@@ -87,14 +87,8 @@ export default class RecommendationCard extends React.Component<
           rating
         );
         if (status === 200) {
-          this.setState({ feedback: rating });
           updateFeedback(recordingMBID, rating);
         }
-
-        this.setState({
-          icon: iconToSet,
-          text: textToSet,
-        });
       } catch (error) {
         this.handleError(
           `Error while submitting recommendation feedback - ${error.message}`
@@ -121,13 +115,8 @@ export default class RecommendationCard extends React.Component<
           recordingMBID
         );
         if (status === 200) {
-          this.setState({ feedback: null });
           updateFeedback(recordingMBID, null);
         }
-        this.setState({
-          icon: faThumbsUpRegular,
-          text: "Like",
-        });
       } catch (error) {
         this.handleError(
           `Error while deleting recommendation feedback - ${error.message}`
@@ -184,98 +173,92 @@ export default class RecommendationCard extends React.Component<
         onDoubleClick={this.playRecommendation}
         className={`recommendation-card row ${className}`}
       >
-        <div className="col-xs-9">
-          <div className="col-xs-11">
-            <div className="track-details">
-              <p title={recommendation.track_metadata.track_name}>
-                {getTrackLink(recommendation)}
-              </p>
-              <p>
-                <small
-                  className="text-muted"
-                  title={recommendation.track_metadata.artist_name}
-                >
-                  {getArtistLink(recommendation)}
-                </small>
-              </p>
-            </div>
+        <div className="track-details">
+          <div title={recommendation.track_metadata.track_name}>
+            {getTrackLink(recommendation)}
           </div>
+          <small
+            className="text-muted"
+            title={recommendation.track_metadata.artist_name}
+          >
+            {getArtistLink(recommendation)}
+          </small>
         </div>
-        <div className="col-xs-1 text-center">
-          <div className="recommendation-controls">
-            <>
-              <button
-                className={`btn ${currentFeedback}`}
-                id="recommendationControlsDropdown"
-                data-toggle="dropdown"
-                aria-haspopup="true"
-                aria-expanded="true"
-                type="button"
-              >
-                <FontAwesomeIcon icon={icon as IconProp} /> {text}
-              </button>
-              <ul
-                className="dropdown-menu dropdown-menu-right"
-                aria-labelledby="recommendationControlsDropdown"
-              >
-                <RecommendationControl
-                  iconHover={faAngry}
-                  icon={faAngryRegular}
-                  title="I never want to hear this again!"
-                  action={() =>
-                    currentFeedback === "hate"
-                      ? this.deleteFeedback()
-                      : this.submitFeedback("hate", faAngry, "hate")
-                  }
-                  selected={currentFeedback === "hate"}
-                />
-                <RecommendationControl
-                  iconHover={faFrown}
-                  icon={faFrownRegular}
-                  title="I don't like this!"
-                  action={() =>
-                    currentFeedback === "dislike"
-                      ? this.deleteFeedback()
-                      : this.submitFeedback("dislike", faFrown, "dislike")
-                  }
-                  selected={currentFeedback === "dislike"}
-                />
-                <RecommendationControl
-                  iconHover={faMeh}
-                  icon={faMehRegular}
-                  title="This is a bad recommendation!"
-                  action={() =>
-                    currentFeedback === "bad_recommendation"
-                      ? this.deleteFeedback()
-                      : this.submitFeedback("bad_recommendation", faMeh, "bad")
-                  }
-                  selected={currentFeedback === "bad_recommendation"}
-                />
-                <RecommendationControl
-                  iconHover={faSmileBeam}
-                  icon={faSmileBeamRegular}
-                  title="I like this!"
-                  action={() =>
-                    currentFeedback === "like"
-                      ? this.deleteFeedback()
-                      : this.submitFeedback("like", faSmileBeam, "like")
-                  }
-                  selected={currentFeedback === "like"}
-                />
-                <RecommendationControl
-                  iconHover={faGrinStars}
-                  icon={faGrinStarsRegular}
-                  title="I really love this!"
-                  action={() =>
-                    currentFeedback === "love"
-                      ? this.deleteFeedback()
-                      : this.submitFeedback("love", faGrinStars, "love")
-                  }
-                  selected={currentFeedback === "love"}
-                />
-              </ul>
-            </>
-          </div>
+        <div className="recommendation-controls">
+          <button
+            className={`btn ${currentFeedback}`}
+            id="recommendationControlsDropdown"
+            data-toggle="dropdown"
+            aria-haspopup="true"
+            aria-expanded="true"
+            type="button"
+          >
+            <FontAwesomeIcon icon={icon as IconProp} /> {text}
+          </button>
+          <ul
+            className="dropdown-menu dropdown-menu-right"
+            aria-labelledby="recommendationControlsDropdown"
+          >
+            <RecommendationControl
+              iconHover={faAngry}
+              icon={faAngryRegular}
+              title="I never want to hear this again!"
+              action={() =>
+                currentFeedback === "hate"
+                  ? this.deleteFeedback()
+                  : this.submitFeedback("hate", faAngry, "hate")
+              }
+              cssClass={`hate ${currentFeedback === "hate" ? "selected" : ""}`}
+            />
+            <RecommendationControl
+              iconHover={faFrown}
+              icon={faFrownRegular}
+              title="I don't like this!"
+              action={() =>
+                currentFeedback === "dislike"
+                  ? this.deleteFeedback()
+                  : this.submitFeedback("dislike", faFrown, "dislike")
+              }
+              cssClass={`dislike ${
+                currentFeedback === "dislike" ? "selected" : ""
+              }`}
+            />
+            <RecommendationControl
+              iconHover={faMeh}
+              icon={faMehRegular}
+              title="This is a bad recommendation!"
+              action={() =>
+                currentFeedback === "bad_recommendation"
+                  ? this.deleteFeedback()
+                  : this.submitFeedback("bad_recommendation", faMeh, "bad")
+              }
+              cssClass={`bad_recommendation ${
+                currentFeedback === "bad_recommendation" ? "selected" : ""
+              }`}
+            />
+            <RecommendationControl
+              iconHover={faSmileBeam}
+              icon={faSmileBeamRegular}
+              title="I like this!"
+              action={() =>
+                currentFeedback === "like"
+                  ? this.deleteFeedback()
+                  : this.submitFeedback("like", faSmileBeam, "like")
+              }
+              cssClass={`like ${currentFeedback === "like" ? "selected" : ""}`}
+            />
+            <RecommendationControl
+              iconHover={faGrinStars}
+              icon={faGrinStarsRegular}
+              title="I really love this!"
+              action={() =>
+                currentFeedback === "love"
+                  ? this.deleteFeedback()
+                  : this.submitFeedback("love", faGrinStars, "love")
+              }
+              cssClass={`love ${currentFeedback === "love" ? "selected" : ""}`}
+            />
+          </ul>
         </div>
       </Card>
     );
