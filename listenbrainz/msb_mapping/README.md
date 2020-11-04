@@ -21,6 +21,13 @@ To inspect the cron log of the container do:
 
 ```docker exec -it messybrainz-mapper python manage.py cron-log```
 
+To run a dev container and do connect it to a musicbrainz-docker instance, do:
+
+```
+docker build -f Dockerfile.dev -t metabrainz/messybrainz-mapper .
+docker run --rm -it --network musicbrainzdocker_default metabrainz/messybrainz-mapper python3 manage.py create-all
+```
+
 
 Algorithm
 ---------
