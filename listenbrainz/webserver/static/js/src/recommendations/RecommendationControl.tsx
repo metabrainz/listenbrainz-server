@@ -6,9 +6,9 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 export type RecommendationControlProps = {
   cssClass: string;
-  action?: (event: React.SyntheticEvent) => void;
-  iconHover?: IconDefinition;
-  icon?: IconDefinition;
+  action: (event: React.SyntheticEvent) => void;
+  iconHover: IconDefinition;
+  icon: IconDefinition;
   title: string;
 };
 

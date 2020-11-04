@@ -5,6 +5,7 @@ import { shallow } from "enzyme";
 import * as recommendationProps from "../__mocks__/recommendations.json";
 
 import Recommendations, { RecommendationsProps } from "./Recommendations";
+import * as recommendationPropsOne from "../__mocks__/recommendationPropsOne.json";
 
 enableFetchMocks();
 
@@ -31,6 +32,256 @@ const props = {
   webSocketsServerUrl,
 };
 
+const feedback = {
+  feedback: [
+    {
+      rating: "love",
+      user_id: "vansika",
+      recording_mbid: "cdae1a9e-de70-46b1-9189-5d857bc40c67",
+    },
+    {
+      rating: "hate",
+      user_id: "vansika",
+      recording_mbid: "96b34c7d-d9fc-4db8-a94f-abc9fa3a6759",
+    },
+  ],
+};
+
+describe("Recommendations", () => {
+  it("renders correctly on the recommendations page", () => {
+    const wrapper = shallow<Recommendations>(<Recommendations {...props} />);
+    expect(wrapper.html()).toMatchSnapshot();
+  });
+});
+
+describe("componentDidMount", () => {
+  it('calls loadFeedback if user is the currentUser"', () => {
+    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
+     * so that it doesn't get passed as a reference.
+     */
+    const wrapper = shallow<Recommendations>(
+      <Recommendations
+        {...{
+          ...(JSON.parse(
+            JSON.stringify(recommendationProps)
+          ) as RecommendationsProps),
+          currentUser: { name: "vansika" },
+        }}
+      />
+    );
+    const instance = wrapper.instance();
+    instance.loadFeedback = jest.fn();
+
+    instance.componentDidMount();
+
+    expect(instance.loadFeedback).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not call loadFeedback if user is not the currentUser", () => {
+    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
+     * so that it doesn't get passed as a reference.
+     */
+    const wrapper = shallow<Recommendations>(
+      <Recommendations
+        {...{
+          ...(JSON.parse(
+            JSON.stringify(recommendationProps)
+          ) as RecommendationsProps),
+          currentUser: { name: "foobar" },
+        }}
+      />
+    );
+    const instance = wrapper.instance();
+    instance.loadFeedback = jest.fn();
+
+    instance.componentDidMount();
+
+    expect(instance.loadFeedback).toHaveBeenCalledTimes(0);
+  });
+});
+
+describe("getFeedback", () => {
+  it("calls the API correctly", async () => {
+    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
+     * so that it doesn't get passed as a reference.
+     */
+    const wrapper = shallow<Recommendations>(
+      <Recommendations
+        {...(JSON.parse(
+          JSON.stringify(recommendationPropsOne)
+        ) as RecommendationsProps)}
+      />
+    );
+
+    const instance = wrapper.instance();
+    const spy = jest.fn().mockImplementation(() => {
+      return Promise.resolve(feedback);
+    });
+    // eslint-disable-next-line dot-notation
+    instance["APIService"].getFeedbackForUserForRecommendations = spy;
+
+    const result = await instance.getFeedback();
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(
+      "vansika",
+      "cdae1a9e-de70-46b1-9189-5d857bc40c67,96b34c7d-d9fc-4db8-a94f-abc9fa3a6759"
+    );
+    expect(result).toEqual(feedback.feedback);
+  });
+});
+
+describe("loadFeedback", () => {
+  it("updates the recommendationFeedbackMap state", async () => {
+    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
+     * so that it doesn't get passed as a reference.
+     */
+    const wrapper = shallow<Recommendations>(
+      <Recommendations
+        {...(JSON.parse(
+          JSON.stringify(recommendationPropsOne)
+        ) as RecommendationsProps)}
+      />
+    );
+
+    const instance = wrapper.instance();
+
+    instance.getFeedback = jest
+      .fn()
+      .mockImplementationOnce(() => Promise.resolve(feedback.feedback));
+
+    await instance.loadFeedback();
+    expect(wrapper.state("recommendationFeedbackMap")).toMatchObject({
+      "cdae1a9e-de70-46b1-9189-5d857bc40c67": "love",
+      "96b34c7d-d9fc-4db8-a94f-abc9fa3a6759": "hate",
+    });
+  });
+});
+
+describe("getFeedbackForRecordingMbid", () => {
+  it("returns the feedback after fetching from recommendationFeedbackMap state", async () => {
+    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
+     * so that it doesn't get passed as a reference.
+     */
+    const wrapper = shallow<Recommendations>(
+      <Recommendations
+        {...(JSON.parse(
+          JSON.stringify(recommendationPropsOne)
+        ) as RecommendationsProps)}
+      />
+    );
+
+    const instance = wrapper.instance();
+
+    const recommendationFeedbackMap: RecommendationFeedbackMap = {
+      "973e5620-829d-46dd-89a8-760d87076287": "hate",
+    };
+    wrapper.setState({ recommendationFeedbackMap });
+
+    const res = await instance.getFeedbackForRecordingMbid(
+      "973e5620-829d-46dd-89a8-760d87076287"
+    );
+
+    expect(res).toEqual("hate");
+  });
+
+  it("returns null if the recording is not in recommendationFeedbackMap state", async () => {
+    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
+     * so that it doesn't get passed as a reference.
+     */
+    const wrapper = shallow<Recommendations>(
+      <Recommendations
+        {...(JSON.parse(
+          JSON.stringify(recommendationPropsOne)
+        ) as RecommendationsProps)}
+      />
+    );
+
+    const instance = wrapper.instance();
+
+    const res = await instance.getFeedbackForRecordingMbid(
+      "073e5620-829d-46dd-89a8-760d87076287"
+    );
+
+    expect(res).toEqual(null);
+  });
+});
+
+describe("updateFeedback", () => {
+  it("updates the recommendationFeedbackMap state for particular recording", async () => {
+    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
+     * so that it doesn't get passed as a reference.
+     */
+    const wrapper = shallow<Recommendations>(
+      <Recommendations
+        {...(JSON.parse(
+          JSON.stringify(recommendationPropsOne)
+        ) as RecommendationsProps)}
+      />
+    );
+    const instance = wrapper.instance();
+
+    const recommendationFeedbackMap: RecommendationFeedbackMap = {
+      "973e5620-829d-46dd-89a8-760d87076287": "bad_recommendation",
+    };
+    wrapper.setState(JSON.parse(JSON.stringify(recommendationFeedbackMap)));
+
+    await instance.updateFeedback(
+      "973e5620-829d-46dd-89a8-760d87076287",
+      "love"
+    );
+
+    expect(wrapper.state("recommendationFeedbackMap")).toMatchObject({
+      "973e5620-829d-46dd-89a8-760d87076287": "love",
+    });
+  });
+});
+
+describe("isCurrentRecommendation", () => {
+  it("returns true if currentRecommendation and passed recommendation is same", () => {
+    const wrapper = shallow<Recommendations>(<Recommendations {...props} />);
+    const instance = wrapper.instance();
+
+    const recommendation: Recommendation = {
+      listened_at: 0,
+      track_metadata: {
+        artist_name: "Coldplay",
+        track_name: "Up & Up",
+      },
+    };
+    wrapper.setState({ currentRecommendation: recommendation });
+
+    expect(instance.isCurrentRecommendation(recommendation)).toBe(true);
+  });
+
+  it("returns false if currentRecommendation is not set", () => {
+    const wrapper = shallow<Recommendations>(<Recommendations {...props} />);
+    const instance = wrapper.instance();
+
+    wrapper.setState({ currentRecommendation: undefined });
+
+    expect(instance.isCurrentRecommendation({} as Recommendation)).toBeFalsy();
+  });
+});
+
+describe("handleCurrentRecommendationChange", () => {
+  it("sets the state correctly", () => {
+    const wrapper = shallow<Recommendations>(<Recommendations {...props} />);
+    const instance = wrapper.instance();
+
+    const recommendation: Recommendation = {
+      listened_at: 0,
+      track_metadata: {
+        artist_name: "George Erza",
+        track_name: "Shotgun",
+      },
+    };
+    instance.handleCurrentRecommendationChange(recommendation);
+
+    expect(wrapper.state().currentRecommendation).toEqual(recommendation);
+  });
+});
+
 describe("handleClickPrevious", () => {
   it("don't do anything if already on first page", async () => {
     const wrapper = shallow<Recommendations>(<Recommendations {...props} />);
@@ -39,6 +290,7 @@ describe("handleClickPrevious", () => {
 
     await instance.handleClickPrevious();
 
+    expect(wrapper.state("loading")).toBeFalsy();
     expect(wrapper.state("currRecPage")).toEqual(1);
     expect(wrapper.state("totalRecPages")).toEqual(3);
     expect(wrapper.state("recommendations")).toEqual(
@@ -59,6 +311,7 @@ describe("handleClickPrevious", () => {
 
     await instance.handleClickPrevious();
 
+    expect(wrapper.state("loading")).toBeFalsy();
     expect(wrapper.state("currRecPage")).toEqual(2);
     expect(wrapper.state("totalRecPages")).toEqual(3);
     expect(wrapper.state("recommendations")).toEqual(
@@ -81,6 +334,7 @@ describe("handleClickNext", () => {
 
     await instance.handleClickNext();
 
+    expect(wrapper.state("loading")).toBeFalsy();
     expect(wrapper.state("currRecPage")).toEqual(3);
     expect(wrapper.state("totalRecPages")).toEqual(3);
     expect(wrapper.state("recommendations")).toEqual(
@@ -101,6 +355,7 @@ describe("handleClickNext", () => {
 
     await instance.handleClickNext();
 
+    expect(wrapper.state("loading")).toBeFalsy();
     expect(wrapper.state("currRecPage")).toEqual(3);
     expect(wrapper.state("recommendations")).toEqual(
       recommendationProps.recommendations.slice(50, 73)
