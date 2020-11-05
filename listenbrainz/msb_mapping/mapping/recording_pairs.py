@@ -61,8 +61,8 @@ def create_indexes(conn):
 
     try:
         with conn.cursor() as curs:
-            curs.execute("""CREATE INDEX tmp_recording_artist_credit_pairs_idx_artist_credit_name
-                                      ON mapping.tmp_recording_artist_credit_pairs(artist_credit_name)""")
+            curs.execute("""CREATE INDEX tmp_recording_artist_credit_pairs_idx_artist_credit_recording_name
+                                      ON mapping.tmp_recording_artist_credit_pairs(artist_credit_name, recording_name)""")
         conn.commit()
     except OperationalError as err:
         log("failed to create recording pair index", err)
@@ -83,31 +83,52 @@ def create_temp_release_table(conn, stats):
 
     with conn.cursor() as curs:
         log("Create temp release table: select")
-        query = """INSERT INTO mapping.tmp_recording_pair_releases (release)
-                        SELECT r.id
-                          FROM musicbrainz.release_group rg
-                          JOIN musicbrainz.release r ON rg.id = r.release_group
-                          JOIN musicbrainz.release_country rc ON rc.release = r.id
-                          JOIN musicbrainz.medium m ON m.release = r.id
-                          JOIN musicbrainz.medium_format mf ON m.format = mf.id
-                          JOIN mapping.format_sort fs ON mf.id = fs.format
-                          JOIN musicbrainz.artist_credit ac ON rg.artist_credit = ac.id
-                          JOIN musicbrainz.release_group_primary_type rgpt ON rg.type = rgpt.id
-               FULL OUTER JOIN musicbrainz.release_group_secondary_type_join rgstj ON rg.id = rgstj.release_group
-               FULL OUTER JOIN musicbrainz.release_group_secondary_type rgst ON rgstj.secondary_type = rgst.id
-                         WHERE rg.artist_credit != 1
-                               %s
-                         ORDER BY rg.type, rgst.id desc, fs.sort,
-                                  to_date(date_year::TEXT || '-' ||
-                                          COALESCE(date_month,12)::TEXT || '-' ||
-                                          COALESCE(date_day,28)::TEXT, 'YYYY-MM-DD'),
-                                  country, rg.artist_credit, rg.name"""
+        query = """             SELECT r.id AS release
+                                  FROM musicbrainz.release_group rg
+                                  JOIN musicbrainz.release r ON rg.id = r.release_group
+                             LEFT JOIN musicbrainz.release_country rc ON rc.release = r.id
+                                  JOIN musicbrainz.medium m ON m.release = r.id
+                                  JOIN musicbrainz.medium_format mf ON m.format = mf.id
+                                  JOIN mapping.format_sort fs ON mf.id = fs.format
+                                  JOIN musicbrainz.artist_credit ac ON rg.artist_credit = ac.id
+                                  JOIN musicbrainz.release_group_primary_type rgpt ON rg.type = rgpt.id
+                             LEFT JOIN musicbrainz.release_group_secondary_type_join rgstj ON rg.id = rgstj.release_group
+                             LEFT JOIN musicbrainz.release_group_secondary_type rgst ON rgstj.secondary_type = rgst.id
+                                 WHERE rg.artist_credit != 1
+                                       %s
+                                 ORDER BY rg.type, rgst.id desc, fs.sort,
+                                          to_date(date_year::TEXT || '-' ||
+                                                  COALESCE(date_month,12)::TEXT || '-' ||
+                                                  COALESCE(date_day,28)::TEXT, 'YYYY-MM-DD'),
+                                          country, rg.artist_credit, rg.name"""
 
         if config.USE_MINIMAL_DATASET:
             log("Create temp release table: Using a minimal dataset!")
             curs.execute(query % ('AND rg.artist_credit = %d' % TEST_ARTIST_ID))
         else:
             curs.execute(query % "")
+
+        # Fetch releases and toss out duplicates -- using DISTINCT in the query above is not possible as it will
+        # destroy the sort order we so carefully crafted.
+        with conn.cursor() as curs_insert:
+            rows = []
+            count = 0
+            release_index = {}
+            for row in curs:
+                if row[0] in release_index:
+                    continue
+
+                release_index[row[0]] = 1
+
+                count += 1
+                rows.append((count, row[0]))
+                if len(rows) == BATCH_SIZE:
+                    insert_rows(curs_insert, "mapping.tmp_recording_pair_releases", rows)
+                    rows = []
+                    print("recording pair releases inserted %s rows." % count)
+
+            if rows:
+                insert_rows(curs_insert, "mapping.tmp_recording_pair_releases", rows)
 
         log("Create temp release table: create indexes")
         curs.execute("""CREATE INDEX tmp_recording_pair_releases_idx_release
@@ -137,8 +158,8 @@ def swap_table_and_indexes(conn):
             curs.execute("""ALTER TABLE mapping.tmp_recording_pair_releases
                               RENAME TO recording_pair_releases""")
 
-            curs.execute("""ALTER INDEX mapping.tmp_recording_artist_credit_pairs_idx_artist_credit_name
-                              RENAME TO recording_artist_credit_pairs_idx_artist_credit_name""")
+            curs.execute("""ALTER INDEX mapping.tmp_recording_artist_credit_pairs_idx_artist_credit_recording_name
+                              RENAME TO recording_artist_credit_pairs_idx_artist_credit_recording_name""")
             curs.execute("""ALTER INDEX mapping.tmp_recording_pair_releases_idx_release
                               RENAME TO recording_pair_releases_idx_release""")
             curs.execute("""ALTER INDEX mapping.tmp_recording_pair_releases_idx_id
@@ -192,13 +213,20 @@ def create_pairs():
                                           rpr.id,
                                           date_year AS year
                                      FROM recording r
-                                     JOIN artist_credit ac ON r.artist_credit = ac.id
-                                     JOIN artist_credit_name acn ON ac.id = acn.artist_credit
-                                     JOIN track t ON t.recording = r.id
-                                     JOIN medium m ON m.id = t.medium
-                                     JOIN release rl ON rl.id = m.release
-                                     JOIN mapping.tmp_recording_pair_releases rpr ON rl.id = rpr.release
-                               RIGHT JOIN release_country rc ON rc.release = rl.id
+                                     JOIN artist_credit ac
+                                       ON r.artist_credit = ac.id
+                                     JOIN artist_credit_name acn
+                                       ON ac.id = acn.artist_credit
+                                     JOIN track t
+                                       ON t.recording = r.id
+                                     JOIN medium m
+                                       ON m.id = t.medium
+                                     JOIN release rl
+                                       ON rl.id = m.release
+                                     JOIN mapping.tmp_recording_pair_releases rpr
+                                       ON rl.id = rpr.release
+                                LEFT JOIN release_country rc
+                                       ON rc.release = rl.id
                                     GROUP BY rpr.id, ac.id, rl.id, artist_credit_name, r.id, r.name, release_name, year
                                     ORDER BY ac.id, rpr.id""")
                 log("Create pairs: Insert rows into DB.")
@@ -222,18 +250,22 @@ def create_pairs():
                             log("Create pairs: inserted %d rows." % count)
                             rows = []
 
-                    recording_name = row['recording_name']
-                    artist_credit_name = row['artist_credit_name']
-                    release_name = row['release_name']
-                    if config.REMOVE_NON_WORD_CHARS:
-                        recording_name = re.sub(r'\W+', '', recording_name)
-                    if recording_name not in artist_recordings:
+                    try:
+                        recording_name = row['recording_name']
+                        artist_credit_name = row['artist_credit_name']
+                        release_name = row['release_name']
                         if config.REMOVE_NON_WORD_CHARS:
-                            artist_credit_name = re.sub(r'\W+', '', artist_credit_name)
-                            release_name = re.sub(r'\W+', '', release_name)
-                        artist_recordings[recording_name] = (recording_name, row['recording_id'],
-                                                             artist_credit_name, row['artist_credit_id'],
-                                                             release_name, row['release_id'])
+                            recording_name = re.sub(r'\W+', '', recording_name)
+                        if recording_name not in artist_recordings:
+                            if config.REMOVE_NON_WORD_CHARS:
+                                artist_credit_name = re.sub(r'\W+', '', artist_credit_name)
+                                release_name = re.sub(r'\W+', '', release_name)
+                            artist_recordings[recording_name] = (recording_name, row['recording_id'],
+                                                                 artist_credit_name, row['artist_credit_id'],
+                                                                 release_name, row['release_id'])
+                    except TypeError:
+                        print(row)
+                        raise
 
                     last_ac_id = row['artist_credit_id']
 
