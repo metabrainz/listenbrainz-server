@@ -8,6 +8,7 @@ import click
 
 from mapping.msid_mapping import create_mapping as action_create_mapping
 from mapping.recording_pairs import create_pairs as action_create_pairs
+from mapping.recording_pairs_year import create_pairs_year as action_create_pairs_year
 from mapping.mapping_test.mapping_test import test_mapping as action_test_mapping
 from mapping.write_mapping import write_all_mappings as action_write_all_mappings
 from mapping.utils import log, CRON_LOG_FILE
@@ -22,6 +23,7 @@ def cli():
 def create_all():
     action_create_pairs()
     action_create_mapping()
+    action_create_pairs_year()
 
 
 @cli.command()
@@ -42,6 +44,11 @@ def test_mapping():
 @cli.command()
 def test_pairs():
     action_test_pairs()
+
+
+@cli.command()
+def create_pairs_year():
+    action_create_pairs_year()
 
 
 @cli.command()
