@@ -89,7 +89,11 @@ class RequestConsumer:
                     self.connect_to_rabbitmq()
                     self.init_rabbitmq_channels()
 
-        avg_size_of_message //= num_of_messages
+        try:
+            avg_size_of_message //= num_of_messages
+        except ZeroDivisionError:
+            avg_size_of_message = 0
+            current_app.logger.warn("No messages calculated", exc_info=True)
 
         current_app.logger.info("Done!")
         current_app.logger.info("Number of messages sent: {}".format(num_of_messages))
