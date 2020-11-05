@@ -102,7 +102,7 @@ export default class Recommendations extends React.Component<
         );
       }
     }
-    return {};
+    return [];
   };
 
   loadFeedback = async () => {

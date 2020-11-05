@@ -302,7 +302,10 @@ describe("handleClickPrevious", () => {
   it("go to the previous page if not on first page", async () => {
     const wrapper = shallow<Recommendations>(<Recommendations {...props} />);
     const instance = wrapper.instance();
-    instance.afterRecommendationsDisplay = jest.fn();
+    const afterRecommendationsDisplaySpy = jest.spyOn(
+      instance,
+      "afterRecommendationsDisplay"
+    );
 
     wrapper.setState({
       currRecPage: 3,
@@ -317,7 +320,7 @@ describe("handleClickPrevious", () => {
     expect(wrapper.state("recommendations")).toEqual(
       recommendationProps.recommendations.slice(25, 50)
     );
-    expect(instance.afterRecommendationsDisplay).toHaveBeenCalledTimes(1);
+    expect(afterRecommendationsDisplaySpy).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -325,7 +328,10 @@ describe("handleClickNext", () => {
   it("don't do anything if already on last page", async () => {
     const wrapper = shallow<Recommendations>(<Recommendations {...props} />);
     const instance = wrapper.instance();
-    instance.afterRecommendationsDisplay = jest.fn();
+    const afterRecommendationsDisplaySpy = jest.spyOn(
+      instance,
+      "afterRecommendationsDisplay"
+    );
 
     wrapper.setState({
       currRecPage: 3,
@@ -340,13 +346,16 @@ describe("handleClickNext", () => {
     expect(wrapper.state("recommendations")).toEqual(
       recommendationProps.recommendations.slice(50, 73)
     );
-    expect(instance.afterRecommendationsDisplay).toHaveBeenCalledTimes(0);
+    expect(afterRecommendationsDisplaySpy).toHaveBeenCalledTimes(0);
   });
 
   it("go to the next page if not on last page", async () => {
     const wrapper = shallow<Recommendations>(<Recommendations {...props} />);
     const instance = wrapper.instance();
-    instance.afterRecommendationsDisplay = jest.fn();
+    const afterRecommendationsDisplaySpy = jest.spyOn(
+      instance,
+      "afterRecommendationsDisplay"
+    );
 
     wrapper.setState({
       currRecPage: 2,
@@ -360,6 +369,6 @@ describe("handleClickNext", () => {
     expect(wrapper.state("recommendations")).toEqual(
       recommendationProps.recommendations.slice(50, 73)
     );
-    expect(instance.afterRecommendationsDisplay).toHaveBeenCalledTimes(1);
+    expect(afterRecommendationsDisplaySpy).toHaveBeenCalledTimes(1);
   });
 });
