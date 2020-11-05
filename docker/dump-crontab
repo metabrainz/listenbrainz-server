@@ -1,10 +1,10 @@
 
 ## Trigger a full dump on 1st and 15th of every month
-# 00 20 1,15 * * /code/listenbrainz/admin/create-dumps.sh full
+00 20 1,15 * * /code/listenbrainz/admin/create-dumps.sh full
 ## Around 24 hours later, trigger a full import into the spark cluster
 00 21 2,16 * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_import_full
 
 ## Trigger an incremental dump everyday
-# 00 18 * * * /code/listenbrainz/admin/create-dumps.sh incremental
+00 18 * * * /code/listenbrainz/admin/create-dumps.sh incremental
 ## Around 3 hours later, trigger an incremental import into the spark cluster
 00 21 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_import_incremental
