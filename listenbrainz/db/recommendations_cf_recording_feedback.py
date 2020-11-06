@@ -129,7 +129,9 @@ def get_feedback_for_multiple_recordings_for_user(user_id: int, recording_list: 
                   FROM recommendation_feedback
                  WHERE user_id = :user_id
                    AND recording_mbid
-                    IN :recording_list """
+                    IN :recording_list
+              ORDER BY created DESC
+            """
 
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text(query), args)
