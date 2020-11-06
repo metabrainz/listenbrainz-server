@@ -982,10 +982,10 @@ describe("Pagination", () => {
         previousListenTs: 1234567881,
         listens: [],
       });
-
+      const sortedListens = sortBy(listens, "listened_at");
       const getListensForUserSpy = jest
         .fn()
-        .mockImplementation(() => Promise.resolve(listens));
+        .mockImplementation(() => Promise.resolve(sortedListens));
       // eslint-disable-next-line dot-notation
       instance["APIService"].getListensForUser = getListensForUserSpy;
       const checkListensRangeSpy = jest.spyOn(instance, "checkListensRange");
@@ -1007,7 +1007,7 @@ describe("Pagination", () => {
       expect(getListensForUserSpy).toHaveBeenNthCalledWith(
         2,
         user.name,
-        1586513524,
+        1586440536,
         undefined,
         25,
         6
