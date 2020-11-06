@@ -18,7 +18,7 @@ import {
 
 import { get as _get } from "lodash";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { IconDefinition } from "@fortawesome/fontawesome-common-types";
+import { IconDefinition } from "@fortawesome/fontawesome-common-types"; // eslint-disable-line import/no-unresolved
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import RecommendationControl from "./RecommendationControl";
 

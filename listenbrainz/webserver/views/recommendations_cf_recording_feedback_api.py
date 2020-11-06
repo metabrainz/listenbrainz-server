@@ -125,7 +125,7 @@ def get_feedback_for_user(user_name):
     A sample response may look like:
         {
             count: 1,
-            recommendation_feedback: [
+            feedback: [
                 {
                     "created": "1345679998",
                     "recording_mbid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
@@ -174,7 +174,7 @@ def get_feedback_for_user(user_name):
     feedback = [_format_feedback(fb) for fb in feedback]
 
     return jsonify({
-        "recommendation-feedback": feedback,
+        "feedback": feedback,
         "count": len(feedback),
         "total_count": total_count,
         "offset": offset,
@@ -187,10 +187,9 @@ def get_feedback_for_user(user_name):
 @ratelimit()
 def get_feedback_for_recordings_for_user(user_name):
     """
-    Get feedback given by user ``user_name`` for the list of recordings supplied. The format for the JSON returned
-    is defined in our :ref:`feedback-json-doc`.
+    Get feedback given by user ``user_name`` for the list of recordings supplied.
 
-    If the feedback for given recording MBID doesn't exist then a rating == "feedback_not_given" is returned for that recording.
+    An empty response will be returned if the feedback for given recording MBID doesn't exist.
 
     :param recordings: comma separated list of recording_mbids for which feedback records are to be fetched.
     :type recordings: ``str``
