@@ -266,10 +266,6 @@ def get_top_artists(mapped_listens_subset, top_artist_limit, users):
                 top_artist_given_users_df (dataframe): Top Y artists listened to by a user for given users where
                                                        Y = TOP_ARTISTS_LIMIT
     """
-    test_df = mapped_listens_subset.select('*').where(col('user_name') == 'Freso')
-    for row in test_df.collect():
-        current_app.logger.info(row) # since there will be only 24 rows
-
     df = mapped_listens_subset.select('mb_artist_credit_id',
                                       'msb_artist_credit_name_matchable',
                                       'mb_artist_credit_mbids',
