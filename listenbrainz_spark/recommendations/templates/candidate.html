@@ -30,13 +30,11 @@ td, th {
                 <tr>
                     <th>Top artist name</th>
                     <th>Top artist credit id</th>
-                    <th>Count</th>
                 </tr>
                 {% for i in data['top_artist'] -%}
                 <tr>
                     <td>{{ i[0] }}</td>
                     <td>{{ i[1] }}</td>
-                    <td>{{ i[2] }}</td>
                 </tr>
                 {% endfor -%}
             </table>

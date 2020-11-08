@@ -183,19 +183,16 @@ def explode_artist_collaborations(df):
             df: A dataframe
 
         Returns:
-            df with columns ['mb_artist_credit_mbids', 'user_name', 'total_count']
+            df with columns ['mb_artist_credit_mbids', 'user_name']
     """
     df = df.select(col('mb_artist_credit_mbids'),
-                   col('user_name'),
-                   col('total_count')) \
+                   col('user_name')) \
            .where(func.size('mb_artist_credit_mbids') > 1) \
            .withColumn('mb_artist_credit_mbids', func.explode('mb_artist_credit_mbids')) \
            .select(col('mb_artist_credit_mbids').alias('mbids'),
-                   col('total_count'),
                    col('user_name'))
 
     res_df = convert_string_datatype_to_array(df).select(col('mb_artist_credit_mbids'),
-                                                         col('total_count'),
                                                          col('user_name'))
 
     return res_df
@@ -233,7 +230,6 @@ def append_artists_from_collaborations(top_artist_df):
                                  .select(col('mb_artist_credit_mbids'),
                                          col('mb_artist_credit_id').alias('top_artist_credit_id'),
                                          col('msb_artist_credit_name_matchable').alias('top_artist_name'),
-                                         col('total_count'),
                                          col('user_name')) \
                                  .distinct()
 
@@ -241,7 +237,6 @@ def append_artists_from_collaborations(top_artist_df):
     top_artist_df = top_artist_df.union(res_df) \
                                  .select('top_artist_credit_id',
                                          'top_artist_name',
-                                         'total_count',
                                          'user_name') \
                                  .distinct()
     # using distinct for extra care since pyspark union ~ SQL union all.
@@ -283,7 +278,6 @@ def get_top_artists(mapped_listens_subset, top_artist_limit, users):
                       .select(col('mb_artist_credit_mbids'),
                               col('mb_artist_credit_id').alias('top_artist_credit_id'),
                               col('msb_artist_credit_name_matchable').alias('top_artist_name'),
-                              col('total_count'),
                               col('user_name'))
 
     top_artist_df = append_artists_from_collaborations(top_artist_df)
@@ -291,7 +285,6 @@ def get_top_artists(mapped_listens_subset, top_artist_limit, users):
     if users:
         top_artist_given_users_df = top_artist_df.select('top_artist_credit_id',
                                                          'top_artist_name',
-                                                         'total_count',
                                                          'user_name') \
                                                  .where(top_artist_df.user_name.isin(users))
 
@@ -564,8 +557,7 @@ def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_can
 
         data = (
             row.top_artist_name,
-            row.top_artist_credit_id,
-            row.total_count
+            row.top_artist_credit_id
         )
         user_data[row.user_name]['top_artist'].append(data)
 
