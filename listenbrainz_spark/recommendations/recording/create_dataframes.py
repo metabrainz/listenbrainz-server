@@ -122,6 +122,11 @@ from pyspark.sql.functions import rank, col, row_number
 #   ]
 
 
+# The following var defines the string of which the dataframe id is made up of.
+# An UUID will be appended to the string to generate a dataframe id.
+DATAFRAME_ID_PREFIX = 'listenbrainz-dataframe-recording-recommendations'
+
+
 def save_dataframe_metadata_to_hdfs(metadata):
     """ Save dataframe metadata.
     """
@@ -380,7 +385,7 @@ def main(train_model_window=None):
 
     save_playcounts_df(listens_df, recordings_df, users_df, metadata)
 
-    metadata['dataframe_id'] = get_dataframe_id(config.DATAFRAME_ID_PREFIX)
+    metadata['dataframe_id'] = get_dataframe_id(DATAFRAME_ID_PREFIX)
     save_dataframe_metadata_to_hdfs(metadata)
 
     current_app.logger.info('Preparing missing MusicBrainz data...')
