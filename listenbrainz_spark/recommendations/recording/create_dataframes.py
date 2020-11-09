@@ -122,9 +122,8 @@ from pyspark.sql.functions import rank, col, row_number
 #   ]
 
 
-# Dataframe id is made up of two parts.
-# String + UUID
 # The following var defines the string of which the dataframe id is made up of.
+# An UUID will be appended to the string to generate a dataframe id.
 DATAFRAME_ID_PREFIX = 'listenbrainz-dataframe-recording-recommendations'
 
 
