@@ -502,7 +502,7 @@ export default class RecentListens extends React.Component<
         );
       }
     }
-    return {};
+    return [];
   };
 
   loadFeedback = async () => {
