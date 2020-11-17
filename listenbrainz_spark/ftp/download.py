@@ -142,6 +142,8 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
 
             Returns:
                 dest_path (str): Local path where listens have been downloaded.
+                listens_file_name (str): name of downloaded listens dump.
+                dump_id (int): Unique indentifier of downloaded listens dump.
         """
         ftp_cwd = current_app.config['FTP_LISTENS_DIR'] + 'fullexport/'
         if dump_type == INCREMENTAL:
