@@ -163,7 +163,7 @@ export default class BrainzPlayer extends React.Component<
       title || "Playback error",
       _isString(error)
         ? error
-        : `${!_isNil(error.status) && `Error ${error.status}:`} ${
+        : `${!_isNil(error.status) ? `Error ${error.status}:` : ""} ${
             error.message || error.statusText
           }`
     );

@@ -306,7 +306,7 @@ export default class SpotifyPlayer
     handleError(
       {
         status: error.status,
-        message: `${error.reason} - ${error.message}`,
+        message: `${error.reason ? `${error.reason} - ` : ""}${error.message}`,
       },
       "Spotify player error"
     );
