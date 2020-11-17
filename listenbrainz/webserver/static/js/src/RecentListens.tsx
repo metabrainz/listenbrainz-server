@@ -541,7 +541,7 @@ export default class RecentListens extends React.Component<
    * and is increased exponentially each retry.
    */
   checkListensRange = async (timeRange: number = 6) => {
-    const { oldestListenTs, user } = this.props;
+    const { latestListenTs, oldestListenTs, user } = this.props;
     const {
       listens,
       lastFetchedDirection,
@@ -549,10 +549,11 @@ export default class RecentListens extends React.Component<
       previousListenTs,
     } = this.state;
     if (
-      // If we have enough listens of we're on the last page (could have run out of listens),
-      // Consider our job done and return.
-      listens.length === this.expectedListensPerPage ||
-      listens[listens.length - 1]?.listened_at <= oldestListenTs
+      // If we have enough listens or if we're on the first/last page,
+      // consider our job done and return.
+      listens.length >= this.expectedListensPerPage ||
+      listens[listens.length - 1]?.listened_at <= oldestListenTs ||
+      listens[0]?.listened_at >= latestListenTs
     ) {
       this.setState({ endOfTheLine: false });
       return;
@@ -560,7 +561,13 @@ export default class RecentListens extends React.Component<
     if (timeRange > this.APIService.MAX_TIME_RANGE) {
       // We reached the maximum time_range allowed by the API.
       // Show a nice message requesting a user action to load listens from next/previous year.
-      this.setState({ endOfTheLine: true });
+      const newState = { endOfTheLine: true, nextListenTs, previousListenTs };
+      if (lastFetchedDirection === "older") {
+        newState.nextListenTs = undefined;
+      } else {
+        newState.previousListenTs = undefined;
+      }
+      this.setState(newState);
     } else {
       // Otherwise…
       let newListens;
@@ -586,12 +593,17 @@ export default class RecentListens extends React.Component<
       let newIncrement;
       if (timeRange === this.APIService.MAX_TIME_RANGE) {
         // Set new increment above the limit, to be detected at next checkListensRange call
-        newIncrement = 100;
+        newIncrement = this.APIService.MAX_TIME_RANGE + 1;
       } else {
         newIncrement = Math.min(timeRange * 2, this.APIService.MAX_TIME_RANGE);
       }
       this.setState(
-        { listens: newListens },
+        {
+          listens: newListens,
+          nextListenTs:
+            newListens?.[newListens.length - 1]?.listened_at ?? nextListenTs,
+          previousListenTs: newListens?.[0]?.listened_at ?? previousListenTs,
+        },
         this.checkListensRange.bind(this, newIncrement)
       );
     }
@@ -819,7 +831,7 @@ export default class RecentListens extends React.Component<
                   <div>
                     No more listens to show in a 12 months period. <br />
                     Navigate to the
-                    {lastFetchedDirection === "older" ? " next" : " previous"}
+                    {lastFetchedDirection === "older" ? " next " : " previous "}
                     page to see {lastFetchedDirection} listens.
                   </div>
                 )}
