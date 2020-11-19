@@ -188,7 +188,7 @@ def import_dump(private_archive, public_archive, listen_archive, threads):
             threads (int): the number of threads to use during decompression, defaults to 1
     """
     if not private_archive and not public_archive and not listen_archive:
-        print('You need to enter a path to the archive(s) to import!')
+        current_app.logger.critical('You need to enter a path to the archive(s) to import!')
         sys.exit(1)
 
     app = create_app()
@@ -235,7 +235,7 @@ def _cleanup_dumps(location):
     dump_files = [x for x in os.listdir(location) if full_dump_re.match(x)]
     full_dumps = [x for x in sorted(dump_files, key=get_dump_id, reverse=True)]
     if not full_dumps:
-        print('No full dumps present in specified directory!')
+        current_app.logger.critical('No full dumps present in specified directory!')
     else:
         remove_dumps(location, full_dumps, NUMBER_OF_FULL_DUMPS_TO_KEEP)
 
@@ -243,7 +243,7 @@ def _cleanup_dumps(location):
     dump_files = [x for x in os.listdir(location) if incremental_dump_re.match(x)]
     incremental_dumps = [x for x in sorted(dump_files, key=get_dump_id, reverse=True)]
     if not incremental_dumps:
-        print('No full dumps present in specified directory!')
+        current_app.logger.critical('No full dumps present in specified directory!')
     else:
         remove_dumps(location, incremental_dumps, NUMBER_OF_INCREMENTAL_DUMPS_TO_KEEP)
 
@@ -252,17 +252,17 @@ def remove_dumps(location, dumps, remaining_count):
     keep = dumps[0:remaining_count]
     keep_count = 0
     for dump in keep:
-        print('Keeping %s...' % dump)
+        current_app.logger.info('Keeping %s...' % dump)
         keep_count += 1
 
     remove = dumps[remaining_count:]
     remove_count = 0
     for dump in remove:
-        print('Removing %s...' % dump)
+        current_app.logger.info('Removing %s...' % dump)
         shutil.rmtree(os.path.join(location, dump))
         remove_count += 1
 
-    print('Deleted %d old exports, kept %d exports!' % (remove_count, keep_count))
+    current_app.logger.info('Deleted %d old exports, kept %d exports!' % (remove_count, keep_count))
     return keep_count, remove_count
 
 
@@ -304,7 +304,7 @@ def transmogrify_dump_file_to_spark_import_format(in_file, out_file, threads):
                         if member.name.endswith(".listens"):
                             filename = member.name.replace(".listens", ".json")
                             filename = filename.replace("-full", "-spark-full")
-                            print("mogrify: ", filename)
+                            current_app.logger.info("mogrify: ", filename)
                             tmp_file = tempfile.mkstemp()
                             with os.fdopen(tmp_file[0], "w") as out_f:
                                 with tarf.extractfile(member) as f:
