@@ -113,6 +113,11 @@ def create_full(location, threads, dump_id, last_dump_id):
             current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
             sys.exit(-1)
 
+#        try:
+#            if not sanity_check_dump(dump_path, 8):
+#                return sys.exit(-1)
+#        except IOError as e:
+#            sys.exit(-1)
 
         # if in production, send an email to interested people for observability
         send_dump_creation_notification(dump_name, 'fullexport')
@@ -120,8 +125,8 @@ def create_full(location, threads, dump_id, last_dump_id):
         current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
 
         # Write the DUMP_ID file so that the FTP sync scripts can be more robust
-        with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
-            f.write("%s %s full" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
+#        with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
+#            f.write("%s %s full" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
 
         sys.exit(0)
 
@@ -165,12 +170,18 @@ def create_incremental(location, threads, dump_id):
             current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
             sys.exit(-1)
 
+#        try:
+#            if not sanity_check_dump(dump_path, 8):
+#                return sys.exit(-1)
+#        except IOError as e:
+#            sys.exit(-1)
+
         # if in production, send an email to interested people for observability
         send_dump_creation_notification(dump_name, 'incremental')
 
         # Write the DUMP_ID file so that the FTP sync scripts can be more robust
-        with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
-            f.write("%s %s incremental" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
+#        with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
+#            f.write("%s %s incremental" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
 
         current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
         sys.exit(0)
@@ -261,17 +272,17 @@ def remove_dumps(location, dumps, remaining_count):
     keep = dumps[0:remaining_count]
     keep_count = 0
     for dump in keep:
-        current_app.logger.info('Keeping %s...' % dump)
+        print('Keeping %s...' % dump)
         keep_count += 1
 
     remove = dumps[remaining_count:]
     remove_count = 0
     for dump in remove:
-        current_app.logger.info('Removing %s...' % dump)
+        print('Removing %s...' % dump)
         shutil.rmtree(os.path.join(location, dump))
         remove_count += 1
 
-    current_app.logger.info('Deleted %d old exports, kept %d exports!' % (remove_count, keep_count))
+    print('Deleted %d old exports, kept %d exports!' % (remove_count, keep_count))
     return keep_count, remove_count
 
 
@@ -292,6 +303,34 @@ def write_hashes(location):
         except IOError as e:
             current_app.logger.error('IOError while trying to write hash files for file %s: %s', file, str(e), exc_info=True)
             raise
+
+
+def sanity_check_dumps(location, expected_count):
+    """ Sanity check the generated dummps to ensure that none are empty
+
+    Args:
+        location (str): the path in which the dump archive files are present
+        expected_count (int): the number of files that are expected to be present
+    Return:
+        boolean: true if the dump passes the sanity check
+    """
+
+    count = 0
+    for file in os.listdir(location):
+        try:
+            dump_file = os.path.join(location, file)
+            if os.path.getsize(dump_file) == 0:
+                current_app.logger.critical("Dump file %s is empty!" % dump_file)
+                return False
+            count += 1
+        except IOError as e:
+            return False
+
+    if expected_count == count:
+        return True
+
+    current_app.logger.critical("Expected %d dump files, found %d. Aborting." % (expected_count, count))
+    return False
 
 
 def transmogrify_dump_file_to_spark_import_format(in_file, out_file, threads):
