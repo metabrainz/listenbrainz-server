@@ -54,13 +54,19 @@ else
     SUB_DIR="incremental"
 fi
 
+TMPDIR=$(mktemp --tmpdir="$TEMP_DIR" -d -t "$SUB_DIR.XXXXXXXXXX")
+function finish {
+  rm -rf "$TMPDIR"
+}
+trap finish EXIT
+
 if [ "$DUMP_TYPE" == "full" ]; then
-    if ! /usr/local/bin/python manage.py dump create_full -l $TEMP_DIR/$SUB_DIR -t $DUMP_THREADS --last-dump-id; then
+    if ! /usr/local/bin/python manage.py dump create_full -l "$TMPDIR" -t $DUMP_THREADS --last-dump-id; then
 	echo "Full dump failed, exiting!"
 	exit 1
     fi
 elif [ "$DUMP_TYPE" == "incremental" ]; then
-    if ! /usr/local/bin/python manage.py dump create_incremental -l $TEMP_DIR/$SUB_DIR -t $DUMP_THREADS; then
+    if ! /usr/local/bin/python manage.py dump create_incremental -l "$TMPDIR" -t $DUMP_THREADS; then
 	echo "Incremental dump failed, exiting!"
 	exit 1
     fi
@@ -69,12 +75,24 @@ else
     exit 1
 fi
 
+DUMP_ID_FILE=$(find "$TMPDIR" -type f -name 'DUMP_ID.txt')
+if [ -z "$DUMP_ID_FILE" ]; then
+    echo "DUMP_ID.txt not found, exiting."
+    exit 1
+fi
 
-DUMP_NAME=`ls -t $TEMP_DIR/$SUB_DIR | head -1`
-DUMP_TIMESTAMP=`echo $DUMP_NAME | awk -F '-' '{ printf "%s-%s", $4, $5 }'`
-DUMP_ID=`echo $DUMP_NAME | awk -F '-' '{ printf "%s", $3}'`
+HAS_EMPTY_DIRS_OR_FILES=$(find "$TMPDIR" -empty)
+if [ -z "$HAS_EMPTY_DIRS_OR_FILES" ]; then
+    echo "Empty files or dirs, exiting."
+    echo "$HAS_EMPTY_DIRS_OR_FILES"
+    exit 1
+fi
+
+read -r DUMP_TIMESTAMP DUMP_ID DUMP_TYPE < "$DUMP_ID_FILE"
+
 echo "Dump created with timestamp $DUMP_TIMESTAMP"
-DUMP_DIR="$TEMP_DIR/$SUB_DIR/$DUMP_NAME"
+DUMP_DIR=$(dirname "$DUMP_ID_FILE")
+DUMP_NAME=$(basename "$DUMP_DIR")
 
 # Backup dumps to the backup volume
 # Create backup directories owned by user "listenbrainz"
