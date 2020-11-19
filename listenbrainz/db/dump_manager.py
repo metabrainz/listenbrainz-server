@@ -126,7 +126,7 @@ def create_full(location, threads, dump_id, last_dump_id):
 
         # Write the DUMP_ID file so that the FTP sync scripts can be more robust
         with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
-            f.write("%s %s full" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
+            f.write("%s %s full\n" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
 
         sys.exit(0)
 
