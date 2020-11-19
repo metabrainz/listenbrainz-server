@@ -182,7 +182,7 @@ def create_incremental(location, threads, dump_id):
         # Write the DUMP_ID file so that the FTP sync scripts can be more robust
         print(os.path.join(dump_path, "DUMP_ID.txt"))
         with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
-            f.write("%s %s incremental" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
+            f.write("%s %s incremental\n" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
 
         current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
         sys.exit(0)
