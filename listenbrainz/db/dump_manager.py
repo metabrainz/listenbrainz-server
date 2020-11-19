@@ -113,11 +113,11 @@ def create_full(location, threads, dump_id, last_dump_id):
             current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
             sys.exit(-1)
 
-#        try:
-#            if not sanity_check_dump(dump_path, 8):
-#                return sys.exit(-1)
-#        except IOError as e:
-#            sys.exit(-1)
+        try:
+            if not sanity_check_dumps(dump_path, 12):
+                return sys.exit(-1)
+        except IOError as e:
+            sys.exit(-1)
 
         # if in production, send an email to interested people for observability
         send_dump_creation_notification(dump_name, 'fullexport')
@@ -125,8 +125,8 @@ def create_full(location, threads, dump_id, last_dump_id):
         current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
 
         # Write the DUMP_ID file so that the FTP sync scripts can be more robust
-#        with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
-#            f.write("%s %s full" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
+        with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
+            f.write("%s %s full" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
 
         sys.exit(0)
 
@@ -170,18 +170,19 @@ def create_incremental(location, threads, dump_id):
             current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
             sys.exit(-1)
 
-#        try:
-#            if not sanity_check_dump(dump_path, 8):
-#                return sys.exit(-1)
-#        except IOError as e:
-#            sys.exit(-1)
+        try:
+            if not sanity_check_dumps(dump_path, 6):
+                return sys.exit(-1)
+        except IOError as e:
+            sys.exit(-1)
 
         # if in production, send an email to interested people for observability
         send_dump_creation_notification(dump_name, 'incremental')
 
         # Write the DUMP_ID file so that the FTP sync scripts can be more robust
-#        with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
-#            f.write("%s %s incremental" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
+        print(os.path.join(dump_path, "DUMP_ID.txt"))
+        with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
+            f.write("%s %s incremental" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
 
         current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
         sys.exit(0)
@@ -208,7 +209,7 @@ def import_dump(private_archive, public_archive, listen_archive, threads):
             threads (int): the number of threads to use during decompression, defaults to 1
     """
     if not private_archive and not public_archive and not listen_archive:
-        current_app.logger.critical('You need to enter a path to the archive(s) to import!')
+        print('You need to enter a path to the archive(s) to import!')
         sys.exit(1)
 
     app = create_app()
@@ -255,7 +256,7 @@ def _cleanup_dumps(location):
     dump_files = [x for x in os.listdir(location) if full_dump_re.match(x)]
     full_dumps = [x for x in sorted(dump_files, key=get_dump_id, reverse=True)]
     if not full_dumps:
-        current_app.logger.critical('No full dumps present in specified directory!')
+        print('No full dumps present in specified directory!')
     else:
         remove_dumps(location, full_dumps, NUMBER_OF_FULL_DUMPS_TO_KEEP)
 
@@ -263,7 +264,7 @@ def _cleanup_dumps(location):
     dump_files = [x for x in os.listdir(location) if incremental_dump_re.match(x)]
     incremental_dumps = [x for x in sorted(dump_files, key=get_dump_id, reverse=True)]
     if not incremental_dumps:
-        current_app.logger.critical('No full dumps present in specified directory!')
+        print('No full dumps present in specified directory!')
     else:
         remove_dumps(location, incremental_dumps, NUMBER_OF_INCREMENTAL_DUMPS_TO_KEEP)
 
@@ -319,17 +320,20 @@ def sanity_check_dumps(location, expected_count):
     for file in os.listdir(location):
         try:
             dump_file = os.path.join(location, file)
+            print(dump_file)
             if os.path.getsize(dump_file) == 0:
-                current_app.logger.critical("Dump file %s is empty!" % dump_file)
+                print("Dump file %s is empty!" % dump_file)
                 return False
             count += 1
         except IOError as e:
+            print("caught ioerror")
             return False
 
     if expected_count == count:
+        print("count ok")
         return True
 
-    current_app.logger.critical("Expected %d dump files, found %d. Aborting." % (expected_count, count))
+    print("Expected %d dump files, found %d. Aborting." % (expected_count, count))
     return False
 
 
@@ -352,7 +356,7 @@ def transmogrify_dump_file_to_spark_import_format(in_file, out_file, threads):
                         if member.name.endswith(".listens"):
                             filename = member.name.replace(".listens", ".json")
                             filename = filename.replace("-full", "-spark-full")
-                            current_app.logger.info("mogrify: ", filename)
+                            print("mogrify: ", filename)
                             tmp_file = tempfile.mkstemp()
                             with os.fdopen(tmp_file[0], "w") as out_f:
                                 with tarf.extractfile(member) as f:
