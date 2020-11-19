@@ -60,7 +60,7 @@
   border-radius: 2px;
   box-shadow: inset 0px 11px 8px -10px #ccc;
 
-  > div {
+  > * {
     display: flex;
     align-items: center;
     padding: 5px;
@@ -68,14 +68,11 @@
 
     > #follow-button {
       margin-left: auto;
-
     }
-  }
-  hr {
-    border: 1px solid #ddd;
-    border-radius: 2px;
-    width: 80%;
-    margin: 0px auto;
-    text-align: center;
+
+    &:not(:first-child) {
+      border-top: 2px solid #ddd;
+      padding-top: 12px;
+    }
   }
 }
