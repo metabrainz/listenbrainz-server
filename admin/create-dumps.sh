@@ -82,7 +82,7 @@ if [ -z "$DUMP_ID_FILE" ]; then
 fi
 
 HAS_EMPTY_DIRS_OR_FILES=$(find "$TMPDIR" -empty)
-if [ -z "$HAS_EMPTY_DIRS_OR_FILES" ]; then
+if [ ! -z "$HAS_EMPTY_DIRS_OR_FILES" ]; then
     echo "Empty files or dirs, exiting."
     echo "$HAS_EMPTY_DIRS_OR_FILES"
     exit 1
