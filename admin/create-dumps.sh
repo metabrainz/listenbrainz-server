@@ -55,9 +55,15 @@ else
 fi
 
 if [ $DUMP_TYPE == "full" ]; then
-    /usr/local/bin/python manage.py dump create_full -l $TEMP_DIR/$SUB_DIR -t $DUMP_THREADS --last-dump-id
+    if ! /usr/local/bin/python manage.py dump create_full -l $TEMP_DIR/$SUB_DIR -t $DUMP_THREADS --last-dump-id; then
+	echo "Full dump failed, exiting!"
+	exit 1
+    fi
 elif [ $DUMP_TYPE == "incremental" ]; then
-    /usr/local/bin/python manage.py dump create_incremental -l $TEMP_DIR/$SUB_DIR -t $DUMP_THREADS
+    if ! /usr/local/bin/python manage.py dump create_incremental -l $TEMP_DIR/$SUB_DIR -t $DUMP_THREADS; then
+	echo "Incremental dump failed, exiting!"
+	exit 1
+    fi
 else
     echo "Not sure what type of dump to create, exiting!"
     exit 1
