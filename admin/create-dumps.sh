@@ -23,13 +23,13 @@ function add_rsync_include_rule {
     RULE_FILE=$1/.rsync-filter
     FILE_NAME=$2
     MAIN_FILE_RULE="include $FILE_NAME"
-    echo $MAIN_FILE_RULE >> $RULE_FILE
+    echo "$MAIN_FILE_RULE" >> "$RULE_FILE"
 
     MD5_FILE_RULE="include $FILE_NAME.md5"
-    echo $MD5_FILE_RULE >> $RULE_FILE
+    echo "$MD5_FILE_RULE" >> "$RULE_FILE"
 
     SHA256_FILE_RULE="include $FILE_NAME.sha256"
-    echo $SHA256_FILE_RULE >> $RULE_FILE
+    echo "$SHA256_FILE_RULE" >> "$RULE_FILE"
 }
 
 
@@ -41,25 +41,25 @@ trap 'echo "Disk space when create-dumps ends:" ; df -m' 0
 
 
 LB_SERVER_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)
-cd "$LB_SERVER_ROOT"
+cd "$LB_SERVER_ROOT" || exit 1
 
-source admin/config.sh
-source admin/functions.sh
+source "admin/config.sh"
+source "admin/functions.sh"
 
-DUMP_TYPE=${1:-full}
+DUMP_TYPE="${1:-full}"
 
-if [ $DUMP_TYPE == "full" ]; then
+if [ "$DUMP_TYPE" == "full" ]; then
     SUB_DIR="fullexport"
 else
     SUB_DIR="incremental"
 fi
 
-if [ $DUMP_TYPE == "full" ]; then
+if [ "$DUMP_TYPE" == "full" ]; then
     if ! /usr/local/bin/python manage.py dump create_full -l $TEMP_DIR/$SUB_DIR -t $DUMP_THREADS --last-dump-id; then
 	echo "Full dump failed, exiting!"
 	exit 1
     fi
-elif [ $DUMP_TYPE == "incremental" ]; then
+elif [ "$DUMP_TYPE" == "incremental" ]; then
     if ! /usr/local/bin/python manage.py dump create_incremental -l $TEMP_DIR/$SUB_DIR -t $DUMP_THREADS; then
 	echo "Incremental dump failed, exiting!"
 	exit 1
@@ -74,7 +74,7 @@ DUMP_NAME=`ls -t $TEMP_DIR/$SUB_DIR | head -1`
 DUMP_TIMESTAMP=`echo $DUMP_NAME | awk -F '-' '{ printf "%s-%s", $4, $5 }'`
 DUMP_ID=`echo $DUMP_NAME | awk -F '-' '{ printf "%s", $3}'`
 echo "Dump created with timestamp $DUMP_TIMESTAMP"
-DUMP_DIR="$TEMP_DIR"/$SUB_DIR/"$DUMP_NAME"
+DUMP_DIR="$TEMP_DIR/$SUB_DIR/$DUMP_NAME"
 
 # Backup dumps to the backup volume
 # Create backup directories owned by user "listenbrainz"
@@ -83,19 +83,19 @@ mkdir -m "$BACKUP_DIR_MODE" -p \
          "$BACKUP_DIR"/$SUB_DIR/ \
          "$BACKUP_DIR"/$SUB_DIR/"$DUMP_NAME"
 chown "$BACKUP_USER:$BACKUP_GROUP" \
-      "$BACKUP_DIR"/$SUB_DIR/ \
-      "$BACKUP_DIR"/$SUB_DIR/"$DUMP_NAME"
+      "$BACKUP_DIR/$SUB_DIR/" \
+      "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME"
 echo "Backup directories created!"
 
 # Copy the files into the backup directory
 echo "Begin copying dumps to backup directory..."
-retry cp -a "$DUMP_DIR"/* "$BACKUP_DIR"/$SUB_DIR/"$DUMP_NAME"/
-chmod "$BACKUP_FILE_MODE" "$BACKUP_DIR"/"$SUB_DIR"/"$DUMP_NAME"/*
+retry cp -a "$DUMP_DIR"/* "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME"/
+chmod "$BACKUP_FILE_MODE" "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME"/*
 echo "Dumps copied to backup directory!"
 
 
 # rsync the files into the FTP server
-FTP_CURRENT_DUMP_DIR="$FTP_DIR"/$SUB_DIR/"$DUMP_NAME"
+FTP_CURRENT_DUMP_DIR="$FTP_DIR/$SUB_DIR/$DUMP_NAME"
 
 # create the dir in which to copy the dumps before
 # changing their permissions to the FTP_FILE_MODE
@@ -105,7 +105,7 @@ mkdir -m "$FTP_DIR_MODE" -p "$FTP_CURRENT_DUMP_DIR"
 # make sure these dirs are owned by the correct user
 chown "$FTP_USER:$FTP_GROUP" \
       "$FTP_DIR" \
-      "$FTP_DIR"/$SUB_DIR \
+      "$FTP_DIR/$SUB_DIR" \
       "$FTP_CURRENT_DUMP_DIR"
 
 # make sure all dump files are owned by the correct user
@@ -116,26 +116,26 @@ chmod "$FTP_FILE_MODE" "$FTP_CURRENT_DUMP_DIR"/*
 
 # create an explicit rsync filter for the new private dump in the
 # ftp folder
-touch "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
+touch "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
 
-add_rsync_include_rule $FTP_CURRENT_DUMP_DIR "listenbrainz-public-dump-$DUMP_TIMESTAMP.tar.xz"
+add_rsync_include_rule "$FTP_CURRENT_DUMP_DIR" "listenbrainz-public-dump-$DUMP_TIMESTAMP.tar.xz"
 add_rsync_include_rule \
-    $FTP_CURRENT_DUMP_DIR \
+    "$FTP_CURRENT_DUMP_DIR" \
     "listenbrainz-listens-dump-$DUMP_ID-$DUMP_TIMESTAMP-$DUMP_TYPE.tar.xz"
 add_rsync_include_rule \
-    $FTP_CURRENT_DUMP_DIR \
+    "$FTP_CURRENT_DUMP_DIR" \
     "listenbrainz-listens-dump-$DUMP_ID-$DUMP_TIMESTAMP-spark-$DUMP_TYPE.tar.xz"
 
 EXCLUDE_RULE="exclude *"
-echo "$EXCLUDE_RULE" >> "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
-cat $FTP_CURRENT_DUMP_DIR/.rsync-filter
+echo "$EXCLUDE_RULE" >> "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
+cat "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
 
 
-/usr/local/bin/python manage.py dump delete_old_dumps "$FTP_DIR"/$SUB_DIR
-/usr/local/bin/python manage.py dump delete_old_dumps $BACKUP_DIR/$SUB_DIR
-/usr/local/bin/python manage.py dump delete_old_dumps  $TEMP_DIR/$SUB_DIR
+/usr/local/bin/python manage.py dump delete_old_dumps "$FTP_DIR/$SUB_DIR"
+/usr/local/bin/python manage.py dump delete_old_dumps "$BACKUP_DIR/$SUB_DIR"
+/usr/local/bin/python manage.py dump delete_old_dumps "$TEMP_DIR/$SUB_DIR"
 
 # rsync to ftp folder taking care of the rules
-./admin/rsync-dump-files.sh $DUMP_TYPE
+./admin/rsync-dump-files.sh "$DUMP_TYPE"
 
 echo "Dumps created, backed up and uploaded to the FTP server!"
