@@ -4,35 +4,43 @@
 #follow-button {
   margin-left: 10px;
   font-family: "Sintony";
+  color: @white;
+  background: @purple;
+  border: 2px solid @purple;
+  font-weight: bold;
+  padding: 5px 8px;
+  border-radius: 4px;
+  transition: color 0.42s, background 0.42s;
+  text-align: center;
+
 
   &.icon-only {
     > .text {
-      margin-left: 4px;
       width: 0px;
+      margin-left: 0px;
       display: inherit;
       vertical-align: inherit;
-      transition: width 0.42s;
+      transition: width 0.42s, margin-left 0.42s;
       overflow-x: hidden;
     }
-    &:hover > .text,
-    &:focus > .text {
-      width: 4.5em;
+
+    &:hover, &:focus {
+      background: white;
+      color: #353070;
+
+      > .text {
+        min-width: 4.75em;
+        margin-left: 5px;
+      }
     }
   }
 
   &.block {
-    color: @purple;
-    background: @white;
-    border: 2px solid @purple;
-    font-weight: bold;
-    border-radius: 6px;
-    padding: 5px;
-    text-align: center;
     width: 85px;
 
-    &.btn-info {
-      color: @white;
-      background: @purple;
+    &.following {
+      background: white;
+      color: #353070;
     }
 
     svg {
@@ -40,4 +48,3 @@
     }
   }
 }
-  
