@@ -111,13 +111,14 @@ def create_full(location, threads, dump_id, last_dump_id):
             write_hashes(dump_path)
         except IOError as e:
             current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
-            return
+            sys.exit(-1)
 
 
         # if in production, send an email to interested people for observability
         send_dump_creation_notification(dump_name, 'fullexport')
 
         current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
+        sys.exit(0)
 
 
 @cli.command(name="create_incremental")
@@ -157,12 +158,13 @@ def create_incremental(location, threads, dump_id):
             write_hashes(dump_path)
         except IOError as e:
             current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
-            return
+            sys.exit(-1)
 
         # if in production, send an email to interested people for observability
         send_dump_creation_notification(dump_name, 'incremental')
 
         current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
+        sys.exit(0)
 
 
 @cli.command(name="import_dump")
@@ -206,11 +208,14 @@ def import_dump(private_archive, public_archive, listen_archive, threads):
             current_app.logger.critical('Unexpected error while importing data: %s', str(e), exc_info=True)
             raise
 
+    sys.exit(0)
+
 
 @cli.command(name="delete_old_dumps")
 @click.argument('location', type=str)
 def delete_old_dumps(location):
     _cleanup_dumps(location)
+    sys.exit(0)
 
 
 def get_dump_id(dump_name):
