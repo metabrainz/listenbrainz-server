@@ -96,14 +96,15 @@ def create_full(location, threads, dump_id, last_dump_id):
                 sys.exit(-1)
             end_time = dump_entry['created']
 
-        dump_name = 'listenbrainz-dump-{dump_id}-{time}-full'.format(dump_id=dump_id, time=end_time.strftime('%Y%m%d-%H%M%S'))
+        ts = end_time.strftime('%Y%m%d-%H%M%S')
+        dump_name = 'listenbrainz-dump-{dump_id}-{time}-full'.format(dump_id=dump_id, time=ts)
         dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
         db_dump.dump_postgres_db(dump_path, end_time, threads)
 
         listens_dump_file = ls.dump_listens(dump_path, dump_id=dump_id, end_time=end_time, threads=threads)
         spark_dump_file = 'listenbrainz-listens-dump-{dump_id}-{time}-spark-full.tar.xz'.format(dump_id=dump_id,
-                           time=end_time.strftime('%Y%m%d-%H%M%S'))
+                           time=ts)
         spark_dump_path = os.path.join(location, dump_path, spark_dump_file)
         transmogrify_dump_file_to_spark_import_format(listens_dump_file, spark_dump_path, threads)
 
@@ -126,7 +127,7 @@ def create_full(location, threads, dump_id, last_dump_id):
 
         # Write the DUMP_ID file so that the FTP sync scripts can be more robust
         with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
-            f.write("%s %s full\n" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
+            f.write("%s %s full\n" % (ts, dump_id))
 
         sys.exit(0)
 
