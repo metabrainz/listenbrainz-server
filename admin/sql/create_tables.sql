@@ -175,6 +175,14 @@ CREATE TABLE user_relationship (
     created             TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE cover_art (
+    id                      SERIAL, -- PK
+    release_mbid            UUID NOT NULL,
+    image_url               VARCHAR NOT NULL,
+    source                  VARCHAR NOT NULL,
+    created                 TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listenbrainz;
 
 COMMIT;
