@@ -180,7 +180,6 @@ def create_incremental(location, threads, dump_id):
         send_dump_creation_notification(dump_name, 'incremental')
 
         # Write the DUMP_ID file so that the FTP sync scripts can be more robust
-        print(os.path.join(dump_path, "DUMP_ID.txt"))
         with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
             f.write("%s %s incremental\n" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
 
@@ -301,13 +300,13 @@ def write_hashes(location):
             with open(os.path.join(location, '{}.sha256'.format(file)), 'w') as f:
                 sha256sum = subprocess.check_output(['sha256sum', os.path.join(location, file)]).decode('utf-8').split()[0]
                 f.write(sha256sum)
-        except IOError as e:
+        except OSError as e:
             current_app.logger.error('IOError while trying to write hash files for file %s: %s', file, str(e), exc_info=True)
             raise
 
 
 def sanity_check_dumps(location, expected_count):
-    """ Sanity check the generated dummps to ensure that none are empty
+    """ Sanity check the generated dumps to ensure that none are empty
 
     Args:
         location (str): the path in which the dump archive files are present
@@ -320,17 +319,14 @@ def sanity_check_dumps(location, expected_count):
     for file in os.listdir(location):
         try:
             dump_file = os.path.join(location, file)
-            print(dump_file)
             if os.path.getsize(dump_file) == 0:
                 print("Dump file %s is empty!" % dump_file)
                 return False
             count += 1
-        except IOError as e:
-            print("caught ioerror")
+        except OSError as e:
             return False
 
     if expected_count == count:
-        print("count ok")
         return True
 
     print("Expected %d dump files, found %d. Aborting." % (expected_count, count))
