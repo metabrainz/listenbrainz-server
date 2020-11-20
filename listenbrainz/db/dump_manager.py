@@ -117,7 +117,7 @@ def create_full(location, threads, dump_id, last_dump_id):
         try:
             if not sanity_check_dumps(dump_path, 12):
                 return sys.exit(-1)
-        except IOError as e:
+        except OSError as e:
             sys.exit(-1)
 
         # if in production, send an email to interested people for observability
@@ -174,7 +174,7 @@ def create_incremental(location, threads, dump_id):
         try:
             if not sanity_check_dumps(dump_path, 6):
                 return sys.exit(-1)
-        except IOError as e:
+        except OSError as e:
             sys.exit(-1)
 
         # if in production, send an email to interested people for observability
@@ -308,6 +308,7 @@ def write_hashes(location):
 
 def sanity_check_dumps(location, expected_count):
     """ Sanity check the generated dumps to ensure that none are empty
+        and make sure that the right number of dump files exist.
 
     Args:
         location (str): the path in which the dump archive files are present
