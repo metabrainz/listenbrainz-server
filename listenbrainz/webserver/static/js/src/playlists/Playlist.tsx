@@ -11,7 +11,7 @@ import * as _ from "lodash";
 import * as io from "socket.io-client";
 import BrainzPlayer from "../BrainzPlayer";
 import APIService from "../APIService";
-import ListenCard from "../listens/ListenCard";
+import PlaylistItemCard from "./PlaylistItemCard";
 
 export interface PlaylistPageProps {
   apiUrl: string;
@@ -88,7 +88,9 @@ export default class PlaylistPage extends React.Component<
   };
 
   handlePlaylistChange = (data: string): void => {
-    const playListChangeInstruction = JSON.parse(data);
+    const newPlaylist = JSON.parse(data);
+    // rerun fetching metadata for all tracks?
+    // or find new tracks and fetch metadata for them, add them to local Map
     this.setState((prevState) => {
       const { listens } = prevState;
       // Respond to each atomic change received here.
@@ -204,7 +206,7 @@ export default class PlaylistPage extends React.Component<
     return recordingMsid ? _.get(recordingFeedbackMap, recordingMsid, 0) : 0;
   };
 
-  removeListenFromListenList = (listen: Listen) => {
+  removeTrackFromPlaylist = (listen: Listen) => {
     const { listens } = this.state;
     const index = listens.indexOf(listen);
 
@@ -259,30 +261,23 @@ export default class PlaylistPage extends React.Component<
                     //   }
                     //   return 0;
                     // })
-                    .map((listen) => {
+                    .map((listen, index) => {
                       return (
-                        <ListenCard
-                          key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
+                        <PlaylistItemCard
+                          key={`${listen.track_metadata?.track_name}`}
                           currentUser={currentUser}
                           isCurrentUser={currentUser?.name === user?.name}
                           apiUrl={apiUrl}
                           listen={listen}
-                          mode={mode}
+                          // metadata={trackMetadataMap[listen.mbid]}
                           currentFeedback={this.getFeedbackForRecordingMsid(
                             listen.track_metadata?.additional_info
                               ?.recording_msid
                           )}
                           playListen={this.playListen}
-                          removeListenFromListenList={
-                            this.removeListenFromListenList
-                          }
+                          removeTrackFromPlaylist={this.removeTrackFromPlaylist}
                           updateFeedback={this.updateFeedback}
                           newAlert={this.newAlert}
-                          className={`${
-                            this.isCurrentListen(listen)
-                              ? " current-listen"
-                              : ""
-                          }${listen.playing_now ? " playing-now" : ""}`}
                         />
                       );
                     })}
