@@ -14,11 +14,18 @@ class PlaylistRecording(BaseModel):
     # The position of this item in the playlist
     position: int
     # The item
-    recording_mbid: uuid.UUID
+    mbid: uuid.UUID
     # Who added this item to the playlist
     added_by: int
     # When the item was added
     created: datetime.datetime
+
+
+class WritablePlaylistRecording(PlaylistRecording):
+    id: int = None
+    playlist_id: int = None
+    position: int = None
+    created: datetime.datetime = None
 
 
 class Playlist(BaseModel):
