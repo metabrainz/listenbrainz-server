@@ -11,7 +11,7 @@ CREATE TABLE playlist.playlist (
     created timestamp with time zone default now() not null,
     copied_from int,
     created_for_id int,
-    algorithm_meta jsonb
+    algorithm_metadata jsonb
 );
 
 CREATE TABLE playlist.playlist_recording (
