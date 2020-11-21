@@ -315,3 +315,17 @@ declare type FeedbackResponse = {
 declare type RecordingFeedbackMap = {
   [recordingMsid: string]: ListenFeedBack;
 };
+
+declare type Playlist = {
+  id: string;
+  title: string;
+  description?: string;
+  itemCount: number; // trackCount ?
+  tracks?: Listen[];
+  creator: ListenBrainzUser;
+  created_at: number;
+  last_modified: number;
+  created_for?: string;
+  copied_from?: string;
+  collaborators?: ListenBrainzUser[];
+};

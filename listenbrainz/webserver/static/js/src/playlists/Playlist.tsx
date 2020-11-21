@@ -13,25 +13,27 @@ import BrainzPlayer from "../BrainzPlayer";
 import APIService from "../APIService";
 import ListenCard from "../listens/ListenCard";
 
-export interface PlaylistProps {
+export interface PlaylistPageProps {
   apiUrl: string;
   listens?: Array<Listen>;
+  playlist: Playlist;
   spotify: SpotifyUser;
   user: ListenBrainzUser;
   webSocketsServerUrl: string;
   currentUser?: ListenBrainzUser;
 }
 
-export interface PlaylistState {
+export interface PlaylistPageState {
   alerts: Array<Alert>;
   currentListen?: Listen;
   listens: Array<Listen>;
+  playlist: Playlist;
   recordingFeedbackMap: RecordingFeedbackMap;
 }
 
-export default class Playlist extends React.Component<
-  PlaylistProps,
-  PlaylistState
+export default class PlaylistPage extends React.Component<
+  PlaylistPageProps,
+  PlaylistPageState
 > {
   private APIService: APIService;
 
@@ -40,13 +42,12 @@ export default class Playlist extends React.Component<
 
   private socket!: SocketIOClient.Socket;
 
-  private expectedRecommendationsPerPage = 25;
-
-  constructor(props: PlaylistProps) {
+  constructor(props: PlaylistPageProps) {
     super(props);
     this.state = {
       alerts: [],
       listens: props.listens || [],
+      playlist: props.playlist || [],
       recordingFeedbackMap: {},
     };
 
@@ -212,7 +213,7 @@ export default class Playlist extends React.Component<
   };
 
   render() {
-    const { alerts, currentListen, listens } = this.state;
+    const { alerts, currentListen, listens, playlist } = this.state;
     const { spotify, user, apiUrl, currentUser } = this.props;
 
     return (
@@ -227,7 +228,7 @@ export default class Playlist extends React.Component<
         <div className="row">
           <div className="col-md-8">
             <h3>
-              Insert playlist name
+              {playlist.title}
               <small>Playlist</small>
             </h3>
 
@@ -324,6 +325,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const {
     api_url,
     listens,
+    playlist,
     spotify,
     user,
     web_sockets_server_url,
@@ -331,9 +333,10 @@ document.addEventListener("DOMContentLoaded", () => {
   } = reactProps;
 
   ReactDOM.render(
-    <Playlist
+    <PlaylistPage
       apiUrl={api_url}
       listens={listens}
+      playlist={playlist}
       spotify={spotify}
       user={user}
       webSocketsServerUrl={web_sockets_server_url}

@@ -11,11 +11,11 @@ import ErrorBoundary from "../ErrorBoundary";
 export type UserPlaylistsProps = {
   user: ListenBrainzUser;
   apiUrl: string;
-  playlists?: [];
+  playlists?: Playlist[];
 };
 
 export type UserPlaylistsState = {
-  playlists: [];
+  playlists: Playlist[];
 };
 
 export default class UserPlaylists extends React.Component<
@@ -63,8 +63,18 @@ export default class UserPlaylists extends React.Component<
           id="playlists-container"
           style={{ display: "flex", flexWrap: "wrap" }}
         >
-          {playlists.map((playlist: any) => {
-            return <div key={playlist.id}>playlist.name</div>;
+          {playlists.map((playlist: Playlist) => {
+            return (
+              <div key={playlist.id}>
+                {playlist.title}
+                <br />
+                {playlist.description}
+                <br />
+                Last Modified: {playlist.last_modified}
+                <br />
+                Created at:{playlist.created_at}
+              </div>
+            );
           })}
         </div>
       </div>
