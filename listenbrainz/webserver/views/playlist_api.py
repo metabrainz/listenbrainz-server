@@ -21,10 +21,11 @@ playlist_api_bp = Blueprint('playlist_api_v1', __name__)
 PLAYLIST_TRACK_URI_PREFIX = "https://musicbrainz.org/recording/"
 
 def _parse_boolean_arg(name, default=None):
-    value = request.args.get(name).lower()
+    value = request.args.get(name)
     if not value:
         return default
 
+    value = value.lower()
     if value not in ["true", "false"]:
         raise APIBadRequest("Invalid %s argument: %s. Must be 'true' or 'false'" % (name, value))
 
@@ -112,9 +113,7 @@ def create_playlist():
     data = request.json
     validate_playlist(data)
 
-    playlist = WritablePlaylist()
-    playlist.name = data['playlist']['title']
-    playlist.creator = user["id"]
+    playlist = WritablePlaylist(name=data['playlist']['title'], creator_id=user["id"])
     playlist.private = private
 
     for track in jspf['track']:
@@ -150,10 +149,6 @@ def get_playlist(playlist_mbid):
         uid = UUID(playlist_mbid)
     except ValueError:
         log_raise_400("Provided playlist ID is invalid.")
-
-    user = db_user.get_by_mb_id(user_name)
-    if user is None:
-        raise APINotFound("Cannot find user: %s" % user_name)
 
     playlist = db_playlist.get_by_id(playlist_mbid)
     if playlist is None or \
