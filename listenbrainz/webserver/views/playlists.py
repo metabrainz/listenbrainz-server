@@ -10,7 +10,7 @@ playlist_bp = Blueprint("playlist", __name__)
 @playlist_bp.route("/", methods=["GET"])
 @login_required
 
-def load():
+def load_playlist():
     """Load a single playlist by id
     """
 

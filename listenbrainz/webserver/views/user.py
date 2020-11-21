@@ -195,7 +195,7 @@ def reports(user_name: str):
     )
 
 @user_bp.route("/<user_name>/playlists")
-def reports(user_name: str):
+def user_playlists(user_name: str):
     """ Show user playlists """
     user = _get_user(user_name)
 
