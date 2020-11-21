@@ -1,0 +1,39 @@
+#playlists-container {
+	.playlist, .new-playlist {
+		margin: 0.5em;
+		width: 15em;
+		min-height: 15em;
+	}
+	.playlist {
+		position: relative;
+		overflow: hidden;
+		
+		.info {
+			padding: 1em;
+			position: absolute;
+			transition: bottom 0.2s linear;
+			bottom: -7em;
+			background: #add8e685;
+		}
+		&:hover .info {
+			bottom:0px;
+		}
+	}
+	.new-playlist {
+		cursor: pointer;
+		// using !important to overwrite styles from Card component
+		// (not classes but DOM element.style
+		background: @blue !important;
+		height: initial !important;
+		color: white;
+		text-align: center;
+		> div {
+			display:flex;
+			flex-direction: column;
+			justify-content: space-around;
+			align-items: center;
+			font-size: 2em;
+			padding: 1em;
+		}
+	}
+}

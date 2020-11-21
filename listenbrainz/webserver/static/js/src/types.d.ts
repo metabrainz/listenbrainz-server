@@ -328,4 +328,5 @@ declare type Playlist = {
   created_for?: string;
   copied_from?: string;
   collaborators?: ListenBrainzUser[];
+  identifier?: string;
 };
