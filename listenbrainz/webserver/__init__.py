@@ -247,12 +247,14 @@ def _register_blueprints(app):
     from listenbrainz.webserver.views.recommendations_cf_recording_api import recommendations_cf_recording_api_bp
     from listenbrainz.webserver.views.missing_musicbrainz_data_api import missing_musicbrainz_data_api_bp
     from listenbrainz.webserver.views.recommendations_cf_recording import recommendations_cf_recording_bp
+    from listenbrainz.webserver.views.playlist import playlist_bp
     app.register_blueprint(index_bp)
     app.register_blueprint(login_bp, url_prefix='/login')
     app.register_blueprint(user_bp, url_prefix='/user')
     app.register_blueprint(profile_bp, url_prefix='/profile')
     app.register_blueprint(follow_bp, url_prefix='/follow')
     app.register_blueprint(player_bp, url_prefix='/player')
+    app.register_blueprint(playlist_bp, url_prefix='/playlist')
     app.register_blueprint(api_bp, url_prefix=API_PREFIX)
     app.register_blueprint(follow_api_bp, url_prefix=API_PREFIX+'/follow')
     app.register_blueprint(stats_api_bp, url_prefix=API_PREFIX+'/stats')
