@@ -7,6 +7,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { AlertList } from "react-bs-notifier";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import ErrorBoundary from "../ErrorBoundary";
+import Card from "../components/Card";
 
 export type UserPlaylistsProps = {
   user: ListenBrainzUser;
@@ -49,13 +50,13 @@ export default class UserPlaylists extends React.Component<
 
     return (
       <div>
-        <h3>Playlists</h3>
         <button
           title="Create new playlist"
           type="button"
-          className="btn btn-primary"
+          className="btn btn-info pull-right"
           onClick={this.createPlaylist}
         >
+          <h1>Playlists</h1>
           <FontAwesomeIcon icon={faPlusCircle as IconProp} />
           &nbsp;&nbsp;New playlist
         </button>
@@ -65,17 +66,26 @@ export default class UserPlaylists extends React.Component<
         >
           {playlists.map((playlist: Playlist) => {
             return (
-              <div key={playlist.id}>
-                {playlist.title}
-                <br />
-                {playlist.description}
-                <br />
-                Last Modified: {playlist.last_modified}
-                <br />
-                Created at:{playlist.created_at}
-              </div>
+              <Card className="playlist" key={playlist.id}>
+                <div className="image" />
+                <div className="info">
+                  {playlist.title}
+                  <br />
+                  {playlist.description}
+                  <br />
+                  Last Modified: {playlist.last_modified}
+                  <br />
+                  Created at:{playlist.created_at}
+                </div>
+              </Card>
             );
           })}
+          <Card className="new-playlist" onClick={this.createPlaylist}>
+            <div>
+              <FontAwesomeIcon icon={faPlusCircle as IconProp} size="2x" />
+              <span>Create new playlist</span>
+            </div>
+          </Card>
         </div>
       </div>
     );
