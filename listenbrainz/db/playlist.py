@@ -30,7 +30,7 @@ def get_by_id(playlist_id: str, load_recordings: bool = True) -> Optional[model_
              , created
              , copied_from
              , created_for_id
-             , algorithm_meta
+             , algorithm_metadata
           FROM playlist.playlist
          WHERE mbid = :mbid""")
     with ts.engine.connect() as connection:
@@ -77,7 +77,7 @@ def get_playlists_for_user(user_id: int, include_private: bool = False, include_
              , created
              , copied_from
              , created_for_id
-             , algorithm_meta
+             , algorithm_metadata
           FROM playlist.playlist
          WHERE creator_id = :creator_id
                {where_public}""")
@@ -109,7 +109,7 @@ def get_playlists_created_for_user(user_id: int, include_recordings: bool = Fals
              , created
              , copied_from
              , created_for_id
-             , algorithm_meta
+             , algorithm_metadata
           FROM playlist.playlist
          WHERE created_for_id = :created_for_id""")
     with ts.engine.connect() as connection:
@@ -166,7 +166,7 @@ def insert(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
                                      , public
                                      , copied_from
                                      , created_for_id
-                                     , algorithm_meta)
+                                     , algorithm_metadata)
                                VALUES (:creator_id
                                      , :name
                                      , :description
