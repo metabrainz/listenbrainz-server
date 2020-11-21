@@ -13,9 +13,9 @@ def init(client_id, client_secret, session_key='musicbrainz'):
     global _musicbrainz, _session_key
     _musicbrainz = OAuth2Service(
         name='musicbrainz',
-        base_url="https://test.musicbrainz.org/",
-        authorize_url="https://test.musicbrainz.org/oauth2/authorize",
-        access_token_url="https://test.musicbrainz.org/oauth2/token",
+        base_url="https://musicbrainz.org/",
+        authorize_url="https://musicbrainz.org/oauth2/authorize",
+        access_token_url="https://musicbrainz.org/oauth2/token",
         client_id=client_id,
         client_secret=client_secret,
     )
