@@ -35,7 +35,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
     def test_playlist_create_and_get(self):
         """ Test to ensure creating a playlist works """
 
-        playlist = get_test_data()
+        playlist = self.get_test_data()
 
         response = self.client.post(
             url_for("playlist_api_v1.create_playlist"),
@@ -77,7 +77,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
     def test_playlist_create_and_get_private(self):
         """ Test to ensure creating a private playlist works """
 
-        playlist = get_test_data()
+        playlist = self.get_test_data()
 
         response = self.client.post(
             url_for("playlist_api_v1.create_playlist", private="true"),
@@ -124,7 +124,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
     def test_playlist_unauthorised_submission(self):
         """ Test for checking that unauthorized submissions return 401 """
 
-        playlist = get_test_data()
+        playlist = self.get_test_data()
 
         # request with no authorization header
         response = self.client.post(
