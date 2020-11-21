@@ -16,9 +16,12 @@ class PlaylistRecording(BaseModel):
     # The item
     mbid: uuid.UUID
     # Who added this item to the playlist
-    added_by: int
+    added_by_id: int
     # When the item was added
     created: datetime.datetime
+
+    # Computed
+    added_by: str
 
 
 class WritablePlaylistRecording(PlaylistRecording):
@@ -26,6 +29,7 @@ class WritablePlaylistRecording(PlaylistRecording):
     playlist_id: int = None
     position: int = None
     created: datetime.datetime = None
+    added_by: str = None
 
 
 class Playlist(BaseModel):
