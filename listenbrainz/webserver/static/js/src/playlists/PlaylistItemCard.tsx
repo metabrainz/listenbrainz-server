@@ -2,13 +2,7 @@ import * as timeago from "time-ago";
 
 import * as React from "react";
 import { get as _get } from "lodash";
-import MediaQuery from "react-responsive";
-import {
-  faMusic,
-  faHeart,
-  faHeartBroken,
-  faEllipsisV,
-} from "@fortawesome/free-solid-svg-icons";
+import { faEllipsisV, faGripLines } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -19,7 +13,7 @@ import ListenControl from "../listens/ListenControl";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
-export type ListenCardProps = {
+export type PlaylistItemCardProps = {
   apiUrl: string;
   listen: Listen;
   currentFeedback: ListenFeedBack;
@@ -35,19 +29,19 @@ export type ListenCardProps = {
   ) => void;
 };
 
-type ListenCardState = {
+type PlaylistItemCardState = {
   isDeleted: Boolean;
   feedback: ListenFeedBack;
 };
 
-export default class ListenCard extends React.Component<
-  ListenCardProps,
-  ListenCardState
+export default class PlaylistItemCard extends React.Component<
+  PlaylistItemCardProps,
+  PlaylistItemCardState
 > {
   APIService: APIService;
   playListen: (listen: Listen) => void;
 
-  constructor(props: ListenCardProps) {
+  constructor(props: PlaylistItemCardProps) {
     super(props);
 
     this.state = {
@@ -62,7 +56,7 @@ export default class ListenCard extends React.Component<
     this.playListen = props.playListen.bind(this, props.listen);
   }
 
-  componentDidUpdate(prevProps: ListenCardProps) {
+  componentDidUpdate(prevProps: PlaylistItemCardProps) {
     const { currentFeedback } = this.props;
     if (currentFeedback !== prevProps.currentFeedback) {
       this.setState({ feedback: currentFeedback });
@@ -188,78 +182,42 @@ export default class ListenCard extends React.Component<
         onDoubleClick={this.playListen}
         className={`listen-card row ${isDeleted ? " deleted" : ""}`}
       >
-        <div className="col-xs-9">
-          <MediaQuery minWidth={768}>
-            <div className="col-xs-9">
-              <div className="track-details">
-                <p title={listen.track_metadata.track_name}>
-                  {getTrackLink(listen)}
-                </p>
-                <p>
-                  <small
-                    className="text-muted"
-                    title={listen.track_metadata.artist_name}
-                  >
-                    {getArtistLink(listen)}
-                  </small>
-                </p>
-              </div>
-            </div>
-            <div className="col-xs-3">{this.handleListenedAt()}</div>
-          </MediaQuery>
-          <MediaQuery maxWidth={767}>
-            <div className="col-xs-12">
-              <div className="track-details">
-                <p title={listen.track_metadata.track_name}>
-                  {getTrackLink(listen)}
-                </p>
-                <p>
-                  <small
-                    className="text-muted"
-                    title={listen.track_metadata.artist_name}
-                  >
-                    {this.handleListenedAtMobileView()}
-                    {getArtistLink(listen)}
-                  </small>
-                </p>
-              </div>
-            </div>
-          </MediaQuery>
-        </div>
-        <div className="col-xs-3 text-center">
-          <div className="listen-controls">
-            <ListenControl
-              icon={faHeart}
-              title="Love"
-              action={() => this.submitFeedback(feedback === 1 ? 0 : 1)}
-              className={`${feedback === 1 ? " loved" : ""}`}
-            />
-            <ListenControl
-              icon={faHeartBroken}
-              title="Hate"
-              action={() => this.submitFeedback(feedback === -1 ? 0 : -1)}
-              className={`${feedback === -1 ? " hated" : ""}`}
-            />
-            <FontAwesomeIcon
-              icon={faEllipsisV as IconProp}
-              title="Delete"
-              className="dropdown-toggle"
-              id="listenControlsDropdown"
-              data-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="true"
-            />
-            <ul
-              className="dropdown-menu dropdown-menu-right"
-              aria-labelledby="listenControlsDropdown"
-            >
-              <ListenControl
-                title="Remove from playlist"
-                action={this.removeTrack}
-              />
-            </ul>
+        <FontAwesomeIcon
+          icon={faGripLines as IconProp}
+          title="Drag to reorder"
+        />
+        <div className="track-details">
+          <div title={listen.track_metadata.track_name}>
+            {getTrackLink(listen)}
           </div>
+          <small
+            className="text-muted"
+            title={listen.track_metadata.artist_name}
+          >
+            {getArtistLink(listen)}
+          </small>
         </div>
+        <div className="feedback">Feedback component</div>
+        <div>{this.handleListenedAt()}</div>
+
+        <FontAwesomeIcon
+          icon={faEllipsisV as IconProp}
+          title="Delete"
+          className="dropdown-toggle"
+          id="listenControlsDropdown"
+          data-toggle="dropdown"
+          aria-haspopup="true"
+          aria-expanded="true"
+        />
+        <ul
+          className="dropdown-menu dropdown-menu-right"
+          aria-labelledby="listenControlsDropdown"
+        >
+          <ListenControl
+            title="Remove from playlist"
+            action={this.removeTrack}
+          />
+        </ul>
       </Card>
     );
   }
