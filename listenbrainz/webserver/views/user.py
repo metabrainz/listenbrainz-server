@@ -194,6 +194,28 @@ def reports(user_name: str):
         user=user
     )
 
+@user_bp.route("/<user_name>/playlists")
+def reports(user_name: str):
+    """ Show user playlists """
+    user = _get_user(user_name)
+
+    user_data = {
+        "name": user.musicbrainz_id,
+        "id": user.id,
+    }
+
+    props = {
+        "user": user_data,
+        "api_url": current_app.config["API_URL"]
+    }
+
+    return render_template(
+        "playlists/playlists.html",
+        active_section="playlists",
+        props=ujson.dumps(props),
+        user=user
+    )
+
 
 @user_bp.route('/<user_name>/follow', methods=['OPTIONS', 'POST'])
 @login_required
