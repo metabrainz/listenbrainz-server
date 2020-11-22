@@ -165,7 +165,7 @@ def get_playlist(playlist_mbid):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    playlist = db_playlist.get_by_id(playlist_mbid, True)
+    playlist = db_playlist.get_by_mbid(playlist_mbid, True)
     if playlist is None or \
         (playlist.creator_id != user["id"] and not playlist.public):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
@@ -202,7 +202,7 @@ def add_playlist_item(playlist_mbid, offset):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    playlist = db_playlist.get_by_id(playlist_mbid)
+    playlist = db_playlist.get_by_mbid(playlist_mbid)
     if playlist is None or \
         (playlist.creator_id != user["id"] and not playlist.public):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
@@ -252,7 +252,7 @@ def move_playlist_item(playlist_mbid):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    playlist = db_playlist.get_by_id(playlist_mbid)
+    playlist = db_playlist.get_by_mbid(playlist_mbid)
     if playlist is None or \
         (playlist.creator_id != user["id"] and not playlist.public):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
