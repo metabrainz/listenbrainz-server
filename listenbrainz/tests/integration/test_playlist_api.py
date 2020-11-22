@@ -59,9 +59,9 @@ class PlaylistAPITestCase(IntegrationTestCase):
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
         )
         self.assert200(response)
-        self.assertEqual(response.json["playlist"]["playlist"]["creator"], "testuserpleaseignore")
-        self.assertEqual(response.json["playlist"]["playlist"]["identifier"], playlist_mbid)
-        self.assertEqual(response.json["playlist"]["playlist"]["track"][0]["identifier"],
+        self.assertEqual(response.json["playlist"]["creator"], "testuserpleaseignore")
+        self.assertEqual(response.json["playlist"]["identifier"], playlist_mbid)
+        self.assertEqual(response.json["playlist"]["track"][0]["identifier"],
                          playlist["playlist"]["track"][0]["identifier"])
 
     def test_playlist_get_non_existent(self):
@@ -97,6 +97,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
             headers={"Authorization": "Token {}".format(self.user2["auth_token"])}
         )
         self.assert404(response)
+
 
     def test_playlist_create_empty(self):
         """ Test to ensure creating an empty playlist works """
