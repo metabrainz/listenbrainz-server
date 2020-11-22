@@ -40,9 +40,23 @@
 
 #playlist {
 	.playlist-details {
-		
+		.title {
+			line-height: 1em;
+			padding-bottom: 0.5em;
+    		border-bottom: 1px solid @blue;
+		}
+		.info {
+			display: flex;
+			flex-wrap: wrap;
+			&:extend(.text-muted);
+			margin: 0.5em 0;
+			> * {
+				padding: 0 0.7em;
+			}
+		}
 	}
-	.listen-card {
+	.playlist-item-card {
+		&:extend(#listens .listen-card);
 		display:flex;
 		align-items: center;
 		
@@ -64,7 +78,17 @@
 			&:extend(.text-muted);
 		}
 	}
-	.add-track {
-		> div {width: 80%}
+	#add-track {
+		background-color: @orange !important;
+		> *:first-child {
+			display: flex;
+    		align-items: center;
+			color: white;
+			font-size: 1.3em;
+			font-weight: bold;
+		}
+		> .search{
+			flex:1;
+		}
 	}
 }
