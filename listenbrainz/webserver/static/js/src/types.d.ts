@@ -330,3 +330,12 @@ declare type Playlist = {
   collaborators?: ListenBrainzUser[];
   identifier?: string;
 };
+
+declare type ACRMSearchResult = {
+  artist_credit_id: number;
+  artist_credit_name: string;
+  recording_mbid: string;
+  recording_name: string;
+  release_mbid: string;
+  release_name: string;
+};
