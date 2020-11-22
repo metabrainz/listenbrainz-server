@@ -52,8 +52,19 @@
 		> *:first-child, > *:last-child {
 			align-self:center;
 		}
-		.track-details, .feedback {
+		.addition-details{
 			flex: 1;
+			&:extend(.text-muted);
+			text-align: right;
 		}
+		.track-details{
+			flex: 2;
+		}
+		.drag-handle {
+			&:extend(.text-muted);
+		}
+	}
+	.add-track {
+		> div {width: 80%}
 	}
 }
