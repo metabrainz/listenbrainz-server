@@ -320,6 +320,7 @@ declare type Playlist = {
   id: string;
   title: string;
   description?: string;
+  public: boolean;
   itemCount: number; // trackCount ?
   tracks?: Listen[];
   creator: ListenBrainzUser;

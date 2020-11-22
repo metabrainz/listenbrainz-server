@@ -30,7 +30,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
       name: props.playlist?.title ?? "",
       description: props.playlist?.description ?? "",
       isEdit: Boolean(props.playlist?.id),
-      isPublic: props.playlist?.public ?? true,
+      isPublic: props.playlist ? props.playlist.public : true,
       collaborators: props.playlist?.collaborators || [],
     };
   }
