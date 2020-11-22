@@ -150,3 +150,6 @@ SESSION_REMEMBER_ME_DURATION = 365
 
 # listen dumps creation dir
 LISTEN_DUMP_TEMP_DIR_ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'tmp')
+
+# Feature configs that enable/disable new features that are merge in master, but not ready for release
+FEATURE_PLAYLIST=True
