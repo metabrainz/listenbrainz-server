@@ -57,7 +57,6 @@ class Playlist(BaseModel):
 
     # Computed fields
     created_for: Optional[str]
-    copied_from: Optional[uuid.UUID]
     creator: str
     recordings: List[PlaylistRecording]
 
