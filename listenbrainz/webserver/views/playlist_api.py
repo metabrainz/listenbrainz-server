@@ -109,11 +109,8 @@ def validate_delete_data(data):
         error message if not.
     """
 
-    if "mbid" not in data or "index" not in data or "count" not in data:
-        log_raise_400("post data for a remove instruction must include the keys 'index', 'count' and 'mbid'.")
-
-    if not is_valid_uuid(data["mbid"]):
-        log_raise_400("move instruction mbid is not a valid mbid.")
+    if "index" not in data or "count" not in data:
+        log_raise_400("post data for a remove instruction must include the keys 'index' and 'count'.")
 
     try:
         index_value = int(data["index"])
