@@ -367,7 +367,10 @@ export default class PlaylistPage extends React.Component<
                 </div>
                 <small>
                   {playlist.public ? "Public " : "Private "}
-                  playlist by {playlist.creator.name}
+                  playlist by{" "}
+                  <a href={`/user/${playlist.creator.name}`}>
+                    {playlist.creator.name}
+                  </a>
                   {playlist.collaborators?.length &&
                     ` | Collaborators: ${playlist.collaborators
                       ?.map((col) => col.name)
