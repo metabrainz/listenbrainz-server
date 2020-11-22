@@ -59,7 +59,7 @@ def validate_playlist(jspf):
         if recording_uri.startswith(PLAYLIST_TRACK_URI_PREFIX):
             recording_mbid = recording_uri[len(PLAYLIST_TRACK_URI_PREFIX):]
         else:
-            recording_mbid = recording_uid
+            recording_mbid = recording_uri
 
         try:
             uid = UUID(recording_mbid)
@@ -69,13 +69,13 @@ def validate_playlist(jspf):
         track['mbid'] = recording_mbid
             
 
-def serialize_jspf(playlist, user):
+def serialize_jspf(playlist: Playlist, user):
     """
         Given a playlist, return a properly formated dict that can be passed to jsonify.
     """
 
     pl = { "creator" : user["musicbrainz_id"],
-            "title" : playlist.title
+            "title" : playlist.name
     }
 
     tracks = []
@@ -123,12 +123,12 @@ def create_playlist():
             playlist.recordings.append(pr)
 
     try:
-        db_playlist.create(playlist)
+        playlist = db_playlist.create(playlist)
     except Exception as e:
         current_app.logger.error("Error while new playlist: {}".format(e))
         raise APIInternalServerError("Failed to create the playlist. Please try again.")
 
-    return jsonify({'status': 'ok', 'playlist_mbid': db_playlist.mbid })
+    return jsonify({'status': 'ok', 'playlist_mbid': playlist.mbid })
 
 
 @playlist_api_bp.route("/<playlist_mbid>", methods=["GET"])
