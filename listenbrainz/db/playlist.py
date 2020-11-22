@@ -30,7 +30,7 @@ def get_by_mbid(playlist_id: str, load_recordings: bool = True) -> Optional[mode
              , description
              , public
              , created
-             , copied_from
+             , copied_from_id
              , created_for_id
              , algorithm_metadata
           FROM playlist.playlist
