@@ -8,6 +8,7 @@ import { AlertList } from "react-bs-notifier";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import ErrorBoundary from "../ErrorBoundary";
 import Card from "../components/Card";
+import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
 
 export type UserPlaylistsProps = {
   user: ListenBrainzUser;
@@ -17,6 +18,7 @@ export type UserPlaylistsProps = {
 
 export type UserPlaylistsState = {
   playlists: Playlist[];
+  alerts: Alert[];
 };
 
 export default class UserPlaylists extends React.Component<
@@ -27,7 +29,8 @@ export default class UserPlaylists extends React.Component<
     super(props);
 
     this.state = {
-      playlists: props.playlists || [],
+      alerts: [],
+      playlists: props.playlists || fakePlaylists,
     };
   }
 
@@ -36,12 +39,59 @@ export default class UserPlaylists extends React.Component<
     // event.target.id ?
   };
 
-  createPlaylist = (event: React.SyntheticEvent) => {
-    // Delete playlist by id
-    // event.target.id ?
+  createPlaylist = (
+    name: string,
+    description: string,
+    isPublic: boolean,
+    collaborators: string[],
+    id?: string
+  ) => {
     // Show modal or section with playlist attributes
     // name, description, private/public
     // Then call API endpoint POST  /1/playlist/create
+    const content = (
+      <div>
+        <div>name: {name}</div>
+        <div>description: {description}</div>
+        <div>isPublic: {isPublic}</div>
+        <div>collaborators: {collaborators}</div>
+        <div>id: {id}</div>
+      </div>
+    );
+    this.newAlert("success", "Creating playlist", content);
+  };
+
+  newAlert = (
+    type: AlertType,
+    title: string,
+    message?: string | JSX.Element
+  ): void => {
+    const newAlert = {
+      id: new Date().getTime(),
+      type,
+      title,
+      message,
+    } as Alert;
+
+    this.setState((prevState) => {
+      return {
+        alerts: [...prevState.alerts, newAlert],
+      };
+    });
+  };
+
+  onAlertDismissed = (alert: Alert): void => {
+    const { alerts } = this.state;
+
+    // find the index of the alert that was dismissed
+    const idx = alerts.indexOf(alert);
+
+    if (idx >= 0) {
+      this.setState({
+        // remove the alert from the array
+        alerts: [...alerts.slice(0, idx), ...alerts.slice(idx + 1)],
+      });
+    }
   };
 
   render() {
@@ -50,14 +100,6 @@ export default class UserPlaylists extends React.Component<
 
     return (
       <div>
-        <button
-          title="Create new playlist"
-          type="button"
-          className="btn btn-info pull-right"
-          onClick={this.createPlaylist}
-        >
-          <h1>Playlists</h1>
-          <FontAwesomeIcon icon={faPlusCircle as IconProp} />
           &nbsp;&nbsp;New playlist
         </button>
         <div
@@ -66,7 +108,10 @@ export default class UserPlaylists extends React.Component<
         >
           {playlists.map((playlist: Playlist) => {
             return (
-              <Card className="playlist" key={playlist.id}>
+              <Card
+                className="playlist"
+                key={playlist.id}
+                href={`/playlist/${playlist.id}`}
                 <div className="image" />
                 <div className="info">
                   {playlist.title}
@@ -80,7 +125,11 @@ export default class UserPlaylists extends React.Component<
               </Card>
             );
           })}
-          <Card className="new-playlist" onClick={this.createPlaylist}>
+          <Card
+            className="new-playlist"
+            data-toggle="modal"
+            data-target="#playlistModal"
+          >
             <div>
               <FontAwesomeIcon icon={faPlusCircle as IconProp} size="2x" />
               <span>Create new playlist</span>
