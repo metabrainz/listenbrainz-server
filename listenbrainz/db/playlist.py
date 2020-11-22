@@ -232,20 +232,20 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
                                      , name
                                      , description
                                      , public
-                                     , copied_from
+                                     , copied_from_id
                                      , created_for_id
                                      , algorithm_metadata)
                                VALUES (:creator_id
                                      , :name
                                      , :description
                                      , :public
-                                     , :copied_from
+                                     , :copied_from_id
                                      , :created_for_id
                                      , :algorithm_metadata)
                              RETURNING id, mbid, created
     """)
     fields = playlist.dict(include={'creator_id', 'name', 'description', 'public',
-                                    'copied_from', 'created_for_id', 'algorithm_metadata'})
+                                    'copied_from_id', 'created_for_id', 'algorithm_metadata'})
     with ts.engine.connect() as connection:
         result = connection.execute(query, fields)
         row = dict(result.fetchone())
@@ -255,6 +255,64 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
         playlist.creator = creator['musicbrainz_id']
         playlist.recordings = insert_recordings(connection, playlist.id, playlist.recordings, 0)
         return model_playlist.Playlist.parse_obj(playlist.dict())
+
+
+def update_playlist(playlist: model_playlist.Playlist):
+    """Update playlist metadata (Name, description, public flag)
+
+    Arguments:
+
+    """
+
+    query = sqlalchemy.text("""
+        UPDATE playlist.playlist
+           SET name = :name
+             , description = :description
+             , public = :public
+         WHERE id = :id
+    """)
+    with ts.engine.connect() as connection:
+        params = playlist.dict(include={'id', 'name', 'description', 'public'})
+        connection.execute(query, params)
+        return playlist
+
+
+def copy_playlist(playlist: model_playlist.Playlist, creator_id: int):
+    newplaylist = playlist.copy()
+    newplaylist.creator_id = creator_id
+    newplaylist.copied_from_id = playlist.id
+
+    return create(newplaylist)
+
+
+def delete_playlist(playlist: model_playlist.Playlist):
+    """Delete a playlist.
+
+    Arguments:
+        playlist: The playlist to delete
+
+    Returns:
+        True if the playlist was deleted, False if no such playlist with the given mbid exists
+    """
+    return delete_playlist_by_mbid(playlist.mbid)
+
+
+def delete_playlist_by_mbid(playlist_mbid: str):
+    """Delete a playlist given an mbid.
+
+    Arguments:
+        playlist_mbid: The mbid of the playlist to delete
+
+    Returns:
+        True if the playlist was deleted, False if no such playlist with the given mbid exists
+    """
+    query = sqlalchemy.text("""
+        DELETE FROM playlist.playlist
+              WHERE playlist.mbid = :playlist_mbid
+    """)
+    with ts.engine.connect() as connection:
+        result = connection.execute(query, {"playlist_mbid": playlist_mbid})
+        return result.rowcount == 1
 
 
 def insert_recordings(connection, playlist_id: int, recordings: List[model_playlist.WritablePlaylistRecording],
@@ -374,6 +432,8 @@ def add_recordings_to_playlist(playlist: model_playlist.Playlist,
          WHERE playlist_id = :playlist_id
            AND position >= :position
     """)
+    if position is None:
+        position = len(playlist.recordings)
     with ts.engine.connect() as connection:
         if position < len(playlist.recordings):
             reorder_params = {"playlist_id": playlist.id,

@@ -146,7 +146,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
 
 
     def test_playlist_recording_add(self):
-        """ Test to ensure creating a playlist works """
+        """ Test adding a recording to a playlist works """
 
         playlist = self.get_test_data()
 
@@ -188,6 +188,96 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["track"][1]["identifier"],
                          add_recording["playlist"]["track"][0]["identifier"])
 
+    def test_playlist_recording_move(self):
+
+        playlist = {
+           "playlist" : {
+              "title" : "1980s flashback jams",
+              "track" : [
+                 {
+                    "identifier" : "https://musicbrainz.org/recording/e8f9b188-f819-4e43-ab0f-4bd26ce9ff56"
+                 },
+                 {
+                    "identifier" : "https://musicbrainz.org/recording/57ef4803-5181-4b3d-8dd6-8b9d9ca83e2a"
+                 }
+              ],
+           }
+        }
+
+        response = self.client.post(
+            url_for("playlist_api_v1.create_playlist"),
+            data=ujson.dumps(playlist),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert200(response)
+        playlist_mbid = response.json["playlist_mbid"]
+
+        move = { "mbid" : "57ef4803-5181-4b3d-8dd6-8b9d9ca83e2a", "from" : 1, "to" : 0, "count": 1 }
+        response = self.client.post(
+            url_for("playlist_api_v1.move_playlist_item", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            data=ujson.dumps(move),
+            content_type="application/json"
+        )
+        self.assert200(response)
+
+        response = self.client.get(
+            url_for("playlist_api_v1.get_playlist", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assertEqual(response.json["playlist"]["creator"], "testuserpleaseignore")
+        self.assertEqual(response.json["playlist"]["identifier"], playlist_mbid)
+        self.assertEqual(response.json["playlist"]["track"][0]["identifier"],
+                         playlist["playlist"]["track"][1]["identifier"])
+        self.assertEqual(response.json["playlist"]["track"][1]["identifier"],
+                         playlist["playlist"]["track"][0]["identifier"])
+
+
+    def test_playlist_recording_delete(self):
+
+        playlist = {
+           "playlist" : {
+              "title" : "1980s flashback jams",
+              "track" : [
+                 {
+                    "identifier" : "https://musicbrainz.org/recording/e8f9b188-f819-4e43-ab0f-4bd26ce9ff56"
+                 },
+                 {
+                    "identifier" : "https://musicbrainz.org/recording/57ef4803-5181-4b3d-8dd6-8b9d9ca83e2a"
+                 }
+              ],
+           }
+        }
+
+        response = self.client.post(
+            url_for("playlist_api_v1.create_playlist"),
+            data=ujson.dumps(playlist),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert200(response)
+        playlist_mbid = response.json["playlist_mbid"]
+
+        move = { "index" : 0, "count": 1 }
+        response = self.client.post(
+            url_for("playlist_api_v1.delete_playlist_item", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            data=ujson.dumps(move),
+            content_type="application/json"
+        )
+        self.assert200(response)
+
+        response = self.client.get(
+            url_for("playlist_api_v1.get_playlist", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assertEqual(response.json["playlist"]["creator"], "testuserpleaseignore")
+        self.assertEqual(response.json["playlist"]["identifier"], playlist_mbid)
+        self.assertEqual(response.json["playlist"]["track"][0]["identifier"],
+                         playlist["playlist"]["track"][1]["identifier"])
+
+
     def test_playlist_private_access(self):
         """ Test for checking that unauthorized access to private playlists return 404 """
 
@@ -226,6 +316,15 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert404(response)
 
+        # Delete recording in playlist
+        response = self.client.post(
+            url_for("playlist_api_v1.delete_playlist_item", playlist_mbid=playlist_mbid),
+            data=ujson.dumps({}),
+            headers={"Authorization": "Token {}".format(self.user2["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert404(response)
+
 
     def test_playlist_unauthorized_access(self):
         """ Test for checking that unauthorized access return 401 """
@@ -249,6 +348,14 @@ class PlaylistAPITestCase(IntegrationTestCase):
         # Move recording in playlist
         response = self.client.post(
             url_for("playlist_api_v1.move_playlist_item", playlist_mbid=playlist_mbid),
+            data=ujson.dumps({}),
+            content_type="application/json"
+        )
+        self.assert401(response)
+
+        # Delete recording in playlist
+        response = self.client.post(
+            url_for("playlist_api_v1.delete_playlist_item", playlist_mbid=playlist_mbid),
             data=ujson.dumps({}),
             content_type="application/json"
         )
