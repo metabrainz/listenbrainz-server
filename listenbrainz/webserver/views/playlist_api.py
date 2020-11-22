@@ -88,7 +88,7 @@ def validate_move_data(data):
     """
 
     if "mbid" not in data or "from" not in data or "to" not in data or "count" not in data:
-        log_raise_400("move for a move instruction must include the keys 'from', 'to', 'count' and 'mbid'.")
+        log_raise_400("post data for a move instruction must include the keys 'from', 'to', 'count' and 'mbid'.")
 
     if not is_valid_uuid(data["mbid"]):
         log_raise_400("move instruction mbid is not a valid mbid.")
@@ -101,6 +101,27 @@ def validate_move_data(data):
             raise ValueError
     except ValueError:
         log_raise_400("move instruction values for 'from', 'to' and 'count' must all be positive integers.")
+
+
+def validate_delete_data(data):
+    """
+        Check that the passed JSON for a delete recordings endpoint call are valid. Raise 400 with
+        error message if not.
+    """
+
+    if "mbid" not in data or "index" not in data or "count" not in data:
+        log_raise_400("post data for a remove instruction must include the keys 'index', 'count' and 'mbid'.")
+
+    if not is_valid_uuid(data["mbid"]):
+        log_raise_400("move instruction mbid is not a valid mbid.")
+
+    try:
+        index_value = int(data["index"])
+        count_value = int(data["count"])
+        if index_value < 0 or count_value < 0:
+            raise ValueError
+    except ValueError:
+        log_raise_400("move instruction values for 'index' and 'count' must all be positive integers.")
 
 
 @playlist_api_bp.route("/create", methods=["POST"])
@@ -261,8 +282,50 @@ def move_playlist_item(playlist_mbid):
     validate_move_data(data)
 
     try:
-        # TODO, complete when the method becomes available
-        #db_playlist.add_playlist_items(playlist, precordings, offset)
+        # TODO, complete when the method becomes available, create proper response code
+        pass
+    except Exception as e:
+        current_app.logger.error("Error while adding recordings to playlist: {}".format(e))
+        raise APIInternalServerError("Failed to add recordings to the playlist. Please try again.")
+
+    return jsonify({'status': 'ok' })
+
+
+@playlist_api_bp.route("/<playlist_mbid>/item/delete", methods=["POST"])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
+def delete_playlist_item(playlist_mbid):
+    """
+
+    To delete an item in a playlist, the POST data needs to specify the recording MBID and current index
+    of the track to delete, and how many tracks from that position should be moved deleted. The format of the
+    post data should look as follows:
+
+     { “mbid” : “<mbid>”, “index” : 3, “count”: 2 }
+
+    :reqheader Authorization: Token <user token>
+    :statuscode 200: playlist accepted.
+    :statuscode 400: invalid JSON sent, see error message for details.
+    :statuscode 401: invalid authorization. See error message for details.
+    :resheader Content-Type: *application/json*
+    """
+
+    user = _validate_auth_header()
+
+    if not is_valid_uuid(playlist_mbid):
+        log_raise_400("Provided playlist ID is invalid.")
+
+    playlist = db_playlist.get_by_id(playlist_mbid)
+    if playlist is None or \
+        (playlist.creator_id != user["id"] and not playlist.public):
+        raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+
+    data = request.json
+    validate_delete_data(data)
+
+    try:
+        # TODO, complete when the method becomes available, create proper response code
+        #db_playlist.delete_recordings_from_playlist(playlist, UUID(data['mbid']), data['index'], data['count'])
         pass
     except Exception as e:
         current_app.logger.error("Error while adding recordings to playlist: {}".format(e))
