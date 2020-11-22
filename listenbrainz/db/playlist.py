@@ -388,7 +388,7 @@ def add_recordings_to_playlist(playlist: model_playlist.Playlist,
 def move_recordings(playlist: model_playlist.Playlist, position_from: int, position_to: int, count: int):
     # TODO: This must be done in a single transaction
     removed = playlist.recordings[position_from:position_from+count]
-    remove_recordings(playlist, position_from, count)
+    delete_recordings_from_playlist(playlist, position_from, count)
     add_recordings_to_playlist(playlist, removed, position_to)
 
 
