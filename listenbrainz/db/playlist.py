@@ -38,13 +38,14 @@ def get_by_id(playlist_id: str, load_recordings: bool = True) -> Optional[model_
         obj = result.fetchone()
         if not obj:
             return None
+        obj = dict(obj)
         user_id = obj['creator_id']
         user = db_user.get(user_id)
         obj['creator'] = user['musicbrainz_id']
-        if load_recordings:
-            obj['recordings'] = get_recordings_for_playlists([obj['id']])
-        else:
-            obj['recordings'] = []
+        #if load_recordings:
+        #    obj['recordings'] = get_recordings_for_playlists([obj['id']])
+        #else:
+        obj['recordings'] = []
         return model_playlist.Playlist.parse_obj(obj)
 
 
@@ -137,8 +138,8 @@ def get_recordings_for_playlists(playlist_ids: List[int]):
         # TODO: Return objects, get usernames
 
 
-def insert(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist:
-    """Insert a playlist
+def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist:
+    """Create a playlist
 
     Arguments:
         playlist: A playlist to add
@@ -180,7 +181,7 @@ def insert(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
                                     'copied_from', 'created_for_id', 'algorithm_metadata'})
     with ts.engine.connect() as connection:
         result = connection.execute(query, fields)
-        row = result.fetchone()
+        row = dict(result.fetchone())
         playlist.id = row['id']
         playlist.mbid = row['mbid']
         playlist.created = row['created']

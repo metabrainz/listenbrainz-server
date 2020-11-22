@@ -44,7 +44,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
             content_type="application/json"
         )
         self.assert200(response)
-        self.assertEqual(response.json["code"], 200)
+        self.assertEqual(response.json["status"], "ok")
         self.assertNotEqual(response.json["playlist_mbid"], "")
 
         playlist_mbid = response.json["playlist_mbid"]
@@ -86,7 +86,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
             content_type="application/json"
         )
         self.assert200(response)
-        self.assertEqual(response.json["code"], 200)
+        self.assertEqual(response.json["status"], "ok")
         self.assertNotEqual(response.json["playlist_mbid"], "")
 
         playlist_mbid = response.json["playlist_mbid"]
@@ -114,7 +114,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
             content_type="application/json"
         )
         self.assert200(response)
-        self.assertEqual(response.json["code"], 200)
+        self.assertEqual(response.json["status"], "ok")
         self.assertNotEqual(response.json["playlist_mbid"], "")
 
         # Make sure the return playlist id is valid
@@ -133,7 +133,6 @@ class PlaylistAPITestCase(IntegrationTestCase):
             content_type="application/json"
         )
         self.assert401(response)
-        self.assertEqual(response.json["code"], 401)
 
         # request with invalid authorization header
         response = self.client.post(
@@ -143,7 +142,6 @@ class PlaylistAPITestCase(IntegrationTestCase):
             content_type="application/json"
         )
         self.assert401(response)
-        self.assertEqual(response.json["code"], 401)
 
     def test_playlist_json_with_missing_keys(self):
         """ Test for checking that submitting JSON with missing keys returns 400 """
