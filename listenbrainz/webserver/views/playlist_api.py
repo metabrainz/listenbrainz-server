@@ -59,7 +59,7 @@ def validate_playlist(jspf):
         if recording_uri.startswith(PLAYLIST_TRACK_URI_PREFIX):
             recording_mbid = recording_uri[len(PLAYLIST_TRACK_URI_PREFIX):]
         else:
-            recording_mbid = recording_uri
+            log_raise_400("JSPF playlist track %d identifier must have the namespace '%s' prepended to it." % (i, PLAYLIST_TRACK_URI_PREFIX))
 
         try:
             uid = UUID(recording_mbid)
@@ -74,8 +74,9 @@ def serialize_jspf(playlist: Playlist, user):
         Given a playlist, return a properly formated dict that can be passed to jsonify.
     """
 
-    pl = { "creator" : user["musicbrainz_id"],
-            "title" : playlist.name
+    pl = { "creator": user["musicbrainz_id"],
+            "title": playlist.name,
+            "identifier": playlist.mbid
     }
 
     tracks = []
