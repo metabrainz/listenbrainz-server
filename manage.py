@@ -177,6 +177,9 @@ def init_db(force, create_db):
     ts.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
     application = webserver.create_app()
     with application.app_context():
+        print('TS: Creating Schemas...')
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_schemas.sql'))
+
         print('TS: Creating tables...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_tables.sql'))
 
@@ -188,6 +191,10 @@ def init_db(force, create_db):
 
         print('TS: Creating indexes...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))
+
+        print('TS: Creating Primary and Foreign Keys...')
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_primary_keys.sql'))
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_foreign_keys.sql'))
 
         print("Done!")
 
