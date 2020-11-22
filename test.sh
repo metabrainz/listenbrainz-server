@@ -203,7 +203,14 @@ if [ "$1" == "int" ]; then
     int_setup
     echo "Bringing containers up"
     bring_up_int_containers
-    echo "Running tests"
+    shift
+    if [ -z "$@" ]; then
+        TESTS_TO_RUN="listenbrainz/tests/integration"
+    else
+        TESTS_TO_RUN="$@"
+    fi
+    echo "Running tests $TESTS_TO_RUN"
+
     docker-compose -f $INT_COMPOSE_FILE_LOC \
                    -p $INT_COMPOSE_PROJECT_NAME \
                 run --rm listenbrainz dockerize \
@@ -211,7 +218,7 @@ if [ "$1" == "int" ]; then
                   -wait tcp://timescale:5432 -timeout 60s \
                   -wait tcp://redis:6379 -timeout 60s \
                   -wait tcp://rabbitmq:5672 -timeout 60s \
-                bash -c "py.test listenbrainz/tests/integration"
+                bash -c "py.test $TESTS_TO_RUN"
     echo "Taking containers down"
     int_dcdown
     exit 0

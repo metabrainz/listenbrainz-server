@@ -107,19 +107,20 @@ def create_playlist():
     :resheader Content-Type: *application/json*
     """
 
-    private = _parse_boolean_arg("private", "false")
+    public = _parse_boolean_arg("public", "true")
     user = _validate_auth_header()
 
     data = request.json
     validate_playlist(data)
 
     playlist = WritablePlaylist(name=data['playlist']['title'], creator_id=user["id"])
-    playlist.private = private
+    playlist.public = public
 
-    for track in jspf['track']:
-        pr = WritablePlaylistRecording()
-        pr.mbid = track['mbid']
-        playlist.recordings.append(pr)
+    if "track" in data:
+        for track in data['track']:
+            pr = WritablePlaylistRecording()
+            pr.mbid = track['mbid']
+            playlist.recordings.append(pr)
 
     try:
         db_playlist.create(playlist)
