@@ -374,6 +374,8 @@ def add_recordings_to_playlist(playlist: model_playlist.Playlist,
          WHERE playlist_id = :playlist_id
            AND position >= :position
     """)
+    if position is None:
+        position = len(playlist.recordings)
     with ts.engine.connect() as connection:
         if position < len(playlist.recordings):
             reorder_params = {"playlist_id": playlist.id,
