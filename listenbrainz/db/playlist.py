@@ -8,8 +8,8 @@ from listenbrainz.db import timescale as ts
 from listenbrainz.db import user as db_user
 
 
-def get_by_id(playlist_id: str, load_recordings: bool = True) -> Optional[model_playlist.Playlist]:
-    """Get a playlist
+def get_by_mbid(playlist_id: str, load_recordings: bool = True) -> Optional[model_playlist.Playlist]:
+    """Get a playlist given its mbid
 
     Arguments:
         playlist_id: the uuid of a playlist to get
@@ -253,7 +253,7 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
         playlist.mbid = row['mbid']
         playlist.created = row['created']
         playlist.creator = creator['musicbrainz_id']
-        playlist.recordings = insert_recordings(connection, playlist.id, playlist.recordings, 1)
+        playlist.recordings = insert_recordings(connection, playlist.id, playlist.recordings, 0)
         return model_playlist.Playlist.parse_obj(playlist.dict())
 
 
@@ -266,7 +266,7 @@ def insert_recordings(connection, playlist_id: int, recordings: List[model_playl
         connection: an open database connection
         playlist_id: the playlist id to add the recordings to
         recordings: a list of recordings to add
-        starting_position: The position number to set in the first recording.
+        starting_position: The position number to set in the first recording. The first recording in a playlist is position 0
     """
     for position, recording in enumerate(recordings, starting_position):
         recording.playlist_id = playlist_id
@@ -291,13 +291,68 @@ def insert_recordings(connection, playlist_id: int, recordings: List[model_playl
     return return_recordings
 
 
+def delete_recordings_from_playlist(playlist: model_playlist.Playlist, remove_from: int, remove_count: int):
+    """Delete recordings from a playlist. If the remove_from + remove_count is more than the number
+    of items in the playlist, silently remove as many as possible
+
+    Arguments:
+        playlist: The playlist to remove recordings from
+        remove_from: The position to remove from, 0 indexed
+        remove_count: The number of items to remove
+
+    Raises:
+        ValueError: if ``remove_from`` is less than 0, or greater than the number of recordings in the playlist
+        ValueError: if ``remove_count`` is less than or equal to 0
+
+    """
+    # If recordings are at the end of the list, just remove them
+
+    # If in the middle, find where they are:
+    #   [existing] | [to-remove] | [trailing]
+    # Items in trailing need to be renumbered starting from
+
+    # If at the beginning, this is a special case of in the middle
+    # TODO: these queries assume that the the passed in playlist is up to date, it should verify
+    #   in case it's changed
+
+    if remove_count < 1:
+        raise ValueError("Need to ask to remove at least one recording")
+    if remove_from < 0:
+        raise ValueError("Cannot remove from negative index")
+    if remove_from >= len(playlist.recordings):
+        raise ValueError("Cannot remove item past the end of the list of recordings")
+
+    delete = sqlalchemy.text("""
+        DELETE FROM playlist.playlist_recording
+          WHERE playlist_id = :playlist_id
+            AND position >= :position_start
+            AND position < :position_end
+    """)
+    reorder = sqlalchemy.text("""
+        UPDATE playlist.playlist_recording
+           SET position = position + :offset
+         WHERE playlist_id = :playlist_id
+           AND position >= :position
+    """)
+    with ts.engine.connect() as connection:
+        delete_params = {"playlist_id": playlist.id,
+                         "position_start": remove_from,
+                         "position_end": remove_from+remove_count}
+        connection.execute(delete, delete_params)
+        if remove_from + remove_count < len(playlist.recordings):
+            reorder_params = {"playlist_id": playlist.id,
+                              "position": remove_from + remove_count,
+                              "offset": -1 * remove_count}
+            connection.execute(reorder, reorder_params)
+
+
 def add_recordings_to_playlist(playlist: model_playlist.Playlist,
                                recordings: List[model_playlist.WritablePlaylistRecording],
                                position: int = None):
     """Add some recordings to a playlist at a given position
 
-    Recording positions are counted from 1, and recordings are added after the given position.
-    A position of 0 has the effect of adding a recording before the first recording in the playlist.
+    Recording positions are counted from 0, and recordings are added at the given position. If the playlist
+    has other recordings at this position, they will be moved
 
     Arguments:
         playlist: A Playlist to append to. Must be loaded with ``get_by_id`` and have and id and recordings set
@@ -305,24 +360,36 @@ def add_recordings_to_playlist(playlist: model_playlist.Playlist,
         position: The position in the existing playlist after which to add the recordings. If ``None`` or
            the position is greater than the number of recordings currently in the playlist, append them.
 
-    Raises:
-        ValueError: If you try and insert recordings into the middle of an existing playlist
-
     Returns:
         The provided playlist with the recordings added
     """
 
-    if position and position < len(playlist.recordings):
-        raise ValueError("Cannot insert recordings yet")
-    # TODO: Check if this is actually the value of playlist.recordings[-1].position
-    starting_position = len(playlist.recordings) + 1
     # TODO: Need to check if there are actually recordings in this playlist that aren't declared
     #   - can we just check if there's an exception on insert?
     # TODO: Need unique key on (playlist_id, position) on playlist_recording
+    # TODO: This is the same reorder method as delete
+    reorder = sqlalchemy.text("""
+        UPDATE playlist.playlist_recording
+           SET position = position + :offset
+         WHERE playlist_id = :playlist_id
+           AND position >= :position
+    """)
     with ts.engine.connect() as connection:
-        recordings = insert_recordings(connection, playlist.id, recordings, starting_position)
-        playlist.recordings.extend(recordings)
+        if position < len(playlist.recordings):
+            reorder_params = {"playlist_id": playlist.id,
+                              "offset": len(recordings),
+                              "position": position}
+            connection.execute(reorder, reorder_params)
+        recordings = insert_recordings(connection, playlist.id, recordings, position)
+        playlist.recordings = playlist.recordings[0:position] + recordings + playlist.recordings[position:]
         return playlist
+
+
+def move_recordings(playlist: model_playlist.Playlist, position_from: int, position_to: int, count: int):
+    # TODO: This must be done in a single transaction
+    removed = playlist.recordings[position_from:position_from+count]
+    remove_recordings(playlist, position_from, count)
+    add_recordings_to_playlist(playlist, removed, position_to)
 
 
 def update(playlist: model_playlist.Playlist) -> model_playlist.Playlist:
