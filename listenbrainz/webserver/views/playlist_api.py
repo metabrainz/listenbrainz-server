@@ -28,18 +28,19 @@ def _parse_boolean_arg(name, default=None):
     return True if value == "true" else False
 
 
-def validate_playlist(jspf):
+def validate_playlist(jspf, require_title=True):
     """
         Given a JSPF dict, ensure that title is present and that if tracks are present
         they have valid URIs or MBIDs specified. If any errors are found 400 is raised.
     """
 
-    try:
-        title = jspf["playlist"]["title"]
-        if not title:
-            raise KeyError
-    except KeyError:
-        log_raise_400("JSPF playlist must contain a title element with the title of the playlist.")
+    if require_title:
+        try:
+            title = jspf["playlist"]["title"]
+            if not title:
+                raise KeyError
+        except KeyError:
+            log_raise_400("JSPF playlist must contain a title element with the title of the playlist.")
 
     if 'track' not in jspf:
         return
@@ -195,29 +196,28 @@ def add_playlist_item(playlist_mbid, offset):
     """
 
     user = _validate_auth_header()
-    if offset < 0:
+    if offset is not None and offset < 0:
         log_raise_400("Offset must be a positive integer.")
 
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
-
-    data = request.json
-    validate_playlist(data)
-
-    if len(data["playlist"]["track"]) > MAX_RECORDINGS_PER_ADD:
-        log_raise_400("You may only add max %d recordings per call." % MAX_RECORDINGS_PER_ADD)
 
     playlist = db_playlist.get_by_id(playlist_mbid)
     if playlist is None or \
         (playlist.creator_id != user["id"] and not playlist.public):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
+    data = request.json
+    validate_playlist(data, False)
+
+    if len(data["playlist"]["track"]) > MAX_RECORDINGS_PER_ADD:
+        log_raise_400("You may only add max %d recordings per call." % MAX_RECORDINGS_PER_ADD)
+
     precordings = []
-    if "track" in data:
-        for track in data['track']:
-            pr = WritablePlaylistRecording()
-            pr.mbid = track['mbid']
-            precordings.append(pr)
+    if "track" in data["playlist"]:
+        for track in data["playlist"]["track"]:
+            precordings.append(WritablePlaylistRecording(mbid=UUID(track['identifier'][len(PLAYLIST_TRACK_URI_PREFIX):]),
+                                       added_by_id=user["id"]))
 
     try:
         db_playlist.add_recordings_to_playlist(playlist, precordings, offset)
@@ -238,7 +238,7 @@ def move_playlist_item(playlist_mbid):
     of the track to move (from), where to move it to (to) and how many tracks from that position should
     be moved (count). The format of the post data should look as follows:
 
-     { “mbid” : “<mbid>”, “from” : 3, “to” : 4, “count”: 2 } }
+     { “mbid” : “<mbid>”, “from” : 3, “to” : 4, “count”: 2 }
 
     :reqheader Authorization: Token <user token>
     :statuscode 200: playlist accepted.
@@ -252,13 +252,13 @@ def move_playlist_item(playlist_mbid):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    data = request.json
-    validate_move_data(data)
-
     playlist = db_playlist.get_by_id(playlist_mbid)
     if playlist is None or \
         (playlist.creator_id != user["id"] and not playlist.public):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+
+    data = request.json
+    validate_move_data(data)
 
     try:
         # TODO, complete when the method becomes available

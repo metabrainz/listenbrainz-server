@@ -121,28 +121,6 @@ class PlaylistAPITestCase(IntegrationTestCase):
         UUID(response.json["playlist_mbid"])
 
 
-    def test_playlist_unauthorised_submission(self):
-        """ Test for checking that unauthorized submissions return 401 """
-
-        playlist = self.get_test_data()
-
-        # request with no authorization header
-        response = self.client.post(
-            url_for("playlist_api_v1.create_playlist"),
-            data=ujson.dumps(playlist),
-            content_type="application/json"
-        )
-        self.assert401(response)
-
-        # request with invalid authorization header
-        response = self.client.post(
-            url_for("playlist_api_v1.create_playlist"),
-            data=ujson.dumps(playlist),
-            headers={"Authorization": "Token testtokenplsignore"},
-            content_type="application/json"
-        )
-        self.assert401(response)
-
     def test_playlist_json_with_missing_keys(self):
         """ Test for checking that submitting JSON with missing keys returns 400 """
 
@@ -165,3 +143,113 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert400(response)
         self.assertEqual(response.json["error"], "JSPF playlist must contain a title element with the title of the playlist.")
+
+
+    def test_playlist_recording_add(self):
+        """ Test to ensure creating a playlist works """
+
+        playlist = self.get_test_data()
+
+        response = self.client.post(
+            url_for("playlist_api_v1.create_playlist"),
+            data=ujson.dumps(playlist),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert200(response)
+        playlist_mbid = response.json["playlist_mbid"]
+
+        # Add a track to the playlist
+        add_recording = {
+           "playlist" : {
+              "track" : [
+                 {
+                    "identifier" : "https://musicbrainz.org/recording/4a77a078-e91a-4522-a409-3b58aa7de3ae"
+                 }
+              ],
+           }
+        }
+        response = self.client.post(
+            url_for("playlist_api_v1.add_playlist_item", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            data=ujson.dumps(add_recording),
+            content_type="application/json"
+        )
+        self.assert200(response)
+
+        response = self.client.get(
+            url_for("playlist_api_v1.get_playlist", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assertEqual(response.json["playlist"]["creator"], "testuserpleaseignore")
+        self.assertEqual(response.json["playlist"]["identifier"], playlist_mbid)
+        self.assertEqual(response.json["playlist"]["track"][0]["identifier"],
+                         playlist["playlist"]["track"][0]["identifier"])
+        self.assertEqual(response.json["playlist"]["track"][1]["identifier"],
+                         add_recording["playlist"]["track"][0]["identifier"])
+
+    def test_playlist_private_access(self):
+        """ Test for checking that unauthorized access to private playlists return 404 """
+
+        # create a private playlist, then try to access it from the wrong user for all the endpoints
+        playlist = self.get_test_data()
+        response = self.client.post(
+            url_for("playlist_api_v1.create_playlist", public="false"),
+            data=ujson.dumps(playlist),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert200(response)
+        playlist_mbid = response.json["playlist_mbid"]
+
+        response = self.client.get(
+            url_for("playlist_api_v1.get_playlist", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user2["auth_token"])},
+        )
+        self.assert404(response)
+
+        # Add recording to playlist
+        response = self.client.post(
+            url_for("playlist_api_v1.add_playlist_item", offset=0, playlist_mbid=playlist_mbid),
+            data=ujson.dumps({}),
+            headers={"Authorization": "Token {}".format(self.user2["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert404(response)
+
+        # Move recording in playlist
+        response = self.client.post(
+            url_for("playlist_api_v1.move_playlist_item", playlist_mbid=playlist_mbid),
+            data=ujson.dumps({}),
+            headers={"Authorization": "Token {}".format(self.user2["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert404(response)
+
+
+    def test_playlist_unauthorized_access(self):
+        """ Test for checking that unauthorized access return 401 """
+
+        response = self.client.post(
+            url_for("playlist_api_v1.create_playlist", public="false"),
+            data=ujson.dumps({}),
+            content_type="application/json"
+        )
+        self.assert401(response)
+
+        playlist_mbid = "d1ff6a3d-f471-416f-94e7-86778b51fa2b"
+        # Add recording to playlist
+        response = self.client.post(
+            url_for("playlist_api_v1.add_playlist_item", offset=0, playlist_mbid=playlist_mbid),
+            data=ujson.dumps({}),
+            content_type="application/json"
+        )
+        self.assert401(response)
+
+        # Move recording in playlist
+        response = self.client.post(
+            url_for("playlist_api_v1.move_playlist_item", playlist_mbid=playlist_mbid),
+            data=ujson.dumps({}),
+            content_type="application/json"
+        )
+        self.assert401(response)
