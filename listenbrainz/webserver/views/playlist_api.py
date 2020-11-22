@@ -1,3 +1,4 @@
+from uuid import UUID
 from flask import Blueprint, current_app, jsonify, request
 #import listenbrainz.db.user as db_user
 import listenbrainz.db.playlist as db_playlist
@@ -60,8 +61,6 @@ def validate_playlist(jspf):
         if not is_valid_uuid(recording_mbid):
             log_raise_400("JSPF playlist track %d does not contain a valid track identifier field." % i)
 
-        track['mbid'] = recording_mbid
-
 
 def serialize_jspf(playlist: Playlist, user):
     """
@@ -75,7 +74,7 @@ def serialize_jspf(playlist: Playlist, user):
 
     tracks = []
     for rec in playlist.recordings:
-        tracks.append({ "identifier": rec.mbid })
+        tracks.append({ "identifier": PLAYLIST_TRACK_URI_PREFIX + str(rec.mbid) })
 
     pl["track"] = tracks
 
@@ -132,11 +131,11 @@ def create_playlist():
     playlist = WritablePlaylist(name=data['playlist']['title'], creator_id=user["id"])
     playlist.public = public
 
-    if "track" in data:
-        for track in data['track']:
-            pr = WritablePlaylistRecording()
-            pr.mbid = track['mbid']
-            playlist.recordings.append(pr)
+    if "track" in data["playlist"]:
+        for track in data["playlist"]["track"]:
+            playlist.recordings.append(WritablePlaylistRecording(mbid=UUID(track['identifier'][len(PLAYLIST_TRACK_URI_PREFIX):]),
+                                       added_by_id=user["id"]))
+
 
     try:
         playlist = db_playlist.create(playlist)
@@ -165,7 +164,7 @@ def get_playlist(playlist_mbid):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    playlist = db_playlist.get_by_id(playlist_mbid)
+    playlist = db_playlist.get_by_id(playlist_mbid, True)
     if playlist is None or \
         (playlist.creator_id != user["id"] and not playlist.public):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
@@ -221,9 +220,7 @@ def add_playlist_item(playlist_mbid, offset):
             precordings.append(pr)
 
     try:
-        # TODO : Add thi method call when available
-        #db_playlist.add_playlist_items(playlist, precordings, offset)
-        pass
+        db_playlist.add_recordings_to_playlist(playlist, precordings, offset)
     except Exception as e:
         current_app.logger.error("Error while adding recordings to playlist: {}".format(e))
         raise APIInternalServerError("Failed to add recordings to the playlist. Please try again.")
