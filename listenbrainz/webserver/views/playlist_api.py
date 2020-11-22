@@ -231,6 +231,7 @@ def add_playlist_item(playlist_mbid, offset):
     data = request.json
     validate_playlist(data, False)
 
+    print(data)
     if len(data["playlist"]["track"]) > MAX_RECORDINGS_PER_ADD:
         log_raise_400("You may only add max %d recordings per call." % MAX_RECORDINGS_PER_ADD)
 
@@ -240,7 +241,10 @@ def add_playlist_item(playlist_mbid, offset):
             precordings.append(WritablePlaylistRecording(mbid=UUID(track['identifier'][len(PLAYLIST_TRACK_URI_PREFIX):]),
                                        added_by_id=user["id"]))
 
+    db_playlist.add_recordings_to_playlist(playlist, precordings, offset)
     try:
+        print(precordings)
+        print(offset)
         db_playlist.add_recordings_to_playlist(playlist, precordings, offset)
     except Exception as e:
         current_app.logger.error("Error while adding recordings to playlist: {}".format(e))
@@ -282,11 +286,10 @@ def move_playlist_item(playlist_mbid):
     validate_move_data(data)
 
     try:
-        # TODO, complete when the method becomes available, create proper response code
-        pass
+        db_playlist.move_recordings(playlist, data['from'], data['to'], data['count'])
     except Exception as e:
-        current_app.logger.error("Error while adding recordings to playlist: {}".format(e))
-        raise APIInternalServerError("Failed to add recordings to the playlist. Please try again.")
+        current_app.logger.error("Error while moving recordings in the playlist: {}".format(e))
+        raise APIInternalServerError("Failed to move recordings in the playlist. Please try again.")
 
     return jsonify({'status': 'ok' })
 
@@ -301,7 +304,7 @@ def delete_playlist_item(playlist_mbid):
     of the track to delete, and how many tracks from that position should be moved deleted. The format of the
     post data should look as follows:
 
-     { “mbid” : “<mbid>”, “index” : 3, “count”: 2 }
+     { “index” : 3, “count”: 2 }
 
     :reqheader Authorization: Token <user token>
     :statuscode 200: playlist accepted.
@@ -315,7 +318,7 @@ def delete_playlist_item(playlist_mbid):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    playlist = db_playlist.get_by_id(playlist_mbid)
+    playlist = db_playlist.get_by_mbid(playlist_mbid)
     if playlist is None or \
         (playlist.creator_id != user["id"] and not playlist.public):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
@@ -324,11 +327,9 @@ def delete_playlist_item(playlist_mbid):
     validate_delete_data(data)
 
     try:
-        # TODO, complete when the method becomes available, create proper response code
-        #db_playlist.delete_recordings_from_playlist(playlist, UUID(data['mbid']), data['index'], data['count'])
-        pass
+        db_playlist.delete_recordings_from_playlist(playlist, data['index'], data['count'])
     except Exception as e:
-        current_app.logger.error("Error while adding recordings to playlist: {}".format(e))
-        raise APIInternalServerError("Failed to add recordings to the playlist. Please try again.")
+        current_app.logger.error("Error while deleting recordings from playlist: {}".format(e))
+        raise APIInternalServerError("Failed to deleting recordings from the playlist. Please try again.")
 
     return jsonify({'status': 'ok' })
