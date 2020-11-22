@@ -14,6 +14,7 @@ import AsyncSelect from "react-select/async";
 import BrainzPlayer from "../BrainzPlayer";
 import APIService from "../APIService";
 import PlaylistItemCard from "./PlaylistItemCard";
+import Card from "../components/Card";
 
 export interface PlaylistPageProps {
   apiUrl: string;
@@ -38,7 +39,7 @@ export default class PlaylistPage extends React.Component<
   PlaylistPageState
 > {
   private APIService: APIService;
-
+  private searchForTrackDebounced: Function;
   private brainzPlayer = React.createRef<BrainzPlayer>();
   private listensTable = React.createRef<HTMLTableElement>();
 
@@ -58,6 +59,7 @@ export default class PlaylistPage extends React.Component<
     );
 
     this.listensTable = React.createRef();
+    this.searchForTrackDebounced = _.debounce(this.searchForTrack, 400);
   }
 
   componentDidMount(): void {
@@ -113,35 +115,41 @@ export default class PlaylistPage extends React.Component<
     // Once one is selected, call API endpoint POST /1/playlist/{id}/item/add
   };
 
-  searchForTrack = async (inputValue) => {
-    const response = await fetch(
-      "http://bono.metabrainz.org:8000/acrm-search/json",
-      {
-        method: "POST",
-        body: JSON.stringify([{ query: inputValue }]),
-        headers: {
-          "Content-type": "application/json; charset=UTF-8",
-          "Access-Control-Allow-Origin": "*",
-        },
-      }
-    );
+  searchForTrack = async (
+    inputValue: string
+  ): Promise<[{ label: string; value: string }?]> => {
+    try {
+      const response = await fetch(
+        "https://datasets.listenbrainz.org/acrm-search/json",
+        {
+          method: "POST",
+          body: JSON.stringify([{ query: inputValue }]),
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+        }
+      );
 
-    // Converting to JSON
-    const parsedResponse = await response.json();
-    // Receives an array of:
-    //   {
-    //     "artist_credit_id": 2471396,
-    //     "artist_credit_name": "Hobocombo",
-    //     "recording_mbid": "9812475d-c800-4f29-8a9a-4ac4af4b4dfd",
-    //     "recording_name": "Bird's Lament",
-    //     "release_mbid": "17276c50-dd38-4c62-990e-186ef0ff36f4",
-    //     "release_name": "Now that it's the opposite, it's twice upon a time"
-    // }
-    // Format the received items to a react-select option
-    return parsedResponse.map((hit) => ({
-      label: `${hit.recording_name} — ${hit.artist_credit_name}`,
-      value: hit.recording_mbid,
-    }));
+      // Converting to JSON
+      const parsedResponse = await response.json();
+      // Receives an array of:
+      //   {
+      //     "artist_credit_id": 2471396,
+      //     "artist_credit_name": "Hobocombo",
+      //     "recording_mbid": "9812475d-c800-4f29-8a9a-4ac4af4b4dfd",
+      //     "recording_name": "Bird's Lament",
+      //     "release_mbid": "17276c50-dd38-4c62-990e-186ef0ff36f4",
+      //     "release_name": "Now that it's the opposite, it's twice upon a time"
+      // }
+      // Format the received items to a react-select option
+      return parsedResponse.map((hit) => ({
+        label: `${hit.recording_name} — ${hit.artist_credit_name}`,
+        value: hit.recording_mbid,
+      }));
+    } catch (error) {
+      console.debug(error);
+      return [];
+    }
   };
 
   deletePlaylist = (): void => {
@@ -261,6 +269,11 @@ export default class PlaylistPage extends React.Component<
     // evt.newDraggableIndex; // element's new index within new parent, only counting draggable elements
     // evt.clone; // the clone element
     // evt.pullMode; // when item is in another sortable: `"clone"` if cloning, `true` if moving
+    console.log(
+      `move MBID ${evt.item.getAttribute("data-recording-mbid")} to index ${
+        evt.newIndex
+      }`
+    );
   };
 
   render() {
@@ -341,7 +354,7 @@ export default class PlaylistPage extends React.Component<
               <div>
                 <div id="listens" ref={this.listensTable}>
                   <ReactSortable
-                    handle=".my-handle"
+                    handle=".drag-handle"
                     list={listens}
                     onEnd={this.updateSortOrder}
                     setList={(newState) => this.setState({ listens: newState })}
@@ -357,9 +370,10 @@ export default class PlaylistPage extends React.Component<
                       //   return 0;
                       // })
                       .map((listen, index) => {
+                        const id = `${listen.track_metadata?.additional_info?.recording_msid}`;
                         return (
                           <PlaylistItemCard
-                            key={`${listen.track_metadata?.track_name}`}
+                            key={id}
                             currentUser={currentUser}
                             isCurrentUser={currentUser?.name === user?.name}
                             apiUrl={apiUrl}
@@ -379,10 +393,16 @@ export default class PlaylistPage extends React.Component<
                         );
                       })}
                   </ReactSortable>
+                  <Card className="listen-card row add-track">
+                    <span>Add a track</span>
+                    <AsyncSelect
+                      cacheOptions
+                      loadOptions={this.searchForTrackDebounced}
+                    />
+                  </Card>
                 </div>
               </div>
             )}
-            <AsyncSelect cacheOptions loadOptions={this.searchForTrack} />
           </div>
           <div
             className="col-md-4"

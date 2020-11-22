@@ -138,7 +138,7 @@ export default class PlaylistItemCard extends React.Component<
     const { listen } = this.props;
     return (
       <span
-        className="listen-time text-center text-muted"
+        className="listen-time"
         title={
           listen.listened_at_iso?.toString() ||
           new Date(listen.listened_at * 1000).toISOString()
@@ -177,14 +177,21 @@ export default class PlaylistItemCard extends React.Component<
     const { listen, isCurrentUser } = this.props;
     const { feedback, isDeleted } = this.state;
 
+    const trackDuration = listen.track_metadata?.additional_info?.duration_ms
+      ? (listen.track_metadata.additional_info.duration_ms / 10000).toFixed(2)
+      : "?";
+    const recordingMbid =
+      listen.track_metadata?.additional_info?.recording_msid;
     return (
       <Card
         onDoubleClick={this.playListen}
         className={`listen-card row ${isDeleted ? " deleted" : ""}`}
+        data-recording-mbid={recordingMbid}
       >
         <FontAwesomeIcon
           icon={faGripLines as IconProp}
           title="Drag to reorder"
+          className="drag-handle text-muted"
         />
         <div className="track-details">
           <div title={listen.track_metadata.track_name}>
@@ -197,18 +204,24 @@ export default class PlaylistItemCard extends React.Component<
             {getArtistLink(listen)}
           </small>
         </div>
+        <div className="track-duration">{trackDuration}</div>
         <div className="feedback">Feedback component</div>
-        <div>{this.handleListenedAt()}</div>
+        <div className="addition-details">
+          <div>added by {listen.user_name}</div>
+          {this.handleListenedAt()}
+        </div>
 
-        <FontAwesomeIcon
-          icon={faEllipsisV as IconProp}
-          title="Delete"
-          className="dropdown-toggle"
-          id="listenControlsDropdown"
-          data-toggle="dropdown"
-          aria-haspopup="true"
-          aria-expanded="true"
-        />
+        <button className="btn btn-link" type="button">
+          <FontAwesomeIcon
+            icon={faEllipsisV as IconProp}
+            title="Delete"
+            className="dropdown-toggle"
+            id="listenControlsDropdown"
+            data-toggle="dropdown"
+            aria-haspopup="true"
+            aria-expanded="true"
+          />
+        </button>
         <ul
           className="dropdown-menu dropdown-menu-right"
           aria-labelledby="listenControlsDropdown"
