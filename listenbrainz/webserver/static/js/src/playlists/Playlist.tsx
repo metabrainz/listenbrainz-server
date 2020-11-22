@@ -11,9 +11,12 @@ import * as _ from "lodash";
 import * as io from "socket.io-client";
 import { ReactSortable } from "react-sortablejs";
 import AsyncSelect from "react-select/async";
+import { ActionMeta } from "react-select";
+import debounceAsync from "debounce-async";
 import BrainzPlayer from "../BrainzPlayer";
 import APIService from "../APIService";
 import PlaylistItemCard from "./PlaylistItemCard";
+import Card from "../components/Card";
 
 export interface PlaylistPageProps {
   apiUrl: string;
@@ -38,9 +41,8 @@ export default class PlaylistPage extends React.Component<
   PlaylistPageState
 > {
   private APIService: APIService;
-
+  private searchForTrackDebounced: any;
   private brainzPlayer = React.createRef<BrainzPlayer>();
-  private listensTable = React.createRef<HTMLTableElement>();
 
   private socket!: SocketIOClient.Socket;
 
@@ -57,7 +59,9 @@ export default class PlaylistPage extends React.Component<
       props.apiUrl || `${window.location.origin}/1`
     );
 
-    this.listensTable = React.createRef();
+    this.searchForTrackDebounced = debounceAsync(this.searchForTrack, 500, {
+      leading: false,
+    });
   }
 
   componentDidMount(): void {
@@ -107,41 +111,61 @@ export default class PlaylistPage extends React.Component<
     }
   };
 
-  addTrack = (): void => {
-    // Show a popup with a search field and results to choose from
-    // Calls http://bono.metabrainz.org:8000/acrm-search and displays results
-    // Once one is selected, call API endpoint POST /1/playlist/{id}/item/add
+  addTrack = (
+    track: { label: string; value: string },
+    actionMeta: ActionMeta<{ label: string; value: string }>
+    // track: { label: string; value: string },
+    // { action }: { action: string }
+  ): void => {
+    if (actionMeta.action === "select-option") {
+      // Once one is selected, call API endpoint POST /1/playlist/{id}/item/add
+      this.newAlert(
+        "success",
+        "Add track",
+        `Add track ${track.label} (${track.value})`
+      );
+    }
   };
 
-  searchForTrack = async (inputValue) => {
-    const response = await fetch(
-      "http://bono.metabrainz.org:8000/acrm-search/json",
-      {
-        method: "POST",
-        body: JSON.stringify([{ query: inputValue }]),
-        headers: {
-          "Content-type": "application/json; charset=UTF-8",
-          "Access-Control-Allow-Origin": "*",
-        },
-      }
-    );
+  searchForTrack = async (
+    inputValue: string
+  ): Promise<{ label: string; value: string }[]> => {
+    try {
+      const response = await fetch(
+        "https://datasets.listenbrainz.org/acrm-search/json",
+        {
+          method: "POST",
+          body: JSON.stringify([{ query: inputValue }]),
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+        }
+      );
 
-    // Converting to JSON
-    const parsedResponse = await response.json();
-    // Receives an array of:
-    //   {
-    //     "artist_credit_id": 2471396,
-    //     "artist_credit_name": "Hobocombo",
-    //     "recording_mbid": "9812475d-c800-4f29-8a9a-4ac4af4b4dfd",
-    //     "recording_name": "Bird's Lament",
-    //     "release_mbid": "17276c50-dd38-4c62-990e-186ef0ff36f4",
-    //     "release_name": "Now that it's the opposite, it's twice upon a time"
-    // }
-    // Format the received items to a react-select option
-    return parsedResponse.map((hit) => ({
-      label: `${hit.recording_name} — ${hit.artist_credit_name}`,
-      value: hit.recording_mbid,
-    }));
+      // Converting to JSON
+      const parsedResponse: ACRMSearchResult[] = await response.json();
+      // Receives an array of:
+      //   {
+      //     "artist_credit_id": 2471396,
+      //     "artist_credit_name": "Hobocombo",
+      //     "recording_mbid": "9812475d-c800-4f29-8a9a-4ac4af4b4dfd",
+      //     "recording_name": "Bird's Lament",
+      //     "release_mbid": "17276c50-dd38-4c62-990e-186ef0ff36f4",
+      //     "release_name": "Now that it's the opposite, it's twice upon a time"
+      // }
+      // Format the received items to a react-select option
+      return parsedResponse.map((hit: ACRMSearchResult) => ({
+        label: `${hit.recording_name} — ${hit.artist_credit_name}`,
+        value: hit.recording_mbid,
+      }));
+    } catch (error) {
+      console.debug(error);
+      return [];
+    }
+  };
+
+  copyPlaylist = (): void => {
+    // Call API endpoint
   };
 
   deletePlaylist = (): void => {
@@ -243,29 +267,49 @@ export default class PlaylistPage extends React.Component<
     return recordingMsid ? _.get(recordingFeedbackMap, recordingMsid, 0) : 0;
   };
 
-  removeTrackFromPlaylist = (listen: Listen) => {
-    const { listens } = this.state;
-    const index = listens.indexOf(listen);
-
-    listens.splice(index, 1);
-    this.setState({ listens });
+  hasRightToEdit = (): boolean => {
+    const { currentUser } = this.props;
+    const { playlist } = this.state;
+    const { creator, collaborators } = playlist;
+    if (
+      currentUser?.name === creator.name ||
+      (collaborators ?? []).findIndex(
+        (collaborator) => collaborator.name === currentUser?.name
+      ) >= 0
+    ) {
+      return true;
+    }
+    return false;
   };
 
-  updateSortOrder = (evt) => {
-    // var itemEl = evt.item; // dragged HTMLElement
-    // evt.to; // target list
-    // evt.from; // previous list
-    // evt.oldIndex; // element's old index within old parent
-    // evt.newIndex; // element's new index within new parent
-    // evt.oldDraggableIndex; // element's old index within old parent, only counting draggable elements
-    // evt.newDraggableIndex; // element's new index within new parent, only counting draggable elements
-    // evt.clone; // the clone element
-    // evt.pullMode; // when item is in another sortable: `"clone"` if cloning, `true` if moving
+  removeTrackFromPlaylist = (listen: Listen) => {
+    const { currentUser, user } = this.props;
+    // const { listens } = this.state;
+    // const index = listens.indexOf(listen);
+
+    // listens.splice(index, 1);
+    // this.setState({ listens });
+    if (this.hasRightToEdit() && currentUser?.auth_token) {
+      const recordingMSID = _.get(
+        listen,
+        "track_metadata.additional_info.recording_msid"
+      );
+      // Call API to remove recordingMSID (at index?)
+    }
+  };
+
+  updateSortOrder = (evt: any) => {
+    console.log(
+      `move MBID ${evt.item.getAttribute("data-recording-mbid")} to index ${
+        evt.newIndex
+      }`
+    );
   };
 
   render() {
     const { alerts, currentListen, listens, playlist } = this.state;
     const { spotify, user, apiUrl, currentUser } = this.props;
+    const hasRightToEdit = this.hasRightToEdit();
 
     return (
       <div role="main">
@@ -279,10 +323,58 @@ export default class PlaylistPage extends React.Component<
         <div className="row">
           <div id="playlist" className="col-md-8">
             <div className="playlist-details row">
-              <div className="col-xs-11">
-                <h2>{playlist.title}</h2>
-                <div>Playlist by {playlist.creator.name}</div>
-                <div>{playlist.description}</div>
+              <h1 className="title">
+                <div>
+                  {playlist.title}
+                  <span className="dropdown">
+                    <button
+                      className="btn btn-link dropdown-toggle"
+                      type="button"
+                      id="playlistOptionsDropdown"
+                      data-toggle="dropdown"
+                      aria-haspopup="true"
+                      aria-expanded="true"
+                    >
+                      <FontAwesomeIcon
+                        icon={faEllipsisV as IconProp}
+                        title="More options"
+                      />
+                    </button>
+                    <ul
+                      className="dropdown-menu dropdown-menu-right"
+                      aria-labelledby="playlistOptionsDropdown"
+                    >
+                      {hasRightToEdit && (
+                        <li>
+                          <a onClick={this.copyPlaylist} role="button" href="#">
+                            Edit
+                          </a>
+                        </li>
+                      )}
+                      <li>
+                        <a onClick={this.copyPlaylist} role="button" href="#">
+                          Duplicate
+                        </a>
+                      </li>
+                      <li role="separator" className="divider" />
+                      <li>
+                        <a onClick={this.deletePlaylist} role="button" href="#">
+                          Delete
+                        </a>
+                      </li>
+                    </ul>
+                  </span>
+                </div>
+                <small>
+                  {playlist.public ? "Public " : "Private "}
+                  playlist by {playlist.creator.name}
+                  {playlist.collaborators?.length &&
+                    ` | Collaborators: ${playlist.collaborators
+                      ?.map((col) => col.name)
+                      .join(", ")}`}
+                </small>
+              </h1>
+              <div className="info">
                 <div>{playlist.itemCount} tracks</div>
                 <div>
                   Created at: {new Date(playlist.created_at).toLocaleString()}
@@ -297,92 +389,73 @@ export default class PlaylistPage extends React.Component<
                   <div>Copied from: {playlist.copied_from}</div>
                 )}
               </div>
-              <div className="col-xs-1">
-                <FontAwesomeIcon
-                  icon={faEllipsisV as IconProp}
-                  title="Delete"
-                  className="dropdown-toggle"
-                  id="playlistOptionsDropdown"
-                  data-toggle="dropdown"
-                  aria-haspopup="true"
-                  aria-expanded="true"
-                />
-                <ul
-                  className="dropdown-menu dropdown-menu-right"
-                  aria-labelledby="playlistOptionsDropdown"
-                >
-                  <button
-                    className="btn btn-link"
-                    title="Delete playlist"
-                    type="button"
-                    onClick={this.deletePlaylist}
-                  >
-                    Delete
-                  </button>
-                </ul>
-              </div>
+              <div>{playlist.description}</div>
+              <hr />
             </div>
-            <hr />
-            {!listens.length && (
-              <div className="lead text-center">
-                <p>No items in this playlist</p>
-                <button
-                  title="Load recent listens"
-                  type="button"
+            {listens.length > 5 && (
+              <div className="text-center">
+                <a
                   className="btn btn-primary"
-                  onClick={this.addTrack}
+                  type="button"
+                  href="#add-track"
+                  style={{ marginBottom: "1em" }}
                 >
                   <FontAwesomeIcon icon={faPlusCircle as IconProp} />
-                  &nbsp;&nbsp;Add some tracks !
-                </button>
+                  &nbsp;&nbsp;Add a track
+                </a>
               </div>
             )}
-            {listens.length > 0 && (
-              <div>
-                <div id="listens" ref={this.listensTable}>
-                  <ReactSortable
-                    handle=".my-handle"
-                    list={listens}
-                    onEnd={this.updateSortOrder}
-                    setList={(newState) => this.setState({ listens: newState })}
-                  >
-                    {listens
-                      // .sort((a, b) => {
-                      //   if (a.added_on) {
-                      //     return -1;
-                      //   }
-                      //   if (b.added_on) {
-                      //     return 1;
-                      //   }
-                      //   return 0;
-                      // })
-                      .map((listen, index) => {
-                        return (
-                          <PlaylistItemCard
-                            key={`${listen.track_metadata?.track_name}`}
-                            currentUser={currentUser}
-                            isCurrentUser={currentUser?.name === user?.name}
-                            apiUrl={apiUrl}
-                            listen={listen}
-                            // metadata={trackMetadataMap[listen.mbid]}
-                            currentFeedback={this.getFeedbackForRecordingMsid(
-                              listen.track_metadata?.additional_info
-                                ?.recording_msid
-                            )}
-                            playListen={this.playListen}
-                            removeTrackFromPlaylist={
-                              this.removeTrackFromPlaylist
-                            }
-                            updateFeedback={this.updateFeedback}
-                            newAlert={this.newAlert}
-                          />
-                        );
-                      })}
-                  </ReactSortable>
+            <div id="listens row">
+              {listens.length > 0 ? (
+                <ReactSortable
+                  handle=".drag-handle"
+                  list={listens}
+                  onEnd={this.updateSortOrder}
+                  setList={(newState) => this.setState({ listens: newState })}
+                >
+                  {listens.map((listen, index) => {
+                    const id = `${listen.track_metadata?.additional_info?.recording_msid}`;
+                    return (
+                      <PlaylistItemCard
+                        key={id}
+                        currentUser={currentUser}
+                        canEdit={hasRightToEdit}
+                        apiUrl={apiUrl}
+                        listen={listen}
+                        // metadata={trackMetadataMap[listen.mbid]}
+                        currentFeedback={this.getFeedbackForRecordingMsid(
+                          listen.track_metadata?.additional_info?.recording_msid
+                        )}
+                        playListen={this.playListen}
+                        removeTrackFromPlaylist={this.removeTrackFromPlaylist}
+                        updateFeedback={this.updateFeedback}
+                        newAlert={this.newAlert}
+                      />
+                    );
+                  })}
+                </ReactSortable>
+              ) : (
+                <div className="lead text-center">
+                  <p>No items in this playlist</p>
                 </div>
-              </div>
-            )}
-            <AsyncSelect cacheOptions loadOptions={this.searchForTrack} />
+              )}
+              <Card className="playlist-item-card row" id="add-track">
+                <span>
+                  <FontAwesomeIcon icon={faPlusCircle as IconProp} />
+                  &nbsp;&nbsp;Add a track
+                </span>
+                <AsyncSelect
+                  className="search"
+                  cacheOptions
+                  isClearable
+                  closeMenuOnSelect={false}
+                  loadOptions={this.searchForTrackDebounced}
+                  onChange={this.addTrack}
+                  placeholder="Artist followed by track name"
+                  loadingMessage={() => "Searching for your track…"}
+                />
+              </Card>
+            </div>
           </div>
           <div
             className="col-md-4"
