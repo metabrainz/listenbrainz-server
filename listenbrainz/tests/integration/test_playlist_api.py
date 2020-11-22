@@ -52,7 +52,6 @@ class PlaylistAPITestCase(IntegrationTestCase):
         # Make sure the return playlist id is valid
         UUID(response.json["playlist_mbid"])
 
-
         # Test to ensure fetching a playlist works
         response = self.client.get(
             url_for("playlist_api_v1.get_playlist", playlist_mbid=playlist_mbid),
@@ -80,7 +79,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         playlist = self.get_test_data()
 
         response = self.client.post(
-            url_for("playlist_api_v1.create_playlist", private="true"),
+            url_for("playlist_api_v1.create_playlist", public="false"),
             data=ujson.dumps(playlist),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json"
