@@ -9,7 +9,7 @@ CREATE TABLE playlist.playlist (
     description text,
     public boolean not null,
     created timestamp with time zone default now() not null,
-    copied_from int,
+    copied_from_id int, -- id of another playlist
     created_for_id int,
     algorithm_metadata jsonb
 );
