@@ -17,6 +17,7 @@ import BrainzPlayer from "../BrainzPlayer";
 import APIService from "../APIService";
 import PlaylistItemCard from "./PlaylistItemCard";
 import Card from "../components/Card";
+import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
 
 export interface PlaylistPageProps {
   apiUrl: string;
@@ -25,7 +26,6 @@ export interface PlaylistPageProps {
   spotify: SpotifyUser;
   user: ListenBrainzUser;
   webSocketsServerUrl: string;
-  currentUser?: ListenBrainzUser;
 }
 
 export interface PlaylistPageState {
@@ -65,12 +65,12 @@ export default class PlaylistPage extends React.Component<
   }
 
   componentDidMount(): void {
-    const { user, currentUser } = this.props;
+    const { user } = this.props;
     this.connectWebsockets();
     // Is this correct? When do we want to load feedback? always?
-    if (currentUser?.name === user?.name) {
-      this.loadFeedback();
-    }
+    // if (currentUser?.name === user?.name) {
+    this.loadFeedback();
+    // }
   }
 
   connectWebsockets = (): void => {
@@ -268,13 +268,13 @@ export default class PlaylistPage extends React.Component<
   };
 
   hasRightToEdit = (): boolean => {
-    const { currentUser } = this.props;
+    const { user } = this.props;
     const { playlist } = this.state;
     const { creator, collaborators } = playlist;
     if (
-      currentUser?.name === creator.name ||
+      user?.name === creator.name ||
       (collaborators ?? []).findIndex(
-        (collaborator) => collaborator.name === currentUser?.name
+        (collaborator) => collaborator.name === user?.name
       ) >= 0
     ) {
       return true;
@@ -283,13 +283,13 @@ export default class PlaylistPage extends React.Component<
   };
 
   removeTrackFromPlaylist = (listen: Listen) => {
-    const { currentUser, user } = this.props;
+    const { user } = this.props;
     // const { listens } = this.state;
     // const index = listens.indexOf(listen);
 
     // listens.splice(index, 1);
     // this.setState({ listens });
-    if (this.hasRightToEdit() && currentUser?.auth_token) {
+    if (this.hasRightToEdit() && user?.auth_token) {
       const recordingMSID = _.get(
         listen,
         "track_metadata.additional_info.recording_msid"
@@ -306,10 +306,33 @@ export default class PlaylistPage extends React.Component<
     );
   };
 
+  editPlaylist = (
+    name: string,
+    description: string,
+    isPublic: boolean,
+    collaborators: string[],
+    id?: string
+  ) => {
+    // Show modal or section with playlist attributes
+    // name, description, private/public
+    // Then call API endpoint POST  /1/playlist/create
+    const content = (
+      <div>
+        <div>name: {name}</div>
+        <div>description: {description}</div>
+        <div>isPublic: {isPublic}</div>
+        <div>collaborators: {collaborators}</div>
+        <div>id: {id}</div>
+      </div>
+    );
+    this.newAlert("success", "Creating playlist", content);
+  };
+
   render() {
     const { alerts, currentListen, listens, playlist } = this.state;
-    const { spotify, user, apiUrl, currentUser } = this.props;
+    const { spotify, user, apiUrl } = this.props;
     const hasRightToEdit = this.hasRightToEdit();
+    const isOwner = playlist.creator.name === user.name;
 
     return (
       <div role="main">
@@ -344,9 +367,15 @@ export default class PlaylistPage extends React.Component<
                       className="dropdown-menu dropdown-menu-right"
                       aria-labelledby="playlistOptionsDropdown"
                     >
-                      {hasRightToEdit && (
+                      {isOwner && (
                         <li>
-                          <a onClick={this.copyPlaylist} role="button" href="#">
+                          <a
+                            onClick={this.copyPlaylist}
+                            role="button"
+                            href="#"
+                            data-toggle="modal"
+                            data-target="#playlistModal"
+                          >
                             Edit
                           </a>
                         </li>
@@ -421,7 +450,7 @@ export default class PlaylistPage extends React.Component<
                     return (
                       <PlaylistItemCard
                         key={id}
-                        currentUser={currentUser}
+                        currentUser={user}
                         canEdit={hasRightToEdit}
                         apiUrl={apiUrl}
                         listen={listen}
@@ -459,6 +488,12 @@ export default class PlaylistPage extends React.Component<
                 />
               </Card>
             </div>
+            {isOwner && (
+              <CreateOrEditPlaylistModal
+                onSubmit={this.editPlaylist}
+                playlist={playlist}
+              />
+            )}
           </div>
           <div
             className="col-md-4"
@@ -510,7 +545,7 @@ document.addEventListener("DOMContentLoaded", () => {
       spotify={spotify}
       user={user}
       webSocketsServerUrl={web_sockets_server_url}
-      currentUser={current_user}
+      // currentUser={current_user}
     />,
     domContainer
   );
