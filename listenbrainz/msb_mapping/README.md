@@ -14,34 +14,48 @@ so that it can be used to find the first release year of that pair.
 3. A typesense index that takes the data from #1 and generates an index that can be used to quickly and fuzzily
 look up data from the table in #1. This index will serve as the official "MusicBrainz mapping".
 
+Creating mappings and running tests
+-----------------------------------
+
+You will need to have a copy of musicbrainz-docker installed and running in order to run these commands.
 
 
-```docker exec -it messybrainz-mapper python manage.py create-all```
+To build the docker image for the mapping tools:
 
-To test the mapping when it is generated, run:
+```./build.sh```
 
-```docker exec -it messybrainz-mapper python manage.py test-mapping```
+Then to access the manage.py command that is used to invoke the various functions, do:
 
-To inspect the cron log of the container do:
+```docker run --rm -it --network musicbrainzdocker_default metabrainz/mbid-mapping python3 manage.py```
 
-```docker exec -it messybrainz-mapper python manage.py cron-log```
+To create the MusicBrainz MBID mapping run:
 
-To run a dev container and do connect it to a musicbrainz-docker instance, do:
+```manage.py mbid-mapping```
+
+To create the MusicBrainz year mapping run:
+
+```manage.py year-mapping```
+
+
+Creating a typesense index for searching the mapping
+----------------------------------------------------
+
+If you plan to create a typesense index, you'll need typesense installed. First set an API KEY in config.py,
+then run:
 
 ```
-docker build -f Dockerfile.dev -t metabrainz/mbid-mapper .
-docker run --rm -it --network musicbrainzdocker_default metabrainz/mbid-mapping python3 manage.py create-all
-docker run -p 8108:8108 -d -v /home/robert/typesense:/data --name=typesense --network=musicbrainzdocker_default typesense/typesense:0.17.0 --data-dir /data --api-key=root-api-key
+docker run -p 8108:8108 -d -v <some_data_dir_for_typesense>/data --name=typesense
+       --network=musicbrainzdocker_default typesense/typesense:0.17.0 --data-dir /data --api-key=<the api key>
 ```
 
-Recording Artist Pairs
-======================
+To create the typesense index:
 
-In this step all of the releases in MusicBrainz are ordered by artist, release type, release date and release format.
-The motivation for this step is to give priority to those releases that are likely the source releases that streaming
-services (whose listens we're tyring to match with this mapping). It should choose the earliest digital releases of
-albums from countries where those albums likely were released first.
+```manage.py build-index```
 
-After the ordering is complete the recordings from these releases are fetched from the DB and stored in memory.
-Only the first occurance of any one pair of artist name - release name is loaded to memory -- all other duplicates
-are not loaded into ram and thus not elegible for being part of the mapping.
+To test searching the index:
+
+```manage.py search sun shines tv```
+
+To run the mapping tests:
+
+```manage.py test-mapping```
