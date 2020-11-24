@@ -1,10 +1,16 @@
 import * as React from "react";
 import { mount, shallow } from "enzyme";
+import {
+  faAngry,
+  faFrown,
+  faMeh,
+  faSmileBeam,
+  faGrinStars,
+} from "@fortawesome/free-solid-svg-icons";
 
 import RecommendationCard, {
   RecommendationCardProps,
 } from "./RecommendationCard";
-
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
@@ -69,6 +75,12 @@ describe("submitFeedback", () => {
     const spy = jest.spyOn(instance.APIService, "submitRecommendationFeedback");
     spy.mockImplementation(() => Promise.resolve(200));
 
+    // Check initial values of HTML elements
+    expect(
+      wrapper.find(".recommendation-controls").childAt(0).hasClass("love")
+    ).toEqual(true);
+    expect(wrapper.find('.recommendation-controls').childAt(0).childAt(0).prop("icon").iconName).toEqual("grin-stars");
+    expect(wrapper.find('.recommendation-controls').childAt(0).childAt(2).text()).toEqual("Love");
     await instance.submitFeedback("hate");
 
     expect(spy).toHaveBeenCalledTimes(1);
@@ -76,6 +88,16 @@ describe("submitFeedback", () => {
 
     expect(instance.props.updateFeedback).toHaveBeenCalledTimes(1);
     expect(instance.props.updateFeedback).toHaveBeenCalledWith("yyyy", "hate");
+
+    // Emulate updating the props after calling Recommendations component's updateFeedback
+    wrapper.setProps({ currentFeedback: "hate" });
+
+    // Check that HTML elements have changed accordingly
+    expect(
+      wrapper.find(".recommendation-controls").childAt(0).hasClass("hate")
+    ).toEqual(true);
+    expect(wrapper.find('.recommendation-controls').childAt(0).childAt(0).prop("icon").iconName).toEqual("angry");
+    expect(wrapper.find('.recommendation-controls').childAt(0).childAt(2).text()).toEqual("Hate");
   });
 
   it("does nothing if isCurrentUser is false", async () => {
@@ -92,6 +114,7 @@ describe("submitFeedback", () => {
     instance.submitFeedback("dislike");
     expect(spy).toHaveBeenCalledTimes(0);
     expect(instance.props.updateFeedback).toHaveBeenCalledTimes(0);
+    expect(wrapper.exists(".recommendation-controls")).toEqual(false);
   });
 
   it("does nothing if CurrentUser.authtoken is not set", async () => {
@@ -112,6 +135,7 @@ describe("submitFeedback", () => {
     instance.submitFeedback("love");
     expect(spy).toHaveBeenCalledTimes(0);
     expect(instance.props.updateFeedback).toHaveBeenCalledTimes(0);
+    expect(wrapper.exists(".recommendation-controls")).toEqual(false);
   });
 
   it("doesn't call updateFeedback if status code is not 200", async () => {
@@ -130,6 +154,11 @@ describe("submitFeedback", () => {
     expect(spy).toHaveBeenCalledWith("lalala", "yyyy", "bad_recommendation");
 
     expect(props.updateFeedback).toHaveBeenCalledTimes(0);
+    expect(
+      wrapper.find(".recommendation-controls").childAt(0).hasClass("love")
+    ).toEqual(true);
+    expect(wrapper.find('.recommendation-controls').childAt(0).childAt(0).prop("icon").iconName).toEqual("grin-stars");
+    expect(wrapper.find('.recommendation-controls').childAt(0).childAt(2).text()).toEqual("Love");
   });
 
   it("calls handleError if error is returned", async () => {
@@ -151,6 +180,11 @@ describe("submitFeedback", () => {
       "Error while submitting recommendation feedback - error"
     );
     expect(props.updateFeedback).toHaveBeenCalledTimes(0);
+    expect(
+      wrapper.find(".recommendation-controls").childAt(0).hasClass("love")
+    ).toEqual(true);
+    expect(wrapper.find('.recommendation-controls').childAt(0).childAt(0).prop("icon").iconName).toEqual("grin-stars");
+    expect(wrapper.find('.recommendation-controls').childAt(0).childAt(2).text()).toEqual("Love");
   });
 });
 
@@ -184,11 +218,29 @@ describe("deleteFeedback", () => {
 
     await instance.deleteFeedback();
 
+    // Check initial values of HTML elements
+    expect(
+      wrapper.find(".recommendation-controls").childAt(0).hasClass("love")
+    ).toEqual(true);
+    expect(wrapper.find('.recommendation-controls').childAt(0).childAt(0).prop("icon").iconName).toEqual("grin-stars");
+    expect(wrapper.find('.recommendation-controls').childAt(0).childAt(2).text()).toEqual("Love");
+
+    await instance.submitFeedback("hate");
+
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith("lalala", "yyyy");
 
     expect(instance.props.updateFeedback).toHaveBeenCalledTimes(1);
     expect(instance.props.updateFeedback).toHaveBeenCalledWith("yyyy", null);
+    // Emulate updating the props after calling Recommendations component's updateFeedback
+    wrapper.setProps({ currentFeedback: null });
+
+    // Check that HTML elements have changed accordingly
+    expect(
+      wrapper.find(".recommendation-controls").childAt(0).hasClass("btn")
+    ).toEqual(true);
+    expect(wrapper.find('.recommendation-controls').childAt(0).childAt(0).prop("icon").iconName).toEqual("thumbs-up");
+    expect(wrapper.find('.recommendation-controls').childAt(0).childAt(2).text()).toEqual("Like");
   });
 
   it("does nothing if isCurrentUser is false", async () => {
@@ -204,6 +256,7 @@ describe("deleteFeedback", () => {
     instance.deleteFeedback();
     expect(spy).toHaveBeenCalledTimes(0);
     expect(instance.props.updateFeedback).toHaveBeenCalledTimes(0);
+    expect(wrapper.exists(".recommendation-controls")).toEqual(false);
   });
 
   it("does nothing if CurrentUser.authtoken is not set", async () => {
@@ -221,6 +274,7 @@ describe("deleteFeedback", () => {
     instance.deleteFeedback();
     expect(spy).toHaveBeenCalledTimes(0);
     expect(instance.props.updateFeedback).toHaveBeenCalledTimes(0);
+    expect(wrapper.exists(".recommendation-controls")).toEqual(false);
   });
 
   it("doesn't call updateFeedback if status code is not 200", async () => {
