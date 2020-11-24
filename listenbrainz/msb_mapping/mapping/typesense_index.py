@@ -1,19 +1,11 @@
-import datetime
-import operator
-import sys
 import re
-from time import time, asctime
 import typesense
 import typesense.exceptions
 from unidecode import unidecode
-
 import psycopg2
-from psycopg2.extras import execute_values
-from psycopg2.errors import OperationalError, DuplicateTable, UndefinedObject
-import ujson
 
-from mapping.utils import log
 import config
+
 
 BATCH_SIZE = 5000
 COLLECTION_NAME = 'mbid_mapping'
@@ -84,7 +76,7 @@ def build_index():
             documents = []
             for i, row in enumerate(curs):
                 document = dict(row)
-                document['score'] = max_score - document['score'] 
+                document['score'] = max_score - document['score']
                 document['combined'] = prepare_string(document['recording_name'] + " " + document['artist_credit_name'])
                 documents.append(document)
 

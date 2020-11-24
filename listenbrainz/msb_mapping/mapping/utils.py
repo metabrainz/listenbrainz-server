@@ -3,6 +3,7 @@ from time import asctime
 
 import psycopg2
 from psycopg2.extras import execute_values
+from psycopg2.errors import OperationalError
 
 CRON_LOG_FILE = "lb-cron.log"
 

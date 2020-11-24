@@ -1,18 +1,9 @@
-import datetime
-import operator
-import re
-import subprocess
-import sys
-from time import time, asctime
-
 import psycopg2
-from psycopg2.extras import execute_values
-from psycopg2.errors import OperationalError, DuplicateTable, UndefinedObject
-import ujson
-
+from psycopg2.errors import OperationalError, UndefinedTable
 from mapping.utils import create_schema, insert_rows, log
 from mapping.formats import create_formats_table
 import config
+
 
 BATCH_SIZE = 5000
 TEST_ARTIST_ID = 1160983  # Gun'n'roses, because of obvious spelling issues
@@ -41,7 +32,7 @@ def create_tables(mb_conn):
                                             release INTEGER)""")
             create_formats_table(mb_conn)
             mb_conn.commit()
-    except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable) as err:
+    except (OperationalError, UndefinedTable) as err:
         log("failed to create recording pair year tables", err)
         mb_conn.rollback()
         raise
@@ -114,7 +105,7 @@ def create_temp_release_table(conn):
 
                 count += 1
                 rows.append((count, row[0]))
-               
+
                 if len(rows) == BATCH_SIZE:
                     insert_rows(curs_insert, "mapping.tmp_year_mapping_release", rows)
                     rows = []
@@ -216,7 +207,7 @@ def create_year_mapping():
                     recording_name = row['recording_name']
                     artist_credit_name = row['artist_credit_name']
                     if recording_name not in artist_recordings:
-                        artist_recordings[recording_name] = (recording_name.replace("'", "''"), 
+                        artist_recordings[recording_name] = (recording_name.replace("'", "''"),
                                                              artist_credit_name.replace("'", "''"), row['year'])
                     last_ac_id = row['artist_credit_id']
 

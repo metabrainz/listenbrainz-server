@@ -1,15 +1,5 @@
-import datetime
-import operator
-import re
-import subprocess
-import sys
-from time import time, asctime
-
 import psycopg2
-from psycopg2.extras import execute_values
-from psycopg2.errors import OperationalError, DuplicateTable, UndefinedObject
-import ujson
-from unidecode import unidecode
+from psycopg2.errors import OperationalError
 
 from mapping.utils import create_schema, insert_rows, log
 from mapping.formats import create_formats_table
@@ -149,16 +139,16 @@ def swap_table_and_indexes(conn):
             curs.execute("DROP TABLE IF EXISTS mapping.mbid_mapping_releases")
             curs.execute("DROP TABLE IF EXISTS mapping.mbid_mapping")
             curs.execute("""ALTER TABLE mapping.tmp_mbid_mapping
-                              RENAME TO mbid_mapping""")
+                            RENAME TO mbid_mapping""")
             curs.execute("""ALTER TABLE mapping.tmp_mbid_mapping_releases
-                              RENAME TO mbid_mapping_releases""")
+                            RENAME TO mbid_mapping_releases""")
 
             curs.execute("""ALTER INDEX mapping.tmp_mbid_mapping_idx_artist_credit_recording_name
-                              RENAME TO mbid_mapping_idx_artist_credit_recording_name""")
+                            RENAME TO mbid_mapping_idx_artist_credit_recording_name""")
             curs.execute("""ALTER INDEX mapping.tmp_mbid_mapping_releases_idx_release
-                              RENAME TO mbid_mapping_releases_idx_release""")
+                            RENAME TO mbid_mapping_releases_idx_release""")
             curs.execute("""ALTER INDEX mapping.tmp_mbid_mapping_releases_idx_id
-                              RENAME TO mbid_mapping_releases_idx_id""")
+                            RENAME TO mbid_mapping_releases_idx_id""")
         conn.commit()
     except OperationalError as err:
         log("failed to swap in new mbid mapping tables", str(err))
