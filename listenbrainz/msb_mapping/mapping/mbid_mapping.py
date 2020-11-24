@@ -125,7 +125,9 @@ def create_temp_release_table(conn):
                 if len(rows) == BATCH_SIZE:
                     insert_rows(curs_insert, "mapping.tmp_mbid_mapping_releases", rows)
                     rows = []
-                    print("mbid mapping inserted %s rows." % count)
+
+                if count % 100000 == 0:
+                    print("Fetch mapping releases: inserted %s rows." % count)
 
             if rows:
                 insert_rows(curs_insert, "mapping.tmp_mbid_mapping_releases", rows)
@@ -187,6 +189,7 @@ def create_mbid_mapping():
                 last_ac_id = None
                 artist_recordings = {}
                 count = 0
+                batch_count = 0
                 log("Create mbid mapping: fetch recordings")
                 mb_curs.execute("""SELECT r.name AS recording_name,
                                           r.id AS recording_id,
@@ -231,8 +234,11 @@ def create_mbid_mapping():
                             insert_rows(mb_curs2, "mapping.tmp_mbid_mapping", rows)
                             count += len(rows)
                             mb_conn.commit()
-                            log("Create mbid mapping: inserted %d rows." % count)
                             rows = []
+                            batch_count += 1
+
+                            if batch_count % 10 == 0:
+                                log("Create mbid mapping: inserted %d rows." % count)
 
                     try:
                         recording_name = row['recording_name']

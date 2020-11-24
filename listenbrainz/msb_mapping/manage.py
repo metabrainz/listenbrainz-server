@@ -7,9 +7,10 @@ import subprocess
 import click
 
 from mapping.mbid_mapping import create_mbid_mapping
-from mapping.build_typesense_index import build_index as action_build_index
+from mapping.typesense_index import build_index as action_build_index
 from mapping.year_mapping import create_year_mapping
 from mapping.search import search as action_search
+from mapping.mapping_test.mapping_test import test_mapping as action_test_mapping
 from mapping.utils import log, CRON_LOG_FILE
 
 
@@ -23,9 +24,9 @@ def mbid_mapping():
     create_mbid_mapping()
 
 
-#@cli.command()
-#def test_pairs():
-#    action_test_pairs()
+@cli.command()
+def test_mapping():
+    action_test_mapping()
 
 
 @cli.command()

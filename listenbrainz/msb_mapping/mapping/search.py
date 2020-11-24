@@ -1,7 +1,7 @@
 
 import typesense
 import typesense.exceptions
-from mapping.build_typesense_index import prepare_string
+from mapping.typesense_index import prepare_string
 
 import config
 
