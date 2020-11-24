@@ -9,8 +9,9 @@ import psycopg2
 from psycopg2.extras import execute_values
 from psycopg2.errors import OperationalError, DuplicateTable, UndefinedObject
 import ujson
+from unidecode import unidecode
 
-from mapping.utils import create_schema, insert_rows, create_stats_table, log
+from mapping.utils import create_schema, insert_rows, log
 from mapping.formats import create_formats_table
 import config
 
@@ -21,52 +22,55 @@ TEST_ARTIST_ID = 1160983  # Gun'n'roses, because of obvious spelling issues
 
 def create_tables(mb_conn):
     """
-        Create tables needed to create the recording artist year pairs. First
+        Create tables needed to create the recording artist pairs. First
         is the temp table that the results will be stored in (in order
         to not conflict with the production version of this table).
         Second its format sort table to enables us to sort releases
-        according to preferred format, release date and type. Finally
-        a stats table is created if it doesn't exist.
+        according to preferred format, release date and type.
     """
 
     # drop/create finished table
     try:
         with mb_conn.cursor() as curs:
-            curs.execute("DROP TABLE IF EXISTS mapping.tmp_recording_artist_credit_year")
-            curs.execute("""CREATE TABLE mapping.tmp_recording_artist_credit_year (
+            curs.execute("DROP TABLE IF EXISTS mapping.tmp_mbid_mapping")
+            curs.execute("""CREATE TABLE mapping.tmp_mbid_mapping (
                                          recording_name            TEXT NOT NULL,
+                                         recording_id              INTEGER NOT NULL,
                                          artist_credit_name        TEXT NOT NULL,
-                                         year                      INTEGER)""")
-            curs.execute("DROP TABLE IF EXISTS mapping.tmp_recording_pair_releases_year")
-            curs.execute("""CREATE TABLE mapping.tmp_recording_pair_releases_year (
+                                         artist_credit_id          INTEGER NOT NULL,
+                                         release_name              TEXT NOT NULL,
+                                         release_id                INTEGER NOT NULL,
+                                         year                      INTEGER,
+                                         score                     INTEGER NOT NULL)""")
+            curs.execute("DROP TABLE IF EXISTS mapping.tmp_mbid_mapping_releases")
+            curs.execute("""CREATE TABLE mapping.tmp_mbid_mapping_releases (
                                             id      SERIAL,
                                             release INTEGER)""")
             create_formats_table(mb_conn)
-            create_stats_table(curs)
             mb_conn.commit()
     except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable) as err:
-        log("failed to create recording pair year tables", err)
+        log("failed to create mbid mapping tables", err)
         mb_conn.rollback()
         raise
 
 
 def create_indexes(conn):
     """
-        Create indexes for the recording artist pairs
+        Create indexes for the mapping
     """
 
     try:
         with conn.cursor() as curs:
-            curs.execute("""CREATE INDEX tmp_recording_artist_credit_pairs_year_idx_ac_rec_year
-                                      ON mapping.tmp_recording_artist_credit_year(artist_credit_name, recording_name)""")
+            curs.execute("""CREATE INDEX tmp_mbid_mapping_idx_artist_credit_recording_name
+                                      ON mapping.tmp_mbid_mapping(artist_credit_name, recording_name)""")
         conn.commit()
     except OperationalError as err:
-        log("failed to create recording pair index", err)
+        log("failed to create mbid mapping", err)
         conn.rollback()
         raise
 
 
-def create_temp_release_table(conn, stats):
+def create_temp_release_table(conn):
     """
         Creates an intermediate table that orders releases by types, format,
         releases date, country and artist_credit. This sorting should in theory
@@ -92,7 +96,7 @@ def create_temp_release_table(conn, stats):
                              LEFT JOIN musicbrainz.release_group_secondary_type rgst ON rgstj.secondary_type = rgst.id
                                  WHERE rg.artist_credit != 1
                                        %s
-                                 ORDER BY rg.type, rgst.id desc,
+                                 ORDER BY rg.type, rgst.id desc, fs.sort,
                                           to_date(date_year::TEXT || '-' ||
                                                   COALESCE(date_month,12)::TEXT || '-' ||
                                                   COALESCE(date_day,28)::TEXT, 'YYYY-MM-DD'),
@@ -118,21 +122,19 @@ def create_temp_release_table(conn, stats):
 
                 count += 1
                 rows.append((count, row[0]))
-               
                 if len(rows) == BATCH_SIZE:
-                    insert_rows(curs_insert, "mapping.tmp_recording_pair_releases_year", rows)
+                    insert_rows(curs_insert, "mapping.tmp_mbid_mapping_releases", rows)
                     rows = []
-                    print("recording pair releases inserted %s rows." % count)
+                    print("mbid mapping inserted %s rows." % count)
 
             if rows:
-                insert_rows(curs_insert, "mapping.tmp_recording_pair_releases_year", rows)
+                insert_rows(curs_insert, "mapping.tmp_mbid_mapping_releases", rows)
 
-        curs.execute("SELECT COUNT(*) from mapping.tmp_recording_pair_releases_year")
-        stats["recording_pair_release_count"] = curs.fetchone()[0]
-        curs.execute("SELECT COUNT(*) from musicbrainz.release")
-        stats["mb_release_count"] = curs.fetchone()[0]
-
-    return stats
+        log("Create temp release table: create indexes")
+        curs.execute("""CREATE INDEX tmp_mbid_mapping_releases_idx_release
+                                  ON mapping.tmp_mbid_mapping_releases(release)""")
+        curs.execute("""CREATE INDEX tmp_mbid_mapping_releases_idx_id
+                                  ON mapping.tmp_mbid_mapping_releases(id)""")
 
 
 def swap_table_and_indexes(conn):
@@ -142,59 +144,58 @@ def swap_table_and_indexes(conn):
 
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
-            curs.execute("DROP TABLE IF EXISTS mapping.recording_pair_releases_year")
-            curs.execute("DROP TABLE IF EXISTS mapping.recording_artist_credit_pairs_year")
-            curs.execute("""ALTER TABLE mapping.tmp_recording_artist_credit_year
-                              RENAME TO recording_artist_credit_pairs_year""")
-            curs.execute("""ALTER TABLE mapping.tmp_recording_pair_releases_year
-                              RENAME TO recording_pair_releases_year""")
+            curs.execute("DROP TABLE IF EXISTS mapping.mbid_mapping_releases")
+            curs.execute("DROP TABLE IF EXISTS mapping.mbid_mapping")
+            curs.execute("""ALTER TABLE mapping.tmp_mbid_mapping
+                              RENAME TO mbid_mapping""")
+            curs.execute("""ALTER TABLE mapping.tmp_mbid_mapping_releases
+                              RENAME TO mbid_mapping_releases""")
 
-            curs.execute("""ALTER INDEX mapping.tmp_recording_artist_credit_pairs_year_idx_ac_rec_year
-                              RENAME TO recording_artist_credit_pairs_idx_artist_credit_recording_name_year""")
+            curs.execute("""ALTER INDEX mapping.tmp_mbid_mapping_idx_artist_credit_recording_name
+                              RENAME TO mbid_mapping_idx_artist_credit_recording_name""")
+            curs.execute("""ALTER INDEX mapping.tmp_mbid_mapping_releases_idx_release
+                              RENAME TO mbid_mapping_releases_idx_release""")
+            curs.execute("""ALTER INDEX mapping.tmp_mbid_mapping_releases_idx_id
+                              RENAME TO mbid_mapping_releases_idx_id""")
         conn.commit()
     except OperationalError as err:
-        log("failed to swap in new recording pair tables", str(err))
+        log("failed to swap in new mbid mapping tables", str(err))
         conn.rollback()
         raise
 
 
-def create_pairs_year():
+def create_mbid_mapping():
     """
-        This function is the heart of the recording artist pair mapping. It
+        This function is the heart of the mbid mapping. It
         calculates the intermediate table and then fetches all the recordings
         from these tables so that duplicate recording-artist pairs all
         resolve to the "canonical" release-artist pairs that make
         them suitable for inclusion in the msid-mapping.
     """
 
-    stats = {}
-    stats["started"] = datetime.datetime.utcnow().isoformat()
-    stats["git commit hash"] = subprocess.getoutput("git rev-parse HEAD")
-
     with psycopg2.connect(config.DB_CONNECT_MB) as mb_conn:
         with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
 
             # Create the dest table (perhaps dropping the old one first)
-            log("Create pairs: drop old tables, create new tables")
+            log("Create mbid mapping: drop old tables, create new tables")
             create_schema(mb_conn)
             create_tables(mb_conn)
 
-            stats = create_temp_release_table(mb_conn, stats)
-
-            mb_curs.execute("SELECT COUNT(*) from musicbrainz.recording")
-            stats["mb_recording_count"] = mb_curs.fetchone()[0]
-
+            create_temp_release_table(mb_conn)
             with mb_conn.cursor() as mb_curs2:
-
                 rows = []
                 last_ac_id = None
                 artist_recordings = {}
                 count = 0
-                log("Create pairs: fetch recordings")
-                mb_curs.execute("""SELECT lower(musicbrainz.musicbrainz_unaccent(r.name)) AS recording_name,
-                                          lower(musicbrainz.musicbrainz_unaccent(ac.name)) AS artist_credit_name,
+                log("Create mbid mapping: fetch recordings")
+                mb_curs.execute("""SELECT r.name AS recording_name,
+                                          r.id AS recording_id,
+                                          ac.name AS artist_credit_name,
                                           ac.id AS artist_credit_id,
-                                          date_year AS year
+                                          rl.name AS release_name,
+                                          rl.id AS release_id,
+                                          date_year AS year,
+                                          rpr.id AS score
                                      FROM recording r
                                      JOIN artist_credit ac
                                        ON r.artist_credit = ac.id
@@ -206,12 +207,13 @@ def create_pairs_year():
                                        ON m.id = t.medium
                                      JOIN release rl
                                        ON rl.id = m.release
-                                     JOIN mapping.tmp_recording_pair_releases_year rpr
+                                     JOIN mapping.tmp_mbid_mapping_releases rpr
                                        ON rl.id = rpr.release
                                 LEFT JOIN release_country rc
                                        ON rc.release = rl.id
+                                    GROUP BY rpr.id, ac.id, rl.id, artist_credit_name, r.id, r.name, release_name, year
                                     ORDER BY ac.id, rpr.id""")
-                log("Create pairs: Insert rows into DB.")
+                log("Create mbid mapping: Insert rows into DB.")
                 while True:
                     row = mb_curs.fetchone()
                     if not row:
@@ -226,42 +228,39 @@ def create_pairs_year():
                         artist_recordings = {}
 
                         if len(rows) > BATCH_SIZE:
-                            insert_rows(mb_curs2, "mapping.tmp_recording_artist_credit_year", rows)
+                            insert_rows(mb_curs2, "mapping.tmp_mbid_mapping", rows)
                             count += len(rows)
                             mb_conn.commit()
-                            log("Create pairs: inserted %d rows." % count)
+                            log("Create mbid mapping: inserted %d rows." % count)
                             rows = []
 
-                    recording_name = row['recording_name']
-                    artist_credit_name = row['artist_credit_name']
-                    if config.REMOVE_NON_WORD_CHARS:
-                        recording_name = re.sub(r'\W+', '', recording_name)
-                    if recording_name not in artist_recordings:
-                        if config.REMOVE_NON_WORD_CHARS:
-                            artist_credit_name = re.sub(r'\W+', '', artist_credit_name)
-                        artist_recordings[recording_name] = (recording_name, artist_credit_name, row['year'])
+                    try:
+                        recording_name = row['recording_name']
+                        artist_credit_name = row['artist_credit_name']
+                        release_name = row['release_name']
+                        if recording_name not in artist_recordings:
+                            artist_recordings[recording_name] = (recording_name, row['recording_id'],
+                                                                 artist_credit_name, row['artist_credit_id'],
+                                                                 release_name, row['release_id'], row['year'],
+                                                                 row['score'])
+                    except TypeError:
+                        print(row)
+                        raise
+
                     last_ac_id = row['artist_credit_id']
 
                 rows.extend(artist_recordings.values())
                 if rows:
-                    insert_rows(mb_curs2, "mapping.tmp_recording_artist_credit_year", rows)
+                    insert_rows(mb_curs2, "mapping.tmp_mbid_mapping", rows)
                     mb_conn.commit()
                     count += len(rows)
 
-            log("Create pairs years: inserted %d rows total." % count)
-            stats["recording_artist_pair_count"] = count
-
-            log("Create pairs years: create indexes")
+            log("Create mbid mapping: inserted %d rows total." % count)
+            log("Create mbid mapping: create indexes")
             create_indexes(mb_conn)
 
-            log("Create pairs years: swap tables and indexes into production.")
+            log("Create mbid mapping: swap tables and indexes into production.")
             swap_table_and_indexes(mb_conn)
-
-    stats["completed"] = datetime.datetime.utcnow().isoformat()
-    with psycopg2.connect(config.DB_CONNECT_MB) as conn:
-        with conn.cursor() as curs:
-            curs.execute("""INSERT INTO mapping.mapping_stats (stats) VALUES (%s)""", ((ujson.dumps(stats),)))
-        conn.commit()
 
     log("done")
     print()

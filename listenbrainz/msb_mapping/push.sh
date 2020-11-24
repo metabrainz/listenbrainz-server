@@ -10,5 +10,5 @@
 
 TAG=${1:-beta}
 echo "building for tag $TAG"
-docker build -t metabrainz/listenbrainz-msb-mapper:$TAG . && \
-    docker push metabrainz/listenbrainz-msb-mapper:$TAG
+docker build -t metabrainz/mbid-mapping:$TAG . && \
+    docker push metabrainz/mbid-mapping:$TAG

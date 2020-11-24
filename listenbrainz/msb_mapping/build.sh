@@ -1,3 +1,3 @@
 #!/bin/sh
 
-docker build -t metabrainz/listenbrainz-msb-mapper .
+docker build -t metabrainz/mbid-mapping .
