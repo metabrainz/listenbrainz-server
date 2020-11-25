@@ -1,6 +1,11 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
-import { faPlusCircle, faEllipsisV } from "@fortawesome/free-solid-svg-icons";
+import {
+  faPlusCircle,
+  faEllipsisV,
+  faTrashAlt,
+  faPenAlt,
+} from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 import { AlertList } from "react-bs-notifier";
@@ -18,6 +23,7 @@ import APIService from "../APIService";
 import PlaylistItemCard from "./PlaylistItemCard";
 import Card from "../components/Card";
 import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
+import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
 
 export interface PlaylistPageProps {
   apiUrl: string;
@@ -166,10 +172,22 @@ export default class PlaylistPage extends React.Component<
 
   copyPlaylist = (): void => {
     // Call API endpoint
+    const { playlist } = this.state;
+    this.newAlert(
+      "warning",
+      "API call placeholder",
+      `Copy playlist ${playlist.id}`
+    );
   };
 
   deletePlaylist = (): void => {
     // Call API endpoint
+    const { playlist } = this.state;
+    this.newAlert(
+      "warning",
+      "API call placeholder",
+      `Delete playlist ${playlist.id}`
+    );
   };
 
   handleCurrentListenChange = (listen: Listen): void => {
@@ -299,7 +317,9 @@ export default class PlaylistPage extends React.Component<
   };
 
   updateSortOrder = (evt: any) => {
-    console.log(
+    this.newAlert(
+      "warning",
+      "Move track",
       `move MBID ${evt.item.getAttribute("data-recording-mbid")} to index ${
         evt.newIndex
       }`
@@ -367,30 +387,38 @@ export default class PlaylistPage extends React.Component<
                       className="dropdown-menu dropdown-menu-right"
                       aria-labelledby="playlistOptionsDropdown"
                     >
-                      {isOwner && (
-                        <li>
-                          <a
-                            onClick={this.copyPlaylist}
-                            role="button"
-                            href="#"
-                            data-toggle="modal"
-                            data-target="#playlistModal"
-                          >
-                            Edit
-                          </a>
-                        </li>
-                      )}
                       <li>
                         <a onClick={this.copyPlaylist} role="button" href="#">
                           Duplicate
                         </a>
                       </li>
-                      <li role="separator" className="divider" />
-                      <li>
-                        <a onClick={this.deletePlaylist} role="button" href="#">
-                          Delete
-                        </a>
-                      </li>
+                      {isOwner && (
+                        <>
+                          <li role="separator" className="divider" />
+                          <li>
+                            <a
+                              data-toggle="modal"
+                              data-target="#playlistModal"
+                              role="button"
+                              href="#"
+                            >
+                              <FontAwesomeIcon icon={faPenAlt as IconProp} />{" "}
+                              Edit
+                            </a>
+                          </li>
+                          <li>
+                            <a
+                              data-toggle="modal"
+                              data-target="#confirmDeleteModal"
+                              role="button"
+                              href="#"
+                            >
+                              <FontAwesomeIcon icon={faTrashAlt as IconProp} />{" "}
+                              Delete
+                            </a>
+                          </li>
+                        </>
+                      )}
                     </ul>
                   </span>
                 </div>
@@ -489,10 +517,16 @@ export default class PlaylistPage extends React.Component<
               </Card>
             </div>
             {isOwner && (
-              <CreateOrEditPlaylistModal
-                onSubmit={this.editPlaylist}
-                playlist={playlist}
-              />
+              <>
+                <CreateOrEditPlaylistModal
+                  onSubmit={this.editPlaylist}
+                  playlist={playlist}
+                />
+                <DeletePlaylistConfirmationModal
+                  onConfirm={this.deletePlaylist}
+                  playlist={playlist}
+                />
+              </>
             )}
           </div>
           <div
