@@ -17,7 +17,7 @@ import * as io from "socket.io-client";
 import { ReactSortable } from "react-sortablejs";
 import AsyncSelect from "react-select/async";
 import { ActionMeta, ValueType } from "react-select";
-import * as debounceAsync from "debounce-async";
+import debounceAsync from "debounce-async";
 import BrainzPlayer from "../BrainzPlayer";
 import APIService from "../APIService";
 import PlaylistItemCard from "./PlaylistItemCard";
