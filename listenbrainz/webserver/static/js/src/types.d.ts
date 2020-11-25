@@ -340,3 +340,36 @@ declare type ACRMSearchResult = {
   release_mbid: string;
   release_name: string;
 };
+
+declare type JSPFObject = {
+  playlist: JSPFPlaylist;
+};
+declare type JSPFPlaylist = {
+  title: string;
+  creator: string;
+  annotation: string;
+  info: string;
+  location: string;
+  identifier: string;
+  image: string;
+  date: string;
+  license: string;
+  attribution: Array<{ location: string } | { identifier: string }>;
+  link: Array<{ [name: string]: string }>;
+  meta: Array<{ [name: string]: string }>;
+  track: Array<JSPFTrack>;
+};
+declare type JSPFTrack = {
+  location: string[];
+  identifier: string[];
+  title: string;
+  creator: string;
+  annotation: string;
+  info: string;
+  image: string;
+  album: string;
+  trackNum: number;
+  duration: number;
+  link: Array<{ [name: string]: string }>;
+  meta: Array<{ [name: string]: string }>;
+};
