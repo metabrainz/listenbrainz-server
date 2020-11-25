@@ -316,22 +316,6 @@ declare type RecordingFeedbackMap = {
   [recordingMsid: string]: ListenFeedBack;
 };
 
-declare type Playlist = {
-  id: string;
-  title: string;
-  description?: string;
-  public: boolean;
-  itemCount: number; // trackCount ?
-  tracks?: Listen[];
-  creator: ListenBrainzUser;
-  created_at: number;
-  last_modified: number;
-  created_for?: string;
-  copied_from?: string;
-  collaborators?: ListenBrainzUser[];
-  identifier?: string;
-};
-
 declare type ACRMSearchResult = {
   artist_credit_id: number;
   artist_credit_name: string;
@@ -341,22 +325,23 @@ declare type ACRMSearchResult = {
   release_name: string;
 };
 
+// XSPF/JSPF format: https://www.xspf.org/jspf/
 declare type JSPFObject = {
   playlist: JSPFPlaylist;
 };
 declare type JSPFPlaylist = {
   title: string;
   creator: string;
-  annotation: string;
-  info: string;
-  location: string;
+  annotation?: string;
+  info?: string;
+  location?: string;
   identifier: string;
-  image: string;
+  image?: string;
   date: string;
-  license: string;
-  attribution: Array<{ location: string } | { identifier: string }>;
-  link: Array<{ [name: string]: string }>;
-  meta: Array<{ [name: string]: string }>;
+  license?: string;
+  attribution?: Array<{ location: string } | { identifier: string }>;
+  link?: Array<{ [name: string]: string }>;
+  meta?: Array<{ [name: string]: string }>;
   track: Array<JSPFTrack>;
 };
 declare type JSPFTrack = {
@@ -364,12 +349,29 @@ declare type JSPFTrack = {
   identifier: string[];
   title: string;
   creator: string;
-  annotation: string;
-  info: string;
-  image: string;
-  album: string;
-  trackNum: number;
+  annotation?: string;
+  info?: string;
+  image?: string;
+  album?: string;
+  trackNum?: number;
   duration: number;
   link: Array<{ [name: string]: string }>;
   meta: Array<{ [name: string]: string }>;
+};
+declare type ListenBrainzTrack = JSPFTrack & {
+  id: string; // React-sortable library expects an id attribute
+  added_at: string;
+  added_by: string;
+};
+
+// LB stores more information about the playlist
+// the doesn't fit in the JSPF format
+declare type ListenBrainzPlaylist = JSPFPlaylist & {
+  id: string; // Playlist MBID (without full URL)
+  public: boolean;
+  item_count: number; // or track_count ?
+  last_modified: string; // ISO format?
+  created_for?: string;
+  copied_from?: string;
+  collaborators?: string[];
 };

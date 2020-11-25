@@ -1,7 +1,7 @@
 import * as React from "react";
 
 type CreateOrEditPlaylistModalProps = {
-  playlist?: Playlist;
+  playlist?: ListenBrainzPlaylist;
   onSubmit: (
     name: string,
     description: string,
@@ -28,7 +28,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
 
     this.state = {
       name: props.playlist?.title ?? "",
-      description: props.playlist?.description ?? "",
+      description: props.playlist?.annotation ?? "",
       isPublic: props.playlist?.public ?? true,
       collaborators: props.playlist?.collaborators ?? [],
     };
@@ -41,7 +41,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
     if (prevProps.playlist?.id !== playlist?.id) {
       this.setState({
         name: playlist?.title ?? "",
-        description: playlist?.description ?? "",
+        description: playlist?.annotation ?? "",
         isPublic: playlist?.public ?? true,
         collaborators: playlist?.collaborators ?? [],
       });
@@ -57,9 +57,14 @@ export default class CreateOrEditPlaylistModal extends React.Component<
     onSubmit(name, description, isPublic, collaborators, playlist?.id);
   };
 
-  handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  handleInputChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { target } = event;
-    const value = target.type === "checkbox" ? target.checked : target.value;
+    const value =
+      target.type === "checkbox"
+        ? (target as HTMLInputElement).checked
+        : target.value;
     const { name } = target;
     // @ts-ignore
     this.setState({
@@ -97,45 +102,52 @@ export default class CreateOrEditPlaylistModal extends React.Component<
             </div>
             <div className="modal-body">
               <div className="form-group">
-                <label htmlFor="playlistName">Name</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="playlistName"
-                  placeholder="Name"
-                  value={name}
-                  name="name"
-                  onChange={this.handleInputChange}
-                />
+                <label htmlFor="playlistName">
+                  Name
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="playlistName"
+                    placeholder="Name"
+                    value={name}
+                    name="name"
+                    onChange={this.handleInputChange}
+                  />
+                </label>
               </div>
 
               <div className="form-group">
-                <label htmlFor="playlistdescription">Description</label>
-                <textarea
-                  className="form-control"
-                  id="playlistdescription"
-                  placeholder="Description"
-                  value={description}
-                  name="description"
-                  onChange={this.handleInputChange}
-                />
+                <label htmlFor="playlistdescription">
+                  Description
+                  <textarea
+                    className="form-control"
+                    id="playlistdescription"
+                    placeholder="Description"
+                    value={description}
+                    name="description"
+                    onChange={this.handleInputChange}
+                  />
+                </label>
               </div>
               <div className="checkbox">
-                <label>
+                <label htmlFor="isPublic">
                   <input
                     type="checkbox"
                     checked={isPublic}
+                    id="isPublic"
                     name="isPublic"
                     onChange={this.handleInputChange}
                   />
                   &nbsp;public playlist
                 </label>
                 <div className="form-group">
-                  <label>
+                  <label htmlFor="playlistcollaborators">
                     Collaborators
-                    {collaborators.map((collaborator) => {
-                      return <div>{collaborator.name ?? collaborator}</div>;
-                    })}
+                    <ul id="playlistcollaborators">
+                      {collaborators.map((collaborator) => {
+                        return <li>{collaborator}</li>;
+                      })}
+                    </ul>
                   </label>
                 </div>
               </div>

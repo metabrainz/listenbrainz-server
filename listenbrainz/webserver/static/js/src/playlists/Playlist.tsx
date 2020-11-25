@@ -16,8 +16,8 @@ import * as _ from "lodash";
 import * as io from "socket.io-client";
 import { ReactSortable } from "react-sortablejs";
 import AsyncSelect from "react-select/async";
-import { ActionMeta } from "react-select";
-import debounceAsync from "debounce-async";
+import { ActionMeta, ValueType } from "react-select";
+import * as debounceAsync from "debounce-async";
 import BrainzPlayer from "../BrainzPlayer";
 import APIService from "../APIService";
 import PlaylistItemCard from "./PlaylistItemCard";
@@ -27,8 +27,8 @@ import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
 
 export interface PlaylistPageProps {
   apiUrl: string;
-  listens?: Array<Listen>;
-  playlist: Playlist;
+  tracks?: Array<ListenBrainzTrack>;
+  playlist: ListenBrainzPlaylist;
   spotify: SpotifyUser;
   user: ListenBrainzUser;
   webSocketsServerUrl: string;
@@ -36,11 +36,15 @@ export interface PlaylistPageProps {
 
 export interface PlaylistPageState {
   alerts: Array<Alert>;
-  currentListen?: Listen;
-  listens: Array<Listen>;
-  playlist: Playlist;
+  currentTrack?: ListenBrainzTrack;
+  tracks: Array<ListenBrainzTrack>;
+  playlist: ListenBrainzPlaylist;
   recordingFeedbackMap: RecordingFeedbackMap;
 }
+
+type OptionType = { label: string; value: string };
+
+const PLAYLIST_TRACK_URI_PREFIX = "https://musicbrainz.org/recording/";
 
 export default class PlaylistPage extends React.Component<
   PlaylistPageProps,
@@ -56,7 +60,7 @@ export default class PlaylistPage extends React.Component<
     super(props);
     this.state = {
       alerts: [],
-      listens: props.listens || [],
+      tracks: props.tracks || [],
       playlist: props.playlist || [],
       recordingFeedbackMap: {},
     };
@@ -77,6 +81,10 @@ export default class PlaylistPage extends React.Component<
     // if (currentUser?.name === user?.name) {
     this.loadFeedback();
     // }
+  }
+
+  static getRecordingMBIDFromJSPFTrack(track: JSPFTrack): string {
+    return track.identifier?.[0].substr(PLAYLIST_TRACK_URI_PREFIX.length) ?? "";
   }
 
   connectWebsockets = (): void => {
@@ -104,38 +112,48 @@ export default class PlaylistPage extends React.Component<
     // rerun fetching metadata for all tracks?
     // or find new tracks and fetch metadata for them, add them to local Map
     this.setState((prevState) => {
-      const { listens } = prevState;
+      const { tracks } = prevState;
       // Respond to each atomic change received here.
       // Can be of type add, delete, move, playlist attributes change
-      return { listens };
+      return { tracks };
     });
   };
 
-  playListen = (listen: Listen): void => {
+  playTrack = (track: ListenBrainzTrack): void => {
+    const listen: Listen = {
+      id: track.identifier?.[0],
+      listened_at: 0,
+      track_metadata: {
+        artist_name: track.creator,
+        track_name: track.title,
+        release_name: track.album,
+        additional_info: {
+          duration_ms: track.duration,
+          // recording_mbid: track.identifier
+          origin_url: track.location?.[0],
+        },
+      },
+    };
     if (this.brainzPlayer.current) {
       this.brainzPlayer.current.playListen(listen);
     }
   };
 
   addTrack = (
-    track: { label: string; value: string },
-    actionMeta: ActionMeta<{ label: string; value: string }>
-    // track: { label: string; value: string },
-    // { action }: { action: string }
+    track: ValueType<OptionType>,
+    actionMeta: ActionMeta<OptionType>
   ): void => {
     if (actionMeta.action === "select-option") {
+      if (!track) {
+        return;
+      }
+      const { label, value } = track as OptionType;
       // Once one is selected, call API endpoint POST /1/playlist/{id}/item/add
-      this.newAlert(
-        "success",
-        "Add track",
-        `Add track ${track.label} (${track.value})`
-      );
+      this.newAlert("success", "Add track", `Add track ${label} (${value})`);
     }
   };
 
-  searchForTrack = async (
-    inputValue: string
-  ): Promise<{ label: string; value: string }[]> => {
+  searchForTrack = async (inputValue: string): Promise<OptionType[]> => {
     try {
       const response = await fetch(
         "https://datasets.listenbrainz.org/acrm-search/json",
@@ -190,13 +208,13 @@ export default class PlaylistPage extends React.Component<
     );
   };
 
-  handleCurrentListenChange = (listen: Listen): void => {
-    this.setState({ currentListen: listen });
+  handleCurrentTrackChange = (track: ListenBrainzTrack | Listen): void => {
+    this.setState({ currentTrack: track as ListenBrainzTrack });
   };
 
-  isCurrentListen = (listen: Listen): boolean => {
-    const { currentListen } = this.state;
-    return Boolean(currentListen && _.isEqual(listen, currentListen));
+  isCurrentTrack = (track: ListenBrainzTrack): boolean => {
+    const { currentTrack } = this.state;
+    return Boolean(currentTrack && _.isEqual(track, currentTrack));
   };
 
   newAlert = (
@@ -233,23 +251,16 @@ export default class PlaylistPage extends React.Component<
   };
 
   getFeedback = async () => {
-    const { user, listens } = this.props;
-    let recordings = "";
+    const { user, tracks } = this.props;
 
-    if (listens) {
-      listens.forEach((listen) => {
-        const recordingMsid = _.get(
-          listen,
-          "track_metadata.additional_info.recording_msid"
-        );
-        if (recordingMsid) {
-          recordings += `${recordingMsid},`;
-        }
-      });
+    if (tracks) {
+      const recordings = tracks.map(
+        (track) => PlaylistPage.getRecordingMBIDFromJSPFTrack
+      );
       try {
         const data = await this.APIService.getFeedbackForUserForRecordings(
           user.name,
-          recordings
+          recordings.join(", ")
         );
         return data.feedback;
       } catch (error) {
@@ -278,11 +289,11 @@ export default class PlaylistPage extends React.Component<
     this.setState({ recordingFeedbackMap });
   };
 
-  getFeedbackForRecordingMsid = (
-    recordingMsid?: string | null
+  getFeedbackForRecordingMbid = (
+    recordingMbid?: string | null
   ): ListenFeedBack => {
     const { recordingFeedbackMap } = this.state;
-    return recordingMsid ? _.get(recordingFeedbackMap, recordingMsid, 0) : 0;
+    return recordingMbid ? _.get(recordingFeedbackMap, recordingMbid, 0) : 0;
   };
 
   hasRightToEdit = (): boolean => {
@@ -290,9 +301,9 @@ export default class PlaylistPage extends React.Component<
     const { playlist } = this.state;
     const { creator, collaborators } = playlist;
     if (
-      user?.name === creator.name ||
+      user?.name === creator ||
       (collaborators ?? []).findIndex(
-        (collaborator) => collaborator.name === user?.name
+        (collaborator) => collaborator === user?.name
       ) >= 0
     ) {
       return true;
@@ -300,18 +311,10 @@ export default class PlaylistPage extends React.Component<
     return false;
   };
 
-  removeTrackFromPlaylist = (listen: Listen) => {
+  removeTrackFromPlaylist = (track: ListenBrainzTrack) => {
     const { user } = this.props;
-    // const { listens } = this.state;
-    // const index = listens.indexOf(listen);
-
-    // listens.splice(index, 1);
-    // this.setState({ listens });
     if (this.hasRightToEdit() && user?.auth_token) {
-      const recordingMSID = _.get(
-        listen,
-        "track_metadata.additional_info.recording_msid"
-      );
+      const recordingMBID = PlaylistPage.getRecordingMBIDFromJSPFTrack(track);
       // Call API to remove recordingMSID (at index?)
     }
   };
@@ -349,11 +352,17 @@ export default class PlaylistPage extends React.Component<
   };
 
   render() {
-    const { alerts, currentListen, listens, playlist } = this.state;
+    const { alerts, currentTrack, tracks, playlist } = this.state;
     const { spotify, user, apiUrl } = this.props;
     const hasRightToEdit = this.hasRightToEdit();
-    const isOwner = playlist.creator.name === user.name;
+    const isOwner = playlist.creator === user.name;
 
+    const transformedTracks: ListenBrainzTrack[] = tracks.map((track) => {
+      return {
+        ...track,
+        id: PlaylistPage.getRecordingMBIDFromJSPFTrack(track),
+      };
+    });
     return (
       <div role="main">
         <AlertList
@@ -424,19 +433,15 @@ export default class PlaylistPage extends React.Component<
                 <small>
                   {playlist.public ? "Public " : "Private "}
                   playlist by{" "}
-                  <a href={`/user/${playlist.creator.name}`}>
-                    {playlist.creator.name}
-                  </a>
+                  <a href={`/user/${playlist.creator}`}>{playlist.creator}</a>
                   {playlist.collaborators?.length &&
-                    ` | Collaborators: ${playlist.collaborators
-                      ?.map((col) => col.name)
-                      .join(", ")}`}
+                    ` | Collaborators: ${playlist.collaborators?.join(", ")}`}
                 </small>
               </h1>
               <div className="info">
-                <div>{playlist.itemCount} tracks</div>
+                <div>{playlist.item_count} tracks</div>
                 <div>
-                  Created at: {new Date(playlist.created_at).toLocaleString()}
+                  Created at: {new Date(playlist.date).toLocaleString()}
                 </div>
                 {playlist.last_modified && (
                   <div>
@@ -448,10 +453,10 @@ export default class PlaylistPage extends React.Component<
                   <div>Copied from: {playlist.copied_from}</div>
                 )}
               </div>
-              <div>{playlist.description}</div>
+              <div>{playlist.annotation}</div>
               <hr />
             </div>
-            {listens.length > 5 && (
+            {transformedTracks.length > 5 && (
               <div className="text-center">
                 <a
                   className="btn btn-primary"
@@ -465,27 +470,29 @@ export default class PlaylistPage extends React.Component<
               </div>
             )}
             <div id="listens row">
-              {listens.length > 0 ? (
+              {transformedTracks.length > 0 ? (
                 <ReactSortable
                   handle=".drag-handle"
-                  list={listens}
+                  list={tracks}
                   onEnd={this.updateSortOrder}
-                  setList={(newState) => this.setState({ listens: newState })}
+                  setList={(newState) => this.setState({ tracks: newState })}
                 >
-                  {listens.map((listen, index) => {
-                    const id = `${listen.track_metadata?.additional_info?.recording_msid}`;
+                  {tracks.map((track: ListenBrainzTrack, index) => {
                     return (
                       <PlaylistItemCard
-                        key={id}
+                        key={track.id}
                         currentUser={user}
                         canEdit={hasRightToEdit}
                         apiUrl={apiUrl}
-                        listen={listen}
+                        track={track}
+                        className={
+                          this.isCurrentTrack(track) ? " current-listen" : ""
+                        }
                         // metadata={trackMetadataMap[listen.mbid]}
-                        currentFeedback={this.getFeedbackForRecordingMsid(
-                          listen.track_metadata?.additional_info?.recording_msid
+                        currentFeedback={this.getFeedbackForRecordingMbid(
+                          track.id
                         )}
-                        playListen={this.playListen}
+                        playTrack={this.playTrack}
                         removeTrackFromPlaylist={this.removeTrackFromPlaylist}
                         updateFeedback={this.updateFeedback}
                         newAlert={this.newAlert}
@@ -536,11 +543,11 @@ export default class PlaylistPage extends React.Component<
           >
             <BrainzPlayer
               apiService={this.APIService}
-              currentListen={currentListen}
+              currentListen={currentTrack}
               direction="down"
-              listens={listens}
+              listens={tracks}
               newAlert={this.newAlert}
-              onCurrentListenChange={this.handleCurrentListenChange}
+              onCurrentListenChange={this.handleCurrentTrackChange}
               ref={this.brainzPlayer}
               spotifyUser={spotify}
             />
@@ -562,7 +569,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   const {
     api_url,
-    listens,
+    tracks,
     playlist,
     spotify,
     user,
@@ -573,12 +580,11 @@ document.addEventListener("DOMContentLoaded", () => {
   ReactDOM.render(
     <PlaylistPage
       apiUrl={api_url}
-      listens={listens}
+      tracks={tracks}
       playlist={playlist}
       spotify={spotify}
       user={user}
       webSocketsServerUrl={web_sockets_server_url}
-      // currentUser={current_user}
     />,
     domContainer
   );
