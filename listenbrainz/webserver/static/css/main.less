@@ -126,3 +126,12 @@ h2.page-title { @media (max-width: @grid-float-breakpoint) { margin-top: 0px; } 
   align-items: center;
   justify-content: center;
 }
+
+// Allows styling of elements other than <a> in Bootstrap dropdowns
+.dropdown-menu > li > * {
+  &:extend(.dropdown-menu>li>a all);
+  background: inherit;
+  border: none;
+  width: 100%;
+  text-align: left;
+}

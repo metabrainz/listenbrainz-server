@@ -102,54 +102,49 @@ export default class CreateOrEditPlaylistModal extends React.Component<
             </div>
             <div className="modal-body">
               <div className="form-group">
-                <label htmlFor="playlistName">
-                  Name
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="playlistName"
-                    placeholder="Name"
-                    value={name}
-                    name="name"
-                    onChange={this.handleInputChange}
-                  />
-                </label>
+                <label htmlFor="playlistName">Name</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="playlistName"
+                  placeholder="Name"
+                  value={name}
+                  name="name"
+                  onChange={this.handleInputChange}
+                />
               </div>
 
               <div className="form-group">
-                <label htmlFor="playlistdescription">
-                  Description
-                  <textarea
-                    className="form-control"
-                    id="playlistdescription"
-                    placeholder="Description"
-                    value={description}
-                    name="description"
-                    onChange={this.handleInputChange}
-                  />
-                </label>
+                <label htmlFor="playlistdescription">Description</label>
+                <textarea
+                  className="form-control"
+                  id="playlistdescription"
+                  placeholder="Description"
+                  value={description}
+                  name="description"
+                  onChange={this.handleInputChange}
+                />
               </div>
-              <div className="checkbox">
+              <div className="form-group">
                 <label htmlFor="isPublic">
+                  &nbsp;public playlist
                   <input
+                    className="checkbox"
                     type="checkbox"
                     checked={isPublic}
                     id="isPublic"
                     name="isPublic"
                     onChange={this.handleInputChange}
                   />
-                  &nbsp;public playlist
                 </label>
-                <div className="form-group">
-                  <label htmlFor="playlistcollaborators">
-                    Collaborators
-                    <ul id="playlistcollaborators">
-                      {collaborators.map((collaborator) => {
-                        return <li>{collaborator}</li>;
-                      })}
-                    </ul>
-                  </label>
-                </div>
+              </div>
+              <div className="form-group">
+                <label htmlFor="playlistcollaborators">Collaborators</label>
+                <ul id="playlistcollaborators">
+                  {collaborators.map((collaborator) => {
+                    return <li>{collaborator}</li>;
+                  })}
+                </ul>
               </div>
               <div>Something here for adding/removing collaborators</div>
             </div>
