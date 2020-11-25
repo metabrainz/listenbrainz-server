@@ -1,4 +1,12 @@
 import * as React from "react";
+import {
+  faPlusCircle,
+  faTimes,
+  faTrashAlt,
+} from "@fortawesome/free-solid-svg-icons";
+
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 type CreateOrEditPlaylistModalProps = {
   playlist?: ListenBrainzPlaylist;
@@ -17,6 +25,7 @@ type CreateOrEditPlaylistModalState = {
   description: string;
   isPublic: boolean;
   collaborators: string[];
+  newCollaborator: string;
 };
 
 export default class CreateOrEditPlaylistModal extends React.Component<
@@ -31,6 +40,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
       description: props.playlist?.annotation ?? "",
       isPublic: props.playlist?.public ?? true,
       collaborators: props.playlist?.collaborators ?? [],
+      newCollaborator: "",
     };
   }
 
@@ -44,6 +54,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
         description: playlist?.annotation ?? "",
         isPublic: playlist?.public ?? true,
         collaborators: playlist?.collaborators ?? [],
+        newCollaborator: "",
       });
     }
   }
@@ -72,8 +83,37 @@ export default class CreateOrEditPlaylistModal extends React.Component<
     });
   };
 
+  removeCollaborator = (username: string): void => {
+    const { collaborators } = this.state;
+    this.setState({
+      collaborators: collaborators.filter(
+        (collabName) => collabName !== username
+      ),
+    });
+  };
+
+  addCollaborator = (evt: React.FormEvent<HTMLFormElement>): void => {
+    evt.preventDefault();
+    const { collaborators, newCollaborator } = this.state;
+    if (collaborators.indexOf(newCollaborator) !== -1) {
+      // already in the list
+      this.setState({ newCollaborator: "" });
+      return;
+    }
+    this.setState({
+      collaborators: [...collaborators, newCollaborator],
+      newCollaborator: "",
+    });
+  };
+
   render() {
-    const { name, description, isPublic, collaborators } = this.state;
+    const {
+      name,
+      description,
+      isPublic,
+      collaborators,
+      newCollaborator,
+    } = this.state;
     const { htmlId, playlist } = this.props;
 
     const isEdit = Boolean(playlist?.id);
@@ -125,28 +165,72 @@ export default class CreateOrEditPlaylistModal extends React.Component<
                   onChange={this.handleInputChange}
                 />
               </div>
-              <div className="form-group">
-                <label htmlFor="isPublic">
-                  &nbsp;public playlist
+              <div className="checkbox">
+                <label>
                   <input
-                    className="checkbox"
+                    id="isPublic"
                     type="checkbox"
                     checked={isPublic}
-                    id="isPublic"
                     name="isPublic"
                     onChange={this.handleInputChange}
                   />
+                  &nbsp;Make playlist public
                 </label>
               </div>
+
               <div className="form-group">
                 <label htmlFor="playlistcollaborators">Collaborators</label>
-                <ul id="playlistcollaborators">
-                  {collaborators.map((collaborator) => {
-                    return <li>{collaborator}</li>;
-                  })}
-                </ul>
+                <table
+                  id="playlistcollaborators"
+                  className="table table-condensed table-striped listens-table"
+                >
+                  <tbody>
+                    {collaborators.map((user, index) => {
+                      return (
+                        <tr key={user}>
+                          <td>{user}</td>
+
+                          <td
+                            style={{
+                              paddingTop: 0,
+                              paddingBottom: 0,
+                              width: "30px",
+                            }}
+                          >
+                            <button
+                              className="btn btn-link"
+                              type="button"
+                              aria-label="Remove"
+                              onClick={this.removeCollaborator.bind(this, user)}
+                            >
+                              <FontAwesomeIcon icon={faTimes as IconProp} />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                <form
+                  className="input-group input-group-flex"
+                  onSubmit={this.addCollaborator}
+                >
+                  <span className="input-group-addon">Add collaborator</span>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Username…"
+                    name="newCollaborator"
+                    onChange={this.handleInputChange}
+                    value={newCollaborator}
+                  />
+                  <span className="input-group-btn">
+                    <button className="btn" type="submit">
+                      <FontAwesomeIcon icon={faPlusCircle as IconProp} /> Add
+                    </button>
+                  </span>
+                </form>
               </div>
-              <div>Something here for adding/removing collaborators</div>
             </div>
             <div className="modal-footer">
               <button
