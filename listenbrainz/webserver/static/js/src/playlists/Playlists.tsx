@@ -1,7 +1,12 @@
 import * as ReactDOM from "react-dom";
 import * as React from "react";
 
-import { faPlusCircle } from "@fortawesome/free-solid-svg-icons";
+import {
+  faPlusCircle,
+  faEllipsisV,
+  faTrashAlt,
+  faPen,
+} from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 import { AlertList } from "react-bs-notifier";
@@ -9,6 +14,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import ErrorBoundary from "../ErrorBoundary";
 import Card from "../components/Card";
 import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
+import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
 
 export type UserPlaylistsProps = {
   user: ListenBrainzUser;
@@ -18,6 +24,7 @@ export type UserPlaylistsProps = {
 
 export type UserPlaylistsState = {
   playlists: Playlist[];
+  playlistSelectedForOperation?: Playlist;
   alerts: Alert[];
 };
 
@@ -34,9 +41,34 @@ export default class UserPlaylists extends React.Component<
     };
   }
 
-  deletePlaylist = (event: React.SyntheticEvent) => {
-    // Delete playlist by id
-    // event.target.id ?
+  copyPlaylist = (): void => {
+    // Call API endpoint
+    const { playlistSelectedForOperation } = this.state;
+    if (!playlistSelectedForOperation) {
+      return;
+    }
+    this.newAlert(
+      "warning",
+      "API call placeholder",
+      `Copy playlist ${playlistSelectedForOperation.id}`
+    );
+  };
+
+  deletePlaylist = (): void => {
+    // Call API endpoint
+    const { playlistSelectedForOperation } = this.state;
+    if (!playlistSelectedForOperation) {
+      return;
+    }
+    this.newAlert(
+      "warning",
+      "API call placeholder",
+      `Delete playlist ${playlistSelectedForOperation.id}`
+    );
+  };
+
+  selectedPlaylistForEdit = (playlist: Playlist): void => {
+    this.setState({ playlistSelectedForOperation: playlist });
   };
 
   createPlaylist = (
@@ -53,8 +85,30 @@ export default class UserPlaylists extends React.Component<
       <div>
         <div>name: {name}</div>
         <div>description: {description}</div>
-        <div>isPublic: {isPublic}</div>
-        <div>collaborators: {collaborators}</div>
+        <div>isPublic: {isPublic.toString()}</div>
+        <div>collaborators: {collaborators.join(", ")}</div>
+        <div>id: {id}</div>
+      </div>
+    );
+    this.newAlert("success", "Creating playlist", content);
+  };
+
+  editPlaylist = (
+    name: string,
+    description: string,
+    isPublic: boolean,
+    collaborators: string[],
+    id?: string
+  ) => {
+    // Show modal or section with playlist attributes
+    // name, description, private/public
+    // Then call API endpoint POST  /1/playlist/create
+    const content = (
+      <div>
+        <div>name: {name}</div>
+        <div>description: {description}</div>
+        <div>isPublic: {isPublic.toString()}</div>
+        <div>collaborators: {collaborators.join(", ")}</div>
         <div>id: {id}</div>
       </div>
     );
@@ -95,25 +149,79 @@ export default class UserPlaylists extends React.Component<
   };
 
   render() {
-    const { playlists } = this.state;
+    const { alerts, playlists, playlistSelectedForOperation } = this.state;
     const { apiUrl, user } = this.props;
-
     return (
       <div>
-          &nbsp;&nbsp;New playlist
-        </button>
         <div
           id="playlists-container"
           style={{ display: "flex", flexWrap: "wrap" }}
         >
           {playlists.map((playlist: Playlist) => {
+            const isOwner = playlist.creator.name === user.name;
             return (
               <Card
                 className="playlist"
                 key={playlist.id}
                 href={`/playlist/${playlist.id}`}
+              >
                 <div className="image" />
                 <div className="info">
+                  <span className="dropdown">
+                    <button
+                      className="btn btn-link dropdown-toggle pull-right"
+                      type="button"
+                      id="playlistOptionsDropdown"
+                      data-toggle="dropdown"
+                      aria-haspopup="true"
+                      aria-expanded="true"
+                      onClick={this.selectedPlaylistForEdit.bind(
+                        this,
+                        playlist
+                      )}
+                    >
+                      <FontAwesomeIcon
+                        icon={faEllipsisV as IconProp}
+                        title="More options"
+                      />
+                    </button>
+                    <ul
+                      className="dropdown-menu"
+                      aria-labelledby="playlistOptionsDropdown"
+                    >
+                      <li>
+                        <a onClick={this.copyPlaylist} role="button" href="#">
+                          Duplicate
+                        </a>
+                      </li>
+                      {isOwner && (
+                        <>
+                          <li role="separator" className="divider" />
+                          <li>
+                            <a
+                              data-toggle="modal"
+                              data-target="#playlistEditModal"
+                              role="button"
+                              href="#"
+                            >
+                              <FontAwesomeIcon icon={faPen as IconProp} /> Edit
+                            </a>
+                          </li>
+                          <li>
+                            <a
+                              data-toggle="modal"
+                              data-target="#confirmDeleteModal"
+                              role="button"
+                              href="#"
+                            >
+                              <FontAwesomeIcon icon={faTrashAlt as IconProp} />{" "}
+                              Delete
+                            </a>
+                          </li>
+                        </>
+                      )}
+                    </ul>
+                  </span>
                   {playlist.title}
                   <br />
                   {playlist.description}
@@ -128,14 +236,39 @@ export default class UserPlaylists extends React.Component<
           <Card
             className="new-playlist"
             data-toggle="modal"
-            data-target="#playlistModal"
+            data-target="#playlistCreateModal"
           >
             <div>
               <FontAwesomeIcon icon={faPlusCircle as IconProp} size="2x" />
               <span>Create new playlist</span>
             </div>
           </Card>
+          <CreateOrEditPlaylistModal
+            onSubmit={this.createPlaylist}
+            htmlId="playlistCreateModal"
+          />
+          {playlistSelectedForOperation &&
+            playlistSelectedForOperation.creator.name === user.name && (
+              <>
+                <CreateOrEditPlaylistModal
+                  onSubmit={this.editPlaylist}
+                  playlist={playlistSelectedForOperation}
+                  htmlId="playlistEditModal"
+                />
+                <DeletePlaylistConfirmationModal
+                  onConfirm={this.deletePlaylist}
+                  playlist={playlistSelectedForOperation}
+                />
+              </>
+            )}
         </div>
+        <AlertList
+          position="bottom-right"
+          alerts={alerts}
+          timeout={15000}
+          dismissTitle="Dismiss"
+          onDismiss={this.onAlertDismissed}
+        />
       </div>
     );
   }

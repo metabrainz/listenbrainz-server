@@ -4,7 +4,7 @@ import {
   faPlusCircle,
   faEllipsisV,
   faTrashAlt,
-  faPenAlt,
+  faPen,
 } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
@@ -402,8 +402,7 @@ export default class PlaylistPage extends React.Component<
                               role="button"
                               href="#"
                             >
-                              <FontAwesomeIcon icon={faPenAlt as IconProp} />{" "}
-                              Edit
+                              <FontAwesomeIcon icon={faPen as IconProp} /> Edit
                             </a>
                           </li>
                           <li>

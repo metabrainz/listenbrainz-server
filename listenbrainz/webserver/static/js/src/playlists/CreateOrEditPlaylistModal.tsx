@@ -9,12 +9,12 @@ type CreateOrEditPlaylistModalProps = {
     collaborators: string[],
     id?: string
   ) => void;
+  htmlId?: string;
 };
 
 type CreateOrEditPlaylistModalState = {
   name: string;
   description: string;
-  isEdit: boolean;
   isPublic: boolean;
   collaborators: string[];
 };
@@ -29,10 +29,23 @@ export default class CreateOrEditPlaylistModal extends React.Component<
     this.state = {
       name: props.playlist?.title ?? "",
       description: props.playlist?.description ?? "",
-      isEdit: Boolean(props.playlist?.id),
-      isPublic: props.playlist ? props.playlist.public : true,
-      collaborators: props.playlist?.collaborators || [],
+      isPublic: props.playlist?.public ?? true,
+      collaborators: props.playlist?.collaborators ?? [],
     };
+  }
+
+  // We make the component reusable by updating the state
+  // when props change (when we pass another playlist)
+  componentDidUpdate(prevProps: CreateOrEditPlaylistModalProps) {
+    const { playlist } = this.props;
+    if (prevProps.playlist?.id !== playlist?.id) {
+      this.setState({
+        name: playlist?.title ?? "",
+        description: playlist?.description ?? "",
+        isPublic: playlist?.public ?? true,
+        collaborators: playlist?.collaborators ?? [],
+      });
+    }
   }
 
   submit = (event: React.SyntheticEvent) => {
@@ -55,11 +68,14 @@ export default class CreateOrEditPlaylistModal extends React.Component<
   };
 
   render() {
-    const { name, description, isEdit, isPublic, collaborators } = this.state;
+    const { name, description, isPublic, collaborators } = this.state;
+    const { htmlId, playlist } = this.props;
+
+    const isEdit = Boolean(playlist?.id);
     return (
       <div
         className="modal fade"
-        id="playlistModal"
+        id={htmlId ?? "playlistModal"}
         tabIndex={-1}
         role="dialog"
         aria-labelledby="playlistModalLabel"
