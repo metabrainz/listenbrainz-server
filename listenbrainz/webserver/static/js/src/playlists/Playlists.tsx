@@ -190,33 +190,31 @@ export default class UserPlaylists extends React.Component<
                       aria-labelledby="playlistOptionsDropdown"
                     >
                       <li>
-                        <a onClick={this.copyPlaylist} role="button" href="#">
+                        <button onClick={this.copyPlaylist} type="button">
                           Duplicate
-                        </a>
+                        </button>
                       </li>
                       {isOwner && (
                         <>
                           <li role="separator" className="divider" />
                           <li>
-                            <a
+                            <button
+                              type="button"
                               data-toggle="modal"
                               data-target="#playlistEditModal"
-                              role="button"
-                              href="#"
                             >
                               <FontAwesomeIcon icon={faPen as IconProp} /> Edit
-                            </a>
+                            </button>
                           </li>
                           <li>
-                            <a
+                            <button
+                              type="button"
                               data-toggle="modal"
                               data-target="#confirmDeleteModal"
-                              role="button"
-                              href="#"
                             >
                               <FontAwesomeIcon icon={faTrashAlt as IconProp} />{" "}
                               Delete
-                            </a>
+                            </button>
                           </li>
                         </>
                       )}

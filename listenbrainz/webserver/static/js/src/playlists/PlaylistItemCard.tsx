@@ -185,11 +185,11 @@ export default class PlaylistItemCard extends React.Component<
               </a>
             </li>
             {canEdit && (
-              <li onClick={this.removeTrack}>
-                <a>
+              <li>
+                <button onClick={this.removeTrack} type="button">
                   <FontAwesomeIcon icon={faTrashAlt as IconProp} /> Remove from
                   playlist
-                </a>
+                </button>
               </li>
             )}
           </ul>

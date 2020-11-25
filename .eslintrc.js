@@ -37,6 +37,9 @@ module.exports = {
       "always",
       { exceptAfterSingleLine: true },
     ],
+    "jsx-a11y/label-has-associated-control": ['error', {
+      "assert":"either"
+    }],
   },
   settings: {
     "import/resolver": {

@@ -121,7 +121,6 @@ export default class PlaylistPage extends React.Component<
 
   playTrack = (track: ListenBrainzTrack): void => {
     const listen: Listen = {
-      id: track.identifier?.[0],
       listened_at: 0,
       track_metadata: {
         artist_name: track.creator,
@@ -129,7 +128,7 @@ export default class PlaylistPage extends React.Component<
         release_name: track.album,
         additional_info: {
           duration_ms: track.duration,
-          // recording_mbid: track.identifier
+          recording_mbid: track.id,
           origin_url: track.location?.[0],
         },
       },
