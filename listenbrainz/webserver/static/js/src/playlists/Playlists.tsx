@@ -19,12 +19,12 @@ import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
 export type UserPlaylistsProps = {
   user: ListenBrainzUser;
   apiUrl: string;
-  playlists?: Playlist[];
+  playlists?: ListenBrainzPlaylist[];
 };
 
 export type UserPlaylistsState = {
-  playlists: Playlist[];
-  playlistSelectedForOperation?: Playlist;
+  playlists: ListenBrainzPlaylist[];
+  playlistSelectedForOperation?: ListenBrainzPlaylist;
   alerts: Alert[];
 };
 
@@ -37,7 +37,7 @@ export default class UserPlaylists extends React.Component<
 
     this.state = {
       alerts: [],
-      playlists: props.playlists || fakePlaylists,
+      playlists: props.playlists || [],
     };
   }
 
@@ -67,7 +67,7 @@ export default class UserPlaylists extends React.Component<
     );
   };
 
-  selectedPlaylistForEdit = (playlist: Playlist): void => {
+  selectedPlaylistForEdit = (playlist: ListenBrainzPlaylist): void => {
     this.setState({ playlistSelectedForOperation: playlist });
   };
 
@@ -157,8 +157,8 @@ export default class UserPlaylists extends React.Component<
           id="playlists-container"
           style={{ display: "flex", flexWrap: "wrap" }}
         >
-          {playlists.map((playlist: Playlist) => {
-            const isOwner = playlist.creator.name === user.name;
+          {playlists.map((playlist: ListenBrainzPlaylist) => {
+            const isOwner = playlist.creator === user.name;
             return (
               <Card
                 className="playlist"
@@ -224,11 +224,11 @@ export default class UserPlaylists extends React.Component<
                   </span>
                   {playlist.title}
                   <br />
-                  {playlist.description}
+                  {playlist.annotation}
                   <br />
                   Last Modified: {playlist.last_modified}
                   <br />
-                  Created at:{playlist.created_at}
+                  Created at:{playlist.date}
                 </div>
               </Card>
             );
@@ -248,7 +248,7 @@ export default class UserPlaylists extends React.Component<
             htmlId="playlistCreateModal"
           />
           {playlistSelectedForOperation &&
-            playlistSelectedForOperation.creator.name === user.name && (
+            playlistSelectedForOperation.creator === user.name && (
               <>
                 <CreateOrEditPlaylistModal
                   onSubmit={this.editPlaylist}

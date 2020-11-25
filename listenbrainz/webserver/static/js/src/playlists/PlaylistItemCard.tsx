@@ -19,12 +19,13 @@ export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
 export type PlaylistItemCardProps = {
   apiUrl: string;
-  listen: Listen;
+  track: ListenBrainzTrack;
   currentFeedback: ListenFeedBack;
   canEdit: Boolean;
+  className?: string;
   currentUser?: ListenBrainzUser;
-  playListen: (listen: Listen) => void;
-  removeTrackFromPlaylist: (listen: Listen) => void;
+  playTrack: (track: ListenBrainzTrack) => void;
+  removeTrackFromPlaylist: (track: ListenBrainzTrack) => void;
   updateFeedback: (recordingMsid: string, score: ListenFeedBack) => void;
   newAlert: (
     alertType: AlertType,
@@ -43,7 +44,7 @@ export default class PlaylistItemCard extends React.Component<
   PlaylistItemCardState
 > {
   APIService: APIService;
-  playListen: (listen: Listen) => void;
+  playTrack: (track: ListenBrainzTrack) => void;
 
   constructor(props: PlaylistItemCardProps) {
     super(props);
@@ -57,7 +58,7 @@ export default class PlaylistItemCard extends React.Component<
       props.apiUrl || `${window.location.origin}/1`
     );
 
-    this.playListen = props.playListen.bind(this, props.listen);
+    this.playTrack = props.playTrack.bind(this, props.track);
   }
 
   componentDidUpdate(prevProps: PlaylistItemCardProps) {
@@ -93,8 +94,8 @@ export default class PlaylistItemCard extends React.Component<
   };
 
   removeTrack = async () => {
-    const { listen, removeTrackFromPlaylist } = this.props;
-    removeTrackFromPlaylist(listen);
+    const { track, removeTrackFromPlaylist } = this.props;
+    removeTrackFromPlaylist(track);
   };
 
   handleError = (error: string | Error, title?: string): void => {
@@ -110,35 +111,28 @@ export default class PlaylistItemCard extends React.Component<
   };
 
   handleListenedAt = () => {
-    const { listen } = this.props;
+    const { track } = this.props;
     return (
-      <span
-        className="listen-time"
-        title={
-          listen.listened_at_iso?.toString() ||
-          new Date(listen.listened_at * 1000).toISOString()
-        }
-      >
-        {listen.listened_at_iso
-          ? timeago.ago(listen.listened_at_iso)
-          : timeago.ago(listen.listened_at * 1000)}
+      <span className="listen-time" title={track.added_at}>
+        {timeago.ago(track.added_at)}
       </span>
     );
   };
 
   render() {
-    const { listen, canEdit } = this.props;
+    const { track, canEdit, className } = this.props;
     const { feedback, isDeleted } = this.state;
 
-    const trackDuration = listen.track_metadata?.additional_info?.duration_ms
-      ? (listen.track_metadata.additional_info.duration_ms / 100000).toFixed(2)
+    const trackDuration = track.duration
+      ? (track.duration / 100000).toFixed(2)
       : "?";
-    const recordingMbid =
-      listen.track_metadata?.additional_info?.recording_msid;
+    const recordingMbid = track.id;
     return (
       <Card
-        onDoubleClick={this.playListen}
-        className={`playlist-item-card row ${isDeleted ? " deleted" : ""}`}
+        onDoubleClick={this.playTrack}
+        className={`playlist-item-card row ${className} ${
+          isDeleted ? " deleted" : ""
+        }`}
         data-recording-mbid={recordingMbid}
       >
         <FontAwesomeIcon
@@ -147,20 +141,19 @@ export default class PlaylistItemCard extends React.Component<
           className="drag-handle text-muted"
         />
         <div className="track-details">
-          <div title={listen.track_metadata.track_name}>
-            {getTrackLink(listen)}
+          <div title={track.title}>
+            {/* {getTrackLink(track)} */}
+            {track.title}
           </div>
-          <small
-            className="text-muted"
-            title={listen.track_metadata.artist_name}
-          >
-            {getArtistLink(listen)}
+          <small className="text-muted" title={track.creator}>
+            {/* {getArtistLink(track)} */}
+            {track.creator}
           </small>
         </div>
         <div className="track-duration">{trackDuration}</div>
         {/* <div className="feedback">Feedback component</div> */}
         <div className="addition-details">
-          <div>added by monkey{listen.user_name}</div>
+          <div>added by {track.added_by}</div>
           {this.handleListenedAt()}
         </div>
 
