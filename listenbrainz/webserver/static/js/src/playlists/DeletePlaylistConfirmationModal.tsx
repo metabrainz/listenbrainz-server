@@ -8,7 +8,7 @@ type DeletePlaylistConfirmationModalProps = {
 export default function DeletePlaylistConfirmationModal(
   props: DeletePlaylistConfirmationModalProps
 ) {
-  const { playlist } = props;
+  const { playlist, onConfirm } = props;
   return (
     <div
       className="modal fade"
@@ -50,7 +50,7 @@ export default function DeletePlaylistConfirmationModal(
             <button
               type="button"
               className="btn btn-danger"
-              onClick={props.onConfirm}
+              onClick={onConfirm}
               data-dismiss="modal"
             >
               Confirm
