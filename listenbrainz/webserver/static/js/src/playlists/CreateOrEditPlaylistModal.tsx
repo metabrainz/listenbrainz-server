@@ -44,11 +44,11 @@ export default class CreateOrEditPlaylistModal extends React.Component<
     onSubmit(name, description, isPublic, collaborators, playlist?.id);
   };
 
-  handleInputChange = (event: React.SyntheticEvent) => {
+  handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { target } = event;
     const value = target.type === "checkbox" ? target.checked : target.value;
     const { name } = target;
-
+    // @ts-ignore
     this.setState({
       [name]: value,
     });
