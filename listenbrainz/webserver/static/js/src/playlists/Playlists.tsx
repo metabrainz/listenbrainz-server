@@ -1,23 +1,26 @@
-import * as ReactDOM from "react-dom";
+/* eslint-disable camelcase */
+
 import * as React from "react";
+import * as ReactDOM from "react-dom";
 
 import {
-  faPlusCircle,
   faEllipsisV,
-  faTrashAlt,
   faPen,
+  faPlusCircle,
+  faTrashAlt,
 } from "@fortawesome/free-solid-svg-icons";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 import { AlertList } from "react-bs-notifier";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import ErrorBoundary from "../ErrorBoundary";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import APIService from "../APIService";
 import Card from "../components/Card";
 import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
 import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
+import ErrorBoundary from "../ErrorBoundary";
 
 export type UserPlaylistsProps = {
-  user: ListenBrainzUser;
+  currentUser?: ListenBrainzUser;
   apiUrl: string;
   playlists?: ListenBrainzPlaylist[];
 };
@@ -32,6 +35,8 @@ export default class UserPlaylists extends React.Component<
   UserPlaylistsProps,
   UserPlaylistsState
 > {
+  private APIService: APIService;
+
   constructor(props: UserPlaylistsProps) {
     super(props);
 
@@ -39,6 +44,10 @@ export default class UserPlaylists extends React.Component<
       alerts: [],
       playlists: props.playlists || [],
     };
+
+    this.APIService = new APIService(
+      props.apiUrl || `${window.location.origin}/1`
+    );
   }
 
   copyPlaylist = (): void => {
@@ -54,43 +63,74 @@ export default class UserPlaylists extends React.Component<
     );
   };
 
-  deletePlaylist = (): void => {
-    // Call API endpoint
-    const { playlistSelectedForOperation } = this.state;
-    if (!playlistSelectedForOperation) {
+  deletePlaylist = async (): Promise<void> => {
+    const { currentUser } = this.props;
+    const { playlistSelectedForOperation: playlist } = this.state;
+    if (!currentUser?.auth_token) {
+      this.alertMustBeLoggedIn();
       return;
     }
-    this.newAlert(
-      "warning",
-      "API call placeholder",
-      `Delete playlist ${playlistSelectedForOperation.id}`
-    );
+    if (!playlist) {
+      this.newAlert("danger", "Error", "No playlist to delete");
+      return;
+    }
+    try {
+      await this.APIService.deletePlaylist(currentUser.auth_token, playlist.id);
+      // redirect
+      this.newAlert(
+        "success",
+        "Deleted playlist",
+        `Deleted playlist ${playlist.title}`
+      );
+    } catch (error) {
+      this.newAlert("danger", "Error", error.message);
+    }
   };
 
-  selectedPlaylistForEdit = (playlist: ListenBrainzPlaylist): void => {
+  selectPlaylistForEdit = (playlist: ListenBrainzPlaylist): void => {
     this.setState({ playlistSelectedForOperation: playlist });
   };
 
-  createPlaylist = (
+  createPlaylist = async (
     name: string,
     description: string,
     isPublic: boolean,
+    // Not sure waht to do with those yet
     collaborators: string[],
     id?: string
-  ) => {
-    // Show modal or section with playlist attributes
-    // name, description, private/public
-    // Then call API endpoint POST  /1/playlist/create
-    const content = (
-      <div>
-        <div>name: {name}</div>
-        <div>description: {description}</div>
-        <div>isPublic: {isPublic.toString()}</div>
-        <div>collaborators: {collaborators.join(", ")}</div>
-        <div>id: {id}</div>
-      </div>
-    );
-    this.newAlert("success", "Creating playlist", content);
+  ): Promise<void> => {
+    const { currentUser } = this.props;
+    if (id) {
+      this.newAlert(
+        "danger",
+        "Error",
+        "Called createPlaylist method with an ID; should call editPlaylist instead"
+      );
+      return;
+    }
+    if (!currentUser?.auth_token) {
+      this.alertMustBeLoggedIn();
+      return;
+    }
+    try {
+      const newPlaylistId = await this.APIService.createPlaylist(
+        currentUser.auth_token,
+        name,
+        [],
+        isPublic,
+        description
+      );
+      this.newAlert(
+        "success",
+        "Created playlist",
+        <>
+          Created new playlist{" "}
+          <a href={`/playlist/${newPlaylistId}`}>{newPlaylistId}</a>
+        </>
+      );
+    } catch (error) {
+      this.newAlert("danger", "Error", error.message);
+    }
   };
 
   editPlaylist = (
@@ -134,6 +174,14 @@ export default class UserPlaylists extends React.Component<
     });
   };
 
+  alertMustBeLoggedIn = () => {
+    this.newAlert(
+      "danger",
+      "Error",
+      "You must be logged in for this operation"
+    );
+  };
+
   onAlertDismissed = (alert: Alert): void => {
     const { alerts } = this.state;
 
@@ -150,7 +198,7 @@ export default class UserPlaylists extends React.Component<
 
   render() {
     const { alerts, playlists, playlistSelectedForOperation } = this.state;
-    const { apiUrl, user } = this.props;
+    const { currentUser } = this.props;
     return (
       <div>
         <div
@@ -158,7 +206,7 @@ export default class UserPlaylists extends React.Component<
           style={{ display: "flex", flexWrap: "wrap" }}
         >
           {playlists.map((playlist: ListenBrainzPlaylist) => {
-            const isOwner = playlist.creator === user.name;
+            const isOwner = playlist.creator === currentUser?.name;
             return (
               <Card className="playlist" key={playlist.id}>
                 <a className="image" href={`/playlist/${playlist.id}`}>
@@ -175,10 +223,7 @@ export default class UserPlaylists extends React.Component<
                       data-toggle="dropdown"
                       aria-haspopup="true"
                       aria-expanded="true"
-                      onClick={this.selectedPlaylistForEdit.bind(
-                        this,
-                        playlist
-                      )}
+                      onClick={this.selectPlaylistForEdit.bind(this, playlist)}
                     >
                       <FontAwesomeIcon
                         icon={faEllipsisV as IconProp}
@@ -248,7 +293,7 @@ export default class UserPlaylists extends React.Component<
             htmlId="playlistCreateModal"
           />
           {playlistSelectedForOperation &&
-            playlistSelectedForOperation.creator === user.name && (
+            playlistSelectedForOperation.creator === currentUser?.name && (
               <>
                 <CreateOrEditPlaylistModal
                   onSubmit={this.editPlaylist}
@@ -283,10 +328,10 @@ document.addEventListener("DOMContentLoaded", () => {
   } catch (err) {
     // Show error to the user and ask to reload page
   }
-  const { user, api_url: apiUrl } = reactProps;
+  const { current_user, api_url: apiUrl } = reactProps;
   ReactDOM.render(
     <ErrorBoundary>
-      <UserPlaylists apiUrl={apiUrl} user={user} />
+      <UserPlaylists apiUrl={apiUrl} currentUser={current_user} />
     </ErrorBoundary>,
     domContainer
   );
