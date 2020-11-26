@@ -1,48 +1,49 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
-import {
-  faPlusCircle,
-  faEllipsisV,
-  faTrashAlt,
-  faPen,
-} from "@fortawesome/free-solid-svg-icons";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
-
-import { AlertList } from "react-bs-notifier";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as _ from "lodash";
 import * as io from "socket.io-client";
-import { ReactSortable } from "react-sortablejs";
-import AsyncSelect from "react-select/async";
+
 import { ActionMeta, ValueType } from "react-select";
+import {
+  faEllipsisV,
+  faPen,
+  faPlusCircle,
+  faTrashAlt,
+} from "@fortawesome/free-solid-svg-icons";
+
+import { AlertList } from "react-bs-notifier";
+import AsyncSelect from "react-select/async";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { ReactSortable } from "react-sortablejs";
 import debounceAsync from "debounce-async";
-import BrainzPlayer from "../BrainzPlayer";
 import APIService from "../APIService";
-import PlaylistItemCard from "./PlaylistItemCard";
+import BrainzPlayer from "../BrainzPlayer";
 import Card from "../components/Card";
 import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
 import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
+import ErrorBoundary from "../ErrorBoundary";
+import PlaylistItemCard from "./PlaylistItemCard";
 
 export interface PlaylistPageProps {
   apiUrl: string;
-  tracks?: Array<ListenBrainzTrack>;
   playlist: ListenBrainzPlaylist;
   spotify: SpotifyUser;
-  user: ListenBrainzUser;
+  currentUser?: ListenBrainzUser;
   webSocketsServerUrl: string;
 }
 
 export interface PlaylistPageState {
   alerts: Array<Alert>;
   currentTrack?: ListenBrainzTrack;
-  tracks: Array<ListenBrainzTrack>;
   playlist: ListenBrainzPlaylist;
   recordingFeedbackMap: RecordingFeedbackMap;
+  trackMetadataMap: RecordingMetadataMap;
 }
 
-type OptionType = { label: string; value: string };
+type OptionType = { label: string; value: ACRMSearchResult };
 
 const PLAYLIST_TRACK_URI_PREFIX = "https://musicbrainz.org/recording/";
 
@@ -50,6 +51,18 @@ export default class PlaylistPage extends React.Component<
   PlaylistPageProps,
   PlaylistPageState
 > {
+  static getRecordingMBIDFromJSPFTrack(track: JSPFTrack): string {
+    return track.identifier?.[0].substr(PLAYLIST_TRACK_URI_PREFIX.length) ?? "";
+  }
+
+  static makeJSPFTrack(track: ACRMSearchResult): JSPFTrack {
+    return {
+      identifier: [`${PLAYLIST_TRACK_URI_PREFIX}${track.recording_mbid}`],
+      title: track.recording_name,
+      creator: track.artist_credit_name,
+    };
+  }
+
   private APIService: APIService;
   private searchForTrackDebounced: any;
   private brainzPlayer = React.createRef<BrainzPlayer>();
@@ -60,9 +73,9 @@ export default class PlaylistPage extends React.Component<
     super(props);
     this.state = {
       alerts: [],
-      tracks: props.tracks || [],
       playlist: props.playlist || [],
       recordingFeedbackMap: {},
+      trackMetadataMap: {},
     };
 
     this.APIService = new APIService(
@@ -75,16 +88,12 @@ export default class PlaylistPage extends React.Component<
   }
 
   componentDidMount(): void {
-    const { user } = this.props;
+    const { currentUser } = this.props;
     this.connectWebsockets();
     // Is this correct? When do we want to load feedback? always?
     // if (currentUser?.name === user?.name) {
     this.loadFeedback();
     // }
-  }
-
-  static getRecordingMBIDFromJSPFTrack(track: JSPFTrack): string {
-    return track.identifier?.[0].substr(PLAYLIST_TRACK_URI_PREFIX.length) ?? "";
   }
 
   connectWebsockets = (): void => {
@@ -99,7 +108,6 @@ export default class PlaylistPage extends React.Component<
   };
 
   addWebsocketsHandlers = (): void => {
-    const { user } = this.props;
     // this.socket.on("connect", () => {
     // });
     this.socket.on("playlist_change", (data: string) => {
@@ -112,10 +120,10 @@ export default class PlaylistPage extends React.Component<
     // rerun fetching metadata for all tracks?
     // or find new tracks and fetch metadata for them, add them to local Map
     this.setState((prevState) => {
-      const { tracks } = prevState;
+      const { playlist } = prevState;
       // Respond to each atomic change received here.
       // Can be of type add, delete, move, playlist attributes change
-      return { tracks };
+      return { playlist };
     });
   };
 
@@ -138,17 +146,30 @@ export default class PlaylistPage extends React.Component<
     }
   };
 
-  addTrack = (
+  addTrack = async (
     track: ValueType<OptionType>,
     actionMeta: ActionMeta<OptionType>
-  ): void => {
+  ): Promise<void> => {
     if (actionMeta.action === "select-option") {
       if (!track) {
         return;
       }
       const { label, value } = track as OptionType;
-      // Once one is selected, call API endpoint POST /1/playlist/{id}/item/add
-      this.newAlert("success", "Add track", `Add track ${label} (${value})`);
+      const { currentUser, playlist } = this.props;
+      if (!currentUser?.auth_token) {
+        this.alertMustBeLoggedIn();
+        return;
+      }
+      try {
+        await this.APIService.addPlaylistItems(
+          currentUser.auth_token,
+          playlist.id,
+          [PlaylistPage.makeJSPFTrack(value)]
+        );
+        this.newAlert("success", "Added track", `Added track ${label}`);
+      } catch (error) {
+        this.newAlert("danger", "Error", error.message);
+      }
     }
   };
 
@@ -164,47 +185,67 @@ export default class PlaylistPage extends React.Component<
           },
         }
       );
-
       // Converting to JSON
       const parsedResponse: ACRMSearchResult[] = await response.json();
-      // Receives an array of:
-      //   {
-      //     "artist_credit_id": 2471396,
-      //     "artist_credit_name": "Hobocombo",
-      //     "recording_mbid": "9812475d-c800-4f29-8a9a-4ac4af4b4dfd",
-      //     "recording_name": "Bird's Lament",
-      //     "release_mbid": "17276c50-dd38-4c62-990e-186ef0ff36f4",
-      //     "release_name": "Now that it's the opposite, it's twice upon a time"
-      // }
       // Format the received items to a react-select option
       return parsedResponse.map((hit: ACRMSearchResult) => ({
         label: `${hit.recording_name} — ${hit.artist_credit_name}`,
-        value: hit.recording_mbid,
+        value: hit,
       }));
     } catch (error) {
       console.debug(error);
-      return [];
+    }
+    return [];
+  };
+
+  copyPlaylist = async (): Promise<void> => {
+    const { currentUser } = this.props;
+    const { playlist } = this.state;
+    if (!currentUser?.auth_token) {
+      this.alertMustBeLoggedIn();
+      return;
+    }
+    try {
+      await this.APIService.createPlaylist(
+        currentUser.auth_token,
+        playlist.title,
+        playlist.track,
+        playlist.public,
+        playlist.annotation
+      );
+      this.newAlert(
+        "success",
+        "Copied playlist",
+        `Copied playlist ${playlist.id}`
+      );
+    } catch (error) {
+      this.newAlert("danger", "Error", error.message);
     }
   };
 
-  copyPlaylist = (): void => {
-    // Call API endpoint
+  deletePlaylist = async (): Promise<void> => {
+    const { currentUser } = this.props;
     const { playlist } = this.state;
-    this.newAlert(
-      "warning",
-      "API call placeholder",
-      `Copy playlist ${playlist.id}`
-    );
-  };
-
-  deletePlaylist = (): void => {
-    // Call API endpoint
-    const { playlist } = this.state;
-    this.newAlert(
-      "warning",
-      "API call placeholder",
-      `Delete playlist ${playlist.id}`
-    );
+    if (!currentUser?.auth_token) {
+      this.alertMustBeLoggedIn();
+      return;
+    }
+    try {
+      await this.APIService.deletePlaylist(currentUser.auth_token, playlist.id);
+      // redirect
+      this.newAlert(
+        "success",
+        "Deleted playlist",
+        `Deleted playlist ${playlist.title}`
+      );
+      // Wait 1.5 second before navigating to user playlists page
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1500);
+      });
+      window.location.href = `${window.location.origin}/user/${currentUser.name}/playlists`;
+    } catch (error) {
+      this.newAlert("danger", "Error", error.message);
+    }
   };
 
   handleCurrentTrackChange = (track: ListenBrainzTrack | Listen): void => {
@@ -250,15 +291,13 @@ export default class PlaylistPage extends React.Component<
   };
 
   getFeedback = async () => {
-    const { user, tracks } = this.props;
-
+    const { currentUser, playlist } = this.props;
+    const { track: tracks } = playlist;
     if (tracks) {
-      const recordings = tracks.map(
-        (track) => PlaylistPage.getRecordingMBIDFromJSPFTrack
-      );
+      const recordings = tracks.map(PlaylistPage.getRecordingMBIDFromJSPFTrack);
       try {
         const data = await this.APIService.getFeedbackForUserForRecordings(
-          user.name,
+          currentUser.name,
           recordings.join(", ")
         );
         return data.feedback;
@@ -296,13 +335,13 @@ export default class PlaylistPage extends React.Component<
   };
 
   hasRightToEdit = (): boolean => {
-    const { user } = this.props;
+    const { currentUser } = this.props;
     const { playlist } = this.state;
     const { creator, collaborators } = playlist;
     if (
-      user?.name === creator ||
+      currentUser?.name === creator ||
       (collaborators ?? []).findIndex(
-        (collaborator) => collaborator === user?.name
+        (collaborator) => collaborator === currentUser?.name
       ) >= 0
     ) {
       return true;
@@ -310,22 +349,57 @@ export default class PlaylistPage extends React.Component<
     return false;
   };
 
-  removeTrackFromPlaylist = (track: ListenBrainzTrack) => {
-    const { user } = this.props;
-    if (this.hasRightToEdit() && user?.auth_token) {
-      const recordingMBID = PlaylistPage.getRecordingMBIDFromJSPFTrack(track);
-      // Call API to remove recordingMSID (at index?)
+  deletePlaylistItem = async (trackToDelete: ListenBrainzTrack) => {
+    const { currentUser } = this.props;
+    const { playlist } = this.state;
+    const { track: tracks } = playlist;
+    if (!currentUser?.auth_token) {
+      this.alertMustBeLoggedIn();
+      return;
+    }
+    if (!this.hasRightToEdit()) {
+      this.newAlert(
+        "danger",
+        "Not allowed",
+        "You are not authorized to modify this playlist"
+      );
+      return;
+    }
+    const recordingMBID = PlaylistPage.getRecordingMBIDFromJSPFTrack(
+      trackToDelete
+    );
+    const trackIndex = _.findIndex(tracks, trackToDelete);
+    try {
+      await this.APIService.deletePlaylistItems(
+        currentUser.auth_token,
+        playlist.id,
+        recordingMBID,
+        trackIndex
+      );
+    } catch (error) {
+      this.newAlert("danger", "Error", error.message);
     }
   };
 
-  updateSortOrder = (evt: any) => {
-    this.newAlert(
-      "warning",
-      "Move track",
-      `move MBID ${evt.item.getAttribute("data-recording-mbid")} to index ${
-        evt.newIndex
-      }`
-    );
+  movePlaylistItem = async (evt: any) => {
+    const { currentUser } = this.props;
+    const { playlist } = this.props;
+    if (!currentUser?.auth_token) {
+      this.alertMustBeLoggedIn();
+      return;
+    }
+    try {
+      await this.APIService.movePlaylistItem(
+        currentUser.auth_token,
+        playlist.id,
+        evt.item.getAttribute("data-recording-mbid"),
+        evt.oldIndex,
+        evt.newIndex,
+        1
+      );
+    } catch (error) {
+      this.newAlert("danger", "Error", error.message);
+    }
   };
 
   editPlaylist = (
@@ -350,18 +424,29 @@ export default class PlaylistPage extends React.Component<
     this.newAlert("success", "Creating playlist", content);
   };
 
-  render() {
-    const { alerts, currentTrack, tracks, playlist } = this.state;
-    const { spotify, user, apiUrl } = this.props;
-    const hasRightToEdit = this.hasRightToEdit();
-    const isOwner = playlist.creator === user.name;
+  alertMustBeLoggedIn = () => {
+    this.newAlert(
+      "danger",
+      "Error",
+      "You must be logged in for this operation"
+    );
+  };
 
-    const transformedTracks: ListenBrainzTrack[] = tracks.map((track) => {
-      return {
-        ...track,
-        id: PlaylistPage.getRecordingMBIDFromJSPFTrack(track),
-      };
-    });
+  render() {
+    const { alerts, currentTrack, playlist } = this.state;
+    const { spotify, currentUser, apiUrl } = this.props;
+    const { track: tracks } = playlist;
+    const hasRightToEdit = this.hasRightToEdit();
+    const isOwner = playlist.creator === currentUser?.name;
+
+    const transformedTracks: ListenBrainzTrack[] = playlist.track.map(
+      (jspfTrack) => {
+        return {
+          ...jspfTrack,
+          id: PlaylistPage.getRecordingMBIDFromJSPFTrack(jspfTrack),
+        } as ListenBrainzTrack;
+      }
+    );
     return (
       <div role="main">
         <AlertList
@@ -472,15 +557,19 @@ export default class PlaylistPage extends React.Component<
               {transformedTracks.length > 0 ? (
                 <ReactSortable
                   handle=".drag-handle"
-                  list={tracks}
-                  onEnd={this.updateSortOrder}
-                  setList={(newState) => this.setState({ tracks: newState })}
+                  list={transformedTracks}
+                  onEnd={this.movePlaylistItem}
+                  setList={(newState) =>
+                    this.setState({
+                      playlist: { ...playlist, track: newState },
+                    })
+                  }
                 >
-                  {tracks.map((track: ListenBrainzTrack, index) => {
+                  {transformedTracks.map((track: ListenBrainzTrack, index) => {
                     return (
                       <PlaylistItemCard
                         key={track.id}
-                        currentUser={user}
+                        currentUser={currentUser}
                         canEdit={hasRightToEdit}
                         apiUrl={apiUrl}
                         track={track}
@@ -492,7 +581,7 @@ export default class PlaylistPage extends React.Component<
                           track.id
                         )}
                         playTrack={this.playTrack}
-                        removeTrackFromPlaylist={this.removeTrackFromPlaylist}
+                        removeTrackFromPlaylist={this.deletePlaylistItem}
                         updateFeedback={this.updateFeedback}
                         newAlert={this.newAlert}
                       />
@@ -544,7 +633,7 @@ export default class PlaylistPage extends React.Component<
               apiService={this.APIService}
               currentListen={currentTrack}
               direction="down"
-              listens={tracks}
+              listens={transformedTracks}
               newAlert={this.newAlert}
               onCurrentListenChange={this.handleCurrentTrackChange}
               ref={this.brainzPlayer}
@@ -568,23 +657,22 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   const {
     api_url,
-    tracks,
     playlist,
     spotify,
-    user,
     web_sockets_server_url,
     current_user,
   } = reactProps;
 
   ReactDOM.render(
-    <PlaylistPage
-      apiUrl={api_url}
-      tracks={tracks}
-      playlist={playlist}
-      spotify={spotify}
-      user={user}
-      webSocketsServerUrl={web_sockets_server_url}
-    />,
+    <ErrorBoundary>
+      <PlaylistPage
+        apiUrl={api_url}
+        playlist={playlist}
+        spotify={spotify}
+        currentUser={current_user}
+        webSocketsServerUrl={web_sockets_server_url}
+      />
+    </ErrorBoundary>,
     domContainer
   );
 });
