@@ -65,7 +65,7 @@ export default class UserPlaylists extends React.Component<
 
   deletePlaylist = async (): Promise<void> => {
     const { currentUser } = this.props;
-    const { playlistSelectedForOperation: playlist } = this.state;
+    const { playlistSelectedForOperation: playlist, playlists } = this.state;
     if (!currentUser?.auth_token) {
       this.alertMustBeLoggedIn();
       return;
@@ -77,10 +77,15 @@ export default class UserPlaylists extends React.Component<
     try {
       await this.APIService.deletePlaylist(currentUser.auth_token, playlist.id);
       // redirect
-      this.newAlert(
-        "success",
-        "Deleted playlist",
-        `Deleted playlist ${playlist.title}`
+      // Remove playlist from state and display success message afterwards
+      this.setState(
+        { playlists: playlists.filter((pl) => pl.id !== playlist.id) },
+        this.newAlert.bind(
+          this,
+          "success",
+          "Deleted playlist",
+          `Deleted playlist ${playlist.title}`
+        )
       );
     } catch (error) {
       this.newAlert("danger", "Error", error.message);
