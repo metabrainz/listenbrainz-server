@@ -135,11 +135,15 @@ export default class PlaylistItemCard extends React.Component<
         }`}
         data-recording-mbid={recordingMbid}
       >
-        <FontAwesomeIcon
-          icon={faGripLines as IconProp}
-          title="Drag to reorder"
-          className="drag-handle text-muted"
-        />
+        {/* We can't currently disable the SortableJS component (https://github.com/SortableJS/react-sortablejs/issues/153)
+        So insteand we hide the drag handle */}
+        {canEdit && (
+          <FontAwesomeIcon
+            icon={faGripLines as IconProp}
+            title="Drag to reorder"
+            className="drag-handle text-muted"
+          />
+        )}
         <div className="track-details">
           <div title={track.title}>
             {/* {getTrackLink(track)} */}
