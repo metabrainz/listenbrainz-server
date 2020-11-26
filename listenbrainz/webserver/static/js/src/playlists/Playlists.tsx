@@ -160,12 +160,12 @@ export default class UserPlaylists extends React.Component<
           {playlists.map((playlist: ListenBrainzPlaylist) => {
             const isOwner = playlist.creator === user.name;
             return (
-              <Card
-                className="playlist"
-                key={playlist.id}
-                href={`/playlist/${playlist.id}`}
-              >
-                <div className="image" />
+              <Card className="playlist" key={playlist.id}>
+                <a className="image" href={`/playlist/${playlist.id}`}>
+                  <div style={{ background: "palegoldenrod", height: "100%" }}>
+                    Images here
+                  </div>
+                </a>
                 <div className="info">
                   <span className="dropdown">
                     <button
@@ -220,13 +220,15 @@ export default class UserPlaylists extends React.Component<
                       )}
                     </ul>
                   </span>
-                  {playlist.title}
-                  <br />
-                  {playlist.annotation}
-                  <br />
-                  Last Modified: {playlist.last_modified}
-                  <br />
-                  Created at:{playlist.date}
+                  <a href={`/playlist/${playlist.id}`}>
+                    {playlist.title}
+                    <br />
+                    {playlist.annotation}
+                    <br />
+                    Last Modified: {playlist.last_modified}
+                    <br />
+                    Created at:{playlist.date}
+                  </a>
                 </div>
               </Card>
             );
