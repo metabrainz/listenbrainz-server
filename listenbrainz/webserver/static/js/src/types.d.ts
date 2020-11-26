@@ -343,9 +343,10 @@ declare type JSPFPlaylist = {
   link?: Array<{ [name: string]: string }>;
   meta?: Array<{ [name: string]: string }>;
   track: Array<JSPFTrack>;
+  extension?: { [name: string]: any };
 };
 declare type JSPFTrack = {
-  location: string[];
+  location?: string[];
   identifier: string[];
   title: string;
   creator: string;
@@ -354,9 +355,10 @@ declare type JSPFTrack = {
   image?: string;
   album?: string;
   trackNum?: number;
-  duration: number;
-  link: Array<{ [name: string]: string }>;
-  meta: Array<{ [name: string]: string }>;
+  duration?: number;
+  link?: Array<{ [name: string]: string }>;
+  meta?: Array<{ [name: string]: string }>;
+  extension?: { [name: string]: any };
 };
 declare type ListenBrainzTrack = JSPFTrack & {
   id: string; // React-sortable library expects an id attribute
