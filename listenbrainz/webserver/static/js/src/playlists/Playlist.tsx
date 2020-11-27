@@ -35,7 +35,7 @@ import {
 
 export interface PlaylistPageProps {
   apiUrl: string;
-  playlist: JSPFPlaylist;
+  playlist: JSPFObject;
   spotify: SpotifyUser;
   currentUser?: ListenBrainzUser;
   webSocketsServerUrl: string;
@@ -73,7 +73,7 @@ export default class PlaylistPage extends React.Component<
     super(props);
     this.state = {
       alerts: [],
-      playlist: props.playlist || [],
+      playlist: props.playlist?.playlist || {},
       recordingFeedbackMap: {},
       trackMetadataMap: {},
     };
@@ -89,11 +89,11 @@ export default class PlaylistPage extends React.Component<
 
   componentDidMount(): void {
     const { currentUser } = this.props;
-    this.connectWebsockets();
+    // this.connectWebsockets();
     // Is this correct? When do we want to load feedback? always?
     // if (currentUser?.name === user?.name) {
-    this.loadFeedback();
-    // }
+    // this.loadFeedback();
+    // // }
   }
 
   connectWebsockets = (): void => {
@@ -155,7 +155,8 @@ export default class PlaylistPage extends React.Component<
         return;
       }
       const { label, value } = track as OptionType;
-      const { currentUser, playlist } = this.props;
+      const { currentUser } = this.props;
+      const { playlist } = this.state;
       if (!currentUser?.auth_token) {
         this.alertMustBeLoggedIn();
         return;
@@ -295,7 +296,8 @@ export default class PlaylistPage extends React.Component<
   };
 
   getFeedback = async (): Promise<FeedbackResponse[]> => {
-    const { currentUser, playlist } = this.props;
+    const { currentUser } = this.props;
+    const { playlist } = this.state;
     const { track: tracks } = playlist;
     if (currentUser && tracks) {
       const recordings = tracks.map(getRecordingMBIDFromJSPFTrack);
@@ -386,7 +388,7 @@ export default class PlaylistPage extends React.Component<
 
   movePlaylistItem = async (evt: any) => {
     const { currentUser } = this.props;
-    const { playlist } = this.props;
+    const { playlist } = this.state;
     if (!currentUser?.auth_token) {
       this.alertMustBeLoggedIn();
       return;
@@ -530,7 +532,7 @@ export default class PlaylistPage extends React.Component<
                 </small>
               </h1>
               <div className="info">
-                <div>{playlist.track.length} tracks</div>
+                <div>{playlist.track?.length} tracks</div>
                 <div>
                   Created at: {new Date(playlist.date).toLocaleString()}
                 </div>
