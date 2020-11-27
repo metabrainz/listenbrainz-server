@@ -1,4 +1,6 @@
+import datetime
 from uuid import UUID
+
 from flask import Blueprint, current_app, jsonify, request
 #import listenbrainz.db.user as db_user
 import listenbrainz.db.playlist as db_playlist
@@ -15,6 +17,8 @@ playlist_api_bp = Blueprint('playlist_api_v1', __name__)
 
 PLAYLIST_TRACK_URI_PREFIX = "https://musicbrainz.org/recording/"
 PLAYLIST_URI_PREFIX = "https://listenbrainz.org/playlist/"
+PLAYLIST_EXTENSION_URI = "https://musicbrainz.org/doc/jspf#playlist"
+PLAYLIST_TRACK_EXTENSION_URI = "https://musicbrainz.org/doc/jspf#track"
 MAX_RECORDINGS_PER_ADD = 100
 
 def _parse_boolean_arg(name, default=None):
@@ -67,16 +71,35 @@ def validate_playlist(jspf, require_title=True):
 def serialize_jspf(playlist: Playlist, user):
     """
         Given a playlist, return a properly formated dict that can be passed to jsonify.
+        TODO: Add tests for newly added fields.
+              Add collaborators
     """
 
     pl = { "creator": user["musicbrainz_id"],
             "title": playlist.name,
-            "identifier": PLAYLIST_URI_PREFIX + str(playlist.mbid)
+            "identifier": PLAYLIST_URI_PREFIX + str(playlist.mbid),
+            "date": playlist.created.replace(tzinfo=datetime.timezone.utc).isoformat(),
     }
+
+
+    extension = { "public": "true" if playlist.public else "false" }
+#    extension["last_modified_at"] = playlist.last_modified_at.replace(tzinfo=datetime.timezone.utc).isoformat()
+    if playlist.created_for_id:
+        extension['created_for'] = playlist.created_for_id
+    if playlist.copied_from_id:
+        extension['copied_from'] = PLAYLIST_URI_PREFIX + str(playlist.copied_from_id)
+
+    pl["extension"] = { PLAYLIST_EXTENSION_URI: extension }
 
     tracks = []
     for rec in playlist.recordings:
-        tracks.append({ "identifier": PLAYLIST_TRACK_URI_PREFIX + str(rec.mbid) })
+        tr = { "identifier": PLAYLIST_TRACK_URI_PREFIX + str(rec.mbid) }
+        extension = { "added_by": rec.added_by,
+                      "added_at": rec.created }
+        tr["extension"] = { PLAYLIST_TRACK_EXTENSION_URI: extension }
+
+        tracks.append(tr)
+
 
     pl["track"] = tracks
 
@@ -231,20 +254,20 @@ def add_playlist_item(playlist_mbid, offset):
     data = request.json
     validate_playlist(data, False)
 
-    print(data)
     if len(data["playlist"]["track"]) > MAX_RECORDINGS_PER_ADD:
         log_raise_400("You may only add max %d recordings per call." % MAX_RECORDINGS_PER_ADD)
 
     precordings = []
     if "track" in data["playlist"]:
-        for track in data["playlist"]["track"]:
-            precordings.append(WritablePlaylistRecording(mbid=UUID(track['identifier'][len(PLAYLIST_TRACK_URI_PREFIX):]),
-                                       added_by_id=user["id"]))
+        for i, track in enumerate(data["playlist"]["track"]):
+            try:
+                mbid = UUID(track['identifier'][len(PLAYLIST_TRACK_URI_PREFIX):])
+            except (KeyError, ValueError):
+                log_raise_400("Track %d has an invalid identifier field, it must be a complete URI.")
+            precordings.append(WritablePlaylistRecording(mbid=mbid, added_by_id=user["id"]))
 
     db_playlist.add_recordings_to_playlist(playlist, precordings, offset)
     try:
-        print(precordings)
-        print(offset)
         db_playlist.add_recordings_to_playlist(playlist, precordings, offset)
     except Exception as e:
         current_app.logger.error("Error while adding recordings to playlist: {}".format(e))
