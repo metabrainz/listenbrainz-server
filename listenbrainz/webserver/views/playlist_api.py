@@ -266,7 +266,6 @@ def add_playlist_item(playlist_mbid, offset):
                 log_raise_400("Track %d has an invalid identifier field, it must be a complete URI.")
             precordings.append(WritablePlaylistRecording(mbid=mbid, added_by_id=user["id"]))
 
-    db_playlist.add_recordings_to_playlist(playlist, precordings, offset)
     try:
         db_playlist.add_recordings_to_playlist(playlist, precordings, offset)
     except Exception as e:
