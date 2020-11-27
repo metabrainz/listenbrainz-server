@@ -11,17 +11,20 @@ export const PLAYLIST_TRACK_URI_PREFIX = "https://musicbrainz.org/recording/";
 
 export function getPlaylistExtension(
   playlist?: JSPFPlaylist
-): {
-  collaborators: string[];
-  public: boolean;
-  created_for?: string;
-  copied_from?: string; // Full ListenBrainz playlist URI
-  last_modified_at: string; // ISO date string
-} | null {
+): JSPFPlaylistExtension | null {
   if (!playlist) {
     return null;
   }
   return playlist.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION] ?? null;
+}
+
+export function getTrackExtension(
+  track?: JSPFTrack
+): JSPFTrackExtension | null {
+  if (!track) {
+    return null;
+  }
+  return track.extension?.[MUSICBRAINZ_JSPF_TRACK_EXTENSION] ?? null;
 }
 
 export function getPlaylistId(playlist?: JSPFPlaylist): string {

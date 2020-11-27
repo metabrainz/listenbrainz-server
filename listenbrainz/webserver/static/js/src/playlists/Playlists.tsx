@@ -330,9 +330,12 @@ export default class UserPlaylists extends React.Component<
                     <br />
                     {playlist.annotation}
                     <br />
-                    Last Modified: {customFields?.last_modified_at}
+                    {customFields?.last_modified_at &&
+                      `Last Modified: ${new Date(
+                        customFields.last_modified_at
+                      ).toLocaleString()}`}
                     <br />
-                    Created at:{playlist.date}
+                    Created: {new Date(playlist.date).toLocaleString()}
                   </a>
                 </div>
               </Card>
