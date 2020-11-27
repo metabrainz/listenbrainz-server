@@ -21,13 +21,13 @@ export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
 export type PlaylistItemCardProps = {
   apiUrl: string;
-  track: ListenBrainzTrack;
+  track: JSPFTrack;
   currentFeedback: ListenFeedBack;
   canEdit: Boolean;
   className?: string;
   currentUser?: ListenBrainzUser;
-  playTrack: (track: ListenBrainzTrack) => void;
-  removeTrackFromPlaylist: (track: ListenBrainzTrack) => void;
+  playTrack: (track: JSPFTrack) => void;
+  removeTrackFromPlaylist: (track: JSPFTrack) => void;
   updateFeedback: (recordingMsid: string, score: ListenFeedBack) => void;
   newAlert: (
     alertType: AlertType,
@@ -46,7 +46,7 @@ export default class PlaylistItemCard extends React.Component<
   PlaylistItemCardState
 > {
   APIService: APIService;
-  playTrack: (track: ListenBrainzTrack) => void;
+  playTrack: (track: JSPFTrack) => void;
 
   constructor(props: PlaylistItemCardProps) {
     super(props);
