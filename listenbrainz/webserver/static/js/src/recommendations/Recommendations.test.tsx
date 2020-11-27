@@ -56,19 +56,14 @@ describe("Recommendations", () => {
 
 describe("componentDidMount", () => {
   it('calls loadFeedback if user is the currentUser"', () => {
-    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
-     * so that it doesn't get passed as a reference.
-     */
+    const updatedProps = {
+      ...recommendationProps,
+      currentUser: { name: "vansika" },
+    };
     const wrapper = shallow<Recommendations>(
-      <Recommendations
-        {...{
-          ...(JSON.parse(
-            JSON.stringify(recommendationProps)
-          ) as RecommendationsProps),
-          currentUser: { name: "vansika" },
-        }}
-      />
+      <Recommendations {...(updatedProps as RecommendationsProps)} />
     );
+
     const instance = wrapper.instance();
     instance.loadFeedback = jest.fn();
 
@@ -78,18 +73,12 @@ describe("componentDidMount", () => {
   });
 
   it("does not call loadFeedback if user is not the currentUser", () => {
-    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
-     * so that it doesn't get passed as a reference.
-     */
+    const updatedProps = {
+      ...recommendationProps,
+      currentUser: { name: "foobar" },
+    };
     const wrapper = shallow<Recommendations>(
-      <Recommendations
-        {...{
-          ...(JSON.parse(
-            JSON.stringify(recommendationProps)
-          ) as RecommendationsProps),
-          currentUser: { name: "foobar" },
-        }}
-      />
+      <Recommendations {...(updatedProps as RecommendationsProps)} />
     );
     const instance = wrapper.instance();
     instance.loadFeedback = jest.fn();
@@ -102,15 +91,8 @@ describe("componentDidMount", () => {
 
 describe("getFeedback", () => {
   it("calls the API correctly", async () => {
-    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
-     * so that it doesn't get passed as a reference.
-     */
     const wrapper = shallow<Recommendations>(
-      <Recommendations
-        {...(JSON.parse(
-          JSON.stringify(recommendationPropsOne)
-        ) as RecommendationsProps)}
-      />
+      <Recommendations {...(recommendationPropsOne as RecommendationsProps)} />
     );
 
     const instance = wrapper.instance();
@@ -133,15 +115,8 @@ describe("getFeedback", () => {
 
 describe("loadFeedback", () => {
   it("updates the recommendationFeedbackMap state", async () => {
-    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
-     * so that it doesn't get passed as a reference.
-     */
     const wrapper = shallow<Recommendations>(
-      <Recommendations
-        {...(JSON.parse(
-          JSON.stringify(recommendationPropsOne)
-        ) as RecommendationsProps)}
-      />
+      <Recommendations {...(recommendationPropsOne as RecommendationsProps)} />
     );
 
     const instance = wrapper.instance();
@@ -160,15 +135,8 @@ describe("loadFeedback", () => {
 
 describe("getFeedbackForRecordingMbid", () => {
   it("returns the feedback after fetching from recommendationFeedbackMap state", async () => {
-    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
-     * so that it doesn't get passed as a reference.
-     */
     const wrapper = shallow<Recommendations>(
-      <Recommendations
-        {...(JSON.parse(
-          JSON.stringify(recommendationPropsOne)
-        ) as RecommendationsProps)}
-      />
+      <Recommendations {...(recommendationPropsOne as RecommendationsProps)} />
     );
 
     const instance = wrapper.instance();
@@ -186,15 +154,8 @@ describe("getFeedbackForRecordingMbid", () => {
   });
 
   it("returns null if the recording is not in recommendationFeedbackMap state", async () => {
-    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
-     * so that it doesn't get passed as a reference.
-     */
     const wrapper = shallow<Recommendations>(
-      <Recommendations
-        {...(JSON.parse(
-          JSON.stringify(recommendationPropsOne)
-        ) as RecommendationsProps)}
-      />
+      <Recommendations {...(recommendationPropsOne as RecommendationsProps)} />
     );
 
     const instance = wrapper.instance();
@@ -209,22 +170,15 @@ describe("getFeedbackForRecordingMbid", () => {
 
 describe("updateFeedback", () => {
   it("updates the recommendationFeedbackMap state for particular recording", async () => {
-    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
-     * so that it doesn't get passed as a reference.
-     */
     const wrapper = shallow<Recommendations>(
-      <Recommendations
-        {...(JSON.parse(
-          JSON.stringify(recommendationPropsOne)
-        ) as RecommendationsProps)}
-      />
+      <Recommendations {...(recommendationPropsOne as RecommendationsProps)} />
     );
     const instance = wrapper.instance();
 
     const recommendationFeedbackMap: RecommendationFeedbackMap = {
       "973e5620-829d-46dd-89a8-760d87076287": "bad_recommendation",
     };
-    wrapper.setState(JSON.parse(JSON.stringify(recommendationFeedbackMap)));
+    wrapper.setState({ recommendationFeedbackMap });
 
     await instance.updateFeedback(
       "973e5620-829d-46dd-89a8-760d87076287",

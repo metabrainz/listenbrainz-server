@@ -25,5 +25,9 @@ describe("RecommendationControl", () => {
   it("renders correctly", () => {
     const wrapper = mount(<RecommendationControl {...props} />);
     expect(wrapper).toMatchSnapshot();
+    expect(wrapper.props().cssClass).toEqual("bad_recommendation");
+    expect(wrapper.props().title).toEqual("This is a bad recommendation");
+    expect(wrapper.props().icon).toEqual(faMehRegular);
+    expect(wrapper.props().iconHover).toEqual(faMeh);
   });
 });
