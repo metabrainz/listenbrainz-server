@@ -392,12 +392,21 @@ export default class PlaylistPage extends React.Component<
     const recordingMBID = getRecordingMBIDFromJSPFTrack(trackToDelete);
     const trackIndex = _.findIndex(tracks, trackToDelete);
     try {
-      await this.APIService.deletePlaylistItems(
+      const status = await this.APIService.deletePlaylistItems(
         currentUser.auth_token,
         getPlaylistId(playlist),
         recordingMBID,
         trackIndex
       );
+      if (status === 200) {
+        tracks.splice(trackIndex, 1);
+        this.setState({
+          playlist: {
+            ...playlist,
+            track: [...tracks],
+          },
+        });
+      }
     } catch (error) {
       this.newAlert("danger", "Error", error.message);
     }
