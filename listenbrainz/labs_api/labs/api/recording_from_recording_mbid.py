@@ -96,25 +96,25 @@ class RecordingFromRecordingMBIDQuery(Query):
 
                     recording_index[row['recording_mbid']] = dict(row)
 
-                # Finally collate all the results, ensuring that we have one entry with original_recording_mbid for each 
+                # Finally collate all the results, ensuring that we have one entry with original_recording_mbid for each
                 # input argument
                 output = []
                 for p in params:
-                    mbid = p['[recording_mbid]'] 
+                    mbid = p['[recording_mbid]']
                     try:
                         r = dict(recording_index[mbid])
                     except KeyError:
                         try:
                             r = dict(recording_index[redirect_index[mbid]])
                         except KeyError:
-                            output.append({'recording_mbid': None, 
+                            output.append({'recording_mbid': None,
                                            'recording_name': None,
                                            'length': None,
                                            'comment': None,
                                            'artist_credit_id': None,
-                                           'artist_credit_name': None, 
-                                           '[artist_credit_mbids]': None, 
-                                           'original_recording_mbid': mbid })
+                                           'artist_credit_name': None,
+                                           '[artist_credit_mbids]': None,
+                                           'original_recording_mbid': mbid})
                             continue
 
                     r['[artist_credit_mbids]'] = [r for r in r['artist_credit_mbids']]

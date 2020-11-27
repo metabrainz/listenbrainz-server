@@ -155,7 +155,7 @@ class MainTestCase(flask_testing.TestCase):
         self.assertNotEqual(q.introduction(), "")
         self.assertEqual(q.inputs(), ['[recording_mbid]'])
         self.assertEqual(q.outputs(), ['recording_mbid', 'recording_name', 'length', 'comment',
-            'artist_credit_id', 'artist_credit_name', '[artist_credit_mbids]', 'original_recording_mbid'])
+                         'artist_credit_id', 'artist_credit_name', '[artist_credit_mbids]', 'original_recording_mbid'])
 
     @patch('psycopg2.connect')
     def test_AAAfetch(self, mock_connect):

@@ -35,8 +35,8 @@ def test_mapping():
             print("H %-30s %-30s %-25 %s" % (hits[0]['recording_name'][:29], hits[0]['release_name'][:29],
                   hits[0]['artist_credit_name'][:29], hits[0]['release_mbid']))
             print
-            failed +=1
+            failed += 1
         else:
-            passed +=1
+            passed += 1
 
     print("%d passed, %d failed." % (passed, failed))

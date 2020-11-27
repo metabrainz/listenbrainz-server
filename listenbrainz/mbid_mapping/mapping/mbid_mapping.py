@@ -9,7 +9,6 @@ BATCH_SIZE = 5000
 TEST_ARTIST_ID = 1160983  # Gun'n'roses, because of obvious spelling issues
 
 
-
 def create_tables(mb_conn):
     """
         Create tables needed to create the recording artist pairs. First

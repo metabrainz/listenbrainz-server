@@ -10,6 +10,7 @@ import config
 BATCH_SIZE = 5000
 COLLECTION_NAME = 'mbid_mapping'
 
+
 def prepare_string(text):
     return unidecode(re.sub(" +", " ", re.sub(r'[^\w ]+', '', text)).lower())
 
@@ -30,12 +31,12 @@ def build_index():
         'name': COLLECTION_NAME,
         'fields': [
           {
-            'name'  :  'combined',
-            'type'  :  'string'
+            'name':  'combined',
+            'type':  'string'
           },
           {
-            'name'  :  'score',
-            'type'  :  'int32'
+            'name':  'score',
+            'type':  'int32'
           },
         ],
         'default_sorting_field': 'score'
@@ -50,7 +51,6 @@ def build_index():
 
     with psycopg2.connect(config.DB_CONNECT_MB) as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
-
 
             curs.execute("SELECT max(score) FROM mapping.mbid_mapping")
             max_score = curs.fetchone()[0]
@@ -67,7 +67,6 @@ def build_index():
                             ON r.id = recording_id
                           JOIN release rl
                             ON rl.id = release_id""")
-
 
             if config.USE_MINIMAL_DATASET:
                 query += " WHERE artist_credit_id = 1160983"
