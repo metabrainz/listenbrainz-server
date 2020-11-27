@@ -430,6 +430,14 @@ export default class PlaylistPage extends React.Component<
       );
     } catch (error) {
       this.newAlert("danger", "Error", error.message);
+      // Revert the move in state.playlist order
+      const newTracks = [...playlist.track];
+      // The ol' switcheroo !
+      const toMoveBack = newTracks[evt.newIndex];
+      newTracks[evt.newIndex] = newTracks[evt.oldIndex];
+      newTracks[evt.oldIndex] = toMoveBack;
+
+      this.setState({ playlist: { ...playlist, track: newTracks } });
     }
   };
 
