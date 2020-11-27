@@ -29,5 +29,5 @@ export function getPlaylistId(playlist?: JSPFPlaylist): string {
 }
 
 export function getRecordingMBIDFromJSPFTrack(track: JSPFTrack): string {
-  return track.identifier?.[0].substr(PLAYLIST_TRACK_URI_PREFIX.length) ?? "";
+  return track.identifier?.substr(PLAYLIST_TRACK_URI_PREFIX.length) ?? "";
 }
