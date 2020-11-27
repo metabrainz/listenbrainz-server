@@ -11,6 +11,7 @@ from flask import Blueprint, render_template, request, url_for, Response, redire
 from flask_login import current_user, login_required
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
+from listenbrainz.db.playlist import get_playlists_for_user
 from listenbrainz.domain import spotify
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
@@ -21,6 +22,7 @@ from listenbrainz.webserver.views.api_tools import publish_data_to_queue, log_ra
 from datetime import datetime
 from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, ServiceUnavailable, Unauthorized, InternalServerError
 from listenbrainz.webserver.views.stats_api import _get_non_negative_param
+from listenbrainz.webserver.views.playlist_api import serialize_jspf
 from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStoreException
 from pydantic import ValidationError
 
@@ -208,10 +210,21 @@ def user_playlists(user_name: str):
             "name": current_user.musicbrainz_id,
             "auth_token": current_user.auth_token,
         }
+    
+    loadPrivatePlaylists = False
+    if current_user.is_authenticated and \
+       current_user.musicbrainz_id == user_name:
+       loadPrivatePlaylists = True
+    
+    dbUser = db_user.get_by_mb_id(user_name)
+    playlists = []
+    for playlist in get_playlists_for_user(user.id, loadPrivatePlaylists):
+        playlists.append(serialize_jspf(playlist, dbUser))
 
     props = {
         "current_user": current_user_data,
-        "api_url": current_app.config["API_URL"]
+        "api_url": current_app.config["API_URL"],
+        "playlists": playlists
     }
 
     return render_template(
