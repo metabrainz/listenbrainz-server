@@ -43,7 +43,7 @@ export interface PlaylistPageProps {
 
 export interface PlaylistPageState {
   alerts: Array<Alert>;
-  currentTrack?: ListenBrainzTrack;
+  currentTrack?: JSPFTrack;
   playlist: JSPFPlaylist;
   recordingFeedbackMap: RecordingFeedbackMap;
   trackMetadataMap: RecordingMetadataMap;
@@ -71,6 +71,15 @@ export default class PlaylistPage extends React.Component<
 
   constructor(props: PlaylistPageProps) {
     super(props);
+
+    // React-SortableJS expects an 'id' attribute and we can't change it, so add it to each object
+    // eslint-disable-next-line no-unused-expressions
+    props.playlist?.playlist?.track?.forEach(
+      (jspfTrack: JSPFTrack, index: number) => {
+        // eslint-disable-next-line no-param-reassign
+        jspfTrack.id = `${getRecordingMBIDFromJSPFTrack(jspfTrack)}-${index}`;
+      }
+    );
     this.state = {
       alerts: [],
       playlist: props.playlist?.playlist || {},
@@ -119,15 +128,19 @@ export default class PlaylistPage extends React.Component<
     const newPlaylist = JSON.parse(data);
     // rerun fetching metadata for all tracks?
     // or find new tracks and fetch metadata for them, add them to local Map
-    this.setState((prevState) => {
-      const { playlist } = prevState;
-      // Respond to each atomic change received here.
-      // Can be of type add, delete, move, playlist attributes change
-      return { playlist };
-    });
+
+    // React-SortableJS expects an 'id' attribute and we can't change it, so add it to each object
+    // eslint-disable-next-line no-unused-expressions
+    newPlaylist?.playlist?.track?.forEach(
+      (jspfTrack: JSPFTrack, index: number) => {
+        // eslint-disable-next-line no-param-reassign
+        jspfTrack.id = `${getRecordingMBIDFromJSPFTrack(jspfTrack)}-${index}`;
+      }
+    );
+    this.setState({ playlist: newPlaylist });
   };
 
-  playTrack = (track: ListenBrainzTrack): void => {
+  playTrack = (track: JSPFTrack): void => {
     const listen: Listen = {
       listened_at: 0,
       track_metadata: {
@@ -257,11 +270,11 @@ export default class PlaylistPage extends React.Component<
     }
   };
 
-  handleCurrentTrackChange = (track: ListenBrainzTrack | Listen): void => {
-    this.setState({ currentTrack: track as ListenBrainzTrack });
+  handleCurrentTrackChange = (track: JSPFTrack | Listen): void => {
+    this.setState({ currentTrack: track as JSPFTrack });
   };
 
-  isCurrentTrack = (track: ListenBrainzTrack): boolean => {
+  isCurrentTrack = (track: JSPFTrack): boolean => {
     const { currentTrack } = this.state;
     return Boolean(currentTrack && _.isEqual(track, currentTrack));
   };
@@ -360,7 +373,7 @@ export default class PlaylistPage extends React.Component<
     return false;
   };
 
-  deletePlaylistItem = async (trackToDelete: ListenBrainzTrack) => {
+  deletePlaylistItem = async (trackToDelete: JSPFTrack) => {
     const { currentUser } = this.props;
     const { playlist } = this.state;
     const { track: tracks } = playlist;
@@ -447,14 +460,6 @@ export default class PlaylistPage extends React.Component<
     const { track: tracks } = playlist;
     const hasRightToEdit = this.hasRightToEdit();
     const isOwner = playlist.creator === currentUser?.name;
-
-    const transformedTracks: ListenBrainzTrack[] =
-      tracks?.map((jspfTrack) => {
-        return {
-          ...jspfTrack,
-          id: getRecordingMBIDFromJSPFTrack(jspfTrack),
-        };
-      }) ?? [];
 
     const customFields = getPlaylistExtension(playlist);
 
@@ -553,7 +558,7 @@ export default class PlaylistPage extends React.Component<
               <div>{playlist.annotation}</div>
               <hr />
             </div>
-            {transformedTracks.length > 5 && (
+            {tracks.length > 5 && (
               <div className="text-center">
                 <a
                   className="btn btn-primary"
@@ -567,18 +572,18 @@ export default class PlaylistPage extends React.Component<
               </div>
             )}
             <div id="listens row">
-              {transformedTracks.length > 0 ? (
+              {tracks.length > 0 ? (
                 <ReactSortable
                   handle=".drag-handle"
-                  list={transformedTracks}
+                  list={tracks as (JSPFTrack & { id: string })[]}
                   onEnd={this.movePlaylistItem}
-                  setList={(newState) =>
+                  setList={(newState: JSPFTrack[]) =>
                     this.setState({
                       playlist: { ...playlist, track: newState },
                     })
                   }
                 >
-                  {transformedTracks.map((track: ListenBrainzTrack, index) => {
+                  {tracks.map((track: JSPFTrack, index) => {
                     return (
                       <PlaylistItemCard
                         key={track.id}
@@ -647,7 +652,7 @@ export default class PlaylistPage extends React.Component<
               apiService={this.APIService}
               currentListen={currentTrack}
               direction="down"
-              listens={transformedTracks}
+              listens={tracks}
               newAlert={this.newAlert}
               onCurrentListenChange={this.handleCurrentTrackChange}
               ref={this.brainzPlayer}

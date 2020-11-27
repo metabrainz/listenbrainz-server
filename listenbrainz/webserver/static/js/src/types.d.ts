@@ -367,6 +367,7 @@ declare type JSPFPlaylist = {
 };
 
 declare type JSPFTrack = {
+  id?: string; // React-sortable library expects an id attribute, this is not part of JSPF specification
   location?: string[];
   identifier: string;
   title: string;
@@ -383,10 +384,6 @@ declare type JSPFTrack = {
     [name: string]: any;
     "https://musicbrainz.org/doc/jspf#track"?: JSPFTrackExtension;
   };
-};
-
-declare type ListenBrainzTrack = JSPFTrack & {
-  id: string; // React-sortable library expects an id attribute
 };
 
 declare type RecordingMetadata = {
