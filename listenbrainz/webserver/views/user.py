@@ -200,6 +200,10 @@ def reports(user_name: str):
 def user_playlists(user_name: str):
     """ Show user playlists """
     user = _get_user(user_name)
+    user_data = {
+        "name": user.musicbrainz_id,
+        "id": user.id,
+    }
     
     spotify_data = {}
     current_user_data = {}
@@ -219,12 +223,14 @@ def user_playlists(user_name: str):
     dbUser = db_user.get_by_mb_id(user_name)
     playlists = []
     for playlist in get_playlists_for_user(user.id, loadPrivatePlaylists):
-        playlists.append(jsonify(serialize_jspf(playlist, dbUser)))
+        playlists.append(serialize_jspf(playlist, dbUser))
+
 
     props = {
         "current_user": current_user_data,
         "api_url": current_app.config["API_URL"],
-        "playlists": playlists
+        "playlists": playlists,
+        "user": user_data
     }
 
     return render_template(
