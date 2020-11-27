@@ -18,16 +18,21 @@ import Card from "../components/Card";
 import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
 import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
 import ErrorBoundary from "../ErrorBoundary";
+import {
+  getPlaylistExtension,
+  getPlaylistId,
+  MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
+} from "./utils";
 
 export type UserPlaylistsProps = {
   currentUser?: ListenBrainzUser;
   apiUrl: string;
-  playlists?: ListenBrainzPlaylist[];
+  playlists?: JSPFObject[];
 };
 
 export type UserPlaylistsState = {
-  playlists: ListenBrainzPlaylist[];
-  playlistSelectedForOperation?: ListenBrainzPlaylist;
+  playlists: JSPFPlaylist[];
+  playlistSelectedForOperation?: JSPFPlaylist;
   alerts: Alert[];
 };
 
@@ -40,9 +45,10 @@ export default class UserPlaylists extends React.Component<
   constructor(props: UserPlaylistsProps) {
     super(props);
 
+    const concatenatedPlaylists = props.playlists?.map((pl) => pl.playlist);
     this.state = {
       alerts: [],
-      playlists: props.playlists || [],
+      playlists: concatenatedPlaylists ?? [],
     };
 
     this.APIService = new APIService(
@@ -59,7 +65,7 @@ export default class UserPlaylists extends React.Component<
     this.newAlert(
       "warning",
       "API call placeholder",
-      `Copy playlist ${playlistSelectedForOperation.id}`
+      `Copy playlist ${getPlaylistId(playlistSelectedForOperation)}`
     );
   };
 
@@ -75,11 +81,18 @@ export default class UserPlaylists extends React.Component<
       return;
     }
     try {
-      await this.APIService.deletePlaylist(currentUser.auth_token, playlist.id);
+      await this.APIService.deletePlaylist(
+        currentUser.auth_token,
+        getPlaylistId(playlist)
+      );
       // redirect
       // Remove playlist from state and display success message afterwards
       this.setState(
-        { playlists: playlists.filter((pl) => pl.id !== playlist.id) },
+        {
+          playlists: playlists.filter(
+            (pl) => getPlaylistId(pl) !== getPlaylistId(playlist)
+          ),
+        },
         this.newAlert.bind(
           this,
           "success",
@@ -92,7 +105,7 @@ export default class UserPlaylists extends React.Component<
     }
   };
 
-  selectPlaylistForEdit = (playlist: ListenBrainzPlaylist): void => {
+  selectPlaylistForEdit = (playlist: JSPFPlaylist): void => {
     this.setState({ playlistSelectedForOperation: playlist });
   };
 
@@ -133,31 +146,70 @@ export default class UserPlaylists extends React.Component<
           <a href={`/playlist/${newPlaylistId}`}>{newPlaylistId}</a>
         </>
       );
+      // Fetch the newly created playlist and add it to the state
+      const JSPFObject: JSPFObject = await this.APIService.getPlaylist(
+        newPlaylistId
+      );
+      this.setState((prevState) => ({
+        playlists: [...prevState.playlists, JSPFObject.playlist],
+      }));
     } catch (error) {
       this.newAlert("danger", "Error", error.message);
     }
   };
 
-  editPlaylist = (
+  editPlaylist = async (
     name: string,
     description: string,
     isPublic: boolean,
     collaborators: string[],
     id?: string
-  ) => {
-    // Show modal or section with playlist attributes
-    // name, description, private/public
-    // Then call API endpoint POST  /1/playlist/create
-    const content = (
-      <div>
-        <div>name: {name}</div>
-        <div>description: {description}</div>
-        <div>isPublic: {isPublic.toString()}</div>
-        <div>collaborators: {collaborators.join(", ")}</div>
-        <div>id: {id}</div>
-      </div>
-    );
-    this.newAlert("success", "Creating playlist", content);
+  ): Promise<void> => {
+    if (!id) {
+      this.newAlert(
+        "danger",
+        "Error",
+        "Trying to edit a playlist without an id. This shouldn't have happened, please contact us with the error message."
+      );
+      return;
+    }
+    const { playlists } = this.state;
+    const playlistsCopy = { ...playlists };
+    try {
+      const content = (
+        <div>
+          This is a placeholder; the API call is not yet implemented.
+          <div>name: {name}</div>
+          <div>description: {description}</div>
+          <div>isPublic: {isPublic.toString()}</div>
+          <div>collaborators: {collaborators.join(", ")}</div>
+          <div>id: {id}</div>
+        </div>
+      );
+
+      this.newAlert("success", "Edited playlist", content);
+
+      // Once API call succeeds, find and update playlist in state
+      const playlistIndex = playlistsCopy.findIndex(
+        (pl) => getPlaylistId(pl) === id
+      );
+      playlistsCopy[playlistIndex] = {
+        ...playlistsCopy[playlistIndex],
+        annotation: description,
+        title: name,
+        extension: {
+          MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION: {
+            public: isPublic,
+            collaborators,
+          },
+        },
+      };
+      // — OR - fetch the newly edited playlist and replace it in the state
+      // const playlist:JSPFPlaylist = await this.APIService.getPlaylist(id);
+      this.setState({ playlists: playlistsCopy });
+    } catch (error) {
+      this.newAlert("danger", "Error", error.message);
+    }
   };
 
   newAlert = (
@@ -210,11 +262,13 @@ export default class UserPlaylists extends React.Component<
           id="playlists-container"
           style={{ display: "flex", flexWrap: "wrap" }}
         >
-          {playlists.map((playlist: ListenBrainzPlaylist) => {
+          {playlists.map((playlist: JSPFPlaylist) => {
             const isOwner = playlist.creator === currentUser?.name;
+            const playlistId = getPlaylistId(playlist);
+            const customFields = getPlaylistExtension(playlist);
             return (
-              <Card className="playlist" key={playlist.id}>
-                <a className="image" href={`/playlist/${playlist.id}`}>
+              <Card className="playlist" key={playlistId}>
+                <a className="image" href={`/playlist/${playlistId}`}>
                   <div style={{ background: "palegoldenrod", height: "100%" }}>
                     Images here
                   </div>
@@ -270,12 +324,12 @@ export default class UserPlaylists extends React.Component<
                       )}
                     </ul>
                   </span>
-                  <a href={`/playlist/${playlist.id}`}>
+                  <a href={`/playlist/${playlistId}`}>
                     {playlist.title}
                     <br />
                     {playlist.annotation}
                     <br />
-                    Last Modified: {playlist.last_modified}
+                    Last Modified: {customFields?.last_modified_at}
                     <br />
                     Created at:{playlist.date}
                   </a>
@@ -333,10 +387,14 @@ document.addEventListener("DOMContentLoaded", () => {
   } catch (err) {
     // Show error to the user and ask to reload page
   }
-  const { current_user, api_url: apiUrl } = reactProps;
+  const { current_user, api_url: apiUrl, playlists } = reactProps;
   ReactDOM.render(
     <ErrorBoundary>
-      <UserPlaylists apiUrl={apiUrl} currentUser={current_user} />
+      <UserPlaylists
+        apiUrl={apiUrl}
+        currentUser={current_user}
+        playlists={playlists}
+      />
     </ErrorBoundary>,
     domContainer
   );
