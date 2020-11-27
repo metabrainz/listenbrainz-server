@@ -148,7 +148,8 @@ export default class UserPlaylists extends React.Component<
       );
       // Fetch the newly created playlist and add it to the state
       const JSPFObject: JSPFObject = await this.APIService.getPlaylist(
-        newPlaylistId
+        newPlaylistId,
+        currentUser.auth_token
       );
       this.setState((prevState) => ({
         playlists: [...prevState.playlists, JSPFObject.playlist],

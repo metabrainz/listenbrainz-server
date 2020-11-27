@@ -419,13 +419,22 @@ export default class APIService {
     return result.playlist_mbid;
   };
 
-  getPlaylist = async (playlistMBID: string) => {
+  getPlaylist = async (playlistMBID: string, userToken?: string) => {
     if (!playlistMBID) {
       throw new SyntaxError("playlist MBID missing");
     }
+    let headers;
+    if (userToken) {
+      headers = {
+        Authorization: `Token ${userToken}`,
+      };
+    }
 
     const url = `${this.APIBaseURI}/playlist/${playlistMBID}`;
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      method: "GET",
+      headers,
+    });
     this.checkStatus(response);
     const data = response.json();
     return data;
