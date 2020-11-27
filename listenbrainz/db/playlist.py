@@ -80,7 +80,7 @@ def get_playlists_for_user(user_id: int, include_private: bool = False, load_rec
              , description
              , public
              , created
-             , copied_from
+             , copied_from_id
              , created_for_id
              , algorithm_metadata
           FROM playlist.playlist
@@ -137,7 +137,7 @@ def get_playlists_created_for_user(user_id: int, load_recordings: bool = False):
              , description
              , public
              , created
-             , copied_from
+             , copied_from_id
              , created_for_id
              , algorithm_metadata
           FROM playlist.playlist
