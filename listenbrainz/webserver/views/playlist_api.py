@@ -14,6 +14,7 @@ from listenbrainz.db.model.playlist import Playlist, WritablePlaylist, WritableP
 playlist_api_bp = Blueprint('playlist_api_v1', __name__)
 
 PLAYLIST_TRACK_URI_PREFIX = "https://musicbrainz.org/recording/"
+PLAYLIST_URI_PREFIX = "https://listenbrainz.org/playlist/"
 MAX_RECORDINGS_PER_ADD = 100
 
 def _parse_boolean_arg(name, default=None):
@@ -70,7 +71,7 @@ def serialize_jspf(playlist: Playlist, user):
 
     pl = { "creator": user["musicbrainz_id"],
             "title": playlist.name,
-            "identifier": playlist.mbid
+            "identifier": PLAYLIST_URI_PREFIX + str(playlist.mbid)
     }
 
     tracks = []
@@ -80,6 +81,8 @@ def serialize_jspf(playlist: Playlist, user):
     pl["track"] = tracks
 
     return { "playlist": pl }
+
+
 
 def validate_move_data(data):
     """
