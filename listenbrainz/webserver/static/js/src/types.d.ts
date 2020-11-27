@@ -4,6 +4,7 @@ declare module "react-responsive";
 declare module "spotify-web-playback-sdk";
 declare module "react-bs-notifier";
 declare module "time-ago";
+declare module "debounce-async";
 
 // TODO: Remove "| null" when backend stops sending fields with null
 interface AdditionalInfo {
@@ -329,6 +330,7 @@ declare type ACRMSearchResult = {
 declare type JSPFObject = {
   playlist: JSPFPlaylist;
 };
+
 declare type JSPFPlaylist = {
   title: string;
   creator: string;
@@ -337,14 +339,24 @@ declare type JSPFPlaylist = {
   location?: string;
   identifier: string;
   image?: string;
-  date: string;
+  date: string; // ISO date string
   license?: string;
   attribution?: Array<{ location: string } | { identifier: string }>;
   link?: Array<{ [name: string]: string }>;
   meta?: Array<{ [name: string]: string }>;
   track: Array<JSPFTrack>;
-  extension?: { [name: string]: any };
+  extension?: {
+    [name: string]: any;
+    "https://musicbrainz.org/doc/jspf#playlist"?: {
+      collaborators: string[];
+      public: boolean;
+      created_for?: string;
+      copied_from?: string; // Full ListenBrainz playlist URI
+      last_modified_at: string; // ISO date string
+    };
+  };
 };
+
 declare type JSPFTrack = {
   location?: string[];
   identifier: string[];
@@ -358,22 +370,31 @@ declare type JSPFTrack = {
   duration?: number;
   link?: Array<{ [name: string]: string }>;
   meta?: Array<{ [name: string]: string }>;
-  extension?: { [name: string]: any };
-};
-declare type ListenBrainzTrack = JSPFTrack & {
-  id: string; // React-sortable library expects an id attribute
-  added_at: string;
-  added_by: string;
+  extension?: {
+    [name: string]: any;
+    "https://musicbrainz.org/doc/jspf#track"?: {
+      added_by: string;
+      artist_identifier: string[]; // Full MusicBrainz artist URIs
+      added_at: string; // ISO date string
+      release_identifier: string; // Full MusicBrainz release URI
+    };
+  };
 };
 
-// LB stores more information about the playlist
-// the doesn't fit in the JSPF format
-declare type ListenBrainzPlaylist = JSPFPlaylist & {
-  id: string; // Playlist MBID (without full URL)
-  public: boolean;
-  item_count: number; // or track_count ?
-  last_modified: string; // ISO format?
-  created_for?: string;
-  copied_from?: string;
-  collaborators?: string[];
+declare type ListenBrainzTrack = JSPFTrack & {
+  id: string; // React-sortable library expects an id attribute
+};
+
+declare type RecordingMetadata = {
+  "[artist_credit_mbids]": string[];
+  artist_credit_id: number;
+  artist_credit_name: string;
+  comment?: string;
+  length: number;
+  recording_mbid: string;
+  recording_name: string;
+};
+
+declare type RecordingMetadataMap = {
+  [recordingMsid: string]: RecordingMetadata;
 };

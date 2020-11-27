@@ -26,10 +26,16 @@ import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
 import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
 import ErrorBoundary from "../ErrorBoundary";
 import PlaylistItemCard from "./PlaylistItemCard";
+import {
+  PLAYLIST_TRACK_URI_PREFIX,
+  getPlaylistExtension,
+  getPlaylistId,
+  getRecordingMBIDFromJSPFTrack,
+} from "./utils";
 
 export interface PlaylistPageProps {
   apiUrl: string;
-  playlist: ListenBrainzPlaylist;
+  playlist: JSPFPlaylist;
   spotify: SpotifyUser;
   currentUser?: ListenBrainzUser;
   webSocketsServerUrl: string;
@@ -38,23 +44,17 @@ export interface PlaylistPageProps {
 export interface PlaylistPageState {
   alerts: Array<Alert>;
   currentTrack?: ListenBrainzTrack;
-  playlist: ListenBrainzPlaylist;
+  playlist: JSPFPlaylist;
   recordingFeedbackMap: RecordingFeedbackMap;
   trackMetadataMap: RecordingMetadataMap;
 }
 
 type OptionType = { label: string; value: ACRMSearchResult };
 
-const PLAYLIST_TRACK_URI_PREFIX = "https://musicbrainz.org/recording/";
-
 export default class PlaylistPage extends React.Component<
   PlaylistPageProps,
   PlaylistPageState
 > {
-  static getRecordingMBIDFromJSPFTrack(track: JSPFTrack): string {
-    return track.identifier?.[0].substr(PLAYLIST_TRACK_URI_PREFIX.length) ?? "";
-  }
-
   static makeJSPFTrack(track: ACRMSearchResult): JSPFTrack {
     return {
       identifier: [`${PLAYLIST_TRACK_URI_PREFIX}${track.recording_mbid}`],
@@ -163,7 +163,7 @@ export default class PlaylistPage extends React.Component<
       try {
         await this.APIService.addPlaylistItems(
           currentUser.auth_token,
-          playlist.id,
+          getPlaylistId(playlist),
           [PlaylistPage.makeJSPFTrack(value)]
         );
         this.newAlert("success", "Added track", `Added track ${label}`);
@@ -206,17 +206,18 @@ export default class PlaylistPage extends React.Component<
       return;
     }
     try {
+      const customFields = getPlaylistExtension(playlist);
       await this.APIService.createPlaylist(
         currentUser.auth_token,
         playlist.title,
         playlist.track,
-        playlist.public,
+        customFields?.public ?? true,
         playlist.annotation
       );
       this.newAlert(
         "success",
         "Copied playlist",
-        `Copied playlist ${playlist.id}`
+        `Copied playlist ${getPlaylistId(playlist)}`
       );
     } catch (error) {
       this.newAlert("danger", "Error", error.message);
@@ -231,7 +232,10 @@ export default class PlaylistPage extends React.Component<
       return;
     }
     try {
-      await this.APIService.deletePlaylist(currentUser.auth_token, playlist.id);
+      await this.APIService.deletePlaylist(
+        currentUser.auth_token,
+        getPlaylistId(playlist)
+      );
       // redirect
       this.newAlert(
         "success",
@@ -290,11 +294,11 @@ export default class PlaylistPage extends React.Component<
     }
   };
 
-  getFeedback = async () => {
+  getFeedback = async (): Promise<FeedbackResponse[]> => {
     const { currentUser, playlist } = this.props;
     const { track: tracks } = playlist;
-    if (tracks) {
-      const recordings = tracks.map(PlaylistPage.getRecordingMBIDFromJSPFTrack);
+    if (currentUser && tracks) {
+      const recordings = tracks.map(getRecordingMBIDFromJSPFTrack);
       try {
         const data = await this.APIService.getFeedbackForUserForRecordings(
           currentUser.name,
@@ -337,7 +341,8 @@ export default class PlaylistPage extends React.Component<
   hasRightToEdit = (): boolean => {
     const { currentUser } = this.props;
     const { playlist } = this.state;
-    const { creator, collaborators } = playlist;
+    const { creator } = playlist;
+    const collaborators = getPlaylistExtension(playlist)?.collaborators ?? [];
     if (
       currentUser?.name === creator ||
       (collaborators ?? []).findIndex(
@@ -365,14 +370,12 @@ export default class PlaylistPage extends React.Component<
       );
       return;
     }
-    const recordingMBID = PlaylistPage.getRecordingMBIDFromJSPFTrack(
-      trackToDelete
-    );
+    const recordingMBID = getRecordingMBIDFromJSPFTrack(trackToDelete);
     const trackIndex = _.findIndex(tracks, trackToDelete);
     try {
       await this.APIService.deletePlaylistItems(
         currentUser.auth_token,
-        playlist.id,
+        getPlaylistId(playlist),
         recordingMBID,
         trackIndex
       );
@@ -391,7 +394,7 @@ export default class PlaylistPage extends React.Component<
     try {
       await this.APIService.movePlaylistItem(
         currentUser.auth_token,
-        playlist.id,
+        getPlaylistId(playlist),
         evt.item.getAttribute("data-recording-mbid"),
         evt.oldIndex,
         evt.newIndex,
@@ -439,14 +442,16 @@ export default class PlaylistPage extends React.Component<
     const hasRightToEdit = this.hasRightToEdit();
     const isOwner = playlist.creator === currentUser?.name;
 
-    const transformedTracks: ListenBrainzTrack[] = playlist.track.map(
-      (jspfTrack) => {
+    const transformedTracks: ListenBrainzTrack[] =
+      tracks?.map((jspfTrack) => {
         return {
           ...jspfTrack,
-          id: PlaylistPage.getRecordingMBIDFromJSPFTrack(jspfTrack),
+          id: getRecordingMBIDFromJSPFTrack(jspfTrack),
         } as ListenBrainzTrack;
-      }
-    );
+      }) ?? [];
+
+    const customFields = getPlaylistExtension(playlist);
+
     return (
       <div role="main">
         <AlertList
@@ -515,26 +520,28 @@ export default class PlaylistPage extends React.Component<
                   </span>
                 </div>
                 <small>
-                  {playlist.public ? "Public " : "Private "}
+                  {customFields?.public ? "Public " : "Private "}
                   playlist by{" "}
                   <a href={`/user/${playlist.creator}`}>{playlist.creator}</a>
-                  {playlist.collaborators?.length &&
-                    ` | Collaborators: ${playlist.collaborators?.join(", ")}`}
+                  {customFields?.collaborators?.length &&
+                    ` | Collaborators: ${customFields.collaborators.join(
+                      ", "
+                    )}`}
                 </small>
               </h1>
               <div className="info">
-                <div>{playlist.item_count} tracks</div>
+                <div>{playlist.track.length} tracks</div>
                 <div>
                   Created at: {new Date(playlist.date).toLocaleString()}
                 </div>
-                {playlist.last_modified && (
+                {customFields?.last_modified_at && (
                   <div>
                     Last modified:{" "}
-                    {new Date(playlist.last_modified).toLocaleString()}
+                    {new Date(customFields.last_modified_at).toLocaleString()}
                   </div>
                 )}
-                {playlist.copied_from && (
-                  <div>Copied from: {playlist.copied_from}</div>
+                {customFields?.copied_from && (
+                  <div>Copied from: {customFields.copied_from}</div>
                 )}
               </div>
               <div>{playlist.annotation}</div>

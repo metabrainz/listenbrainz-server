@@ -7,9 +7,10 @@ import {
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { getPlaylistExtension, getPlaylistId } from "./utils";
 
 type CreateOrEditPlaylistModalProps = {
-  playlist?: ListenBrainzPlaylist;
+  playlist?: JSPFPlaylist;
   onSubmit: (
     name: string,
     description: string,
@@ -34,12 +35,12 @@ export default class CreateOrEditPlaylistModal extends React.Component<
 > {
   constructor(props: CreateOrEditPlaylistModalProps) {
     super(props);
-
+    const customFields = getPlaylistExtension(props.playlist);
     this.state = {
       name: props.playlist?.title ?? "",
       description: props.playlist?.annotation ?? "",
-      isPublic: props.playlist?.public ?? true,
-      collaborators: props.playlist?.collaborators ?? [],
+      isPublic: customFields?.public ?? true,
+      collaborators: customFields?.collaborators ?? [],
       newCollaborator: "",
     };
   }
@@ -48,12 +49,14 @@ export default class CreateOrEditPlaylistModal extends React.Component<
   // when props change (when we pass another playlist)
   componentDidUpdate(prevProps: CreateOrEditPlaylistModalProps) {
     const { playlist } = this.props;
-    if (prevProps.playlist?.id !== playlist?.id) {
+
+    if (getPlaylistId(prevProps.playlist) !== getPlaylistId(playlist)) {
+      const customFields = getPlaylistExtension(playlist);
       this.setState({
         name: playlist?.title ?? "",
         description: playlist?.annotation ?? "",
-        isPublic: playlist?.public ?? true,
-        collaborators: playlist?.collaborators ?? [],
+        isPublic: customFields?.public ?? true,
+        collaborators: customFields?.collaborators ?? [],
         newCollaborator: "",
       });
     }
@@ -65,7 +68,13 @@ export default class CreateOrEditPlaylistModal extends React.Component<
     const { name, description, isPublic, collaborators } = this.state;
 
     // VALIDATION PLEASE !
-    onSubmit(name, description, isPublic, collaborators, playlist?.id);
+    onSubmit(
+      name,
+      description,
+      isPublic,
+      collaborators,
+      getPlaylistId(playlist)
+    );
   };
 
   handleInputChange = (
@@ -116,7 +125,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
     } = this.state;
     const { htmlId, playlist } = this.props;
 
-    const isEdit = Boolean(playlist?.id);
+    const isEdit = Boolean(getPlaylistId(playlist));
     return (
       <div
         className="modal fade"

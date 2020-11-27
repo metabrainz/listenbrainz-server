@@ -1,7 +1,7 @@
 import * as React from "react";
 
 type DeletePlaylistConfirmationModalProps = {
-  playlist: ListenBrainzPlaylist;
+  playlist: JSPFPlaylist;
   onConfirm: (event: React.SyntheticEvent) => void;
 };
 
