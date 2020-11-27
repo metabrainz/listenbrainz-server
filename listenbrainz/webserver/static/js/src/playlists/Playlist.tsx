@@ -528,7 +528,9 @@ export default class PlaylistPage extends React.Component<
                 <small>
                   {customFields?.public ? "Public " : "Private "}
                   playlist by{" "}
-                  <a href={`/user/${playlist.creator}`}>{playlist.creator}</a>
+                  <a href={`/user/${playlist.creator}/playlists`}>
+                    {playlist.creator}
+                  </a>
                   {customFields?.collaborators?.length &&
                     ` | Collaborators: ${customFields.collaborators.join(
                       ", "
@@ -537,9 +539,7 @@ export default class PlaylistPage extends React.Component<
               </h1>
               <div className="info">
                 <div>{playlist.track?.length} tracks</div>
-                <div>
-                  Created at: {new Date(playlist.date).toLocaleString()}
-                </div>
+                <div>Created: {new Date(playlist.date).toLocaleString()}</div>
                 {customFields?.last_modified_at && (
                   <div>
                     Last modified:{" "}
@@ -582,6 +582,7 @@ export default class PlaylistPage extends React.Component<
                     return (
                       <PlaylistItemCard
                         key={track.id}
+                        data-recording-mbid={track.id}
                         currentUser={currentUser}
                         canEdit={hasRightToEdit}
                         apiUrl={apiUrl}

@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import * as timeago from "time-ago";
 
 import * as React from "react";
@@ -11,6 +12,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { getArtistLink, getTrackLink } from "../utils";
+import { getTrackExtension } from "./utils";
 import Card from "../components/Card";
 import APIService from "../APIService";
 import ListenControl from "../listens/ListenControl";
@@ -68,32 +70,7 @@ export default class PlaylistItemCard extends React.Component<
     }
   }
 
-  submitFeedback = async (score: ListenFeedBack) => {
-    // const { listen, currentUser, canEdit, updateFeedback } = this.props;
-    // if (canEdit && currentUser?.auth_token) {
-    //   const recordingMSID = _get(
-    //     listen,
-    //     "track_metadata.additional_info.recording_msid"
-    //   );
-    //   try {
-    //     const status = await this.APIService.submitFeedback(
-    //       currentUser.auth_token,
-    //       recordingMSID,
-    //       score
-    //     );
-    //     if (status === 200) {
-    //       this.setState({ feedback: score });
-    //       updateFeedback(recordingMSID, score);
-    //     }
-    //   } catch (error) {
-    //     this.handleError(error, "Error while submitting feedback");
-    //   }
-    // }
-    // We'll want most of this code (at least the API call) on the parent (Playlist) component
-    // because we will need the playlist id for bad_recommendation feedback
-  };
-
-  removeTrack = async () => {
+  removeTrack = () => {
     const { track, removeTrackFromPlaylist } = this.props;
     removeTrackFromPlaylist(track);
   };
@@ -110,19 +87,10 @@ export default class PlaylistItemCard extends React.Component<
     );
   };
 
-  handleListenedAt = () => {
-    const { track } = this.props;
-    return (
-      <span className="listen-time" title={track.added_at}>
-        {timeago.ago(track.added_at)}
-      </span>
-    );
-  };
-
   render() {
     const { track, canEdit, className } = this.props;
     const { feedback, isDeleted } = this.state;
-
+    const customFields = getTrackExtension(track);
     const trackDuration = track.duration
       ? (track.duration / 100000).toFixed(2)
       : "?";
@@ -133,7 +101,6 @@ export default class PlaylistItemCard extends React.Component<
         className={`playlist-item-card row ${className} ${
           isDeleted ? " deleted" : ""
         }`}
-        data-recording-mbid={recordingMbid}
       >
         {/* We can't currently disable the SortableJS component (https://github.com/SortableJS/react-sortablejs/issues/153)
         So insteand we hide the drag handle */}
@@ -157,8 +124,15 @@ export default class PlaylistItemCard extends React.Component<
         <div className="track-duration">{trackDuration}</div>
         {/* <div className="feedback">Feedback component</div> */}
         <div className="addition-details">
-          <div>added by {track.added_by}</div>
-          {this.handleListenedAt()}
+          <div>added by {customFields?.added_by}</div>
+          {customFields?.added_at && (
+            <span
+              className="listen-time"
+              title={String(Number(customFields.added_at) * 1000)}
+            >
+              {timeago.ago(Number(customFields.added_at) * 1000)}
+            </span>
+          )}
         </div>
 
         <div className="dropdown">

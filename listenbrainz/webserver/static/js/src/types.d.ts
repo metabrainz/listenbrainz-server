@@ -331,6 +331,21 @@ declare type JSPFObject = {
   playlist: JSPFPlaylist;
 };
 
+declare type JSPFPlaylistExtension = {
+  collaborators: string[];
+  public: boolean;
+  created_for?: string;
+  copied_from?: string; // Full ListenBrainz playlist URI
+  last_modified_at: string; // ISO date string
+};
+
+declare type JSPFTrackExtension = {
+  added_by: string;
+  artist_identifier: string[]; // Full MusicBrainz artist URIs
+  added_at: string; // ISO date string
+  release_identifier: string; // Full MusicBrainz release URI
+};
+
 declare type JSPFPlaylist = {
   title: string;
   creator: string;
@@ -347,13 +362,7 @@ declare type JSPFPlaylist = {
   track: Array<JSPFTrack>;
   extension?: {
     [name: string]: any;
-    "https://musicbrainz.org/doc/jspf#playlist"?: {
-      collaborators: string[];
-      public: boolean;
-      created_for?: string;
-      copied_from?: string; // Full ListenBrainz playlist URI
-      last_modified_at: string; // ISO date string
-    };
+    "https://musicbrainz.org/doc/jspf#playlist"?: JSPFPlaylistExtension;
   };
 };
 
@@ -372,12 +381,7 @@ declare type JSPFTrack = {
   meta?: Array<{ [name: string]: string }>;
   extension?: {
     [name: string]: any;
-    "https://musicbrainz.org/doc/jspf#track"?: {
-      added_by: string;
-      artist_identifier: string[]; // Full MusicBrainz artist URIs
-      added_at: string; // ISO date string
-      release_identifier: string; // Full MusicBrainz release URI
-    };
+    "https://musicbrainz.org/doc/jspf#track"?: JSPFTrackExtension;
   };
 };
 
