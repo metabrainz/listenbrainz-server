@@ -158,7 +158,7 @@ export default class SoundcloudPlayer
     onPlayerPausedChange(false);
   };
 
-  playListen = (listen: Listen) => {
+  playListen = (listen: Listen | JSPFTrack) => {
     const { show, onTrackNotFound } = this.props;
     if (!show) {
       return;
