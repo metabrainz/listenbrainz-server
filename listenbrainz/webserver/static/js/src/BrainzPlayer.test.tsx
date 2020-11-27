@@ -12,7 +12,7 @@ const props = {
     permission: "read" as SpotifyPermission,
   },
   direction: "up" as BrainzPlayDirection,
-  onCurrentListenChange: (listen: Listen) => {},
+  onCurrentListenChange: (listen: Listen | JSPFTrack) => {},
   listens: [],
   newAlert: (
     alertType: AlertType,

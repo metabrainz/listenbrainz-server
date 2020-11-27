@@ -7,6 +7,7 @@ import {
   isString as _isString,
 } from "lodash";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
+import { getTrackExtension } from "./playlists/utils";
 
 type YoutubePlayerState = {
   currentListen?: Listen;
@@ -73,9 +74,11 @@ export default class YoutubePlayer
     onProgressChange(player.getCurrentTime() * 1000);
   };
 
-  searchAndPlayTrack = (listen: Listen): void => {
-    const trackName = _get(listen, "track_metadata.track_name");
-    const artistName = _get(listen, "track_metadata.artist_name");
+  searchAndPlayTrack = (listen: Listen | JSPFTrack): void => {
+    const trackName =
+      _get(listen, "track_metadata.track_name") || _get(listen, "title");
+    const artistName =
+      _get(listen, "track_metadata.artist_name") || _get(listen, "creator");
     const releaseName = _get(listen, "track_metadata.release_name");
     const { handleWarning, onTrackNotFound } = this.props;
     if (!trackName) {
@@ -107,7 +110,7 @@ export default class YoutubePlayer
     }
   };
 
-  playListen = (listen: Listen) => {
+  playListen = (listen: Listen | JSPFTrack) => {
     const { show } = this.props;
     if (!show) {
       return;
