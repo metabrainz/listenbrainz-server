@@ -1,3 +1,4 @@
+import { isNil } from "lodash";
 import APIError from "./APIError";
 
 export default class APIService {
@@ -449,9 +450,8 @@ export default class APIService {
     if (!playlistMBID) {
       throw new SyntaxError("Playlist MBID is missing");
     }
-    const optionalOffset = Number.isSafeInteger(offset)
-      ? `?offset=${offset}`
-      : "";
+    const optionalOffset =
+      !isNil(offset) && Number.isSafeInteger(offset) ? `?offset=${offset}` : "";
     const url = `${this.APIBaseURI}/playlist/${playlistMBID}/item/add${optionalOffset}`;
     const response = await fetch(url, {
       method: "POST",
