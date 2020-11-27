@@ -1,12 +1,14 @@
 import ujson
 from uuid import UUID
-import listenbrainz.db.user as db_user
-import listenbrainz.db.playlist as db_playlist
 
 from redis import Redis
 from flask import url_for, current_app
 from listenbrainz.db.model.playlist import Playlist
 from listenbrainz.tests.integration import IntegrationTestCase
+import listenbrainz.db.user as db_user
+import listenbrainz.db.playlist as db_playlist
+from listenbrainz.webserver.views.playlist_api import PLAYLIST_TRACK_URI_PREFIX, PLAYLIST_URI_PREFIX
+
 
 
 class PlaylistAPITestCase(IntegrationTestCase):
@@ -38,7 +40,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         playlist = self.get_test_data()
 
         response = self.client.post(
-            url_for("playlist_api_v1.create_playlist"),
+            url_for("playlist_api_v1.create_playlist", public="true"),
             data=ujson.dumps(playlist),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json"
@@ -59,7 +61,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert200(response)
         self.assertEqual(response.json["playlist"]["creator"], "testuserpleaseignore")
-        self.assertEqual(response.json["playlist"]["identifier"], playlist_mbid)
+        self.assertEqual(response.json["playlist"]["identifier"], PLAYLIST_URI_PREFIX + playlist_mbid)
         self.assertEqual(response.json["playlist"]["track"][0]["identifier"],
                          playlist["playlist"]["track"][0]["identifier"])
 
@@ -164,7 +166,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
            "playlist" : {
               "track" : [
                  {
-                    "identifier" : "https://musicbrainz.org/recording/4a77a078-e91a-4522-a409-3b58aa7de3ae"
+                    "identifier" : PLAYLIST_TRACK_URI_PREFIX + "4a77a078-e91a-4522-a409-3b58aa7de3ae"
                  }
               ],
            }
@@ -182,11 +184,31 @@ class PlaylistAPITestCase(IntegrationTestCase):
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
         )
         self.assertEqual(response.json["playlist"]["creator"], "testuserpleaseignore")
-        self.assertEqual(response.json["playlist"]["identifier"], playlist_mbid)
+        self.assertEqual(response.json["playlist"]["identifier"], PLAYLIST_URI_PREFIX + playlist_mbid)
         self.assertEqual(response.json["playlist"]["track"][0]["identifier"],
                          playlist["playlist"]["track"][0]["identifier"])
         self.assertEqual(response.json["playlist"]["track"][1]["identifier"],
                          add_recording["playlist"]["track"][0]["identifier"])
+
+
+        # Add an invalid track id to the playlist
+        add_recording = {
+           "playlist" : {
+              "track" : [
+                 {
+                    "identifier" : "4a77a078-e91a-4522-a409-3b58aa7de3ae"
+                 }
+              ],
+           }
+        }
+        response = self.client.post(
+            url_for("playlist_api_v1.add_playlist_item", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            data=ujson.dumps(add_recording),
+            content_type="application/json"
+        )
+        self.assert400(response)
+
 
     def test_playlist_recording_move(self):
 
@@ -195,10 +217,10 @@ class PlaylistAPITestCase(IntegrationTestCase):
               "title" : "1980s flashback jams",
               "track" : [
                  {
-                    "identifier" : "https://musicbrainz.org/recording/e8f9b188-f819-4e43-ab0f-4bd26ce9ff56"
+                    "identifier" : PLAYLIST_TRACK_URI_PREFIX + "e8f9b188-f819-4e43-ab0f-4bd26ce9ff56"
                  },
                  {
-                    "identifier" : "https://musicbrainz.org/recording/57ef4803-5181-4b3d-8dd6-8b9d9ca83e2a"
+                    "identifier" : PLAYLIST_TRACK_URI_PREFIX + "57ef4803-5181-4b3d-8dd6-8b9d9ca83e2a"
                  }
               ],
            }
@@ -227,7 +249,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
         )
         self.assertEqual(response.json["playlist"]["creator"], "testuserpleaseignore")
-        self.assertEqual(response.json["playlist"]["identifier"], playlist_mbid)
+        self.assertEqual(response.json["playlist"]["identifier"], PLAYLIST_URI_PREFIX + playlist_mbid)
         self.assertEqual(response.json["playlist"]["track"][0]["identifier"],
                          playlist["playlist"]["track"][1]["identifier"])
         self.assertEqual(response.json["playlist"]["track"][1]["identifier"],
@@ -273,7 +295,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
         )
         self.assertEqual(response.json["playlist"]["creator"], "testuserpleaseignore")
-        self.assertEqual(response.json["playlist"]["identifier"], playlist_mbid)
+        self.assertEqual(response.json["playlist"]["identifier"], PLAYLIST_URI_PREFIX + playlist_mbid)
         self.assertEqual(response.json["playlist"]["track"][0]["identifier"],
                          playlist["playlist"]["track"][1]["identifier"])
 
