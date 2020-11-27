@@ -359,7 +359,7 @@ declare type JSPFPlaylist = {
 
 declare type JSPFTrack = {
   location?: string[];
-  identifier: string[];
+  identifier: string;
   title: string;
   creator: string;
   annotation?: string;
