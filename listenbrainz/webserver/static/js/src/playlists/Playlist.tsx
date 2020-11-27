@@ -162,12 +162,16 @@ export default class PlaylistPage extends React.Component<
         return;
       }
       try {
+        const jspfTrack = PlaylistPage.makeJSPFTrack(value);
         await this.APIService.addPlaylistItems(
           currentUser.auth_token,
           getPlaylistId(playlist),
-          [PlaylistPage.makeJSPFTrack(value)]
+          [jspfTrack]
         );
         this.newAlert("success", "Added track", `Added track ${label}`);
+        this.setState({
+          playlist: { ...playlist, track: [...playlist.track, jspfTrack] },
+        });
       } catch (error) {
         this.newAlert("danger", "Error", error.message);
       }
