@@ -180,9 +180,12 @@ def get_feedback_for_recordings_for_user(user_name):
 
     recordings = request.args.get('recordings')
 
+    if not recordings:
+        log_raise_400("'recordings' has no valid recording MSID.")
+
     recording_list = parse_param_list(recordings)
     if not len(recording_list):
-        raise APIBadRequest("'recordings' has no valid recording_msid.")
+        raise APIBadRequest("'recordings' has no valid recording MSID.")
 
     user = db_user.get_by_mb_id(user_name)
     if user is None:
