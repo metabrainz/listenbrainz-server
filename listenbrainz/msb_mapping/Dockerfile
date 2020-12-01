@@ -1,4 +1,4 @@
-FROM metabrainz/python:3.7
+FROM metabrainz/python:3.7-20201201
 
 RUN apt-get update && apt-get install -y ca-certificates && \
         pip install --upgrade pip

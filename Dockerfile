@@ -1,4 +1,4 @@
-FROM metabrainz/python:3.7 as listenbrainz-base
+FROM metabrainz/python:3.7-20201201 as listenbrainz-base
 
 ARG deploy_env
 
@@ -31,7 +31,6 @@ WORKDIR /code
 
 RUN mkdir /code/listenbrainz
 WORKDIR /code/listenbrainz
-RUN pip3 install -U pip
 COPY requirements.txt /code/listenbrainz/
 RUN pip3 install --no-cache-dir -r requirements.txt
 RUN useradd --create-home --shell /bin/bash listenbrainz
