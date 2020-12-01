@@ -16,21 +16,18 @@ services:
 
   timescale:
     image: timescale/timescaledb:latest-pg12
+    command: postgres -F
     environment:
       POSTGRES_PASSWORD: "postgres"
 
   rabbitmq:
     image: rabbitmq:3.6.5
-    ports:
-      - "5672:5672"
 
   listenbrainz:
     build:
       context: ../..
       dockerfile: Dockerfile
       target: listenbrainz-dev
-    volumes:
-      - ..:/code/listenbrainz:z
     depends_on:
       - redis
       - db
