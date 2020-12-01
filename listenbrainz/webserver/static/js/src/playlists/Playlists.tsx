@@ -269,75 +269,74 @@ export default class UserPlaylists extends React.Component<
             const customFields = getPlaylistExtension(playlist);
             return (
               <Card className="playlist" key={playlistId}>
-                <a className="image" href={`/playlist/${playlistId}`}>
-                  <div style={{ background: "palegoldenrod", height: "100%" }}>
-                    Images here
+                <span className="dropdown">
+                  <button
+                    className="btn btn-link dropdown-toggle pull-right"
+                    type="button"
+                    id="playlistOptionsDropdown"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="true"
+                    onClick={this.selectPlaylistForEdit.bind(this, playlist)}
+                  >
+                    <FontAwesomeIcon
+                      icon={faEllipsisV as IconProp}
+                      title="More options"
+                    />
+                  </button>
+                  <ul
+                    className="dropdown-menu"
+                    aria-labelledby="playlistOptionsDropdown"
+                  >
+                    <li>
+                      <button onClick={this.copyPlaylist} type="button">
+                        Duplicate
+                      </button>
+                    </li>
+                    {isOwner && (
+                      <>
+                        <li role="separator" className="divider" />
+                        <li>
+                          <button
+                            type="button"
+                            data-toggle="modal"
+                            data-target="#playlistEditModal"
+                          >
+                            <FontAwesomeIcon icon={faPen as IconProp} /> Edit
+                          </button>
+                        </li>
+                        <li>
+                          <button
+                            type="button"
+                            data-toggle="modal"
+                            data-target="#confirmDeleteModal"
+                          >
+                            <FontAwesomeIcon icon={faTrashAlt as IconProp} />{" "}
+                            Delete
+                          </button>
+                        </li>
+                      </>
+                    )}
+                  </ul>
+                </span>
+                <a className="info" href={`/playlist/${playlistId}`}>
+                  <h4>{playlist.title}</h4>
+                  {playlist.annotation && (
+                    <div className="description">{playlist.annotation}</div>
+                  )}
+                  <div>
+                    Created:{" "}
+                    {new Date(playlist.date).toLocaleString(undefined, {
+                      dateStyle: "short",
+                    })}
                   </div>
-                </a>
-                <div className="info">
-                  <span className="dropdown">
-                    <button
-                      className="btn btn-link dropdown-toggle pull-right"
-                      type="button"
-                      id="playlistOptionsDropdown"
-                      data-toggle="dropdown"
-                      aria-haspopup="true"
-                      aria-expanded="true"
-                      onClick={this.selectPlaylistForEdit.bind(this, playlist)}
-                    >
-                      <FontAwesomeIcon
-                        icon={faEllipsisV as IconProp}
-                        title="More options"
-                      />
-                    </button>
-                    <ul
-                      className="dropdown-menu"
-                      aria-labelledby="playlistOptionsDropdown"
-                    >
-                      <li>
-                        <button onClick={this.copyPlaylist} type="button">
-                          Duplicate
-                        </button>
-                      </li>
-                      {isOwner && (
-                        <>
-                          <li role="separator" className="divider" />
-                          <li>
-                            <button
-                              type="button"
-                              data-toggle="modal"
-                              data-target="#playlistEditModal"
-                            >
-                              <FontAwesomeIcon icon={faPen as IconProp} /> Edit
-                            </button>
-                          </li>
-                          <li>
-                            <button
-                              type="button"
-                              data-toggle="modal"
-                              data-target="#confirmDeleteModal"
-                            >
-                              <FontAwesomeIcon icon={faTrashAlt as IconProp} />{" "}
-                              Delete
-                            </button>
-                          </li>
-                        </>
-                      )}
-                    </ul>
-                  </span>
-                  <a href={`/playlist/${playlistId}`}>
-                    {playlist.title}
-                    <br />
-                    {playlist.annotation}
-                    <br />
+                  <div>
                     {customFields?.last_modified_at &&
                       `Last Modified: ${new Date(
                         customFields.last_modified_at
-                      ).toLocaleString()}`}
-                    <br />
-                    Created: {new Date(playlist.date).toLocaleString()}
-                  </a>
-                </div>
+                      ).toLocaleString(undefined, { dateStyle: "short" })}`}
+                  </div>
+                </a>
               </Card>
             );
           })}

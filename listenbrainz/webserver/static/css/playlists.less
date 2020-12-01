@@ -1,3 +1,6 @@
+@playlistBackgroundColor:  #fafafa;
+@descriptionLines: 3;
+
 #playlists-container {
 	.playlist, .new-playlist {
 		margin: 0.5em;
@@ -9,21 +12,41 @@
 		overflow: hidden;
 		
 		.info {
+			display: block;
 			padding: 1em;
-			position: absolute;
-			transition: bottom 0.2s linear;
-			bottom: -7em;
-			min-height: 10em;
+			height: 100%;
 			width: 100%;
-			background: #add8e685;
-			.dropdown-toggle {
-				position: relative;
-				top: -6px;
-				right: -10px;
+			background-color: @playlistBackgroundColor;
+			> * {
+				margin: 0.5em 0;
 			}
-		}
-		&:hover .info {
-			bottom:0px;
+
+			/* Pure CSS multiline ellipsis by Sagi Shrieber:
+			   http://hackingui.com/a-pure-css-solution-for-multiline-text-truncation/
+			*/
+			.description {
+				overflow: hidden;
+				position: relative;
+				line-height: 1.2em;
+				max-height: @descriptionLines * 1.2em;
+				text-align: justify;
+				padding-right: 2em;
+				&:before {
+				  content: '...';
+				  position: absolute;
+				  right: 1em;
+				  bottom: 0;
+				}
+				&:after {
+				  content: '';
+				  position: absolute;
+				  right: 0;
+				  width: 1em;
+				  height: 1em;
+				  margin-top: 0.2em;
+				  background-color: inherit;
+				}
+			  }
 		}
 	}
 	.new-playlist {
