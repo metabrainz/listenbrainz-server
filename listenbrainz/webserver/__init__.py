@@ -255,7 +255,6 @@ def _register_blueprints(app):
     app.register_blueprint(profile_bp, url_prefix='/profile')
     app.register_blueprint(follow_bp, url_prefix='/follow')
     app.register_blueprint(player_bp, url_prefix='/player')
-    app.register_blueprint(playlist_bp, url_prefix='/playlist')
     app.register_blueprint(api_bp, url_prefix=API_PREFIX)
     app.register_blueprint(follow_api_bp, url_prefix=API_PREFIX+'/follow')
     app.register_blueprint(stats_api_bp, url_prefix=API_PREFIX+'/stats')
@@ -267,3 +266,4 @@ def _register_blueprints(app):
     app.register_blueprint(recommendations_cf_recording_bp, url_prefix='/recommended/tracks')
     if app.config.get("FEATURE_PLAYLIST", False):
             app.register_blueprint(playlist_api_bp, url_prefix=API_PREFIX+'/playlist')
+            app.register_blueprint(playlist_bp, url_prefix='/playlist')

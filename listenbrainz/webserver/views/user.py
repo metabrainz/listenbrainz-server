@@ -197,8 +197,12 @@ def reports(user_name: str):
     )
 
 @user_bp.route("/<user_name>/playlists")
-def user_playlists(user_name: str):
+def playlists(user_name: str):
     """ Show user playlists """
+    
+    if not current_app.config.get("FEATURE_PLAYLIST", False):
+        raise NotFound()
+    
     user = _get_user(user_name)
     user_data = {
         "name": user.musicbrainz_id,
