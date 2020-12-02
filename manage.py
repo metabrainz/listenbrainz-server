@@ -57,8 +57,8 @@ def init_db(force, create_db):
     3. Indexes are created.
     """
     from listenbrainz import config
-    db.init_db_connection(config.POSTGRES_ADMIN_URI)
     if force:
+        db.init_db_connection(config.POSTGRES_ADMIN_URI)
         res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'drop_db.sql'))
         if not res:
             raise Exception('Failed to drop existing database and user! Exit code: %i' % res)
@@ -106,8 +106,8 @@ def init_msb_db(force, create_db):
     3. Indexes are created.
     """
     from listenbrainz import config
-    db.init_db_connection(config.POSTGRES_ADMIN_URI)
     if force:
+        db.init_db_connection(config.POSTGRES_ADMIN_URI)
         res = db.run_sql_script_without_transaction(os.path.join(MSB_ADMIN_SQL_DIR, 'drop_db.sql'))
         if not res:
             raise Exception('Failed to drop existing database and user! Exit code: %s' % res)
@@ -157,8 +157,8 @@ def init_db(force, create_db):
     3. Views are created
     """
     from listenbrainz import config
-    ts.init_db_connection(config.TIMESCALE_ADMIN_URI)
     if force:
+        ts.init_db_connection(config.TIMESCALE_ADMIN_URI)
         res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'drop_db.sql'))
         if not res:
             raise Exception('Failed to drop existing database and user! Exit code: %i' % res)
