@@ -100,6 +100,7 @@ export default class PlaylistItemCard extends React.Component<
         className={`playlist-item-card row ${className} ${
           isDeleted ? " deleted" : ""
         }`}
+        data-recording-mbid={track.id}
       >
         {/* We can't currently disable the SortableJS component (https://github.com/SortableJS/react-sortablejs/issues/153)
         So insteand we hide the drag handle */}

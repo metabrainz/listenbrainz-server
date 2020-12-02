@@ -626,7 +626,6 @@ export default class PlaylistPage extends React.Component<
                     return (
                       <PlaylistItemCard
                         key={`${track.id}-${index.toString()}`}
-                        data-recording-mbid={track.id}
                         currentUser={currentUser}
                         canEdit={hasRightToEdit}
                         apiUrl={apiUrl}
