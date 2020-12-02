@@ -20,7 +20,7 @@ PLAYLIST_TRACK_URI_PREFIX = "https://musicbrainz.org/recording/"
 PLAYLIST_URI_PREFIX = "https://listenbrainz.org/playlist/"
 PLAYLIST_EXTENSION_URI = "https://musicbrainz.org/doc/jspf#playlist"
 PLAYLIST_TRACK_EXTENSION_URI = "https://musicbrainz.org/doc/jspf#track"
-RECORDING_LOOKUP_SERVER_URL = "https://labs.api.listenbrainz.org/recording-mbid-lookup/json
+RECORDING_LOOKUP_SERVER_URL = "https://labs.api.listenbrainz.org/recording-mbid-lookup/json"
 MAX_RECORDINGS_PER_ADD = 100
 
 def _parse_boolean_arg(name, default=None):
