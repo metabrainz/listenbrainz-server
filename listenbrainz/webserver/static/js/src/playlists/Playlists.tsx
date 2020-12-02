@@ -259,10 +259,7 @@ export default class UserPlaylists extends React.Component<
     const { currentUser } = this.props;
     return (
       <div>
-        <div
-          id="playlists-container"
-          style={{ display: "flex", flexWrap: "wrap" }}
-        >
+        <div id="playlists-container">
           {playlists.map((playlist: JSPFPlaylist) => {
             const isOwner = playlist.creator === currentUser?.name;
             const playlistId = getPlaylistId(playlist);
