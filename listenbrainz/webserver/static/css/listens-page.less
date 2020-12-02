@@ -234,76 +234,77 @@
         word-break: break-word;
       }
 
-      .listen-controls {
+    }
+    
+    .listen-controls {
 
-        > svg:hover {
+      > svg:hover {
+        cursor: pointer;
+      }
+
+      .fa-heart, .fa-heart-broken, .fa-ellipsis-v {
+        stroke-width: 40px;
+        font-size: 18px;
+        margin: 0% 7%;
+      }
+
+      .fa-heart, .fa-heart-broken {
+        color: transparent;
+        stroke: #8d8d8d;
+      }
+
+      .fa-ellipsis-v {
+        color: #8d8d8d;
+        stroke: #ffffff;
+
+        &:hover {
+          color: #46433a;
+        }
+      }
+
+      .fa-heart {
+
+        &:hover {
+          stroke: @love;
+        }
+
+        &.loved {
+          stroke: transparent;
+          color: @love;
+        }
+      }
+        
+      .fa-heart-broken {
+
+        &:hover {
+          stroke: @hate;
+        }
+
+        &.hated {
+          stroke: transparent;
+          color: @hate;
+        }
+      }
+
+      .dropdown-menu {
+        min-width: 140px;
+        border-radius: 4px;
+        padding: 10px 0px;
+
+        button {
+          width: 100%;
+          background: none;
+          color: inherit;
+          border: none;
+          padding: 5px 20px;
+          font: inherit;
           cursor: pointer;
-        }
-
-        .fa-heart, .fa-heart-broken, .fa-ellipsis-v {
-          stroke-width: 40px;
-          font-size: 18px;
-          margin: 0% 7%;
-        }
-
-        .fa-heart, .fa-heart-broken {
-          color: transparent;
-          stroke: #8d8d8d;
-        }
-
-        .fa-ellipsis-v {
-          color: #8d8d8d;
-          stroke: #ffffff;
+          outline: inherit;
+          text-align: left;
 
           &:hover {
-            color: #46433a;
-          }
-        }
-
-        .fa-heart {
-
-          &:hover {
-            stroke: @love;
-          }
-
-          &.loved {
-            stroke: transparent;
-            color: @love;
-          }
-        }
-          
-        .fa-heart-broken {
-
-          &:hover {
-            stroke: @hate;
-          }
-
-          &.hated {
-            stroke: transparent;
-            color: @hate;
-          }
-        }
-
-        .dropdown-menu {
-          min-width: 140px;
-          border-radius: 4px;
-          padding: 10px 0px;
-
-          button {
-            width: 100%;
-            background: none;
-            color: inherit;
-            border: none;
-            padding: 5px 20px;
-            font: inherit;
-            cursor: pointer;
-            outline: inherit;
-            text-align: left;
-
-            &:hover {
-              color: #ffffff;
-              background-color: #eb743b;
-            }
+            color: #ffffff;
+            background-color: #eb743b;
           }
         }
       }
