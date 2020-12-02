@@ -12,7 +12,7 @@ from listenbrainz.webserver.errors import (APIBadRequest,
 from listenbrainz.webserver.rate_limiter import ratelimit
 from listenbrainz.webserver.views.api import _validate_auth_header
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid
-from listenbrainz.db.model.playlist import Playlist, WritablePlaylist, WritablePlaylistRecording, playlist as model_playlist
+from listenbrainz.db.model.playlist import Playlist, WritablePlaylist, WritablePlaylistRecording
 
 playlist_api_bp = Blueprint('playlist_api_v1', __name__)
 
@@ -150,7 +150,8 @@ def validate_delete_data(data):
         log_raise_400("move instruction values for 'index' and 'count' must all be positive integers.")
 
 
-def fetch_playlist_recording_metadata(playlist: model_playlist.Playlist):
+#def fetch_playlist_recording_metadata(playlist: model_playlist.Playlist):
+def fetch_playlist_recording_metadata(playlist):
     """
         This interim function will soon be replaced with a more complete service layer
     """
