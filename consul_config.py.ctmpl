@@ -18,13 +18,6 @@ DEBUG = False
 
 SECRET_KEY = '''{{template "KEY" "secret_key"}}'''
 
-{{if service "pgbouncer-master"}}
-{{with index (service "pgbouncer-master") 0}}
-MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@{{.Address}}:{{.Port}}/messybrainz"
-{{end}}
-{{end}}
-
-
 {{if service "pgbouncer-slave"}}
 {{with index (service "pgbouncer-slave") 0}}
 MB_DATABASE_URI = 'postgresql://musicbrainz_ro@{{.Address}}:{{.Port}}/musicbrainz_db'
@@ -44,6 +37,8 @@ POSTGRES_ADMIN_LB_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/lis
 SQLALCHEMY_TIMESCALE_URI = "postgresql://listenbrainz_test:listenbrainz_test@{{.Address}}:{{.Port}}/listenbrainz_test"
 TIMESCALE_ADMIN_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/template1"
 TIMESCALE_ADMIN_LB_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/listenbrainz_test"
+
+MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz_test:messybrainz_test@{{.Address}}:{{.Port}}/messybrainz_test"
 {{end}}
 {{end}}
 
