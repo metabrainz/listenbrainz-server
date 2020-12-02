@@ -300,6 +300,32 @@ class PlaylistAPITestCase(IntegrationTestCase):
                          playlist["playlist"]["track"][1]["identifier"])
 
 
+    def test_playlist_delete_playlist(self):
+
+        playlist = {
+           "playlist" : {
+              "title" : "yer dreams suck!"
+           }
+        }
+
+        response = self.client.post(
+            url_for("playlist_api_v1.create_playlist"),
+            data=ujson.dumps(playlist),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert200(response)
+
+        response = self.client.post(
+            url_for("playlist_api_v1.delete_playlist", playlist_mbid=response.json["playlist_mbid"]),
+            data=ujson.dumps({}),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert200(response)
+
+
+
     def test_playlist_private_access(self):
         """ Test for checking that unauthorized access to private playlists return 404 """
 
@@ -347,6 +373,15 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert404(response)
 
+        # Delete a playlist
+        response = self.client.post(
+            url_for("playlist_api_v1.delete_playlist", playlist_mbid=playlist_mbid),
+            data=ujson.dumps({}),
+            headers={"Authorization": "Token {}".format(self.user2["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert404(response)
+
 
     def test_playlist_unauthorized_access(self):
         """ Test for checking that unauthorized access return 401 """
@@ -378,6 +413,14 @@ class PlaylistAPITestCase(IntegrationTestCase):
         # Delete recording in playlist
         response = self.client.post(
             url_for("playlist_api_v1.delete_playlist_item", playlist_mbid=playlist_mbid),
+            data=ujson.dumps({}),
+            content_type="application/json"
+        )
+        self.assert401(response)
+
+        # Delete a playlist
+        response = self.client.post(
+            url_for("playlist_api_v1.delete_playlist", playlist_mbid=playlist_mbid),
             data=ujson.dumps({}),
             content_type="application/json"
         )
