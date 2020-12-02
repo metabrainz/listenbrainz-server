@@ -149,7 +149,7 @@ def init_msb_db(force, create_db):
 @cli.command(name="init_ts_db")
 @click.option("--force", "-f", is_flag=True, help="Drop existing database and user.")
 @click.option("--create-db", is_flag=True, help="Create the database and user.")
-def init_db(force, create_db):
+def init_ts_db(force, create_db):
     """Initializes database.
     This process involves several steps:
     1. Table structure is created.
