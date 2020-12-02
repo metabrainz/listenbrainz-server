@@ -90,6 +90,13 @@
 		display:flex;
 		align-items: center;
 		
+		.listen-controls {
+			&:extend(#listens .listen-card .listen-controls all);
+			flex: 0 6em;
+		}
+		> div {
+			padding: 0 0.8em;
+		}
 		> *:first-child {
 			margin: 1em 1em 1em 0em;
 		}

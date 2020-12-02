@@ -7,6 +7,8 @@ import {
   faEllipsisV,
   faGripLines,
   faTrashAlt,
+  faHeart,
+  faHeartBroken,
 } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -38,7 +40,6 @@ export type PlaylistItemCardProps = {
 
 type PlaylistItemCardState = {
   isDeleted: Boolean;
-  feedback: ListenFeedBack;
 };
 
 export default class PlaylistItemCard extends React.Component<
@@ -53,7 +54,6 @@ export default class PlaylistItemCard extends React.Component<
 
     this.state = {
       isDeleted: false,
-      feedback: props.currentFeedback || 0,
     };
 
     this.APIService = new APIService(
@@ -61,13 +61,6 @@ export default class PlaylistItemCard extends React.Component<
     );
 
     this.playTrack = props.playTrack.bind(this, props.track);
-  }
-
-  componentDidUpdate(prevProps: PlaylistItemCardProps) {
-    const { currentFeedback } = this.props;
-    if (currentFeedback !== prevProps.currentFeedback) {
-      this.setState({ feedback: currentFeedback });
-    }
   }
 
   removeTrack = () => {
@@ -88,19 +81,26 @@ export default class PlaylistItemCard extends React.Component<
   };
 
   render() {
-    const { track, canEdit, className } = this.props;
-    const { feedback, isDeleted } = this.state;
+    const {
+      track,
+      canEdit,
+      className,
+      currentFeedback,
+      updateFeedback,
+    } = this.props;
+    const { isDeleted } = this.state;
     const customFields = getTrackExtension(track);
     const trackDuration = track.duration
       ? (track.duration / 100000).toFixed(2)
       : "?";
-    const recordingMbid = track.id;
+    const recordingMbid = track.id as string;
     return (
       <Card
         onDoubleClick={this.playTrack}
         className={`playlist-item-card row ${className} ${
           isDeleted ? " deleted" : ""
         }`}
+        data-recording-mbid={track.id}
       >
         {/* We can't currently disable the SortableJS component (https://github.com/SortableJS/react-sortablejs/issues/153)
         So insteand we hide the drag handle */}
@@ -122,7 +122,24 @@ export default class PlaylistItemCard extends React.Component<
           </small>
         </div>
         <div className="track-duration">{trackDuration}</div>
-        {/* <div className="feedback">Feedback component</div> */}
+        <div className="listen-controls">
+          <ListenControl
+            icon={faHeart}
+            title="Love"
+            action={() =>
+              updateFeedback(recordingMbid, currentFeedback === 1 ? 0 : 1)
+            }
+            className={`${currentFeedback === 1 ? " loved" : ""}`}
+          />
+          <ListenControl
+            icon={faHeartBroken}
+            title="Hate"
+            action={() =>
+              updateFeedback(recordingMbid, currentFeedback === -1 ? 0 : -1)
+            }
+            className={`${currentFeedback === -1 ? " hated" : ""}`}
+          />
+        </div>
         <div className="addition-details">
           <div>added by {customFields?.added_by}</div>
           {customFields?.added_at && (
@@ -135,7 +152,7 @@ export default class PlaylistItemCard extends React.Component<
           )}
         </div>
 
-        <div className="dropdown">
+        <span className="dropdown">
           <button
             className="btn btn-link dropdown-toggle"
             type="button"
@@ -171,7 +188,7 @@ export default class PlaylistItemCard extends React.Component<
               </li>
             )}
           </ul>
-        </div>
+        </span>
       </Card>
     );
   }

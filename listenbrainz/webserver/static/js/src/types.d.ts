@@ -2,9 +2,17 @@
 
 declare module "react-responsive";
 declare module "spotify-web-playback-sdk";
-declare module "react-bs-notifier";
 declare module "time-ago";
 declare module "debounce-async";
+
+declare module "react-bs-notifier";
+declare type AlertType = "danger" | "warning" | "success";
+declare type Alert = {
+  id: number;
+  type: AlertType;
+  headline: string;
+  message: string | JSX.Element;
+};
 
 // TODO: Remove "| null" when backend stops sending fields with null
 interface AdditionalInfo {
@@ -117,15 +125,6 @@ declare type SpotifyPlayerSDKState = {
 // Adding an any here for now.
 // TODO: remove this any eventually
 declare type SpotifyPlayerType = any | Spotify.SpotifyPlayer;
-
-declare type AlertType = "danger" | "warning" | "success";
-
-declare type Alert = {
-  id: number;
-  type: AlertType;
-  title: string;
-  message: string | JSX.Element;
-};
 
 // Expect either a string or an Error or an html Response object
 declare type BrainzPlayerError =
@@ -343,7 +342,7 @@ declare type JSPFTrackExtension = {
   added_by: string;
   artist_identifier: string[]; // Full MusicBrainz artist URIs
   added_at: string; // ISO date string
-  release_identifier: string; // Full MusicBrainz release URI
+  release_identifier?: string; // Full MusicBrainz release URI
 };
 
 declare type JSPFPlaylist = {
@@ -384,18 +383,4 @@ declare type JSPFTrack = {
     [name: string]: any;
     "https://musicbrainz.org/doc/jspf#track"?: JSPFTrackExtension;
   };
-};
-
-declare type RecordingMetadata = {
-  "[artist_credit_mbids]": string[];
-  artist_credit_id: number;
-  artist_credit_name: string;
-  comment?: string;
-  length: number;
-  recording_mbid: string;
-  recording_name: string;
-};
-
-declare type RecordingMetadataMap = {
-  [recordingMsid: string]: RecordingMetadata;
 };

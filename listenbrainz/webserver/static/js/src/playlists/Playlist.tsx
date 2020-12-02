@@ -46,7 +46,6 @@ export interface PlaylistPageState {
   currentTrack?: JSPFTrack;
   playlist: JSPFPlaylist;
   recordingFeedbackMap: RecordingFeedbackMap;
-  trackMetadataMap: RecordingMetadataMap;
 }
 
 type OptionType = { label: string; value: ACRMSearchResult };
@@ -77,14 +76,13 @@ export default class PlaylistPage extends React.Component<
     props.playlist?.playlist?.track?.forEach(
       (jspfTrack: JSPFTrack, index: number) => {
         // eslint-disable-next-line no-param-reassign
-        jspfTrack.id = `${getRecordingMBIDFromJSPFTrack(jspfTrack)}-${index}`;
+        jspfTrack.id = getRecordingMBIDFromJSPFTrack(jspfTrack);
       }
     );
     this.state = {
       alerts: [],
       playlist: props.playlist?.playlist || {},
       recordingFeedbackMap: {},
-      trackMetadataMap: {},
     };
 
     this.APIService = new APIService(
@@ -96,13 +94,10 @@ export default class PlaylistPage extends React.Component<
     });
   }
 
-  componentDidMount(): void {
-    const { currentUser } = this.props;
+  async componentDidMount() {
     // this.connectWebsockets();
-    // Is this correct? When do we want to load feedback? always?
-    // if (currentUser?.name === user?.name) {
-    // this.loadFeedback();
-    // // }
+    const recordingFeedbackMap = await this.loadFeedback();
+    this.setState({ recordingFeedbackMap });
   }
 
   connectWebsockets = (): void => {
@@ -134,7 +129,7 @@ export default class PlaylistPage extends React.Component<
     newPlaylist?.playlist?.track?.forEach(
       (jspfTrack: JSPFTrack, index: number) => {
         // eslint-disable-next-line no-param-reassign
-        jspfTrack.id = `${getRecordingMBIDFromJSPFTrack(jspfTrack)}-${index}`;
+        jspfTrack.id = getRecordingMBIDFromJSPFTrack(jspfTrack);
       }
     );
     this.setState({ playlist: newPlaylist });
@@ -167,7 +162,7 @@ export default class PlaylistPage extends React.Component<
       if (!track) {
         return;
       }
-      const { label, value } = track as OptionType;
+      const { label, value: selectedRecording } = track as OptionType;
       const { currentUser } = this.props;
       const { playlist } = this.state;
       if (!currentUser?.auth_token) {
@@ -175,15 +170,20 @@ export default class PlaylistPage extends React.Component<
         return;
       }
       try {
-        const jspfTrack = PlaylistPage.makeJSPFTrack(value);
+        const jspfTrack = PlaylistPage.makeJSPFTrack(selectedRecording);
         await this.APIService.addPlaylistItems(
           currentUser.auth_token,
           getPlaylistId(playlist),
           [jspfTrack]
         );
         this.newAlert("success", "Added track", `Added track ${label}`);
+        const recordingFeedbackMap = await this.loadFeedback([
+          selectedRecording.recording_mbid,
+        ]);
+        jspfTrack.id = selectedRecording.recording_mbid;
         this.setState({
           playlist: { ...playlist, track: [...playlist.track, jspfTrack] },
+          recordingFeedbackMap,
         });
       } catch (error) {
         this.newAlert("danger", "Error", error.message);
@@ -282,14 +282,14 @@ export default class PlaylistPage extends React.Component<
   newAlert = (
     type: AlertType,
     title: string,
-    message?: string | JSX.Element
+    message: string | JSX.Element
   ): void => {
-    const newAlert = {
+    const newAlert: Alert = {
       id: new Date().getTime(),
       type,
-      title,
+      headline: title,
       message,
-    } as Alert;
+    };
 
     this.setState((prevState) => {
       return {
@@ -312,12 +312,12 @@ export default class PlaylistPage extends React.Component<
     }
   };
 
-  getFeedback = async (): Promise<FeedbackResponse[]> => {
+  getFeedback = async (mbids?: string[]): Promise<FeedbackResponse[]> => {
     const { currentUser } = this.props;
     const { playlist } = this.state;
     const { track: tracks } = playlist;
     if (currentUser && tracks) {
-      const recordings = tracks.map(getRecordingMBIDFromJSPFTrack);
+      const recordings = mbids ?? tracks.map(getRecordingMBIDFromJSPFTrack);
       try {
         const data = await this.APIService.getFeedbackForUserForRecordings(
           currentUser.name,
@@ -335,19 +335,41 @@ export default class PlaylistPage extends React.Component<
     return [];
   };
 
-  loadFeedback = async () => {
-    const feedback = await this.getFeedback();
-    const recordingFeedbackMap: RecordingFeedbackMap = {};
+  loadFeedback = async (mbids?: string[]): Promise<RecordingFeedbackMap> => {
+    const { recordingFeedbackMap } = this.state;
+    const feedback = await this.getFeedback(mbids);
+    const newRecordingFeedbackMap: RecordingFeedbackMap = {
+      ...recordingFeedbackMap,
+    };
     feedback.forEach((fb: FeedbackResponse) => {
-      recordingFeedbackMap[fb.recording_msid] = fb.score;
+      newRecordingFeedbackMap[fb.recording_msid] = fb.score;
     });
-    this.setState({ recordingFeedbackMap });
+    return newRecordingFeedbackMap;
   };
 
-  updateFeedback = (recordingMsid: string, score: ListenFeedBack) => {
+  updateFeedback = async (recordingMbid: string, score: ListenFeedBack) => {
     const { recordingFeedbackMap } = this.state;
-    recordingFeedbackMap[recordingMsid] = score;
-    this.setState({ recordingFeedbackMap });
+    const { currentUser } = this.props;
+    if (currentUser?.auth_token) {
+      try {
+        const status = await this.APIService.submitFeedback(
+          currentUser.auth_token,
+          recordingMbid,
+          score
+        );
+        if (status === 200) {
+          const newRecordingFeedbackMap = { ...recordingFeedbackMap };
+          newRecordingFeedbackMap[recordingMbid] = score;
+          this.setState({ recordingFeedbackMap: newRecordingFeedbackMap });
+        }
+      } catch (error) {
+        this.newAlert(
+          "danger",
+          "Error while submitting feedback",
+          error.message
+        );
+      }
+    }
   };
 
   getFeedbackForRecordingMbid = (
@@ -603,8 +625,7 @@ export default class PlaylistPage extends React.Component<
                   {tracks.map((track: JSPFTrack, index) => {
                     return (
                       <PlaylistItemCard
-                        key={track.id}
-                        data-recording-mbid={track.id}
+                        key={`${track.id}-${index.toString()}`}
                         currentUser={currentUser}
                         canEdit={hasRightToEdit}
                         apiUrl={apiUrl}
@@ -612,7 +633,6 @@ export default class PlaylistPage extends React.Component<
                         className={
                           this.isCurrentTrack(track) ? " current-listen" : ""
                         }
-                        // metadata={trackMetadataMap[listen.mbid]}
                         currentFeedback={this.getFeedbackForRecordingMbid(
                           track.id
                         )}
