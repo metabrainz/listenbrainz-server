@@ -279,6 +279,7 @@ def update_playlist(playlist: model_playlist.Playlist):
 
 def copy_playlist(playlist: model_playlist.Playlist, creator_id: int):
     newplaylist = playlist.copy()
+    newplaylist.name = "Copy of " + newplaylist.name
     newplaylist.creator_id = creator_id
     newplaylist.copied_from_id = playlist.id
 
