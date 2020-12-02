@@ -2,6 +2,7 @@ import datetime
 from uuid import UUID
 
 from flask import Blueprint, current_app, jsonify, request
+import requests
 #import listenbrainz.db.user as db_user
 import listenbrainz.db.playlist as db_playlist
 
@@ -11,7 +12,7 @@ from listenbrainz.webserver.errors import (APIBadRequest,
 from listenbrainz.webserver.rate_limiter import ratelimit
 from listenbrainz.webserver.views.api import _validate_auth_header
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid
-from listenbrainz.db.model.playlist import Playlist, WritablePlaylist, WritablePlaylistRecording
+from listenbrainz.db.model.playlist import Playlist, WritablePlaylist, WritablePlaylistRecording, playlist as model_playlist
 
 playlist_api_bp = Blueprint('playlist_api_v1', __name__)
 
@@ -19,6 +20,7 @@ PLAYLIST_TRACK_URI_PREFIX = "https://musicbrainz.org/recording/"
 PLAYLIST_URI_PREFIX = "https://listenbrainz.org/playlist/"
 PLAYLIST_EXTENSION_URI = "https://musicbrainz.org/doc/jspf#playlist"
 PLAYLIST_TRACK_EXTENSION_URI = "https://musicbrainz.org/doc/jspf#track"
+RECORDING_LOOKUP_SERVER_URL = "https://labs.api.listenbrainz.org/recording-mbid-lookup/json
 MAX_RECORDINGS_PER_ADD = 100
 
 def _parse_boolean_arg(name, default=None):
@@ -80,12 +82,14 @@ def serialize_jspf(playlist: Playlist, user):
             "identifier": PLAYLIST_URI_PREFIX + str(playlist.mbid),
             "date": playlist.created.replace(tzinfo=datetime.timezone.utc).isoformat(),
     }
+    if playlist.description:
+        pl["annotation"] = playlist.description
 
 
     extension = { "public": "true" if playlist.public else "false" }
-#    extension["last_modified_at"] = playlist.last_modified_at.replace(tzinfo=datetime.timezone.utc).isoformat()
+    extension["creator_id"] = playlist.creator_id
     if playlist.created_for_id:
-        extension['created_for'] = playlist.created_for_id
+        extension['created_for'] = playlist.created_for
     if playlist.copied_from_id:
         extension['copied_from'] = PLAYLIST_URI_PREFIX + str(playlist.copied_from_id)
 
@@ -104,7 +108,6 @@ def serialize_jspf(playlist: Playlist, user):
     pl["track"] = tracks
 
     return { "playlist": pl }
-
 
 
 def validate_move_data(data):
@@ -145,6 +148,44 @@ def validate_delete_data(data):
             raise ValueError
     except ValueError:
         log_raise_400("move instruction values for 'index' and 'count' must all be positive integers.")
+
+
+def fetch_playlist_recording_metadata(playlist: model_playlist.Playlist):
+    """
+        This interim function will soon be replaced with a more complete service layer
+    """
+
+    mbids  = [ { '[recording_mbid]': item.mbid } for item in playlist.recordings ]
+    if not mbids:
+        return
+
+    r = requests.post(RECORDING_LOOKUP_SERVER_URL, count=len(mbids), json=mbids)
+    if r.status_code != 200:
+        current_app.logger.error("Error while fetching metadata for a playlist: {}".format(e))
+        raise APIInternalServerError("Failed to fetch metadata for a playlist. Please try again.")
+
+    try:
+        rows = ujson.loads(r.text)
+    except ValueError as err:
+        current_app.logger.error("Error parse metadata for a playlist: {}".format(e))
+        raise APIInternalServerError("Failed parse fetched metadata for a playlist. Please try again.")
+
+    mbid_index = {}
+    for row in rows:
+        mbid_index[row['original_recording_mbid']] = row
+
+    for rec in playlist.recordings:
+        try:
+            row = mbid_index[r.mbid]
+        except KeyError:
+            continue
+
+        rec.artist_credit = row["artist_credit_id"]
+        rec.artist_mbids = [ UUID(mbid) for mbid in row["[artist_credit_mbids]"] ]
+        rec.release_mbid = UUID(row["release_mbid"])
+        rec.release_name = row["release_name"]
+        rec.title = row["recording_name"]
+        rec.identifier = PLAYLIST_TRACK_URI_PREFIX + row["recording_mbid"]
 
 
 @playlist_api_bp.route("/create", methods=["POST"])
@@ -213,6 +254,8 @@ def get_playlist(playlist_mbid):
     if playlist is None or \
         (playlist.creator_id != user["id"] and not playlist.public):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+
+    fetch_playlist_recording_metadata(playlist)
 
     return jsonify(serialize_jspf(playlist, user))
 
