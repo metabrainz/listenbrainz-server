@@ -30,6 +30,8 @@ function cleanup {
 }
 
 function run_tests {
+    cp listenbrainz/config.py.sample listenbrainz/config.py
+
     # Create containers
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
