@@ -46,7 +46,6 @@ export interface PlaylistPageState {
   currentTrack?: JSPFTrack;
   playlist: JSPFPlaylist;
   recordingFeedbackMap: RecordingFeedbackMap;
-  trackMetadataMap: RecordingMetadataMap;
 }
 
 type OptionType = { label: string; value: ACRMSearchResult };
@@ -84,7 +83,6 @@ export default class PlaylistPage extends React.Component<
       alerts: [],
       playlist: props.playlist?.playlist || {},
       recordingFeedbackMap: {},
-      trackMetadataMap: {},
     };
 
     this.APIService = new APIService(
@@ -612,7 +610,6 @@ export default class PlaylistPage extends React.Component<
                         className={
                           this.isCurrentTrack(track) ? " current-listen" : ""
                         }
-                        // metadata={trackMetadataMap[listen.mbid]}
                         currentFeedback={this.getFeedbackForRecordingMbid(
                           track.id
                         )}
