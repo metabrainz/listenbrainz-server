@@ -389,3 +389,37 @@ def delete_playlist(playlist_mbid):
         raise APIInternalServerError("Failed to delete the playlist. Please try again.")
 
     return jsonify({'status': 'ok' })
+
+
+@playlist_api_bp.route("/<playlist_mbid>/copy", methods=["POST"])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
+def copy_playlist(playlist_mbid):
+    """
+
+    Copy a playlist. POST body data does not need to contain anything.
+
+    :reqheader Authorization: Token <user token>
+    :statuscode 200: playlist deleted.
+    :statuscode 401: invalid authorization. See error message for details.
+    :statuscode 404: Playlist not found
+    :resheader Content-Type: *application/json*
+    """
+
+    user = _validate_auth_header()
+
+    if not is_valid_uuid(playlist_mbid):
+        log_raise_400("Provided playlist ID is invalid.")
+
+    playlist = db_playlist.get_by_mbid(playlist_mbid)
+    if playlist is None or \
+        (playlist.creator_id != user["id"] and not playlist.public):
+        raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+
+    try:
+        new_playlist = db_playlist.copy_playlist(playlist, user["id"])
+    except Exception as e:
+        current_app.logger.error("Error deleting playlist: {}".format(e))
+        raise APIInternalServerError("Failed to delete the playlist. Please try again.")
+
+    return jsonify({'status': 'ok', 'playlist_mbid': new_playlist.mbid })

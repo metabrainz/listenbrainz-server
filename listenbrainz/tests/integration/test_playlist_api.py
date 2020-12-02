@@ -315,14 +315,98 @@ class PlaylistAPITestCase(IntegrationTestCase):
             content_type="application/json"
         )
         self.assert200(response)
+        playlist_mbid = response.json["playlist_mbid"]
 
         response = self.client.post(
-            url_for("playlist_api_v1.delete_playlist", playlist_mbid=response.json["playlist_mbid"]),
+            url_for("playlist_api_v1.delete_playlist", playlist_mbid=playlist_mbid),
             data=ujson.dumps({}),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json"
         )
         self.assert200(response)
+
+        response = self.client.get(
+            url_for("playlist_api_v1.get_playlist", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert404(response)
+
+
+    def test_playlist_copy_public_playlist(self):
+
+        playlist = {
+           "playlist" : {
+              "title" : "my stupid playlist"
+           }
+        }
+
+        response = self.client.post(
+            url_for("playlist_api_v1.create_playlist", public="true"),
+            data=ujson.dumps(playlist),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert200(response)
+        playlist_mbid = response.json["playlist_mbid"]
+
+        response = self.client.post(
+            url_for("playlist_api_v1.copy_playlist", playlist_mbid=playlist_mbid),
+            data=ujson.dumps({}),
+            headers={"Authorization": "Token {}".format(self.user2["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert200(response)
+        new_playlist_mbid = response.json["playlist_mbid"]
+        self.assertNotEqual(playlist_mbid, new_playlist_mbid)
+
+        response = self.client.get(
+            url_for("playlist_api_v1.get_playlist", playlist_mbid=new_playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert200(response)
+        self.assertEqual(response.json["playlist"]["identifier"], PLAYLIST_URI_PREFIX + new_playlist_mbid)
+        self.assertEqual(response.json["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["public"], "true")
+        self.assertEqual(response.json["playlist"]["title"], "Copy of my stupid playlist")
+        self.assertEqual(response.json["playlist"]["creator"], "anothertestuserpleaseignore")
+
+
+    def test_playlist_copy_private_playlist(self):
+
+        playlist = {
+           "playlist" : {
+              "title" : "my stupid playlist"
+           }
+        }
+
+        response = self.client.post(
+            url_for("playlist_api_v1.create_playlist", public="false"),
+            data=ujson.dumps(playlist),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert200(response)
+        playlist_mbid = response.json["playlist_mbid"]
+
+        response = self.client.post(
+            url_for("playlist_api_v1.copy_playlist", playlist_mbid=playlist_mbid),
+            data=ujson.dumps({}),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert200(response)
+        new_playlist_mbid = response.json["playlist_mbid"]
+
+        response = self.client.get(
+            url_for("playlist_api_v1.get_playlist", playlist_mbid=new_playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert200(response)
+        self.assertEqual(response.json["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["public"], "false")
+        self.assertEqual(response.json["playlist"]["title"], "Copy of my stupid playlist")
+        self.assertEqual(response.json["playlist"]["creator"], "testuserpleaseignore")
 
 
 
@@ -382,6 +466,14 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert404(response)
 
+        # Copy a playlist
+        response = self.client.post(
+            url_for("playlist_api_v1.copy_playlist", playlist_mbid=playlist_mbid),
+            data=ujson.dumps({}),
+            headers={"Authorization": "Token {}".format(self.user2["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert404(response)
 
     def test_playlist_unauthorized_access(self):
         """ Test for checking that unauthorized access return 401 """
@@ -421,6 +513,14 @@ class PlaylistAPITestCase(IntegrationTestCase):
         # Delete a playlist
         response = self.client.post(
             url_for("playlist_api_v1.delete_playlist", playlist_mbid=playlist_mbid),
+            data=ujson.dumps({}),
+            content_type="application/json"
+        )
+        self.assert401(response)
+
+        # Copy a playlist
+        response = self.client.post(
+            url_for("playlist_api_v1.copy_playlist", playlist_mbid=playlist_mbid),
             data=ujson.dumps({}),
             content_type="application/json"
         )
