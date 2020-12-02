@@ -343,7 +343,7 @@ declare type JSPFTrackExtension = {
   added_by: string;
   artist_identifier: string[]; // Full MusicBrainz artist URIs
   added_at: string; // ISO date string
-  release_identifier: string; // Full MusicBrainz release URI
+  release_identifier?: string; // Full MusicBrainz release URI
 };
 
 declare type JSPFPlaylist = {
@@ -384,18 +384,4 @@ declare type JSPFTrack = {
     [name: string]: any;
     "https://musicbrainz.org/doc/jspf#track"?: JSPFTrackExtension;
   };
-};
-
-declare type RecordingMetadata = {
-  "[artist_credit_mbids]": string[];
-  artist_credit_id: number;
-  artist_credit_name: string;
-  comment?: string;
-  length: number;
-  recording_mbid: string;
-  recording_name: string;
-};
-
-declare type RecordingMetadataMap = {
-  [recordingMsid: string]: RecordingMetadata;
 };
