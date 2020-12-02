@@ -1,3 +1,9 @@
+#
+# DO. NOT. MERGE. THE. CHANGES. IN. THIS. FILE. INTO. MASTER.
+#
+# THIS SETUP IS FOR TEST.LISTENBRAINZ.ORG ONLY!
+#
+
 {{- define "KEY" -}}
     {{ key (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .) }}
 {{- end -}}
@@ -14,9 +20,7 @@ SECRET_KEY = '''{{template "KEY" "secret_key"}}'''
 
 {{if service "pgbouncer-master"}}
 {{with index (service "pgbouncer-master") 0}}
-SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@{{.Address}}:{{.Port}}/listenbrainz"
 MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@{{.Address}}:{{.Port}}/messybrainz"
-POSTGRES_ADMIN_URI="postgresql://postgres@{{.Address}}:{{.Port}}/template1"
 {{end}}
 {{end}}
 
@@ -33,14 +37,13 @@ MB_DATABASE_URI = 'postgresql://musicbrainz_ro@{{.Address}}:{{.Port}}/musicbrain
 
 {{if service "timescale-listenbrainz"}}
 {{with index (service "timescale-listenbrainz") 0}}
-#SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@{{.Address}}:{{.Port}}/listenbrainz"
-#MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@{{.Address}}:{{.Port}}/messybrainz"
+SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz_test:listenbrainz_test@{{.Address}}:{{.Port}}/listenbrainz_test"
 POSTGRES_ADMIN_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/template1"
-POSTGRES_ADMIN_LB_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/listenbrainz"
+POSTGRES_ADMIN_LB_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/listenbrainz_test"
 
-SQLALCHEMY_TIMESCALE_URI = "postgresql://listenbrainz_ts:listenbrainz_ts@{{.Address}}:{{.Port}}/listenbrainz_ts"
+SQLALCHEMY_TIMESCALE_URI = "postgresql://listenbrainz_test:listenbrainz_test@{{.Address}}:{{.Port}}/listenbrainz_test"
 TIMESCALE_ADMIN_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/template1"
-TIMESCALE_ADMIN_LB_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/listenbrainz_ts"
+TIMESCALE_ADMIN_LB_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/listenbrainz_test"
 {{end}}
 {{end}}
 
