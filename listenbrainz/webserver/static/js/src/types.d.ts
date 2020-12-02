@@ -2,9 +2,17 @@
 
 declare module "react-responsive";
 declare module "spotify-web-playback-sdk";
-declare module "react-bs-notifier";
 declare module "time-ago";
 declare module "debounce-async";
+
+declare module "react-bs-notifier";
+declare type AlertType = "danger" | "warning" | "success";
+declare type Alert = {
+  id: number;
+  type: AlertType;
+  headline: string;
+  message: string | JSX.Element;
+};
 
 // TODO: Remove "| null" when backend stops sending fields with null
 interface AdditionalInfo {
@@ -117,15 +125,6 @@ declare type SpotifyPlayerSDKState = {
 // Adding an any here for now.
 // TODO: remove this any eventually
 declare type SpotifyPlayerType = any | Spotify.SpotifyPlayer;
-
-declare type AlertType = "danger" | "warning" | "success";
-
-declare type Alert = {
-  id: number;
-  type: AlertType;
-  title: string;
-  message: string | JSX.Element;
-};
 
 // Expect either a string or an Error or an html Response object
 declare type BrainzPlayerError =

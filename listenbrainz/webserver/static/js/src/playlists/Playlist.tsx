@@ -280,14 +280,14 @@ export default class PlaylistPage extends React.Component<
   newAlert = (
     type: AlertType,
     title: string,
-    message?: string | JSX.Element
+    message: string | JSX.Element
   ): void => {
-    const newAlert = {
+    const newAlert: Alert = {
       id: new Date().getTime(),
       type,
-      title,
+      headline: title,
       message,
-    } as Alert;
+    };
 
     this.setState((prevState) => {
       return {
