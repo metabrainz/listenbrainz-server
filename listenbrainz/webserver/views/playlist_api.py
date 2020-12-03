@@ -198,7 +198,7 @@ def fetch_playlist_recording_metadata(playlist: Playlist):
         except KeyError:
             continue
 
-        rec.artist_credit = row.get("artist_credit_id", "")
+        rec.artist_credit = row.get("artist_credit_name", "")
         if "[artist_credit_mbids]" in row and not row["[artist_credit_mbids]"] is None:
             rec.artist_mbids = [ UUID(mbid) for mbid in row["[artist_credit_mbids]"] ]
         rec.title = row.get("recording_name", "")
