@@ -13,8 +13,7 @@ import {
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { getArtistLink, getTrackLink } from "../utils";
-import { getTrackExtension } from "./utils";
+import { getTrackExtension, millisecondsToStr } from "./utils";
 import Card from "../components/Card";
 import APIService from "../APIService";
 import ListenControl from "../listens/ListenControl";
@@ -91,8 +90,8 @@ export default class PlaylistItemCard extends React.Component<
     const { isDeleted } = this.state;
     const customFields = getTrackExtension(track);
     const trackDuration = track.duration
-      ? (track.duration / 100000).toFixed(2)
-      : "?";
+      ? millisecondsToStr(track.duration)
+      : null;
     const recordingMbid = track.id as string;
     return (
       <Card
@@ -112,16 +111,12 @@ export default class PlaylistItemCard extends React.Component<
           />
         )}
         <div className="track-details">
-          <div title={track.title}>
-            {/* {getTrackLink(track)} */}
-            {track.title}
-          </div>
+          <div title={track.title}>{track.title}</div>
           <small className="text-muted" title={track.creator}>
-            {/* {getArtistLink(track)} */}
             {track.creator}
           </small>
         </div>
-        <div className="track-duration">{trackDuration}</div>
+        {trackDuration && <div className="track-duration">{trackDuration}</div>}
         <div className="listen-controls">
           <ListenControl
             icon={faHeart}
