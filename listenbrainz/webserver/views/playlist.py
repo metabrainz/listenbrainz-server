@@ -5,7 +5,7 @@ from flask import Blueprint, render_template, current_app, request
 from flask_login import current_user, login_required
 from listenbrainz.domain import spotify
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
-from listenbrainz.webserver.views.playlist_api import serialize_jspf
+from listenbrainz.webserver.views.playlist_api import serialize_jspf, fetch_playlist_recording_metadata
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
 
@@ -25,6 +25,8 @@ def load_playlist(playlist_mbid: str):
         (playlist.creator_id != current_user.get_id() and not playlist.public):
         raise NotFound("Cannot find playlist: %s" % playlist_mbid)
 
+    fetch_playlist_recording_metadata(playlist)
+    
     spotify_data = {}
     current_user_data = {}
     if current_user.is_authenticated:
