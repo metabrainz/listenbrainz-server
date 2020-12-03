@@ -65,6 +65,7 @@ export default class PlaylistPage extends React.Component<
   private APIService: APIService;
   private searchForTrackDebounced: any;
   private brainzPlayer = React.createRef<BrainzPlayer>();
+  private addTrackSelectRef = React.createRef<AsyncSelect<OptionType>>();
 
   private socket!: SocketIOClient.Socket;
 
@@ -176,6 +177,9 @@ export default class PlaylistPage extends React.Component<
           getPlaylistId(playlist),
           [jspfTrack]
         );
+        if (this.addTrackSelectRef?.current?.select) {
+          this.addTrackSelectRef.current.select.setState({ value: null });
+        }
         this.newAlert("success", "Added track", `Added track ${label}`);
         const recordingFeedbackMap = await this.loadFeedback([
           selectedRecording.recording_mbid,
@@ -658,11 +662,13 @@ export default class PlaylistPage extends React.Component<
                   className="search"
                   cacheOptions
                   isClearable
-                  closeMenuOnSelect={false}
+                  loadingMessage={({ inputValue }) =>
+                    `Searching for '${inputValue}'…`
+                  }
                   loadOptions={this.searchForTrackDebounced}
                   onChange={this.addTrack}
                   placeholder="Artist followed by track name"
-                  loadingMessage={() => "Searching for your track…"}
+                  ref={this.addTrackSelectRef}
                 />
               </Card>
             </div>
