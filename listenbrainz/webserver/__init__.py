@@ -265,5 +265,10 @@ def _register_blueprints(app):
     app.register_blueprint(missing_musicbrainz_data_api_bp, url_prefix=API_PREFIX+'/missing/musicbrainz')
     app.register_blueprint(recommendations_cf_recording_bp, url_prefix='/recommended/tracks')
     if app.config.get("FEATURE_PLAYLIST", False):
+<<<<<<< HEAD
         app.register_blueprint(playlist_bp, url_prefix='/playlist')
         app.register_blueprint(playlist_api_bp, url_prefix=API_PREFIX+'/playlist')
+=======
+            app.register_blueprint(playlist_api_bp, url_prefix=API_PREFIX+'/playlist')
+            app.register_blueprint(playlist_bp, url_prefix='/playlist')
+>>>>>>> 3558aad6d814ee121da9580a902f26b47a980bc2

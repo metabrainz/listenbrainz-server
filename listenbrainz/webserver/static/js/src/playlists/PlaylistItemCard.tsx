@@ -140,21 +140,26 @@ export default class PlaylistItemCard extends React.Component<
             className={`${currentFeedback === -1 ? " hated" : ""}`}
           />
         </div>
-        <div className="addition-details">
-          <div>added by {customFields?.added_by}</div>
-          {customFields?.added_at && (
-            <span
-              className="listen-time"
-              title={String(Number(customFields.added_at) * 1000)}
-            >
-              {timeago.ago(Number(customFields.added_at) * 1000)}
-            </span>
-          )}
-        </div>
+        {(customFields?.added_by || customFields?.added_at) && (
+          <div className="addition-details">
+            added&ensp;
+            {customFields?.added_at && (
+              <span
+                className="listen-time"
+                title={new Date(
+                  Number(customFields.added_at) * 1000
+                ).toLocaleString()}
+              >
+                {timeago.ago(Number(customFields.added_at) * 1000)}
+              </span>
+            )}
+            {customFields?.added_by && <div>by {customFields?.added_by}</div>}
+          </div>
+        )}
 
         <span className="dropdown">
           <button
-            className="btn btn-link dropdown-toggle"
+            className="btn btn-link btn-sm dropdown-toggle"
             type="button"
             id="listenControlsDropdown"
             data-toggle="dropdown"
