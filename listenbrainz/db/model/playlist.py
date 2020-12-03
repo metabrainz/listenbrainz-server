@@ -20,6 +20,16 @@ class PlaylistRecording(BaseModel):
     # When the item was added
     created: datetime.datetime
 
+    artist_credit: Optional[str]
+    artist_mbids: Optional[List[uuid.UUID]]
+    title: Optional[str]
+    # What release would this be if the recording is of more than one?
+    release_mbid: Optional[uuid.UUID]
+    release_name: Optional[str]
+    release_track_number: Optional[int]  # exists in xspf, probably not needed?
+    duration_ms: Optional[int]
+    image: Optional[str]  # who looks this up on CAA?
+
     # Computed
     added_by: str
 

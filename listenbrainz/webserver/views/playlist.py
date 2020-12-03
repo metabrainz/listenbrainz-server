@@ -22,7 +22,7 @@ def load_playlist(playlist_mbid: str):
 
     playlist = db_playlist.get_by_mbid(playlist_mbid, True)
     if playlist is None or \
-        (playlist.creator_id != current_user.id and not playlist.public):
+        (playlist.creator_id != current_user.get_id() and not playlist.public):
         raise NotFound("Cannot find playlist: %s" % playlist_mbid)
 
     spotify_data = {}

@@ -1,4 +1,5 @@
 import datetime
+import ujson
 from uuid import UUID
 
 from flask import Blueprint, current_app, jsonify, request
@@ -8,7 +9,9 @@ import listenbrainz.db.playlist as db_playlist
 
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
-                                           APIInternalServerError, APINotFound)
+                                           APIInternalServerError,
+                                           APINotFound,
+                                           APIForbidden)
 from listenbrainz.webserver.rate_limiter import ratelimit
 from listenbrainz.webserver.views.api import _validate_auth_header
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid
@@ -17,6 +20,8 @@ from listenbrainz.db.model.playlist import Playlist, WritablePlaylist, WritableP
 playlist_api_bp = Blueprint('playlist_api_v1', __name__)
 
 PLAYLIST_TRACK_URI_PREFIX = "https://musicbrainz.org/recording/"
+PLAYLIST_ARTIST_URI_PREFIX = "https://musicbrainz.org/artist/"
+PLAYLIST_RELEASE_URI_PREFIX = "https://musicbrainz.org/release/"
 PLAYLIST_URI_PREFIX = "https://listenbrainz.org/playlist/"
 PLAYLIST_EXTENSION_URI = "https://musicbrainz.org/doc/jspf#playlist"
 PLAYLIST_TRACK_EXTENSION_URI = "https://musicbrainz.org/doc/jspf#track"
@@ -98,15 +103,29 @@ def serialize_jspf(playlist: Playlist, user):
     tracks = []
     for rec in playlist.recordings:
         tr = { "identifier": PLAYLIST_TRACK_URI_PREFIX + str(rec.mbid) }
+        if rec.artist_credit:
+            tr["creator"] = rec.artist_credit
+
+        if rec.release_name:
+            tr["album"] = rec.release_name
+
+        if rec.title:
+            tr["title"] = rec.title
+
         extension = { "added_by": rec.added_by,
-                      "added_at": rec.created }
+                      "added_at": rec.created.replace(tzinfo=datetime.timezone.utc).isoformat() }
+        if rec.artist_mbids:
+            extension["artist_identifier"].append([ PLAYLIST_ARTIST_URI_PREFIX + str(mbid) for mbid in rec.artist_mbids ])
+
+        if rec.release_mbid:
+            extension["release_identifier"] = PLAYLIST_RELEASE_URI_PREFIX + str(rec.release_mbid)
+
         tr["extension"] = { PLAYLIST_TRACK_EXTENSION_URI: extension }
-
         tracks.append(tr)
-
 
     pl["track"] = tracks
 
+    print({ "playlist": pl })
     return { "playlist": pl }
 
 
@@ -150,17 +169,16 @@ def validate_delete_data(data):
         log_raise_400("move instruction values for 'index' and 'count' must all be positive integers.")
 
 
-#def fetch_playlist_recording_metadata(playlist: model_playlist.Playlist):
-def fetch_playlist_recording_metadata(playlist):
+def fetch_playlist_recording_metadata(playlist: Playlist):
     """
         This interim function will soon be replaced with a more complete service layer
     """
 
-    mbids  = [ { '[recording_mbid]': item.mbid } for item in playlist.recordings ]
+    mbids  = [ { '[recording_mbid]': str(item.mbid) } for item in playlist.recordings ]
     if not mbids:
         return
 
-    r = requests.post(RECORDING_LOOKUP_SERVER_URL, count=len(mbids), json=mbids)
+    r = requests.post(RECORDING_LOOKUP_SERVER_URL, params={ "count": len(mbids) }, json=mbids)
     if r.status_code != 200:
         current_app.logger.error("Error while fetching metadata for a playlist: {}".format(e))
         raise APIInternalServerError("Failed to fetch metadata for a playlist. Please try again.")
@@ -177,7 +195,7 @@ def fetch_playlist_recording_metadata(playlist):
 
     for rec in playlist.recordings:
         try:
-            row = mbid_index[r.mbid]
+            row = mbid_index[rec.mbid]
         except KeyError:
             continue
 
@@ -188,8 +206,10 @@ def fetch_playlist_recording_metadata(playlist):
         rec.title = row["recording_name"]
         rec.identifier = PLAYLIST_TRACK_URI_PREFIX + row["recording_mbid"]
 
+    print(playlist.recordings)
 
-@playlist_api_bp.route("/create", methods=["POST"])
+
+@playlist_api_bp.route("/create", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def create_playlist():
@@ -233,8 +253,8 @@ def create_playlist():
     return jsonify({'status': 'ok', 'playlist_mbid': playlist.mbid })
 
 
-@playlist_api_bp.route("/<playlist_mbid>", methods=["GET"])
-@crossdomain()
+@playlist_api_bp.route("/<playlist_mbid>", methods=["GET", "OPTIONS"])
+@crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def get_playlist(playlist_mbid):
     """
@@ -261,8 +281,8 @@ def get_playlist(playlist_mbid):
     return jsonify(serialize_jspf(playlist, user))
 
 
-@playlist_api_bp.route("/<playlist_mbid>/item/add/<int:offset>", methods=["POST"])
-@playlist_api_bp.route("/<playlist_mbid>/item/add", methods=["POST"], defaults={'offset': None})
+@playlist_api_bp.route("/<playlist_mbid>/item/add/<int:offset>", methods=["POST", "OPTIONS"])
+@playlist_api_bp.route("/<playlist_mbid>/item/add", methods=["POST", "OPTIONS"], defaults={'offset': None})
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def add_playlist_item(playlist_mbid, offset):
@@ -280,6 +300,7 @@ def add_playlist_item(playlist_mbid, offset):
     :statuscode 200: playlist accepted.
     :statuscode 400: invalid JSON sent, see error message for details.
     :statuscode 401: invalid authorization. See error message for details.
+    :statuscode 403: forbidden. the requesting user was not allowed to carry out this operation.
     :resheader Content-Type: *application/json*
     """
 
@@ -294,6 +315,9 @@ def add_playlist_item(playlist_mbid, offset):
     if playlist is None or \
         (playlist.creator_id != user["id"] and not playlist.public):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+
+    if playlist.creator_id != user["id"]:
+        raise APIForbidden("You are not allowed to add recordings to this playlist.")
 
     data = request.json
     validate_playlist(data, False)
@@ -319,7 +343,7 @@ def add_playlist_item(playlist_mbid, offset):
     return jsonify({'status': 'ok' })
 
 
-@playlist_api_bp.route("/<playlist_mbid>/item/move", methods=["POST"])
+@playlist_api_bp.route("/<playlist_mbid>/item/move", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def move_playlist_item(playlist_mbid):
@@ -335,6 +359,7 @@ def move_playlist_item(playlist_mbid):
     :statuscode 200: playlist accepted.
     :statuscode 400: invalid JSON sent, see error message for details.
     :statuscode 401: invalid authorization. See error message for details.
+    :statuscode 403: forbidden. the requesting user was not allowed to carry out this operation.
     :resheader Content-Type: *application/json*
     """
 
@@ -348,6 +373,9 @@ def move_playlist_item(playlist_mbid):
         (playlist.creator_id != user["id"] and not playlist.public):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
+    if playlist.creator_id != user["id"]:
+        raise APIForbidden("You are not allowed to move recordings in this playlist.")
+
     data = request.json
     validate_move_data(data)
 
@@ -360,7 +388,7 @@ def move_playlist_item(playlist_mbid):
     return jsonify({'status': 'ok' })
 
 
-@playlist_api_bp.route("/<playlist_mbid>/item/delete", methods=["POST"])
+@playlist_api_bp.route("/<playlist_mbid>/item/delete", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def delete_playlist_item(playlist_mbid):
@@ -376,6 +404,7 @@ def delete_playlist_item(playlist_mbid):
     :statuscode 200: playlist accepted.
     :statuscode 400: invalid JSON sent, see error message for details.
     :statuscode 401: invalid authorization. See error message for details.
+    :statuscode 403: forbidden. the requesting user was not allowed to carry out this operation.
     :resheader Content-Type: *application/json*
     """
 
@@ -389,6 +418,9 @@ def delete_playlist_item(playlist_mbid):
         (playlist.creator_id != user["id"] and not playlist.public):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
+    if playlist.creator_id != user["id"]:
+        raise APIForbidden("You are not allowed to remove recordings from this playlist.")
+
     data = request.json
     validate_delete_data(data)
 
@@ -401,7 +433,7 @@ def delete_playlist_item(playlist_mbid):
     return jsonify({'status': 'ok' })
 
 
-@playlist_api_bp.route("/<playlist_mbid>/delete", methods=["POST"])
+@playlist_api_bp.route("/<playlist_mbid>/delete", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def delete_playlist(playlist_mbid):
@@ -412,6 +444,7 @@ def delete_playlist(playlist_mbid):
     :reqheader Authorization: Token <user token>
     :statuscode 200: playlist deleted.
     :statuscode 401: invalid authorization. See error message for details.
+    :statuscode 403: forbidden. the requesting user was not allowed to carry out this operation.
     :statuscode 404: Playlist not found
     :resheader Content-Type: *application/json*
     """
@@ -426,6 +459,9 @@ def delete_playlist(playlist_mbid):
         (playlist.creator_id != user["id"] and not playlist.public):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
+    if playlist.creator_id != user["id"]:
+        raise APIForbidden("You are not allowed to delete this playlist.")
+
     try:
         db_playlist.delete_playlist(playlist)
     except Exception as e:
@@ -435,7 +471,7 @@ def delete_playlist(playlist_mbid):
     return jsonify({'status': 'ok' })
 
 
-@playlist_api_bp.route("/<playlist_mbid>/copy", methods=["POST"])
+@playlist_api_bp.route("/<playlist_mbid>/copy", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def copy_playlist(playlist_mbid):
