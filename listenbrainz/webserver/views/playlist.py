@@ -35,12 +35,11 @@ def load_playlist(playlist_mbid: str):
                 "name": current_user.musicbrainz_id,
                 "auth_token": current_user.auth_token,
         }
-    playlist_user = db_user.get(playlist.creator_id)
     props = {
         "current_user": current_user_data,
         "spotify": spotify_data,
         "api_url": current_app.config["API_URL"],
-        "playlist": serialize_jspf(playlist, playlist_user)
+        "playlist": serialize_jspf(playlist)
     }
 
     return render_template(

@@ -75,14 +75,14 @@ def validate_playlist(jspf, require_title=True):
             log_raise_400("JSPF playlist track %d does not contain a valid track identifier field." % i)
 
 
-def serialize_jspf(playlist: Playlist, user):
+def serialize_jspf(playlist: Playlist):
     """
         Given a playlist, return a properly formated dict that can be passed to jsonify.
         TODO: Add tests for newly added fields.
               Add collaborators
     """
 
-    pl = { "creator": user["musicbrainz_id"],
+    pl = { "creator": playlist.creator,
             "title": playlist.name,
             "identifier": PLAYLIST_URI_PREFIX + str(playlist.mbid),
             "date": playlist.created.replace(tzinfo=datetime.timezone.utc).isoformat(),
@@ -115,7 +115,7 @@ def serialize_jspf(playlist: Playlist, user):
         extension = { "added_by": rec.added_by,
                       "added_at": rec.created.replace(tzinfo=datetime.timezone.utc).isoformat() }
         if rec.artist_mbids:
-            extension["artist_identifier"].append([ PLAYLIST_ARTIST_URI_PREFIX + str(mbid) for mbid in rec.artist_mbids ])
+            extension["artist_identifier"] = [ PLAYLIST_ARTIST_URI_PREFIX + str(mbid) for mbid in rec.artist_mbids ]
 
         if rec.release_mbid:
             extension["release_identifier"] = PLAYLIST_RELEASE_URI_PREFIX + str(rec.release_mbid)
@@ -125,7 +125,6 @@ def serialize_jspf(playlist: Playlist, user):
 
     pl["track"] = tracks
 
-    print({ "playlist": pl })
     return { "playlist": pl }
 
 
@@ -195,18 +194,14 @@ def fetch_playlist_recording_metadata(playlist: Playlist):
 
     for rec in playlist.recordings:
         try:
-            row = mbid_index[rec.mbid]
+            row = mbid_index[str(rec.mbid)]
         except KeyError:
             continue
 
-        rec.artist_credit = row["artist_credit_id"]
-        rec.artist_mbids = [ UUID(mbid) for mbid in row["[artist_credit_mbids]"] ]
-        rec.release_mbid = UUID(row["release_mbid"])
-        rec.release_name = row["release_name"]
-        rec.title = row["recording_name"]
-        rec.identifier = PLAYLIST_TRACK_URI_PREFIX + row["recording_mbid"]
-
-    print(playlist.recordings)
+        rec.artist_credit = row.get("artist_credit_id", "")
+        if "[artist_credit_mbids]" in row and not row["[artist_credit_mbids]"] is None:
+            rec.artist_mbids = [ UUID(mbid) for mbid in row["[artist_credit_mbids]"] ]
+        rec.title = row.get("recording_name", "")
 
 
 @playlist_api_bp.route("/create", methods=["POST", "OPTIONS"])
@@ -266,19 +261,22 @@ def get_playlist(playlist_mbid):
     :statuscode 401: Invalid authorization. See error message for details.
     :resheader Content-Type: *application/json*
     """
-    user = _validate_auth_header()
 
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
     playlist = db_playlist.get_by_mbid(playlist_mbid, True)
-    if playlist is None or \
-        (playlist.creator_id != user["id"] and not playlist.public):
+    if playlist is None:
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+
+    if not playlist.public:
+        user = _validate_auth_header()
+        if playlist.creator_id != user["id"]:
+            raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
     fetch_playlist_recording_metadata(playlist)
 
-    return jsonify(serialize_jspf(playlist, user))
+    return jsonify(serialize_jspf(playlist))
 
 
 @playlist_api_bp.route("/<playlist_mbid>/item/add/<int:offset>", methods=["POST", "OPTIONS"])
