@@ -146,11 +146,9 @@ export default class PlaylistItemCard extends React.Component<
             {customFields?.added_at && (
               <span
                 className="listen-time"
-                title={new Date(
-                  Number(customFields.added_at) * 1000
-                ).toLocaleString()}
+                title={new Date(customFields.added_at).toLocaleString()}
               >
-                {timeago.ago(Number(customFields.added_at) * 1000)}
+                {timeago.ago(customFields.added_at)}
               </span>
             )}
             {customFields?.added_by && <div>by {customFields?.added_by}</div>}
