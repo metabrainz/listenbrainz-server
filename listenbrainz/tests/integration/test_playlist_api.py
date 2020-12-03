@@ -525,3 +525,58 @@ class PlaylistAPITestCase(IntegrationTestCase):
             content_type="application/json"
         )
         self.assert401(response)
+
+
+    def test_playlist_invalid_user(self):
+        """ Test for checking that forbidden access returns 403 """
+
+        playlist = {
+           "playlist" : {
+              "title" : "my stupid playlist"
+           }
+        }
+
+        response = self.client.post(
+            url_for("playlist_api_v1.create_playlist", public="true"),
+            data=ujson.dumps(playlist),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert200(response)
+        playlist_mbid = response.json["playlist_mbid"]
+
+        # Add recording to playlist
+        response = self.client.post(
+            url_for("playlist_api_v1.add_playlist_item", offset=0, playlist_mbid=playlist_mbid),
+            data=ujson.dumps({}),
+            headers={"Authorization": "Token {}".format(self.user2["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert403(response)
+
+        # Move recording in playlist
+        response = self.client.post(
+            url_for("playlist_api_v1.move_playlist_item", playlist_mbid=playlist_mbid),
+            data=ujson.dumps({}),
+            headers={"Authorization": "Token {}".format(self.user2["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert403(response)
+
+        # Delete recording in playlist
+        response = self.client.post(
+            url_for("playlist_api_v1.delete_playlist_item", playlist_mbid=playlist_mbid),
+            data=ujson.dumps({}),
+            headers={"Authorization": "Token {}".format(self.user2["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert403(response)
+
+        # Delete a playlist
+        response = self.client.post(
+            url_for("playlist_api_v1.delete_playlist", playlist_mbid=playlist_mbid),
+            data=ujson.dumps({}),
+            headers={"Authorization": "Token {}".format(self.user2["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert403(response)
