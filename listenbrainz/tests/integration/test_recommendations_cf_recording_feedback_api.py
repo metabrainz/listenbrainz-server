@@ -368,7 +368,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         self.assertEqual(data["offset"], 0)
         self.assertEqual(data['user_name'], self.user1['musicbrainz_id'])
 
-        feedback = data["recommendation-feedback"]  # sorted in descending order of their creation
+        feedback = data["feedback"]  # sorted in descending order of their creation
         self.assertEqual(len(feedback), 2)
 
         self.assertEqual(feedback[0]["recording_mbid"], sample_feedback[1]["recording_mbid"])
@@ -399,7 +399,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         self.assertEqual(data["offset"], 0)
         self.assertEqual(data['user_name'], self.user1['musicbrainz_id'])
 
-        feedback = data["recommendation-feedback"]  # sorted in descending order of their creation
+        feedback = data["feedback"]  # sorted in descending order of their creation
         self.assertEqual(len(feedback), 1)
 
         self.assertEqual(feedback[0]["recording_mbid"], sample_feedback[1]["recording_mbid"])
@@ -446,7 +446,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         self.assertEqual(data["offset"], 0)
         self.assertEqual(data["user_name"], self.user2['musicbrainz_id'])
 
-        feedback = data["recommendation-feedback"]
+        feedback = data["feedback"]
         self.assertEqual(len(feedback), 10)
         for i in range(10):
             self.assertEqual(feedback[i]['recording_mbid'], feedback_love[i]['recording_mbid'])
@@ -463,7 +463,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         self.assertEqual(data["offset"], 90)
         self.assertEqual(data["user_name"], self.user2['musicbrainz_id'])
 
-        feedback = data["recommendation-feedback"]  # sorted in descending order of their creation
+        feedback = data["feedback"]  # sorted in descending order of their creation
         self.assertEqual(len(feedback), 20)
         for i in range(10):
             self.assertEqual(feedback[i]['recording_mbid'], feedback_love[i+90]['recording_mbid'])
@@ -479,7 +479,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         self.assertEqual(data["offset"], 0)
         self.assertEqual(data["user_name"], self.user2['musicbrainz_id'])
 
-        feedback = data["recommendation-feedback"]  # sorted in descending order of their creation
+        feedback = data["feedback"]  # sorted in descending order of their creation
         self.assertEqual(len(feedback), 100)
         for i in range(100):
             self.assertEqual(feedback[i]['recording_mbid'], feedback_love[i]['recording_mbid'])
@@ -510,3 +510,64 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_user",
                                    user_name=self.user["musicbrainz_id"]), query_string={"offset": -1})
         self.assert400(response)
+
+    def test_get_feedback_for_recordings_for_user(self):
+        """ Test to make sure valid response is received """
+        sample_feedback = self.insert_test_data()
+
+        rec_mbid_1 = sample_feedback[0]["recording_mbid"]
+        rec_mbid_2 = sample_feedback[1]["recording_mbid"]
+
+        response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_recordings_for_user",
+                                           user_name=self.user1["musicbrainz_id"]),
+                                           query_string={"mbids": ""+rec_mbid_1+','+rec_mbid_2})
+
+        self.assert200(response)
+        data = json.loads(response.data)
+
+        self.assertEqual(data["user_name"], 'vansika_1')
+        feedback = data["feedback"]
+        self.assertEqual(len(feedback), 2)
+
+        self.assertTrue(feedback[0]["created"])
+        self.assertEqual(feedback[0]["recording_mbid"], rec_mbid_2)
+        self.assertEqual(feedback[0]["rating"], sample_feedback[1]["rating"])
+
+        self.assertTrue(feedback[1]["created"])
+        self.assertEqual(feedback[1]["recording_mbid"], rec_mbid_1)
+        self.assertEqual(feedback[1]["rating"], sample_feedback[0]["rating"])
+
+    def test_get_feedback_for_user_invalid_user(self):
+        """ Test to make sure that the API sends 404 if user does not exist. """
+        response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_recordings_for_user", user_name="invalid"))
+        self.assert404(response)
+
+    def test_get_feedback_for_recording_invalid_recording_mbid(self):
+        """ Test to make sure that the API sends 404 if recording_msid is invalid. """
+        response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_recordings_for_user",
+                                           user_name=self.user1["musicbrainz_id"]),
+                                           query_string={"mbids":"invalid_recording_mbid"})
+        self.assert400(response)
+
+        response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_recordings_for_user",
+                                           user_name=self.user1["musicbrainz_id"]),
+                                           query_string={"mbids":" "})
+        self.assert400(response)
+
+    def test_get_feedback_for_recording_missing_mbid_args(self):
+        """ Test to make sure that the API sends 404 if recording_msid is invalid. """
+        response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_recordings_for_user",
+                                           user_name=self.user1["musicbrainz_id"]))
+        self.assert400(response)
+
+    def test_get_feedback_for_recording_empty_response(self):
+        """ Test to make sure that the API return empty list if user hasn't rated a recording """
+        response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_recordings_for_user",
+                                           user_name=self.user1["musicbrainz_id"]),
+                                           query_string={"mbids":"222eb00d-9ead-42de-aec9-8f8c15094130"})
+        self.assert200(response)
+        data = json.loads(response.data)
+
+        self.assertEqual(data["user_name"], 'vansika_1')
+        feedback = data["feedback"]
+        self.assertEqual(len(feedback), 0)

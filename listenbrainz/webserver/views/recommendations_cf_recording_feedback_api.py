@@ -1,10 +1,12 @@
+import uuid
 import listenbrainz.db.user as db_user
 import listenbrainz.db.recommendations_cf_recording_feedback as db_feedback
 
 from flask import Blueprint, current_app, jsonify, request
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIInternalServerError,
-                                           APINotFound)
+                                           APINotFound,
+                                           APIBadRequest)
 
 from listenbrainz.webserver.rate_limiter import ratelimit
 from listenbrainz.webserver.views.api import _validate_auth_header
@@ -123,7 +125,7 @@ def get_feedback_for_user(user_name):
     A sample response may look like:
         {
             count: 1,
-            recommendation_feedback: [
+            feedback: [
                 {
                     "created": "1345679998",
                     "recording_mbid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
@@ -148,6 +150,8 @@ def get_feedback_for_user(user_name):
         Ex. An offset of 5 means the top 5 feedback will be skipped, defaults to 0.
     :type offset: ``int``
     :statuscode 200: Yay, you have data!
+    :statuscode 404: User not found.
+    :statuscode 400: Bad request, check ``response['error']`` for more details
     :resheader Content-Type: *application/json*
     """
     user = db_user.get_by_mb_id(user_name)
@@ -172,11 +176,71 @@ def get_feedback_for_user(user_name):
     feedback = [_format_feedback(fb) for fb in feedback]
 
     return jsonify({
-        "recommendation-feedback": feedback,
+        "feedback": feedback,
         "count": len(feedback),
         "total_count": total_count,
         "offset": offset,
         "user_name": user["musicbrainz_id"]
+    })
+
+
+@recommendation_feedback_api_bp.route("/user/<user_name>/recordings", methods=["GET"])
+@crossdomain()
+@ratelimit()
+def get_feedback_for_recordings_for_user(user_name):
+    """
+    Get feedback given by user ``user_name`` for the list of recordings supplied.
+
+    A sample response may look like:
+    {
+        "feedback": [
+            {
+                "created": 1604033691,
+                "rating": "bad_recommendation",
+                "recording_mbid": "9ffabbe4-e078-4906-80a7-3a02b537e251"
+            },
+            {
+                "created": 1604032934,
+                "rating": "hate",
+                "recording_mbid": "28111d2c-a80d-418f-8b77-6aba58abe3e7"
+            }
+        ],
+        "user_name": "Vansika Pareek"
+    }
+
+    An empty response will be returned if the feedback for given recording MBID doesn't exist.
+
+    :param mbids: comma separated list of recording_mbids for which feedback records are to be fetched.
+    :type mbids: ``str``
+    :statuscode 200: Yay, you have data!
+    :statuscode 400: Bad request, check ``response['error']`` for more details.
+    :statuscode 404: User not found.
+    :resheader Content-Type: *application/json*
+    """
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise APINotFound("Cannot find user: %s" % user_name)
+
+    mbids = request.args.get('mbids')
+    if not mbids:
+        raise APIBadRequest("Please provide comma separated recording 'mbids'!")
+
+    recording_list = parse_recording_mbid_list(mbids)
+
+    if not len(recording_list):
+        raise APIBadRequest("Please provide comma separated recording mbids!")
+
+    try:
+        feedback = db_feedback.get_feedback_for_multiple_recordings_for_user(user_id=user["id"], recording_list=recording_list)
+    except ValidationError as e:
+        log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "),
+                      request.args)
+
+    recommendation_feedback = [_format_feedback(fb) for fb in feedback]
+
+    return jsonify({
+        "feedback": recommendation_feedback,
+        "user_name": user_name
     })
 
 
@@ -192,3 +256,20 @@ def _format_feedback(fb):
     del fb.user_id
 
     return fb.dict()
+
+
+def parse_recording_mbid_list(mbids):
+    """ Check if the passed mbids are valid UUIDs
+    """
+    mbid_list = []
+    for mbid in mbids.split(","):
+        try:
+            uuid.UUID(mbid)
+        except (AttributeError, ValueError):
+            raise APIBadRequest("'{}' is not a valid MBID".format(mbid))
+        mbid = mbid.strip()
+        if not mbid:
+            continue
+        mbid_list.append(mbid)
+
+    return mbid_list

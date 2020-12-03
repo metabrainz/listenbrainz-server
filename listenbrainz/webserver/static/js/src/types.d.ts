@@ -367,16 +367,29 @@ declare type ListensListMode = "listens" | "follow" | "recent";
 
 declare type ListenFeedBack = 1 | 0 | -1;
 
+declare type RecommendationFeedBack =
+  | "love"
+  | "like"
+  | "hate"
+  | "dislike"
+  | "bad_recommendation";
+
 declare type FeedbackResponse = {
   recording_msid: string;
   score: ListenFeedBack;
   user_id: string;
 };
 
+declare type RecommendationFeedbackResponse = {
+  recording_mbid: string;
+  rating: RecommendationFeedBack;
+};
+
 declare type RecordingFeedbackMap = {
   [recordingMsid: string]: ListenFeedBack;
 };
 
+<<<<<<< HEAD
 declare type ACRMSearchResult = {
   artist_credit_id: number;
   artist_credit_name: string;
@@ -444,4 +457,7 @@ declare type JSPFTrack = {
     [name: string]: any;
     "https://musicbrainz.org/doc/jspf#track"?: JSPFTrackExtension;
   };
+
+declare type RecommendationFeedbackMap = {
+  [recordingMbid: string]: RecommendationFeedBack | null;
 };

@@ -3,7 +3,8 @@
 import { AlertList } from "react-bs-notifier";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { isEqual } from "lodash";
+import { isEqual, get } from "lodash";
+
 import BrainzPlayer from "../BrainzPlayer";
 import APIService from "../APIService";
 import Loader from "../components/Loader";
@@ -27,6 +28,7 @@ export interface RecommendationsState {
   loading: boolean;
   currRecPage?: number;
   totalRecPages: number;
+  recommendationFeedbackMap: RecommendationFeedbackMap;
 }
 
 export default class Recommendations extends React.Component<
@@ -54,6 +56,7 @@ export default class Recommendations extends React.Component<
             props.recommendations.length / this.expectedRecommendationsPerPage
           )
         : 0,
+      recommendationFeedbackMap: {},
     };
 
     this.recommendationsTable = React.createRef();
@@ -61,6 +64,76 @@ export default class Recommendations extends React.Component<
       props.apiUrl || `${window.location.origin}/1`
     );
   }
+
+  componentDidMount(): void {
+    const { user, currentUser } = this.props;
+    const { currRecPage } = this.state;
+    if (currentUser?.name === user?.name) {
+      this.loadFeedback();
+    }
+    window.history.replaceState(null, "", `?page=${currRecPage}`);
+  }
+
+  getFeedback = async () => {
+    const { user, recommendations } = this.props;
+    const recordings: string[] = [];
+
+    if (recommendations) {
+      recommendations.forEach((recommendation) => {
+        const recordingMbid = get(
+          recommendation,
+          "track_metadata.additional_info.recording_mbid"
+        );
+        if (recordingMbid) {
+          recordings.push(recordingMbid);
+        }
+      });
+      try {
+        const data = await this.APIService.getFeedbackForUserForRecommendations(
+          user.name,
+          recordings.join(",")
+        );
+        return data.feedback;
+      } catch (error) {
+        this.newAlert(
+          "danger",
+          "Playback error",
+          typeof error === "object" ? error.message : error
+        );
+      }
+    }
+    return [];
+  };
+
+  loadFeedback = async () => {
+    const feedback = await this.getFeedback();
+    const recommendationFeedbackMap: RecommendationFeedbackMap = {};
+    feedback.forEach((fb: RecommendationFeedbackResponse) => {
+      recommendationFeedbackMap[fb.recording_mbid] = fb.rating;
+    });
+    this.setState({ recommendationFeedbackMap });
+  };
+
+  updateFeedback = (
+    recordingMbid: string,
+    rating: RecommendationFeedBack | null
+  ) => {
+    this.setState((state) => ({
+      recommendationFeedbackMap: {
+        ...state.recommendationFeedbackMap,
+        [recordingMbid]: rating,
+      },
+    }));
+  };
+
+  getFeedbackForRecordingMbid = (
+    recordingMbid?: string | null
+  ): RecommendationFeedBack | null => {
+    const { recommendationFeedbackMap } = this.state;
+    return recordingMbid
+      ? get(recommendationFeedbackMap, recordingMbid, null)
+      : null;
+  };
 
   playRecommendation = (recommendation: Recommendation): void => {
     if (this.brainzPlayer.current) {
@@ -114,6 +187,7 @@ export default class Recommendations extends React.Component<
     if (currRecPage && currRecPage > 1) {
       this.setState({ loading: true });
       const offset = (currRecPage - 1) * this.expectedRecommendationsPerPage;
+      const updatedRecPage = currRecPage - 1;
       this.setState(
         {
           recommendations:
@@ -121,11 +195,11 @@ export default class Recommendations extends React.Component<
               offset - this.expectedRecommendationsPerPage,
               offset
             ) || [],
-          currRecPage: currRecPage - 1,
+          currRecPage: updatedRecPage,
         },
         this.afterRecommendationsDisplay
       );
-      window.history.pushState(null, "", `?page=${currRecPage}`);
+      window.history.pushState(null, "", `?page=${updatedRecPage}`);
     }
   };
 
@@ -136,6 +210,7 @@ export default class Recommendations extends React.Component<
     if (currRecPage && currRecPage < totalRecPages) {
       this.setState({ loading: true });
       const offset = currRecPage * this.expectedRecommendationsPerPage;
+      const updatedRecPage = currRecPage + 1;
       this.setState(
         {
           recommendations:
@@ -143,11 +218,11 @@ export default class Recommendations extends React.Component<
               offset,
               offset + this.expectedRecommendationsPerPage
             ) || [],
-          currRecPage: currRecPage + 1,
+          currRecPage: updatedRecPage,
         },
         this.afterRecommendationsDisplay
       );
-      window.history.pushState(null, "", `?page=${currRecPage}`);
+      window.history.pushState(null, "", `?page=${updatedRecPage}`);
     }
   };
 
@@ -175,7 +250,7 @@ export default class Recommendations extends React.Component<
       currRecPage,
       totalRecPages,
     } = this.state;
-    const { spotify, user, currentUser } = this.props;
+    const { spotify, user, currentUser, apiUrl } = this.props;
 
     return (
       <div role="main">
@@ -217,6 +292,13 @@ export default class Recommendations extends React.Component<
                           ? " current-recommendation"
                           : ""
                       }`}
+                      currentFeedback={this.getFeedbackForRecordingMbid(
+                        recommendation.track_metadata?.additional_info
+                          ?.recording_mbid
+                      )}
+                      updateFeedback={this.updateFeedback}
+                      apiUrl={apiUrl}
+                      newAlert={this.newAlert}
                     />
                   );
                 })}

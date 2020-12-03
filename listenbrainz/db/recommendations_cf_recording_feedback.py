@@ -4,6 +4,7 @@ from listenbrainz import db
 from listenbrainz.db.model.recommendation_feedback import (RecommendationFeedbackSubmit,
                                                            RecommendationFeedbackDelete)
 from typing import List
+from flask import current_app
 
 
 def insert(feedback_submit: RecommendationFeedbackSubmit):
@@ -105,3 +106,33 @@ def get_feedback_count_for_user(user_id: int) -> int:
         count = int(result.fetchone()["count"])
 
     return count
+
+
+def get_feedback_for_multiple_recordings_for_user(user_id: int, recording_list: List[str]):
+    """ Get a list of recording feedback given by the user for given recordings
+
+        Args:
+            user_id: the row ID of the user in the DB
+            recording_list: list of recording_mbid for which feedback records are to be obtained
+                            - if record is present then return it
+                            - if record is not present then return rating = None
+
+        Returns:
+            A list of Feedback objects
+    """
+
+    args = {"user_id": user_id, "recording_list": tuple(recording_list)}
+    query = """ SELECT user_id,
+                       recording_mbid::text,
+                       rating,
+                       created
+                  FROM recommendation_feedback
+                 WHERE user_id = :user_id
+                   AND recording_mbid
+                    IN :recording_list
+              ORDER BY created DESC
+            """
+
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text(query), args)
+        return [RecommendationFeedbackSubmit(**dict(row)) for row in result.fetchall()]

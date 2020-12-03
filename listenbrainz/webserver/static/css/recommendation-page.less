@@ -1,61 +1,100 @@
+@import "theme/theme.less";
+
 #recommendations {
   &:extend(#listens);
   padding: 10px;
 
   > .recommendation-card {
     padding: 15px;
+    padding-left: 4em;
     margin-bottom: 7px;
     max-height: 72px;
+    display: flex;
+
+    @media (max-width: @screen-sm-min) {
+      & {
+        padding-left: 30px;
+      }
+    }
 
     &.current-recommendation {
       background-color: rgba(217, 237, 247, 0.3) !important ;
     }
 
-    > .col-xs-9, .col-xs-11 {
-
-      > .col-xs-9, .col-xs-11 {
-        display: flex;
-
-        .track-details {
-          width: 100%;
-
-          p {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space:nowrap;
-            margin-bottom: 0px;
-          }
-        }
-      }
-
-    }
-
-    > .col-xs-1 {
-      display: table;
-      height: 40px;
+    .track-details {
+      flex: 1;
+      overflow: hidden;
 
       > * {
-        display: table-cell;
-        vertical-align: middle;
+        overflow-x: hidden;
+        text-overflow: ellipsis;
+        white-space:nowrap;
+        margin-bottom: 0px;
+      }
+    }
+
+    a {
+      word-break: break-word;
+    }
+
+    .recommendation-controls {
+
+      flex: 0 140px;
+
+      &.open .dropdown-menu {
+        display: flex;
+        top: auto;
       }
 
-      a {
-        word-break: break-word;
-      }
+      .btn {
+        font-size: 18px;
+        color: @blue;
+        background-color: white;
 
-      .recommendation-controls {
-
-        &.open .dropdown-menu {
-          display: flex;
+        &:hover {
+          background-color: @blue;
+          color: white;
         }
-
-        .smile, .laugh, .angry, .disappoint, .meh {
-          font-size: 18px;
-          flex: 1;
-          text-align: center;
-          margin: 0 0.4em;
-        }
       }
+
+      .hate {
+        color: #C62828;
+      }
+
+      .dislike {
+        color: #f5873d;
+      }
+
+      .bad_recommendation {
+        color: #ebbf0b;
+      }
+
+      .like {
+        color: #b0e111;
+      }
+
+      .love {
+        color: #32cd32;
+      }
+
+      .recommendation-icon > span {
+        stroke-width: 40px;
+        font-size: 18px;
+        flex: 1;
+        text-align: center;
+        margin: 0 0.4em;
+      }
+
+      .recommendation-icon:hover .off,
+      .recommendation-icon.selected .off,
+      .recommendation-icon .on {
+        display: none;
+      }
+      .recommendation-icon:hover .on,
+      .recommendation-icon.selected .on {
+        display: inline;
+      }
+
     }
   }
 }
