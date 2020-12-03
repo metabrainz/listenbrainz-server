@@ -2,6 +2,10 @@
 @descriptionLines: 3;
 
 #playlists-container {
+	display: flex;
+	flex-wrap: wrap;
+	padding-top: 1.5em;
+	
 	.playlist, .new-playlist {
 		margin: 0.5em;
 		width: 15em;
@@ -105,6 +109,7 @@
 		}
 		.addition-details{
 			flex: 1;
+			font-size: 0.85em;
 			&:extend(.text-muted);
 			text-align: right;
 		}
