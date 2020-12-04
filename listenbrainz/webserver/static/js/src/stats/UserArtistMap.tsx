@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/anchor-is-valid */
 import * as React from "react";
 import { faExclamationCircle, faLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -31,6 +32,8 @@ export default class UserArtistMap extends React.Component<
 
   graphContainer: React.RefObject<HTMLDivElement>;
 
+  rawData: UserArtistMapResponse;
+
   constructor(props: UserArtistMapProps) {
     super(props);
     this.APIService = new APIService(
@@ -46,6 +49,8 @@ export default class UserArtistMap extends React.Component<
     };
 
     this.graphContainer = React.createRef();
+
+    this.rawData = {} as UserArtistMapResponse;
   }
 
   componentDidMount() {
@@ -74,14 +79,27 @@ export default class UserArtistMap extends React.Component<
     window.removeEventListener("resize", this.handleResize);
   }
 
+  changeCountOf = (
+    newCountOf: "artist" | "listen",
+    event: React.MouseEvent<HTMLElement>
+  ) => {
+    event.preventDefault();
+
+    this.setState({
+      countOf: newCountOf,
+      data: this.processData(this.rawData, newCountOf),
+    });
+  };
+
   loadData = async (): Promise<void> => {
+    const { countOf } = this.state;
     this.setState({
       hasError: false,
       loading: true,
     });
-    const data = await this.getData();
+    this.rawData = await this.getData();
     this.setState({
-      data: this.processData(data),
+      data: this.processData(this.rawData, countOf),
       loading: false,
     });
   };
@@ -107,8 +125,10 @@ export default class UserArtistMap extends React.Component<
     return {} as UserArtistMapResponse;
   };
 
-  processData = (data: UserArtistMapResponse): UserArtistMapData => {
-    const { countOf } = this.state;
+  processData = (
+    data: UserArtistMapResponse,
+    countOf: "artist" | "listen"
+  ): UserArtistMapData => {
     return data.payload.artist_map.map((country) => {
       return {
         id: country.country,
@@ -143,12 +163,47 @@ export default class UserArtistMap extends React.Component<
         ref={this.graphContainer}
       >
         <div className="row">
-          <div className="col-xs-10">
+          <div className="col-md-9 col-xs-6">
             <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
               Artist Origins
             </h3>
           </div>
-          <div className="col-xs-2 text-right">
+          <div
+            className="col-md-2 col-xs-4 text-right"
+            style={{ marginTop: 20 }}
+          >
+            <span className="dropdown">
+              <button
+                className="dropdown-toggle btn-transparent capitalize-bold"
+                data-toggle="dropdown"
+                type="button"
+              >
+                {countOf}s
+                <span className="caret" />
+              </button>
+              <ul className="dropdown-menu" role="menu">
+                <li>
+                  <a
+                    href=""
+                    role="button"
+                    onClick={(event) => this.changeCountOf("listen", event)}
+                  >
+                    Listens
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href=""
+                    role="button"
+                    onClick={(event) => this.changeCountOf("artist", event)}
+                  >
+                    Artists
+                  </a>
+                </li>
+              </ul>
+            </span>
+          </div>
+          <div className="col-md-1 col-xs-2 text-right">
             <h4 style={{ marginTop: 20 }}>
               <a href="#artist-origin">
                 <FontAwesomeIcon

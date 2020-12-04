@@ -5,7 +5,7 @@ import { BasicTooltip } from "@nivo/tooltip";
 import { scaleThreshold } from "d3-scale";
 import { schemeOranges } from "d3-scale-chromatic";
 import { format } from "d3-format";
-import * as _ from "lodash";
+import { maxBy } from "lodash";
 import * as React from "react";
 import { useMediaQuery } from "react-responsive";
 import * as features from "./world_countries.json";
@@ -81,7 +81,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
 
   // Calculate logarithmic domain
   const domain = (() => {
-    const maxArtistCount = _.maxBy(data, (datum) => datum.value)?.value || 1;
+    const maxArtistCount = maxBy(data, (datum) => datum.value)?.value || 1;
 
     const result = [];
     for (let i = 0; i < 6; i += 1) {
