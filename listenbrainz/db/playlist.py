@@ -1,4 +1,5 @@
 import collections
+import datetime
 from typing import List, Optional
 
 import sqlalchemy
@@ -281,7 +282,8 @@ def copy_playlist(playlist: model_playlist.Playlist, creator_id: int):
     newplaylist = playlist.copy()
     newplaylist.name = "Copy of " + newplaylist.name
     newplaylist.creator_id = creator_id
-    newplaylist.copied_from_id = playlist.mbid
+    newplaylist.copied_from_id = playlist.id
+    # TODO: We need a copied_from_mbid (calculated) field in the playlist object so we can show the mbid in the ui
 
     return create(newplaylist)
 
@@ -333,11 +335,14 @@ def insert_recordings(connection, playlist_id: int, recordings: List[model_playl
 
     query = sqlalchemy.text("""
         INSERT INTO playlist.playlist_recording (playlist_id, position, mbid, added_by_id, created)
-                                         VALUES (:playlist_id, :position, :mbid, :added_by_id, created)
+                                         VALUES (:playlist_id, :position, :mbid, :added_by_id, :created)
                                       RETURNING id, created""")
     return_recordings = []
     user_id_map = {}
+    insert_ts = datetime.datetime.utcnow()
     for recording in recordings:
+        if not recording.created:
+            recording.created = insert_ts
         result = connection.execute(query, recording.dict(include={'playlist_id', 'position', 'mbid', 'added_by_id', 'created'}))
         if recording.added_by_id not in user_id_map:
             # TODO: Do this lookup in bulk
