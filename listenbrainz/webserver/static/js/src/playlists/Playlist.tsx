@@ -583,15 +583,26 @@ export default class PlaylistPage extends React.Component<
                   <a href={`/user/${playlist.creator}/playlists`}>
                     {playlist.creator}
                   </a>
-                  {customFields?.collaborators?.length &&
-                    ` | Collaborators: ${customFields.collaborators.join(
-                      ", "
-                    )}`}
                 </small>
               </h1>
               <div className="info">
                 <div>{playlist.track?.length} tracks</div>
                 <div>Created: {new Date(playlist.date).toLocaleString()}</div>
+                {customFields?.collaborators?.length && (
+                  <div>
+                    With the help of:&ensp;
+                    {customFields.collaborators.map((collaborator, index) => (
+                      <>
+                        <a key={collaborator} href={`/user/${collaborator}`}>
+                          {collaborator}
+                        </a>
+                        {index < customFields.collaborators.length - 1
+                          ? ", "
+                          : ""}
+                      </>
+                    ))}
+                  </div>
+                )}
                 {customFields?.last_modified_at && (
                   <div>
                     Last modified:{" "}
@@ -599,7 +610,14 @@ export default class PlaylistPage extends React.Component<
                   </div>
                 )}
                 {customFields?.copied_from && (
-                  <div>Copied from: {customFields.copied_from}</div>
+                  <div>
+                    Copied from:
+                    <a href={customFields.copied_from}>
+                      {customFields.copied_from.substr(
+                        PLAYLIST_URI_PREFIX.length
+                      )}
+                    </a>
+                  </div>
                 )}
               </div>
               <div>{playlist.annotation}</div>
