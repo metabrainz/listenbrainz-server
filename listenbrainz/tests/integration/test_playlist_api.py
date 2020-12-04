@@ -188,7 +188,6 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["track"][1]["identifier"],
                          add_recording["playlist"]["track"][0]["identifier"])
 
-
         # Add an invalid track id to the playlist
         add_recording = {
            "playlist": {
@@ -232,7 +231,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assert200(response)
         playlist_mbid = response.json["playlist_mbid"]
 
-        move = {"mbid": "57ef4803-5181-4b3d-8dd6-8b9d9ca83e2a", "from": 1, "to": 0, "count": 1 }
+        move = {"mbid": "57ef4803-5181-4b3d-8dd6-8b9d9ca83e2a", "from": 1, "to": 0, "count": 1}
         response = self.client.post(
             url_for("playlist_api_v1.move_playlist_item", playlist_mbid=playlist_mbid),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
@@ -277,7 +276,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assert200(response)
         playlist_mbid = response.json["playlist_mbid"]
 
-        move = {"index": 0, "count": 1 }
+        move = {"index": 0, "count": 1}
         response = self.client.post(
             url_for("playlist_api_v1.delete_playlist_item", playlist_mbid=playlist_mbid),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},

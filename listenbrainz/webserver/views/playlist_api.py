@@ -27,6 +27,7 @@ PLAYLIST_TRACK_EXTENSION_URI = "https://musicbrainz.org/doc/jspf#track"
 RECORDING_LOOKUP_SERVER_URL = "https://labs.api.listenbrainz.org/recording-mbid-lookup/json"
 MAX_RECORDINGS_PER_ADD = 100
 
+
 def _parse_boolean_arg(name, default=None):
     value = request.args.get(name)
     if not value:
@@ -82,13 +83,12 @@ def serialize_jspf(playlist: Playlist):
     """
 
     pl = {"creator": playlist.creator,
-            "title": playlist.name,
-            "identifier": PLAYLIST_URI_PREFIX + str(playlist.mbid),
-            "date": playlist.created.replace(tzinfo=datetime.timezone.utc).isoformat(),
+          "title": playlist.name,
+          "identifier": PLAYLIST_URI_PREFIX + str(playlist.mbid),
+          "date": playlist.created.replace(tzinfo=datetime.timezone.utc).isoformat(),
     }
     if playlist.description:
         pl["annotation"] = playlist.description
-
 
     extension = {"public": "true" if playlist.public else "false"}
     extension["creator_id"] = playlist.creator_id
@@ -114,7 +114,7 @@ def serialize_jspf(playlist: Playlist):
         extension = {"added_by": rec.added_by,
                       "added_at": rec.created.replace(tzinfo=datetime.timezone.utc).isoformat()}
         if rec.artist_mbids:
-            extension["artist_identifier"] = [PLAYLIST_ARTIST_URI_PREFIX + str(mbid) for mbid in rec.artist_mbids ]
+            extension["artist_identifier"] = [PLAYLIST_ARTIST_URI_PREFIX + str(mbid) for mbid in rec.artist_mbids]
 
         if rec.release_mbid:
             extension["release_identifier"] = PLAYLIST_RELEASE_URI_PREFIX + str(rec.release_mbid)
@@ -172,7 +172,7 @@ def fetch_playlist_recording_metadata(playlist: Playlist):
         This interim function will soon be replaced with a more complete service layer
     """
 
-    mbids  = [{'[recording_mbid]': str(item.mbid)} for item in playlist.recordings ]
+    mbids = [{'[recording_mbid]': str(item.mbid)} for item in playlist.recordings]
     if not mbids:
         return
 
@@ -199,7 +199,7 @@ def fetch_playlist_recording_metadata(playlist: Playlist):
 
         rec.artist_credit = row.get("artist_credit_name", "")
         if "[artist_credit_mbids]" in row and not row["[artist_credit_mbids]"] is None:
-            rec.artist_mbids = [UUID(mbid) for mbid in row["[artist_credit_mbids]"] ]
+            rec.artist_mbids = [UUID(mbid) for mbid in row["[artist_credit_mbids]"]]
         rec.title = row.get("recording_name", "")
 
 
@@ -310,7 +310,7 @@ def add_playlist_item(playlist_mbid, offset):
 
     playlist = db_playlist.get_by_mbid(playlist_mbid)
     if playlist is None or \
-        (playlist.creator_id != user["id"] and not playlist.public):
+       (playlist.creator_id != user["id"] and not playlist.public):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
     if playlist.creator_id != user["id"]:
@@ -367,7 +367,7 @@ def move_playlist_item(playlist_mbid):
 
     playlist = db_playlist.get_by_mbid(playlist_mbid)
     if playlist is None or \
-        (playlist.creator_id != user["id"] and not playlist.public):
+       (playlist.creator_id != user["id"] and not playlist.public):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
     if playlist.creator_id != user["id"]:
@@ -412,7 +412,7 @@ def delete_playlist_item(playlist_mbid):
 
     playlist = db_playlist.get_by_mbid(playlist_mbid)
     if playlist is None or \
-        (playlist.creator_id != user["id"] and not playlist.public):
+       (playlist.creator_id != user["id"] and not playlist.public):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
     if playlist.creator_id != user["id"]:
@@ -453,7 +453,7 @@ def delete_playlist(playlist_mbid):
 
     playlist = db_playlist.get_by_mbid(playlist_mbid)
     if playlist is None or \
-        (playlist.creator_id != user["id"] and not playlist.public):
+       (playlist.creator_id != user["id"] and not playlist.public):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
     if playlist.creator_id != user["id"]:
@@ -490,7 +490,7 @@ def copy_playlist(playlist_mbid):
 
     playlist = db_playlist.get_by_mbid(playlist_mbid)
     if playlist is None or \
-        (playlist.creator_id != user["id"] and not playlist.public):
+       (playlist.creator_id != user["id"] and not playlist.public):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
     try:
