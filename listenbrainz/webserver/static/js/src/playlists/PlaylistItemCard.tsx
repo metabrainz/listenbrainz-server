@@ -111,9 +111,27 @@ export default class PlaylistItemCard extends React.Component<
           />
         )}
         <div className="track-details">
-          <div title={track.title}>{track.title}</div>
+          <div title={track.title}>
+            <a
+              href={track.identifier}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {track.title}
+            </a>
+          </div>
           <small className="text-muted" title={track.creator}>
-            {track.creator}
+            {customFields?.artist_identifier?.length ? (
+              <a
+                href={customFields.artist_identifier[0]}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {track.creator}
+              </a>
+            ) : (
+              track.creator
+            )}
           </small>
         </div>
         {trackDuration && <div className="track-duration">{trackDuration}</div>}
