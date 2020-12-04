@@ -4,7 +4,6 @@ from uuid import UUID
 import ujson
 from flask import Blueprint, current_app, jsonify, request
 import requests
-#import listenbrainz.db.user as db_user
 import listenbrainz.db.playlist as db_playlist
 
 from listenbrainz.webserver.decorators import crossdomain
@@ -82,7 +81,7 @@ def serialize_jspf(playlist: Playlist):
               Add collaborators
     """
 
-    pl = { "creator": playlist.creator,
+    pl = {"creator": playlist.creator,
             "title": playlist.name,
             "identifier": PLAYLIST_URI_PREFIX + str(playlist.mbid),
             "date": playlist.created.replace(tzinfo=datetime.timezone.utc).isoformat(),
@@ -91,18 +90,18 @@ def serialize_jspf(playlist: Playlist):
         pl["annotation"] = playlist.description
 
 
-    extension = { "public": "true" if playlist.public else "false" }
+    extension = {"public": "true" if playlist.public else "false"}
     extension["creator_id"] = playlist.creator_id
     if playlist.created_for_id:
         extension['created_for'] = playlist.created_for
     if playlist.copied_from_id:
         extension['copied_from'] = PLAYLIST_URI_PREFIX + str(playlist.copied_from_id)
 
-    pl["extension"] = { PLAYLIST_EXTENSION_URI: extension }
+    pl["extension"] = {PLAYLIST_EXTENSION_URI: extension}
 
     tracks = []
     for rec in playlist.recordings:
-        tr = { "identifier": PLAYLIST_TRACK_URI_PREFIX + str(rec.mbid) }
+        tr = {"identifier": PLAYLIST_TRACK_URI_PREFIX + str(rec.mbid)}
         if rec.artist_credit:
             tr["creator"] = rec.artist_credit
 
@@ -112,20 +111,20 @@ def serialize_jspf(playlist: Playlist):
         if rec.title:
             tr["title"] = rec.title
 
-        extension = { "added_by": rec.added_by,
-                      "added_at": rec.created.replace(tzinfo=datetime.timezone.utc).isoformat() }
+        extension = {"added_by": rec.added_by,
+                      "added_at": rec.created.replace(tzinfo=datetime.timezone.utc).isoformat()}
         if rec.artist_mbids:
-            extension["artist_identifier"] = [ PLAYLIST_ARTIST_URI_PREFIX + str(mbid) for mbid in rec.artist_mbids ]
+            extension["artist_identifier"] = [PLAYLIST_ARTIST_URI_PREFIX + str(mbid) for mbid in rec.artist_mbids ]
 
         if rec.release_mbid:
             extension["release_identifier"] = PLAYLIST_RELEASE_URI_PREFIX + str(rec.release_mbid)
 
-        tr["extension"] = { PLAYLIST_TRACK_EXTENSION_URI: extension }
+        tr["extension"] = {PLAYLIST_TRACK_EXTENSION_URI: extension}
         tracks.append(tr)
 
     pl["track"] = tracks
 
-    return { "playlist": pl }
+    return {"playlist": pl}
 
 
 def validate_move_data(data):
@@ -173,11 +172,11 @@ def fetch_playlist_recording_metadata(playlist: Playlist):
         This interim function will soon be replaced with a more complete service layer
     """
 
-    mbids  = [ { '[recording_mbid]': str(item.mbid) } for item in playlist.recordings ]
+    mbids  = [{'[recording_mbid]': str(item.mbid)} for item in playlist.recordings ]
     if not mbids:
         return
 
-    r = requests.post(RECORDING_LOOKUP_SERVER_URL, params={ "count": len(mbids) }, json=mbids)
+    r = requests.post(RECORDING_LOOKUP_SERVER_URL, params={"count": len(mbids)}, json=mbids)
     if r.status_code != 200:
         current_app.logger.error("Error while fetching metadata for a playlist: %d" % r.status_code)
         raise APIInternalServerError("Failed to fetch metadata for a playlist. Please try again.")
@@ -200,7 +199,7 @@ def fetch_playlist_recording_metadata(playlist: Playlist):
 
         rec.artist_credit = row.get("artist_credit_name", "")
         if "[artist_credit_mbids]" in row and not row["[artist_credit_mbids]"] is None:
-            rec.artist_mbids = [ UUID(mbid) for mbid in row["[artist_credit_mbids]"] ]
+            rec.artist_mbids = [UUID(mbid) for mbid in row["[artist_credit_mbids]"] ]
         rec.title = row.get("recording_name", "")
 
 
@@ -238,14 +237,13 @@ def create_playlist():
             playlist.recordings.append(WritablePlaylistRecording(mbid=UUID(track['identifier'][len(PLAYLIST_TRACK_URI_PREFIX):]),
                                        added_by_id=user["id"]))
 
-
     try:
         playlist = db_playlist.create(playlist)
     except Exception as e:
         current_app.logger.error("Error while creating new playlist: {}".format(e))
         raise APIInternalServerError("Failed to create the playlist. Please try again.")
 
-    return jsonify({'status': 'ok', 'playlist_mbid': playlist.mbid })
+    return jsonify({'status': 'ok', 'playlist_mbid': playlist.mbid})
 
 
 @playlist_api_bp.route("/<playlist_mbid>", methods=["GET", "OPTIONS"])
@@ -338,7 +336,7 @@ def add_playlist_item(playlist_mbid, offset):
         current_app.logger.error("Error while adding recordings to playlist: {}".format(e))
         raise APIInternalServerError("Failed to add recordings to the playlist. Please try again.")
 
-    return jsonify({'status': 'ok' })
+    return jsonify({'status': 'ok'})
 
 
 @playlist_api_bp.route("/<playlist_mbid>/item/move", methods=["POST", "OPTIONS"])
@@ -351,7 +349,7 @@ def move_playlist_item(playlist_mbid):
     of the track to move (from), where to move it to (to) and how many tracks from that position should
     be moved (count). The format of the post data should look as follows:
 
-     { “mbid” : “<mbid>”, “from” : 3, “to” : 4, “count”: 2 }
+     {“mbid” : “<mbid>”, “from” : 3, “to” : 4, “count”: 2}
 
     :reqheader Authorization: Token <user token>
     :statuscode 200: playlist accepted.
@@ -383,7 +381,7 @@ def move_playlist_item(playlist_mbid):
         current_app.logger.error("Error while moving recordings in the playlist: {}".format(e))
         raise APIInternalServerError("Failed to move recordings in the playlist. Please try again.")
 
-    return jsonify({'status': 'ok' })
+    return jsonify({'status': 'ok'})
 
 
 @playlist_api_bp.route("/<playlist_mbid>/item/delete", methods=["POST", "OPTIONS"])
@@ -396,7 +394,7 @@ def delete_playlist_item(playlist_mbid):
     of the track to delete, and how many tracks from that position should be moved deleted. The format of the
     post data should look as follows:
 
-     { “index” : 3, “count”: 2 }
+     {“index” : 3, “count”: 2}
 
     :reqheader Authorization: Token <user token>
     :statuscode 200: playlist accepted.
@@ -428,7 +426,7 @@ def delete_playlist_item(playlist_mbid):
         current_app.logger.error("Error while deleting recordings from playlist: {}".format(e))
         raise APIInternalServerError("Failed to deleting recordings from the playlist. Please try again.")
 
-    return jsonify({'status': 'ok' })
+    return jsonify({'status': 'ok'})
 
 
 @playlist_api_bp.route("/<playlist_mbid>/delete", methods=["POST", "OPTIONS"])
@@ -466,7 +464,7 @@ def delete_playlist(playlist_mbid):
         current_app.logger.error("Error deleting playlist: {}".format(e))
         raise APIInternalServerError("Failed to delete the playlist. Please try again.")
 
-    return jsonify({'status': 'ok' })
+    return jsonify({'status': 'ok'})
 
 
 @playlist_api_bp.route("/<playlist_mbid>/copy", methods=["POST", "OPTIONS"])
@@ -500,4 +498,4 @@ def copy_playlist(playlist_mbid):
         current_app.logger.error("Error deleting playlist: {}".format(e))
         raise APIInternalServerError("Failed to delete the playlist. Please try again.")
 
-    return jsonify({'status': 'ok', 'playlist_mbid': new_playlist.mbid })
+    return jsonify({'status': 'ok', 'playlist_mbid': new_playlist.mbid})

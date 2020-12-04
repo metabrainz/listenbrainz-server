@@ -10,11 +10,11 @@ import ujson
 
 def get_test_data():
     return {
-       "playlist" : {
-          "title" : "1980s flashback jams",
-          "track" : [
+       "playlist": {
+          "title": "1980s flashback jams",
+          "track": [
              {
-                "identifier" : "https://musicbrainz.org/recording/e8f9b188-f819-4e43-ab0f-4bd26ce9ff56"
+                "identifier": "https://musicbrainz.org/recording/e8f9b188-f819-4e43-ab0f-4bd26ce9ff56"
              }
           ],
        }
@@ -76,7 +76,6 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert404(response)
 
-
     def test_playlist_create_and_get_private(self):
         """ Test to ensure creating a private playlist works """
 
@@ -101,13 +100,12 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert404(response)
 
-
     def test_playlist_create_empty(self):
         """ Test to ensure creating an empty playlist works """
 
         playlist = {
-           "playlist" : {
-              "title" : "yer dreams suck!"
+           "playlist": {
+              "title": "yer dreams suck!"
            }
         }
 
@@ -124,16 +122,15 @@ class PlaylistAPITestCase(IntegrationTestCase):
         # Make sure the return playlist id is valid
         UUID(response.json["playlist_mbid"])
 
-
     def test_playlist_json_with_missing_keys(self):
         """ Test for checking that submitting JSON with missing keys returns 400 """
 
         # submit a playlist without title
         playlist = {
-           "playlist" : {
-              "track" : [
+           "playlist": {
+              "track": [
                  {
-                    "identifier" : "https://musicbrainz.org/recording/e8f9b188-f819-4e43-ab0f-4bd26ce9ff56"
+                    "identifier": "https://musicbrainz.org/recording/e8f9b188-f819-4e43-ab0f-4bd26ce9ff56"
                  }
               ],
            }
@@ -147,7 +144,6 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert400(response)
         self.assertEqual(response.json["error"], "JSPF playlist must contain a title element with the title of the playlist.")
-
 
     def test_playlist_recording_add(self):
         """ Test adding a recording to a playlist works """
@@ -165,10 +161,10 @@ class PlaylistAPITestCase(IntegrationTestCase):
 
         # Add a track to the playlist
         add_recording = {
-           "playlist" : {
-              "track" : [
+           "playlist": {
+              "track": [
                  {
-                    "identifier" : PLAYLIST_TRACK_URI_PREFIX + "4a77a078-e91a-4522-a409-3b58aa7de3ae"
+                    "identifier": PLAYLIST_TRACK_URI_PREFIX + "4a77a078-e91a-4522-a409-3b58aa7de3ae"
                  }
               ],
            }
@@ -195,10 +191,10 @@ class PlaylistAPITestCase(IntegrationTestCase):
 
         # Add an invalid track id to the playlist
         add_recording = {
-           "playlist" : {
-              "track" : [
+           "playlist": {
+              "track": [
                  {
-                    "identifier" : "4a77a078-e91a-4522-a409-3b58aa7de3ae"
+                    "identifier": "4a77a078-e91a-4522-a409-3b58aa7de3ae"
                  }
               ],
            }
@@ -211,18 +207,17 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert400(response)
 
-
     def test_playlist_recording_move(self):
 
         playlist = {
-           "playlist" : {
-              "title" : "1980s flashback jams",
-              "track" : [
+           "playlist": {
+              "title": "1980s flashback jams",
+              "track": [
                  {
-                    "identifier" : PLAYLIST_TRACK_URI_PREFIX + "e8f9b188-f819-4e43-ab0f-4bd26ce9ff56"
+                    "identifier": PLAYLIST_TRACK_URI_PREFIX + "e8f9b188-f819-4e43-ab0f-4bd26ce9ff56"
                  },
                  {
-                    "identifier" : PLAYLIST_TRACK_URI_PREFIX + "57ef4803-5181-4b3d-8dd6-8b9d9ca83e2a"
+                    "identifier": PLAYLIST_TRACK_URI_PREFIX + "57ef4803-5181-4b3d-8dd6-8b9d9ca83e2a"
                  }
               ],
            }
@@ -237,7 +232,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assert200(response)
         playlist_mbid = response.json["playlist_mbid"]
 
-        move = { "mbid" : "57ef4803-5181-4b3d-8dd6-8b9d9ca83e2a", "from" : 1, "to" : 0, "count": 1 }
+        move = {"mbid": "57ef4803-5181-4b3d-8dd6-8b9d9ca83e2a", "from": 1, "to": 0, "count": 1 }
         response = self.client.post(
             url_for("playlist_api_v1.move_playlist_item", playlist_mbid=playlist_mbid),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
@@ -257,18 +252,17 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["track"][1]["identifier"],
                          playlist["playlist"]["track"][0]["identifier"])
 
-
     def test_playlist_recording_delete(self):
 
         playlist = {
-           "playlist" : {
-              "title" : "1980s flashback jams",
-              "track" : [
+           "playlist": {
+              "title": "1980s flashback jams",
+              "track": [
                  {
-                    "identifier" : "https://musicbrainz.org/recording/e8f9b188-f819-4e43-ab0f-4bd26ce9ff56"
+                    "identifier": "https://musicbrainz.org/recording/e8f9b188-f819-4e43-ab0f-4bd26ce9ff56"
                  },
                  {
-                    "identifier" : "https://musicbrainz.org/recording/57ef4803-5181-4b3d-8dd6-8b9d9ca83e2a"
+                    "identifier": "https://musicbrainz.org/recording/57ef4803-5181-4b3d-8dd6-8b9d9ca83e2a"
                  }
               ],
            }
@@ -283,7 +277,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assert200(response)
         playlist_mbid = response.json["playlist_mbid"]
 
-        move = { "index" : 0, "count": 1 }
+        move = {"index": 0, "count": 1 }
         response = self.client.post(
             url_for("playlist_api_v1.delete_playlist_item", playlist_mbid=playlist_mbid),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
@@ -301,12 +295,11 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["track"][0]["identifier"],
                          playlist["playlist"]["track"][1]["identifier"])
 
-
     def test_playlist_delete_playlist(self):
 
         playlist = {
-           "playlist" : {
-              "title" : "yer dreams suck!"
+           "playlist": {
+              "title": "yer dreams suck!"
            }
         }
 
@@ -334,12 +327,11 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert404(response)
 
-
     def test_playlist_copy_public_playlist(self):
 
         playlist = {
-           "playlist" : {
-              "title" : "my stupid playlist"
+           "playlist": {
+              "title": "my stupid playlist"
            }
         }
 
@@ -373,12 +365,11 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["title"], "Copy of my stupid playlist")
         self.assertEqual(response.json["playlist"]["creator"], "anothertestuserpleaseignore")
 
-
     def test_playlist_copy_private_playlist(self):
 
         playlist = {
-           "playlist" : {
-              "title" : "my stupid playlist"
+           "playlist": {
+              "title": "my stupid playlist"
            }
         }
 
@@ -409,8 +400,6 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["public"], "false")
         self.assertEqual(response.json["playlist"]["title"], "Copy of my stupid playlist")
         self.assertEqual(response.json["playlist"]["creator"], "testuserpleaseignore")
-
-
 
     def test_playlist_private_access(self):
         """ Test for checking that unauthorized access to private playlists return 404 """
@@ -528,13 +517,12 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert401(response)
 
-
     def test_playlist_invalid_user(self):
         """ Test for checking that forbidden access returns 403 """
 
         playlist = {
-           "playlist" : {
-              "title" : "my stupid playlist"
+           "playlist": {
+              "title": "my stupid playlist"
            }
         }
 

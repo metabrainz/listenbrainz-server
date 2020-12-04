@@ -12,7 +12,6 @@ playlist_bp = Blueprint("playlist", __name__)
 
 
 @playlist_bp.route("/<playlist_mbid>", methods=["GET"])
-
 def load_playlist(playlist_mbid: str):
     """Load a single playlist by id
     """
@@ -20,8 +19,7 @@ def load_playlist(playlist_mbid: str):
         raise BadRequest("Provided playlist ID is invalid: %s" % playlist_mbid)
 
     playlist = db_playlist.get_by_mbid(playlist_mbid, True)
-    if playlist is None or \
-        (playlist.creator_id != current_user.get_id() and not playlist.public):
+    if playlist is None or (playlist.creator_id != current_user.get_id() and not playlist.public):
         raise NotFound("Cannot find playlist: %s" % playlist_mbid)
 
     fetch_playlist_recording_metadata(playlist)
