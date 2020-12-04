@@ -1,7 +1,7 @@
 import datetime
-import ujson
 from uuid import UUID
 
+import ujson
 from flask import Blueprint, current_app, jsonify, request
 import requests
 #import listenbrainz.db.user as db_user
@@ -179,13 +179,13 @@ def fetch_playlist_recording_metadata(playlist: Playlist):
 
     r = requests.post(RECORDING_LOOKUP_SERVER_URL, params={ "count": len(mbids) }, json=mbids)
     if r.status_code != 200:
-        current_app.logger.error("Error while fetching metadata for a playlist: {}".format(e))
+        current_app.logger.error("Error while fetching metadata for a playlist: %d" % r.status_code)
         raise APIInternalServerError("Failed to fetch metadata for a playlist. Please try again.")
 
     try:
         rows = ujson.loads(r.text)
     except ValueError as err:
-        current_app.logger.error("Error parse metadata for a playlist: {}".format(e))
+        current_app.logger.error("Error parse metadata for a playlist: {}".format(err))
         raise APIInternalServerError("Failed parse fetched metadata for a playlist. Please try again.")
 
     mbid_index = {}
@@ -325,7 +325,7 @@ def add_playlist_item(playlist_mbid, offset):
 
     precordings = []
     if "track" in data["playlist"]:
-        for i, track in enumerate(data["playlist"]["track"]):
+        for track in data["playlist"]["track"]:
             try:
                 mbid = UUID(track['identifier'][len(PLAYLIST_TRACK_URI_PREFIX):])
             except (KeyError, ValueError):
