@@ -290,7 +290,8 @@ def add_playlist_item(playlist_mbid, offset):
     If the offset is provided in the URL, then the recordings will be added at that offset,
     otherwise they will be added at the end of the playlist.
 
-    You may only add MAX_RECORDINGS_PER_ADD recordings in one call to this endpoint.
+    You may only add :data:`~webserver.views.playlist_api.MAX_RECORDINGS_PER_ADD` recordings in one
+    call to this endpoint.
 
     :reqheader Authorization: Token <user token>
     :statuscode 200: playlist accepted.
