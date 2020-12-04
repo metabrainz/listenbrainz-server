@@ -513,6 +513,26 @@ export default class APIService {
     return response.status;
   };
 
+  copyPlaylist = async (
+    userToken: string,
+    playlistMBID: string
+  ): Promise<string> => {
+    if (!playlistMBID) {
+      throw new SyntaxError("playlist MBID missing");
+    }
+
+    const url = `${this.APIBaseURI}/playlist/${playlistMBID}/copy`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
+    });
+    this.checkStatus(response);
+    const data = await response.json();
+    return data.playlist_mbid;
+  };
+
   deletePlaylist = async (
     userToken: string,
     playlistMBID: string
@@ -526,7 +546,6 @@ export default class APIService {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
-        "Content-Type": "application/json;charset=UTF-8",
       },
     });
     this.checkStatus(response);
