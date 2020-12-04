@@ -161,7 +161,8 @@ describe("processData", () => {
     const instance = wrapper.instance();
 
     const result = instance.processData(
-      userArtistMapResponse as UserArtistMapResponse
+      userArtistMapResponse as UserArtistMapResponse,
+      "artist"
     );
 
     expect(result).toEqual(userArtistMapProcessedData);

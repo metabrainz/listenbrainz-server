@@ -36,7 +36,7 @@ exports[`UserArtistMap renders corectly when range is invalid 1`] = `
         className="row"
       >
         <div
-          className="col-xs-10"
+          className="col-md-9 col-xs-6"
         >
           <h3
             className="capitalize-bold"
@@ -50,7 +50,54 @@ exports[`UserArtistMap renders corectly when range is invalid 1`] = `
           </h3>
         </div>
         <div
-          className="col-xs-2 text-right"
+          className="col-md-2 col-xs-4 text-right"
+          style={
+            Object {
+              "marginTop": 20,
+            }
+          }
+        >
+          <span
+            className="dropdown"
+          >
+            <button
+              className="dropdown-toggle btn-transparent capitalize-bold"
+              data-toggle="dropdown"
+              type="button"
+            >
+              artist
+              s
+              <span
+                className="caret"
+              />
+            </button>
+            <ul
+              className="dropdown-menu"
+              role="menu"
+            >
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Listens
+                </a>
+              </li>
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Artists
+                </a>
+              </li>
+            </ul>
+          </span>
+        </div>
+        <div
+          className="col-md-1 col-xs-2 text-right"
         >
           <h4
             style={
@@ -217,7 +264,7 @@ exports[`UserArtistMap renders correctly 1`] = `
     className="row"
   >
     <div
-      className="col-xs-10"
+      className="col-md-9 col-xs-6"
     >
       <h3
         className="capitalize-bold"
@@ -231,7 +278,54 @@ exports[`UserArtistMap renders correctly 1`] = `
       </h3>
     </div>
     <div
-      className="col-xs-2 text-right"
+      className="col-md-2 col-xs-4 text-right"
+      style={
+        Object {
+          "marginTop": 20,
+        }
+      }
+    >
+      <span
+        className="dropdown"
+      >
+        <button
+          className="dropdown-toggle btn-transparent capitalize-bold"
+          data-toggle="dropdown"
+          type="button"
+        >
+          artist
+          s
+          <span
+            className="caret"
+          />
+        </button>
+        <ul
+          className="dropdown-menu"
+          role="menu"
+        >
+          <li>
+            <a
+              href=""
+              onClick={[Function]}
+              role="button"
+            >
+              Listens
+            </a>
+          </li>
+          <li>
+            <a
+              href=""
+              onClick={[Function]}
+              role="button"
+            >
+              Artists
+            </a>
+          </li>
+        </ul>
+      </span>
+    </div>
+    <div
+      className="col-md-1 col-xs-2 text-right"
     >
       <h4
         style={
