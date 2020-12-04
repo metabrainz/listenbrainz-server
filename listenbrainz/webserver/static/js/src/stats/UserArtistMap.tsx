@@ -81,9 +81,11 @@ export default class UserArtistMap extends React.Component<
 
   changeCountOf = (
     newCountOf: "artist" | "listen",
-    event: React.MouseEvent<HTMLElement>
+    event?: React.MouseEvent<HTMLElement>
   ) => {
-    event.preventDefault();
+    if (event) {
+      event.preventDefault();
+    }
 
     this.setState({
       countOf: newCountOf,
