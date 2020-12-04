@@ -281,7 +281,7 @@ def copy_playlist(playlist: model_playlist.Playlist, creator_id: int):
     newplaylist = playlist.copy()
     newplaylist.name = "Copy of " + newplaylist.name
     newplaylist.creator_id = creator_id
-    newplaylist.copied_from_id = playlist.id
+    newplaylist.copied_from_id = playlist.mbid
 
     return create(newplaylist)
 
@@ -332,13 +332,13 @@ def insert_recordings(connection, playlist_id: int, recordings: List[model_playl
         recording.position = position
 
     query = sqlalchemy.text("""
-        INSERT INTO playlist.playlist_recording (playlist_id, position, mbid, added_by_id)
-                                         VALUES (:playlist_id, :position, :mbid, :added_by_id)
+        INSERT INTO playlist.playlist_recording (playlist_id, position, mbid, added_by_id, created)
+                                         VALUES (:playlist_id, :position, :mbid, :added_by_id, created)
                                       RETURNING id, created""")
     return_recordings = []
     user_id_map = {}
     for recording in recordings:
-        result = connection.execute(query, recording.dict(include={'playlist_id', 'position', 'mbid', 'added_by_id'}))
+        result = connection.execute(query, recording.dict(include={'playlist_id', 'position', 'mbid', 'added_by_id', 'created'}))
         if recording.added_by_id not in user_id_map:
             # TODO: Do this lookup in bulk
             user_id_map[recording.added_by_id] = db_user.get(recording.added_by_id)
