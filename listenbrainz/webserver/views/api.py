@@ -12,7 +12,7 @@ import listenbrainz.webserver.redis_connection as redis_connection
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list,\
     is_valid_uuid, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT,\
     LISTEN_TYPE_PLAYING_NOW
-from listenbrainz.listenstore.timescale_listenstore import SECONDS_IN_TIME_RANGE
+from listenbrainz.listenstore.timescale_listenstore import SECONDS_IN_TIME_RANGE, TimescaleListenStoreException
 import time
 import psycopg2
 from listenbrainz.webserver.timescale_connection import _ts
@@ -416,10 +416,10 @@ def delete_listen():
         _ts.delete_listen(listened_at=listened_at, recording_msid=recording_msid, user_name=user["musicbrainz_id"])
     except TimescaleListenStoreException as e:
         current_app.logger.error("Cannot delete listen for user: %s" % str(e))
-        raise ServiceUnavailable("We couldn't delete the listen. Please try again later.")
+        raise APIServiceUnavailable("We couldn't delete the listen. Please try again later.")
     except Exception as e:
         current_app.logger.error("Cannot delete listen for user: %s" % str(e))
-        raise InternalServerError("We couldn't delete the listen. Please try again later.")
+        raise APIInternalServerError("We couldn't delete the listen. Please try again later.")
 
     return jsonify({'status': 'ok'})
 

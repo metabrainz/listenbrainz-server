@@ -1,13 +1,12 @@
 import ujson
 from werkzeug.exceptions import NotFound, BadRequest
 
-from flask import Blueprint, render_template, current_app, request
-from flask_login import current_user, login_required
+from flask import Blueprint, render_template, current_app
+from flask_login import current_user
 from listenbrainz.domain import spotify
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 from listenbrainz.webserver.views.playlist_api import serialize_jspf, fetch_playlist_recording_metadata
 import listenbrainz.db.playlist as db_playlist
-import listenbrainz.db.user as db_user
 
 playlist_bp = Blueprint("playlist", __name__)
 
@@ -26,7 +25,7 @@ def load_playlist(playlist_mbid: str):
         raise NotFound("Cannot find playlist: %s" % playlist_mbid)
 
     fetch_playlist_recording_metadata(playlist)
-    
+
     spotify_data = {}
     current_user_data = {}
     if current_user.is_authenticated:
