@@ -28,6 +28,7 @@ export type UserPlaylistsProps = {
   currentUser?: ListenBrainzUser;
   apiUrl: string;
   playlists?: JSPFObject[];
+  user: ListenBrainzUser;
 };
 
 export type UserPlaylistsState = {
@@ -56,17 +57,43 @@ export default class UserPlaylists extends React.Component<
     );
   }
 
-  copyPlaylist = (): void => {
-    // Call API endpoint
-    const { playlistSelectedForOperation } = this.state;
-    if (!playlistSelectedForOperation) {
+  copyPlaylist = async (): Promise<void> => {
+    const { currentUser, user } = this.props;
+    const { playlistSelectedForOperation: playlist, playlists } = this.state;
+    if (!currentUser?.auth_token) {
+      this.alertMustBeLoggedIn();
       return;
     }
-    this.newAlert(
-      "warning",
-      "API call placeholder",
-      `Copy playlist ${getPlaylistId(playlistSelectedForOperation)}`
-    );
+    if (!playlist) {
+      this.newAlert("danger", "Error", "No playlist to copy");
+      return;
+    }
+    try {
+      const newPlaylistId = await this.APIService.copyPlaylist(
+        currentUser.auth_token,
+        getPlaylistId(playlist)
+      );
+      this.newAlert(
+        "success",
+        "Duplicated playlist",
+        <>
+          Duplicated to playlist&ensp;
+          <a href={`/playlist/${newPlaylistId}`}>{newPlaylistId}</a>
+        </>
+      );
+      // Fetch the newly created playlist and add it to the state if it's the current user's page
+      if (currentUser.name === user.name) {
+        const JSPFObject: JSPFObject = await this.APIService.getPlaylist(
+          newPlaylistId,
+          currentUser.auth_token
+        );
+        this.setState((prevState) => ({
+          playlists: [...prevState.playlists, JSPFObject.playlist],
+        }));
+      }
+    } catch (error) {
+      this.newAlert("danger", "Error", error.message);
+    }
   };
 
   deletePlaylist = async (): Promise<void> => {
@@ -175,11 +202,12 @@ export default class UserPlaylists extends React.Component<
       return;
     }
     const { playlists } = this.state;
-    const playlistsCopy = { ...playlists };
+    const playlistsCopy = [...playlists];
     try {
       const content = (
         <div>
-          This is a placeholder; the API call is not yet implemented.
+          This is a placeholder; the API call is not yet implemented. Your
+          changes haven't been saved.
           <div>name: {name}</div>
           <div>description: {description}</div>
           <div>isPublic: {isPublic.toString()}</div>
@@ -188,7 +216,7 @@ export default class UserPlaylists extends React.Component<
         </div>
       );
 
-      this.newAlert("success", "Edited playlist", content);
+      this.newAlert("warning", "Placeholder", content);
 
       // Once API call succeeds, find and update playlist in state
       const playlistIndex = playlistsCopy.findIndex(
@@ -199,7 +227,7 @@ export default class UserPlaylists extends React.Component<
         annotation: description,
         title: name,
         extension: {
-          MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION: {
+          [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
             public: isPublic,
             collaborators,
           },
@@ -387,13 +415,14 @@ document.addEventListener("DOMContentLoaded", () => {
   } catch (err) {
     // Show error to the user and ask to reload page
   }
-  const { current_user, api_url: apiUrl, playlists } = reactProps;
+  const { current_user, api_url: apiUrl, playlists, user } = reactProps;
   ReactDOM.render(
     <ErrorBoundary>
       <UserPlaylists
         apiUrl={apiUrl}
         currentUser={current_user}
         playlists={playlists}
+        user={user}
       />
     </ErrorBoundary>,
     domContainer

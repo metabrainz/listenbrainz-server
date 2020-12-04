@@ -335,7 +335,7 @@ declare type JSPFPlaylistExtension = {
   public: boolean;
   created_for?: string;
   copied_from?: string; // Full ListenBrainz playlist URI
-  last_modified_at: string; // ISO date string
+  last_modified_at?: string; // ISO date string
 };
 
 declare type JSPFTrackExtension = {

@@ -28,6 +28,7 @@ import ErrorBoundary from "../ErrorBoundary";
 import PlaylistItemCard from "./PlaylistItemCard";
 import {
   PLAYLIST_TRACK_URI_PREFIX,
+  PLAYLIST_URI_PREFIX,
   getPlaylistExtension,
   getPlaylistId,
   getRecordingMBIDFromJSPFTrack,
@@ -227,19 +228,22 @@ export default class PlaylistPage extends React.Component<
       this.alertMustBeLoggedIn();
       return;
     }
+    if (!playlist) {
+      this.newAlert("danger", "Error", "No playlist to copy");
+      return;
+    }
     try {
-      const customFields = getPlaylistExtension(playlist);
-      await this.APIService.createPlaylist(
+      const newPlaylistId = await this.APIService.copyPlaylist(
         currentUser.auth_token,
-        playlist.title,
-        playlist.track,
-        customFields?.public ?? true,
-        playlist.annotation
+        getPlaylistId(playlist)
       );
       this.newAlert(
         "success",
-        "Copied playlist",
-        `Copied playlist ${getPlaylistId(playlist)}`
+        "Duplicated playlist",
+        <>
+          Duplicated to playlist&ensp;
+          <a href={`/playlist/${newPlaylistId}`}>{newPlaylistId}</a>
+        </>
       );
     } catch (error) {
       this.newAlert("danger", "Error", error.message);
