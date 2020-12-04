@@ -224,7 +224,6 @@ def playlists(user_name: str):
        current_user.musicbrainz_id == user_name:
        loadPrivatePlaylists = True
     
-    dbUser = db_user.get_by_mb_id(user_name)
     playlists = []
     for playlist in get_playlists_for_user(user.id, loadPrivatePlaylists):
         playlists.append(serialize_jspf(playlist))
