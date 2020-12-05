@@ -30,6 +30,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         super(PlaylistAPITestCase, self).setUp()
         self.user = db_user.get_or_create(1, "testuserpleaseignore")
         self.user2 = db_user.get_or_create(2, "anothertestuserpleaseignore")
+        self.user3 = db_user.get_or_create(3, "troi-bot")
 
     def tearDown(self):
         r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
@@ -66,6 +67,38 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["identifier"], PLAYLIST_URI_PREFIX + playlist_mbid)
         self.assertEqual(response.json["playlist"]["track"][0]["identifier"],
                          playlist["playlist"]["track"][0]["identifier"])
+
+    def test_playlist_create_with_created_for(self):
+        """ Test to ensure creating a playlist for someone else works """
+
+        # Submit a playlist on a different user's behalf
+        playlist = get_test_data()
+        playlist["playlist"]["created_for"] = self.user["musicbrainz_id"]
+
+        response = self.client.post(
+            url_for("playlist_api_v1.create_playlist", public="true"),
+            data=ujson.dumps(playlist),
+            headers={"Authorization": "Token {}".format(self.user3["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert200(response)
+        playlist_mbid = response.json["playlist_mbid"]
+
+        response = self.client.get(
+            url_for("playlist_api_v1.get_playlist", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        self.assertEqual(response.json["playlist"]["created_for"], self.user["musicbrainz_id"])
+
+        # Try to submit a playlist on a different users's behalf without the right perms
+        response = self.client.post(
+            url_for("playlist_api_v1.create_playlist", public="true"),
+            data=ujson.dumps(playlist),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert403(response)
 
     def test_playlist_get_non_existent(self):
         """ Test to ensure fetching a non existent playlist gives 404 """

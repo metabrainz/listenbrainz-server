@@ -45,6 +45,11 @@ def get_by_mbid(playlist_id: str, load_recordings: bool = True) -> Optional[mode
         user_id = obj['creator_id']
         user = db_user.get(user_id)
         obj['creator'] = user['musicbrainz_id']
+        if obj['created_for_id']:
+            created_for_user = db_user.get(obj['created_for_id'])
+            if created_for_user:
+                obj['created_for'] = created_for_user['musicbrainz_id']
+
         if load_recordings:
             playlist_map = get_recordings_for_playlists(connection, [obj['id']])
             obj['recordings'] = playlist_map.get(obj['id'], [])
@@ -224,6 +229,10 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
     creator = db_user.get(playlist.creator_id)
     if creator is None:
         raise Exception("TODO: Custom exception")
+
+    # TODO: In a way this is less than ideal -- the caller must take the string name and find the ID,
+    # and then the name is fetched for verification again. Should we accept created_for here and do
+    # lookup only here and not he in the API call validation?
     if playlist.created_for_id:
         created_for = db_user.get(playlist.created_for_id)
         if created_for is None:

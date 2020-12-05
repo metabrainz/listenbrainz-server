@@ -126,7 +126,10 @@ LISTENBRAINZ_LABS_API_URL = 'https://labs.api.listenbrainz.org'
 # Set to True if you want Flask-Debug to intercept redirects
 DEBUG_TB_INTERCEPT_REDIRECTS = False
 
+# Users who are allowed to view the LB admin interface
 ADMINS = []
+# Users who are allowed to submit playlists made for someone else.
+APPROVED_PLAYLIST_BOTS = ['troi-bot']
 
 # SPOTIFY
 SPOTIFY_CLIENT_ID = 'needs a non empty default value for tests, change this'

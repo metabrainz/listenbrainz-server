@@ -5,6 +5,7 @@ import ujson
 from flask import Blueprint, current_app, jsonify, request
 import requests
 import listenbrainz.db.playlist as db_playlist
+import listenbrainz.db.user as db_user
 
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
@@ -44,6 +45,9 @@ def validate_playlist(jspf, require_title=True):
     """
         Given a JSPF dict, ensure that title is present and that if tracks are present
         they have valid URIs or MBIDs specified. If any errors are found 400 is raised.
+
+        If a created_for field is found and the user is not an approved playlist bot,
+        then a 403 forbidden will be raised.
     """
 
     if require_title:
@@ -89,11 +93,11 @@ def serialize_jspf(playlist: Playlist):
     }
     if playlist.description:
         pl["annotation"] = playlist.description
+    if playlist.created_for_id:
+        pl['created_for'] = playlist.created_for
 
     extension = {"public": "true" if playlist.public else "false"}
     extension["creator_id"] = playlist.creator_id
-    if playlist.created_for_id:
-        extension['created_for'] = playlist.created_for
     if playlist.copied_from_id:
         extension['copied_from'] = PLAYLIST_URI_PREFIX + str(playlist.copied_from_id)
 
@@ -220,6 +224,7 @@ def create_playlist():
     :statuscode 200: playlist accepted.
     :statuscode 400: invalid JSON sent, see error message for details.
     :statuscode 401: invalid authorization. See error message for details.
+    :statuscode 403: forbidden. The subitting user is not allowed to submit playlists for other users.
     :resheader Content-Type: *application/json*
     """
 
@@ -229,8 +234,17 @@ def create_playlist():
     data = request.json
     validate_playlist(data)
 
+
     playlist = WritablePlaylist(name=data['playlist']['title'], creator_id=user["id"])
     playlist.public = public
+
+    if data["playlist"].get("created_for", None):
+        if user["musicbrainz_id"] not in current_app.config["APPROVED_PLAYLIST_BOTS"]:
+            raise APIForbidden("Playlist contains a created_for field, but subitting user is not an approved playlist bot.")
+        created_for_user = db_user.get_by_mb_id(data["playlist"]["created_for"])
+        if not created_for_user:
+            log_raise_400("created_for user does not exist.")
+        playlist.created_for_id = created_for_user["id"]
 
     if "track" in data["playlist"]:
         for track in data["playlist"]["track"]:
