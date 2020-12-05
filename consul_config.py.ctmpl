@@ -141,6 +141,9 @@ MUSICBRAINZ_IMPORT_DRY_RUN = True
 ADMINS = [
     {{template "KEY_ARRAY" "admins"}}
 ]
+APPROVED_PLAYLIST_BOTS = [
+    {{template "KEY_ARRAY" "approved_playlist_bots"}}
+]
 
 # SPOTIFY
 SPOTIFY_CLIENT_ID = '''{{template "KEY" "spotify/client_id"}}'''
