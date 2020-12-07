@@ -58,8 +58,8 @@ export default class UserPlaylists extends React.Component<
   }
 
   copyPlaylist = async (): Promise<void> => {
-    const { currentUser, user } = this.props;
-    const { playlistSelectedForOperation: playlist, playlists } = this.state;
+    const { currentUser } = this.props;
+    const { playlistSelectedForOperation: playlist } = this.state;
     if (!currentUser?.auth_token) {
       this.alertMustBeLoggedIn();
       return;
@@ -82,7 +82,7 @@ export default class UserPlaylists extends React.Component<
         </>
       );
       // Fetch the newly created playlist and add it to the state if it's the current user's page
-      if (currentUser.name === user.name) {
+      if (this.isCurrentUserPage()) {
         const JSPFObject: JSPFObject = await this.APIService.getPlaylist(
           newPlaylistId,
           currentUser.auth_token
@@ -282,6 +282,11 @@ export default class UserPlaylists extends React.Component<
     }
   };
 
+  isCurrentUserPage = () => {
+    const { currentUser, user } = this.props;
+    return currentUser?.name === user.name;
+  };
+
   render() {
     const { alerts, playlists, playlistSelectedForOperation } = this.state;
     const { currentUser } = this.props;
@@ -365,34 +370,34 @@ export default class UserPlaylists extends React.Component<
               </Card>
             );
           })}
-          <Card
-            className="new-playlist"
-            data-toggle="modal"
-            data-target="#playlistCreateModal"
-          >
-            <div>
-              <FontAwesomeIcon icon={faPlusCircle as IconProp} size="2x" />
-              <span>Create new playlist</span>
-            </div>
-          </Card>
-          <CreateOrEditPlaylistModal
-            onSubmit={this.createPlaylist}
-            htmlId="playlistCreateModal"
-          />
-          {playlistSelectedForOperation &&
-            playlistSelectedForOperation.creator === currentUser?.name && (
-              <>
-                <CreateOrEditPlaylistModal
-                  onSubmit={this.editPlaylist}
-                  playlist={playlistSelectedForOperation}
-                  htmlId="playlistEditModal"
-                />
-                <DeletePlaylistConfirmationModal
-                  onConfirm={this.deletePlaylist}
-                  playlist={playlistSelectedForOperation}
-                />
-              </>
-            )}
+          {this.isCurrentUserPage() && (
+            <>
+              <Card
+                className="new-playlist"
+                data-toggle="modal"
+                data-target="#playlistCreateModal"
+              >
+                <div>
+                  <FontAwesomeIcon icon={faPlusCircle as IconProp} size="2x" />
+                  <span>Create new playlist</span>
+                </div>
+              </Card>
+              <CreateOrEditPlaylistModal
+                onSubmit={this.createPlaylist}
+                htmlId="playlistCreateModal"
+              />
+
+              <CreateOrEditPlaylistModal
+                onSubmit={this.editPlaylist}
+                playlist={playlistSelectedForOperation}
+                htmlId="playlistEditModal"
+              />
+              <DeletePlaylistConfirmationModal
+                onConfirm={this.deletePlaylist}
+                playlist={playlistSelectedForOperation}
+              />
+            </>
+          )}
         </div>
         <AlertList
           position="bottom-right"

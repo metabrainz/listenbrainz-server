@@ -1,7 +1,7 @@
 import * as React from "react";
 
 type DeletePlaylistConfirmationModalProps = {
-  playlist: JSPFPlaylist;
+  playlist?: JSPFPlaylist;
   onConfirm: (event: React.SyntheticEvent) => void;
 };
 
@@ -34,7 +34,7 @@ export default function DeletePlaylistConfirmationModal(
           </div>
 
           <div className="modal-body">
-            You are about to delete playlist <i>{playlist.title}</i>.
+            You are about to delete playlist <i>{playlist?.title}</i>.
             <br />
             This action cannot be undone.
           </div>
