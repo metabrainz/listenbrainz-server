@@ -102,7 +102,7 @@ export default class PlaylistItemCard extends React.Component<
         data-recording-mbid={track.id}
       >
         {/* We can't currently disable the SortableJS component (https://github.com/SortableJS/react-sortablejs/issues/153)
-        So insteand we hide the drag handle */}
+        So instead we hide the drag handle */}
         {canEdit && (
           <FontAwesomeIcon
             icon={faGripLines as IconProp}
