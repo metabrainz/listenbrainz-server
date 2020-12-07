@@ -171,6 +171,10 @@ export default class PlaylistPage extends React.Component<
         this.alertMustBeLoggedIn();
         return;
       }
+      if (this.hasRightToEdit()) {
+        this.alertNotAuthorized();
+        return;
+      }
       try {
         const jspfTrack = PlaylistPage.makeJSPFTrack(selectedRecording);
         await this.APIService.addPlaylistItems(
@@ -255,6 +259,10 @@ export default class PlaylistPage extends React.Component<
     const { playlist } = this.state;
     if (!currentUser?.auth_token) {
       this.alertMustBeLoggedIn();
+      return;
+    }
+    if (this.isOwner()) {
+      this.alertNotAuthorized();
       return;
     }
     try {
@@ -387,14 +395,20 @@ export default class PlaylistPage extends React.Component<
     return recordingMbid ? _.get(recordingFeedbackMap, recordingMbid, 0) : 0;
   };
 
+  isOwner = ():boolean => {
+    const { playlist } = this.state;
+    const {  currentUser } = this.props;
+    return Boolean(currentUser) && currentUser?.name === playlist.creator;
+  }
+  
   hasRightToEdit = (): boolean => {
+    if(this.isOwner()){
+      return true;
+    }
     const { currentUser } = this.props;
     const { playlist } = this.state;
-    const { creator } = playlist;
     const collaborators = getPlaylistExtension(playlist)?.collaborators ?? [];
-    if (
-      currentUser?.name === creator ||
-      (collaborators ?? []).findIndex(
+    if ( collaborators.findIndex(
         (collaborator) => collaborator === currentUser?.name
       ) >= 0
     ) {
@@ -412,11 +426,7 @@ export default class PlaylistPage extends React.Component<
       return;
     }
     if (!this.hasRightToEdit()) {
-      this.newAlert(
-        "danger",
-        "Not allowed",
-        "You are not authorized to modify this playlist"
-      );
+      this.alertNotAuthorized();
       return;
     }
     const recordingMBID = getRecordingMBIDFromJSPFTrack(trackToDelete);
@@ -449,6 +459,10 @@ export default class PlaylistPage extends React.Component<
       this.alertMustBeLoggedIn();
       return;
     }
+    if(!this.hasRightToEdit()){
+      this.alertNotAuthorized();
+      return;
+    }
     try {
       await this.APIService.movePlaylistItem(
         currentUser.auth_token,
@@ -478,6 +492,10 @@ export default class PlaylistPage extends React.Component<
     collaborators: string[],
     id?: string
   ) => {
+    if(!this.isOwner()){
+      this.alertNotAuthorized();
+      return;
+    }
     // Show modal or section with playlist attributes
     // name, description, private/public
     // Then call API endpoint POST  /1/playlist/create
@@ -501,12 +519,20 @@ export default class PlaylistPage extends React.Component<
     );
   };
 
+  alertNotAuthorized = () => {
+    this.newAlert(
+      "danger",
+      "Not allowed",
+      "You are not authorized to modify this playlist"
+    );
+  };
+
   render() {
     const { alerts, currentTrack, playlist } = this.state;
     const { spotify, currentUser, apiUrl } = this.props;
     const { track: tracks } = playlist;
     const hasRightToEdit = this.hasRightToEdit();
-    const isOwner = playlist.creator === currentUser?.name;
+    const isOwner = this.isOwner();
 
     const customFields = getPlaylistExtension(playlist);
 
