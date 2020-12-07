@@ -56,6 +56,18 @@ export default class UserPlaylists extends React.Component<
       props.apiUrl || `${window.location.origin}/1`
     );
   }
+  
+  isOwner = (playlist:JSPFPlaylist):boolean => {
+    const {  currentUser } = this.props;
+    return Boolean(currentUser) && currentUser?.name === playlist.creator;
+  }
+  alertNotAuthorized = () => {
+    this.newAlert(
+      "danger",
+      "Not allowed",
+      "You are not authorized to modify this playlist"
+    );
+  };
 
   copyPlaylist = async (): Promise<void> => {
     const { currentUser } = this.props;
@@ -107,6 +119,10 @@ export default class UserPlaylists extends React.Component<
       this.newAlert("danger", "Error", "No playlist to delete");
       return;
     }
+    if(!this.isOwner(playlist)){
+      this.alertNotAuthorized();
+      return;
+    }
     try {
       await this.APIService.deletePlaylist(
         currentUser.auth_token,
@@ -140,7 +156,7 @@ export default class UserPlaylists extends React.Component<
     name: string,
     description: string,
     isPublic: boolean,
-    // Not sure waht to do with those yet
+    // Not sure what to do with those yet
     collaborators: string[],
     id?: string
   ): Promise<void> => {
@@ -155,6 +171,15 @@ export default class UserPlaylists extends React.Component<
     }
     if (!currentUser?.auth_token) {
       this.alertMustBeLoggedIn();
+      return;
+    }
+    if(!this.isCurrentUserPage()){
+      // Just in case the user find a way to access this method, let's nudge them to their own page
+      this.newAlert(
+        "warning",
+        "",
+        <span>Please go to <a href={`/user/${currentUser.name}/playlists`}>your playlists</a> to create a new one</span>
+      );
       return;
     }
     try {
@@ -203,6 +228,13 @@ export default class UserPlaylists extends React.Component<
     }
     const { playlists } = this.state;
     const playlistsCopy = [...playlists];
+    const playlistIndex = playlistsCopy.findIndex(
+      (pl) => getPlaylistId(pl) === id
+      );
+    if(!this.isOwner(playlists[playlistIndex])){
+      this.alertNotAuthorized();
+      return;
+    }
     try {
       const content = (
         <div>
@@ -218,10 +250,7 @@ export default class UserPlaylists extends React.Component<
 
       this.newAlert("warning", "Placeholder", content);
 
-      // Once API call succeeds, find and update playlist in state
-      const playlistIndex = playlistsCopy.findIndex(
-        (pl) => getPlaylistId(pl) === id
-      );
+      // Once API call succeeds, update playlist in state
       playlistsCopy[playlistIndex] = {
         ...playlistsCopy[playlistIndex],
         annotation: description,
@@ -294,7 +323,7 @@ export default class UserPlaylists extends React.Component<
       <div>
         <div id="playlists-container">
           {playlists.map((playlist: JSPFPlaylist) => {
-            const isOwner = playlist.creator === currentUser?.name;
+            const isOwner = this.isOwner(playlist);
             const playlistId = getPlaylistId(playlist);
             const customFields = getPlaylistExtension(playlist);
             return (
