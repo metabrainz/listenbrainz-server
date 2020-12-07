@@ -56,11 +56,12 @@ export default class UserPlaylists extends React.Component<
       props.apiUrl || `${window.location.origin}/1`
     );
   }
-  
-  isOwner = (playlist:JSPFPlaylist):boolean => {
-    const {  currentUser } = this.props;
+
+  isOwner = (playlist: JSPFPlaylist): boolean => {
+    const { currentUser } = this.props;
     return Boolean(currentUser) && currentUser?.name === playlist.creator;
-  }
+  };
+
   alertNotAuthorized = () => {
     this.newAlert(
       "danger",
@@ -119,7 +120,7 @@ export default class UserPlaylists extends React.Component<
       this.newAlert("danger", "Error", "No playlist to delete");
       return;
     }
-    if(!this.isOwner(playlist)){
+    if (!this.isOwner(playlist)) {
       this.alertNotAuthorized();
       return;
     }
@@ -173,12 +174,16 @@ export default class UserPlaylists extends React.Component<
       this.alertMustBeLoggedIn();
       return;
     }
-    if(!this.isCurrentUserPage()){
+    if (!this.isCurrentUserPage()) {
       // Just in case the user find a way to access this method, let's nudge them to their own page
       this.newAlert(
         "warning",
         "",
-        <span>Please go to <a href={`/user/${currentUser.name}/playlists`}>your playlists</a> to create a new one</span>
+        <span>
+          Please go to&nbsp;
+          <a href={`/user/${currentUser.name}/playlists`}>your playlists</a> to
+          create a new one
+        </span>
       );
       return;
     }
@@ -230,8 +235,8 @@ export default class UserPlaylists extends React.Component<
     const playlistsCopy = [...playlists];
     const playlistIndex = playlistsCopy.findIndex(
       (pl) => getPlaylistId(pl) === id
-      );
-    if(!this.isOwner(playlists[playlistIndex])){
+    );
+    if (!this.isOwner(playlists[playlistIndex])) {
       this.alertNotAuthorized();
       return;
     }
@@ -239,7 +244,7 @@ export default class UserPlaylists extends React.Component<
       const content = (
         <div>
           This is a placeholder; the API call is not yet implemented. Your
-          changes haven't been saved.
+          changes have not been saved.
           <div>name: {name}</div>
           <div>description: {description}</div>
           <div>isPublic: {isPublic.toString()}</div>

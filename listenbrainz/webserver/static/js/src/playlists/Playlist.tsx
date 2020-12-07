@@ -395,20 +395,21 @@ export default class PlaylistPage extends React.Component<
     return recordingMbid ? _.get(recordingFeedbackMap, recordingMbid, 0) : 0;
   };
 
-  isOwner = ():boolean => {
+  isOwner = (): boolean => {
     const { playlist } = this.state;
-    const {  currentUser } = this.props;
+    const { currentUser } = this.props;
     return Boolean(currentUser) && currentUser?.name === playlist.creator;
-  }
-  
+  };
+
   hasRightToEdit = (): boolean => {
-    if(this.isOwner()){
+    if (this.isOwner()) {
       return true;
     }
     const { currentUser } = this.props;
     const { playlist } = this.state;
     const collaborators = getPlaylistExtension(playlist)?.collaborators ?? [];
-    if ( collaborators.findIndex(
+    if (
+      collaborators.findIndex(
         (collaborator) => collaborator === currentUser?.name
       ) >= 0
     ) {
@@ -459,7 +460,7 @@ export default class PlaylistPage extends React.Component<
       this.alertMustBeLoggedIn();
       return;
     }
-    if(!this.hasRightToEdit()){
+    if (!this.hasRightToEdit()) {
       this.alertNotAuthorized();
       return;
     }
@@ -492,7 +493,7 @@ export default class PlaylistPage extends React.Component<
     collaborators: string[],
     id?: string
   ) => {
-    if(!this.isOwner()){
+    if (!this.isOwner()) {
       this.alertNotAuthorized();
       return;
     }
@@ -649,7 +650,7 @@ export default class PlaylistPage extends React.Component<
               <div>{playlist.annotation}</div>
               <hr />
             </div>
-            {tracks.length > 5 && (
+            {hasRightToEdit && tracks.length > 10 && (
               <div className="text-center">
                 <a
                   className="btn btn-primary"
@@ -698,27 +699,29 @@ export default class PlaylistPage extends React.Component<
                 </ReactSortable>
               ) : (
                 <div className="lead text-center">
-                  <p>No items in this playlist</p>
+                  <p>Nothing in this playlist yet</p>
                 </div>
               )}
-              <Card className="playlist-item-card row" id="add-track">
-                <span>
-                  <FontAwesomeIcon icon={faPlusCircle as IconProp} />
-                  &nbsp;&nbsp;Add a track
-                </span>
-                <AsyncSelect
-                  className="search"
-                  cacheOptions
-                  isClearable
-                  loadingMessage={({ inputValue }) =>
-                    `Searching for '${inputValue}'…`
-                  }
-                  loadOptions={this.searchForTrackDebounced}
-                  onChange={this.addTrack}
-                  placeholder="Artist followed by track name"
-                  ref={this.addTrackSelectRef}
-                />
-              </Card>
+              {hasRightToEdit && (
+                <Card className="playlist-item-card row" id="add-track">
+                  <span>
+                    <FontAwesomeIcon icon={faPlusCircle as IconProp} />
+                    &nbsp;&nbsp;Add a track
+                  </span>
+                  <AsyncSelect
+                    className="search"
+                    cacheOptions
+                    isClearable
+                    loadingMessage={({ inputValue }) =>
+                      `Searching for '${inputValue}'…`
+                    }
+                    loadOptions={this.searchForTrackDebounced}
+                    onChange={this.addTrack}
+                    placeholder="Artist followed by track name"
+                    ref={this.addTrackSelectRef}
+                  />
+                </Card>
+              )}
             </div>
             {isOwner && (
               <>
