@@ -117,13 +117,11 @@ class RecordingFromRecordingMBIDQuery(Query):
                                            'original_recording_mbid': mbid})
                             continue
 
-                    r['[artist_credit_mbids]'] = [r for r in r['artist_credit_mbids']]
+                    r['[artist_credit_mbids]'] = [ac_mbid for ac_mbid in r['artist_credit_mbids']]
                     del r['artist_credit_mbids']
-                    try:
-                        r['original_recording_mbid'] = inverse_redirect_index[mbid]
-                    except KeyError:
-                        r['original_recording_mbid'] = mbid
+                    r['original_recording_mbid'] = inverse_redirect_index.get(mbid, mbid)
                     output.append(r)
+
 
                 # Ideally offset and count should be handled by the postgres query itself, but the 1:1 relationship
                 # of what the user requests and what we need to fetch is no longer true, so we can't easily use LIMIT/OFFSET.

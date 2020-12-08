@@ -17,14 +17,19 @@ look up data from the table in #1. This index will serve as the official "MusicB
 Creating mappings and running tests
 -----------------------------------
 
-You will need to have a copy of musicbrainz-docker installed and running in order to run these commands.
+You will need to have a copy of [musicbrainz-docker](https://github.com/metabrainz/musicbrainz-docker)
+installed and running in order to run these commands.
 
 
 To build the docker image for the mapping tools:
 
-```./build.sh```
+```
+cp config.py.sample config.py
+./build.sh
+```
 
-Then to access the manage.py command that is used to invoke the various functions, do:
+config.py may need tweaking, depending on your setup. Then to access the manage.py command that is used to
+invoke the various functions, do:
 
 ```docker run --rm -it --network musicbrainzdocker_default metabrainz/mbid-mapping python3 manage.py```
 

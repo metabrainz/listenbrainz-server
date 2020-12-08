@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 # Build production image from the currently checked out version
-# of ListenBrainz and push it to Docker Hub, with an optional
-# tag (which defaults to "latest")
+# of the MBID mapping and push it to Docker Hub, with an optional
+# tag (which defaults to "beta")
 #
 # Usage:
 #   $ ./push.sh [tag]

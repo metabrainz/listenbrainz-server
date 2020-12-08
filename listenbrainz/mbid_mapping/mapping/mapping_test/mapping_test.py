@@ -21,7 +21,10 @@ def _read_test_data(filename):
 
 
 def test_mapping():
-    ''' This test will run as many test as there are in the CSV file '''
+    ''' This test will run as many test as there are in the CSV file, with the format"
+
+        track_name,artist_credit_name,exected_MB_release_MBID
+    '''
 
     data = _read_test_data("mapping/mapping_test/mapping_test_cases.csv")
 
@@ -34,7 +37,7 @@ def test_mapping():
             print("Q %-30s %-30s %-25 %s" % (row[0][:29], "", row[1][:29], row[2]))
             print("H %-30s %-30s %-25 %s" % (hits[0]['recording_name'][:29], hits[0]['release_name'][:29],
                   hits[0]['artist_credit_name'][:29], hits[0]['release_mbid']))
-            print
+            print()
             failed += 1
         else:
             passed += 1

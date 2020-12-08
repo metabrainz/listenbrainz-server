@@ -158,7 +158,7 @@ class MainTestCase(flask_testing.TestCase):
                          'artist_credit_id', 'artist_credit_name', '[artist_credit_mbids]', 'original_recording_mbid'])
 
     @patch('psycopg2.connect')
-    def test_AAAfetch(self, mock_connect):
+    def test_fetch(self, mock_connect):
         mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [redirect_db_response[0],
                                                                                 redirect_db_response[1],
                                                                                 None,
