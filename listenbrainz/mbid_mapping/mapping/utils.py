@@ -3,6 +3,7 @@ from time import asctime
 
 import psycopg2
 from psycopg2.extras import execute_values
+from psycopg2.errors import OperationalError
 
 CRON_LOG_FILE = "lb-cron.log"
 
@@ -20,15 +21,6 @@ def create_schema(conn):
     except OperationalError:
         log("failed to create schema 'mapping'")
         conn.rollback()
-
-
-def create_stats_table(curs):
-    '''
-        Create the stats table if it doesn't exist
-    '''
-    curs.execute("""CREATE TABLE IF NOT EXISTS mapping.mapping_stats
-                                 (stats    JSONB,
-                                  created  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW())""")
 
 
 def insert_rows(curs, table, values):
