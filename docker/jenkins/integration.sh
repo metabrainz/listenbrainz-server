@@ -47,7 +47,8 @@ function run_tests {
       dockerize \
       -wait tcp://db:5432 -timeout 60s \
       -wait tcp://timescale:5432 -timeout 60s \
-      bash -c "python3 manage.py init_db --create-db && \
+      bash -c "cp listenbrainz/config.py.sample listenbrainz/config.py && \
+               python3 manage.py init_db --create-db && \
                python3 manage.py init_msb_db --create-db && \
                python3 manage.py init_ts_db --create-db"
 
