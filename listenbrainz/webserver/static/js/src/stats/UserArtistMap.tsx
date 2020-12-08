@@ -21,7 +21,7 @@ export type UserArtistMapState = {
   graphContainerWidth?: number;
   hasError?: boolean;
   loading: boolean;
-  countOf: "artist" | "listen";
+  selectedMetric: "artist" | "listen";
 };
 
 export default class UserArtistMap extends React.Component<
@@ -45,7 +45,7 @@ export default class UserArtistMap extends React.Component<
       loading: false,
       errorMessage: "",
       hasError: false,
-      countOf: "artist",
+      selectedMetric: "artist",
     };
 
     this.graphContainer = React.createRef();
@@ -79,8 +79,8 @@ export default class UserArtistMap extends React.Component<
     window.removeEventListener("resize", this.handleResize);
   }
 
-  changeCountOf = (
-    newCountOf: "artist" | "listen",
+  changeSelectedMetric = (
+    newSelectedMetric: "artist" | "listen",
     event?: React.MouseEvent<HTMLElement>
   ) => {
     if (event) {
@@ -88,20 +88,20 @@ export default class UserArtistMap extends React.Component<
     }
 
     this.setState({
-      countOf: newCountOf,
-      data: this.processData(this.rawData, newCountOf),
+      selectedMetric: newSelectedMetric,
+      data: this.processData(this.rawData, newSelectedMetric),
     });
   };
 
   loadData = async (): Promise<void> => {
-    const { countOf } = this.state;
+    const { selectedMetric } = this.state;
     this.setState({
       hasError: false,
       loading: true,
     });
     this.rawData = await this.getData();
     this.setState({
-      data: this.processData(this.rawData, countOf),
+      data: this.processData(this.rawData, selectedMetric),
       loading: false,
     });
   };
@@ -129,13 +129,15 @@ export default class UserArtistMap extends React.Component<
 
   processData = (
     data: UserArtistMapResponse,
-    countOf: "artist" | "listen"
+    selectedMetric: "artist" | "listen"
   ): UserArtistMapData => {
     return data.payload.artist_map.map((country) => {
       return {
         id: country.country,
         value:
-          countOf === "artist" ? country.artist_count : country.listen_count,
+          selectedMetric === "artist"
+            ? country.artist_count
+            : country.listen_count,
       };
     });
   };
@@ -148,7 +150,7 @@ export default class UserArtistMap extends React.Component<
 
   render() {
     const {
-      countOf,
+      selectedMetric,
       data,
       errorMessage,
       graphContainerWidth,
@@ -180,7 +182,7 @@ export default class UserArtistMap extends React.Component<
                 data-toggle="dropdown"
                 type="button"
               >
-                {countOf}s
+                {selectedMetric}s
                 <span className="caret" />
               </button>
               <ul className="dropdown-menu" role="menu">
@@ -188,7 +190,9 @@ export default class UserArtistMap extends React.Component<
                   <a
                     href=""
                     role="button"
-                    onClick={(event) => this.changeCountOf("listen", event)}
+                    onClick={(event) =>
+                      this.changeSelectedMetric("listen", event)
+                    }
                   >
                     Listens
                   </a>
@@ -197,7 +201,9 @@ export default class UserArtistMap extends React.Component<
                   <a
                     href=""
                     role="button"
-                    onClick={(event) => this.changeCountOf("artist", event)}
+                    onClick={(event) =>
+                      this.changeSelectedMetric("artist", event)
+                    }
                   >
                     Artists
                   </a>
@@ -238,7 +244,7 @@ export default class UserArtistMap extends React.Component<
                 <Choropleth
                   data={data}
                   width={graphContainerWidth}
-                  countOf={countOf}
+                  selectedMetric={selectedMetric}
                 />
               </div>
             </div>

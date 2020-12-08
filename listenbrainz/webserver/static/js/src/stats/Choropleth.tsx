@@ -13,7 +13,7 @@ import * as features from "./world_countries.json";
 export type ChoroplethProps = {
   data: UserArtistMapData;
   width?: number;
-  countOf: "artist" | "listen";
+  selectedMetric: "artist" | "listen";
 };
 
 export default function CustomChoropleth(props: ChoroplethProps) {
@@ -128,7 +128,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
       return null;
     }
 
-    const { countOf } = props;
+    const { selectedMetric } = props;
 
     return (
       <BasicTooltip
@@ -136,7 +136,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
         color={feature.color}
         value={`${
           feature.formattedValue
-        } ${countOf[0].toUpperCase()}${countOf.slice(1)}s`}
+        } ${selectedMetric[0].toUpperCase()}${selectedMetric.slice(1)}s`}
         enableChip
       />
     );

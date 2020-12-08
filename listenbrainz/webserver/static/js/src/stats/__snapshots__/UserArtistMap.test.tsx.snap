@@ -388,7 +388,6 @@ exports[`UserArtistMap renders correctly 1`] = `
         className="col-xs-12"
       >
         <CustomChoropleth
-          countOf="artist"
           data={
             Array [
               Object {
@@ -501,6 +500,7 @@ exports[`UserArtistMap renders correctly 1`] = `
               },
             ]
           }
+          selectedMetric="artist"
           width={1200}
         />
       </div>

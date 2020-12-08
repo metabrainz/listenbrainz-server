@@ -22,7 +22,7 @@ describe("UserArtistMap", () => {
     );
 
     wrapper.setState({
-      countOf: "artist",
+      selectedMetric: "artist",
       data: userArtistMapProcessedDataArtist,
       graphContainerWidth: 1200,
       loading: false,
@@ -185,17 +185,17 @@ describe("processData", () => {
   });
 });
 
-describe("changeCountOf", () => {
+describe("changeSelectedMetric", () => {
   it('sets state correctly for "artist"', () => {
     const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
     const instance = wrapper.instance();
 
     instance.rawData = userArtistMapResponse as UserArtistMapResponse;
 
-    instance.changeCountOf("artist");
+    instance.changeSelectedMetric("artist");
     expect(wrapper.state()).toMatchObject({
       data: userArtistMapProcessedDataArtist,
-      countOf: "artist",
+      selectedMetric: "artist",
     });
   });
 
@@ -205,10 +205,10 @@ describe("changeCountOf", () => {
 
     instance.rawData = userArtistMapResponse as UserArtistMapResponse;
 
-    instance.changeCountOf("listen");
+    instance.changeSelectedMetric("listen");
     expect(wrapper.state()).toMatchObject({
       data: userArtistMapProcessedDataListen,
-      countOf: "listen",
+      selectedMetric: "listen",
     });
   });
 });
