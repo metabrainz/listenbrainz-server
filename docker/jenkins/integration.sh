@@ -47,10 +47,9 @@ function run_tests {
       dockerize \
       -wait tcp://db:5432 -timeout 60s \
       -wait tcp://timescale:5432 -timeout 60s \
-      bash -c "cd /code/listenbrainz && \
-               python3 manage.py init_db --create-db && \
-               python3 manage.py init_msb_db --create-db && \
-               python3 manage.py init_ts_db --create-db"
+      bash -c "python3 /code/listenbrainz/manage.py init_db --create-db && \
+               python3 /code/listenbrainz/manage.py init_msb_db --create-db && \
+               python3 /code/listenbrainz/manage.py init_ts_db --create-db"
 
     docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME run --rm listenbrainz \
                 dockerize \
