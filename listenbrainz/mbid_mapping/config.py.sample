@@ -1,0 +1,13 @@
+#
+# Database connection.
+
+# If you are connecting to a musicbrainz-docker instance for MusicBrainz data, this string should work:
+DB_CONNECT_MB = "dbname=musicbrainz_db user=musicbrainz host=localhost port=25432 password=musicbrainz"
+
+# Typesense connection
+TYPESENSE_HOST = "typesense"
+TYPESENSE_PORT = 8108
+TYPESENSE_API_KEY = "sooper secret api key"
+
+# For debugging, only fetches a tiny portion of the data if True
+USE_MINIMAL_DATASET = False

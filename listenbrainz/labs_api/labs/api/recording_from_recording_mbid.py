@@ -1,6 +1,7 @@
 import copy
 import sys
 import uuid
+import ujson
 
 import psycopg2
 import psycopg2.extras
@@ -27,7 +28,7 @@ class RecordingFromRecordingMBIDQuery(Query):
 
     def outputs(self):
         return ['recording_mbid', 'recording_name', 'length', 'comment', 'artist_credit_id',
-                'artist_credit_name', '[artist_credit_mbids]', 'original_recording_mbid', 'year']
+                'artist_credit_name', '[artist_credit_mbids]', 'original_recording_mbid']
 
     def fetch(self, params, offset=-1, count=-1):
 
@@ -46,8 +47,10 @@ class RecordingFromRecordingMBIDQuery(Query):
                 args = [tuple([psycopg2.extensions.adapt(p) for p in mbids])]
                 curs.execute(query, tuple(args))
 
+
                 # Build an index with all redirected recordings
                 redirect_index = {}
+                inverse_redirect_index = {}
                 while True:
                     row = curs.fetchone()
                     if not row:
@@ -55,16 +58,20 @@ class RecordingFromRecordingMBIDQuery(Query):
 
                     r = dict(row)
                     redirect_index[r['recording_mbid_old']] = r['recording_mbid_new']
+                    inverse_redirect_index[r['recording_mbid_new']] = r['recording_mbid_old']
 
                 # Now start looking up actual recordings
                 for i, mbid in enumerate(mbids):
                     if mbid in redirect_index:
                         mbids[i] = redirect_index[mbid]
 
-                query = '''SELECT r.gid::TEXT AS recording_mbid, r.name AS recording_name, r.length, r.comment,
-                                  ac.id AS artist_credit_id, ac.name AS artist_credit_name,
-                                  array_agg(a.gid)::TEXT[] AS artist_credit_mbids,
-                                  first_release_date_year AS year
+                query = '''SELECT r.gid::TEXT AS recording_mbid,
+                                  r.name AS recording_name,
+                                  r.length,
+                                  r.comment,
+                                  ac.id AS artist_credit_id,
+                                  ac.name AS artist_credit_name,
+                                  array_agg(a.gid)::TEXT[] AS artist_credit_mbids
                              FROM recording r
                              JOIN artist_credit ac
                                ON r.artist_credit = ac.id
@@ -72,19 +79,9 @@ class RecordingFromRecordingMBIDQuery(Query):
                                ON ac.id = acn.artist_credit
                              JOIN artist a
                                ON acn.artist = a.id
-                             JOIN track t
-                               ON t.recording = r.id
-                             JOIN medium m
-                               ON t.medium = m.id
-                             JOIN release rl
-                               ON m.release = rl.id
-                             JOIN release_group rg
-                               ON rl.release_group = rg.id
-                             JOIN release_group_meta rgm
-                               ON rg.id = rgm.id
                             WHERE r.gid
                                IN %s
-                         GROUP BY r.gid, r.id, r.name, r.length, r.comment, ac.id, ac.name, rgm.first_release_date_year
+                         GROUP BY r.gid, r.id, r.name, r.length, r.comment, ac.id, ac.name
                          ORDER BY r.gid'''
 
                 args = [tuple([psycopg2.extensions.adapt(p) for p in mbids])]
@@ -105,20 +102,26 @@ class RecordingFromRecordingMBIDQuery(Query):
                 for p in params:
                     mbid = p['[recording_mbid]']
                     try:
-                        r = copy.copy(recording_index[mbid])
+                        r = dict(recording_index[mbid])
                     except KeyError:
                         try:
-                            r = copy.copy(recording_index[redirect_index[mbid]])
+                            r = dict(recording_index[redirect_index[mbid]])
                         except KeyError:
-                            out = dict.fromkeys(self.outputs(), None)
-                            out['original_recording_mbid'] = mbid
-                            output.append(out)
+                            output.append({'recording_mbid': None,
+                                           'recording_name': None,
+                                           'length': None,
+                                           'comment': None,
+                                           'artist_credit_id': None,
+                                           'artist_credit_name': None,
+                                           '[artist_credit_mbids]': None,
+                                           'original_recording_mbid': mbid})
                             continue
 
-                    r['[artist_credit_mbids]'] = list(set(r['artist_credit_mbids']))
+                    r['[artist_credit_mbids]'] = [ac_mbid for ac_mbid in r['artist_credit_mbids']]
                     del r['artist_credit_mbids']
-                    r['original_recording_mbid'] = mbid
+                    r['original_recording_mbid'] = inverse_redirect_index.get(mbid, mbid)
                     output.append(r)
+
 
                 # Ideally offset and count should be handled by the postgres query itself, but the 1:1 relationship
                 # of what the user requests and what we need to fetch is no longer true, so we can't easily use LIMIT/OFFSET.
