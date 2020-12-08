@@ -53,12 +53,13 @@ function run_tests {
                python3 manage.py init_ts_db --create-db"
 
     docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME run --rm listenbrainz \
-                dockerize \
-                  -wait tcp://db:5432 -timeout 60s \
-                  -wait tcp://timescale:5432 -timeout 60s \
-                  -wait tcp://redis:6379 -timeout 60s \
-                  -wait tcp://rabbitmq:5672 -timeout 60s \
-                pytest listenbrainz/tests/integration --junitxml=/data/test_report.xml
+      dockerize \
+        -wait tcp://db:5432 -timeout 60s \
+        -wait tcp://timescale:5432 -timeout 60s \
+        -wait tcp://redis:6379 -timeout 60s \
+        -wait tcp://rabbitmq:5672 -timeout 60s \
+      bash -c "cp listenbrainz/config.py.sample listenbrainz/config.py && \
+               pytest listenbrainz/tests/integration --junitxml=/data/test_report.xml"
 }
 
 function  extract_results {
