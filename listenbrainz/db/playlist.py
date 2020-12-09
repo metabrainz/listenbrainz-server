@@ -67,7 +67,8 @@ def get_playlists_for_user(user_id: int,
 
     Arguments:
         user_id: The user to find playlists for
-        include_private: If True, include all playlists by a user, including private ones
+        include_private: If True, include all playlists by a user, including private ones. The count of
+                         playlists returned will include private playlists if True
         load_recordings: If true, load the recordings for the playlist too
         count: Return max count number of playlists, for pagination purposes. If omitted, return all.
         offset: Return playlists starting at offset, for pagination purposes. Default 0.
@@ -75,7 +76,7 @@ def get_playlists_for_user(user_id: int,
     Raises:
 
     Returns:
-        A list of Playlists created by the given user
+        A tuple of (Playlists created by the given user, total number of playlists for a user)
 
     """
 
@@ -131,7 +132,19 @@ def get_playlists_for_user(user_id: int,
             for p in playlists:
                 p.recordings = playlist_recordings.get(p.id, [])
 
-    return playlists
+        # Now fetch the count of playlists
+        params = {"creator_id": user_id}
+        where_public = ""
+        if not include_private:
+            where_public = "AND public = :public"
+            params["public"] = True
+        query = sqlalchemy.text(f"""SELECT COUNT(*)
+                                      FROM playlist.playlist
+                                     WHERE creator_id = :creator_id
+                                           {where_public}""")
+        count = connection.execute(query, params).fetchone()[0]
+
+    return (playlists, count)
 
 
 def get_playlists_created_for_user(user_id: int,
@@ -200,7 +213,14 @@ def get_playlists_created_for_user(user_id: int,
             for p in playlists:
                 p.recordings = playlist_recordings.get(p.id, [])
 
-    return playlists
+        # Now fetch the count of playlists
+        params = {"creator_id": user_id}
+        query = sqlalchemy.text(f"""SELECT COUNT(*)
+                                      FROM playlist.playlist
+                                     WHERE creator_id = :creator_id""")
+        count = connection.execute(query, params).fetchone()[0]
+
+    return (playlists, count)
 
 
 def get_recordings_for_playlists(connection, playlist_ids: List[int]):
