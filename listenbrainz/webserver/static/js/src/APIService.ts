@@ -420,6 +420,37 @@ export default class APIService {
     return result.playlist_mbid;
   };
 
+  getUserPlaylists = async (
+    userName: string,
+    userToken?: string,
+    offset: number = 0,
+    count: number = 25,
+    createdFor: boolean = false
+  ) => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    let headers;
+    if (userToken) {
+      headers = {
+        Authorization: `Token ${userToken}`,
+      };
+    }
+
+    const url = `${this.APIBaseURI}/user/${userName}/playlists${
+      createdFor ? "/createdfor" : ""
+    }?offset=${offset}&count=${count}`;
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers,
+    });
+
+    this.checkStatus(response);
+    const data = response.json();
+    return data;
+  };
+
   getPlaylist = async (playlistMBID: string, userToken?: string) => {
     if (!playlistMBID) {
       throw new SyntaxError("playlist MBID missing");

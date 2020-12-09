@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/anchor-is-valid */
 /* eslint-disable camelcase */
 
 import * as React from "react";
@@ -15,6 +16,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import APIService from "../APIService";
 import Card from "../components/Card";
+import Loader from "../components/Loader";
 import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
 import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
 import ErrorBoundary from "../ErrorBoundary";
@@ -29,12 +31,18 @@ export type UserPlaylistsProps = {
   apiUrl: string;
   playlists?: JSPFObject[];
   user: ListenBrainzUser;
+  paginationOffset?: number;
+  playlistCount: number;
+  activeSection: "playlists" | "recommendations";
 };
 
 export type UserPlaylistsState = {
   playlists: JSPFPlaylist[];
   playlistSelectedForOperation?: JSPFPlaylist;
   alerts: Alert[];
+  loading: boolean;
+  paginationOffset: number;
+  playlistCount: number;
 };
 
 export default class UserPlaylists extends React.Component<
@@ -42,6 +50,7 @@ export default class UserPlaylists extends React.Component<
   UserPlaylistsState
 > {
   private APIService: APIService;
+  private MAX_PLAYLISTS_PER_PAGE = 25;
 
   constructor(props: UserPlaylistsProps) {
     super(props);
@@ -50,12 +59,62 @@ export default class UserPlaylists extends React.Component<
     this.state = {
       alerts: [],
       playlists: concatenatedPlaylists ?? [],
+      loading: false,
+      paginationOffset: props.paginationOffset ?? 0,
+      playlistCount: props.playlistCount,
     };
 
     this.APIService = new APIService(
       props.apiUrl || `${window.location.origin}/1`
     );
   }
+
+  componentDidMount(): void {
+    // Listen to browser previous/next events and load page accordingly
+    window.addEventListener("popstate", this.handleURLChange);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener("popstate", this.handleURLChange);
+  }
+
+  handleURLChange = async (): Promise<void> => {
+    const url = new URL(window.location.href);
+    let offset = 0;
+    let count = this.MAX_PLAYLISTS_PER_PAGE;
+    if (url.searchParams.get("offset")) {
+      offset = Number(url.searchParams.get("offset"));
+    }
+    if (url.searchParams.get("count")) {
+      count = Number(url.searchParams.get("count"));
+    }
+
+    this.setState({ loading: true });
+
+    const { user, activeSection } = this.props;
+    const newPlaylists = await this.APIService.getUserPlaylists(
+      user.name,
+      undefined,
+      offset,
+      count,
+      activeSection === "recommendations"
+    );
+
+    if (!newPlaylists.playlists.length) {
+      // No more listens to fetch
+      this.setState({
+        loading: false,
+        playlistCount: newPlaylists.playlist_count,
+      });
+      return;
+    }
+    this.setState({
+      playlists: newPlaylists.playlists,
+      playlistCount: newPlaylists.playlist_count,
+      paginationOffset: newPlaylists.offset,
+      loading: false,
+    });
+  };
 
   isOwner = (playlist: JSPFPlaylist): boolean => {
     const { currentUser } = this.props;
@@ -321,12 +380,130 @@ export default class UserPlaylists extends React.Component<
     return currentUser?.name === user.name;
   };
 
+  handleClickNext = async () => {
+    const { user, activeSection } = this.props;
+    const { paginationOffset, playlistCount } = this.state;
+    // No more playlists to fetch
+    const newOffset = paginationOffset + this.MAX_PLAYLISTS_PER_PAGE;
+    if (playlistCount && newOffset >= playlistCount) {
+      return;
+    }
+    this.setState({ loading: true });
+    try {
+      const newPlaylists = await this.APIService.getUserPlaylists(
+        user.name,
+        undefined,
+        newOffset,
+        this.MAX_PLAYLISTS_PER_PAGE,
+        activeSection === "recommendations"
+      );
+
+      if (!newPlaylists.playlists.length) {
+        // No more listens to fetch
+        this.setState({
+          loading: false,
+          playlistCount: newPlaylists.playlist_count,
+        });
+        return;
+      }
+      this.setState({
+        playlists: newPlaylists.playlists,
+        playlistCount: newPlaylists.playlist_count,
+        paginationOffset: newPlaylists.offset,
+        loading: false,
+      });
+      window.history.pushState(
+        null,
+        "",
+        `?offset=${newPlaylists.offset}&count=${newPlaylists.count}`
+      );
+    } catch (error) {
+      this.newAlert(
+        "danger",
+        "Error loading playlists",
+        error?.message ?? error
+      );
+      this.setState({ loading: false });
+    }
+  };
+
+  handleClickPrevious = async () => {
+    const { user, activeSection } = this.props;
+    const { paginationOffset } = this.state;
+    // No more playlists to fetch
+    if (paginationOffset === 0) {
+      return;
+    }
+    const newOffset = paginationOffset - this.MAX_PLAYLISTS_PER_PAGE;
+    this.setState({ loading: true });
+    try {
+      const newPlaylists = await this.APIService.getUserPlaylists(
+        user.name,
+        undefined,
+        newOffset,
+        this.MAX_PLAYLISTS_PER_PAGE,
+        activeSection === "recommendations"
+      );
+
+      if (!newPlaylists.playlists.length) {
+        // No more listens to fetch
+        this.setState({
+          loading: false,
+          playlistCount: newPlaylists.playlist_count,
+        });
+        return;
+      }
+      this.setState({
+        playlists: newPlaylists.playlists,
+        playlistCount: newPlaylists.playlist_count,
+        paginationOffset: newPlaylists.offset,
+        loading: false,
+      });
+      window.history.pushState(
+        null,
+        "",
+        `?offset=${newPlaylists.offset}&count=${newPlaylists.count}`
+      );
+    } catch (error) {
+      this.newAlert(
+        "danger",
+        "Error loading playlists",
+        error?.message ?? error
+      );
+      this.setState({ loading: false });
+    }
+  };
+
   render() {
-    const { alerts, playlists, playlistSelectedForOperation } = this.state;
-    const { currentUser } = this.props;
+    const { user, activeSection } = this.props;
+    const {
+      alerts,
+      playlists,
+      playlistSelectedForOperation,
+      paginationOffset,
+      playlistCount,
+      loading,
+    } = this.state;
+    const isRecommendations = activeSection === "recommendations";
     return (
       <div>
-        <div id="playlists-container">
+        <Loader isLoading={loading} />
+        {isRecommendations && (
+          <>
+            <h3>Recommendation playlists created for {user.name}</h3>
+            <p>
+              These playlists are ephemeral and will only be available for a
+              month. Be sure to save the ones you like to your own playlists !
+            </p>
+          </>
+        )}
+        {!playlists.length && (
+          <p>No playlists to show yet. Come back later !</p>
+        )}
+        <div
+          id="playlists-container"
+          style={{ opacity: loading ? "0.4" : "1" }}
+        >
           {playlists.map((playlist: JSPFPlaylist) => {
             const isOwner = this.isOwner(playlist);
             const playlistId = getPlaylistId(playlist);
@@ -404,7 +581,7 @@ export default class UserPlaylists extends React.Component<
               </Card>
             );
           })}
-          {this.isCurrentUserPage() && (
+          {!isRecommendations && this.isCurrentUserPage() && (
             <>
               <Card
                 className="new-playlist"
@@ -420,7 +597,6 @@ export default class UserPlaylists extends React.Component<
                 onSubmit={this.createPlaylist}
                 htmlId="playlistCreateModal"
               />
-
               <CreateOrEditPlaylistModal
                 onSubmit={this.editPlaylist}
                 playlist={playlistSelectedForOperation}
@@ -433,6 +609,40 @@ export default class UserPlaylists extends React.Component<
             </>
           )}
         </div>
+        <ul className="pager" style={{ display: "flex" }}>
+          <li className={`previous ${paginationOffset <= 0 ? "disabled" : ""}`}>
+            <a
+              role="button"
+              onClick={this.handleClickPrevious}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") this.handleClickPrevious();
+              }}
+              tabIndex={0}
+            >
+              &larr; Previous
+            </a>
+          </li>
+          <li
+            className={`next ${
+              playlistCount &&
+              playlistCount <= paginationOffset + this.MAX_PLAYLISTS_PER_PAGE
+                ? "disabled"
+                : ""
+            }`}
+            style={{ marginLeft: "auto" }}
+          >
+            <a
+              role="button"
+              onClick={this.handleClickNext}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") this.handleClickNext();
+              }}
+              tabIndex={0}
+            >
+              Next &rarr;
+            </a>
+          </li>
+        </ul>
         <AlertList
           position="bottom-right"
           alerts={alerts}
@@ -454,10 +664,19 @@ document.addEventListener("DOMContentLoaded", () => {
   } catch (err) {
     // Show error to the user and ask to reload page
   }
-  const { current_user, api_url: apiUrl, playlists, user } = reactProps;
+  const {
+    current_user,
+    api_url: apiUrl,
+    playlists,
+    user,
+    playlist_count: playlistCount,
+    active_section: activeSection,
+  } = reactProps;
   ReactDOM.render(
     <ErrorBoundary>
       <UserPlaylists
+        activeSection={activeSection}
+        playlistCount={playlistCount}
         apiUrl={apiUrl}
         currentUser={current_user}
         playlists={playlists}
