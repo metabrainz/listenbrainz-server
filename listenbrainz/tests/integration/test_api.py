@@ -133,16 +133,25 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
-        # This sleep allows for the timescale subscriber to take its time in getting
-        # the listen submitted from redis and writing it to timescale.
-        # Removing it causes an empty list of listens to be returned.
-        time.sleep(2)
-
+        count = 0
         url = url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
-        response = self.client.get(url)
+        expected_count = 3
+        while count < 5:
+            count += 1
+            # This sleep allows for the timescale subscriber to take its time in getting
+            # the listen submitted from redis and writing it to timescale.
+            # Removing it causes an empty list of listens to be returned.
+            # We try a few times (up to a maximum of 5) to see if the data is present,
+            # but then fail if the data still hasn't arrived
+            time.sleep(2)
+
+            response = self.client.get(url)
+            data = json.loads(response.data)['payload']
+            if data['count'] == expected_count:
+                break
+
         self.assert200(response)
-        data = json.loads(response.data)['payload']
-        self.assertEqual(data['count'], 3)
+        self.assertEqual(data['count'], expected_count)
         self.assertEqual(data['listens'][0]['listened_at'], 1400000200)
         self.assertEqual(data['listens'][1]['listened_at'], 1400000100)
         self.assertEqual(data['listens'][2]['listened_at'], 1400000000)
