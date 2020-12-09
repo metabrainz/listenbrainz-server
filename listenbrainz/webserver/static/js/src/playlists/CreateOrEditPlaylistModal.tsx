@@ -220,7 +220,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
                     })}
                   </tbody>
                 </table>
-                <form
+                <div
                   className="input-group input-group-flex"
                   onSubmit={this.addCollaborator}
                 >
@@ -238,7 +238,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
                       <FontAwesomeIcon icon={faPlusCircle as IconProp} /> Add
                     </button>
                   </span>
-                </form>
+                </div>
               </div>
             </div>
             <div className="modal-footer">
