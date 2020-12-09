@@ -31,8 +31,8 @@ export type UserPlaylistsProps = {
   apiUrl: string;
   playlists?: JSPFObject[];
   user: ListenBrainzUser;
-  paginationOffset: number;
-  totalPlaylistsCount: number;
+  paginationOffset?: number;
+  playlistCount: number;
 };
 
 export type UserPlaylistsState = {
@@ -41,7 +41,7 @@ export type UserPlaylistsState = {
   alerts: Alert[];
   loading: boolean;
   paginationOffset: number;
-  totalPlaylistsCount: number;
+  playlistCount: number;
 };
 
 export default class UserPlaylists extends React.Component<
@@ -60,7 +60,7 @@ export default class UserPlaylists extends React.Component<
       playlists: concatenatedPlaylists ?? [],
       loading: false,
       paginationOffset: props.paginationOffset ?? 0,
-      totalPlaylistsCount: props.totalPlaylistsCount,
+      playlistCount: props.playlistCount,
     };
 
     this.APIService = new APIService(
@@ -102,13 +102,13 @@ export default class UserPlaylists extends React.Component<
       // No more listens to fetch
       this.setState({
         loading: false,
-        totalPlaylistsCount: newPlaylists.totalCount,
+        playlistCount: newPlaylists.playlist_count,
       });
       return;
     }
     this.setState({
       playlists: newPlaylists.playlists,
-      totalPlaylistsCount: newPlaylists.totalCount,
+      playlistCount: newPlaylists.playlist_count,
       paginationOffset: offset,
       loading: false,
     });
@@ -380,10 +380,10 @@ export default class UserPlaylists extends React.Component<
 
   handleClickNext = async () => {
     const { user } = this.props;
-    const { paginationOffset, totalPlaylistsCount } = this.state;
+    const { paginationOffset, playlistCount } = this.state;
     // No more playlists to fetch
     const newOffset = paginationOffset + this.MAX_PLAYLISTS_PER_PAGE;
-    if (totalPlaylistsCount && newOffset >= totalPlaylistsCount) {
+    if (playlistCount && newOffset >= playlistCount) {
       return;
     }
     this.setState({ loading: true });
@@ -399,13 +399,13 @@ export default class UserPlaylists extends React.Component<
         // No more listens to fetch
         this.setState({
           loading: false,
-          totalPlaylistsCount: newPlaylists.totalCount,
+          playlistCount: newPlaylists.playlist_count,
         });
         return;
       }
       this.setState({
         playlists: newPlaylists.playlists,
-        totalPlaylistsCount: newPlaylists.totalCount,
+        playlistCount: newPlaylists.playlist_count,
         paginationOffset: newOffset,
         loading: false,
       });
@@ -445,13 +445,13 @@ export default class UserPlaylists extends React.Component<
         // No more listens to fetch
         this.setState({
           loading: false,
-          totalPlaylistsCount: newPlaylists.totalCount,
+          playlistCount: newPlaylists.playlist_count,
         });
         return;
       }
       this.setState({
         playlists: newPlaylists.playlists,
-        totalPlaylistsCount: newPlaylists.totalCount,
+        playlistCount: newPlaylists.playlist_count,
         paginationOffset: newOffset,
         loading: false,
       });
@@ -476,7 +476,7 @@ export default class UserPlaylists extends React.Component<
       playlists,
       playlistSelectedForOperation,
       paginationOffset,
-      totalPlaylistsCount,
+      playlistCount,
       loading,
     } = this.state;
     return (
@@ -607,9 +607,8 @@ export default class UserPlaylists extends React.Component<
           </li>
           <li
             className={`next ${
-              totalPlaylistsCount &&
-              totalPlaylistsCount <=
-                paginationOffset + this.MAX_PLAYLISTS_PER_PAGE
+              playlistCount &&
+              playlistCount <= paginationOffset + this.MAX_PLAYLISTS_PER_PAGE
                 ? "disabled"
                 : ""
             }`}
@@ -648,10 +647,17 @@ document.addEventListener("DOMContentLoaded", () => {
   } catch (err) {
     // Show error to the user and ask to reload page
   }
-  const { current_user, api_url: apiUrl, playlists, user } = reactProps;
+  const {
+    current_user,
+    api_url: apiUrl,
+    playlists,
+    user,
+    playlist_count: playlistCount,
+  } = reactProps;
   ReactDOM.render(
     <ErrorBoundary>
       <UserPlaylists
+        playlistCount={playlistCount}
         apiUrl={apiUrl}
         currentUser={current_user}
         playlists={playlists}
