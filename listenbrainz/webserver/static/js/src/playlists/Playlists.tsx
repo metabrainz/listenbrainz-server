@@ -9,6 +9,7 @@ import {
   faPen,
   faPlusCircle,
   faTrashAlt,
+  faSave,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { AlertList } from "react-bs-notifier";
@@ -101,7 +102,7 @@ export default class UserPlaylists extends React.Component<
     );
 
     if (!newPlaylists.playlists.length) {
-      // No more listens to fetch
+      // No more playlists to fetch
       this.setState({
         loading: false,
         playlistCount: newPlaylists.playlist_count,
@@ -129,21 +130,24 @@ export default class UserPlaylists extends React.Component<
     );
   };
 
-  copyPlaylist = async (): Promise<void> => {
+  copyPlaylist = async (playlistId: string): Promise<void> => {
     const { currentUser } = this.props;
-    const { playlistSelectedForOperation: playlist } = this.state;
     if (!currentUser?.auth_token) {
       this.alertMustBeLoggedIn();
       return;
     }
-    if (!playlist) {
-      this.newAlert("danger", "Error", "No playlist to copy");
+    if (!playlistId?.length) {
+      this.newAlert(
+        "danger",
+        "Error",
+        "No playlist to copy; missing a playlist ID"
+      );
       return;
     }
     try {
       const newPlaylistId = await this.APIService.copyPlaylist(
         currentUser.auth_token,
-        getPlaylistId(playlist)
+        playlistId
       );
       this.newAlert(
         "success",
@@ -160,7 +164,7 @@ export default class UserPlaylists extends React.Component<
           currentUser.auth_token
         );
         this.setState((prevState) => ({
-          playlists: [...prevState.playlists, JSPFObject.playlist],
+          playlists: [JSPFObject.playlist, ...prevState.playlists],
         }));
       }
     } catch (error) {
@@ -268,7 +272,7 @@ export default class UserPlaylists extends React.Component<
         currentUser.auth_token
       );
       this.setState((prevState) => ({
-        playlists: [...prevState.playlists, JSPFObject.playlist],
+        playlists: [JSPFObject.playlist, ...prevState.playlists],
       }));
     } catch (error) {
       this.newAlert("danger", "Error", error.message);
@@ -376,7 +380,10 @@ export default class UserPlaylists extends React.Component<
   };
 
   isCurrentUserPage = () => {
-    const { currentUser, user } = this.props;
+    const { currentUser, user, activeSection } = this.props;
+    if (activeSection === "recommendations") {
+      return false;
+    }
     return currentUser?.name === user.name;
   };
 
@@ -399,7 +406,7 @@ export default class UserPlaylists extends React.Component<
       );
 
       if (!newPlaylists.playlists.length) {
-        // No more listens to fetch
+        // No more playlists to fetch
         this.setState({
           loading: false,
           playlistCount: newPlaylists.playlist_count,
@@ -446,7 +453,7 @@ export default class UserPlaylists extends React.Component<
       );
 
       if (!newPlaylists.playlists.length) {
-        // No more listens to fetch
+        // No more playlists to fetch
         this.setState({
           loading: false,
           playlistCount: newPlaylists.playlist_count,
@@ -510,56 +517,73 @@ export default class UserPlaylists extends React.Component<
             const customFields = getPlaylistExtension(playlist);
             return (
               <Card className="playlist" key={playlistId}>
-                <span className="dropdown">
+                {isRecommendations ? (
                   <button
-                    className="btn btn-link dropdown-toggle pull-right"
+                    className="btn btn-sm btn-info pull-right"
+                    onClick={this.copyPlaylist.bind(this, playlistId)}
                     type="button"
-                    id="playlistOptionsDropdown"
-                    data-toggle="dropdown"
-                    aria-haspopup="true"
-                    aria-expanded="true"
-                    onClick={this.selectPlaylistForEdit.bind(this, playlist)}
                   >
                     <FontAwesomeIcon
-                      icon={faEllipsisV as IconProp}
-                      title="More options"
+                      icon={faSave as IconProp}
+                      title="Save to my playlists"
+                      style={{ fontSize: "1.3em" }}
                     />
                   </button>
-                  <ul
-                    className="dropdown-menu"
-                    aria-labelledby="playlistOptionsDropdown"
-                  >
-                    <li>
-                      <button onClick={this.copyPlaylist} type="button">
-                        Duplicate
-                      </button>
-                    </li>
-                    {isOwner && (
-                      <>
-                        <li role="separator" className="divider" />
-                        <li>
-                          <button
-                            type="button"
-                            data-toggle="modal"
-                            data-target="#playlistEditModal"
-                          >
-                            <FontAwesomeIcon icon={faPen as IconProp} /> Edit
-                          </button>
-                        </li>
-                        <li>
-                          <button
-                            type="button"
-                            data-toggle="modal"
-                            data-target="#confirmDeleteModal"
-                          >
-                            <FontAwesomeIcon icon={faTrashAlt as IconProp} />{" "}
-                            Delete
-                          </button>
-                        </li>
-                      </>
-                    )}
-                  </ul>
-                </span>
+                ) : (
+                  <span className="dropdown">
+                    <button
+                      className="btn btn-link dropdown-toggle pull-right"
+                      type="button"
+                      id="playlistOptionsDropdown"
+                      data-toggle="dropdown"
+                      aria-haspopup="true"
+                      aria-expanded="true"
+                      onClick={this.selectPlaylistForEdit.bind(this, playlist)}
+                    >
+                      <FontAwesomeIcon
+                        icon={faEllipsisV as IconProp}
+                        title="More options"
+                      />
+                    </button>
+                    <ul
+                      className="dropdown-menu"
+                      aria-labelledby="playlistOptionsDropdown"
+                    >
+                      <li>
+                        <button
+                          onClick={this.copyPlaylist.bind(this, playlistId)}
+                          type="button"
+                        >
+                          Duplicate
+                        </button>
+                      </li>
+                      {isOwner && (
+                        <>
+                          <li role="separator" className="divider" />
+                          <li>
+                            <button
+                              type="button"
+                              data-toggle="modal"
+                              data-target="#playlistEditModal"
+                            >
+                              <FontAwesomeIcon icon={faPen as IconProp} /> Edit
+                            </button>
+                          </li>
+                          <li>
+                            <button
+                              type="button"
+                              data-toggle="modal"
+                              data-target="#confirmDeleteModal"
+                            >
+                              <FontAwesomeIcon icon={faTrashAlt as IconProp} />{" "}
+                              Delete
+                            </button>
+                          </li>
+                        </>
+                      )}
+                    </ul>
+                  </span>
+                )}
                 <a className="info" href={`/playlist/${playlistId}`}>
                   <h4>{playlist.title}</h4>
                   {playlist.annotation && (
