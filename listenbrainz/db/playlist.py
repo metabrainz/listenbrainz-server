@@ -336,6 +336,8 @@ def copy_playlist(playlist: model_playlist.Playlist, creator_id: int):
     newplaylist.name = "Copy of " + newplaylist.name
     newplaylist.creator_id = creator_id
     newplaylist.copied_from_id = playlist.id
+    newplaylist.created_for_id = None
+    newplaylist.created_for = None
     # TODO: We need a copied_from_mbid (calculated) field in the playlist object so we can show the mbid in the ui
 
     return create(newplaylist)
