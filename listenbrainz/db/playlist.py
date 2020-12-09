@@ -169,7 +169,7 @@ def get_playlists_created_for_user(user_id: int,
         count = "ALL"
 
     params = {"created_for_id": user_id, "count": count, "offset": offset}
-    query = sqlalchemy.text("""
+    query = sqlalchemy.text(f"""
         SELECT id
              , mbid
              , creator_id
