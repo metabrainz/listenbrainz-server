@@ -8,10 +8,7 @@ import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
 
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import (APIBadRequest,
-                                           APIInternalServerError,
-                                           APINotFound,
-                                           APIForbidden)
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden
 from listenbrainz.webserver.rate_limiter import ratelimit
 from listenbrainz.webserver.views.api import _validate_auth_header
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid
@@ -61,12 +58,9 @@ def validate_playlist(jspf, require_title=True):
     if 'track' not in jspf:
         return
 
-    for i, track in enumerate(jspf['track']):
-        try:
-            recording_uri = track["identifier"]
-            if not recording_uri:
-                raise KeyError
-        except KeyError:
+    for i, track in enumerate(jspf.get('track', [])):
+        recording_uri = track.get("identifier")
+        if not recording_uri:
             log_raise_400("JSPF playlist track %d must contain an identifier element with recording MBID." % i)
 
         if recording_uri.startswith(PLAYLIST_TRACK_URI_PREFIX):
@@ -116,7 +110,7 @@ def serialize_jspf(playlist: Playlist):
             tr["title"] = rec.title
 
         extension = {"added_by": rec.added_by,
-                      "added_at": rec.created.replace(tzinfo=datetime.timezone.utc).isoformat()}
+                      "added_at": rec.created.astimezone(datetime.timezone.utc)}
         if rec.artist_mbids:
             extension["artist_identifier"] = [PLAYLIST_ARTIST_URI_PREFIX + str(mbid) for mbid in rec.artist_mbids]
 
@@ -215,9 +209,10 @@ def create_playlist():
     Create a playlist. The playlist must be in JSPF format with MusicBrainz extensions, which is defined
     here: https://musicbrainz.org/doc/jspf . To create an empty playlist, you can send an empty playlist
     with only the title field filled out. If you would like to create a playlist populated with recordings,
-    each of the track items in the playlist must have the identifier element present.
+    each of the track items in the playlist must have an identifier element that contains the MusicBrainz
+    recording that includes the recording MBID.
 
-    When creating a playlist, only the playlist tite and the track identifier elements will be used -- all
+    When creating a playlist, only the playlist title and the track identifier elements will be used -- all
     other elements in the posted JSPF wil be ignored.
 
     :reqheader Authorization: Token <user token>
@@ -364,10 +359,11 @@ def move_playlist_item(playlist_mbid):
     of the track to move (from), where to move it to (to) and how many tracks from that position should
     be moved (count). The format of the post data should look as follows:
 
-     {“mbid” : “<mbid>”, “from” : 3, “to” : 4, “count”: 2}
+    .. code-block:: json
+       {"mbid" : "<mbid>", “from” : 3, “to” : 4, “count”: 2}
 
     :reqheader Authorization: Token <user token>
-    :statuscode 200: playlist accepted.
+    :statuscode 200: move operation succeeded
     :statuscode 400: invalid JSON sent, see error message for details.
     :statuscode 401: invalid authorization. See error message for details.
     :statuscode 403: forbidden. the requesting user was not allowed to carry out this operation.
@@ -409,7 +405,8 @@ def delete_playlist_item(playlist_mbid):
     of the track to delete, and how many tracks from that position should be moved deleted. The format of the
     post data should look as follows:
 
-     {“index” : 3, “count”: 2}
+    .. code-block:: json
+      {“index” : 3, “count”: 2}
 
     :reqheader Authorization: Token <user token>
     :statuscode 200: playlist accepted.
@@ -488,10 +485,11 @@ def delete_playlist(playlist_mbid):
 def copy_playlist(playlist_mbid):
     """
 
-    Copy a playlist. POST body data does not need to contain anything.
+    Copy a playlist -- the new playlist will be given the name "Copy of <playlist_name>".
+    POST body data does not need to contain anything.
 
     :reqheader Authorization: Token <user token>
-    :statuscode 200: playlist deleted.
+    :statuscode 200: playlist copied.
     :statuscode 401: invalid authorization. See error message for details.
     :statuscode 404: Playlist not found
     :resheader Content-Type: *application/json*
