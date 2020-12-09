@@ -58,13 +58,19 @@ def get_by_mbid(playlist_id: str, load_recordings: bool = True) -> Optional[mode
         return model_playlist.Playlist.parse_obj(obj)
 
 
-def get_playlists_for_user(user_id: int, include_private: bool = False, load_recordings: bool = False):
+def get_playlists_for_user(user_id: int,
+                           include_private: bool = False,
+                           load_recordings: bool = False,
+                           count: int = 0,
+                           offset: int = 0):
     """Get all playlists that a user created
 
     Arguments:
         user_id: The user to find playlists for
         include_private: If True, include all playlists by a user, including private ones
         load_recordings: If true, load the recordings for the playlist too
+        count: Return max count number of playlists, for pagination purposes. If omitted, return all.
+        offset: Return playlists starting at offset, for pagination purposes. Default 0.
 
     Raises:
 
@@ -73,7 +79,10 @@ def get_playlists_for_user(user_id: int, include_private: bool = False, load_rec
 
     """
 
-    params = {"creator_id": user_id}
+    if count == 0:
+        count = "ALL"
+
+    params = {"creator_id": user_id, "count": count, "offset": offset}
     where_public = ""
     if not include_private:
         where_public = "AND public = :public"
@@ -91,7 +100,10 @@ def get_playlists_for_user(user_id: int, include_private: bool = False, load_rec
              , algorithm_metadata
           FROM playlist.playlist
          WHERE creator_id = :creator_id
-               {where_public}""")
+               {where_public}
+      ORDER BY created DESC
+         LIMIT {count}
+        OFFSET {offset}""")
 
     playlists = []
     with ts.engine.connect() as connection:
@@ -122,12 +134,17 @@ def get_playlists_for_user(user_id: int, include_private: bool = False, load_rec
     return playlists
 
 
-def get_playlists_created_for_user(user_id: int, load_recordings: bool = False):
+def get_playlists_created_for_user(user_id: int,
+                                   load_recordings: bool = False,
+                                   count: int = 0,
+                                   offset: int = 0):
     """Get all playlists that were created for a user by bots
 
     Arguments:
         user_id
         load_recordings
+        count: Return max count number of playlists, for pagination purposes. If omitted, return all.
+        offset: Return playlists starting at offset, for pagination purposes. Default 0.
 
     Raises:
 
@@ -135,6 +152,10 @@ def get_playlists_created_for_user(user_id: int, load_recordings: bool = False):
 
     """
 
+    if count == 0:
+        count = "ALL"
+
+    params = {"created_for_id": user_id, "count": count, "offset": offset}
     query = sqlalchemy.text("""
         SELECT id
              , mbid
@@ -147,12 +168,15 @@ def get_playlists_created_for_user(user_id: int, load_recordings: bool = False):
              , created_for_id
              , algorithm_metadata
           FROM playlist.playlist
-         WHERE created_for_id = :created_for_id""")
+         WHERE created_for_id = :created_for_id
+      ORDER BY created DESC
+         LIMIT {count}
+        OFFSET {offset}""")
 
     # TODO: This is almost exactly the same as get_playlists_for_user
     playlists = []
     with ts.engine.connect() as connection:
-        result = connection.execute(query, {"created_for_id": user_id})
+        result = connection.execute(query, params)
         user_id_map = {}
         for row in result:
             creator_id = row["creator_id"]
