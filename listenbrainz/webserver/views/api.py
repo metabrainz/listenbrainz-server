@@ -431,6 +431,9 @@ def delete_listen():
 
 
 def serialize_playlists(playlists, playlist_count, count, offset):
+    """
+        Serialize the playlist metadata for the get playlists commands.
+    """
 
     items = []
     for playlist in playlists:
@@ -480,7 +483,7 @@ def get_playlists_for_user(playlist_user_name):
     if playlist_user is None:
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
-    include_private = True if user and user.id == playlist_user.id else False
+    include_private = True if user and user["id"] == playlist_user["id"] else False
     playlists, playlist_count = db_playlist.get_playlists_for_user(playlist_user["id"], include_private, False, count, offset)
 
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
