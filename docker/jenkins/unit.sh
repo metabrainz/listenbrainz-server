@@ -53,7 +53,8 @@ function run_tests {
        python3 manage.py init_msb_db --create-db && \
        python3 manage.py init_ts_db --create-db"
 
-    docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME run listenbrainz \
+    docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME run --name $TEST_CONTAINER_REF \
+                listenbrainz \
                 dockerize \
                 -wait tcp://db:5432 -timeout 60s \
                 -wait tcp://timescale:5432 -timeout 60s \
