@@ -33,6 +33,7 @@ export type UserPlaylistsProps = {
   user: ListenBrainzUser;
   paginationOffset?: number;
   playlistCount: number;
+  activeSection: "playlists" | "recommendations";
 };
 
 export type UserPlaylistsState = {
@@ -90,12 +91,13 @@ export default class UserPlaylists extends React.Component<
 
     this.setState({ loading: true });
 
-    const { user } = this.props;
+    const { user, activeSection } = this.props;
     const newPlaylists = await this.APIService.getUserPlaylists(
       user.name,
       undefined,
       offset,
-      count
+      count,
+      activeSection === "recommendations"
     );
 
     if (!newPlaylists.playlists.length) {
@@ -379,7 +381,7 @@ export default class UserPlaylists extends React.Component<
   };
 
   handleClickNext = async () => {
-    const { user } = this.props;
+    const { user, activeSection } = this.props;
     const { paginationOffset, playlistCount } = this.state;
     // No more playlists to fetch
     const newOffset = paginationOffset + this.MAX_PLAYLISTS_PER_PAGE;
@@ -392,7 +394,8 @@ export default class UserPlaylists extends React.Component<
         user.name,
         undefined,
         newOffset,
-        this.MAX_PLAYLISTS_PER_PAGE
+        this.MAX_PLAYLISTS_PER_PAGE,
+        activeSection === "recommendations"
       );
 
       if (!newPlaylists.playlists.length) {
@@ -425,7 +428,7 @@ export default class UserPlaylists extends React.Component<
   };
 
   handleClickPrevious = async () => {
-    const { user } = this.props;
+    const { user, activeSection } = this.props;
     const { paginationOffset } = this.state;
     // No more playlists to fetch
     if (paginationOffset === 0) {
@@ -438,7 +441,8 @@ export default class UserPlaylists extends React.Component<
         user.name,
         undefined,
         newOffset,
-        this.MAX_PLAYLISTS_PER_PAGE
+        this.MAX_PLAYLISTS_PER_PAGE,
+        activeSection === "recommendations"
       );
 
       if (!newPlaylists.playlists.length) {
@@ -471,6 +475,7 @@ export default class UserPlaylists extends React.Component<
   };
 
   render() {
+    const { user, activeSection } = this.props;
     const {
       alerts,
       playlists,
@@ -479,9 +484,22 @@ export default class UserPlaylists extends React.Component<
       playlistCount,
       loading,
     } = this.state;
+    const isRecommendations = activeSection === "recommendations";
     return (
       <div>
         <Loader isLoading={loading} />
+        {isRecommendations && (
+          <>
+            <h3>Recommendation playlists created for {user.name}</h3>
+            <p>
+              These playlists are ephemeral and will only be available for a
+              month. Be sure to save the ones you like to your own playlists !
+            </p>
+          </>
+        )}
+        {!playlists.length && (
+          <p>No playlists to show yet. Come back later !</p>
+        )}
         <div
           id="playlists-container"
           style={{ opacity: loading ? "0.4" : "1" }}
@@ -563,7 +581,7 @@ export default class UserPlaylists extends React.Component<
               </Card>
             );
           })}
-          {this.isCurrentUserPage() && (
+          {!isRecommendations && this.isCurrentUserPage() && (
             <>
               <Card
                 className="new-playlist"
@@ -579,7 +597,6 @@ export default class UserPlaylists extends React.Component<
                 onSubmit={this.createPlaylist}
                 htmlId="playlistCreateModal"
               />
-
               <CreateOrEditPlaylistModal
                 onSubmit={this.editPlaylist}
                 playlist={playlistSelectedForOperation}
@@ -653,10 +670,12 @@ document.addEventListener("DOMContentLoaded", () => {
     playlists,
     user,
     playlist_count: playlistCount,
+    active_section: activeSection,
   } = reactProps;
   ReactDOM.render(
     <ErrorBoundary>
       <UserPlaylists
+        activeSection={activeSection}
         playlistCount={playlistCount}
         apiUrl={apiUrl}
         currentUser={current_user}
