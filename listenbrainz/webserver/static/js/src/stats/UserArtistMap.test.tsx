@@ -4,7 +4,8 @@ import { mount, shallow } from "enzyme";
 import UserArtistMap, { UserArtistMapProps } from "./UserArtistMap";
 import APIError from "../APIError";
 import * as userArtistMapResponse from "../__mocks__/userArtistMap.json";
-import * as userArtistMapProcessedData from "../__mocks__/userArtistMapProcessData.json";
+import * as userArtistMapProcessedDataArtist from "../__mocks__/userArtistMapProcessDataArtist.json";
+import * as userArtistMapProcessedDataListen from "../__mocks__/userArtistMapProcessDataListen.json";
 
 const props: UserArtistMapProps = {
   user: {
@@ -21,7 +22,8 @@ describe("UserArtistMap", () => {
     );
 
     wrapper.setState({
-      data: userArtistMapProcessedData,
+      selectedMetric: "artist",
+      data: userArtistMapProcessedDataArtist,
       graphContainerWidth: 1200,
       loading: false,
     });
@@ -161,10 +163,53 @@ describe("processData", () => {
     const instance = wrapper.instance();
 
     const result = instance.processData(
-      userArtistMapResponse as UserArtistMapResponse
+      userArtistMapResponse as UserArtistMapResponse,
+      "artist"
     );
 
-    expect(result).toEqual(userArtistMapProcessedData);
+    expect(result).toEqual(userArtistMapProcessedDataArtist);
+  });
+
+  it("processes data correctly for listen", () => {
+    const wrapper = shallow<UserArtistMap>(
+      <UserArtistMap {...{ ...props, range: "all_time" }} />
+    );
+    const instance = wrapper.instance();
+
+    const result = instance.processData(
+      userArtistMapResponse as UserArtistMapResponse,
+      "listen"
+    );
+
+    expect(result).toEqual(userArtistMapProcessedDataListen);
+  });
+});
+
+describe("changeSelectedMetric", () => {
+  it('sets state correctly for "artist"', () => {
+    const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
+    const instance = wrapper.instance();
+
+    instance.rawData = userArtistMapResponse as UserArtistMapResponse;
+
+    instance.changeSelectedMetric("artist");
+    expect(wrapper.state()).toMatchObject({
+      data: userArtistMapProcessedDataArtist,
+      selectedMetric: "artist",
+    });
+  });
+
+  it('sets state correctly for "listen"', () => {
+    const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
+    const instance = wrapper.instance();
+
+    instance.rawData = userArtistMapResponse as UserArtistMapResponse;
+
+    instance.changeSelectedMetric("listen");
+    expect(wrapper.state()).toMatchObject({
+      data: userArtistMapProcessedDataListen,
+      selectedMetric: "listen",
+    });
   });
 });
 
@@ -189,8 +234,10 @@ describe("loadData", () => {
       .mockImplementationOnce(() => Promise.resolve(userArtistMapResponse));
     await instance.loadData();
 
+    expect(instance.rawData).toMatchObject(userArtistMapResponse);
+
     expect(wrapper.state()).toMatchObject({
-      data: userArtistMapProcessedData,
+      data: userArtistMapProcessedDataArtist,
       loading: false,
     });
   });

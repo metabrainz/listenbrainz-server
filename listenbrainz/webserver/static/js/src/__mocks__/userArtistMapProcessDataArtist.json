@@ -1,0 +1,110 @@
+[
+  {
+    "id": "GBR",
+    "value": 50
+  },
+  {
+    "id": "USA",
+    "value": 135
+  },
+  {
+    "id": "AUS",
+    "value": 6
+  },
+  {
+    "id": "BEL",
+    "value": 2
+  },
+  {
+    "id": "DEU",
+    "value": 10
+  },
+  {
+    "id": "CAN",
+    "value": 10
+  },
+  {
+    "id": "ARG",
+    "value": 1
+  },
+  {
+    "id": "ESP",
+    "value": 1
+  },
+  {
+    "id": "PRT",
+    "value": 1
+  },
+  {
+    "id": "ISL",
+    "value": 3
+  },
+  {
+    "id": "NLD",
+    "value": 6
+  },
+  {
+    "id": "NOR",
+    "value": 2
+  },
+  {
+    "id": "SWE",
+    "value": 10
+  },
+  {
+    "id": "IND",
+    "value": 30
+  },
+  {
+    "id": "IRL",
+    "value": 5
+  },
+  {
+    "id": "FRA",
+    "value": 5
+  },
+  {
+    "id": "URY",
+    "value": 1
+  },
+  {
+    "id": "DNK",
+    "value": 2
+  },
+  {
+    "id": "PAK",
+    "value": 1
+  },
+  {
+    "id": "TUR",
+    "value": 1
+  },
+  {
+    "id": "JAM",
+    "value": 1
+  },
+  {
+    "id": "SGP",
+    "value": 1
+  },
+  {
+    "id": "IDN",
+    "value": 2
+  },
+  {
+    "id": "PHL",
+    "value": 1
+  },
+  {
+    "id": "PRI",
+    "value": 1
+  },
+  {
+    "id": "NZL",
+    "value": 1
+  },
+  {
+    "id": "MYS",
+    "value": 1
+  }
+]
