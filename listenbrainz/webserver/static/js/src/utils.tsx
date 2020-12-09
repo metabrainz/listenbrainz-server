@@ -32,7 +32,7 @@ const searchForSpotifyTrack = async (
   }
 
   const response = await fetch(
-    `https://api.spotify.com/v1/search?${encodeURI(queryString)}`,
+    `https://api.spotify.com/v1/search?${queryString}`,
     {
       method: "GET",
       headers: {
