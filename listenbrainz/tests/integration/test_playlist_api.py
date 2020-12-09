@@ -540,6 +540,26 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert200(response)
         self.assertEqual(response.json["playlist_count"], 2)
+        #TODO: check other items returned by the playlist
+
+        # Test count and offset parameters
+        response = self.client.get(
+            url_for("api_v1.get_playlists_for_user", playlist_user_name=self.user4["musicbrainz_id"], count=1),
+            headers={"Authorization": "Token {}".format(self.user4["auth_token"])},
+        )
+        self.assert200(response)
+        self.assertEqual(len(response.json["playlists"]), 1)
+        self.assertEqual(int(response.json["count"]), 1)
+        self.assertEqual(int(response.json["offset"]), 0)
+
+        response = self.client.get(
+            url_for("api_v1.get_playlists_for_user", playlist_user_name=self.user4["musicbrainz_id"], offset=1, count=1),
+            headers={"Authorization": "Token {}".format(self.user4["auth_token"])},
+        )
+        self.assert200(response)
+        self.assertEqual(len(response.json["playlists"]), 1)
+        self.assertEqual(int(response.json["count"]), 1)
+        self.assertEqual(int(response.json["offset"]), 1)
 
     def test_playlist_unauthorized_access(self):
         """ Test for checking that unauthorized access return 401 """
