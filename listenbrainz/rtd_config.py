@@ -9,10 +9,10 @@ SECRET_KEY = "CHANGE_ME"
 SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@db:5432/listenbrainz"
 MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@db:5432/messybrainz"
 
-POSTGRES_ADMIN_URI="postgresql://postgres@db/template1"
+POSTGRES_ADMIN_URI = "postgresql://postgres@db/postgres"
 
 SQLALCHEMY_TIMESCALE_URI = "postgresql://listenbrainz_ts:listenbrainz_ts@timescale/listenbrainz_ts"
-TIMESCALE_ADMIN_URI = "postgresql://postgres:postgres@timescale/template1"
+TIMESCALE_ADMIN_URI = "postgresql://postgres:postgres@timescale/postgres"
 TIMESCALE_ADMIN_LB_URI = "postgresql://postgres:postgres@timescale/listenbrainz_ts"
 
 # Other postgres configuration options
