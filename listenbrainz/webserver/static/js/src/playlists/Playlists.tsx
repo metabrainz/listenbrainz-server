@@ -111,7 +111,7 @@ export default class UserPlaylists extends React.Component<
     this.setState({
       playlists: newPlaylists.playlists,
       playlistCount: newPlaylists.playlist_count,
-      paginationOffset: offset,
+      paginationOffset: newPlaylists.offset,
       loading: false,
     });
   };
@@ -409,13 +409,13 @@ export default class UserPlaylists extends React.Component<
       this.setState({
         playlists: newPlaylists.playlists,
         playlistCount: newPlaylists.playlist_count,
-        paginationOffset: newOffset,
+        paginationOffset: newPlaylists.offset,
         loading: false,
       });
       window.history.pushState(
         null,
         "",
-        `?offset=${newOffset}&count=${this.MAX_PLAYLISTS_PER_PAGE}`
+        `?offset=${newPlaylists.offset}&count=${newPlaylists.count}`
       );
     } catch (error) {
       this.newAlert(
@@ -456,13 +456,13 @@ export default class UserPlaylists extends React.Component<
       this.setState({
         playlists: newPlaylists.playlists,
         playlistCount: newPlaylists.playlist_count,
-        paginationOffset: newOffset,
+        paginationOffset: newPlaylists.offset,
         loading: false,
       });
       window.history.pushState(
         null,
         "",
-        `?offset=${newOffset}&count=${this.MAX_PLAYLISTS_PER_PAGE}`
+        `?offset=${newPlaylists.offset}&count=${newPlaylists.count}`
       );
     } catch (error) {
       this.newAlert(
