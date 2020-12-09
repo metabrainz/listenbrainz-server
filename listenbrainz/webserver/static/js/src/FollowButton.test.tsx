@@ -19,7 +19,7 @@
  */
 
 import * as React from "react";
-import { shallow, ShallowWrapper } from "enzyme";
+import { shallow, mount, ShallowWrapper } from "enzyme";
 import FollowButton from "./FollowButton";
 
 const user = {
@@ -33,10 +33,35 @@ const loggedInUser = {
 };
 
 describe("<FollowButton />", () => {
+  it("renders correct styling based on type prop", () => {
+    // button is icon-only and renders text on hover
+    let wrapper = mount(
+      <FollowButton
+        type="icon-only"
+        user={user}
+        loggedInUser={loggedInUser}
+        loggedInUserFollowsUser
+      />
+    );
+    expect(wrapper.html()).toMatchSnapshot();
+
+    // button is solid and has no icon
+    wrapper = mount(
+      <FollowButton
+        type="block"
+        user={user}
+        loggedInUser={loggedInUser}
+        loggedInUserFollowsUser={false}
+      />
+    );
+    expect(wrapper.html()).toMatchSnapshot();
+  });
+
   it("renders with the correct text based on the props", () => {
     // already follows the user, should show "Following"
     let wrapper = shallow(
       <FollowButton
+        type="icon-only"
         user={user}
         loggedInUser={loggedInUser}
         loggedInUserFollowsUser
@@ -47,6 +72,7 @@ describe("<FollowButton />", () => {
     // doesn't already follow the user, should show "Follow"
     wrapper = shallow(
       <FollowButton
+        type="icon-only"
         user={user}
         loggedInUser={loggedInUser}
         loggedInUserFollowsUser={false}
@@ -81,6 +107,7 @@ describe("<FollowButton />", () => {
     it("follows the user if logged in user isn't following the user", () => {
       const wrapper = shallow(
         <FollowButton
+          type="icon-only"
           user={user}
           loggedInUser={loggedInUser}
           loggedInUserFollowsUser={false}
@@ -96,6 +123,7 @@ describe("<FollowButton />", () => {
     it("unfollows the user if logged in user is already following the user", () => {
       const wrapper = shallow(
         <FollowButton
+          type="icon-only"
           user={user}
           loggedInUser={loggedInUser}
           loggedInUserFollowsUser
