@@ -8,6 +8,10 @@ from listenbrainz.webserver.views.playlist_api import PLAYLIST_TRACK_URI_PREFIX,
 import ujson
 
 
+# NOTE: This test module includes all the tests for playlist features, even those served from the
+#       user API endpoint!
+
+
 def get_test_data():
     return {
        "playlist": {
@@ -31,6 +35,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.user = db_user.get_or_create(1, "testuserpleaseignore")
         self.user2 = db_user.get_or_create(2, "anothertestuserpleaseignore")
         self.user3 = db_user.get_or_create(3, "troi-bot")
+        self.user4 = db_user.get_or_create(4, "iloveassgaskets")
 
     def tearDown(self):
         r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
@@ -497,6 +502,44 @@ class PlaylistAPITestCase(IntegrationTestCase):
             content_type="application/json"
         )
         self.assert404(response)
+
+    def test_playlist_get_playlists(self):
+        """ Test for checking that unauthorized access to private playlists return 404 """
+
+        # create a public and private playlist, then try various forms of access
+        playlist = get_test_data()
+        response = self.client.post(
+            url_for("playlist_api_v1.create_playlist", public="false"),
+            data=ujson.dumps(playlist),
+            headers={"Authorization": "Token {}".format(self.user4["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert200(response)
+        private_playlist_mbid = response.json["playlist_mbid"]
+
+        playlist = get_test_data()
+        response = self.client.post(
+            url_for("playlist_api_v1.create_playlist", public="true"),
+            data=ujson.dumps(playlist),
+            headers={"Authorization": "Token {}".format(self.user4["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert200(response)
+        public_playlist_mbid = response.json["playlist_mbid"]
+
+        response = self.client.get(
+            url_for("api_v1.get_playlists_for_user", playlist_user_name=self.user4["musicbrainz_id"]),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+        )
+        self.assert200(response)
+        self.assertEqual(response.json["playlist_count"], 1)
+
+        response = self.client.get(
+            url_for("api_v1.get_playlists_for_user", playlist_user_name=self.user4["musicbrainz_id"]),
+            headers={"Authorization": "Token {}".format(self.user4["auth_token"])},
+        )
+        self.assert200(response)
+        self.assertEqual(response.json["playlist_count"], 2)
 
     def test_playlist_unauthorized_access(self):
         """ Test for checking that unauthorized access return 401 """
