@@ -261,7 +261,7 @@ export default class PlaylistPage extends React.Component<
       this.alertMustBeLoggedIn();
       return;
     }
-    if (this.isOwner()) {
+    if (!this.isOwner()) {
       this.alertNotAuthorized();
       return;
     }
