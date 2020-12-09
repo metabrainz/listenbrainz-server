@@ -430,7 +430,7 @@ def delete_listen():
     return jsonify({'status': 'ok'})
 
 
-def serialize_playlists(playlists):
+def serialize_playlists(playlists, playlist_count, count, offset):
 
     items = []
     for playlist in playlists:
@@ -448,9 +448,12 @@ def serialize_playlists(playlists):
         if playlist.created_for_id:
             item["created_for_id"] = playlist.created_for_id
 
-        items.append(item)
+        items.append({"playlist": item})
 
-    return {"playlists": items}
+    return {"playlists": items,
+            "playlist_count": playlist_count,
+            "offset": offset,
+            "count": count}
 
 
 @api_bp.route("/user/<playlist_user_name>/playlists", methods=["GET", "OPTIONS"])
@@ -478,11 +481,9 @@ def get_playlists_for_user(playlist_user_name):
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
     include_private = True if user and user.id == playlist_user.id else False
-    playlists = db_playlist.get_playlists_for_user(playlist_user["id"], include_private, False, count, offset)
-    if not playlists:
-        raise APINotFound("Found no playlists for user %s" % playlist_user_name)
+    playlists, playlist_count = db_playlist.get_playlists_for_user(playlist_user["id"], include_private, False, count, offset)
 
-    return jsonify(serialize_playlists(playlists))
+    return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
 @api_bp.route("/user/<playlist_user_name>/playlists/createdfor", methods=["GET", "OPTIONS"])
@@ -507,11 +508,9 @@ def get_playlists_created_for_user(playlist_user_name):
     if playlist_user is None:
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
-    playlists = db_playlist.get_playlists_created_for_user(playlist_user["id"], False, count, offset)
-    if not playlists:
-        raise APINotFound("Found no playlists created for user %s" % playlist_user_name)
+    playlists, playlist_count = db_playlist.get_playlists_created_for_user(playlist_user["id"], False, count, offset)
 
-    return jsonify(serialize_playlists(playlists))
+    return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
 def _parse_int_arg(name, default=None):
