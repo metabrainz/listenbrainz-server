@@ -1,10 +1,18 @@
+import datetime
+import time
+from typing import Tuple
+
 import ujson
+import psycopg2
 from flask import Blueprint, request, jsonify, current_app
+
 from listenbrainz.listenstore import TimescaleListenStore
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, APIServiceUnavailable
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz import webserver
+from listenbrainz.db.model.playlist import Playlist
+import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 from listenbrainz.webserver.rate_limiter import ratelimit
@@ -13,10 +21,7 @@ from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400
     is_valid_uuid, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT,\
     LISTEN_TYPE_PLAYING_NOW
 from listenbrainz.listenstore.timescale_listenstore import SECONDS_IN_TIME_RANGE, TimescaleListenStoreException
-import time
-import psycopg2
 from listenbrainz.webserver.timescale_connection import _ts
-from typing import Tuple
 
 api_bp = Blueprint('api_v1', __name__)
 
@@ -424,6 +429,80 @@ def delete_listen():
     return jsonify({'status': 'ok'})
 
 
+def serialize_playlists(playlists):
+
+    items = []
+    for playlist in playlists:
+        item = {"mbid": playlist.mbid,
+                "creator_id": playlist.creator_id,
+                "creator": playlist.creator,
+                "name": playlist.name or "",
+                "description": playlist.description or "",
+                "public": playlist.public,
+                "created": playlist.created.replace(tzinfo=datetime.timezone.utc).isoformat(),
+        }
+
+        if playlist.copied_from_id:
+            item["copied_from_id"] = playlist.copied_from_id
+        if playlist.created_for_id:
+            item["created_for_id"] = playlist.created_for_id
+
+        items.append(item)
+
+    return {"playlists": items}
+
+
+@api_bp.route("/user/<playlist_user_name>/playlists", methods=["GET", "OPTIONS"])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
+def get_playlists_for_user(playlist_user_name):
+    """
+    Fetch the playlists for a user. Returns an array of playlists without their recordings. If
+    a user token is provided in the Authorization header, return private playlists as well
+    as public playlists for that user.
+
+    :statuscode 200: Yay, you have data!
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+    user = _validate_auth_header(True)
+
+    playlist_user = db_user.get_by_mb_id(playlist_user_name)
+    if playlist_user is None:
+        raise APINotFound("Cannot find user: %s" % playlist_user_name)
+
+    include_private = True if user and user.id == playlist_user.id else False
+    playlists = db_playlist.get_playlists_for_user(playlist_user["id"], include_private, False)
+    if not playlists:
+        raise APINotFound("Found no playlists for user %s" % playlist_user_name)
+
+    return jsonify(serialize_playlists(playlists))
+
+
+@api_bp.route("/user/<playlist_user_name>/playlists/createdfor", methods=["GET", "OPTIONS"])
+@crossdomain(headers="Content-Type")
+@ratelimit()
+def get_playlists_created_for_user(playlist_user_name):
+    """
+    Fetch the playlists that have been created for a user. Returns an array of playlists without
+    their recordings. Createdfor playlists are all public, so not Authorization is needed for this call.
+
+    :statuscode 200: Yay, you have data!
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+
+    playlist_user = db_user.get_by_mb_id(playlist_user_name)
+    if playlist_user is None:
+        raise APINotFound("Cannot find user: %s" % playlist_user_name)
+
+    playlists = db_playlist.get_playlists_created_for_user(playlist_user["id"], False)
+    if not playlists:
+        raise APINotFound("Found no playlists created for user %s" % playlist_user_name)
+
+    return jsonify(serialize_playlists(playlists))
+
+
 def _parse_int_arg(name, default=None):
     value = request.args.get(name)
     if value:
@@ -435,9 +514,11 @@ def _parse_int_arg(name, default=None):
         return default
 
 
-def _validate_auth_header():
+def _validate_auth_header(optional=False):
     auth_token = request.headers.get('Authorization')
     if not auth_token:
+        if optional:
+            return None
         raise APIUnauthorized("You need to provide an Authorization header.")
     try:
         auth_token = auth_token.split(" ")[1]
