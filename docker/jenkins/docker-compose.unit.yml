@@ -38,5 +38,4 @@ services:
     build:
       context: ../..
       dockerfile: docker/Dockerfile.webpack
-    volumes:
-      - ../../listenbrainz/webserver/static:/code/static:z
+      target: webpack-with-source
