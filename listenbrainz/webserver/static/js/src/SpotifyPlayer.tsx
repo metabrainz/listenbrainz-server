@@ -108,12 +108,13 @@ export default class SpotifyPlayer
     this.disconnectSpotifyPlayer();
   }
 
-  searchAndPlayTrack = (listen: Listen): void => {
-    const trackName = _get(listen, "track_metadata.track_name");
-    const artistName = _get(listen, "track_metadata.artist_name");
-    // Using the releaseName has paradoxically given worst search results, so we're going to ignor it for now
-    // const releaseName = _get(listen, "track_metadata.release_name");
-    const releaseName = "";
+  searchAndPlayTrack = (listen: Listen | JSPFTrack): void => {
+    const trackName =
+      _get(listen, "track_metadata.track_name") || _get(listen, "title");
+    const artistName =
+      _get(listen, "track_metadata.artist_name") || _get(listen, "creator");
+    // Using the releaseName has paradoxically given worst search results, so we're going to ignore it for now
+    const releaseName = ""; // _get(listen, "track_metadata.release_name");
     const {
       handleError,
       handleWarning,
@@ -213,9 +214,9 @@ export default class SpotifyPlayer
       });
   };
 
-  playListen = (listen: Listen): void => {
+  playListen = (listen: Listen | JSPFTrack): void => {
     if (_get(listen, "track_metadata.additional_info.spotify_id")) {
-      this.playSpotifyURI(getSpotifyUriFromListen(listen));
+      this.playSpotifyURI(getSpotifyUriFromListen(listen as Listen));
     } else {
       this.searchAndPlayTrack(listen);
     }

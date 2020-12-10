@@ -585,13 +585,13 @@ describe("onAlertDismissed", () => {
     const alert1 = {
       id: 0,
       type: "warning",
-      title: "Test",
+      headline: "Test",
       message: "foobar",
     } as Alert;
     const alert2 = {
       id: 0,
       type: "danger",
-      title: "test",
+      headline: "test",
       message: <p>foobar</p>,
     } as Alert;
     wrapper.setState({

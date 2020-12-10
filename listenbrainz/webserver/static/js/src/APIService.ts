@@ -1,3 +1,4 @@
+import { isNil } from "lodash";
 import APIError from "./APIError";
 
 export default class APIService {
@@ -388,6 +389,164 @@ export default class APIService {
         listened_at: listenedAt,
         recording_msid: recordingMSID,
       }),
+    });
+    this.checkStatus(response);
+    return response.status;
+  };
+
+  createPlaylist = async (
+    userToken: string,
+    title: string,
+    tracks: any,
+    isPublic: Boolean,
+    description?: string
+  ): Promise<string> => {
+    if (!title) {
+      throw new SyntaxError("playlist title missing");
+    }
+
+    const url = `${this.APIBaseURI}/playlist/create?public=${isPublic}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ playlist: { title, description, track: tracks } }),
+    });
+    this.checkStatus(response);
+    const result = await response.json();
+
+    return result.playlist_mbid;
+  };
+
+  getPlaylist = async (playlistMBID: string, userToken?: string) => {
+    if (!playlistMBID) {
+      throw new SyntaxError("playlist MBID missing");
+    }
+    let headers;
+    if (userToken) {
+      headers = {
+        Authorization: `Token ${userToken}`,
+      };
+    }
+
+    const url = `${this.APIBaseURI}/playlist/${playlistMBID}`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers,
+    });
+    this.checkStatus(response);
+    const data = response.json();
+    return data;
+  };
+
+  addPlaylistItems = async (
+    userToken: string,
+    playlistMBID: string,
+    tracks: JSPFTrack[],
+    offset?: number
+  ): Promise<number> => {
+    if (!playlistMBID) {
+      throw new SyntaxError("Playlist MBID is missing");
+    }
+    const optionalOffset =
+      !isNil(offset) && Number.isSafeInteger(offset) ? `?offset=${offset}` : "";
+    const url = `${this.APIBaseURI}/playlist/${playlistMBID}/item/add${optionalOffset}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ playlist: { track: tracks } }),
+    });
+    this.checkStatus(response);
+
+    return response.status;
+  };
+
+  deletePlaylistItems = async (
+    userToken: string,
+    playlistMBID: string,
+    // This is currently unused by the API endpoint, which might be an oversight
+    recordingMBID: string,
+    index: number,
+    count: number = 1
+  ): Promise<number> => {
+    if (!playlistMBID) {
+      throw new SyntaxError("Playlist MBID is missing");
+    }
+    const url = `${this.APIBaseURI}/playlist/${playlistMBID}/item/delete`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ index, count }),
+    });
+    this.checkStatus(response);
+
+    return response.status;
+  };
+
+  movePlaylistItem = async (
+    userToken: string,
+    playlistMBID: string,
+    recordingMBID: string,
+    from: number,
+    to: number,
+    count: number
+  ): Promise<number> => {
+    const url = `${this.APIBaseURI}/playlist/${playlistMBID}/item/move`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ mbid: recordingMBID, from, to, count }),
+    });
+    this.checkStatus(response);
+
+    return response.status;
+  };
+
+  copyPlaylist = async (
+    userToken: string,
+    playlistMBID: string
+  ): Promise<string> => {
+    if (!playlistMBID) {
+      throw new SyntaxError("playlist MBID missing");
+    }
+
+    const url = `${this.APIBaseURI}/playlist/${playlistMBID}/copy`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
+    });
+    this.checkStatus(response);
+    const data = await response.json();
+    return data.playlist_mbid;
+  };
+
+  deletePlaylist = async (
+    userToken: string,
+    playlistMBID: string
+  ): Promise<number> => {
+    if (!playlistMBID) {
+      throw new SyntaxError("playlist MBID missing");
+    }
+
+    const url = `${this.APIBaseURI}/playlist/${playlistMBID}/delete`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
     });
     this.checkStatus(response);
     return response.status;
