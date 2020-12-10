@@ -1,17 +1,10 @@
-import sys
-import os
-import uuid
-import unittest
-
-from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
-from listenbrainz.db import timescale as ts
-from listenbrainz.webserver.errors import APINotFound
-from flask import url_for, current_app
-from redis import Redis
-import listenbrainz.db.user as db_user
-import time
 import json
-from listenbrainz import config
+import time
+
+from flask import url_for
+
+import listenbrainz.db.user as db_user
+from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 
 

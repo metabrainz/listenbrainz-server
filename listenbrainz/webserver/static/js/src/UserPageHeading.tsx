@@ -53,6 +53,7 @@ const UserPageHeading = ({
         followUsersFeatureEnabled(loggedInUser.name) &&
         user.name !== loggedInUser.name && (
           <FollowButton
+            type="icon-only"
             user={user}
             loggedInUser={loggedInUser}
             loggedInUserFollowsUser={loggedInUserFollowsUser}

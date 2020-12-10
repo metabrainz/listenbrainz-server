@@ -666,12 +666,17 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["error"], "Cannot find user: nouser")
 
     def test_get_feedback_for_recordings_for_user_no_recordings(self):
-        """ Test to make sure that the API sends 400 if params recordings has nothing. """
+        """ Test to make sure that the API sends 400 if param recordings is not passed or is empty. """
+        response = self.client.get(url_for("feedback_api_v1.get_feedback_for_recordings_for_user",
+                                           user_name=self.user["musicbrainz_id"]))  # missing recordings param
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "'recordings' has no valid recording MSID.")
+
         response = self.client.get(url_for("feedback_api_v1.get_feedback_for_recordings_for_user",
                                            user_name=self.user["musicbrainz_id"]),
                                    query_string={"recordings": ""})  # empty string
         self.assert400(response)
-        self.assertEqual(response.json["error"], "'recordings' has no valid recording_msid.")
+        self.assertEqual(response.json["error"], "'recordings' has no valid recording MSID.")
 
     def test_get_feedback_for_recordings_for_user_invalid_recording(self):
         """ Test to make sure that the API sends 400 if params recordings has invalid recording_msid. """
