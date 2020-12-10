@@ -11,6 +11,7 @@ from flask import Blueprint, render_template, request, url_for, Response, redire
 from flask_login import current_user, login_required
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
+from listenbrainz.db.playlist import get_playlists_for_user
 from listenbrainz.domain import spotify
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
@@ -21,6 +22,7 @@ from listenbrainz.webserver.views.api_tools import publish_data_to_queue, log_ra
 from datetime import datetime
 from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, ServiceUnavailable, Unauthorized, InternalServerError
 from listenbrainz.webserver.views.stats_api import _get_non_negative_param
+from listenbrainz.webserver.views.playlist_api import serialize_jspf
 from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStoreException
 from pydantic import ValidationError
 
@@ -190,6 +192,53 @@ def reports(user_name: str):
     return render_template(
         "user/reports.html",
         active_section="reports",
+        props=ujson.dumps(props),
+        user=user
+    )
+
+@user_bp.route("/<user_name>/playlists")
+def playlists(user_name: str):
+    """ Show user playlists """
+    
+    if not current_app.config.get("FEATURE_PLAYLIST", False):
+        raise NotFound()
+    
+    user = _get_user(user_name)
+    user_data = {
+        "name": user.musicbrainz_id,
+        "id": user.id,
+    }
+    
+    spotify_data = {}
+    current_user_data = {}
+    if current_user.is_authenticated:
+        spotify_data = spotify.get_user_dict(current_user.id)
+        current_user_data = {
+            "id": current_user.id,
+            "name": current_user.musicbrainz_id,
+            "auth_token": current_user.auth_token,
+        }
+    
+    loadPrivatePlaylists = False
+    if current_user.is_authenticated and \
+       current_user.musicbrainz_id == user_name:
+       loadPrivatePlaylists = True
+    
+    playlists = []
+    for playlist in get_playlists_for_user(user.id, loadPrivatePlaylists):
+        playlists.append(serialize_jspf(playlist))
+
+
+    props = {
+        "current_user": current_user_data,
+        "api_url": current_app.config["API_URL"],
+        "playlists": playlists,
+        "user": user_data
+    }
+
+    return render_template(
+        "playlists/playlists.html",
+        active_section="playlists",
         props=ujson.dumps(props),
         user=user
     )
