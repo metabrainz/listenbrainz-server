@@ -113,12 +113,3 @@ services:
       - ../listenbrainz/webserver/static:/code/static:z
       - ../listenbrainz/webserver/static:/static:z
 
-  type_checker:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.webpack
-    command: npm run type-check:watch
-    volumes:
-      - ../listenbrainz/webserver/static:/code/static:z
-      - ../listenbrainz/webserver/static:/static:z
-
