@@ -13,7 +13,7 @@
     "build": "npm run build:dev",
     "postinstall": "npm run build:prod",
     "format": "eslint ./static/js/src --ignore-path .gitignore --ext .js,jsx,ts,tsx --fix --quiet",
-    "format:ci": "eslint ./static/js/src --ignore-path .gitignore --ext .js,jsx,ts,tsx",
+    "format:ci": "eslint ./static/js/src --ignore-path .gitignore --ext .js,jsx,ts,tsx -o eslint.xml -f jslint-xml",
     "test": "jest",
     "test:ci": "jest --ci --reporters=default --reporters=jest-junit",
     "test:watch": "jest --watch",

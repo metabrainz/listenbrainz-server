@@ -33,3 +33,10 @@ services:
       - db
       - timescale
       - rabbitmq
+
+  frontend_tester:
+    build:
+      context: ../..
+      dockerfile: docker/Dockerfile.webpack
+    volumes:
+      - ../../listenbrainz/webserver/static:/code/static:z
