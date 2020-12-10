@@ -1,7 +1,8 @@
 from uuid import UUID
 
-from redis import Redis
+import dateutil.parser
 from flask import url_for, current_app
+from redis import Redis
 from listenbrainz.tests.integration import IntegrationTestCase
 import listenbrainz.db.user as db_user
 from listenbrainz.webserver.views.playlist_api import PLAYLIST_TRACK_URI_PREFIX, PLAYLIST_URI_PREFIX
@@ -16,6 +17,7 @@ def get_test_data():
     return {
        "playlist": {
           "title": "1980s flashback jams",
+          "description": "your lame 80s music",
           "track": [
              {
                 "identifier": "https://musicbrainz.org/recording/e8f9b188-f819-4e43-ab0f-4bd26ce9ff56"
@@ -515,7 +517,24 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert200(response)
         self.assertEqual(response.json["playlist_count"], 2)
-        #TODO: check other items returned by the playlist
+        self.assertEqual(response.json["playlists"][0]["playlist"]["creator_id"], self.user4["id"])
+        self.assertEqual(response.json["playlists"][0]["playlist"]["creator"], self.user4["musicbrainz_id"])
+        self.assertEqual(response.json["playlists"][0]["playlist"]["mbid"], public_playlist_mbid)
+        self.assertEqual(response.json["playlists"][0]["playlist"]["name"], "1980s flashback jams")
+        self.assertEqual(response.json["playlists"][0]["playlist"]["public"], True)
+        try:
+            dateutil.parser.isoparse(response.json["playlists"][0]["playlist"]["created"])
+        except ValueError:
+            assert False
+        self.assertEqual(response.json["playlists"][1]["playlist"]["creator_id"], self.user4["id"])
+        self.assertEqual(response.json["playlists"][1]["playlist"]["creator"], self.user4["musicbrainz_id"])
+        self.assertEqual(response.json["playlists"][1]["playlist"]["mbid"], private_playlist_mbid)
+        self.assertEqual(response.json["playlists"][1]["playlist"]["name"], "1980s flashback jams")
+        self.assertEqual(response.json["playlists"][1]["playlist"]["public"], False)
+        try:
+            dateutil.parser.isoparse(response.json["playlists"][1]["playlist"]["created"])
+        except ValueError:
+            assert False
 
         # Test count and offset parameters
         response = self.client.get(

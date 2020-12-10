@@ -83,7 +83,7 @@ def serialize_jspf(playlist: Playlist):
     pl = {"creator": playlist.creator,
           "title": playlist.name,
           "identifier": PLAYLIST_URI_PREFIX + str(playlist.mbid),
-          "date": playlist.created.replace(tzinfo=datetime.timezone.utc).isoformat(),
+          "date": playlist.created.astimezone(datetime.timezone.utc).isoformat()
     }
     if playlist.description:
         pl["annotation"] = playlist.description
@@ -110,7 +110,7 @@ def serialize_jspf(playlist: Playlist):
             tr["title"] = rec.title
 
         extension = {"added_by": rec.added_by,
-                      "added_at": rec.created.astimezone(datetime.timezone.utc)}
+                      "added_at": rec.created.astimezone(datetime.timezone.utc).isoformat()}
         if rec.artist_mbids:
             extension["artist_identifier"] = [PLAYLIST_ARTIST_URI_PREFIX + str(mbid) for mbid in rec.artist_mbids]
 
