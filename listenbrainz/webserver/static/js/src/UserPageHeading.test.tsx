@@ -77,6 +77,7 @@ describe("<UserPageHeading />", () => {
     );
     const followButton = wrapper.find(FollowButton).at(0);
     expect(followButton.props()).toEqual({
+      type: "icon-only",
       user: { id: 1, name: "followed_user" },
       loggedInUser: { id: 2, name: "iliekcomputers" },
       loggedInUserFollowsUser: false,
