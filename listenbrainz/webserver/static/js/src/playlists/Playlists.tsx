@@ -294,33 +294,24 @@ export default class UserPlaylists extends React.Component<
       );
       return;
     }
+    const { currentUser } = this.props;
+    if (!currentUser?.auth_token) {
+      this.alertMustBeLoggedIn();
+      return;
+    }
     const { playlists } = this.state;
     const playlistsCopy = [...playlists];
     const playlistIndex = playlistsCopy.findIndex(
       (pl) => getPlaylistId(pl) === id
     );
-    if (!this.isOwner(playlists[playlistIndex])) {
+    const playlistToEdit = playlists[playlistIndex];
+    if (!this.isOwner(playlistToEdit)) {
       this.alertNotAuthorized();
       return;
     }
     try {
-      const content = (
-        <div>
-          This is a placeholder; the API call is not yet implemented. Your
-          changes have not been saved.
-          <div>name: {name}</div>
-          <div>description: {description}</div>
-          <div>isPublic: {isPublic.toString()}</div>
-          <div>collaborators: {collaborators.join(", ")}</div>
-          <div>id: {id}</div>
-        </div>
-      );
-
-      this.newAlert("warning", "Placeholder", content);
-
-      // Once API call succeeds, update playlist in state
-      playlistsCopy[playlistIndex] = {
-        ...playlistsCopy[playlistIndex],
+      const editedPlaylist: JSPFPlaylist = {
+        ...playlistToEdit,
         annotation: description,
         title: name,
         extension: {
@@ -330,8 +321,14 @@ export default class UserPlaylists extends React.Component<
           },
         },
       };
-      // — OR - fetch the newly edited playlist and replace it in the state
-      // const playlist:JSPFPlaylist = await this.APIService.getPlaylist(id);
+      await this.APIService.editPlaylist(currentUser.auth_token, id, {
+        playlist: editedPlaylist,
+      });
+
+      this.newAlert("success", "Saved playlist", "");
+
+      // Once API call succeeds, update playlist in state
+      playlistsCopy[playlistIndex] = editedPlaylist;
       this.setState({ playlists: playlistsCopy });
     } catch (error) {
       this.newAlert("danger", "Error", error.message);
