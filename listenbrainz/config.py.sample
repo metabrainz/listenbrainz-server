@@ -126,7 +126,10 @@ LISTENBRAINZ_LABS_API_URL = 'https://labs.api.listenbrainz.org'
 # Set to True if you want Flask-Debug to intercept redirects
 DEBUG_TB_INTERCEPT_REDIRECTS = False
 
+# Users who are allowed to view the LB admin interface
 ADMINS = []
+# Users who are allowed to submit playlists made for someone else.
+APPROVED_PLAYLIST_BOTS = ['troi-bot']
 
 # SPOTIFY
 SPOTIFY_CLIENT_ID = 'needs a non empty default value for tests, change this'
@@ -150,3 +153,6 @@ SESSION_REMEMBER_ME_DURATION = 365
 
 # listen dumps creation dir
 LISTEN_DUMP_TEMP_DIR_ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'tmp')
+
+# Feature configs that enable/disable new features that are merged in master, but not ready for release
+FEATURE_PLAYLIST=True

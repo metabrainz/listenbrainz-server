@@ -97,7 +97,7 @@ def insert_rows(id, curs, formats):
         Helper function for inserting format rows.
     '''
 
-    for format_id, format in formats:
+    for format_id, _ in formats:
         curs.execute("INSERT INTO mapping.format_sort values (%s, %s);",  tuple((id, format_id)))
         id += 1
 
@@ -119,7 +119,7 @@ def create_formats_table(conn):
             curs.execute("CREATE INDEX format_sort_format_ndx ON mapping.format_sort(format)")
             curs.execute("CREATE INDEX format_sort_sort_ndx ON mapping.format_sort(sort)")
         conn.commit()
-    except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable) as err:
+    except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable):
         print("failed to create formats table")
         conn.rollback()
         raise

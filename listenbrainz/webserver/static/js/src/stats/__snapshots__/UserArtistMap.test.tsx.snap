@@ -36,7 +36,7 @@ exports[`UserArtistMap renders corectly when range is invalid 1`] = `
         className="row"
       >
         <div
-          className="col-xs-10"
+          className="col-md-9 col-xs-6"
         >
           <h3
             className="capitalize-bold"
@@ -50,7 +50,54 @@ exports[`UserArtistMap renders corectly when range is invalid 1`] = `
           </h3>
         </div>
         <div
-          className="col-xs-2 text-right"
+          className="col-md-2 col-xs-4 text-right"
+          style={
+            Object {
+              "marginTop": 20,
+            }
+          }
+        >
+          <span
+            className="dropdown"
+          >
+            <button
+              className="dropdown-toggle btn-transparent capitalize-bold"
+              data-toggle="dropdown"
+              type="button"
+            >
+              artist
+              s
+              <span
+                className="caret"
+              />
+            </button>
+            <ul
+              className="dropdown-menu"
+              role="menu"
+            >
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Listens
+                </a>
+              </li>
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Artists
+                </a>
+              </li>
+            </ul>
+          </span>
+        </div>
+        <div
+          className="col-md-1 col-xs-2 text-right"
         >
           <h4
             style={
@@ -217,7 +264,7 @@ exports[`UserArtistMap renders correctly 1`] = `
     className="row"
   >
     <div
-      className="col-xs-10"
+      className="col-md-9 col-xs-6"
     >
       <h3
         className="capitalize-bold"
@@ -231,7 +278,54 @@ exports[`UserArtistMap renders correctly 1`] = `
       </h3>
     </div>
     <div
-      className="col-xs-2 text-right"
+      className="col-md-2 col-xs-4 text-right"
+      style={
+        Object {
+          "marginTop": 20,
+        }
+      }
+    >
+      <span
+        className="dropdown"
+      >
+        <button
+          className="dropdown-toggle btn-transparent capitalize-bold"
+          data-toggle="dropdown"
+          type="button"
+        >
+          artist
+          s
+          <span
+            className="caret"
+          />
+        </button>
+        <ul
+          className="dropdown-menu"
+          role="menu"
+        >
+          <li>
+            <a
+              href=""
+              onClick={[Function]}
+              role="button"
+            >
+              Listens
+            </a>
+          </li>
+          <li>
+            <a
+              href=""
+              onClick={[Function]}
+              role="button"
+            >
+              Artists
+            </a>
+          </li>
+        </ul>
+      </span>
+    </div>
+    <div
+      className="col-md-1 col-xs-2 text-right"
     >
       <h4
         style={
@@ -294,67 +388,102 @@ exports[`UserArtistMap renders correctly 1`] = `
         className="col-xs-12"
       >
         <CustomChoropleth
-          countOf="artist"
           data={
             Array [
               Object {
-                "id": "USA",
-                "value": 43,
-              },
-              Object {
-                "id": "CAN",
-                "value": 5,
-              },
-              Object {
-                "id": "IND",
-                "value": 7,
-              },
-              Object {
-                "id": "DNK",
-                "value": 1,
-              },
-              Object {
                 "id": "GBR",
-                "value": 20,
+                "value": 50,
               },
               Object {
-                "id": "ISR",
-                "value": 1,
+                "id": "USA",
+                "value": 135,
               },
               Object {
                 "id": "AUS",
-                "value": 4,
+                "value": 6,
               },
               Object {
-                "id": "FRA",
-                "value": 3,
-              },
-              Object {
-                "id": "SWE",
-                "value": 4,
+                "id": "BEL",
+                "value": 2,
               },
               Object {
                 "id": "DEU",
-                "value": 3,
+                "value": 10,
+              },
+              Object {
+                "id": "CAN",
+                "value": 10,
+              },
+              Object {
+                "id": "ARG",
+                "value": 1,
+              },
+              Object {
+                "id": "ESP",
+                "value": 1,
               },
               Object {
                 "id": "PRT",
                 "value": 1,
               },
               Object {
-                "id": "IRL",
-                "value": 2,
+                "id": "ISL",
+                "value": 3,
               },
               Object {
-                "id": "ISL",
-                "value": 1,
+                "id": "NLD",
+                "value": 6,
               },
               Object {
                 "id": "NOR",
                 "value": 2,
               },
               Object {
-                "id": "ARG",
+                "id": "SWE",
+                "value": 10,
+              },
+              Object {
+                "id": "IND",
+                "value": 30,
+              },
+              Object {
+                "id": "IRL",
+                "value": 5,
+              },
+              Object {
+                "id": "FRA",
+                "value": 5,
+              },
+              Object {
+                "id": "URY",
+                "value": 1,
+              },
+              Object {
+                "id": "DNK",
+                "value": 2,
+              },
+              Object {
+                "id": "PAK",
+                "value": 1,
+              },
+              Object {
+                "id": "TUR",
+                "value": 1,
+              },
+              Object {
+                "id": "JAM",
+                "value": 1,
+              },
+              Object {
+                "id": "SGP",
+                "value": 1,
+              },
+              Object {
+                "id": "IDN",
+                "value": 2,
+              },
+              Object {
+                "id": "PHL",
                 "value": 1,
               },
               Object {
@@ -362,11 +491,16 @@ exports[`UserArtistMap renders correctly 1`] = `
                 "value": 1,
               },
               Object {
-                "id": "ESP",
+                "id": "NZL",
+                "value": 1,
+              },
+              Object {
+                "id": "MYS",
                 "value": 1,
               },
             ]
           }
+          selectedMetric="artist"
           width={1200}
         />
       </div>

@@ -563,13 +563,13 @@ describe("newAlert", () => {
 
     instance.newAlert("warning", "Test", "foobar");
     expect(wrapper.state().alerts).toEqual([
-      { id: 0, type: "warning", title: "Test", message: "foobar" },
+      { id: 0, type: "warning", headline: "Test", message: "foobar" },
     ]);
 
     instance.newAlert("danger", "test", <p>foobar</p>);
     expect(wrapper.state().alerts).toEqual([
-      { id: 0, type: "warning", title: "Test", message: "foobar" },
-      { id: 0, type: "danger", title: "test", message: <p>foobar</p> },
+      { id: 0, type: "warning", headline: "Test", message: "foobar" },
+      { id: 0, type: "danger", headline: "test", message: <p>foobar</p> },
     ]);
   });
 });
@@ -585,13 +585,13 @@ describe("onAlertDismissed", () => {
     const alert1 = {
       id: 0,
       type: "warning",
-      title: "Test",
+      headline: "Test",
       message: "foobar",
     } as Alert;
     const alert2 = {
       id: 0,
       type: "danger",
-      title: "test",
+      headline: "test",
       message: <p>foobar</p>,
     } as Alert;
     wrapper.setState({
