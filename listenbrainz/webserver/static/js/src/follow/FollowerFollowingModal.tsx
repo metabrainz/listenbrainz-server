@@ -129,7 +129,6 @@ export default class FollowerFollowingModal extends React.Component<
                     )}
                   />
                 </div>
-                <hr />
               </>
             );
           })}
