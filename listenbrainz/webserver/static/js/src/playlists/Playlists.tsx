@@ -391,6 +391,7 @@ export default class UserPlaylists extends React.Component<
                   <div>
                     Created:{" "}
                     {new Date(playlist.date).toLocaleString(undefined, {
+                      // @ts-ignore see https://github.com/microsoft/TypeScript/issues/40806
                       dateStyle: "short",
                     })}
                   </div>
@@ -398,7 +399,10 @@ export default class UserPlaylists extends React.Component<
                     {customFields?.last_modified_at &&
                       `Last Modified: ${new Date(
                         customFields.last_modified_at
-                      ).toLocaleString(undefined, { dateStyle: "short" })}`}
+                      ).toLocaleString(undefined, {
+                        // @ts-ignore see https://github.com/microsoft/TypeScript/issues/40806
+                        dateStyle: "short",
+                      })}`}
                   </div>
                 </a>
               </Card>

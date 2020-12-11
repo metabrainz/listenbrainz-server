@@ -20,8 +20,7 @@
     "test:update-snapshots": "jest -u",
     "test:coverage": "jest --coverage --colors",
     "test:debug": "node --inspect node_modules/.bin/jest --runInBand",
-    "type-check": "tsc --noEmit",
-    "type-check:watch": "npm run type-check -- --watch"
+    "type-check": "tsc --noEmit"
   },
   "author": "MetaBrainz Foundation Inc.",
   "license": "GPL-2.0-only",
@@ -106,6 +105,7 @@
     "eslint-plugin-prettier": "^3.1.2",
     "eslint-plugin-react": "^7.19.0",
     "eslint-plugin-react-hooks": "^2.5.1",
+    "fork-ts-checker-webpack-plugin": "^6.0.5",
     "jest": "^25.1.0",
     "jest-fetch-mock": "^3.0.3",
     "jest-junit": "^12.0.0",

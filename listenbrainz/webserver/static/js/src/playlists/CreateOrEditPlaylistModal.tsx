@@ -101,7 +101,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
     });
   };
 
-  addCollaborator = (evt: React.FormEvent<HTMLFormElement>): void => {
+  addCollaborator = (evt: React.MouseEvent<HTMLButtonElement>): void => {
     evt.preventDefault();
     const { collaborators, newCollaborator } = this.state;
     if (collaborators.indexOf(newCollaborator) !== -1) {
@@ -220,10 +220,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
                     })}
                   </tbody>
                 </table>
-                <div
-                  className="input-group input-group-flex"
-                  onSubmit={this.addCollaborator}
-                >
+                <div className="input-group input-group-flex">
                   <span className="input-group-addon">Add collaborator</span>
                   <input
                     type="text"
@@ -234,7 +231,11 @@ export default class CreateOrEditPlaylistModal extends React.Component<
                     value={newCollaborator}
                   />
                   <span className="input-group-btn">
-                    <button className="btn" type="submit">
+                    <button
+                      className="btn"
+                      type="submit"
+                      onClick={this.addCollaborator}
+                    >
                       <FontAwesomeIcon icon={faPlusCircle as IconProp} /> Add
                     </button>
                   </span>
