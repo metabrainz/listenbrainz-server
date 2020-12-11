@@ -65,9 +65,11 @@ class TimescaleTestCase(unittest.TestCase):
         ts.engine.dispose()
 
         ts.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
-        ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_extensions.sql'))
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_schemas.sql'))
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_tables.sql'))
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_functions.sql'))
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_primary_keys.sql'))
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_foreign_keys.sql'))
         ts.engine.dispose()

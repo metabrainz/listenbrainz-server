@@ -292,8 +292,8 @@ export default class RecentListens extends React.Component<
     });
   };
 
-  handleCurrentListenChange = (listen: Listen): void => {
-    this.setState({ currentListen: listen });
+  handleCurrentListenChange = (listen: Listen | JSPFTrack): void => {
+    this.setState({ currentListen: listen as Listen });
   };
 
   isCurrentListen = (listen: Listen): boolean => {
@@ -321,14 +321,14 @@ export default class RecentListens extends React.Component<
   newAlert = (
     type: AlertType,
     title: string,
-    message?: string | JSX.Element
+    message: string | JSX.Element
   ): void => {
-    const newAlert = {
+    const newAlert: Alert = {
       id: new Date().getTime(),
       type,
-      title,
+      headline: title,
       message,
-    } as Alert;
+    };
 
     this.setState((prevState) => {
       return {

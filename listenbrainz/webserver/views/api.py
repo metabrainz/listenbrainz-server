@@ -418,10 +418,10 @@ def delete_listen():
         _ts.delete_listen(listened_at=listened_at, recording_msid=recording_msid, user_name=user["musicbrainz_id"])
     except TimescaleListenStoreException as e:
         current_app.logger.error("Cannot delete listen for user: %s" % str(e))
-        raise ServiceUnavailable("We couldn't delete the listen. Please try again later.")
+        raise APIServiceUnavailable("We couldn't delete the listen. Please try again later.")
     except Exception as e:
         current_app.logger.error("Cannot delete listen for user: %s" % str(e))
-        raise InternalServerError("We couldn't delete the listen. Please try again later.")
+        raise APIInternalServerError("We couldn't delete the listen. Please try again later.")
 
     return jsonify({'status': 'ok'})
 

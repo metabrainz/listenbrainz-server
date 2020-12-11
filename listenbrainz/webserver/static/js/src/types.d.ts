@@ -2,8 +2,17 @@
 
 declare module "react-responsive";
 declare module "spotify-web-playback-sdk";
-declare module "react-bs-notifier";
 declare module "time-ago";
+declare module "debounce-async";
+
+declare module "react-bs-notifier";
+declare type AlertType = "danger" | "warning" | "success";
+declare type Alert = {
+  id: number;
+  type: AlertType;
+  headline: string;
+  message: string | JSX.Element;
+};
 
 // TODO: Remove "| null" when backend stops sending fields with null
 interface AdditionalInfo {
@@ -116,15 +125,6 @@ declare type SpotifyPlayerSDKState = {
 // Adding an any here for now.
 // TODO: remove this any eventually
 declare type SpotifyPlayerType = any | Spotify.SpotifyPlayer;
-
-declare type AlertType = "danger" | "warning" | "success";
-
-declare type Alert = {
-  id: number;
-  type: AlertType;
-  title: string;
-  message: string | JSX.Element;
-};
 
 // Expect either a string or an Error or an html Response object
 declare type BrainzPlayerError =
@@ -314,4 +314,73 @@ declare type FeedbackResponse = {
 
 declare type RecordingFeedbackMap = {
   [recordingMsid: string]: ListenFeedBack;
+};
+
+declare type ACRMSearchResult = {
+  artist_credit_id: number;
+  artist_credit_name: string;
+  recording_mbid: string;
+  recording_name: string;
+  release_mbid: string;
+  release_name: string;
+};
+
+// XSPF/JSPF format: https://www.xspf.org/jspf/
+declare type JSPFObject = {
+  playlist: JSPFPlaylist;
+};
+
+declare type JSPFPlaylistExtension = {
+  collaborators: string[];
+  public: boolean;
+  created_for?: string;
+  copied_from?: string; // Full ListenBrainz playlist URI
+  last_modified_at?: string; // ISO date string
+};
+
+declare type JSPFTrackExtension = {
+  added_by: string;
+  artist_identifier: string[]; // Full MusicBrainz artist URIs
+  added_at: string; // ISO date string
+  release_identifier?: string; // Full MusicBrainz release URI
+};
+
+declare type JSPFPlaylist = {
+  title: string;
+  creator: string;
+  annotation?: string;
+  info?: string;
+  location?: string;
+  identifier: string;
+  image?: string;
+  date: string; // ISO date string
+  license?: string;
+  attribution?: Array<{ location: string } | { identifier: string }>;
+  link?: Array<{ [name: string]: string }>;
+  meta?: Array<{ [name: string]: string }>;
+  track: Array<JSPFTrack>;
+  extension?: {
+    [name: string]: any;
+    "https://musicbrainz.org/doc/jspf#playlist"?: JSPFPlaylistExtension;
+  };
+};
+
+declare type JSPFTrack = {
+  id?: string; // React-sortable library expects an id attribute, this is not part of JSPF specification
+  location?: string[];
+  identifier: string;
+  title: string;
+  creator: string;
+  annotation?: string;
+  info?: string;
+  image?: string;
+  album?: string;
+  trackNum?: number;
+  duration?: number;
+  link?: Array<{ [name: string]: string }>;
+  meta?: Array<{ [name: string]: string }>;
+  extension?: {
+    [name: string]: any;
+    "https://musicbrainz.org/doc/jspf#track"?: JSPFTrackExtension;
+  };
 };

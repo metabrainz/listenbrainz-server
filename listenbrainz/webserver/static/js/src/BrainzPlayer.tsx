@@ -13,7 +13,7 @@ import YoutubePlayer from "./YoutubePlayer";
 import SoundcloudPlayer from "./SoundcloudPlayer";
 
 export type DataSourceType = {
-  playListen: (listen: Listen) => void;
+  playListen: (listen: Listen | JSPFTrack) => void;
   togglePlay: () => void;
   seekToPositionMs: (msTimecode: number) => void;
 };
@@ -41,9 +41,9 @@ export type DataSourceProps = {
 type BrainzPlayerProps = {
   spotifyUser: SpotifyUser;
   direction: BrainzPlayDirection;
-  onCurrentListenChange: (listen: Listen) => void;
-  currentListen?: Listen;
-  listens: Array<Listen>;
+  onCurrentListenChange: (listen: Listen | JSPFTrack) => void;
+  currentListen?: Listen | JSPFTrack;
+  listens: Array<Listen | JSPFTrack>;
   newAlert: (
     alertType: AlertType,
     title: string,
@@ -105,7 +105,7 @@ export default class BrainzPlayer extends React.Component<
     };
   }
 
-  isCurrentListen = (element: Listen): boolean => {
+  isCurrentListen = (element: Listen | JSPFTrack): boolean => {
     const { currentListen } = this.props;
     return (currentListen && _isEqual(element, currentListen)) as boolean;
   };
@@ -197,7 +197,10 @@ export default class BrainzPlayer extends React.Component<
     }
   };
 
-  playListen = (listen: Listen, datasourceIndex: number = 0): void => {
+  playListen = (
+    listen: Listen | JSPFTrack,
+    datasourceIndex: number = 0
+  ): void => {
     if (this.firstRun) {
       this.firstRun = false;
     }
@@ -229,7 +232,7 @@ export default class BrainzPlayer extends React.Component<
     });
   };
 
-  getSourceIndexByListenData = (listen: Listen): number => {
+  getSourceIndexByListenData = (listen: Listen | JSPFTrack): number => {
     let selectedDatasourceIndex = -1;
     const listeningFrom = _get(
       listen,

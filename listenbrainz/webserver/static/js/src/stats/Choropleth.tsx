@@ -5,7 +5,7 @@ import { BasicTooltip } from "@nivo/tooltip";
 import { scaleThreshold } from "d3-scale";
 import { schemeOranges } from "d3-scale-chromatic";
 import { format } from "d3-format";
-import * as _ from "lodash";
+import { maxBy } from "lodash";
 import * as React from "react";
 import { useMediaQuery } from "react-responsive";
 import * as features from "./world_countries.json";
@@ -13,7 +13,7 @@ import * as features from "./world_countries.json";
 export type ChoroplethProps = {
   data: UserArtistMapData;
   width?: number;
-  countOf: "artist" | "listen";
+  selectedMetric: "artist" | "listen";
 };
 
 export default function CustomChoropleth(props: ChoroplethProps) {
@@ -81,7 +81,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
 
   // Calculate logarithmic domain
   const domain = (() => {
-    const maxArtistCount = _.maxBy(data, (datum) => datum.value)?.value || 1;
+    const maxArtistCount = maxBy(data, (datum) => datum.value)?.value || 1;
 
     const result = [];
     for (let i = 0; i < 6; i += 1) {
@@ -128,7 +128,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
       return null;
     }
 
-    const { countOf } = props;
+    const { selectedMetric } = props;
 
     return (
       <BasicTooltip
@@ -136,7 +136,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
         color={feature.color}
         value={`${
           feature.formattedValue
-        } ${countOf[0].toUpperCase()}${countOf.slice(1)}s`}
+        } ${selectedMetric[0].toUpperCase()}${selectedMetric.slice(1)}s`}
         enableChip
       />
     );
