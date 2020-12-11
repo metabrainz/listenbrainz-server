@@ -143,12 +143,11 @@ class FollowButton extends React.Component<
     const { buttonClass, buttonText, buttonIcon } = this.getButtonDetails();
     return (
       <div
-        id="follow-button"
         onClick={this.handleButtonClick}
         onKeyPress={this.handleButtonClick}
         onMouseEnter={() => this.setHover(true)}
         onMouseLeave={() => this.setHover(false)}
-        className={`btn btn-sm ${buttonClass} ${type}`}
+        className={`follow-button ${buttonClass} ${type}`}
         role="button"
         tabIndex={0}
       >
