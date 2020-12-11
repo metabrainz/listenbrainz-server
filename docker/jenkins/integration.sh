@@ -30,6 +30,9 @@ function cleanup {
 }
 
 function run_tests {
+    # copy config before build, it's needed in all containers
+    cp listenbrainz/config.py.sample listenbrainz/config.py
+
     # Create containers
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
@@ -47,8 +50,7 @@ function run_tests {
       dockerize \
       -wait tcp://db:5432 -timeout 60s \
       -wait tcp://timescale:5432 -timeout 60s \
-      bash -c "cp listenbrainz/config.py.sample listenbrainz/config.py && \
-               python3 manage.py init_db --create-db && \
+      bash -c "python3 manage.py init_db --create-db && \
                python3 manage.py init_msb_db --create-db && \
                python3 manage.py init_ts_db --create-db"
 
@@ -58,8 +60,7 @@ function run_tests {
         -wait tcp://timescale:5432 -timeout 60s \
         -wait tcp://redis:6379 -timeout 60s \
         -wait tcp://rabbitmq:5672 -timeout 60s \
-      bash -c "cp listenbrainz/config.py.sample listenbrainz/config.py && \
-               pytest listenbrainz/tests/integration --junitxml=/data/test_report.xml"
+      pytest listenbrainz/tests/integration --junitxml=/data/test_report.xml
 }
 
 function  extract_results {
