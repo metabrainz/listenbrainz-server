@@ -183,7 +183,6 @@ different services. We provide a small description of each container here:
 * ``api_compat``: A Last.fm-compatible API server
 * ``follow_server``: A helper server used for the user-following component of ListenBrainz
 * ``static_builder``: A helper service to build Javascript/Typescript and CSS assets if they are changed
-* ``type_checker``: A helper service to type-check Typescript assets
 
 .. note::
 
