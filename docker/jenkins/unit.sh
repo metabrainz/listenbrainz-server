@@ -30,6 +30,7 @@ function cleanup {
 }
 
 function run_tests {
+    # copy config before build, it's needed in all containers
     cp listenbrainz/config.py.sample listenbrainz/config.py
 
     # Create containers
