@@ -90,7 +90,7 @@ export default class FollowerFollowingModal extends React.Component<
       activeMode === "follower" ? followerList : followingList;
     return (
       <>
-        <div className="text-center">
+        <div className="text-center follower-following-pills">
           <div className="btn-group btn-group-justified" role="group">
             <Pill
               active={activeMode === "follower"}
@@ -108,28 +108,28 @@ export default class FollowerFollowingModal extends React.Component<
             </Pill>
           </div>
         </div>
-        <hr />
         <div className="follower-following-list">
           {activeModeList.map((listEntry: ListenBrainzUser) => {
             return (
-              <div className="text-center" key={listEntry.name}>
-                <a
-                  href={`/user/${listEntry.name}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {listEntry.name}
-                </a>
-                <FollowButton
-                  type="block"
-                  user={{ name: listEntry.name }}
-                  loggedInUser={user}
-                  loggedInUserFollowsUser={this.loggedInUserFollowsUser(
-                    listEntry
-                  )}
-                />
-                <hr />
-              </div>
+              <>
+                <div key={listEntry.name}>
+                  <a
+                    href={`/user/${listEntry.name}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {listEntry.name}
+                  </a>
+                  <FollowButton
+                    type="block"
+                    user={{ name: listEntry.name }}
+                    loggedInUser={user}
+                    loggedInUserFollowsUser={this.loggedInUserFollowsUser(
+                      listEntry
+                    )}
+                  />
+                </div>
+              </>
             );
           })}
         </div>

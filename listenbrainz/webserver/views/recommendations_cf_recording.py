@@ -64,21 +64,24 @@ def _get_template(active_section, user):
     data = db_recommendations_cf_recording.get_user_recommendation(user.id)
 
     if data is None:
+        current_app.logger.error('Inactive user: "{}"'.format(user.musicbrainz_id))
         return render_template(
             "recommendations_cf_recording/{}.html".format(active_section),
             active_section=active_section,
             user=user,
-            error_msg="Recommended tracks for the user have not been calculated. Check back later."
+            error_msg="Looks like the user wasn't active in the last week. Submit your listens and check back after a week!"
         )
 
     result = getattr(data, 'recording_mbid').dict()[active_section]
 
     if not result:
+        current_app.logger.error('Top/Similar artists not found in Mapping/artist relation for "{}"'.format(user.musicbrainz_id))
         return render_template(
             "recommendations_cf_recording/{}.html".format(active_section),
             active_section=active_section,
             user=user,
-            error_msg="Recommended tracks for the user have not been calculated. Check back later."
+            error_msg="Looks like the recommendations weren't generated because of anomalies in our data." \
+                      "We are working on it. Check back later."
         )
 
     listens = _get_listens_from_recording_mbid(result)

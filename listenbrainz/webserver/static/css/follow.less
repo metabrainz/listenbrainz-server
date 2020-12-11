@@ -1,7 +1,7 @@
 @purple: #353070;
 @white: #ffffff;
 
-#follow-button {
+.follow-button {
   margin-left: 10px;
   font-family: "Sintony";
   color: @white;
@@ -45,6 +45,34 @@
 
     svg {
       display: none;
+    }
+  }
+}
+
+.follower-following-pills {
+  padding-bottom: 10px;
+}
+
+.follower-following-list {
+  height: 250px;
+  padding: 10px;
+  overflow-y: scroll;
+  border-radius: 2px;
+  box-shadow: inset 0px 11px 8px -10px #ccc;
+
+  > * {
+    display: flex;
+    align-items: center;
+    padding: 5px;
+    margin: 5px 10px;
+
+    > .follow-button {
+      margin-left: auto;
+    }
+
+    &:not(:first-child) {
+      border-top: 2px solid #ddd;
+      padding-top: 12px;
     }
   }
 }
