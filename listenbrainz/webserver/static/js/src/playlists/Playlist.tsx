@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import * as _ from "lodash";
+import { isEqual, get, findIndex, omit } from "lodash";
 import * as io from "socket.io-client";
 
 import { ActionMeta, ValueType } from "react-select";
@@ -27,6 +27,7 @@ import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
 import ErrorBoundary from "../ErrorBoundary";
 import PlaylistItemCard from "./PlaylistItemCard";
 import {
+  MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
   PLAYLIST_TRACK_URI_PREFIX,
   PLAYLIST_URI_PREFIX,
   getPlaylistExtension,
@@ -183,7 +184,9 @@ export default class PlaylistPage extends React.Component<
           [jspfTrack]
         );
         if (this.addTrackSelectRef?.current?.select) {
-          this.addTrackSelectRef.current.select.setState({ value: null });
+          (this.addTrackSelectRef.current.select as any).setState({
+            value: null,
+          });
         }
         this.newAlert("success", "Added track", `Added track ${label}`);
         const recordingFeedbackMap = await this.loadFeedback([
@@ -292,7 +295,7 @@ export default class PlaylistPage extends React.Component<
 
   isCurrentTrack = (track: JSPFTrack): boolean => {
     const { currentTrack } = this.state;
-    return Boolean(currentTrack && _.isEqual(track, currentTrack));
+    return Boolean(currentTrack && isEqual(track, currentTrack));
   };
 
   newAlert = (
@@ -392,7 +395,7 @@ export default class PlaylistPage extends React.Component<
     recordingMbid?: string | null
   ): ListenFeedBack => {
     const { recordingFeedbackMap } = this.state;
-    return recordingMbid ? _.get(recordingFeedbackMap, recordingMbid, 0) : 0;
+    return recordingMbid ? get(recordingFeedbackMap, recordingMbid, 0) : 0;
   };
 
   isOwner = (): boolean => {
@@ -431,7 +434,7 @@ export default class PlaylistPage extends React.Component<
       return;
     }
     const recordingMBID = getRecordingMBIDFromJSPFTrack(trackToDelete);
-    const trackIndex = _.findIndex(tracks, trackToDelete);
+    const trackIndex = findIndex(tracks, trackToDelete);
     try {
       const status = await this.APIService.deletePlaylistItems(
         currentUser.auth_token,
@@ -486,30 +489,64 @@ export default class PlaylistPage extends React.Component<
     }
   };
 
-  editPlaylist = (
+  editPlaylist = async (
     name: string,
     description: string,
     isPublic: boolean,
     collaborators: string[],
     id?: string
   ) => {
+    if (!id) {
+      this.newAlert(
+        "danger",
+        "Error",
+        "Trying to edit a playlist without an id. This shouldn't have happened, please contact us with the error message."
+      );
+      return;
+    }
     if (!this.isOwner()) {
       this.alertNotAuthorized();
       return;
     }
-    // Show modal or section with playlist attributes
-    // name, description, private/public
-    // Then call API endpoint POST  /1/playlist/create
-    const content = (
-      <div>
-        <div>name: {name}</div>
-        <div>description: {description}</div>
-        <div>isPublic: {isPublic}</div>
-        <div>collaborators: {collaborators}</div>
-        <div>id: {id}</div>
-      </div>
-    );
-    this.newAlert("success", "Creating playlist", content);
+    const { currentUser } = this.props;
+    if (!currentUser?.auth_token) {
+      this.alertMustBeLoggedIn();
+      return;
+    }
+    const { playlist } = this.state;
+    if (
+      description === playlist.annotation &&
+      name === playlist.title &&
+      isPublic ===
+        playlist.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]?.public &&
+      collaborators ===
+        playlist.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]?.collaborators
+    ) {
+      // Nothing changed
+      return;
+    }
+    try {
+      const editedPlaylist: JSPFPlaylist = {
+        ...playlist,
+        annotation: description,
+        title: name,
+        extension: {
+          [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
+            public: isPublic,
+            collaborators,
+          },
+        },
+      };
+      await this.APIService.editPlaylist(currentUser.auth_token, id, {
+        playlist: omit(editedPlaylist, "track") as JSPFPlaylist,
+      });
+
+      this.newAlert("success", "Saved playlist", "");
+
+      this.setState({ playlist: editedPlaylist });
+    } catch (error) {
+      this.newAlert("danger", "Error", error.message);
+    }
   };
 
   alertMustBeLoggedIn = () => {

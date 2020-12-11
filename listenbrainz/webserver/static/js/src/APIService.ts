@@ -420,6 +420,29 @@ export default class APIService {
     return result.playlist_mbid;
   };
 
+  editPlaylist = async (
+    userToken: string,
+    playlistMBID: string,
+    playlistObject: JSPFObject
+  ): Promise<number> => {
+    if (!playlistMBID) {
+      throw new SyntaxError("Playlist MBID is missing");
+    }
+
+    const url = `${this.APIBaseURI}/playlist/edit/${playlistMBID}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify(playlistObject),
+    });
+    this.checkStatus(response);
+
+    return response.status;
+  };
+
   getUserPlaylists = async (
     userName: string,
     userToken?: string,
