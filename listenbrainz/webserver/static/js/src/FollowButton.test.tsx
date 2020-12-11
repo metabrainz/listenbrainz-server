@@ -89,7 +89,7 @@ describe("<FollowButton />", () => {
 
   describe("handleButtonClick", () => {
     const clickButton = (wrapper: ShallowWrapper) => {
-      wrapper.find("#follow-button").at(0).simulate("click");
+      wrapper.find(".follow-button").at(0).simulate("click");
     };
 
     const mockFollowAPICall = (instance: any, status: number) => {
