@@ -542,8 +542,16 @@ export default class PlaylistPage extends React.Component<
       });
 
       this.newAlert("success", "Saved playlist", "");
-
-      this.setState({ playlist: editedPlaylist });
+    } catch (error) {
+      this.newAlert("danger", "Error", error.message);
+    }
+    try {
+      // Fetch the newly editd playlist and save it to state
+      const JSPFObject: JSPFObject = await this.APIService.getPlaylist(
+        id,
+        currentUser.auth_token
+      );
+      this.setState({ playlist: JSPFObject.playlist });
     } catch (error) {
       this.newAlert("danger", "Error", error.message);
     }
