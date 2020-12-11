@@ -71,6 +71,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json["playlist"]["creator"], "testuserpleaseignore")
         self.assertEqual(response.json["playlist"]["identifier"], PLAYLIST_URI_PREFIX + playlist_mbid)
+        self.assertEqual(response.json["playlist"]["annotation"], "your lame 80s music")
         self.assertEqual(response.json["playlist"]["track"][0]["identifier"],
                          playlist["playlist"]["track"][0]["identifier"])
 
@@ -521,6 +522,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlists"][0]["playlist"]["creator"], self.user4["musicbrainz_id"])
         self.assertEqual(response.json["playlists"][0]["playlist"]["mbid"], public_playlist_mbid)
         self.assertEqual(response.json["playlists"][0]["playlist"]["name"], "1980s flashback jams")
+        self.assertEqual(response.json["playlists"][0]["playlist"]["description"], "your lame 80s music")
         self.assertEqual(response.json["playlists"][0]["playlist"]["public"], True)
         try:
             dateutil.parser.isoparse(response.json["playlists"][0]["playlist"]["created"])
@@ -530,6 +532,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlists"][1]["playlist"]["creator"], self.user4["musicbrainz_id"])
         self.assertEqual(response.json["playlists"][1]["playlist"]["mbid"], private_playlist_mbid)
         self.assertEqual(response.json["playlists"][1]["playlist"]["name"], "1980s flashback jams")
+        self.assertEqual(response.json["playlists"][1]["playlist"]["description"], "your lame 80s music")
         self.assertEqual(response.json["playlists"][1]["playlist"]["public"], False)
         try:
             dateutil.parser.isoparse(response.json["playlists"][1]["playlist"]["created"])
@@ -554,6 +557,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(len(response.json["playlists"]), 1)
         self.assertEqual(int(response.json["count"]), 1)
         self.assertEqual(int(response.json["offset"]), 1)
+
 
     def test_playlist_unauthorized_access(self):
         """ Test for checking that unauthorized access return 401 """

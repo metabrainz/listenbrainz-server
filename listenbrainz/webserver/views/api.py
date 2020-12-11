@@ -443,8 +443,7 @@ def serialize_playlists(playlists, playlist_count, count, offset):
                 "name": playlist.name or "",
                 "description": playlist.description or "",
                 "public": playlist.public,
-                "created": playlist.created.astimezone(datetime.timezone.utc).isoformat()
-        }
+                "created": playlist.created.astimezone(datetime.timezone.utc).isoformat()}
 
         if playlist.copied_from_id:
             item["copied_from_id"] = playlist.copied_from_id

@@ -230,7 +230,9 @@ def create_playlist():
     validate_playlist(data)
 
 
-    playlist = WritablePlaylist(name=data['playlist']['title'], creator_id=user["id"])
+    playlist = WritablePlaylist(name=data['playlist']['title'],
+                                creator_id=user["id"],
+                                description=data["playlist"].get("description", None))
     playlist.public = public
 
     if data["playlist"].get("created_for", None):
