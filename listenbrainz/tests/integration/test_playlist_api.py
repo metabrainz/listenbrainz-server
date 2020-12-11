@@ -182,6 +182,43 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assert400(response)
         self.assertEqual(response.json["error"], "JSPF playlist must contain a title element with the title of the playlist.")
 
+    def test_playlist_edit(self):
+        """ Test to ensure editing a playlist works """
+
+        playlist = get_test_data()
+
+        response = self.client.post(
+            url_for("playlist_api_v1.create_playlist", public="true"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        self.assertEqual(response.json["status"], "ok")
+        self.assertNotEqual(response.json["playlist_mbid"], "")
+
+        playlist_mbid = response.json["playlist_mbid"]
+
+        # Test to ensure fetching a playlist works
+        response = self.client.post(
+            url_for("playlist_api_v1.edit_playlist", playlist_mbid=playlist_mbid),
+            json={"playlist": {"title": "new title",
+                               "annotation": "new desc",
+                               "public": "false",
+                               "collaborators": ("rob", "zas")}},
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+
+        response = self.client.get(
+            url_for("playlist_api_v1.get_playlist", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+
+        self.assertEqual(response.json["playlist"]["title"], "new title")
+        self.assertEqual(response.json["playlist"]["annotation"], "new desc")
+        self.assertEqual(response.json["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["public"], "false")
+
+
     def test_playlist_recording_add(self):
         """ Test adding a recording to a playlist works """
 
@@ -604,6 +641,13 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert401(response)
 
+        # Edit a playlist
+        response = self.client.post(
+            url_for("playlist_api_v1.edit_playlist", playlist_mbid=playlist_mbid),
+            json={}
+        )
+        self.assert401(response)
+
     def test_playlist_invalid_user(self):
         """ Test for checking that forbidden access returns 403 """
 
@@ -648,6 +692,14 @@ class PlaylistAPITestCase(IntegrationTestCase):
         # Delete a playlist
         response = self.client.post(
             url_for("playlist_api_v1.delete_playlist", playlist_mbid=playlist_mbid),
+            json={},
+            headers={"Authorization": "Token {}".format(self.user2["auth_token"])}
+        )
+        self.assert403(response)
+
+        # edit a playlist
+        response = self.client.post(
+            url_for("playlist_api_v1.edit_playlist", playlist_mbid=playlist_mbid),
             json={},
             headers={"Authorization": "Token {}".format(self.user2["auth_token"])}
         )
