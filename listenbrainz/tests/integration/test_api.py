@@ -10,6 +10,18 @@ from listenbrainz.webserver.views.api_tools import is_valid_uuid
 
 class APITestCase(ListenAPIIntegrationTestCase):
 
+    def test_get_listens_invalid_count(self):
+        """If the count argument is negative, the API should raise HTTP 400"""
+        url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
+        response = self.client.get(url, query_string={'count': '-1'})
+        self.assert400(response)
+
+    def test_get_listens_ts_order(self):
+        """If min_ts is greater than max_ts, the API should raise HTTP 400"""
+        url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
+        response = self.client.get(url, query_string={'max_ts': '1400000000', 'min_ts': '1500000000'})
+        self.assert400(response)
+
     def test_get_listens(self):
         """ Test to make sure that the api sends valid listens on get requests.
         """
@@ -23,20 +35,11 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
-        # This sleep allows for the timescale subscriber to take its time in getting
-        # the listen submitted from redis and writing it to timescale.
-        # Removing it causes an empty list of listens to be returned.
-        time.sleep(3)
-
         url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
-
-        # validating that the API raise a error 400 if listen count is negative
-        response = self.client.get(url, query_string={'count': '-1'})
-        self.assert400(response)
-
-        response = self.client.get(url, query_string={'count': '1'})
-        self.assert200(response)
+        response = self.wait_for_query_to_have_items(url, 1, query_string={'count': '1'})
         data = json.loads(response.data)['payload']
+
+        self.assert200(response)
 
         # make sure user id is correct
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
@@ -75,7 +78,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         # test request with both max_ts and min_ts is working
         url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
 
-        response = self.client.get(url, query_string={'max_ts': ts + 1000,'min_ts': ts - 1000})
+        response = self.client.get(url, query_string={'max_ts': ts + 1000, 'min_ts': ts - 1000})
         self.assert200(response)
         data = json.loads(response.data)['payload']
 
@@ -89,9 +92,6 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(data['listens'][0]['track_metadata']['track_name'], 'Fade')
         self.assertEqual(data['listens'][0]['track_metadata']['artist_name'], 'Kanye West')
         self.assertEqual(data['listens'][0]['track_metadata']['release_name'], 'The Life of Pablo')
-
-        # CHeck api throws error 400 if min_ts is greater than max_ts
-        response = self.client.get(url, query_string={'max_ts': '1400000000','min_ts':'1500000000'})
 
         # check that recent listens are fetched correctly
         url = url_for('api_v1.get_recent_listens_for_user_list', user_list=self.user['musicbrainz_id'])
@@ -133,22 +133,10 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
-        count = 0
-        url = url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
         expected_count = 3
-        while count < 5:
-            count += 1
-            # This sleep allows for the timescale subscriber to take its time in getting
-            # the listen submitted from redis and writing it to timescale.
-            # Removing it causes an empty list of listens to be returned.
-            # We try a few times (up to a maximum of 5) to see if the data is present,
-            # but then fail if the data still hasn't arrived
-            time.sleep(2)
-
-            response = self.client.get(url)
-            data = json.loads(response.data)['payload']
-            if data['count'] == expected_count:
-                break
+        url = url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
+        response = self.wait_for_query_to_have_items(url, expected_count)
+        data = json.loads(response.data)['payload']
 
         self.assert200(response)
         self.assertEqual(data['count'], expected_count)
@@ -190,33 +178,27 @@ class APITestCase(ListenAPIIntegrationTestCase):
             self.assert200(response)
             self.assertEqual(response.json['status'], 'ok')
 
-        # This sleep allows for the timescale subscriber to take its time in getting
-        # the listen submitted from redis and writing it to timescale.
-        # Removing it causes an empty list of listens to be returned.
-        time.sleep(2)
-
-        # Fetch the listens with to_ts and make sure the order is descending
-        url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
-        response = self.client.get(url, query_string={'count': '3', 'to_ts':ts+1})
-        self.assert200(response)
+        expected_count = 3
+        url = url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
+        response = self.wait_for_query_to_have_items(url, expected_count)
         data = json.loads(response.data)['payload']
 
-        self.assertEqual(data['count'], 3)
+        self.assert200(response)
+        self.assertEqual(data['count'], expected_count)
         self.assertEqual(data['listens'][0]['listened_at'], 1400000200)
         self.assertEqual(data['listens'][1]['listened_at'], 1400000100)
         self.assertEqual(data['listens'][2]['listened_at'], 1400000000)
 
         # Fetch the listens with from_ts and make sure the order is descending
         url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
-        response = self.client.get(url, query_string={'count': '3', 'from_ts':ts-500})
+        response = self.client.get(url, query_string={'count': '3', 'from_ts': ts-500})
         self.assert200(response)
         data = json.loads(response.data)['payload']
 
-        self.assertEqual(data['count'], 3)
+        self.assertEqual(data['count'], expected_count)
         self.assertEqual(data['listens'][0]['listened_at'], 1400000200)
         self.assertEqual(data['listens'][1]['listened_at'], 1400000100)
         self.assertEqual(data['listens'][2]['listened_at'], 1400000000)
-
 
     def test_zero_listens_payload(self):
         """ Test that API returns 400 for payloads with no listens
@@ -425,13 +407,13 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
-        # wait for timescale-writer to get its work done before getting the listen back
-        time.sleep(2)
-
+        expected_length = 1
         url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
-        response = self.client.get(url, query_string={'count': '1'})
-        self.assert200(response)
+        response = self.wait_for_query_to_have_items(url, expected_length, query_string={'count': '1'})
         data = json.loads(response.data)['payload']
+
+        self.assert200(response)
+        self.assertEqual(len(data['listens']), expected_length)
         sent_additional_info = payload['payload'][0]['track_metadata']['additional_info']
         received_additional_info = data['listens'][0]['track_metadata']['additional_info']
         self.assertEqual(sent_additional_info['best_song'], received_additional_info['best_song'])
@@ -574,10 +556,10 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
-        # This sleep allows for the timescale subscriber to take its time in getting
-        # the listen submitted from redis and writing it to timescale.
-        # Removing it causes an empty list of listens to be returned.
-        time.sleep(3)
+        url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
+        response = self.wait_for_query_to_have_items(url, 1)
+        data = json.loads(response.data)['payload']
+        self.assertEqual(len(data['listens']), 1)
 
         delete_listen_url = url_for('api_v1.delete_listen')
         data = {
