@@ -1,5 +1,7 @@
 import json
 import os
+import time
+
 import listenbrainz.db.user as db_user
 from flask import current_app, url_for
 
@@ -19,6 +21,30 @@ class IntegrationTestCase(ServerTestCase, DatabaseTestCase):
     def tearDown(self):
         ServerTestCase.tearDown(self)
         DatabaseTestCase.tearDown(self)
+
+    def wait_for_query_to_have_items(self, url, num_items, **kwargs):
+        """Try the provided query in a loop until the required number of returned listens is available.
+        In integration tests, we send data through a number of services before it hits the database,
+        so we often have to wait. In some cases this takes longer than others, so we loop a few
+        times until we have the correct number of items.
+
+        Arguments:
+            url: the url to GET
+            num_items: The number of listens expected to be in the response
+            kwargs: any additional arguments to pass to the client GET
+
+        Returns the result from a flask client GET
+        """
+        count = 0
+        while count < 5:
+            count += 1
+            time.sleep(2)
+
+            response = self.client.get(url, **kwargs)
+            data = json.loads(response.data)['payload']
+            if data['count'] == num_items:
+                break
+        return response
 
 
 class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
