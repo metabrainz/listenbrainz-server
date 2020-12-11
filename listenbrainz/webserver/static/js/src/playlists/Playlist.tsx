@@ -183,7 +183,9 @@ export default class PlaylistPage extends React.Component<
           [jspfTrack]
         );
         if (this.addTrackSelectRef?.current?.select) {
-          this.addTrackSelectRef.current.select.setState({ value: null });
+          (this.addTrackSelectRef.current.select as any).setState({
+            value: null,
+          });
         }
         this.newAlert("success", "Added track", `Added track ${label}`);
         const recordingFeedbackMap = await this.loadFeedback([
