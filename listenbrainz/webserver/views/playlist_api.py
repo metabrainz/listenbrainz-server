@@ -55,6 +55,15 @@ def validate_playlist(jspf, require_title=True):
         except KeyError:
             log_raise_400("JSPF playlist must contain a title element with the title of the playlist.")
 
+    if 'public' in jspf:
+        if not jspf['public'] in ("true", "false"):
+            log_raise_400("JSPF playlist public field must contain 'true' or 'false'.")
+
+    if 'collaborators' in jspf:
+        for collaborator in jspf['collaborators']:
+            if not collaborator:
+                log_raise_400("The collaborators field contains an empty value.")
+
     if 'track' not in jspf:
         return
 
@@ -229,7 +238,6 @@ def create_playlist():
     data = request.json
     validate_playlist(data)
 
-
     playlist = WritablePlaylist(name=data['playlist']['title'],
                                 creator_id=user["id"],
                                 description=data["playlist"].get("description", None))
@@ -255,6 +263,57 @@ def create_playlist():
         raise APIInternalServerError("Failed to create the playlist. Please try again.")
 
     return jsonify({'status': 'ok', 'playlist_mbid': playlist.mbid})
+
+
+@playlist_api_bp.route("/edit/<playlist_mbid>", methods=["POST", "OPTIONS"])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
+def edit_playlist(playlist_mbid):
+    """
+    Edit the private/public status, name, description or list of collaborators for an exising playlist.
+    The Authorization header must be set and correspond to the owner of the playlist otherwise a 403
+    error will be returned. All fields will be overwritten with new values.
+
+    :reqheader Authorization: Token <user token>
+    :statuscode 200: playlist accepted.
+    :statuscode 400: invalid JSON sent, see error message for details.
+    :statuscode 401: invalid authorization. See error message for details.
+    :statuscode 403: forbidden. The subitting user is not allowed to edit playlists for other users.
+    :resheader Content-Type: *application/json*
+    """
+
+    user = _validate_auth_header()
+
+    data = request.json
+    validate_playlist(data, False)
+
+    if not is_valid_uuid(playlist_mbid):
+        log_raise_400("Provided playlist ID is invalid.")
+
+    playlist = db_playlist.get_by_mbid(playlist_mbid, False)
+    if playlist is None or (not playlist.public and playlist.creator_id != user["id"]):
+        raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+
+    if playlist.creator_id != user["id"]:
+        raise APIForbidden("You are not allowed to edit this playlist.")
+
+    if data["playlist"].get("public"):
+        playlist.public = True if data["playlist"]["public"] == "true" else False
+
+    if data["playlist"].get("annotation"):
+        playlist.description = data["playlist"]["annotation"]
+
+    if data["playlist"].get("title"):
+        playlist.name = data["playlist"]["title"]
+
+    # TODO: uncomment this when collaborators are implemented in the DB layer
+    #if data.get("collaborators", None):
+    #   playlist.collaborators = data["collaborators"]
+
+    print(playlist)
+    db_playlist.update_playlist(playlist)
+
+    return jsonify({'status': 'ok'})
 
 
 @playlist_api_bp.route("/<playlist_mbid>", methods=["GET", "OPTIONS"])
