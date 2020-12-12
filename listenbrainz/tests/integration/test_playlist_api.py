@@ -203,7 +203,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
             url_for("playlist_api_v1.edit_playlist", playlist_mbid=playlist_mbid),
             json={"playlist": {"title": "new title",
                                "annotation": "new desc",
-                               "public": "false",
+                               "extension": {"https://musicbrainz.org/doc/jspf#playlist": {"public": "false"}},
                                "collaborators": ("rob", "zas")}},
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
         )

@@ -55,9 +55,12 @@ def validate_playlist(jspf, require_title=True):
         except KeyError:
             log_raise_400("JSPF playlist must contain a title element with the title of the playlist.")
 
-    if 'public' in jspf:
-        if not jspf['public'] in ("true", "false"):
+    try:
+        public = jspf["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["public"]
+        if not public in ("true", "false"):
             log_raise_400("JSPF playlist public field must contain 'true' or 'false'.")
+    except KeyError:
+        pass
 
     if 'collaborators' in jspf:
         for collaborator in jspf['collaborators']:
@@ -297,8 +300,13 @@ def edit_playlist(playlist_mbid):
     if playlist.creator_id != user["id"]:
         raise APIForbidden("You are not allowed to edit this playlist.")
 
-    if data["playlist"].get("public"):
-        playlist.public = True if data["playlist"]["public"] == "true" else False
+    try:
+        public = data["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["public"]
+        if not public in ("true", "false"):
+            log_raise_400("JSPF playlist public field must contain 'true' or 'false'.")
+        playlist.public = True if public == "true" else False
+    except KeyError:
+        pass
 
     if data["playlist"].get("annotation"):
         playlist.description = data["playlist"]["annotation"]
