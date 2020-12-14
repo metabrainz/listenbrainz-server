@@ -57,8 +57,8 @@ def validate_playlist(jspf, require_title=True):
 
     try:
         public = jspf["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["public"]
-        if not public in ("true", "false"):
-            log_raise_400("JSPF playlist public field must contain 'true' or 'false'.")
+        if not isinstance(public, bool):
+            log_raise_400("JSPF playlist public field must contain a boolean.")
     except KeyError:
         pass
 
@@ -102,7 +102,7 @@ def serialize_jspf(playlist: Playlist):
     if playlist.created_for_id:
         pl['created_for'] = playlist.created_for
 
-    extension = {"public": "true" if playlist.public else "false"}
+    extension = {"public": playlist.public}
     extension["creator_id"] = playlist.creator_id
     if playlist.copied_from_id:
         extension['copied_from'] = PLAYLIST_URI_PREFIX + str(playlist.copied_from_id)
@@ -302,9 +302,9 @@ def edit_playlist(playlist_mbid):
 
     try:
         public = data["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["public"]
-        if not public in ("true", "false"):
-            log_raise_400("JSPF playlist public field must contain 'true' or 'false'.")
-        playlist.public = True if public == "true" else False
+        if not isinstance(public, bool):
+            log_raise_400("JSPF playlist public field must contain a boolean value.")
+        playlist.public = public
     except KeyError:
         pass
 
