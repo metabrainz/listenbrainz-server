@@ -203,7 +203,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
             url_for("playlist_api_v1.edit_playlist", playlist_mbid=playlist_mbid),
             json={"playlist": {"title": "new title",
                                "annotation": "new desc",
-                               "extension": {"https://musicbrainz.org/doc/jspf#playlist": {"public": "false"}},
+                               "extension": {"https://musicbrainz.org/doc/jspf#playlist": {"public": False}},
                                "collaborators": ("rob", "zas")}},
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
         )
@@ -216,7 +216,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
 
         self.assertEqual(response.json["playlist"]["title"], "new title")
         self.assertEqual(response.json["playlist"]["annotation"], "new desc")
-        self.assertEqual(response.json["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["public"], "false")
+        self.assertEqual(response.json["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["public"], False)
 
 
     def test_playlist_recording_add(self):
@@ -421,7 +421,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert200(response)
         self.assertEqual(response.json["playlist"]["identifier"], PLAYLIST_URI_PREFIX + new_playlist_mbid)
-        self.assertEqual(response.json["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["public"], "true")
+        self.assertEqual(response.json["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["public"], True)
         self.assertEqual(response.json["playlist"]["title"], "Copy of my stupid playlist")
         self.assertEqual(response.json["playlist"]["creator"], "anothertestuserpleaseignore")
 
@@ -455,7 +455,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
         )
         self.assert200(response)
-        self.assertEqual(response.json["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["public"], "false")
+        self.assertEqual(response.json["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["public"], False)
         self.assertEqual(response.json["playlist"]["title"], "Copy of my stupid playlist")
         self.assertEqual(response.json["playlist"]["creator"], "testuserpleaseignore")
 
