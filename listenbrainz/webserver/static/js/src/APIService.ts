@@ -34,7 +34,7 @@ export default class APIService {
     const response = await fetch(query, {
       method: "GET",
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     const result = await response.json();
 
     return result.payload.listens;
@@ -75,7 +75,7 @@ export default class APIService {
     const response = await fetch(query, {
       method: "GET",
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     const result = await response.json();
 
     return result.payload.listens;
@@ -91,7 +91,7 @@ export default class APIService {
     const response = await fetch(query, {
       method: "GET",
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     const result = await response.json();
 
     return parseInt(result.payload.count, 10);
@@ -101,7 +101,7 @@ export default class APIService {
     const response = await fetch("/profile/refresh-spotify-token", {
       method: "POST",
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     const result = await response.json();
     return result.user_token;
   };
@@ -127,7 +127,7 @@ export default class APIService {
 
     const url = `/user/${username}/followers`;
     const response = await fetch(url);
-    this.checkStatus(response);
+    await this.checkStatus(response);
     const data = response.json();
     return data;
   };
@@ -139,7 +139,7 @@ export default class APIService {
 
     const url = `/user/${username}/following`;
     const response = await fetch(url);
-    this.checkStatus(response);
+    await this.checkStatus(response);
     const data = response.json();
     return data;
   };
@@ -213,7 +213,7 @@ export default class APIService {
     const response = await fetch(url, {
       method: "GET",
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     const result = await response.json();
     return parseInt(result.latest_import, 10);
   };
@@ -236,7 +236,7 @@ export default class APIService {
       },
       body: JSON.stringify({ ts: timestamp }),
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     return response.status; // Return true if timestamp is updated
   };
 
@@ -252,7 +252,7 @@ export default class APIService {
       url += `&count=${count}`;
     }
     const response = await fetch(url);
-    this.checkStatus(response);
+    await this.checkStatus(response);
     // if response code is 204, then statistics havent been calculated, send empty object
     if (response.status === 204) {
       const error = new APIError(`HTTP Error ${response.statusText}`);
@@ -270,7 +270,7 @@ export default class APIService {
   ): Promise<UserListeningActivityResponse> => {
     const url = `${this.APIBaseURI}/stats/user/${userName}/listening-activity?range=${range}`;
     const response = await fetch(url);
-    this.checkStatus(response);
+    await this.checkStatus(response);
     if (response.status === 204) {
       const error = new APIError(`HTTP Error ${response.statusText}`);
       error.status = response.statusText;
@@ -287,7 +287,7 @@ export default class APIService {
   ): Promise<UserDailyActivityResponse> => {
     const url = `${this.APIBaseURI}/stats/user/${userName}/daily-activity?range=${range}`;
     const response = await fetch(url);
-    this.checkStatus(response);
+    await this.checkStatus(response);
     if (response.status === 204) {
       const error = new APIError(`HTTP Error ${response.statusText}`);
       error.status = response.statusText;
@@ -305,7 +305,7 @@ export default class APIService {
   ) => {
     const url = `${this.APIBaseURI}/stats/user/${userName}/artist-map?range=${range}&force_recalculate=${forceRecalculate}`;
     const response = await fetch(url);
-    this.checkStatus(response);
+    await this.checkStatus(response);
     if (response.status === 204) {
       const error = new APIError(`HTTP Error ${response.statusText}`);
       error.status = response.statusText;
@@ -316,9 +316,16 @@ export default class APIService {
     return data;
   };
 
-  checkStatus = (response: Response): void => {
+  checkStatus = async (response: Response): Promise<void> => {
     if (response.status >= 200 && response.status < 300) {
       return;
+    }
+    const data = response.json && (await response.json());
+    let message;
+    if (data?.error) {
+      message = data?.error;
+    } else {
+      message = `HTTP Error ${response.statusText}`;
     }
     const error = new APIError(`HTTP Error ${response.statusText}`);
     error.status = response.statusText;
@@ -332,7 +339,7 @@ export default class APIService {
   ): Promise<string | null> => {
     const url = `${this.APIBaseURI}/get-cover-art/?release_mbid=${releaseMBID}&recording_msid=${recordingMSID}`;
     const response = await fetch(url);
-    this.checkStatus(response);
+    await this.checkStatus(response);
     if (response.status === 200) {
       const data = await response.json();
       return data.image_url;
@@ -354,7 +361,7 @@ export default class APIService {
       },
       body: JSON.stringify({ recording_msid: recordingMSID, score }),
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     return response.status;
   };
 
@@ -368,7 +375,7 @@ export default class APIService {
 
     const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings?recordings=${recordings}`;
     const response = await fetch(url);
-    this.checkStatus(response);
+    await this.checkStatus(response);
     const data = response.json();
     return data;
   };
@@ -390,7 +397,7 @@ export default class APIService {
         recording_msid: recordingMSID,
       }),
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     return response.status;
   };
 
@@ -414,7 +421,7 @@ export default class APIService {
       },
       body: JSON.stringify({ playlist: { title, description, track: tracks } }),
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     const result = await response.json();
 
     return result.playlist_mbid;
@@ -438,7 +445,7 @@ export default class APIService {
       },
       body: JSON.stringify(playlistObject),
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
 
     return response.status;
   };
@@ -469,7 +476,7 @@ export default class APIService {
       headers,
     });
 
-    this.checkStatus(response);
+    await this.checkStatus(response);
     const data = response.json();
     return data;
   };
@@ -490,7 +497,7 @@ export default class APIService {
       method: "GET",
       headers,
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     const data = response.json();
     return data;
   };
@@ -515,7 +522,7 @@ export default class APIService {
       },
       body: JSON.stringify({ playlist: { track: tracks } }),
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
 
     return response.status;
   };
@@ -540,7 +547,7 @@ export default class APIService {
       },
       body: JSON.stringify({ index, count }),
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
 
     return response.status;
   };
@@ -562,7 +569,7 @@ export default class APIService {
       },
       body: JSON.stringify({ mbid: recordingMBID, from, to, count }),
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
 
     return response.status;
   };
@@ -582,7 +589,7 @@ export default class APIService {
         Authorization: `Token ${userToken}`,
       },
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     const data = await response.json();
     return data.playlist_mbid;
   };
@@ -602,7 +609,7 @@ export default class APIService {
         Authorization: `Token ${userToken}`,
       },
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     return response.status;
   };
 }
