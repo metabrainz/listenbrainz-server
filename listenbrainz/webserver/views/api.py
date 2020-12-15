@@ -28,7 +28,7 @@ api_bp = Blueprint('api_v1', __name__)
 
 DEFAULT_TIME_RANGE = 3
 MAX_TIME_RANGE = 73
-MAX_NUMBER_OF_PLAYLISTS_PER_CALL = 25
+DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL = 25
 
 
 @api_bp.route("/submit-listens", methods=["POST", "OPTIONS"])
@@ -456,7 +456,7 @@ def get_playlists_for_user(playlist_user_name):
     as public playlists for that user.
 
     :params count: The number of playlists to return (for pagination). Default
-        :data:`~webserver.views.api.MAX_NUMBER_OF_PLAYLISTS_PER_CALL`
+        :data:`~webserver.views.api.DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL`
     :params offset: The offset of into the list of playlists to return (for pagination)
     :statuscode 200: Yay, you have data!
     :statuscode 404: User not found
@@ -464,7 +464,7 @@ def get_playlists_for_user(playlist_user_name):
     """
     user = validate_auth_header(True)
 
-    count = request.args.get('count', MAX_NUMBER_OF_PLAYLISTS_PER_CALL)
+    count = request.args.get('count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     offset = request.args.get('offset', 0)
     playlist_user = db_user.get_by_mb_id(playlist_user_name)
     if playlist_user is None:
@@ -485,14 +485,14 @@ def get_playlists_created_for_user(playlist_user_name):
     their recordings. Createdfor playlists are all public, so not Authorization is needed for this call.
 
     :params count: The number of playlists to return (for pagination). Default
-        :data:`~webserver.views.api.MAX_NUMBER_OF_PLAYLISTS_PER_CALL`
+        :data:`~webserver.views.api.DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL`
     :params offset: The offset of into the list of playlists to return (for pagination)
     :statuscode 200: Yay, you have data!
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     """
 
-    count = request.args.get('count', MAX_NUMBER_OF_PLAYLISTS_PER_CALL)
+    count = request.args.get('count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     offset = request.args.get('offset', 0)
     playlist_user = db_user.get_by_mb_id(playlist_user_name)
     if playlist_user is None:
