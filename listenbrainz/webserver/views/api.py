@@ -19,7 +19,7 @@ from listenbrainz.webserver.rate_limiter import ratelimit
 import listenbrainz.webserver.redis_connection as redis_connection
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list,\
     is_valid_uuid, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT,\
-    LISTEN_TYPE_PLAYING_NOW
+    LISTEN_TYPE_PLAYING_NOW, validate_auth_header
 from listenbrainz.listenstore.timescale_listenstore import SECONDS_IN_TIME_RANGE, TimescaleListenStoreException
 from listenbrainz.webserver.timescale_connection import _ts
 
@@ -51,7 +51,7 @@ def submit_listen():
     :statuscode 401: invalid authorization. See error message for details.
     :resheader Content-Type: *application/json*
     """
-    user = _validate_auth_header()
+    user = validate_auth_header()
 
     raw_data = request.get_data()
     try:
@@ -312,7 +312,7 @@ def latest_import():
             'latest_import': 0 if not user['latest_import'] else int(user['latest_import'].strftime('%s'))
         })
     elif request.method == 'POST':
-        user = _validate_auth_header()
+        user = validate_auth_header()
 
         try:
             ts = ujson.loads(request.get_data()).get('ts', 0)
@@ -399,7 +399,7 @@ def delete_listen():
     :statuscode 401: invalid authorization. See error message for details.
     :resheader Content-Type: *application/json*
     """
-    user = _validate_auth_header()
+    user = validate_auth_header()
 
     data = request.json
 
@@ -474,7 +474,7 @@ def get_playlists_for_user(playlist_user_name):
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     """
-    user = _validate_auth_header(True)
+    user = validate_auth_header(True)
 
     count = request.args.get('count', MAX_NUMBER_OF_PLAYLISTS_PER_CALL)
     offset = request.args.get('offset', 0)
@@ -525,23 +525,6 @@ def _parse_int_arg(name, default=None):
     else:
         return default
 
-
-def _validate_auth_header(optional=False):
-    auth_token = request.headers.get('Authorization')
-    if not auth_token:
-        if optional:
-            return None
-        raise APIUnauthorized("You need to provide an Authorization header.")
-    try:
-        auth_token = auth_token.split(" ")[1]
-    except IndexError:
-        raise APIUnauthorized("Provided Authorization header is invalid.")
-
-    user = db_user.get_by_token(auth_token)
-    if user is None:
-        raise APIUnauthorized("Invalid authorization token.")
-
-    return user
 
 
 def _get_listen_type(listen_type):

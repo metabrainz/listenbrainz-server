@@ -10,8 +10,7 @@ import listenbrainz.db.user as db_user
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden
 from listenbrainz.webserver.rate_limiter import ratelimit
-from listenbrainz.webserver.views.api import _validate_auth_header
-from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid
+from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, validate_auth_header
 from listenbrainz.db.model.playlist import Playlist, WritablePlaylist, WritablePlaylistRecording
 
 playlist_api_bp = Blueprint('playlist_api_v1', __name__)
@@ -236,7 +235,7 @@ def create_playlist():
     """
 
     public = _parse_boolean_arg("public", "true")
-    user = _validate_auth_header()
+    user = validate_auth_header()
 
     data = request.json
     validate_playlist(data)
@@ -285,7 +284,7 @@ def edit_playlist(playlist_mbid):
     :resheader Content-Type: *application/json*
     """
 
-    user = _validate_auth_header()
+    user = validate_auth_header()
 
     data = request.json
     validate_playlist(data, False)
@@ -346,7 +345,7 @@ def get_playlist(playlist_mbid):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
     if not playlist.public:
-        user = _validate_auth_header()
+        user = validate_auth_header()
         if playlist.creator_id != user["id"]:
             raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
@@ -379,7 +378,7 @@ def add_playlist_item(playlist_mbid, offset):
     :resheader Content-Type: *application/json*
     """
 
-    user = _validate_auth_header()
+    user = validate_auth_header()
     if offset is not None and offset < 0:
         log_raise_400("Offset must be a positive integer.")
 
@@ -439,7 +438,7 @@ def move_playlist_item(playlist_mbid):
     :resheader Content-Type: *application/json*
     """
 
-    user = _validate_auth_header()
+    user = validate_auth_header()
 
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
@@ -485,7 +484,7 @@ def delete_playlist_item(playlist_mbid):
     :resheader Content-Type: *application/json*
     """
 
-    user = _validate_auth_header()
+    user = validate_auth_header()
 
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
@@ -526,7 +525,7 @@ def delete_playlist(playlist_mbid):
     :resheader Content-Type: *application/json*
     """
 
-    user = _validate_auth_header()
+    user = validate_auth_header()
 
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
@@ -564,7 +563,7 @@ def copy_playlist(playlist_mbid):
     :resheader Content-Type: *application/json*
     """
 
-    user = _validate_auth_header()
+    user = validate_auth_header()
 
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
