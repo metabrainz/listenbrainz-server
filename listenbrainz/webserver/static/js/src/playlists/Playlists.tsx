@@ -516,15 +516,15 @@ export default class UserPlaylists extends React.Component<
               <Card className="playlist" key={playlistId}>
                 {isRecommendations ? (
                   <button
-                    className="btn btn-sm btn-info pull-right"
+                    className="save-rec-playlist-btn"
                     onClick={this.copyPlaylist.bind(this, playlistId)}
                     type="button"
                   >
                     <FontAwesomeIcon
                       icon={faSave as IconProp}
                       title="Save to my playlists"
-                      style={{ fontSize: "1.3em" }}
                     />
+                    &nbsp;Save
                   </button>
                 ) : (
                   <span className="dropdown">
