@@ -20,6 +20,7 @@ import listenbrainz.webserver.redis_connection as redis_connection
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list,\
     is_valid_uuid, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT,\
     LISTEN_TYPE_PLAYING_NOW, validate_auth_header
+from listenbrainz.webserver.views.playlist_api import serialize_jspf
 from listenbrainz.listenstore.timescale_listenstore import SECONDS_IN_TIME_RANGE, TimescaleListenStoreException
 from listenbrainz.webserver.timescale_connection import _ts
 
@@ -437,20 +438,7 @@ def serialize_playlists(playlists, playlist_count, count, offset):
 
     items = []
     for playlist in playlists:
-        item = {"mbid": playlist.mbid,
-                "creator_id": playlist.creator_id,
-                "creator": playlist.creator,
-                "name": playlist.name or "",
-                "description": playlist.description or "",
-                "public": playlist.public,
-                "created": playlist.created.astimezone(datetime.timezone.utc).isoformat()}
-
-        if playlist.copied_from_id:
-            item["copied_from_id"] = playlist.copied_from_id
-        if playlist.created_for_id:
-            item["created_for_id"] = playlist.created_for_id
-
-        items.append({"playlist": item})
+        items.append(serialize_jspf(playlist))
 
     return {"playlists": items,
             "playlist_count": playlist_count,
