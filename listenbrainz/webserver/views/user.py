@@ -19,6 +19,7 @@ from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.views.api_tools import publish_data_to_queue, log_raise_400, is_valid_uuid
+from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
 from datetime import datetime
 from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, ServiceUnavailable, Unauthorized, InternalServerError
 from listenbrainz.webserver.views.stats_api import _get_non_negative_param
@@ -203,6 +204,18 @@ def playlists(user_name: str):
     if not current_app.config.get("FEATURE_PLAYLIST", False):
         raise NotFound()
     
+    offset = request.args.get('offset', 0)
+    try:
+        offset = int(offset)
+    except ValueError:
+        raise BadRequest("Incorrect int argument offset: %s" % request.args.get("offset"))
+    
+    count = request.args.get("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
+    try:
+        count = int(count)
+    except ValueError:
+        raise BadRequest("Incorrect int argument count: %s" % request.args.get("count"))
+    
     user = _get_user(user_name)
     user_data = {
         "name": user.musicbrainz_id,
@@ -225,7 +238,7 @@ def playlists(user_name: str):
        loadPrivatePlaylists = True
     
     playlists = []
-    user_playlists, playlist_count = get_playlists_for_user(user.id, loadPrivatePlaylists)
+    user_playlists, playlist_count = get_playlists_for_user(user.id, loadPrivatePlaylists, False, count, offset)
     for playlist in user_playlists:
         playlists.append(serialize_jspf(playlist))
 
@@ -237,6 +250,8 @@ def playlists(user_name: str):
         "user": user_data,
         "active_section": "playlists",
         "playlist_count": playlist_count,
+        "pagination_offset": offset,
+        "playlists_per_page": count,
     }
 
     return render_template(
