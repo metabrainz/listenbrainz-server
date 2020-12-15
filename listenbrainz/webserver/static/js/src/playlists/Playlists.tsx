@@ -32,7 +32,8 @@ export type UserPlaylistsProps = {
   apiUrl: string;
   playlists?: JSPFObject[];
   user: ListenBrainzUser;
-  paginationOffset?: number;
+  paginationOffset: string;
+  playlistsPerPage: string;
   playlistCount: number;
   activeSection: "playlists" | "recommendations";
 };
@@ -43,6 +44,7 @@ export type UserPlaylistsState = {
   alerts: Alert[];
   loading: boolean;
   paginationOffset: number;
+  playlistsPerPage: number;
   playlistCount: number;
 };
 
@@ -51,7 +53,7 @@ export default class UserPlaylists extends React.Component<
   UserPlaylistsState
 > {
   private APIService: APIService;
-  private MAX_PLAYLISTS_PER_PAGE = 25;
+  private DEFAULT_PLAYLISTS_PER_PAGE = 25;
 
   constructor(props: UserPlaylistsProps) {
     super(props);
@@ -61,8 +63,10 @@ export default class UserPlaylists extends React.Component<
       alerts: [],
       playlists: concatenatedPlaylists ?? [],
       loading: false,
-      paginationOffset: props.paginationOffset ?? 0,
+      paginationOffset: parseInt(props.paginationOffset, 10) || 0,
       playlistCount: props.playlistCount,
+      playlistsPerPage:
+        parseInt(props.playlistsPerPage, 10) || this.DEFAULT_PLAYLISTS_PER_PAGE,
     };
 
     this.APIService = new APIService(
@@ -73,6 +77,10 @@ export default class UserPlaylists extends React.Component<
   componentDidMount(): void {
     // Listen to browser previous/next events and load page accordingly
     window.addEventListener("popstate", this.handleURLChange);
+    // Call it once to allow navigating straight to a certain page
+    // The server route provides for this, but just in case…
+    // There's a check in handleURLChange to prevent wasting an API call.
+    this.handleURLChange();
   }
 
   componentWillUnmount() {
@@ -81,40 +89,42 @@ export default class UserPlaylists extends React.Component<
 
   handleURLChange = async (): Promise<void> => {
     const url = new URL(window.location.href);
-    let offset = 0;
-    let count = this.MAX_PLAYLISTS_PER_PAGE;
+    const { paginationOffset, playlistsPerPage } = this.state;
+    let offset = paginationOffset;
+    let count = playlistsPerPage;
     if (url.searchParams.get("offset")) {
       offset = Number(url.searchParams.get("offset"));
     }
     if (url.searchParams.get("count")) {
       count = Number(url.searchParams.get("count"));
     }
-
-    this.setState({ loading: true });
-
-    const { user, activeSection } = this.props;
-    const newPlaylists = await this.APIService.getUserPlaylists(
-      user.name,
-      undefined,
-      offset,
-      count,
-      activeSection === "recommendations"
-    );
-
-    if (!newPlaylists.playlists.length) {
-      // No more playlists to fetch
-      this.setState({
-        loading: false,
-        playlistCount: newPlaylists.playlist_count,
-      });
+    if (offset === paginationOffset && count === playlistsPerPage) {
+      // Nothing changed
+      console.debug("handleURLChange does nothing");
       return;
     }
-    this.setState({
-      playlists: newPlaylists.playlists,
-      playlistCount: newPlaylists.playlist_count,
-      paginationOffset: newPlaylists.offset,
-      loading: false,
-    });
+
+    this.setState({ loading: true });
+    const { user, activeSection, currentUser } = this.props;
+
+    try {
+      const newPlaylists = await this.APIService.getUserPlaylists(
+        user.name,
+        currentUser?.auth_token,
+        offset,
+        count,
+        activeSection === "recommendations"
+      );
+
+      this.handleAPIResponse(newPlaylists, false);
+    } catch (error) {
+      this.newAlert(
+        "danger",
+        "Error loading playlists",
+        error?.message ?? error
+      );
+      this.setState({ loading: false });
+    }
   };
 
   isOwner = (playlist: JSPFPlaylist): boolean => {
@@ -386,10 +396,10 @@ export default class UserPlaylists extends React.Component<
 
   handleClickNext = async () => {
     const { user, activeSection, currentUser } = this.props;
-    const { paginationOffset, playlistCount } = this.state;
+    const { paginationOffset, playlistsPerPage, playlistCount } = this.state;
+    const newOffset = paginationOffset + playlistsPerPage;
     // No more playlists to fetch
-    const newOffset = paginationOffset + this.MAX_PLAYLISTS_PER_PAGE;
-    if (playlistCount && newOffset >= playlistCount) {
+    if (newOffset >= playlistCount) {
       return;
     }
     this.setState({ loading: true });
@@ -398,29 +408,11 @@ export default class UserPlaylists extends React.Component<
         user.name,
         currentUser?.auth_token,
         newOffset,
-        this.MAX_PLAYLISTS_PER_PAGE,
+        playlistsPerPage,
         activeSection === "recommendations"
       );
 
-      if (!newPlaylists.playlists.length) {
-        // No more playlists to fetch
-        this.setState({
-          loading: false,
-          playlistCount: newPlaylists.playlist_count,
-        });
-        return;
-      }
-      this.setState({
-        playlists: newPlaylists.playlists.map((pl: JSPFObject) => pl.playlist),
-        playlistCount: newPlaylists.playlist_count,
-        paginationOffset: newPlaylists.offset,
-        loading: false,
-      });
-      window.history.pushState(
-        null,
-        "",
-        `?offset=${newPlaylists.offset}&count=${newPlaylists.count}`
-      );
+      this.handleAPIResponse(newPlaylists);
     } catch (error) {
       this.newAlert(
         "danger",
@@ -433,41 +425,23 @@ export default class UserPlaylists extends React.Component<
 
   handleClickPrevious = async () => {
     const { user, activeSection, currentUser } = this.props;
-    const { paginationOffset } = this.state;
+    const { paginationOffset, playlistsPerPage } = this.state;
     // No more playlists to fetch
     if (paginationOffset === 0) {
       return;
     }
-    const newOffset = paginationOffset - this.MAX_PLAYLISTS_PER_PAGE;
+    const newOffset = Math.max(0, paginationOffset - playlistsPerPage);
     this.setState({ loading: true });
     try {
       const newPlaylists = await this.APIService.getUserPlaylists(
         user.name,
         currentUser?.auth_token,
         newOffset,
-        this.MAX_PLAYLISTS_PER_PAGE,
+        playlistsPerPage,
         activeSection === "recommendations"
       );
 
-      if (!newPlaylists.playlists.length) {
-        // No more playlists to fetch
-        this.setState({
-          loading: false,
-          playlistCount: newPlaylists.playlist_count,
-        });
-        return;
-      }
-      this.setState({
-        playlists: newPlaylists.playlists.map((pl: JSPFObject) => pl.playlist),
-        playlistCount: newPlaylists.playlist_count,
-        paginationOffset: newPlaylists.offset,
-        loading: false,
-      });
-      window.history.pushState(
-        null,
-        "",
-        `?offset=${newPlaylists.offset}&count=${newPlaylists.count}`
-      );
+      this.handleAPIResponse(newPlaylists);
     } catch (error) {
       this.newAlert(
         "danger",
@@ -478,6 +452,33 @@ export default class UserPlaylists extends React.Component<
     }
   };
 
+  handleAPIResponse = (
+    newPlaylists: {
+      playlists: JSPFObject[];
+      playlist_count: number;
+      count: string;
+      offset: string;
+    },
+    pushHistory: boolean = true
+  ) => {
+    const parsedOffset = parseInt(newPlaylists.offset, 10);
+    const parsedCount = parseInt(newPlaylists.count, 10);
+    this.setState({
+      playlists: newPlaylists.playlists.map((pl: JSPFObject) => pl.playlist),
+      playlistCount: newPlaylists.playlist_count,
+      paginationOffset: parsedOffset,
+      playlistsPerPage: parsedCount,
+      loading: false,
+    });
+    if (pushHistory) {
+      window.history.pushState(
+        null,
+        "",
+        `?offset=${parsedOffset}&count=${parsedCount}`
+      );
+    }
+  };
+
   render() {
     const { user, activeSection } = this.props;
     const {
@@ -485,6 +486,7 @@ export default class UserPlaylists extends React.Component<
       playlists,
       playlistSelectedForOperation,
       paginationOffset,
+      playlistsPerPage,
       playlistCount,
       loading,
     } = this.state;
@@ -650,7 +652,7 @@ export default class UserPlaylists extends React.Component<
           <li
             className={`next ${
               playlistCount &&
-              playlistCount <= paginationOffset + this.MAX_PLAYLISTS_PER_PAGE
+              playlistCount <= paginationOffset + playlistsPerPage
                 ? "disabled"
                 : ""
             }`}
@@ -696,6 +698,8 @@ document.addEventListener("DOMContentLoaded", () => {
     user,
     playlist_count: playlistCount,
     active_section: activeSection,
+    pagination_offset: paginationOffset,
+    playlists_per_page: playlistsPerPage,
   } = reactProps;
   ReactDOM.render(
     <ErrorBoundary>
@@ -705,6 +709,8 @@ document.addEventListener("DOMContentLoaded", () => {
         apiUrl={apiUrl}
         currentUser={current_user}
         playlists={playlists}
+        paginationOffset={paginationOffset}
+        playlistsPerPage={playlistsPerPage}
         user={user}
       />
     </ErrorBoundary>,
