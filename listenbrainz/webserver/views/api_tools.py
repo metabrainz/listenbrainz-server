@@ -1,5 +1,6 @@
 import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
 import listenbrainz.webserver.redis_connection as redis_connection
+import listenbrainz.db.user as db_user
 import pika
 import pika.exceptions
 import sys
@@ -11,8 +12,7 @@ from flask import current_app, request
 from listenbrainz.listen import Listen
 from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
 from listenbrainz.webserver.external import messybrainz
-from listenbrainz.webserver.errors import APIInternalServerError, APIServiceUnavailable, APIBadRequest
-
+from listenbrainz.webserver.errors import APIInternalServerError, APIServiceUnavailable, APIBadRequest, APIUnauthorized
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
 MAX_LISTEN_SIZE = 10240
 
@@ -376,3 +376,20 @@ def parse_param_list(params: str) -> list:
         param_list.append(param)
 
     return param_list
+
+def validate_auth_header(optional=False):
+    auth_token = request.headers.get('Authorization')
+    if not auth_token:
+        if optional:
+            return None
+        raise APIUnauthorized("You need to provide an Authorization header.")
+    try:
+        auth_token = auth_token.split(" ")[1]
+    except IndexError:
+        raise APIUnauthorized("Provided Authorization header is invalid.")
+
+    user = db_user.get_by_token(auth_token)
+    if user is None:
+        raise APIUnauthorized("Invalid authorization token.")
+
+    return user
