@@ -385,7 +385,7 @@ export default class UserPlaylists extends React.Component<
   };
 
   handleClickNext = async () => {
-    const { user, activeSection } = this.props;
+    const { user, activeSection, currentUser } = this.props;
     const { paginationOffset, playlistCount } = this.state;
     // No more playlists to fetch
     const newOffset = paginationOffset + this.MAX_PLAYLISTS_PER_PAGE;
@@ -396,7 +396,7 @@ export default class UserPlaylists extends React.Component<
     try {
       const newPlaylists = await this.APIService.getUserPlaylists(
         user.name,
-        undefined,
+        currentUser?.auth_token,
         newOffset,
         this.MAX_PLAYLISTS_PER_PAGE,
         activeSection === "recommendations"
@@ -411,7 +411,7 @@ export default class UserPlaylists extends React.Component<
         return;
       }
       this.setState({
-        playlists: newPlaylists.playlists,
+        playlists: newPlaylists.playlists.map((pl: JSPFObject) => pl.playlist),
         playlistCount: newPlaylists.playlist_count,
         paginationOffset: newPlaylists.offset,
         loading: false,
@@ -432,7 +432,7 @@ export default class UserPlaylists extends React.Component<
   };
 
   handleClickPrevious = async () => {
-    const { user, activeSection } = this.props;
+    const { user, activeSection, currentUser } = this.props;
     const { paginationOffset } = this.state;
     // No more playlists to fetch
     if (paginationOffset === 0) {
@@ -443,7 +443,7 @@ export default class UserPlaylists extends React.Component<
     try {
       const newPlaylists = await this.APIService.getUserPlaylists(
         user.name,
-        undefined,
+        currentUser?.auth_token,
         newOffset,
         this.MAX_PLAYLISTS_PER_PAGE,
         activeSection === "recommendations"
@@ -458,7 +458,7 @@ export default class UserPlaylists extends React.Component<
         return;
       }
       this.setState({
-        playlists: newPlaylists.playlists,
+        playlists: newPlaylists.playlists.map((pl: JSPFObject) => pl.playlist),
         playlistCount: newPlaylists.playlist_count,
         paginationOffset: newPlaylists.offset,
         loading: false,
@@ -589,6 +589,7 @@ export default class UserPlaylists extends React.Component<
                   <div>
                     Created:{" "}
                     {new Date(playlist.date).toLocaleString(undefined, {
+                      // @ts-ignore see https://github.com/microsoft/TypeScript/issues/40806
                       dateStyle: "short",
                     })}
                   </div>
@@ -596,7 +597,10 @@ export default class UserPlaylists extends React.Component<
                     {customFields?.last_modified_at &&
                       `Last Modified: ${new Date(
                         customFields.last_modified_at
-                      ).toLocaleString(undefined, { dateStyle: "short" })}`}
+                      ).toLocaleString(undefined, {
+                        // @ts-ignore see https://github.com/microsoft/TypeScript/issues/40806
+                        dateStyle: "short",
+                      })}`}
                   </div>
                 </a>
               </Card>
