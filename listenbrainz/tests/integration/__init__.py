@@ -1,14 +1,13 @@
 import json
-import sys
 import os
+import time
+
 import listenbrainz.db.user as db_user
 from flask import current_app, url_for
 
 from redis import Redis
-from listenbrainz import config
 from listenbrainz.webserver.testing import ServerTestCase, APICompatServerTestCase
-from listenbrainz.db.testing import DatabaseTestCase
-from listenbrainz.db import timescale as ts
+from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 
 TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', '..', 'admin', 'timescale')
 
@@ -23,38 +22,42 @@ class IntegrationTestCase(ServerTestCase, DatabaseTestCase):
         ServerTestCase.tearDown(self)
         DatabaseTestCase.tearDown(self)
 
+    def wait_for_query_to_have_items(self, url, num_items, **kwargs):
+        """Try the provided query in a loop until the required number of returned listens is available.
+        In integration tests, we send data through a number of services before it hits the database,
+        so we often have to wait. In some cases this takes longer than others, so we loop a few
+        times until we have the correct number of items.
 
-class ListenAPIIntegrationTestCase(IntegrationTestCase):
+        Arguments:
+            url: the url to GET
+            num_items: The number of listens expected to be in the response
+            kwargs: any additional arguments to pass to the client GET
+
+        Returns the result from a flask client GET
+        """
+        count = 0
+        while count < 5:
+            count += 1
+            time.sleep(2)
+
+            response = self.client.get(url, **kwargs)
+            data = json.loads(response.data)['payload']
+            if data['count'] == num_items:
+                break
+        return response
+
+
+class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
     def setUp(self):
-        super(ListenAPIIntegrationTestCase, self).setUp()
+        IntegrationTestCase.setUp(self)
+        TimescaleTestCase.setUp(self)
         self.user = db_user.get_or_create(1, 'testuserpleaseignore')
 
     def tearDown(self):
         r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
         r.flushall()
-        self.reset_timescale_db()
-        super(ListenAPIIntegrationTestCase, self).tearDown()
-
-    def reset_timescale_db(self):
-
-        ts.init_db_connection(config.TIMESCALE_ADMIN_URI)
-        ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'drop_db.sql'))
-        ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_db.sql'))
-        ts.engine.dispose()
-
-        ts.init_db_connection(config.TIMESCALE_ADMIN_LB_URI)
-        ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_extensions.sql'))
-        ts.engine.dispose()
-
-        ts.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_schemas.sql'))
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_tables.sql'))
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_functions.sql'))
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_primary_keys.sql'))
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_foreign_keys.sql'))
-        ts.engine.dispose()
+        IntegrationTestCase.tearDown(self)
+        TimescaleTestCase.tearDown(self)
 
     def send_data(self, payload, user=None):
         """ Sends payload to api.submit_listen and return the response

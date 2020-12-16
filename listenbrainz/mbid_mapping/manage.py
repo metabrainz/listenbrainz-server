@@ -6,10 +6,11 @@ import subprocess
 
 import click
 
-from mapping.msid_mapping import create_mapping as action_create_mapping
-from mapping.recording_pairs import create_pairs as action_create_pairs
+from mapping.mbid_mapping import create_mbid_mapping
+from mapping.typesense_index import build_index as action_build_index
+from mapping.year_mapping import create_year_mapping
+from mapping.search import search as action_search
 from mapping.mapping_test.mapping_test import test_mapping as action_test_mapping
-from mapping.write_mapping import write_all_mappings as action_write_all_mappings
 from mapping.utils import log, CRON_LOG_FILE
 
 
@@ -19,19 +20,8 @@ def cli():
 
 
 @cli.command()
-def create_all():
-    action_create_pairs()
-    action_create_mapping()
-
-
-@cli.command()
-def create_mapping():
-    action_create_mapping()
-
-
-@cli.command()
-def create_pairs():
-    action_create_pairs()
+def mbid_mapping():
+    create_mbid_mapping()
 
 
 @cli.command()
@@ -40,14 +30,21 @@ def test_mapping():
 
 
 @cli.command()
-def test_pairs():
-    action_test_pairs()
+def year_mapping():
+    create_year_mapping()
 
 
 @cli.command()
-@click.argument("dest_dir", nargs=1)
-def write(dest_dir):
-    action_write_all_mappings(dest_dir)
+def build_index():
+    action_build_index()
+
+
+@cli.command()
+@click.argument('query', nargs=-1)
+def search(query):
+    hits = action_search(" ".join(query))
+    for hit in hits:
+        print("%-40s %-40s %-40s" % (hit['recording_name'][:39], hit['release_name'][:39], hit['artist_credit_name'][:39]))
 
 
 @cli.command()

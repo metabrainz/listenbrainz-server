@@ -3,7 +3,6 @@
 import datetime
 import logging
 import time
-import ujson
 import uuid
 
 from dateutil.relativedelta import relativedelta
@@ -11,8 +10,8 @@ from redis.connection import Connection
 
 import listenbrainz.db.user as db_user
 from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz import config
 from listenbrainz.listen import Listen
-from listenbrainz.listenstore.tests.util import generate_data
 from listenbrainz.webserver.redis_connection import init_redis_connection
 from listenbrainz.listenstore.redis_listenstore import RedisListenStore
 
@@ -22,7 +21,8 @@ class RedisListenStoreTestCase(DatabaseTestCase):
     def setUp(self):
         super(RedisListenStoreTestCase, self).setUp()
         self.log = logging.getLogger()
-        self._redis = init_redis_connection(self.log, self.config.REDIS_HOST, self.config.REDIS_PORT, self.config.REDIS_NAMESPACE)
+        # TODO: Ideally this would use a config from a flask app, but this test case doesn't create an app
+        self._redis = init_redis_connection(self.log, config.REDIS_HOST, config.REDIS_PORT, config.REDIS_NAMESPACE)
         self.testuser = db_user.get_or_create(1, "test")
 
     def tearDown(self):
@@ -41,7 +41,7 @@ class RedisListenStoreTestCase(DatabaseTestCase):
                 'additional_info': {},
             },
         }
-        self._redis.put_playing_now(listen['user_id'], listen, self.config.PLAYING_NOW_MAX_DURATION)
+        self._redis.put_playing_now(listen['user_id'], listen, config.PLAYING_NOW_MAX_DURATION)
 
         playing_now = self._redis.get_playing_now(listen['user_id'])
         self.assertIsNotNone(playing_now)
