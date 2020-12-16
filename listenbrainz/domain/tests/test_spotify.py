@@ -62,6 +62,8 @@ class SpotifyDomainTestCase(ServerTestCase):
         self.assertIn('streaming', func_oauth.scope)
         self.assertIn('user-read-email', func_oauth.scope)
         self.assertIn('user-read-private', func_oauth.scope)
+        self.assertIn('playlist-modify-public', func_oauth.scope)
+        self.assertIn('playlist-modify-private', func_oauth.scope)
         self.assertNotIn('user-read-recently-played', func_oauth.scope)
         self.assertNotIn('user-read-currently-playing', func_oauth.scope)
 
@@ -71,6 +73,8 @@ class SpotifyDomainTestCase(ServerTestCase):
         self.assertNotIn('streaming', func_oauth.scope)
         self.assertNotIn('user-read-email', func_oauth.scope)
         self.assertNotIn('user-read-private', func_oauth.scope)
+        self.assertNotIn('playlist-modify-public', func_oauth.scope)
+        self.assertNotIn('playlist-modify-private', func_oauth.scope)
 
 
     @mock.patch('listenbrainz.domain.spotify.db_spotify.get_user')
