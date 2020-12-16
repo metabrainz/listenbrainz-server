@@ -12,6 +12,7 @@ import {
   faPlusCircle,
   faTrashAlt,
 } from "@fortawesome/free-solid-svg-icons";
+import { faSpotify } from "@fortawesome/free-brands-svg-icons";
 
 import { AlertList } from "react-bs-notifier";
 import AsyncSelect from "react-select/async";
@@ -20,8 +21,10 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { ReactSortable } from "react-sortablejs";
 import debounceAsync from "debounce-async";
 import APIService from "../APIService";
+import SpotifyAPIService from "../SpotifyAPIService";
 import BrainzPlayer from "../BrainzPlayer";
 import Card from "../components/Card";
+import Loader from "../components/Loader";
 import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
 import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
 import ErrorBoundary from "../ErrorBoundary";
@@ -48,6 +51,7 @@ export interface PlaylistPageState {
   currentTrack?: JSPFTrack;
   playlist: JSPFPlaylist;
   recordingFeedbackMap: RecordingFeedbackMap;
+  loading: boolean;
 }
 
 type OptionType = { label: string; value: ACRMSearchResult };
@@ -65,6 +69,8 @@ export default class PlaylistPage extends React.Component<
   }
 
   private APIService: APIService;
+  private SpotifyAPIService?: SpotifyAPIService;
+  private spotifyPlaylist?: SpotifyPlaylistObject;
   private searchForTrackDebounced: any;
   private brainzPlayer = React.createRef<BrainzPlayer>();
   private addTrackSelectRef = React.createRef<AsyncSelect<OptionType>>();
@@ -86,11 +92,17 @@ export default class PlaylistPage extends React.Component<
       alerts: [],
       playlist: props.playlist?.playlist || {},
       recordingFeedbackMap: {},
+      loading: false,
     };
 
     this.APIService = new APIService(
       props.apiUrl || `${window.location.origin}/1`
     );
+
+    if (props.spotify) {
+      // Do we want to check current permissions?
+      this.SpotifyAPIService = new SpotifyAPIService(props.spotify);
+    }
 
     this.searchForTrackDebounced = debounceAsync(this.searchForTrack, 500, {
       leading: false,
@@ -198,7 +210,7 @@ export default class PlaylistPage extends React.Component<
           recordingFeedbackMap,
         });
       } catch (error) {
-        this.newAlert("danger", "Error", error.message);
+        this.handleError(error);
       }
     }
   };
@@ -253,7 +265,7 @@ export default class PlaylistPage extends React.Component<
         </>
       );
     } catch (error) {
-      this.newAlert("danger", "Error", error.message);
+      this.handleError(error);
     }
   };
 
@@ -285,7 +297,7 @@ export default class PlaylistPage extends React.Component<
       });
       window.location.href = `${window.location.origin}/user/${currentUser.name}/playlists`;
     } catch (error) {
-      this.newAlert("danger", "Error", error.message);
+      this.handleError(error);
     }
   };
 
@@ -452,7 +464,7 @@ export default class PlaylistPage extends React.Component<
         });
       }
     } catch (error) {
-      this.newAlert("danger", "Error", error.message);
+      this.handleError(error);
     }
   };
 
@@ -477,7 +489,7 @@ export default class PlaylistPage extends React.Component<
         1
       );
     } catch (error) {
-      this.newAlert("danger", "Error", error.message);
+      this.handleError(error);
       // Revert the move in state.playlist order
       const newTracks = [...playlist.track];
       // The ol' switcheroo !
@@ -543,7 +555,7 @@ export default class PlaylistPage extends React.Component<
 
       this.newAlert("success", "Saved playlist", "");
     } catch (error) {
-      this.newAlert("danger", "Error", error.message);
+      this.handleError(error);
     }
     try {
       // Fetch the newly editd playlist and save it to state
@@ -553,7 +565,7 @@ export default class PlaylistPage extends React.Component<
       );
       this.setState({ playlist: JSPFObject.playlist });
     } catch (error) {
-      this.newAlert("danger", "Error", error.message);
+      this.handleError(error);
     }
   };
 
@@ -573,8 +585,97 @@ export default class PlaylistPage extends React.Component<
     );
   };
 
+  handleError = (error: any) => {
+    this.newAlert("danger", "Error", error.message);
+  };
+
+  exportToSpotify = async () => {
+    const { playlist } = this.state;
+    if (!playlist || !this.SpotifyAPIService) {
+      return;
+    }
+    if (!playlist.track.length) {
+      this.newAlert(
+        "warning",
+        "Empty playlist",
+        "Why don't you fill up the playlist a bit before trying to export it?"
+      );
+      return;
+    }
+    const { title, annotation, identifier } = playlist;
+    const customFields = getPlaylistExtension(playlist);
+    this.setState({ loading: true });
+    try {
+      const newPlaylist: SpotifyPlaylistObject =
+        this.spotifyPlaylist ||
+        (await this.SpotifyAPIService.createPlaylist(
+          title,
+          customFields?.public,
+          `${annotation}
+          Exported from ListenBrainz playlist ${identifier}`
+        ));
+
+      if (!this.spotifyPlaylist) {
+        // Store the playlist ID, in case something goes wrong we don't recreate another playlist
+        this.spotifyPlaylist = newPlaylist;
+      }
+
+      const spotifyURIs = await this.SpotifyAPIService.searchForSpotifyURIs(
+        playlist.track
+      );
+      await this.SpotifyAPIService.addSpotifyTracksToPlaylist(
+        newPlaylist.id,
+        spotifyURIs
+      );
+      this.newAlert(
+        "success",
+        "Playlist exported to Spotify",
+        <>
+          Successfully exported playlist:{" "}
+          <a href={newPlaylist.href} target="_blank" rel="noopener noreferrer">
+            {newPlaylist.href}
+          </a>
+          {spotifyURIs.length !== playlist.track.length && (
+            <b>
+              <br />
+              {playlist.track.length - spotifyURIs.length} tracks were not found
+              on Spotify, and consequently skipped.
+            </b>
+          )}
+        </>
+      );
+    } catch (error) {
+      if (error.error?.status === 401) {
+        try {
+          const newUserToken = await this.APIService.refreshSpotifyToken();
+          this.SpotifyAPIService.setUserToken(newUserToken);
+        } catch (err) {
+          this.handleError(err.error ?? err);
+        }
+      } else if (
+        error.error?.status === 403 &&
+        error.error?.message === "Invalid token scopes."
+      ) {
+        this.newAlert(
+          "danger",
+          "Spotify permissions missing",
+          <>
+            Please try to{" "}
+            <a href="/profile/connect-spotify" target="_blank">
+              disconnect and reconnect
+            </a>{" "}
+            your Spotify account and refresh this page
+          </>
+        );
+      } else {
+        this.handleError(error.error ?? error);
+      }
+    }
+    this.setState({ loading: false });
+  };
+
   render() {
-    const { alerts, currentTrack, playlist } = this.state;
+    const { alerts, currentTrack, playlist, loading } = this.state;
     const { spotify, currentUser, apiUrl } = this.props;
     const { track: tracks } = playlist;
     const hasRightToEdit = this.hasRightToEdit();
@@ -584,6 +685,11 @@ export default class PlaylistPage extends React.Component<
 
     return (
       <div role="main">
+        <Loader
+          isLoading={loading}
+          loaderText="Exporting playlist to Spotify"
+          className="full-page-loader"
+        />
         <AlertList
           position="bottom-right"
           alerts={alerts}
@@ -643,6 +749,21 @@ export default class PlaylistPage extends React.Component<
                             >
                               <FontAwesomeIcon icon={faTrashAlt as IconProp} />{" "}
                               Delete
+                            </a>
+                          </li>
+                        </>
+                      )}
+                      {this.SpotifyAPIService && (
+                        <>
+                          <li role="separator" className="divider" />
+                          <li>
+                            <a
+                              role="button"
+                              href="#"
+                              onClick={this.exportToSpotify}
+                            >
+                              <FontAwesomeIcon icon={faSpotify as IconProp} />{" "}
+                              Export to Spotify
                             </a>
                           </li>
                         </>
