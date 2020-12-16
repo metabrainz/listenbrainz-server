@@ -77,6 +77,8 @@ class Playlist(BaseModel):
     created_for: Optional[str]
     creator: str
     recordings: List[PlaylistRecording]
+    # mbid of the playlist referred to in copied_from_id
+    copied_from_mbid: Optional[uuid.UUID]
 
 
 class WritablePlaylist(Playlist):
