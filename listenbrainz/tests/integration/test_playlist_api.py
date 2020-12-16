@@ -74,6 +74,10 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["annotation"], "your lame 80s music")
         self.assertEqual(response.json["playlist"]["track"][0]["identifier"],
                          playlist["playlist"]["track"][0]["identifier"])
+        try:
+            dateutil.parser.isoparse(response.json["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["last_modified_at"])
+        except ValueError:
+            assert False
 
     def test_playlist_create_with_created_for(self):
         """ Test to ensure creating a playlist for someone else works """
@@ -95,7 +99,8 @@ class PlaylistAPITestCase(IntegrationTestCase):
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
         )
         self.assert200(response)
-        self.assertEqual(response.json["playlist"]["created_for"], self.user["musicbrainz_id"])
+        self.assertEqual(response.json["playlist"]["extension"]
+                         ["https://musicbrainz.org/doc/jspf#playlist"]["created_for"], self.user["musicbrainz_id"])
 
         # Try to submit a playlist on a different users's behalf without the right perms
         # (a user must be part of config. APPROVED_PLAYLIST_BOTS to be able to create playlists
@@ -556,22 +561,24 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assert200(response)
         print(response.json)
         self.assertEqual(response.json["playlist_count"], 2)
-        self.assertEqual(response.json["playlists"][0]["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["creator_id"], self.user4["id"])
-        self.assertEqual(response.json["playlists"][0]["playlist"]["creator"], self.user4["musicbrainz_id"])
+        self.assertEqual(response.json["playlists"][0]["playlist"]["extension"] \
+                         ["https://musicbrainz.org/doc/jspf#playlist"]["creator"], self.user4["musicbrainz_id"])
         self.assertEqual(response.json["playlists"][0]["playlist"]["identifier"], PLAYLIST_URI_PREFIX + public_playlist_mbid)
         self.assertEqual(response.json["playlists"][0]["playlist"]["title"], "1980s flashback jams")
         self.assertEqual(response.json["playlists"][0]["playlist"]["annotation"], "your lame 80s music")
-        self.assertEqual(response.json["playlists"][0]["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["public"], True)
+        self.assertEqual(response.json["playlists"][0]["playlist"]["extension"] \
+                         ["https://musicbrainz.org/doc/jspf#playlist"]["public"], True)
         try:
             dateutil.parser.isoparse(response.json["playlists"][0]["playlist"]["date"])
         except ValueError:
             assert False
-        self.assertEqual(response.json["playlists"][1]["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["creator_id"], self.user4["id"])
-        self.assertEqual(response.json["playlists"][1]["playlist"]["creator"], self.user4["musicbrainz_id"])
+        self.assertEqual(response.json["playlists"][1]["playlist"]["extension"] \
+                         ["https://musicbrainz.org/doc/jspf#playlist"]["creator"], self.user4["musicbrainz_id"])
         self.assertEqual(response.json["playlists"][1]["playlist"]["identifier"], PLAYLIST_URI_PREFIX + private_playlist_mbid)
         self.assertEqual(response.json["playlists"][1]["playlist"]["title"], "1980s flashback jams")
         self.assertEqual(response.json["playlists"][1]["playlist"]["annotation"], "your lame 80s music")
-        self.assertEqual(response.json["playlists"][1]["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["public"], False)
+        self.assertEqual(response.json["playlists"][1]["playlist"]["extension"] \
+                         ["https://musicbrainz.org/doc/jspf#playlist"]["public"], False)
         try:
             dateutil.parser.isoparse(response.json["playlists"][1]["playlist"]["date"])
         except ValueError:
