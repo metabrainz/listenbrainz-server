@@ -12,7 +12,6 @@ import ujson
 # NOTE: This test module includes all the tests for playlist features, even those served from the
 #       user API endpoint!
 
-
 def get_test_data():
     return {
        "playlist": {
@@ -426,9 +425,29 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert200(response)
         self.assertEqual(response.json["playlist"]["identifier"], PLAYLIST_URI_PREFIX + new_playlist_mbid)
-        self.assertEqual(response.json["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["public"], True)
+        self.assertEqual(response.json["playlist"]["extension"] \
+                         ["https://musicbrainz.org/doc/jspf#playlist"]["copied_from_mbid"], playlist_mbid)
+        self.assertEqual(response.json["playlist"]["extension"] \
+                         ["https://musicbrainz.org/doc/jspf#playlist"]["public"], True)
         self.assertEqual(response.json["playlist"]["title"], "Copy of my stupid playlist")
         self.assertEqual(response.json["playlist"]["creator"], "anothertestuserpleaseignore")
+
+
+        # Now delete the original playlist so that we can test copied from deleted playlist
+        response = self.client.post(
+            url_for("playlist_api_v1.delete_playlist", playlist_mbid=playlist_mbid),
+            json={},
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+
+        response = self.client.get(
+            url_for("playlist_api_v1.get_playlist", playlist_mbid=new_playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        self.assertEqual(response.json["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["copied_from_deleted"], True)
+
 
     def test_playlist_copy_private_playlist(self):
 
