@@ -144,7 +144,7 @@ def get_playlists_for_user(user_id: int,
                                            {where_public}""")
         count = connection.execute(query, params).fetchone()[0]
 
-    return (playlists, count)
+    return playlists, count
 
 
 def get_playlists_created_for_user(user_id: int,
@@ -220,7 +220,7 @@ def get_playlists_created_for_user(user_id: int,
                                      WHERE creator_id = :creator_id""")
         count = connection.execute(query, params).fetchone()[0]
 
-    return (playlists, count)
+    return playlists, count
 
 
 def get_recordings_for_playlists(connection, playlist_ids: List[int]):
@@ -308,7 +308,25 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
         playlist.created = row['created']
         playlist.creator = creator['musicbrainz_id']
         playlist.recordings = insert_recordings(connection, playlist.id, playlist.recordings, 0)
+
+        if playlist.collaborator_ids:
+            add_playlist_collaborators(connection, playlist.id, playlist.collaborator_ids)
+
         return model_playlist.Playlist.parse_obj(playlist.dict())
+
+
+def add_playlist_collaborators(connection, playlist_id, collaborator_ids):
+    delete_query = sqlalchemy.text(
+        """DELETE FROM playlist.playlist_collaborator
+                 WHERE playlist_id = :playlist_id""")
+    insert_query = sqlalchemy.text(
+        """INSERT INTO playlist.playlist_collaborator (playlist_id, collaborator_id)
+                VALUES (:playlist_id, :collaborator_id)""")
+
+    collaborator_params = [{"playlist_id": playlist_id, "collaborator_id": c_id} for c_id in collaborator_ids]
+    if collaborator_params:
+        connection.execute(delete_query, {"playlist_id": playlist_id})
+        connection.execute(insert_query, collaborator_params)
 
 
 def update_playlist(playlist: model_playlist.Playlist):
@@ -323,11 +341,14 @@ def update_playlist(playlist: model_playlist.Playlist):
            SET name = :name
              , description = :description
              , public = :public
+             , updated = now()
          WHERE id = :id
     """)
     with ts.engine.connect() as connection:
         params = playlist.dict(include={'id', 'name', 'description', 'public'})
         connection.execute(query, params)
+        if playlist.collaborator_ids:
+            add_playlist_collaborators(connection, playlist.id, playlist.collaborator_ids)
         return playlist
 
 
@@ -511,11 +532,3 @@ def move_recordings(playlist: model_playlist.Playlist, position_from: int, posit
     removed = playlist.recordings[position_from:position_from+count]
     delete_recordings_from_playlist(playlist, position_from, count)
     add_recordings_to_playlist(playlist, removed, position_to)
-
-
-def update(playlist: model_playlist.Playlist) -> model_playlist.Playlist:
-    if not playlist.id:
-        raise ValueError("needs an id")
-    pass
-
-

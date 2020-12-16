@@ -58,12 +58,17 @@ class Playlist(BaseModel):
     public: bool = True
     # When the playlist was created
     created: datetime.datetime
+    # When a change was made to metadata
+    updated: Optional[datetime.datetime]
     # If the playlist was copied from another one, the id of that playlist
     copied_from_id: Optional[int]
     # If the playlist was created by a bot, the user for who this playlist was created
     created_for_id: Optional[int]
     # If the playlist was created by a bot, some freeform data about it
     algorithm_metadata: Optional[Dict]
+    # The users who have permission to collaborate on this playlist
+    collaborator_ids: List[int] = []
+    collaborators: List[str] = []
 
     # Computed fields
     created_for: Optional[str]
