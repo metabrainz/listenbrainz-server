@@ -20,3 +20,6 @@ htmlcov
 
 # Private credentials
 credentials
+
+# Javascript packages
+node_modules

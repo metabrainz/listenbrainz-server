@@ -30,6 +30,7 @@ import {
 import APIService from "./APIService";
 
 type FollowButtonProps = {
+  type: "icon-only" | "block";
   user: ListenBrainzUser;
   loggedInUser?: ListenBrainzUser;
   loggedInUserFollowsUser: boolean;
@@ -97,7 +98,7 @@ class FollowButton extends React.Component<
 
   getButtonDetails = (): {
     buttonIcon: IconProp;
-    buttonClass: string;
+    buttonClass?: string;
     buttonText: string;
   } => {
     const { error, justFollowed, loggedInUserFollowsUser, hover } = this.state;
@@ -105,15 +106,13 @@ class FollowButton extends React.Component<
     if (error) {
       return {
         buttonIcon: faExclamationTriangle as IconProp,
-        buttonClass: "btn btn-sm btn-danger",
-        buttonText: "Something went wrong!",
+        buttonText: "Error!!",
       };
     }
 
     if (justFollowed) {
       return {
         buttonIcon: faUserCheck as IconProp,
-        buttonClass: "btn btn-sm btn-success",
         buttonText: "Following",
       };
     }
@@ -122,38 +121,37 @@ class FollowButton extends React.Component<
       if (!hover) {
         return {
           buttonIcon: faUserCheck as IconProp,
-          buttonClass: "btn btn-sm btn-success",
+          buttonClass: "following",
           buttonText: "Following",
         };
       }
       return {
         buttonIcon: faUserTimes as IconProp,
-        buttonClass: "btn btn-sm btn-primary",
+        buttonClass: "following",
         buttonText: "Unfollow",
       };
     }
 
     return {
       buttonIcon: faUserPlus as IconProp,
-      buttonClass: "btn btn-sm btn-info",
       buttonText: "Follow",
     };
   };
 
   render() {
+    const { type } = this.props;
     const { buttonClass, buttonText, buttonIcon } = this.getButtonDetails();
     return (
       <div
-        id="follow-button"
         onClick={this.handleButtonClick}
         onKeyPress={this.handleButtonClick}
         onMouseEnter={() => this.setHover(true)}
         onMouseLeave={() => this.setHover(false)}
-        className={buttonClass}
+        className={`follow-button ${buttonClass} ${type}`}
         role="button"
         tabIndex={0}
       >
-        <FontAwesomeIcon icon={buttonIcon} />{" "}
+        <FontAwesomeIcon icon={buttonIcon} />
         <div className="text">{buttonText}</div>
       </div>
     );

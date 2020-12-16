@@ -205,8 +205,8 @@ def request_candidate_sets(days, top, similar, users, html):
 
 
 @cli.command(name='request_recommendations')
-@click.option("--top", type=int, default=200, help="Generate given number of top artist recommendations")
-@click.option("--similar", type=int, default=200, help="Generate given number of similar artist recommendations")
+@click.option("--top", type=int, default=1000, help="Generate given number of top artist recommendations")
+@click.option("--similar", type=int, default=1000, help="Generate given number of similar artist recommendations")
 @click.option("--user-name", 'users', callback=parse_list, default=[], multiple=True,
               help="Generate recommendations for given users. Generate recommendations for all users by default.")
 def request_recommendations(top, similar, users):
