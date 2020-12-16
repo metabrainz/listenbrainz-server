@@ -554,25 +554,26 @@ class PlaylistAPITestCase(IntegrationTestCase):
             headers={"Authorization": "Token {}".format(self.user4["auth_token"])},
         )
         self.assert200(response)
+        print(response.json)
         self.assertEqual(response.json["playlist_count"], 2)
-        self.assertEqual(response.json["playlists"][0]["playlist"]["creator_id"], self.user4["id"])
+        self.assertEqual(response.json["playlists"][0]["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["creator_id"], self.user4["id"])
         self.assertEqual(response.json["playlists"][0]["playlist"]["creator"], self.user4["musicbrainz_id"])
-        self.assertEqual(response.json["playlists"][0]["playlist"]["mbid"], public_playlist_mbid)
-        self.assertEqual(response.json["playlists"][0]["playlist"]["name"], "1980s flashback jams")
-        self.assertEqual(response.json["playlists"][0]["playlist"]["description"], "your lame 80s music")
-        self.assertEqual(response.json["playlists"][0]["playlist"]["public"], True)
+        self.assertEqual(response.json["playlists"][0]["playlist"]["identifier"], PLAYLIST_URI_PREFIX + public_playlist_mbid)
+        self.assertEqual(response.json["playlists"][0]["playlist"]["title"], "1980s flashback jams")
+        self.assertEqual(response.json["playlists"][0]["playlist"]["annotation"], "your lame 80s music")
+        self.assertEqual(response.json["playlists"][0]["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["public"], True)
         try:
-            dateutil.parser.isoparse(response.json["playlists"][0]["playlist"]["created"])
+            dateutil.parser.isoparse(response.json["playlists"][0]["playlist"]["date"])
         except ValueError:
             assert False
-        self.assertEqual(response.json["playlists"][1]["playlist"]["creator_id"], self.user4["id"])
+        self.assertEqual(response.json["playlists"][1]["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["creator_id"], self.user4["id"])
         self.assertEqual(response.json["playlists"][1]["playlist"]["creator"], self.user4["musicbrainz_id"])
-        self.assertEqual(response.json["playlists"][1]["playlist"]["mbid"], private_playlist_mbid)
-        self.assertEqual(response.json["playlists"][1]["playlist"]["name"], "1980s flashback jams")
-        self.assertEqual(response.json["playlists"][1]["playlist"]["description"], "your lame 80s music")
-        self.assertEqual(response.json["playlists"][1]["playlist"]["public"], False)
+        self.assertEqual(response.json["playlists"][1]["playlist"]["identifier"], PLAYLIST_URI_PREFIX + private_playlist_mbid)
+        self.assertEqual(response.json["playlists"][1]["playlist"]["title"], "1980s flashback jams")
+        self.assertEqual(response.json["playlists"][1]["playlist"]["annotation"], "your lame 80s music")
+        self.assertEqual(response.json["playlists"][1]["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["public"], False)
         try:
-            dateutil.parser.isoparse(response.json["playlists"][1]["playlist"]["created"])
+            dateutil.parser.isoparse(response.json["playlists"][1]["playlist"]["date"])
         except ValueError:
             assert False
 
