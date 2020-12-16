@@ -7,7 +7,7 @@ import * as io from "socket.io-client";
 
 import { ActionMeta, ValueType } from "react-select";
 import {
-  faEllipsisV,
+  faCog,
   faPen,
   faPlusCircle,
   faTrashAlt,
@@ -597,9 +597,9 @@ export default class PlaylistPage extends React.Component<
               <h1 className="title">
                 <div>
                   {playlist.title}
-                  <span className="dropdown">
+                  <span className="dropdown pull-right">
                     <button
-                      className="btn btn-link dropdown-toggle"
+                      className="btn btn-info dropdown-toggle"
                       type="button"
                       id="playlistOptionsDropdown"
                       data-toggle="dropdown"
@@ -607,9 +607,10 @@ export default class PlaylistPage extends React.Component<
                       aria-expanded="true"
                     >
                       <FontAwesomeIcon
-                        icon={faEllipsisV as IconProp}
-                        title="More options"
+                        icon={faCog as IconProp}
+                        title="Options"
                       />
+                      &nbsp;Options
                     </button>
                     <ul
                       className="dropdown-menu dropdown-menu-right"
