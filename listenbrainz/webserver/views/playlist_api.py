@@ -98,10 +98,15 @@ def serialize_jspf(playlist: Playlist):
     extension = {"public": playlist.public, "creator": playlist.creator}
     if playlist.last_updated:
         extension["last_modified_at"] = playlist.last_updated.astimezone(datetime.timezone.utc).isoformat()
-    if playlist.copied_from_id:
-        extension['copied_from'] = PLAYLIST_URI_PREFIX + str(playlist.copied_from_id)
+    if playlist.copied_from_bid is not None:
+        if playlist.copied_from_mbid is None:
+            extension['copied_from_deleted'] = True
+        else:
+            extension['copied_from'] = PLAYLIST_URI_PREFIX + str(playlist.copied_from_mbid)
     if playlist.created_for_id:
         extension['created_for'] = playlist.created_for
+    if playlist.collaborators:
+        extension['collaborators'] = playlist.collaborators
 
     pl["extension"] = {PLAYLIST_EXTENSION_URI: extension}
 
