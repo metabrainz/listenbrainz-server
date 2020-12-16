@@ -81,7 +81,9 @@ declare type SpotifyPermission =
   | "streaming"
   | "user-read-birthdate"
   | "user-read-email"
-  | "user-read-private";
+  | "user-read-private"
+  | "playlist-modify-public"
+  | "playlist-modify-private";
 
 declare type SpotifyImage = {
   height: number;
