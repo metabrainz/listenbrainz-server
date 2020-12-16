@@ -41,9 +41,6 @@ def validate_playlist(jspf, require_title=True):
     """
         Given a JSPF dict, ensure that title is present and that if tracks are present
         they have valid URIs or MBIDs specified. If any errors are found 400 is raised.
-
-        If a created_for field is found and the user is not an approved playlist bot,
-        then a 403 forbidden will be raised.
     """
 
     if require_title:
@@ -87,8 +84,7 @@ def validate_playlist(jspf, require_title=True):
 def serialize_jspf(playlist: Playlist):
     """
         Given a playlist, return a properly formated dict that can be passed to jsonify.
-        TODO: Add tests for newly added fields.
-              Add collaborators
+        TODO: Add collaborators
     """
 
     pl = {"creator": playlist.creator,
@@ -98,13 +94,14 @@ def serialize_jspf(playlist: Playlist):
     }
     if playlist.description:
         pl["annotation"] = playlist.description
-    if playlist.created_for_id:
-        pl['created_for'] = playlist.created_for
 
-    extension = {"public": playlist.public}
-    extension["creator_id"] = playlist.creator_id
+    extension = {"public": playlist.public, "creator": playlist.creator}
+    if playlist.last_updated:
+        extension["last_modified_at"] = playlist.last_updated.astimezone(datetime.timezone.utc).isoformat()
     if playlist.copied_from_id:
         extension['copied_from'] = PLAYLIST_URI_PREFIX + str(playlist.copied_from_id)
+    if playlist.created_for_id:
+        extension['created_for'] = playlist.created_for
 
     pl["extension"] = {PLAYLIST_EXTENSION_URI: extension}
 
@@ -121,7 +118,7 @@ def serialize_jspf(playlist: Playlist):
             tr["title"] = rec.title
 
         extension = {"added_by": rec.added_by,
-                      "added_at": rec.created.astimezone(datetime.timezone.utc).isoformat()}
+                     "added_at": rec.created.astimezone(datetime.timezone.utc).isoformat()}
         if rec.artist_mbids:
             extension["artist_identifier"] = [PLAYLIST_ARTIST_URI_PREFIX + str(mbid) for mbid in rec.artist_mbids]
 
@@ -226,6 +223,8 @@ def create_playlist():
     When creating a playlist, only the playlist title and the track identifier elements will be used -- all
     other elements in the posted JSPF wil be ignored.
 
+    If a created_for field is found and the user is not an approved playlist bot, then a 403 forbidden will be raised.
+
     :reqheader Authorization: Token <user token>
     :statuscode 200: playlist accepted.
     :statuscode 400: invalid JSON sent, see error message for details.
@@ -313,9 +312,8 @@ def edit_playlist(playlist_mbid):
     if data["playlist"].get("title"):
         playlist.name = data["playlist"]["title"]
 
-    # TODO: uncomment this when collaborators are implemented in the DB layer
-    #if data.get("collaborators", None):
-    #   playlist.collaborators = data["collaborators"]
+    if data.get("collaborators", None):
+        playlist.collaborators = data["collaborators"]
 
     print(playlist)
     db_playlist.update_playlist(playlist)
