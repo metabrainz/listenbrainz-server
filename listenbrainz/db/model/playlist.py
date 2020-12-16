@@ -67,6 +67,9 @@ class Playlist(BaseModel):
     # If the playlist was created by a bot, some freeform data about it
     algorithm_metadata: Optional[Dict]
     # The users who have permission to collaborate on this playlist
+    # TODO: Because the id list isn't an FK to a table, we can't guarantee that these values
+    #  actually exist. There's no agreement between collaborator_ids and collaborators.
+    #  Ideally this should be a list of a User object that allows us to keep these values in sync
     collaborator_ids: List[int] = []
     collaborators: List[str] = []
 

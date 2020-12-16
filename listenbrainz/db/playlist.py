@@ -56,6 +56,15 @@ def get_by_mbid(playlist_id: str, load_recordings: bool = True) -> Optional[mode
             obj['recordings'] = playlist_map.get(obj['id'], [])
         else:
             obj['recordings'] = []
+        playlist_collaborator_ids = get_collaborators_for_playlists(connection, [obj['id']])
+        obj['collaborator_ids'] = playlist_collaborator_ids.get(obj['id'], [])
+        collaborators = []
+        # TODO: Look this up in one query
+        for user_id in obj['collaborator_ids']:
+            user = db_user.get(user_id)
+            if user:
+                collaborators.append(user["musicbrainz_id"])
+            obj['collaborators'] = collaborators
         return model_playlist.Playlist.parse_obj(obj)
 
 
@@ -128,11 +137,21 @@ def get_playlists_for_user(user_id: int,
             playlist = model_playlist.Playlist.parse_obj(row)
             playlists.append(playlist)
 
+        playlist_ids = [p.id for p in playlists]
         if load_recordings:
-            playlist_ids = [p.id for p in playlists]
             playlist_recordings = get_recordings_for_playlists(connection, playlist_ids)
             for p in playlists:
                 p.recordings = playlist_recordings.get(p.id, [])
+        playlist_collaborator_ids = get_collaborators_for_playlists(connection, playlist_ids)
+        for p in playlists:
+            p.collaborator_ids = playlist_collaborator_ids.get(p.id, [])
+            collaborators = []
+            # TODO: Look this up in one query
+            for user_id in p.collaborator_ids:
+                user = db_user.get(user_id)
+                if user:
+                    collaborators.append(user["musicbrainz_id"])
+            p.collaborators = collaborators
 
         # Now fetch the count of playlists
         params = {"creator_id": user_id}
@@ -210,13 +229,24 @@ def get_playlists_created_for_user(user_id: int,
             playlist = model_playlist.Playlist.parse_obj(row)
             playlists.append(playlist)
 
+        playlist_ids = [p.id for p in playlists]
         if load_recordings:
-            playlist_ids = [p.id for p in playlists]
             playlist_recordings = get_recordings_for_playlists(connection, playlist_ids)
             for p in playlists:
                 p.recordings = playlist_recordings.get(p.id, [])
+        playlist_collaborator_ids = get_collaborators_for_playlists(connection, playlist_ids)
+        for p in playlists:
+            p.collaborator_ids = playlist_collaborator_ids.get(p.id, [])
+            collaborators = []
+            # TODO: Look this up in one query
+            for user_id in p.collaborator_ids:
+                user = db_user.get(user_id)
+                if user:
+                    collaborators.append(user["musicbrainz_id"])
+            p.collaborators = collaborators
 
         # Now fetch the count of playlists
+        # TODO: Bug, this should be created_for_id, not creator_id
         params = {"creator_id": user_id}
         query = sqlalchemy.text(f"""SELECT COUNT(*)
                                       FROM playlist.playlist
@@ -224,6 +254,29 @@ def get_playlists_created_for_user(user_id: int,
         count = connection.execute(query, params).fetchone()[0]
 
     return playlists, count
+
+
+def get_collaborators_for_playlists(connection, playlist_ids: List[int]):
+    """Get all of the collaborators for the given playlists
+
+    Args:
+        connection: an open database connection
+        playlist_ids: a list of playlist ids to get collaborator information for
+
+    Return:
+        a dictionary of {playlist_id: [collaborator_ids]}
+    """
+    query = sqlalchemy.text("""
+        SELECT playlist_id
+             , array_agg(collaborator_id) AS collaborator_ids
+          FROM playlist.playlist_collaborator
+         WHERE playlist_id in :playlist_ids
+      GROUP BY playlist_id""")
+    result = connection.execute(query, {"playlist_ids": tuple(playlist_ids)})
+    ret = {}
+    for row in result.fetchall():
+        ret[row['playlist_id']] = row['collaborator_ids']
+    return ret
 
 
 def get_recordings_for_playlists(connection, playlist_ids: List[int]):
@@ -314,6 +367,7 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
 
         if playlist.collaborator_ids:
             add_playlist_collaborators(connection, playlist.id, playlist.collaborator_ids)
+            # TODO: Get collaborator names, if we think this is useful here
 
         return model_playlist.Playlist.parse_obj(playlist.dict())
 
