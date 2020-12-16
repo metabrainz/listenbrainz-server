@@ -24,19 +24,22 @@ def get_by_mbid(playlist_id: str, load_recordings: bool = True) -> Optional[mode
         given id exists
     """
     query = sqlalchemy.text("""
-        SELECT id
-             , mbid
-             , creator_id
-             , name
-             , description
-             , public
-             , created
-             , last_updated
-             , copied_from_id
-             , created_for_id
-             , algorithm_metadata
-          FROM playlist.playlist
-         WHERE mbid = :mbid""")
+        SELECT pl.id
+             , pl.mbid
+             , pl.creator_id
+             , pl.name
+             , pl.description
+             , pl.public
+             , pl.created
+             , pl.last_updated
+             , pl.copied_from_id
+             , pl.created_for_id
+             , pl.algorithm_metadata
+             , copy.mbid as copied_from_mbid
+          FROM playlist.playlist AS pl
+     LEFT JOIN playlist.playlist AS copy
+            ON pl.copied_from_id = copy.id
+         WHERE pl.mbid = :mbid""")
     with ts.engine.connect() as connection:
         result = connection.execute(query, {"mbid": playlist_id})
         obj = result.fetchone()
