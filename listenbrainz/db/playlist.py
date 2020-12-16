@@ -31,6 +31,7 @@ def get_by_mbid(playlist_id: str, load_recordings: bool = True) -> Optional[mode
              , description
              , public
              , created
+             , last_updated
              , copied_from_id
              , created_for_id
              , algorithm_metadata
@@ -96,6 +97,7 @@ def get_playlists_for_user(user_id: int,
              , description
              , public
              , created
+             , last_updated
              , copied_from_id
              , created_for_id
              , algorithm_metadata
@@ -177,6 +179,7 @@ def get_playlists_created_for_user(user_id: int,
              , description
              , public
              , created
+             , last_updated
              , copied_from_id
              , created_for_id
              , algorithm_metadata
@@ -341,7 +344,6 @@ def update_playlist(playlist: model_playlist.Playlist):
            SET name = :name
              , description = :description
              , public = :public
-             , updated = now()
          WHERE id = :id
     """)
     with ts.engine.connect() as connection:
@@ -349,7 +351,18 @@ def update_playlist(playlist: model_playlist.Playlist):
         connection.execute(query, params)
         if playlist.collaborator_ids:
             add_playlist_collaborators(connection, playlist.id, playlist.collaborator_ids)
+        playlist.last_updated = set_last_updated(connection, playlist.id)
         return playlist
+
+
+def set_last_updated(connection, playlist_id):
+    query = sqlalchemy.text("""
+        UPDATE playlist.playlist
+           SET last_updated = now()
+         WHERE id = :playlist_id
+     RETURNING last_updated""")
+    result = connection.execute(query, {"playlist_id": playlist_id})
+    return result.fetchone()[0]
 
 
 def copy_playlist(playlist: model_playlist.Playlist, creator_id: int):
@@ -484,6 +497,8 @@ def delete_recordings_from_playlist(playlist: model_playlist.Playlist, remove_fr
                               "position": remove_from + remove_count,
                               "offset": -1 * remove_count}
             connection.execute(reorder, reorder_params)
+        # TODO: In move_recordings we call delete and then add, so this is called twice
+        set_last_updated(connection, playlist.id)
 
 
 def add_recordings_to_playlist(playlist: model_playlist.Playlist,
@@ -524,6 +539,7 @@ def add_recordings_to_playlist(playlist: model_playlist.Playlist,
             connection.execute(reorder, reorder_params)
         recordings = insert_recordings(connection, playlist.id, recordings, position)
         playlist.recordings = playlist.recordings[0:position] + recordings + playlist.recordings[position:]
+        set_last_updated(connection, playlist.id)
         return playlist
 
 
