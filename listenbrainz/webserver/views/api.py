@@ -482,7 +482,7 @@ def get_playlists_for_user(playlist_user_name):
 def get_playlists_created_for_user(playlist_user_name):
     """
     Fetch the playlists that have been created for a user. Returns an array of playlists without
-    their recordings. Createdfor playlists are all public, so not Authorization is needed for this call.
+    their recordings. Createdfor playlists are all public, so no Authorization is needed for this call.
 
     :params count: The number of playlists to return (for pagination). Default
         :data:`~webserver.views.api.DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL`
@@ -499,6 +499,38 @@ def get_playlists_created_for_user(playlist_user_name):
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
     playlists, playlist_count = db_playlist.get_playlists_created_for_user(playlist_user["id"], False, count, offset)
+
+    return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
+
+
+@api_bp.route("/user/<playlist_user_name>/playlists/collaborator", methods=["GET", "OPTIONS"])
+@crossdomain(headers="Content-Type")
+@ratelimit()
+def get_playlists_collaborated_on_for_user(playlist_user_name):
+    """
+    Fetch the playlists for which a user is a collaborator. Returns an array of playlists without
+    their recordings. If the authorized user is the not the owner of the playlist, only
+    public playlists will be returned.
+
+    :params count: The number of playlists to return (for pagination). Default
+        :data:`~webserver.views.api.DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL`
+    :params offset: The offset of into the list of playlists to return (for pagination)
+    :statuscode 200: Yay, you have data!
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+
+    user = validate_auth_header(True)
+
+    count = request.args.get('count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
+    offset = request.args.get('offset', 0)
+    playlist_user = db_user.get_by_mb_id(playlist_user_name)
+    if playlist_user is None:
+        raise APINotFound("Cannot find user: %s" % playlist_user_name)
+
+    # TODO: This needs to be passed to the DB layer
+    include_private = True if user and user["id"] == playlist_user["id"] else False
+    playlists, playlist_count = db_playlist.get_playlists_collaborated_on(playlist_user["id"], False, count, offset)
 
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
