@@ -232,12 +232,11 @@ def get_playlists_created_for_user(user_id: int,
         result = connection.execute(query, params)
         playlists = _playlist_resultset_to_model(connection, result, load_recordings)
 
-        # Now fetch the count of playlists
-        # TODO: Bug, this should be created_for_id, not creator_id
-        params = {"creator_id": user_id}
+        # Fetch the total count of playlists
+        params = {"created_for_id": user_id}
         query = sqlalchemy.text(f"""SELECT COUNT(*)
                                       FROM playlist.playlist
-                                     WHERE creator_id = :creator_id""")
+                                     WHERE created_for_id = :created_for_id""")
         count = connection.execute(query, params).fetchone()[0]
 
     return playlists, count
