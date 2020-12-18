@@ -166,21 +166,21 @@ def _playlist_resultset_to_model(connection, result, load_recordings):
         playlists.append(playlist)
 
     playlist_ids = [p.id for p in playlists]
-    if load_recordings:
-        playlist_recordings = get_recordings_for_playlists(connection, playlist_ids)
+    if playlist_ids:
+        if load_recordings:
+            playlist_recordings = get_recordings_for_playlists(connection, playlist_ids)
+            for p in playlists:
+                p.recordings = playlist_recordings.get(p.id, [])
+        playlist_collaborator_ids = get_collaborators_for_playlists(connection, playlist_ids)
         for p in playlists:
-            p.recordings = playlist_recordings.get(p.id, [])
-    # TODO: Fails if no playlist_ids returned
-    playlist_collaborator_ids = get_collaborators_for_playlists(connection, playlist_ids)
-    for p in playlists:
-        p.collaborator_ids = playlist_collaborator_ids.get(p.id, [])
-        collaborators = []
-        # TODO: Look this up in one query
-        for user_id in p.collaborator_ids:
-            user = db_user.get(user_id)
-            if user:
-                collaborators.append(user["musicbrainz_id"])
-        p.collaborators = collaborators
+            p.collaborator_ids = playlist_collaborator_ids.get(p.id, [])
+            collaborators = []
+            # TODO: Look this up in one query
+            for user_id in p.collaborator_ids:
+                user = db_user.get(user_id)
+                if user:
+                    collaborators.append(user["musicbrainz_id"])
+            p.collaborators = collaborators
 
     return playlists
 
