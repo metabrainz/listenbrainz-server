@@ -59,3 +59,35 @@ export function millisecondsToStr(milliseconds: number) {
 
   return "< 1s";
 }
+
+export function JSPFTrackToListen(track: JSPFTrack): Listen {
+  return {
+    listened_at: 0,
+    track_metadata: {
+      artist_name: track.creator,
+      track_name: track.title,
+      release_name: track.album,
+      additional_info: {
+        duration_ms: track.duration,
+        recording_mbid: track.id,
+        origin_url: track.location?.[0],
+      },
+    },
+  };
+}
+
+export function listenToJSPFTrack(listen: Listen): JSPFTrack {
+  return {
+    identifier:
+      PLAYLIST_TRACK_URI_PREFIX +
+      listen.track_metadata.additional_info?.recording_mbid,
+    id: listen.track_metadata.additional_info?.recording_mbid || undefined,
+    title: listen.track_metadata.track_name,
+    creator: listen.track_metadata.artist_name,
+    album: listen.track_metadata.release_name || undefined,
+    duration: listen.track_metadata.additional_info?.duration_ms || undefined,
+    location: listen.track_metadata.additional_info?.origin_url
+      ? [listen.track_metadata.additional_info?.origin_url]
+      : undefined,
+  };
+}
