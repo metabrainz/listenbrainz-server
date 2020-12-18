@@ -456,7 +456,8 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json["playlist"]["identifier"], PLAYLIST_URI_PREFIX + new_playlist_mbid)
         self.assertEqual(response.json["playlist"]["extension"] \
-                         ["https://musicbrainz.org/doc/jspf#playlist"]["copied_from_mbid"], playlist_mbid)
+                         ["https://musicbrainz.org/doc/jspf#playlist"]["copied_from_mbid"], \
+                         PLAYLIST_URI_PREFIX + playlist_mbid)
         self.assertEqual(response.json["playlist"]["extension"] \
                          ["https://musicbrainz.org/doc/jspf#playlist"]["public"], True)
         self.assertEqual(response.json["playlist"]["title"], "Copy of my stupid playlist")
@@ -608,7 +609,6 @@ class PlaylistAPITestCase(IntegrationTestCase):
             headers={"Authorization": "Token {}".format(self.user4["auth_token"])},
         )
         self.assert200(response)
-        print(response.json)
         self.assertEqual(response.json["playlist_count"], 2)
         self.assertEqual(response.json["playlists"][0]["playlist"]["extension"] \
                          ["https://musicbrainz.org/doc/jspf#playlist"]["creator"], self.user4["musicbrainz_id"])

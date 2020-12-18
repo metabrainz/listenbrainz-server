@@ -86,10 +86,8 @@ def validate_playlist(jspf, require_title=True):
 def serialize_jspf(playlist: Playlist):
     """
         Given a playlist, return a properly formated dict that can be passed to jsonify.
-        TODO: Add collaborators
     """
 
-    print(playlist)
     pl = {"creator": playlist.creator,
           "title": playlist.name,
           "identifier": PLAYLIST_URI_PREFIX + str(playlist.mbid),
@@ -101,11 +99,11 @@ def serialize_jspf(playlist: Playlist):
     extension = {"public": playlist.public, "creator": playlist.creator}
     if playlist.last_updated:
         extension["last_modified_at"] = playlist.last_updated.astimezone(datetime.timezone.utc).isoformat()
-    if playlist.copied_from_mbid is not None:
+    if playlist.copied_from_id is not None:
         if playlist.copied_from_mbid is None:
             extension['copied_from_deleted'] = True
         else:
-            extension['copied_from'] = PLAYLIST_URI_PREFIX + str(playlist.copied_from_mbid)
+            extension['copied_from_mbid'] = PLAYLIST_URI_PREFIX + str(playlist.copied_from_mbid)
     if playlist.created_for_id:
         extension['created_for'] = playlist.created_for
     if playlist.collaborators:
@@ -329,7 +327,6 @@ def edit_playlist(playlist_mbid):
     if data.get("collaborators", None):
         playlist.collaborators = data["collaborators"]
 
-    print(playlist)
     db_playlist.update_playlist(playlist)
 
     return jsonify({'status': 'ok'})
