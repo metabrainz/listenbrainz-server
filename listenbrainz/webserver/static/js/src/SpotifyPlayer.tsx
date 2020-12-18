@@ -136,16 +136,18 @@ export default class SpotifyPlayer
             <span>
               We found a matching track on Spotify:
               <br />
-              {track.name} —{" "}
+              {track?.name} —{" "}
               <small>
-                {track.artists
+                {track?.artists
                   .map((artist: SpotifyArtist) => artist.name)
                   .join(", ")}
               </small>
             </span>,
             "Found a match"
           );
-          this.playSpotifyURI(track.uri);
+          if (track?.uri) {
+            this.playSpotifyURI(track.uri);
+          }
           return;
         }
         // handleWarning("Could not find track on Spotify");
@@ -480,7 +482,8 @@ export default class SpotifyPlayer
       return null;
     }
     const sortedImages = currentSpotifyTrack.album.images.sort(
-      (a: SpotifyImage, b: SpotifyImage) => (a.height > b.height ? -1 : 1)
+      (a: SpotifyImage, b: SpotifyImage) =>
+        a?.height && b?.height && a.height > b.height ? -1 : 1
     );
     return (
       sortedImages[0] && (
