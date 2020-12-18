@@ -186,6 +186,31 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assert400(response)
         self.assertEqual(response.json["error"], "JSPF playlist must contain a title element with the title of the playlist.")
 
+    def test_playlist_create_with_collaborators(self):
+        """ Test to ensure creating a playlist with collaborators works """
+
+        playlist = get_test_data()
+        playlist["playlist"]["extension"] = {"https://musicbrainz.org/doc/jspf#playlist": { "collaborators": [self.user2["musicbrainz_id"]] }}
+
+        response = self.client.post(
+            url_for("playlist_api_v1.create_playlist", public="true"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        self.assertEqual(response.json["status"], "ok")
+        self.assertNotEqual(response.json["playlist_mbid"], "")
+
+        playlist_mbid = response.json["playlist_mbid"]
+
+        response = self.client.get(
+            url_for("playlist_api_v1.get_playlist", playlist_mbid=playlist_mbid),
+        )
+        self.assert200(response)
+        self.assertEqual(response.json["playlist"]["extension"]
+                         ["https://musicbrainz.org/doc/jspf#playlist"]["collaborators"], [self.user2["musicbrainz_id"]])
+
+
     def test_playlist_edit(self):
         """ Test to ensure editing a playlist works """
 
@@ -207,8 +232,9 @@ class PlaylistAPITestCase(IntegrationTestCase):
             url_for("playlist_api_v1.edit_playlist", playlist_mbid=playlist_mbid),
             json={"playlist": {"title": "new title",
                                "annotation": "new desc",
-                               "extension": {"https://musicbrainz.org/doc/jspf#playlist": {"public": False}},
-                               "collaborators": ("rob", "zas")}},
+                               "extension": {"https://musicbrainz.org/doc/jspf#playlist": {"public": False,
+                                                                                           "collaborators": (self.user2["musicbrainz_id"], 
+                                                                                                             self.user3["musicbrainz_id"])}}}},
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
         )
         self.assert200(response)
@@ -220,7 +246,11 @@ class PlaylistAPITestCase(IntegrationTestCase):
 
         self.assertEqual(response.json["playlist"]["title"], "new title")
         self.assertEqual(response.json["playlist"]["annotation"], "new desc")
-        self.assertEqual(response.json["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["public"], False)
+        self.assertEqual(response.json["playlist"]["extension"]
+                         ["https://musicbrainz.org/doc/jspf#playlist"]["public"], False)
+        self.assertEqual(response.json["playlist"]["extension"]
+                         ["https://musicbrainz.org/doc/jspf#playlist"]["collaborators"], (self.user2["musicbrainz_id"], 
+                                                                                          self.user3["musicbrainz_id"]))
 
 
     def test_playlist_recording_add(self):

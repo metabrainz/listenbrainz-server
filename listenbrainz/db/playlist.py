@@ -123,27 +123,50 @@ def get_playlists_for_user(user_id: int,
          LIMIT {count}
         OFFSET {offset}""")
 
-    playlists = []
     with ts.engine.connect() as connection:
         result = connection.execute(query, params)
-        user_id_map = {}
-        for row in result:
-            creator_id = row["creator_id"]
-            if creator_id not in user_id_map:
-                # TODO: Do this lookup in bulk
-                user_id_map[creator_id] = db_user.get(creator_id)
-            created_for_id = row["created_for_id"]
-            if created_for_id and created_for_id not in user_id_map:
-                user_id_map[created_for_id] = db_user.get(created_for_id)
-            row = dict(row)
-            row["creator"] = user_id_map[creator_id]["musicbrainz_id"]
-            if created_for_id:
-                row["created_for"] = user_id_map[created_for_id]["musicbrainz_id"]
-            row["recordings"] = []
-            playlist = model_playlist.Playlist.parse_obj(row)
-            playlists.append(playlist)
+        playlists = _playlist_resultset_to_model(connection, result, load_recordings)
 
-        playlist_ids = [p.id for p in playlists]
+        # Now fetch the count of playlists
+        params = {"creator_id": user_id}
+        where_public = ""
+        if not include_private:
+            where_public = "AND public = :public"
+            params["public"] = True
+        query = sqlalchemy.text(f"""SELECT COUNT(*)
+                                      FROM playlist.playlist
+                                     WHERE creator_id = :creator_id
+                                           {where_public}""")
+        count = connection.execute(query, params).fetchone()[0]
+
+    return playlists, count
+
+
+def _playlist_resultset_to_model(connection, result, load_recordings):
+    """Parse the result of an sql query to get playlists
+
+    Fill in related data (username, created_for username) and collaborators
+    """
+    playlists = []
+    user_id_map = {}
+    for row in result:
+        creator_id = row["creator_id"]
+        if creator_id not in user_id_map:
+            # TODO: Do this lookup in bulk
+            user_id_map[creator_id] = db_user.get(creator_id)
+        created_for_id = row["created_for_id"]
+        if created_for_id and created_for_id not in user_id_map:
+            user_id_map[created_for_id] = db_user.get(created_for_id)
+        row = dict(row)
+        row["creator"] = user_id_map[creator_id]["musicbrainz_id"]
+        if created_for_id:
+            row["created_for"] = user_id_map[created_for_id]["musicbrainz_id"]
+        row["recordings"] = []
+        playlist = model_playlist.Playlist.parse_obj(row)
+        playlists.append(playlist)
+
+    playlist_ids = [p.id for p in playlists]
+    if playlist_ids:
         if load_recordings:
             playlist_recordings = get_recordings_for_playlists(connection, playlist_ids)
             for p in playlists:
@@ -159,19 +182,7 @@ def get_playlists_for_user(user_id: int,
                     collaborators.append(user["musicbrainz_id"])
             p.collaborators = collaborators
 
-        # Now fetch the count of playlists
-        params = {"creator_id": user_id}
-        where_public = ""
-        if not include_private:
-            where_public = "AND public = :public"
-            params["public"] = True
-        query = sqlalchemy.text(f"""SELECT COUNT(*)
-                                      FROM playlist.playlist
-                                     WHERE creator_id = :creator_id
-                                           {where_public}""")
-        count = connection.execute(query, params).fetchone()[0]
-
-    return playlists, count
+    return playlists
 
 
 def get_playlists_created_for_user(user_id: int,
@@ -217,49 +228,74 @@ def get_playlists_created_for_user(user_id: int,
          LIMIT {count}
         OFFSET {offset}""")
 
-    # TODO: This is almost exactly the same as get_playlists_for_user
-    playlists = []
     with ts.engine.connect() as connection:
         result = connection.execute(query, params)
-        user_id_map = {}
-        for row in result:
-            creator_id = row["creator_id"]
-            if creator_id not in user_id_map:
-                # TODO: Do this lookup in bulk
-                user_id_map[creator_id] = db_user.get(creator_id)
-            created_for_id = row["created_for_id"]
-            if created_for_id and created_for_id not in user_id_map:
-                user_id_map[created_for_id] = db_user.get(created_for_id)
-            row = dict(row)
-            row["creator"] = user_id_map[creator_id]["musicbrainz_id"]
-            if created_for_id:
-                row["created_for"] = user_id_map[created_for_id]["musicbrainz_id"]
-            row["recordings"] = []
-            playlist = model_playlist.Playlist.parse_obj(row)
-            playlists.append(playlist)
+        playlists = _playlist_resultset_to_model(connection, result, load_recordings)
 
-        playlist_ids = [p.id for p in playlists]
-        if load_recordings:
-            playlist_recordings = get_recordings_for_playlists(connection, playlist_ids)
-            for p in playlists:
-                p.recordings = playlist_recordings.get(p.id, [])
-        playlist_collaborator_ids = get_collaborators_for_playlists(connection, playlist_ids)
-        for p in playlists:
-            p.collaborator_ids = playlist_collaborator_ids.get(p.id, [])
-            collaborators = []
-            # TODO: Look this up in one query
-            for user_id in p.collaborator_ids:
-                user = db_user.get(user_id)
-                if user:
-                    collaborators.append(user["musicbrainz_id"])
-            p.collaborators = collaborators
-
-        # Now fetch the count of playlists
-        # TODO: Bug, this should be created_for_id, not creator_id
-        params = {"creator_id": user_id}
+        # Fetch the total count of playlists
+        params = {"created_for_id": user_id}
         query = sqlalchemy.text(f"""SELECT COUNT(*)
                                       FROM playlist.playlist
-                                     WHERE creator_id = :creator_id""")
+                                     WHERE created_for_id = :created_for_id""")
+        count = connection.execute(query, params).fetchone()[0]
+
+    return playlists, count
+
+
+def get_playlists_collaborated_on(user_id: int,
+                                  load_recordings: bool = False,
+                                  count: int = 0,
+                                  offset: int = 0):
+    """Get playlists that this user doesn't own, but is a collaborator on.
+    Playlists are ordered by creation date.
+
+    Arguments:
+        user_id: The user id
+        load_recordings: If True, also return recordings for each playlist
+        count: Return this many playlists. If 0, return all playlists
+        offset: if set, get playlists from this offset
+
+    Returns:
+        a tuple (playlists, total_playlists)
+    """
+    if count == 0:
+        count = "ALL"
+
+    params = {"collaborator_id": user_id, "count": count, "offset": offset}
+    query = sqlalchemy.text(f"""
+        SELECT pl.id
+             , pl.mbid
+             , pl.creator_id
+             , pl.name
+             , pl.description
+             , pl.public
+             , pl.created
+             , pl.last_updated
+             , pl.copied_from_id
+             , pl.created_for_id
+             , pl.algorithm_metadata
+             , copy.mbid as copied_from_mbid
+          FROM playlist.playlist AS pl
+     LEFT JOIN playlist.playlist AS copy
+            ON pl.copied_from_id = copy.id
+     LEFT JOIN playlist.playlist_collaborator
+            ON pl.id = playlist_collaborator.playlist_id
+         WHERE playlist.playlist_collaborator.collaborator_id = :collaborator_id
+      ORDER BY pl.created DESC
+         LIMIT {count}
+        OFFSET {offset}""")
+
+    with ts.engine.connect() as connection:
+        result = connection.execute(query, params)
+        playlists = _playlist_resultset_to_model(connection, result, load_recordings)
+
+        # Fetch the total count of playlists
+        params = {"collaborator_id": user_id}
+        query = sqlalchemy.text(f"""SELECT COUNT(*)
+                                      FROM playlist.playlist
+                                 LEFT JOIN playlist.playlist_collaborator
+                                        ON playlist.playlist.id = playlist_collaborator.playlist_id
+                                     WHERE playlist.playlist_collaborator.collaborator_id = :collaborator_id""")
         count = connection.execute(query, params).fetchone()[0]
 
     return playlists, count
