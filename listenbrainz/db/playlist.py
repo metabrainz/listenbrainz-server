@@ -99,24 +99,27 @@ def get_playlists_for_user(user_id: int,
     params = {"creator_id": user_id, "count": count, "offset": offset}
     where_public = ""
     if not include_private:
-        where_public = "AND public = :public"
+        where_public = "AND pl.public = :public"
         params["public"] = True
     query = sqlalchemy.text(f"""
-        SELECT id
-             , mbid
-             , creator_id
-             , name
-             , description
-             , public
-             , created
-             , last_updated
-             , copied_from_id
-             , created_for_id
-             , algorithm_metadata
-          FROM playlist.playlist
-         WHERE creator_id = :creator_id
+        SELECT pl.id
+             , pl.mbid
+             , pl.creator_id
+             , pl.name
+             , pl.description
+             , pl.public
+             , pl.created
+             , pl.last_updated
+             , pl.copied_from_id
+             , pl.created_for_id
+             , pl.algorithm_metadata
+             , copy.mbid as copied_from_mbid
+          FROM playlist.playlist AS pl
+     LEFT JOIN playlist.playlist AS copy
+            ON pl.copied_from_id = copy.id
+         WHERE pl.creator_id = :creator_id
                {where_public}
-      ORDER BY created DESC
+      ORDER BY pl.created DESC
          LIMIT {count}
         OFFSET {offset}""")
 
@@ -194,20 +197,23 @@ def get_playlists_created_for_user(user_id: int,
 
     params = {"created_for_id": user_id, "count": count, "offset": offset}
     query = sqlalchemy.text(f"""
-        SELECT id
-             , mbid
-             , creator_id
-             , name
-             , description
-             , public
-             , created
-             , last_updated
-             , copied_from_id
-             , created_for_id
-             , algorithm_metadata
-          FROM playlist.playlist
-         WHERE created_for_id = :created_for_id
-      ORDER BY created DESC
+        SELECT pl.id
+             , pl.mbid
+             , pl.creator_id
+             , pl.name
+             , pl.description
+             , pl.public
+             , pl.created
+             , pl.last_updated
+             , pl.copied_from_id
+             , pl.created_for_id
+             , pl.algorithm_metadata
+             , copy.mbid as copied_from_mbid
+          FROM playlist.playlist AS pl
+     LEFT JOIN playlist.playlist AS copy
+            ON pl.copied_from_id = copy.id
+         WHERE pl.created_for_id = :created_for_id
+      ORDER BY pl.created DESC
          LIMIT {count}
         OFFSET {offset}""")
 
