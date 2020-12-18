@@ -320,7 +320,7 @@ export default class APIService {
     if (response.status >= 200 && response.status < 300) {
       return;
     }
-    const data = response.json && (await response.json());
+    const data = response.body || (response.json && (await response.json()));
     let message;
     if (data?.error) {
       message = data?.error;
@@ -330,6 +330,7 @@ export default class APIService {
     const error = new APIError(`HTTP Error ${response.statusText}`);
     error.status = response.statusText;
     error.response = response;
+    error.message = message;
     throw error;
   };
 
