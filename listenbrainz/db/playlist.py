@@ -243,6 +243,65 @@ def get_playlists_created_for_user(user_id: int,
     return playlists, count
 
 
+def get_playlists_collaborated_on(user_id: int,
+                                  load_recordings: bool = False,
+                                  count: int = 0,
+                                  offset: int = 0):
+    """Get playlists that this user doesn't own, but is a collaborator on.
+    Playlists are ordered by creation date.
+
+    Arguments:
+        user_id: The user id
+        load_recordings: If True, also return recordings for each playlist
+        count: Return this many playlists. If 0, return all playlists
+        offset: if set, get playlists from this offset
+
+    Returns:
+        a tuple (playlists, total_playlists)
+    """
+    if count == 0:
+        count = "ALL"
+
+    params = {"collaborator_id": user_id, "count": count, "offset": offset}
+    query = sqlalchemy.text(f"""
+        SELECT pl.id
+             , pl.mbid
+             , pl.creator_id
+             , pl.name
+             , pl.description
+             , pl.public
+             , pl.created
+             , pl.last_updated
+             , pl.copied_from_id
+             , pl.created_for_id
+             , pl.algorithm_metadata
+             , copy.mbid as copied_from_mbid
+          FROM playlist.playlist AS pl
+     LEFT JOIN playlist.playlist AS copy
+            ON pl.copied_from_id = copy.id
+     LEFT JOIN playlist.playlist_collaborator
+            ON pl.id = playlist_collaborator.playlist_id
+         WHERE playlist.playlist_collaborator.collaborator_id = :collaborator_id
+      ORDER BY pl.created DESC
+         LIMIT {count}
+        OFFSET {offset}""")
+
+    with ts.engine.connect() as connection:
+        result = connection.execute(query, params)
+        playlists = _playlist_resultset_to_model(connection, result, load_recordings)
+
+        # Fetch the total count of playlists
+        params = {"collaborator_id": user_id}
+        query = sqlalchemy.text(f"""SELECT COUNT(*)
+                                      FROM playlist.playlist
+                                 LEFT JOIN playlist.playlist_collaborator
+                                        ON playlist.playlist.id = playlist_collaborator.playlist_id
+                                     WHERE playlist.playlist_collaborator.collaborator_id = :collaborator_id""")
+        count = connection.execute(query, params).fetchone()[0]
+
+    return playlists, count
+
+
 def get_collaborators_for_playlists(connection, playlist_ids: List[int]):
     """Get all of the collaborators for the given playlists
 
