@@ -135,6 +135,7 @@ export default class PlaylistItemCard extends React.Component<
           </small>
         </div>
         {trackDuration && <div className="track-duration">{trackDuration}</div>}
+        {/* Deactivating feedback until the feedback system works with MBIDs instead of MSIDs
         <div className="listen-controls">
           <ListenControl
             icon={faHeart}
@@ -152,7 +153,7 @@ export default class PlaylistItemCard extends React.Component<
             }
             className={`${currentFeedback === -1 ? " hated" : ""}`}
           />
-        </div>
+        </div> */}
         {(customFields?.added_by || customFields?.added_at) && (
           <div className="addition-details">
             added&ensp;

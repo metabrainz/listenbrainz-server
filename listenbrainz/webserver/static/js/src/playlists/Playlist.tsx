@@ -113,8 +113,9 @@ export default class PlaylistPage extends React.Component<
 
   async componentDidMount() {
     // this.connectWebsockets();
-    const recordingFeedbackMap = await this.loadFeedback();
-    this.setState({ recordingFeedbackMap });
+    /* Deactivating feedback until the feedback system works with MBIDs instead of MSIDs */
+    /* const recordingFeedbackMap = await this.loadFeedback();
+    this.setState({ recordingFeedbackMap }); */
   }
 
   connectWebsockets = (): void => {
@@ -191,13 +192,14 @@ export default class PlaylistPage extends React.Component<
           });
         }
         this.newAlert("success", "Added track", `Added track ${label}`);
-        const recordingFeedbackMap = await this.loadFeedback([
+        /* Deactivating feedback until the feedback system works with MBIDs instead of MSIDs */
+        /* const recordingFeedbackMap = await this.loadFeedback([
           selectedRecording.recording_mbid,
-        ]);
+        ]); */
         jspfTrack.id = selectedRecording.recording_mbid;
         this.setState({
           playlist: { ...playlist, track: [...playlist.track, jspfTrack] },
-          recordingFeedbackMap,
+          // recordingFeedbackMap,
         });
       } catch (error) {
         this.handleError(error);
