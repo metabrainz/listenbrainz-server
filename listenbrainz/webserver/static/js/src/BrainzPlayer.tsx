@@ -4,6 +4,7 @@ import {
   isNil as _isNil,
   isString as _isString,
   get as _get,
+  has as _has,
 } from "lodash";
 import * as _ from "lodash";
 import PlaybackControls from "./PlaybackControls";
@@ -107,7 +108,14 @@ export default class BrainzPlayer extends React.Component<
 
   isCurrentListen = (element: Listen | JSPFTrack): boolean => {
     const { currentListen } = this.props;
-    return (currentListen && _isEqual(element, currentListen)) as boolean;
+    if (_isNil(currentListen)) {
+      return false;
+    }
+    if (_has(element, "identifier")) {
+      // JSPF Track format
+      return (element as JSPFTrack).id === (currentListen as JSPFTrack).id;
+    }
+    return _isEqual(element, currentListen);
   };
 
   playPreviousTrack = (): void => {
