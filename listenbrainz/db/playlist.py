@@ -275,6 +275,9 @@ def get_collaborators_for_playlists(connection, playlist_ids: List[int]):
     Return:
         a dictionary of {playlist_id: [collaborator_ids]}
     """
+    if not playlist_ids:
+        return {}
+
     query = sqlalchemy.text("""
         SELECT playlist_id
              , array_agg(collaborator_id) AS collaborator_ids
