@@ -58,10 +58,12 @@ def validate_playlist(jspf, require_title=True):
     except KeyError:
         pass
 
-    if 'collaborators' in jspf:
-        for collaborator in jspf['collaborators']:
+    try:
+        for collaborator in jspf["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["collabortors"]:
             if not collaborator:
                 log_raise_400("The collaborators field contains an empty value.")
+    except KeyError:
+        pass
 
     if 'track' not in jspf:
         return
@@ -87,6 +89,7 @@ def serialize_jspf(playlist: Playlist):
         TODO: Add collaborators
     """
 
+    print(playlist)
     pl = {"creator": playlist.creator,
           "title": playlist.name,
           "identifier": PLAYLIST_URI_PREFIX + str(playlist.mbid),
@@ -244,10 +247,16 @@ def create_playlist():
     data = request.json
     validate_playlist(data)
 
+    try:
+        collaborators = data["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["collaborators"]
+    except KeyError:
+        collaborators = []
+
     playlist = WritablePlaylist(name=data['playlist']['title'],
                                 creator_id=user["id"],
-                                description=data["playlist"].get("description", None))
-    playlist.public = public
+                                description=data["playlist"].get("description", None),
+                                collaborators=collaborators,
+                                public=public)
 
     if data["playlist"].get("created_for", None):
         if user["musicbrainz_id"] not in current_app.config["APPROVED_PLAYLIST_BOTS"]:
