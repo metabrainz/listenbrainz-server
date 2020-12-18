@@ -415,7 +415,15 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
 
         if playlist.collaborator_ids:
             add_playlist_collaborators(connection, playlist.id, playlist.collaborator_ids)
-            # TODO: Get collaborator names, if we think this is useful here
+            collaborator_ids = get_collaborators_for_playlists(connection, [playlist.id])
+            collaborator_ids = collaborator_ids.get(playlist.id, [])
+            collaborators = []
+            # TODO: Look this up in one query
+            for user_id in collaborator_ids:
+                user = db_user.get(user_id)
+                if user:
+                    collaborators.append(user["musicbrainz_id"])
+            playlist.collaborators = collaborators
 
         return model_playlist.Playlist.parse_obj(playlist.dict())
 
@@ -453,6 +461,15 @@ def update_playlist(playlist: model_playlist.Playlist):
         connection.execute(query, params)
         if playlist.collaborator_ids:
             add_playlist_collaborators(connection, playlist.id, playlist.collaborator_ids)
+            collaborator_ids = get_collaborators_for_playlists(connection, [playlist.id])
+            collaborator_ids = collaborator_ids.get(playlist.id, [])
+            collaborators = []
+            # TODO: Look this up in one query
+            for user_id in collaborator_ids:
+                user = db_user.get(user_id)
+                if user:
+                    collaborators.append(user["musicbrainz_id"])
+            playlist.collaborators = collaborators
         playlist.last_updated = set_last_updated(connection, playlist.id)
         return playlist
 
