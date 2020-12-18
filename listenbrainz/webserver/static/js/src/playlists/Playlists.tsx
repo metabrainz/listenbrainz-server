@@ -5,11 +5,11 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 
 import {
-  faEllipsisV,
   faPen,
   faPlusCircle,
   faTrashAlt,
   faSave,
+  faCog,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { AlertList } from "react-bs-notifier";
@@ -507,7 +507,7 @@ export default class UserPlaylists extends React.Component<
             </p>
           </>
         )}
-        {isCollaborations && <h3>Collaborative playlists for {user.name}</h3>}
+        {isCollaborations && <h2>Collaborative playlists</h2>}
         {!playlists.length && (
           <p>No playlists to show yet. Come back later !</p>
         )}
@@ -523,7 +523,7 @@ export default class UserPlaylists extends React.Component<
               <Card className="playlist" key={playlistId}>
                 {isRecommendations ? (
                   <button
-                    className="save-rec-playlist-btn"
+                    className="playlist-card-action-button"
                     onClick={this.copyPlaylist.bind(this, playlistId)}
                     type="button"
                   >
@@ -534,59 +534,68 @@ export default class UserPlaylists extends React.Component<
                     &nbsp;Save
                   </button>
                 ) : (
-                  <span className="dropdown">
-                    <button
-                      className="btn btn-link dropdown-toggle pull-right"
-                      type="button"
-                      id="playlistOptionsDropdown"
-                      data-toggle="dropdown"
-                      aria-haspopup="true"
-                      aria-expanded="true"
-                      onClick={this.selectPlaylistForEdit.bind(this, playlist)}
-                    >
-                      <FontAwesomeIcon
-                        icon={faEllipsisV as IconProp}
-                        title="More options"
-                      />
-                    </button>
-                    <ul
-                      className="dropdown-menu"
-                      aria-labelledby="playlistOptionsDropdown"
-                    >
-                      <li>
-                        <button
-                          onClick={this.copyPlaylist.bind(this, playlistId)}
-                          type="button"
-                        >
-                          Duplicate
-                        </button>
-                      </li>
-                      {isOwner && (
-                        <>
-                          <li role="separator" className="divider" />
-                          <li>
-                            <button
-                              type="button"
-                              data-toggle="modal"
-                              data-target="#playlistEditModal"
-                            >
-                              <FontAwesomeIcon icon={faPen as IconProp} /> Edit
-                            </button>
-                          </li>
-                          <li>
-                            <button
-                              type="button"
-                              data-toggle="modal"
-                              data-target="#confirmDeleteModal"
-                            >
-                              <FontAwesomeIcon icon={faTrashAlt as IconProp} />{" "}
-                              Delete
-                            </button>
-                          </li>
-                        </>
-                      )}
-                    </ul>
-                  </span>
+                  <>
+                    <div className="dropup playlist-card-action-dropdown">
+                      <button
+                        className="dropdown-toggle playlist-card-action-button"
+                        type="button"
+                        id="playlistOptionsDropdown"
+                        data-toggle="dropdown"
+                        aria-haspopup="true"
+                        aria-expanded="true"
+                        onClick={this.selectPlaylistForEdit.bind(
+                          this,
+                          playlist
+                        )}
+                      >
+                        <FontAwesomeIcon
+                          icon={faCog as IconProp}
+                          title="More options"
+                        />
+                        &nbsp;Options
+                      </button>
+                      <ul
+                        className="dropdown-menu"
+                        aria-labelledby="playlistOptionsDropdown"
+                      >
+                        <li>
+                          <button
+                            onClick={this.copyPlaylist.bind(this, playlistId)}
+                            type="button"
+                          >
+                            Duplicate
+                          </button>
+                        </li>
+                        {isOwner && (
+                          <>
+                            <li role="separator" className="divider" />
+                            <li>
+                              <button
+                                type="button"
+                                data-toggle="modal"
+                                data-target="#playlistEditModal"
+                              >
+                                <FontAwesomeIcon icon={faPen as IconProp} />{" "}
+                                Edit
+                              </button>
+                            </li>
+                            <li>
+                              <button
+                                type="button"
+                                data-toggle="modal"
+                                data-target="#confirmDeleteModal"
+                              >
+                                <FontAwesomeIcon
+                                  icon={faTrashAlt as IconProp}
+                                />{" "}
+                                Delete
+                              </button>
+                            </li>
+                          </>
+                        )}
+                      </ul>
+                    </div>
+                  </>
                 )}
                 <a className="info" href={`/playlist/${playlistId}`}>
                   <h4>{playlist.title}</h4>
