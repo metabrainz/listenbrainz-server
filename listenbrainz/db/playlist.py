@@ -123,41 +123,9 @@ def get_playlists_for_user(user_id: int,
          LIMIT {count}
         OFFSET {offset}""")
 
-    playlists = []
     with ts.engine.connect() as connection:
         result = connection.execute(query, params)
-        user_id_map = {}
-        for row in result:
-            creator_id = row["creator_id"]
-            if creator_id not in user_id_map:
-                # TODO: Do this lookup in bulk
-                user_id_map[creator_id] = db_user.get(creator_id)
-            created_for_id = row["created_for_id"]
-            if created_for_id and created_for_id not in user_id_map:
-                user_id_map[created_for_id] = db_user.get(created_for_id)
-            row = dict(row)
-            row["creator"] = user_id_map[creator_id]["musicbrainz_id"]
-            if created_for_id:
-                row["created_for"] = user_id_map[created_for_id]["musicbrainz_id"]
-            row["recordings"] = []
-            playlist = model_playlist.Playlist.parse_obj(row)
-            playlists.append(playlist)
-
-        playlist_ids = [p.id for p in playlists]
-        if load_recordings:
-            playlist_recordings = get_recordings_for_playlists(connection, playlist_ids)
-            for p in playlists:
-                p.recordings = playlist_recordings.get(p.id, [])
-        playlist_collaborator_ids = get_collaborators_for_playlists(connection, playlist_ids)
-        for p in playlists:
-            p.collaborator_ids = playlist_collaborator_ids.get(p.id, [])
-            collaborators = []
-            # TODO: Look this up in one query
-            for user_id in p.collaborator_ids:
-                user = db_user.get(user_id)
-                if user:
-                    collaborators.append(user["musicbrainz_id"])
-            p.collaborators = collaborators
+        playlists = _playlist_resultset_to_model(connection, result, load_recordings)
 
         # Now fetch the count of playlists
         params = {"creator_id": user_id}
@@ -172,6 +140,49 @@ def get_playlists_for_user(user_id: int,
         count = connection.execute(query, params).fetchone()[0]
 
     return playlists, count
+
+
+def _playlist_resultset_to_model(connection, result, load_recordings):
+    """Parse the result of an sql query to get playlists
+
+    Fill in related data (username, created_for username) and collaborators
+    """
+    playlists = []
+    user_id_map = {}
+    for row in result:
+        creator_id = row["creator_id"]
+        if creator_id not in user_id_map:
+            # TODO: Do this lookup in bulk
+            user_id_map[creator_id] = db_user.get(creator_id)
+        created_for_id = row["created_for_id"]
+        if created_for_id and created_for_id not in user_id_map:
+            user_id_map[created_for_id] = db_user.get(created_for_id)
+        row = dict(row)
+        row["creator"] = user_id_map[creator_id]["musicbrainz_id"]
+        if created_for_id:
+            row["created_for"] = user_id_map[created_for_id]["musicbrainz_id"]
+        row["recordings"] = []
+        playlist = model_playlist.Playlist.parse_obj(row)
+        playlists.append(playlist)
+
+    playlist_ids = [p.id for p in playlists]
+    if load_recordings:
+        playlist_recordings = get_recordings_for_playlists(connection, playlist_ids)
+        for p in playlists:
+            p.recordings = playlist_recordings.get(p.id, [])
+    # TODO: Fails if no playlist_ids returned
+    playlist_collaborator_ids = get_collaborators_for_playlists(connection, playlist_ids)
+    for p in playlists:
+        p.collaborator_ids = playlist_collaborator_ids.get(p.id, [])
+        collaborators = []
+        # TODO: Look this up in one query
+        for user_id in p.collaborator_ids:
+            user = db_user.get(user_id)
+            if user:
+                collaborators.append(user["musicbrainz_id"])
+        p.collaborators = collaborators
+
+    return playlists
 
 
 def get_playlists_created_for_user(user_id: int,
@@ -217,42 +228,9 @@ def get_playlists_created_for_user(user_id: int,
          LIMIT {count}
         OFFSET {offset}""")
 
-    # TODO: This is almost exactly the same as get_playlists_for_user
-    playlists = []
     with ts.engine.connect() as connection:
         result = connection.execute(query, params)
-        user_id_map = {}
-        for row in result:
-            creator_id = row["creator_id"]
-            if creator_id not in user_id_map:
-                # TODO: Do this lookup in bulk
-                user_id_map[creator_id] = db_user.get(creator_id)
-            created_for_id = row["created_for_id"]
-            if created_for_id and created_for_id not in user_id_map:
-                user_id_map[created_for_id] = db_user.get(created_for_id)
-            row = dict(row)
-            row["creator"] = user_id_map[creator_id]["musicbrainz_id"]
-            if created_for_id:
-                row["created_for"] = user_id_map[created_for_id]["musicbrainz_id"]
-            row["recordings"] = []
-            playlist = model_playlist.Playlist.parse_obj(row)
-            playlists.append(playlist)
-
-        playlist_ids = [p.id for p in playlists]
-        if load_recordings:
-            playlist_recordings = get_recordings_for_playlists(connection, playlist_ids)
-            for p in playlists:
-                p.recordings = playlist_recordings.get(p.id, [])
-        playlist_collaborator_ids = get_collaborators_for_playlists(connection, playlist_ids)
-        for p in playlists:
-            p.collaborator_ids = playlist_collaborator_ids.get(p.id, [])
-            collaborators = []
-            # TODO: Look this up in one query
-            for user_id in p.collaborator_ids:
-                user = db_user.get(user_id)
-                if user:
-                    collaborators.append(user["musicbrainz_id"])
-            p.collaborators = collaborators
+        playlists = _playlist_resultset_to_model(connection, result, load_recordings)
 
         # Now fetch the count of playlists
         # TODO: Bug, this should be created_for_id, not creator_id
