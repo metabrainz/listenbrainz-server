@@ -457,7 +457,7 @@ export default class APIService {
     offset: number = 0,
     count: number = 25,
     createdFor: boolean = false,
-    collaborations: boolean = false
+    collaborator: boolean = false
   ) => {
     if (!userName) {
       throw new SyntaxError("Username missing");
@@ -471,9 +471,7 @@ export default class APIService {
 
     const url = `${this.APIBaseURI}/user/${userName}/playlists${
       createdFor ? "/createdfor" : ""
-    }${
-      collaborations ? "/collaborations" : ""
-    }?offset=${offset}&count=${count}`;
+    }${collaborator ? "/collaborator" : ""}?offset=${offset}&count=${count}`;
 
     const response = await fetch(url, {
       method: "GET",
