@@ -13,6 +13,7 @@
         {% if config.get("FEATURE_PLAYLIST", False) %}
         <li {{ 'class=active' if active_section=='playlists' }}><a href="{{ url_for('user.playlists', user_name=user.musicbrainz_id) }}">Playlists</a></li>
         <li {{ 'class=active' if active_section=='recommendations' }}><a href="{{ url_for('user.recommendations', user_name=user.musicbrainz_id) }}">Recommendations</a></li>
+        <li {{ 'class=active' if active_section=='collaborations' }}><a href="{{ url_for('user.collaborations', user_name=user.musicbrainz_id) }}">Collaborations</a></li>
        {% endif %}
     </ul>
 

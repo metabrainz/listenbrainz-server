@@ -35,7 +35,7 @@ export type UserPlaylistsProps = {
   paginationOffset: string;
   playlistsPerPage: string;
   playlistCount: number;
-  activeSection: "playlists" | "recommendations";
+  activeSection: "playlists" | "recommendations" | "collaborations";
 };
 
 export type UserPlaylistsState = {
@@ -113,7 +113,8 @@ export default class UserPlaylists extends React.Component<
         currentUser?.auth_token,
         offset,
         count,
-        activeSection === "recommendations"
+        activeSection === "recommendations",
+        activeSection === "collaborations"
       );
 
       this.handleAPIResponse(newPlaylists, false);
@@ -409,7 +410,8 @@ export default class UserPlaylists extends React.Component<
         currentUser?.auth_token,
         newOffset,
         playlistsPerPage,
-        activeSection === "recommendations"
+        activeSection === "recommendations",
+        activeSection === "collaborations"
       );
 
       this.handleAPIResponse(newPlaylists);
@@ -438,7 +440,8 @@ export default class UserPlaylists extends React.Component<
         currentUser?.auth_token,
         newOffset,
         playlistsPerPage,
-        activeSection === "recommendations"
+        activeSection === "recommendations",
+        activeSection === "collaborations"
       );
 
       this.handleAPIResponse(newPlaylists);
@@ -491,6 +494,7 @@ export default class UserPlaylists extends React.Component<
       loading,
     } = this.state;
     const isRecommendations = activeSection === "recommendations";
+    const isCollaborations = activeSection === "collaborations";
     return (
       <div>
         <Loader isLoading={loading} />
@@ -503,6 +507,7 @@ export default class UserPlaylists extends React.Component<
             </p>
           </>
         )}
+        {isCollaborations && <h3>Collaborative playlists for {user.name}</h3>}
         {!playlists.length && (
           <p>No playlists to show yet. Come back later !</p>
         )}
@@ -608,7 +613,7 @@ export default class UserPlaylists extends React.Component<
               </Card>
             );
           })}
-          {!isRecommendations && this.isCurrentUserPage() && (
+          {!isRecommendations && !isCollaborations && this.isCurrentUserPage() && (
             <>
               <Card
                 className="new-playlist"
