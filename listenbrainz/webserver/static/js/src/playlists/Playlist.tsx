@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { isEqual, get, findIndex, omit } from "lodash";
+import { isEqual, get, findIndex, omit, isNil, has } from "lodash";
 import * as io from "socket.io-client";
 
 import { ActionMeta, ValueType } from "react-select";
@@ -36,6 +36,8 @@ import {
   getPlaylistExtension,
   getPlaylistId,
   getRecordingMBIDFromJSPFTrack,
+  JSPFTrackToListen,
+  listenToJSPFTrack,
 } from "./utils";
 
 export interface PlaylistPageProps {
@@ -151,19 +153,7 @@ export default class PlaylistPage extends React.Component<
   };
 
   playTrack = (track: JSPFTrack): void => {
-    const listen: Listen = {
-      listened_at: 0,
-      track_metadata: {
-        artist_name: track.creator,
-        track_name: track.title,
-        release_name: track.album,
-        additional_info: {
-          duration_ms: track.duration,
-          recording_mbid: track.id,
-          origin_url: track.location?.[0],
-        },
-      },
-    };
+    const listen = JSPFTrackToListen(track);
     if (this.brainzPlayer.current) {
       this.brainzPlayer.current.playListen(listen);
     }
@@ -302,12 +292,24 @@ export default class PlaylistPage extends React.Component<
   };
 
   handleCurrentTrackChange = (track: JSPFTrack | Listen): void => {
-    this.setState({ currentTrack: track as JSPFTrack });
+    if (has(track, "identifier")) {
+      // JSPF Track
+      this.setState({ currentTrack: track as JSPFTrack });
+      return;
+    }
+    const JSPFTrack = listenToJSPFTrack(track as Listen);
+    this.setState({ currentTrack: JSPFTrack });
   };
 
   isCurrentTrack = (track: JSPFTrack): boolean => {
     const { currentTrack } = this.state;
-    return Boolean(currentTrack && isEqual(track, currentTrack));
+    if (isNil(currentTrack)) {
+      return false;
+    }
+    if (track.id === currentTrack.id) {
+      return true;
+    }
+    return false;
   };
 
   newAlert = (
@@ -850,9 +852,7 @@ export default class PlaylistPage extends React.Component<
                         canEdit={hasRightToEdit}
                         apiUrl={apiUrl}
                         track={track}
-                        className={
-                          this.isCurrentTrack(track) ? " current-listen" : ""
-                        }
+                        isBeingPlayed={this.isCurrentTrack(track)}
                         currentFeedback={this.getFeedbackForRecordingMbid(
                           track.id
                         )}

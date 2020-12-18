@@ -25,7 +25,7 @@ export type PlaylistItemCardProps = {
   track: JSPFTrack;
   currentFeedback: ListenFeedBack;
   canEdit: Boolean;
-  className?: string;
+  isBeingPlayed: boolean;
   currentUser?: ListenBrainzUser;
   playTrack: (track: JSPFTrack) => void;
   removeTrackFromPlaylist: (track: JSPFTrack) => void;
@@ -83,7 +83,7 @@ export default class PlaylistItemCard extends React.Component<
     const {
       track,
       canEdit,
-      className,
+      isBeingPlayed,
       currentFeedback,
       updateFeedback,
     } = this.props;
@@ -96,9 +96,9 @@ export default class PlaylistItemCard extends React.Component<
     return (
       <Card
         onDoubleClick={this.playTrack}
-        className={`playlist-item-card row ${className} ${
-          isDeleted ? " deleted" : ""
-        }`}
+        className={`playlist-item-card row ${
+          isBeingPlayed ? " current-track" : ""
+        } ${isDeleted ? " deleted" : ""}`}
         data-recording-mbid={track.id}
       >
         {/* We can't currently disable the SortableJS component (https://github.com/SortableJS/react-sortablejs/issues/153)
