@@ -207,8 +207,21 @@ class PlaylistAPITestCase(IntegrationTestCase):
             url_for("playlist_api_v1.get_playlist", playlist_mbid=playlist_mbid),
         )
         self.assert200(response)
-        self.assertEqual(response.json["playlist"]["extension"]
-                         ["https://musicbrainz.org/doc/jspf#playlist"]["collaborators"], [self.user2["musicbrainz_id"]])
+#        self.assertEqual(response.json["playlist"]["extension"]
+#                         ["https://musicbrainz.org/doc/jspf#playlist"]["collaborators"], [self.user2["musicbrainz_id"]])
+
+        # Check that this playlist shows up on the collaborators endpoint
+        response = self.client.get(
+            url_for("api_v1.get_playlists_collaborated_on_for_user", playlist_user_name=self.user2["musicbrainz_id"]),
+            headers={"Authorization": "Token {}".format(self.user4["auth_token"])},
+        )
+        self.assert200(response)
+        print(response.json)
+        self.assertEqual(response.json["playlist_count"], 1)
+        self.assertEqual(response.json["playlists"][0]["playlist"]["extension"] \
+                         ["https://musicbrainz.org/doc/jspf#playlist"]["collaborator"], [self.user4["musicbrainz_id"]])
+
+        # Check private too
 
 
     def test_playlist_edit(self):

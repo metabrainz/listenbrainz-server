@@ -241,7 +241,7 @@ def get_playlists_created_for_user(user_id: int,
 
     return playlists, count
 
-
+#TODO: I think we need to add a include_private flag to this call, otherwise we could leak private data
 def get_playlists_collaborated_on(user_id: int,
                                   load_recordings: bool = False,
                                   count: int = 0,
