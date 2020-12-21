@@ -245,21 +245,36 @@ def create_playlist():
     data = request.json
     validate_playlist(data)
 
-    try:
-        collaborators = data["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["collaborators"]
-    except KeyError:
-        collaborators = []
+    collaborators = data.get("playlist", {}).\
+        get("extension", {}).get("https://musicbrainz.org/doc/jspf#playlist", {}).\
+        get("collaborators", [])
+
+    username_lookup = collaborators
+    created_for = data["playlist"].get("created_for", None)
+    if created_for:
+        username_lookup.append(created_for)
+
+    users = {}
+    if username_lookup:
+        users = db_user.get_many_users_by_mb_id(username_lookup)
+
+    collaborator_ids = []
+    for collaborator in collaborators:
+        if collaborator.lower() not in users:
+            log_raise_400("Collaborator {} doesn't exist".format(collaborator))
+        collaborator_ids.append(users[collaborator.lower()]["id"])
 
     playlist = WritablePlaylist(name=data['playlist']['title'],
                                 creator_id=user["id"],
                                 description=data["playlist"].get("description", None),
+                                collaborator_ids=collaborator_ids,
                                 collaborators=collaborators,
                                 public=public)
 
     if data["playlist"].get("created_for", None):
         if user["musicbrainz_id"] not in current_app.config["APPROVED_PLAYLIST_BOTS"]:
             raise APIForbidden("Playlist contains a created_for field, but subitting user is not an approved playlist bot.")
-        created_for_user = db_user.get_by_mb_id(data["playlist"]["created_for"])
+        created_for_user = users.get(data["playlist"]["created_for"])
         if not created_for_user:
             log_raise_400("created_for user does not exist.")
         playlist.created_for_id = created_for_user["id"]
@@ -324,8 +339,22 @@ def edit_playlist(playlist_mbid):
     if data["playlist"].get("title"):
         playlist.name = data["playlist"]["title"]
 
-    if data.get("collaborators", None):
-        playlist.collaborators = data["collaborators"]
+    collaborators = data.get("playlist", {}).\
+        get("extension", {}).get("https://musicbrainz.org/doc/jspf#playlist", {}).\
+        get("collaborators", [])
+    users = {}
+    if collaborators:
+        users = db_user.get_many_users_by_mb_id(collaborators)
+
+    collaborator_ids = []
+    for collaborator in collaborators:
+        if collaborator.lower() not in users:
+            log_raise_400("Collaborator {} doesn't exist".format(collaborator))
+        collaborator_ids.append(users[collaborator.lower()]["id"])
+
+    if collaborators:
+        playlist.collaborators = collaborators
+        playlist.collaborator_ids = collaborator_ids
 
     db_playlist.update_playlist(playlist)
 

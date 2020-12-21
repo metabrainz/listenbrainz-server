@@ -207,8 +207,8 @@ class PlaylistAPITestCase(IntegrationTestCase):
             url_for("playlist_api_v1.get_playlist", playlist_mbid=playlist_mbid),
         )
         self.assert200(response)
-#        self.assertEqual(response.json["playlist"]["extension"]
-#                         ["https://musicbrainz.org/doc/jspf#playlist"]["collaborators"], [self.user2["musicbrainz_id"]])
+        self.assertEqual(response.json["playlist"]["extension"]
+                         ["https://musicbrainz.org/doc/jspf#playlist"]["collaborators"], [self.user2["musicbrainz_id"]])
 
         # Check that this playlist shows up on the collaborators endpoint
         response = self.client.get(
@@ -219,7 +219,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         print(response.json)
         self.assertEqual(response.json["playlist_count"], 1)
         self.assertEqual(response.json["playlists"][0]["playlist"]["extension"] \
-                         ["https://musicbrainz.org/doc/jspf#playlist"]["collaborator"], [self.user4["musicbrainz_id"]])
+                         ["https://musicbrainz.org/doc/jspf#playlist"]["collaborators"], [self.user2["musicbrainz_id"]])
 
         # Check private too
 
@@ -262,8 +262,8 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["extension"]
                          ["https://musicbrainz.org/doc/jspf#playlist"]["public"], False)
         self.assertEqual(response.json["playlist"]["extension"]
-                         ["https://musicbrainz.org/doc/jspf#playlist"]["collaborators"], (self.user2["musicbrainz_id"], 
-                                                                                          self.user3["musicbrainz_id"]))
+                         ["https://musicbrainz.org/doc/jspf#playlist"]["collaborators"], [self.user2["musicbrainz_id"],
+                                                                                          self.user3["musicbrainz_id"]])
 
 
     def test_playlist_recording_add(self):
