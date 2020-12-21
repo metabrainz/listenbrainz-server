@@ -5,6 +5,7 @@ from flask import url_for, current_app
 from redis import Redis
 from listenbrainz.tests.integration import IntegrationTestCase
 import listenbrainz.db.user as db_user
+from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
 from listenbrainz.webserver.views.playlist_api import PLAYLIST_TRACK_URI_PREFIX, PLAYLIST_URI_PREFIX
 import ujson
 
@@ -216,7 +217,6 @@ class PlaylistAPITestCase(IntegrationTestCase):
             headers={"Authorization": "Token {}".format(self.user4["auth_token"])},
         )
         self.assert200(response)
-        print(response.json)
         self.assertEqual(response.json["playlist_count"], 1)
         self.assertEqual(response.json["playlists"][0]["playlist"]["extension"] \
                          ["https://musicbrainz.org/doc/jspf#playlist"]["collaborators"], [self.user2["musicbrainz_id"]])
@@ -593,9 +593,8 @@ class PlaylistAPITestCase(IntegrationTestCase):
         playlist = get_test_data()
         response = self.client.post(
             url_for("playlist_api_v1.create_playlist", public="false"),
-            data=ujson.dumps(playlist),
-            headers={"Authorization": "Token {}".format(self.user4["auth_token"])},
-            content_type="application/json"
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user4["auth_token"])}
         )
         self.assert200(response)
         private_playlist_mbid = response.json["playlist_mbid"]
@@ -603,9 +602,8 @@ class PlaylistAPITestCase(IntegrationTestCase):
         playlist = get_test_data()
         response = self.client.post(
             url_for("playlist_api_v1.create_playlist", public="true"),
-            data=ujson.dumps(playlist),
-            headers={"Authorization": "Token {}".format(self.user4["auth_token"])},
-            content_type="application/json"
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user4["auth_token"])}
         )
         self.assert200(response)
         public_playlist_mbid = response.json["playlist_mbid"]
@@ -623,6 +621,8 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert200(response)
         self.assertEqual(response.json["playlist_count"], 2)
+        self.assertEqual(response.json["count"], DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
+        self.assertEqual(response.json["offset"], 0)
         self.assertEqual(response.json["playlists"][0]["playlist"]["extension"] \
                          ["https://musicbrainz.org/doc/jspf#playlist"]["creator"], self.user4["musicbrainz_id"])
         self.assertEqual(response.json["playlists"][0]["playlist"]["identifier"], PLAYLIST_URI_PREFIX + public_playlist_mbid)
@@ -653,8 +653,9 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert200(response)
         self.assertEqual(len(response.json["playlists"]), 1)
-        self.assertEqual(int(response.json["count"]), 1)
-        self.assertEqual(int(response.json["offset"]), 0)
+        self.assertEqual(response.json["playlist_count"], 2)
+        self.assertEqual(response.json["count"], 1)
+        self.assertEqual(response.json["offset"], 0)
 
         response = self.client.get(
             url_for("api_v1.get_playlists_for_user", playlist_user_name=self.user4["musicbrainz_id"], offset=1, count=1),
@@ -662,8 +663,9 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert200(response)
         self.assertEqual(len(response.json["playlists"]), 1)
-        self.assertEqual(int(response.json["count"]), 1)
-        self.assertEqual(int(response.json["offset"]), 1)
+        self.assertEqual(response.json["playlist_count"], 2)
+        self.assertEqual(response.json["count"], 1)
+        self.assertEqual(response.json["offset"], 1)
 
 
     def test_playlist_unauthorized_access(self):

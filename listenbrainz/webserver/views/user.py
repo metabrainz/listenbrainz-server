@@ -22,7 +22,7 @@ from listenbrainz.webserver.views.api_tools import publish_data_to_queue, log_ra
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
 from datetime import datetime
 from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, ServiceUnavailable, Unauthorized, InternalServerError
-from listenbrainz.webserver.views.stats_api import _get_non_negative_param
+from listenbrainz.webserver.views.stats_api import get_non_negative_param
 from listenbrainz.webserver.views.playlist_api import serialize_jspf
 from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStoreException
 from pydantic import ValidationError
@@ -262,7 +262,7 @@ def playlists(user_name: str):
     )
 
 @user_bp.route("/<user_name>/recommendations")
-def recommendations(user_name: str):
+def recommendation_playlists(user_name: str):
     """ Show playlists created for user """
     
     if not current_app.config.get("FEATURE_PLAYLIST", False):

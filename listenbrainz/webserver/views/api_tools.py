@@ -347,7 +347,7 @@ def publish_data_to_queue(data, exchange, queue, error_msg):
         raise APIServiceUnavailable(error_msg)
 
 
-def _get_non_negative_param(param, default=None):
+def get_non_negative_param(param, default=None):
     """ Gets the value of a request parameter, validating that it is non-negative
 
     Args:
@@ -378,6 +378,16 @@ def parse_param_list(params: str) -> list:
     return param_list
 
 def validate_auth_header(optional=False):
+    """ Examine the current request headers for an Authorization: Token <uuid>
+        header that identifies a LB user and then load the corresponding user
+        object from the database and return it, if succesful. Otherwise raise
+        APIUnauthorized() exception.
+
+    Args:
+        optional (bool): If the optional flag is given, do not raise an exception
+                         if the Authorization header is not set.
+    """
+
     auth_token = request.headers.get('Authorization')
     if not auth_token:
         if optional:
