@@ -22,7 +22,7 @@ import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
 
 from listenbrainz.webserver.errors import APIBadRequest, APINotFound, APINoContent
 from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
-                                                    _get_non_negative_param,
+                                                    get_non_negative_param,
                                                     MAX_ITEMS_PER_GET)
 
 from flask import Blueprint, jsonify, request
@@ -92,8 +92,8 @@ def get_missing_musicbrainz_data(user_name):
     if user is None:
         raise APINotFound("Cannot find user: {}".format(user_name))
 
-    offset = _get_non_negative_param('offset', default=0)
-    count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
+    offset = get_non_negative_param('offset', default=0)
+    count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
     count = min(count, MAX_ITEMS_PER_GET)
 

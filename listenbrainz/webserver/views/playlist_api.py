@@ -59,7 +59,7 @@ def validate_playlist(jspf, require_title=True):
         pass
 
     try:
-        for collaborator in jspf["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["collabortors"]:
+        for collaborator in jspf["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["collaborators"]:
             if not collaborator:
                 log_raise_400("The collaborators field contains an empty value.")
     except KeyError:
@@ -326,10 +326,7 @@ def edit_playlist(playlist_mbid):
         raise APIForbidden("You are not allowed to edit this playlist.")
 
     try:
-        public = data["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["public"]
-        if not isinstance(public, bool):
-            log_raise_400("JSPF playlist public field must contain a boolean value.")
-        playlist.public = public
+        playlist.public = data["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["public"]
     except KeyError:
         pass
 

@@ -19,7 +19,7 @@ from listenbrainz.webserver.rate_limiter import ratelimit
 import listenbrainz.webserver.redis_connection as redis_connection
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list,\
     is_valid_uuid, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT,\
-    LISTEN_TYPE_PLAYING_NOW, validate_auth_header
+    LISTEN_TYPE_PLAYING_NOW, validate_auth_header, get_non_negative_param
 from listenbrainz.webserver.views.playlist_api import serialize_jspf
 from listenbrainz.listenstore.timescale_listenstore import SECONDS_IN_TIME_RANGE, TimescaleListenStoreException
 from listenbrainz.webserver.timescale_connection import _ts
@@ -451,8 +451,8 @@ def serialize_playlists(playlists, playlist_count, count, offset):
 @ratelimit()
 def get_playlists_for_user(playlist_user_name):
     """
-    Fetch the playlists for a user. Returns an array of playlists without their recordings. If
-    a user token is provided in the Authorization header, return private playlists as well
+    Fetch playlist metadata in JSPF format without recordings for the given user.
+    If a user token is provided in the Authorization header, return private playlists as well
     as public playlists for that user.
 
     :params count: The number of playlists to return (for pagination). Default
@@ -464,14 +464,15 @@ def get_playlists_for_user(playlist_user_name):
     """
     user = validate_auth_header(True)
 
-    count = request.args.get('count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
-    offset = request.args.get('offset', 0)
+    count = get_non_negative_param('count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
+    offset = get_non_negative_param('offset', 0)
     playlist_user = db_user.get_by_mb_id(playlist_user_name)
     if playlist_user is None:
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
     include_private = True if user and user["id"] == playlist_user["id"] else False
-    playlists, playlist_count = db_playlist.get_playlists_for_user(playlist_user["id"], include_private, False, count, offset)
+    playlists, playlist_count = db_playlist.get_playlists_for_user(playlist_user["id"], include_private,
+                                                                   load_recordings=False, count=count, offset=offset)
 
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
@@ -481,8 +482,8 @@ def get_playlists_for_user(playlist_user_name):
 @ratelimit()
 def get_playlists_created_for_user(playlist_user_name):
     """
-    Fetch the playlists that have been created for a user. Returns an array of playlists without
-    their recordings. Createdfor playlists are all public, so no Authorization is needed for this call.
+    Fetch playlist metadata in JSPF format without recordings that have been created for the user.
+    Createdfor playlists are all public, so no Authorization is needed for this call.
 
     :params count: The number of playlists to return (for pagination). Default
         :data:`~webserver.views.api.DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL`
@@ -492,13 +493,14 @@ def get_playlists_created_for_user(playlist_user_name):
     :resheader Content-Type: *application/json*
     """
 
-    count = request.args.get('count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
-    offset = request.args.get('offset', 0)
+    count = get_non_negative_param('count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
+    offset = get_non_negative_param('offset', 0)
     playlist_user = db_user.get_by_mb_id(playlist_user_name)
     if playlist_user is None:
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
-    playlists, playlist_count = db_playlist.get_playlists_created_for_user(playlist_user["id"], False, count, offset)
+    playlists, playlist_count = db_playlist.get_playlists_created_for_user(playlist_user["id"],
+                                                                           load_recordings=False, count=count, offset=offset)
 
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
@@ -508,9 +510,8 @@ def get_playlists_created_for_user(playlist_user_name):
 @ratelimit()
 def get_playlists_collaborated_on_for_user(playlist_user_name):
     """
-    Fetch the playlists for which a user is a collaborator. Returns an array of playlists without
-    their recordings. If the authorized user is the not the owner of the playlist, only
-    public playlists will be returned.
+    Fetch playlist metadata in JSPF format without recordings for which a user is a collaborator.
+    If a playlist is private, it will only be returned if the caller is authorized to edit that playlist.
 
     :params count: The number of playlists to return (for pagination). Default
         :data:`~webserver.views.api.DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL`
@@ -522,8 +523,8 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
 
     user = validate_auth_header(True)
 
-    count = request.args.get('count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
-    offset = request.args.get('offset', 0)
+    count = get_non_negative_param('count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
+    offset = get_non_negative_param('offset', 0)
     playlist_user = db_user.get_by_mb_id(playlist_user_name)
     if playlist_user is None:
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
