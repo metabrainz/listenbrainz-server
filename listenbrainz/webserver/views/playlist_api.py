@@ -56,7 +56,7 @@ def validate_playlist(jspf, require_title=True):
         if not isinstance(public, bool):
             log_raise_400("JSPF playlist public field must contain a boolean.")
     except KeyError:
-        pass
+        log_raise_400("JSPF playlist.extension.https://musicbrainz.org/doc/jspf#playlist.public field must be given.")
 
     try:
         for collaborator in jspf["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["collaborators"]:
@@ -239,12 +239,12 @@ def create_playlist():
     :resheader Content-Type: *application/json*
     """
 
-    public = _parse_boolean_arg("public", "true")
     user = validate_auth_header()
 
     data = request.json
     validate_playlist(data)
 
+    public = data["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["public"]
     collaborators = data.get("playlist", {}).\
         get("extension", {}).get("https://musicbrainz.org/doc/jspf#playlist", {}).\
         get("collaborators", [])
