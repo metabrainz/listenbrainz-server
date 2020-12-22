@@ -94,7 +94,7 @@ def get_playlists_for_user(user_id: int,
     """
 
     if count == 0:
-        count = "ALL"
+        count = None
 
     params = {"creator_id": user_id, "count": count, "offset": offset}
     where_public = ""
@@ -120,8 +120,8 @@ def get_playlists_for_user(user_id: int,
          WHERE pl.creator_id = :creator_id
                {where_public}
       ORDER BY pl.created DESC
-         LIMIT {count}
-        OFFSET {offset}""")
+         LIMIT :count
+        OFFSET :offset""")
 
     with ts.engine.connect() as connection:
         result = connection.execute(query, params)
@@ -204,7 +204,7 @@ def get_playlists_created_for_user(user_id: int,
     """
 
     if count == 0:
-        count = "ALL"
+        count = None
 
     params = {"created_for_id": user_id, "count": count, "offset": offset}
     query = sqlalchemy.text(f"""
@@ -225,8 +225,8 @@ def get_playlists_created_for_user(user_id: int,
             ON pl.copied_from_id = copy.id
          WHERE pl.created_for_id = :created_for_id
       ORDER BY pl.created DESC
-         LIMIT {count}
-        OFFSET {offset}""")
+         LIMIT :count
+        OFFSET :offset""")
 
     with ts.engine.connect() as connection:
         result = connection.execute(query, params)
@@ -259,7 +259,7 @@ def get_playlists_collaborated_on(user_id: int,
         a tuple (playlists, total_playlists)
     """
     if count == 0:
-        count = "ALL"
+        count = None
 
     params = {"collaborator_id": user_id, "count": count, "offset": offset}
     query = sqlalchemy.text(f"""
@@ -282,8 +282,8 @@ def get_playlists_collaborated_on(user_id: int,
             ON pl.id = playlist_collaborator.playlist_id
          WHERE playlist.playlist_collaborator.collaborator_id = :collaborator_id
       ORDER BY pl.created DESC
-         LIMIT {count}
-        OFFSET {offset}""")
+         LIMIT :count
+        OFFSET :offset""")
 
     with ts.engine.connect() as connection:
         result = connection.execute(query, params)
