@@ -222,26 +222,24 @@ def playlists(user_name: str):
         "id": user.id,
     }
     
-    spotify_data = {}
     current_user_data = {}
     if current_user.is_authenticated:
-        spotify_data = spotify.get_user_dict(current_user.id)
         current_user_data = {
             "id": current_user.id,
             "name": current_user.musicbrainz_id,
             "auth_token": current_user.auth_token,
         }
     
-    loadPrivatePlaylists = False
-    if current_user.is_authenticated and \
-       current_user.musicbrainz_id == user_name:
-       loadPrivatePlaylists = True
-    
+    include_private = current_user.is_authenticated and current_user.id == user.id
+
     playlists = []
-    user_playlists, playlist_count = get_playlists_for_user(user.id, loadPrivatePlaylists, False, count, offset)
+    user_playlists, playlist_count = get_playlists_for_user(user.id,
+                                                            include_private=include_private,
+                                                            load_recordings=False,
+                                                            count=count,
+                                                            offse=toffset)
     for playlist in user_playlists:
         playlists.append(serialize_jspf(playlist))
-
 
     props = {
         "current_user": current_user_data,
@@ -260,6 +258,7 @@ def playlists(user_name: str):
         props=ujson.dumps(props),
         user=user
     )
+
 
 @user_bp.route("/<user_name>/recommendations")
 def recommendation_playlists(user_name: str):
@@ -338,28 +337,30 @@ def collaborations(user_name: str):
     except ValueError:
         raise BadRequest("Incorrect int argument count: %s" % request.args.get("count"))
     
-    
     user = _get_user(user_name)
     user_data = {
         "name": user.musicbrainz_id,
         "id": user.id,
     }
     
-    spotify_data = {}
     current_user_data = {}
     if current_user.is_authenticated:
-        spotify_data = spotify.get_user_dict(current_user.id)
         current_user_data = {
             "id": current_user.id,
             "name": current_user.musicbrainz_id,
             "auth_token": current_user.auth_token,
         }
-    
+
+    include_private = current_user.is_authenticated and current_user.id == user.id
+
     playlists = []
-    colalborative_playlists, playlist_count = get_playlists_collaborated_on(user.id, False, count, offset)
+    colalborative_playlists, playlist_count = get_playlists_collaborated_on(user.id,
+                                                                            include_private=include_private,
+                                                                            load_recordings=False,
+                                                                            count=count,
+                                                                            offset=offset)
     for playlist in colalborative_playlists:
         playlists.append(serialize_jspf(playlist))
-
 
     props = {
         "current_user": current_user_data,
