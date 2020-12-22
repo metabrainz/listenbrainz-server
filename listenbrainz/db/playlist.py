@@ -241,8 +241,9 @@ def get_playlists_created_for_user(user_id: int,
 
     return playlists, count
 
-#TODO: I think we need to add a include_private flag to this call, otherwise we could leak private data
+
 def get_playlists_collaborated_on(user_id: int,
+                                  include_private: bool = False,
                                   load_recordings: bool = False,
                                   count: int = 0,
                                   offset: int = 0):
@@ -252,6 +253,8 @@ def get_playlists_collaborated_on(user_id: int,
     Arguments:
         user_id: The user id
         load_recordings: If True, also return recordings for each playlist
+        include_private: If True, include all playlists by a user, including private ones. The count of
+                 playlists returned will include private playlists if True
         count: Return this many playlists. If 0, return all playlists
         offset: if set, get playlists from this offset
 
@@ -262,6 +265,10 @@ def get_playlists_collaborated_on(user_id: int,
         count = None
 
     params = {"collaborator_id": user_id, "count": count, "offset": offset}
+    where_public = ""
+    if not include_private:
+        where_public = "AND pl.public = :public"
+        params["public"] = True
     query = sqlalchemy.text(f"""
         SELECT pl.id
              , pl.mbid
@@ -281,6 +288,7 @@ def get_playlists_collaborated_on(user_id: int,
      LEFT JOIN playlist.playlist_collaborator
             ON pl.id = playlist_collaborator.playlist_id
          WHERE playlist.playlist_collaborator.collaborator_id = :collaborator_id
+               {where_public}
       ORDER BY pl.created DESC
          LIMIT :count
         OFFSET :offset""")
@@ -291,11 +299,16 @@ def get_playlists_collaborated_on(user_id: int,
 
         # Fetch the total count of playlists
         params = {"collaborator_id": user_id}
+        where_public = ""
+        if not include_private:
+            where_public = "AND pl.public = :public"
+            params["public"] = True
         query = sqlalchemy.text(f"""SELECT COUNT(*)
                                       FROM playlist.playlist
                                  LEFT JOIN playlist.playlist_collaborator
                                         ON playlist.playlist.id = playlist_collaborator.playlist_id
-                                     WHERE playlist.playlist_collaborator.collaborator_id = :collaborator_id""")
+                                     WHERE playlist.playlist_collaborator.collaborator_id = :collaborator_id
+                                           {where_public}""")
         count = connection.execute(query, params).fetchone()[0]
 
     return playlists, count
