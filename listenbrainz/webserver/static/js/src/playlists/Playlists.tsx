@@ -262,12 +262,27 @@ export default class UserPlaylists extends React.Component<
       return;
     }
     try {
+      const newPlaylist: JSPFObject = {
+        playlist: {
+          // Th following 4 fields to satisfy TS type
+          creator: currentUser?.name,
+          identifier: "",
+          date: "",
+          track: [],
+
+          title: name,
+          annotation: description,
+          extension: {
+            [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
+              public: isPublic,
+              collaborators,
+            },
+          },
+        },
+      };
       const newPlaylistId = await this.APIService.createPlaylist(
         currentUser.auth_token,
-        name,
-        [],
-        isPublic,
-        description
+        newPlaylist
       );
       this.newAlert(
         "success",
