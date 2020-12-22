@@ -281,8 +281,11 @@ def create_playlist():
 
     if "track" in data["playlist"]:
         for track in data["playlist"]["track"]:
-            playlist.recordings.append(WritablePlaylistRecording(mbid=UUID(track['identifier'][len(PLAYLIST_TRACK_URI_PREFIX):]),
-                                       added_by_id=user["id"]))
+            try:
+                playlist.recordings.append(WritablePlaylistRecording(mbid=UUID(track['identifier'][len(PLAYLIST_TRACK_URI_PREFIX):]),
+                                           added_by_id=user["id"]))
+            except ValueError:
+                log_raise_400("Invalid recording MBID found in submitted recordings")
 
     try:
         playlist = db_playlist.create(playlist)
