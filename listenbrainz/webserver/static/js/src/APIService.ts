@@ -404,23 +404,20 @@ export default class APIService {
 
   createPlaylist = async (
     userToken: string,
-    title: string,
-    tracks: any,
-    isPublic: Boolean,
-    description?: string
+    playlistObject: JSPFObject
   ): Promise<string> => {
-    if (!title) {
+    if (!playlistObject.playlist?.title) {
       throw new SyntaxError("playlist title missing");
     }
 
-    const url = `${this.APIBaseURI}/playlist/create?public=${isPublic}`;
+    const url = `${this.APIBaseURI}/playlist/create`;
     const response = await fetch(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
         "Content-Type": "application/json;charset=UTF-8",
       },
-      body: JSON.stringify({ playlist: { title, description, track: tracks } }),
+      body: JSON.stringify(playlistObject),
     });
     await this.checkStatus(response);
     const result = await response.json();
