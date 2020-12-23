@@ -227,7 +227,7 @@ def playlists(user_name: str):
                                                             include_private=include_private,
                                                             load_recordings=False,
                                                             count=count,
-                                                            offse=offset)
+                                                            offset=offset)
     for playlist in user_playlists:
         playlists.append(serialize_jspf(playlist))
 
