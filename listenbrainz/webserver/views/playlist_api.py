@@ -75,14 +75,14 @@ def validate_playlist(jspf, require_title=True):
             log_raise_400("JSPF playlist must contain a title element with the title of the playlist.")
 
     try:
-        public = jspf["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["public"]
+        public = jspf["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["public"]
         if not isinstance(public, bool):
             log_raise_400("JSPF playlist public field must contain a boolean.")
     except KeyError:
         log_raise_400("JSPF playlist.extension.https://musicbrainz.org/doc/jspf#playlist.public field must be given.")
 
     try:
-        for collaborator in jspf["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["collaborators"]:
+        for collaborator in jspf["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["collaborators"]:
             if not collaborator:
                 log_raise_400("The collaborators field contains an empty value.")
     except KeyError:
@@ -267,9 +267,9 @@ def create_playlist():
     data = request.json
     validate_playlist(data)
 
-    public = data["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["public"]
+    public = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["public"]
     collaborators = data.get("playlist", {}).\
-        get("extension", {}).get("https://musicbrainz.org/doc/jspf#playlist", {}).\
+        get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}).\
         get("collaborators", [])
 
     username_lookup = collaborators
@@ -357,7 +357,7 @@ def edit_playlist(playlist_mbid):
         raise APIForbidden("You are not allowed to edit this playlist.")
 
     try:
-        playlist.public = data["playlist"]["extension"]["https://musicbrainz.org/doc/jspf#playlist"]["public"]
+        playlist.public = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["public"]
     except KeyError:
         pass
 
@@ -375,7 +375,7 @@ def edit_playlist(playlist_mbid):
         playlist.name = data["playlist"]["title"]
 
     collaborators = data.get("playlist", {}).\
-        get("extension", {}).get("https://musicbrainz.org/doc/jspf#playlist", {}).\
+        get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}).\
         get("collaborators", [])
     users = {}
     if collaborators:
