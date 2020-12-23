@@ -307,8 +307,9 @@ class PlaylistAPITestCase(IntegrationTestCase):
             json={"playlist": {"title": "new title",
                                "annotation": "new <b>desc</b> <script>noscript</script>",
                                "extension": {PLAYLIST_EXTENSION_URI: {"public": False,
-                                                                                           "collaborators": (self.user2["musicbrainz_id"], 
-                                                                                                             self.user3["musicbrainz_id"])}}}},
+                                                                      "collaborators": [self.user2["musicbrainz_id"],
+                                                                                        self.user3["musicbrainz_id"]]}
+                                             }}},
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
         )
         self.assert200(response)
@@ -326,11 +327,13 @@ class PlaylistAPITestCase(IntegrationTestCase):
                          [PLAYLIST_EXTENSION_URI]["collaborators"], [self.user2["musicbrainz_id"],
                                                                      self.user3["musicbrainz_id"]])
 
-        # Edit again to remove description
+        # Edit again to remove description and collaborators
         response = self.client.post(
             url_for("playlist_api_v1.edit_playlist", playlist_mbid=playlist_mbid),
             json={"playlist": {"annotation": "",
-                               "extension": {PLAYLIST_EXTENSION_URI: {"public": False}}}},
+                               "extension": {PLAYLIST_EXTENSION_URI: {
+                                   "public": False,
+                                   "collaborators": []}}}},
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
         )
         self.assert200(response)
@@ -343,6 +346,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertNotIn("annotation", response.json["playlist"])
         self.assertEqual(response.json["playlist"]["extension"]
                          [PLAYLIST_EXTENSION_URI]["public"], False)
+        self.assertNotIn("collaborators", response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI])
 
     def test_playlist_recording_add(self):
         """ Test adding a recording to a playlist works """
