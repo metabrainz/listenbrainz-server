@@ -60,20 +60,18 @@ def _filter_description_html(description):
     return bleach.clean(description, tags=ok_tags, attributes={"a": _allow_metabrainz_domains}, strip=True)
 
 
-def validate_playlist(jspf, require_title=True):
-    """
-        Given a JSPF dict, ensure that title is present and that if tracks are present
-        they have valid URIs or MBIDs specified. If any errors are found 400 is raised.
-    """
+def _validate_playlist_title(jspf):
+    """Given a JSPF dict, ensure that title is set and is not empty. Otherwise, 400 is raised."""
+    try:
+        title = jspf["playlist"]["title"]
+        if not title:
+            raise KeyError
+    except KeyError:
+        log_raise_400("JSPF playlist must contain a title element with the title of the playlist.")
 
-    if require_title:
-        try:
-            title = jspf["playlist"]["title"]
-            if not title:
-                raise KeyError
-        except KeyError:
-            log_raise_400("JSPF playlist must contain a title element with the title of the playlist.")
 
+def _validate_playlist_public(jspf):
+    """Given a JSPF dict, ensure that public field is set and a valid boolean. Otherwise, 400 is raised."""
     try:
         public = jspf["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["public"]
         if not isinstance(public, bool):
@@ -81,6 +79,31 @@ def validate_playlist(jspf, require_title=True):
     except KeyError:
         log_raise_400("JSPF playlist.extension.https://musicbrainz.org/doc/jspf#playlist.public field must be given.")
 
+
+def validate_create_data(jspf):
+    """
+        Given a JSPF dict, validate the title, public field and if tracks are present ensure they have
+        valid URIs or MBIDs specified. If any errors are found 400 is raised.
+    """
+    _validate_playlist_title(jspf)
+    _validate_playlist_public(jspf)
+    validate_add_data(jspf)
+
+
+def validate_edit_data(jspf):
+    """
+        Given a JSPF dict, validate the public field and if tracks are present ensure they have
+        valid URIs or MBIDs specified. If any errors are found 400 is raised.
+    """
+    _validate_playlist_public(jspf)
+    validate_add_data(jspf)
+
+
+def validate_add_data(jspf):
+    """
+        Given a JSPF dict, if tracks are present, ensure they have valid URIs or MBIDs specified.
+        If any errors are found 400 is raised.
+    """
     try:
         for collaborator in jspf["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["collaborators"]:
             if not collaborator:
@@ -265,7 +288,7 @@ def create_playlist():
     user = validate_auth_header()
 
     data = request.json
-    validate_playlist(data)
+    validate_create_data(data)
 
     public = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["public"]
     collaborators = data.get("playlist", {}).\
@@ -344,7 +367,7 @@ def edit_playlist(playlist_mbid):
     user = validate_auth_header()
 
     data = request.json
-    validate_playlist(data, False)
+    validate_edit_data(data)
 
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
@@ -466,7 +489,7 @@ def add_playlist_item(playlist_mbid, offset):
         raise APIForbidden("You are not allowed to add recordings to this playlist.")
 
     data = request.json
-    validate_playlist(data, False)
+    validate_add_data(data)
 
     if len(data["playlist"]["track"]) > MAX_RECORDINGS_PER_ADD:
         log_raise_400("You may only add max %d recordings per call." % MAX_RECORDINGS_PER_ADD)

@@ -368,12 +368,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
                  {
                     "identifier": PLAYLIST_TRACK_URI_PREFIX + "4a77a078-e91a-4522-a409-3b58aa7de3ae"
                  }
-              ],
-              "extension": {
-                  PLAYLIST_EXTENSION_URI: {
-                      "public": True
-                  }
-              },
+              ]
            }
         }
         response = self.client.post(
