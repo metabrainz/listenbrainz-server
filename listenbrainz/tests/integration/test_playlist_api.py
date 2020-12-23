@@ -17,7 +17,7 @@ def get_test_data():
     return {
        "playlist": {
           "title": "1980s flashback jams",
-          "description": "your lame 80s music",
+          "annotation": "your lame 80s music",
           "extension": {
               PLAYLIST_EXTENSION_URI: {
                   "public": True
