@@ -301,7 +301,7 @@ def get_playlists_collaborated_on(user_id: int,
         params = {"collaborator_id": user_id}
         where_public = ""
         if not include_private:
-            where_public = "AND pl.public = :public"
+            where_public = "AND playlist.public = :public"
             params["public"] = True
         query = sqlalchemy.text(f"""SELECT COUNT(*)
                                       FROM playlist.playlist

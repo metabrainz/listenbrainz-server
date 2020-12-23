@@ -266,7 +266,7 @@ def create_playlist():
 
     playlist = WritablePlaylist(name=data['playlist']['title'],
                                 creator_id=user["id"],
-                                description=data["playlist"].get("description", None),
+                                description=data["playlist"].get("annotation", None),
                                 collaborator_ids=collaborator_ids,
                                 collaborators=collaborators,
                                 public=public)
