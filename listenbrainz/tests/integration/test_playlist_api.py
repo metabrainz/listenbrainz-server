@@ -6,8 +6,8 @@ from redis import Redis
 from listenbrainz.tests.integration import IntegrationTestCase
 import listenbrainz.db.user as db_user
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
+from listenbrainz.webserver.views import playlist_api
 from listenbrainz.webserver.views.playlist_api import PLAYLIST_TRACK_URI_PREFIX, PLAYLIST_URI_PREFIX, PLAYLIST_EXTENSION_URI
-import ujson
 
 
 # NOTE: This test module includes all the tests for playlist features, even those served from the
@@ -17,7 +17,7 @@ def get_test_data():
     return {
        "playlist": {
           "title": "1980s flashback jams",
-          "annotation": "your lame 80s music",
+          "annotation": "your lame <i>80s</i> music",
           "extension": {
               PLAYLIST_EXTENSION_URI: {
                   "public": True
@@ -49,6 +49,30 @@ class PlaylistAPITestCase(IntegrationTestCase):
         r.flushall()
         super(PlaylistAPITestCase, self).tearDown()
 
+    def test_filter_description(self):
+        """Check that non-approved html tags are filtered from descriptions"""
+
+        # a href to unapproved domain
+        description = """<a href="http://gooogle.com">link to google</a>"""
+        result = playlist_api._filter_description_html(description)
+        assert result == "<a>link to google</a>"
+
+        # a href to approved domain
+        description = """<a href="http://acousticbrainz.org/foo">link to AB</a>"""
+        result = playlist_api._filter_description_html(description)
+        assert result == description
+
+        # non-approved tag
+        description = """<input>input tag</input>"""
+        result = playlist_api._filter_description_html(description)
+        assert result == "input tag"
+
+        # OK tags
+        description = """<b>Your amazing playlist</b><br><ul><li>wow</li><li>such playlist</li></ul>
+        <a href="https://listenbrainz.org/user/is/you">more info</a>"""
+        result = playlist_api._filter_description_html(description)
+        assert result == description
+
     def test_playlist_create_and_get(self):
         """ Test to ensure creating a playlist works """
 
@@ -76,7 +100,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json["playlist"]["creator"], "testuserpleaseignore")
         self.assertEqual(response.json["playlist"]["identifier"], PLAYLIST_URI_PREFIX + playlist_mbid)
-        self.assertEqual(response.json["playlist"]["annotation"], "your lame 80s music")
+        self.assertEqual(response.json["playlist"]["annotation"], "your lame <i>80s</i> music")
         self.assertEqual(response.json["playlist"]["track"][0]["identifier"],
                          playlist["playlist"]["track"][0]["identifier"])
         try:
@@ -281,7 +305,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         response = self.client.post(
             url_for("playlist_api_v1.edit_playlist", playlist_mbid=playlist_mbid),
             json={"playlist": {"title": "new title",
-                               "annotation": "new desc",
+                               "annotation": "new <b>desc</b> <script>noscript</script>",
                                "extension": {PLAYLIST_EXTENSION_URI: {"public": False,
                                                                                            "collaborators": (self.user2["musicbrainz_id"], 
                                                                                                              self.user3["musicbrainz_id"])}}}},
@@ -295,13 +319,30 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
 
         self.assertEqual(response.json["playlist"]["title"], "new title")
-        self.assertEqual(response.json["playlist"]["annotation"], "new desc")
+        self.assertEqual(response.json["playlist"]["annotation"], "new <b>desc</b> noscript")
         self.assertEqual(response.json["playlist"]["extension"]
                          [PLAYLIST_EXTENSION_URI]["public"], False)
         self.assertEqual(response.json["playlist"]["extension"]
                          [PLAYLIST_EXTENSION_URI]["collaborators"], [self.user2["musicbrainz_id"],
-                                                                                          self.user3["musicbrainz_id"]])
+                                                                     self.user3["musicbrainz_id"]])
 
+        # Edit again to remove description
+        response = self.client.post(
+            url_for("playlist_api_v1.edit_playlist", playlist_mbid=playlist_mbid),
+            json={"playlist": {"annotation": "",
+                               "extension": {PLAYLIST_EXTENSION_URI: {"public": False}}}},
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        response = self.client.get(
+            url_for("playlist_api_v1.get_playlist", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+
+        self.assertEqual(response.json["playlist"]["title"], "new title")
+        self.assertNotIn("annotation", response.json["playlist"])
+        self.assertEqual(response.json["playlist"]["extension"]
+                         [PLAYLIST_EXTENSION_URI]["public"], False)
 
     def test_playlist_recording_add(self):
         """ Test adding a recording to a playlist works """
@@ -696,7 +737,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
                          [PLAYLIST_EXTENSION_URI]["creator"], self.user4["musicbrainz_id"])
         self.assertEqual(response.json["playlists"][0]["playlist"]["identifier"], PLAYLIST_URI_PREFIX + public_playlist_mbid)
         self.assertEqual(response.json["playlists"][0]["playlist"]["title"], "1980s flashback jams")
-        self.assertEqual(response.json["playlists"][0]["playlist"]["annotation"], "your lame 80s music")
+        self.assertEqual(response.json["playlists"][0]["playlist"]["annotation"], "your lame <i>80s</i> music")
         self.assertEqual(response.json["playlists"][0]["playlist"]["extension"] \
                          [PLAYLIST_EXTENSION_URI]["public"], True)
         try:
@@ -707,7 +748,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
                          [PLAYLIST_EXTENSION_URI]["creator"], self.user4["musicbrainz_id"])
         self.assertEqual(response.json["playlists"][1]["playlist"]["identifier"], PLAYLIST_URI_PREFIX + private_playlist_mbid)
         self.assertEqual(response.json["playlists"][1]["playlist"]["title"], "1980s flashback jams")
-        self.assertEqual(response.json["playlists"][1]["playlist"]["annotation"], "your lame 80s music")
+        self.assertEqual(response.json["playlists"][1]["playlist"]["annotation"], "your lame <i>80s</i> music")
         self.assertEqual(response.json["playlists"][1]["playlist"]["extension"] \
                          [PLAYLIST_EXTENSION_URI]["public"], False)
         try:
