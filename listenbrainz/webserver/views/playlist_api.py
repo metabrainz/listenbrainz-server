@@ -1,6 +1,8 @@
 import datetime
+from urllib.parse import urlparse
 from uuid import UUID
 
+import bleach
 import ujson
 from flask import Blueprint, current_app, jsonify, request
 import requests
@@ -35,6 +37,27 @@ def _parse_boolean_arg(name, default=None):
         raise APIBadRequest("Invalid %s argument: %s. Must be 'true' or 'false'" % (name, value))
 
     return True if value == "true" else False
+
+
+def _allow_metabrainz_domains(tag, name, value):
+    """A bleach attribute cleaner for <a> tags that only allows hrefs to point
+    to metabrainz-controlled domains"""
+
+    metabrainz_domains = ["acousticbrainz.org", "critiquebrainz.org", "listenbrainz.org",
+                          "metabrainz.org", "musicbrainz.org"]
+
+    if name == "rel":
+        return True
+    elif name == "href":
+        p = urlparse(value)
+        return (not p.netloc) or p.netloc in metabrainz_domains
+    else:
+        return False
+
+
+def _filter_description_html(description):
+    ok_tags = [u"a", u"strong", u"b", u"em", u"i", u"u", u"ul", u"li", u"p", u"br"]
+    return bleach.clean(description, tags=ok_tags, attributes={"a": _allow_metabrainz_domains}, strip=True)
 
 
 def validate_playlist(jspf, require_title=True):
@@ -264,9 +287,14 @@ def create_playlist():
             log_raise_400("Collaborator {} doesn't exist".format(collaborator))
         collaborator_ids.append(users[collaborator.lower()]["id"])
 
+    # filter description
+    description = data["playlist"].get("annotation", None)
+    if description is not None:
+        description = _filter_description_html(description)
+
     playlist = WritablePlaylist(name=data['playlist']['title'],
                                 creator_id=user["id"],
-                                description=data["playlist"].get("annotation", None),
+                                description=description,
                                 collaborator_ids=collaborator_ids,
                                 collaborators=collaborators,
                                 public=public)
@@ -333,8 +361,15 @@ def edit_playlist(playlist_mbid):
     except KeyError:
         pass
 
-    if data["playlist"].get("annotation"):
-        playlist.description = data["playlist"]["annotation"]
+    if "annotation" in data["playlist"]:
+        # If the annotation key exists but the value is empty ("" or None),
+        # unset the description
+        description = data["playlist"]["annotation"]
+        if description:
+            description = _filter_description_html(description)
+        else:
+            description = None
+        playlist.description = description
 
     if data["playlist"].get("title"):
         playlist.name = data["playlist"]["title"]
