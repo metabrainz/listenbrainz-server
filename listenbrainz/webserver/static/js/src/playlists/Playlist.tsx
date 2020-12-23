@@ -818,7 +818,9 @@ export default class PlaylistPage extends React.Component<
                   </div>
                 )}
               </div>
-              <div>{playlist.annotation}</div>
+              {playlist.annotation && (
+                  <div dangerouslySetInnerHTML={{__html: playlist.annotation}} />
+              )}
               <hr />
             </div>
             {hasRightToEdit && tracks.length > 10 && (
