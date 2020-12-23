@@ -450,8 +450,8 @@ def add_playlist_collaborators(connection, playlist_id, collaborator_ids):
                 VALUES (:playlist_id, :collaborator_id)""")
 
     collaborator_params = [{"playlist_id": playlist_id, "collaborator_id": c_id} for c_id in collaborator_ids]
+    connection.execute(delete_query, {"playlist_id": playlist_id})
     if collaborator_params:
-        connection.execute(delete_query, {"playlist_id": playlist_id})
         connection.execute(insert_query, collaborator_params)
 
 
@@ -472,17 +472,20 @@ def update_playlist(playlist: model_playlist.Playlist):
     with ts.engine.connect() as connection:
         params = playlist.dict(include={'id', 'name', 'description', 'public'})
         connection.execute(query, params)
-        if playlist.collaborator_ids:
-            add_playlist_collaborators(connection, playlist.id, playlist.collaborator_ids)
-            collaborator_ids = get_collaborators_for_playlists(connection, [playlist.id])
-            collaborator_ids = collaborator_ids.get(playlist.id, [])
-            collaborators = []
-            # TODO: Look this up in one query
-            for user_id in collaborator_ids:
-                user = db_user.get(user_id)
-                if user:
-                    collaborators.append(user["musicbrainz_id"])
-            playlist.collaborators = collaborators
+        # Unconditionally add collaborators, this allows us to delete all collaborators
+        # if [] is passed in.
+        # TODO: Optimise this by getting collaborators from the database and only updating
+        #  if what has passed is different to what exists
+        add_playlist_collaborators(connection, playlist.id, playlist.collaborator_ids)
+        collaborator_ids = get_collaborators_for_playlists(connection, [playlist.id])
+        collaborator_ids = collaborator_ids.get(playlist.id, [])
+        collaborators = []
+        # TODO: Look this up in one query
+        for user_id in collaborator_ids:
+            user = db_user.get(user_id)
+            if user:
+                collaborators.append(user["musicbrainz_id"])
+        playlist.collaborators = collaborators
         playlist.last_updated = set_last_updated(connection, playlist.id)
         return playlist
 

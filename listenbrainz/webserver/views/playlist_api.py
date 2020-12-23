@@ -387,9 +387,8 @@ def edit_playlist(playlist_mbid):
             log_raise_400("Collaborator {} doesn't exist".format(collaborator))
         collaborator_ids.append(users[collaborator.lower()]["id"])
 
-    if collaborators:
-        playlist.collaborators = collaborators
-        playlist.collaborator_ids = collaborator_ids
+    playlist.collaborators = collaborators
+    playlist.collaborator_ids = collaborator_ids
 
     db_playlist.update_playlist(playlist)
 
