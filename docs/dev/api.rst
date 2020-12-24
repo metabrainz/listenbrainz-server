@@ -57,9 +57,19 @@ Core API Endpoints
   :statuscode 400: invalid JSON sent, see error message for details.
   :statuscode 401: invalid authorization. See error message for details.
 
+Playlists API Endpoints
+^^^^^^^^^^^^^^^^^^^^^^^
+The playlists API allows for the creation and editing of lists of recordings
+
+.. autoflask:: listenbrainz.webserver:create_app_rtfd()
+   :blueprints: playlist_api_v1
+   :include-empty-docstring:
+   :undoc-static:
+
+
 Statistics API Endpoints
 ^^^^^^^^^^^^^^^^^^^^^^^^
-ListenBrainz now has a statistics infrastructure that collects and computes statistics
+ListenBrainz has a statistics infrastructure that collects and computes statistics
 from the listen data that has been stored in the database. The endpoints in this section
 offer a way to get this data programmatically.
 
