@@ -142,20 +142,20 @@ export default class Recommendations extends React.Component<
   };
 
   handleCurrentRecommendationChange = (
-    recommendation: Recommendation
+    recommendation: Recommendation | JSPFTrack
   ): void => {
-    this.setState({ currentRecommendation: recommendation });
+    this.setState({ currentRecommendation: recommendation as Recommendation});
   };
 
   newAlert = (
     type: AlertType,
-    title: string,
+    headline: string,
     message?: string | JSX.Element
   ): void => {
     const newAlert = {
       id: new Date().getTime(),
       type,
-      title,
+      headline,
       message,
     } as Alert;
 

@@ -11,7 +11,6 @@ import {
   faThumbsUp as faThumbsUpRegular,
   faAngry as faAngryRegular,
   faFrown as faFrownRegular,
-  faMeh as faMehRegular,
   faSmileBeam as faSmileBeamRegular,
   faGrinStars as faGrinStarsRegular,
 } from "@fortawesome/free-regular-svg-icons";
@@ -152,10 +151,6 @@ export default class RecommendationCard extends React.Component<
         icon = faFrown;
         text = "Dislike";
         break;
-      case "bad_recommendation":
-        icon = faMeh;
-        text = "Bad";
-        break;
       case "like":
         icon = faSmileBeam;
         text = "Like";
@@ -226,19 +221,6 @@ export default class RecommendationCard extends React.Component<
                 }
                 cssClass={`dislike ${
                   currentFeedback === "dislike" ? "selected" : ""
-                }`}
-              />
-              <RecommendationControl
-                iconHover={faMeh}
-                icon={faMehRegular}
-                title="This is a bad recommendation!"
-                action={() =>
-                  currentFeedback === "bad_recommendation"
-                    ? this.deleteFeedback()
-                    : this.submitFeedback("bad_recommendation")
-                }
-                cssClass={`bad_recommendation ${
-                  currentFeedback === "bad_recommendation" ? "selected" : ""
                 }`}
               />
               <RecommendationControl

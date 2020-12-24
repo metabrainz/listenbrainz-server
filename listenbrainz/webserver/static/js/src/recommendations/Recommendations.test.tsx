@@ -176,7 +176,7 @@ describe("updateFeedback", () => {
     const instance = wrapper.instance();
 
     const recommendationFeedbackMap: RecommendationFeedbackMap = {
-      "973e5620-829d-46dd-89a8-760d87076287": "bad_recommendation",
+      "973e5620-829d-46dd-89a8-760d87076287": "like",
     };
     wrapper.setState({ recommendationFeedbackMap });
 

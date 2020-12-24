@@ -371,8 +371,7 @@ declare type RecommendationFeedBack =
   | "love"
   | "like"
   | "hate"
-  | "dislike"
-  | "bad_recommendation";
+  | "dislike";
 
 declare type FeedbackResponse = {
   recording_msid: string;
@@ -389,7 +388,6 @@ declare type RecordingFeedbackMap = {
   [recordingMsid: string]: ListenFeedBack;
 };
 
-<<<<<<< HEAD
 declare type ACRMSearchResult = {
   artist_credit_id: number;
   artist_credit_name: string;
@@ -457,6 +455,7 @@ declare type JSPFTrack = {
     [name: string]: any;
     "https://musicbrainz.org/doc/jspf#track"?: JSPFTrackExtension;
   };
+};
 
 declare type RecommendationFeedbackMap = {
   [recordingMbid: string]: RecommendationFeedBack | null;

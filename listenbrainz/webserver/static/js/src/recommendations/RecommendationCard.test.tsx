@@ -177,10 +177,10 @@ describe("submitFeedback", () => {
     const spy = jest.spyOn(instance.APIService, "submitRecommendationFeedback");
     spy.mockImplementation(() => Promise.resolve(201));
 
-    instance.submitFeedback("bad_recommendation");
+    instance.submitFeedback("hate");
 
     expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith("lalala", "yyyy", "bad_recommendation");
+    expect(spy).toHaveBeenCalledWith("lalala", "yyyy", "hate");
 
     expect(updateFeedbackSpy).toHaveBeenCalledTimes(0);
     expect(instance.props.currentFeedback).toEqual("love");
@@ -406,14 +406,11 @@ describe("Check if button and dropdown values ae synced.", () => {
     // validate RecommendationComponent props for 'dislike' emoticon
     expect(myComponents.get(1).props.cssClass).toEqual("dislike ");
 
-    // validate RecommendationComponent props for 'Meh' emoticon
-    expect(myComponents.get(2).props.cssClass).toEqual("bad_recommendation ");
-
     // validate RecommendationComponent props for 'like' emoticon
-    expect(myComponents.get(3).props.cssClass).toEqual("like ");
+    expect(myComponents.get(2).props.cssClass).toEqual("like ");
 
     // validate RecommendationComponent props for 'love' emoticon
-    expect(myComponents.get(4).props.cssClass).toEqual("love ");
+    expect(myComponents.get(3).props.cssClass).toEqual("love ");
   });
 
   it("check button and dropdown values when currentFeedback == 'dislike' ", async () => {
@@ -446,63 +443,11 @@ describe("Check if button and dropdown values ae synced.", () => {
     // validate RecommendationComponent props for 'angry' emoticon
     expect(myComponents.get(0).props.cssClass).toEqual("hate ");
 
-    // validate RecommendationComponent props for 'Meh' emoticon
-    expect(myComponents.get(2).props.cssClass).toEqual("bad_recommendation ");
-
     // validate RecommendationComponent props for 'like' emoticon
-    expect(myComponents.get(3).props.cssClass).toEqual("like ");
+    expect(myComponents.get(2).props.cssClass).toEqual("like ");
 
     // validate RecommendationComponent props for 'love' emoticon
-    expect(myComponents.get(4).props.cssClass).toEqual("love ");
-  });
-
-  it("check button and dropdown values when currentFeedback == 'bad_recommendation' ", async () => {
-    const wrapper = shallow<RecommendationCard>(
-      <RecommendationCard
-        {...{ ...props, currentFeedback: "bad_recommendation" }}
-      />
-    );
-    const myComponents = wrapper.find(RecommendationControl);
-
-    // validate button class and properties
-    expect(
-      wrapper
-        .find(".recommendation-controls")
-        .childAt(0)
-        .hasClass("bad_recommendation")
-    ).toEqual(true);
-    expect(
-      wrapper
-        .find(".recommendation-controls")
-        .childAt(0)
-        .childAt(0)
-        .prop("icon").iconName
-    ).toEqual("meh");
-    expect(
-      wrapper.find(".recommendation-controls").childAt(0).childAt(2).text()
-    ).toEqual("Bad");
-
-    // validate RecommendationComponent props for 'Meh' emoticon
-    expect(myComponents.get(2).props.iconHover).toEqual(faMeh);
-    expect(myComponents.get(2).props.icon).toEqual(faMehRegular);
-    expect(myComponents.get(2).props.cssClass).toEqual(
-      "bad_recommendation selected"
-    );
-    expect(myComponents.get(2).props.title).toEqual(
-      "This is a bad recommendation!"
-    );
-
-    // validate RecommendationComponent props for 'angry' emoticon
-    expect(myComponents.get(0).props.cssClass).toEqual("hate ");
-
-    // validate RecommendationComponent props for 'dislike' emoticon
-    expect(myComponents.get(1).props.cssClass).toEqual("dislike ");
-
-    // validate RecommendationComponent props for 'like' emoticon
-    expect(myComponents.get(3).props.cssClass).toEqual("like ");
-
-    // validate RecommendationComponent props for 'love' emoticon
-    expect(myComponents.get(4).props.cssClass).toEqual("love ");
+    expect(myComponents.get(3).props.cssClass).toEqual("love ");
   });
 
   it("check button and dropdown values when currentFeedback == 'like' ", async () => {
@@ -527,10 +472,10 @@ describe("Check if button and dropdown values ae synced.", () => {
     ).toEqual("Like");
 
     // validate RecommendationComponent props for 'like' emoticon
-    expect(myComponents.get(3).props.iconHover).toEqual(faSmileBeam);
-    expect(myComponents.get(3).props.icon).toEqual(faSmileBeamRegular);
-    expect(myComponents.get(3).props.cssClass).toEqual("like selected");
-    expect(myComponents.get(3).props.title).toEqual("I like this!");
+    expect(myComponents.get(2).props.iconHover).toEqual(faSmileBeam);
+    expect(myComponents.get(2).props.icon).toEqual(faSmileBeamRegular);
+    expect(myComponents.get(2).props.cssClass).toEqual("like selected");
+    expect(myComponents.get(2).props.title).toEqual("I like this!");
 
     // validate RecommendationComponent props for 'angry' emoticon
     expect(myComponents.get(0).props.cssClass).toEqual("hate ");
@@ -538,11 +483,8 @@ describe("Check if button and dropdown values ae synced.", () => {
     // validate RecommendationComponent props for 'dislike' emoticon
     expect(myComponents.get(1).props.cssClass).toEqual("dislike ");
 
-    // validate RecommendationComponent props for 'bad_recommendation' emoticon
-    expect(myComponents.get(2).props.cssClass).toEqual("bad_recommendation ");
-
     // validate RecommendationComponent props for 'love' emoticon
-    expect(myComponents.get(4).props.cssClass).toEqual("love ");
+    expect(myComponents.get(3).props.cssClass).toEqual("love ");
   });
 
   it("check button and dropdown values when currentFeedback == 'Love' ", async () => {
@@ -567,19 +509,16 @@ describe("Check if button and dropdown values ae synced.", () => {
     ).toEqual("Love");
 
     // validate RecommendationComponent props for 'Love' emoticon
-    expect(myComponents.get(4).props.iconHover).toEqual(faGrinStars);
-    expect(myComponents.get(4).props.icon).toEqual(faGrinStarsRegular);
-    expect(myComponents.get(4).props.cssClass).toEqual("love selected");
-    expect(myComponents.get(4).props.title).toEqual("I really love this!");
+    expect(myComponents.get(3).props.iconHover).toEqual(faGrinStars);
+    expect(myComponents.get(3).props.icon).toEqual(faGrinStarsRegular);
+    expect(myComponents.get(3).props.cssClass).toEqual("love selected");
+    expect(myComponents.get(3).props.title).toEqual("I really love this!");
 
     // validate RecommendationComponent props for 'dislike' emoticon
     expect(myComponents.get(1).props.cssClass).toEqual("dislike ");
 
-    // validate RecommendationComponent props for 'Meh' emoticon
-    expect(myComponents.get(2).props.cssClass).toEqual("bad_recommendation ");
-
     // validate RecommendationComponent props for 'like' emoticon
-    expect(myComponents.get(3).props.cssClass).toEqual("like ");
+    expect(myComponents.get(2).props.cssClass).toEqual("like ");
 
     // validate RecommendationComponent props for 'angry' emoticon
     expect(myComponents.get(0).props.cssClass).toEqual("hate ");

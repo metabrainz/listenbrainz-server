@@ -9,11 +9,11 @@ from listenbrainz.webserver.errors import (APIInternalServerError,
                                            APIBadRequest)
 
 from listenbrainz.webserver.rate_limiter import ratelimit
-from listenbrainz.webserver.views.api import _validate_auth_header
 from listenbrainz.webserver.views.api_tools import (log_raise_400,
                                                     DEFAULT_ITEMS_PER_GET,
                                                     MAX_ITEMS_PER_GET,
-                                                    _get_non_negative_param)
+                                                    get_non_negative_param,
+                                                    validate_auth_header)
 
 from listenbrainz.db.model.recommendation_feedback import (RecommendationFeedbackSubmit,
                                                            RecommendationFeedbackDelete,
@@ -46,7 +46,7 @@ def submit_recommendation_feedback():
     :statuscode 401: invalid authorization. See error message for details.
     :resheader Content-Type: *application/json*
     """
-    user = _validate_auth_header()
+    user = validate_auth_header()
 
     data = request.json
 
@@ -91,7 +91,7 @@ def delete_recommendation_feedback():
     :statuscode 401: invalid authorization. See error message for details.
     :resheader Content-Type: *application/json*
     """
-    user = _validate_auth_header()
+    user = validate_auth_header()
 
     data = request.json
 
@@ -165,8 +165,8 @@ def get_feedback_for_user(user_name):
         if rating not in expected_rating:
             log_raise_400("Rating must be in {}".format(expected_rating), request.args)
 
-    offset = _get_non_negative_param('offset', default=0)
-    count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
+    offset = get_non_negative_param('offset', default=0)
+    count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
     count = min(count, MAX_ITEMS_PER_GET)
 
