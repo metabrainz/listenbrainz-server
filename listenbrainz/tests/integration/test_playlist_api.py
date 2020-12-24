@@ -247,6 +247,83 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assert400(response)
         self.assertEqual(response.json["error"], "JSPF playlist.extension.https://musicbrainz.org/doc/jspf#playlist.public field must be given.")
 
+        # submit a playlist with non-boolean public
+        playlist = {
+            "playlist": {
+                "title": "no, you're a douche!",
+                "track": [
+                    {
+                        "identifier": "https://musicbrainz.org/recording/e8f9b188-f819-4e43-ab0f-4bd26ce9ff56"
+                    }
+                ],
+                "extension": {
+                    PLAYLIST_EXTENSION_URI: {
+                        "public": "yes"
+                    }
+                },
+            }
+        }
+
+        response = self.client.post(
+            url_for("playlist_api_v1.create_playlist"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "JSPF playlist public field must contain a boolean.")
+
+        # submit a playlist with empty collaborator
+        playlist = {
+            "playlist": {
+                "title": "no, you're a douche!",
+                "track": [
+                    {
+                        "identifier": "https://musicbrainz.org/recording/e8f9b188-f819-4e43-ab0f-4bd26ce9ff56"
+                    }
+                ],
+                "extension": {
+                    PLAYLIST_EXTENSION_URI: {
+                        "public": True,
+                        "collaborators": ["one", ""]
+                    }
+                },
+            }
+        }
+
+        response = self.client.post(
+            url_for("playlist_api_v1.create_playlist"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"],
+                         "The collaborators field contains an empty value.")
+
+        # submit a playlist with invalid track identifier
+        playlist = {
+            "playlist": {
+                "title": "no, you're a douche!",
+                "track": [
+                    {
+                        "identifier": "https://someoneelse.com/e8f9b188-f819-4e43-ab0f-4bd26ce9ff56"
+                    }
+                ],
+                "extension": {
+                    PLAYLIST_EXTENSION_URI: {
+                        "public": True,
+                    }
+                },
+            }
+        }
+
+        response = self.client.post(
+            url_for("playlist_api_v1.create_playlist"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"],
+                         "JSPF playlist track 0 identifier must have the namespace 'https://musicbrainz.org/recording/' prepended to it.")
 
     def test_playlist_create_with_collaborators(self):
         """ Test to ensure creating a playlist with collaborators works """
@@ -332,7 +409,6 @@ class PlaylistAPITestCase(IntegrationTestCase):
             url_for("playlist_api_v1.edit_playlist", playlist_mbid=playlist_mbid),
             json={"playlist": {"annotation": "",
                                "extension": {PLAYLIST_EXTENSION_URI: {
-                                   "public": False,
                                    "collaborators": []}}}},
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
         )
