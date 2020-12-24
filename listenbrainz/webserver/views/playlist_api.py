@@ -302,7 +302,7 @@ def create_playlist():
     if data["playlist"].get("created_for", None):
         if user["musicbrainz_id"] not in current_app.config["APPROVED_PLAYLIST_BOTS"]:
             raise APIForbidden("Playlist contains a created_for field, but submitting user is not an approved playlist bot.")
-        created_for_user = users.get(data["playlist"]["created_for"])
+        created_for_user = users.get(data["playlist"]["created_for"].lower())
         if not created_for_user:
             log_raise_400("created_for user does not exist.")
         playlist.created_for_id = created_for_user["id"]
