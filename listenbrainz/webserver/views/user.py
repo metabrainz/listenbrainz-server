@@ -20,6 +20,34 @@ from pydantic import ValidationError
 LISTENS_PER_PAGE = 25
 
 user_bp = Blueprint("user", __name__)
+redirect_bp = Blueprint("redirect", __name__)
+
+
+def redirect_user_page(target):
+    """Redirect a well-known url to a user's profile.
+
+    The user-facing informational pages contain a username in the url. This means
+    that we don't have a standard url that we can send any user to (for example a link
+    on twitter). We configure some standardised URLS /my/[page] that will redirect
+    the user to this specific page in their namespace if they are logged in."""
+    def inner():
+        if current_user.is_authenticated:
+            print(url_for(target, user_name=current_user.musicbrainz_id, **request.args))
+            return redirect(url_for(target, user_name=current_user.musicbrainz_id, **request.args))
+        else:
+            return current_app.login_manager.unauthorized()
+        pass
+    return inner
+
+
+redirect_bp.add_url_rule("/listens", "redirect_listens", redirect_user_page("user.profile"))
+redirect_bp.add_url_rule("/charts", "redirect_charts", redirect_user_page("user.charts"))
+redirect_bp.add_url_rule("/reports", "redirect_reports", redirect_user_page("user.reports"))
+redirect_bp.add_url_rule("/playlists", "redirect_playlists", redirect_user_page("user.playlists"))
+redirect_bp.add_url_rule("/collaborations", "redirect_collaborations", redirect_user_page("user.collaborations"))
+redirect_bp.add_url_rule("/recommendations",
+                         "redirect_recommendations",
+                         redirect_user_page("user.recommendation_playlists"))
 
 
 @user_bp.route("/<user_name>")
