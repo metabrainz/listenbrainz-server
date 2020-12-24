@@ -44,6 +44,25 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         ServerTestCase.tearDown(self)
         DatabaseTestCase.tearDown(self)
 
+    def test_redirects(self):
+        # Not logged in
+        response = self.client.get(url_for("redirect.redirect_listens"))
+        self.assertEqual(response.status_code, 302)
+        assert response.location.endswith("/login/?next=%2Fmy%2Flistens")
+
+        self.temporary_login(self.user.login_id)
+        response = self.client.get(url_for("redirect.redirect_listens"))
+        self.assertEqual(response.status_code, 302)
+        assert response.location.endswith("/user/iliekcomputers")
+
+        response = self.client.get(url_for("redirect.redirect_charts"))
+        self.assertEqual(response.status_code, 302)
+        assert response.location.endswith("/user/iliekcomputers/charts")
+
+        response = self.client.get(url_for("redirect.redirect_charts") + "?foo=bar")
+        self.assertEqual(response.status_code, 302)
+        assert response.location.endswith("/user/iliekcomputers/charts?foo=bar")
+
     def test_user_page(self):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
