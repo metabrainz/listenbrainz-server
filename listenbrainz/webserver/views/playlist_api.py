@@ -271,7 +271,7 @@ def create_playlist():
     :statuscode 200: playlist accepted.
     :statuscode 400: invalid JSON sent, see error message for details.
     :statuscode 401: invalid authorization. See error message for details.
-    :statuscode 403: forbidden. The subitting user is not allowed to submit playlists for other users.
+    :statuscode 403: forbidden. The submitting user is not allowed to create playlists for other users.
     :resheader Content-Type: *application/json*
     """
 
