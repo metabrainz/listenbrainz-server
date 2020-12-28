@@ -37,5 +37,5 @@ def joined(data):
         raise BadRequest("Missing key 'playlist_id'")
 
 
-def run_websockets(host='0.0.0.0', port=8081, debug=True):
+def run_websockets(host='0.0.0.0', port=8082, debug=True):
     socketio.run(app, debug=debug, host=host, port=port)

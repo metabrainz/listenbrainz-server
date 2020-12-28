@@ -104,6 +104,14 @@ services:
       - redis
       - rabbitmq
 
+  websockets:
+    image: web
+    volumes:
+      - ..:/code/listenbrainz:z
+    command: python manage.py run_websockets -h 0.0.0.0 -p 8082
+    ports:
+      - "8082:8082"
+
   static_builder:
     build:
       context: ..
