@@ -300,6 +300,7 @@ def latest_import():
     The JSON that needs to be posted must contain a field named `ts` in the root with a valid unix timestamp.
 
     :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
     :statuscode 200: latest import timestamp updated
     :statuscode 400: invalid JSON sent, see error message for details.
     :statuscode 401: invalid authorization. See error message for details.
@@ -396,6 +397,7 @@ def delete_listen():
         }
 
     :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
     :statuscode 200: listen deleted.
     :statuscode 400: invalid JSON sent, see error message for details.
     :statuscode 401: invalid authorization. See error message for details.
