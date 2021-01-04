@@ -5,9 +5,9 @@
 **/*.py[cod]
 
 # Virtual environment
-/env
-/venv
-/build
+/env/
+/venv/
+/build/
 
 # Logs
 **/*.log
@@ -15,11 +15,11 @@
 **/pip-delete-this-directory.txt
 
 # Test results
-**/htmlcov
+**/htmlcov/
 **/.coverage
 
 # Private credentials
 /credentials
 
 # Javascript packages
-/node_modules
+/node_modules/
