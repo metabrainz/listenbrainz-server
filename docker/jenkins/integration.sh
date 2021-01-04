@@ -49,7 +49,6 @@ function run_tests {
     docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME run --rm listenbrainz \
       dockerize \
       -wait tcp://db:5432 -timeout 60s \
-      -wait tcp://timescale:5432 -timeout 60s \
       bash -c "python3 manage.py init_db --create-db && \
                python3 manage.py init_msb_db --create-db && \
                python3 manage.py init_ts_db --create-db"
@@ -57,7 +56,6 @@ function run_tests {
     docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME run --name $TEST_CONTAINER_REF listenbrainz \
       dockerize \
         -wait tcp://db:5432 -timeout 60s \
-        -wait tcp://timescale:5432 -timeout 60s \
         -wait tcp://redis:6379 -timeout 60s \
         -wait tcp://rabbitmq:5672 -timeout 60s \
       pytest listenbrainz/tests/integration --junitxml=/data/test_report.xml \
