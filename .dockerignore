@@ -1,13 +1,13 @@
-/.git
+/.git*
 
 # Byte-compiled / optimized / DLL files
 **/__pycache__/
 **/*.py[cod]
 
 # Virtual environment
-/env/
-/venv/
-/build/
+/env*/
+/venv*/
+/build*/
 
 # Logs
 **/*.log
