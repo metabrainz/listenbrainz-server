@@ -261,11 +261,12 @@ export default class LastFmImporter extends React.Component<
 
   async startImport() {
     this.updateModalAction(<p>Your import from Last.fm is starting!</p>, false);
-    this.playCount = await this.getTotalNumberOfScrobbles();
     this.latestImportTime = await this.APIService.getLatestImport(
       this.userName
     );
     this.incrementalImport = this.latestImportTime > 0;
+    if (!this.incrementalImport)
+      this.playCount = await this.getTotalNumberOfScrobbles();
     this.totalPages = await this.getNumberOfPages();
     this.page = this.totalPages; // Start from the last page so that oldest scrobbles are imported first
 
