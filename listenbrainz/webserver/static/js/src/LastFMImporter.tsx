@@ -229,10 +229,6 @@ export default class LastFmImporter extends React.Component<
     this.setState({ canClose });
   };
 
-  updateMessage = (msg: React.ReactElement) => {
-    this.setState({ msg });
-  };
-
   handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({ lastfmUsername: event.target.value });
   };
@@ -265,8 +261,7 @@ export default class LastFmImporter extends React.Component<
       this.userName
     );
     this.incrementalImport = this.latestImportTime > 0;
-    if (!this.incrementalImport)
-      this.playCount = await this.getTotalNumberOfScrobbles();
+    this.playCount = await this.getTotalNumberOfScrobbles();
     this.totalPages = await this.getNumberOfPages();
     this.page = this.totalPages; // Start from the last page so that oldest scrobbles are imported first
 
@@ -298,7 +293,7 @@ export default class LastFmImporter extends React.Component<
           </span>
         </p>
       );
-      this.updateMessage(msg);
+      this.setState({ msg });
     }
 
     // Update latest import time on LB server
