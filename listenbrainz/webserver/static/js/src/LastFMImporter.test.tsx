@@ -118,6 +118,18 @@ describe("getTotalNumberOfScrobbles", () => {
     });
     await expect(instance.getTotalNumberOfScrobbles()).rejects.toThrowError();
   });
+  it("should show the error message in importer", async () => {
+    // Mock function for failed fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: false,
+      });
+    });
+    await expect(instance.getTotalNumberOfScrobbles()).rejects.toThrowError();
+    expect(instance.state.msg?.props.children).toMatch(
+      "An error occurred, please try again. :("
+    );
+  });
 });
 
 describe("getPage", () => {
