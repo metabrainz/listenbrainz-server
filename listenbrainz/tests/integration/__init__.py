@@ -2,16 +2,22 @@ import json
 import os
 import time
 
+import pytest
+
 import listenbrainz.db.user as db_user
 from flask import current_app, url_for
 
 from redis import Redis
 from listenbrainz.webserver.testing import ServerTestCase, APICompatServerTestCase
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
+from listenbrainz.messybrainz.testing import MessyBrainzTestCase
 
 TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', '..', 'admin', 'timescale')
 
 
+# All tests that inherit from IntegrationTestCase are marked as as "integration tests",
+# that don't run by default and can be chosen with `pytest -m integration`
+@pytest.mark.integration
 class IntegrationTestCase(ServerTestCase, DatabaseTestCase):
 
     def setUp(self):
@@ -23,10 +29,12 @@ class IntegrationTestCase(ServerTestCase, DatabaseTestCase):
         DatabaseTestCase.tearDown(self)
 
 
-class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
+class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase, MessyBrainzTestCase):
     def setUp(self):
         IntegrationTestCase.setUp(self)
         TimescaleTestCase.setUp(self)
+        MessyBrainzTestCase.setUp(self)
+
         self.user = db_user.get_or_create(1, 'testuserpleaseignore')
         db_user.agree_to_gdpr(self.user['musicbrainz_id'])
         self.user2 = db_user.get_or_create(2, 'all_muppets_all_of_them')
@@ -36,6 +44,7 @@ class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
         r.flushall()
         IntegrationTestCase.tearDown(self)
         TimescaleTestCase.tearDown(self)
+        MessyBrainzTestCase.tearDown(self)
 
     def wait_for_query_to_have_items(self, url, num_items, **kwargs):
         """Try the provided query in a loop until the required number of returned listens is available.
@@ -74,6 +83,7 @@ class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
         )
 
 
+@pytest.mark.integration
 class APICompatIntegrationTestCase(APICompatServerTestCase, DatabaseTestCase):
 
     def setUp(self):

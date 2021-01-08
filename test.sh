@@ -76,11 +76,11 @@ function docker_compose_run_int {
 }
 
 function build_unit_containers {
-    invoke_docker_compose build lb_db redis rabbitmq listenbrainz
+    invoke_docker_compose build lb_db redis rabbitmq listenbrainz timescale_writer
 }
 
 function bring_up_unit_db {
-    invoke_docker_compose up -d lb_db redis rabbitmq
+    invoke_docker_compose up -d lb_db redis rabbitmq timescale_writer
 }
 
 function unit_setup {

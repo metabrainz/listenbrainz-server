@@ -31,10 +31,20 @@ services:
       - redis
       - lb_db
       - rabbitmq
- 
+
   frontend_tester:
     build:
       context: ..
       dockerfile: docker/Dockerfile.webpack
     volumes:
       - ../listenbrainz/webserver/static:/code/static:z
+
+  timescale_writer:
+    image: listenbrainz
+    command: python3 -m "listenbrainz.timescale_writer.timescale_writer"
+    volumes:
+      - ..:/code/listenbrainz:z
+    depends_on:
+      - redis
+      - lb_db
+      - rabbitmq
