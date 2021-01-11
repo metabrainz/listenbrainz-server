@@ -659,7 +659,7 @@ export default class RecentListens extends React.Component<
       <ul className="pager" style={{ display: "flex" }}>
         <li
           className={`previous ${
-            currRecPage && currRecPage <= 1 ? "hidden" : ""
+            currRecPage && currRecPage <= 1 ? "disabled" : ""
           }`}
         >
           <a
@@ -675,7 +675,7 @@ export default class RecentListens extends React.Component<
         </li>
         <li
           className={`next ${
-            currRecPage && currRecPage >= totalRecPages ? "hidden" : ""
+            currRecPage && currRecPage >= totalRecPages ? "disabled" : ""
           }`}
           style={{ marginLeft: "auto" }}
         >
