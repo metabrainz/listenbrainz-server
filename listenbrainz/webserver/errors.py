@@ -107,7 +107,6 @@ class CompatError(object):
 
 
 def init_error_handlers(app):
-
     def error_wrapper(template, error, code):
         hide_navbar_user_menu = False
         if code == 500:
@@ -136,7 +135,7 @@ def init_error_handlers(app):
                 A Response which will be a json error if request was made to the LB api and an html page
                 otherwise
         """
-        if current_app.config.get('IS_API_COMPAT_APP'):
+        if current_app.config.get('IS_API_COMPAT_APP') or request.path.startswith(API_PREFIX):
             return jsonify({'code': code, 'error': error.description}), code
         return error_wrapper('errors/{code}.html'.format(code=code), error, code)
 
@@ -168,11 +167,9 @@ def init_error_handlers(app):
         else:
             return handle_error(error, 500)
 
-    
     @app.errorhandler(502)
     def bad_gateway(error):
         return handle_error(error, 502)
-
 
     @app.errorhandler(503)
     def service_unavailable(error):
@@ -181,7 +178,6 @@ def init_error_handlers(app):
     @app.errorhandler(504)
     def gateway_timeout(error):
         return handle_error(error, 504)
-
 
     @app.errorhandler(APIError)
     @crossdomain()
