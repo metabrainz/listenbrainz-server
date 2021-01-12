@@ -2,7 +2,6 @@ import os
 import pprint
 import sys
 from time import sleep
-from shutil import copyfile
 
 from brainzutils.flask import CustomFlask
 from flask import request, url_for, redirect
@@ -42,9 +41,8 @@ def create_rabbitmq(app):
         app.logger.error('Could not connect to RabbitMQ: %s', str(e))
         return
 
+
 def load_config(app):
-
-
     # Load configuration files: If we're running under a docker deployment, wait until
     config_file = os.path.join( os.path.dirname(os.path.realpath(__file__)), '..', 'config.py' )
     if deploy_env:
@@ -71,7 +69,7 @@ def load_config(app):
         print('Unable to retrieve git commit. Error: %s', str(e))
 
 
-def gen_app(config_path=None, debug=None):
+def gen_app(debug=None):
     """ Generate a Flask app for LB with all configurations done and connections established.
 
     In the Flask app returned, blueprints are not registered.
@@ -143,9 +141,8 @@ def gen_app(config_path=None, debug=None):
     return app
 
 
-def create_app(config_path=None, debug=None):
-
-    app = gen_app(config_path=config_path, debug=debug)
+def create_app(debug=None):
+    app = gen_app(debug=debug)
 
     # Static files
     import listenbrainz.webserver.static_manager
@@ -169,7 +166,6 @@ def create_app(config_path=None, debug=None):
     admin.add_view(UserAdminView(UserModel, model.db.session, endpoint='user_model'))
     admin.add_view(SpotifyAdminView(SpotifyModel, model.db.session, endpoint='spotify_model'))
 
-
     @app.before_request
     def before_request_gdpr_check():
         # skip certain pages, static content and the API
@@ -188,14 +184,14 @@ def create_app(config_path=None, debug=None):
     return app
 
 
-def create_api_compat_app(config_path=None, debug=None):
+def create_api_compat_app(debug=None):
     """ Creates application for the AudioScrobbler API.
 
     The AudioScrobbler API v1.2 requires special views for the root URL so we
     need to create a different app and only register the api_compat blueprints
     """
 
-    app = gen_app(config_path=config_path, debug=debug)
+    app = gen_app(debug=debug)
 
     from listenbrainz.webserver.views.api_compat import api_bp as api_compat_bp
     from listenbrainz.webserver.views.api_compat_deprecated import api_compat_old_bp
