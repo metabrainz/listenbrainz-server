@@ -273,6 +273,13 @@ describe("processData", () => {
     );
     const instance = wrapper.instance();
 
+    const spy = jest.spyOn(Date.prototype, "getFullYear");
+    spy.mockImplementationOnce(() =>
+      new Date(
+        userListeningActivityResponseAllTime.payload.to_ts * 1000
+      ).getFullYear()
+    );
+
     const result = instance.processData(
       userListeningActivityResponseAllTime as UserListeningActivityResponse
     );

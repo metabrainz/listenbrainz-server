@@ -615,7 +615,10 @@ export default class UserPlaylists extends React.Component<
                 <a className="info" href={`/playlist/${playlistId}`}>
                   <h4>{playlist.title}</h4>
                   {playlist.annotation && (
-                    <div className="description" dangerouslySetInnerHTML={{__html: playlist.annotation}} />
+                    <div
+                      className="description"
+                      dangerouslySetInnerHTML={{ __html: playlist.annotation }}
+                    />
                   )}
                   <div>
                     Created:{" "}
