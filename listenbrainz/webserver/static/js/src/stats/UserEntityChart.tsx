@@ -548,7 +548,9 @@ export default class UserEntityChart extends React.Component<
                 <div className="col-xs-12">
                   <ul className="pager">
                     <li
-                      className={`previous ${!(prevPage > 0) ? "disabled" : ""}`}
+                      className={`previous ${
+                        !(prevPage > 0) ? "disabled" : ""
+                      }`}
                     >
                       <a
                         href=""

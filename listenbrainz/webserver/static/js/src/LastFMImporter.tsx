@@ -275,6 +275,16 @@ export default class LastFmImporter extends React.Component<
 
       this.page -= 1;
       this.numCompleted += 1;
+      // Retrieve first track's timestamp from payload and convert it into string for display
+      const latestImportEpoch = new Date(payload[0].listened_at * 1000);
+      const timestampString = latestImportEpoch.toLocaleString("en-US", {
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      });
 
       // Update message
       const msg = (
@@ -289,7 +299,11 @@ export default class LastFmImporter extends React.Component<
                 <br />
               </span>
             )}
-            <span>Please don&apos;t close this page while this is running</span>
+            <span>
+              Please don&apos;t close this page while this is running.
+            </span>{" "}
+            <br /> <br />
+            <span> Last timestamp imported: {timestampString} </span>
           </span>
         </p>
       );
