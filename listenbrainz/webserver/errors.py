@@ -1,4 +1,5 @@
 from flask import render_template, make_response, jsonify, request, has_request_context, _request_ctx_stack, current_app
+from werkzeug.exceptions import InternalServerError
 from yattag import Doc
 import yattag
 import ujson
@@ -159,13 +160,15 @@ def init_error_handlers(app):
     def file_size_too_large(error):
         return handle_error(error, 413)
 
-    @app.errorhandler(500)
+    @app.errorhandler(InternalServerError)
     def internal_server_error(error):
+        original = getattr(error, "original_exception", None)
+
         if request.path.startswith(API_PREFIX):
             error = APIError("An unknown error occured.", 500)
             return jsonify(error.to_dict()), error.status_code
         else:
-            return handle_error(error, 500)
+            return handle_error(original or error, 500)
 
     @app.errorhandler(502)
     def bad_gateway(error):
