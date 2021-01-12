@@ -16,6 +16,10 @@ module.exports = function (env) {
         },
         mode: "write-references",
       },
+      eslint: {
+        files: "/static/js/src/**/*.{ts,tsx,js,jsx}",
+        options: { fix: !isProd },
+      },
     }),
   ];
   return {
