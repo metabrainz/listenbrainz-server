@@ -125,6 +125,7 @@ LOG_SENTRY = {
     'environment': '''{{template "KEY" "sentry/environment"}}''',
 }
 SENTRY_DSN_PUBLIC = '''{{template "KEY" "sentry/dsn_public"}}'''
+DATASETS_SENTRY_DSN = '''{{template "KEY" "sentry/datasets_dsn"}}'''
 
 
 # Stats

@@ -1,13 +1,7 @@
-import copy
-import sys
-import uuid
-import ujson
-
 import psycopg2
 import psycopg2.extras
 from flask import current_app
 from datasethoster import Query
-from datasethoster.main import app, register_query
 
 psycopg2.extras.register_uuid()
 
