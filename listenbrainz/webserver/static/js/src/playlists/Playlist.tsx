@@ -819,7 +819,9 @@ export default class PlaylistPage extends React.Component<
                 )}
               </div>
               {playlist.annotation && (
-                  <div dangerouslySetInnerHTML={{__html: playlist.annotation}} />
+                <div
+                  dangerouslySetInnerHTML={{ __html: playlist.annotation }}
+                />
               )}
               <hr />
             </div>
