@@ -1,3 +1,4 @@
+from unittest import mock
 from uuid import UUID
 
 import dateutil.parser
@@ -73,7 +74,8 @@ class PlaylistAPITestCase(IntegrationTestCase):
         result = playlist_api._filter_description_html(description)
         assert result == description
 
-    def test_playlist_create_and_get(self):
+    @mock.patch('listenbrainz.webserver.views.playlist_api.fetch_playlist_recording_metadata')
+    def test_playlist_create_and_get(self, mock_fetch_playlist_recording_metadata):
         """ Test to ensure creating a playlist works """
 
         playlist = get_test_data()
@@ -103,12 +105,14 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["annotation"], "your lame <i>80s</i> music")
         self.assertEqual(response.json["playlist"]["track"][0]["identifier"],
                          playlist["playlist"]["track"][0]["identifier"])
+        mock_fetch_playlist_recording_metadata.assert_called_once()
         try:
             dateutil.parser.isoparse(response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["last_modified_at"])
         except ValueError:
             assert False
 
-    def test_playlist_create_with_created_for(self):
+    @mock.patch('listenbrainz.webserver.views.playlist_api.fetch_playlist_recording_metadata')
+    def test_playlist_create_with_created_for(self, mock_fetch_playlist_recording_metadata):
         """ Test to ensure creating a playlist for someone else works """
 
         # Submit a playlist on a different user's behalf
@@ -130,6 +134,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json["playlist"]["extension"]
                          [PLAYLIST_EXTENSION_URI]["created_for"], self.user["musicbrainz_id"])
+        mock_fetch_playlist_recording_metadata.assert_called_once()
 
         # Try to submit a playlist on a different users's behalf without the right perms
         # (a user must be part of config. APPROVED_PLAYLIST_BOTS to be able to create playlists
@@ -325,7 +330,8 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["error"],
                          "JSPF playlist track 0 identifier must have the namespace 'https://musicbrainz.org/recording/' prepended to it.")
 
-    def test_playlist_create_with_collaborators(self):
+    @mock.patch('listenbrainz.webserver.views.playlist_api.fetch_playlist_recording_metadata')
+    def test_playlist_create_with_collaborators(self, mock_fetch_playlist_recording_metadata):
         """ Test to ensure creating a playlist with collaborators works """
 
         playlist = get_test_data()
@@ -348,6 +354,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json["playlist"]["extension"]
                          [PLAYLIST_EXTENSION_URI]["collaborators"], [self.user2["musicbrainz_id"]])
+        mock_fetch_playlist_recording_metadata.assert_called_once()
 
         # Check that this playlist shows up on the collaborators endpoint
         response = self.client.get(
@@ -361,8 +368,8 @@ class PlaylistAPITestCase(IntegrationTestCase):
 
         # Check private too
 
-
-    def test_playlist_edit(self):
+    @mock.patch('listenbrainz.webserver.views.playlist_api.fetch_playlist_recording_metadata')
+    def test_playlist_edit(self, mock_fetch_playlist_recording_metadata):
         """ Test to ensure editing a playlist works """
 
         playlist = get_test_data()
@@ -403,6 +410,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["extension"]
                          [PLAYLIST_EXTENSION_URI]["collaborators"], [self.user2["musicbrainz_id"],
                                                                      self.user3["musicbrainz_id"]])
+        mock_fetch_playlist_recording_metadata.assert_called_once()
 
         # Edit again to remove description and collaborators
         response = self.client.post(
@@ -424,7 +432,8 @@ class PlaylistAPITestCase(IntegrationTestCase):
                          [PLAYLIST_EXTENSION_URI]["public"], False)
         self.assertNotIn("collaborators", response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI])
 
-    def test_playlist_recording_add(self):
+    @mock.patch('listenbrainz.webserver.views.playlist_api.fetch_playlist_recording_metadata')
+    def test_playlist_recording_add(self, mock_fetch_playlist_recording_metadata):
         """ Test adding a recording to a playlist works """
 
         playlist = get_test_data()
@@ -469,6 +478,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
                          playlist["playlist"]["track"][0]["identifier"])
         self.assertEqual(response.json["playlist"]["track"][1]["identifier"],
                          add_recording["playlist"]["track"][0]["identifier"])
+        mock_fetch_playlist_recording_metadata.assert_called_once()
 
         # Add an invalid track id to the playlist
         add_recording = {
@@ -487,7 +497,8 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert400(response)
 
-    def test_playlist_recording_move(self):
+    @mock.patch('listenbrainz.webserver.views.playlist_api.fetch_playlist_recording_metadata')
+    def test_playlist_recording_move(self, mock_fetch_playlist_recording_metadata):
 
         playlist = {
            "playlist": {
@@ -534,9 +545,10 @@ class PlaylistAPITestCase(IntegrationTestCase):
                          playlist["playlist"]["track"][1]["identifier"])
         self.assertEqual(response.json["playlist"]["track"][1]["identifier"],
                          playlist["playlist"]["track"][0]["identifier"])
+        mock_fetch_playlist_recording_metadata.assert_called_once()
 
-    def test_playlist_recording_delete(self):
-
+    @mock.patch('listenbrainz.webserver.views.playlist_api.fetch_playlist_recording_metadata')
+    def test_playlist_recording_delete(self, mock_fetch_playlist_recording_metadata):
         playlist = {
            "playlist": {
               "title": "1980s flashback jams",
@@ -580,6 +592,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["identifier"], PLAYLIST_URI_PREFIX + playlist_mbid)
         self.assertEqual(response.json["playlist"]["track"][0]["identifier"],
                          playlist["playlist"]["track"][1]["identifier"])
+        mock_fetch_playlist_recording_metadata.assert_called_once()
 
     def test_playlist_delete_playlist(self):
 
