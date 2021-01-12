@@ -258,7 +258,7 @@ describe("handleClickPreviousRecommendations", () => {
 
     expect(wrapper.state("currRecPage")).toEqual(1);
     expect(wrapper.state("totalRecPages")).toEqual(3);
-    expect(wrapper.state("listens").length).toEqual(25);
+    expect(wrapper.state("listens")).toHaveLength(25);
     expect(instance.afterRecommendationsDisplay).toHaveBeenCalledTimes(0);
   });
 
@@ -276,7 +276,7 @@ describe("handleClickPreviousRecommendations", () => {
     await instance.handleClickPreviousRecommendations();
 
     expect(wrapper.state("currRecPage")).toEqual(2);
-    expect(wrapper.state("listens").length).toEqual(25);
+    expect(wrapper.state("listens")).toHaveLength(25);
     expect(instance.afterRecommendationsDisplay).toHaveBeenCalledTimes(1);
   });
 });
@@ -297,7 +297,7 @@ describe("handleClickNextRecommendations", () => {
 
     expect(wrapper.state("currRecPage")).toEqual(3);
     expect(wrapper.state("totalRecPages")).toEqual(3);
-    expect(wrapper.state("listens").length).toEqual(2);
+    expect(wrapper.state("listens")).toHaveLength(2);
     expect(instance.afterRecommendationsDisplay).toHaveBeenCalledTimes(0);
   });
 
@@ -315,7 +315,7 @@ describe("handleClickNextRecommendations", () => {
     await instance.handleClickNextRecommendations();
 
     expect(wrapper.state("currRecPage")).toEqual(3);
-    expect(wrapper.state("listens").length).toEqual(2);
+    expect(wrapper.state("listens")).toHaveLength(2);
     expect(instance.afterRecommendationsDisplay).toHaveBeenCalledTimes(1);
   });
 });
