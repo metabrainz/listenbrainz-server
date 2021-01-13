@@ -257,10 +257,10 @@ Lint your code
 
 ListenBrainz uses ESLint to lint the frontend codebase as part of the development process, in Webpack.
 
-This should fix auto-fixable issues and list all other issues in your terminal.
-Make sure to fix all errors with the code you've modified.
+ESLint will automatically fix trivial issues and list all other issues in your terminal.
+Make sure to fix any error with the code you've modified.
 
-There can be quite a lot of logs, so if you want to look only at front-end build output, you can use this command to inspect only those logs:
+There can be quite a lot of logs in the terminal, so if you want to look only at front-end build output, you can use this command to inspect only the static_builder logs:
 
 .. code-block:: bash
 
