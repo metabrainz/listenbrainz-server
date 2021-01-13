@@ -31,12 +31,12 @@ def dispatch_playlist_updates(data):
 
 @socketio.on('joined')
 def joined(data):
-    try:
-        room = data['playlist_id']
-        join_room(room)
-        emit('joined', {'status': 'success'}, room=room)
-    except KeyError:
+    if 'playlist_id' not in data:
         raise BadRequest("Missing key 'playlist_id'")
+
+    room = data['playlist_id']
+    join_room(room)
+    emit('joined', {'status': 'success'}, room=room)
 
 
 def run_websockets(host='0.0.0.0', port=8082, debug=True):

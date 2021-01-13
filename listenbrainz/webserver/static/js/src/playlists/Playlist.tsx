@@ -113,10 +113,15 @@ export default class PlaylistPage extends React.Component<
 
   componentDidMount(): void {
     this.connectWebsockets();
-    this.setState({});
     /* Deactivating feedback until the feedback system works with MBIDs instead of MSIDs */
     /* const recordingFeedbackMap = await this.loadFeedback();
     this.setState({ recordingFeedbackMap }); */
+  }
+
+  componentWillUnmount(): void {
+    if (this.socket?.connected) {
+      this.socket.disconnect();
+    }
   }
 
   connectWebsockets = (): void => {
@@ -579,7 +584,6 @@ export default class PlaylistPage extends React.Component<
         currentUser.auth_token
       );
       this.setState({ playlist: JSPFObject.playlist });
-      this.emitPlaylistChanged();
     } catch (error) {
       this.handleError(error);
     }
