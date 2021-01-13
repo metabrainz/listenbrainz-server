@@ -1,22 +1,24 @@
 import eventlet
-eventlet.monkey_patch()
 
 from flask_socketio import SocketIO, join_room, emit
 from werkzeug.exceptions import BadRequest
-from listenbrainz.webserver import load_config
 from brainzutils.flask import CustomFlask
+
+from listenbrainz.webserver import load_config
+from listenbrainz.webserver.errors import init_error_handlers
+
+eventlet.monkey_patch()
 
 app = CustomFlask(import_name=__name__, use_flask_uuid=True)
 load_config(app)
-socketio = SocketIO(app, cors_allowed_origins='*')
-
-from listenbrainz.webserver.errors import init_error_handlers
 init_error_handlers(app)
 app.init_loggers(
     file_config=app.config.get('LOG_FILE'),
     email_config=app.config.get('LOG_EMAIL'),
     sentry_config=app.config.get('LOG_SENTRY')
 )
+
+socketio = SocketIO(app, cors_allowed_origins='*')
 
 
 @socketio.on('change_playlist')
