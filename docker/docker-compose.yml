@@ -108,8 +108,10 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.webpack
+      # We target webpack-base and mount the JS code folder as a volume
+      # as opposed to using webpack-with-source target and having to rebuild the image each time
+      target: webpack-base
     command: npm run build:dev
     volumes:
       - ../listenbrainz/webserver/static:/code/static:z
-      - ../listenbrainz/webserver/static:/static:z
 
