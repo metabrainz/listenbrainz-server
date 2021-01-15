@@ -36,6 +36,9 @@ pip-selfcheck.json
 
 # Javascript
 node_modules
+# Javascript linting
+eslint.xml
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
