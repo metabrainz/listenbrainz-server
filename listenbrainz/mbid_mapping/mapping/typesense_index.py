@@ -1,4 +1,7 @@
+import sys
 import re
+import time
+
 import typesense
 import typesense.exceptions
 from unidecode import unidecode
@@ -8,7 +11,7 @@ import config
 
 
 BATCH_SIZE = 5000
-COLLECTION_NAME = 'mbid_mapping'
+COLLECTION_NAME_PREFIX = 'mbid_mapping_'
 
 
 def prepare_string(text):
@@ -27,8 +30,45 @@ def build_index():
         'connection_timeout_seconds': 1000000
     })
 
+    collection_name = COLLECTION_NAME_PREFIX + str(int(time.time()))
+    try:
+        print("build index '%s'" % collection_name)
+        build(client, collection_name)
+    except typesense.exceptions.TypesenseClientError as err:
+        print("Cannot build index: ", str(err))
+        return -1
+
+    try:
+        latest = COLLECTION_NAME_PREFIX + "latest"
+        print("alias index '%s' to %s" % (collection_name, latest))
+        aliased_collection = { "collection_name": collection_name }
+        client.aliases.upsert(latest, aliased_collection)
+    except typesense.exceptions.TypesenseClientError as err:
+        print("Cannot build index: ", str(err))
+        return -2
+
+    try:
+        for collection in client.collections.retrieve():
+            if collection["name"] == collection_name:
+                continue;
+
+            if collection["name"].startswith(COLLECTION_NAME_PREFIX):
+                print("delete collection '%s'" % collection["name"])
+                client.collections[collection["name"]].delete()
+            else:
+                print("ignore collection '%s'" % collection["name"])
+
+    except typesense.exceptions.ObjectNotFound:
+        print("Failed to delete collection '%s'.", str(err))
+
+    return 0
+
+
+
+def build(client, collection_name):
+
     schema = {
-        'name': COLLECTION_NAME,
+        'name': collection_name,
         'fields': [
           {
             'name':  'combined',
@@ -42,10 +82,6 @@ def build_index():
         'default_sorting_field': 'score'
     }
 
-    try:
-        client.collections[COLLECTION_NAME].delete()
-    except typesense.exceptions.ObjectNotFound:
-        pass
 
     client.collections.create(schema)
 
@@ -80,11 +116,16 @@ def build_index():
                 documents.append(document)
 
                 if len(documents) == BATCH_SIZE:
-                    client.collections[COLLECTION_NAME].documents.import_(documents)
+                    client.collections[collection_name].documents.import_(documents)
                     documents = []
 
                 if i and i % 100000 == 0:
                     print(i)
 
             if documents:
-                client.collections[COLLECTION_NAME].documents.import_(documents)
+                client.collections[collection_name].documents.import_(documents)
+
+
+    print("indexing complete. waiting for background tasks to finish.")
+    sys.stdout.flush()
+    time.sleep(5)
