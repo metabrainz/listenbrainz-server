@@ -3,7 +3,6 @@
 import psycopg2
 import psycopg2.extras
 from datasethoster import Query
-from datasethoster.main import register_query
 from flask import current_app
 
 
