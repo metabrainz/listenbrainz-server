@@ -14,6 +14,8 @@ import FollowUsers from "./FollowUsers";
 import APIService from "./APIService";
 import Loader from "./components/Loader";
 import ListenCard from "./listens/ListenCard";
+import * as ListenPager from "./listens/ListenPager";
+import RecentListenList from "./listens/RecentListenList";
 
 export interface RecentListensProps {
   apiUrl: string;
@@ -58,7 +60,7 @@ export interface RecentListensState {
 export default class RecentListens extends React.Component<
   RecentListensProps,
   RecentListensState
-> {
+  > {
   private APIService: APIService;
 
   private brainzPlayer = React.createRef<BrainzPlayer>();
@@ -656,41 +658,28 @@ export default class RecentListens extends React.Component<
   recommendationPaginationControl = () => {
     const { currRecPage, totalRecPages } = this.state;
     return (
-      <ul className="pager" style={{ display: "flex" }}>
-        <li
-          className={`previous ${
-            currRecPage && currRecPage <= 1 ? "disabled" : ""
-          }`}
+      <ListenPager.Pager>
+        <ListenPager.Item
+          className={`previous ${currRecPage && currRecPage <= 1 ? "disabled" : ""}`}
+          onClick={this.handleClickPreviousRecommendations}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") this.handleClickPreviousRecommendations();
+          }}
         >
-          <a
-            role="button"
-            onClick={this.handleClickPreviousRecommendations}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") this.handleClickPreviousRecommendations();
-            }}
-            tabIndex={0}
-          >
-            &larr; Previous
-          </a>
-        </li>
-        <li
-          className={`next ${
-            currRecPage && currRecPage >= totalRecPages ? "disabled" : ""
-          }`}
+          &larr; Previous
+        </ListenPager.Item>
+        <ListenPager.Item
+          className={`next ${currRecPage && currRecPage >= totalRecPages ? "disabled" : ""
+            }`}
           style={{ marginLeft: "auto" }}
+          onClick={this.handleClickNextRecommendations}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") this.handleClickNextRecommendations();
+          }}
         >
-          <a
-            role="button"
-            onClick={this.handleClickNextRecommendations}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") this.handleClickNextRecommendations();
-            }}
-            tabIndex={0}
-          >
-            Next &rarr;
-          </a>
-        </li>
-      </ul>
+          Next &rarr;
+        </ListenPager.Item>
+      </ListenPager.Pager>
     );
   };
 
@@ -750,9 +739,8 @@ export default class RecentListens extends React.Component<
           <div className="col-md-8">
             <h3>
               {mode === "listens" || mode === "recent"
-                ? `Recent listens${
-                    _.isNil(listenCount) ? "" : ` (${listenCount} total)`
-                  }`
+                ? `Recent listens${_.isNil(listenCount) ? "" : ` (${listenCount} total)`
+                }`
                 : "Playlist"}
             </h3>
 
@@ -784,49 +772,23 @@ export default class RecentListens extends React.Component<
                 >
                   <Loader isLoading={loading} />
                 </div>
-                <div
-                  id="listens"
-                  ref={this.listensTable}
-                  style={{ opacity: loading ? "0.4" : "1" }}
-                >
-                  {listens
-                    .sort((a, b) => {
-                      if (a.playing_now) {
-                        return -1;
-                      }
-                      if (b.playing_now) {
-                        return 1;
-                      }
-                      return 0;
-                    })
-                    .map((listen) => {
-                      return (
-                        <ListenCard
-                          key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
-                          currentUser={currentUser}
-                          isCurrentUser={currentUser?.name === user?.name}
-                          apiUrl={apiUrl}
-                          listen={listen}
-                          mode={mode}
-                          currentFeedback={this.getFeedbackForRecordingMsid(
-                            listen.track_metadata?.additional_info
-                              ?.recording_msid
-                          )}
-                          playListen={this.playListen}
-                          removeListenFromListenList={
-                            this.removeListenFromListenList
-                          }
-                          updateFeedback={this.updateFeedback}
-                          newAlert={this.newAlert}
-                          className={`${
-                            this.isCurrentListen(listen)
-                              ? " current-listen"
-                              : ""
-                          }${listen.playing_now ? " playing-now" : ""}`}
-                        />
-                      );
-                    })}
-                </div>
+                <RecentListenList
+                  tableref={() => this.listensTable}
+                  loading={loading}
+                  listens={listens}
+                  currentUser={currentUser}
+                  isCurrentUser={currentUser?.name === user?.name}
+                  apiUrl={apiUrl}
+                  mode={mode}
+                  getFeedbackForRecordingMsid={this.getFeedbackForRecordingMsid}
+                  playListen={this.playListen}
+                  removeListenFromListenList={
+                    this.removeListenFromListenList
+                  }
+                  updateFeedback={this.updateFeedback}
+                  newAlert={this.newAlert}
+                  isCurrentListen={this.isCurrentListen}
+                />
                 {endOfTheLine && (
                   <div>
                     No more listens to show in a 12 months period. <br />
@@ -837,82 +799,58 @@ export default class RecentListens extends React.Component<
                 )}
 
                 {mode === "listens" && (
-                  <ul className="pager" style={{ display: "flex" }}>
-                    <li
-                      className={`previous ${
-                        listens[0].listened_at >= latestListenTs
-                          ? "disabled"
-                          : ""
-                      }`}
+                  <ListenPager.Pager>
+                    <ListenPager.Item
+                      className={`previous ${listens[0].listened_at >= latestListenTs
+                        ? "disabled"
+                        : ""
+                        }`}
+                      onClick={this.handleClickNewest}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") this.handleClickNewest();
+                      }}
                     >
-                      <a
-                        role="button"
-                        onClick={this.handleClickNewest}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") this.handleClickNewest();
-                        }}
-                        tabIndex={0}
-                      >
-                        &#x21E4;
-                      </a>
-                    </li>
-                    <li
-                      className={`previous ${
-                        !previousListenTs || previousListenTs >= latestListenTs
-                          ? "disabled"
-                          : ""
-                      }`}
+                      &#x21E4;
+                    </ListenPager.Item>
+                    <ListenPager.Item
+                      className={`previous ${!previousListenTs || previousListenTs >= latestListenTs
+                        ? "disabled"
+                        : ""
+                        }`}
+                      onClick={this.handleClickNewer}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") this.handleClickNewer();
+                      }}
                     >
-                      <a
-                        role="button"
-                        onClick={this.handleClickNewer}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") this.handleClickNewer();
-                        }}
-                        tabIndex={0}
-                      >
-                        &larr; Newer
-                      </a>
-                    </li>
-                    <li
-                      className={`next ${
-                        !nextListenTs || nextListenTs <= oldestListenTs
-                          ? "disabled"
-                          : ""
-                      }`}
+                      &larr; Newer
+                    </ListenPager.Item>
+                    <ListenPager.Item
+                      className={`next ${!nextListenTs || nextListenTs <= oldestListenTs
+                        ? "disabled"
+                        : ""
+                        }`}
                       style={{ marginLeft: "auto" }}
+                      onClick={this.handleClickOlder}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") this.handleClickOlder();
+                      }}
                     >
-                      <a
-                        role="button"
-                        onClick={this.handleClickOlder}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") this.handleClickOlder();
-                        }}
-                        tabIndex={0}
-                      >
-                        Older &rarr;
-                      </a>
-                    </li>
-                    <li
-                      className={`next ${
-                        listens[listens.length - 1].listened_at <=
+                      Older &rarr;
+                    </ListenPager.Item>
+                    <ListenPager.Item
+                      className={`next ${listens[listens.length - 1].listened_at <=
                         oldestListenTs
-                          ? "disabled"
-                          : ""
-                      }`}
+                        ? "disabled"
+                        : ""
+                        }`}
+                      onClick={this.handleClickOldest}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") this.handleClickOldest();
+                      }}
                     >
-                      <a
-                        role="button"
-                        onClick={this.handleClickOldest}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") this.handleClickOldest();
-                        }}
-                        tabIndex={0}
-                      >
-                        &#x21E5;
-                      </a>
-                    </li>
-                  </ul>
+                      &#x21E5;
+                    </ListenPager.Item>
+                  </ListenPager.Pager>
                 )}
 
                 {mode === "cf_recs" && this.recommendationPaginationControl()}
