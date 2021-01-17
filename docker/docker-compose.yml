@@ -53,7 +53,7 @@ services:
       - ..:/code/listenbrainz:z
       - ../listenbrainz/webserver/static:/static
     ports:
-      - "80:80"
+      - "9000:80"
     depends_on:
       - redis
       - db
