@@ -68,6 +68,7 @@ export default class LastFmImporter extends React.Component<
 
   private latestImportTime = 0; // the latest timestamp that we've imported earlier
   private maxTimestampForImport = 0; // the latest listen found in this import
+  private lastImportedString = ""; // date formatted string of first song on payload's timestamp 
   private incrementalImport = false;
 
   private numCompleted = 0; // number of pages completed till now
@@ -198,6 +199,19 @@ export default class LastFmImporter extends React.Component<
     return null;
   }
 
+  getlastImportedString(listenedAt: number) { 
+    // Retrieve first track's timestamp from payload and convert it into string for display
+    let lastImportedDate = new Date(listenedAt * 1000);
+    return lastImportedDate.toLocaleString("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
+  });
+  }
+
   getRateLimitDelay() {
     /* Get the amount of time we should wait according to LB rate limits before making a request to LB */
     let delay = 0;
@@ -275,16 +289,7 @@ export default class LastFmImporter extends React.Component<
 
       this.page -= 1;
       this.numCompleted += 1;
-      // Retrieve first track's timestamp from payload and convert it into string for display
-      const latestImportEpoch = new Date(payload[0].listened_at * 1000);
-      const timestampString = latestImportEpoch.toLocaleString("en-US", {
-        month: "short",
-        day: "2-digit",
-        year: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        hour12: true,
-      });
+      this.lastImportedString = this.getlastImportedString(payload[0].listened_at);
 
       // Update message
       const msg = (
@@ -303,7 +308,7 @@ export default class LastFmImporter extends React.Component<
               Please don&apos;t close this page while this is running.
             </span>{" "}
             <br /> <br />
-            <span> Last timestamp imported: {timestampString} </span>
+            <span> Last timestamp imported: {this.lastImportedString} </span>
           </span>
         </p>
       );
