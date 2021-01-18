@@ -308,7 +308,7 @@ export default class LastFmImporter extends React.Component<
               Please don&apos;t close this page while this is running.
             </span>{" "}
             <br /> <br />
-            <span> Last timestamp imported: {this.lastImportedString} </span>
+            <span> Latest import timestamp: {this.lastImportedString} </span>
           </span>
         </p>
       );
