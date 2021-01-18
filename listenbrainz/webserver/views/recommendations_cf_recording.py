@@ -64,7 +64,7 @@ def _get_template(active_section, user):
     data = db_recommendations_cf_recording.get_user_recommendation(user.id)
 
     if data is None:
-        current_app.logger.error('Inactive user: "{}"'.format(user.musicbrainz_id))
+        current_app.logger.debug('Inactive user: "{}"'.format(user.musicbrainz_id))
         return render_template(
             "recommendations_cf_recording/{}.html".format(active_section),
             active_section=active_section,
