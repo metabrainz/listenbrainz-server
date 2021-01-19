@@ -155,13 +155,19 @@ environment by running ``develop.sh up``.
 
     ./develop.sh up
     
- 
 .. note::
 
-    ``./develop.sh`` up does not work if another application is already rinning on port 80, 
-    because listenbrainz_web_1 wants to bind to port 80. This can be handled by editing 
-    "80:80" to "9000:80" in the web section of ``docker/docker-compose.yml`` and rerunning
-    ``./develop.sh``
+    By default, the web service listens on port 80. If you already have a service listening
+    on this port, then you can change it by updating the ports section of ``docker/docker-compose.yml``.
+    
+    
+    .. code-block:: bash
+    
+        ports:
+        - "80:80"
+    
+    To change the listening port, change only the value before the ":" to the port of your choice
+    and point your browser to ``http://localhost:<Port>``
 
 You will see the output of ``docker-compose``. You can shut down listenbrainz
 by pressing CTRL^C. Once everything is running, visit your new site in a browser!
