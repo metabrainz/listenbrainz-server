@@ -680,7 +680,6 @@ class PlaylistAPITestCase(IntegrationTestCase):
         # Ensure original playlist's collaborators have been scrubbed
         self.assertEqual(response.json["playlist"]["extension"]
                          [PLAYLIST_EXTENSION_URI]["collaborators"], [])
-       
 
         # Now delete the original playlist so that we can test copied from deleted playlist
         response = self.client.post(

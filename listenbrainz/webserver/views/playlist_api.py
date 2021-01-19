@@ -289,7 +289,7 @@ def create_playlist():
     # Don't allow creator to also be a collaborator
     if user["musicbrainz_id"] in collaborators:
         collaborators.remove(user["musicbrainz_id"])
-        
+
     username_lookup = collaborators
     created_for = data["playlist"].get("created_for", None)
     if created_for:
