@@ -335,8 +335,10 @@ class PlaylistAPITestCase(IntegrationTestCase):
         """ Test to ensure creating a playlist with collaborators works """
 
         playlist = get_test_data()
-        # Owner is in collaborators, should be filtered out
+        # If the owner is in collaborators, it should be filtered out
+        # If a collaborator is listed multiple times, it should only be added once
         playlist["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["collaborators"] = [self.user["musicbrainz_id"],
+                                                                                      self.user2["musicbrainz_id"],
                                                                                       self.user2["musicbrainz_id"]]
 
         response = self.client.post(

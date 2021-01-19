@@ -285,6 +285,9 @@ def create_playlist():
     collaborators = data.get("playlist", {}).\
         get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}).\
         get("collaborators", [])
+    
+    # Uniquify collaborators list
+    collaborators = list(dict.fromkeys(collaborators))
 
     # Don't allow creator to also be a collaborator
     if user["musicbrainz_id"] in collaborators:
@@ -397,11 +400,13 @@ def edit_playlist(playlist_mbid):
         get("collaborators", [])
     users = {}
 
-    # Don't allow creator to also be a collaborator
-    if collaborators and user["musicbrainz_id"] in collaborators:
-        collaborators.remove(user["musicbrainz_id"])
+    # Uniquify collaborators list
+    collaborators = list(dict.fromkeys(collaborators))
 
     if collaborators:
+        # Don't allow creator to also be a collaborator
+        if user["musicbrainz_id"] in collaborators:
+            collaborators.remove(user["musicbrainz_id"])
         users = db_user.get_many_users_by_mb_id(collaborators)
 
     collaborator_ids = []
