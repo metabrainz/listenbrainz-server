@@ -65,8 +65,8 @@ function run_tests {
 }
 
 function  extract_results {
-    docker cp ${TEST_CONTAINER_REF}:/data/test_report.xml .
-    docker cp ${TEST_CONTAINER_REF}:/data/coverage.xml .
+    docker cp ${TEST_CONTAINER_REF}:/data/test_report.xml . || true
+    docker cp ${TEST_CONTAINER_REF}:/data/coverage.xml . || true
 }
 
 set -e
