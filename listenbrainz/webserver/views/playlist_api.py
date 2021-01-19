@@ -287,7 +287,7 @@ def create_playlist():
         get("collaborators", [])
     
     # Uniquify collaborators list
-    collaborators = list(dict.fromkeys(collaborators))
+    collaborators = list(set(collaborators))
 
     # Don't allow creator to also be a collaborator
     if user["musicbrainz_id"] in collaborators:
@@ -401,7 +401,7 @@ def edit_playlist(playlist_mbid):
     users = {}
 
     # Uniquify collaborators list
-    collaborators = list(dict.fromkeys(collaborators))
+    collaborators = list(set(collaborators))
 
     if collaborators:
         # Don't allow creator to also be a collaborator
