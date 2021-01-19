@@ -286,6 +286,10 @@ def create_playlist():
         get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}).\
         get("collaborators", [])
 
+    # Don't allow creator to also be a collaborator
+    if user["musicbrainz_id"] in collaborators:
+        collaborators.remove(user["musicbrainz_id"])
+        
     username_lookup = collaborators
     created_for = data["playlist"].get("created_for", None)
     if created_for:
@@ -392,6 +396,11 @@ def edit_playlist(playlist_mbid):
         get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}).\
         get("collaborators", [])
     users = {}
+
+    # Don't allow creator to also be a collaborator
+    if collaborators and user["musicbrainz_id"] in collaborators:
+        collaborators.remove(user["musicbrainz_id"])
+
     if collaborators:
         users = db_user.get_many_users_by_mb_id(collaborators)
 

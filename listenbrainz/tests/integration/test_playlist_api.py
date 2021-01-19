@@ -335,7 +335,9 @@ class PlaylistAPITestCase(IntegrationTestCase):
         """ Test to ensure creating a playlist with collaborators works """
 
         playlist = get_test_data()
-        playlist["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["collaborators"] = [self.user2["musicbrainz_id"]]
+        # Owner is in collaborators, should be filtered out
+        playlist["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["collaborators"] = [self.user["musicbrainz_id"],
+                                                                                      self.user2["musicbrainz_id"]]
 
         response = self.client.post(
             url_for("playlist_api_v1.create_playlist"),
@@ -385,13 +387,15 @@ class PlaylistAPITestCase(IntegrationTestCase):
 
         playlist_mbid = response.json["playlist_mbid"]
 
-        # Test to ensure fetching a playlist works
+        # Test to ensure posting a playlist works
+        # Owner is in collaborators, should be filtered out
         response = self.client.post(
             url_for("playlist_api_v1.edit_playlist", playlist_mbid=playlist_mbid),
             json={"playlist": {"title": "new title",
                                "annotation": "new <b>desc</b> <script>noscript</script>",
                                "extension": {PLAYLIST_EXTENSION_URI: {"public": False,
-                                                                      "collaborators": [self.user2["musicbrainz_id"],
+                                                                      "collaborators": [self.user["musicbrainz_id"],
+                                                                                        self.user2["musicbrainz_id"],
                                                                                         self.user3["musicbrainz_id"]]}
                                              }}},
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
