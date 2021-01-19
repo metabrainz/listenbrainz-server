@@ -154,6 +154,14 @@ environment by running ``develop.sh up``.
 .. code-block:: bash
 
     ./develop.sh up
+    
+ 
+.. note::
+
+    ``./develop.sh`` up does not work if another application is already rinning on port 80, 
+    because listenbrainz_web_1 wants to bind to port 80. This can be handled by editing 
+    "80:80" to "9000:80" in the web section of ``docker/docker-compose.yml`` and rerunning
+    ``./develop.sh``
 
 You will see the output of ``docker-compose``. You can shut down listenbrainz
 by pressing CTRL^C. Once everything is running, visit your new site in a browser!
