@@ -60,12 +60,13 @@ function run_tests {
         -wait tcp://timescale:5432 -timeout 60s \
         -wait tcp://redis:6379 -timeout 60s \
         -wait tcp://rabbitmq:5672 -timeout 60s \
-      pytest listenbrainz/tests/integration --junitxml=/data/test_report.xml
+      pytest listenbrainz/tests/integration --junitxml=/data/test_report.xml \
+                                            --cov-report xml:/data/coverage.xml
 }
 
 function  extract_results {
-    docker cp ${TEST_CONTAINER_REF}:/data/test_report.xml .
-    docker cp ${TEST_CONTAINER_REF}:/data/coverage.xml .
+    docker cp ${TEST_CONTAINER_REF}:/data/test_report.xml . || true
+    docker cp ${TEST_CONTAINER_REF}:/data/coverage.xml . || true
 }
 
 set -e

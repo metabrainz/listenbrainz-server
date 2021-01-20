@@ -69,10 +69,8 @@ RUN useradd --create-home --shell /bin/bash --uid 901 --gid 901 listenbrainz_sta
 
 
 # Add cron jobs
-ADD docker/stats-crontab /etc/cron.d/stats-crontab
-RUN chmod 0644 /etc/cron.d/stats-crontab && crontab -u listenbrainz_stats_cron /etc/cron.d/stats-crontab
-ADD docker/dump-crontab /etc/cron.d/dump-crontab
-RUN chmod 0644 /etc/cron.d/dump-crontab && crontab -u lbdumps /etc/cron.d/dump-crontab
+ADD docker/cron/stats-crontab /etc/cron.d/stats-crontab
+ADD docker/cron/dump-crontab /etc/cron.d/dump-crontab
 
 # Make sure the cron service doesn't start automagically
 # http://smarden.org/runit/runsv.8.html

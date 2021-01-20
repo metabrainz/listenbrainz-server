@@ -611,4 +611,54 @@ export default class APIService {
     await this.checkStatus(response);
     return response.status;
   };
+
+  submitRecommendationFeedback = async (
+    userToken: string,
+    recordingMBID: string,
+    rating: RecommendationFeedBack
+  ): Promise<number> => {
+    const url = `${this.APIBaseURI}/recommendation/feedback/submit`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ recording_mbid: recordingMBID, rating }),
+    });
+    this.checkStatus(response);
+    return response.status;
+  };
+
+  deleteRecommendationFeedback = async (
+    userToken: string,
+    recordingMBID: string
+  ): Promise<number> => {
+    const url = `${this.APIBaseURI}/recommendation/feedback/delete`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ recording_mbid: recordingMBID }),
+    });
+    this.checkStatus(response);
+    return response.status;
+  };
+
+  getFeedbackForUserForRecommendations = async (
+    userName: string,
+    recordings: string
+  ) => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+
+    const url = `${this.APIBaseURI}/recommendation/feedback/user/${userName}/recordings?mbids=${recordings}`;
+    const response = await fetch(url);
+    this.checkStatus(response);
+    const data = response.json();
+    return data;
+  };
 }
