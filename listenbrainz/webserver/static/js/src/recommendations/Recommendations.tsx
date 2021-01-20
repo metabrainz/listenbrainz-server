@@ -75,7 +75,8 @@ export default class Recommendations extends React.Component<
   }
 
   getFeedback = async () => {
-    const { user, recommendations } = this.props;
+    const { user } = this.props;
+    const { recommendations } = this.state;
     const recordings: string[] = [];
 
     if (recommendations) {
@@ -144,7 +145,7 @@ export default class Recommendations extends React.Component<
   handleCurrentRecommendationChange = (
     recommendation: Recommendation | JSPFTrack
   ): void => {
-    this.setState({ currentRecommendation: recommendation as Recommendation});
+    this.setState({ currentRecommendation: recommendation as Recommendation });
   };
 
   newAlert = (
@@ -234,6 +235,10 @@ export default class Recommendations extends React.Component<
   };
 
   afterRecommendationsDisplay() {
+    const { user, currentUser } = this.props;
+    if (currentUser?.name === user?.name) {
+      this.loadFeedback();
+    }
     if (this.recommendationsTable?.current) {
       this.recommendationsTable.current.scrollIntoView({ behavior: "smooth" });
     }
