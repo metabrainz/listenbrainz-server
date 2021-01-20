@@ -41,10 +41,8 @@ interface AdditionalInfo {
   work_mbids?: Array<string> | null;
 }
 
-declare type Listen = {
+declare type BaseListenFormat = {
   listened_at: number;
-  listened_at_iso?: string | null;
-  playing_now?: boolean | null;
   user_name?: string | null;
   track_metadata: {
     artist_name: string;
@@ -52,8 +50,14 @@ declare type Listen = {
     track_name: string;
     additional_info?: AdditionalInfo;
   };
-  score?: number;
 };
+
+declare type Listen = BaseListenFormat & {
+  listened_at_iso?: string | null;
+  playing_now?: boolean | null;
+};
+
+declare type Recommendation = BaseListenFormat;
 
 declare type ListenBrainzUser = {
   id?: number;
@@ -359,14 +363,25 @@ declare type UserArtistMapDatum = {
 
 declare type UserArtistMapData = Array<UserArtistMapDatum>;
 
-declare type ListensListMode = "listens" | "follow" | "recent" | "cf_recs";
+declare type ListensListMode = "listens" | "follow" | "recent";
 
 declare type ListenFeedBack = 1 | 0 | -1;
+
+declare type RecommendationFeedBack =
+  | "love"
+  | "like"
+  | "hate"
+  | "dislike";
 
 declare type FeedbackResponse = {
   recording_msid: string;
   score: ListenFeedBack;
   user_id: string;
+};
+
+declare type RecommendationFeedbackResponse = {
+  recording_mbid: string;
+  rating: RecommendationFeedBack;
 };
 
 declare type RecordingFeedbackMap = {
@@ -440,4 +455,8 @@ declare type JSPFTrack = {
     [name: string]: any;
     "https://musicbrainz.org/doc/jspf#track"?: JSPFTrackExtension;
   };
+};
+
+declare type RecommendationFeedbackMap = {
+  [recordingMbid: string]: RecommendationFeedBack | null;
 };
