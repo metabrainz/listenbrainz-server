@@ -146,3 +146,6 @@ docker/tunnel/keys
 
 # recommendation engine HTMl files
 listenbrainz_spark/recommendations/html_files*
+
+# IDE configs
+.idea
