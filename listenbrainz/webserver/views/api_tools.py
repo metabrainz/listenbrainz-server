@@ -139,7 +139,7 @@ def validate_listen(listen, listen_type):
 
             if 'track_metadata' in listen and len(listen) > 1:
                 raise APIBadRequest("JSON document may only contain track_metadata as top level "
-                                    "key when submitting now_playing.", listen)
+                                    "key when submitting playing_now.", listen)
 
     # Basic metadata
     try:
@@ -152,7 +152,7 @@ def validate_listen(listen, listen_type):
         if not isinstance(listen['track_metadata']['artist_name'], str):
             raise APIBadRequest("artist_name must be a single string.", listen)
     except KeyError:
-        log_raise_400("JSON document does not contain a valid metadata.track_name "
+        raise APIBadRequest("JSON document does not contain a valid metadata.track_name "
                        "and/or track_metadata.artist_name.", listen)
 
     if 'additional_info' in listen['track_metadata']:
