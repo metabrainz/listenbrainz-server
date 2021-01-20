@@ -10,6 +10,13 @@ DB_CONNECT_MSB = "dbname=messybrainz user=messybrainz host={{.Address}} port={{.
 {{end}}
 {{end}}
 
+{{if service "typesense-listenbrainz"}}
+{{with index (service "typesense-listenbrainz") 0}}
+TYPESENSE_HOST = "{{.Address}}"
+TYPESENSE_PORT = {{.Port}}
+{{end}}
+{{end}}
+
 # Mapping specific settings
 
 # For debugging, only fetches a tiny portion of the data if True
@@ -19,4 +26,4 @@ USE_MINIMAL_DATASET = False
 REMOVE_NON_WORD_CHARS = True  
 
 # Show matches as the algorithms go
-SHOW_MATCHES = False  
+SHOW_MATCHES = False
