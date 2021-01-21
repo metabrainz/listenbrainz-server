@@ -46,12 +46,12 @@ describe("submitListens", () => {
     });
   });
 
-  it("retries if submit fails", async () => {
-    // Overide mock for fetch
-    window.fetch = jest
-      .fn()
-      .mockImplementationOnce(() => {
-        return Promise.reject(Error);
+  it("retries if network error / submit fails", async () => {
+    // Overide mock for fetch: 
+    window.fetch = jest.fn()
+    .mockImplementationOnce(() => {
+      // 1st call will recieve a network error
+        return Promise.reject(Error); 
       })
       .mockImplementation(() => {
         return Promise.resolve({
@@ -72,12 +72,20 @@ describe("submitListens", () => {
     expect(setTimeout).toHaveBeenCalledTimes(1);
   });
 
-  it("retries if error 429 is recieved fails", async () => {
+  it("retries if error 429 is recieved (rate limited)", async () => {
     // Overide mock for fetch
-    window.fetch = jest.fn().mockImplementation(() => {
+    window.fetch = jest.fn()
+    .mockImplementationOnce(() => {
+      // 1st call will recieve a 429 error
       return Promise.resolve({
         ok: true,
         status: 429,
+      });
+    })
+    .mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
       });
     });
 
@@ -111,7 +119,7 @@ describe("submitListens", () => {
         },
       },
     ]);
-    expect(setTimeout).not.toHaveBeenCalled(); // no setTimeout calls for future retries
+    expect(setTimeout).not.toHaveBeenCalled(); // should return response with no calls for additional retries
   });
 
   it("returns the response if successful", async () => {
