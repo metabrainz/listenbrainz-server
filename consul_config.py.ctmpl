@@ -45,11 +45,6 @@ DB_CONNECT_MAPPING = "dbname=musicbrainz_json_dump user=musicbrainz host={{.Addr
 {{end}}
 {{end}}
 
-# Not currently used
-MAX_POSTGRES_LISTEN_HISTORY = "-1"
-PG_QUERY_TIMEOUT = "3000"
-PG_ASYNC_LISTEN_COMMIT = False
-
 {{if service "listenbrainz-redis"}}
 {{with index (service "listenbrainz-redis") 0}}
 REDIS_HOST = "{{.Address}}"
