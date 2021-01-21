@@ -40,13 +40,13 @@ function run_tests {
     docker ps -a | grep $COMPOSE_PROJECT_NAME | awk '{print $0}'
 
     docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME run --name ${TEST_CONTAINER_REF}_test \
-                frontend_tester npm run test:ci
+                frontend_tester npm run test:ci || true
     docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME run --name ${TEST_CONTAINER_REF}_lint \
-                frontend_tester npm run format:ci
+                frontend_tester npm run format:ci || true
     docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME run --name ${TEST_CONTAINER_REF}_typecheck \
-                frontend_tester npm run type-check
-    docker cp ${TEST_CONTAINER_REF}_test:/code/junit.xml .
-    docker cp ${TEST_CONTAINER_REF}_lint:/code/eslint.xml .
+                frontend_tester npm run type-check || true
+    docker cp ${TEST_CONTAINER_REF}_test:/code/junit.xml . || true
+    docker cp ${TEST_CONTAINER_REF}_lint:/code/eslint.xml . || true
 }
 
 set -e
