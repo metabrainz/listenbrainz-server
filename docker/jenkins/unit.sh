@@ -40,7 +40,7 @@ function run_tests {
 
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                   up -d db redis timescale rabbitmq
+                   up -d db redis rabbitmq
 
     # List images and containers related to this build
     docker images | grep $COMPOSE_PROJECT_NAME | awk '{print $0}'
