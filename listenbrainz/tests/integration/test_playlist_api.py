@@ -681,8 +681,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["creator"], "anothertestuserpleaseignore")
         # Ensure original playlist's collaborators have been scrubbed
         # The serialized JSPF playlist leaves out the "collaborators" key if there are none
-        self.assertNotIn(response.json["playlist"]["extension"]
-                         [PLAYLIST_EXTENSION_URI], "collaborators")
+        self.assertNotIn("collaborators", response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI])
 
         # Now delete the original playlist so that we can test copied from deleted playlist
         response = self.client.post(
