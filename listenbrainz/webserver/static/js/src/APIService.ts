@@ -161,6 +161,7 @@ export default class APIService {
 
       const url = `${this.APIBaseURI}/submit-listens`;
 
+      /* eslint-disable no-await-in-loop */
       while(true){
         try {
           const response = await fetch(url, {
@@ -171,24 +172,19 @@ export default class APIService {
             },
             body: JSON.stringify(struct),
           });
-  
           // we skip listens if we get an error code that's not a rate limit
-          if (response.status === 429) {
-            // Rate limit error, this should never happen, but if it does, try again in 3 seconds.
-            setTimeout(
-              () => {},
-              3000
-            );
+          if (response.status !== 429) {
+            return response; // Return response so that caller can handle appropriately
           }
-          return response; // Return response so that caller can handle appropriately
+          // Rate limit error, this should never happen, but if it does, try again in 3 seconds.
+          await new Promise((resolve) => setTimeout(resolve, 3000));
+          
         } catch {
           // Retry if there is an network error
-          setTimeout(
-            () => {},
-            3000
-          );
+          await new Promise((resolve) => setTimeout(resolve, 3000));
         }
       }
+      /* eslint-enable no-await-in-loop */
     }
 
     // Payload is not within submission limit, split and submit
