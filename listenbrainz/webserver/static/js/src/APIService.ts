@@ -162,7 +162,7 @@ export default class APIService {
       const url = `${this.APIBaseURI}/submit-listens`;
 
       /* eslint-disable no-await-in-loop */
-      while(true){
+      while (true) {
         try {
           const response = await fetch(url, {
             method: "POST",
@@ -177,11 +177,14 @@ export default class APIService {
             return response; // Return response so that caller can handle appropriately
           }
           // Rate limit error, this should never happen, but if it does, try again in 3 seconds.
-          await new Promise((resolve) => setTimeout(resolve, 3000));
-          
+          await new Promise((resolve) => {
+            setTimeout(resolve, 3000);
+          });
         } catch {
           // Retry if there is an network error
-          await new Promise((resolve) => setTimeout(resolve, 3000));
+          await new Promise((resolve) => {
+            setTimeout(resolve, 3000);
+          });
         }
       }
       /* eslint-enable no-await-in-loop */
