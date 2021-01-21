@@ -631,13 +631,14 @@ export default class PlaylistPage extends React.Component<
         newPlaylist.id,
         spotifyURIs
       );
+      const playlistLink = `https://open.spotify.com/playlist/${newPlaylist.id}`;
       this.newAlert(
         "success",
         "Playlist exported to Spotify",
         <>
           Successfully exported playlist:{" "}
-          <a href={newPlaylist.href} target="_blank" rel="noopener noreferrer">
-            {newPlaylist.href}
+          <a href={playlistLink} target="_blank" rel="noopener noreferrer">
+            {playlistLink}
           </a>
           {spotifyURIs.length !== playlist.track.length && (
             <b>

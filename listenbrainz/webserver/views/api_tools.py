@@ -114,44 +114,45 @@ def validate_listen(listen, listen_type):
 
     if listen_type in (LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT):
         if 'listened_at' not in listen:
-            log_raise_400("JSON document must contain the key listened_at at the top level.", listen)
+            raise APIBadRequest("JSON document must contain the key listened_at at the top level.", listen)
 
         try:
             listen['listened_at'] = int(listen['listened_at'])
         except ValueError:
-            log_raise_400("JSON document must contain an int value for listened_at.", listen)
+            raise APIBadRequest("JSON document must contain an int value for listened_at.", listen)
 
         if 'listened_at' in listen and 'track_metadata' in listen and len(listen) > 2:
-            log_raise_400("JSON document may only contain listened_at and "
-                           "track_metadata top level keys", listen)
+            raise APIBadRequest("JSON document may only contain listened_at and "
+                                "track_metadata top level keys", listen)
 
         # if timestamp is too high, raise BadRequest
         # in order to make up for possible clock skew, we allow
         # timestamps to be one hour ahead of server time
         if not is_valid_timestamp(listen['listened_at']):
-            log_raise_400("Value for key listened_at is too high.", listen)
+            raise APIBadRequest("Value for key listened_at is too high.", listen)
 
     elif listen_type == LISTEN_TYPE_PLAYING_NOW:
-        if 'listened_at' in listen:
-            log_raise_400("JSON document must not contain listened_at while submitting "
-                           "playing_now.", listen)
+        if listen is not None:
+            if 'listened_at' in listen:
+                raise APIBadRequest("JSON document must not contain listened_at while submitting "
+                                    "playing_now.", listen)
 
-        if 'track_metadata' in listen and len(listen) > 1:
-            log_raise_400("JSON document may only contain track_metadata as top level "
-                           "key when submitting now_playing.", listen)
+            if 'track_metadata' in listen and len(listen) > 1:
+                raise APIBadRequest("JSON document may only contain track_metadata as top level "
+                                    "key when submitting playing_now.", listen)
 
     # Basic metadata
     try:
         if not listen['track_metadata']['track_name']:
-            log_raise_400("JSON document does not contain required "
-                           "track_metadata.track_name.", listen)
+            raise APIBadRequest("JSON document does not contain required "
+                                "track_metadata.track_name.", listen)
         if not listen['track_metadata']['artist_name']:
-            log_raise_400("JSON document does not contain required "
-                           "track_metadata.artist_name.", listen)
+            raise APIBadRequest("JSON document does not contain required "
+                                "track_metadata.artist_name.", listen)
         if not isinstance(listen['track_metadata']['artist_name'], str):
-            log_raise_400("artist_name must be a single string.", listen)
+            raise APIBadRequest("artist_name must be a single string.", listen)
     except KeyError:
-        log_raise_400("JSON document does not contain a valid metadata.track_name "
+        raise APIBadRequest("JSON document does not contain a valid metadata.track_name "
                        "and/or track_metadata.artist_name.", listen)
 
     if 'additional_info' in listen['track_metadata']:
@@ -159,12 +160,12 @@ def validate_listen(listen, listen_type):
         if 'tags' in listen['track_metadata']['additional_info']:
             tags = listen['track_metadata']['additional_info']['tags']
             if len(tags) > MAX_TAGS_PER_LISTEN:
-                log_raise_400("JSON document may not contain more than %d items in "
-                               "track_metadata.additional_info.tags." % MAX_TAGS_PER_LISTEN, listen)
+                raise APIBadRequest("JSON document may not contain more than %d items in "
+                                    "track_metadata.additional_info.tags." % MAX_TAGS_PER_LISTEN, listen)
             for tag in tags:
                 if len(tag) > MAX_TAG_SIZE:
-                    log_raise_400("JSON document may not contain track_metadata.additional_info.tags "
-                                   "longer than %d characters." % MAX_TAG_SIZE, listen)
+                    raise APIBadRequest("JSON document may not contain track_metadata.additional_info.tags "
+                                        "longer than %d characters." % MAX_TAG_SIZE, listen)
         # MBIDs
         single_mbid_keys = ['release_mbid', 'recording_mbid', 'release_group_mbid', 'track_mbid']
         for key in single_mbid_keys:
