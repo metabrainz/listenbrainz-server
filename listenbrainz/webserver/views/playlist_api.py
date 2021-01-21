@@ -676,7 +676,7 @@ def copy_playlist(playlist_mbid):
     try:
         new_playlist = db_playlist.copy_playlist(playlist, user["id"])
     except Exception as e:
-        current_app.logger.error("Error deleting playlist: {}".format(e))
-        raise APIInternalServerError("Failed to delete the playlist. Please try again.")
+        current_app.logger.error("Error copying playlist: {}".format(e))
+        raise APIInternalServerError("Failed to copy the playlist. Please try again.")
 
     return jsonify({'status': 'ok', 'playlist_mbid': new_playlist.mbid})
