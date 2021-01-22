@@ -5,6 +5,7 @@ import LastFmImporter from "./LastFMImporter";
 import * as page from "./__mocks__/page.json";
 import * as getInfo from "./__mocks__/getInfo.json";
 import * as getInfoNoPlayCount from "./__mocks__/getInfoNoPlayCount.json";
+import * as getUserPrivacy from "./__mocks__/getUserPrivacy.json";
 // Output for the mock data
 import * as encodeScrobbleOutput from "./__mocks__/encodeScrobbleOutput.json";
 
@@ -286,6 +287,45 @@ describe("submitPage", () => {
   });
 });
 
+describe("getUserPrivacy", () => {
+  beforeEach(() => {
+    const wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
+    instance = wrapper.instance();
+    instance.setState({ lastfmUsername: "dummyUser" });
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return {
+        json: () => page,
+      };
+    });
+  });
+
+  it("should call with the correct url", () => {
+    instance.getUserPrivacy();
+
+    expect(window.fetch).toHaveBeenCalledWith(
+      `${props.lastfmApiUrl}?method=user.getrecenttracks&user=${instance.state.lastfmUsername}&api_key=${props.lastfmApiKey}&format=json`
+    );
+  });
+
+  it("should return false if last.fm error =/= 17", async () => {
+    const userIsPrivate = await instance.getUserPrivacy();
+    expect(userIsPrivate).toEqual(false);
+  });
+
+  it("should return true if last.fm error == 17", async () => {
+    // Override mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return {
+        json: () => getUserPrivacy,
+      };
+    });
+
+    const userIsPrivate = await instance.getUserPrivacy();
+    expect(userIsPrivate).toEqual(true);
+  });
+});
+
 describe("LastFmImporter Page", () => {
   it("renders", () => {
     const wrapper = mount(<LastFmImporter {...props} />);
@@ -311,23 +351,23 @@ describe("LastFmImporter Page", () => {
     // Test if button is disabled
     expect(wrapper.find('input[type="submit"]').props().disabled).toBe(true);
   });
-});
 
-describe("LastFmImporter Page", () => {
   it("should properly convert latest imported timestamp to string", () => {
     // Check getlastImportedString() and formatting
-    let testDate = Number(page["recenttracks"]["track"][0]["date"]["uts"]);
-    let lastImportedDate = new Date(testDate * 1000);
-    let msg = lastImportedDate.toLocaleString("en-US", {
-        month: "short",
-        day: "2-digit",
-        year: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        hour12: true,
+    const testDate = Number(page.recenttracks.track[0].date.uts);
+    const lastImportedDate = new Date(testDate * 1000);
+    const msg = lastImportedDate.toLocaleString("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
     });
 
-    expect(instance.getlastImportedString(testDate)).toMatch(msg);
-    expect(instance.getlastImportedString(testDate).length).not.toEqual(0);
+    expect(LastFmImporter.getlastImportedString(testDate)).toMatch(msg);
+    expect(LastFmImporter.getlastImportedString(testDate).length).not.toEqual(
+      0
+    );
   });
 });
