@@ -1,4 +1,4 @@
-FROM metabrainz/python:3.7
+FROM metabrainz/python:3.8-20210115
 
 RUN apt-get update && apt-get install -y ca-certificates && \
         pip install --upgrade pip
@@ -11,6 +11,8 @@ WORKDIR /code/mapper
 
 # service start up scripts
 COPY docker/consul-template.conf /etc/consul-template.conf
+RUN mkdir /etc/service/mapper
+COPY docker/mapper.service /etc/service/mapper/run
 
 # Add cron jobs
 COPY docker/crontab /etc/cron.d/mapper
