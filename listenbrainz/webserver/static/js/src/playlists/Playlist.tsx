@@ -2,10 +2,10 @@
 
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { isEqual, get, findIndex, omit, isNil, has } from "lodash";
+import { get, findIndex, omit, isNil, has } from "lodash";
 import * as io from "socket.io-client";
 
-import { ActionMeta, ValueType } from "react-select";
+import { ActionMeta, InputActionMeta, ValueType } from "react-select";
 import {
   faCog,
   faPen,
@@ -54,6 +54,8 @@ export interface PlaylistPageState {
   playlist: JSPFPlaylist;
   recordingFeedbackMap: RecordingFeedbackMap;
   loading: boolean;
+  searchInputValue: string;
+  cachedSearchResults: OptionType[];
 }
 
 type OptionType = { label: string; value: ACRMSearchResult };
@@ -75,7 +77,6 @@ export default class PlaylistPage extends React.Component<
   private spotifyPlaylist?: SpotifyPlaylistObject;
   private searchForTrackDebounced: any;
   private brainzPlayer = React.createRef<BrainzPlayer>();
-  private addTrackSelectRef = React.createRef<AsyncSelect<OptionType>>();
 
   private socket!: SocketIOClient.Socket;
 
@@ -95,6 +96,8 @@ export default class PlaylistPage extends React.Component<
       playlist: props.playlist?.playlist || {},
       recordingFeedbackMap: {},
       loading: false,
+      searchInputValue: "",
+      cachedSearchResults: [],
     };
 
     this.APIService = new APIService(
@@ -186,11 +189,6 @@ export default class PlaylistPage extends React.Component<
           getPlaylistId(playlist),
           [jspfTrack]
         );
-        if (this.addTrackSelectRef?.current?.select) {
-          (this.addTrackSelectRef.current.select as any).setState({
-            value: null,
-          });
-        }
         this.newAlert("success", "Added track", `Added track ${label}`);
         /* Deactivating feedback until the feedback system works with MBIDs instead of MSIDs */
         /* const recordingFeedbackMap = await this.loadFeedback([
@@ -204,6 +202,9 @@ export default class PlaylistPage extends React.Component<
       } catch (error) {
         this.handleError(error);
       }
+    }
+    if (actionMeta.action === "clear") {
+      this.setState({ searchInputValue: "", cachedSearchResults: [] });
     }
   };
 
@@ -222,10 +223,12 @@ export default class PlaylistPage extends React.Component<
       // Converting to JSON
       const parsedResponse: ACRMSearchResult[] = await response.json();
       // Format the received items to a react-select option
-      return parsedResponse.map((hit: ACRMSearchResult) => ({
+      const results = parsedResponse.map((hit: ACRMSearchResult) => ({
         label: `${hit.recording_name} — ${hit.artist_credit_name}`,
         value: hit,
       }));
+      this.setState({ cachedSearchResults: results });
+      return results;
     } catch (error) {
       console.debug(error);
     }
@@ -679,8 +682,25 @@ export default class PlaylistPage extends React.Component<
     this.setState({ loading: false });
   };
 
+  handleInputChange = (inputValue: string, params: InputActionMeta) => {
+    /* Prevent clearing the search value on select dropdown close */
+    if (params.action === "menu-close" || params.action === "set-value") {
+      const { searchInputValue } = this.state;
+      this.setState({ searchInputValue });
+    } else {
+      this.setState({ searchInputValue: inputValue, cachedSearchResults: [] });
+    }
+  };
+
   render() {
-    const { alerts, currentTrack, playlist, loading } = this.state;
+    const {
+      alerts,
+      currentTrack,
+      playlist,
+      loading,
+      searchInputValue,
+      cachedSearchResults,
+    } = this.state;
     const { spotify, currentUser, apiUrl } = this.props;
     const { track: tracks } = playlist;
     const hasRightToEdit = this.hasRightToEdit();
@@ -886,13 +906,16 @@ export default class PlaylistPage extends React.Component<
                     className="search"
                     cacheOptions
                     isClearable
+                    closeMenuOnSelect={false}
                     loadingMessage={({ inputValue }) =>
                       `Searching for '${inputValue}'…`
                     }
                     loadOptions={this.searchForTrackDebounced}
+                    defaultOptions={cachedSearchResults}
                     onChange={this.addTrack}
                     placeholder="Artist followed by track name"
-                    ref={this.addTrackSelectRef}
+                    inputValue={searchInputValue}
+                    onInputChange={this.handleInputChange}
                   />
                 </Card>
               )}
