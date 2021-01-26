@@ -58,17 +58,27 @@ class Playlist(BaseModel):
     public: bool = True
     # When the playlist was created
     created: datetime.datetime
+    # When a change was made to metadata
+    last_updated: Optional[datetime.datetime]
     # If the playlist was copied from another one, the id of that playlist
     copied_from_id: Optional[int]
     # If the playlist was created by a bot, the user for who this playlist was created
     created_for_id: Optional[int]
     # If the playlist was created by a bot, some freeform data about it
     algorithm_metadata: Optional[Dict]
+    # The users who have permission to collaborate on this playlist
+    # TODO: Because the id list isn't an FK to a table, we can't guarantee that these values
+    #  actually exist. There's no agreement between collaborator_ids and collaborators.
+    #  Ideally this should be a list of a User object that allows us to keep these values in sync
+    collaborator_ids: List[int] = []
+    collaborators: List[str] = []
 
     # Computed fields
     created_for: Optional[str]
     creator: str
     recordings: List[PlaylistRecording]
+    # mbid of the playlist referred to in copied_from_id
+    copied_from_mbid: Optional[uuid.UUID]
 
 
 class WritablePlaylist(Playlist):

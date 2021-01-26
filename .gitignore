@@ -36,6 +36,9 @@ pip-selfcheck.json
 
 # Javascript
 node_modules
+# Javascript linting
+eslint.xml
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -143,3 +146,6 @@ docker/tunnel/keys
 
 # recommendation engine HTMl files
 listenbrainz_spark/recommendations/html_files*
+
+# IDE configs
+.idea

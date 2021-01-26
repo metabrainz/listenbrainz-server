@@ -51,8 +51,6 @@ export interface RecentListensState {
   previousListenTs?: number;
   saveUrl: string;
   recordingFeedbackMap: RecordingFeedbackMap;
-  currRecPage?: number;
-  totalRecPages: number;
 }
 
 export default class RecentListens extends React.Component<
@@ -68,16 +66,11 @@ export default class RecentListens extends React.Component<
 
   private expectedListensPerPage = 25;
 
-  private expectedRecommendationsPerPage = 25;
-
   constructor(props: RecentListensProps) {
     super(props);
     this.state = {
       alerts: [],
-      listens:
-        props.mode === "cf_recs"
-          ? props.listens?.slice(0, this.expectedRecommendationsPerPage) || []
-          : props.listens || [],
+      listens: props.listens || [],
       mode: props.mode,
       followList: props.followList || [],
       playingNowByUser: {},
@@ -90,10 +83,6 @@ export default class RecentListens extends React.Component<
       previousListenTs: props.listens?.[0]?.listened_at,
       direction: "down",
       recordingFeedbackMap: {},
-      currRecPage: 1,
-      totalRecPages: props.listens
-        ? Math.ceil(props.listens.length / this.expectedRecommendationsPerPage)
-        : 0,
     };
 
     this.APIService = new APIService(
@@ -609,100 +598,8 @@ export default class RecentListens extends React.Component<
     }
   };
 
-  handleClickPreviousRecommendations = () => {
-    const { listens } = this.props;
-    const { currRecPage } = this.state;
-
-    if (currRecPage && currRecPage > 1) {
-      this.setState({ loading: true });
-      const offset = (currRecPage - 1) * this.expectedRecommendationsPerPage;
-      this.setState(
-        {
-          listens:
-            listens?.slice(
-              offset - this.expectedRecommendationsPerPage,
-              offset
-            ) || [],
-          currRecPage: currRecPage - 1,
-        },
-        this.afterRecommendationsDisplay
-      );
-      window.history.pushState(null, "", `?page=${currRecPage}`);
-    }
-  };
-
-  handleClickNextRecommendations = () => {
-    const { listens } = this.props;
-    const { currRecPage, totalRecPages } = this.state;
-
-    if (currRecPage && currRecPage < totalRecPages) {
-      this.setState({ loading: true });
-      const offset = currRecPage * this.expectedRecommendationsPerPage;
-      this.setState(
-        {
-          listens:
-            listens?.slice(
-              offset,
-              offset + this.expectedRecommendationsPerPage
-            ) || [],
-          currRecPage: currRecPage + 1,
-        },
-        this.afterRecommendationsDisplay
-      );
-      window.history.pushState(null, "", `?page=${currRecPage}`);
-    }
-  };
-
-  recommendationPaginationControl = () => {
-    const { currRecPage, totalRecPages } = this.state;
-    return (
-      <ul className="pager" style={{ display: "flex" }}>
-        <li
-          className={`previous ${
-            currRecPage && currRecPage <= 1 ? "hidden" : ""
-          }`}
-        >
-          <a
-            role="button"
-            onClick={this.handleClickPreviousRecommendations}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") this.handleClickPreviousRecommendations();
-            }}
-            tabIndex={0}
-          >
-            &larr; Previous
-          </a>
-        </li>
-        <li
-          className={`next ${
-            currRecPage && currRecPage >= totalRecPages ? "hidden" : ""
-          }`}
-          style={{ marginLeft: "auto" }}
-        >
-          <a
-            role="button"
-            onClick={this.handleClickNextRecommendations}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") this.handleClickNextRecommendations();
-            }}
-            tabIndex={0}
-          >
-            Next &rarr;
-          </a>
-        </li>
-      </ul>
-    );
-  };
-
   afterListensFetch() {
     this.checkListensRange();
-    if (this.listensTable?.current) {
-      this.listensTable.current.scrollIntoView({ behavior: "smooth" });
-    }
-    this.setState({ loading: false });
-  }
-
-  afterRecommendationsDisplay() {
     if (this.listensTable?.current) {
       this.listensTable.current.scrollIntoView({ behavior: "smooth" });
     }
@@ -914,8 +811,6 @@ export default class RecentListens extends React.Component<
                     </li>
                   </ul>
                 )}
-
-                {mode === "cf_recs" && this.recommendationPaginationControl()}
               </div>
             )}
             <br />

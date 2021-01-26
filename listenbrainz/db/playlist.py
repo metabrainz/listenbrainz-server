@@ -24,18 +24,22 @@ def get_by_mbid(playlist_id: str, load_recordings: bool = True) -> Optional[mode
         given id exists
     """
     query = sqlalchemy.text("""
-        SELECT id
-             , mbid
-             , creator_id
-             , name
-             , description
-             , public
-             , created
-             , copied_from_id
-             , created_for_id
-             , algorithm_metadata
-          FROM playlist.playlist
-         WHERE mbid = :mbid""")
+        SELECT pl.id
+             , pl.mbid
+             , pl.creator_id
+             , pl.name
+             , pl.description
+             , pl.public
+             , pl.created
+             , pl.last_updated
+             , pl.copied_from_id
+             , pl.created_for_id
+             , pl.algorithm_metadata
+             , copy.mbid as copied_from_mbid
+          FROM playlist.playlist AS pl
+     LEFT JOIN playlist.playlist AS copy
+            ON pl.copied_from_id = copy.id
+         WHERE pl.mbid = :mbid""")
     with ts.engine.connect() as connection:
         result = connection.execute(query, {"mbid": playlist_id})
         obj = result.fetchone()
@@ -55,79 +59,143 @@ def get_by_mbid(playlist_id: str, load_recordings: bool = True) -> Optional[mode
             obj['recordings'] = playlist_map.get(obj['id'], [])
         else:
             obj['recordings'] = []
+        playlist_collaborator_ids = get_collaborators_for_playlists(connection, [obj['id']])
+        obj['collaborator_ids'] = playlist_collaborator_ids.get(obj['id'], [])
+        collaborators = []
+        # TODO: Look this up in one query
+        for user_id in obj['collaborator_ids']:
+            user = db_user.get(user_id)
+            if user:
+                collaborators.append(user["musicbrainz_id"])
+            obj['collaborators'] = collaborators
         return model_playlist.Playlist.parse_obj(obj)
 
 
-def get_playlists_for_user(user_id: int, include_private: bool = False, load_recordings: bool = False):
+def get_playlists_for_user(user_id: int,
+                           include_private: bool = False,
+                           load_recordings: bool = False,
+                           count: int = 0,
+                           offset: int = 0):
     """Get all playlists that a user created
 
     Arguments:
         user_id: The user to find playlists for
-        include_private: If True, include all playlists by a user, including private ones
+        include_private: If True, include all playlists by a user, including private ones. The count of
+                         playlists returned will include private playlists if True
         load_recordings: If true, load the recordings for the playlist too
+        count: Return max count number of playlists, for pagination purposes. If omitted, return all.
+        offset: Return playlists starting at offset, for pagination purposes. Default 0.
 
     Raises:
 
     Returns:
-        A list of Playlists created by the given user
+        A tuple of (Playlists created by the given user, total number of playlists for a user)
 
     """
 
-    params = {"creator_id": user_id}
+    if count == 0:
+        count = None
+
+    params = {"creator_id": user_id, "count": count, "offset": offset}
     where_public = ""
     if not include_private:
-        where_public = "AND public = :public"
+        where_public = "AND pl.public = :public"
         params["public"] = True
     query = sqlalchemy.text(f"""
-        SELECT id
-             , mbid
-             , creator_id
-             , name
-             , description
-             , public
-             , created
-             , copied_from_id
-             , created_for_id
-             , algorithm_metadata
-          FROM playlist.playlist
-         WHERE creator_id = :creator_id
-               {where_public}""")
+        SELECT pl.id
+             , pl.mbid
+             , pl.creator_id
+             , pl.name
+             , pl.description
+             , pl.public
+             , pl.created
+             , pl.last_updated
+             , pl.copied_from_id
+             , pl.created_for_id
+             , pl.algorithm_metadata
+             , copy.mbid as copied_from_mbid
+          FROM playlist.playlist AS pl
+     LEFT JOIN playlist.playlist AS copy
+            ON pl.copied_from_id = copy.id
+         WHERE pl.creator_id = :creator_id
+               {where_public}
+      ORDER BY pl.created DESC
+         LIMIT :count
+        OFFSET :offset""")
 
-    playlists = []
     with ts.engine.connect() as connection:
         result = connection.execute(query, params)
-        user_id_map = {}
-        for row in result:
-            creator_id = row["creator_id"]
-            if creator_id not in user_id_map:
-                # TODO: Do this lookup in bulk
-                user_id_map[creator_id] = db_user.get(creator_id)
-            created_for_id = row["created_for_id"]
-            if created_for_id and created_for_id not in user_id_map:
-                user_id_map[created_for_id] = db_user.get(created_for_id)
-            row = dict(row)
-            row["creator"] = user_id_map[creator_id]["musicbrainz_id"]
-            if created_for_id:
-                row["created_for"] = user_id_map[created_for_id]["musicbrainz_id"]
-            row["recordings"] = []
-            playlist = model_playlist.Playlist.parse_obj(row)
-            playlists.append(playlist)
+        playlists = _playlist_resultset_to_model(connection, result, load_recordings)
 
+        # Now fetch the count of playlists
+        params = {"creator_id": user_id}
+        where_public = ""
+        if not include_private:
+            where_public = "AND public = :public"
+            params["public"] = True
+        query = sqlalchemy.text(f"""SELECT COUNT(*)
+                                      FROM playlist.playlist
+                                     WHERE creator_id = :creator_id
+                                           {where_public}""")
+        count = connection.execute(query, params).fetchone()[0]
+
+    return playlists, count
+
+
+def _playlist_resultset_to_model(connection, result, load_recordings):
+    """Parse the result of an sql query to get playlists
+
+    Fill in related data (username, created_for username) and collaborators
+    """
+    playlists = []
+    user_id_map = {}
+    for row in result:
+        creator_id = row["creator_id"]
+        if creator_id not in user_id_map:
+            # TODO: Do this lookup in bulk
+            user_id_map[creator_id] = db_user.get(creator_id)
+        created_for_id = row["created_for_id"]
+        if created_for_id and created_for_id not in user_id_map:
+            user_id_map[created_for_id] = db_user.get(created_for_id)
+        row = dict(row)
+        row["creator"] = user_id_map[creator_id]["musicbrainz_id"]
+        if created_for_id:
+            row["created_for"] = user_id_map[created_for_id]["musicbrainz_id"]
+        row["recordings"] = []
+        playlist = model_playlist.Playlist.parse_obj(row)
+        playlists.append(playlist)
+
+    playlist_ids = [p.id for p in playlists]
+    if playlist_ids:
         if load_recordings:
-            playlist_ids = [p.id for p in playlists]
             playlist_recordings = get_recordings_for_playlists(connection, playlist_ids)
             for p in playlists:
                 p.recordings = playlist_recordings.get(p.id, [])
+        playlist_collaborator_ids = get_collaborators_for_playlists(connection, playlist_ids)
+        for p in playlists:
+            p.collaborator_ids = playlist_collaborator_ids.get(p.id, [])
+            collaborators = []
+            # TODO: Look this up in one query
+            for user_id in p.collaborator_ids:
+                user = db_user.get(user_id)
+                if user:
+                    collaborators.append(user["musicbrainz_id"])
+            p.collaborators = collaborators
 
     return playlists
 
 
-def get_playlists_created_for_user(user_id: int, load_recordings: bool = False):
+def get_playlists_created_for_user(user_id: int,
+                                   load_recordings: bool = False,
+                                   count: int = 0,
+                                   offset: int = 0):
     """Get all playlists that were created for a user by bots
 
     Arguments:
         user_id
         load_recordings
+        count: Return max count number of playlists, for pagination purposes. If omitted, return all.
+        offset: Return playlists starting at offset, for pagination purposes. Default 0.
 
     Raises:
 
@@ -135,48 +203,141 @@ def get_playlists_created_for_user(user_id: int, load_recordings: bool = False):
 
     """
 
-    query = sqlalchemy.text("""
-        SELECT id
-             , mbid
-             , creator_id
-             , name
-             , description
-             , public
-             , created
-             , copied_from_id
-             , created_for_id
-             , algorithm_metadata
-          FROM playlist.playlist
-         WHERE created_for_id = :created_for_id""")
+    if count == 0:
+        count = None
 
-    # TODO: This is almost exactly the same as get_playlists_for_user
-    playlists = []
+    params = {"created_for_id": user_id, "count": count, "offset": offset}
+    query = sqlalchemy.text(f"""
+        SELECT pl.id
+             , pl.mbid
+             , pl.creator_id
+             , pl.name
+             , pl.description
+             , pl.public
+             , pl.created
+             , pl.last_updated
+             , pl.copied_from_id
+             , pl.created_for_id
+             , pl.algorithm_metadata
+             , copy.mbid as copied_from_mbid
+          FROM playlist.playlist AS pl
+     LEFT JOIN playlist.playlist AS copy
+            ON pl.copied_from_id = copy.id
+         WHERE pl.created_for_id = :created_for_id
+      ORDER BY pl.created DESC
+         LIMIT :count
+        OFFSET :offset""")
+
     with ts.engine.connect() as connection:
-        result = connection.execute(query, {"created_for_id": user_id})
-        user_id_map = {}
-        for row in result:
-            creator_id = row["creator_id"]
-            if creator_id not in user_id_map:
-                # TODO: Do this lookup in bulk
-                user_id_map[creator_id] = db_user.get(creator_id)
-            created_for_id = row["created_for_id"]
-            if created_for_id and created_for_id not in user_id_map:
-                user_id_map[created_for_id] = db_user.get(created_for_id)
-            row = dict(row)
-            row["creator"] = user_id_map[creator_id]["musicbrainz_id"]
-            if created_for_id:
-                row["created_for"] = user_id_map[created_for_id]["musicbrainz_id"]
-            row["recordings"] = []
-            playlist = model_playlist.Playlist.parse_obj(row)
-            playlists.append(playlist)
+        result = connection.execute(query, params)
+        playlists = _playlist_resultset_to_model(connection, result, load_recordings)
 
-        if load_recordings:
-            playlist_ids = [p.id for p in playlists]
-            playlist_recordings = get_recordings_for_playlists(connection, playlist_ids)
-            for p in playlists:
-                p.recordings = playlist_recordings.get(p.id, [])
+        # Fetch the total count of playlists
+        params = {"created_for_id": user_id}
+        query = sqlalchemy.text(f"""SELECT COUNT(*)
+                                      FROM playlist.playlist
+                                     WHERE created_for_id = :created_for_id""")
+        count = connection.execute(query, params).fetchone()[0]
 
-    return playlists
+    return playlists, count
+
+
+def get_playlists_collaborated_on(user_id: int,
+                                  include_private: bool = False,
+                                  load_recordings: bool = False,
+                                  count: int = 0,
+                                  offset: int = 0):
+    """Get playlists that this user doesn't own, but is a collaborator on.
+    Playlists are ordered by creation date.
+
+    Arguments:
+        user_id: The user id
+        load_recordings: If True, also return recordings for each playlist
+        include_private: If True, include all playlists by a user, including private ones. The count of
+                 playlists returned will include private playlists if True
+        count: Return this many playlists. If 0, return all playlists
+        offset: if set, get playlists from this offset
+
+    Returns:
+        a tuple (playlists, total_playlists)
+    """
+    if count == 0:
+        count = None
+
+    params = {"collaborator_id": user_id, "count": count, "offset": offset}
+    where_public = ""
+    if not include_private:
+        where_public = "AND pl.public = :public"
+        params["public"] = True
+    query = sqlalchemy.text(f"""
+        SELECT pl.id
+             , pl.mbid
+             , pl.creator_id
+             , pl.name
+             , pl.description
+             , pl.public
+             , pl.created
+             , pl.last_updated
+             , pl.copied_from_id
+             , pl.created_for_id
+             , pl.algorithm_metadata
+             , copy.mbid as copied_from_mbid
+          FROM playlist.playlist AS pl
+     LEFT JOIN playlist.playlist AS copy
+            ON pl.copied_from_id = copy.id
+     LEFT JOIN playlist.playlist_collaborator
+            ON pl.id = playlist_collaborator.playlist_id
+         WHERE playlist.playlist_collaborator.collaborator_id = :collaborator_id
+               {where_public}
+      ORDER BY pl.created DESC
+         LIMIT :count
+        OFFSET :offset""")
+
+    with ts.engine.connect() as connection:
+        result = connection.execute(query, params)
+        playlists = _playlist_resultset_to_model(connection, result, load_recordings)
+
+        # Fetch the total count of playlists
+        params = {"collaborator_id": user_id}
+        where_public = ""
+        if not include_private:
+            where_public = "AND playlist.public = :public"
+            params["public"] = True
+        query = sqlalchemy.text(f"""SELECT COUNT(*)
+                                      FROM playlist.playlist
+                                 LEFT JOIN playlist.playlist_collaborator
+                                        ON playlist.playlist.id = playlist_collaborator.playlist_id
+                                     WHERE playlist.playlist_collaborator.collaborator_id = :collaborator_id
+                                           {where_public}""")
+        count = connection.execute(query, params).fetchone()[0]
+
+    return playlists, count
+
+
+def get_collaborators_for_playlists(connection, playlist_ids: List[int]):
+    """Get all of the collaborators for the given playlists
+
+    Args:
+        connection: an open database connection
+        playlist_ids: a list of playlist ids to get collaborator information for
+
+    Return:
+        a dictionary of {playlist_id: [collaborator_ids]}
+    """
+    if not playlist_ids:
+        return {}
+
+    query = sqlalchemy.text("""
+        SELECT playlist_id
+             , array_agg(collaborator_id) AS collaborator_ids
+          FROM playlist.playlist_collaborator
+         WHERE playlist_id in :playlist_ids
+      GROUP BY playlist_id""")
+    result = connection.execute(query, {"playlist_ids": tuple(playlist_ids)})
+    ret = {}
+    for row in result.fetchall():
+        ret[row['playlist_id']] = row['collaborator_ids']
+    return ret
 
 
 def get_recordings_for_playlists(connection, playlist_ids: List[int]):
@@ -264,7 +425,34 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
         playlist.created = row['created']
         playlist.creator = creator['musicbrainz_id']
         playlist.recordings = insert_recordings(connection, playlist.id, playlist.recordings, 0)
+
+        if playlist.collaborator_ids:
+            add_playlist_collaborators(connection, playlist.id, playlist.collaborator_ids)
+            collaborator_ids = get_collaborators_for_playlists(connection, [playlist.id])
+            collaborator_ids = collaborator_ids.get(playlist.id, [])
+            collaborators = []
+            # TODO: Look this up in one query
+            for user_id in collaborator_ids:
+                user = db_user.get(user_id)
+                if user:
+                    collaborators.append(user["musicbrainz_id"])
+            playlist.collaborators = collaborators
+
         return model_playlist.Playlist.parse_obj(playlist.dict())
+
+
+def add_playlist_collaborators(connection, playlist_id, collaborator_ids):
+    delete_query = sqlalchemy.text(
+        """DELETE FROM playlist.playlist_collaborator
+                 WHERE playlist_id = :playlist_id""")
+    insert_query = sqlalchemy.text(
+        """INSERT INTO playlist.playlist_collaborator (playlist_id, collaborator_id)
+                VALUES (:playlist_id, :collaborator_id)""")
+
+    collaborator_params = [{"playlist_id": playlist_id, "collaborator_id": c_id} for c_id in collaborator_ids]
+    connection.execute(delete_query, {"playlist_id": playlist_id})
+    if collaborator_params:
+        connection.execute(insert_query, collaborator_params)
 
 
 def update_playlist(playlist: model_playlist.Playlist):
@@ -284,7 +472,32 @@ def update_playlist(playlist: model_playlist.Playlist):
     with ts.engine.connect() as connection:
         params = playlist.dict(include={'id', 'name', 'description', 'public'})
         connection.execute(query, params)
+        # Unconditionally add collaborators, this allows us to delete all collaborators
+        # if [] is passed in.
+        # TODO: Optimise this by getting collaborators from the database and only updating
+        #  if what has passed is different to what exists
+        add_playlist_collaborators(connection, playlist.id, playlist.collaborator_ids)
+        collaborator_ids = get_collaborators_for_playlists(connection, [playlist.id])
+        collaborator_ids = collaborator_ids.get(playlist.id, [])
+        collaborators = []
+        # TODO: Look this up in one query
+        for user_id in collaborator_ids:
+            user = db_user.get(user_id)
+            if user:
+                collaborators.append(user["musicbrainz_id"])
+        playlist.collaborators = collaborators
+        playlist.last_updated = set_last_updated(connection, playlist.id)
         return playlist
+
+
+def set_last_updated(connection, playlist_id):
+    query = sqlalchemy.text("""
+        UPDATE playlist.playlist
+           SET last_updated = now()
+         WHERE id = :playlist_id
+     RETURNING last_updated""")
+    result = connection.execute(query, {"playlist_id": playlist_id})
+    return result.fetchone()[0]
 
 
 def copy_playlist(playlist: model_playlist.Playlist, creator_id: int):
@@ -292,6 +505,8 @@ def copy_playlist(playlist: model_playlist.Playlist, creator_id: int):
     newplaylist.name = "Copy of " + newplaylist.name
     newplaylist.creator_id = creator_id
     newplaylist.copied_from_id = playlist.id
+    newplaylist.created_for_id = None
+    newplaylist.created_for = None
     # TODO: We need a copied_from_mbid (calculated) field in the playlist object so we can show the mbid in the ui
 
     return create(newplaylist)
@@ -348,7 +563,7 @@ def insert_recordings(connection, playlist_id: int, recordings: List[model_playl
                                       RETURNING id, created""")
     return_recordings = []
     user_id_map = {}
-    insert_ts = datetime.datetime.utcnow()
+    insert_ts = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
     for recording in recordings:
         if not recording.created:
             recording.created = insert_ts
@@ -417,6 +632,8 @@ def delete_recordings_from_playlist(playlist: model_playlist.Playlist, remove_fr
                               "position": remove_from + remove_count,
                               "offset": -1 * remove_count}
             connection.execute(reorder, reorder_params)
+        # TODO: In move_recordings we call delete and then add, so this is called twice
+        set_last_updated(connection, playlist.id)
 
 
 def add_recordings_to_playlist(playlist: model_playlist.Playlist,
@@ -457,6 +674,7 @@ def add_recordings_to_playlist(playlist: model_playlist.Playlist,
             connection.execute(reorder, reorder_params)
         recordings = insert_recordings(connection, playlist.id, recordings, position)
         playlist.recordings = playlist.recordings[0:position] + recordings + playlist.recordings[position:]
+        set_last_updated(connection, playlist.id)
         return playlist
 
 
@@ -465,11 +683,3 @@ def move_recordings(playlist: model_playlist.Playlist, position_from: int, posit
     removed = playlist.recordings[position_from:position_from+count]
     delete_recordings_from_playlist(playlist, position_from, count)
     add_recordings_to_playlist(playlist, removed, position_to)
-
-
-def update(playlist: model_playlist.Playlist) -> model_playlist.Playlist:
-    if not playlist.id:
-        raise ValueError("needs an id")
-    pass
-
-

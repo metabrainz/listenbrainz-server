@@ -29,6 +29,7 @@ module.exports = function (env) {
       userFeed: "/static/js/src/UserFeed.tsx",
       playlist: "/static/js/src/playlists/Playlist.tsx",
       playlists: "/static/js/src/playlists/Playlists.tsx",
+      recommendations: "/static/js/src/recommendations/Recommendations.tsx",
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",

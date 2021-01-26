@@ -9,9 +9,10 @@ from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIServiceUnavailable,
                                            APIUnauthorized)
 from listenbrainz.webserver.rate_limiter import ratelimit
-from listenbrainz.webserver.views.api import _validate_auth_header, _parse_int_arg
+from listenbrainz.webserver.views.api import _parse_int_arg
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid,\
-    DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET, _get_non_negative_param, parse_param_list
+    DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET, get_non_negative_param, parse_param_list,\
+    validate_auth_header
 from listenbrainz.db.model.feedback import Feedback
 from pydantic import ValidationError
 
@@ -34,7 +35,7 @@ def recording_feedback():
     :statuscode 401: invalid authorization. See error message for details.
     :resheader Content-Type: *application/json*
     """
-    user = _validate_auth_header()
+    user = validate_auth_header()
 
     data = request.json
 
@@ -89,8 +90,8 @@ def get_feedback_for_user(user_name):
 
     score = _parse_int_arg('score')
 
-    offset = _get_non_negative_param('offset', default=0)
-    count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
+    offset = get_non_negative_param('offset', default=0)
+    count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
     count = min(count, MAX_ITEMS_PER_GET)
 
@@ -140,8 +141,8 @@ def get_feedback_for_recording(recording_msid):
 
     score = _parse_int_arg('score')
 
-    offset = _get_non_negative_param('offset', default=0)
-    count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
+    offset = get_non_negative_param('offset', default=0)
+    count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
     count = min(count, MAX_ITEMS_PER_GET)
 

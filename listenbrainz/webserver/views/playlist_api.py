@@ -1,6 +1,8 @@
 import datetime
+from urllib.parse import urlparse
 from uuid import UUID
 
+import bleach
 import ujson
 from flask import Blueprint, current_app, jsonify, request
 import requests
@@ -10,8 +12,7 @@ import listenbrainz.db.user as db_user
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden
 from listenbrainz.webserver.rate_limiter import ratelimit
-from listenbrainz.webserver.views.api import _validate_auth_header
-from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid
+from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, validate_auth_header
 from listenbrainz.db.model.playlist import Playlist, WritablePlaylist, WritablePlaylistRecording
 
 playlist_api_bp = Blueprint('playlist_api_v1', __name__)
@@ -38,27 +39,72 @@ def _parse_boolean_arg(name, default=None):
     return True if value == "true" else False
 
 
-def validate_playlist(jspf, require_title=True):
+def _allow_metabrainz_domains(tag, name, value):
+    """A bleach attribute cleaner for <a> tags that only allows hrefs to point
+    to metabrainz-controlled domains"""
+
+    metabrainz_domains = ["acousticbrainz.org", "critiquebrainz.org", "listenbrainz.org",
+                          "metabrainz.org", "musicbrainz.org"]
+
+    if name == "rel":
+        return True
+    elif name == "href":
+        p = urlparse(value)
+        return (not p.netloc) or p.netloc in metabrainz_domains
+    else:
+        return False
+
+
+def _filter_description_html(description):
+    ok_tags = [u"a", u"strong", u"b", u"em", u"i", u"u", u"ul", u"li", u"p", u"br"]
+    return bleach.clean(description, tags=ok_tags, attributes={"a": _allow_metabrainz_domains}, strip=True)
+
+
+def validate_create_playlist_required_items(jspf):
+    """Given a JSPF dict, ensure that the title and public fields are present.
+    These fields are required only when creating a new playlist"""
+
+    if "playlist" not in jspf:
+        log_raise_400("JSPF playlist requires 'playlist' element")
+
+    if "title" not in jspf["playlist"]:
+        log_raise_400("JSPF playlist must contain a title element with the title of the playlist.")
+
+    if "public" not in jspf["playlist"].get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}):
+        log_raise_400("JSPF playlist.extension.https://musicbrainz.org/doc/jspf#playlist.public field must be given.")
+
+
+def validate_playlist(jspf):
     """
         Given a JSPF dict, ensure that title is present and that if tracks are present
         they have valid URIs or MBIDs specified. If any errors are found 400 is raised.
-
-        If a created_for field is found and the user is not an approved playlist bot,
-        then a 403 forbidden will be raised.
     """
 
-    if require_title:
-        try:
-            title = jspf["playlist"]["title"]
-            if not title:
-                raise KeyError
-        except KeyError:
+    if "playlist" not in jspf:
+        log_raise_400("JSPF playlist requires 'playlist' element")
+
+    if "title" in jspf["playlist"]:
+        title = jspf["playlist"]["title"]
+        if not title:
             log_raise_400("JSPF playlist must contain a title element with the title of the playlist.")
 
-    if 'track' not in jspf:
+    if "public" in jspf["playlist"].get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}):
+        public = jspf["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["public"]
+        if not isinstance(public, bool):
+            log_raise_400("JSPF playlist public field must contain a boolean.")
+
+    try:
+        # Collaborators are not required, so only validate if they are set
+        for collaborator in jspf["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["collaborators"]:
+            if not collaborator:
+                log_raise_400("The collaborators field contains an empty value.")
+    except KeyError:
+        pass
+
+    if "track" not in jspf["playlist"]:
         return
 
-    for i, track in enumerate(jspf.get('track', [])):
+    for i, track in enumerate(jspf["playlist"].get("track", [])):
         recording_uri = track.get("identifier")
         if not recording_uri:
             log_raise_400("JSPF playlist track %d must contain an identifier element with recording MBID." % i)
@@ -76,24 +122,28 @@ def validate_playlist(jspf, require_title=True):
 def serialize_jspf(playlist: Playlist):
     """
         Given a playlist, return a properly formated dict that can be passed to jsonify.
-        TODO: Add tests for newly added fields.
-              Add collaborators
     """
 
     pl = {"creator": playlist.creator,
           "title": playlist.name,
           "identifier": PLAYLIST_URI_PREFIX + str(playlist.mbid),
-          "date": playlist.created.replace(tzinfo=datetime.timezone.utc).isoformat(),
+          "date": playlist.created.astimezone(datetime.timezone.utc).isoformat()
     }
     if playlist.description:
         pl["annotation"] = playlist.description
-    if playlist.created_for_id:
-        pl['created_for'] = playlist.created_for
 
-    extension = {"public": "true" if playlist.public else "false"}
-    extension["creator_id"] = playlist.creator_id
-    if playlist.copied_from_id:
-        extension['copied_from'] = PLAYLIST_URI_PREFIX + str(playlist.copied_from_id)
+    extension = {"public": playlist.public, "creator": playlist.creator}
+    if playlist.last_updated:
+        extension["last_modified_at"] = playlist.last_updated.astimezone(datetime.timezone.utc).isoformat()
+    if playlist.copied_from_id is not None:
+        if playlist.copied_from_mbid is None:
+            extension['copied_from_deleted'] = True
+        else:
+            extension['copied_from_mbid'] = PLAYLIST_URI_PREFIX + str(playlist.copied_from_mbid)
+    if playlist.created_for_id:
+        extension['created_for'] = playlist.created_for
+    if playlist.collaborators:
+        extension['collaborators'] = playlist.collaborators
 
     pl["extension"] = {PLAYLIST_EXTENSION_URI: extension}
 
@@ -110,7 +160,7 @@ def serialize_jspf(playlist: Playlist):
             tr["title"] = rec.title
 
         extension = {"added_by": rec.added_by,
-                      "added_at": rec.created.astimezone(datetime.timezone.utc)}
+                     "added_at": rec.created.astimezone(datetime.timezone.utc).isoformat()}
         if rec.artist_mbids:
             extension["artist_identifier"] = [PLAYLIST_ARTIST_URI_PREFIX + str(mbid) for mbid in rec.artist_mbids]
 
@@ -215,36 +265,69 @@ def create_playlist():
     When creating a playlist, only the playlist title and the track identifier elements will be used -- all
     other elements in the posted JSPF wil be ignored.
 
+    If a created_for field is found and the user is not an approved playlist bot, then a 403 forbidden will be raised.
+
     :reqheader Authorization: Token <user token>
     :statuscode 200: playlist accepted.
     :statuscode 400: invalid JSON sent, see error message for details.
     :statuscode 401: invalid authorization. See error message for details.
-    :statuscode 403: forbidden. The subitting user is not allowed to submit playlists for other users.
+    :statuscode 403: forbidden. The submitting user is not allowed to create playlists for other users.
     :resheader Content-Type: *application/json*
     """
 
-    public = _parse_boolean_arg("public", "true")
-    user = _validate_auth_header()
+    user = validate_auth_header()
 
     data = request.json
+    validate_create_playlist_required_items(data)
     validate_playlist(data)
 
+    public = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["public"]
+    collaborators = data.get("playlist", {}).\
+        get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}).\
+        get("collaborators", [])
 
-    playlist = WritablePlaylist(name=data['playlist']['title'], creator_id=user["id"])
-    playlist.public = public
+    username_lookup = collaborators
+    created_for = data["playlist"].get("created_for", None)
+    if created_for:
+        username_lookup.append(created_for)
+
+    users = {}
+    if username_lookup:
+        users = db_user.get_many_users_by_mb_id(username_lookup)
+
+    collaborator_ids = []
+    for collaborator in collaborators:
+        if collaborator.lower() not in users:
+            log_raise_400("Collaborator {} doesn't exist".format(collaborator))
+        collaborator_ids.append(users[collaborator.lower()]["id"])
+
+    # filter description
+    description = data["playlist"].get("annotation", None)
+    if description is not None:
+        description = _filter_description_html(description)
+
+    playlist = WritablePlaylist(name=data['playlist']['title'],
+                                creator_id=user["id"],
+                                description=description,
+                                collaborator_ids=collaborator_ids,
+                                collaborators=collaborators,
+                                public=public)
 
     if data["playlist"].get("created_for", None):
         if user["musicbrainz_id"] not in current_app.config["APPROVED_PLAYLIST_BOTS"]:
-            raise APIForbidden("Playlist contains a created_for field, but subitting user is not an approved playlist bot.")
-        created_for_user = db_user.get_by_mb_id(data["playlist"]["created_for"])
+            raise APIForbidden("Playlist contains a created_for field, but submitting user is not an approved playlist bot.")
+        created_for_user = users.get(data["playlist"]["created_for"].lower())
         if not created_for_user:
             log_raise_400("created_for user does not exist.")
         playlist.created_for_id = created_for_user["id"]
 
     if "track" in data["playlist"]:
         for track in data["playlist"]["track"]:
-            playlist.recordings.append(WritablePlaylistRecording(mbid=UUID(track['identifier'][len(PLAYLIST_TRACK_URI_PREFIX):]),
-                                       added_by_id=user["id"]))
+            try:
+                playlist.recordings.append(WritablePlaylistRecording(mbid=UUID(track['identifier'][len(PLAYLIST_TRACK_URI_PREFIX):]),
+                                           added_by_id=user["id"]))
+            except ValueError:
+                log_raise_400("Invalid recording MBID found in submitted recordings")
 
     try:
         playlist = db_playlist.create(playlist)
@@ -253,6 +336,77 @@ def create_playlist():
         raise APIInternalServerError("Failed to create the playlist. Please try again.")
 
     return jsonify({'status': 'ok', 'playlist_mbid': playlist.mbid})
+
+
+@playlist_api_bp.route("/edit/<playlist_mbid>", methods=["POST", "OPTIONS"])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
+def edit_playlist(playlist_mbid):
+    """
+    Edit the private/public status, name, description or list of collaborators for an exising playlist.
+    The Authorization header must be set and correspond to the owner of the playlist otherwise a 403
+    error will be returned. All fields will be overwritten with new values.
+
+    :reqheader Authorization: Token <user token>
+    :statuscode 200: playlist accepted.
+    :statuscode 400: invalid JSON sent, see error message for details.
+    :statuscode 401: invalid authorization. See error message for details.
+    :statuscode 403: forbidden. The subitting user is not allowed to edit playlists for other users.
+    :resheader Content-Type: *application/json*
+    """
+
+    user = validate_auth_header()
+
+    data = request.json
+    validate_playlist(data)
+
+    if not is_valid_uuid(playlist_mbid):
+        log_raise_400("Provided playlist ID is invalid.")
+
+    playlist = db_playlist.get_by_mbid(playlist_mbid, False)
+    if playlist is None or (not playlist.public and playlist.creator_id != user["id"]):
+        raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+
+    if playlist.creator_id != user["id"]:
+        raise APIForbidden("You are not allowed to edit this playlist.")
+
+    try:
+        playlist.public = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["public"]
+    except KeyError:
+        pass
+
+    if "annotation" in data["playlist"]:
+        # If the annotation key exists but the value is empty ("" or None),
+        # unset the description
+        description = data["playlist"]["annotation"]
+        if description:
+            description = _filter_description_html(description)
+        else:
+            description = None
+        playlist.description = description
+
+    if data["playlist"].get("title"):
+        playlist.name = data["playlist"]["title"]
+
+    collaborators = data.get("playlist", {}).\
+        get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}).\
+        get("collaborators", [])
+    users = {}
+    if collaborators:
+        users = db_user.get_many_users_by_mb_id(collaborators)
+
+    collaborator_ids = []
+    for collaborator in collaborators:
+        if collaborator.lower() not in users:
+            log_raise_400("Collaborator {} doesn't exist".format(collaborator))
+        collaborator_ids.append(users[collaborator.lower()]["id"])
+
+    playlist.collaborators = collaborators
+    playlist.collaborator_ids = collaborator_ids
+
+    db_playlist.update_playlist(playlist)
+
+    return jsonify({'status': 'ok'})
 
 
 @playlist_api_bp.route("/<playlist_mbid>", methods=["GET", "OPTIONS"])
@@ -277,7 +431,7 @@ def get_playlist(playlist_mbid):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
     if not playlist.public:
-        user = _validate_auth_header()
+        user = validate_auth_header()
         if playlist.creator_id != user["id"]:
             raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
@@ -310,7 +464,7 @@ def add_playlist_item(playlist_mbid, offset):
     :resheader Content-Type: *application/json*
     """
 
-    user = _validate_auth_header()
+    user = validate_auth_header()
     if offset is not None and offset < 0:
         log_raise_400("Offset must be a positive integer.")
 
@@ -326,7 +480,7 @@ def add_playlist_item(playlist_mbid, offset):
         raise APIForbidden("You are not allowed to add recordings to this playlist.")
 
     data = request.json
-    validate_playlist(data, False)
+    validate_playlist(data)
 
     if len(data["playlist"]["track"]) > MAX_RECORDINGS_PER_ADD:
         log_raise_400("You may only add max %d recordings per call." % MAX_RECORDINGS_PER_ADD)
@@ -370,7 +524,7 @@ def move_playlist_item(playlist_mbid):
     :resheader Content-Type: *application/json*
     """
 
-    user = _validate_auth_header()
+    user = validate_auth_header()
 
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
@@ -416,7 +570,7 @@ def delete_playlist_item(playlist_mbid):
     :resheader Content-Type: *application/json*
     """
 
-    user = _validate_auth_header()
+    user = validate_auth_header()
 
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
@@ -457,7 +611,7 @@ def delete_playlist(playlist_mbid):
     :resheader Content-Type: *application/json*
     """
 
-    user = _validate_auth_header()
+    user = validate_auth_header()
 
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
@@ -495,7 +649,7 @@ def copy_playlist(playlist_mbid):
     :resheader Content-Type: *application/json*
     """
 
-    user = _validate_auth_header()
+    user = validate_auth_header()
 
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")

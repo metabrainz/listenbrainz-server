@@ -21,6 +21,7 @@ CREATE TABLE playlist.playlist (
     description text,
     public boolean not null,
     created timestamp with time zone default now() not null,
+    last_updated timestamp with time zone default now() not null,
     copied_from_id int, -- id of another playlist
     created_for_id int,
     algorithm_metadata jsonb
@@ -33,6 +34,11 @@ CREATE TABLE playlist.playlist_recording (
     mbid uuid not null,
     added_by_id int not null,  -- int, but not an fk because it's in the wrong database
     created timestamp with time zone default now() not null
+);
+
+CREATE TABLE  playlist.playlist_collaborator (
+    playlist_id int not null,  -- FK playlist.id
+    collaborator_id int not null  -- link to user.id in main database
 );
 
 COMMIT;

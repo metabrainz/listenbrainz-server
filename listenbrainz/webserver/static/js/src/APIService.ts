@@ -34,7 +34,7 @@ export default class APIService {
     const response = await fetch(query, {
       method: "GET",
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     const result = await response.json();
 
     return result.payload.listens;
@@ -75,7 +75,7 @@ export default class APIService {
     const response = await fetch(query, {
       method: "GET",
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     const result = await response.json();
 
     return result.payload.listens;
@@ -91,7 +91,7 @@ export default class APIService {
     const response = await fetch(query, {
       method: "GET",
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     const result = await response.json();
 
     return parseInt(result.payload.count, 10);
@@ -101,7 +101,7 @@ export default class APIService {
     const response = await fetch("/profile/refresh-spotify-token", {
       method: "POST",
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     const result = await response.json();
     return result.user_token;
   };
@@ -127,7 +127,7 @@ export default class APIService {
 
     const url = `/user/${username}/followers`;
     const response = await fetch(url);
-    this.checkStatus(response);
+    await this.checkStatus(response);
     const data = response.json();
     return data;
   };
@@ -139,7 +139,7 @@ export default class APIService {
 
     const url = `/user/${username}/following`;
     const response = await fetch(url);
-    this.checkStatus(response);
+    await this.checkStatus(response);
     const data = response.json();
     return data;
   };
@@ -213,7 +213,7 @@ export default class APIService {
     const response = await fetch(url, {
       method: "GET",
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     const result = await response.json();
     return parseInt(result.latest_import, 10);
   };
@@ -236,7 +236,7 @@ export default class APIService {
       },
       body: JSON.stringify({ ts: timestamp }),
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     return response.status; // Return true if timestamp is updated
   };
 
@@ -252,7 +252,7 @@ export default class APIService {
       url += `&count=${count}`;
     }
     const response = await fetch(url);
-    this.checkStatus(response);
+    await this.checkStatus(response);
     // if response code is 204, then statistics havent been calculated, send empty object
     if (response.status === 204) {
       const error = new APIError(`HTTP Error ${response.statusText}`);
@@ -270,7 +270,7 @@ export default class APIService {
   ): Promise<UserListeningActivityResponse> => {
     const url = `${this.APIBaseURI}/stats/user/${userName}/listening-activity?range=${range}`;
     const response = await fetch(url);
-    this.checkStatus(response);
+    await this.checkStatus(response);
     if (response.status === 204) {
       const error = new APIError(`HTTP Error ${response.statusText}`);
       error.status = response.statusText;
@@ -287,7 +287,7 @@ export default class APIService {
   ): Promise<UserDailyActivityResponse> => {
     const url = `${this.APIBaseURI}/stats/user/${userName}/daily-activity?range=${range}`;
     const response = await fetch(url);
-    this.checkStatus(response);
+    await this.checkStatus(response);
     if (response.status === 204) {
       const error = new APIError(`HTTP Error ${response.statusText}`);
       error.status = response.statusText;
@@ -305,7 +305,7 @@ export default class APIService {
   ) => {
     const url = `${this.APIBaseURI}/stats/user/${userName}/artist-map?range=${range}&force_recalculate=${forceRecalculate}`;
     const response = await fetch(url);
-    this.checkStatus(response);
+    await this.checkStatus(response);
     if (response.status === 204) {
       const error = new APIError(`HTTP Error ${response.statusText}`);
       error.status = response.statusText;
@@ -316,13 +316,21 @@ export default class APIService {
     return data;
   };
 
-  checkStatus = (response: Response): void => {
+  checkStatus = async (response: Response): Promise<void> => {
     if (response.status >= 200 && response.status < 300) {
       return;
+    }
+    const data = response.body || (response.json && (await response.json()));
+    let message;
+    if (data?.error) {
+      message = data?.error;
+    } else {
+      message = `HTTP Error ${response.statusText}`;
     }
     const error = new APIError(`HTTP Error ${response.statusText}`);
     error.status = response.statusText;
     error.response = response;
+    error.message = message;
     throw error;
   };
 
@@ -332,7 +340,7 @@ export default class APIService {
   ): Promise<string | null> => {
     const url = `${this.APIBaseURI}/get-cover-art/?release_mbid=${releaseMBID}&recording_msid=${recordingMSID}`;
     const response = await fetch(url);
-    this.checkStatus(response);
+    await this.checkStatus(response);
     if (response.status === 200) {
       const data = await response.json();
       return data.image_url;
@@ -354,7 +362,7 @@ export default class APIService {
       },
       body: JSON.stringify({ recording_msid: recordingMSID, score }),
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     return response.status;
   };
 
@@ -368,7 +376,7 @@ export default class APIService {
 
     const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings?recordings=${recordings}`;
     const response = await fetch(url);
-    this.checkStatus(response);
+    await this.checkStatus(response);
     const data = response.json();
     return data;
   };
@@ -390,34 +398,86 @@ export default class APIService {
         recording_msid: recordingMSID,
       }),
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     return response.status;
   };
 
   createPlaylist = async (
     userToken: string,
-    title: string,
-    tracks: any,
-    isPublic: Boolean,
-    description?: string
+    playlistObject: JSPFObject
   ): Promise<string> => {
-    if (!title) {
+    if (!playlistObject.playlist?.title) {
       throw new SyntaxError("playlist title missing");
     }
 
-    const url = `${this.APIBaseURI}/playlist/create?public=${isPublic}`;
+    const url = `${this.APIBaseURI}/playlist/create`;
     const response = await fetch(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
         "Content-Type": "application/json;charset=UTF-8",
       },
-      body: JSON.stringify({ playlist: { title, description, track: tracks } }),
+      body: JSON.stringify(playlistObject),
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     const result = await response.json();
 
     return result.playlist_mbid;
+  };
+
+  editPlaylist = async (
+    userToken: string,
+    playlistMBID: string,
+    playlistObject: JSPFObject
+  ): Promise<number> => {
+    if (!playlistMBID) {
+      throw new SyntaxError("Playlist MBID is missing");
+    }
+
+    const url = `${this.APIBaseURI}/playlist/edit/${playlistMBID}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify(playlistObject),
+    });
+    await this.checkStatus(response);
+
+    return response.status;
+  };
+
+  getUserPlaylists = async (
+    userName: string,
+    userToken?: string,
+    offset: number = 0,
+    count: number = 25,
+    createdFor: boolean = false,
+    collaborator: boolean = false
+  ) => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    let headers;
+    if (userToken) {
+      headers = {
+        Authorization: `Token ${userToken}`,
+      };
+    }
+
+    const url = `${this.APIBaseURI}/user/${userName}/playlists${
+      createdFor ? "/createdfor" : ""
+    }${collaborator ? "/collaborator" : ""}?offset=${offset}&count=${count}`;
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers,
+    });
+
+    await this.checkStatus(response);
+    const data = response.json();
+    return data;
   };
 
   getPlaylist = async (playlistMBID: string, userToken?: string) => {
@@ -436,7 +496,7 @@ export default class APIService {
       method: "GET",
       headers,
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     const data = response.json();
     return data;
   };
@@ -461,7 +521,7 @@ export default class APIService {
       },
       body: JSON.stringify({ playlist: { track: tracks } }),
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
 
     return response.status;
   };
@@ -486,7 +546,7 @@ export default class APIService {
       },
       body: JSON.stringify({ index, count }),
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
 
     return response.status;
   };
@@ -508,7 +568,7 @@ export default class APIService {
       },
       body: JSON.stringify({ mbid: recordingMBID, from, to, count }),
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
 
     return response.status;
   };
@@ -528,7 +588,7 @@ export default class APIService {
         Authorization: `Token ${userToken}`,
       },
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     const data = await response.json();
     return data.playlist_mbid;
   };
@@ -548,7 +608,57 @@ export default class APIService {
         Authorization: `Token ${userToken}`,
       },
     });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
+  submitRecommendationFeedback = async (
+    userToken: string,
+    recordingMBID: string,
+    rating: RecommendationFeedBack
+  ): Promise<number> => {
+    const url = `${this.APIBaseURI}/recommendation/feedback/submit`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ recording_mbid: recordingMBID, rating }),
+    });
     this.checkStatus(response);
     return response.status;
+  };
+
+  deleteRecommendationFeedback = async (
+    userToken: string,
+    recordingMBID: string
+  ): Promise<number> => {
+    const url = `${this.APIBaseURI}/recommendation/feedback/delete`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ recording_mbid: recordingMBID }),
+    });
+    this.checkStatus(response);
+    return response.status;
+  };
+
+  getFeedbackForUserForRecommendations = async (
+    userName: string,
+    recordings: string
+  ) => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+
+    const url = `${this.APIBaseURI}/recommendation/feedback/user/${userName}/recordings?mbids=${recordings}`;
+    const response = await fetch(url);
+    this.checkStatus(response);
+    const data = response.json();
+    return data;
   };
 }

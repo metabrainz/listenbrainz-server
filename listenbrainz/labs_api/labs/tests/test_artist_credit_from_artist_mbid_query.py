@@ -1,11 +1,7 @@
-import os
-import unittest
-from unittest.mock import patch, call, MagicMock
+from unittest.mock import patch
 
 import flask_testing
-import flask
-import psycopg2
-from datasethoster.main import app
+from datasethoster.main import create_app
 from listenbrainz.labs_api.labs.api.artist_credit_from_artist_mbid import ArtistCreditIdFromArtistMBIDQuery
 
 
@@ -33,6 +29,7 @@ json_response = [
 class MainTestCase(flask_testing.TestCase):
 
     def create_app(self):
+        app = create_app()
         app.config['MB_DATABASE_URI'] = 'yermom'
         return app
 

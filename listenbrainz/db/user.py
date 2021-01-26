@@ -1,4 +1,6 @@
 import logging
+from typing import List
+
 import sqlalchemy
 import uuid
 
@@ -67,10 +69,15 @@ def get(id):
     Returns:
         Dictionary with the following structure:
         {
-            "id": <user id>,
+            "id": <listenbrainz user id>,
             "created": <account creation time>,
             "musicbrainz_id": <MusicBrainz username>,
             "auth_token": <authentication token>,
+            "last_login": <date that this user last logged in>,
+            "latest_import": <date that this user last performed a data import>
+            "gdpr_agreed": <boolean, if the user has agreed to terms and conditions>,
+            "musicbrainz_row_id": <musicbrainz row id associated with this user>,
+            "login_id": <token used for login sessions>
         }
     """
     with db.engine.connect() as connection:
@@ -92,10 +99,15 @@ def get_by_login_id(login_id):
     Returns:
         Dictionary with the following structure:
         {
-            "id": <user id>,
+            "id": <listenbrainz user id>,
             "created": <account creation time>,
             "musicbrainz_id": <MusicBrainz username>,
             "auth_token": <authentication token>,
+            "last_login": <date that this user last logged in>,
+            "latest_import": <date that this user last performed a data import>
+            "gdpr_agreed": <boolean, if the user has agreed to terms and conditions>,
+            "musicbrainz_row_id": <musicbrainz row id associated with this user>,
+            "login_id": <token used for login sessions>
         }
     """
     with db.engine.connect() as connection:
@@ -108,6 +120,26 @@ def get_by_login_id(login_id):
         return dict(row) if row else None
 
 
+def get_many_users_by_mb_id(musicbrainz_ids: List[str]):
+    """Load a list of users given their musicbrainz login name
+
+    Args:
+        musicbrainz_ids: A list of musicbrainz usernames
+
+    Returns:
+        A dictionary where keys are the username, and values are dictionaries of user information
+        following the same format as `get_by_mb_id`.
+        If a provided username doesn't exist, it won't be returned.
+    """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT {columns}
+              FROM "user"
+             WHERE LOWER(musicbrainz_id) in :mb_ids
+        """.format(columns=','.join(USER_GET_COLUMNS))), {"mb_ids": tuple([mbname.lower() for mbname in musicbrainz_ids])})
+        return {row['musicbrainz_id'].lower(): dict(row) for row in result.fetchall()}
+
+
 def get_by_mb_id(musicbrainz_id):
     """Get user with a specified MusicBrainz ID.
 
@@ -117,10 +149,15 @@ def get_by_mb_id(musicbrainz_id):
     Returns:
         Dictionary with the following structure:
         {
-            "id": <user id>,
+            "id": <listenbrainz user id>,
             "created": <account creation time>,
             "musicbrainz_id": <MusicBrainz username>,
             "auth_token": <authentication token>,
+            "last_login": <date that this user last logged in>,
+            "latest_import": <date that this user last performed a data import>
+            "gdpr_agreed": <boolean, if the user has agreed to terms and conditions>,
+            "musicbrainz_row_id": <musicbrainz row id associated with this user>,
+            "login_id": <token used for login sessions>
         }
     """
     with db.engine.connect() as connection:

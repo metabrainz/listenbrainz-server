@@ -5,17 +5,11 @@ version: "3.4"
 # `../` to refer to a directory in the main code checkout
 
 services:
-  db:
-    image: postgres:12.3
-    command: postgres -F
-    environment:
-      POSTGRES_PASSWORD: "postgres"
-
   redis:
     image: redis:5.0.3
 
-  timescale:
-    image: timescale/timescaledb:latest-pg12
+  db:
+    image: timescale/timescaledb:1.7.4-pg12
     command: postgres -F
     environment:
       POSTGRES_PASSWORD: "postgres"
@@ -31,7 +25,6 @@ services:
     depends_on:
       - redis
       - db
-      - timescale
       - rabbitmq
 
   frontend_tester:

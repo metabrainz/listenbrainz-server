@@ -19,7 +19,8 @@ def load_playlist(playlist_mbid: str):
         raise BadRequest("Provided playlist ID is invalid: %s" % playlist_mbid)
 
     playlist = db_playlist.get_by_mbid(playlist_mbid, True)
-    if playlist is None or (playlist.creator_id != current_user.get_id() and not playlist.public):
+    # TODO: Allow playlist collaborators to access private playlist
+    if playlist is None or not playlist.public and (not current_user.is_authenticated or playlist.creator_id != current_user.id):
         raise NotFound("Cannot find playlist: %s" % playlist_mbid)
 
     fetch_playlist_recording_metadata(playlist)

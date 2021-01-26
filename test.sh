@@ -44,13 +44,13 @@ fi
 function build_unit_containers {
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                build db timescale redis rabbitmq listenbrainz
+                build db redis rabbitmq listenbrainz
 }
 
 function bring_up_unit_db {
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                up -d db timescale redis rabbitmq
+                up -d db redis rabbitmq
 }
 
 function unit_setup {
@@ -60,7 +60,6 @@ function unit_setup {
                    -p $COMPOSE_PROJECT_NAME \
                 run --rm listenbrainz dockerize \
                   -wait tcp://db:5432 -timeout 60s \
-                  -wait tcp://timescale:5432 -timeout 60s \
                   -wait tcp://rabbitmq:5672 -timeout 60s \
                 bash -c "python3 manage.py init_db --create-db && \
                          python3 manage.py init_msb_db --create-db && \
@@ -156,7 +155,6 @@ function int_setup {
                    -p $INT_COMPOSE_PROJECT_NAME \
                 run --rm listenbrainz dockerize \
                   -wait tcp://db:5432 -timeout 60s \
-                  -wait tcp://timescale:5432 -timeout 60s \
                 bash -c "python3 manage.py init_db --create-db && \
                          python3 manage.py init_msb_db --create-db && \
                          python3 manage.py init_ts_db --create-db"
@@ -165,7 +163,7 @@ function int_setup {
 function bring_up_int_containers {
     docker-compose -f $INT_COMPOSE_FILE_LOC \
                    -p $INT_COMPOSE_PROJECT_NAME \
-                up -d db timescale redis timescale_writer rabbitmq
+                up -d db redis timescale_writer rabbitmq
 }
 
 # Exit immediately if a command exits with a non-zero status.
@@ -215,7 +213,6 @@ if [ "$1" == "int" ]; then
                    -p $INT_COMPOSE_PROJECT_NAME \
                 run --rm listenbrainz dockerize \
                   -wait tcp://db:5432 -timeout 60s \
-                  -wait tcp://timescale:5432 -timeout 60s \
                   -wait tcp://redis:6379 -timeout 60s \
                   -wait tcp://rabbitmq:5672 -timeout 60s \
                 bash -c "py.test $TESTS_TO_RUN"

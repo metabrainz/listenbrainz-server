@@ -16,7 +16,7 @@ SECRET_KEY = '''{{template "KEY" "secret_key"}}'''
 {{with index (service "pgbouncer-master") 0}}
 SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@{{.Address}}:{{.Port}}/listenbrainz"
 MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@{{.Address}}:{{.Port}}/messybrainz"
-POSTGRES_ADMIN_URI="postgresql://postgres@{{.Address}}:{{.Port}}/template1"
+POSTGRES_ADMIN_URI="postgresql://postgres@{{.Address}}:{{.Port}}/postgres"
 {{end}}
 {{end}}
 
@@ -33,13 +33,8 @@ MB_DATABASE_URI = 'postgresql://musicbrainz_ro@{{.Address}}:{{.Port}}/musicbrain
 
 {{if service "timescale-listenbrainz"}}
 {{with index (service "timescale-listenbrainz") 0}}
-#SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@{{.Address}}:{{.Port}}/listenbrainz"
-#MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@{{.Address}}:{{.Port}}/messybrainz"
-POSTGRES_ADMIN_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/template1"
-POSTGRES_ADMIN_LB_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/listenbrainz"
-
 SQLALCHEMY_TIMESCALE_URI = "postgresql://listenbrainz_ts:listenbrainz_ts@{{.Address}}:{{.Port}}/listenbrainz_ts"
-TIMESCALE_ADMIN_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/template1"
+TIMESCALE_ADMIN_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/postgres"
 TIMESCALE_ADMIN_LB_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/listenbrainz_ts"
 {{end}}
 {{end}}
@@ -49,11 +44,6 @@ TIMESCALE_ADMIN_LB_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/li
 DB_CONNECT_MAPPING = "dbname=musicbrainz_json_dump user=musicbrainz host={{.Address}} port={{.Port}} password=musicbrainz"
 {{end}}
 {{end}}
-
-# Not currently used
-MAX_POSTGRES_LISTEN_HISTORY = "-1"
-PG_QUERY_TIMEOUT = "3000"
-PG_ASYNC_LISTEN_COMMIT = False
 
 {{if service "listenbrainz-redis"}}
 {{with index (service "listenbrainz-redis") 0}}
@@ -130,6 +120,7 @@ LOG_SENTRY = {
     'environment': '''{{template "KEY" "sentry/environment"}}''',
 }
 SENTRY_DSN_PUBLIC = '''{{template "KEY" "sentry/dsn_public"}}'''
+DATASETS_SENTRY_DSN = '''{{template "KEY" "sentry/datasets_dsn"}}'''
 
 
 # Stats

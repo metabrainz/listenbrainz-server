@@ -7,18 +7,13 @@ version: "3.4"
 services:
 
   db:
-    image: postgres:12.3
+    image: timescale/timescaledb:1.7.4-pg12
     command: postgres -F
     environment:
       POSTGRES_PASSWORD: 'postgres'
 
   redis:
     image: redis:5.0.3
-
-  timescale:
-    image: timescale/timescaledb:latest-pg12
-    environment:
-      POSTGRES_PASSWORD: 'postgres'
 
   listenbrainz:
     build:
@@ -32,7 +27,6 @@ services:
     depends_on:
       - redis
       - db
-      - timescale
       - rabbitmq
 
   timescale_writer:
@@ -40,7 +34,7 @@ services:
     command: python3 -m "listenbrainz.timescale_writer.timescale_writer"
     depends_on:
       - redis
-      - timescale
+      - db
       - rabbitmq 
 
   rabbitmq:

@@ -31,7 +31,7 @@ module.exports = {
     "import/extensions": "off",
     "no-unused-vars": "off",
     camelcase: "warn",
-    "prettier/prettier": "error",
+    "prettier/prettier": "warn",
     "lines-between-class-members": [
       "error",
       "always",

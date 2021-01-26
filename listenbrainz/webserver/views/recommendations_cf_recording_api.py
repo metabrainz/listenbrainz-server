@@ -3,7 +3,7 @@ import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_rec
 
 from listenbrainz.webserver.errors import APIBadRequest, APINotFound, APINoContent
 from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
-                                                    _get_non_negative_param,
+                                                    get_non_negative_param,
                                                     MAX_ITEMS_PER_GET)
 
 from enum import Enum
@@ -86,8 +86,8 @@ def get_recommendations(user_name):
     if not _is_valid_artist_type(artist_type):
         raise APIBadRequest("Invalid artist type: {}".format(artist_type))
 
-    offset = _get_non_negative_param('offset', default=0)
-    count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
+    offset = get_non_negative_param('offset', default=0)
+    count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
     recommendations = db_recommendations_cf_recording.get_user_recommendation(user['id'])
 

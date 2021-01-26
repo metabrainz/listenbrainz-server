@@ -663,7 +663,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
             className="pager"
           >
             <li
-              className="previous hidden"
+              className="previous disabled"
             >
               <a
                 href=""
@@ -674,7 +674,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               </a>
             </li>
             <li
-              className="next hidden"
+              className="next disabled"
             >
               <a
                 href=""
@@ -1605,7 +1605,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
             className="pager"
           >
             <li
-              className="previous hidden"
+              className="previous disabled"
             >
               <a
                 href=""
@@ -1616,7 +1616,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               </a>
             </li>
             <li
-              className="next hidden"
+              className="next disabled"
             >
               <a
                 href=""
@@ -2447,7 +2447,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
             className="pager"
           >
             <li
-              className="previous hidden"
+              className="previous disabled"
             >
               <a
                 href=""
@@ -2458,7 +2458,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               </a>
             </li>
             <li
-              className="next hidden"
+              className="next disabled"
             >
               <a
                 href=""

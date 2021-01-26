@@ -15,6 +15,21 @@
 		position: relative;
 		overflow: hidden;
 		
+		.playlist-card-action-dropdown {
+			position: absolute;
+			bottom: 0;
+			width: 100%;
+		}
+
+		.playlist-card-action-button {
+			position: absolute;
+			bottom: 0;
+			border: none;
+			padding: 5px;
+			&:extend(.btn-block);
+			&:extend(.btn-info);
+		}
+
 		.info {
 			display: block;
 			padding: 1em;
@@ -23,6 +38,9 @@
 			background-color: @playlistBackgroundColor;
 			> * {
 				margin: 0.5em 0;
+				&:first-child {
+					margin:0;
+				}
 			}
 
 			/* Pure CSS multiline ellipsis by Sagi Shrieber:
@@ -100,6 +118,10 @@
 		align-items: center;
 		margin-bottom: 0px;
 		
+		&.current-track {
+			background-color: rgba(217, 237, 247, 0.3) !important ;
+		}
+
 		.listen-controls {
 			&:extend(#listens .listen-card .listen-controls all);
 			flex: 0 6em;

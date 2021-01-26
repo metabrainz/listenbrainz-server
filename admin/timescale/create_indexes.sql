@@ -14,4 +14,7 @@ CREATE INDEX playlist_id_playlist_recording ON playlist.playlist_recording (play
 CREATE INDEX mbid_playlist_recording ON playlist.playlist_recording (mbid);
 CREATE INDEX added_by_id_playlist_recording ON playlist.playlist_recording (added_by_id);
 
+CREATE INDEX playlist_id_playlist_collaborator ON playlist.playlist_collaborator (playlist_id);
+CREATE INDEX collaborator_id_playlist_collaborator ON playlist.playlist_collaborator (collaborator_id);
+
 COMMIT;

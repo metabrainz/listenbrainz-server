@@ -31,7 +31,7 @@ from listenbrainz.webserver.errors import (APIBadRequest,
 from listenbrainz.webserver.rate_limiter import ratelimit
 from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
                                                     MAX_ITEMS_PER_GET,
-                                                    _get_non_negative_param)
+                                                    get_non_negative_param)
 
 STATS_CALCULATION_INTERVAL = 7  # Stats are recalculated every 7 days
 
@@ -114,8 +114,8 @@ def get_user_artist(user_name):
     if not _is_valid_range(stats_range):
         raise APIBadRequest("Invalid range: {}".format(stats_range))
 
-    offset = _get_non_negative_param('offset', default=0)
-    count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
+    offset = get_non_negative_param('offset', default=0)
+    count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
     stats = db_stats.get_user_artists(user['id'], stats_range)
     if stats is None or getattr(stats, stats_range) is None:
@@ -218,8 +218,8 @@ def get_release(user_name):
     if not _is_valid_range(stats_range):
         raise APIBadRequest("Invalid range: {}".format(stats_range))
 
-    offset = _get_non_negative_param('offset', default=0)
-    count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
+    offset = get_non_negative_param('offset', default=0)
+    count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
     stats = db_stats.get_user_releases(user['id'], stats_range)
     if stats is None or getattr(stats, stats_range) is None:
@@ -320,8 +320,8 @@ def get_recording(user_name):
     if not _is_valid_range(stats_range):
         raise APIBadRequest("Invalid range: {}".format(stats_range))
 
-    offset = _get_non_negative_param('offset', default=0)
-    count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
+    offset = get_non_negative_param('offset', default=0)
+    count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
     stats = db_stats.get_user_recordings(user['id'], stats_range)
     if stats is None or getattr(stats, stats_range) is None:
@@ -722,8 +722,8 @@ def get_sitewide_artist():
     if not _is_valid_range(stats_range):
         raise APIBadRequest("Invalid range: {}".format(stats_range))
 
-    offset = _get_non_negative_param('offset', default=0)
-    count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
+    offset = get_non_negative_param('offset', default=0)
+    count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
     stats = db_stats.get_sitewide_artists(stats_range)
     if stats is None or stats.data is None:

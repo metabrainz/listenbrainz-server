@@ -5,8 +5,7 @@ import listenbrainz.db.user as db_user
 from flask import Blueprint, request, jsonify
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.rate_limiter import ratelimit
-from listenbrainz.webserver.views.api import _validate_auth_header
-from listenbrainz.webserver.views.api_tools import log_raise_400
+from listenbrainz.webserver.views.api_tools import log_raise_400, validate_auth_header
 from listenbrainz.webserver.errors import APINotFound, APIForbidden, APIUnauthorized
 from listenbrainz.db.exceptions import DatabaseException
 
@@ -16,7 +15,7 @@ follow_api_bp = Blueprint('follow_api_v1', __name__)
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def save_list():
-    creator = _validate_auth_header()
+    creator = validate_auth_header()
     raw_data = request.get_data()
     try:
         data = ujson.loads(raw_data.decode("utf-8"))

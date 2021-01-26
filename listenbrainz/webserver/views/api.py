@@ -1,29 +1,34 @@
+import datetime
+import time
+from typing import Tuple
+
 import ujson
+import psycopg2
 from flask import Blueprint, request, jsonify, current_app
-from werkzeug.exceptions import InternalServerError, ServiceUnavailable
 
 from listenbrainz.listenstore import TimescaleListenStore
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, APIServiceUnavailable
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz import webserver
+from listenbrainz.db.model.playlist import Playlist
+import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 from listenbrainz.webserver.rate_limiter import ratelimit
 import listenbrainz.webserver.redis_connection as redis_connection
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list,\
     is_valid_uuid, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT,\
-    LISTEN_TYPE_PLAYING_NOW
+    LISTEN_TYPE_PLAYING_NOW, validate_auth_header, get_non_negative_param
+from listenbrainz.webserver.views.playlist_api import serialize_jspf
 from listenbrainz.listenstore.timescale_listenstore import SECONDS_IN_TIME_RANGE, TimescaleListenStoreException
-import time
-import psycopg2
 from listenbrainz.webserver.timescale_connection import _ts
-from typing import Tuple
 
 api_bp = Blueprint('api_v1', __name__)
 
 DEFAULT_TIME_RANGE = 3
 MAX_TIME_RANGE = 73
+DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL = 25
 
 
 @api_bp.route("/submit-listens", methods=["POST", "OPTIONS"])
@@ -42,12 +47,13 @@ def submit_listen():
     For complete details on the format of the JSON to be POSTed to this endpoint, see :ref:`json-doc`.
 
     :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
     :statuscode 200: listen(s) accepted.
     :statuscode 400: invalid JSON sent, see error message for details.
     :statuscode 401: invalid authorization. See error message for details.
     :resheader Content-Type: *application/json*
     """
-    user = _validate_auth_header()
+    user = validate_auth_header()
 
     raw_data = request.get_data()
     try:
@@ -294,6 +300,7 @@ def latest_import():
     The JSON that needs to be posted must contain a field named `ts` in the root with a valid unix timestamp.
 
     :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
     :statuscode 200: latest import timestamp updated
     :statuscode 400: invalid JSON sent, see error message for details.
     :statuscode 401: invalid authorization. See error message for details.
@@ -308,7 +315,7 @@ def latest_import():
             'latest_import': 0 if not user['latest_import'] else int(user['latest_import'].strftime('%s'))
         })
     elif request.method == 'POST':
-        user = _validate_auth_header()
+        user = validate_auth_header()
 
         try:
             ts = ujson.loads(request.get_data()).get('ts', 0)
@@ -390,12 +397,13 @@ def delete_listen():
         }
 
     :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
     :statuscode 200: listen deleted.
     :statuscode 400: invalid JSON sent, see error message for details.
     :statuscode 401: invalid authorization. See error message for details.
     :resheader Content-Type: *application/json*
     """
-    user = _validate_auth_header()
+    user = validate_auth_header()
 
     data = request.json
 
@@ -426,6 +434,116 @@ def delete_listen():
     return jsonify({'status': 'ok'})
 
 
+def serialize_playlists(playlists, playlist_count, count, offset):
+    """
+        Serialize the playlist metadata for the get playlists commands.
+    """
+
+    items = []
+    for playlist in playlists:
+        items.append(serialize_jspf(playlist))
+
+    return {"playlists": items,
+            "playlist_count": playlist_count,
+            "offset": offset,
+            "count": count}
+
+
+@api_bp.route("/user/<playlist_user_name>/playlists", methods=["GET", "OPTIONS"])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
+def get_playlists_for_user(playlist_user_name):
+    """
+    Fetch playlist metadata in JSPF format without recordings for the given user.
+    If a user token is provided in the Authorization header, return private playlists as well
+    as public playlists for that user.
+
+    :params count: The number of playlists to return (for pagination). Default
+        :data:`~webserver.views.api.DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL`
+    :params offset: The offset of into the list of playlists to return (for pagination)
+    :statuscode 200: Yay, you have data!
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+    user = validate_auth_header(True)
+
+    count = get_non_negative_param('count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
+    offset = get_non_negative_param('offset', 0)
+    playlist_user = db_user.get_by_mb_id(playlist_user_name)
+    if playlist_user is None:
+        raise APINotFound("Cannot find user: %s" % playlist_user_name)
+
+    include_private = True if user and user["id"] == playlist_user["id"] else False
+    playlists, playlist_count = db_playlist.get_playlists_for_user(playlist_user["id"],
+                                                                   include_private=include_private,
+                                                                   load_recordings=False, count=count, offset=offset)
+
+    return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
+
+
+@api_bp.route("/user/<playlist_user_name>/playlists/createdfor", methods=["GET", "OPTIONS"])
+@crossdomain(headers="Content-Type")
+@ratelimit()
+def get_playlists_created_for_user(playlist_user_name):
+    """
+    Fetch playlist metadata in JSPF format without recordings that have been created for the user.
+    Createdfor playlists are all public, so no Authorization is needed for this call.
+
+    :params count: The number of playlists to return (for pagination). Default
+        :data:`~webserver.views.api.DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL`
+    :params offset: The offset of into the list of playlists to return (for pagination)
+    :statuscode 200: Yay, you have data!
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+
+    count = get_non_negative_param('count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
+    offset = get_non_negative_param('offset', 0)
+    playlist_user = db_user.get_by_mb_id(playlist_user_name)
+    if playlist_user is None:
+        raise APINotFound("Cannot find user: %s" % playlist_user_name)
+
+    playlists, playlist_count = db_playlist.get_playlists_created_for_user(playlist_user["id"],
+                                                                           load_recordings=False, count=count, offset=offset)
+
+    return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
+
+
+@api_bp.route("/user/<playlist_user_name>/playlists/collaborator", methods=["GET", "OPTIONS"])
+@crossdomain(headers="Content-Type")
+@ratelimit()
+def get_playlists_collaborated_on_for_user(playlist_user_name):
+    """
+    Fetch playlist metadata in JSPF format without recordings for which a user is a collaborator.
+    If a playlist is private, it will only be returned if the caller is authorized to edit that playlist.
+
+    :params count: The number of playlists to return (for pagination). Default
+        :data:`~webserver.views.api.DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL`
+    :params offset: The offset of into the list of playlists to return (for pagination)
+    :statuscode 200: Yay, you have data!
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+
+    user = validate_auth_header(True)
+
+    count = get_non_negative_param('count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
+    offset = get_non_negative_param('offset', 0)
+    playlist_user = db_user.get_by_mb_id(playlist_user_name)
+    if playlist_user is None:
+        raise APINotFound("Cannot find user: %s" % playlist_user_name)
+
+    # TODO: This needs to be passed to the DB layer
+    include_private = True if user and user["id"] == playlist_user["id"] else False
+    playlists, playlist_count = db_playlist.get_playlists_collaborated_on(playlist_user["id"],
+                                                                          include_private=include_private,
+                                                                          load_recordings=False,
+                                                                          count=count,
+                                                                          offset=offset)
+
+    return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
+
+
 def _parse_int_arg(name, default=None):
     value = request.args.get(name)
     if value:
@@ -436,21 +554,6 @@ def _parse_int_arg(name, default=None):
     else:
         return default
 
-
-def _validate_auth_header():
-    auth_token = request.headers.get('Authorization')
-    if not auth_token:
-        raise APIUnauthorized("You need to provide an Authorization header.")
-    try:
-        auth_token = auth_token.split(" ")[1]
-    except IndexError:
-        raise APIUnauthorized("Provided Authorization header is invalid.")
-
-    user = db_user.get_by_token(auth_token)
-    if user is None:
-        raise APIUnauthorized("Invalid authorization token.")
-
-    return user
 
 
 def _get_listen_type(listen_type):

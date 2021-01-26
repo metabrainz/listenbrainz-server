@@ -25,7 +25,7 @@ export type PlaylistItemCardProps = {
   track: JSPFTrack;
   currentFeedback: ListenFeedBack;
   canEdit: Boolean;
-  className?: string;
+  isBeingPlayed: boolean;
   currentUser?: ListenBrainzUser;
   playTrack: (track: JSPFTrack) => void;
   removeTrackFromPlaylist: (track: JSPFTrack) => void;
@@ -83,7 +83,7 @@ export default class PlaylistItemCard extends React.Component<
     const {
       track,
       canEdit,
-      className,
+      isBeingPlayed,
       currentFeedback,
       updateFeedback,
     } = this.props;
@@ -96,9 +96,9 @@ export default class PlaylistItemCard extends React.Component<
     return (
       <Card
         onDoubleClick={this.playTrack}
-        className={`playlist-item-card row ${className} ${
-          isDeleted ? " deleted" : ""
-        }`}
+        className={`playlist-item-card row ${
+          isBeingPlayed ? " current-track" : ""
+        } ${isDeleted ? " deleted" : ""}`}
         data-recording-mbid={track.id}
       >
         {/* We can't currently disable the SortableJS component (https://github.com/SortableJS/react-sortablejs/issues/153)
@@ -135,6 +135,7 @@ export default class PlaylistItemCard extends React.Component<
           </small>
         </div>
         {trackDuration && <div className="track-duration">{trackDuration}</div>}
+        {/* Deactivating feedback until the feedback system works with MBIDs instead of MSIDs
         <div className="listen-controls">
           <ListenControl
             icon={faHeart}
@@ -152,7 +153,7 @@ export default class PlaylistItemCard extends React.Component<
             }
             className={`${currentFeedback === -1 ? " hated" : ""}`}
           />
-        </div>
+        </div> */}
         {(customFields?.added_by || customFields?.added_at) && (
           <div className="addition-details">
             added&ensp;

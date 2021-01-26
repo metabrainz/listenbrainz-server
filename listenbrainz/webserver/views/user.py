@@ -1,34 +1,53 @@
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
-import urllib
 import ujson
-import psycopg2
-import datetime
 import time
 
-from flask import Blueprint, render_template, request, url_for, Response, redirect, flash, current_app, jsonify
+from flask import Blueprint, render_template, request, url_for, redirect, current_app, jsonify
 from flask_login import current_user, login_required
 from listenbrainz import webserver
-from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz.db.playlist import get_playlists_for_user
+from listenbrainz.db.playlist import get_playlists_for_user, get_playlists_created_for_user, get_playlists_collaborated_on
 from listenbrainz.domain import spotify
-from listenbrainz.webserver import flash
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
-from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver import timescale_connection
-from listenbrainz.webserver.views.api_tools import publish_data_to_queue, log_raise_400, is_valid_uuid
-from datetime import datetime
-from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, ServiceUnavailable, Unauthorized, InternalServerError
-from listenbrainz.webserver.views.stats_api import _get_non_negative_param
+from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
+from werkzeug.exceptions import NotFound, BadRequest
 from listenbrainz.webserver.views.playlist_api import serialize_jspf
-from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStoreException
 from pydantic import ValidationError
 
 LISTENS_PER_PAGE = 25
 
 user_bp = Blueprint("user", __name__)
+redirect_bp = Blueprint("redirect", __name__)
+
+
+def redirect_user_page(target):
+    """Redirect a well-known url to a user's profile.
+
+    The user-facing informational pages contain a username in the url. This means
+    that we don't have a standard url that we can send any user to (for example a link
+    on twitter). We configure some standardised URLS /my/[page] that will redirect
+    the user to this specific page in their namespace if they are logged in."""
+    def inner():
+        if current_user.is_authenticated:
+            print(url_for(target, user_name=current_user.musicbrainz_id, **request.args))
+            return redirect(url_for(target, user_name=current_user.musicbrainz_id, **request.args))
+        else:
+            return current_app.login_manager.unauthorized()
+        pass
+    return inner
+
+
+redirect_bp.add_url_rule("/listens", "redirect_listens", redirect_user_page("user.profile"))
+redirect_bp.add_url_rule("/charts", "redirect_charts", redirect_user_page("user.charts"))
+redirect_bp.add_url_rule("/reports", "redirect_reports", redirect_user_page("user.reports"))
+redirect_bp.add_url_rule("/playlists", "redirect_playlists", redirect_user_page("user.playlists"))
+redirect_bp.add_url_rule("/collaborations", "redirect_collaborations", redirect_user_page("user.collaborations"))
+redirect_bp.add_url_rule("/recommendations",
+                         "redirect_recommendations",
+                         redirect_user_page("user.recommendation_playlists"))
 
 
 @user_bp.route("/<user_name>")
@@ -203,6 +222,82 @@ def playlists(user_name: str):
     if not current_app.config.get("FEATURE_PLAYLIST", False):
         raise NotFound()
     
+    offset = request.args.get('offset', 0)
+    try:
+        offset = int(offset)
+    except ValueError:
+        raise BadRequest("Incorrect int argument offset: %s" % request.args.get("offset"))
+    
+    count = request.args.get("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
+    try:
+        count = int(count)
+    except ValueError:
+        raise BadRequest("Incorrect int argument count: %s" % request.args.get("count"))
+    
+    user = _get_user(user_name)
+    user_data = {
+        "name": user.musicbrainz_id,
+        "id": user.id,
+    }
+    
+    current_user_data = {}
+    if current_user.is_authenticated:
+        current_user_data = {
+            "id": current_user.id,
+            "name": current_user.musicbrainz_id,
+            "auth_token": current_user.auth_token,
+        }
+    
+    include_private = current_user.is_authenticated and current_user.id == user.id
+
+    playlists = []
+    user_playlists, playlist_count = get_playlists_for_user(user.id,
+                                                            include_private=include_private,
+                                                            load_recordings=False,
+                                                            count=count,
+                                                            offset=offset)
+    for playlist in user_playlists:
+        playlists.append(serialize_jspf(playlist))
+
+    props = {
+        "current_user": current_user_data,
+        "api_url": current_app.config["API_URL"],
+        "playlists": playlists,
+        "user": user_data,
+        "active_section": "playlists",
+        "playlist_count": playlist_count,
+        "pagination_offset": offset,
+        "playlists_per_page": count,
+    }
+
+    return render_template(
+        "playlists/playlists.html",
+        active_section="playlists",
+        props=ujson.dumps(props),
+        user=user
+    )
+
+
+@user_bp.route("/<user_name>/recommendations")
+def recommendation_playlists(user_name: str):
+    """ Show playlists created for user """
+    
+    if not current_app.config.get("FEATURE_PLAYLIST", False):
+        raise NotFound()
+    
+    offset = request.args.get('offset', 0)
+    try:
+        offset = int(offset)
+    except ValueError:
+        raise BadRequest("Incorrect int argument offset: %s" % request.args.get("offset"))
+    
+    count = request.args.get("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
+    try:
+        count = int(count)
+    except ValueError:
+        raise BadRequest("Incorrect int argument count: %s" % request.args.get("count"))
+    
+    
     user = _get_user(user_name)
     user_data = {
         "name": user.musicbrainz_id,
@@ -219,13 +314,9 @@ def playlists(user_name: str):
             "auth_token": current_user.auth_token,
         }
     
-    loadPrivatePlaylists = False
-    if current_user.is_authenticated and \
-       current_user.musicbrainz_id == user_name:
-       loadPrivatePlaylists = True
-    
     playlists = []
-    for playlist in get_playlists_for_user(user.id, loadPrivatePlaylists):
+    user_playlists, playlist_count = get_playlists_created_for_user(user.id, False, count, offset)
+    for playlist in user_playlists:
         playlists.append(serialize_jspf(playlist))
 
 
@@ -233,12 +324,74 @@ def playlists(user_name: str):
         "current_user": current_user_data,
         "api_url": current_app.config["API_URL"],
         "playlists": playlists,
-        "user": user_data
+        "user": user_data,
+        "active_section": "recommendations",
+        "playlist_count": playlist_count,
     }
 
     return render_template(
         "playlists/playlists.html",
-        active_section="playlists",
+        active_section="recommendations",
+        props=ujson.dumps(props),
+        user=user
+    )
+
+@user_bp.route("/<user_name>/collaborations")
+def collaborations(user_name: str):
+    """ Show playlists a user collaborates on """
+    
+    if not current_app.config.get("FEATURE_PLAYLIST", False):
+        raise NotFound()
+    
+    offset = request.args.get('offset', 0)
+    try:
+        offset = int(offset)
+    except ValueError:
+        raise BadRequest("Incorrect int argument offset: %s" % request.args.get("offset"))
+    
+    count = request.args.get("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
+    try:
+        count = int(count)
+    except ValueError:
+        raise BadRequest("Incorrect int argument count: %s" % request.args.get("count"))
+    
+    user = _get_user(user_name)
+    user_data = {
+        "name": user.musicbrainz_id,
+        "id": user.id,
+    }
+    
+    current_user_data = {}
+    if current_user.is_authenticated:
+        current_user_data = {
+            "id": current_user.id,
+            "name": current_user.musicbrainz_id,
+            "auth_token": current_user.auth_token,
+        }
+
+    include_private = current_user.is_authenticated and current_user.id == user.id
+
+    playlists = []
+    colalborative_playlists, playlist_count = get_playlists_collaborated_on(user.id,
+                                                                            include_private=include_private,
+                                                                            load_recordings=False,
+                                                                            count=count,
+                                                                            offset=offset)
+    for playlist in colalborative_playlists:
+        playlists.append(serialize_jspf(playlist))
+
+    props = {
+        "current_user": current_user_data,
+        "api_url": current_app.config["API_URL"],
+        "playlists": playlists,
+        "user": user_data,
+        "active_section": "collaborations",
+        "playlist_count": playlist_count,
+    }
+
+    return render_template(
+        "playlists/playlists.html",
+        active_section="collaborations",
         props=ujson.dumps(props),
         user=user
     )
