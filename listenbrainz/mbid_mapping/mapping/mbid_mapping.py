@@ -117,7 +117,7 @@ def create_temp_release_table(conn):
                     rows = []
 
                 if count % 1000000 == 0:
-                    log("mbid mapping temp tables: Fetch mapping releases: inserted %s rows." % count)
+                    log("mbid mapping temp tables: inserted %s rows." % count)
 
             if rows:
                 insert_rows(curs_insert, "mapping.tmp_mbid_mapping_releases", rows)
