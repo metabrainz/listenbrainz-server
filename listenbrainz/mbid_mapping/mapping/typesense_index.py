@@ -32,21 +32,21 @@ def build_index():
         'connection_timeout_seconds': 1000000
     })
 
-    collection_name = COLLECTION_NAME_PREFIX + datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
+    collection_name = COLLECTION_NAME_PREFIX + datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
     try:
-        log("build index '%s'" % collection_name)
+        log("typesense index: build index '%s'" % collection_name)
         build(client, collection_name)
     except typesense.exceptions.TypesenseClientError as err:
-        log("Cannot build index: ", str(err))
+        log("typesense index: Cannot build index: ", str(err))
         return -1
 
     try:
         latest = COLLECTION_NAME_PREFIX + "latest"
-        log("alias index '%s' to %s" % (collection_name, latest))
+        log("typesense index: alias index '%s' to %s" % (collection_name, latest))
         aliased_collection = { "collection_name": collection_name }
         client.aliases.upsert(latest, aliased_collection)
     except typesense.exceptions.TypesenseClientError as err:
-        log("Cannot build index: ", str(err))
+        log("typesense index: Cannot build index: ", str(err))
         return -2
 
     try:
@@ -55,13 +55,13 @@ def build_index():
                 continue;
 
             if collection["name"].startswith(COLLECTION_NAME_PREFIX):
-                log("delete collection '%s'" % collection["name"])
+                log("typesense index: delete collection '%s'" % collection["name"])
                 client.collections[collection["name"]].delete()
             else:
-                log("ignore collection '%s'" % collection["name"])
+                log("typesense index: ignore collection '%s'" % collection["name"])
 
     except typesense.exceptions.ObjectNotFound:
-        log("Failed to delete collection '%s'.", str(err))
+        log("typesense index: Failed to delete collection '%s'.", str(err))
 
     return 0
 
@@ -122,12 +122,12 @@ def build(client, collection_name):
                     documents = []
 
                 if i and i % 1000000 == 0:
-                    log("Indexed %d rows" % i)
+                    log("typesense index: Indexed %d rows" % i)
 
             if documents:
                 client.collections[collection_name].documents.import_(documents)
 
 
-    log("indexing complete. waiting for background tasks to finish.")
+    log("typesense index: indexing complete. waiting for background tasks to finish.")
     sys.stdout.flush()
     time.sleep(5)

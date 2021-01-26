@@ -1,2 +1,2 @@
 # Create the typesense index periodically
-0 * * * * listenbrainz /usr/local/bin/python /code/mapper/manage.py create-all
+0 4 * * * listenbrainz /usr/local/bin/python /code/mapper/manage.py create-all

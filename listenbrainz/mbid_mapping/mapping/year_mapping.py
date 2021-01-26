@@ -33,7 +33,7 @@ def create_tables(mb_conn):
             create_formats_table(mb_conn)
             mb_conn.commit()
     except (OperationalError, UndefinedTable) as err:
-        log("failed to create recording pair year tables", err)
+        log("year mapping: failed to create recording pair year tables", err)
         mb_conn.rollback()
         raise
 
@@ -49,7 +49,7 @@ def create_indexes(conn):
                                       ON mapping.tmp_year_mapping(artist_credit_name, recording_name)""")
         conn.commit()
     except OperationalError as err:
-        log("failed to create recording pair index", err)
+        log("year mapping: failed to create recording pair index", err)
         conn.rollback()
         raise
 
@@ -66,7 +66,7 @@ def create_temp_release_table(conn):
     """
 
     with conn.cursor() as curs:
-        log("Create temp release table: select")
+        log("year mapping temp tables: select")
         query = """             SELECT r.id AS release
                                   FROM musicbrainz.release_group rg
                                   JOIN musicbrainz.release r ON rg.id = r.release_group
@@ -86,10 +86,10 @@ def create_temp_release_table(conn):
                                           country, rg.artist_credit, rg.name"""
 
         if config.USE_MINIMAL_DATASET:
-            log("Create temp release table: Using a minimal dataset!")
+            log("year mapping temp tables: Using a minimal dataset!")
             curs.execute(query % ('WHERE rg.artist_credit = %d' % TEST_ARTIST_ID))
         else:
-            log("Create temp release table: Using full dataset")
+            log("year mapping temp tables: Using full dataset")
             curs.execute(query % "")
 
         # Fetch releases and toss out duplicates -- using DISTINCT in the query above is not possible as it will
@@ -114,7 +114,7 @@ def create_temp_release_table(conn):
             if rows:
                 insert_rows(curs_insert, "mapping.tmp_year_mapping_release", rows)
 
-        log("Create temp release table: done")
+        log("year mapping temp tables: done")
 
 
 def swap_table_and_indexes(conn):
@@ -135,7 +135,7 @@ def swap_table_and_indexes(conn):
                               RENAME TO year_mapping_idx_ac_rec_year""")
         conn.commit()
     except OperationalError as err:
-        log("failed to swap in new recording pair tables", str(err))
+        log("year mapping: failed to swap in new recording pair tables", str(err))
         conn.rollback()
         raise
 
@@ -149,11 +149,12 @@ def create_year_mapping():
         them suitable for inclusion in the msid-mapping.
     """
 
+    log("year mapping: start")
     with psycopg2.connect(config.DB_CONNECT_MB) as mb_conn:
         with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
 
             # Create the dest table (perhaps dropping the old one first)
-            log("Create year mapping: drop old tables, create new tables")
+            log("year mapping: drop old tables, create new tables")
             create_schema(mb_conn)
             create_tables(mb_conn)
 
@@ -164,7 +165,7 @@ def create_year_mapping():
                 last_ac_id = None
                 artist_recordings = {}
                 count = 0
-                log("Create year mapping: fetch recordings")
+                log("year mapping: fetch recordings")
                 mb_curs.execute("""SELECT lower(musicbrainz.musicbrainz_unaccent(r.name)) AS recording_name,
                                           lower(musicbrainz.musicbrainz_unaccent(ac.name)) AS artist_credit_name,
                                           ac.id AS artist_credit_id,
@@ -185,7 +186,6 @@ def create_year_mapping():
                                 LEFT JOIN release_country rc
                                        ON rc.release = rl.id
                                     ORDER BY ac.id, rpr.id""")
-                log("Create year mapping: Insert rows into DB.")
                 while True:
                     row = mb_curs.fetchone()
                     if not row:
@@ -218,12 +218,10 @@ def create_year_mapping():
                     mb_conn.commit()
                     count += len(rows)
 
-            log("Create year mapping: inserted %d rows total." % count)
-
-            log("Create year mapping: create indexes")
+            log("year mapping: inserted %d rows total." % count)
             create_indexes(mb_conn)
 
-            log("Create year mapping: swap tables and indexes into production.")
+            log("year mapping: swap tables and indexes into production.")
             swap_table_and_indexes(mb_conn)
 
-    log("done")
+    log("year mapping: done")

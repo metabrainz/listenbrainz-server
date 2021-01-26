@@ -23,6 +23,7 @@ def cli():
 def create_all():
     create_mbid_mapping()
     action_build_index()
+    create_year_mapping()
 
 
 @cli.command()
