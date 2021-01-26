@@ -1,6 +1,7 @@
 import sys
 import re
 import time
+import datetime
 
 import typesense
 import typesense.exceptions
@@ -8,6 +9,7 @@ from unidecode import unidecode
 import psycopg2
 
 import config
+from mapping.utils import log
 
 
 BATCH_SIZE = 5000
@@ -30,21 +32,21 @@ def build_index():
         'connection_timeout_seconds': 1000000
     })
 
-    collection_name = COLLECTION_NAME_PREFIX + str(int(time.time()))
+    collection_name = COLLECTION_NAME_PREFIX + datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
     try:
-        print("build index '%s'" % collection_name)
+        log("build index '%s'" % collection_name)
         build(client, collection_name)
     except typesense.exceptions.TypesenseClientError as err:
-        print("Cannot build index: ", str(err))
+        log("Cannot build index: ", str(err))
         return -1
 
     try:
         latest = COLLECTION_NAME_PREFIX + "latest"
-        print("alias index '%s' to %s" % (collection_name, latest))
+        log("alias index '%s' to %s" % (collection_name, latest))
         aliased_collection = { "collection_name": collection_name }
         client.aliases.upsert(latest, aliased_collection)
     except typesense.exceptions.TypesenseClientError as err:
-        print("Cannot build index: ", str(err))
+        log("Cannot build index: ", str(err))
         return -2
 
     try:
@@ -53,13 +55,13 @@ def build_index():
                 continue;
 
             if collection["name"].startswith(COLLECTION_NAME_PREFIX):
-                print("delete collection '%s'" % collection["name"])
+                log("delete collection '%s'" % collection["name"])
                 client.collections[collection["name"]].delete()
             else:
-                print("ignore collection '%s'" % collection["name"])
+                log("ignore collection '%s'" % collection["name"])
 
     except typesense.exceptions.ObjectNotFound:
-        print("Failed to delete collection '%s'.", str(err))
+        log("Failed to delete collection '%s'.", str(err))
 
     return 0
 
@@ -119,13 +121,13 @@ def build(client, collection_name):
                     client.collections[collection_name].documents.import_(documents)
                     documents = []
 
-                if i and i % 100000 == 0:
-                    print(i)
+                if i and i % 1000000 == 0:
+                    log("Indexed %d rows" % i)
 
             if documents:
                 client.collections[collection_name].documents.import_(documents)
 
 
-    print("indexing complete. waiting for background tasks to finish.")
+    log("indexing complete. waiting for background tasks to finish.")
     sys.stdout.flush()
     time.sleep(5)

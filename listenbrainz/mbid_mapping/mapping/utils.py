@@ -34,7 +34,7 @@ def insert_rows(curs, table, values):
 
 def log(*args):
     '''
-        Super simple logging function that prepends timestamps. Did I mention I had python's logging module?
+        Super simple logging function that prepends timestamps. Did I mention I hate python's logging module?
     '''
     print(asctime(), *args)
     sys.stdout.flush()

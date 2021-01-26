@@ -89,6 +89,7 @@ def create_temp_release_table(conn):
             log("Create temp release table: Using a minimal dataset!")
             curs.execute(query % ('WHERE rg.artist_credit = %d' % TEST_ARTIST_ID))
         else:
+            log("Create temp release table: Using full dataset")
             curs.execute(query % "")
 
         # Fetch releases and toss out duplicates -- using DISTINCT in the query above is not possible as it will
@@ -109,10 +110,11 @@ def create_temp_release_table(conn):
                 if len(rows) == BATCH_SIZE:
                     insert_rows(curs_insert, "mapping.tmp_year_mapping_release", rows)
                     rows = []
-                    print("recording pair releases inserted %s rows." % count)
 
             if rows:
                 insert_rows(curs_insert, "mapping.tmp_year_mapping_release", rows)
+
+        log("Create temp release table: done")
 
 
 def swap_table_and_indexes(conn):
@@ -201,7 +203,6 @@ def create_year_mapping():
                             insert_rows(mb_curs2, "mapping.tmp_year_mapping", rows)
                             count += len(rows)
                             mb_conn.commit()
-                            log("Create year mapping: inserted %d rows." % count)
                             rows = []
 
                     recording_name = row['recording_name']
@@ -226,4 +227,3 @@ def create_year_mapping():
             swap_table_and_indexes(mb_conn)
 
     log("done")
-    print()

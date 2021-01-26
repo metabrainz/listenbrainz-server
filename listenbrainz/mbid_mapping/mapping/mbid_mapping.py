@@ -115,8 +115,8 @@ def create_temp_release_table(conn):
                     insert_rows(curs_insert, "mapping.tmp_mbid_mapping_releases", rows)
                     rows = []
 
-                if count % 100000 == 0:
-                    print("Fetch mapping releases: inserted %s rows." % count)
+                if count % 1000000 == 0:
+                    log("Fetch mapping releases: inserted %s rows." % count)
 
             if rows:
                 insert_rows(curs_insert, "mapping.tmp_mbid_mapping_releases", rows)
@@ -239,7 +239,7 @@ def create_mbid_mapping():
                                                                  release_name, row['release_id'], row['year'],
                                                                  row['score'])
                     except TypeError:
-                        print(row)
+                        log(row)
                         raise
 
                     last_ac_id = row['artist_credit_id']
@@ -258,4 +258,3 @@ def create_mbid_mapping():
             swap_table_and_indexes(mb_conn)
 
     log("done")
-    print()
