@@ -24,8 +24,8 @@ def build_index():
 
     client = typesense.Client({
         'nodes': [{
-          'host': 'typesense',
-          'port': '8108',
+          'host': config.TYPESENSE_HOST,
+          'port': config.TYPESENSE_PORT,
           'protocol': 'http',
         }],
         'api_key': config.TYPESENSE_API_KEY,
