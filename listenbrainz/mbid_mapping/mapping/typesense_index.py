@@ -43,7 +43,7 @@ def build_index():
     try:
         latest = COLLECTION_NAME_PREFIX + "latest"
         log("typesense index: alias index '%s' to %s" % (collection_name, latest))
-        aliased_collection = { "collection_name": collection_name }
+        aliased_collection = {"collection_name": collection_name}
         client.aliases.upsert(latest, aliased_collection)
     except typesense.exceptions.TypesenseClientError as err:
         log("typesense index: Cannot build index: ", str(err))
@@ -52,7 +52,7 @@ def build_index():
     try:
         for collection in client.collections.retrieve():
             if collection["name"] == collection_name:
-                continue;
+                continue
 
             if collection["name"].startswith(COLLECTION_NAME_PREFIX):
                 log("typesense index: delete collection '%s'" % collection["name"])
@@ -64,7 +64,6 @@ def build_index():
         log("typesense index: Failed to delete collection '%s'.", str(err))
 
     return 0
-
 
 
 def build(client, collection_name):
@@ -126,7 +125,6 @@ def build(client, collection_name):
 
             if documents:
                 client.collections[collection_name].documents.import_(documents)
-
 
     log("typesense index: indexing complete. waiting for background tasks to finish.")
     sys.stdout.flush()
