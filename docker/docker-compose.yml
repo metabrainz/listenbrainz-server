@@ -35,6 +35,8 @@ services:
       context: ..
       dockerfile: Dockerfile
       target: listenbrainz-dev
+      args:
+        VCS_REF: HEAD
     environment:
       FLASK_APP: listenbrainz.webserver
       FLASK_ENV: development
