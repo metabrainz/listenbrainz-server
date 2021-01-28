@@ -325,7 +325,7 @@ describe("LastFmImporter Page", () => {
       hour12: true,
     });
 
-    expect(instance.getlastImportedString(testDate)).toMatch(msg);
-    expect(instance.getlastImportedString(testDate)).not.toHaveLength(0);
+    expect(LastFmImporter.getlastImportedString(testDate)).toMatch(msg);
+    expect(LastFmImporter.getlastImportedString(testDate)).not.toHaveLength(0);
   });
 });
