@@ -22,6 +22,8 @@ services:
       context: ../..
       dockerfile: Dockerfile
       target: listenbrainz-dev
+      args:
+        VCS_REF: HEAD
     depends_on:
       - redis
       - db
