@@ -683,8 +683,8 @@ export default class PlaylistPage extends React.Component<
   };
 
   handleInputChange = (inputValue: string, params: InputActionMeta) => {
-    /* Prevent clearing the search value on select dropdown close */
-    if (params.action === "menu-close" || params.action === "set-value") {
+    /* Prevent clearing the search value on select dropdown close and input blur */
+    if (["menu-close", "set-value", "input-blur"].includes(params.action)) {
       const { searchInputValue } = this.state;
       this.setState({ searchInputValue });
     } else {
