@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { isEqual, get, findIndex, omit, isNil, has } from "lodash";
+import { get, findIndex, omit, isNil, has, defaultsDeep } from "lodash";
 import * as io from "socket.io-client";
 
 import { ActionMeta, ValueType } from "react-select";
@@ -210,11 +210,13 @@ export default class PlaylistPage extends React.Component<
           selectedRecording.recording_mbid,
         ]); */
         jspfTrack.id = selectedRecording.recording_mbid;
-        this.setState({
-          playlist: { ...playlist, track: [...playlist.track, jspfTrack] },
-          // recordingFeedbackMap,
-        });
-        this.emitPlaylistChanged();
+        this.setState(
+          {
+            playlist: { ...playlist, track: [...playlist.track, jspfTrack] },
+            // recordingFeedbackMap,
+          },
+          this.emitPlaylistChanged
+        );
       } catch (error) {
         this.handleError(error);
       }
@@ -474,13 +476,15 @@ export default class PlaylistPage extends React.Component<
       );
       if (status === 200) {
         tracks.splice(trackIndex, 1);
-        this.setState({
-          playlist: {
-            ...playlist,
-            track: [...tracks],
+        this.setState(
+          {
+            playlist: {
+              ...playlist,
+              track: [...tracks],
+            },
           },
-        });
-        this.emitPlaylistChanged();
+          this.emitPlaylistChanged
+        );
       }
     } catch (error) {
       this.handleError(error);
@@ -558,32 +562,26 @@ export default class PlaylistPage extends React.Component<
       return;
     }
     try {
-      const editedPlaylist: JSPFPlaylist = {
-        ...playlist,
-        annotation: description,
-        title: name,
-        extension: {
-          [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
-            public: isPublic,
-            collaborators,
+      // Replace keys that have changed but keep all other attributres
+      const editedPlaylist: JSPFPlaylist = defaultsDeep(
+        {
+          annotation: description,
+          title: name,
+          extension: {
+            [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
+              public: isPublic,
+              collaborators,
+            },
           },
         },
-      };
+        playlist
+      );
+
       await this.APIService.editPlaylist(currentUser.auth_token, id, {
         playlist: omit(editedPlaylist, "track") as JSPFPlaylist,
       });
-
+      this.setState({ playlist: editedPlaylist }, this.emitPlaylistChanged);
       this.newAlert("success", "Saved playlist", "");
-    } catch (error) {
-      this.handleError(error);
-    }
-    try {
-      // Fetch the newly editd playlist and save it to state
-      const JSPFObject: JSPFObject = await this.APIService.getPlaylist(
-        id,
-        currentUser.auth_token
-      );
-      this.setState({ playlist: JSPFObject.playlist });
     } catch (error) {
       this.handleError(error);
     }
