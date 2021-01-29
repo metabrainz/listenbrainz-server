@@ -142,66 +142,6 @@ export default class ListenCard extends React.Component<
     );
   };
 
-  handleListenedAt = () => {
-    const { mode, listen } = this.props;
-    if (mode === "cf_recs") {
-      return (
-        <span
-          className="score text-center text-muted"
-          title={listen.score ? listen.score.toString() : "Undefined"}
-        >
-          score: {listen.score ? listen.score.toString() : "Undefined"}
-        </span>
-      );
-    }
-    return (
-      <span
-        className="listen-time text-center text-muted"
-        title={
-          listen.listened_at_iso?.toString() ||
-          new Date(listen.listened_at * 1000).toISOString()
-        }
-      >
-        {listen.listened_at_iso
-          ? timeago.ago(listen.listened_at_iso)
-          : timeago.ago(listen.listened_at * 1000)}
-      </span>
-    );
-  };
-
-  handleListenedAtMobileView = () => {
-    const { mode, listen } = this.props;
-    if (mode === "cf_recs") {
-      return (
-        <span
-          className="score text-center text-muted"
-          title={listen.score ? listen.score.toString() : "Undefined"}
-        >
-          score: {listen.score ? listen.score.toString() : "Undefined"}
-          &nbsp; &#8212; &nbsp;
-        </span>
-      );
-    }
-    return (
-      <span
-        className="listen-time text-muted"
-        title={
-          listen.listened_at_iso?.toString() ||
-          new Date(listen.listened_at * 1000).toISOString()
-        }
-      >
-        {`
-      ${
-        listen.listened_at_iso
-          ? timeago.ago(listen.listened_at_iso, true)
-          : timeago.ago(listen.listened_at * 1000, true)
-      }
-      `}
-        ago &#8212; &nbsp;
-      </span>
-    );
-  };
-
   render() {
     const { listen, mode, className, isCurrentUser } = this.props;
     const { feedback, isDeleted } = this.state;
@@ -215,9 +155,7 @@ export default class ListenCard extends React.Component<
       >
         <div
           className={`${
-            (isCurrentUser && mode !== "cf_recs") ||
-            mode === "recent" ||
-            mode === "follow"
+            isCurrentUser || mode === "recent" || mode === "follow"
               ? " col-xs-9"
               : " col-xs-12"
           }`}
@@ -244,7 +182,17 @@ export default class ListenCard extends React.Component<
                   <FontAwesomeIcon icon={faMusic as IconProp} /> Playing now
                 </span>
               ) : (
-                this.handleListenedAt()
+                <span
+                  className="listen-time text-center text-muted"
+                  title={
+                    listen.listened_at_iso?.toString() ||
+                    new Date(listen.listened_at * 1000).toISOString()
+                  }
+                >
+                  {listen.listened_at_iso
+                    ? timeago.ago(listen.listened_at_iso)
+                    : timeago.ago(listen.listened_at * 1000)}
+                </span>
               )}
             </div>
           </MediaQuery>
@@ -265,7 +213,22 @@ export default class ListenCard extends React.Component<
                         now &#8212;
                       </span>
                     ) : (
-                      this.handleListenedAtMobileView()
+                      <span
+                        className="listen-time text-muted"
+                        title={
+                          listen.listened_at_iso?.toString() ||
+                          new Date(listen.listened_at * 1000).toISOString()
+                        }
+                      >
+                        {`
+                          ${
+                            listen.listened_at_iso
+                              ? timeago.ago(listen.listened_at_iso, true)
+                              : timeago.ago(listen.listened_at * 1000, true)
+                          }
+                          `}
+                        ago &#8212; &nbsp;
+                      </span>
                     )}
                     {getArtistLink(listen)}
                   </small>
@@ -276,9 +239,7 @@ export default class ListenCard extends React.Component<
         </div>
         <div
           className={`${
-            (isCurrentUser && mode !== "cf_recs") ||
-            mode === "recent" ||
-            mode === "follow"
+            isCurrentUser || mode === "recent" || mode === "follow"
               ? " col-xs-3 text-center"
               : "hidden"
           }`}
@@ -292,46 +253,42 @@ export default class ListenCard extends React.Component<
               {listen.user_name}
             </a>
           ) : (
-            mode !== "cf_recs" && (
-              <div className="listen-controls">
-                {!listen?.playing_now && (
-                  <>
+            <div className="listen-controls">
+              {!listen?.playing_now && (
+                <>
+                  <ListenControl
+                    icon={faHeart}
+                    title="Love"
+                    action={() => this.submitFeedback(feedback === 1 ? 0 : 1)}
+                    className={`${feedback === 1 ? " loved" : ""}`}
+                  />
+                  <ListenControl
+                    icon={faHeartBroken}
+                    title="Hate"
+                    action={() => this.submitFeedback(feedback === -1 ? 0 : -1)}
+                    className={`${feedback === -1 ? " hated" : ""}`}
+                  />
+                  <FontAwesomeIcon
+                    icon={faEllipsisV as IconProp}
+                    title="Delete"
+                    className="dropdown-toggle"
+                    id="listenControlsDropdown"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="true"
+                  />
+                  <ul
+                    className="dropdown-menu dropdown-menu-right"
+                    aria-labelledby="listenControlsDropdown"
+                  >
                     <ListenControl
-                      icon={faHeart}
-                      title="Love"
-                      action={() => this.submitFeedback(feedback === 1 ? 0 : 1)}
-                      className={`${feedback === 1 ? " loved" : ""}`}
+                      title="Delete Listen"
+                      action={this.deleteListen}
                     />
-                    <ListenControl
-                      icon={faHeartBroken}
-                      title="Hate"
-                      action={() =>
-                        this.submitFeedback(feedback === -1 ? 0 : -1)
-                      }
-                      className={`${feedback === -1 ? " hated" : ""}`}
-                    />
-                    <FontAwesomeIcon
-                      icon={faEllipsisV as IconProp}
-                      title="Delete"
-                      className="dropdown-toggle"
-                      id="listenControlsDropdown"
-                      data-toggle="dropdown"
-                      aria-haspopup="true"
-                      aria-expanded="true"
-                    />
-                    <ul
-                      className="dropdown-menu dropdown-menu-right"
-                      aria-labelledby="listenControlsDropdown"
-                    >
-                      <ListenControl
-                        title="Delete Listen"
-                        action={this.deleteListen}
-                      />
-                    </ul>
-                  </>
-                )}
-              </div>
-            )
+                  </ul>
+                </>
+              )}
+            </div>
           )}
         </div>
       </Card>

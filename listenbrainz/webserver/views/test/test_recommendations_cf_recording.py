@@ -142,8 +142,8 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assert_context('user', user)
 
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.db_recommendations_cf_recording.get_user_recommendation')
-    @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_listens_from_recording_mbid')
-    def test_get_template_empty_repsonce_top_artist(self, mock_get_listens, mock_get_rec):
+    @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_playable_recommendations_list')
+    def test_get_template_empty_repsonce_top_artist(self, mock_get_recommendations, mock_get_rec):
         user = _get_user('vansika_1')
 
         mock_get_rec.return_value = UserRecommendationsData(**{
@@ -156,7 +156,7 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
             'created': datetime.utcnow(),
             'user_id': 1
         })
-        mock_get_listens.return_value = []
+        mock_get_recommendations.return_value = []
 
         recommendations_cf_recording._get_template(active_section='top_artist', user=user)
         self.assertTemplateUsed('recommendations_cf_recording/top_artist.html')
@@ -166,8 +166,8 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assert_context('error_msg', error_msg)
 
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.db_recommendations_cf_recording.get_user_recommendation')
-    @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_listens_from_recording_mbid')
-    def test_get_template_empty_repsonce_similar_artist(self, mock_get_listens, mock_get_rec):
+    @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_playable_recommendations_list')
+    def test_get_template_empty_repsonce_similar_artist(self, mock_get_recommendations, mock_get_rec):
         user = _get_user('vansika_1')
 
         mock_get_rec.return_value = UserRecommendationsData(**{
@@ -180,7 +180,7 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
             'created': datetime.utcnow(),
             'user_id': 1
         })
-        mock_get_listens.return_value = []
+        mock_get_recommendations.return_value = []
 
         recommendations_cf_recording._get_template(active_section='similar_artist', user=user)
         self.assertTemplateUsed('recommendations_cf_recording/similar_artist.html')
@@ -192,8 +192,8 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.spotify.get_user_dict')
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.current_user')
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.db_recommendations_cf_recording.get_user_recommendation')
-    @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_listens_from_recording_mbid')
-    def test_get_template(self, mock_get_listens, mock_get_rec, mock_curr_user, mock_spotify_dict):
+    @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_playable_recommendations_list')
+    def test_get_template(self, mock_get_recommendations, mock_get_rec, mock_curr_user, mock_spotify_dict):
         # active_section = 'top_artist'
         user = _get_user('vansika_1')
         created = datetime.utcnow()
@@ -209,7 +209,7 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
             'user_id': 1
         })
 
-        listens = [{
+        recommendations = [{
             'listened_at': 0,
             'track_metadata': {
                 'artist_name': "Ultravox",
@@ -219,10 +219,9 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
                     'recording_mbid': "af5a56f4-1f83-4681-b319-70a734d0d047",
                     'artist_mbids': ["6a70b322-9aa9-41b3-9dce-824733633a1c"]
                 }
-            },
-            'score': 0.756
+            }
         }]
-        mock_get_listens.return_value = listens
+        mock_get_recommendations.return_value = recommendations
 
         spotify_dict = {'user': 10}
         mock_spotify_dict.return_value = spotify_dict
@@ -233,7 +232,7 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
 
         recommendations_cf_recording._get_template(active_section='top_artist', user=user)
         mock_get_rec.assert_called_with(user.id)
-        mock_get_listens.assert_called_once()
+        mock_get_recommendations.assert_called_once()
         mock_spotify_dict.assert_called_with(10)
         self.assertTemplateUsed('recommendations_cf_recording/top_artist.html')
         self.assert_context('active_section', 'top_artist')
@@ -253,8 +252,7 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
             "spotify": spotify_dict,
             "api_url": current_app.config["API_URL"],
             "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
-            "listens": listens,
-            "mode": "cf_recs"
+            "recommendations": recommendations
         }
         received_props = ujson.loads(self.get_context_variable('props'))
         self.assertEqual(expected_props, received_props)
@@ -280,7 +278,7 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
 
 
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.requests')
-    def test_get_listens_from_recording_mbid(self, mock_requests):
+    def test_get_playable_recommendations_list(self, mock_requests):
         mbids_and_ratings = [
             {
                 'recording_mbid': "03f1b16a-af43-4cd7-b22c-d2991bf011a3",
@@ -320,23 +318,10 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
         mock_requests.post().text = ujson.dumps(text)
         mock_requests.post().status_code = 200
 
-        received_listens = recommendations_cf_recording._get_listens_from_recording_mbid(mbids_and_ratings)
+        received_recommendations = recommendations_cf_recording._get_playable_recommendations_list(mbids_and_ratings)
 
         mock_requests.post.assert_called_with(self.server_url, json=data)
-        expected_listens = [
-            {
-                'listened_at': 0,
-                'track_metadata': {
-                    'artist_name': 'Tame Impala',
-                    'track_name': 'Sun’s Coming Up',
-                    'release_name': '',
-                    'additional_info': {
-                            'recording_mbid': '2c8412f0-9353-48a2-aedb-1ad8dac9498f',
-                            'artist_mbids': ['63aa26c3-d59b-4da4-84ac-716b54f1ef4d']
-                    }
-                },
-                'score': 9.0
-            },
+        expected_recommendations = [
             {
                 'listened_at': 0,
                 'track_metadata': {
@@ -347,16 +332,27 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
                         'recording_mbid': '03f1b16a-af43-4cd7-b22c-d2991bf011a3',
                         'artist_mbids': ['63aa26c3-d59b-4da4-84ac-716b54f1ef4d']
                     }
-                },
-                'score': 6.88
+                }
+            },
+            {
+                'listened_at': 0,
+                'track_metadata': {
+                    'artist_name': 'Tame Impala',
+                    'track_name': 'Sun’s Coming Up',
+                    'release_name': '',
+                    'additional_info': {
+                            'recording_mbid': '2c8412f0-9353-48a2-aedb-1ad8dac9498f',
+                            'artist_mbids': ['63aa26c3-d59b-4da4-84ac-716b54f1ef4d']
+                    }
+                }
             }
         ]
-        self.assertEqual(expected_listens, received_listens)
+        self.assertEqual(expected_recommendations, received_recommendations)
 
         mock_requests.post().status_code = 400
         with self.assertRaises(BadRequest):
-            recommendations_cf_recording._get_listens_from_recording_mbid(mbids_and_ratings)
+            recommendations_cf_recording._get_playable_recommendations_list(mbids_and_ratings)
 
         mock_requests.post().status_code = 304
         with self.assertRaises(InternalServerError):
-            recommendations_cf_recording._get_listens_from_recording_mbid(mbids_and_ratings)
+            recommendations_cf_recording._get_playable_recommendations_list(mbids_and_ratings)

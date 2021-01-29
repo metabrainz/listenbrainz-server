@@ -1,0 +1,18 @@
+{%- extends 'base.html' -%}
+{%- block title -%}Importing Data - ListenBrainz{%- endblock -%}
+{%- block content -%}
+  <h2 class="page-title">Importing your data to Listenbrainz</h2>
+  {# Last.fm import information #}
+  <h3>Importing data from Last.fm</h3>
+
+  <p>
+     We encourage Last.fm users to save their listen histories to ListenBrainz.
+  </p>
+  <p>
+    To help us test this service, please import your listen history from Last.fm. To proceed, you will need a
+    MusicBrainz account.
+  </p>
+  <div class="well" style="max-width: 600px; margin: 0 auto;">
+    <a href="{{ url_for('index.import_data') }}" class="btn btn-primary btn-lg btn-block">Import my listen history</a>
+  </div>
+{%- endblock -%}

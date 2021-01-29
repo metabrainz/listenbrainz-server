@@ -11,18 +11,9 @@ MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@db:5
 
 POSTGRES_ADMIN_URI = "postgresql://postgres@db/postgres"
 
-SQLALCHEMY_TIMESCALE_URI = "postgresql://listenbrainz_ts:listenbrainz_ts@timescale/listenbrainz_ts"
-TIMESCALE_ADMIN_URI = "postgresql://postgres:postgres@timescale/postgres"
-TIMESCALE_ADMIN_LB_URI = "postgresql://postgres:postgres@timescale/listenbrainz_ts"
-
-# Other postgres configuration options
-# Oldest listens which can be stored in the database, in days.
-MAX_POSTGRES_LISTEN_HISTORY = "-1"
-# Log Postgres queries if they execeed this time, in milliseconds.
-PG_QUERY_TIMEOUT = "3000"
-# Set to True to enable 'synchronous_commit' for Postgres. Default: False
-PG_ASYNC_LISTEN_COMMIT = False
-
+SQLALCHEMY_TIMESCALE_URI = "postgresql://listenbrainz_ts:listenbrainz_ts@db/listenbrainz_ts"
+TIMESCALE_ADMIN_URI = "postgresql://postgres:postgres@db/postgres"
+TIMESCALE_ADMIN_LB_URI = "postgresql://postgres:postgres@db/listenbrainz_ts"
 
 # Redis
 REDIS_HOST = "redis"

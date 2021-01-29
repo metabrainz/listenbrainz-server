@@ -161,32 +161,33 @@ export default class APIService {
 
       const url = `${this.APIBaseURI}/submit-listens`;
 
-      try {
-        const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            Authorization: `Token ${userToken}`,
-            "Content-Type": "application/json;charset=UTF-8",
-          },
-          body: JSON.stringify(struct),
-        });
-
-        // we skip listens if we get an error code that's not a rate limit
-        if (response.status === 429) {
+      /* eslint-disable no-await-in-loop */
+      while (true) {
+        try {
+          const response = await fetch(url, {
+            method: "POST",
+            headers: {
+              Authorization: `Token ${userToken}`,
+              "Content-Type": "application/json;charset=UTF-8",
+            },
+            body: JSON.stringify(struct),
+          });
+          // we skip listens if we get an error code that's not a rate limit
+          if (response.status !== 429) {
+            return response; // Return response so that caller can handle appropriately
+          }
           // Rate limit error, this should never happen, but if it does, try again in 3 seconds.
-          setTimeout(
-            () => this.submitListens(userToken, listenType, payload),
-            3000
-          );
+          await new Promise((resolve) => {
+            setTimeout(resolve, 3000);
+          });
+        } catch {
+          // Retry if there is an network error
+          await new Promise((resolve) => {
+            setTimeout(resolve, 3000);
+          });
         }
-        return response; // Return response so that caller can handle appropriately
-      } catch {
-        // Retry if there is an network error
-        setTimeout(
-          () => this.submitListens(userToken, listenType, payload),
-          3000
-        );
       }
+      /* eslint-enable no-await-in-loop */
     }
 
     // Payload is not within submission limit, split and submit
@@ -610,5 +611,55 @@ export default class APIService {
     });
     await this.checkStatus(response);
     return response.status;
+  };
+
+  submitRecommendationFeedback = async (
+    userToken: string,
+    recordingMBID: string,
+    rating: RecommendationFeedBack
+  ): Promise<number> => {
+    const url = `${this.APIBaseURI}/recommendation/feedback/submit`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ recording_mbid: recordingMBID, rating }),
+    });
+    this.checkStatus(response);
+    return response.status;
+  };
+
+  deleteRecommendationFeedback = async (
+    userToken: string,
+    recordingMBID: string
+  ): Promise<number> => {
+    const url = `${this.APIBaseURI}/recommendation/feedback/delete`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ recording_mbid: recordingMBID }),
+    });
+    this.checkStatus(response);
+    return response.status;
+  };
+
+  getFeedbackForUserForRecommendations = async (
+    userName: string,
+    recordings: string
+  ) => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+
+    const url = `${this.APIBaseURI}/recommendation/feedback/user/${userName}/recordings?mbids=${recordings}`;
+    const response = await fetch(url);
+    this.checkStatus(response);
+    const data = response.json();
+    return data;
   };
 }
