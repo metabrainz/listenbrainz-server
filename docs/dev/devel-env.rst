@@ -255,15 +255,18 @@ are a helpful way to validate new changes without a lot of work.
 Lint your code
 --------------
 
-ListenBrainz uses ESLint to lint the frontend codebase, please make sure you lint
-all new frontend code using
+ListenBrainz uses ESLint to lint the frontend codebase as part of the development process, in Webpack.
+
+ESLint will automatically fix trivial issues and list all other issues in your terminal.
+Make sure to fix any error with the code you've modified.
+
+There can be quite a lot of logs in the terminal, so if you want to look only at front-end build output, you can use this command to inspect only the static_builder logs:
 
 .. code-block:: bash
 
-    ./lint.sh
+   ./develop.sh logs -f static_builder
 
-This command should list all issues with the code you've modified. Make sure to fix
-all errors.
-
+FAQ
+--------------
 We have a :doc:`FAQ page <faqs>` for questions that come up often. Please take a look
 if you have any issues.
