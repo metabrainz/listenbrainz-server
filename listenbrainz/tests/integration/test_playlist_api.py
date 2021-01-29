@@ -335,7 +335,11 @@ class PlaylistAPITestCase(IntegrationTestCase):
         """ Test to ensure creating a playlist with collaborators works """
 
         playlist = get_test_data()
-        playlist["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["collaborators"] = [self.user2["musicbrainz_id"]]
+        # If the owner is in collaborators, it should be filtered out
+        # If a collaborator is listed multiple times, it should only be added once
+        playlist["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["collaborators"] = [self.user["musicbrainz_id"],
+                                                                                      self.user2["musicbrainz_id"],
+                                                                                      self.user2["musicbrainz_id"]]
 
         response = self.client.post(
             url_for("playlist_api_v1.create_playlist"),
@@ -385,13 +389,15 @@ class PlaylistAPITestCase(IntegrationTestCase):
 
         playlist_mbid = response.json["playlist_mbid"]
 
-        # Test to ensure fetching a playlist works
+        # Test to ensure posting a playlist works
+        # Owner is in collaborators, should be filtered out
         response = self.client.post(
             url_for("playlist_api_v1.edit_playlist", playlist_mbid=playlist_mbid),
             json={"playlist": {"title": "new title",
                                "annotation": "new <b>desc</b> <script>noscript</script>",
                                "extension": {PLAYLIST_EXTENSION_URI: {"public": False,
-                                                                      "collaborators": [self.user2["musicbrainz_id"],
+                                                                      "collaborators": [self.user["musicbrainz_id"],
+                                                                                        self.user2["musicbrainz_id"],
                                                                                         self.user3["musicbrainz_id"]]}
                                              }}},
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
@@ -635,7 +641,9 @@ class PlaylistAPITestCase(IntegrationTestCase):
               "title": "my stupid playlist",
               "extension": {
                   PLAYLIST_EXTENSION_URI: {
-                      "public": True
+                      "public": True,
+                      "collaborators": [self.user2["musicbrainz_id"],
+                                        self.user3["musicbrainz_id"]]
                   }
               },
            }
@@ -671,7 +679,9 @@ class PlaylistAPITestCase(IntegrationTestCase):
                          [PLAYLIST_EXTENSION_URI]["public"], True)
         self.assertEqual(response.json["playlist"]["title"], "Copy of my stupid playlist")
         self.assertEqual(response.json["playlist"]["creator"], "anothertestuserpleaseignore")
-
+        # Ensure original playlist's collaborators have been scrubbed
+        # The serialized JSPF playlist leaves out the "collaborators" key if there are none
+        self.assertNotIn("collaborators", response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI])
 
         # Now delete the original playlist so that we can test copied from deleted playlist
         response = self.client.post(
