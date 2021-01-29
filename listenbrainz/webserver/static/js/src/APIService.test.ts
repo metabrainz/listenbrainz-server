@@ -11,7 +11,6 @@ describe("submitListens", () => {
         status: 200,
       });
     });
-
     jest.useFakeTimers();
   });
 
@@ -46,11 +45,12 @@ describe("submitListens", () => {
     });
   });
 
-  it("retries if submit fails", async () => {
-    // Overide mock for fetch
+  it("retries if network error / submit fails", async () => {
+    // Overide mock for fetch:
     window.fetch = jest
       .fn()
       .mockImplementationOnce(() => {
+        // 1st call will recieve a network error
         return Promise.reject(Error);
       })
       .mockImplementation(() => {
@@ -60,7 +60,7 @@ describe("submitListens", () => {
         });
       });
 
-    await apiService.submitListens("foobar", "import", [
+    apiService.submitListens("foobar", "import", [
       {
         listened_at: 1000,
         track_metadata: {
@@ -69,19 +69,34 @@ describe("submitListens", () => {
         },
       },
     ]);
+
+    jest.runAllTimers();
+    // Flush all promises
+    // https://stackoverflow.com/questions/51126786/jest-fake-timers-with-promises
+    await new Promise((resolve) => setImmediate(resolve));
+
     expect(setTimeout).toHaveBeenCalledTimes(1);
   });
 
-  it("retries if error 429 is recieved fails", async () => {
+  it("retries if error 429 is recieved (rate limited)", async () => {
     // Overide mock for fetch
-    window.fetch = jest.fn().mockImplementation(() => {
-      return Promise.resolve({
-        ok: true,
-        status: 429,
+    window.fetch = jest
+      .fn()
+      .mockImplementationOnce(() => {
+        // 1st call will recieve a 429 error
+        return Promise.resolve({
+          ok: true,
+          status: 429,
+        });
+      })
+      .mockImplementation(() => {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+        });
       });
-    });
 
-    await apiService.submitListens("foobar", "import", [
+    apiService.submitListens("foobar", "import", [
       {
         listened_at: 1000,
         track_metadata: {
@@ -90,6 +105,12 @@ describe("submitListens", () => {
         },
       },
     ]);
+
+    jest.runAllTimers();
+    // Flush all promises
+    // https://stackoverflow.com/questions/51126786/jest-fake-timers-with-promises
+    await new Promise((resolve) => setImmediate(resolve));
+
     expect(setTimeout).toHaveBeenCalledTimes(1);
   });
 
@@ -111,7 +132,7 @@ describe("submitListens", () => {
         },
       },
     ]);
-    expect(setTimeout).not.toHaveBeenCalled(); // no setTimeout calls for future retries
+    expect(setTimeout).not.toHaveBeenCalled(); // should return response with no calls for additional retries
   });
 
   it("returns the response if successful", async () => {
