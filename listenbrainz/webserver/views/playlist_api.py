@@ -285,6 +285,13 @@ def create_playlist():
     collaborators = data.get("playlist", {}).\
         get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}).\
         get("collaborators", [])
+    
+    # Uniquify collaborators list
+    collaborators = list(set(collaborators))
+
+    # Don't allow creator to also be a collaborator
+    if user["musicbrainz_id"] in collaborators:
+        collaborators.remove(user["musicbrainz_id"])
 
     username_lookup = collaborators
     created_for = data["playlist"].get("created_for", None)
@@ -392,7 +399,14 @@ def edit_playlist(playlist_mbid):
         get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}).\
         get("collaborators", [])
     users = {}
+
+    # Uniquify collaborators list
+    collaborators = list(set(collaborators))
+
     if collaborators:
+        # Don't allow creator to also be a collaborator
+        if user["musicbrainz_id"] in collaborators:
+            collaborators.remove(user["musicbrainz_id"])
         users = db_user.get_many_users_by_mb_id(collaborators)
 
     collaborator_ids = []
@@ -662,7 +676,7 @@ def copy_playlist(playlist_mbid):
     try:
         new_playlist = db_playlist.copy_playlist(playlist, user["id"])
     except Exception as e:
-        current_app.logger.error("Error deleting playlist: {}".format(e))
-        raise APIInternalServerError("Failed to delete the playlist. Please try again.")
+        current_app.logger.error("Error copying playlist: {}".format(e))
+        raise APIInternalServerError("Failed to copy the playlist. Please try again.")
 
     return jsonify({'status': 'ok', 'playlist_mbid': new_playlist.mbid})
