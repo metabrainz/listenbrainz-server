@@ -282,7 +282,7 @@ export default class LastFmImporter extends React.Component<
     while (this.page > 0) {
       // Fixing no-await-in-loop will require significant changes to the code, ignoring for now
       const payload = await this.getPage(this.page); // eslint-disable-line
-      this.lastImportedString = "Attempting to fetch track...";
+      this.lastImportedString = "...";
       if (payload) {
         // Submit only if response is valid
         this.submitPage(payload);
