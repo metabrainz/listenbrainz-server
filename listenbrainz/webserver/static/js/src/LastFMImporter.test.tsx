@@ -314,8 +314,8 @@ describe("LastFmImporter Page", () => {
 
   it("should properly convert latest imported timestamp to string", () => {
     // Check getlastImportedString() and formatting
-    const testDate = Number(page.recenttracks.track[0].date.uts);
-    const lastImportedDate = new Date(testDate * 1000);
+    const data = LastFmImporter.encodeScrobbles(page);
+    const lastImportedDate = new Date(data[0].listened_at * 1000);
     const msg = lastImportedDate.toLocaleString("en-US", {
       month: "short",
       day: "2-digit",
@@ -325,7 +325,23 @@ describe("LastFmImporter Page", () => {
       hour12: true,
     });
 
-    expect(LastFmImporter.getlastImportedString(testDate)).toMatch(msg);
-    expect(LastFmImporter.getlastImportedString(testDate)).not.toHaveLength(0);
+    expect(LastFmImporter.getlastImportedString(data[0])).toMatch(msg);
+    expect(LastFmImporter.getlastImportedString(data[0])).not.toHaveLength(0);
+  });
+});
+
+describe("importLoop", () => {
+  beforeEach(() => {
+    const wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
+    instance = wrapper.instance();
+    instance.setState({ lastfmUsername: "dummyUser" });
+  });
+
+  // only uncaught exeptions can cause importLoop to stop processing payloads
+  it("should not contain any uncaught exceptions", async () => {
+    instance.getPage = jest.fn().mockImplementation(() => {
+      return null;
+    });
+    await instance.importLoop();
   });
 });

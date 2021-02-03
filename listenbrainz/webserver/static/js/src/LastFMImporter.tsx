@@ -207,7 +207,7 @@ export default class LastFmImporter extends React.Component<
       }
     } catch {
       // Retry if there is a network error
-      retry("Error");
+      retry("Network error");
     }
     return null;
   }
@@ -269,29 +269,20 @@ export default class LastFmImporter extends React.Component<
     this.updateRateLimitParameters(response);
   }
 
-  async startImport() {
-    this.updateModalAction(<p>Your import from Last.fm is starting!</p>, false);
-    this.latestImportTime = await this.APIService.getLatestImport(
-      this.userName
-    );
-    this.incrementalImport = this.latestImportTime > 0;
-    this.playCount = await this.getTotalNumberOfScrobbles();
-    this.totalPages = await this.getNumberOfPages();
-    this.page = this.totalPages; // Start from the last page so that oldest scrobbles are imported first
-
+  async importLoop() {
     while (this.page > 0) {
       // Fixing no-await-in-loop will require significant changes to the code, ignoring for now
       const payload = await this.getPage(this.page); // eslint-disable-line
       if (payload) {
         // Submit only if response is valid
         this.submitPage(payload);
+        this.lastImportedString = LastFmImporter.getlastImportedString(
+          payload[0]
+        );
       }
 
       this.page -= 1;
       this.numCompleted += 1;
-      this.lastImportedString = LastFmImporter.getlastImportedString(
-        payload[0].listened_at
-      );
 
       // Update message
       const msg = (
@@ -316,8 +307,21 @@ export default class LastFmImporter extends React.Component<
       );
       this.setState({ msg });
     }
+  }
 
-    // Update latest import time on LB server
+  async startImport() {
+    this.updateModalAction(<p>Your import from Last.fm is starting!</p>, false);
+    this.latestImportTime = await this.APIService.getLatestImport(
+      this.userName
+    );
+    this.incrementalImport = this.latestImportTime > 0;
+    this.playCount = await this.getTotalNumberOfScrobbles();
+    this.totalPages = await this.getNumberOfPages();
+    this.page = this.totalPages; // Start from the last page so that oldest scrobbles are imported first
+
+    await this.importLoop(); // import pages
+
+    // after import finish, update latest import time on LB server
     try {
       this.maxTimestampForImport = Math.max(
         Number(this.maxTimestampForImport),
