@@ -34,11 +34,14 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-      target: listenbrainz-dev
+      target: listenbrainz-prod
     environment:
       FLASK_APP: listenbrainz.webserver
       FLASK_ENV: development
-    command: flask run -h 0.0.0.0 -p 80
+      CONSUL_HOST: host.docker.internal
+      DEPLOY_ENV: beta
+      CONTAINER_NAME: listenbrainz-web-beta
+    #command: flask run -h 0.0.0.0 -p 80
     image: web
     volumes:
       - web_home:/root

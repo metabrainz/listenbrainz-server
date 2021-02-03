@@ -1,12 +1,51 @@
 #!/bin/bash
 
+echo "Hello, this is rc.local. CONTAINER_NAME is $CONTAINER_NAME, and DEPLOY_ENV is $DEPLOY_ENV"
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-web-${DEPLOY_ENV}" ]
+then
+    rm -f /etc/service/uwsgi/down
+    exit 0
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-timescale-writer-${DEPLOY_ENV}" ]
+then
+    cd /code/listenbrainz
+    exec python3 -u -m listenbrainz.timescale_writer.timescale_writer
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-api-compat-${DEPLOY_ENV}" ]
+then
+    exec uwsgi /etc/uwsgi/uwsgi-api-compat.ini
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-follow-dispatcher-${DEPLOY_ENV}" ]
+then
+    cd /code/listenbrainz
+    exec python manage.py run_follow_server -h 0.0.0.0 -p 3031
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-spotify-reader-${DEPLOY_ENV}" ]
+then
+    cd /code/listenbrainz
+    exec python3 -m listenbrainz.spotify_updater.spotify_read_listens
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-spark-reader-${DEPLOY_ENV}" ]
+then
+    cd /code/listenbrainz
+    exec python3 -m listenbrainz.spark.spark_reader
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-labs-api-${DEPLOY_ENV}" ]
+then
+    cd /code/listenbrainz
+    exec uwsgi /etc/uwsgi/uwsgi-labs-api.ini
+fi
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-cron-${DEPLOY_ENV}" ]
 then
     rm -f /etc/service/cron/down
-    exit 0
-else
-    rm -f /etc/service/uwsgi/down
     exit 0
 fi
 
