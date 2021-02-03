@@ -1,13 +1,46 @@
 #!/bin/bash
 
+echo "Hello, this is rc.local. CONTAINER_NAME is $CONTAINER_NAME, and DEPLOY_ENV is $DEPLOY_ENV"
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-web-${DEPLOY_ENV}" ]
+then
+    rm -f /etc/service/uwsgi/down
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-timescale-writer-${DEPLOY_ENV}" ]
+then
+    rm -f /etc/service/timescale_writer/down
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-api-compat-${DEPLOY_ENV}" ]
+then
+    rm -f /etc/service/api_compat/down
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-follow-dispatcher-${DEPLOY_ENV}" ]
+then
+    rm -f /etc/service/follow_dispatcher/down
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-spotify-reader-${DEPLOY_ENV}" ]
+then
+    rm -f /etc/service/spotify_reader/down
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-spark-reader-${DEPLOY_ENV}" ]
+then
+    rm -f /etc/service/spark_reader/down
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-labs-api-${DEPLOY_ENV}" ]
+then
+    rm -f /etc/service/labs_api/down
+fi
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-cron-${DEPLOY_ENV}" ]
 then
     rm -f /etc/service/cron/down
-    exit 0
-else
-    rm -f /etc/service/uwsgi/down
-    exit 0
+    rm -f /etc/service/cron-config/down
 fi
 
 
