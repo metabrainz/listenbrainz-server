@@ -127,5 +127,4 @@ def build(client, collection_name):
                 client.collections[collection_name].documents.import_(documents)
 
     log("typesense index: indexing complete. waiting for background tasks to finish.")
-    sys.stdout.flush()
     time.sleep(5)

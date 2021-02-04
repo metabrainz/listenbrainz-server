@@ -14,5 +14,5 @@ git describe --tags --dirty --always > .git-version
 
 TAG=${1:-prod}
 echo "building tag $TAG"
-docker build -t metabrainz/listenbrainz-mbid-mapping:$TAG -f Dockerfile.prod . && \
+docker build -t metabrainz/listenbrainz-mbid-mapping:$TAG --target mbid-mapping-prod . && \
     docker push metabrainz/listenbrainz-mbid-mapping:$TAG
