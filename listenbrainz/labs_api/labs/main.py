@@ -5,12 +5,14 @@ from listenbrainz.labs_api.labs.api.artist_country_from_artist_mbid import Artis
 from listenbrainz.labs_api.labs.api.artist_credit_from_artist_mbid import ArtistCreditIdFromArtistMBIDQuery
 from listenbrainz.labs_api.labs.api.artist_credit_from_artist_msid import ArtistCreditIdFromArtistMSIDQuery
 from listenbrainz.labs_api.labs.api.recording_from_recording_mbid import RecordingFromRecordingMBIDQuery
+from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery
 from listenbrainz.webserver import load_config
 
 register_query(ArtistCountryFromArtistMBIDQuery())
 register_query(ArtistCreditIdFromArtistMBIDQuery())
 register_query(ArtistCreditIdFromArtistMSIDQuery())
 register_query(RecordingFromRecordingMBIDQuery())
+register_query(MBIDMappingQuery())
 
 app = create_app()
 load_config(app)

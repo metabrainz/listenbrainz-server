@@ -61,7 +61,7 @@ class MBIDMappingQuery(Query):
         args = []
         for i, param in enumerate(params):
             args.append((i, param['[artist_credit_name]'], param['[recording_name]']))
-      
+
         results = []
         for index, artist_credit_name, recording_name in args:
             hit = self.search(artist_credit_name, recording_name)
@@ -77,7 +77,7 @@ class MBIDMappingQuery(Query):
     #  - Swap artist/recording
     #  - remove track numbers from recording
     def detune_query_string(self, query):
-        """ 
+        """
             Detune (remove known extra cruft) a metadata field. If a known
             trailing string exists in the input string, that string and everything
             after it is removed.
@@ -135,10 +135,10 @@ class MBIDMappingQuery(Query):
 
 
     def search(self, artist_credit_name, recording_name):
-        """ 
+        """
             Main query body: Prepare the search query terms and prepare
             detuned query terms. Then attempt to find the given search terms
-            and if not found, sequentially try the detuned versions of the 
+            and if not found, sequentially try the detuned versions of the
             query terms. Return a match dict (properly formatted for this
             query) or None if not match.
         """
@@ -154,7 +154,7 @@ class MBIDMappingQuery(Query):
 
         tries = 0
         while True:
-           
+
             tries += 1
             hit = self.lookup(artist_credit_name_p, recording_name_p)
             if hit:
