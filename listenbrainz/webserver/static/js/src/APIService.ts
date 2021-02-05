@@ -161,32 +161,33 @@ export default class APIService {
 
       const url = `${this.APIBaseURI}/submit-listens`;
 
-      try {
-        const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            Authorization: `Token ${userToken}`,
-            "Content-Type": "application/json;charset=UTF-8",
-          },
-          body: JSON.stringify(struct),
-        });
-
-        // we skip listens if we get an error code that's not a rate limit
-        if (response.status === 429) {
+      /* eslint-disable no-await-in-loop */
+      while (true) {
+        try {
+          const response = await fetch(url, {
+            method: "POST",
+            headers: {
+              Authorization: `Token ${userToken}`,
+              "Content-Type": "application/json;charset=UTF-8",
+            },
+            body: JSON.stringify(struct),
+          });
+          // we skip listens if we get an error code that's not a rate limit
+          if (response.status !== 429) {
+            return response; // Return response so that caller can handle appropriately
+          }
           // Rate limit error, this should never happen, but if it does, try again in 3 seconds.
-          setTimeout(
-            () => this.submitListens(userToken, listenType, payload),
-            3000
-          );
+          await new Promise((resolve) => {
+            setTimeout(resolve, 3000);
+          });
+        } catch {
+          // Retry if there is an network error
+          await new Promise((resolve) => {
+            setTimeout(resolve, 3000);
+          });
         }
-        return response; // Return response so that caller can handle appropriately
-      } catch {
-        // Retry if there is an network error
-        setTimeout(
-          () => this.submitListens(userToken, listenType, payload),
-          3000
-        );
       }
+      /* eslint-enable no-await-in-loop */
     }
 
     // Payload is not within submission limit, split and submit

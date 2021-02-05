@@ -311,23 +311,21 @@ describe("LastFmImporter Page", () => {
     // Test if button is disabled
     expect(wrapper.find('input[type="submit"]').props().disabled).toBe(true);
   });
-});
 
-describe("LastFmImporter Page", () => {
   it("should properly convert latest imported timestamp to string", () => {
     // Check getlastImportedString() and formatting
-    let testDate = Number(page["recenttracks"]["track"][0]["date"]["uts"]);
-    let lastImportedDate = new Date(testDate * 1000);
-    let msg = lastImportedDate.toLocaleString("en-US", {
-        month: "short",
-        day: "2-digit",
-        year: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        hour12: true,
+    const testDate = Number(page.recenttracks.track[0].date.uts);
+    const lastImportedDate = new Date(testDate * 1000);
+    const msg = lastImportedDate.toLocaleString("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
     });
 
-    expect(instance.getlastImportedString(testDate)).toMatch(msg);
-    expect(instance.getlastImportedString(testDate).length).not.toEqual(0);
+    expect(LastFmImporter.getlastImportedString(testDate)).toMatch(msg);
+    expect(LastFmImporter.getlastImportedString(testDate)).not.toHaveLength(0);
   });
 });
