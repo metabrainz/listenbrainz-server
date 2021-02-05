@@ -32,3 +32,6 @@ sentry-sdk[flask]==0.19.5
 six == 1.15.0
 pydantic == 1.6.1
 pycountry == 20.7.3
+typesense==0.9.0
+unidecode==1.1.2
+Levenshtein==0.12.0
