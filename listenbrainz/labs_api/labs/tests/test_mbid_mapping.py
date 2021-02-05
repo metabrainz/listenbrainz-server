@@ -13,7 +13,7 @@ json_request = [
 ]
 
 typesense_response = {
-    "hits" : [ {
+    "hits" : [ { "document" : {
         "artist_credit_arg": "u2",
         "artist_credit_id": 197,
         "artist_credit_name": "U2",
@@ -22,7 +22,7 @@ typesense_response = {
         "recording_name": "Gloria",
         "release_mbid": "7abd5878-4ea3-4b33-a5d2-7721317013d7",
         "release_name": "October"
-    } ]
+    }} ]
 } 
 
 json_response = [
@@ -61,13 +61,11 @@ class MainTestCase(flask_testing.TestCase):
                          'artist_credit_name', 'release_name', 'recording_name',
                          'release_mbid', 'recording_mbid', 'artist_credit_id'])
 
-    @patch('typesense.Client')
-    def test_fetch(self, client):
-        client.collections[COLLECTION_NAME].documents.search.return_value = typesense_response
+    @patch('typesense.documents.Documents.search')
+    def test_fetch(self, search):
+        search.return_value = typesense_response
 
         q = MBIDMappingQuery()
-        print(client.call_count)
         resp = q.fetch(json_request)
-        print(client.call_count)
         self.assertEqual(len(resp), 1)
         self.assertDictEqual(resp[0], json_response[0])
