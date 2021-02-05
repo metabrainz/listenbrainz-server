@@ -9,6 +9,10 @@ RUN useradd --create-home --shell /bin/bash --uid 901 --gid 901 listenbrainz
 RUN mkdir -p /code/mapper && chown listenbrainz:listenbrainz /code/mapper
 WORKDIR /code/mapper
 
+COPY requirements.txt /code/mapper
+RUN python -m pip install --no-cache-dir -r requirements.txt
+COPY . /code/mapper
+
 
 # Section for PROD specific setup
 FROM mbid-mapping-base as mbid-mapping-prod
