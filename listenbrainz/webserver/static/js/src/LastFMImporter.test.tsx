@@ -331,17 +331,65 @@ describe("LastFmImporter Page", () => {
 });
 
 describe("importLoop", () => {
+  const errorMsg: string = "Testing: something went wrong !!!";
   beforeEach(() => {
     const wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
     instance = wrapper.instance();
     instance.setState({ lastfmUsername: "dummyUser" });
+    // needed for startImport
+    instance.APIService.getLatestImport = jest.fn().mockImplementation(() => {
+      return Promise.resolve(0);
+    });
+
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(getInfo),
+      });
+    });
   });
 
-  // only uncaught exeptions can cause importLoop to stop processing payloads
   it("should not contain any uncaught exceptions", async () => {
     instance.getPage = jest.fn().mockImplementation(() => {
       return null;
     });
-    await instance.importLoop();
+
+    let error = null;
+    try {
+      await instance.importLoop();
+    } catch (e) {
+      error = e;
+    }
+    expect(error).toBeNull();
+  });
+
+  it("should show success message on import completion", async () => {
+    // Mock function for successful importLoop
+    instance.importLoop = jest.fn().mockImplementation(async () => {
+      return Promise.resolve({
+        ok: true,
+      });
+    });
+
+    await expect(instance.startImport()).resolves.toBe(null);
+    // verify message is success message
+    expect(instance.state.msg?.props.children).toContain("Import finished");
+    // verify message isn't failure message
+    expect(instance.state.msg?.props.children).not.toContain(errorMsg);
+  });
+
+  it("should show error message on unhandled exception / network error", async () => {
+    // Mock function for failed importLoop
+    instance.importLoop = jest.fn().mockImplementation(async () => {
+      const error = new Error();
+      error.message = errorMsg;
+      throw error;
+    });
+
+    // startImport shouldn't throw error
+    await expect(instance.startImport()).resolves.toBe(null);
+    // verify message is failure message
+    expect(instance.state.msg?.props.children).toContain(errorMsg);
   });
 });
