@@ -102,4 +102,5 @@ services:
     command: npm run build:dev
     volumes:
       - ../listenbrainz/webserver/static:/code/static:z
+      - ../listenbrainz/webserver/static:/static:z
 
