@@ -6,6 +6,7 @@ from listenbrainz.labs_api.labs.api.artist_credit_from_artist_mbid import Artist
 from listenbrainz.labs_api.labs.api.artist_credit_from_artist_msid import ArtistCreditIdFromArtistMSIDQuery
 from listenbrainz.labs_api.labs.api.recording_from_recording_mbid import RecordingFromRecordingMBIDQuery
 from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery
+from listenbrainz.labs_api.labs.api.year_lookup import RecordingYearLookupQuery
 from listenbrainz.webserver import load_config
 
 register_query(ArtistCountryFromArtistMBIDQuery())
@@ -13,6 +14,7 @@ register_query(ArtistCreditIdFromArtistMBIDQuery())
 register_query(ArtistCreditIdFromArtistMSIDQuery())
 register_query(RecordingFromRecordingMBIDQuery())
 register_query(MBIDMappingQuery())
+register_query(RecordingYearLookupQuery())
 
 app = create_app()
 load_config(app)
