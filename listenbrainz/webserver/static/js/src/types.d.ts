@@ -367,11 +367,7 @@ declare type ListensListMode = "listens" | "follow" | "recent";
 
 declare type ListenFeedBack = 1 | 0 | -1;
 
-declare type RecommendationFeedBack =
-  | "love"
-  | "like"
-  | "hate"
-  | "dislike";
+declare type RecommendationFeedBack = "love" | "like" | "hate" | "dislike";
 
 declare type FeedbackResponse = {
   recording_msid: string;
