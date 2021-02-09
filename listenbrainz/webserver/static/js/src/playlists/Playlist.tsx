@@ -227,6 +227,7 @@ export default class PlaylistPage extends React.Component<
         value: hit,
       }));
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.debug(error);
     }
     return [];

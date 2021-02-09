@@ -100,7 +100,6 @@ export default class UserPlaylists extends React.Component<
     }
     if (offset === paginationOffset && count === playlistsPerPage) {
       // Nothing changed
-      console.debug("handleURLChange does nothing");
       return;
     }
 
