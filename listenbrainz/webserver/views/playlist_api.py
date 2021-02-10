@@ -447,7 +447,7 @@ def get_playlist(playlist_mbid):
     user = validate_auth_header(True)
     user_id = None
     if user:
-        user_id =  user["id"]
+        user_id = user["id"]
     if not playlist.is_visible_by(user_id):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 

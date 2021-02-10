@@ -79,7 +79,7 @@ class Playlist(BaseModel):
     recordings: List[PlaylistRecording]
     # mbid of the playlist referred to in copied_from_id
     copied_from_mbid: Optional[uuid.UUID]
-    
+
     def is_visible_by(self, user_id: int):
         if self.public:
             return True
