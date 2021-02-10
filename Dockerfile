@@ -66,6 +66,7 @@ RUN useradd --create-home --shell /bin/bash --uid 900 --gid 900 lbdumps
 
 RUN groupadd --gid 901 listenbrainz_stats_cron
 RUN useradd --create-home --shell /bin/bash --uid 901 --gid 901 listenbrainz_stats_cron
+RUN mkdir /logs && chown lbdumps:lbdumps /logs
 
 
 # Add cron jobs
