@@ -111,7 +111,6 @@ API_URL = 'https://api.listenbrainz.org'
 LASTFM_PROXY_URL = 'http://localhost:8080/'
 SERVER_ROOT_URL = 'http://localhost'
 WEBSOCKETS_SERVER_URL = 'http://localhost:8081'
-PLAYLIST_WEBSOCKETS_URL = 'http://localhost:8082'
 MUSICBRAINZ_OAUTH_URL = 'https://musicbrainz.org/oauth2/userinfo'
 LISTENBRAINZ_LABS_API_URL = 'https://labs.api.listenbrainz.org'
 

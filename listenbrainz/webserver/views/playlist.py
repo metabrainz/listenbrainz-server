@@ -39,7 +39,7 @@ def load_playlist(playlist_mbid: str):
         "current_user": current_user_data,
         "spotify": spotify_data,
         "api_url": current_app.config["API_URL"],
-        "web_sockets_server_url": current_app.config['PLAYLIST_WEBSOCKETS_URL'],
+        "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
         "playlist": serialize_jspf(playlist)
     }
 
