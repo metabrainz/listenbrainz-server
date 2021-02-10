@@ -100,19 +100,6 @@ export default class LastFmImporter extends React.Component<
     this.userToken = props.user.auth_token || "";
   }
 
-  static getlastImportedString(listenedAt: number) {
-    // Retrieve first track's timestamp from payload and convert it into string for display
-    const lastImportedDate = new Date(listenedAt * 1000);
-    return lastImportedDate.toLocaleString("en-US", {
-      month: "short",
-      day: "2-digit",
-      year: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-      hour12: true,
-    });
-  }
-
   async getTotalNumberOfScrobbles() {
     /*
      * Get the total play count reported by Last.FM for user
@@ -212,6 +199,19 @@ export default class LastFmImporter extends React.Component<
       retry("Network error");
     }
     return null;
+  }
+
+  static getlastImportedString(listen: Listen) {
+    // Retrieve first track's timestamp from payload and convert it into string for display
+    const lastImportedDate = new Date(listen.listened_at * 1000);
+    return lastImportedDate.toLocaleString("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
+    });
   }
 
   getRateLimitDelay() {

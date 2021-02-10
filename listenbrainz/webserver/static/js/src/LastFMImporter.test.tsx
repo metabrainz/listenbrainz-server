@@ -331,7 +331,6 @@ describe("LastFmImporter Page", () => {
 });
 
 describe("importLoop", () => {
-  const errorMsg: string = "Testing: something went wrong !!!";
   beforeEach(() => {
     const wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
     instance = wrapper.instance();
@@ -376,13 +375,17 @@ describe("importLoop", () => {
     // verify message is success message
     expect(instance.state.msg?.props.children).toContain("Import finished");
     // verify message isn't failure message
-    expect(instance.state.msg?.props.children).not.toContain(errorMsg);
+    expect(instance.state.msg?.props.children).not.toContain(
+      "Something went wrong"
+    );
   });
 
   it("should show error message on unhandled exception / network error", async () => {
+    const errorMsg = "Testing: something went wrong !!!";
     // Mock function for failed importLoop
     instance.importLoop = jest.fn().mockImplementation(async () => {
       const error = new Error();
+      // Changing the error message to make sure it gets reflected in the modal.
       error.message = errorMsg;
       throw error;
     });
