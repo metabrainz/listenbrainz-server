@@ -158,6 +158,7 @@ export default class LastFmImporter extends React.Component<
     const { lastfmUsername } = this.state;
 
     const retry = (reason: string) => {
+      // eslint-disable-next-line no-console
       console.warn(
         `${reason} while fetching last.fm page=${page}, retrying in 3s`
       );
@@ -334,7 +335,7 @@ export default class LastFmImporter extends React.Component<
           <FontAwesomeIcon icon={faTimes as IconProp} /> Import failed due to a
           network error, please retry.
           <br />
-          Message: "{err.message}."
+          Message: &quot;{err.message}&quot;
           <br />
           <br />
           <span style={{ fontSize: `${10}pt` }}>
@@ -344,7 +345,8 @@ export default class LastFmImporter extends React.Component<
           </span>
         </p>
       );
-      console.warn(err);
+      // eslint-disable-next-line no-console
+      console.debug(err);
       this.setState({ canClose: true, msg: finalMsg });
       return Promise.resolve(null);
     }
