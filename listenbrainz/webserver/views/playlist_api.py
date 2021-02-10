@@ -371,7 +371,7 @@ def edit_playlist(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
     playlist = db_playlist.get_by_mbid(playlist_mbid, False)
-    if playlist is None or (not playlist.public and playlist.creator_id != user["id"]):
+    if playlist is None or (not playlist.public and playlist.creator_id != user["id"] and user["id"] not in playlist.collaborator_ids):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
     if playlist.creator_id != user["id"]:
@@ -446,7 +446,7 @@ def get_playlist(playlist_mbid):
 
     if not playlist.public:
         user = validate_auth_header()
-        if playlist.creator_id != user["id"]:
+        if playlist.creator_id != user["id"] and user["id"] not in playlist.collaborator_ids:
             raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
     fetch_playlist_recording_metadata(playlist)
@@ -487,10 +487,10 @@ def add_playlist_item(playlist_mbid, offset):
 
     playlist = db_playlist.get_by_mbid(playlist_mbid)
     if playlist is None or \
-       (playlist.creator_id != user["id"] and not playlist.public):
+       (playlist.creator_id != user["id"] and user["id"] not in playlist.collaborator_ids and not playlist.public):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
-    if playlist.creator_id != user["id"]:
+    if playlist.creator_id != user["id"] and user["id"] not in playlist.collaborator_ids:
         raise APIForbidden("You are not allowed to add recordings to this playlist.")
 
     data = request.json
@@ -545,10 +545,10 @@ def move_playlist_item(playlist_mbid):
 
     playlist = db_playlist.get_by_mbid(playlist_mbid)
     if playlist is None or \
-       (playlist.creator_id != user["id"] and not playlist.public):
+       (playlist.creator_id != user["id"] and user["id"] not in playlist.collaborator_ids and not playlist.public):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
-    if playlist.creator_id != user["id"]:
+    if playlist.creator_id != user["id"] and user["id"] not in playlist.collaborator_ids:
         raise APIForbidden("You are not allowed to move recordings in this playlist.")
 
     data = request.json
@@ -591,10 +591,10 @@ def delete_playlist_item(playlist_mbid):
 
     playlist = db_playlist.get_by_mbid(playlist_mbid)
     if playlist is None or \
-       (playlist.creator_id != user["id"] and not playlist.public):
+       (playlist.creator_id != user["id"] and user["id"] not in playlist.collaborator_ids and not playlist.public):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
-    if playlist.creator_id != user["id"]:
+    if playlist.creator_id != user["id"] and user["id"] not in playlist.collaborator_ids:
         raise APIForbidden("You are not allowed to remove recordings from this playlist.")
 
     data = request.json
@@ -670,7 +670,7 @@ def copy_playlist(playlist_mbid):
 
     playlist = db_playlist.get_by_mbid(playlist_mbid)
     if playlist is None or \
-       (playlist.creator_id != user["id"] and not playlist.public):
+       (playlist.creator_id != user["id"] and user["id"] not in playlist.collaborator_ids and not playlist.public):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
     try:
