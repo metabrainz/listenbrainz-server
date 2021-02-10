@@ -18,9 +18,12 @@ def load_playlist(playlist_mbid: str):
     if not is_valid_uuid(playlist_mbid):
         raise BadRequest("Provided playlist ID is invalid: %s" % playlist_mbid)
 
+    current_user_id = None
+    if current_user.is_authenticated:
+        current_user_id = current_user.id
+
     playlist = db_playlist.get_by_mbid(playlist_mbid, True)
-    if playlist is None or not playlist.public and not current_user.is_authenticated \
-            or (playlist.creator_id != current_user.id and current_user.id not in playlist.collaborator_ids):
+    if playlist is None or not playlist.is_visible_by(current_user_id):
         raise NotFound("Cannot find playlist: %s" % playlist_mbid)
 
     fetch_playlist_recording_metadata(playlist)

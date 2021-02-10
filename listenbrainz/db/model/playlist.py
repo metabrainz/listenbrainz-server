@@ -79,6 +79,18 @@ class Playlist(BaseModel):
     recordings: List[PlaylistRecording]
     # mbid of the playlist referred to in copied_from_id
     copied_from_mbid: Optional[uuid.UUID]
+    
+    def is_visible_by(self, user_id: int):
+        if self.public:
+            return True
+        if user_id:
+            if user_id == self.creator_id:
+                return True
+            elif user_id in self.collaborator_ids:
+                return True
+            else:
+                return False
+        return False
 
 
 class WritablePlaylist(Playlist):
