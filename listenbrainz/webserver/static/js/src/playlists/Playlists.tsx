@@ -15,6 +15,7 @@ import {
 import { AlertList } from "react-bs-notifier";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { sanitize } from "dompurify";
 import APIService from "../APIService";
 import Card from "../components/Card";
 import Loader from "../components/Loader";
@@ -100,7 +101,6 @@ export default class UserPlaylists extends React.Component<
     }
     if (offset === paginationOffset && count === playlistsPerPage) {
       // Nothing changed
-      console.debug("handleURLChange does nothing");
       return;
     }
 
@@ -617,7 +617,11 @@ export default class UserPlaylists extends React.Component<
                   {playlist.annotation && (
                     <div
                       className="description"
-                      dangerouslySetInnerHTML={{ __html: playlist.annotation }}
+                      // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
+                      // eslint-disable-next-line react/no-danger
+                      dangerouslySetInnerHTML={{
+                        __html: sanitize(playlist.annotation),
+                      }}
                     />
                   )}
                   <div>
