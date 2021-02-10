@@ -321,7 +321,13 @@ export default class APIService {
     if (response.status >= 200 && response.status < 300) {
       return;
     }
-    const data = response.body || (response.json && (await response.json()));
+    let data;
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.indexOf("application/json") !== -1) {
+      data = await response.json();
+    } else {
+      data = response.body;
+    }
     let message;
     if (data?.error) {
       message = data?.error;
