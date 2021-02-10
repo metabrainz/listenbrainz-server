@@ -371,7 +371,8 @@ def edit_playlist(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
     playlist = db_playlist.get_by_mbid(playlist_mbid, False)
-    if playlist is None or (not playlist.public and playlist.creator_id != user["id"] and user["id"] not in playlist.collaborator_ids):
+    if playlist is None or \
+    (not playlist.public and playlist.creator_id != user["id"] and user["id"] not in playlist.collaborator_ids):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
     if playlist.creator_id != user["id"]:
