@@ -20,6 +20,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { ReactSortable } from "react-sortablejs";
 import debounceAsync from "debounce-async";
+import { sanitize } from "dompurify";
 import APIService from "../APIService";
 import SpotifyAPIService from "../SpotifyAPIService";
 import BrainzPlayer from "../BrainzPlayer";
@@ -227,6 +228,7 @@ export default class PlaylistPage extends React.Component<
         value: hit,
       }));
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.debug(error);
     }
     return [];
@@ -821,7 +823,11 @@ export default class PlaylistPage extends React.Component<
               </div>
               {playlist.annotation && (
                 <div
-                  dangerouslySetInnerHTML={{ __html: playlist.annotation }}
+                  // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
+                  // eslint-disable-next-line react/no-danger
+                  dangerouslySetInnerHTML={{
+                    __html: sanitize(playlist.annotation),
+                  }}
                 />
               )}
               <hr />
