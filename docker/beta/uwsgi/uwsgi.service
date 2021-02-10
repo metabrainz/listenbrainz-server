@@ -25,7 +25,7 @@ fi
 if [ "${CONTAINER_NAME}" = "listenbrainz-follow-dispatcher-beta" ]
 then
     cd /code/listenbrainz
-    exec python3 manage.py run_follow_server -h 0.0.0.0 -p 3031
+    exec python3 manage.py run_websockets -h 0.0.0.0 -p 3031
 fi
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-spark-reader-beta" ]
