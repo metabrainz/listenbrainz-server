@@ -373,7 +373,7 @@ def edit_playlist(playlist_mbid):
     playlist = db_playlist.get_by_mbid(playlist_mbid, False)
     if playlist is None \
         or (not playlist.public and playlist.creator_id != user["id"] and user["id"] not in playlist.collaborator_ids):
-        raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+            raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
     if playlist.creator_id != user["id"]:
         raise APIForbidden("You are not allowed to edit this playlist.")

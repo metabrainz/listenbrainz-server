@@ -21,7 +21,7 @@ def load_playlist(playlist_mbid: str):
     playlist = db_playlist.get_by_mbid(playlist_mbid, True)
     if playlist is None or not playlist.public and not current_user.is_authenticated \
         or (playlist.creator_id != current_user.id and current_user.id not in playlist.collaborator_ids):
-        raise NotFound("Cannot find playlist: %s" % playlist_mbid)
+            raise NotFound("Cannot find playlist: %s" % playlist_mbid)
 
     fetch_playlist_recording_metadata(playlist)
 
