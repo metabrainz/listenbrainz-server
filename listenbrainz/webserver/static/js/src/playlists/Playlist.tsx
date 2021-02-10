@@ -5,7 +5,7 @@ import * as ReactDOM from "react-dom";
 import { get, findIndex, omit, isNil, has, defaultsDeep } from "lodash";
 import * as io from "socket.io-client";
 
-import { ActionMeta, ValueType } from "react-select";
+import { ActionMeta, InputActionMeta, ValueType } from "react-select";
 import {
   faCog,
   faPen,
@@ -20,6 +20,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { ReactSortable } from "react-sortablejs";
 import debounceAsync from "debounce-async";
+import { sanitize } from "dompurify";
 import APIService from "../APIService";
 import SpotifyAPIService from "../SpotifyAPIService";
 import BrainzPlayer from "../BrainzPlayer";
@@ -54,6 +55,8 @@ export interface PlaylistPageState {
   playlist: JSPFPlaylist;
   recordingFeedbackMap: RecordingFeedbackMap;
   loading: boolean;
+  searchInputValue: string;
+  cachedSearchResults: OptionType[];
 }
 
 type OptionType = { label: string; value: ACRMSearchResult };
@@ -75,7 +78,6 @@ export default class PlaylistPage extends React.Component<
   private spotifyPlaylist?: SpotifyPlaylistObject;
   private searchForTrackDebounced: any;
   private brainzPlayer = React.createRef<BrainzPlayer>();
-  private addTrackSelectRef = React.createRef<AsyncSelect<OptionType>>();
 
   private socket!: SocketIOClient.Socket;
 
@@ -95,6 +97,8 @@ export default class PlaylistPage extends React.Component<
       playlist: props.playlist?.playlist || {},
       recordingFeedbackMap: {},
       loading: false,
+      searchInputValue: "",
+      cachedSearchResults: [],
     };
 
     this.APIService = new APIService(
@@ -199,11 +203,6 @@ export default class PlaylistPage extends React.Component<
           getPlaylistId(playlist),
           [jspfTrack]
         );
-        if (this.addTrackSelectRef?.current?.select) {
-          (this.addTrackSelectRef.current.select as any).setState({
-            value: null,
-          });
-        }
         this.newAlert("success", "Added track", `Added track ${label}`);
         /* Deactivating feedback until the feedback system works with MBIDs instead of MSIDs */
         /* const recordingFeedbackMap = await this.loadFeedback([
@@ -220,6 +219,9 @@ export default class PlaylistPage extends React.Component<
       } catch (error) {
         this.handleError(error);
       }
+    }
+    if (actionMeta.action === "clear") {
+      this.setState({ searchInputValue: "", cachedSearchResults: [] });
     }
   };
 
@@ -238,11 +240,14 @@ export default class PlaylistPage extends React.Component<
       // Converting to JSON
       const parsedResponse: ACRMSearchResult[] = await response.json();
       // Format the received items to a react-select option
-      return parsedResponse.map((hit: ACRMSearchResult) => ({
+      const results = parsedResponse.map((hit: ACRMSearchResult) => ({
         label: `${hit.recording_name} — ${hit.artist_credit_name}`,
         value: hit,
       }));
+      this.setState({ cachedSearchResults: results });
+      return results;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.debug(error);
     }
     return [];
@@ -693,8 +698,25 @@ export default class PlaylistPage extends React.Component<
     this.setState({ loading: false });
   };
 
+  handleInputChange = (inputValue: string, params: InputActionMeta) => {
+    /* Prevent clearing the search value on select dropdown close and input blur */
+    if (["menu-close", "set-value", "input-blur"].includes(params.action)) {
+      const { searchInputValue } = this.state;
+      this.setState({ searchInputValue });
+    } else {
+      this.setState({ searchInputValue: inputValue, cachedSearchResults: [] });
+    }
+  };
+
   render() {
-    const { alerts, currentTrack, playlist, loading } = this.state;
+    const {
+      alerts,
+      currentTrack,
+      playlist,
+      loading,
+      searchInputValue,
+      cachedSearchResults,
+    } = this.state;
     const { spotify, currentUser, apiUrl } = this.props;
     const { track: tracks } = playlist;
     const hasRightToEdit = this.hasRightToEdit();
@@ -835,7 +857,11 @@ export default class PlaylistPage extends React.Component<
               </div>
               {playlist.annotation && (
                 <div
-                  dangerouslySetInnerHTML={{ __html: playlist.annotation }}
+                  // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
+                  // eslint-disable-next-line react/no-danger
+                  dangerouslySetInnerHTML={{
+                    __html: sanitize(playlist.annotation),
+                  }}
                 />
               )}
               <hr />
@@ -900,13 +926,16 @@ export default class PlaylistPage extends React.Component<
                     className="search"
                     cacheOptions
                     isClearable
+                    closeMenuOnSelect={false}
                     loadingMessage={({ inputValue }) =>
                       `Searching for '${inputValue}'…`
                     }
                     loadOptions={this.searchForTrackDebounced}
+                    defaultOptions={cachedSearchResults}
                     onChange={this.addTrack}
                     placeholder="Artist followed by track name"
-                    ref={this.addTrackSelectRef}
+                    inputValue={searchInputValue}
+                    onInputChange={this.handleInputChange}
                   />
                 </Card>
               )}

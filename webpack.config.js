@@ -17,7 +17,10 @@ module.exports = function (env) {
         mode: "write-references",
       },
       eslint: {
-        files: "./static/js/src/**/*.{ts,tsx,js,jsx}",
+        // Starting the path with "**/" because of current dev/prod path discrepancy
+        // In dev we bind-mount the source code to "/code/static" and in prod to "/static"
+        // The "**/" allows us to ignore the folder structure and find source files in whatever CWD we're in.
+        files: "**/js/src/**/*.{ts,tsx,js,jsx}",
         options: { fix: !isProd },
       },
     }),
@@ -25,19 +28,19 @@ module.exports = function (env) {
   return {
     mode: isProd ? "production" : "development",
     entry: {
-      main: "./static/js/src/RecentListens.tsx",
-      import: "./static/js/src/LastFMImporter.tsx",
-      userEntityChart: "./static/js/src/stats/UserEntityChart.tsx",
-      userReports: "./static/js/src/stats/UserReports.tsx",
-      userPageHeading: "./static/js/src/UserPageHeading.tsx",
-      userFeed: "./static/js/src/UserFeed.tsx",
-      playlist: "./static/js/src/playlists/Playlist.tsx",
-      playlists: "./static/js/src/playlists/Playlists.tsx",
-      recommendations: "./static/js/src/recommendations/Recommendations.tsx",
+      main: "/static/js/src/RecentListens.tsx",
+      import: "/static/js/src/LastFMImporter.tsx",
+      userEntityChart: "/static/js/src/stats/UserEntityChart.tsx",
+      userReports: "/static/js/src/stats/UserReports.tsx",
+      userPageHeading: "/static/js/src/UserPageHeading.tsx",
+      userFeed: "/static/js/src/UserFeed.tsx",
+      playlist: "/static/js/src/playlists/Playlist.tsx",
+      playlists: "/static/js/src/playlists/Playlists.tsx",
+      recommendations: "/static/js/src/recommendations/Recommendations.tsx",
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",
-      path: path.resolve(__dirname, "static/js/dist"),
+      path: "/static/js/dist",
     },
     devtool: isProd ? false : "inline-source-map",
     module: {
@@ -71,7 +74,7 @@ module.exports = function (env) {
       ],
     },
     resolve: {
-      modules: ["/code/node_modules", "./static/node_modules"],
+      modules: ["/code/node_modules", "/static/node_modules"],
       extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
     },
     plugins,
