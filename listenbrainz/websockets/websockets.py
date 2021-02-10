@@ -1,38 +1,30 @@
 import eventlet
-eventlet.monkey_patch()
 
-from flask import Flask, current_app, request
-from flask_socketio import SocketIO, join_room, leave_room, emit, rooms
+from flask import request
+from flask_socketio import SocketIO, join_room, emit, rooms, leave_room
 from werkzeug.exceptions import BadRequest
-import argparse
-import json
+from brainzutils.flask import CustomFlask
 
 from listenbrainz.webserver import load_config
-from brainzutils.flask import CustomFlask
-from listenbrainz.follow_server.dispatcher import FollowDispatcher
-
-app = CustomFlask(
-    import_name=__name__,
-    use_flask_uuid=True,
-)
-load_config(app)
-
-# Error handling
 from listenbrainz.webserver.errors import init_error_handlers
-init_error_handlers(app)
+from listenbrainz.websockets.follow_server_dispatcher import FollowDispatcher
 
-# Logging
+eventlet.monkey_patch()
+
+app = CustomFlask(import_name=__name__, use_flask_uuid=True)
+load_config(app)
+init_error_handlers(app)
 app.init_loggers(
     file_config=app.config.get('LOG_FILE'),
     email_config=app.config.get('LOG_EMAIL'),
     sentry_config=app.config.get('LOG_SENTRY')
 )
+
 socketio = SocketIO(app, cors_allowed_origins='*')
 
 
 @socketio.on('json')
 def handle_json(data):
-
     try:
         user = data['user']
     except KeyError:
@@ -48,7 +40,7 @@ def handle_json(data):
 
     current_rooms = rooms()
     for user in rooms():
-         
+
         # Don't remove the user from its own room
         if user == request.sid:
             continue
@@ -61,7 +53,25 @@ def handle_json(data):
             join_room(user)
 
 
-def run_follow_server(host='0.0.0.0', port=8081, debug=True):
+@socketio.on('change_playlist')
+def dispatch_playlist_updates(data):
+    identifier = data['identifier']
+    idx = identifier.rfind('/')
+    playlist_id = identifier[idx + 1:]
+    emit('playlist_changed', data, room=playlist_id)
+
+
+@socketio.on('joined')
+def joined(data):
+    if 'playlist_id' not in data:
+        raise BadRequest("Missing key 'playlist_id'")
+
+    room = data['playlist_id']
+    join_room(room)
+    emit('joined', {'status': 'success'}, room=room)
+
+
+def run_websockets(host='0.0.0.0', port=8082, debug=True):
     fd = FollowDispatcher(app, socketio)
     fd.start()
     socketio.run(app, debug=debug, host=host, port=port)

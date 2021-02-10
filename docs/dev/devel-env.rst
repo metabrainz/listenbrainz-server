@@ -195,7 +195,7 @@ different services. We provide a small description of each container here:
 * ``rabbitmq``: Used for passing listens between different services
 * ``web``: This is the main ListenBrainz server
 * ``api_compat``: A Last.fm-compatible API server
-* ``follow_server``: A helper server used for the user-following component of ListenBrainz
+* ``websockets``: A websocket server used for the user-following and playlist updates on the front-end
 * ``static_builder``: A helper service to build Javascript/Typescript and CSS assets if they are changed
 
 .. note::
