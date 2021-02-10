@@ -81,13 +81,13 @@ services:
       - redis
       - rabbitmq
 
-  follow_server:
+  websockets:
     image: web
     volumes:
       - ..:/code/listenbrainz:z
-    command: python manage.py run_follow_server -h 0.0.0.0 -p 8081
+    command: python manage.py run_websockets -h 0.0.0.0 -p 8082
     ports:
-      - "8081:8081"
+      - "8082:8082"
     depends_on:
       - redis
       - rabbitmq
