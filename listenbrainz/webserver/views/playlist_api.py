@@ -444,10 +444,12 @@ def get_playlist(playlist_mbid):
     if playlist is None:
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
-    if not playlist.public:
-        user = validate_auth_header()
-        if not playlist.is_visible_by(user["id"]):
-            raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+    user = validate_auth_header(True)
+    user_id = None
+    if user:
+        user_id =  user["id"]
+    if not playlist.is_visible_by(user_id):
+        raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
     fetch_playlist_recording_metadata(playlist)
 
