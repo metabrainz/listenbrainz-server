@@ -1,6 +1,7 @@
 import { enableFetchMocks } from "jest-fetch-mock";
 import * as React from "react";
 import { shallow } from "enzyme";
+import * as timeago from "time-ago";
 import PlaylistPage from "./Playlist";
 import * as playlistPageProps from "../__mocks__/playlistPageProps.json";
 
@@ -31,6 +32,8 @@ const props = {
 
 describe("PlaylistPage", () => {
   it("renders correctly", () => {
+    // Mock timeago (returns an elapsed time string) otherwise snapshot won't match
+    timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
     const wrapper = shallow<PlaylistPage>(<PlaylistPage {...props} />);
     expect(wrapper.html()).toMatchSnapshot();
   });
