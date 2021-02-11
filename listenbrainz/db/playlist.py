@@ -437,6 +437,7 @@ def add_playlist_collaborators(connection, playlist_id, collaborator_ids):
     if collaborator_params:
         connection.execute(insert_query, collaborator_params)
 
+
 def get_collaborators_names_from_ids(collaborator_ids: List[int]):
     collaborators = []
     # TODO: Look this up in one query
@@ -446,6 +447,7 @@ def get_collaborators_names_from_ids(collaborator_ids: List[int]):
             collaborators.append(user["musicbrainz_id"])
     collaborators.sort()
     return collaborators
+
 
 def update_playlist(playlist: model_playlist.Playlist):
     """Update playlist metadata (Name, description, public flag)
