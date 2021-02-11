@@ -67,6 +67,7 @@ def get_by_mbid(playlist_id: str, load_recordings: bool = True) -> Optional[mode
             user = db_user.get(user_id)
             if user:
                 collaborators.append(user["musicbrainz_id"])
+            collaborators.sort()
             obj['collaborators'] = collaborators
         return model_playlist.Playlist.parse_obj(obj)
 
@@ -180,6 +181,7 @@ def _playlist_resultset_to_model(connection, result, load_recordings):
                 user = db_user.get(user_id)
                 if user:
                     collaborators.append(user["musicbrainz_id"])
+            collaborators.sort()
             p.collaborators = collaborators
 
     return playlists
@@ -436,6 +438,7 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
                 user = db_user.get(user_id)
                 if user:
                     collaborators.append(user["musicbrainz_id"])
+            collaborators.sort()
             playlist.collaborators = collaborators
 
         return model_playlist.Playlist.parse_obj(playlist.dict())
@@ -485,6 +488,7 @@ def update_playlist(playlist: model_playlist.Playlist):
             user = db_user.get(user_id)
             if user:
                 collaborators.append(user["musicbrainz_id"])
+        collaborators.sort()
         playlist.collaborators = collaborators
         playlist.last_updated = set_last_updated(connection, playlist.id)
         return playlist
