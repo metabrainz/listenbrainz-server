@@ -63,11 +63,13 @@ trap finish EXIT
 if [ "$DUMP_TYPE" == "full" ]; then
     if ! /usr/local/bin/python manage.py dump create_full -l "$TMPDIR" -t $DUMP_THREADS --last-dump-id; then
 	echo "Full dump failed, exiting!"
+        finish
 	exit 1
     fi
 elif [ "$DUMP_TYPE" == "incremental" ]; then
     if ! /usr/local/bin/python manage.py dump create_incremental -l "$TMPDIR" -t $DUMP_THREADS; then
 	echo "Incremental dump failed, exiting!"
+        finish
 	exit 1
     fi
 else
@@ -78,6 +80,7 @@ fi
 DUMP_ID_FILE=$(find "$TMPDIR" -type f -name 'DUMP_ID.txt')
 if [ -z "$DUMP_ID_FILE" ]; then
     echo "DUMP_ID.txt not found, exiting."
+    finish
     exit 1
 fi
 
@@ -85,6 +88,7 @@ HAS_EMPTY_DIRS_OR_FILES=$(find "$TMPDIR" -empty)
 if [ ! -z "$HAS_EMPTY_DIRS_OR_FILES" ]; then
     echo "Empty files or dirs, exiting."
     echo "$HAS_EMPTY_DIRS_OR_FILES"
+    finish
     exit 1
 fi
 
@@ -155,5 +159,8 @@ cat "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
 
 # rsync to ftp folder taking care of the rules
 ./admin/rsync-dump-files.sh "$DUMP_TYPE"
+
+# Clean up the temp dir completely
+finish
 
 echo "Dumps created, backed up and uploaded to the FTP server!"
