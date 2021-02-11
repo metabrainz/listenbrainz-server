@@ -16,7 +16,7 @@ then
     exec uwsgi /etc/uwsgi/uwsgi-api-compat.ini
 fi
 
-if [ "${CONTAINER_NAME}" = "listenbrainz-follow-dispatcher-prod" ]
+if [ "${CONTAINER_NAME}" = "listenbrainz-websockets-prod" ]
 then
     cd /code/listenbrainz
     exec python manage.py run_websockets -h 0.0.0.0 -p 3031
