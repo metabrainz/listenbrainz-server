@@ -630,8 +630,7 @@ def delete_playlist(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
     playlist = db_playlist.get_by_mbid(playlist_mbid)
-    if playlist is None or \
-       (playlist.creator_id != user["id"] and not playlist.public):
+    if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
     if playlist.creator_id != user["id"]:
