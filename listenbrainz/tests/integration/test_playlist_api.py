@@ -797,6 +797,96 @@ class PlaylistAPITestCase(IntegrationTestCase):
             headers={"Authorization": "Token {}".format(self.user2["auth_token"])}
         )
         self.assert404(response)
+    
+    def test_private_playlist_collaborators_access(self):
+        """ Test to ensure playlist collaborators can view, copy and add/move/delete tracks """
+
+        # create a private playlist with a collaborator,
+        # then try to access it as the collaborator user for all the endpoints
+        playlist = get_test_data()
+        playlist["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["public"] = False
+        playlist["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["collaborators"] = [self.user2["musicbrainz_id"]]
+        response = self.client.post(
+            url_for("playlist_api_v1.create_playlist"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        playlist_mbid = response.json["playlist_mbid"]
+
+        # Get playlist
+        response = self.client.get(
+            url_for("playlist_api_v1.get_playlist", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user2["auth_token"])},
+        )
+        self.assert200(response)
+
+        # Add recording to playlist
+        add_recording = {
+           "playlist": {
+              "track": [
+                 {
+                    "identifier": PLAYLIST_TRACK_URI_PREFIX + "4a77a078-e91a-4522-a409-3b58aa7de3ae"
+                 }
+              ],
+              "extension": {
+                  PLAYLIST_EXTENSION_URI: {
+                      "public": True
+                  }
+              },
+           }
+        }
+        response = self.client.post(
+            url_for("playlist_api_v1.add_playlist_item", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user2["auth_token"])},
+            json=add_recording
+        )
+        self.assert200(response)
+
+        # Move recording in playlist
+        move = {"mbid": "57ef4803-5181-4b3d-8dd6-8b9d9ca83e2a", "from": 1, "to": 0, "count": 1}
+        response = self.client.post(
+            url_for("playlist_api_v1.move_playlist_item", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user2["auth_token"])},
+            json=move
+        )
+        self.assert200(response)
+
+        # Delete recording in playlist
+        delete = {"index": 0, "count": 1}
+        response = self.client.post(
+            url_for("playlist_api_v1.delete_playlist_item", playlist_mbid=playlist_mbid),
+            json=delete,
+            headers={"Authorization": "Token {}".format(self.user2["auth_token"])}
+        )
+        self.assert200(response)
+
+        # Copy a playlist
+        response = self.client.post(
+            url_for("playlist_api_v1.copy_playlist", playlist_mbid=playlist_mbid),
+            json={},
+            headers={"Authorization": "Token {}".format(self.user2["auth_token"])}
+        )
+        self.assert200(response)
+        new_playlist_mbid = response.json["playlist_mbid"]
+        self.assertNotEqual(playlist_mbid, new_playlist_mbid)
+
+        # Collaborators are not authorized to edit or delete the playlist
+        # Delete a playlist
+        response = self.client.post(
+            url_for("playlist_api_v1.delete_playlist", playlist_mbid=playlist_mbid),
+            json={},
+            headers={"Authorization": "Token {}".format(self.user2["auth_token"])}
+        )
+        self.assert403(response)
+        
+        # Edit a playlist
+        response = self.client.post(
+            url_for("playlist_api_v1.edit_playlist", playlist_mbid=playlist_mbid),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user2["auth_token"])}
+        )
+        self.assert403(response)
 
     def test_playlist_get_playlists(self):
         """ Test for checking that unauthorized access to private playlists return 404 """
