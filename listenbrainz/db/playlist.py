@@ -60,14 +60,9 @@ def get_by_mbid(playlist_id: str, load_recordings: bool = True) -> Optional[mode
         else:
             obj['recordings'] = []
         playlist_collaborator_ids = get_collaborators_for_playlists(connection, [obj['id']])
-        obj['collaborator_ids'] = playlist_collaborator_ids.get(obj['id'], [])
-        collaborators = []
-        # TODO: Look this up in one query
-        for user_id in obj['collaborator_ids']:
-            user = db_user.get(user_id)
-            if user:
-                collaborators.append(user["musicbrainz_id"])
-            obj['collaborators'] = collaborators
+        collaborator_ids_list = playlist_collaborator_ids.get(obj['id'], [])
+        obj['collaborator_ids'] = collaborator_ids_list
+        obj['collaborators'] = get_collaborators_names_from_ids(collaborator_ids_list)
         return model_playlist.Playlist.parse_obj(obj)
 
 
@@ -174,13 +169,7 @@ def _playlist_resultset_to_model(connection, result, load_recordings):
         playlist_collaborator_ids = get_collaborators_for_playlists(connection, playlist_ids)
         for p in playlists:
             p.collaborator_ids = playlist_collaborator_ids.get(p.id, [])
-            collaborators = []
-            # TODO: Look this up in one query
-            for user_id in p.collaborator_ids:
-                user = db_user.get(user_id)
-                if user:
-                    collaborators.append(user["musicbrainz_id"])
-            p.collaborators = collaborators
+            p.collaborators = get_collaborators_names_from_ids(p.collaborator_ids)
 
     return playlists
 
@@ -430,13 +419,7 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
             add_playlist_collaborators(connection, playlist.id, playlist.collaborator_ids)
             collaborator_ids = get_collaborators_for_playlists(connection, [playlist.id])
             collaborator_ids = collaborator_ids.get(playlist.id, [])
-            collaborators = []
-            # TODO: Look this up in one query
-            for user_id in collaborator_ids:
-                user = db_user.get(user_id)
-                if user:
-                    collaborators.append(user["musicbrainz_id"])
-            playlist.collaborators = collaborators
+            playlist.collaborators = get_collaborators_names_from_ids(collaborator_ids)
 
         return model_playlist.Playlist.parse_obj(playlist.dict())
 
@@ -453,6 +436,17 @@ def add_playlist_collaborators(connection, playlist_id, collaborator_ids):
     connection.execute(delete_query, {"playlist_id": playlist_id})
     if collaborator_params:
         connection.execute(insert_query, collaborator_params)
+
+
+def get_collaborators_names_from_ids(collaborator_ids: List[int]):
+    collaborators = []
+    # TODO: Look this up in one query
+    for user_id in collaborator_ids:
+        user = db_user.get(user_id)
+        if user:
+            collaborators.append(user["musicbrainz_id"])
+    collaborators.sort()
+    return collaborators
 
 
 def update_playlist(playlist: model_playlist.Playlist):
@@ -479,13 +473,7 @@ def update_playlist(playlist: model_playlist.Playlist):
         add_playlist_collaborators(connection, playlist.id, playlist.collaborator_ids)
         collaborator_ids = get_collaborators_for_playlists(connection, [playlist.id])
         collaborator_ids = collaborator_ids.get(playlist.id, [])
-        collaborators = []
-        # TODO: Look this up in one query
-        for user_id in collaborator_ids:
-            user = db_user.get(user_id)
-            if user:
-                collaborators.append(user["musicbrainz_id"])
-        playlist.collaborators = collaborators
+        playlist.collaborators = get_collaborators_names_from_ids(playlist.collaborator_ids)
         playlist.last_updated = set_last_updated(connection, playlist.id)
         return playlist
 
