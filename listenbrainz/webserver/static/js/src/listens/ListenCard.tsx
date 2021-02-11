@@ -120,7 +120,7 @@ export default class ListenCard extends React.Component<
           this.setState({ isDeleted: true });
 
           // wait for the animation to finish
-          setTimeout(function () {
+          setTimeout(function removeListen() {
             removeListenFromListenList(listen);
           }, 1000);
         }
