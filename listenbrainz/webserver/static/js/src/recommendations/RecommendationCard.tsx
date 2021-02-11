@@ -171,12 +171,12 @@ export default class RecommendationCard extends React.Component<
         className={`recommendation-card row ${className}`}
       >
         <div className="track-details">
-          <div title={recommendation.track_metadata.track_name}>
+          <div title={recommendation.track_metadata?.track_name}>
             {getTrackLink(recommendation)}
           </div>
           <small
             className="text-muted"
-            title={recommendation.track_metadata.artist_name}
+            title={recommendation.track_metadata?.artist_name}
           >
             {getArtistLink(recommendation)}
           </small>
