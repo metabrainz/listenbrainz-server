@@ -35,8 +35,3 @@ RSYNC_INCREMENTAL_KEY='/home/{{template "KEY" "user"}}/.ssh/rsync-listenbrainz-d
 PROD="{{ (env "DEPLOY_ENV") }}"
 CONTAINER_NAME="{{ (env "CONTAINER_NAME") }}"
 DO_NOT_RSYNC=1
-
-if [[ "${CONTAINER_NAME}" = "listenbrainz-cron-prod" && "${PROD}" = "beta" ]]
-then
-    DO_NOT_RSYNC=0
-fi
