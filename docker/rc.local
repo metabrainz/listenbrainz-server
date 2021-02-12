@@ -43,7 +43,7 @@ then
     exec uwsgi /etc/uwsgi/uwsgi-labs-api.ini
 fi
 
-if [ "${CONTAINER_NAME}" = "listenbrainz-cron-${DEPLOY_ENV}" ]
+if [ "${CONTAINER_NAME}" = "listenbrainz-cron-prod" ]
 then
     rm -f /etc/service/cron/down
     exit 0
