@@ -37,7 +37,7 @@ then
     rm -f /etc/service/labs_api/down
 fi
 
-if [ "${CONTAINER_NAME}" = "listenbrainz-cron-${DEPLOY_ENV}" ]
+if [ "${CONTAINER_NAME}" = "listenbrainz-cron-prod" ]
 then
     rm -f /etc/service/cron/down
     rm -f /etc/service/cron-config/down
