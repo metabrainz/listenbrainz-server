@@ -156,5 +156,4 @@ cat "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
 # rsync to ftp folder taking care of the rules
 ./admin/rsync-dump-files.sh "$DUMP_TYPE"
 
-# Clean up the temp dir completely
 echo "Dumps created, backed up and uploaded to the FTP server!"
