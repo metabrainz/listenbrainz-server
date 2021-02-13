@@ -163,13 +163,13 @@ export default class ListenCard extends React.Component<
           <MediaQuery minWidth={768}>
             <div className="col-xs-9">
               <div className="track-details">
-                <p title={listen.track_metadata.track_name}>
+                <p title={listen.track_metadata?.track_name}>
                   {getTrackLink(listen)}
                 </p>
                 <p>
                   <small
                     className="text-muted"
-                    title={listen.track_metadata.artist_name}
+                    title={listen.track_metadata?.artist_name}
                   >
                     {getArtistLink(listen)}
                   </small>
@@ -199,13 +199,13 @@ export default class ListenCard extends React.Component<
           <MediaQuery maxWidth={767}>
             <div className="col-xs-12">
               <div className="track-details">
-                <p title={listen.track_metadata.track_name}>
+                <p title={listen.track_metadata?.track_name}>
                   {getTrackLink(listen)}
                 </p>
                 <p>
                   <small
                     className="text-muted"
-                    title={listen.track_metadata.artist_name}
+                    title={listen.track_metadata?.artist_name}
                   >
                     {listen.playing_now ? (
                       <span className="listen-time text-muted">
