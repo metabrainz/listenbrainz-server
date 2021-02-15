@@ -172,7 +172,7 @@ def init_ts_db(force, create_db):
                 res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_db.sql'))
                 break
             except sqlalchemy.exc.OperationalError:
-                print("Trapped template1 access error, FFS. Sleeping, trying again.")
+                print("Trapped template1 access error, FFS! Sleeping, trying again.")
                 retries += 1
                 if retries == 5:
                     raise
