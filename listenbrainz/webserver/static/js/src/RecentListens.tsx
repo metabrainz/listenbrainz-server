@@ -247,6 +247,7 @@ export default class RecentListens extends React.Component<
         console.debug(
           `Could not find track_metadata and data in following json: ${json}`
         );
+        return;
       }
       if (!("listened_at" in json) && "timestamp" in json) {
         json.listened_at = json.timestamp;
@@ -256,6 +257,7 @@ export default class RecentListens extends React.Component<
         console.debug(
           `Could not find listened_at and timestamp in following json: ${json}`
         );
+        return;
       }
     } catch (error) {
       // eslint-disable-next-line no-console
