@@ -234,7 +234,12 @@ export default class RecentListens extends React.Component<
   };
 
   receiveNewListen = (newListen: string): void => {
-    const listen = JSON.parse(newListen) as Listen;
+    const json = JSON.parse(newListen);
+    if (!("track_metadata" in json)) {
+      json.track_metadata = json.data;
+      delete json.data;
+    }
+    const listen = json as Listen;
     this.setState((prevState) => {
       const { listens } = prevState;
       // Crop listens array to 100 max
