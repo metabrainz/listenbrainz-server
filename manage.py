@@ -166,7 +166,19 @@ def init_ts_db(force, create_db):
 
     if create_db or force:
         print('TS: Creating user and a database...')
-        res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_db.sql'))
+        retries = 0
+        while True:
+            try:
+                res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_db.sql'))
+                break
+            except sqlalchemy.exc.OperationalError:
+                print("Trapped template1 access error, FFS! Sleeping, trying again.")
+                retries += 1
+                if retries == 5:
+                    raise
+                sleep(1)
+                continue
+            
         if not res:
             raise Exception('Failed to create new database and user! Exit code: %i' % res)
 
