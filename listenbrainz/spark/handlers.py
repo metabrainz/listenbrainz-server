@@ -72,7 +72,6 @@ def handle_user_entity(data):
     musicbrainz_id = data['musicbrainz_id']
     user = db_user.get_by_mb_id(musicbrainz_id)
     if not user:
-        current_app.logger.critical("Calculated stats for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
         return
 
     # send a notification if this is a new batch of stats
@@ -233,8 +232,6 @@ def handle_missing_musicbrainz_data(data):
     user = db_user.get_by_mb_id(musicbrainz_id)
 
     if not user:
-        current_app.logger.critical("Calculated data missing from MusicBrainz for a user that doesn't exist"
-                                    " in the Postgres database: {}".format(musicbrainz_id))
         return
 
     current_app.logger.debug("Inserting missing musicbrainz data for {}".format(musicbrainz_id))

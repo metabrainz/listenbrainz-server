@@ -234,7 +234,42 @@ export default class RecentListens extends React.Component<
   };
 
   receiveNewListen = (newListen: string): void => {
-    const listen = JSON.parse(newListen) as Listen;
+    let json;
+    try {
+      json = JSON.parse(newListen);
+      // the websocket message received may not contain the expected track_metadata and listened_at fields
+      // therefore, we look for their alias as well.
+      if (!("track_metadata" in json)) {
+        if ("data" in json) {
+          json.track_metadata = json.data;
+          delete json.data;
+        } else {
+          // eslint-disable-next-line no-console
+          console.debug(
+            `Could not find track_metadata and data in following json: ${json}`
+          );
+          return;
+        }
+      }
+      if (!("listened_at" in json)) {
+        if ("timestamp" in json) {
+          json.listened_at = json.timestamp;
+          delete json.timestamp;
+        } else {
+          // eslint-disable-next-line no-console
+          console.debug(
+            `Could not find listened_at and timestamp in following json: ${json}`
+          );
+          return;
+        }
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error(error);
+      return;
+    }
+
+    const listen = json as Listen;
     this.setState((prevState) => {
       const { listens } = prevState;
       // Crop listens array to 100 max
