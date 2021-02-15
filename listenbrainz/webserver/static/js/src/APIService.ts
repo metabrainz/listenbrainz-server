@@ -161,7 +161,8 @@ export default class APIService {
 
       const url = `${this.APIBaseURI}/submit-listens`;
 
-      while(true){
+      /* eslint-disable no-await-in-loop */
+      while (true) {
         try {
           const response = await fetch(url, {
             method: "POST",
@@ -171,24 +172,22 @@ export default class APIService {
             },
             body: JSON.stringify(struct),
           });
-  
           // we skip listens if we get an error code that's not a rate limit
-          if (response.status === 429) {
-            // Rate limit error, this should never happen, but if it does, try again in 3 seconds.
-            setTimeout(
-              () => {},
-              3000
-            );
+          if (response.status !== 429) {
+            return response; // Return response so that caller can handle appropriately
           }
-          return response; // Return response so that caller can handle appropriately
+          // Rate limit error, this should never happen, but if it does, try again in 3 seconds.
+          await new Promise((resolve) => {
+            setTimeout(resolve, 3000);
+          });
         } catch {
           // Retry if there is an network error
-          setTimeout(
-            () => {},
-            3000
-          );
+          await new Promise((resolve) => {
+            setTimeout(resolve, 3000);
+          });
         }
       }
+      /* eslint-enable no-await-in-loop */
     }
 
     // Payload is not within submission limit, split and submit
@@ -322,13 +321,19 @@ export default class APIService {
     if (response.status >= 200 && response.status < 300) {
       return;
     }
-    const data = response.body || (response.json && (await response.json()));
     let message;
-    if (data?.error) {
-      message = data?.error;
-    } else {
+    try {
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        const jsonError = await response.json();
+        message = jsonError.error;
+      } else {
+        message = await response.text();
+      }
+    } catch (error) {
       message = `HTTP Error ${response.statusText}`;
     }
+
     const error = new APIError(`HTTP Error ${response.statusText}`);
     error.status = response.statusText;
     error.response = response;
