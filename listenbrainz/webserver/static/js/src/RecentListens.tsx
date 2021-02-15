@@ -235,9 +235,15 @@ export default class RecentListens extends React.Component<
 
   receiveNewListen = (newListen: string): void => {
     const json = JSON.parse(newListen);
+    // the websocket message received may not contain the expected track_metadata and listened_at fields
+    // therefore, we look for their alias as well.
     if (!("track_metadata" in json)) {
       json.track_metadata = json.data;
       delete json.data;
+    }
+    if (!("listened_at" in json)) {
+      json.listened_at = json.timestamp;
+      delete json.timestamp;
     }
     const listen = json as Listen;
     this.setState((prevState) => {
