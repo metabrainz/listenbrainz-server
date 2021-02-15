@@ -80,7 +80,12 @@ class Playlist(BaseModel):
     # mbid of the playlist referred to in copied_from_id
     copied_from_mbid: Optional[uuid.UUID]
 
-    def is_visible_by(self, user_id: int):
+    def is_visible_by(self, user_id: Optional[int]):
+         """Check if user is allowed to access a playlist
+        
+        Args:
+            user_id : (Optional) row id of the user.
+        """
         if self.public:
             return True
         if user_id:
@@ -88,8 +93,6 @@ class Playlist(BaseModel):
                 return True
             elif user_id in self.collaborator_ids:
                 return True
-            else:
-                return False
         return False
 
 
