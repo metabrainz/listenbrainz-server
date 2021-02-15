@@ -491,7 +491,7 @@ def add_playlist_item(playlist_mbid, offset):
     if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
-    if playlist.creator_id != user["id"] and user["id"] not in playlist.collaborator_ids:
+    if not playlist.is_modifiable_by(user["id"]):
         raise APIForbidden("You are not allowed to add recordings to this playlist.")
 
     data = request.json
@@ -548,7 +548,7 @@ def move_playlist_item(playlist_mbid):
     if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
-    if playlist.creator_id != user["id"] and user["id"] not in playlist.collaborator_ids:
+    if not playlist.is_modifiable_by(user["id"]):
         raise APIForbidden("You are not allowed to move recordings in this playlist.")
 
     data = request.json
@@ -593,7 +593,7 @@ def delete_playlist_item(playlist_mbid):
     if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
-    if playlist.creator_id != user["id"] and user["id"] not in playlist.collaborator_ids:
+    if not playlist.is_modifiable_by(user["id"]):
         raise APIForbidden("You are not allowed to remove recordings from this playlist.")
 
     data = request.json
