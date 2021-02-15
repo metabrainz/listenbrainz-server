@@ -797,7 +797,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
             headers={"Authorization": "Token {}".format(self.user2["auth_token"])}
         )
         self.assert404(response)
-    
+
     def test_private_playlist_collaborators_access(self):
         """ Test to ensure playlist collaborators can view, copy and add/move/delete tracks """
 
@@ -879,7 +879,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
             headers={"Authorization": "Token {}".format(self.user2["auth_token"])}
         )
         self.assert403(response)
-        
+
         # Edit a playlist
         response = self.client.post(
             url_for("playlist_api_v1.edit_playlist", playlist_mbid=playlist_mbid),

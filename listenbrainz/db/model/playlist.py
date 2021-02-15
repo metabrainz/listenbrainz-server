@@ -81,8 +81,8 @@ class Playlist(BaseModel):
     copied_from_mbid: Optional[uuid.UUID]
 
     def is_visible_by(self, user_id: Optional[int]):
-         """Check if user is allowed to access a playlist
-        
+        """Check if user is allowed to access a playlist
+
         Args:
             user_id : (Optional) row id of the user.
         """
@@ -94,7 +94,7 @@ class Playlist(BaseModel):
             elif user_id in self.collaborator_ids:
                 return True
         return False
-        
+
     def is_modifiable_by(self, user_id: int):
         """Check if user can modify a playlist
         
