@@ -97,9 +97,9 @@ class Playlist(BaseModel):
 
     def is_modifiable_by(self, user_id: int):
         """Check if user can modify a playlist
-        
+
         Check if a user is allowed to add/move/delete items in a playlist.
-        
+
         Args:
             user_id : row id of the user.
         """
