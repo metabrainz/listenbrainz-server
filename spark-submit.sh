@@ -14,5 +14,7 @@ time ./run.sh /usr/local/spark/bin/spark-submit \
     --conf "spark.driver.memoryOverhead"=$DRIVER_MEMORY_OVERHEAD \
     --conf "spark.executor.memoryOverhead"=$EXECUTOR_MEMORY_OVERHEAD \
 	--conf "spark.driver.maxResultSize"=$DRIVER_MAX_RESULT_SIZE \
+	--conf "spark.python.use.daemon"=true \
+  --conf "spark.python.daemon.module"=sentry_daemon \
 	--py-files listenbrainz_spark.zip \
 	"$@"

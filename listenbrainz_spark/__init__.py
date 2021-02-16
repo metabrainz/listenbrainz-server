@@ -1,6 +1,10 @@
+import sentry_sdk
+from sentry_sdk.integrations.spark import SparkIntegration
+
 from py4j.protocol import Py4JJavaError
 
 from listenbrainz_spark.exceptions import SparkSessionNotInitializedException
+from listenbrainz_spark import config
 
 from pyspark import SparkContext
 from pyspark.sql import SparkSession, SQLContext
@@ -9,12 +13,14 @@ session = None
 context = None
 sql_context = None
 
+
 def init_spark_session(app_name):
     """ Initializes a Spark Session with the given application name.
 
         Args:
             app_name (str): Name of the Spark application. This will also occur in the Spark UI.
     """
+    sentry_sdk.init(**config.LOG_SENTRY, integrations=[SparkIntegration()])
     global session, context, sql_context
     try:
         session = SparkSession \
