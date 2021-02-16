@@ -83,6 +83,8 @@ class Playlist(BaseModel):
     def is_visible_by(self, user_id: Optional[int]):
         """Check if user is allowed to access a playlist
 
+        user_id may be None, for example if the user is not logged in.
+
         Args:
             user_id : (Optional) row id of the user.
         """
@@ -99,6 +101,7 @@ class Playlist(BaseModel):
         """Check if user can modify a playlist
 
         Check if a user is allowed to add/move/delete items in a playlist.
+        user_id is required, since playlist modifications require a logged in user
 
         Args:
             user_id : row id of the user.
