@@ -4,9 +4,6 @@ import os
 from time import sleep
 
 import pika
-from listenbrainz_spark import config
-from brainzutils.flask import CustomFlask
-from flask import current_app
 from py4j.protocol import Py4JJavaError
 from pyspark.sql.utils import AnalysisException
 
@@ -53,30 +50,6 @@ def append(df, dest_path):
         df.write.mode('append').parquet(config.HDFS_CLUSTER_URI + dest_path)
     except Py4JJavaError as err:
         raise DataFrameNotAppendedException(err.java_exception, df.schema)
-
-
-def create_app(debug=None):
-    """ Uses brainzutils (https://github.com/metabrainz/brainzutils-python) to log exceptions to sentry.
-    """
-    # create flask application
-    app = CustomFlask(import_name=__name__)
-    # load config
-    config_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'config.py')
-
-    # config must exist to link the file with our flask app.
-    if os.path.exists(config_file):
-        app.config.from_pyfile(config_file)
-    else:
-        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), config_file)
-
-    if debug is not None:
-        app.debug = debug
-
-    # attach app logs to sentry.
-    app.init_loggers(
-        sentry_config=app.config.get('LOG_SENTRY')
-    )
-    return app
 
 
 def init_rabbitmq(username, password, host, port, vhost, log=logging.error, heartbeat=None):
@@ -170,13 +143,13 @@ def get_listens(from_date, to_date, dest_path):
             month = read_files_from_HDFS('{}/{}/{}.parquet'.format(dest_path, from_date.year, from_date.month))
             df = df.union(month) if df else month
         except PathNotFoundException as err:
-            current_app.logger.debug('{}\nFetching file for next date...'.format(err))
+            logging.debug('{}\nFetching file for next date...'.format(err))
         # go to the next month of from_date
         from_date = stats.offset_months(date=from_date, months=1, shift_backwards=False)
         # shift to the first of the month
         from_date = stats.replace_days(from_date, 1)
     if not df:
-        current_app.logger.error('Listening history missing form HDFS')
+        logging.error('Listening history missing form HDFS')
         raise HDFSException("Listening history missing from HDFS")
     return df
 

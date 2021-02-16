@@ -2,19 +2,16 @@ import os
 import json
 import tarfile
 import tempfile
-import shutil
 import subprocess
 import unittest
 from datetime import datetime
-from unittest.mock import patch, Mock, call, MagicMock
+from unittest.mock import patch, MagicMock
 
-import listenbrainz_spark
 from listenbrainz_spark import config, utils, schema
 from listenbrainz_spark.exceptions import DumpInvalidException
 from listenbrainz_spark.hdfs import ListenbrainzHDFSUploader
 from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
 
-from pyspark.sql.types import StructField, StructType, StringType
 
 test_listen = {
 
@@ -30,17 +27,8 @@ test_listen = {
             'listened_at': str(datetime.utcnow())
         }
 
+
 class HDFSTestCase(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        cls.app = utils.create_app()
-        cls.app_context = cls.app.app_context()
-        cls.app_context.push()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.app_context.pop()
 
     @patch('listenbrainz_spark.hdfs_connection.init_hdfs')
     @patch('listenbrainz_spark.init_spark_session')

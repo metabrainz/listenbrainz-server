@@ -1,10 +1,10 @@
 import itertools
 import json
 import calendar
+import logging
 from datetime import datetime
 from typing import Iterator, Optional
 
-from flask import current_app
 from pydantic import ValidationError
 
 import listenbrainz_spark
@@ -66,7 +66,7 @@ def get_daily_activity():
 
 def get_daily_activity_week() -> Iterator[Optional[UserDailyActivityStatMessage]]:
     """ Calculate number of listens for an user per hour on each day of the past week. """
-    current_app.logger.debug("Calculating daily_activity_week")
+    logging.debug("Calculating daily_activity_week")
 
     date = get_latest_listen_ts()
     to_date = get_last_monday(date)
@@ -78,14 +78,14 @@ def get_daily_activity_week() -> Iterator[Optional[UserDailyActivityStatMessage]
 
     messages = create_messages(data=data, stats_range='week', from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
-    current_app.logger.debug("Done!")
+    logging.debug("Done!")
 
     return messages
 
 
 def get_daily_activity_month() -> Iterator[Optional[UserDailyActivityStatMessage]]:
     """ Calculate number of listens for an user per hour on each day of week of the current month. """
-    current_app.logger.debug("Calculating daily_activity_month")
+    logging.debug("Calculating daily_activity_month")
 
     to_date = get_latest_listen_ts()
     from_date = replace_days(to_date, 1)
@@ -97,14 +97,14 @@ def get_daily_activity_month() -> Iterator[Optional[UserDailyActivityStatMessage
     data = get_daily_activity()
     messages = create_messages(data=data, stats_range='month', from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
-    current_app.logger.debug("Done!")
+    logging.debug("Done!")
 
     return messages
 
 
 def get_daily_activity_year() -> Iterator[Optional[UserDailyActivityStatMessage]]:
     """ Calculate number of listens for an user per hour on each day of week of the current year. """
-    current_app.logger.debug("Calculating daily_activity_year")
+    logging.debug("Calculating daily_activity_year")
 
     to_date = get_latest_listen_ts()
     from_date = datetime(to_date.year, 1, 1)
@@ -114,14 +114,14 @@ def get_daily_activity_year() -> Iterator[Optional[UserDailyActivityStatMessage]
     data = get_daily_activity()
     messages = create_messages(data=data, stats_range='year', from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
-    current_app.logger.debug("Done!")
+    logging.debug("Done!")
 
     return messages
 
 
 def get_daily_activity_all_time() -> Iterator[Optional[UserDailyActivityStatMessage]]:
     """ Calculate number of listens for an user per hour on each day of week. """
-    current_app.logger.debug("Calculating daily_activity_all_time")
+    logging.debug("Calculating daily_activity_all_time")
 
     to_date = get_latest_listen_ts()
     from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
@@ -131,7 +131,7 @@ def get_daily_activity_all_time() -> Iterator[Optional[UserDailyActivityStatMess
     data = get_daily_activity()
     messages = create_messages(data=data, stats_range='all_time', from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
-    current_app.logger.debug("Done!")
+    logging.debug("Done!")
 
     return messages
 
@@ -160,7 +160,7 @@ def create_messages(data, stats_range: str, from_ts: int, to_ts: int) -> Iterato
             result = model.dict(exclude_none=True)
             yield result
         except ValidationError:
-            current_app.logger.error("""ValidationError while calculating {stats_range} daily_activity for user: {user_name}.
+            logging.error("""ValidationError while calculating {stats_range} daily_activity for user: {user_name}.
                                      Data: {data}""".format(stats_range=stats_range, user_name=_dict['user_name'],
                                                             data=json.dumps(_dict, indent=3)),
                                      exc_info=True)

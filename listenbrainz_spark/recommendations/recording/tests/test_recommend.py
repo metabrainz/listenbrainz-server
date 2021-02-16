@@ -1,24 +1,18 @@
-import os
-import time
-from datetime import datetime
-import unittest
-from unittest.mock import patch, call, MagicMock, Mock
+import logging
+from unittest.mock import patch, call, MagicMock
 
 from listenbrainz_spark.tests import SparkTestCase
 from listenbrainz_spark.recommendations.recording import recommend
-from listenbrainz_spark.recommendations.recording import train_models
-from listenbrainz_spark import schema, utils, config, path, stats
+from listenbrainz_spark import schema, utils, path
 from listenbrainz_spark.exceptions import (RecommendationsNotGeneratedException,
-                                           EmptyDataframeExcpetion,
-                                           RatingOutOfRangeException)
+                                           EmptyDataframeExcpetion)
 
 from pyspark.sql import Row
-import pyspark.sql.functions as f
 from pyspark.rdd import RDD
 from pyspark.sql.functions import col
-from pyspark.mllib.recommendation import Rating
 
 # for test data/dataframes refer to listenbrainzspark/tests/__init__.py
+
 
 class RecommendTestClass(SparkTestCase):
 
@@ -400,14 +394,14 @@ class RecommendTestClass(SparkTestCase):
         ))
         return df
 
-    @patch('listenbrainz_spark.recommendations.recording.recommend.current_app')
-    def test_check_for_ratings_beyond_range(self, mock_current_app):
+    @patch('logging.Logger.info')
+    def test_check_for_ratings_beyond_range(self, mock_logger):
         top_artist_rec_df = self.get_top_artist_rec_df()
         similar_artist_rec_df = self.get_similar_artist_rec_df()
 
         recommend.check_for_ratings_beyond_range(top_artist_rec_df, similar_artist_rec_df)
 
-        mock_current_app.logger.info.assert_has_calls([
+        mock_logger.assert_has_calls([
             call('Some ratings are greater than 1 \nMax rating: 1.8'),
             call('Some ratings are less than -1 \nMin rating: -2.8')
         ])

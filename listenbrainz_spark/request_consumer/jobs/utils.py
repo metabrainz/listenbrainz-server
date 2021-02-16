@@ -1,8 +1,8 @@
 """ Bunch of utilility functions needed for import jobs """
+import logging
 from datetime import datetime
 from typing import Optional
 
-from flask import current_app
 from listenbrainz_spark.exceptions import PathNotFoundException
 from listenbrainz_spark.path import IMPORT_METADATA
 from listenbrainz_spark.schema import import_metadata_schema
@@ -57,7 +57,7 @@ def insert_dump_data(dump_id: int, dump_type: str, imported_at: datetime):
     try:
         import_meta_df = read_files_from_HDFS(IMPORT_METADATA)
     except PathNotFoundException:
-        current_app.logger.info("Import metadata file not found, creating...")
+        logging.info("Import metadata file not found, creating...")
 
     data = create_dataframe(Row(dump_id, dump_type, imported_at), schema=import_metadata_schema)
     if import_meta_df:

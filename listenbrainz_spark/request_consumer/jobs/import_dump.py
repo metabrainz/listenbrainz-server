@@ -4,10 +4,10 @@
 import shutil
 import tempfile
 import time
+import logging
 from datetime import datetime
 
 import listenbrainz_spark.request_consumer.jobs.utils as utils
-from flask import current_app
 from listenbrainz_spark.exceptions import DumpNotFoundException
 from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
 from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
@@ -49,7 +49,7 @@ def import_newest_incremental_dump_handler():
     if latest_full_dump is None:
         # If no prior full dump is present, just import the lates incremental dump
         imported_dumps.append(import_dump_to_hdfs('incremental', overwrite=False))
-        current_app.logger.warn("No previous full dump found, importing latest incremental dump", exc_info=True)
+        logging.warn("No previous full dump found, importing latest incremental dump", exc_info=True)
     else:
         # Import all missing dumps from last full dump import
         dump_id = latest_full_dump["dump_id"] + 1
@@ -62,7 +62,7 @@ def import_newest_incremental_dump_handler():
                     break
                 except Exception as e:
                     # Exit if any other error occurs during import
-                    current_app.logger.error(f"Error while importing incremental dump with ID {dump_id}: {e}", exc_info=True)
+                    logging.error(f"Error while importing incremental dump with ID {dump_id}: {e}", exc_info=True)
                     break
             dump_id += 1
             request_consumer.rc.ping()
