@@ -20,7 +20,8 @@ def init_spark_session(app_name):
         Args:
             app_name (str): Name of the Spark application. This will also occur in the Spark UI.
     """
-    sentry_sdk.init(**config.LOG_SENTRY, integrations=[SparkIntegration()])
+    if hasattr(config, 'LOG_SENTRY'):  # attempt to initialize sentry_sdk only if configuration available
+        sentry_sdk.init(**config.LOG_SENTRY, integrations=[SparkIntegration()])
     global session, context, sql_context
     try:
         session = SparkSession \
