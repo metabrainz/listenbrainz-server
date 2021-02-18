@@ -11,7 +11,7 @@ import listenbrainz.db.user as db_user
 
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden
-from listenbrainz.webserver.rate_limiter import ratelimit
+from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, validate_auth_header, \
     _filter_description_html
 from listenbrainz.db.model.playlist import Playlist, WritablePlaylist, WritablePlaylistRecording

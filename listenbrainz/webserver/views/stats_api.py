@@ -28,7 +28,7 @@ from listenbrainz.webserver.errors import (APIBadRequest,
                                            APINoContent, APINotFound,
                                            APIServiceUnavailable,
                                            APIUnauthorized)
-from listenbrainz.webserver.rate_limiter import ratelimit
+from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
                                                     MAX_ITEMS_PER_GET,
                                                     get_non_negative_param)
