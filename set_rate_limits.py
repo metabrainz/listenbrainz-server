@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-from redis import Redis
-from listenbrainz.redis_keys import RATELIMIT_PER_TOKEN_KEY, RATELIMIT_PER_IP_KEY, RATELIMIT_WINDOW_KEY
-
-from listenbrainz import config
+from brainzutils.ratelimit import get_per_ip_limits, get_per_token_limits, set_rate_limits
 
 # Yes, I could use getoptgetargparsewtfbbw, but then I would spend 20 mimnutes re-learning the stupid syntax.
 # Or, I could just do it myself in the space of seconds.
@@ -12,13 +9,14 @@ from listenbrainz import config
 # to figure out how to do this. So, we have this script. If you want to see it part of manage.py, you'll
 # have to do it.
 
-r = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
 if len(sys.argv) < 4:
+    per_ip_limits = get_per_ip_limits()
+    per_token_limits = get_per_token_limits()
     print("Usage: %s <per ip limit> <per token limit> <window in s>" % (sys.argv[0]))
     print("Current values:")
-    print("      Requests per ip: ", int(r.get(RATELIMIT_PER_IP_KEY) or -1))
-    print("   Requests per token: ", int(r.get(RATELIMIT_PER_TOKEN_KEY) or -1))
-    print("          window size: ", int(r.get(RATELIMIT_WINDOW_KEY) or -1))
+    print("      Requests per ip: ", int(per_ip_limits['limit'] or -1))
+    print("   Requests per token: ", int(per_token_limits['limit'] or -1))
+    print("          window size: ", int(per_ip_limits['window'] or -1))
     sys.exit(-1)
 
 try:
@@ -50,6 +48,4 @@ except ValueError:
 if window <= 0:
     print("Invalid window size. Must be non zero integer.")
 
-r.set(RATELIMIT_PER_TOKEN_KEY, per_token)
-r.set(RATELIMIT_PER_IP_KEY, per_ip)
-r.set(RATELIMIT_WINDOW_KEY, window)
+set_rate_limits(per_token, per_ip, window)
