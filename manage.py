@@ -247,6 +247,15 @@ def init_ts_db(force, create_db):
         print("Done!")
 
 
+@cli.command(name="set_rate_limits")
+@click.argument("per_token_limit", type=click.IntRange(1, None))
+@click.argument("per_ip_limit", type=click.IntRange(1, None))
+@click.argument("window_size", type=click.IntRange(1, None))
+def set_rate_limits(per_token_limit, per_ip_limit, window_size):
+    from brainzutils.ratelimit import set_rate_limits
+    set_rate_limits(per_token_limit, per_ip_limit, window_size)
+
+
 @cli.command(name="calculate_user_similarity")
 def calculate_user_similarity():
     """
