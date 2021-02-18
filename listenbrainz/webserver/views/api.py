@@ -13,7 +13,7 @@ from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz import webserver
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
-from listenbrainz.webserver.rate_limiter import ratelimit
+from brainzutils.ratelimit import ratelimit
 import listenbrainz.webserver.redis_connection as redis_connection
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list,\
     is_valid_uuid, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT,\
@@ -293,7 +293,7 @@ def get_similar_to_user(user_name, other_user_name):
         }
 
     :param user_name: the MusicBrainz ID of the the one user
-    :param other_user_name: the MusicBrainz ID of the other user whose similar users are 
+    :param other_user_name: the MusicBrainz ID of the other user whose similar users are
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
     :statuscode 404: The requested user was not found.
