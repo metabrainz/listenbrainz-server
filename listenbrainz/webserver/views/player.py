@@ -49,6 +49,8 @@ def load():
         "auth_token": current_user.auth_token,
     }
     spotify_data = spotify.get_user_dict(current_user.id)
+    # `user` == `curent_user` since player isn't for a user but the recommendation component
+    # it uses expects `user` and `current_user` as keys.
     props = {
         "user": {
             "id": current_user.id,
