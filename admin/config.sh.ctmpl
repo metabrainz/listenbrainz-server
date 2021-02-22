@@ -34,4 +34,3 @@ RSYNC_INCREMENTAL_KEY='/home/{{template "KEY" "user"}}/.ssh/rsync-listenbrainz-d
 # Check to make sure that this container is the prod cron container, otherwise never rsync anything!
 PROD="{{ (env "DEPLOY_ENV") }}"
 CONTAINER_NAME="{{ (env "CONTAINER_NAME") }}"
-DO_NOT_RSYNC=1
