@@ -371,7 +371,7 @@ def edit_playlist(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
     playlist = db_playlist.get_by_mbid(playlist_mbid, False)
-    if playlist is None or (not playlist.public and playlist.creator_id != user["id"]):
+    if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
     if playlist.creator_id != user["id"]:
@@ -430,7 +430,8 @@ def get_playlist(playlist_mbid):
     """
     Fetch the given playlist.
 
-    :param playlist_mbid: Optional, The playlist mbid to fetch.
+    :param playlist_mbid: The playlist mbid to fetch.
+    :param fetch_metadata: Optional, pass value 'false' to skip lookup up recording metadata
     :statuscode 200: Yay, you have data!
     :statuscode 404: Playlist not found
     :statuscode 401: Invalid authorization. See error message for details.
@@ -440,16 +441,21 @@ def get_playlist(playlist_mbid):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
+    fetch_metadata = _parse_boolean_arg("fetch_metadata", True)
+
     playlist = db_playlist.get_by_mbid(playlist_mbid, True)
     if playlist is None:
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
-    if not playlist.public:
-        user = validate_auth_header()
-        if playlist.creator_id != user["id"]:
-            raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+    user = validate_auth_header(True)
+    user_id = None
+    if user:
+        user_id = user["id"]
+    if not playlist.is_visible_by(user_id):
+        raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
-    fetch_playlist_recording_metadata(playlist)
+    if fetch_metadata:
+        fetch_playlist_recording_metadata(playlist)
 
     return jsonify(serialize_jspf(playlist))
 
@@ -486,11 +492,10 @@ def add_playlist_item(playlist_mbid, offset):
         log_raise_400("Provided playlist ID is invalid.")
 
     playlist = db_playlist.get_by_mbid(playlist_mbid)
-    if playlist is None or \
-       (playlist.creator_id != user["id"] and not playlist.public):
+    if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
-    if playlist.creator_id != user["id"]:
+    if not playlist.is_modifiable_by(user["id"]):
         raise APIForbidden("You are not allowed to add recordings to this playlist.")
 
     data = request.json
@@ -544,11 +549,10 @@ def move_playlist_item(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
     playlist = db_playlist.get_by_mbid(playlist_mbid)
-    if playlist is None or \
-       (playlist.creator_id != user["id"] and not playlist.public):
+    if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
-    if playlist.creator_id != user["id"]:
+    if not playlist.is_modifiable_by(user["id"]):
         raise APIForbidden("You are not allowed to move recordings in this playlist.")
 
     data = request.json
@@ -590,11 +594,10 @@ def delete_playlist_item(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
     playlist = db_playlist.get_by_mbid(playlist_mbid)
-    if playlist is None or \
-       (playlist.creator_id != user["id"] and not playlist.public):
+    if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
-    if playlist.creator_id != user["id"]:
+    if not playlist.is_modifiable_by(user["id"]):
         raise APIForbidden("You are not allowed to remove recordings from this playlist.")
 
     data = request.json
@@ -631,8 +634,7 @@ def delete_playlist(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
     playlist = db_playlist.get_by_mbid(playlist_mbid)
-    if playlist is None or \
-       (playlist.creator_id != user["id"] and not playlist.public):
+    if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
     if playlist.creator_id != user["id"]:
@@ -669,8 +671,7 @@ def copy_playlist(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
     playlist = db_playlist.get_by_mbid(playlist_mbid)
-    if playlist is None or \
-       (playlist.creator_id != user["id"] and not playlist.public):
+    if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
     try:
