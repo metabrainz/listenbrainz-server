@@ -8,7 +8,9 @@ from datasethoster import Query
 from unidecode import unidecode
 from Levenshtein import distance
 
-import config
+from listenbrainz import config
+
+COLLECTION_NAME = "mbid_mapping"
 
 
 def prepare_query(text):
@@ -33,7 +35,7 @@ class MBIDMappingQuery(Query):
         self.client = typesense.Client({
             'nodes': [{
               'host': config.TYPESENSE_HOST,
-              'port': config.TYPSENSE_PORT,
+              'port': config.TYPESENSE_PORT,
               'protocol': 'http',
             }],
             'api_key': config.TYPESENSE_API_KEY,
@@ -132,6 +134,30 @@ class MBIDMappingQuery(Query):
                 continue
 
             return None
+
+
+    def lookup(self, artist_credit_name_p, recording_name_p):
+
+        search_parameters = {
+            'q'         : artist_credit_name_p + " " + recording_name_p,
+            'query_by'  : "combined",
+            'prefix'    : 'no',
+            'num_typos' : self.EDIT_DIST_THRESHOLD
+        }
+
+        while True:
+            try:
+                hits = self.client.collections[COLLECTION_NAME].documents.search(search_parameters)
+                print("hits: ", hits)
+                break
+            except requests.exceptions.ReadTimeout:
+                print("Got socket timeout, sleeping 5 seconds, trying again.")
+                sleep(5)
+
+        if len(hits["hits"]) == 0:
+            return None
+
+        return hits["hits"][0]
 
 
     def search(self, artist_credit_name, recording_name):
