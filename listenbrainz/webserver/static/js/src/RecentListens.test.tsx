@@ -164,7 +164,7 @@ describe("createWebsocketsConnection", () => {
     const spy = jest.spyOn(io, "connect");
     instance.createWebsocketsConnection();
 
-    expect(spy).toHaveBeenCalledWith("http://localhost:8081");
+    expect(spy).toHaveBeenCalledWith("http://localhost:8082");
     jest.clearAllMocks();
   });
 });
