@@ -11,7 +11,7 @@ from listenbrainz import config
 
 
 class YearFromArtistCreditRecordingQuery(Query):
-    """ 
+    """
         Lookup year from artist_credit_name and recording name. The main goal of this lookup
         is to enable year lookups in troi as a step after recording metadata lookup. If the
         metadata hasn't been looked up in MB and it doesn't exactly match what is in MB,
@@ -35,11 +35,11 @@ class YearFromArtistCreditRecordingQuery(Query):
         return ['artist_credit_name', 'recording_name', 'year']
 
     def fetch(self, params, offset=-1, count=-1):
-        artists = tuple([ p['[artist_credit_name]'] for p in params ])
-        recordings = tuple([ p['[recording_name]'] for p in params ])
+        artists = tuple([p['[artist_credit_name]'] for p in params])
+        recordings = tuple([p['[recording_name]'] for p in params])
         with psycopg2.connect(current_app.config['MB_DATABASE_URI']) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
-                curs.execute("""SELECT DISTINCT artist_credit_name, 
+                curs.execute("""SELECT DISTINCT artist_credit_name,
                                        recording_name,
                                        year
                                   FROM mapping.year_mapping
@@ -57,10 +57,10 @@ class YearFromArtistCreditRecordingQuery(Query):
                 results = []
                 for param in params:
                     try:
-                        results.append({ 
-                                         'artist_credit_name': param['[artist_credit_name]'], 
-                                         'recording_name': param['[recording_name]'], 
-                                         'year': index[param['[artist_credit_name]']+param['[recording_name]']] 
+                        results.append({
+                                         'artist_credit_name': param['[artist_credit_name]'],
+                                         'recording_name': param['[recording_name]'],
+                                         'year': index[param['[artist_credit_name]']+param['[recording_name]']]
                                        })
                     except KeyError:
                         pass

@@ -22,25 +22,24 @@ json_request = [
 
 typesense_response = [
     {
-        "hits" : [
-             {
-                "document" : {
-                    "artist_credit_arg": "u2",
-                    "artist_credit_id": 197,
-                    "artist_credit_name": "U2",
-                    "recording_arg": "gloria",
-                    "recording_mbid": "398a5f12-80ba-4d29-8b6b-bfe2176341a6",
-                    "recording_name": "Gloria",
-                    "release_mbid": "7abd5878-4ea3-4b33-a5d2-7721317013d7",
-                    "release_name": "October"
-                },
-             }
-         ]
+        "hits": [{
+            "document": {
+                "artist_credit_arg": "u2",
+                "artist_credit_id": 197,
+                "artist_credit_name": "U2",
+                "recording_arg": "gloria",
+                "recording_mbid": "398a5f12-80ba-4d29-8b6b-bfe2176341a6",
+                "recording_name": "Gloria",
+                "release_mbid": "7abd5878-4ea3-4b33-a5d2-7721317013d7",
+                "release_name": "October"
+            },
+        }
+        ]
     },
     {
-        "hits" : [
-             {
-                "document" : {
+        "hits": [
+            {
+                "document": {
                     "artist_credit_arg": "portishead",
                     "artist_credit_id": 65,
                     "artist_credit_name": "Portishead",
@@ -54,22 +53,21 @@ typesense_response = [
         ]
     },
     {
-        "hits" : [ ]
+        "hits": []
     },
     {
-        "hits" : [
-             {
-                "document" : {
-                    "artist_credit_arg": "portishead",
-                    "artist_credit_id": 65,
-                    "artist_credit_name": "Portishead",
-                    "recording_arg": "glory box (feat. your mom)",
-                    "recording_mbid": "145f5c43-0ac2-4886-8b09-63d0e92ded5d",
-                    "recording_name": "Glory Box",
-                    "release_mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd",
-                    "release_name": "Dummy"
-                }
+        "hits": [{
+            "document": {
+                "artist_credit_arg": "portishead",
+                "artist_credit_id": 65,
+                "artist_credit_name": "Portishead",
+                "recording_arg": "glory box (feat. your mom)",
+                "recording_mbid": "145f5c43-0ac2-4886-8b09-63d0e92ded5d",
+                "recording_name": "Glory Box",
+                "release_mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd",
+                "release_name": "Dummy"
             }
+        }
         ]
     }
 ]
@@ -110,6 +108,7 @@ json_response = [
     }
 ]
 
+
 class MainTestCase(flask_testing.TestCase):
 
     def create_app(self):
@@ -127,10 +126,11 @@ class MainTestCase(flask_testing.TestCase):
         self.assertEqual(q.names()[0], "mbid-mapping")
         self.assertEqual(q.names()[1], "MusicBrainz ID Mapping lookup")
         self.assertNotEqual(q.introduction(), "")
-        self.assertEqual(q.inputs(), ['[artist_credit_name]', '[recording_name]'])
+        self.assertEqual(
+            q.inputs(), ['[artist_credit_name]', '[recording_name]'])
         self.assertEqual(q.outputs(), ['index', 'artist_credit_arg', 'recording_arg',
-                         'artist_credit_name', 'release_name', 'recording_name',
-                         'release_mbid', 'recording_mbid', 'artist_credit_id'])
+                                       'artist_credit_name', 'release_name', 'recording_name',
+                                       'release_mbid', 'recording_mbid', 'artist_credit_id'])
 
     @patch('typesense.documents.Documents.search')
     def test_fetch(self, search):

@@ -45,9 +45,9 @@ class MBIDMappingQuery(Query):
 
         self.client = typesense.Client({
             'nodes': [{
-              'host': config.TYPESENSE_HOST,
-              'port': config.TYPESENSE_PORT,
-              'protocol': 'http',
+                'host': config.TYPESENSE_HOST,
+                'port': config.TYPESENSE_PORT,
+                'protocol': 'http',
             }],
             'api_key': config.TYPESENSE_API_KEY,
             'connection_timeout_seconds': 2
@@ -73,7 +73,8 @@ class MBIDMappingQuery(Query):
 
         args = []
         for i, param in enumerate(params):
-            args.append((i, param['[artist_credit_name]'], param['[recording_name]']))
+            args.append((i, param['[artist_credit_name]'],
+                         param['[recording_name]']))
 
         results = []
         for index, artist_credit_name, recording_name in args:
@@ -106,8 +107,10 @@ class MBIDMappingQuery(Query):
         """
 
         if self.debug:
-            print("Q %-60s %-60s" % (artist_credit_name[:59], recording_name[:59]))
-            print("H %-60s %-60s" % (artist_credit_name_hit[:59], recording_name_hit[:59]))
+            print("Q %-60s %-60s" %
+                  (artist_credit_name[:59], recording_name[:59]))
+            print("H %-60s %-60s" %
+                  (artist_credit_name_hit[:59], recording_name_hit[:59]))
 
         return (distance(artist_credit_name, artist_credit_name_hit), distance(recording_name, recording_name_hit))
 
@@ -125,7 +128,8 @@ class MBIDMappingQuery(Query):
 
         is_alt = False
         while True:
-            ac_dist, r_dist = self.compare(artist_credit_name, recording_name, prepare_query(ac_hit), prepare_query(r_hit))
+            ac_dist, r_dist = self.compare(
+                artist_credit_name, recording_name, prepare_query(ac_hit), prepare_query(r_hit))
             if ac_dist <= self.EDIT_DIST_THRESHOLD and r_dist <= self.EDIT_DIST_THRESHOLD:
                 return hit
 
@@ -143,19 +147,19 @@ class MBIDMappingQuery(Query):
 
             return None
 
-
     def lookup(self, artist_credit_name_p, recording_name_p):
 
         search_parameters = {
-            'q'         : artist_credit_name_p + " " + recording_name_p,
-            'query_by'  : "combined",
-            'prefix'    : 'no',
-            'num_typos' : self.EDIT_DIST_THRESHOLD
+            'q': artist_credit_name_p + " " + recording_name_p,
+            'query_by': "combined",
+            'prefix': 'no',
+            'num_typos': self.EDIT_DIST_THRESHOLD
         }
 
         while True:
             try:
-                hits = self.client.collections[COLLECTION_NAME].documents.search(search_parameters)
+                hits = self.client.collections[COLLECTION_NAME].documents.search(
+                    search_parameters)
                 print("hits: ", hits)
                 break
             except requests.exceptions.ReadTimeout:
@@ -167,7 +171,6 @@ class MBIDMappingQuery(Query):
 
         return hits["hits"][0]
 
-
     def search(self, artist_credit_name, recording_name):
         """
             Main query body: Prepare the search query terms and prepare
@@ -178,12 +181,14 @@ class MBIDMappingQuery(Query):
         """
 
         if self.debug:
-            print("- %-60s %-60s" % (artist_credit_name[:59], recording_name[:59]))
+            print("- %-60s %-60s" %
+                  (artist_credit_name[:59], recording_name[:59]))
 
         artist_credit_name_p = prepare_query(artist_credit_name)
         recording_name_p = prepare_query(recording_name)
 
-        ac_detuned = prepare_query(self.detune_query_string(artist_credit_name_p))
+        ac_detuned = prepare_query(
+            self.detune_query_string(artist_credit_name_p))
         r_detuned = prepare_query(self.detune_query_string(recording_name_p))
 
         tries = 0
@@ -192,7 +197,8 @@ class MBIDMappingQuery(Query):
             tries += 1
             hit = self.lookup(artist_credit_name_p, recording_name_p)
             if hit:
-                hit = self.evaluate_hit(hit, artist_credit_name_p, recording_name_p)
+                hit = self.evaluate_hit(
+                    hit, artist_credit_name_p, recording_name_p)
 
             if not hit:
                 hit = None
@@ -207,15 +213,14 @@ class MBIDMappingQuery(Query):
                     continue
 
                 if self.debug:
-                    print("FAIL.\n");
+                    print("FAIL.\n")
 
                 return None
 
             break
 
         if self.debug:
-            print("OK.\n");
-
+            print("OK.\n")
 
         return {'artist_credit_name': hit['document']['artist_credit_name'],
                 'artist_credit_id': hit['document']['artist_credit_id'],
