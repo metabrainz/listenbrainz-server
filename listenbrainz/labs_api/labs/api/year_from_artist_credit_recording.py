@@ -11,6 +11,14 @@ from listenbrainz import config
 
 
 class YearFromArtistCreditRecordingQuery(Query):
+    """ 
+        Lookup year from artist_credit_name and recording name. The main goal of this lookup
+        is to enable year lookups in troi as a step after recording metadata lookup. If the
+        metadata hasn't been looked up in MB and it doesn't exactly match what is in MB,
+        then this query will return no results. If a year lookup with more flexiblity is needed
+        in the future, then another endpoint will need to be created. This version is catering
+        to the needs of troi.
+    """
 
     def names(self):
         return ("year-artist-recording-year-lookup", "MusicBrainz Recording Year lookup")

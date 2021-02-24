@@ -25,6 +25,17 @@ class MBIDMappingQuery(Query):
         in effort to find a best match.
 
         For instance, if "Glory Box feat. Sloppy Jo" isn't matched, it will try to match "Glory Box".
+        It is the caller's responsibility to ensure that the results meet the criteria for the
+        given task. This mapping lookup aims to find a match by a number of means necessary that
+        may or may not be acceptable to the caller.
+
+        Other possible detunings:
+        - Swap artist/recording
+        - remove track numbers from recording
+
+        Overall these detunings and edit distances will need more tuning as we start using this
+        endpoint for our MessyBrainz mapping. For this reason the debug flag and optional
+        debug output remains since more debugging/tuning will need to be done later on.
     """
 
     EDIT_DIST_THRESHOLD = 5
@@ -39,7 +50,7 @@ class MBIDMappingQuery(Query):
               'protocol': 'http',
             }],
             'api_key': config.TYPESENSE_API_KEY,
-            'connection_timeout_seconds': 10
+            'connection_timeout_seconds': 2
         })
 
     def names(self):
@@ -75,9 +86,6 @@ class MBIDMappingQuery(Query):
 
         return results
 
-    # Other possible detunings:
-    #  - Swap artist/recording
-    #  - remove track numbers from recording
     def detune_query_string(self, query):
         """
             Detune (remove known extra cruft) a metadata field. If a known
