@@ -263,6 +263,23 @@ export default class RecentListens extends React.Component<
           return;
         }
       }
+      // The websocket message received contains the recording_msod as a top level key.
+      // Therefore, we need to shift it json.track_metadata.additional_info.
+      if (!("recording_msid" in json.track_metadata.additional_info)) {
+        if ("recording_msid" in json) {
+          json.track_metadata.additional_info.recording_msid =
+            json.recording_msid;
+          delete json.recording_msid;
+        } else {
+          // eslint-disable-next-line no-console
+          console.debug(
+            `Could not find recording_msid in following json: ${json}`
+          );
+          return;
+        }
+      }
+      // the websocket message received contain some keys which are are either duplicates or are not required in the frontend.
+      // Ideally this should be handled server-side and this will probably be fixed with protobuf move.
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(error);
