@@ -301,11 +301,24 @@ describe("receiveNewListen", () => {
     track_metadata: {
       artist_name: "Coldplay",
       track_name: "Viva La Vida",
+      additional_info: {
+        recording_msid: "2edee875-55c3-4dad-b3ea-e8741484f4b5",
+      },
     },
     listened_at: 1586580524,
     listened_at_iso: "2020-04-10T10:12:04Z",
   };
 
+  const mockWSListen = {
+    data: {
+      artist_name: "Coldplay",
+      track_name: "Viva La Vida",
+      additional_info: {},
+    },
+    recording_msid: "2edee875-55c3-4dad-b3ea-e8741484f4b5",
+    timestamp: 1586580524,
+    listened_at_iso: "2020-04-10T10:12:04Z",
+  };
   it("crops the listens array if length is more than or equal to 100", () => {
     /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
      * so that it doesn't get passed as a reference.
@@ -385,6 +398,38 @@ describe("receiveNewListen", () => {
     );
     result.unshift(mockListen);
     instance.receiveNewListen(JSON.stringify(mockListen));
+
+    expect(wrapper.state("listens")).toHaveLength(result.length);
+    expect(wrapper.state("listens")).toEqual(result);
+  });
+
+  it("moves the keys in the web socket message to appropriate place to make it identical to a listen", () => {
+    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
+     * so that it doesn't get passed as a reference.
+     */
+    const wrapper = shallow<RecentListens>(
+      <RecentListens
+        {...(JSON.parse(
+          JSON.stringify(recentListensPropsOneListen)
+        ) as RecentListensProps)}
+      />
+    );
+    const instance = wrapper.instance();
+    wrapper.setState({ mode: "recent" });
+    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
+     * so that it doesn't get passed as a reference.
+     */
+    const result: Array<Listen> = JSON.parse(
+      JSON.stringify(recentListensPropsOneListen.listens)
+    );
+    /* The mockWSListen has the same keys values as that of the mockListen,
+     * but has different key names or positions. The required keys will be renamed
+     * and moved in the receiveNewListen and it will look identical to mockListen.
+     * So we push the mockListen to expected results and pass the mockWSListen via receiveNewListen
+     * and compare them in the end.
+     */
+    result.unshift(mockListen);
+    instance.receiveNewListen(JSON.stringify(mockWSListen));
 
     expect(wrapper.state("listens")).toHaveLength(result.length);
     expect(wrapper.state("listens")).toEqual(result);
