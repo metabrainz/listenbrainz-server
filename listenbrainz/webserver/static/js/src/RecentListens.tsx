@@ -263,7 +263,7 @@ export default class RecentListens extends React.Component<
           return;
         }
       }
-      // The websocket message received contains the recording_msod as a top level key.
+      // The websocket message received contains the recording_msid as a top level key.
       // Therefore, we need to shift it json.track_metadata.additional_info.
       if (!("recording_msid" in json.track_metadata.additional_info)) {
         if ("recording_msid" in json) {
