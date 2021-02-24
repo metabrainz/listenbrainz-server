@@ -228,7 +228,7 @@ export default class PlaylistPage extends React.Component<
   searchForTrack = async (inputValue: string): Promise<OptionType[]> => {
     try {
       const response = await fetch(
-        "https://datasets.listenbrainz.org/acrm-search/json",
+        "https://labs.api.listenbrainz.org/recording-search/json",
         {
           method: "POST",
           body: JSON.stringify([{ query: inputValue }]),
