@@ -21,8 +21,8 @@ json_request = [
 ]
 
 typesense_response = [
-    {g
-        "hits" : [g
+    {
+        "hits" : [
              {
                 "document" : {
                     "artist_credit_arg": "u2",
@@ -37,8 +37,8 @@ typesense_response = [
              }
          ]
     },
-    {g
-        "hits" : [g
+    {
+        "hits" : [
              {
                 "document" : {
                     "artist_credit_arg": "portishead",
@@ -50,14 +50,14 @@ typesense_response = [
                     "release_mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd",
                     "release_name": "Dummy"
                 }
-            }g
+            }
         ]
     },
-    {g
+    {
         "hits" : [ ]
     },
-    {g
-        "hits" : [g
+    {
+        "hits" : [
              {
                 "document" : {
                     "artist_credit_arg": "portishead",
@@ -69,7 +69,7 @@ typesense_response = [
                     "release_mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd",
                     "release_name": "Dummy"
                 }
-            }g
+            }
         ]
     }
 ]
@@ -108,7 +108,7 @@ json_response = [
         "release_mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd",
         "release_name": "Dummy"
     }
-]g
+]
 
 class MainTestCase(flask_testing.TestCase):
 

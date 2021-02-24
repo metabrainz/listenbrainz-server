@@ -10,33 +10,25 @@ from unidecode import unidecode
 from listenbrainz import config
 
 
-class RecordingYearLookupQuery(Query):
+class YearFromArtistCreditRecordingQuery(Query):
 
     def names(self):
-        return ("recording-year-lookup", "MusicBrainz Recording Year lookup")
+        return ("year-artist-recording-year-lookup", "MusicBrainz Recording Year lookup")
 
     def inputs(self):
         return ['[artist_credit_name]', '[recording_name]']
 
     def introduction(self):
         return """Given an artist_credit_name and a recording name, try and find the first release
-                  year of that release in MusicBrainz."""
+                  year of that release in MusicBrainz. This lookup uses an exact string match to find
+                  the year, so the metadata must match the data in MusicBrainz exactly."""
 
     def outputs(self):
         return ['artist_credit_name', 'recording_name', 'year']
 
     def fetch(self, params, offset=-1, count=-1):
-        artists = []
-        recordings = []
-        for param in params:
-            recording = unidecode(re.sub(r'\W+', '', param['[recording_name]'].lower()))
-            artist = unidecode(re.sub(r'\W+', '', param['[artist_credit_name]'].lower()))
-            artists.append(artist)
-            recordings.append(recording)
-
-        artists = tuple(artists)
-        recordings = tuple(recordings)
-
+        artists = tuple([ p['[artist_credit_name]'] for p in params ])
+        recordings = tuple([ p['[recording_name]'] for p in params ])
         with psycopg2.connect(current_app.config['MB_DATABASE_URI']) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
                 curs.execute("""SELECT DISTINCT artist_credit_name, 
@@ -56,13 +48,11 @@ class RecordingYearLookupQuery(Query):
 
                 results = []
                 for param in params:
-                    recording = unidecode(re.sub(r'\W+', '', param['[recording_name]'].lower()))
-                    artist = unidecode(re.sub(r'\W+', '', param['[artist_credit_name]'].lower()))
                     try:
                         results.append({ 
                                          'artist_credit_name': param['[artist_credit_name]'], 
                                          'recording_name': param['[recording_name]'], 
-                                         'year': index[artist+recording] 
+                                         'year': index[param['[artist_credit_name]']+param['[recording_name]']] 
                                        })
                     except KeyError:
                         pass
