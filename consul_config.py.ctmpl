@@ -61,7 +61,7 @@ INFLUX_DB_NAME  = "listenbrainz"
 {{end}}
 {{end}}
 
-{{- with $rabbitmq_service_name := or (env "RABBITMQ_SERVICE") "rabbitmq"}}
+{{- with $rabbitmq_service_name := or (template "KEY" "rabbitmq_service") "rabbitmq"}}
 {{- if service $rabbitmq_service_name}}
 {{- with index (service $rabbitmq_service_name) 0}}
 RABBITMQ_HOST = "{{.Address}}"
