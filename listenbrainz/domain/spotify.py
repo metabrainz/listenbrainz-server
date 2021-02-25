@@ -24,6 +24,9 @@ SPOTIFY_LISTEN_PERMISSIONS = (
     'playlist-modify-private',
 )
 
+OAUTH_TOKEN_URL = 'https://accounts.spotify.com/api/token'
+
+
 class Spotify:
     def __init__(self, user_id, musicbrainz_id, musicbrainz_row_id, user_token, token_expires,
                  refresh_token, last_updated, record_listens, error_message, latest_listened_at,
@@ -211,23 +214,26 @@ def get_access_token(code):
     is a bug in the spotipy code which leads to loss of the scope received from the
     Spotify API.
     """
-    OAUTH_TOKEN_URL = 'https://accounts.spotify.com/api/token'
-
-    def _make_authorization_headers(client_id, client_secret):
-        auth_header = base64.b64encode(six.text_type(client_id + ':' + client_secret).encode('ascii'))
-        return {'Authorization': 'Basic %s' % auth_header.decode('ascii')}
-
-    payload = {
-        'redirect_uri': current_app.config['SPOTIFY_CALLBACK_URL'],
-        'code': code,
-        'grant_type': 'authorization_code',
-    }
-
-    headers = _make_authorization_headers(current_app.config['SPOTIFY_CLIENT_ID'], current_app.config['SPOTIFY_CLIENT_SECRET'])
-    r = requests.post(OAUTH_TOKEN_URL, data=payload, headers=headers, verify=True)
+    r = _get_spotify_token("authorization_code", code)
     if r.status_code != 200:
         raise SpotifyListenBrainzError(r.reason)
     return r.json()
+
+
+def _get_spotify_token(grant_type, token):
+    client_id = current_app.config['SPOTIFY_CLIENT_ID']
+    client_secret = current_app.config['SPOTIFY_CLIENT_SECRET']
+    auth_header = base64.b64encode(six.text_type(client_id + ':' + client_secret).encode('ascii'))
+    headers = {'Authorization': 'Basic %s' % auth_header.decode('ascii')}
+
+    token_key = "refresh_token" if grant_type == "refresh_token" else "code"
+    payload = {
+        'redirect_uri': current_app.config['SPOTIFY_CALLBACK_URL'],
+        token_key: token,
+        'grant_type': grant_type,
+    }
+
+    return requests.post(OAUTH_TOKEN_URL, data=payload, headers=headers, verify=True)
 
 
 def get_user_dict(user_id):
