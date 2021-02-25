@@ -92,22 +92,39 @@ def refresh_user_token(spotify_user):
 
     Returns:
         user (domain.spotify.Spotify): the same user with updated tokens
-    """
-    auth = get_spotify_oauth()
+        None: if the user has revoked authorization to spotify
 
+    Raises:
+        SpotifyAPIError: if unable to refresh spotify user token
+
+    Note: spotipy eats up the json body in case of error but we need it for checking
+    whether the user has revoked our authorization. hence, we use our own
+    code instead of spotipy to fetch refresh token.
+    """
     retries = SPOTIFY_API_RETRIES
-    new_token = None
+    response = None
     while retries > 0:
-        new_token = auth.refresh_access_token(spotify_user.refresh_token)
-        if new_token:
+        response = _get_spotify_token("refresh_token", spotify_user.refresh_token)
+
+        if response.status_code == 200:
             break
+        elif response.status_code == 400:
+            error_body = response.json()
+            if "error" in error_body and error_body["error"] == "invalid_grant" and \
+                    "error_description" in error_body and error_body["error_description"] == "Refresh token revoked":
+                # user has revoked authorization through spotify ui, delete from our spotify db as well.
+                db_spotify.delete_spotify(spotify_user.user_id)
+                return None
+
         retries -= 1
-    if new_token is None:
+
+    if response is None:
         raise SpotifyAPIError('Could not refresh API Token for Spotify user')
 
-    access_token = new_token['access_token']
-    refresh_token = new_token['refresh_token']
-    expires_at = new_token['expires_at']
+    response = response.json()
+    access_token = response['access_token']
+    refresh_token = response['refresh_token']
+    expires_at = response['expires_at']
     db_spotify.update_token(spotify_user.user_id, access_token, refresh_token, expires_at)
     return get_user(spotify_user.user_id)
 
