@@ -126,7 +126,6 @@ class MBIDMappingQuery(Query):
         ac_detuned = self.detune_query_string(ac_hit)
         r_detuned = self.detune_query_string(r_hit)
 
-        is_alt = False
         while True:
             ac_dist, r_dist = self.compare(
                 artist_credit_name, recording_name, prepare_query(ac_hit), prepare_query(r_hit))
@@ -136,13 +135,11 @@ class MBIDMappingQuery(Query):
             if ac_dist > self.EDIT_DIST_THRESHOLD and ac_detuned:
                 ac_hit = ac_detuned
                 ac_detuned = ""
-                is_alt = True
                 continue
 
             if r_dist > self.EDIT_DIST_THRESHOLD and r_detuned:
                 r_hit = r_detuned
                 r_detuned = ""
-                is_alt = True
                 continue
 
             return None
@@ -191,10 +188,7 @@ class MBIDMappingQuery(Query):
             self.detune_query_string(artist_credit_name_p))
         r_detuned = prepare_query(self.detune_query_string(recording_name_p))
 
-        tries = 0
         while True:
-
-            tries += 1
             hit = self.lookup(artist_credit_name_p, recording_name_p)
             if hit:
                 hit = self.evaluate_hit(

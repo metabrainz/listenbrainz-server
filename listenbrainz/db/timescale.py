@@ -42,6 +42,7 @@ def run_sql_script_without_transaction(sql_file_path):
         connection = engine.connect()
         connection.connection.set_isolation_level(0)
         lines = sql.read().splitlines()
+        retries = 0
         while True:
             try:
                 for line in lines:
@@ -58,7 +59,7 @@ def run_sql_script_without_transaction(sql_file_path):
                 retries += 1
                 if retries == 5:
                     raise
-                sleep(1)
+                time.sleep(1)
                 continue
             finally:
                 connection.connection.set_isolation_level(1)
