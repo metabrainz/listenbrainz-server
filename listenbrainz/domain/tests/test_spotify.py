@@ -1,7 +1,10 @@
-import spotipy.oauth2
 import time
 
+import requests_mock
+
 from flask import current_app
+from requests import Response
+
 from listenbrainz.domain import spotify
 from listenbrainz.webserver.testing import ServerTestCase
 from unittest import mock
@@ -30,18 +33,17 @@ class SpotifyDomainTestCase(ServerTestCase):
         self.assertIsNone(self.spotify_user.last_updated_iso)
         self.assertIsNone(self.spotify_user.latest_listened_at_iso)
 
+    @requests_mock.Mocker()
     @mock.patch('listenbrainz.domain.spotify.db_spotify.get_user')
-    @mock.patch('listenbrainz.domain.spotify.get_spotify_oauth')
     @mock.patch('listenbrainz.domain.spotify.db_spotify.update_token')
-    def test_refresh_user_token(self, mock_update_token, mock_get_spotify_oauth, mock_get_user):
+    def test_refresh_user_token(self, mock_update_token, mock_get_user, mock_requests):
         expires_at = int(time.time()) + 3600
-        mock_get_spotify_oauth.return_value.refresh_access_token.return_value = {
+        mock_requests.post("https://accounts.spotify.com/api/token", status_code=200, json={
             'access_token': 'tokentoken',
             'refresh_token': 'refreshtokentoken',
             'expires_at': expires_at,
             'scope': '',
-        }
-
+        })
         spotify.refresh_user_token(self.spotify_user)
         mock_update_token.assert_called_with(
             self.spotify_user.user_id,
@@ -75,7 +77,6 @@ class SpotifyDomainTestCase(ServerTestCase):
         self.assertNotIn('user-read-private', func_oauth.scope)
         self.assertNotIn('playlist-modify-public', func_oauth.scope)
         self.assertNotIn('playlist-modify-private', func_oauth.scope)
-
 
     @mock.patch('listenbrainz.domain.spotify.db_spotify.get_user')
     def test_get_user(self, mock_db_get_user):
@@ -167,11 +168,8 @@ class SpotifyDomainTestCase(ServerTestCase):
         spotify.update_latest_listened_at(1, t)
         mock_update_listened_at.assert_called_once_with(1, t)
 
-    @mock.patch('listenbrainz.domain.spotify.get_spotify_oauth')
-    def test_refresh_user_token_bad(self, mock_get_spotify_oauth):
-        mock_oauth = MagicMock()
-        mock_oauth.refresh_access_token.return_value = None
-        mock_get_spotify_oauth.return_value = mock_oauth
-
+    @mock.patch('listenbrainz.domain.spotify._get_spotify_token')
+    def test_refresh_user_token_bad(self, mock_get_spotify_token):
+        mock_get_spotify_token.return_value = None
         with self.assertRaises(spotify.SpotifyAPIError):
             spotify.refresh_user_token(self.spotify_user)
