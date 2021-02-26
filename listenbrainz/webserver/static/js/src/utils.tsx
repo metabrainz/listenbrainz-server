@@ -102,4 +102,67 @@ const getPlayButton = (listen: any, onClickFunction: () => void) => {
   );
 };
 
-export { searchForSpotifyTrack, getArtistLink, getTrackLink, getPlayButton };
+const formatWSMessageToListen = (wsMsg: any): Listen | null => {
+  const json = wsMsg;
+  try {
+    // The websocket message received may not contain the expected track_metadata and listened_at fields.
+    // Therefore, we look for their alias as well.
+    if (!("track_metadata" in json)) {
+      if ("data" in json) {
+        json.track_metadata = json.data;
+        delete json.data;
+      } else {
+        // eslint-disable-next-line no-console
+        console.debug(
+          "Could not find track_metadata and data in following json: ",
+          json
+        );
+        return null;
+      }
+    }
+    if (!("listened_at" in json)) {
+      if ("timestamp" in json) {
+        json.listened_at = json.timestamp;
+        delete json.timestamp;
+      } else {
+        // eslint-disable-next-line no-console
+        console.debug(
+          "Could not find listened_at and timestamp in following json: ",
+          json
+        );
+        return null;
+      }
+    }
+    // The websocket message received contains the recording_msid as a top level key.
+    // Therefore, we need to shift it json.track_metadata.additional_info.
+    if (!_.has(json, "track_metadata.additional_info.recording_msid")) {
+      if ("recording_msid" in json) {
+        json.track_metadata.additional_info.recording_msid =
+          json.recording_msid;
+        delete json.recording_msid;
+      } else {
+        // eslint-disable-next-line no-console
+        console.debug(
+          "Could not find recording_msid in following json: ",
+          json
+        );
+        return null;
+      }
+    }
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(error);
+  }
+
+  // The websocket message received contain some keys which are are either duplicates or are not required in the frontend.
+  // Ideally this should be handled server-side and this will probably be fixed with protobuf move.
+  return json as Listen;
+};
+
+export {
+  searchForSpotifyTrack,
+  getArtistLink,
+  getTrackLink,
+  getPlayButton,
+  formatWSMessageToListen,
+};
