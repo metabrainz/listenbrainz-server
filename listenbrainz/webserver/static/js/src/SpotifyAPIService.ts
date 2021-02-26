@@ -178,7 +178,8 @@ export default class SpotifyAPIService {
         }
         tracksCopy.shift();
       } catch (error) {
-        console.error(error);
+        // eslint-disable-next-line no-console
+        console.debug(error);
         if (error.status === 429) {
           // Too many requests, take a nap before continuing
           await new Promise((resolve) => setTimeout(resolve, 600));

@@ -2,10 +2,10 @@
 
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { isEqual, get, findIndex, omit, isNil, has } from "lodash";
+import { get, findIndex, omit, isNil, has, defaultsDeep } from "lodash";
 import * as io from "socket.io-client";
 
-import { ActionMeta, ValueType } from "react-select";
+import { ActionMeta, InputActionMeta, ValueType } from "react-select";
 import {
   faCog,
   faPen,
@@ -20,6 +20,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { ReactSortable } from "react-sortablejs";
 import debounceAsync from "debounce-async";
+import { sanitize } from "dompurify";
 import APIService from "../APIService";
 import SpotifyAPIService from "../SpotifyAPIService";
 import BrainzPlayer from "../BrainzPlayer";
@@ -54,6 +55,8 @@ export interface PlaylistPageState {
   playlist: JSPFPlaylist;
   recordingFeedbackMap: RecordingFeedbackMap;
   loading: boolean;
+  searchInputValue: string;
+  cachedSearchResults: OptionType[];
 }
 
 type OptionType = { label: string; value: ACRMSearchResult };
@@ -75,7 +78,6 @@ export default class PlaylistPage extends React.Component<
   private spotifyPlaylist?: SpotifyPlaylistObject;
   private searchForTrackDebounced: any;
   private brainzPlayer = React.createRef<BrainzPlayer>();
-  private addTrackSelectRef = React.createRef<AsyncSelect<OptionType>>();
 
   private socket!: SocketIOClient.Socket;
 
@@ -95,6 +97,8 @@ export default class PlaylistPage extends React.Component<
       playlist: props.playlist?.playlist || {},
       recordingFeedbackMap: {},
       loading: false,
+      searchInputValue: "",
+      cachedSearchResults: [],
     };
 
     this.APIService = new APIService(
@@ -111,11 +115,17 @@ export default class PlaylistPage extends React.Component<
     });
   }
 
-  async componentDidMount() {
-    // this.connectWebsockets();
+  componentDidMount(): void {
+    this.connectWebsockets();
     /* Deactivating feedback until the feedback system works with MBIDs instead of MSIDs */
     /* const recordingFeedbackMap = await this.loadFeedback();
     this.setState({ recordingFeedbackMap }); */
+  }
+
+  componentWillUnmount(): void {
+    if (this.socket?.connected) {
+      this.socket.disconnect();
+    }
   }
 
   connectWebsockets = (): void => {
@@ -130,26 +140,33 @@ export default class PlaylistPage extends React.Component<
   };
 
   addWebsocketsHandlers = (): void => {
-    // this.socket.on("connect", () => {
-    // });
-    this.socket.on("playlist_change", (data: string) => {
+    this.socket.on("connect", () => {
+      const { playlist } = this.state;
+      this.socket.emit("joined", {
+        playlist_id: getPlaylistId(playlist),
+      });
+    });
+    this.socket.on("playlist_changed", (data: JSPFPlaylist) => {
       this.handlePlaylistChange(data);
     });
   };
 
-  handlePlaylistChange = (data: string): void => {
-    const newPlaylist = JSON.parse(data);
+  emitPlaylistChanged = (): void => {
+    const { playlist } = this.state;
+    this.socket.emit("change_playlist", playlist);
+  };
+
+  handlePlaylistChange = (data: JSPFPlaylist): void => {
+    const newPlaylist = data;
     // rerun fetching metadata for all tracks?
     // or find new tracks and fetch metadata for them, add them to local Map
 
     // React-SortableJS expects an 'id' attribute and we can't change it, so add it to each object
     // eslint-disable-next-line no-unused-expressions
-    newPlaylist?.playlist?.track?.forEach(
-      (jspfTrack: JSPFTrack, index: number) => {
-        // eslint-disable-next-line no-param-reassign
-        jspfTrack.id = getRecordingMBIDFromJSPFTrack(jspfTrack);
-      }
-    );
+    newPlaylist?.track?.forEach((jspfTrack: JSPFTrack, index: number) => {
+      // eslint-disable-next-line no-param-reassign
+      jspfTrack.id = getRecordingMBIDFromJSPFTrack(jspfTrack);
+    });
     this.setState({ playlist: newPlaylist });
   };
 
@@ -186,24 +203,25 @@ export default class PlaylistPage extends React.Component<
           getPlaylistId(playlist),
           [jspfTrack]
         );
-        if (this.addTrackSelectRef?.current?.select) {
-          (this.addTrackSelectRef.current.select as any).setState({
-            value: null,
-          });
-        }
         this.newAlert("success", "Added track", `Added track ${label}`);
         /* Deactivating feedback until the feedback system works with MBIDs instead of MSIDs */
         /* const recordingFeedbackMap = await this.loadFeedback([
           selectedRecording.recording_mbid,
         ]); */
         jspfTrack.id = selectedRecording.recording_mbid;
-        this.setState({
-          playlist: { ...playlist, track: [...playlist.track, jspfTrack] },
-          // recordingFeedbackMap,
-        });
+        this.setState(
+          {
+            playlist: { ...playlist, track: [...playlist.track, jspfTrack] },
+            // recordingFeedbackMap,
+          },
+          this.emitPlaylistChanged
+        );
       } catch (error) {
         this.handleError(error);
       }
+    }
+    if (actionMeta.action === "clear") {
+      this.setState({ searchInputValue: "", cachedSearchResults: [] });
     }
   };
 
@@ -222,11 +240,14 @@ export default class PlaylistPage extends React.Component<
       // Converting to JSON
       const parsedResponse: ACRMSearchResult[] = await response.json();
       // Format the received items to a react-select option
-      return parsedResponse.map((hit: ACRMSearchResult) => ({
+      const results = parsedResponse.map((hit: ACRMSearchResult) => ({
         label: `${hit.recording_name} — ${hit.artist_credit_name}`,
         value: hit,
       }));
+      this.setState({ cachedSearchResults: results });
+      return results;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.debug(error);
     }
     return [];
@@ -460,12 +481,15 @@ export default class PlaylistPage extends React.Component<
       );
       if (status === 200) {
         tracks.splice(trackIndex, 1);
-        this.setState({
-          playlist: {
-            ...playlist,
-            track: [...tracks],
+        this.setState(
+          {
+            playlist: {
+              ...playlist,
+              track: [...tracks],
+            },
           },
-        });
+          this.emitPlaylistChanged
+        );
       }
     } catch (error) {
       this.handleError(error);
@@ -492,6 +516,7 @@ export default class PlaylistPage extends React.Component<
         evt.newIndex,
         1
       );
+      this.emitPlaylistChanged();
     } catch (error) {
       this.handleError(error);
       // Revert the move in state.playlist order
@@ -542,32 +567,26 @@ export default class PlaylistPage extends React.Component<
       return;
     }
     try {
-      const editedPlaylist: JSPFPlaylist = {
-        ...playlist,
-        annotation: description,
-        title: name,
-        extension: {
-          [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
-            public: isPublic,
-            collaborators,
+      // Replace keys that have changed but keep all other attributres
+      const editedPlaylist: JSPFPlaylist = defaultsDeep(
+        {
+          annotation: description,
+          title: name,
+          extension: {
+            [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
+              public: isPublic,
+              collaborators,
+            },
           },
         },
-      };
+        playlist
+      );
+
       await this.APIService.editPlaylist(currentUser.auth_token, id, {
         playlist: omit(editedPlaylist, "track") as JSPFPlaylist,
       });
-
+      this.setState({ playlist: editedPlaylist }, this.emitPlaylistChanged);
       this.newAlert("success", "Saved playlist", "");
-    } catch (error) {
-      this.handleError(error);
-    }
-    try {
-      // Fetch the newly editd playlist and save it to state
-      const JSPFObject: JSPFObject = await this.APIService.getPlaylist(
-        id,
-        currentUser.auth_token
-      );
-      this.setState({ playlist: JSPFObject.playlist });
     } catch (error) {
       this.handleError(error);
     }
@@ -679,8 +698,25 @@ export default class PlaylistPage extends React.Component<
     this.setState({ loading: false });
   };
 
+  handleInputChange = (inputValue: string, params: InputActionMeta) => {
+    /* Prevent clearing the search value on select dropdown close and input blur */
+    if (["menu-close", "set-value", "input-blur"].includes(params.action)) {
+      const { searchInputValue } = this.state;
+      this.setState({ searchInputValue });
+    } else {
+      this.setState({ searchInputValue: inputValue, cachedSearchResults: [] });
+    }
+  };
+
   render() {
-    const { alerts, currentTrack, playlist, loading } = this.state;
+    const {
+      alerts,
+      currentTrack,
+      playlist,
+      loading,
+      searchInputValue,
+      cachedSearchResults,
+    } = this.state;
     const { spotify, currentUser, apiUrl } = this.props;
     const { track: tracks } = playlist;
     const hasRightToEdit = this.hasRightToEdit();
@@ -821,7 +857,11 @@ export default class PlaylistPage extends React.Component<
               </div>
               {playlist.annotation && (
                 <div
-                  dangerouslySetInnerHTML={{ __html: playlist.annotation }}
+                  // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
+                  // eslint-disable-next-line react/no-danger
+                  dangerouslySetInnerHTML={{
+                    __html: sanitize(playlist.annotation),
+                  }}
                 />
               )}
               <hr />
@@ -886,13 +926,16 @@ export default class PlaylistPage extends React.Component<
                     className="search"
                     cacheOptions
                     isClearable
+                    closeMenuOnSelect={false}
                     loadingMessage={({ inputValue }) =>
                       `Searching for '${inputValue}'…`
                     }
                     loadOptions={this.searchForTrackDebounced}
+                    defaultOptions={cachedSearchResults}
                     onChange={this.addTrack}
                     placeholder="Artist followed by track name"
-                    ref={this.addTrackSelectRef}
+                    inputValue={searchInputValue}
+                    onInputChange={this.handleInputChange}
                   />
                 </Card>
               )}
