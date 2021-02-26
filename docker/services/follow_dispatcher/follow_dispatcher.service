@@ -1,3 +1,0 @@
-#!/bin/bash
-
-exec run-consul-template -config /etc/consul-template-follow-dispatcher.conf
