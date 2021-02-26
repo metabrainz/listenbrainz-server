@@ -86,10 +86,10 @@ COPY ./docker/services/api_compat/consul-template-api-compat.conf /etc/consul-te
 COPY ./docker/services/api_compat/api_compat.service /etc/service/api_compat/run
 RUN touch /etc/service/api_compat/down
 
-# Follow dispatcher
-COPY ./docker/services/follow_dispatcher/consul-template-follow-dispatcher.conf /etc/consul-template-follow-dispatcher.conf
-COPY ./docker/services/follow_dispatcher/follow_dispatcher.service /etc/service/follow_dispatcher/run
-RUN touch /etc/service/follow_dispatcher/down
+# Websockets server
+COPY ./docker/services/websockets/consul-template-websockets.conf /etc/consul-template-websockets.conf
+COPY ./docker/services/websockets/websockets.service /etc/service/websockets/run
+RUN touch /etc/service/websockets/down
 
 # Labs API
 COPY ./docker/services/labs_api/uwsgi-labs-api.ini /etc/uwsgi/uwsgi-labs-api.ini

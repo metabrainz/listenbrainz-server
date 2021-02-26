@@ -17,9 +17,9 @@ then
     rm -f /etc/service/api_compat/down
 fi
 
-if [ "${CONTAINER_NAME}" = "listenbrainz-follow-dispatcher-${DEPLOY_ENV}" ]
+if [ "${CONTAINER_NAME}" = "listenbrainz-websockets-${DEPLOY_ENV}" ]
 then
-    rm -f /etc/service/follow_dispatcher/down
+    rm -f /etc/service/websockets/down
 fi
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-spotify-reader-${DEPLOY_ENV}" ]
