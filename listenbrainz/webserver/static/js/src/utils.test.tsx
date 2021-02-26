@@ -23,7 +23,7 @@ describe("formatWSMessageToListen", () => {
     timestamp: 1586580524,
     listened_at_iso: "2020-04-10T10:12:04Z",
   };
-  it("renders a link if MBID is provided", () => {
+  it("converts a WS message to Listen properly", () => {
     const result = formatWSMessageToListen(mockWSListen);
     expect(result).toEqual(mockListen);
   });
