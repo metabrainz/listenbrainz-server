@@ -29,7 +29,7 @@ WORKDIR /code
 
 RUN mkdir /code/listenbrainz
 WORKDIR /code/listenbrainz
-RUN pip3 install pip==20.2.4
+RUN pip3 install pip==21.0.1
 COPY requirements.txt /code/listenbrainz/
 RUN pip3 install --no-cache-dir -r requirements.txt
 RUN useradd --create-home --shell /bin/bash listenbrainz
@@ -130,9 +130,9 @@ WORKDIR /static
 # Compile static files
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
     apt-get install -y nodejs && rm -rf /var/lib/apt/lists/*
-COPY package.json package-lock.json webpack.config.js tsconfig.json ./listenbrainz/webserver/static /static/
+COPY package.json package-lock.json webpack.config.js .eslintrc.js tsconfig.json ./listenbrainz/webserver/static /static/
 RUN npm install && npm run build:prod && ./node_modules/less/bin/lessc --clean-css /static/css/main.less > /static/css/main.css && \
-    rm -rf node_modules js/*.jsx *.json webpack.config.js && npm cache clean --force
+    rm -rf node_modules js/*.jsx *.json webpack.config.js .eslintrc.js && npm cache clean --force
 
 # Now install our code, which may change frequently
 COPY . /code/listenbrainz/
