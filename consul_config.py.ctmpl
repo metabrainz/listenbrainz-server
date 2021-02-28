@@ -61,7 +61,8 @@ INFLUX_DB_NAME  = "listenbrainz"
 {{end}}
 {{end}}
 
-{{- with $rabbitmq_service_name := or (template "KEY" "rabbitmq_service") "rabbitmq"}}
+{{ $rabbitmq_key := (printf "docker-server-configs/LB/config.%s.json/rabbitmq_service" (env "DEPLOY_ENV")) }}
+{{- with $rabbitmq_service_name := keyOrDefault $rabbitmq_key "rabbitmq"}}
 {{- if service $rabbitmq_service_name}}
 {{- with index (service $rabbitmq_service_name) 0}}
 RABBITMQ_HOST = "{{.Address}}"
