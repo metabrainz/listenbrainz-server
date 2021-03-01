@@ -137,8 +137,11 @@ const formatWSMessageToListen = (wsMsg: any): Listen | null => {
     // Therefore, we need to shift it json.track_metadata.additional_info.
     if (!_.has(json, "track_metadata.additional_info.recording_msid")) {
       if ("recording_msid" in json) {
-        json.track_metadata.additional_info.recording_msid =
-          json.recording_msid;
+        _.merge(json, {
+          track_metadata: {
+            additional_info: { recording_msid: json.recording_msid },
+          },
+        });
         delete json.recording_msid;
       } else {
         // eslint-disable-next-line no-console
@@ -152,6 +155,7 @@ const formatWSMessageToListen = (wsMsg: any): Listen | null => {
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error(error);
+    return null;
   }
 
   // The websocket message received contain some keys which are are either duplicates or are not required in the frontend.
