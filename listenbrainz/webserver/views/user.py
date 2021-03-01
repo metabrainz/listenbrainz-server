@@ -219,9 +219,6 @@ def reports(user_name: str):
 def playlists(user_name: str):
     """ Show user playlists """
     
-    if not current_app.config.get("FEATURE_PLAYLIST", False):
-        raise NotFound()
-    
     offset = request.args.get('offset', 0)
     try:
         offset = int(offset)
@@ -282,9 +279,6 @@ def playlists(user_name: str):
 def recommendation_playlists(user_name: str):
     """ Show playlists created for user """
     
-    if not current_app.config.get("FEATURE_PLAYLIST", False):
-        raise NotFound()
-    
     offset = request.args.get('offset', 0)
     try:
         offset = int(offset)
@@ -339,9 +333,6 @@ def recommendation_playlists(user_name: str):
 @user_bp.route("/<user_name>/collaborations")
 def collaborations(user_name: str):
     """ Show playlists a user collaborates on """
-    
-    if not current_app.config.get("FEATURE_PLAYLIST", False):
-        raise NotFound()
     
     offset = request.args.get('offset', 0)
     try:
