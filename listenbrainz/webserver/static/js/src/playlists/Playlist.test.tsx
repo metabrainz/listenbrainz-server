@@ -14,6 +14,7 @@ jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
 const {
   apiUrl,
+  labsApiUrl,
   currentUser,
   playlist,
   webSocketsServerUrl,
@@ -21,6 +22,7 @@ const {
 
 const props = {
   apiUrl,
+  labsApiUrl,
   playlist: playlist as JSPFObject,
   spotify: {
     access_token: "heyo",
