@@ -41,12 +41,6 @@ class MainTestCase(flask_testing.TestCase):
         app.config['MB_DATABASE_URI'] = 'yermom'
         return app
 
-    def setUp(self):
-        flask_testing.TestCase.setUp(self)
-
-    def tearDown(self):
-        flask_testing.TestCase.tearDown(self)
-
     def test_basics(self):
         q = YearFromArtistCreditRecordingQuery()
         self.assertEqual(q.names()[0], "year-artist-recording-year-lookup")
