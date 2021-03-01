@@ -43,3 +43,6 @@ requests==2.23.0
 SQLAlchemy==1.3.16
 mbdata==25.0.4
 sqlalchemy-dst==1.0.1
+typesense==0.9.0
+unidecode==1.1.2
+Levenshtein==0.12.0
