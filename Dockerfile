@@ -74,7 +74,9 @@ COPY ./docker/run-lb-command /usr/local/bin
 
 # cron
 COPY ./docker/services/cron/stats-crontab /etc/cron.d/stats-crontab
+RUN chmod 0644 /etc/cron.d/stats-crontab && crontab -u listenbrainz_stats_cron /etc/cron.d/stats-crontab
 COPY ./docker/services/cron/dump-crontab /etc/cron.d/dump-crontab
+RUN chmod 0644 /etc/cron.d/dump-crontab && crontab -u lbdumps /etc/cron.d/dump-crontab
 COPY ./docker/services/cron/consul-template-cron-config.conf /etc/consul-template-cron-config.conf
 COPY ./docker/services/cron/cron-config.service /etc/service/cron-config/run
 RUN touch /etc/service/cron/down
