@@ -1,8 +1,0 @@
-{%- extends 'base-react.html' -%}
-
-{% block title %}Follow users {{ follow_list|join(', ') }} - ListenBrainz{% endblock %}
-
-{% block scripts %}
-  {{ super() }}
-  <script src="{{ get_static_path('main.js') }}" type="text/javascript"></script>
-{% endblock %}
