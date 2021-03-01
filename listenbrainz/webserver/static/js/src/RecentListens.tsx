@@ -156,6 +156,10 @@ export default class RecentListens extends React.Component<
   };
 
   addWebsocketsHandlers = (): void => {
+    this.socket.on("connect", () => {
+      const { user } = this.props;
+      this.socket.emit("json", { user: user.name });
+    });
     this.socket.on("listen", (data: string) => {
       this.receiveNewListen(data);
     });
