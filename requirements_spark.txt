@@ -8,7 +8,7 @@ git+https://github.com/metabrainz/brainzutils-python.git@v1.16.1
 pytest == 6.2.1
 pytest-cov == 2.10.1
 py4j == 0.10.7
-pyspark == 2.4.5
+pyspark == 3.0.2
 pydantic == 1.6.1
 unidecode == 1.1.2
 Flask==1.1.2
