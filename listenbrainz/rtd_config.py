@@ -84,5 +84,3 @@ SPOTIFY_CLIENT_ID = ''
 SPOTIFY_CLIENT_SECRET = ''
 
 ADMINS = ['iliekcomputers']
-
-FEATURE_PLAYLIST = True
