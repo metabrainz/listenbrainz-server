@@ -51,7 +51,7 @@ TYPESENSE_HOST = "{{.Address}}"
 TYPESENSE_PORT = {{.Port}}
 {{end}}
 {{end}}
-TYPESENSE_API_KEY = '''{{template "KEY" "typesense_api_key"}}''
+TYPESENSE_API_KEY = '''{{template "KEY" "typesense_api_key"}}'''
 
 {{if service "listenbrainz-redis"}}
 {{with index (service "listenbrainz-redis") 0}}
