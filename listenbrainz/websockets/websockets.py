@@ -7,7 +7,7 @@ from brainzutils.flask import CustomFlask
 
 from listenbrainz.webserver import load_config
 from listenbrainz.webserver.errors import init_error_handlers
-from listenbrainz.websockets.follow_server_dispatcher import FollowDispatcher
+from listenbrainz.websockets.listens_dispatcher import ListensDispatcher
 
 eventlet.monkey_patch()
 
@@ -30,7 +30,6 @@ def handle_json(data):
     except KeyError:
         raise BadRequest("Missing key 'user'")
     join_room(user)
-    emit('joined', {'status': 'success'}, room=room)
 
 
 @socketio.on('change_playlist')
@@ -52,6 +51,6 @@ def joined(data):
 
 
 def run_websockets(host='0.0.0.0', port=8082, debug=True):
-    fd = FollowDispatcher(app, socketio)
-    fd.start()
+    dispatcher = ListensDispatcher(app, socketio)
+    dispatcher.start()
     socketio.run(app, debug=debug, host=host, port=port)

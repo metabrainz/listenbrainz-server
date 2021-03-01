@@ -1,5 +1,4 @@
 import json
-import listenbrainz.webserver
 import pika
 import time
 import threading
@@ -7,7 +6,8 @@ import threading
 from flask import current_app
 from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_PLAYING_NOW, LISTEN_TYPE_IMPORT
 
-class FollowDispatcher(threading.Thread):
+
+class ListensDispatcher(threading.Thread):
 
     def __init__(self, app, socketio):
         threading.Thread.__init__(self)
