@@ -32,6 +32,13 @@ function add_rsync_include_rule {
     echo "$SHA256_FILE_RULE" >> "$RULE_FILE"
 }
 
+if [[ "${CONTAINER_NAME}" = "listenbrainz-cron-prod" && "${PROD}" = "prod" ]]
+then
+    echo "Running in listenbrainz-cron-prod container, good!"
+else
+    echo "This container is not the production cron container, exiting..."
+    exit
+fi
 
 echo "This script is being run by the following user: "; whoami
 
