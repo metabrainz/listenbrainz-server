@@ -84,7 +84,7 @@ class Spotify:
         return "<Spotify(user:%s): %s>" % (self.user_id, self.musicbrainz_id)
 
 
-def refresh_user_token(spotify_user):
+def refresh_user_token(spotify_user: Spotify):
     """ Refreshes the user token for the given spotify user.
 
     Args:
@@ -214,7 +214,7 @@ def update_latest_listened_at(user_id, timestamp):
     db_spotify.update_latest_listened_at(user_id, timestamp)
 
 
-def get_access_token(code):
+def get_access_token(code: str):
     """ Get a valid Spotify Access token given the code.
 
     Returns:
@@ -237,7 +237,17 @@ def get_access_token(code):
     return r.json()
 
 
-def _get_spotify_token(grant_type, token):
+def _get_spotify_token(grant_type: str, token: str) -> requests.Response:
+    """ Fetch access token or refresh token from spotify auth api
+
+    Args:
+        grant_type (str): should be "authorization_code" to retrieve access token and "refresh_token" to refresh tokens
+        token (str): authorization code to retrieve access token first time and refresh token to refresh access tokens
+
+    Returns:
+        response from the spotify authentication endpoint
+    """
+
     client_id = current_app.config['SPOTIFY_CLIENT_ID']
     client_secret = current_app.config['SPOTIFY_CLIENT_SECRET']
     auth_header = base64.b64encode(six.text_type(client_id + ':' + client_secret).encode('ascii'))
