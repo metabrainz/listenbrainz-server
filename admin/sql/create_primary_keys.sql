@@ -13,6 +13,7 @@ ALTER TABLE statistics.recording ADD CONSTRAINT stats_recording_pkey PRIMARY KEY
 ALTER TABLE recommendation.cf_recording ADD CONSTRAINT rec_cf_recording_pkey PRIMARY KEY (id);
 ALTER TABLE recommendation.recommender ADD CONSTRAINT rec_recommender_pkey PRIMARY KEY (id);
 ALTER TABLE recommendation.recommender_session ADD CONSTRAINT rec_recommender_session_pkey PRIMARY KEY (id);
+ALTER TABLE recommendation.user_recommendation_event ADD CONSTRAINT rec_user_recommendation_event_pkey PRIMARY KEY (id);
 
 ALTER TABLE recording_feedback ADD CONSTRAINT recording_feedback_pkey PRIMARY KEY (id);
 

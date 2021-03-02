@@ -89,6 +89,14 @@ CREATE TABLE recommendation.recording_session (
   session_id          INTEGER NOT NULL --FK to recommendation.recommender_session.id
 );
 
+CREATE TABLE recommendation.user_recommendation_event (
+  id                    SERIAL, -- PK
+  user_id               INTEGER, -- FK to "user"
+  recommendation_type   user_recommendation_event_type_enum,
+  metadata              JSONB,
+  created               TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+);
+
 CREATE TABLE spotify_auth (
   user_id                   INTEGER NOT NULL, -- PK and FK to user.id
   user_token                VARCHAR NOT NULL,

@@ -54,6 +54,12 @@ ALTER TABLE recommendation.recommender_session
     REFERENCES recommendation.recommender (id)
     ON DELETE CASCADE;
 
+ALTER TABLE recommendation.user_recommendation_event
+    ADD CONSTRAINT user_recommendation_event_user_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
 ALTER TABLE recording_feedback
     ADD CONSTRAINT recording_feedback_user_id_foreign_key
     FOREIGN KEY (user_id)
