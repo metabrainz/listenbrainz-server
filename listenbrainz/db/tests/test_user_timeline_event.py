@@ -105,7 +105,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
             )
         )
         events = db_user_timeline_event.get_user_track_recommendation_events(
-            user_id=self.user['id'],
+            user_id=new_user['id'],
         )
         self.assertEqual(1, len(events))
         self.assertEqual(new_user['id'], events[0].user_id)
