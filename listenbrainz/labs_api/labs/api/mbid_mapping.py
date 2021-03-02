@@ -10,7 +10,7 @@ from Levenshtein import distance
 
 from listenbrainz import config
 
-COLLECTION_NAME = "mbid_mapping"
+COLLECTION_NAME = "mbid_mapping_latest"
 
 
 def prepare_query(text):
