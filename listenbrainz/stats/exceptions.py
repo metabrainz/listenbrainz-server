@@ -1,2 +1,0 @@
-class StatisticsException(Exception):
-    pass
