@@ -18,34 +18,45 @@
 
 import pydantic
 from typing import Optional
+import ujson
+
 from flask import Blueprint, jsonify, request
 
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
 
 from data.model.user_timeline_event import RecordingRecommendationMetadata
+from listenbrainz.db.exceptions import DatabaseException
+from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.views.api_tools import validate_auth_header
+from listenbrainz.webserver.rate_limiter import ratelimit
 
 user_timeline_event_api_bp = Blueprint('user_timeline_event_api_bp', __name__)
 
 
-@user_timeline_event_api_bp.route('/create-user-recommendation/recording')
+@user_timeline_event_api_bp.route('/create-user-recommendation/recording', methods=['POST', 'OPTIONS'])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
 def create_user_recommendation_event():
     user = validate_auth_header()
 
     try:
-        data = request.json()
+        data = ujson.loads(request.get_data())
     except:
         raise APIBadRequest("Invalid JSON")
 
     try:
         metadata = RecordingRecommendationMetadata(**data['metadata'])
-    except:
+    except pydantic.ValidationError:
         raise APIBadRequest("Invalid metadata")
 
     try:
         event = db_user_timeline_event.create_user_track_recommendation_event(user['id'], metadata)
-    except:
+    except DatabaseException:
         raise APIInternalServerError("Something went wrong, please try again.")
 
-    return jsonify(event.dict())
+
+    event_data = event.dict()
+    event_data['created'] = event_data['created'].timestamp()
+    event_data['event_type'] = event_data['event_type'].value
+    return jsonify(event_data)

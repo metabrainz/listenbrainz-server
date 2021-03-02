@@ -18,7 +18,7 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Union, Optional
 
 import pydantic
 
@@ -34,11 +34,11 @@ class RecordingRecommendationMetadata(pydantic.BaseModel):
     recording_msid: str
     artist_msid: str
 
-UserTimelineEventMetadata = Any[RecordingRecommendationMetadata]
+UserTimelineEventMetadata = Union[RecordingRecommendationMetadata]
 
 class UserTimelineEvent(pydantic.BaseModel):
     id: int
     user_id: int
-    metadata: dict
+    metadata: UserTimelineEventMetadata
     event_type: UserTimelineEventType
     created: Optional[datetime]

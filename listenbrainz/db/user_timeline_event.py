@@ -23,6 +23,7 @@ import ujson
 from data.model.user_timeline_event import UserTimelineEvent, UserTimelineEventType, UserTimelineEventMetadata, RecordingRecommendationMetadata
 from enum import Enum
 from listenbrainz import db
+from listenbrainz.db.exceptions import DatabaseException
 from typing import List
 
 
@@ -31,20 +32,23 @@ def create_user_timeline_event(
     event_type: UserTimelineEventMetadata,
     metadata: dict,
 ) -> UserTimelineEvent:
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            INSERT INTO user_timeline_event (user_id, event_type, metadata)
-                 VALUES (:user_id, :event_type, :metadata)
-              RETURNING (id, user_id, event_type, metadata, created)
-            """), {
-                'user_id': user_id,
-                'event_type': event_type.value,
-                'metadata': ujson.dumps(metadata.dict()),
-            }
-        )
+    try:
+        with db.engine.connect() as connection:
+                result = connection.execute(sqlalchemy.text("""
+                    INSERT INTO user_timeline_event (user_id, event_type, metadata)
+                        VALUES (:user_id, :event_type, :metadata)
+                    RETURNING id, user_id, event_type, metadata, created
+                    """), {
+                        'user_id': user_id,
+                        'event_type': event_type.value,
+                        'metadata': ujson.dumps(metadata.dict()),
+                    }
+                )
 
-        r = result.fetchone()
-        return UserTimelineEvent(**r)
+                r = dict(result.fetchone())
+                return UserTimelineEvent(**r)
+    except Exception as e:
+        raise DatabaseException(str(e))
 
 
 def create_user_track_recommendation_event(user_id: int, metadata: RecordingRecommendationMetadata) -> UserTimelineEvent:
@@ -63,13 +67,13 @@ def get_user_timeline_events(user_id: int, event_type: UserTimelineEventType, co
                AND event_type = :event_type
           ORDER BY created
              LIMIT :count
-        """, {
+        """), {
             'user_id': user_id,
             'event_type': event_type.value,
             'count': count,
-        }))
+        })
 
-    return [UserTimelineEvent(**row) for row in result.fetchall()]
+        return [UserTimelineEvent(**row) for row in result.fetchall()]
 
 
 def get_user_track_recommendation_events(user_id: int, count: int) -> List[UserTimelineEvent]:
