@@ -89,10 +89,10 @@ CREATE TABLE recommendation.recording_session (
   session_id          INTEGER NOT NULL --FK to recommendation.recommender_session.id
 );
 
-CREATE TABLE recommendation.user_recommendation_event (
+CREATE TABLE user_timeline_event (
   id                    SERIAL, -- PK
   user_id               INTEGER, -- FK to "user"
-  recommendation_type   user_recommendation_event_type_enum,
+  event_type            user_timeline_event_type_enum,
   metadata              JSONB,
   created               TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
