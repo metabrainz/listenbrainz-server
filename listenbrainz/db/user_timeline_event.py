@@ -29,8 +29,8 @@ from typing import List
 
 def create_user_timeline_event(
     user_id: int,
-    event_type: UserTimelineEventMetadata,
-    metadata: dict,
+    event_type: UserTimelineEventType,
+    metadata: UserTimelineEventMetadata,
 ) -> UserTimelineEvent:
     try:
         with db.engine.connect() as connection:
@@ -76,7 +76,7 @@ def get_user_timeline_events(user_id: int, event_type: UserTimelineEventType, co
         return [UserTimelineEvent(**row) for row in result.fetchall()]
 
 
-def get_user_track_recommendation_events(user_id: int, count: int) -> List[UserTimelineEvent]:
+def get_user_track_recommendation_events(user_id: int, count: int = 50) -> List[UserTimelineEvent]:
     return get_user_timeline_events(
         user_id=user_id,
         event_type=UserTimelineEventType.RECORDING_RECOMMENDATION,
