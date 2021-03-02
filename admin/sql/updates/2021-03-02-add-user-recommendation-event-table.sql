@@ -19,4 +19,8 @@ ALTER TABLE user_timeline_event
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
+CREATE INDEX user_id_ndx_user_timeline_event ON user_timeline_event (user_id);
+CREATE INDEX event_type_ndx_user_timeline_event ON user_timeline_event (event_type);
+CREATE INDEX user_id_event_type_ndx_user_timeline_event ON user_timeline_event (user_id, event_type);
+
 COMMIT;
