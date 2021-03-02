@@ -1,8 +1,7 @@
 Hey! 👋
 
-Artist relation has been successfully imported to the spark cluster.
+Artist relation has been successfully imported into the spark cluster at {{ import_time }}.
 
-import completion time = {{ time }}
-artist relation name = {{ artist_relation_name }}
+Took {{ time_taken_to_import }}s to import the artist relation.
 
 Your Friendly Neighbourhood Brainzbot 🤖

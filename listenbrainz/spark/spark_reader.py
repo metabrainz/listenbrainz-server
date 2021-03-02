@@ -18,21 +18,29 @@ from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          handle_user_daily_activity,
                                          handle_user_entity,
                                          handle_user_listening_activity,
+                                         handle_sitewide_entity,
                                          notify_artist_relation_import,
-                                         notify_mapping_import)
+                                         notify_mapping_import,
+                                         handle_missing_musicbrainz_data,
+                                         notify_cf_recording_recommendations_generation)
+
 from listenbrainz.webserver import create_app
 
 response_handler_map = {
     'user_entity': handle_user_entity,
     'user_listening_activity': handle_user_listening_activity,
     'user_daily_activity': handle_user_daily_activity,
+    'sitewide_entity': handle_sitewide_entity,
     'import_full_dump': handle_dump_imported,
-    'cf_recording_dataframes': handle_dataframes,
-    'cf_recording_model': handle_model,
-    'cf_recording_candidate_sets': handle_candidate_sets,
-    'cf_recording_recommendations': handle_recommendations,
+    'import_incremental_dump': handle_dump_imported,
+    'cf_recommendations_recording_dataframes': handle_dataframes,
+    'cf_recommendations_recording_model': handle_model,
+    'cf_recommendations_recording_candidate_sets': handle_candidate_sets,
+    'cf_recommendations_recording_recommendations': handle_recommendations,
     'import_mapping': notify_mapping_import,
     'import_artist_relation': notify_artist_relation_import,
+    'missing_musicbrainz_data': handle_missing_musicbrainz_data,
+    'cf_recommendations_recording_mail': notify_cf_recording_recommendations_generation
 }
 
 RABBITMQ_HEARTBEAT_TIME = 60 * 60  # 1 hour, in seconds
@@ -110,7 +118,6 @@ class SparkReader:
                 try:
                     self.incoming_ch.start_consuming()
                 except pika.exceptions.ConnectionClosed:
-                    current_app.logger.warning("Connection to rabbitmq closed. Re-opening.")
                     self.connection = None
                     continue
 

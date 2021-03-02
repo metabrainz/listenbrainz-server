@@ -21,7 +21,7 @@ Core API Endpoints
    :blueprints: api_v1
    :include-empty-docstring:
    :undoc-static:
-   :undoc-endpoints: api_v1.latest_import
+   :undoc-endpoints: api_v1.latest_import, api_v1.user_feed
 
 .. http:get:: /1/latest-import
 
@@ -57,13 +57,21 @@ Core API Endpoints
   :statuscode 400: invalid JSON sent, see error message for details.
   :statuscode 401: invalid authorization. See error message for details.
 
+Playlists API Endpoints
+^^^^^^^^^^^^^^^^^^^^^^^
+The playlists API allows for the creation and editing of lists of recordings
+
+.. autoflask:: listenbrainz.webserver:create_app_rtfd()
+   :blueprints: playlist_api_v1
+   :include-empty-docstring:
+   :undoc-static:
+
+
 Statistics API Endpoints
 ^^^^^^^^^^^^^^^^^^^^^^^^
-ListenBrainz now has a statistics infrastructure that collects and computes statistics
+ListenBrainz has a statistics infrastructure that collects and computes statistics
 from the listen data that has been stored in the database. The endpoints in this section
-offer a way to get this data programmatically. Right now, we calculate statistics
-for the top artists, releases and recordings that a user has listened to. However, we plan
-to add more statistics in the near future.
+offer a way to get this data programmatically.
 
 .. autoflask:: listenbrainz.webserver:create_app_rtfd()
    :blueprints: stats_api_v1

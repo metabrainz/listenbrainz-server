@@ -1,5 +1,6 @@
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
+import listenbrainz.db.user_relationship as db_user_relationship
 from time import sleep
 import json
 import ujson
@@ -42,6 +43,25 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.logstore = None
         ServerTestCase.tearDown(self)
         DatabaseTestCase.tearDown(self)
+
+    def test_redirects(self):
+        # Not logged in
+        response = self.client.get(url_for("redirect.redirect_listens"))
+        self.assertEqual(response.status_code, 302)
+        assert response.location.endswith("/login/?next=%2Fmy%2Flistens")
+
+        self.temporary_login(self.user.login_id)
+        response = self.client.get(url_for("redirect.redirect_listens"))
+        self.assertEqual(response.status_code, 302)
+        assert response.location.endswith("/user/iliekcomputers")
+
+        response = self.client.get(url_for("redirect.redirect_charts"))
+        self.assertEqual(response.status_code, 302)
+        assert response.location.endswith("/user/iliekcomputers/charts")
+
+        response = self.client.get(url_for("redirect.redirect_charts") + "?foo=bar")
+        self.assertEqual(response.status_code, 302)
+        assert response.location.endswith("/user/iliekcomputers/charts?foo=bar")
 
     def test_user_page(self):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
@@ -106,6 +126,97 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
             'permission': 'permission',
         })
 
+    @mock.patch('listenbrainz.webserver.views.user.db_user_relationship.is_following_user')
+    def test_logged_in_user_follows_user_props(self, mock_is_following_user):
+        response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
+        self.assert200(response)
+        self.assertTemplateUsed('user/profile.html')
+        props = ujson.loads(self.get_context_variable('props'))
+        self.assertIsNone(props['logged_in_user_follows_user'])
+
+        self.temporary_login(self.user.login_id)
+        mock_is_following_user.return_value = False
+        response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
+        self.assert200(response)
+        props = ujson.loads(self.get_context_variable('props'))
+        self.assertFalse(props['logged_in_user_follows_user'])
+
+    def test_follow_user(self):
+        followed_user = db_user.get_or_create(3, 'followed_user')
+
+        self.temporary_login(self.user.login_id)
+        r = self.client.post('/user/followed_user/follow')
+        self.assert200(r)
+        self.assertTrue(db_user_relationship.is_following_user(self.user.id, followed_user['id']))
+
+    def test_follow_user_requires_login(self):
+        r = self.client.post('/user/followed_user/follow')
+        self.assertNotEqual(r.status_code, 200)
+
+    def test_following_a_nonexistent_user_errors_out(self):
+        self.temporary_login(self.user.login_id)
+        r = self.client.post('/user/user_doesnt_exist_lol/follow')
+        self.assertEqual(r.status_code, 404)
+
+    def test_following_yourself_errors_out(self):
+        self.temporary_login(self.user.login_id)
+        r = self.client.post(f'/user/{self.user.musicbrainz_id}/follow')
+        self.assert400(r)
+
+    def test_follow_user_twice_leads_to_error(self):
+        followed_user = db_user.get_or_create(3, 'followed_user')
+
+        self.temporary_login(self.user.login_id)
+        r = self.client.post('/user/followed_user/follow')
+        self.assert200(r)
+        self.assertTrue(db_user_relationship.is_following_user(self.user.id, followed_user['id']))
+
+        # now, try to follow again, this time expecting a 400
+        r = self.client.post('/user/followed_user/follow')
+        self.assert400(r)
+
+    def test_unfollow_user(self):
+        followed_user = db_user.get_or_create(3, 'followed_user')
+
+        self.temporary_login(self.user.login_id)
+
+        # first, follow the user
+        r = self.client.post('/user/followed_user/follow')
+        self.assert200(r)
+        self.assertTrue(db_user_relationship.is_following_user(self.user.id, followed_user['id']))
+
+        # now, unfollow and check the db
+        r = self.client.post('/user/followed_user/unfollow')
+        self.assert200(r)
+        self.assertFalse(db_user_relationship.is_following_user(self.user.id, followed_user['id']))
+
+    def test_unfollow_user_requires_login(self):
+        r = self.client.post('/user/followed_user/unfollow')
+        self.assertNotEqual(r.status_code, 200)
+
+    def test_followers_returns_the_followers_of_a_user(self):
+        # create a new user, and follow them
+        followed_user = db_user.get_or_create(3, 'followed_user')
+        self.temporary_login(self.user.login_id)
+        r = self.client.post('/user/followed_user/follow')
+        self.assert200(r)
+
+        r = self.client.get(f'/user/followed_user/followers')
+        self.assert200(r)
+        self.assertListEqual([{'musicbrainz_id': self.user.musicbrainz_id}], r.json['followers'])
+
+
+    def test_following_returns_the_people_who_follow_the_user(self):
+        # create a new user, and follow them
+        followed_user = db_user.get_or_create(3, 'followed_user')
+        self.temporary_login(self.user.login_id)
+        r = self.client.post('/user/followed_user/follow')
+        self.assert200(r)
+
+        r = self.client.get(f'/user/{self.user.musicbrainz_id}/following')
+        self.assert200(r)
+        self.assertListEqual([{'musicbrainz_id': 'followed_user'}], r.json['following'])
+
     def _create_test_data(self, user_name):
         min_ts = -1
         max_ts = -1
@@ -139,26 +250,26 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
 
         # If no parameter is given, use current time as the to_ts
         self.client.get(url_for('user.profile', user_name='iliekcomputers'))
-        req_call = mock.call('iliekcomputers', limit=25, to_ts=1400000201, time_range=None)
+        req_call = mock.call('iliekcomputers', limit=25, to_ts=1400000201)
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
         # max_ts query param -> to_ts timescale param
         self.client.get(url_for('user.profile', user_name='iliekcomputers'), query_string={'max_ts': 1520946000})
-        req_call = mock.call('iliekcomputers', limit=25, to_ts=1520946000, time_range=None)
+        req_call = mock.call('iliekcomputers', limit=25, to_ts=1520946000)
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
         # min_ts query param -> from_ts timescale param
         self.client.get(url_for('user.profile', user_name='iliekcomputers'), query_string={'min_ts': 1520941000})
-        req_call = mock.call('iliekcomputers', limit=25, from_ts=1520941000, time_range=None)
+        req_call = mock.call('iliekcomputers', limit=25, from_ts=1520941000)
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
         # If max_ts and min_ts set, only max_ts is used
         self.client.get(url_for('user.profile', user_name='iliekcomputers'),
                         query_string={'min_ts': 1520941000, 'max_ts': 1520946000})
-        req_call = mock.call('iliekcomputers', limit=25, to_ts=1520946000, time_range=None)
+        req_call = mock.call('iliekcomputers', limit=25, to_ts=1520946000)
         timescale.assert_has_calls([req_call])
 
     @mock.patch('listenbrainz.webserver.timescale_connection._ts.get_timestamps_for_user')
@@ -179,151 +290,3 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertIn(b'Incorrect timestamp argument min_ts: b', response.data)
 
         timescale.assert_not_called()
-
-    @mock.patch('listenbrainz.webserver.timescale_connection._ts.get_timestamps_for_user')
-    @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
-    def test_search_larger_time_range_filter(self, timescale, timestamps):
-        """Check that search_larger_time_range is passed to timescale """
-        (min_ts, max_ts) = self._create_test_data('iliekcomputers')
-        timestamps.return_value = (min_ts, max_ts)
-
-        # If search_larger_time_range is not given, use search_larger_time_range=0
-        self.client.get(url_for('user.profile', user_name='iliekcomputers'))
-        req_call = mock.call('iliekcomputers', limit=25, to_ts=1400000201, time_range=None)
-        timescale.assert_has_calls([req_call])
-        timescale.reset_mock()
-
-        # search_larger_time_range query param -> search_larger_time_range timescale param
-        self.client.get(url_for('user.profile', user_name='iliekcomputers'), query_string={'search_larger_time_range': 1})
-        req_call = mock.call('iliekcomputers', limit=25, to_ts=1400000201, time_range=10)
-        timescale.assert_has_calls([req_call])
-        timescale.reset_mock()
-
-    @mock.patch('listenbrainz.webserver.timescale_connection._ts.get_timestamps_for_user')
-    @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
-    def test_search_larger_time_range_filter_errors(self, timescale, timestamps):
-        """If search_larger_time_range is not integer, show an error page"""
-        (min_ts, max_ts) = self._create_test_data('iliekcomputers')
-        timestamps.return_value = (min_ts, max_ts)
-        response = self.client.get(url_for('user.profile', user_name='iliekcomputers'),
-                                   query_string={'search_larger_time_range': 'a'})
-        self.assert400(response)
-        self.assertIn(b'search_larger_time_range must be an integer value 0 or greater: a', response.data)
-
-        timescale.assert_not_called()
-
-
-    def test_delete_listen(self):
-        self.temporary_login(self.user.login_id)
-        self._create_test_data(self.user.musicbrainz_id)
-        delete_listen_url = url_for('user.delete_listen', user_name=self.user.musicbrainz_id)
-
-        listens = self.logstore.fetch_listens(user_name=self.user.musicbrainz_id, from_ts=1399999999)
-        self.assertEqual(len(listens), 5)
-
-        delete_listen = self.test_data[0]
-        response = self.client.post(delete_listen_url,
-                                    data={
-                                        'token': self.user.auth_token,
-                                        'listened_at': delete_listen.ts_since_epoch,
-                                        'recording_msid': delete_listen.recording_msid
-                                        })
-        self.assert200(response)
-        self.assertEqual(response.json["status"], "ok")
-
-        listens = self.logstore.fetch_listens(user_name=self.user.musicbrainz_id, from_ts=1399999999)
-        self.assertEqual(len(listens), 4)
-
-        self.assertNotIn(delete_listen, listens)
-
-    def test_delete_listen_not_logged_in(self):
-        self._create_test_data(self.user.musicbrainz_id)
-        delete_listen_url = url_for('user.delete_listen', user_name=self.user.musicbrainz_id)
-
-        listens = self.logstore.fetch_listens(user_name=self.user.musicbrainz_id, from_ts=1399999999)
-        self.assertEqual(len(listens), 5)
-
-        delete_listen = self.test_data[0]
-        response = self.client.post(delete_listen_url,
-                                    data={
-                                        'token': self.user.auth_token,
-                                        'listened_at': delete_listen.ts_since_epoch,
-                                        'recording_msid': delete_listen.recording_msid
-                                        })
-        self.assertStatus(response, 302)
-        self.assertRedirects(response, url_for('login.index', next=delete_listen_url))
-
-    def test_delete_listen_missing_keys(self):
-        self.temporary_login(self.user.login_id)
-        self._create_test_data(self.user.musicbrainz_id)
-        delete_listen_url = url_for('user.delete_listen', user_name=self.user.musicbrainz_id)
-
-        listens = self.logstore.fetch_listens(user_name=self.user.musicbrainz_id, from_ts=1399999999)
-        self.assertEqual(len(listens), 5)
-
-        delete_listen = self.test_data[0]
-
-        # send request without auth_token
-        response = self.client.post(delete_listen_url,
-                                    data={
-                                        'listened_at': delete_listen.ts_since_epoch,
-                                        'recording_msid': delete_listen.recording_msid
-                                        })
-        self.assertStatus(response, 401)
-
-        # send request without listened_at
-        response = self.client.post(delete_listen_url,
-                                    data={
-                                        'token': self.user.auth_token,
-                                        'recording_msid': delete_listen.recording_msid
-                                        })
-        self.assertStatus(response, 400)
-        self.assertEqual(response.json["error"], "Listen timestamp missing.")
-
-        # send request without recording_msid
-        response = self.client.post(delete_listen_url,
-                                    data={
-                                        'token': self.user.auth_token,
-                                        'listened_at': delete_listen.ts_since_epoch
-                                        })
-        self.assertStatus(response, 400)
-        self.assertEqual(response.json["error"], "Recording MSID missing.")
-
-    def test_delete_listen_invalid_keys(self):
-        self.temporary_login(self.user.login_id)
-        self._create_test_data(self.user.musicbrainz_id)
-        delete_listen_url = url_for('user.delete_listen', user_name=self.user.musicbrainz_id)
-
-        listens = self.logstore.fetch_listens(user_name=self.user.musicbrainz_id, from_ts=1399999999)
-        self.assertEqual(len(listens), 5)
-
-        delete_listen = self.test_data[0]
-
-        # send request with invalid auth_token
-        response = self.client.post(delete_listen_url,
-                                    data={
-                                        'token': 'invalid token',
-                                        'listened_at': delete_listen.ts_since_epoch,
-                                        'recording_msid': delete_listen.recording_msid
-                                        })
-        self.assertStatus(response, 401)
-
-        # send request with invalid listened_at
-        response = self.client.post(delete_listen_url,
-                                    data={
-                                        'token': self.user.auth_token,
-                                        'listened_at': 'invalid listened_at',
-                                        'recording_msid': delete_listen.recording_msid
-                                        })
-        self.assertStatus(response, 400)
-        self.assertEqual(response.json["error"], "invalid listened_at: Listen timestamp invalid.")
-
-        # send request with invalid recording_msid
-        response = self.client.post(delete_listen_url,
-                                    data={
-                                        'token': self.user.auth_token,
-                                        'listened_at': delete_listen.ts_since_epoch,
-                                        'recording_msid': 'invalid recording_msid'
-                                        })
-        self.assertStatus(response, 400)
-        self.assertEqual(response.json["error"], "invalid recording_msid: Recording MSID format invalid.")

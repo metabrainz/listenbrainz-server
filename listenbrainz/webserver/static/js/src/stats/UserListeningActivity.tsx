@@ -1,6 +1,6 @@
 import * as React from "react";
 import MediaQuery from "react-responsive";
-import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
+import { faExclamationCircle, faLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
@@ -128,6 +128,14 @@ export default class UserListeningActivity extends React.Component<
     return {} as UserListeningActivityResponse;
   };
 
+  getNumberOfDaysInMonth = (month: Date): number => {
+    return new Date(
+      month.getUTCFullYear(),
+      month.getUTCMonth() + 1,
+      0
+    ).getDate();
+  };
+
   processData = (
     data: UserListeningActivityResponse
   ): UserListeningActivityData => {
@@ -206,12 +214,7 @@ export default class UserListeningActivity extends React.Component<
     const startOfLastMonth = new Date(
       data.payload.listening_activity[0].from_ts * 1000
     );
-    const numOfDaysInLastMonth =
-      new Date(
-        startOfLastMonth.getUTCFullYear(),
-        startOfLastMonth.getUTCMonth(),
-        0
-      ).getDate() + 1;
+    const numOfDaysInLastMonth = this.getNumberOfDaysInMonth(startOfLastMonth);
 
     const lastMonth = data.payload.listening_activity.slice(
       0,
@@ -377,128 +380,130 @@ export default class UserListeningActivity extends React.Component<
     const { perRange } = this.rangeMap[range] || {};
 
     return (
-      <div>
-        <Card style={{ minHeight: 400 }}>
-          <Loader
-            isLoading={loading}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              minHeight: "inherit",
-            }}
-          >
-            {hasError && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  minHeight: "inherit",
-                }}
-              >
-                <span style={{ fontSize: 24 }}>
-                  <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
-                  {errorMessage}
-                </span>
+      <Card style={{ marginTop: 20, minHeight: 400 }}>
+        <div className="row">
+          <div className="col-xs-10">
+            <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
+              Listening Activity
+            </h3>
+          </div>
+          <div className="col-xs-2 text-right">
+            <h4 style={{ marginTop: 20 }}>
+              <a href="#listening-activity">
+                <FontAwesomeIcon
+                  icon={faLink as IconProp}
+                  size="sm"
+                  color="#000000"
+                  style={{ marginRight: 20 }}
+                />
+              </a>
+            </h4>
+          </div>
+        </div>
+
+        <Loader isLoading={loading}>
+          {hasError && (
+            <div className="flex-center" style={{ minHeight: "inherit" }}>
+              <span style={{ fontSize: 24 }} className="text-center">
+                <FontAwesomeIcon
+                  icon={faExclamationCircle as IconProp}
+                  size="2x"
+                />{" "}
+                {errorMessage}
+              </span>
+            </div>
+          )}
+          {!hasError && (
+            <>
+              <div className="row">
+                <div className="col-xs-12" style={{ height: 350 }}>
+                  <BarDualTone
+                    data={data}
+                    range={range}
+                    showLegend={range !== "all_time"}
+                    lastRangePeriod={lastRangePeriod}
+                    thisRangePeriod={thisRangePeriod}
+                  />
+                </div>
               </div>
-            )}
-            {!hasError && (
-              <>
-                <div className="row">
-                  <div className="col-xs-12" style={{ height: 350 }}>
-                    <BarDualTone
-                      data={data}
-                      range={range}
-                      showLegend={range !== "all_time"}
-                      lastRangePeriod={lastRangePeriod}
-                      thisRangePeriod={thisRangePeriod}
-                    />
-                  </div>
-                </div>
-                <div className="row mt-5 mb-15">
-                  <MediaQuery minWidth={768}>
-                    <div className="col-md-6 text-center">
-                      <span
-                        style={{
-                          fontSize: 30,
-                          fontWeight: "bold",
-                        }}
-                      >
-                        {totalListens}
-                      </span>
-                      <span>
-                        <span style={{ fontSize: 24 }}>&nbsp;Listens</span>
-                      </span>
-                    </div>
-                    <div className="col-md-6 text-center">
-                      <span
-                        style={{
-                          fontSize: 30,
-                          fontWeight: "bold",
-                        }}
-                      >
-                        {avgListens}
-                      </span>
-                      <span style={{ fontSize: 24 }}>
-                        &nbsp;Listens per {perRange}
-                      </span>
-                    </div>
-                  </MediaQuery>
-                  <MediaQuery maxWidth={767}>
-                    <div
-                      className="col-xs-12"
-                      style={{ display: "flex", justifyContent: "center" }}
+              <div className="row mt-5 mb-15">
+                <MediaQuery minWidth={768}>
+                  <div className="col-md-6 text-center">
+                    <span
+                      style={{
+                        fontSize: 30,
+                        fontWeight: "bold",
+                      }}
                     >
-                      <table style={{ width: "90%" }}>
-                        <tbody>
-                          <tr>
-                            <td
-                              style={{
-                                textAlign: "end",
-                                fontSize: 28,
-                                fontWeight: "bold",
-                              }}
-                            >
-                              {totalListens}
-                            </td>
-                            <td>
-                              <span
-                                style={{ fontSize: 22, textAlign: "start" }}
-                              >
-                                &nbsp;Listens
-                              </span>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td
-                              style={{
-                                width: "30%",
-                                textAlign: "end",
-                                fontSize: 28,
-                                fontWeight: "bold",
-                              }}
-                            >
-                              {avgListens}
-                            </td>
-                            <td>
-                              <span
-                                style={{ fontSize: 22, textAlign: "start" }}
-                              >
-                                &nbsp;Listens per {perRange}
-                              </span>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </MediaQuery>
-                </div>
-              </>
-            )}
-          </Loader>
-        </Card>
-      </div>
+                      {totalListens}
+                    </span>
+                    <span>
+                      <span style={{ fontSize: 24 }}>&nbsp;Listens</span>
+                    </span>
+                  </div>
+                  <div className="col-md-6 text-center">
+                    <span
+                      style={{
+                        fontSize: 30,
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {avgListens}
+                    </span>
+                    <span style={{ fontSize: 24 }}>
+                      &nbsp;Listens per {perRange}
+                    </span>
+                  </div>
+                </MediaQuery>
+                <MediaQuery maxWidth={767}>
+                  <div
+                    className="col-xs-12"
+                    style={{ display: "flex", justifyContent: "center" }}
+                  >
+                    <table style={{ width: "90%" }}>
+                      <tbody>
+                        <tr>
+                          <td
+                            style={{
+                              textAlign: "end",
+                              fontSize: 28,
+                              fontWeight: "bold",
+                            }}
+                          >
+                            {totalListens}
+                          </td>
+                          <td>
+                            <span style={{ fontSize: 22, textAlign: "start" }}>
+                              &nbsp;Listens
+                            </span>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            style={{
+                              width: "30%",
+                              textAlign: "end",
+                              fontSize: 28,
+                              fontWeight: "bold",
+                            }}
+                          >
+                            {avgListens}
+                          </td>
+                          <td>
+                            <span style={{ fontSize: 22, textAlign: "start" }}>
+                              &nbsp;Listens per {perRange}
+                            </span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </MediaQuery>
+              </div>
+            </>
+          )}
+        </Loader>
+      </Card>
     );
   }
 }

@@ -1,0 +1,84 @@
+MessyBrainz MSID to MusicBrainz ID mapping
+==========================================
+
+This mapping maps the data in MessyBrainz ( https://messybrainz.org ) to MusicBrainz data.
+
+The mapping comes in three flavors, with differing levels of details:
+
+* Minimal: With only the needed MSB (Messybrainz) IDs and MBIDs
+* Full: MSB (Messybrainz) IDs and MBIDs and the MSB text strings.
+* Matchable: MSB (Messybrainz) IDs and MBIDs and the MSB text strings and MSB matchable strings (see below for details).
+
+Matchable strings are the full strings, but they have been converted to lower case, diacritics have been removed (e.g ü -> u),
+and non-word characters have been removed:
+
+    'Röntgen X-Rays' ==> 'rontgenxrays'
+
+Removing extra stop-characters from the mapping increases the chances of finding correct matches.
+
+fields prefixed with msb_ are MessyBrainz fields and fields prexfixed with mb_ are their MusicBrainz counterparts.
+
+Usage
+-----
+
+To use this index data to match music tracks to MusicBrainz IDs, you can do the following.
+
+1. Convert your recording name and artists name from your music track to be a matchable string.
+2. Search the mapping to see if that recording name and artist name pair contain an entry.
+3. If an entry is found, the best matching recording MBID will be in the mb_recording_mbid field.
+
+
+Algorithm
+---------
+
+The mapping is created by selecting all of the single artist releases in MusicBrainz and ordering them
+so that most recent digital releases are preferred. The recording name and artist names (artist credit names, really)
+for these releases are then matched against the data in MessyBrainz to create this mapping.
+
+Sample data
+-----------
+
+MATCHABLE:
+{
+   "mb_artist_credit_mbids" : [
+      "181c4177-f33a-441d-b15d-910acaf18b07"
+   ],
+   "msb_artist_credit_name_matchable" : "西木康智",
+   "msb_artist_credit_name" : "西木康智",
+   "msb_recording_name_matchable" : "theywhogovernreason",
+   "msb_artist_msid" : "ad17e3d3-2121-4b01-b518-4741626f1997",
+   "mb_artist_credit_id" : 2157963,
+   "mb_recording_mbid" : "3acb406f-c716-45f8-a8bd-96ca3939c2e5",
+   "mb_release_mbid" : "28179ab4-cc01-4cf0-9668-89b7ef5d88e6",
+   "msb_release_msid" : "c1219e64-768b-4dcc-9c72-daffa0349fbd",
+   "msb_recording_msid" : "00000299-24d2-43c3-9ae0-6675cb590544",
+   "msb_recording_name" : "They Who Govern Reason"
+}
+
+FULL:
+{
+   "msb_artist_msid" : "ad17e3d3-2121-4b01-b518-4741626f1997",
+   "msb_release_msid" : "c1219e64-768b-4dcc-9c72-daffa0349fbd",
+   "msb_recording_name" : "They Who Govern Reason",
+   "mb_artist_credit_id" : 2157963,
+   "msb_recording_msid" : "00000299-24d2-43c3-9ae0-6675cb590544",
+   "msb_artist_credit_name" : "西木康智",
+   "mb_artist_credit_mbids" : [
+      "181c4177-f33a-441d-b15d-910acaf18b07"
+   ],
+   "mb_recording_mbid" : "3acb406f-c716-45f8-a8bd-96ca3939c2e5",
+   "mb_release_mbid" : "28179ab4-cc01-4cf0-9668-89b7ef5d88e6"
+}
+
+MINIMAL:
+{
+   "mb_artist_credit_id" : 2157963,
+   "msb_recording_msid" : "00000299-24d2-43c3-9ae0-6675cb590544",
+   "mb_artist_credit_mbids" : [
+      "181c4177-f33a-441d-b15d-910acaf18b07"
+   ],
+   "msb_artist_msid" : "ad17e3d3-2121-4b01-b518-4741626f1997",
+   "msb_release_msid" : "c1219e64-768b-4dcc-9c72-daffa0349fbd",
+   "mb_recording_mbid" : "3acb406f-c716-45f8-a8bd-96ca3939c2e5",
+   "mb_release_mbid" : "28179ab4-cc01-4cf0-9668-89b7ef5d88e6"
+}

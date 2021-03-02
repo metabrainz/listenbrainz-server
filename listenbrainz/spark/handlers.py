@@ -2,20 +2,25 @@
     receive from the Spark cluster.
 """
 import json
-
 import listenbrainz.db.user as db_user
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
+import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
 
 from flask import current_app, render_template
 from pydantic import ValidationError
 from brainzutils.mail import send_mail
 from datetime import datetime, timezone, timedelta
+from data.model.sitewide_artist_stat import SitewideArtistStatJson
 from data.model.user_daily_activity import UserDailyActivityStatJson
 from data.model.user_listening_activity import UserListeningActivityStatJson
 from data.model.user_artist_stat import UserArtistStatJson
 from data.model.user_release_stat import UserReleaseStatJson
 from data.model.user_recording_stat import UserRecordingStatJson
+from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
+from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
+
+
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
 TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7  # days
@@ -35,31 +40,6 @@ def is_new_user_stats_batch():
     return datetime.now(timezone.utc) - last_update_ts > timedelta(minutes=TIME_TO_CONSIDER_STATS_AS_OLD)
 
 
-def is_new_cf_recording_recommendation_batch():
-    """ Returns True if this batch of recommendations is new, False otherwise
-    """
-    create_ts = db_recommendations_cf_recording.get_timestamp_for_last_recording_recommended()
-    if create_ts is None:
-        return True
-
-    return datetime.now(timezone.utc) - create_ts > timedelta(days=TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD)
-
-
-def notify_cf_recording_recommendations_update():
-    """ Send an email to notify recommendations are being written into db.
-    """
-    if current_app.config['TESTING']:
-        return
-
-    send_mail(
-        subject="Recommendations being written into the DB - ListenBrainz",
-        text=render_template('emails/cf_recording_recommendation_notification.txt', now=str(datetime.utcnow())),
-        recipients=['listenbrainz-observability@metabrainz.org'],
-        from_name='ListenBrainz',
-        from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN']
-    )
-
-
 def notify_user_stats_update(stat_type):
     if not current_app.config['TESTING']:
         send_mail(
@@ -71,7 +51,7 @@ def notify_user_stats_update(stat_type):
         )
 
 
-def _get_entity_model(entity):
+def _get_user_entity_model(entity):
     if entity == 'artists':
         return UserArtistStatJson
     elif entity == 'releases':
@@ -81,12 +61,17 @@ def _get_entity_model(entity):
     raise ValueError("Unknown entity type: %s" % entity)
 
 
+def _get_sitewide_entity_model(entity):
+    if entity == 'artists':
+        return SitewideArtistStatJson
+    raise ValueError("Unknown entity type: %s" % entity)
+
+
 def handle_user_entity(data):
     """ Take entity stats for a user and save it in the database. """
     musicbrainz_id = data['musicbrainz_id']
     user = db_user.get_by_mb_id(musicbrainz_id)
     if not user:
-        current_app.logger.critical("Calculated stats for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
         return
 
     # send a notification if this is a new batch of stats
@@ -102,7 +87,7 @@ def handle_user_entity(data):
     to_remove = {'musicbrainz_id', 'type', 'entity', 'data', 'stats_range'}
     data_mod = {key: data[key] for key in data if key not in to_remove}
 
-    entity_model = _get_entity_model(entity)
+    entity_model = _get_user_entity_model(entity)
 
     # Get function to insert statistics
     db_handler = getattr(db_stats, 'insert_user_{}'.format(entity))
@@ -173,8 +158,36 @@ def handle_user_daily_activity(data):
                                  exc_info=True)
 
 
+def handle_sitewide_entity(data):
+    """ Take sitewide entity stats and save it in the database. """
+    # send a notification if this is a new batch of stats
+    if is_new_user_stats_batch():
+        notify_user_stats_update(stat_type=data.get('type', ''))
+
+    stats_range = data['stats_range']
+    entity = data['entity']
+    data['time_ranges'] = data['data']
+
+    # Strip extra data
+    to_remove = {'type', 'entity', 'data', 'stats_range'}
+    data_mod = {key: data[key] for key in data if key not in to_remove}
+
+    entity_model = _get_sitewide_entity_model(entity)
+
+    # Get function to insert statistics
+    db_handler = getattr(db_stats, 'insert_sitewide_{}'.format(entity))
+
+    try:
+        db_handler(stats_range, entity_model(**data))
+    except ValidationError:
+        current_app.logger.error("""ValidationError while inserting {stats_range} sitewide top {entity}.
+                                 Data: {data}""".format(stats_range=stats_range, entity=entity,
+                                                        data=json.dumps({stats_range: data_mod}, indent=3)),
+                                 exc_info=True)
+
+
 def handle_dump_imported(data):
-    """ Process the response that the cluster sends after importing a new full dump
+    """ Process the response that the cluster sends after importing a new dump
 
     We don't really need to _do_ anything, just send an email over for observability.
     """
@@ -184,8 +197,8 @@ def handle_dump_imported(data):
     dump_name = data['imported_dump']
     import_completion_time = data['time']
     send_mail(
-        subject='A full data dump has been imported into the Spark cluster',
-        text=render_template('emails/dump_import_notification.txt', dump_name=dump_name, time=import_completion_time),
+        subject='A {} has been imported into the Spark cluster'.format(' '.join(data['type'].split('_')[1:])),
+        text=render_template('emails/dump_import_notification.txt', dump_name=", ".join(dump_name), time=import_completion_time),
         recipients=['listenbrainz-observability@metabrainz.org'],
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
@@ -210,6 +223,35 @@ def handle_dataframes(data):
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
     )
+
+
+def handle_missing_musicbrainz_data(data):
+    """ Insert user missing musicbrainz data i.e data submitted to ListenBrainz but not MusicBrainz.
+    """
+    musicbrainz_id = data['musicbrainz_id']
+    user = db_user.get_by_mb_id(musicbrainz_id)
+
+    if not user:
+        return
+
+    current_app.logger.debug("Inserting missing musicbrainz data for {}".format(musicbrainz_id))
+
+    missing_musicbrainz_data = data['missing_musicbrainz_data']
+    source = data['source']
+
+    try:
+        db_missing_musicbrainz_data.insert_user_missing_musicbrainz_data(
+            user['id'],
+            UserMissingMusicBrainzDataJson(**{'missing_musicbrainz_data': missing_musicbrainz_data}),
+            source
+        )
+    except ValidationError:
+        current_app.logger.error("""ValidationError while inserting missing MusicBrainz data from source "{source}" for user
+                                 with musicbrainz_id: {musicbrainz_id}. Data: {data}""".format(musicbrainz_id=musicbrainz_id,
+                                                                                               data=json.dumps(data, indent=3),
+                                                                                               source=source), exc_info=True)
+
+    current_app.logger.debug("Missing musicbrainz data for {} inserted".format(musicbrainz_id))
 
 
 def handle_model(data):
@@ -261,11 +303,20 @@ def handle_recommendations(data):
         return
 
     current_app.logger.debug("inserting recommendation for {}".format(musicbrainz_id))
-    top_artist_recording_mbids = data['top_artist']
-    similar_artist_recording_mbids = data['similar_artist']
+    recommendations = data['recommendations']
 
-    db_recommendations_cf_recording.insert_user_recommendation(user['id'], top_artist_recording_mbids,
-                                                               similar_artist_recording_mbids)
+    try:
+        db_recommendations_cf_recording.insert_user_recommendation(
+            user['id'],
+            UserRecommendationsJson(**{
+                'top_artist': recommendations['top_artist'],
+                'similar_artist': recommendations['similar_artist']
+            })
+        )
+    except ValidationError:
+        current_app.logger.error("""ValidationError while inserting recommendations for user with musicbrainz_id:
+                                 {musicbrainz_id}. \nData: {data}""".format(musicbrainz_id=musicbrainz_id,
+                                                                            data=json.dumps(data, indent=3)))
 
     current_app.logger.debug("recommendation for {} inserted".format(musicbrainz_id))
 
@@ -277,10 +328,13 @@ def notify_mapping_import(data):
         return
 
     mapping_name = data['imported_mapping']
-    import_completion_time = data['time']
+    import_time = data['import_time']
+    time_taken_to_import = data['time_taken_to_import']
+
     send_mail(
         subject='MSID MBID mapping has been imported into the Spark cluster',
-        text=render_template('emails/mapping_import_notification.txt', mapping_name=mapping_name, time=import_completion_time),
+        text=render_template('emails/mapping_import_notification.txt', mapping_name=mapping_name, import_time=import_time,
+                             time_taken_to_import=time_taken_to_import),
         recipients=['listenbrainz-observability@metabrainz.org'],
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
@@ -294,11 +348,36 @@ def notify_artist_relation_import(data):
         return
 
     artist_relation_name = data['import_artist_relation']
-    import_completion_time = data['time']
+    import_time = data['import_time']
+    time_taken_to_import = data['time_taken_to_import']
+
     send_mail(
         subject='Artist relation has been imported into the Spark cluster',
         text=render_template('emails/artist_relation_import_notification.txt',
-                             artist_relation_name=artist_relation_name, time=import_completion_time),
+                             artist_relation_name=artist_relation_name, import_time=import_time,
+                             time_taken_to_import=time_taken_to_import),
+        recipients=['listenbrainz-observability@metabrainz.org'],
+        from_name='ListenBrainz',
+        from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
+    )
+
+
+def notify_cf_recording_recommendations_generation(data):
+    """
+    Send an email to notify recommendations have been generated and are being written into db.
+    """
+    if current_app.config['TESTING']:
+        return
+
+    active_user_count = data['active_user_count']
+    total_time = data['total_time']
+    top_artist_user_count = data['top_artist_user_count']
+    similar_artist_user_count = data['similar_artist_user_count']
+    send_mail(
+        subject='Recommendations have been generated and pushed to the queue.',
+        text=render_template('emails/cf_recording_recommendation_notification.txt',
+                             active_user_count=active_user_count, total_time=total_time,
+                             top_artist_user_count=top_artist_user_count, similar_artist_user_count=similar_artist_user_count),
         recipients=['listenbrainz-observability@metabrainz.org'],
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],

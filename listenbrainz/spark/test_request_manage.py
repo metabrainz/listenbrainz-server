@@ -109,19 +109,43 @@ class RequestManageTestCase(unittest.TestCase):
         received_message = request_manage._prepare_query_message('stats.user.daily_activity.all_time')
         self.assertEqual(expected_message, received_message)
 
+        expected_message = ujson.dumps({'query': 'stats.sitewide.entity.week', 'params': {
+                                       'entity': 'test', 'use_mapping': False}})
+        received_message = request_manage._prepare_query_message(
+            'stats.sitewide.entity.week', params={'entity': 'test', 'use_mapping': False})
+        self.assertEqual(expected_message, received_message)
+
+        expected_message = ujson.dumps({'query': 'stats.sitewide.entity.month', 'params': {
+                                       'entity': 'test', 'use_mapping': False}})
+        received_message = request_manage._prepare_query_message(
+            'stats.sitewide.entity.month', params={'entity': 'test', 'use_mapping': False})
+        self.assertEqual(expected_message, received_message)
+
+        expected_message = ujson.dumps({'query': 'stats.sitewide.entity.year', 'params': {
+                                       'entity': 'test', 'use_mapping': False}})
+        received_message = request_manage._prepare_query_message(
+            'stats.sitewide.entity.year', params={'entity': 'test', 'use_mapping': False})
+        self.assertEqual(expected_message, received_message)
+
+        expected_message = ujson.dumps({'query': 'stats.sitewide.entity.all_time',
+                                        'params': {'entity': 'test', 'use_mapping': False}})
+        received_message = request_manage._prepare_query_message('stats.sitewide.entity.all_time', params={
+                                                                 'entity': 'test', 'use_mapping': False})
+        self.assertEqual(expected_message, received_message)
+
         message = {
-            'query': 'cf_recording.recommendations.create_dataframes',
+            'query': 'cf.recommendations.recording.create_dataframes',
             'params': {
                 'train_model_window': 20,
             }
         }
         expected_message = ujson.dumps(message)
-        received_message = request_manage._prepare_query_message('cf_recording.recommendations.create_dataframes',
+        received_message = request_manage._prepare_query_message('cf.recommendations.recording.create_dataframes',
                                                                  message['params'])
         self.assertEqual(expected_message, received_message)
 
         message = {
-            'query': 'cf_recording.recommendations.train_model',
+            'query': 'cf.recommendations.recording.train_model',
             'params': {
                 'ranks': [1, 2],
                 'lambdas': [2.0, 3.0],
@@ -130,26 +154,27 @@ class RequestManageTestCase(unittest.TestCase):
             }
         }
         expected_message = ujson.dumps(message)
-        received_message = request_manage._prepare_query_message('cf_recording.recommendations.train_model',
+        received_message = request_manage._prepare_query_message('cf.recommendations.recording.train_model',
                                                                  message['params'])
         self.assertEqual(expected_message, received_message)
 
         message = {
-            'query': 'cf_recording.recommendations.candidate_sets',
+            'query': 'cf.recommendations.recording.candidate_sets',
             'params': {
                 'recommendation_generation_window': 7,
                 'top_artist_limit': 10,
                 'similar_artist_limit': 10,
-                "users": ['vansika']
+                "users": ['vansika'],
+                "html_flag": True
             }
         }
         expected_message = ujson.dumps(message)
-        received_message = request_manage._prepare_query_message('cf_recording.recommendations.candidate_sets',
+        received_message = request_manage._prepare_query_message('cf.recommendations.recording.candidate_sets',
                                                                  message['params'])
         self.assertEqual(expected_message, received_message)
 
         message = {
-            'query': 'cf_recording.recommendations.recommend',
+            'query': 'cf.recommendations.recording.recommendations',
             'params': {
                 'recommendation_top_artist_limit': 7,
                 'recommendation_similar_artist_limit': 7,
@@ -157,7 +182,7 @@ class RequestManageTestCase(unittest.TestCase):
             }
         }
         expected_message = ujson.dumps(message)
-        received_message = request_manage._prepare_query_message('cf_recording.recommendations.recommend',
+        received_message = request_manage._prepare_query_message('cf.recommendations.recording.recommendations',
                                                                  message['params'])
         self.assertEqual(expected_message, received_message)
 

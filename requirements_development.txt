@@ -1,4 +1,6 @@
+flask-shell-ipython==0.4.1
 nose == 1.3.7
-coverage == 5.1
-pytest==5.4.3
-pytest-cov==2.10.0
+coverage == 5.4
+pytest==6.2.1
+pytest-cov==2.10.1
+requests-mock==1.8.0

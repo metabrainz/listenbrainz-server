@@ -1,5 +1,5 @@
 import * as React from "react";
-import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
+import { faExclamationCircle, faLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
@@ -104,34 +104,44 @@ export default class UserTopEntity extends React.Component<
     return (
       <Card
         style={{
-          height: 550,
+          minHeight: 550,
           marginTop: 20,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
         }}
       >
-        <h3 className="capitalize-bold">Top {entityTextOnCard}</h3>
-        <table
+        <h3 className="capitalize-bold" style={{ display: "inline" }}>
+          Top {entityTextOnCard}
+        </h3>
+        <h4
           style={{
-            whiteSpace: "nowrap",
-            tableLayout: "fixed",
-            width: "90%",
-            height: 450,
+            display: "inline",
+            position: "absolute",
+            marginTop: 20,
+            right: 20,
           }}
         >
-          <tbody>
-            <Loader
-              isLoading={loading}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                height: "100%",
-              }}
-            >
+          <a href="#top-entity">
+            <FontAwesomeIcon
+              icon={faLink as IconProp}
+              size="sm"
+              color="#46443A"
+              style={{ marginRight: 20 }}
+            />
+          </a>
+        </h4>
+        <Loader isLoading={loading}>
+          <table
+            style={{
+              whiteSpace: "nowrap",
+              tableLayout: "fixed",
+              width: "90%",
+            }}
+          >
+            <tbody>
               {hasError && (
-                <tr>
+                <tr style={{ height: 440 }}>
                   <td
                     style={{
                       fontSize: 24,
@@ -151,7 +161,7 @@ export default class UserTopEntity extends React.Component<
                   (artist, index) => {
                     return (
                       // eslint-disable-next-line react/no-array-index-key
-                      <tr key={index}>
+                      <tr key={index} style={{ height: 44 }}>
                         <td style={{ width: "10%", textAlign: "end" }}>
                           {index + 1}.&nbsp;
                         </td>
@@ -181,7 +191,7 @@ export default class UserTopEntity extends React.Component<
                     return (
                       // eslint-disable-next-line react/no-array-index-key
                       <React.Fragment key={index}>
-                        <tr>
+                        <tr style={{ height: 22 }}>
                           <td style={{ width: "10%", textAlign: "end" }}>
                             {index + 1}.&nbsp;
                           </td>
@@ -202,9 +212,16 @@ export default class UserTopEntity extends React.Component<
                             {release.listen_count}
                           </td>
                         </tr>
-                        <tr>
+                        <tr style={{ height: 22 }}>
                           <td />
-                          <td style={{ fontSize: 12 }}>
+                          <td
+                            style={{
+                              fontSize: 12,
+                              textOverflow: "ellipsis",
+                              overflow: "hidden",
+                              paddingRight: 10,
+                            }}
+                          >
                             {getEntityLink(
                               "artist",
                               release.artist_name,
@@ -224,7 +241,7 @@ export default class UserTopEntity extends React.Component<
                     return (
                       // eslint-disable-next-line react/no-array-index-key
                       <React.Fragment key={index}>
-                        <tr>
+                        <tr style={{ height: 22 }}>
                           <td style={{ width: "10%", textAlign: "end" }}>
                             {index + 1}.&nbsp;
                           </td>
@@ -245,9 +262,16 @@ export default class UserTopEntity extends React.Component<
                             {recording.listen_count}
                           </td>
                         </tr>
-                        <tr>
+                        <tr style={{ height: 22 }}>
                           <td />
-                          <td style={{ fontSize: 12 }}>
+                          <td
+                            style={{
+                              fontSize: 12,
+                              textOverflow: "ellipsis",
+                              overflow: "hidden",
+                              paddingRight: 10,
+                            }}
+                          >
                             {getEntityLink(
                               "artist",
                               recording.artist_name,
@@ -260,15 +284,17 @@ export default class UserTopEntity extends React.Component<
                     );
                   }
                 )}
-            </Loader>
-          </tbody>
-        </table>
-        <a
-          href={`${window.location.origin}/user/${user.name}/charts?range=${range}&entity=${entity}`}
-          style={{ marginTop: 10 }}
-        >
-          View More
-        </a>
+            </tbody>
+          </table>
+          {!hasError && (
+            <a
+              href={`${window.location.origin}/user/${user.name}/charts?range=${range}&entity=${entity}`}
+              className="mt-15"
+            >
+              View More
+            </a>
+          )}
+        </Loader>
       </Card>
     );
   }

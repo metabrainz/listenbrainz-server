@@ -3,6 +3,7 @@
 import sys
 import traceback
 from time import sleep
+from datetime import datetime
 
 import pika
 import ujson
@@ -73,6 +74,12 @@ class TimescaleWriterSubscriber(ListenWriter):
 
         if not rows_inserted:
             return len(data)
+
+        try:
+            self.redis_listenstore.increment_listen_count_for_day(day=datetime.utcnow(), count=len(rows_inserted))
+        except Exception:
+            # Not critical, so if this errors out, just log it to Sentry and move forward
+            current_app.logger.error("Could not update listen count per day in redis", exc_info=True)
 
         unique = []
         inserted_index = {}

@@ -96,14 +96,15 @@ def create_full(location, threads, dump_id, last_dump_id):
                 sys.exit(-1)
             end_time = dump_entry['created']
 
-        dump_name = 'listenbrainz-dump-{dump_id}-{time}-full'.format(dump_id=dump_id, time=end_time.strftime('%Y%m%d-%H%M%S'))
+        ts = end_time.strftime('%Y%m%d-%H%M%S')
+        dump_name = 'listenbrainz-dump-{dump_id}-{time}-full'.format(dump_id=dump_id, time=ts)
         dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
         db_dump.dump_postgres_db(dump_path, end_time, threads)
 
         listens_dump_file = ls.dump_listens(dump_path, dump_id=dump_id, end_time=end_time, threads=threads)
         spark_dump_file = 'listenbrainz-listens-dump-{dump_id}-{time}-spark-full.tar.xz'.format(dump_id=dump_id,
-                           time=end_time.strftime('%Y%m%d-%H%M%S'))
+                           time=ts)
         spark_dump_path = os.path.join(location, dump_path, spark_dump_file)
         transmogrify_dump_file_to_spark_import_format(listens_dump_file, spark_dump_path, threads)
 
@@ -111,13 +112,24 @@ def create_full(location, threads, dump_id, last_dump_id):
             write_hashes(dump_path)
         except IOError as e:
             current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
-            return
+            sys.exit(-1)
 
+        try:
+            if not sanity_check_dumps(dump_path, 12):
+                return sys.exit(-1)
+        except OSError as e:
+            sys.exit(-1)
 
         # if in production, send an email to interested people for observability
         send_dump_creation_notification(dump_name, 'fullexport')
 
         current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
+
+        # Write the DUMP_ID file so that the FTP sync scripts can be more robust
+        with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
+            f.write("%s %s full\n" % (ts, dump_id))
+
+        sys.exit(0)
 
 
 @cli.command(name="create_incremental")
@@ -157,12 +169,23 @@ def create_incremental(location, threads, dump_id):
             write_hashes(dump_path)
         except IOError as e:
             current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
-            return
+            sys.exit(-1)
+
+        try:
+            if not sanity_check_dumps(dump_path, 6):
+                return sys.exit(-1)
+        except OSError as e:
+            sys.exit(-1)
 
         # if in production, send an email to interested people for observability
         send_dump_creation_notification(dump_name, 'incremental')
 
+        # Write the DUMP_ID file so that the FTP sync scripts can be more robust
+        with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
+            f.write("%s %s incremental\n" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
+
         current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
+        sys.exit(0)
 
 
 @cli.command(name="import_dump")
@@ -206,11 +229,14 @@ def import_dump(private_archive, public_archive, listen_archive, threads):
             current_app.logger.critical('Unexpected error while importing data: %s', str(e), exc_info=True)
             raise
 
+    sys.exit(0)
+
 
 @cli.command(name="delete_old_dumps")
 @click.argument('location', type=str)
 def delete_old_dumps(location):
     _cleanup_dumps(location)
+    sys.exit(0)
 
 
 def get_dump_id(dump_name):
@@ -275,9 +301,38 @@ def write_hashes(location):
             with open(os.path.join(location, '{}.sha256'.format(file)), 'w') as f:
                 sha256sum = subprocess.check_output(['sha256sum', os.path.join(location, file)]).decode('utf-8').split()[0]
                 f.write(sha256sum)
-        except IOError as e:
+        except OSError as e:
             current_app.logger.error('IOError while trying to write hash files for file %s: %s', file, str(e), exc_info=True)
             raise
+
+
+def sanity_check_dumps(location, expected_count):
+    """ Sanity check the generated dumps to ensure that none are empty
+        and make sure that the right number of dump files exist.
+
+    Args:
+        location (str): the path in which the dump archive files are present
+        expected_count (int): the number of files that are expected to be present
+    Return:
+        boolean: true if the dump passes the sanity check
+    """
+
+    count = 0
+    for file in os.listdir(location):
+        try:
+            dump_file = os.path.join(location, file)
+            if os.path.getsize(dump_file) == 0:
+                print("Dump file %s is empty!" % dump_file)
+                return False
+            count += 1
+        except OSError as e:
+            return False
+
+    if expected_count == count:
+        return True
+
+    print("Expected %d dump files, found %d. Aborting." % (expected_count, count))
+    return False
 
 
 def transmogrify_dump_file_to_spark_import_format(in_file, out_file, threads):

@@ -12,7 +12,7 @@ SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz@db:5432/messybrainz"
 TEST_SQLALCHEMY_DATABASE_URI = "postgresql://msb_test@db:5432/msb_test"
 
 # Admin database
-POSTGRES_ADMIN_URI="postgresql://postgres@db/template1"
+POSTGRES_ADMIN_URI="postgresql://postgres@db/postgres"
 
 
 

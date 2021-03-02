@@ -8,7 +8,7 @@ from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
 from listenbrainz_spark.tests import SparkTestCase
 
 
-class EntityTestCase(SparkTestCase):
+class UserEntityTestCase(SparkTestCase):
     def get_test(self, table):
         return '{}_data'.format(table)
 

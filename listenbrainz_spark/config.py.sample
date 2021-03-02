@@ -30,11 +30,6 @@ SENTRY_DSN_PUBLIC = ''
 # The following var defines the string of which the model id is made up of.
 MODEL_ID_PREFIX = 'listenbrainz-recommendation-model'
 
-# Dataframe id is made up of two parts.
-# String + UUID
-# The following var defines the string of which the dataframe id is made up of.
-DATAFRAME_ID_PREFIX = 'listenbrainz-recommendation-dataframe'
-
 FTP_SERVER_URI = 'ftp.eu.metabrainz.org'
 FTP_MSID_MBID_DIR = '/pub/musicbrainz/listenbrainz/labs/mappings/msid-mbid-mapping/'
 FTP_ARTIST_RELATION_DIR = '/pub/musicbrainz/listenbrainz/labs/artist-credit-artist-credit-relations/'

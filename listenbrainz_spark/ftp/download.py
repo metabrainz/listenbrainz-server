@@ -1,5 +1,5 @@
 import re
-from time import time
+import time
 
 from listenbrainz_spark.ftp import ListenBrainzFTPDownloader
 from listenbrainz_spark.exceptions import DumpNotFoundException
@@ -12,6 +12,7 @@ ARTIST_RELATION_DUMP_ID_POS = 5
 
 FULL = 'full'
 INCREMENTAL = 'incremental'
+
 
 class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
 
@@ -125,10 +126,10 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
 
         mapping_file_name = self.get_latest_mapping(mapping)
 
-        t0 = time()
+        t0 = time.monotonic()
         current_app.logger.info('Downloading {} from FTP...'.format(mapping_file_name))
         dest_path = self.download_dump(mapping_file_name, directory)
-        current_app.logger.info('Done. Total time: {:.2f} sec'.format(time() - t0))
+        current_app.logger.info('Done. Total time: {:.2f} sec'.format(time.monotonic() - t0))
         return dest_path, mapping_file_name
 
     def download_listens(self, directory, listens_dump_id=None, dump_type=FULL):
@@ -141,6 +142,8 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
 
             Returns:
                 dest_path (str): Local path where listens have been downloaded.
+                listens_file_name (str): name of downloaded listens dump.
+                dump_id (int): Unique indentifier of downloaded listens dump.
         """
         ftp_cwd = current_app.config['FTP_LISTENS_DIR'] + 'fullexport/'
         if dump_type == INCREMENTAL:
@@ -148,16 +151,16 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
         self.connection.cwd(ftp_cwd)
         listens_dump_list = sorted(self.list_dir(), key=lambda x: int(x.split('-')[2]))
         req_listens_dump = self.get_dump_name_to_download(listens_dump_list, listens_dump_id, 2)
-
+        dump_id = req_listens_dump.split('-')[2]
 
         self.connection.cwd(req_listens_dump)
         listens_file_name = self.get_listens_dump_file_name(req_listens_dump)
 
-        t0 = time()
+        t0 = time.monotonic()
         current_app.logger.info('Downloading {} from FTP...'.format(listens_file_name))
         dest_path = self.download_dump(listens_file_name, directory)
-        current_app.logger.info('Done. Total time: {:.2f} sec'.format(time() - t0))
-        return dest_path, listens_file_name
+        current_app.logger.info('Done. Total time: {:.2f} sec'.format(time.monotonic() - t0))
+        return dest_path, listens_file_name, int(dump_id)
 
     def download_artist_relation(self, directory, artist_relation_dump_id=None):
         """ Download artist relation to dir passed as an argument.
@@ -178,9 +181,9 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
         self.connection.cwd(req_dump)
         artist_relation_file_name = self.get_dump_archive_name(req_dump)
 
-        t0 = time()
+        t0 = time.monotonic()
         current_app.logger.info('Downloading {} from FTP...'.format(artist_relation_file_name))
         dest_path = self.download_dump(artist_relation_file_name, directory)
-        current_app.logger.info('Done. Total time: {:.2f} sec'.format(time() - t0))
+        current_app.logger.info('Done. Total time: {:.2f} sec'.format(time.monotonic() - t0))
 
         return dest_path, artist_relation_file_name

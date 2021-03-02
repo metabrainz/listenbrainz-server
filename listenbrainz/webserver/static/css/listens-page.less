@@ -5,6 +5,9 @@
 @light: #C0CFB2;
 @dark: #053b47;
 @controlsHeight: 60px;
+@love: #C62828;
+@hate: #353070;
+
 
 #music-player {
   background: @primary;
@@ -165,6 +168,176 @@
   }
 }
 
+#listens {
+  padding: 10px;
+  
+  .listen-card {
+    padding: 15px;
+    margin-bottom: 7px;
+    max-height: 72px;
+    
+    &.playing-now {
+      background-color: rgba(255, 252, 202, 0.3) !important ;
+    }
+    
+    &.current-listen {
+      background-color: rgba(217, 237, 247, 0.3) !important ;
+    }
+
+     > div {
+       padding: 0px;
+     }
+
+    > .col-xs-9, .col-xs-12 {
+
+      > .col-xs-9, .col-xs-12 {
+        display: flex;
+
+        .track-details {
+          width: 100%;
+
+          p {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space:nowrap;
+            margin-bottom: 0px;
+          }
+        }
+      }
+      .listen-time {
+        font-style: italic;
+      }
+
+      > .col-xs-3 {
+        display: table;
+        height: 40px;
+
+        > span {
+          display: table-cell;
+          vertical-align: middle;
+        }
+      }
+
+    }
+
+    
+    > .col-xs-3 {
+      display: table;
+      height: 40px;
+
+      > * {
+        display: table-cell;
+        vertical-align: middle;
+      }
+
+      a {
+        word-break: break-word;
+      }
+
+    }
+    
+    .listen-controls {
+
+      > svg:hover {
+        cursor: pointer;
+      }
+
+      .fa-heart, .fa-heart-broken, .fa-ellipsis-v {
+        stroke-width: 40px;
+        font-size: 18px;
+        margin: 0% 7%;
+      }
+
+      .fa-heart, .fa-heart-broken {
+        color: transparent;
+        stroke: #8d8d8d;
+      }
+
+      .fa-ellipsis-v {
+        color: #8d8d8d;
+        stroke: #ffffff;
+
+        &:hover {
+          color: #46433a;
+        }
+      }
+
+      .fa-heart {
+
+        &:hover {
+          stroke: @love;
+        }
+
+        &.loved {
+          stroke: transparent;
+          color: @love;
+        }
+      }
+        
+      .fa-heart-broken {
+
+        &:hover {
+          stroke: @hate;
+        }
+
+        &.hated {
+          stroke: transparent;
+          color: @hate;
+        }
+      }
+
+      .dropdown-menu {
+        min-width: 140px;
+        border-radius: 4px;
+        padding: 10px 0px;
+
+        button {
+          width: 100%;
+          background: none;
+          color: inherit;
+          border: none;
+          padding: 5px 20px;
+          font: inherit;
+          cursor: pointer;
+          outline: inherit;
+          text-align: left;
+
+          &:hover {
+            color: #ffffff;
+            background-color: #eb743b;
+          }
+        }
+      }
+    }
+
+    &.deleted {
+      animation: deleted-animation 0.3s linear forwards;
+    }
+    
+    @keyframes deleted-animation {
+      0% {
+        opacity: 1;
+        padding: inherit;
+        height: inherit;
+        margin: inherit;
+        transform: scaleY(1);
+      }
+
+      50% {
+        opacity: 0;
+      }
+
+      100% {
+        opacity: 0;
+        height: 0px;
+        margin-top: -40px;
+        transform: scaleY(0);
+        display:none;
+      }
+    }
+  }
+}
+
 .input-group-flex {
   display: flex;
   flex-wrap: wrap;
@@ -189,4 +362,27 @@
 .input-group > .input-group-btn > .btn {
   margin-top: 0px;
   margin-bottom: 0px;
+}
+
+#listen-count-card {
+  padding: 15px 50px;
+  margin-bottom: 20px;
+  text-align: center;
+  
+  > h4 {
+    font-weight: 400;
+    
+    hr {
+      margin: 8px 0px 40px 0px;
+      border-top: 1px solid #eeeeee;
+    }
+  }
+
+  > div > h4 {
+    height: 26px;
+    font-weight: 500;
+    font-size: 20px;
+    margin-bottom: 0;
+    letter-spacing: 1px;
+  }
 }

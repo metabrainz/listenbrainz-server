@@ -1,0 +1,26 @@
+version: "3.4"
+
+# IMPORTANT NOTE: Volume paths mounted on containers are relative to the
+# directory that this file is in (`docker/`) and so probably need to start with
+# `../` to refer to a directory in the main code checkout
+
+services:
+
+  labs_api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: listenbrainz-dev
+    environment:
+      FLASK_APP: listenbrainz.labs_api.labs.main 
+      FLASK_ENV: development
+    command: flask run -h 0.0.0.0 -p 80
+    volumes:
+      - ..:/code/listenbrainz:z
+    ports:
+      - "3000:80"
+
+networks:
+  default:
+    external:
+      name: musicbrainzdocker_default

@@ -8,7 +8,11 @@
     "strict": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    // Having some errors from SortableJS types, fixed by disabling .d.ts files checking
+    // See https://github.com/SortableJS/react-sortablejs/issues/186
+    // Remove skipLibCheck once the issue is fixed.
+    "skipLibCheck": true,
   },
   "exclude": [
     "node_modules"

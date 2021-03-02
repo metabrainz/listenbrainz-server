@@ -106,6 +106,26 @@ def request_user_stats(type_, range_, entity):
         click.echo("Incorrect arguments provided")
 
 
+@cli.command(name="request_sitewide_stats")
+@click.option("--range", 'range_', type=click.Choice(['week', 'month', 'year', 'all_time']),
+              help="Time range of statistics to calculate", required=True)
+@click.option("--entity", type=click.Choice(['artists']),
+              help="Entity for which statistics should be calculated")
+@click.option("--use-mapping", type=bool, help="Set to true if MSID-MBID mapping should be used while calculating statistics")
+def request_sitewide_stats(range_, entity, use_mapping):
+    """ Send request to calculate sitewide stats to the spark cluster
+    """
+    params = {
+        'use_mapping': use_mapping,
+        'entity': entity
+    }
+    try:
+        send_request_to_spark_cluster(_prepare_query_message(
+            "stats.sitewide.entity.{range}".format(range=range_), params=params))
+    except InvalidSparkRequestError:
+        click.echo("Incorrect arguments provided")
+
+
 @cli.command(name="request_import_full")
 @click.option("--id", "id_", type=int, required=False,
               help="Optional. ID of the full dump to import, defaults to latest dump available on FTP server")
@@ -118,6 +138,18 @@ def request_import_new_full_dump(id_: int):
         send_request_to_spark_cluster(_prepare_query_message('import.dump.full_newest'))
 
 
+@cli.command(name="request_import_incremental")
+@click.option("--id", "id_", type=int, required=False,
+              help="Optional. ID of the incremental dump to import, defaults to latest dump available on FTP server")
+def request_import_new_incremental_dump(id_: int):
+    """ Send the cluster a request to import a new incremental data dump
+    """
+    if id_:
+        send_request_to_spark_cluster(_prepare_query_message('import.dump.incremental_id', params={'id': id_}))
+    else:
+        send_request_to_spark_cluster(_prepare_query_message('import.dump.incremental_newest'))
+
+
 @cli.command(name="request_dataframes")
 @click.option("--days", type=int, default=180, help="Request model to be trained on data of given number of days")
 def request_dataframes(days):
@@ -126,7 +158,7 @@ def request_dataframes(days):
     params = {
         'train_model_window': days,
     }
-    send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.create_dataframes', params=params))
+    send_request_to_spark_cluster(_prepare_query_message('cf.recommendations.recording.create_dataframes', params=params))
 
 
 def parse_list(ctx, args):
@@ -149,30 +181,32 @@ def request_model(rank, itr, lmbda, alpha):
         'alpha': alpha,
     }
 
-    send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.train_model', params=params))
+    send_request_to_spark_cluster(_prepare_query_message('cf.recommendations.recording.train_model', params=params))
 
 
 @cli.command(name='request_candidate_sets')
 @click.option("--days", type=int, default=7, help="Request recommendations to be generated on history of given number of days")
 @click.option("--top", type=int, default=20, help="Calculate given number of top artist.")
 @click.option("--similar", type=int, default=20, help="Calculate given number of similar artist.")
+@click.option("--html", is_flag=True, default=False, help='Enable/disable HTML file generation')
 @click.option("--user-name", "users", callback=parse_list, default=[], multiple=True,
               help="Generate candidate set for given users. Generate for all active users by default.")
-def request_candidate_sets(days, top, similar, users):
+def request_candidate_sets(days, top, similar, users, html):
     """ Send the cluster a request to generate candidate sets.
     """
     params = {
         'recommendation_generation_window': days,
         "top_artist_limit": top,
         "similar_artist_limit": similar,
-        "users": users
+        "users": users,
+        "html_flag": html
     }
-    send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.candidate_sets', params=params))
+    send_request_to_spark_cluster(_prepare_query_message('cf.recommendations.recording.candidate_sets', params=params))
 
 
 @cli.command(name='request_recommendations')
-@click.option("--top", type=int, default=200, help="Generate given number of top artist recommendations")
-@click.option("--similar", type=int, default=200, help="Generate given number of similar artist recommendations")
+@click.option("--top", type=int, default=1000, help="Generate given number of top artist recommendations")
+@click.option("--similar", type=int, default=1000, help="Generate given number of similar artist recommendations")
 @click.option("--user-name", 'users', callback=parse_list, default=[], multiple=True,
               help="Generate recommendations for given users. Generate recommendations for all users by default.")
 def request_recommendations(top, similar, users):
@@ -183,7 +217,7 @@ def request_recommendations(top, similar, users):
         'recommendation_similar_artist_limit': similar,
         'users': users
     }
-    send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.recommend', params=params))
+    send_request_to_spark_cluster(_prepare_query_message('cf.recommendations.recording.recommendations', params=params))
 
 
 @cli.command(name='request_import_mapping')

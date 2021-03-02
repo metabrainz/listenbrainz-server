@@ -3,6 +3,9 @@ Hey! 👋
 Recommendations were received by the spark consumer
 and are being written into the database.
 
-The first recommendation came in at {{ now }} UTC.
+It took {{ total_time }}h to generate the recommendations.
+Users active in the last week: {{ active_user_count }}
+Top artist recommendations generated for {{ top_artist_user_count }} users.
+Similar artist recommendations generated for {{ similar_artist_user_count }} users.
 
 Your Friendly Neighbourhood Brainzbot 🤖

@@ -11,10 +11,10 @@ import listenbrainz_spark
 from data.model.user_daily_activity import UserDailyActivityStatMessage
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
-from listenbrainz_spark.stats import adjust_days, replace_days, run_query
-from listenbrainz_spark.stats.user.utils import (filter_listens,
-                                                 get_last_monday,
-                                                 get_latest_listen_ts)
+from listenbrainz_spark.stats import offset_days, replace_days, run_query
+from listenbrainz_spark.stats.utils import (filter_listens,
+                                            get_last_monday,
+                                            get_latest_listen_ts)
 from listenbrainz_spark.utils import get_listens
 from pyspark.sql.functions import collect_list, sort_array, struct
 
@@ -69,9 +69,8 @@ def get_daily_activity_week() -> Iterator[Optional[UserDailyActivityStatMessage]
     current_app.logger.debug("Calculating daily_activity_week")
 
     date = get_latest_listen_ts()
-    # Set time to 00:00
     to_date = get_last_monday(date)
-    from_date = adjust_days(to_date, 7)
+    from_date = offset_days(to_date, 7)
 
     _get_listens(from_date, to_date)
 
@@ -86,12 +85,12 @@ def get_daily_activity_week() -> Iterator[Optional[UserDailyActivityStatMessage]
 
 def get_daily_activity_month() -> Iterator[Optional[UserDailyActivityStatMessage]]:
     """ Calculate number of listens for an user per hour on each day of week of the current month. """
-    current_app.logger.debug("Calculating listening_activity_month")
+    current_app.logger.debug("Calculating daily_activity_month")
 
     to_date = get_latest_listen_ts()
-    # Set time to 00:00
-    to_date = datetime(to_date.year, to_date.month, to_date.day)
     from_date = replace_days(to_date, 1)
+    # Set time to 00:00
+    from_date = datetime(from_date.year, from_date.month, from_date.day)
 
     _get_listens(from_date, to_date)
 
@@ -105,7 +104,7 @@ def get_daily_activity_month() -> Iterator[Optional[UserDailyActivityStatMessage
 
 def get_daily_activity_year() -> Iterator[Optional[UserDailyActivityStatMessage]]:
     """ Calculate number of listens for an user per hour on each day of week of the current year. """
-    current_app.logger.debug("Calculating listening_activity_year")
+    current_app.logger.debug("Calculating daily_activity_year")
 
     to_date = get_latest_listen_ts()
     from_date = datetime(to_date.year, 1, 1)
@@ -122,7 +121,7 @@ def get_daily_activity_year() -> Iterator[Optional[UserDailyActivityStatMessage]
 
 def get_daily_activity_all_time() -> Iterator[Optional[UserDailyActivityStatMessage]]:
     """ Calculate number of listens for an user per hour on each day of week. """
-    current_app.logger.debug("Calculating listening_activity_all_time")
+    current_app.logger.debug("Calculating daily_activity_all_time")
 
     to_date = get_latest_listen_ts()
     from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)

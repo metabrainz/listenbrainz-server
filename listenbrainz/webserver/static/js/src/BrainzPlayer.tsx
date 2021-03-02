@@ -1,8 +1,10 @@
 import * as React from "react";
 import {
   isEqual as _isEqual,
+  isNil as _isNil,
   isString as _isString,
   get as _get,
+  has as _has,
 } from "lodash";
 import * as _ from "lodash";
 import PlaybackControls from "./PlaybackControls";
@@ -12,7 +14,7 @@ import YoutubePlayer from "./YoutubePlayer";
 import SoundcloudPlayer from "./SoundcloudPlayer";
 
 export type DataSourceType = {
-  playListen: (listen: Listen) => void;
+  playListen: (listen: Listen | JSPFTrack) => void;
   togglePlay: () => void;
   seekToPositionMs: (msTimecode: number) => void;
 };
@@ -28,7 +30,7 @@ export type DataSourceProps = {
   onTrackInfoChange: (title: string, artist?: string) => void;
   onTrackEnd: () => void;
   onTrackNotFound: () => void;
-  handleError: (error: string | Error, title?: string) => void;
+  handleError: (error: BrainzPlayerError, title?: string) => void;
   handleWarning: (message: string | JSX.Element, title?: string) => void;
   handleSuccess: (message: string | JSX.Element, title?: string) => void;
   onInvalidateDataSource: (
@@ -40,9 +42,9 @@ export type DataSourceProps = {
 type BrainzPlayerProps = {
   spotifyUser: SpotifyUser;
   direction: BrainzPlayDirection;
-  onCurrentListenChange: (listen: Listen) => void;
-  currentListen?: Listen;
-  listens: Array<Listen>;
+  onCurrentListenChange: (listen: Listen | JSPFTrack) => void;
+  currentListen?: Listen | JSPFTrack;
+  listens: Array<Listen | JSPFTrack>;
   newAlert: (
     alertType: AlertType,
     title: string,
@@ -81,10 +83,8 @@ export default class BrainzPlayer extends React.Component<
   constructor(props: BrainzPlayerProps) {
     super(props);
 
-    const { access_token, permission } = props.spotifyUser;
-
     this.spotifyPlayer = React.createRef<SpotifyPlayer>();
-    if (access_token && permission) {
+    if (SpotifyPlayer.hasPermissions(props.spotifyUser)) {
       this.dataSources.push(this.spotifyPlayer);
     }
 
@@ -106,9 +106,16 @@ export default class BrainzPlayer extends React.Component<
     };
   }
 
-  isCurrentListen = (element: Listen): boolean => {
+  isCurrentListen = (element: Listen | JSPFTrack): boolean => {
     const { currentListen } = this.props;
-    return (currentListen && _isEqual(element, currentListen)) as boolean;
+    if (_isNil(currentListen)) {
+      return false;
+    }
+    if (_has(element, "identifier")) {
+      // JSPF Track format
+      return (element as JSPFTrack).id === (currentListen as JSPFTrack).id;
+    }
+    return _isEqual(element, currentListen);
   };
 
   playPreviousTrack = (): void => {
@@ -154,7 +161,7 @@ export default class BrainzPlayer extends React.Component<
     this.playListen(nextListen);
   };
 
-  handleError = (error: string | Error, title?: string): void => {
+  handleError = (error: BrainzPlayerError, title?: string): void => {
     const { newAlert } = this.props;
     if (!error) {
       return;
@@ -162,7 +169,11 @@ export default class BrainzPlayer extends React.Component<
     newAlert(
       "danger",
       title || "Playback error",
-      typeof error === "object" ? error.message : error
+      _isString(error)
+        ? error
+        : `${!_isNil(error.status) ? `Error ${error.status}:` : ""} ${
+            error.message || error.statusText
+          }`
     );
   };
 
@@ -194,7 +205,10 @@ export default class BrainzPlayer extends React.Component<
     }
   };
 
-  playListen = (listen: Listen, datasourceIndex: number = 0): void => {
+  playListen = (
+    listen: Listen | JSPFTrack,
+    datasourceIndex: number = 0
+  ): void => {
     if (this.firstRun) {
       this.firstRun = false;
     }
@@ -226,7 +240,7 @@ export default class BrainzPlayer extends React.Component<
     });
   };
 
-  getSourceIndexByListenData = (listen: Listen): number => {
+  getSourceIndexByListenData = (listen: Listen | JSPFTrack): number => {
     let selectedDatasourceIndex = -1;
     const listeningFrom = _get(
       listen,
@@ -276,7 +290,7 @@ export default class BrainzPlayer extends React.Component<
       }
       await dataSource.togglePlay();
     } catch (error) {
-      this.handleError(error.message);
+      this.handleError(error);
     }
   };
 

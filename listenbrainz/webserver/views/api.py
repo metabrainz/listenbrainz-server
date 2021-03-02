@@ -1,19 +1,34 @@
+import datetime
+import time
+from typing import Tuple
+
 import ujson
+import psycopg2
 from flask import Blueprint, request, jsonify, current_app
+
+from listenbrainz.listenstore import TimescaleListenStore
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, APIServiceUnavailable
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.views.follow import parse_user_list
 from listenbrainz import webserver
+from listenbrainz.db.model.playlist import Playlist
+import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
+import listenbrainz.db.user_relationship as db_user_relationship
 from listenbrainz.webserver.rate_limiter import ratelimit
 import listenbrainz.webserver.redis_connection as redis_connection
-from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET,\
-    DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
-import time
-import psycopg2
+from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list,\
+    is_valid_uuid, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT,\
+    LISTEN_TYPE_PLAYING_NOW, validate_auth_header, get_non_negative_param
+from listenbrainz.webserver.views.playlist_api import serialize_jspf
+from listenbrainz.listenstore.timescale_listenstore import SECONDS_IN_TIME_RANGE, TimescaleListenStoreException
+from listenbrainz.webserver.timescale_connection import _ts
 
 api_bp = Blueprint('api_v1', __name__)
+
+DEFAULT_TIME_RANGE = 3
+MAX_TIME_RANGE = 73
+DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL = 25
 
 
 @api_bp.route("/submit-listens", methods=["POST", "OPTIONS"])
@@ -32,12 +47,13 @@ def submit_listen():
     For complete details on the format of the JSON to be POSTed to this endpoint, see :ref:`json-doc`.
 
     :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
     :statuscode 200: listen(s) accepted.
     :statuscode 400: invalid JSON sent, see error message for details.
     :statuscode 401: invalid authorization. See error message for details.
     :resheader Content-Type: *application/json*
     """
-    user = _validate_auth_header()
+    user = validate_auth_header()
 
     raw_data = request.get_data()
     try:
@@ -92,49 +108,68 @@ def get_listens(user_name):
     :param max_ts: If you specify a ``max_ts`` timestamp, listens with listened_at less than (but not including) this value will be returned.
     :param min_ts: If you specify a ``min_ts`` timestamp, listens with listened_at greater than (but not including) this value will be returned.
     :param count: Optional, number of listens to return. Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` . Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
+    :param time_range: This parameter determines the time range for the listen search. Each increment of the time_range corresponds to a range of 5 days and the default
+                       time_range of 3 means that 15 days will be searched.
+                       Default: :data:`~webserver.views.api.DEFAULT_TIME_RANGE` . Max: :data:`~webserver.views.api.MAX_TIME_RANGE`
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
     """
-
-    current_time = int(time.time())
-    max_ts = _parse_int_arg("max_ts")
-    min_ts = _parse_int_arg("min_ts")
-
-    # if no max given, use now()
-
-    if max_ts and min_ts:
-        log_raise_400("You may only specify max_ts or min_ts, not both.")
+    db_conn = webserver.create_timescale(current_app)
+    min_ts, max_ts, count, time_range = _validate_get_endpoint_params(db_conn, user_name)
+    _, max_ts_per_user = db_conn.get_timestamps_for_user(user_name)
 
     # If none are given, start with now and go down
     if max_ts == None and min_ts == None:
-        max_ts = current_time
+        max_ts = max_ts_per_user + 1
 
-    db_conn = webserver.create_timescale(current_app)
     listens = db_conn.fetch_listens(
         user_name,
-        limit=min(_parse_int_arg("count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET),
+        limit=count,
         from_ts=min_ts,
         to_ts=max_ts,
+        time_range=time_range
     )
     listen_data = []
     for listen in listens:
         listen_data.append(listen.to_api())
 
-    latest_listen = db_conn.fetch_listens(
-        user_name,
-        limit=1,
-        to_ts=current_time,
-    )
-    latest_listen_ts = latest_listen[0].ts_since_epoch if len(latest_listen) > 0 else 0
-
-    if min_ts:
-        listen_data = listen_data[::-1]
-
     return jsonify({'payload': {
         'user_id': user_name,
         'count': len(listen_data),
         'listens': listen_data,
-        'latest_listen_ts': latest_listen_ts,
+        'latest_listen_ts': max_ts_per_user,
+    }})
+
+
+@api_bp.route('/user/<user_name>/feed/listens', methods=['OPTIONS', 'GET'])
+def user_feed(user_name: str):
+    db_conn = webserver.create_timescale(current_app)
+    min_ts, max_ts, count, time_range = _validate_get_endpoint_params(db_conn, user_name)
+    if min_ts is None and max_ts is None:
+        max_ts = int(time.time())
+
+    user = db_user.get_by_mb_id(user_name)
+    if not user:
+        raise APINotFound(f"User {user_name} not found")
+
+    users_following = [user['musicbrainz_id'] for user in db_user_relationship.get_following_for_user(user['id'])]
+
+    listens = db_conn.fetch_listens_for_multiple_users_from_storage(
+        users_following,
+        limit=count,
+        from_ts=min_ts,
+        to_ts=max_ts,
+        time_range=time_range,
+        order=1,  # descending
+    )
+    listen_data = []
+    for listen in listens:
+        listen_data.append(listen.to_api())
+
+    return jsonify({'payload': {
+        'user_id': user_name,
+        'count': len(listen_data),
+        'feed': listen_data,
     }})
 
 
@@ -219,7 +254,7 @@ def get_recent_listens_for_user_list(user_list):
     """
 
     limit = _parse_int_arg("limit", 2)
-    users = parse_user_list(user_list)
+    users = parse_param_list(user_list)
     if not len(users):
         raise APIBadRequest("user_list is empty or invalid.")
 
@@ -281,6 +316,7 @@ def latest_import():
     The JSON that needs to be posted must contain a field named `ts` in the root with a valid unix timestamp.
 
     :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
     :statuscode 200: latest import timestamp updated
     :statuscode 400: invalid JSON sent, see error message for details.
     :statuscode 401: invalid authorization. See error message for details.
@@ -295,7 +331,7 @@ def latest_import():
             'latest_import': 0 if not user['latest_import'] else int(user['latest_import'].strftime('%s'))
         })
     elif request.method == 'POST':
-        user = _validate_auth_header()
+        user = validate_auth_header()
 
         try:
             ts = ujson.loads(request.get_data()).get('ts', 0)
@@ -361,6 +397,169 @@ def validate_token():
         })
 
 
+@api_bp.route('/delete-listen', methods=['POST', 'OPTIONS'])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
+def delete_listen():
+    """
+    Delete a particular listen from a user's listen history.
+    This checks for the correct authorization token and deletes the listen.
+
+    The format of the JSON to be POSTed to this endpoint is:
+
+        {
+            "listened_at": 1,
+            "recording_msid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f"
+        }
+
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
+    :statuscode 200: listen deleted.
+    :statuscode 400: invalid JSON sent, see error message for details.
+    :statuscode 401: invalid authorization. See error message for details.
+    :resheader Content-Type: *application/json*
+    """
+    user = validate_auth_header()
+
+    data = request.json
+
+    if "listened_at" not in data:
+        log_raise_400("Listen timestamp missing.")
+    try:
+        listened_at = data["listened_at"]
+        listened_at = int(listened_at)
+    except ValueError:
+        log_raise_400("%s: Listen timestamp invalid." % listened_at)
+
+    if "recording_msid" not in data:
+        log_raise_400("Recording MSID missing.")
+
+    recording_msid = data["recording_msid"]
+    if not is_valid_uuid(recording_msid):
+        log_raise_400("%s: Recording MSID format invalid." % recording_msid)
+
+    try:
+        _ts.delete_listen(listened_at=listened_at, recording_msid=recording_msid, user_name=user["musicbrainz_id"])
+    except TimescaleListenStoreException as e:
+        current_app.logger.error("Cannot delete listen for user: %s" % str(e))
+        raise APIServiceUnavailable("We couldn't delete the listen. Please try again later.")
+    except Exception as e:
+        current_app.logger.error("Cannot delete listen for user: %s" % str(e))
+        raise APIInternalServerError("We couldn't delete the listen. Please try again later.")
+
+    return jsonify({'status': 'ok'})
+
+
+def serialize_playlists(playlists, playlist_count, count, offset):
+    """
+        Serialize the playlist metadata for the get playlists commands.
+    """
+
+    items = []
+    for playlist in playlists:
+        items.append(serialize_jspf(playlist))
+
+    return {"playlists": items,
+            "playlist_count": playlist_count,
+            "offset": offset,
+            "count": count}
+
+
+@api_bp.route("/user/<playlist_user_name>/playlists", methods=["GET", "OPTIONS"])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
+def get_playlists_for_user(playlist_user_name):
+    """
+    Fetch playlist metadata in JSPF format without recordings for the given user.
+    If a user token is provided in the Authorization header, return private playlists as well
+    as public playlists for that user.
+
+    :params count: The number of playlists to return (for pagination). Default
+        :data:`~webserver.views.api.DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL`
+    :params offset: The offset of into the list of playlists to return (for pagination)
+    :statuscode 200: Yay, you have data!
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+    user = validate_auth_header(True)
+
+    count = get_non_negative_param('count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
+    offset = get_non_negative_param('offset', 0)
+    playlist_user = db_user.get_by_mb_id(playlist_user_name)
+    if playlist_user is None:
+        raise APINotFound("Cannot find user: %s" % playlist_user_name)
+
+    include_private = True if user and user["id"] == playlist_user["id"] else False
+    playlists, playlist_count = db_playlist.get_playlists_for_user(playlist_user["id"],
+                                                                   include_private=include_private,
+                                                                   load_recordings=False, count=count, offset=offset)
+
+    return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
+
+
+@api_bp.route("/user/<playlist_user_name>/playlists/createdfor", methods=["GET", "OPTIONS"])
+@crossdomain(headers="Content-Type")
+@ratelimit()
+def get_playlists_created_for_user(playlist_user_name):
+    """
+    Fetch playlist metadata in JSPF format without recordings that have been created for the user.
+    Createdfor playlists are all public, so no Authorization is needed for this call.
+
+    :params count: The number of playlists to return (for pagination). Default
+        :data:`~webserver.views.api.DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL`
+    :params offset: The offset of into the list of playlists to return (for pagination)
+    :statuscode 200: Yay, you have data!
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+
+    count = get_non_negative_param('count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
+    offset = get_non_negative_param('offset', 0)
+    playlist_user = db_user.get_by_mb_id(playlist_user_name)
+    if playlist_user is None:
+        raise APINotFound("Cannot find user: %s" % playlist_user_name)
+
+    playlists, playlist_count = db_playlist.get_playlists_created_for_user(playlist_user["id"],
+                                                                           load_recordings=False, count=count, offset=offset)
+
+    return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
+
+
+@api_bp.route("/user/<playlist_user_name>/playlists/collaborator", methods=["GET", "OPTIONS"])
+@crossdomain(headers="Content-Type")
+@ratelimit()
+def get_playlists_collaborated_on_for_user(playlist_user_name):
+    """
+    Fetch playlist metadata in JSPF format without recordings for which a user is a collaborator.
+    If a playlist is private, it will only be returned if the caller is authorized to edit that playlist.
+
+    :params count: The number of playlists to return (for pagination). Default
+        :data:`~webserver.views.api.DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL`
+    :params offset: The offset of into the list of playlists to return (for pagination)
+    :statuscode 200: Yay, you have data!
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+
+    user = validate_auth_header(True)
+
+    count = get_non_negative_param('count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
+    offset = get_non_negative_param('offset', 0)
+    playlist_user = db_user.get_by_mb_id(playlist_user_name)
+    if playlist_user is None:
+        raise APINotFound("Cannot find user: %s" % playlist_user_name)
+
+    # TODO: This needs to be passed to the DB layer
+    include_private = True if user and user["id"] == playlist_user["id"] else False
+    playlists, playlist_count = db_playlist.get_playlists_collaborated_on(playlist_user["id"],
+                                                                          include_private=include_private,
+                                                                          load_recordings=False,
+                                                                          count=count,
+                                                                          offset=offset)
+
+    return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
+
+
 def _parse_int_arg(name, default=None):
     value = request.args.get(name)
     if value:
@@ -372,21 +571,6 @@ def _parse_int_arg(name, default=None):
         return default
 
 
-def _validate_auth_header():
-    auth_token = request.headers.get('Authorization')
-    if not auth_token:
-        raise APIUnauthorized("You need to provide an Authorization header.")
-    try:
-        auth_token = auth_token.split(" ")[1]
-    except IndexError:
-        raise APIUnauthorized("Provided Authorization header is invalid.")
-
-    user = db_user.get_by_token(auth_token)
-    if user is None:
-        raise APIUnauthorized("Invalid authorization token.")
-
-    return user
-
 
 def _get_listen_type(listen_type):
     return {
@@ -394,3 +578,30 @@ def _get_listen_type(listen_type):
         'import': LISTEN_TYPE_IMPORT,
         'playing_now': LISTEN_TYPE_PLAYING_NOW
     }.get(listen_type)
+
+
+def _validate_get_endpoint_params(db_conn: TimescaleListenStore, user_name: str) -> Tuple[int, int, int, int]:
+    """ Validates parameters for listen GET endpoints like /username/listens and /username/feed/events
+
+    Returns a tuple of integers: (min_ts, max_ts, count, time_range)
+    """
+    max_ts = _parse_int_arg("max_ts")
+    min_ts = _parse_int_arg("min_ts")
+    time_range = _parse_int_arg("time_range", DEFAULT_TIME_RANGE)
+
+    if time_range < 1 or time_range > MAX_TIME_RANGE:
+        log_raise_400("time_range must be between 1 and %d." % MAX_TIME_RANGE)
+
+    if max_ts and min_ts:
+        if max_ts < min_ts:
+            log_raise_400("max_ts should be greater than min_ts")
+
+        if (max_ts - min_ts) > MAX_TIME_RANGE * SECONDS_IN_TIME_RANGE:
+            log_raise_400("time_range specified by min_ts and max_ts should be less than %d days." % MAX_TIME_RANGE * 5)
+
+    # Validate requetsed listen count is positive
+    count = min(_parse_int_arg("count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET)
+    if count < 0:
+        log_raise_400("Number of items requested should be positive")
+
+    return min_ts, max_ts, count, time_range

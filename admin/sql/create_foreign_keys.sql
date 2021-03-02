@@ -62,6 +62,27 @@ ALTER TABLE recording_feedback
 
 ALTER TABLE recommendation.similar_user
     ADD CONSTRAINT similar_user_user_id_foreign_key
+
+ALTER TABLE missing_musicbrainz_data
+    ADD CONSTRAINT missing_mb_data_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE user_relationship
+    ADD CONSTRAINT user_relationship_user_0_foreign_key
+    FOREIGN KEY (user_0)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE user_relationship
+    ADD CONSTRAINT user_relationship_user_1_foreign_key
+    FOREIGN KEY (user_1)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE recommendation_feedback
+    ADD CONSTRAINT recommendation_feedback_user_id_foreign_key
     FOREIGN KEY (user_id)
     REFERENCES "user" (id)
     ON DELETE CASCADE;

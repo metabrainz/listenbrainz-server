@@ -10,10 +10,9 @@ exports[`Pill renders correctly for inactive 1`] = `
         "borderRadius": "24px",
         "boxSizing": "border-box",
         "color": "#BBBBBB",
-        "fontWeight": "bold",
-        "margin": "0px 6px",
+        "margin": "2px 6px 12px 6px",
         "outline": "none",
-        "padding": "2px 9px",
+        "padding": "3px 12px",
       }
     }
     type="button"
@@ -34,10 +33,10 @@ exports[`Pill renders correctly for primary active 1`] = `
         "borderRadius": "24px",
         "boxSizing": "border-box",
         "color": "white",
-        "fontWeight": "bold",
-        "margin": "0px 6px",
+        "fontWeight": 700,
+        "margin": "2px 6px 12px 6px",
         "outline": "none",
-        "padding": "2px 9px",
+        "padding": "3px 12px",
       }
     }
     type="button"
@@ -58,10 +57,10 @@ exports[`Pill renders correctly for secondary active 1`] = `
         "borderRadius": "24px",
         "boxSizing": "border-box",
         "color": "white",
-        "fontWeight": "bold",
-        "margin": "0px 6px",
+        "fontWeight": 700,
+        "margin": "2px 6px 12px 6px",
         "outline": "none",
-        "padding": "2px 9px",
+        "padding": "3px 12px",
       }
     }
     type="button"

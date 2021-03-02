@@ -1,31 +1,53 @@
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
-import urllib
+import listenbrainz.db.user_relationship as db_user_relationship
 import ujson
-import psycopg2
-import datetime
 import time
 
-from flask import Blueprint, render_template, request, url_for, Response, redirect, flash, current_app, jsonify
+from flask import Blueprint, render_template, request, url_for, redirect, current_app, jsonify
 from flask_login import current_user, login_required
 from listenbrainz import webserver
-from listenbrainz.db.exceptions import DatabaseException
+from listenbrainz.db.playlist import get_playlists_for_user, get_playlists_created_for_user, get_playlists_collaborated_on
 from listenbrainz.domain import spotify
-from listenbrainz.webserver import flash
-from listenbrainz.webserver.decorators import crossdomain
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.login import User
-from listenbrainz.webserver.redis_connection import _redis
-from listenbrainz.webserver.timescale_connection import _ts
-from listenbrainz.webserver.views.api_tools import publish_data_to_queue, log_raise_400, is_valid_uuid
-from datetime import datetime
-from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, ServiceUnavailable, Unauthorized, InternalServerError
-from listenbrainz.webserver.views.stats_api import _get_non_negative_param
-from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStoreException
+from listenbrainz.webserver import timescale_connection
+from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
+from werkzeug.exceptions import NotFound, BadRequest
+from listenbrainz.webserver.views.playlist_api import serialize_jspf
 from pydantic import ValidationError
 
 LISTENS_PER_PAGE = 25
 
 user_bp = Blueprint("user", __name__)
+redirect_bp = Blueprint("redirect", __name__)
+
+
+def redirect_user_page(target):
+    """Redirect a well-known url to a user's profile.
+
+    The user-facing informational pages contain a username in the url. This means
+    that we don't have a standard url that we can send any user to (for example a link
+    on twitter). We configure some standardised URLS /my/[page] that will redirect
+    the user to this specific page in their namespace if they are logged in."""
+    def inner():
+        if current_user.is_authenticated:
+            print(url_for(target, user_name=current_user.musicbrainz_id, **request.args))
+            return redirect(url_for(target, user_name=current_user.musicbrainz_id, **request.args))
+        else:
+            return current_app.login_manager.unauthorized()
+        pass
+    return inner
+
+
+redirect_bp.add_url_rule("/listens", "redirect_listens", redirect_user_page("user.profile"))
+redirect_bp.add_url_rule("/charts", "redirect_charts", redirect_user_page("user.charts"))
+redirect_bp.add_url_rule("/reports", "redirect_reports", redirect_user_page("user.reports"))
+redirect_bp.add_url_rule("/playlists", "redirect_playlists", redirect_user_page("user.playlists"))
+redirect_bp.add_url_rule("/collaborations", "redirect_collaborations", redirect_user_page("user.collaborations"))
+redirect_bp.add_url_rule("/recommendations",
+                         "redirect_recommendations",
+                         redirect_user_page("user.recommendation_playlists"))
 
 
 @user_bp.route("/<user_name>")
@@ -38,13 +60,6 @@ def profile(user_name):
     user = _get_user(user_name)
     # User name used to get user may not have the same case as original user name.
     user_name = user.musicbrainz_id
-
-    try:
-        have_listen_count = True
-        listen_count = db_conn.get_listen_count_for_user(user_name)
-    except psycopg2.OperationalError:
-        have_listen_count = False
-        listen_count = 0
 
     # Getting data for current page
     max_ts = request.args.get("max_ts")
@@ -61,12 +76,7 @@ def profile(user_name):
         except ValueError:
             raise BadRequest("Incorrect timestamp argument min_ts: %s" % request.args.get("min_ts"))
 
-    search_larger_time_range = request.args.get("search_larger_time_range", 0)
-    try:
-        search_larger_time_range = int(search_larger_time_range)
-    except ValueError:
-        raise BadRequest("search_larger_time_range must be an integer value 0 or greater: %s" % search_larger_time_range)
-
+    # Send min and max listen times to allow React component to hide prev/next buttons accordingly
     (min_ts_per_user, max_ts_per_user) = db_conn.get_timestamps_for_user(user_name)
 
     if max_ts is None and min_ts is None:
@@ -75,12 +85,9 @@ def profile(user_name):
         else:
             max_ts = int(time.time())
 
-    listens_missing = 0
     listens = []
     if min_ts_per_user != max_ts_per_user:
         args = {}
-        # if we're supposed to search larger time range then search 50 days. (each increment in time_range == 5 days)
-        args['time_range'] = 10 if search_larger_time_range else None
         if max_ts:
             args['to_ts'] = max_ts
         else:
@@ -91,25 +98,9 @@ def profile(user_name):
                 "listened_at": listen.ts_since_epoch,
                 "listened_at_iso": listen.timestamp.isoformat() + "Z",
             })
-        if len(listens) < LISTENS_PER_PAGE and search_larger_time_range == 0:
-            listens_missing = 1
-    # Calculate if we need to show next/prev buttons
-    previous_listen_ts = None
-    next_listen_ts = None
-    if listens:
-        if min_ts_per_user >= 0:
-            if listens[-1]['listened_at'] > min_ts_per_user:
-                next_listen_ts = listens[-1]['listened_at']
-            else:
-                next_listen_ts = None
-
-            if listens[0]['listened_at'] < max_ts_per_user:
-                previous_listen_ts = listens[0]['listened_at']
-            else:
-                previous_listen_ts = None
 
     # If there are no previous listens then display now_playing
-    if not previous_listen_ts:
+    if not listens or listens[0]['listened_at'] >= max_ts_per_user:
         playing_now = playing_now_conn.get_playing_now(user.id)
         if playing_now:
             listen = {
@@ -125,28 +116,34 @@ def profile(user_name):
         artist_count = None
 
     spotify_data = {}
+    current_user_data = {}
+    logged_in_user_follows_user = None
     if current_user.is_authenticated:
         spotify_data = spotify.get_user_dict(current_user.id)
+        current_user_data = {
+            "id": current_user.id,
+            "name": current_user.musicbrainz_id,
+            "auth_token": current_user.auth_token,
+        }
+        logged_in_user_follows_user = db_user_relationship.is_following_user(current_user.id, user.id)
 
     props = {
         "user": {
             "id": user.id,
             "name": user.musicbrainz_id,
         },
+        "current_user": current_user_data,
         "listens": listens,
-        "previous_listen_ts": previous_listen_ts,
-        "next_listen_ts": next_listen_ts,
         "latest_listen_ts": max_ts_per_user,
+        "oldest_listen_ts": min_ts_per_user,
         "latest_spotify_uri": _get_spotify_uri_for_listens(listens),
-        "search_larger_time_range": listens_missing,
-        "have_listen_count": have_listen_count,
-        "listen_count": format(int(listen_count), ",d"),
         "artist_count": format(artist_count, ",d") if artist_count else None,
         "profile_url": url_for('user.profile', user_name=user_name),
         "mode": "listens",
         "spotify": spotify_data,
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
         "api_url": current_app.config['API_URL'],
+        "logged_in_user_follows_user": logged_in_user_follows_user,
     }
 
     return render_template("user/profile.html",
@@ -218,42 +215,238 @@ def reports(user_name: str):
         user=user
     )
 
+@user_bp.route("/<user_name>/playlists")
+def playlists(user_name: str):
+    """ Show user playlists """
+    
+    offset = request.args.get('offset', 0)
+    try:
+        offset = int(offset)
+    except ValueError:
+        raise BadRequest("Incorrect int argument offset: %s" % request.args.get("offset"))
+    
+    count = request.args.get("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
+    try:
+        count = int(count)
+    except ValueError:
+        raise BadRequest("Incorrect int argument count: %s" % request.args.get("count"))
+    
+    user = _get_user(user_name)
+    user_data = {
+        "name": user.musicbrainz_id,
+        "id": user.id,
+    }
+    
+    current_user_data = {}
+    if current_user.is_authenticated:
+        current_user_data = {
+            "id": current_user.id,
+            "name": current_user.musicbrainz_id,
+            "auth_token": current_user.auth_token,
+        }
+    
+    include_private = current_user.is_authenticated and current_user.id == user.id
 
-@user_bp.route('/<user_name>/delete-listen', methods=['POST'])
+    playlists = []
+    user_playlists, playlist_count = get_playlists_for_user(user.id,
+                                                            include_private=include_private,
+                                                            load_recordings=False,
+                                                            count=count,
+                                                            offset=offset)
+    for playlist in user_playlists:
+        playlists.append(serialize_jspf(playlist))
+
+    props = {
+        "current_user": current_user_data,
+        "api_url": current_app.config["API_URL"],
+        "playlists": playlists,
+        "user": user_data,
+        "active_section": "playlists",
+        "playlist_count": playlist_count,
+        "pagination_offset": offset,
+        "playlists_per_page": count,
+    }
+
+    return render_template(
+        "playlists/playlists.html",
+        active_section="playlists",
+        props=ujson.dumps(props),
+        user=user
+    )
+
+
+@user_bp.route("/<user_name>/recommendations")
+def recommendation_playlists(user_name: str):
+    """ Show playlists created for user """
+    
+    offset = request.args.get('offset', 0)
+    try:
+        offset = int(offset)
+    except ValueError:
+        raise BadRequest("Incorrect int argument offset: %s" % request.args.get("offset"))
+    
+    count = request.args.get("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
+    try:
+        count = int(count)
+    except ValueError:
+        raise BadRequest("Incorrect int argument count: %s" % request.args.get("count"))
+    
+    
+    user = _get_user(user_name)
+    user_data = {
+        "name": user.musicbrainz_id,
+        "id": user.id,
+    }
+    
+    spotify_data = {}
+    current_user_data = {}
+    if current_user.is_authenticated:
+        spotify_data = spotify.get_user_dict(current_user.id)
+        current_user_data = {
+            "id": current_user.id,
+            "name": current_user.musicbrainz_id,
+            "auth_token": current_user.auth_token,
+        }
+    
+    playlists = []
+    user_playlists, playlist_count = get_playlists_created_for_user(user.id, False, count, offset)
+    for playlist in user_playlists:
+        playlists.append(serialize_jspf(playlist))
+
+
+    props = {
+        "current_user": current_user_data,
+        "api_url": current_app.config["API_URL"],
+        "playlists": playlists,
+        "user": user_data,
+        "active_section": "recommendations",
+        "playlist_count": playlist_count,
+    }
+
+    return render_template(
+        "playlists/playlists.html",
+        active_section="recommendations",
+        props=ujson.dumps(props),
+        user=user
+    )
+
+@user_bp.route("/<user_name>/collaborations")
+def collaborations(user_name: str):
+    """ Show playlists a user collaborates on """
+    
+    offset = request.args.get('offset', 0)
+    try:
+        offset = int(offset)
+    except ValueError:
+        raise BadRequest("Incorrect int argument offset: %s" % request.args.get("offset"))
+    
+    count = request.args.get("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
+    try:
+        count = int(count)
+    except ValueError:
+        raise BadRequest("Incorrect int argument count: %s" % request.args.get("count"))
+    
+    user = _get_user(user_name)
+    user_data = {
+        "name": user.musicbrainz_id,
+        "id": user.id,
+    }
+    
+    current_user_data = {}
+    if current_user.is_authenticated:
+        current_user_data = {
+            "id": current_user.id,
+            "name": current_user.musicbrainz_id,
+            "auth_token": current_user.auth_token,
+        }
+
+    include_private = current_user.is_authenticated and current_user.id == user.id
+
+    playlists = []
+    colalborative_playlists, playlist_count = get_playlists_collaborated_on(user.id,
+                                                                            include_private=include_private,
+                                                                            load_recordings=False,
+                                                                            count=count,
+                                                                            offset=offset)
+    for playlist in colalborative_playlists:
+        playlists.append(serialize_jspf(playlist))
+
+    props = {
+        "current_user": current_user_data,
+        "api_url": current_app.config["API_URL"],
+        "playlists": playlists,
+        "user": user_data,
+        "active_section": "collaborations",
+        "playlist_count": playlist_count,
+    }
+
+    return render_template(
+        "playlists/playlists.html",
+        active_section="collaborations",
+        props=ujson.dumps(props),
+        user=user
+    )
+
+
+@user_bp.route('/<user_name>/follow', methods=['OPTIONS', 'POST'])
 @login_required
-def delete_listen(user_name):
-    """ Delete a particular listen from the currently logged-in user's listen history.
-    This checks for the correct authorization token and deletes the listen.
-    """
-    if request.form.get('token') and (request.form.get('token') == current_user.auth_token):
-        listened_at = request.form.get('listened_at')
-        recording_msid = request.form.get('recording_msid')
+def follow_user(user_name: str):
+    user = _get_user(user_name)
 
-        if listened_at is None:
-            log_raise_400("Listen timestamp missing.")
-        try:
-            listened_at = int(listened_at)
-        except ValueError:
-            log_raise_400("%s: Listen timestamp invalid." % listened_at)
+    if user.musicbrainz_id == current_user.musicbrainz_id:
+        raise APIBadRequest("Whoops, cannot follow yourself.")
 
-        if recording_msid is None:
-            log_raise_400("Recording MSID missing.")
-        if not is_valid_uuid(recording_msid):
-            log_raise_400("%s: Recording MSID format invalid." % recording_msid)
+    if db_user_relationship.is_following_user(current_user.id, user.id):
+        raise APIBadRequest(f"{current_user.musicbrainz_id} is already following user {user.musicbrainz_id}")
 
-        try:
-            user = _get_user(user_name)
-            _ts.delete_listen(listened_at=listened_at, recording_msid=recording_msid, user_name=user.musicbrainz_id)
-        except TimescaleListenStoreException as e:
-            current_app.logger.error("Cannot delete listen for user: %s" % str(e))
-            raise ServiceUnavailable("We couldn't delete the listen. Please try again later.")
-        except Exception as e:
-            current_app.logger.error("Cannot delete listen for user: %s" % str(e))
-            raise InternalServerError("We couldn't delete the listen. Please try again later.")
+    try:
+        db_user_relationship.insert(current_user.id, user.id, 'follow')
+    except Exception:
+        current_app.logger.critical("Error while trying to insert a relationship", exc_info=True)
+        raise APIInternalServerError("Something went wrong, please try again later")
 
-        return jsonify({'status': 'ok'})
-    else:
-        raise Unauthorized("Auth token invalid or missing.")
+    return jsonify({"status": 200, "message": "Success!"})
+
+
+@user_bp.route('/<user_name>/unfollow', methods=['OPTIONS', 'POST'])
+@login_required
+def unfollow_user(user_name: str):
+    user = _get_user(user_name)
+    if not db_user_relationship.is_following_user(current_user.id, user.id):
+        raise APIBadRequest(f"{current_user.musicbrainz_id} is not following user {user.musicbrainz_id}")
+    try:
+        db_user_relationship.delete(current_user.id, user.id, 'follow')
+    except Exception:
+        current_app.logger.critical("Error while trying to delete a relationship", exc_info=True)
+        raise APIInternalServerError("Something went wrong, please try again later")
+
+    return jsonify({"status": 200, "message": "Success!"})
+
+
+@user_bp.route('/<user_name>/followers')
+@login_required
+def get_followers(user_name: str):
+    user = _get_user(user_name)
+    try:
+        followers = db_user_relationship.get_followers_of_user(user.id)
+    except Exception:
+        current_app.logger.critical("Error while trying to fetch followers", exc_info=True)
+        raise APIInternalServerError("Something went wrong, please try again later")
+
+    return jsonify({"followers": followers, "user": user.musicbrainz_id})
+
+
+@user_bp.route('/<user_name>/following')
+@login_required
+def get_following(user_name: str):
+    user = _get_user(user_name)
+    try:
+        following = db_user_relationship.get_following_for_user(user.id)
+    except Exception:
+        current_app.logger.critical("Error while trying to fetch following", exc_info=True)
+        raise APIInternalServerError("Something went wrong, please try again later")
+
+    return jsonify({"following": following, "user": user.musicbrainz_id})
 
 
 def _get_user(user_name):
@@ -291,40 +484,27 @@ def delete_user(musicbrainz_id):
     """ Delete a user from ListenBrainz completely.
     First, drops the user's listens and then deletes the user from the
     database.
-
     Args:
         musicbrainz_id (str): the MusicBrainz ID of the user
-
     Raises:
         NotFound if user isn't present in the database
     """
 
     user = _get_user(musicbrainz_id)
-    _ts.delete(user.musicbrainz_id)
-    publish_data_to_queue(
-        data={
-            'type': 'delete.user',
-            'musicbrainz_id': musicbrainz_id,
-        },
-        exchange=current_app.config['BIGQUERY_EXCHANGE'],
-        queue=current_app.config['BIGQUERY_QUEUE'],
-        error_msg='Could not put user %s into queue for deletion, please try again later' % musicbrainz_id,
-    )
+    timescale_connection._ts.delete(user.musicbrainz_id)
     db_user.delete(user.id)
 
 
 def delete_listens_history(musicbrainz_id):
     """ Delete a user's listens from ListenBrainz completely.
-
     Args:
         musicbrainz_id (str): the MusicBrainz ID of the user
-
     Raises:
         NotFound if user isn't present in the database
     """
 
     user = _get_user(musicbrainz_id)
-    _ts.delete(user.musicbrainz_id)
-    _ts.reset_listen_count(user.musicbrainz_id)
+    timescale_connection._ts.delete(user.musicbrainz_id)
+    timescale_connection._ts.reset_listen_count(user.musicbrainz_id)
     db_user.reset_latest_import(user.musicbrainz_id)
     db_stats.delete_user_stats(user.id)

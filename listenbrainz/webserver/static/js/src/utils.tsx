@@ -10,7 +10,7 @@ const searchForSpotifyTrack = async (
   trackName?: string,
   artistName?: string,
   releaseName?: string
-): Promise<any> => {
+): Promise<SpotifyTrack | null> => {
   if (!spotifyToken) {
     throw new Error(
       JSON.stringify({
@@ -23,17 +23,16 @@ const searchForSpotifyTrack = async (
     // search for track was not provided a track name, cannot proceed
     return null;
   }
-  let queryString = `q=track:${trackName}`;
+  let queryString = `type=track&q=track:${encodeURIComponent(trackName)}`;
   if (artistName) {
-    queryString += ` artist:${artistName}`;
+    queryString += ` artist:${encodeURIComponent(artistName)}`;
   }
   if (releaseName) {
-    queryString += ` album:${releaseName}`;
+    queryString += ` album:${encodeURIComponent(releaseName)}`;
   }
-  queryString += "&type=track";
 
   const response = await fetch(
-    `https://api.spotify.com/v1/search?${encodeURI(queryString)}`,
+    `https://api.spotify.com/v1/search?${queryString}`,
     {
       method: "GET",
       headers: {
@@ -47,7 +46,7 @@ const searchForSpotifyTrack = async (
     throw responseBody.error;
   }
   // Valid response
-  const tracks = _.get(responseBody, "tracks.items");
+  const tracks: SpotifyTrack[] = _.get(responseBody, "tracks.items");
   if (tracks && tracks.length) {
     return tracks[0];
   }

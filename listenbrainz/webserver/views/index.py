@@ -4,6 +4,9 @@ import requests
 import subprocess
 
 from brainzutils import cache
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+from typing import List
 from flask import Blueprint, render_template, current_app, redirect, url_for, request, jsonify
 from flask_login import current_user, login_required
 from requests.exceptions import HTTPError
@@ -67,6 +70,16 @@ def contribute():
     return render_template("index/contribute.html")
 
 
+@index_bp.route("/add-data")
+def add_data_info():
+    return render_template("index/add-data.html")
+
+
+@index_bp.route("/import-data")
+def import_data_info():
+    return render_template("index/import-data.html")
+
+
 @index_bp.route("/goals")
 def goals():
     return render_template("index/goals.html")
@@ -75,11 +88,6 @@ def goals():
 @index_bp.route("/faq")
 def faq():
     return render_template("index/faq.html")
-
-
-@index_bp.route("/api-docs")
-def api_docs():
-    return render_template("index/api-docs.html")
 
 
 @index_bp.route("/lastfm-proxy")
@@ -103,11 +111,26 @@ def current_status():
     except DatabaseException as e:
         user_count = 'Unknown'
 
+    listen_counts_per_day: List[dict] = []
+    for delta in range(2):
+        try:
+            day = datetime.utcnow() - relativedelta(days=delta)
+            day_listen_count = _redis.get_listen_count_for_day(day)
+        except:
+            current_app.logger.error("Could not get %s listen count from redis", day.strftime('%Y-%m-%d'), exc_info=True)
+            day_listen_count = None
+        listen_counts_per_day.append({
+            "date": day.strftime('%Y-%m-%d'),
+            "listen_count": format(day_listen_count, ',d') if day_listen_count else "0",
+            "label": "today" if delta == 0 else "yesterday",
+        })
+
     return render_template(
         "index/current-status.html",
         load=load,
-        listen_count=format(int(listen_count), ",d"),
+        listen_count=format(int(listen_count), ",d") if listen_count else "0",
         user_count=user_count,
+        listen_counts_per_day=listen_counts_per_day,
     )
 
 
@@ -138,6 +161,23 @@ def recent_listens():
         props=ujson.dumps(props),
         mode='recent',
         active_section='listens')
+
+@index_bp.route('/feed', methods=['GET', 'OPTIONS'])
+@login_required
+def feed():
+
+    # TODO (param): remove this when feed feature is ready for release #feedfeatureflag
+    if current_user.musicbrainz_id not in ['rob', 'iliekcomputers', 'mr_monkey', 'shivam-kapila', 'ishaanshah']:
+        raise NotFound
+
+    props = {
+        'current_user': {
+            'id': current_user.id,
+            'name': current_user.musicbrainz_id,
+            'auth_token': current_user.auth_token,
+        }
+    }
+    return render_template('index/feed.html', props=ujson.dumps(props))
 
 
 

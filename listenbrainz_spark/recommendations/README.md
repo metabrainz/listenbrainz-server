@@ -6,10 +6,12 @@ ListenBrainz collaborative filtering component to generate recommendations.
 
 The component uses collaborative filtering to recommend recordings to users based on their listening history. ListenBrainz uses Apache Spark to process the listening history of users and generate recommendations.
 
-**Note**:  The listening history and supporting data used by ListenBrainz is heavy for the local environment. We are trying to release small test datasets soon to make the development experience smooth.
+**Note**:  
+- The listening history and supporting data used by ListenBrainz is heavy for the local environment. Releasing small test datasets to make the development experience smoother is on our roadmap.
+- Spark sends the generated recommendations to ListenBrainz webserver containers as Rabbit MQ messages. Therefore before generating the recommendations, the `spark_reader` container should be running. For details, see the [Spark Architecture](https://listenbrainz.readthedocs.io/en/production/dev/spark-architecture/) document.
 
 
-## Production environemnt
+## Production environment
 
 These instructions help to request recommendations from Spark cluster in prod.
 
@@ -77,7 +79,7 @@ The recommendation generation process has been divided into four stages.
 
   Send a request to spark cluster to generate candidate sets and upload to HDFS. For each user, personalized sets are generated which contain recordings of top artists listened to by the user and recordings of artists similar to top artists listened to by the user.
 
-  `./develop.sh manage spark request_candidate_sets --days=X --top=Y --similar=Z --user-name=M`
+  `./develop.sh manage spark request_candidate_sets --days=X --top=Y --similar=Z --user-name=M --html`
 
   where X is the number of days on which recommendations should be generated. By default, X is equal to 7 i.e. last week from the date on which the script is invoked.
 
@@ -90,6 +92,8 @@ The recommendation generation process has been divided into four stages.
   `--user-name=vansika --user-name=rob --user-name=ram`
 
   By default, user name is an empty list i.e. generate candidate sets for all active users.
+
+  To generate HTML file for candidate sets, set the `html` flag.
 
   ***Note***: Recommendations will be only generated for users with candidate sets.
 
@@ -111,6 +115,7 @@ The recommendation generation process has been divided into four stages.
 
 
 If you pass through all the four stages successfully; congratulations, the recommendations are all yours. Feel free to give us feedback to improve the music we serve :)
+
 
 ## License Notice
 

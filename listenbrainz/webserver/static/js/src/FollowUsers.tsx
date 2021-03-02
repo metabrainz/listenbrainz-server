@@ -22,7 +22,7 @@ type FollowUsersProps = {
   newAlert: (
     type: AlertType,
     title: string,
-    message?: string | JSX.Element
+    message: string | JSX.Element
   ) => void;
   playingNow: FollowUsersPlayingNow;
   playListen: (listen: Listen) => void;

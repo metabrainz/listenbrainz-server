@@ -1,5 +1,6 @@
 import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
 import listenbrainz.webserver.redis_connection as redis_connection
+import listenbrainz.db.user as db_user
 import pika
 import pika.exceptions
 import sys
@@ -11,8 +12,7 @@ from flask import current_app, request
 from listenbrainz.listen import Listen
 from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
 from listenbrainz.webserver.external import messybrainz
-from listenbrainz.webserver.errors import APIInternalServerError, APIServiceUnavailable, APIBadRequest
-
+from listenbrainz.webserver.errors import APIInternalServerError, APIServiceUnavailable, APIBadRequest, APIUnauthorized
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
 MAX_LISTEN_SIZE = 10240
 
@@ -112,46 +112,49 @@ def _send_listens_to_queue(listen_type, listens):
 def validate_listen(listen, listen_type):
     """Make sure that required keys are present, filled out and not too large."""
 
+    if listen is None:
+        raise APIBadRequest("Listen is empty and cannot be validated.")
+
     if listen_type in (LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT):
         if 'listened_at' not in listen:
-            log_raise_400("JSON document must contain the key listened_at at the top level.", listen)
+            raise APIBadRequest("JSON document must contain the key listened_at at the top level.", listen)
 
         try:
             listen['listened_at'] = int(listen['listened_at'])
         except ValueError:
-            log_raise_400("JSON document must contain an int value for listened_at.", listen)
+            raise APIBadRequest("JSON document must contain an int value for listened_at.", listen)
 
         if 'listened_at' in listen and 'track_metadata' in listen and len(listen) > 2:
-            log_raise_400("JSON document may only contain listened_at and "
-                           "track_metadata top level keys", listen)
+            raise APIBadRequest("JSON document may only contain listened_at and "
+                                "track_metadata top level keys", listen)
 
         # if timestamp is too high, raise BadRequest
         # in order to make up for possible clock skew, we allow
         # timestamps to be one hour ahead of server time
         if not is_valid_timestamp(listen['listened_at']):
-            log_raise_400("Value for key listened_at is too high.", listen)
+            raise APIBadRequest("Value for key listened_at is too high.", listen)
 
     elif listen_type == LISTEN_TYPE_PLAYING_NOW:
         if 'listened_at' in listen:
-            log_raise_400("JSON document must not contain listened_at while submitting "
-                           "playing_now.", listen)
+            raise APIBadRequest("JSON document must not contain listened_at while submitting "
+                                "playing_now.", listen)
 
         if 'track_metadata' in listen and len(listen) > 1:
-            log_raise_400("JSON document may only contain track_metadata as top level "
-                           "key when submitting now_playing.", listen)
+            raise APIBadRequest("JSON document may only contain track_metadata as top level "
+                                "key when submitting playing_now.", listen)
 
     # Basic metadata
     try:
         if not listen['track_metadata']['track_name']:
-            log_raise_400("JSON document does not contain required "
-                           "track_metadata.track_name.", listen)
+            raise APIBadRequest("JSON document does not contain required "
+                                "track_metadata.track_name.", listen)
         if not listen['track_metadata']['artist_name']:
-            log_raise_400("JSON document does not contain required "
-                           "track_metadata.artist_name.", listen)
+            raise APIBadRequest("JSON document does not contain required "
+                                "track_metadata.artist_name.", listen)
         if not isinstance(listen['track_metadata']['artist_name'], str):
-            log_raise_400("artist_name must be a single string.", listen)
+            raise APIBadRequest("artist_name must be a single string.", listen)
     except KeyError:
-        log_raise_400("JSON document does not contain a valid metadata.track_name "
+        raise APIBadRequest("JSON document does not contain a valid metadata.track_name "
                        "and/or track_metadata.artist_name.", listen)
 
     if 'additional_info' in listen['track_metadata']:
@@ -159,12 +162,12 @@ def validate_listen(listen, listen_type):
         if 'tags' in listen['track_metadata']['additional_info']:
             tags = listen['track_metadata']['additional_info']['tags']
             if len(tags) > MAX_TAGS_PER_LISTEN:
-                log_raise_400("JSON document may not contain more than %d items in "
-                               "track_metadata.additional_info.tags." % MAX_TAGS_PER_LISTEN, listen)
+                raise APIBadRequest("JSON document may not contain more than %d items in "
+                                    "track_metadata.additional_info.tags." % MAX_TAGS_PER_LISTEN, listen)
             for tag in tags:
                 if len(tag) > MAX_TAG_SIZE:
-                    log_raise_400("JSON document may not contain track_metadata.additional_info.tags "
-                                   "longer than %d characters." % MAX_TAG_SIZE, listen)
+                    raise APIBadRequest("JSON document may not contain track_metadata.additional_info.tags "
+                                        "longer than %d characters." % MAX_TAG_SIZE, listen)
         # MBIDs
         single_mbid_keys = ['release_mbid', 'recording_mbid', 'release_group_mbid', 'track_mbid']
         for key in single_mbid_keys:
@@ -347,7 +350,7 @@ def publish_data_to_queue(data, exchange, queue, error_msg):
         raise APIServiceUnavailable(error_msg)
 
 
-def _get_non_negative_param(param, default=None):
+def get_non_negative_param(param, default=None):
     """ Gets the value of a request parameter, validating that it is non-negative
 
     Args:
@@ -364,3 +367,42 @@ def _get_non_negative_param(param, default=None):
         if value < 0:
             raise APIBadRequest("'{}' should be a non-negative integer".format(param))
     return value
+
+
+def parse_param_list(params: str) -> list:
+    """ Splits a string of comma separated values into a list """
+    param_list = []
+    for param in params.split(","):
+        param = param.strip()
+        if not param:
+            continue
+        param_list.append(param)
+
+    return param_list
+
+def validate_auth_header(optional=False):
+    """ Examine the current request headers for an Authorization: Token <uuid>
+        header that identifies a LB user and then load the corresponding user
+        object from the database and return it, if succesful. Otherwise raise
+        APIUnauthorized() exception.
+
+    Args:
+        optional (bool): If the optional flag is given, do not raise an exception
+                         if the Authorization header is not set.
+    """
+
+    auth_token = request.headers.get('Authorization')
+    if not auth_token:
+        if optional:
+            return None
+        raise APIUnauthorized("You need to provide an Authorization header.")
+    try:
+        auth_token = auth_token.split(" ")[1]
+    except IndexError:
+        raise APIUnauthorized("Provided Authorization header is invalid.")
+
+    user = db_user.get_by_token(auth_token)
+    if user is None:
+        raise APIUnauthorized("Invalid authorization token.")
+
+    return user

@@ -1,7 +1,13 @@
-FROM node:10.15-alpine
+FROM node:10.15-alpine AS webpack-base
 
 RUN mkdir /code
 WORKDIR /code
 
-COPY package.json package-lock.json webpack.config.js babel.config.js enzyme.config.ts jest.config.js tsconfig.json .eslintrc.js .gitignore /code/
+COPY package.json package-lock.json webpack.config.js babel.config.js enzyme.config.ts jest.config.js tsconfig.json .eslintrc.js /code/
 RUN npm install
+
+# When running in metabrainz CI, we can't mount source into a container at runtime,
+# so we have a target here to add source to the image at build-time
+FROM webpack-base AS webpack-with-source
+
+COPY ./listenbrainz/webserver/static /code/static/

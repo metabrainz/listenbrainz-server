@@ -3,18 +3,24 @@
     "id": 1,
     "name": "iliekcomputers"
   },
+  "currentUser": {
+    "id": 1,
+    "name": "iliekcomputers"
+  },
   "listens": [
     {
       "track_metadata": {
         "artist_name": "SOHN",
-        "track_name": "Falling"
+        "track_name": "Falling",
+        "additional_info": {
+          "recording_msid": "973e5620-829d-46dd-89a8-760d87076287"
+        }
       },
       "listened_at": 1586513524,
       "listened_at_iso": "2020-04-10T10:12:04Z"
     }
   ],
-  "previousListenTs": 1586513524,
-  "nextListenTs": 1586440536,
+  "oldestListenTs": 1586440536,
   "latestListenTs": 1586632818,
   "latestSpotifyUri": "spotify:track:5svEhroDfeTt0ePvASUtZ6",
   "haveListenCount": true,
@@ -26,7 +32,7 @@
     "access_token": "access token",
     "permission": "streaming user-read-email user-read-private"
   },
-  "webSocketsServerUrl": "http://localhost:8081",
+  "webSocketsServerUrl": "http://localhost:8082",
   "apiUrl": "http://0.0.0.0",
   "searchLargerTimeRange": 0
 }

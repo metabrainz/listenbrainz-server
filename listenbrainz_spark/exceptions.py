@@ -95,3 +95,30 @@ class RecommendationsNotGeneratedException(SparkException):
     """
     def __init__(self, message):
         super(RecommendationsNotGeneratedException, self).__init__(message)
+
+
+class RatingOutOfRangeException(SparkException):
+    """ CF generated rating is out of range i.e. rating > 1 or rating < -1
+    """
+    def __init__(self, message):
+        super(RatingOutOfRangeException, self).__init__(message)
+
+
+class TopArtistNotFetchedException(SparkException):
+    """ Top artists for user(s) not fetched.
+    """
+    def __init__(self, message):
+        super(TopArtistNotFetchedException, self).__init__(message)
+
+
+class SimilarArtistNotFetchedException(SparkException):
+    """ Similar artists for user(s) not fetched.
+    """
+    def __init__(self, message):
+        super(SimilarArtistNotFetchedException, self).__init__(message)
+
+class EmptyDataframeExcpetion(SparkException):
+    """ Dataframe is empty.
+    """
+    def __init__(self, message):
+        super(EmptyDataframeExcpetion, self).__init__(message)

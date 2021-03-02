@@ -168,9 +168,20 @@ def init_error_handlers(app):
         else:
             return handle_error(error, 500)
 
+    
+    @app.errorhandler(502)
+    def bad_gateway(error):
+        return handle_error(error, 502)
+
+
     @app.errorhandler(503)
     def service_unavailable(error):
         return handle_error(error, 503)
+
+    @app.errorhandler(504)
+    def gateway_timeout(error):
+        return handle_error(error, 504)
+
 
     @app.errorhandler(APIError)
     @crossdomain()

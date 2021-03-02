@@ -20,9 +20,8 @@ export default function Pill(props: React.PropsWithChildren<PillProps>) {
   let style: React.CSSProperties = {
     borderRadius: "24px",
     outline: "none",
-    padding: "2px 9px",
-    margin: "0px 6px",
-    fontWeight: "bold",
+    padding: "3px 12px",
+    margin: "2px 6px 12px 6px",
     boxSizing: "border-box",
   };
 
@@ -30,6 +29,7 @@ export default function Pill(props: React.PropsWithChildren<PillProps>) {
     style = {
       background,
       border: `2px solid ${background}`,
+      fontWeight: 700,
       color: "white",
       ...style,
       ...propStyle,

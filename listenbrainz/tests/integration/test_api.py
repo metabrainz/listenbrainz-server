@@ -1,51 +1,27 @@
-import sys
-import os
-import uuid
-import unittest
-
-from listenbrainz.tests.integration import IntegrationTestCase
-from listenbrainz.db import timescale as ts
-from listenbrainz.webserver.errors import APINotFound
-from flask import url_for, current_app
-from redis import Redis
-import listenbrainz.db.user as db_user
-import time
 import json
-from listenbrainz import config
+import time
+
+import pytest
+from flask import url_for
+
+import listenbrainz.db.user as db_user
+from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 
-TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', '..', 'admin', 'timescale')
 
+class APITestCase(ListenAPIIntegrationTestCase):
 
-class APITestCase(IntegrationTestCase):
+    def test_get_listens_invalid_count(self):
+        """If the count argument is negative, the API should raise HTTP 400"""
+        url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
+        response = self.client.get(url, query_string={'count': '-1'})
+        self.assert400(response)
 
-    def setUp(self):
-        super(APITestCase, self).setUp()
-        self.user = db_user.get_or_create(1, 'testuserpleaseignore')
-
-    def tearDown(self):
-        r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
-        r.flushall()
-        self.reset_timescale_db()
-        super(APITestCase, self).tearDown()
-
-    def reset_timescale_db(self):
-
-        ts.init_db_connection(config.TIMESCALE_ADMIN_URI)
-        ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'drop_db.sql'))
-        ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_db.sql'))
-        ts.engine.dispose()
-
-        ts.init_db_connection(config.TIMESCALE_ADMIN_LB_URI)
-        ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_extensions.sql'))
-        ts.engine.dispose()
-
-        ts.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_tables.sql'))
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_functions.sql'))
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))
-        ts.engine.dispose()
+    def test_get_listens_ts_order(self):
+        """If min_ts is greater than max_ts, the API should raise HTTP 400"""
+        url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
+        response = self.client.get(url, query_string={'max_ts': '1400000000', 'min_ts': '1500000000'})
+        self.assert400(response)
 
     def test_get_listens(self):
         """ Test to make sure that the api sends valid listens on get requests.
@@ -60,15 +36,11 @@ class APITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
-        # This sleep allows for the timescale subscriber to take its time in getting
-        # the listen submitted from redis and writing it to timescale.
-        # Removing it causes an empty list of listens to be returned.
-        time.sleep(2)
-
         url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
-        response = self.client.get(url, query_string={'count': '1'})
-        self.assert200(response)
+        response = self.wait_for_query_to_have_items(url, 1, query_string={'count': '1'})
         data = json.loads(response.data)['payload']
+
+        self.assert200(response)
 
         # make sure user id is correct
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
@@ -104,6 +76,24 @@ class APITestCase(IntegrationTestCase):
         self.assertListEqual(response.json['payload']['listens'], [])
         self.assertEqual(response.json['payload']['latest_listen_ts'], ts)
 
+        # test request with both max_ts and min_ts is working
+        url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
+
+        response = self.client.get(url, query_string={'max_ts': ts + 1000, 'min_ts': ts - 1000})
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+
+        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
+
+        self.assertEqual(data['count'], 1)
+        self.assertEqual(len(data['listens']), 1)
+
+        sent_time = payload['payload'][0]['listened_at']
+        self.assertEqual(data['listens'][0]['listened_at'], sent_time)
+        self.assertEqual(data['listens'][0]['track_metadata']['track_name'], 'Fade')
+        self.assertEqual(data['listens'][0]['track_metadata']['artist_name'], 'Kanye West')
+        self.assertEqual(data['listens'][0]['track_metadata']['release_name'], 'The Life of Pablo')
+
         # check that recent listens are fetched correctly
         url = url_for('api_v1.get_recent_listens_for_user_list', user_list=self.user['musicbrainz_id'])
         response = self.client.get(url, query_string={'limit': '1'})
@@ -123,16 +113,93 @@ class APITestCase(IntegrationTestCase):
         data = json.loads(response.data)['payload']
         self.assertEqual(data['count'], 0)
 
-
-    def send_data(self, payload):
-        """ Sends payload to api.submit_listen and return the response
+    def test_get_listens_with_time_range(self):
+        """ Test to make sure that the api sends valid listens on get requests.
         """
-        return self.client.post(
-            url_for('api_v1.submit_listen'),
-            data=json.dumps(payload),
-            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
-            content_type='application/json'
-        )
+        with open(self.path_to_data_file('valid_single.json'), 'r') as f:
+            payload = json.load(f)
+
+        # send three listens
+        user = db_user.get_or_create(1, 'test_time_range')
+        ts = 1400000000
+        for i in range(3):
+            payload['payload'][0]['listened_at'] = ts + (100 * i)
+            response = self.send_data(payload, user)
+            self.assert200(response)
+            self.assertEqual(response.json['status'], 'ok')
+
+        old_ts = ts - 2592000  # 30 days
+        payload['payload'][0]['listened_at'] = old_ts
+        response = self.send_data(payload, user)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+        expected_count = 3
+        url = url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
+        response = self.wait_for_query_to_have_items(url, expected_count)
+        data = json.loads(response.data)['payload']
+
+        self.assert200(response)
+        self.assertEqual(data['count'], expected_count)
+        self.assertEqual(data['listens'][0]['listened_at'], 1400000200)
+        self.assertEqual(data['listens'][1]['listened_at'], 1400000100)
+        self.assertEqual(data['listens'][2]['listened_at'], 1400000000)
+
+        url = url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
+        response = self.client.get(url, query_string={'time_range': 10})
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+        self.assertEqual(data['count'], 4)
+        self.assertEqual(data['listens'][0]['listened_at'], 1400000200)
+        self.assertEqual(data['listens'][1]['listened_at'], 1400000100)
+        self.assertEqual(data['listens'][2]['listened_at'], 1400000000)
+        self.assertEqual(data['listens'][3]['listened_at'], old_ts)
+
+        # Check time_range ranges
+        url = url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
+        response = self.client.get(url, query_string={'time_range': 0})
+        self.assert400(response)
+
+        url = url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
+        response = self.client.get(url, query_string={'time_range': 74})
+        self.assert400(response)
+
+    def test_get_listens_order(self):
+        """ Test to make sure that the api sends listens in valid order.
+        """
+        with open(self.path_to_data_file('valid_single.json'), 'r') as f:
+            payload = json.load(f)
+
+        # send three listens
+        ts = 1400000000
+        user = db_user.get_or_create(1, 'test_order')
+        for i in range(3):
+            payload['payload'][0]['listened_at'] = ts + (100 * i)
+            response = self.send_data(payload, user)
+            self.assert200(response)
+            self.assertEqual(response.json['status'], 'ok')
+
+        expected_count = 3
+        url = url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
+        response = self.wait_for_query_to_have_items(url, expected_count)
+        data = json.loads(response.data)['payload']
+
+        self.assert200(response)
+        self.assertEqual(data['count'], expected_count)
+        self.assertEqual(data['listens'][0]['listened_at'], 1400000200)
+        self.assertEqual(data['listens'][1]['listened_at'], 1400000100)
+        self.assertEqual(data['listens'][2]['listened_at'], 1400000000)
+
+        # Fetch the listens with from_ts and make sure the order is descending
+        url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
+        response = self.client.get(url, query_string={'count': '3', 'from_ts': ts-500})
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+
+        self.assertEqual(data['count'], expected_count)
+        self.assertEqual(data['listens'][0]['listened_at'], 1400000200)
+        self.assertEqual(data['listens'][1]['listened_at'], 1400000100)
+        self.assertEqual(data['listens'][2]['listened_at'], 1400000000)
 
     def test_zero_listens_payload(self):
         """ Test that API returns 400 for payloads with no listens
@@ -336,18 +403,18 @@ class APITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('additional_info.json'), 'r') as f:
             payload = json.load(f)
 
-        payload['payload'][0]['listened_at'] = int(time.time())
+        payload['payload'][0]['listened_at'] = 1280258690
         response = self.send_data(payload)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
-        # wait for timescale-writer to get its work done before getting the listen back
-        time.sleep(2)
-
+        expected_length = 1
         url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
-        response = self.client.get(url, query_string={'count': '1'})
-        self.assert200(response)
+        response = self.wait_for_query_to_have_items(url, expected_length, query_string={'count': '1'})
         data = json.loads(response.data)['payload']
+
+        self.assert200(response)
+        self.assertEqual(len(data['listens']), expected_length)
         sent_additional_info = payload['payload'][0]['track_metadata']['additional_info']
         received_additional_info = data['listens'][0]['track_metadata']['additional_info']
         self.assertEqual(sent_additional_info['best_song'], received_additional_info['best_song'])
@@ -478,3 +545,123 @@ class APITestCase(IntegrationTestCase):
         self.assertEqual(r.json['payload']['listens'][0]['track_metadata']['artist_name'], 'Kanye West')
         self.assertEqual(r.json['payload']['listens'][0]['track_metadata']['release_name'], 'The Life of Pablo')
         self.assertEqual(r.json['payload']['listens'][0]['track_metadata']['track_name'], 'Fade')
+
+    @pytest.mark.skip(reason="Test seems to fail when running all integration tests, but passes when run individually. "
+                             "Skip for now")
+    def test_delete_listen(self):
+        with open(self.path_to_data_file('valid_single.json'), 'r') as f:
+            payload = json.load(f)
+
+        # send a listen
+        ts = int(time.time())
+        payload['payload'][0]['listened_at'] = ts
+        response = self.send_data(payload)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+        url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
+        response = self.wait_for_query_to_have_items(url, 1)
+        data = json.loads(response.data)['payload']
+        self.assertEqual(len(data['listens']), 1)
+
+        delete_listen_url = url_for('api_v1.delete_listen')
+        data = {
+            "listened_at": ts,
+            "recording_msid": payload['payload'][0]['track_metadata']['additional_info']['recording_msid']
+        }
+
+        response = self.client.post(
+            delete_listen_url,
+            data=json.dumps(data),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+            content_type='application/json'
+        )
+        self.assert200(response)
+        self.assertEqual(response.json["status"], "ok")
+
+    def test_delete_listen_not_logged_in(self):
+        delete_listen_url = url_for('api_v1.delete_listen')
+        data = {
+            "listened_at": 1486449409,
+            "recording_msid": "2cfad207-3f55-4aec-8120-86cf66e34d59"
+        }
+
+        # send a request without auth_token
+        response = self.client.post(
+            delete_listen_url,
+            data=json.dumps(data),
+            content_type='application/json'
+        )
+        self.assert401(response)
+
+        # send a request with invalid auth_token
+        response = self.client.post(
+            delete_listen_url,
+            data=json.dumps(data),
+            headers={'Authorization': 'Token {}'.format("invalidtokenpleaseignore")},
+            content_type='application/json'
+        )
+        self.assert401(response)
+
+    def test_delete_listen_missing_keys(self):
+        delete_listen_url = url_for('api_v1.delete_listen')
+
+        # send request without listened_at
+        data = {
+            "recording_msid": "2cfad207-3f55-4aec-8120-86cf66e34d59"
+        }
+
+        response = self.client.post(
+            delete_listen_url,
+            data=json.dumps(data),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+            content_type='application/json'
+        )
+        self.assertStatus(response, 400)
+        self.assertEqual(response.json["error"], "Listen timestamp missing.")
+
+        # send request without recording_msid
+        data = {
+            "listened_at": 1486449409
+        }
+
+        response = self.client.post(
+            delete_listen_url,
+            data=json.dumps(data),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+            content_type='application/json'
+        )
+        self.assertStatus(response, 400)
+        self.assertEqual(response.json["error"], "Recording MSID missing.")
+
+    def test_delete_listen_invalid_keys(self):
+        delete_listen_url = url_for('api_v1.delete_listen')
+
+        # send request with invalid listened_at
+        data = {
+            "listened_at": "invalid listened_at",
+            "recording_msid": "2cfad207-3f55-4aec-8120-86cf66e34d59"
+        }
+
+        response = self.client.post(
+            delete_listen_url,
+            data=json.dumps(data),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+            content_type='application/json'
+        )
+        self.assertStatus(response, 400)
+        self.assertEqual(response.json["error"], "invalid listened_at: Listen timestamp invalid.")
+
+        # send request with invalid recording_msid
+        data = {
+            "listened_at": 1486449409,
+            "recording_msid": "invalid recording_msid"
+        }
+
+        response = self.client.post(
+            delete_listen_url,
+            data=json.dumps(data),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+            content_type='application/json'
+        )
+        self.assertEqual(response.json["error"], "invalid recording_msid: Recording MSID format invalid.")

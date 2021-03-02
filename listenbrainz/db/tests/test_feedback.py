@@ -187,3 +187,38 @@ class FeedbackDatabaseTestCase(DatabaseTestCase):
 
         result = db_feedback.get_feedback_count_for_recording(recording_msid=fb_msid_1)
         self.assertEqual(result, 2)
+
+    def test_get_feedback_for_multiple_recordings_for_user(self):
+        self.insert_test_data(self.user["id"])
+
+        recording_list = []
+
+        # recording_msids for which feedback records are inserted
+        recording_list.append(self.sample_feedback[0]["recording_msid"])
+        recording_list.append(self.sample_feedback[1]["recording_msid"])
+
+        # recording_msid for which feedback record doesn't exist
+        recording_list.append("b83fd3c3-449c-49be-a874-31d7cf26d946")
+
+        result = db_feedback.get_feedback_for_multiple_recordings_for_user(
+                                                                           user_id=self.user["id"],
+                                                                           recording_list=recording_list
+                                                                          )
+        self.assertEqual(len(result), len(recording_list))
+
+        # test correct score is returned for recording_msids for which feedback records are inserted
+        self.assertEqual(result[0].user_id, self.user["id"])
+        self.assertEqual(result[0].user_name, self.user["musicbrainz_id"])
+        self.assertEqual(result[0].recording_msid, recording_list[0])
+        self.assertEqual(result[0].score, self.sample_feedback[0]["score"])
+
+        self.assertEqual(result[1].user_id, self.user["id"])
+        self.assertEqual(result[1].user_name, self.user["musicbrainz_id"])
+        self.assertEqual(result[1].recording_msid, recording_list[1])
+        self.assertEqual(result[1].score, self.sample_feedback[1]["score"])
+
+        # test score = 0 is returned for recording_msids for which feedback records are inserted
+        self.assertEqual(result[2].user_id, self.user["id"])
+        self.assertEqual(result[2].user_name, self.user["musicbrainz_id"])
+        self.assertEqual(result[2].recording_msid, recording_list[2])
+        self.assertEqual(result[2].score, 0)

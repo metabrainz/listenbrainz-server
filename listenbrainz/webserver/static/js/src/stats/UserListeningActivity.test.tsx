@@ -142,7 +142,9 @@ describe("getData", () => {
 
     const spy = jest.spyOn(instance.APIService, "getUserListeningActivity");
     spy.mockImplementation(() =>
-      Promise.resolve(userListeningActivityResponseWeek)
+      Promise.resolve(
+        userListeningActivityResponseWeek as UserListeningActivityResponse
+      )
     );
     await instance.getData();
 
@@ -187,6 +189,44 @@ describe("getData", () => {
   });
 });
 
+describe("getNumberOfDaysInMonth", () => {
+  it("calculates correctly for non leap February", () => {
+    const wrapper = shallow<UserListeningActivity>(
+      <UserListeningActivity {...props} />
+    );
+    const instance = wrapper.instance();
+
+    expect(instance.getNumberOfDaysInMonth(new Date(2019, 1, 1))).toEqual(28);
+  });
+
+  it("calculates correctly for leap February", () => {
+    const wrapper = shallow<UserListeningActivity>(
+      <UserListeningActivity {...props} />
+    );
+    const instance = wrapper.instance();
+
+    expect(instance.getNumberOfDaysInMonth(new Date(2020, 1, 1))).toEqual(29);
+  });
+
+  it("calculates correctly for December", () => {
+    const wrapper = shallow<UserListeningActivity>(
+      <UserListeningActivity {...props} />
+    );
+    const instance = wrapper.instance();
+
+    expect(instance.getNumberOfDaysInMonth(new Date(2020, 11, 1))).toEqual(31);
+  });
+
+  it("calculates correctly for November", () => {
+    const wrapper = shallow<UserListeningActivity>(
+      <UserListeningActivity {...props} />
+    );
+    const instance = wrapper.instance();
+
+    expect(instance.getNumberOfDaysInMonth(new Date(2020, 10, 1))).toEqual(30);
+  });
+});
+
 describe("processData", () => {
   it("processes data correctly for week", () => {
     const wrapper = shallow<UserListeningActivity>(
@@ -194,7 +234,9 @@ describe("processData", () => {
     );
     const instance = wrapper.instance();
 
-    const result = instance.processData(userListeningActivityResponseWeek);
+    const result = instance.processData(
+      userListeningActivityResponseWeek as UserListeningActivityResponse
+    );
 
     expect(result).toEqual(userListeningActivityProcessedDataWeek);
   });
@@ -205,7 +247,9 @@ describe("processData", () => {
     );
     const instance = wrapper.instance();
 
-    const result = instance.processData(userListeningActivityResponseMonth);
+    const result = instance.processData(
+      userListeningActivityResponseMonth as UserListeningActivityResponse
+    );
 
     expect(result).toEqual(userListeningActivityProcessedDataMonth);
   });
@@ -216,7 +260,9 @@ describe("processData", () => {
     );
     const instance = wrapper.instance();
 
-    const result = instance.processData(userListeningActivityResponseYear);
+    const result = instance.processData(
+      userListeningActivityResponseYear as UserListeningActivityResponse
+    );
 
     expect(result).toEqual(userListeningActivityProcessedDataYear);
   });
@@ -227,7 +273,16 @@ describe("processData", () => {
     );
     const instance = wrapper.instance();
 
-    const result = instance.processData(userListeningActivityResponseAllTime);
+    const spy = jest.spyOn(Date.prototype, "getFullYear");
+    spy.mockImplementationOnce(() =>
+      new Date(
+        userListeningActivityResponseAllTime.payload.to_ts * 1000
+      ).getFullYear()
+    );
+
+    const result = instance.processData(
+      userListeningActivityResponseAllTime as UserListeningActivityResponse
+    );
 
     expect(result).toEqual(userListeningActivityProcessedDataAllTime);
   });
@@ -258,6 +313,7 @@ describe("loadData", () => {
       .mockImplementationOnce(() =>
         Promise.resolve(userListeningActivityResponseWeek)
       );
+
     await instance.loadData();
 
     expect(wrapper.state()).toMatchObject({

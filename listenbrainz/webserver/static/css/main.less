@@ -1,5 +1,8 @@
 @import "theme/theme.less";
 @import "listens-page.less";
+@import "playlists.less";
+@import "follow.less";
+@import "recommendation-page.less";
 
 @import "highlight.css"; // Styles for highlight.js
 
@@ -60,8 +63,14 @@ body {
   }
 }
 
+// Content Wrapper
+.wrapper {
+  min-height: 70vh;
+}
+
 // Footer
 .footer {
+  height: 70px;
   img { height: 45px; }
 }
 
@@ -112,4 +121,29 @@ h2.page-title { @media (max-width: @grid-float-breakpoint) { margin-top: 0px; } 
 
 .mb-15 {
   margin-bottom: 15px
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Allows styling of elements other than <a> in Bootstrap dropdowns
+.dropdown-menu > li > * {
+  &:extend(.dropdown-menu>li>a all);
+  background: inherit;
+  border: none;
+  width: 100%;
+  text-align: left;
+}
+
+.full-page-loader {
+  position: fixed;
+  background: #000000a6;
+  width: 100vw;
+  height: 100vh;
+  top: 0;
+  left: 0;
+  z-index: 10;
 }

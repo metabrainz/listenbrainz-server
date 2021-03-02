@@ -111,7 +111,7 @@ describe("componentDidMount", () => {
     expect(spy).toHaveBeenCalledWith("popstate", instance.syncStateWithURL);
   });
 
-  it('adds event listener for "release" event', () => {
+  it('adds event listener for "resize" event', () => {
     const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
     const instance = wrapper.instance();
 

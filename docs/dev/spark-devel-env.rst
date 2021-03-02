@@ -43,10 +43,11 @@ container.
 
     ./develop.sh spark format
 
-.. warning::
+.. info::
 
-    You should run ``./develop.sh spark format`` only once, during setup. Running the command again
-    can lead to the spark environment breaking. We're looking into ways to fix this issue.
+    You can run ``./develop.sh spark format`` any time that you want to delete all of the
+    data that is loaded in spark. This will shut down the spark docker cluster, remove
+    the docker volumes used to store the data, and recreate the HDFS filesystem.
 
 
 Your development environment is now ready. Now, let's actually see ListenBrainz Spark

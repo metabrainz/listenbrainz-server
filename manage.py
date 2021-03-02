@@ -1,14 +1,10 @@
 from listenbrainz import db
 from listenbrainz.db import timescale as ts
 from listenbrainz import webserver
-from listenbrainz import stats
 import listenbrainz.stats.user_similarity as user_similarity
 from werkzeug.serving import run_simple
-import subprocess
 import os
 import click
-import subprocess
-from urllib.parse import urlsplit
 
 from listenbrainz.utils import safely_import_config
 safely_import_config()
@@ -21,24 +17,6 @@ def cli():
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'admin', 'sql')
 MSB_ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'admin', 'messybrainz', 'sql')
 TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'admin', 'timescale')
-
-
-@cli.command()
-@click.option("--host", "-h", default="0.0.0.0", show_default=True)
-@click.option("--port", "-p", default=8080, show_default=True)
-@click.option("--debug", "-d", is_flag=True,
-              help="Turns debugging mode on or off. If specified, overrides "
-                   "'DEBUG' value in the config file.")
-def runserver(host, port, debug=False):
-    application = webserver.create_app()
-    run_simple(
-        hostname=host,
-        port=port,
-        application=application,
-        use_debugger=debug,
-        use_reloader=debug,
-        processes=5
-    )
 
 
 @cli.command(name="run_api_compat_server")
@@ -58,15 +36,16 @@ def run_api_compat_server(host, port, debug=False):
         processes=5
     )
 
-@cli.command(name="run_follow_server")
+
+@cli.command(name="run_websockets")
 @click.option("--host", "-h", default="0.0.0.0", show_default=True)
-@click.option("--port", "-p", default=8081, show_default=True)
+@click.option("--port", "-p", default=8082, show_default=True)
 @click.option("--debug", "-d", is_flag=True,
               help="Turns debugging mode on or off. If specified, overrides "
                    "'DEBUG' value in the config file.")
-def run_follow_server(host, port, debug=True):
-    from listenbrainz.follow_server.follow_server import run_follow_server
-    run_follow_server(host=host, port=port, debug=debug)
+def run_websockets(host, port, debug=True):
+    from listenbrainz.websockets.websockets import run_websockets
+    run_websockets(host=host, port=port, debug=debug)
 
 
 @cli.command(name="init_db")
@@ -172,7 +151,7 @@ def init_msb_db(force, create_db):
 @cli.command(name="init_ts_db")
 @click.option("--force", "-f", is_flag=True, help="Drop existing database and user.")
 @click.option("--create-db", is_flag=True, help="Create the database and user.")
-def init_db(force, create_db):
+def init_ts_db(force, create_db):
     """Initializes database.
     This process involves several steps:
     1. Table structure is created.
@@ -188,7 +167,19 @@ def init_db(force, create_db):
 
     if create_db or force:
         print('TS: Creating user and a database...')
-        res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_db.sql'))
+        retries = 0
+        while True:
+            try:
+                res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_db.sql'))
+                break
+            except sqlalchemy.exc.OperationalError:
+                print("Trapped template1 access error, FFS! Sleeping, trying again.")
+                retries += 1
+                if retries == 5:
+                    raise
+                sleep(1)
+                continue
+            
         if not res:
             raise Exception('Failed to create new database and user! Exit code: %i' % res)
 
@@ -200,6 +191,9 @@ def init_db(force, create_db):
     ts.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
     application = webserver.create_app()
     with application.app_context():
+        print('TS: Creating Schemas...')
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_schemas.sql'))
+
         print('TS: Creating tables...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_tables.sql'))
 
@@ -211,6 +205,10 @@ def init_db(force, create_db):
 
         print('TS: Creating indexes...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))
+
+        print('TS: Creating Primary and Foreign Keys...')
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_primary_keys.sql'))
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_foreign_keys.sql'))
 
         print("Done!")
 

@@ -1,6 +1,7 @@
 Hey! 👋
 
 Dataframes have been successfully uploaded to HDFS.
+Data relating to releases missing from MusicBrainz are being written into the DB now.
 listens submitted from {{ from_date }} to {{ to_date  }} are used to create the dataframes.
 
 upload time = {{ time_to_upload }}

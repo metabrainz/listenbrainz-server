@@ -20,6 +20,8 @@ SPOTIFY_LISTEN_PERMISSIONS = (
     'streaming',
     'user-read-email',
     'user-read-private',
+    'playlist-modify-public',
+    'playlist-modify-private',
 )
 
 class Spotify:

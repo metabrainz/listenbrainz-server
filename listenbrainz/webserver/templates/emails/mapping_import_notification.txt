@@ -1,8 +1,7 @@
 Hey! 👋
 
-MSID MBID mapping has been successfully imported to the spark cluster.
+MSID MBID mapping has been successfully imported into the spark cluster at {{ import_time }}.
 
-import completion time = {{ time }}
-mapping name = {{ mapping_name }}
+Took {{ time_taken_to_import }}s to import the mapping
 
 Your Friendly Neighbourhood Brainzbot 🤖

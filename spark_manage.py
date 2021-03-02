@@ -78,8 +78,7 @@ def init_dir(rm, recursive, create_dir):
 
 
 @cli.command(name='upload_mapping')
-@click.option("--force", "-f", is_flag=True, help="Deletes existing mapping.")
-def upload_mapping(force):
+def upload_mapping():
     """ Invoke script to upload mapping to HDFS.
     """
     from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
@@ -88,14 +87,14 @@ def upload_mapping(force):
         downloader_obj = ListenbrainzDataDownloader()
         src, _ = downloader_obj.download_msid_mbid_mapping(path.FTP_FILES_PATH)
         uploader_obj = ListenbrainzDataUploader()
-        uploader_obj.upload_mapping(src, force=force)
+        uploader_obj.upload_mapping(src)
 
 
 @cli.command(name='upload_listens')
 @click.option('--incremental', '-i', is_flag=True, default=False, help="Use a smaller dump (more for testing purposes)")
-@click.option("--force", "-f", is_flag=True, help="Deletes existing listens.")
+@click.option("--overwrite", "-o", is_flag=True, help="Deletes existing listens.")
 @click.option("--id", default=None, type=int, help="Get a specific dump based on index")
-def upload_listens(force, incremental, id):
+def upload_listens(overwrite, incremental, id):
     """ Invoke script to upload listens to HDFS.
     """
     from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
@@ -103,14 +102,13 @@ def upload_listens(force, incremental, id):
     with app.app_context():
         downloader_obj = ListenbrainzDataDownloader()
         dump_type = 'incremental' if incremental else 'full'
-        src, _ = downloader_obj.download_listens(directory=path.FTP_FILES_PATH, listens_dump_id=id, dump_type=dump_type)
+        src, _, _ = downloader_obj.download_listens(directory=path.FTP_FILES_PATH, listens_dump_id=id, dump_type=dump_type)
         uploader_obj = ListenbrainzDataUploader()
-        uploader_obj.upload_listens(src, force=force)
+        uploader_obj.upload_listens(src, overwrite=overwrite)
 
 
 @cli.command(name='upload_artist_relation')
-@click.option("--force", "-f", is_flag=True, help="Deletes existing artist relation.")
-def upload_artist_relation(force):
+def upload_artist_relation():
     """ Invoke script  to upload artist relation to HDFS.
     """
     from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
@@ -119,7 +117,7 @@ def upload_artist_relation(force):
         downloader_obj = ListenbrainzDataDownloader()
         src, _ = downloader_obj.download_artist_relation(path.FTP_FILES_PATH)
         uploader_obj = ListenbrainzDataUploader()
-        uploader_obj.upload_artist_relation(src, force=force)
+        uploader_obj.upload_artist_relation(src)
 
 
 @cli.command(name='dataframe')
@@ -127,7 +125,7 @@ def upload_artist_relation(force):
 def dataframes(days):
     """ Invoke script responsible for pre-processing data.
     """
-    from listenbrainz_spark.recommendations import create_dataframes
+    from listenbrainz_spark.recommendations.recording import create_dataframes
     with app.app_context():
         _ = create_dataframes.main(train_model_window=days)
 
@@ -145,7 +143,7 @@ def model(rank, itr, lmbda, alpha):
     """ Invoke script responsible for training data.
         For more details refer to 'https://spark.apache.org/docs/2.1.0/mllib-collaborative-filtering.html'
     """
-    from listenbrainz_spark.recommendations import train_models
+    from listenbrainz_spark.recommendations.recording import train_models
     with app.app_context():
         _ = train_models.main(ranks=rank, lambdas=lmbda, iterations=itr, alpha=alpha)
 
@@ -154,15 +152,16 @@ def model(rank, itr, lmbda, alpha):
 @click.option("--days", type=int, default=7, help="Request recommendations to be generated on history of given number of days")
 @click.option("--top", type=int, default=20, help="Calculate given number of top artist.")
 @click.option("--similar", type=int, default=20, help="Calculate given number of similar artist.")
+@click.option("--html", is_flag=True, default=False, help='Enable/disable HTML file generation')
 @click.option("--user-name", "users", callback=parse_list, default=[], multiple=True,
               help="Generate candidate set for given users. Generate for all active users by default.")
-def candidate(days, top, similar, users):
+def candidate(days, top, similar, users, html):
     """ Invoke script responsible for generating candidate sets.
     """
-    from listenbrainz_spark.recommendations import candidate_sets
+    from listenbrainz_spark.recommendations.recording import candidate_sets
     with app.app_context():
         _ = candidate_sets.main(recommendation_generation_window=days, top_artist_limit=top,
-                                similar_artist_limit=similar, users=users)
+                                similar_artist_limit=similar, users=users, html_flag=html)
 
 
 @cli.command(name='recommend')
@@ -173,7 +172,7 @@ def candidate(days, top, similar, users):
 def recommend(top, similar, users):
     """ Invoke script responsible for generating recommendations.
     """
-    from listenbrainz_spark.recommendations import recommend
+    from listenbrainz_spark.recommendations.recording import recommend
     with app.app_context():
         _ = recommend.main(recommendation_top_artist_limit=top, recommendation_similar_artist_limit=similar, users=users)
 
