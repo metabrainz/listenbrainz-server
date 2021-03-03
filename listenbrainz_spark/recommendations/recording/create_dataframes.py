@@ -341,7 +341,7 @@ def prepare_messages(missing_musicbrainz_data_itr, from_date, to_date, ti):
     return messages
 
 
-def main(train_model_window=None):
+def main(train_model_window):
 
     ti = time.monotonic()
     # dict to save dataframe metadata which would be later merged in model_metadata dataframe.
