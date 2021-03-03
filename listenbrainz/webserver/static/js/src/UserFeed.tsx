@@ -33,8 +33,10 @@ type UserFeedPageProps = {
   apiUrl: string;
   currentUser: ListenBrainzUser;
   events: TimelineEvent[];
+  spotify: SpotifyUser;
 };
 type UserFeedPageState = {
+  currentListen?: Listen;
   alerts: Alert[];
   nextEventTs?: number;
   previousEventTs?: number;
@@ -44,22 +46,11 @@ export default class UserFeedPage extends React.Component<
   UserFeedPageProps,
   UserFeedPageState
 > {
-  private APIService: APIService;
-
-  private brainzPlayer = React.createRef<BrainzPlayer>();
-
-  private expectedEventsPerPage = 25;
-
-  constructor(props: UserFeedPageProps) {
-    super(props);
-    this.state = {
-      alerts: [],
-      nextEventTs: props.events?.[props.events.length - 1]?.created,
-      previousEventTs: props.events?.[0]?.created,
-    };
-
-    this.APIService = new APIService(
-      props.apiUrl || `${window.location.origin}/1`
+  static isEventListenable(event: TimelineEvent): boolean {
+    const { event_type } = event;
+    return (
+      event_type === EventType.RECORDING_RECOMMENDATION ||
+      event_type === EventType.LIKE
     );
   }
 
@@ -91,6 +82,25 @@ export default class UserFeedPage extends React.Component<
       default:
         return "";
     }
+  }
+
+  private APIService: APIService;
+
+  private brainzPlayer = React.createRef<BrainzPlayer>();
+
+  private expectedEventsPerPage = 25;
+
+  constructor(props: UserFeedPageProps) {
+    super(props);
+    this.state = {
+      alerts: [],
+      nextEventTs: props.events?.[props.events.length - 1]?.created,
+      previousEventTs: props.events?.[0]?.created,
+    };
+
+    this.APIService = new APIService(
+      props.apiUrl || `${window.location.origin}/1`
+    );
   }
 
   newAlert = (
@@ -126,6 +136,21 @@ export default class UserFeedPage extends React.Component<
     }
   };
 
+  handleCurrentListenChange = (listen: Listen | JSPFTrack): void => {
+    this.setState({ currentListen: listen as Listen });
+  };
+
+  isCurrentListen = (listen: Listen): boolean => {
+    const { currentListen } = this.state;
+    return Boolean(currentListen && _.isEqual(listen, currentListen));
+  };
+
+  playListen = (listen: Listen): void => {
+    if (this.brainzPlayer.current) {
+      this.brainzPlayer.current.playListen(listen);
+    }
+  };
+
   renderEventContent(event: TimelineEvent) {
     const { event_type, metadata } = event;
     if (
@@ -137,9 +162,7 @@ export default class UserFeedPage extends React.Component<
           <TimelineEventCard
             listen={metadata as Listen}
             newAlert={this.newAlert}
-            playListen={() => {
-              console.log("playTHIS");
-            }}
+            playListen={this.playListen}
           />
         </div>
       );
@@ -192,8 +215,13 @@ export default class UserFeedPage extends React.Component<
   }
 
   render() {
-    const { currentUser, events } = this.props;
-    const { alerts, previousEventTs, nextEventTs } = this.state;
+    const { currentUser, events, spotify } = this.props;
+    const { alerts, currentListen, previousEventTs, nextEventTs } = this.state;
+
+    const listens = events
+      .filter(UserFeedPage.isEventListenable)
+      .map((event) => event.metadata) as Listen[];
+
     return (
       <>
         <h2>Latest activity</h2>
@@ -252,6 +280,16 @@ export default class UserFeedPage extends React.Component<
             </div>
             <div className="col-md-offset-1 col-md-4">
               <FollowerFollowingModal user={currentUser} />
+              <BrainzPlayer
+                apiService={this.APIService}
+                currentListen={currentListen}
+                direction="down"
+                listens={listens}
+                newAlert={this.newAlert}
+                onCurrentListenChange={this.handleCurrentListenChange}
+                ref={this.brainzPlayer}
+                spotifyUser={spotify}
+              />
             </div>
           </div>
         </div>
@@ -264,12 +302,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#react-container");
   const propsElement = document.getElementById("react-props");
   const reactProps = JSON.parse(propsElement!.innerHTML);
-  const { api_url, current_user } = reactProps;
+  const { api_url, current_user, spotify } = reactProps;
   ReactDOM.render(
     <UserFeedPage
       currentUser={current_user}
       events={fakeData.payload.feed as TimelineEvent[]}
       apiUrl={api_url}
+      spotify={spotify}
     />,
     domContainer
   );
