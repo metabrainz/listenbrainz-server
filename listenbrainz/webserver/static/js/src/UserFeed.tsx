@@ -1,5 +1,4 @@
 import {
-  faShareAlt,
   faCircle,
   faQuestion,
   faHeart,
@@ -7,6 +6,7 @@ import {
   faListUl,
   faUserSecret,
   faUserSlash,
+  faMusic,
 } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -66,7 +66,7 @@ export default class UserFeedPage extends React.Component<
   static getEventTypeIcon(eventType: EventTypeT) {
     switch (eventType) {
       case EventType.RECORDING_RECOMMENDATION:
-        return faShareAlt;
+        return faMusic;
       case EventType.LIKE:
         return faHeart;
       case EventType.FOLLOW:
@@ -85,7 +85,7 @@ export default class UserFeedPage extends React.Component<
   static getEventTypePhrase(eventType: EventTypeT): string {
     switch (eventType) {
       case EventType.RECORDING_RECOMMENDATION:
-        return "shared a song";
+        return "recommended a song";
       case EventType.LIKE:
         return "added a song to their favorites";
       default:
@@ -147,7 +147,7 @@ export default class UserFeedPage extends React.Component<
     return null;
   }
 
-  renderEventDescription(event: TimelineEvent) {
+  renderEventText(event: TimelineEvent) {
     const { currentUser } = this.props;
     const { event_type, user_name, metadata } = event;
     if (event_type === EventType.FOLLOW) {
@@ -156,13 +156,13 @@ export default class UserFeedPage extends React.Component<
       let text;
       if (currentUserFollows) {
         return (
-          <span className="event-description">
+          <span className="event-description-text">
             You are now following <a href={`/user/${user_1}`}>{user_1}</a>
           </span>
         );
       }
       return (
-        <span className="event-description">
+        <span className="event-description-text">
           <a href={`/user/${user_0}`}>{user_0}</a> is now following you
         </span>
       );
@@ -170,14 +170,14 @@ export default class UserFeedPage extends React.Component<
     if (event_type === EventType.PLAYLIST_CREATED) {
       const { identifier, title } = metadata as JSPFPlaylist;
       return (
-        <span className="event-description">
+        <span className="event-description-text">
           We created a playlist for you: <a href={identifier}>{title}</a>
         </span>
       );
     }
 
     return (
-      <span className="event-description">
+      <span className="event-description-text">
         <a
           href={`/user/${user_name}`}
           target="_blank"
@@ -206,7 +206,7 @@ export default class UserFeedPage extends React.Component<
             onDismiss={this.onAlertDismissed}
           />
           <div className="row">
-            <div className="col-md-8">
+            <div className="col-md-7">
               <div id="timeline">
                 <ul>
                   {events.map((event) => {
@@ -216,28 +216,30 @@ export default class UserFeedPage extends React.Component<
                         className="timeline-event"
                         key={`event-${user_name}-${created}`}
                       >
-                        <span className="event-time">
-                          {timestampToTimeAgo(created)}
-                        </span>
-                        <span className={`event-icon ${event_type}`}>
-                          <span className="fa-layers">
-                            <FontAwesomeIcon
-                              icon={faCircle as IconProp}
-                              transform="grow-6"
-                            />
-                            <FontAwesomeIcon
-                              icon={
-                                UserFeedPage.getEventTypeIcon(
-                                  event_type
-                                ) as IconProp
-                              }
-                              inverse
-                              transform="shrink-3"
-                            />
+                        <div className="event-description">
+                          <span className={`event-icon ${event_type}`}>
+                            <span className="fa-layers">
+                              <FontAwesomeIcon
+                                icon={faCircle as IconProp}
+                                transform="grow-8"
+                              />
+                              <FontAwesomeIcon
+                                icon={
+                                  UserFeedPage.getEventTypeIcon(
+                                    event_type
+                                  ) as IconProp
+                                }
+                                inverse
+                                transform="shrink-4"
+                              />
+                            </span>
                           </span>
-                        </span>
+                          {this.renderEventText(event)}
 
-                        {this.renderEventDescription(event)}
+                          <span className="event-time">
+                            {timestampToTimeAgo(created)}
+                          </span>
+                        </div>
 
                         {this.renderEventContent(event)}
                       </li>
@@ -248,7 +250,7 @@ export default class UserFeedPage extends React.Component<
               {previousEventTs}
               {nextEventTs}
             </div>
-            <div className="col-md-4">
+            <div className="col-md-offset-1 col-md-4">
               <FollowerFollowingModal user={currentUser} />
             </div>
           </div>

@@ -7,9 +7,12 @@
 		// Vertical line
 		&::before {
 			content: ' ';
-			height: 98%;
+			height: 100%;
 			width: 1px;
 			background-color: @gray-light;
+			// Fade the line out at the bottom.
+			// The ~"calc(…  syntax is necessary because we are using different units. See https://github.com/less/less.js/issues/3047
+			background: linear-gradient(180deg, @gray-light ~"calc(100% - 65px)", fadeout(@gray-light,100%) 100%);
 			position: absolute;
 			top: 10px;
 			left: 1.5em;
@@ -17,50 +20,50 @@
 		}
 		
 		li.timeline-event {
-			margin-top: 1em;
 			margin-bottom: 2em;
 			position: relative;
-			&:first-of-type{
-				margin-top: 0;
-			}
-			&:last-of-type{
-				margin-bottom: 0;
-			}
-			.event-time {
-				&:extend(.text-muted);
-				position: absolute;
-				font-size: 0.8em;
-				font-style: italic;
-				text-align: right;
-				right:0;
-				// To have time on the left of icon:
-				// left: -11em;
-				// max-width: 10em;
-			}
-
-			.event-icon {
-				position: absolute;
-				border-radius: 50%;
-				background: white;
-				z-index: 1;
-				border: 10px solid white;
-				left: -9px;
-				top: -9px;
-				&.recording_recommendation {
-					color:@blue;
-				}
-				&.like {
-					color:@red;
-				}
-				&.follow {
-					color:@green;
-				}
-				&.playlist_created {
-					color:@orange;
-				}
-			}
 			.event-description {
-				margin-left: 3em;
+				display: flex;
+				flex-wrap: wrap;
+				.event-time {
+					&:extend(.text-muted);
+					// position: absolute;
+					// right:0;
+					font-size: 0.8em;
+					font-style: italic;
+					text-align: right;
+					align-self: flex-end;
+					flex: 1;
+					flex-basis: 7em;
+				}
+
+				.event-icon {
+					position: absolute;
+					border-radius: 50%;
+					background: white;
+					z-index: 1;
+					border: 7px solid white;
+					left: -6px;
+					top: -6px;
+					&.recording_recommendation {
+						color:@blue;
+					}
+					&.like {
+						color:@red;
+					}
+					&.follow {
+						color:@green;
+					}
+					&.playlist_created {
+						color:@orange;
+					}
+				}
+				
+				.event-description-text {
+					flex: 1;
+					flex-basis: 25em;
+					margin-left: 2.5em;
+				}
 			}
 			.event-content {
 				padding-top: 1em;
