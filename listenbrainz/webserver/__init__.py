@@ -290,4 +290,4 @@ def _register_blueprints(app):
     app.register_blueprint(playlist_api_bp, url_prefix=API_PREFIX+'/playlist')
 
     from listenbrainz.webserver.views.user_timeline_event_api import user_timeline_event_api_bp
-    app.register_blueprint(user_timeline_event_api_bp, url_prefix=API_PREFIX+'/user-timeline-event')
+    app.register_blueprint(user_timeline_event_api_bp, url_prefix=API_PREFIX)

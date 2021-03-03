@@ -27,28 +27,30 @@ import listenbrainz.db.user_timeline_event as db_user_timeline_event
 from data.model.user_timeline_event import RecordingRecommendationMetadata
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized
 from listenbrainz.webserver.views.api_tools import validate_auth_header
 from listenbrainz.webserver.rate_limiter import ratelimit
 
 user_timeline_event_api_bp = Blueprint('user_timeline_event_api_bp', __name__)
 
 
-@user_timeline_event_api_bp.route('/create-user-recommendation/recording', methods=['POST', 'OPTIONS'])
+@user_timeline_event_api_bp.route('/user/<user_name>/timeline-event/create/recording', methods=['POST', 'OPTIONS'])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
-def create_user_recommendation_event():
+def create_user_recording_recommendation_event(user_name):
     user = validate_auth_header()
+    if user_name != user['musicbrainz_id']:
+        raise APIUnauthorized("You don't have permissions to post to this user's timeline.")
 
     try:
         data = ujson.loads(request.get_data())
-    except:
-        raise APIBadRequest("Invalid JSON")
+    except ValueError as e:
+        raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
     try:
         metadata = RecordingRecommendationMetadata(**data['metadata'])
-    except pydantic.ValidationError:
-        raise APIBadRequest("Invalid metadata")
+    except pydantic.ValidationError as e:
+        raise APIBadRequest(f"Invalid metadata: {str(e)}")
 
     try:
         event = db_user_timeline_event.create_user_track_recommendation_event(user['id'], metadata)

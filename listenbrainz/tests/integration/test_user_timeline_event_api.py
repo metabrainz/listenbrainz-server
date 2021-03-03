@@ -16,6 +16,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+from flask import url_for
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from unittest import mock
@@ -46,7 +47,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             'recording_msid': str(uuid.uuid4()),
         }
         r = self.client.post(
-            '/1/user-timeline-event/create-user-recommendation/recording',
+            url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event', user_name=self.user['musicbrainz_id']),
             data=json.dumps({'metadata': metadata}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
@@ -71,14 +72,14 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # send a request without a token
         r = self.client.post(
-            '/1/user-timeline-event/create-user-recommendation/recording',
+            url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event', user_name=self.user['musicbrainz_id']),
             data=json.dumps({'metadata': metadata}),
         )
         self.assert401(r)
 
         # send a request with an incorrect token
         r = self.client.post(
-            '/1/user-timeline-event/create-user-recommendation/recording',
+            url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event', user_name=self.user['musicbrainz_id']),
             data=json.dumps({'metadata': metadata}),
             headers={'Authorization': 'Token plsnohack'},
         )
@@ -97,7 +98,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # empty metadata should 400
         r = self.client.post(
-            '/1/user-timeline-event/create-user-recommendation/recording',
+            url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event', user_name=self.user['musicbrainz_id']),
             data=json.dumps({'metadata': metadata}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
@@ -113,10 +114,26 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             'recording_msid': str(uuid.uuid4()),
         }
         r = self.client.post(
-            '/1/user-timeline-event/create-user-recommendation/recording',
+            url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event', user_name=self.user['musicbrainz_id']),
             data=json.dumps({'metadata': metadata}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
         self.assert500(r)
         data = json.loads(r.data)
         self.assertEqual('Something went wrong, please try again.', data['error'])
+
+    def test_it_raises_error_if_auth_token_and_user_name_do_not_match(self):
+        metadata = {
+            'artist_name': 'Kanye West',
+            'track_name': 'Fade',
+            'artist_msid':  str(uuid.uuid4()),
+            'recording_msid': str(uuid.uuid4()),
+        }
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event', user_name='notthemainuser'),
+            data=json.dumps({'metadata': metadata}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+        )
+        self.assert401(r)
+        data = json.loads(r.data)
+        self.assertEqual("You don't have permissions to post to this user's timeline.", data['error'])
