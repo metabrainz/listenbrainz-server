@@ -466,7 +466,13 @@ declare type UserTrackRecommendationMetadata = {
   artist_msid: string;
 };
 
-type EventTypeT = "recording_recommendation" | "like" | "follow";
+type EventTypeT =
+  | "recording_recommendation"
+  | "like"
+  | "follow"
+  | "stop_follow"
+  | "block_follow"
+  | "playlist_created";
 
 type UserRelationshipEvent = {
   user_0: string;
@@ -474,7 +480,7 @@ type UserRelationshipEvent = {
   relationship_type: "follow";
   created: number;
 };
-type EventMetadata = Listen | UserRelationshipEvent;
+type EventMetadata = Listen | JSPFPlaylist | UserRelationshipEvent;
 
 type TimelineEvent = {
   event_type: EventTypeT;

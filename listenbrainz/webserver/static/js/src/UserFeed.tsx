@@ -4,6 +4,9 @@ import {
   faQuestion,
   faHeart,
   faUserPlus,
+  faListUl,
+  faUserSecret,
+  faUserSlash,
 } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -21,6 +24,9 @@ export enum EventType {
   RECORDING_RECOMMENDATION = "recording_recommendation",
   LIKE = "like",
   FOLLOW = "follow",
+  STOP_FOLLOW = "stop_follow",
+  BLOCK_FOLLOW = "block_follow",
+  PLAYLIST_CREATED = "playlist_created",
 }
 
 type UserFeedPageProps = {
@@ -65,6 +71,12 @@ export default class UserFeedPage extends React.Component<
         return faHeart;
       case EventType.FOLLOW:
         return faUserPlus;
+      case EventType.STOP_FOLLOW:
+        return faUserSlash;
+      case EventType.BLOCK_FOLLOW:
+        return faUserSecret;
+      case EventType.PLAYLIST_CREATED:
+        return faListUl;
       default:
         return faQuestion;
     }
@@ -152,6 +164,14 @@ export default class UserFeedPage extends React.Component<
       return (
         <span className="event-description">
           <a href={`/user/${user_0}`}>{user_0}</a> is now following you
+        </span>
+      );
+    }
+    if (event_type === EventType.PLAYLIST_CREATED) {
+      const { identifier, title } = metadata as JSPFPlaylist;
+      return (
+        <span className="event-description">
+          We created a playlist for you: <a href={identifier}>{title}</a>
         </span>
       );
     }

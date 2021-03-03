@@ -1,9 +1,6 @@
 #timeline {
-	padding-left: 1em;
-	padding-right: 1em;
 	> ul {
-		padding: 1em 0 0 2em;
-		margin: 0;
+		padding-left: 1em;
 		list-style: none;
 		position: relative;
 		
@@ -15,7 +12,7 @@
 			background-color: @gray-light;
 			position: absolute;
 			top: 10px;
-			left: 2.5em;
+			left: 1.5em;
 			z-index: -1;
 		}
 		
@@ -57,6 +54,9 @@
 				}
 				&.follow {
 					color:@green;
+				}
+				&.playlist_created {
+					color:@orange;
 				}
 			}
 			.event-description {
