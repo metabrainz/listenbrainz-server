@@ -27,6 +27,7 @@ from listenbrainz.db.exceptions import DatabaseException
 
 from data.model.user_timeline_event import UserTimelineEvent, UserTimelineEventMetadata, UserTimelineEventType
 
+
 class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
 
     def setUp(self):

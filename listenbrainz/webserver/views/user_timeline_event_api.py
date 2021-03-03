@@ -81,7 +81,6 @@ def create_user_recording_recommendation_event(user_name):
     except DatabaseException:
         raise APIInternalServerError("Something went wrong, please try again.")
 
-
     event_data = event.dict()
     event_data['created'] = event_data['created'].timestamp()
     event_data['event_type'] = event_data['event_type'].value

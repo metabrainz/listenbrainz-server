@@ -20,7 +20,12 @@ import sqlalchemy
 import pydantic
 import ujson
 
-from data.model.user_timeline_event import UserTimelineEvent, UserTimelineEventType, UserTimelineEventMetadata, RecordingRecommendationMetadata
+from data.model.user_timeline_event import (
+    UserTimelineEvent,
+    UserTimelineEventType,
+    UserTimelineEventMetadata,
+    RecordingRecommendationMetadata,
+)
 from enum import Enum
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
@@ -61,6 +66,7 @@ def create_user_track_recommendation_event(user_id: int, metadata: RecordingReco
         event_type=UserTimelineEventType.RECORDING_RECOMMENDATION,
         metadata=metadata,
     )
+
 
 def get_user_timeline_events(user_id: int, event_type: UserTimelineEventType, count: int = 50) -> List[UserTimelineEvent]:
     """ Gets user timeline events of the specified type associated with the specified user.

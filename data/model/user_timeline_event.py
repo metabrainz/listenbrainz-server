@@ -22,8 +22,10 @@ from typing import Union, Optional
 
 import pydantic
 
+
 class UserTimelineEventType(Enum):
     RECORDING_RECOMMENDATION = 'recording_recommendation'
+
 
 class RecordingRecommendationMetadata(pydantic.BaseModel):
     artist_name: str
@@ -33,7 +35,9 @@ class RecordingRecommendationMetadata(pydantic.BaseModel):
     recording_msid: str
     artist_msid: str
 
+
 UserTimelineEventMetadata = Union[RecordingRecommendationMetadata]
+
 
 class UserTimelineEvent(pydantic.BaseModel):
     id: int

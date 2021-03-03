@@ -27,6 +27,7 @@ import time
 import json
 import uuid
 
+
 class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
     def setUp(self):
@@ -61,7 +62,6 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual('Kanye West', events[0].metadata.artist_name)
         self.assertEqual('Fade', events[0].metadata.track_name)
 
-
     def test_it_checks_auth_token_for_authorization(self):
         metadata = {
             'artist_name': 'Kanye West',
@@ -92,7 +92,6 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
         self.assertListEqual([], events)
 
-
     def test_it_validates_metadata_json(self):
         metadata = {}
 
@@ -103,7 +102,6 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
         self.assert400(r)
-
 
     @mock.patch('listenbrainz.db.user_timeline_event.create_user_track_recommendation_event', side_effect=DatabaseException)
     def test_it_handles_database_exceptions(self, mock_create_event):
