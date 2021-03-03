@@ -68,6 +68,9 @@ ALTER TABLE recording_feedback
 
 ALTER TABLE recommendation.similar_user
     ADD CONSTRAINT similar_user_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
 
 ALTER TABLE missing_musicbrainz_data
     ADD CONSTRAINT missing_mb_data_user_id_foreign_key

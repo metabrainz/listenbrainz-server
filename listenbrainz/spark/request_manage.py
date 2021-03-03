@@ -235,3 +235,16 @@ def request_import_artist_relation():
     """
 
     send_request_to_spark_cluster(_prepare_query_message('import.artist_relation'))
+
+
+@cli.command(name='request_similar_users')
+@click.option("--threshold", type=float, default=.25, help="Threshold for minimum relationship strenth between two users.")
+@click.option("--years", type=int, default=2, help="Maximum number of years of listens to use for similarity correlation.")
+def request_similar_users(thresholdi, years):
+    """ Send the cluster a request to generate similar users.
+    """
+    params = {
+        'threshold': threshold,
+        'years': years
+    }
+    send_request_to_spark_cluster(_prepare_query_message('similarity.similar_users', params=params))

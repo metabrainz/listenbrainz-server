@@ -3,7 +3,6 @@ import listenbrainz.spark.request_manage as spark_request_manage
 from listenbrainz import db
 from listenbrainz.db import timescale as ts
 from listenbrainz import webserver
-import listenbrainz.stats.user_similarity as user_similarity
 from werkzeug.serving import run_simple
 import os
 import click
