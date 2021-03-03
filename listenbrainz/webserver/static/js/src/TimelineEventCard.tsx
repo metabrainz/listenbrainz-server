@@ -9,6 +9,7 @@ import Card from "./components/Card";
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
 export type TimelineEventCardProps = {
+  className?: string;
   listen: Listen;
   playListen: (listen: Listen) => void;
   newAlert: (
@@ -41,10 +42,13 @@ export default class TimelineEventCard extends React.Component<
   };
 
   render() {
-    const { listen } = this.props;
+    const { className, listen } = this.props;
 
     return (
-      <Card onDoubleClick={this.playListen} className="listen-card row">
+      <Card
+        onDoubleClick={this.playListen}
+        className={`listen-card row ${className}`}
+      >
         <div className="col-xs-9">
           <div className="track-details">
             <p title={listen.track_metadata?.track_name}>

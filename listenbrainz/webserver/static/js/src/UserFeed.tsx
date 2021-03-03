@@ -1,21 +1,24 @@
-import {
-  faCircle,
-  faQuestion,
-  faHeart,
-  faUserPlus,
-  faListUl,
-  faUserSecret,
-  faUserSlash,
-  faMusic,
-} from "@fortawesome/free-solid-svg-icons";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+
+import {
+  faCircle,
+  faHeart,
+  faListUl,
+  faMusic,
+  faQuestion,
+  faUserPlus,
+  faUserSecret,
+  faUserSlash,
+} from "@fortawesome/free-solid-svg-icons";
+
 import { AlertList } from "react-bs-notifier";
-import FollowerFollowingModal from "./follow/FollowerFollowingModal";
-import BrainzPlayer from "./BrainzPlayer";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { isEqual } from "lodash";
 import APIService from "./APIService";
+import BrainzPlayer from "./BrainzPlayer";
+import FollowerFollowingModal from "./follow/FollowerFollowingModal";
 import TimelineEventCard from "./TimelineEventCard";
 import fakeData from "./fake-user-feed.json";
 import { timestampToTimeAgo } from "./utils";
@@ -142,7 +145,7 @@ export default class UserFeedPage extends React.Component<
 
   isCurrentListen = (listen: Listen): boolean => {
     const { currentListen } = this.state;
-    return Boolean(currentListen && _.isEqual(listen, currentListen));
+    return Boolean(currentListen && isEqual(listen, currentListen));
   };
 
   playListen = (listen: Listen): void => {
@@ -160,6 +163,9 @@ export default class UserFeedPage extends React.Component<
       return (
         <div className="event-content">
           <TimelineEventCard
+            className={
+              this.isCurrentListen(metadata as Listen) ? " current-listen" : ""
+            }
             listen={metadata as Listen}
             newAlert={this.newAlert}
             playListen={this.playListen}
@@ -275,8 +281,6 @@ export default class UserFeedPage extends React.Component<
                   })}
                 </ul>
               </div>
-              {previousEventTs}
-              {nextEventTs}
             </div>
             <div className="col-md-offset-1 col-md-4">
               <FollowerFollowingModal user={currentUser} />
