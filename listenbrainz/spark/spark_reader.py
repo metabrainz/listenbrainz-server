@@ -22,7 +22,8 @@ from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          notify_artist_relation_import,
                                          notify_mapping_import,
                                          handle_missing_musicbrainz_data,
-                                         notify_cf_recording_recommendations_generation)
+                                         notify_cf_recording_recommendations_generation,
+                                         handle_similar_users)
 
 from listenbrainz.webserver import create_app
 
@@ -41,6 +42,7 @@ response_handler_map = {
     'import_artist_relation': notify_artist_relation_import,
     'missing_musicbrainz_data': handle_missing_musicbrainz_data,
     'cf_recommendations_recording_mail': notify_cf_recording_recommendations_generation
+    'similar_users': handle_similar_users,
 }
 
 RABBITMQ_HEARTBEAT_TIME = 60 * 60  # 1 hour, in seconds

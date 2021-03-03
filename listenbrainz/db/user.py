@@ -466,26 +466,6 @@ def get_users_in_order(user_ids):
         return [dict(row) for row in r.fetchall() if row['musicbrainz_id'] is not None]
 
 
-def insert_similar_users(user_id: int, similar_user_tuples: Tuple[int, float]):
-    """ Insert a list of similar users for user_id into the database
-    """
-    similar_user_data = SimilarUsers(
-        similar_users=[
-            SimilarUserRecord(user_id=row[0], similarity_score=row[1]) for row in similar_user_tuples
-        ],
-    )
-    with db.engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
-            INSERT INTO recommendation.similar_user (user_id, similar_users)
-                 VALUES (:user_id, :similar_users)
-            ON CONFLICT (user_id)
-          DO UPDATE SET similar_users = :similar_users
-        """), {
-            'user_id': user_id,
-            'similar_users': ujson.dumps(similar_user_data.dict()),
-        })
-
-
 def get_similar_users(user_id: int) -> SimilarUsers:
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
