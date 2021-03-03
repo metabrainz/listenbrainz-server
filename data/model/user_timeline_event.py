@@ -29,7 +29,6 @@ class RecordingRecommendationMetadata(pydantic.BaseModel):
     artist_name: str
     track_name: str
     release_name: Optional[str]
-    spotify_id: Optional[str]
     recording_mbid: Optional[str]
     recording_msid: str
     artist_msid: str
