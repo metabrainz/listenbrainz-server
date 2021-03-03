@@ -1,0 +1,1050 @@
+{
+    "payload": {
+        "count": 25,
+        "feed": [
+			{
+				"event_type": "recording_recommendation",
+				"user_name": "reosarevok",
+				"created":1614714523,
+				"metadata": {
+					"inserted_at": "Tue, 16 Feb 2021 11:42:11 GMT",
+					"listened_at": 1613475505,
+					"recording_msid": "45ddbea4-79ee-4462-be9c-20a55bb5c20d",
+					"track_metadata": {
+						"additional_info": {
+							"artist_msid": "eed59112-51d9-4cd1-affd-fe3993cb13d1",
+							"artist_names": [
+								"Tintura + Arno Tamm"
+							],
+							"discnumber": 1,
+							"duration_ms": 254815,
+							"isrc": "EEVC11700034",
+							"listening_from": "spotify",
+							"recording_msid": "45ddbea4-79ee-4462-be9c-20a55bb5c20d",
+							"release_artist_name": "Tintura + Arno Tamm",
+							"release_artist_names": [
+								"Tintura + Arno Tamm"
+							],
+							"release_msid": "83c7d5d6-b6a1-4476-9b26-332dc69a0d78",
+							"spotify_album_artist_ids": [
+								"https://open.spotify.com/artist/6gMNNbVoRx8LCJ3LZVSiQs"
+							],
+							"spotify_album_id": "https://open.spotify.com/album/57ZoaPPLZRirQpPnfFhg98",
+							"spotify_artist_ids": [
+								"https://open.spotify.com/artist/6gMNNbVoRx8LCJ3LZVSiQs"
+							],
+							"spotify_id": "https://open.spotify.com/track/7bG7mmsONmrGppDZSPtME3",
+							"tracknumber": 7
+						},
+						"artist_name": "Tintura + Arno Tamm",
+						"release_name": "Kaugel üksi võõra rahva hulgas",
+						"track_name": "Kust on tulnud muodike"
+					},
+					"user_name": "reosarevok"
+				}
+			},
+            {
+				"event_type": "recording_recommendation",
+				"user_name": "reosarevok",
+				"created":1614711523,
+				"metadata": {
+                "inserted_at": "Tue, 16 Feb 2021 11:36:11 GMT",
+                "listened_at": 1613475250,
+                "recording_msid": "866818d9-a17b-43fc-b32a-3d9fbdc59fdb",
+                "track_metadata": {
+                    "additional_info": {
+                        "artist_msid": "eed59112-51d9-4cd1-affd-fe3993cb13d1",
+                        "artist_names": [
+                            "Tintura + Arno Tamm"
+                        ],
+                        "discnumber": 1,
+                        "duration_ms": 231351,
+                        "isrc": "EEVC11700033",
+                        "listening_from": "spotify",
+                        "recording_msid": "866818d9-a17b-43fc-b32a-3d9fbdc59fdb",
+                        "release_artist_name": "Tintura + Arno Tamm",
+                        "release_artist_names": [
+                            "Tintura + Arno Tamm"
+                        ],
+                        "release_msid": "83c7d5d6-b6a1-4476-9b26-332dc69a0d78",
+                        "spotify_album_artist_ids": [
+                            "https://open.spotify.com/artist/6gMNNbVoRx8LCJ3LZVSiQs"
+                        ],
+                        "spotify_album_id": "https://open.spotify.com/album/57ZoaPPLZRirQpPnfFhg98",
+                        "spotify_artist_ids": [
+                            "https://open.spotify.com/artist/6gMNNbVoRx8LCJ3LZVSiQs"
+                        ],
+                        "spotify_id": "https://open.spotify.com/track/7tv6SoU3xgG6C9MkKkWxRb",
+                        "tracknumber": 6
+                    },
+                    "artist_name": "Tintura + Arno Tamm",
+                    "release_name": "Kaugel üksi võõra rahva hulgas",
+                    "track_name": "Olin noor ja noorukene"
+                },
+                "user_name": "reosarevok"
+            	}
+            },
+            {
+				"event_type": "like",
+				"user_name": "reosarevok",
+				"created":1614684523,
+				"metadata": {
+                "inserted_at": "Tue, 16 Feb 2021 11:36:11 GMT",
+                "listened_at": 1613475018,
+                "recording_msid": "d92c1f4e-b793-4ac5-a697-c2702563abbf",
+                "track_metadata": {
+                    "additional_info": {
+                        "artist_msid": "eed59112-51d9-4cd1-affd-fe3993cb13d1",
+                        "artist_names": [
+                            "Tintura + Arno Tamm"
+                        ],
+                        "discnumber": 1,
+                        "duration_ms": 325450,
+                        "isrc": "EEVC11700032",
+                        "listening_from": "spotify",
+                        "recording_msid": "d92c1f4e-b793-4ac5-a697-c2702563abbf",
+                        "release_artist_name": "Tintura + Arno Tamm",
+                        "release_artist_names": [
+                            "Tintura + Arno Tamm"
+                        ],
+                        "release_msid": "83c7d5d6-b6a1-4476-9b26-332dc69a0d78",
+                        "spotify_album_artist_ids": [
+                            "https://open.spotify.com/artist/6gMNNbVoRx8LCJ3LZVSiQs"
+                        ],
+                        "spotify_album_id": "https://open.spotify.com/album/57ZoaPPLZRirQpPnfFhg98",
+                        "spotify_artist_ids": [
+                            "https://open.spotify.com/artist/6gMNNbVoRx8LCJ3LZVSiQs"
+                        ],
+                        "spotify_id": "https://open.spotify.com/track/11cZdbnbPtsupR5MCFzWyK",
+                        "tracknumber": 5
+                    },
+                    "artist_name": "Tintura + Arno Tamm",
+                    "release_name": "Kaugel üksi võõra rahva hulgas",
+                    "track_name": "Kaks armastajat trehvasid"
+                },
+                "user_name": "reosarevok"
+				}
+			},
+            {
+				"event_type": "follow",
+				"created":1613474472,
+				"metadata": {
+					"user_0": "mr_monkey",
+					"user_1": "reosarevok",
+					"type": "follow"
+                },
+                "user_name": "mr_monkey"
+			},
+            {
+				"event_type": "follow",
+				"created":1613474452,
+				"metadata": {
+					"user_0": "reosarevok",
+					"user_1": "mr_monkey",
+					"type": "follow"
+                },
+                "user_name": "reosarevok"
+			},
+            {
+				"event_type": "recording_recommendation",
+				"user_name": "reosarevok",
+				"created":1613475505,
+				"metadata": {
+                "inserted_at": "Tue, 16 Feb 2021 11:18:16 GMT",
+                "listened_at": 1613474284,
+                "recording_msid": "dc4e6b2c-a2fe-4a5d-a75a-736b87395046",
+                "track_metadata": {
+                    "additional_info": {
+                        "artist_msid": "eed59112-51d9-4cd1-affd-fe3993cb13d1",
+                        "artist_names": [
+                            "Tintura + Arno Tamm"
+                        ],
+                        "discnumber": 1,
+                        "duration_ms": 206193,
+                        "isrc": "EEVC11700029",
+                        "listening_from": "spotify",
+                        "recording_msid": "dc4e6b2c-a2fe-4a5d-a75a-736b87395046",
+                        "release_artist_name": "Tintura + Arno Tamm",
+                        "release_artist_names": [
+                            "Tintura + Arno Tamm"
+                        ],
+                        "release_msid": "83c7d5d6-b6a1-4476-9b26-332dc69a0d78",
+                        "spotify_album_artist_ids": [
+                            "https://open.spotify.com/artist/6gMNNbVoRx8LCJ3LZVSiQs"
+                        ],
+                        "spotify_album_id": "https://open.spotify.com/album/57ZoaPPLZRirQpPnfFhg98",
+                        "spotify_artist_ids": [
+                            "https://open.spotify.com/artist/6gMNNbVoRx8LCJ3LZVSiQs"
+                        ],
+                        "spotify_id": "https://open.spotify.com/track/2vuULzhYjTP9nmBcVAbRad",
+                        "tracknumber": 2
+                    },
+                    "artist_name": "Tintura + Arno Tamm",
+                    "release_name": "Kaugel üksi võõra rahva hulgas",
+                    "track_name": "Kui lauba õhta jõudis"
+                },
+                "user_name": "reosarevok"
+				}
+			},
+            {
+				"event_type": "recording_recommendation",
+				"user_name": "reosarevok",
+				"created":1613474078,
+				"metadata": {
+                "inserted_at": "Tue, 16 Feb 2021 11:18:16 GMT",
+                "listened_at": 1613474078,
+                "recording_msid": "2d1d1f67-60a5-4558-a5c6-b413c8374df5",
+                "track_metadata": {
+                    "additional_info": {
+                        "artist_msid": "eed59112-51d9-4cd1-affd-fe3993cb13d1",
+                        "artist_names": [
+                            "Tintura + Arno Tamm"
+                        ],
+                        "discnumber": 1,
+                        "duration_ms": 165511,
+                        "isrc": "EEVC11700028",
+                        "listening_from": "spotify",
+                        "recording_msid": "2d1d1f67-60a5-4558-a5c6-b413c8374df5",
+                        "release_artist_name": "Tintura + Arno Tamm",
+                        "release_artist_names": [
+                            "Tintura + Arno Tamm"
+                        ],
+                        "release_msid": "83c7d5d6-b6a1-4476-9b26-332dc69a0d78",
+                        "spotify_album_artist_ids": [
+                            "https://open.spotify.com/artist/6gMNNbVoRx8LCJ3LZVSiQs"
+                        ],
+                        "spotify_album_id": "https://open.spotify.com/album/57ZoaPPLZRirQpPnfFhg98",
+                        "spotify_artist_ids": [
+                            "https://open.spotify.com/artist/6gMNNbVoRx8LCJ3LZVSiQs"
+                        ],
+                        "spotify_id": "https://open.spotify.com/track/3oNrEmDCdpoL8nafiMptwq",
+                        "tracknumber": 1
+                    },
+                    "artist_name": "Tintura + Arno Tamm",
+                    "release_name": "Kaugel üksi võõra rahva hulgas",
+                    "track_name": "Jumalaga, üksik talu"
+                },
+                "user_name": "reosarevok"
+				}
+			},
+            {
+				"event_type": "recording_recommendation",
+				"user_name": "reosarevok",
+				"created":1613472575,
+				"metadata": {
+                "inserted_at": "Tue, 16 Feb 2021 10:52:59 GMT",
+                "listened_at": 1613472575,
+                "recording_msid": "20be8c56-c45e-4d5b-b1fa-9e3880410963",
+                "track_metadata": {
+                    "additional_info": {
+                        "artist_msid": "c731e6e7-efee-4a33-abe3-b602944ecc2b",
+                        "artist_names": [
+                            "Pitsa",
+                            "Reket",
+                            "kohver",
+                            "boipepperoni"
+                        ],
+                        "discnumber": 1,
+                        "duration_ms": 200135,
+                        "isrc": "FIUM72100016",
+                        "listening_from": "spotify",
+                        "recording_msid": "20be8c56-c45e-4d5b-b1fa-9e3880410963",
+                        "release_artist_name": "Pitsa",
+                        "release_artist_names": [
+                            "Pitsa"
+                        ],
+                        "release_msid": "7c2690a6-4c2e-4c94-82fc-2a4841d32833",
+                        "spotify_album_artist_ids": [
+                            "https://open.spotify.com/artist/5rr7mN0kRk6dsm1DVwRBFx"
+                        ],
+                        "spotify_album_id": "https://open.spotify.com/album/3vjZwaXDztZJgRQvKSUbMk",
+                        "spotify_artist_ids": [
+                            "https://open.spotify.com/artist/5rr7mN0kRk6dsm1DVwRBFx",
+                            "https://open.spotify.com/artist/4vnAcwsYeJD9QcQsowEuKN",
+                            "https://open.spotify.com/artist/1LsT8mVsiQAq4d4OmYaxxh",
+                            "https://open.spotify.com/artist/0MjPNmazpZOmBH1nOMaeQY"
+                        ],
+                        "spotify_id": "https://open.spotify.com/track/3LeaALvjNEieytTZbdtkPo",
+                        "tracknumber": 12
+                    },
+                    "artist_name": "Pitsa, Reket, kohver, boipepperoni",
+                    "release_name": "calzone",
+                    "track_name": "Trühvlid"
+                },
+                "user_name": "reosarevok"
+				}
+			},
+            {
+				"event_type": "recording_recommendation",
+				"user_name": "reosarevok",
+				"created":1613472374,
+				"metadata": {
+                "inserted_at": "Tue, 16 Feb 2021 10:46:56 GMT",
+                "listened_at": 1613472374,
+                "recording_msid": "6a62ea39-5661-4c5a-b6a0-470da1d0f921",
+                "track_metadata": {
+                    "additional_info": {
+                        "artist_msid": "c731e6e7-efee-4a33-abe3-b602944ecc2b",
+                        "artist_names": [
+                            "Pitsa",
+                            "Reket",
+                            "kohver",
+                            "boipepperoni"
+                        ],
+                        "discnumber": 1,
+                        "duration_ms": 120135,
+                        "isrc": "FIUM72100015",
+                        "listening_from": "spotify",
+                        "recording_msid": "6a62ea39-5661-4c5a-b6a0-470da1d0f921",
+                        "release_artist_name": "Pitsa",
+                        "release_artist_names": [
+                            "Pitsa"
+                        ],
+                        "release_msid": "7c2690a6-4c2e-4c94-82fc-2a4841d32833",
+                        "spotify_album_artist_ids": [
+                            "https://open.spotify.com/artist/5rr7mN0kRk6dsm1DVwRBFx"
+                        ],
+                        "spotify_album_id": "https://open.spotify.com/album/3vjZwaXDztZJgRQvKSUbMk",
+                        "spotify_artist_ids": [
+                            "https://open.spotify.com/artist/5rr7mN0kRk6dsm1DVwRBFx",
+                            "https://open.spotify.com/artist/4vnAcwsYeJD9QcQsowEuKN",
+                            "https://open.spotify.com/artist/1LsT8mVsiQAq4d4OmYaxxh",
+                            "https://open.spotify.com/artist/0MjPNmazpZOmBH1nOMaeQY"
+                        ],
+                        "spotify_id": "https://open.spotify.com/track/1MU56uy3IMjvfgtgI1xstk",
+                        "tracknumber": 11
+                    },
+                    "artist_name": "Pitsa, Reket, kohver, boipepperoni",
+                    "release_name": "calzone",
+                    "track_name": "animemaja"
+                },
+                "user_name": "reosarevok"
+				}
+			},
+            {
+				"event_type": "recording_recommendation",
+				"user_name": "reosarevok",
+				"created":1613472254,
+				"metadata": {
+                "inserted_at": "Tue, 16 Feb 2021 10:46:56 GMT",
+                "listened_at": 1613472254,
+                "recording_msid": "0eb7e0ec-f68b-4981-8d93-523aec9edbbc",
+                "track_metadata": {
+                    "additional_info": {
+                        "artist_msid": "c731e6e7-efee-4a33-abe3-b602944ecc2b",
+                        "artist_names": [
+                            "Pitsa",
+                            "Reket",
+                            "kohver",
+                            "boipepperoni"
+                        ],
+                        "discnumber": 1,
+                        "duration_ms": 129547,
+                        "isrc": "FIUM72100014",
+                        "listening_from": "spotify",
+                        "recording_msid": "0eb7e0ec-f68b-4981-8d93-523aec9edbbc",
+                        "release_artist_name": "Pitsa",
+                        "release_artist_names": [
+                            "Pitsa"
+                        ],
+                        "release_msid": "7c2690a6-4c2e-4c94-82fc-2a4841d32833",
+                        "spotify_album_artist_ids": [
+                            "https://open.spotify.com/artist/5rr7mN0kRk6dsm1DVwRBFx"
+                        ],
+                        "spotify_album_id": "https://open.spotify.com/album/3vjZwaXDztZJgRQvKSUbMk",
+                        "spotify_artist_ids": [
+                            "https://open.spotify.com/artist/5rr7mN0kRk6dsm1DVwRBFx",
+                            "https://open.spotify.com/artist/4vnAcwsYeJD9QcQsowEuKN",
+                            "https://open.spotify.com/artist/1LsT8mVsiQAq4d4OmYaxxh",
+                            "https://open.spotify.com/artist/0MjPNmazpZOmBH1nOMaeQY"
+                        ],
+                        "spotify_id": "https://open.spotify.com/track/5w9DDDP1IbWc5OT7kevJX0",
+                        "tracknumber": 10
+                    },
+                    "artist_name": "Pitsa, Reket, kohver, boipepperoni",
+                    "release_name": "calzone",
+                    "track_name": "üksi lennukis"
+                },
+                "user_name": "reosarevok"
+				}
+			},
+            {
+				"event_type": "recording_recommendation",
+				"user_name": "reosarevok",
+				"created":1613472124,
+				"metadata": {
+                "inserted_at": "Tue, 16 Feb 2021 10:46:56 GMT",
+                "listened_at": 1613472124,
+                "recording_msid": "cd51317b-ff6e-4711-98fd-8b25a4c8e730",
+                "track_metadata": {
+                    "additional_info": {
+                        "artist_msid": "c731e6e7-efee-4a33-abe3-b602944ecc2b",
+                        "artist_names": [
+                            "Pitsa",
+                            "Reket",
+                            "kohver",
+                            "boipepperoni"
+                        ],
+                        "discnumber": 1,
+                        "duration_ms": 162932,
+                        "isrc": "FIUM72100013",
+                        "listening_from": "spotify",
+                        "recording_msid": "cd51317b-ff6e-4711-98fd-8b25a4c8e730",
+                        "release_artist_name": "Pitsa",
+                        "release_artist_names": [
+                            "Pitsa"
+                        ],
+                        "release_msid": "7c2690a6-4c2e-4c94-82fc-2a4841d32833",
+                        "spotify_album_artist_ids": [
+                            "https://open.spotify.com/artist/5rr7mN0kRk6dsm1DVwRBFx"
+                        ],
+                        "spotify_album_id": "https://open.spotify.com/album/3vjZwaXDztZJgRQvKSUbMk",
+                        "spotify_artist_ids": [
+                            "https://open.spotify.com/artist/5rr7mN0kRk6dsm1DVwRBFx",
+                            "https://open.spotify.com/artist/4vnAcwsYeJD9QcQsowEuKN",
+                            "https://open.spotify.com/artist/1LsT8mVsiQAq4d4OmYaxxh",
+                            "https://open.spotify.com/artist/0MjPNmazpZOmBH1nOMaeQY"
+                        ],
+                        "spotify_id": "https://open.spotify.com/track/5cHP4VQzm7oi8NodcM6rxp",
+                        "tracknumber": 9
+                    },
+                    "artist_name": "Pitsa, Reket, kohver, boipepperoni",
+                    "release_name": "calzone",
+                    "track_name": "Piin"
+                },
+                "user_name": "reosarevok"
+				}
+			},
+            {
+				"event_type": "recording_recommendation",
+				"user_name": "reosarevok",
+				"created":1613471961,
+				"metadata": {
+                "inserted_at": "Tue, 16 Feb 2021 10:40:54 GMT",
+                "listened_at": 1613471961,
+                "recording_msid": "efa4a107-7e2a-4519-860d-1ac758357ca9",
+                "track_metadata": {
+                    "additional_info": {
+                        "artist_msid": "0be402b4-f7be-44f9-abdf-08f05871ccd4",
+                        "artist_names": [
+                            "Pitsa",
+                            "Reket",
+                            "kohver",
+                            "boipepperoni",
+                            "Genka"
+                        ],
+                        "discnumber": 1,
+                        "duration_ms": 226421,
+                        "isrc": "FIUM72100012",
+                        "listening_from": "spotify",
+                        "recording_msid": "efa4a107-7e2a-4519-860d-1ac758357ca9",
+                        "release_artist_name": "Pitsa",
+                        "release_artist_names": [
+                            "Pitsa"
+                        ],
+                        "release_msid": "7c2690a6-4c2e-4c94-82fc-2a4841d32833",
+                        "spotify_album_artist_ids": [
+                            "https://open.spotify.com/artist/5rr7mN0kRk6dsm1DVwRBFx"
+                        ],
+                        "spotify_album_id": "https://open.spotify.com/album/3vjZwaXDztZJgRQvKSUbMk",
+                        "spotify_artist_ids": [
+                            "https://open.spotify.com/artist/5rr7mN0kRk6dsm1DVwRBFx",
+                            "https://open.spotify.com/artist/4vnAcwsYeJD9QcQsowEuKN",
+                            "https://open.spotify.com/artist/1LsT8mVsiQAq4d4OmYaxxh",
+                            "https://open.spotify.com/artist/0MjPNmazpZOmBH1nOMaeQY",
+                            "https://open.spotify.com/artist/3bq7DMYbeHU41J88ZR5Leu"
+                        ],
+                        "spotify_id": "https://open.spotify.com/track/74wVYHidVbNdvy1dzCEL84",
+                        "tracknumber": 8
+                    },
+                    "artist_name": "Pitsa, Reket, kohver, boipepperoni, Genka",
+                    "release_name": "calzone",
+                    "track_name": "Intro"
+                },
+                "user_name": "reosarevok"
+				}
+			},
+            {
+				"event_type": "recording_recommendation",
+				"user_name": "reosarevok",
+				"created":1613471734,
+				"metadata": {
+                "inserted_at": "Tue, 16 Feb 2021 10:40:54 GMT",
+                "listened_at": 1613471734,
+                "recording_msid": "5bbefb15-27e8-4b57-b099-88ce9042d191",
+                "track_metadata": {
+                    "additional_info": {
+                        "artist_msid": "c731e6e7-efee-4a33-abe3-b602944ecc2b",
+                        "artist_names": [
+                            "Pitsa",
+                            "Reket",
+                            "kohver",
+                            "boipepperoni"
+                        ],
+                        "discnumber": 1,
+                        "duration_ms": 185092,
+                        "isrc": "FIUM72100011",
+                        "listening_from": "spotify",
+                        "recording_msid": "5bbefb15-27e8-4b57-b099-88ce9042d191",
+                        "release_artist_name": "Pitsa",
+                        "release_artist_names": [
+                            "Pitsa"
+                        ],
+                        "release_msid": "7c2690a6-4c2e-4c94-82fc-2a4841d32833",
+                        "spotify_album_artist_ids": [
+                            "https://open.spotify.com/artist/5rr7mN0kRk6dsm1DVwRBFx"
+                        ],
+                        "spotify_album_id": "https://open.spotify.com/album/3vjZwaXDztZJgRQvKSUbMk",
+                        "spotify_artist_ids": [
+                            "https://open.spotify.com/artist/5rr7mN0kRk6dsm1DVwRBFx",
+                            "https://open.spotify.com/artist/4vnAcwsYeJD9QcQsowEuKN",
+                            "https://open.spotify.com/artist/1LsT8mVsiQAq4d4OmYaxxh",
+                            "https://open.spotify.com/artist/0MjPNmazpZOmBH1nOMaeQY"
+                        ],
+                        "spotify_id": "https://open.spotify.com/track/4Lz2u7kw16ATv0iKQhQ92f",
+                        "tracknumber": 7
+                    },
+                    "artist_name": "Pitsa, Reket, kohver, boipepperoni",
+                    "release_name": "calzone",
+                    "track_name": "Kuulsaks"
+                },
+                "user_name": "reosarevok"
+				}
+			},
+            {
+				"event_type": "recording_recommendation",
+				"user_name": "reosarevok",
+				"created":1613471549,
+				"metadata": {
+                "inserted_at": "Tue, 16 Feb 2021 10:34:43 GMT",
+                "listened_at": 1613471549,
+                "recording_msid": "411962f8-8dc1-47db-a766-b8f2a2c1a11c",
+                "track_metadata": {
+                    "additional_info": {
+                        "artist_msid": "c731e6e7-efee-4a33-abe3-b602944ecc2b",
+                        "artist_names": [
+                            "Pitsa",
+                            "Reket",
+                            "kohver",
+                            "boipepperoni"
+                        ],
+                        "discnumber": 1,
+                        "duration_ms": 216720,
+                        "isrc": "FIUM72000442",
+                        "listening_from": "spotify",
+                        "recording_msid": "411962f8-8dc1-47db-a766-b8f2a2c1a11c",
+                        "release_artist_name": "Pitsa",
+                        "release_artist_names": [
+                            "Pitsa"
+                        ],
+                        "release_msid": "7c2690a6-4c2e-4c94-82fc-2a4841d32833",
+                        "spotify_album_artist_ids": [
+                            "https://open.spotify.com/artist/5rr7mN0kRk6dsm1DVwRBFx"
+                        ],
+                        "spotify_album_id": "https://open.spotify.com/album/3vjZwaXDztZJgRQvKSUbMk",
+                        "spotify_artist_ids": [
+                            "https://open.spotify.com/artist/5rr7mN0kRk6dsm1DVwRBFx",
+                            "https://open.spotify.com/artist/4vnAcwsYeJD9QcQsowEuKN",
+                            "https://open.spotify.com/artist/1LsT8mVsiQAq4d4OmYaxxh",
+                            "https://open.spotify.com/artist/0MjPNmazpZOmBH1nOMaeQY"
+                        ],
+                        "spotify_id": "https://open.spotify.com/track/6HtFG40G9snJdzfSCQFnqJ",
+                        "tracknumber": 6
+                    },
+                    "artist_name": "Pitsa, Reket, kohver, boipepperoni",
+                    "release_name": "calzone",
+                    "track_name": "avokaado (leidsin ta)"
+                },
+                "user_name": "reosarevok"
+				}
+			},
+            {
+				"event_type": "recording_recommendation",
+				"user_name": "reosarevok",
+				"created":1613471108,
+				"metadata": {
+                "inserted_at": "Tue, 16 Feb 2021 10:29:11 GMT",
+                "listened_at": 1613471332,
+                "recording_msid": "6469fb75-fef4-4c17-8c28-ab7b4f13feba",
+                "track_metadata": {
+                    "additional_info": {
+                        "artist_msid": "c731e6e7-efee-4a33-abe3-b602944ecc2b",
+                        "artist_names": [
+                            "Pitsa",
+                            "Reket",
+                            "kohver",
+                            "boipepperoni"
+                        ],
+                        "discnumber": 1,
+                        "duration_ms": 223184,
+                        "isrc": "FIUM72100010",
+                        "listening_from": "spotify",
+                        "recording_msid": "6469fb75-fef4-4c17-8c28-ab7b4f13feba",
+                        "release_artist_name": "Pitsa",
+                        "release_artist_names": [
+                            "Pitsa"
+                        ],
+                        "release_msid": "7c2690a6-4c2e-4c94-82fc-2a4841d32833",
+                        "spotify_album_artist_ids": [
+                            "https://open.spotify.com/artist/5rr7mN0kRk6dsm1DVwRBFx"
+                        ],
+                        "spotify_album_id": "https://open.spotify.com/album/3vjZwaXDztZJgRQvKSUbMk",
+                        "spotify_artist_ids": [
+                            "https://open.spotify.com/artist/5rr7mN0kRk6dsm1DVwRBFx",
+                            "https://open.spotify.com/artist/4vnAcwsYeJD9QcQsowEuKN",
+                            "https://open.spotify.com/artist/1LsT8mVsiQAq4d4OmYaxxh",
+                            "https://open.spotify.com/artist/0MjPNmazpZOmBH1nOMaeQY"
+                        ],
+                        "spotify_id": "https://open.spotify.com/track/23cbJ33r9MYu1bCQow7PIY",
+                        "tracknumber": 5
+                    },
+                    "artist_name": "Pitsa, Reket, kohver, boipepperoni",
+                    "release_name": "calzone",
+                    "track_name": "Jalgrattalauluke"
+                },
+                "user_name": "reosarevok"
+				}
+			},
+            {
+				"event_type": "recording_recommendation",
+				"user_name": "reosarevok",
+				"created":1613471108,
+				"metadata": {
+                "inserted_at": "Tue, 16 Feb 2021 10:29:11 GMT",
+                "listened_at": 1613471108,
+                "recording_msid": "2a6e8522-21a9-4f76-aed6-90b26e080991",
+                "track_metadata": {
+                    "additional_info": {
+                        "artist_msid": "0c516276-a50a-47d7-9df6-1c02cd0be07f",
+                        "artist_names": [
+                            "Pitsa",
+                            "Reket",
+                            "kohver",
+                            "boipepperoni",
+                            "Maian"
+                        ],
+                        "discnumber": 1,
+                        "duration_ms": 197278,
+                        "isrc": "FIUM72100009",
+                        "listening_from": "spotify",
+                        "recording_msid": "2a6e8522-21a9-4f76-aed6-90b26e080991",
+                        "release_artist_name": "Pitsa",
+                        "release_artist_names": [
+                            "Pitsa"
+                        ],
+                        "release_msid": "7c2690a6-4c2e-4c94-82fc-2a4841d32833",
+                        "spotify_album_artist_ids": [
+                            "https://open.spotify.com/artist/5rr7mN0kRk6dsm1DVwRBFx"
+                        ],
+                        "spotify_album_id": "https://open.spotify.com/album/3vjZwaXDztZJgRQvKSUbMk",
+                        "spotify_artist_ids": [
+                            "https://open.spotify.com/artist/5rr7mN0kRk6dsm1DVwRBFx",
+                            "https://open.spotify.com/artist/4vnAcwsYeJD9QcQsowEuKN",
+                            "https://open.spotify.com/artist/1LsT8mVsiQAq4d4OmYaxxh",
+                            "https://open.spotify.com/artist/0MjPNmazpZOmBH1nOMaeQY",
+                            "https://open.spotify.com/artist/14F4wy1bW1Buz1lD8I5YWE"
+                        ],
+                        "spotify_id": "https://open.spotify.com/track/15ZE55MEw1goAbyz1URxpC",
+                        "tracknumber": 4
+                    },
+                    "artist_name": "Pitsa, Reket, kohver, boipepperoni, Maian",
+                    "release_name": "calzone",
+                    "track_name": "Tuhat eid"
+                },
+                "user_name": "reosarevok"
+				}
+			},
+            {
+				"event_type": "recording_recommendation",
+				"user_name": "reosarevok",
+				"created":1613469766,
+				"metadata": {
+                "inserted_at": "Tue, 16 Feb 2021 10:11:07 GMT",
+                "listened_at": 1613469963,
+                "recording_msid": "abc41027-81f5-45dc-8a44-6db0992cee26",
+                "track_metadata": {
+                    "additional_info": {
+                        "artist_msid": "c731e6e7-efee-4a33-abe3-b602944ecc2b",
+                        "artist_names": [
+                            "Pitsa",
+                            "Reket",
+                            "kohver",
+                            "boipepperoni"
+                        ],
+                        "discnumber": 1,
+                        "duration_ms": 196135,
+                        "isrc": "FIUM72000406",
+                        "listening_from": "spotify",
+                        "recording_msid": "abc41027-81f5-45dc-8a44-6db0992cee26",
+                        "release_artist_name": "Pitsa",
+                        "release_artist_names": [
+                            "Pitsa"
+                        ],
+                        "release_msid": "7c2690a6-4c2e-4c94-82fc-2a4841d32833",
+                        "spotify_album_artist_ids": [
+                            "https://open.spotify.com/artist/5rr7mN0kRk6dsm1DVwRBFx"
+                        ],
+                        "spotify_album_id": "https://open.spotify.com/album/3vjZwaXDztZJgRQvKSUbMk",
+                        "spotify_artist_ids": [
+                            "https://open.spotify.com/artist/5rr7mN0kRk6dsm1DVwRBFx",
+                            "https://open.spotify.com/artist/4vnAcwsYeJD9QcQsowEuKN",
+                            "https://open.spotify.com/artist/1LsT8mVsiQAq4d4OmYaxxh",
+                            "https://open.spotify.com/artist/0MjPNmazpZOmBH1nOMaeQY"
+                        ],
+                        "spotify_id": "https://open.spotify.com/track/1AWlHjLlyhES65AFbPr1cl",
+                        "tracknumber": 3
+                    },
+                    "artist_name": "Pitsa, Reket, kohver, boipepperoni",
+                    "release_name": "calzone",
+                    "track_name": "Tahmanägu"
+                },
+                "user_name": "reosarevok"
+				}
+			},
+            {
+				"event_type": "recording_recommendation",
+				"user_name": "reosarevok",
+				"created":1613469766,
+				"metadata": {
+                "inserted_at": "Tue, 16 Feb 2021 10:05:20 GMT",
+                "listened_at": 1613469766,
+                "recording_msid": "7989a204-f7f8-430c-8c5a-4028a61d4d9c",
+                "track_metadata": {
+                    "additional_info": {
+                        "artist_msid": "c731e6e7-efee-4a33-abe3-b602944ecc2b",
+                        "artist_names": [
+                            "Pitsa",
+                            "Reket",
+                            "kohver",
+                            "boipepperoni"
+                        ],
+                        "discnumber": 1,
+                        "duration_ms": 219134,
+                        "isrc": "FIUM72000381",
+                        "listening_from": "spotify",
+                        "recording_msid": "7989a204-f7f8-430c-8c5a-4028a61d4d9c",
+                        "release_artist_name": "Pitsa",
+                        "release_artist_names": [
+                            "Pitsa"
+                        ],
+                        "release_msid": "7c2690a6-4c2e-4c94-82fc-2a4841d32833",
+                        "spotify_album_artist_ids": [
+                            "https://open.spotify.com/artist/5rr7mN0kRk6dsm1DVwRBFx"
+                        ],
+                        "spotify_album_id": "https://open.spotify.com/album/3vjZwaXDztZJgRQvKSUbMk",
+                        "spotify_artist_ids": [
+                            "https://open.spotify.com/artist/5rr7mN0kRk6dsm1DVwRBFx",
+                            "https://open.spotify.com/artist/4vnAcwsYeJD9QcQsowEuKN",
+                            "https://open.spotify.com/artist/1LsT8mVsiQAq4d4OmYaxxh",
+                            "https://open.spotify.com/artist/0MjPNmazpZOmBH1nOMaeQY"
+                        ],
+                        "spotify_id": "https://open.spotify.com/track/57lx0jqmoWsxhV9JXy8elh",
+                        "tracknumber": 2
+                    },
+                    "artist_name": "Pitsa, Reket, kohver, boipepperoni",
+                    "release_name": "calzone",
+                    "track_name": "EOS"
+                },
+                "user_name": "reosarevok"
+				}
+			},
+            {
+				"event_type": "recording_recommendation",
+				"user_name": "reosarevok",
+				"created":1613468782,
+				"metadata": {
+                "inserted_at": "Tue, 16 Feb 2021 09:48:55 GMT",
+                "listened_at": 1613468782,
+                "recording_msid": "52908efe-9085-469b-b6e2-295698314be4",
+                "track_metadata": {
+                    "additional_info": {
+                        "artist_msid": "c731e6e7-efee-4a33-abe3-b602944ecc2b",
+                        "artist_names": [
+                            "Pitsa",
+                            "Reket",
+                            "kohver",
+                            "boipepperoni"
+                        ],
+                        "discnumber": 1,
+                        "duration_ms": 141790,
+                        "isrc": "FIUM72100008",
+                        "listening_from": "spotify",
+                        "recording_msid": "52908efe-9085-469b-b6e2-295698314be4",
+                        "release_artist_name": "Pitsa",
+                        "release_artist_names": [
+                            "Pitsa"
+                        ],
+                        "release_msid": "7c2690a6-4c2e-4c94-82fc-2a4841d32833",
+                        "spotify_album_artist_ids": [
+                            "https://open.spotify.com/artist/5rr7mN0kRk6dsm1DVwRBFx"
+                        ],
+                        "spotify_album_id": "https://open.spotify.com/album/3vjZwaXDztZJgRQvKSUbMk",
+                        "spotify_artist_ids": [
+                            "https://open.spotify.com/artist/5rr7mN0kRk6dsm1DVwRBFx",
+                            "https://open.spotify.com/artist/4vnAcwsYeJD9QcQsowEuKN",
+                            "https://open.spotify.com/artist/1LsT8mVsiQAq4d4OmYaxxh",
+                            "https://open.spotify.com/artist/0MjPNmazpZOmBH1nOMaeQY"
+                        ],
+                        "spotify_id": "https://open.spotify.com/track/37nO27VENGBuVc7oYSSos3",
+                        "tracknumber": 1
+                    },
+                    "artist_name": "Pitsa, Reket, kohver, boipepperoni",
+                    "release_name": "calzone",
+                    "track_name": "9000069"
+                },
+                "user_name": "reosarevok"
+				}
+			},
+            {
+				"event_type": "recording_recommendation",
+				"user_name": "reosarevok",
+				"created":1613460053,
+				"metadata": {
+                "inserted_at": "Tue, 16 Feb 2021 17:04:37 GMT",
+                "listened_at": 1613460053,
+                "recording_msid": "fef14c7f-27d9-4770-86dd-1251d9e4c1e4",
+                "track_metadata": {
+                    "additional_info": {
+                        "artist_msid": "cbf543d3-dc5a-4163-8e5c-7fc171a6a09c",
+                        "artist_names": [
+                            "Machine Head"
+                        ],
+                        "discnumber": 1,
+                        "duration_ms": 254666,
+                        "isrc": "NLA329780023",
+                        "listening_from": "spotify",
+                        "recording_msid": "fef14c7f-27d9-4770-86dd-1251d9e4c1e4",
+                        "release_artist_name": "Machine Head",
+                        "release_artist_names": [
+                            "Machine Head"
+                        ],
+                        "release_msid": "b1b6d466-5632-445c-a1f1-c2a528700479",
+                        "spotify_album_artist_ids": [
+                            "https://open.spotify.com/artist/0lVlNsuGaOr9vMHCZIAKMt"
+                        ],
+                        "spotify_album_id": "https://open.spotify.com/album/60l0eb8lzf8jNF0K6XsbWL",
+                        "spotify_artist_ids": [
+                            "https://open.spotify.com/artist/0lVlNsuGaOr9vMHCZIAKMt"
+                        ],
+                        "spotify_id": "https://open.spotify.com/track/0bxUaSy4x46Ogeio8khuBd",
+                        "tracknumber": 1
+                    },
+                    "artist_name": "Machine Head",
+                    "release_name": "The More Things Change...",
+                    "track_name": "Ten Ton Hammer"
+                },
+                "user_name": "Peter-K"
+				}
+			},
+            {
+				"event_type": "recording_recommendation",
+				"user_name": "reosarevok",
+				"created":1613420137,
+				"metadata": {
+                "inserted_at": "Mon, 15 Feb 2021 20:18:17 GMT",
+                "listened_at": 1613420137,
+                "recording_msid": "c4cde00d-d230-4d90-9a66-3b9c78d45ad8",
+                "track_metadata": {
+                    "additional_info": {
+                        "artist_msid": "b6697021-6481-4fe4-a6ad-0b37dfc8c063",
+                        "artist_names": [
+                            "Mick Pedaja"
+                        ],
+                        "discnumber": 1,
+                        "duration_ms": 292360,
+                        "isrc": "EELD32000005",
+                        "listening_from": "spotify",
+                        "recording_msid": "c4cde00d-d230-4d90-9a66-3b9c78d45ad8",
+                        "release_artist_name": "Various Artists",
+                        "release_artist_names": [
+                            "Various Artists"
+                        ],
+                        "release_msid": "bbe1d7e0-3612-4f22-9857-2f8c2dd0de6c",
+                        "spotify_album_artist_ids": [
+                            "https://open.spotify.com/artist/0LyfQWJT6nXafLPZqxe9Of"
+                        ],
+                        "spotify_album_id": "https://open.spotify.com/album/0cSw9UB1wNTsFDkjXUfJDz",
+                        "spotify_artist_ids": [
+                            "https://open.spotify.com/artist/7doYyGxli71jptaq9BFmAG"
+                        ],
+                        "spotify_id": "https://open.spotify.com/track/6aLE6JZILsXsi3IPZgfZx2",
+                        "tracknumber": 5
+                    },
+                    "artist_name": "Mick Pedaja",
+                    "release_name": "Metsa Kene: Estonia Meets Amazonia",
+                    "track_name": "Kaiapó Unenägu"
+                },
+                "user_name": "reosarevok"
+				}
+			},
+            {
+				"event_type": "recording_recommendation",
+				"user_name": "reosarevok",
+				"created":1613410260,
+				"metadata": {
+                "inserted_at": "Mon, 15 Feb 2021 17:31:23 GMT",
+                "listened_at": 1613410260,
+                "recording_msid": "06ce47ba-d53b-4a33-b8a8-469a16a00585",
+                "track_metadata": {
+                    "additional_info": {
+                        "artist_msid": "786a87e0-5bc6-4b94-9b77-f3f14bb4d8e8",
+                        "artist_names": [
+                            "Rändaja"
+                        ],
+                        "discnumber": 1,
+                        "duration_ms": 344666,
+                        "isrc": "EELD32000004",
+                        "listening_from": "spotify",
+                        "recording_msid": "06ce47ba-d53b-4a33-b8a8-469a16a00585",
+                        "release_artist_name": "Various Artists",
+                        "release_artist_names": [
+                            "Various Artists"
+                        ],
+                        "release_msid": "bbe1d7e0-3612-4f22-9857-2f8c2dd0de6c",
+                        "spotify_album_artist_ids": [
+                            "https://open.spotify.com/artist/0LyfQWJT6nXafLPZqxe9Of"
+                        ],
+                        "spotify_album_id": "https://open.spotify.com/album/0cSw9UB1wNTsFDkjXUfJDz",
+                        "spotify_artist_ids": [
+                            "https://open.spotify.com/artist/42cktZxKm1racRJIcPCRcL"
+                        ],
+                        "spotify_id": "https://open.spotify.com/track/5iaC8s2mtrqlMFSytCzI0S",
+                        "tracknumber": 4
+                    },
+                    "artist_name": "Rändaja",
+                    "release_name": "Metsa Kene: Estonia Meets Amazonia",
+                    "track_name": "Kasserin"
+                },
+                "user_name": "reosarevok"
+				}
+			},
+            {
+				"event_type": "recording_recommendation",
+				"user_name": "reosarevok",
+				"created":1613409697,
+				"metadata": {
+                "inserted_at": "Mon, 15 Feb 2021 17:25:42 GMT",
+                "listened_at": 1613409915,
+                "recording_msid": "eb1ae224-d422-40af-aa21-0fb50e138f88",
+                "track_metadata": {
+                    "additional_info": {
+                        "artist_msid": "b2f905bf-ceac-49c5-b92b-4e97fa2c5e61",
+                        "artist_names": [
+                            "Seto Laulumehed"
+                        ],
+                        "discnumber": 1,
+                        "duration_ms": 218080,
+                        "isrc": "EELD32000003",
+                        "listening_from": "spotify",
+                        "recording_msid": "eb1ae224-d422-40af-aa21-0fb50e138f88",
+                        "release_artist_name": "Various Artists",
+                        "release_artist_names": [
+                            "Various Artists"
+                        ],
+                        "release_msid": "bbe1d7e0-3612-4f22-9857-2f8c2dd0de6c",
+                        "spotify_album_artist_ids": [
+                            "https://open.spotify.com/artist/0LyfQWJT6nXafLPZqxe9Of"
+                        ],
+                        "spotify_album_id": "https://open.spotify.com/album/0cSw9UB1wNTsFDkjXUfJDz",
+                        "spotify_artist_ids": [
+                            "https://open.spotify.com/artist/7hAMR51wKquMf1gaqUz9HE"
+                        ],
+                        "spotify_id": "https://open.spotify.com/track/4Q5pw4evBPs7TF46LPxvxO",
+                        "tracknumber": 3
+                    },
+                    "artist_name": "Seto Laulumehed",
+                    "release_name": "Metsa Kene: Estonia Meets Amazonia",
+                    "track_name": "Ohj Ohj Á Gorá"
+                },
+                "user_name": "reosarevok"
+				}
+			},
+            {
+				"event_type": "recording_recommendation",
+				"user_name": "reosarevok",
+				"created":1613409697,
+				"metadata": {
+                "inserted_at": "Mon, 15 Feb 2021 17:21:58 GMT",
+                "listened_at": 1613409697,
+                "recording_msid": "3b71b717-e218-4d79-9a3e-d67a85e1801d",
+                "track_metadata": {
+                    "additional_info": {
+                        "artist_msid": "f26efa86-0765-47a6-b2d1-c82d9f8ae92f",
+                        "artist_names": [
+                            "Triinu Taul"
+                        ],
+                        "discnumber": 1,
+                        "duration_ms": 307026,
+                        "isrc": "EELD32000002",
+                        "listening_from": "spotify",
+                        "recording_msid": "3b71b717-e218-4d79-9a3e-d67a85e1801d",
+                        "release_artist_name": "Various Artists",
+                        "release_artist_names": [
+                            "Various Artists"
+                        ],
+                        "release_msid": "bbe1d7e0-3612-4f22-9857-2f8c2dd0de6c",
+                        "spotify_album_artist_ids": [
+                            "https://open.spotify.com/artist/0LyfQWJT6nXafLPZqxe9Of"
+                        ],
+                        "spotify_album_id": "https://open.spotify.com/album/0cSw9UB1wNTsFDkjXUfJDz",
+                        "spotify_artist_ids": [
+                            "https://open.spotify.com/artist/7KboG9C6oLIEtghpDMzqMr"
+                        ],
+                        "spotify_id": "https://open.spotify.com/track/3t8w2EZoobhbSaCyzocODn",
+                        "tracknumber": 2
+                    },
+                    "artist_name": "Triinu Taul",
+                    "release_name": "Metsa Kene: Estonia Meets Amazonia",
+                    "track_name": "Nokumana"
+                },
+                "user_name": "reosarevok"
+				}
+			},
+            {
+				"event_type": "recording_recommendation",
+				"user_name": "reosarevok",
+				"created":1613409390,
+					"metadata": {
+					"inserted_at": "Mon, 15 Feb 2021 17:21:58 GMT",
+					"listened_at": 1613409390,
+					"recording_msid": "dd032d50-2ef8-4947-85ea-2fe17a805d9f",
+					"track_metadata": {
+						"additional_info": {
+							"artist_msid": "f83d4fdc-1b7a-496a-86b8-24912e56ec05",
+							"artist_names": [
+								"Mari Kalkun",
+								"Dona Francisca"
+							],
+							"discnumber": 1,
+							"duration_ms": 308746,
+							"isrc": "EELD32000001",
+							"listening_from": "spotify",
+							"recording_msid": "dd032d50-2ef8-4947-85ea-2fe17a805d9f",
+							"release_artist_name": "Various Artists",
+							"release_artist_names": [
+								"Various Artists"
+							],
+							"release_msid": "bbe1d7e0-3612-4f22-9857-2f8c2dd0de6c",
+							"spotify_album_artist_ids": [
+								"https://open.spotify.com/artist/0LyfQWJT6nXafLPZqxe9Of"
+							],
+							"spotify_album_id": "https://open.spotify.com/album/0cSw9UB1wNTsFDkjXUfJDz",
+							"spotify_artist_ids": [
+								"https://open.spotify.com/artist/5YlTySs4XWgNgGDcBiwdu9",
+								"https://open.spotify.com/artist/5LW7023zKDx1QCafECAir7"
+							],
+							"spotify_id": "https://open.spotify.com/track/0YV0zsGuYwhWX8SObQ2GfF",
+							"tracknumber": 1
+						},
+						"artist_name": "Mari Kalkun, Dona Francisca",
+						"release_name": "Metsa Kene: Estonia Meets Amazonia",
+						"track_name": "Shawanawa / Metsa Kene: Estonia Meets Amazonia"
+					},
+					"user_name": "reosarevok"
+				
+				}
+			}
+        ],
+        "user_id": "mr_monkey"
+    }
+}

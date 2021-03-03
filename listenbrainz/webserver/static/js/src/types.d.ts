@@ -453,6 +453,10 @@ declare type RecommendationFeedbackMap = {
   [recordingMbid: string]: RecommendationFeedBack | null;
 };
 
+/** ***********************************
+ ********  USER FEED TIMELINE  ********
+ ************************************* */
+
 declare type UserTrackRecommendationMetadata = {
   artist_name: string;
   track_name: string;
@@ -460,4 +464,21 @@ declare type UserTrackRecommendationMetadata = {
   recording_mbid?: string;
   recording_msid: string;
   artist_msid: string;
+};
+
+type EventTypeT = "recording_recommendation" | "like" | "follow";
+
+type UserRelationshipEvent = {
+  user_0: string;
+  user_1: string;
+  relationship_type: "follow";
+  created: number;
+};
+type EventMetadata = Listen | UserRelationshipEvent;
+
+type TimelineEvent = {
+  event_type: EventTypeT;
+  user_name: string;
+  created: number;
+  metadata: EventMetadata;
 };

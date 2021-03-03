@@ -1,8 +1,7 @@
-import * as timeago from "time-ago";
-
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import * as _ from "lodash";
+import * as timeago from "time-ago";
 import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -206,6 +205,25 @@ const preciseTimestamp = (listened_at: number | string): string => {
   return `${timeago.ago(listened_at)}`;
 };
 
+const timestampToTimeAgo = (ts: number, full: boolean = false): string => {
+  // Javascript works with milliseconds
+  const JSTimestamp = ts * 1000;
+  const oneDayAgoMs = timeago.timefriendly("1 day");
+
+  if (!full && JSTimestamp >= Date.now() - oneDayAgoMs) {
+    return timeago.ago(JSTimestamp);
+  }
+  const options = {
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    dayPeriod: "short",
+  };
+  return new Date(JSTimestamp).toLocaleString(undefined, options);
+};
+
 export {
   searchForSpotifyTrack,
   getArtistLink,
@@ -213,4 +231,5 @@ export {
   getPlayButton,
   formatWSMessageToListen,
   preciseTimestamp,
+  timestampToTimeAgo,
 };

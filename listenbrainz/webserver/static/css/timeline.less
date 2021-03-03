@@ -1,0 +1,82 @@
+#timeline {
+	padding-left: 1em;
+	padding-right: 1em;
+	> ul {
+		padding: 1em 0 0 2em;
+		margin: 0;
+		list-style: none;
+		position: relative;
+		
+		// Vertical line
+		&::before {
+			content: ' ';
+			height: 98%;
+			width: 1px;
+			background-color: @gray-light;
+			position: absolute;
+			top: 10px;
+			left: 2.5em;
+			z-index: -1;
+		}
+		
+		li.timeline-event {
+			margin-top: 1em;
+			margin-bottom: 2em;
+			position: relative;
+			&:first-of-type{
+				margin-top: 0;
+			}
+			&:last-of-type{
+				margin-bottom: 0;
+			}
+			.event-time {
+				&:extend(.text-muted);
+				position: absolute;
+				font-size: 0.8em;
+				font-style: italic;
+				text-align: right;
+				right:0;
+				// To have time on the left of icon:
+				// left: -11em;
+				// max-width: 10em;
+			}
+
+			.event-icon {
+				position: absolute;
+				border-radius: 50%;
+				background: white;
+				z-index: 1;
+				border: 10px solid white;
+				left: -9px;
+				top: -9px;
+				&.recording_recommendation {
+					color:@blue;
+				}
+				&.like {
+					color:@red;
+				}
+				&.follow {
+					color:@green;
+				}
+			}
+			.event-description {
+				margin-left: 3em;
+			}
+			.event-content {
+				padding-top: 1em;
+				padding-left: 4em;
+				.listen-card {
+					&:extend(#listens .listen-card all);
+					> *:last-child{
+						display: flex;
+    					align-items: center;
+						> * {
+							flex: 1;
+    						text-align: right;
+						}
+					}
+				}
+			}
+		}
+	}
+}
