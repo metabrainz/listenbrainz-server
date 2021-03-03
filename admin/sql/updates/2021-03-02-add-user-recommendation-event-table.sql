@@ -1,6 +1,6 @@
 BEGIN;
 
-CREATE TYPE user_timeline_event_type_enum AS ENUM('recording');
+CREATE TYPE user_timeline_event_type_enum AS ENUM('recording_recommendation');
 
 CREATE TABLE user_timeline_event (
   id                    SERIAL, -- PK
