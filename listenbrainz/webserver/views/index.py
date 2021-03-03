@@ -166,10 +166,6 @@ def recent_listens():
 @login_required
 def feed():
 
-    # TODO (param): remove this when feed feature is ready for release #feedfeatureflag
-    if current_user.musicbrainz_id not in ['rob', 'iliekcomputers', 'mr_monkey', 'shivam-kapila', 'ishaanshah', 'alastairp', 'amCap1712']:
-        raise NotFound
-
     spotify_user = {}
     if current_user.is_authenticated:
         spotify_user = spotify.get_user_dict(current_user.id)
