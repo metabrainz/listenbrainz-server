@@ -157,6 +157,7 @@ def request_dataframes(days):
     """
     params = {
         'train_model_window': days,
+        'job_type': 'recommendations'
     }
     send_request_to_spark_cluster(_prepare_query_message('cf.recommendations.recording.create_dataframes', params=params))
 

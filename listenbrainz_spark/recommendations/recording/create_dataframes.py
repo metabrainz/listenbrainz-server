@@ -46,7 +46,8 @@ from listenbrainz_spark import path, stats, utils, config, schema
 from listenbrainz_spark.exceptions import (FileNotFetchedException,
                                            SparkSessionNotInitializedException,
                                            DataFrameNotAppendedException,
-                                           DataFrameNotCreatedException)
+                                           DataFrameNotCreatedException,
+                                           SparkException)
 
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataRecord
 from data.model.user_cf_recommendations_recording_message import (UserCreateDataframesMessage,
@@ -122,13 +123,12 @@ from pyspark.sql.functions import rank, col, row_number
 #   ]
 
 
-# The following var defines the string of which the dataframe id is made up of.
-# An UUID will be appended to the string to generate a dataframe id.
-DATAFRAME_ID_PREFIX = 'listenbrainz-dataframe-recording-recommendations'
-
-
-def save_dataframe_metadata_to_hdfs(metadata):
+def save_dataframe_metadata_to_hdfs(metadata, df_metadata_path):
     """ Save dataframe metadata.
+
+        Args:
+            metadata (dataframe): metadata dataframe to append.
+            df_metadata_path (str): path where metadata dataframe should be saved.
     """
     # Convert metadata to row object.
     metadata_row = schema.convert_dataframe_metadata_to_row(metadata)
@@ -141,7 +141,7 @@ def save_dataframe_metadata_to_hdfs(metadata):
 
     try:
         # Append the dataframe to existing dataframe if already exists or create a new one.
-        utils.append(dataframe_metadata, path.RECOMMENDATION_RECORDING_DATAFRAME_METADATA)
+        utils.append(dataframe_metadata, df_metadata_path)
     except DataFrameNotAppendedException as err:
         current_app.logger.error(str(err), exc_info=True)
         raise
@@ -198,7 +198,7 @@ def get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df):
     return missing_musicbrainz_data_itr
 
 
-def save_playcounts_df(listens_df, recordings_df, users_df, metadata):
+def save_playcounts_df(listens_df, recordings_df, users_df, metadata, save_path):
     """ Prepare and save playcounts dataframe.
 
         Args:
@@ -206,6 +206,7 @@ def save_playcounts_df(listens_df, recordings_df, users_df, metadata):
             recordings_df : Dataframe containing distinct recordings and corresponding
                                        mbids and names.
             users_df : Dataframe containing user names and user ids.
+            save_path: path where playcounts_df should be saved.
     """
     # listens_df is joined with users_df on user_name.
     # The output is then joined with recording_df on recording_mbid.
@@ -217,7 +218,7 @@ def save_playcounts_df(listens_df, recordings_df, users_df, metadata):
                               .agg(func.count('recording_id').alias('count'))
 
     metadata['playcounts_count'] = playcounts_df.count()
-    save_dataframe(playcounts_df, path.RECOMMENDATION_RECORDING_PLAYCOUNTS_DATAFRAME)
+    save_dataframe(playcounts_df, save_path)
 
 
 def get_listens_df(mapped_listens_df, metadata):
@@ -234,11 +235,12 @@ def get_listens_df(mapped_listens_df, metadata):
     return listens_df
 
 
-def get_recordings_df(mapped_listens_df, metadata):
+def get_recordings_df(mapped_listens_df, metadata, save_path):
     """ Prepare recordings dataframe.
 
         Args:
             mapped_listens_df (dataframe): listens mapped with msid_mbid_mapping.
+            save_path (str): path where recordings_df should be saved
 
         Returns:
             recordings_df: Dataframe containing distinct recordings and corresponding
@@ -256,15 +258,16 @@ def get_recordings_df(mapped_listens_df, metadata):
                                      .withColumn('recording_id', rank().over(recording_window))
 
     metadata['recordings_count'] = recordings_df.count()
-    save_dataframe(recordings_df, path.RECOMMENDATION_RECORDINGS_DATAFRAME)
+    save_dataframe(recordings_df, save_path)
     return recordings_df
 
 
-def get_users_dataframe(mapped_listens_df, metadata):
+def get_users_dataframe(mapped_listens_df, metadata, save_path):
     """ Prepare users dataframe
 
         Args:
             mapped_listens_df (dataframe): listens mapped with msid_mbid_mapping.
+            save_path (str): path where users_df should be saved
 
         Returns:
             users_df : Dataframe containing user names and user ids.
@@ -276,7 +279,7 @@ def get_users_dataframe(mapped_listens_df, metadata):
                                 .withColumn('user_id', rank().over(user_window))
 
     metadata['users_count'] = users_df.count()
-    save_dataframe(users_df, path.RECOMMENDATION_RECORDING_USERS_DATAFRAME)
+    save_dataframe(users_df, save_path)
     return users_df
 
 
@@ -341,7 +344,19 @@ def prepare_messages(missing_musicbrainz_data_itr, from_date, to_date, ti):
     return messages
 
 
-def main(train_model_window):
+def main(train_model_window, job_type):
+
+    if job_type == "recommendations":
+        paths = {
+            "mapped_listens": path.RECOMMENDATION_RECORDING_MAPPED_LISTENS,
+            "playcounts": path.RECOMMENDATION_RECORDING_PLAYCOUNTS_DATAFRAME,
+            "recordings": path.RECOMMENDATION_RECORDINGS_DATAFRAME,
+            "users": path.RECOMMENDATION_RECORDING_USERS_DATAFRAME,
+            "metadata": path.RECOMMENDATION_RECORDING_DATAFRAME_METADATA,
+            "prefix": "listenbrainz-dataframe-recording-recommendations"
+        }
+    else:
+        raise SparkException("Invalid job_type parameter received for creating dataframes: " + job_type)
 
     ti = time.monotonic()
     # dict to save dataframe metadata which would be later merged in model_metadata dataframe.
@@ -371,22 +386,22 @@ def main(train_model_window):
 
     current_app.logger.info('Mapping listens...')
     mapped_listens_df = get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_df,
-                                                              path.RECOMMENDATION_RECORDING_MAPPED_LISTENS)
+                                                              paths["mapped_listens"])
     current_app.logger.info('Listen count after mapping: {}'.format(mapped_listens_df.count()))
 
     current_app.logger.info('Preparing users data and saving to HDFS...')
-    users_df = get_users_dataframe(mapped_listens_df, metadata)
+    users_df = get_users_dataframe(mapped_listens_df, metadata, paths["users"])
 
     current_app.logger.info('Preparing recordings data and saving to HDFS...')
-    recordings_df = get_recordings_df(mapped_listens_df, metadata)
+    recordings_df = get_recordings_df(mapped_listens_df, metadata, paths["recordings"])
 
     current_app.logger.info('Preparing listen data dump and playcounts, saving playcounts to HDFS...')
     listens_df = get_listens_df(mapped_listens_df, metadata)
 
-    save_playcounts_df(listens_df, recordings_df, users_df, metadata)
+    save_playcounts_df(listens_df, recordings_df, users_df, metadata, paths["playcounts"])
 
-    metadata['dataframe_id'] = get_dataframe_id(DATAFRAME_ID_PREFIX)
-    save_dataframe_metadata_to_hdfs(metadata)
+    metadata['dataframe_id'] = get_dataframe_id(paths["prefix"])
+    save_dataframe_metadata_to_hdfs(metadata, paths["metadata"])
 
     current_app.logger.info('Preparing missing MusicBrainz data...')
     missing_musicbrainz_data_itr = get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df)
