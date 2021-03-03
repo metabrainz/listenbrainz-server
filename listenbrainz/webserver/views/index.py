@@ -167,7 +167,7 @@ def recent_listens():
 def feed():
 
     # TODO (param): remove this when feed feature is ready for release #feedfeatureflag
-    if current_user.musicbrainz_id not in ['rob', 'iliekcomputers', 'mr_monkey', 'shivam-kapila', 'ishaanshah']:
+    if current_user.musicbrainz_id not in ['rob', 'iliekcomputers', 'mr_monkey', 'shivam-kapila', 'ishaanshah', 'alastairp', 'amCap1712']:
         raise NotFound
 
     props = {
