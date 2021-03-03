@@ -38,6 +38,30 @@ user_timeline_event_api_bp = Blueprint('user_timeline_event_api_bp', __name__)
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def create_user_recording_recommendation_event(user_name):
+    """ Make the user recommend a recording to their followers.
+
+    The request should post the following data about the recording being recommended::
+
+        {
+            "metadata": {
+                "artist_name": <The name of the artist, required>,
+                "track_name": <The name of the track, required>,
+                "artist_msid": <The MessyBrainz ID of the artist, required>,
+                "recording_msid": <The MessyBrainz ID of the recording, required>,
+                "release_name": <The name of the release, optional>
+                "recording_mbid": <The MusicBrainz ID of the recording, optional>
+            }
+        }
+
+
+    :param user_name: The MusicBrainz ID of the user who is recommending the recording.
+    :type user_name: ``str``
+    :statuscode 200: Successful query, recording has been recommended!
+    :statuscode 400: Bad request, check ``response['error']`` for more details.
+    :statuscode 401: Unauthorized, you do not have permissions to recommend recordings on the behalf of this user
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
         raise APIUnauthorized("You don't have permissions to post to this user's timeline.")
