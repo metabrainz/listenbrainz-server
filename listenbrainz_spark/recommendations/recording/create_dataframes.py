@@ -346,7 +346,7 @@ def prepare_messages(missing_musicbrainz_data_itr, from_date, to_date, ti):
 
 def main(train_model_window, job_type):
 
-    if job_type == "recommendations":
+    if job_type == "recommendation_recording":
         paths = {
             "mapped_listens": path.RECOMMENDATION_RECORDING_MAPPED_LISTENS,
             "playcounts": path.RECOMMENDATION_RECORDING_PLAYCOUNTS_DATAFRAME,
@@ -354,6 +354,15 @@ def main(train_model_window, job_type):
             "users": path.RECOMMENDATION_RECORDING_USERS_DATAFRAME,
             "metadata": path.RECOMMENDATION_RECORDING_DATAFRAME_METADATA,
             "prefix": "listenbrainz-dataframe-recording-recommendations"
+        }
+    elif job_type == "user_similarity":
+        paths = {
+            "mapped_listens": path.USER_SIMILARITY_MAPPED_LISTENS,
+            "playcounts": path.USER_SIMILARITY_PLAYCOUNTS_DATAFRAME,
+            "recordings": path.USER_SIMILARITY_RECORDINGS_DATAFRAME,
+            "users": path.USER_SIMILARITY_USERS_DATAFRAME,
+            "metadata": path.USER_SIMILARITY_METADATA_DATAFRAME,
+            "prefix": "listenbrainz-dataframe-user-similarity"
         }
     else:
         raise SparkException("Invalid job_type parameter received for creating dataframes: " + job_type)

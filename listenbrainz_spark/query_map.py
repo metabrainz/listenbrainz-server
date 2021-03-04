@@ -36,7 +36,7 @@ functions = {
     'cf.recommendations.recording.recommendations': listenbrainz_spark.recommendations.recording.recommend.main,
     'import.mapping': listenbrainz_spark.request_consumer.jobs.import_dump.import_mapping_to_hdfs,
     'import.artist_relation': listenbrainz_spark.request_consumer.jobs.import_dump.import_artist_relation_to_hdfs,
-    'user_similarity': listenbrainz_spark.recommendations.recording.user_similarity
+    'similarity.similar_users': listenbrainz_spark.recommendations.recording.user_similarity
 }
 
 
