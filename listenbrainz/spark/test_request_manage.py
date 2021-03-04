@@ -137,7 +137,7 @@ class RequestManageTestCase(unittest.TestCase):
             'query': 'cf.recommendations.recording.create_dataframes',
             'params': {
                 'train_model_window': 20,
-                'job_type': "your mom"
+                'job_type': "recommendation_recording"
             }
         }
         expected_message = ujson.dumps(message)
@@ -198,8 +198,7 @@ class RequestManageTestCase(unittest.TestCase):
         message = {
             'query': 'similarity.similar_users',
             'params': {
-                'threshold': .3,
-                'years': 2
+                'threshold': .3
             }
         }
         expected_message = ujson.dumps(message)

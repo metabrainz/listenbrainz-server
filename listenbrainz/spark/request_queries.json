@@ -146,8 +146,7 @@
     "name": "similarity.similar_users",
     "description": "Generate similar user correlation",
     "params": [
-      "threshold",
-      "years"
+      "threshold"
     ]
   }
 }

@@ -19,6 +19,7 @@ from data.model.user_release_stat import UserReleaseStatJson
 from data.model.user_recording_stat import UserRecordingStatJson
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
 from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
+from listenbrainz.db.similar_users import import_user_similarities
 
 
 
@@ -390,4 +391,4 @@ def handle_similar_users(data):
     if current_app.config['TESTING']:
         return
 
-    # TODO: write the data to disk
+    import_user_similarities(data)

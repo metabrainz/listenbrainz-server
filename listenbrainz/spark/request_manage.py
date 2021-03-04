@@ -10,6 +10,7 @@ from listenbrainz.webserver import create_app
 
 
 QUERIES_JSON_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'request_queries.json')
+DATAFRAME_JOB_TYPES = ("recommendation_recording", "similar_users")
 
 cli = click.Group()
 
@@ -152,12 +153,18 @@ def request_import_new_incremental_dump(id_: int):
 
 @cli.command(name="request_dataframes")
 @click.option("--days", type=int, default=180, help="Request model to be trained on data of given number of days")
-def request_dataframes(days):
+@click.option("--job_type", default="recommendation_recording", help="The type of dataframes to request. 'recommendation_recording' or 'similar_users' are allowed.")
+def request_dataframes(days, job_type):
     """ Send the cluster a request to create dataframes.
     """
+
+    if job_type not in DATAFRAME_JOB_TYPES:
+        print("job_type must be one of ", DATAFRAME_JOB_TYPES)
+        sys.exit(-1)
+
     params = {
         'train_model_window': days,
-        'job_type': 'recommendations'
+        'job_type': job_type
     }
     send_request_to_spark_cluster(_prepare_query_message('cf.recommendations.recording.create_dataframes', params=params))
 
@@ -239,12 +246,10 @@ def request_import_artist_relation():
 
 @cli.command(name='request_similar_users')
 @click.option("--threshold", type=float, default=.25, help="Threshold for minimum relationship strenth between two users.")
-@click.option("--years", type=int, default=2, help="Maximum number of years of listens to use for similarity correlation.")
 def request_similar_users(thresholdi, years):
     """ Send the cluster a request to generate similar users.
     """
     params = {
-        'threshold': threshold,
-        'years': years
+        'threshold': threshold
     }
     send_request_to_spark_cluster(_prepare_query_message('similarity.similar_users', params=params))
