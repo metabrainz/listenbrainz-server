@@ -349,7 +349,7 @@ export default class UserFeedPage extends React.Component<
           <h2>Latest activity</h2>
           <a
             id="feedback-button"
-            href="mailto:listenbrainz@metabrainz.org?subject=Feed%20page%20feedback"
+            href="mailto:support@listenbrainz.org?subject=Feed%20page%20feedback"
             type="button"
             className="btn btn-primary"
           >
