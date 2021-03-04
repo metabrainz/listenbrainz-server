@@ -21,7 +21,7 @@
 import * as React from "react";
 import { mount, shallow } from "enzyme";
 import * as timeago from "time-ago";
-import { before } from "lodash";
+import { sortBy } from "lodash";
 import UserFeedPage from "./UserFeed";
 import FollowerFollowingModal from "./follow/FollowerFollowingModal";
 import BrainzPlayer from "./BrainzPlayer";
@@ -108,5 +108,206 @@ describe("<UserFeed />", () => {
     expect(content.exists()).toBeFalsy();
     const time = playlistEvent.find(".event-time");
     expect(time.text()).toEqual("Tue, Feb 16, 2021, 11 AM");
+  });
+
+  describe("Pagination", () => {
+    const pushStateSpy = jest.spyOn(window.history, "pushState");
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    describe("handleClickOlder", () => {
+      it("does nothing if there is no older events timestamp", async () => {
+        const wrapper = shallow<UserFeedPage>(<UserFeedPage {...props} />);
+        const instance = wrapper.instance();
+
+        wrapper.setState({ nextEventTs: undefined });
+
+        const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
+        // eslint-disable-next-line dot-notation
+        instance["APIService"].getFeedForUser = spy;
+
+        await instance.handleClickOlder();
+        expect(wrapper.state("loading")).toBeFalsy();
+        expect(spy).not.toHaveBeenCalled();
+      });
+
+      it("calls the API to get older events", async () => {
+        const wrapper = shallow<UserFeedPage>(<UserFeedPage {...props} />);
+        const instance = wrapper.instance();
+
+        wrapper.setState({ nextEventTs: 1586450000 });
+        const expectedEventsArray = [
+          {
+            event_type: "follow",
+            created: 1613474472,
+            metadata: {
+              user_0: "iliekcomputers",
+              user_1: "reosarevok",
+              type: "follow",
+            },
+            user_id: "iliekcomputers",
+          },
+        ];
+        const spy = jest
+          .fn()
+          .mockImplementation(() => Promise.resolve(expectedEventsArray));
+        // eslint-disable-next-line dot-notation
+        instance["APIService"].getFeedForUser = spy;
+
+        await instance.handleClickOlder();
+        expect(spy).toHaveBeenCalledWith(
+          props.currentUser.name,
+          undefined,
+          1586450000
+        );
+        expect(wrapper.state("loading")).toBeFalsy();
+        expect(wrapper.state("events")).toEqual(expectedEventsArray);
+      });
+
+      it("sets nextEventTs to undefined if it receives no events from API", async () => {
+        const wrapper = shallow<UserFeedPage>(<UserFeedPage {...props} />);
+        const instance = wrapper.instance();
+
+        wrapper.setState({ nextEventTs: 1586450000 });
+
+        const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
+        // eslint-disable-next-line dot-notation
+        instance["APIService"].getFeedForUser = spy;
+
+        await instance.handleClickOlder();
+        expect(spy).toHaveBeenCalledWith(
+          props.currentUser.name,
+          undefined,
+          1586450000
+        );
+        expect(wrapper.state("loading")).toBeFalsy();
+        expect(wrapper.state("nextEventTs")).toBeUndefined();
+        expect(pushStateSpy).not.toHaveBeenCalled();
+      });
+
+      it("sets the events, nextEventTs and  previousEventTs on the state and updates browser history", async () => {
+        const wrapper = shallow<UserFeedPage>(<UserFeedPage {...props} />);
+        const instance = wrapper.instance();
+
+        // Random nextEventTs to ensure that is the value set in browser history
+        wrapper.setState({ events: [], nextEventTs: 1586440600 });
+
+        const sortedEvents = sortBy(props.events, "created").reverse();
+        const nextEventTs = sortedEvents[sortedEvents.length - 1].created;
+        const previousEventTs = sortedEvents[0].created;
+
+        const spy = jest.fn().mockImplementation((username, minTs, maxTs) => {
+          return Promise.resolve(sortedEvents);
+        });
+        // eslint-disable-next-line dot-notation
+        instance["APIService"].getFeedForUser = spy;
+
+        await instance.handleClickOlder();
+
+        expect(wrapper.state("events")).toEqual(sortedEvents);
+        expect(wrapper.state("loading")).toBeFalsy();
+        expect(wrapper.state("nextEventTs")).toEqual(nextEventTs);
+        expect(wrapper.state("previousEventTs")).toEqual(previousEventTs);
+        expect(pushStateSpy).toHaveBeenCalledWith(
+          null,
+          "",
+          `?max_ts=1586440600`
+        );
+      });
+    });
+
+    describe("handleClickNewer", () => {
+      it("does nothing if there is no newer events timestamp", async () => {
+        const wrapper = shallow<UserFeedPage>(<UserFeedPage {...props} />);
+        const instance = wrapper.instance();
+
+        wrapper.setState({ previousEventTs: undefined });
+
+        const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
+        // eslint-disable-next-line dot-notation
+        instance["APIService"].getFeedForUser = spy;
+
+        await instance.handleClickNewer();
+        expect(wrapper.state("loading")).toBeFalsy();
+        expect(spy).not.toHaveBeenCalled();
+      });
+
+      it("calls the API to get older events", async () => {
+        const wrapper = shallow<UserFeedPage>(<UserFeedPage {...props} />);
+        const instance = wrapper.instance();
+        wrapper.setState({ previousEventTs: 123456 });
+
+        const expectedEventsArray = [
+          {
+            event_type: "follow",
+            created: 1613474472,
+            metadata: {
+              user_0: "iliekcomputers",
+              user_1: "reosarevok",
+              type: "follow",
+            },
+            user_id: "iliekcomputers",
+          },
+        ];
+        const spy = jest
+          .fn()
+          .mockImplementation(() => Promise.resolve(expectedEventsArray));
+        // eslint-disable-next-line dot-notation
+        instance["APIService"].getFeedForUser = spy;
+
+        await instance.handleClickNewer();
+
+        expect(wrapper.state("events")).toEqual(expectedEventsArray);
+        expect(wrapper.state("loading")).toBeFalsy();
+        expect(spy).toHaveBeenCalledWith(
+          props.currentUser.name,
+          123456,
+          undefined
+        );
+      });
+
+      it("sets nextEventTs to undefined if it receives no events from API", async () => {
+        const wrapper = shallow<UserFeedPage>(<UserFeedPage {...props} />);
+        const instance = wrapper.instance();
+
+        wrapper.setState({ previousEventTs: 123456 });
+
+        const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
+        // eslint-disable-next-line dot-notation
+        instance["APIService"].getFeedForUser = spy;
+
+        await instance.handleClickNewer();
+        expect(wrapper.state("loading")).toBeFalsy();
+        expect(wrapper.state("previousEventTs")).toBeUndefined();
+        expect(pushStateSpy).not.toHaveBeenCalled();
+      });
+
+      it("sets the events, nextEventTs and  previousEventTs on the state and updates browser history", async () => {
+        const wrapper = shallow<UserFeedPage>(<UserFeedPage {...props} />);
+        const instance = wrapper.instance();
+
+        wrapper.setState({ previousEventTs: 123456 });
+
+        const sortedEvents = sortBy(props.events, "created");
+        const nextEventTs = sortedEvents[props.events.length - 1].created;
+        const previousEventTs = sortedEvents[0].created;
+
+        const spy = jest.fn().mockImplementation((username, minTs, maxTs) => {
+          return Promise.resolve(sortedEvents);
+        });
+        // eslint-disable-next-line dot-notation
+        instance["APIService"].getFeedForUser = spy;
+
+        await instance.handleClickNewer();
+
+        expect(wrapper.state("events")).toEqual(sortedEvents);
+        expect(wrapper.state("loading")).toBeFalsy();
+        expect(wrapper.state("nextEventTs")).toEqual(nextEventTs);
+        expect(wrapper.state("previousEventTs")).toEqual(previousEventTs);
+        expect(pushStateSpy).toHaveBeenCalledWith(null, "", `?min_ts=123456`);
+      });
+    });
   });
 });

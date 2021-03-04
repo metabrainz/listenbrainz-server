@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/anchor-is-valid */
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
@@ -19,6 +20,7 @@ import { isEqual } from "lodash";
 import APIService from "./APIService";
 import BrainzPlayer from "./BrainzPlayer";
 import FollowerFollowingModal from "./follow/FollowerFollowingModal";
+import Loader from "./components/Loader";
 import TimelineEventCard from "./TimelineEventCard";
 import fakeData from "./fake-user-feed.json";
 import { timestampToTimeAgo } from "./utils";
@@ -43,6 +45,8 @@ type UserFeedPageState = {
   alerts: Alert[];
   nextEventTs?: number;
   previousEventTs?: number;
+  events: TimelineEvent[];
+  loading: boolean;
 };
 
 export default class UserFeedPage extends React.Component<
@@ -90,6 +94,7 @@ export default class UserFeedPage extends React.Component<
   private APIService: APIService;
 
   private brainzPlayer = React.createRef<BrainzPlayer>();
+  // private eventsHTMLElement = React.createRef<HTMLTableElement>();
 
   private expectedEventsPerPage = 25;
 
@@ -99,12 +104,113 @@ export default class UserFeedPage extends React.Component<
       alerts: [],
       nextEventTs: props.events?.[props.events.length - 1]?.created,
       previousEventTs: props.events?.[0]?.created,
+      events: props.events,
+      loading: false,
     };
 
     this.APIService = new APIService(
       props.apiUrl || `${window.location.origin}/1`
     );
   }
+
+  componentDidMount(): void {
+    // Listen to browser previous/next events and load page accordingly
+    window.addEventListener("popstate", this.handleURLChange);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener("popstate", this.handleURLChange);
+  }
+
+  handleURLChange = async (): Promise<void> => {
+    const url = new URL(window.location.href);
+    let maxTs;
+    let minTs;
+    if (url.searchParams.get("max_ts")) {
+      maxTs = Number(url.searchParams.get("max_ts"));
+    }
+    if (url.searchParams.get("min_ts")) {
+      minTs = Number(url.searchParams.get("min_ts"));
+    }
+    await this.getFeedFromAPI(minTs, maxTs);
+  };
+
+  handleClickOlder = async () => {
+    const { nextEventTs } = this.state;
+    // No more events to fetch
+    if (!nextEventTs) {
+      return;
+    }
+    await this.getFeedFromAPI(undefined, nextEventTs, () => {
+      window.history.pushState(null, "", `?max_ts=${nextEventTs}`);
+    });
+  };
+
+  handleClickNewer = async () => {
+    const { previousEventTs } = this.state;
+    // No more events to fetch
+    if (!previousEventTs) {
+      return;
+    }
+    await this.getFeedFromAPI(previousEventTs, undefined, () => {
+      window.history.pushState(null, "", `?min_ts=${previousEventTs}`);
+    });
+  };
+
+  getFeedFromAPI = async (
+    minTs?: number,
+    maxTs?: number,
+    successCallback?: () => void
+  ) => {
+    const { currentUser } = this.props;
+    this.setState({ loading: true });
+    let newEvents: TimelineEvent[] = [];
+    try {
+      newEvents = await this.APIService.getFeedForUser(
+        currentUser.name,
+        minTs,
+        maxTs
+      );
+    } catch (error) {
+      this.newAlert(
+        "warning",
+        "Could not load timeline events",
+        "Something went wrong when we tried to load your events, please try again or contact us if the problem persists."
+      );
+      this.setState({ loading: false });
+      return;
+    }
+    if (!newEvents.length) {
+      // No more listens to fetch
+      if (minTs !== undefined) {
+        this.setState({
+          loading: false,
+          previousEventTs: undefined,
+        });
+      } else {
+        this.setState({
+          loading: false,
+          nextEventTs: undefined,
+        });
+      }
+      return;
+    }
+    this.setState(
+      {
+        loading: false,
+        events: newEvents,
+        nextEventTs: newEvents[newEvents.length - 1].created,
+        previousEventTs: newEvents[0].created,
+      },
+      successCallback
+    );
+
+    // Scroll window back to the top of the events container element
+    const eventContainerElement = document.querySelector("#timeline");
+    if (eventContainerElement) {
+      eventContainerElement.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   newAlert = (
     type: AlertType,
@@ -216,8 +322,15 @@ export default class UserFeedPage extends React.Component<
   }
 
   render() {
-    const { currentUser, events, spotify } = this.props;
-    const { alerts, currentListen, previousEventTs, nextEventTs } = this.state;
+    const { currentUser, spotify } = this.props;
+    const {
+      alerts,
+      currentListen,
+      events,
+      previousEventTs,
+      nextEventTs,
+      loading,
+    } = this.state;
 
     const listens = events
       .filter(UserFeedPage.isEventListenable)
@@ -236,7 +349,17 @@ export default class UserFeedPage extends React.Component<
           />
           <div className="row">
             <div className="col-md-7">
-              <div id="timeline">
+              <div
+                style={{
+                  height: 0,
+                  position: "sticky",
+                  top: "50%",
+                  zIndex: 1,
+                }}
+              >
+                <Loader isLoading={loading} />
+              </div>
+              <div id="timeline" style={{ opacity: loading ? "0.4" : "1" }}>
                 <ul>
                   {events.map((event) => {
                     const { created, event_type, user_id } = event;
@@ -276,6 +399,37 @@ export default class UserFeedPage extends React.Component<
                   })}
                 </ul>
               </div>
+              <ul className="pager" style={{ display: "flex" }}>
+                <li
+                  className={`previous ${!previousEventTs ? "disabled" : ""}`}
+                >
+                  <a
+                    role="button"
+                    onClick={this.handleClickNewer}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") this.handleClickNewer();
+                    }}
+                    tabIndex={0}
+                  >
+                    &larr; Newer
+                  </a>
+                </li>
+                <li
+                  className={`next ${!nextEventTs ? "disabled" : ""}`}
+                  style={{ marginLeft: "auto" }}
+                >
+                  <a
+                    role="button"
+                    onClick={this.handleClickOlder}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") this.handleClickOlder();
+                    }}
+                    tabIndex={0}
+                  >
+                    Older &rarr;
+                  </a>
+                </li>
+              </ul>
             </div>
             <div className="col-md-offset-1 col-md-4">
               <FollowerFollowingModal user={currentUser} />
