@@ -142,7 +142,7 @@ export default class ListenCard extends React.Component<
     );
   };
 
-  preciseTimestamp = (listen: Listen): string => {
+  static preciseTimestamp = (listen: Listen): string => {
     const listened_at = listen.listened_at_iso || listen.listened_at * 1000;
     const listenDate: Date = new Date(listened_at);
     const msDifference = new Date().getTime() - listenDate.getTime();
@@ -226,7 +226,7 @@ export default class ListenCard extends React.Component<
                     new Date(listen.listened_at * 1000).toISOString()
                   }
                 >
-                  {this.preciseTimestamp(listen)}
+                  {ListenCard.preciseTimestamp(listen)}
                 </span>
               )}
             </div>
@@ -255,7 +255,7 @@ export default class ListenCard extends React.Component<
                           new Date(listen.listened_at * 1000).toISOString()
                         }
                       >
-                        {this.preciseTimestamp(listen)}
+                        {ListenCard.preciseTimestamp(listen)}
                         &nbsp; &#8212; &nbsp;
                       </span>
                     )}

@@ -39,7 +39,6 @@ const props: ListenCardProps = {
 describe("ListenCard", () => {
   it("renders correctly for mode = 'listens'", () => {
     const wrapper = mount<ListenCard>(<ListenCard {...props} />);
-
     expect(wrapper).toMatchSnapshot();
   });
 
@@ -64,6 +63,14 @@ describe("ListenCard", () => {
     const wrapper = mount<ListenCard>(
       <ListenCard {...{ ...props, listen: playingNowListen }} />
     );
+
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it("should render timestamp using preciseTimestamp", () => {
+    ListenCard.preciseTimestamp = jest.fn(() => "foobar");
+    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
+    expect(ListenCard.preciseTimestamp).toHaveBeenCalledTimes(2);
 
     expect(wrapper).toMatchSnapshot();
   });
