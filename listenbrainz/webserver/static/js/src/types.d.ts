@@ -484,7 +484,7 @@ type EventMetadata = Listen | JSPFPlaylist | UserRelationshipEvent;
 
 type TimelineEvent = {
   event_type: EventTypeT;
-  user_name: string;
+  user_id: string;
   created: number;
   metadata: EventMetadata;
 };

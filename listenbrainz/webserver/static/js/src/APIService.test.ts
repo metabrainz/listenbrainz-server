@@ -1,5 +1,7 @@
 import APIService from "./APIService";
 
+const feedProps = require("./__mocks__/feedProps.json");
+
 const apiService = new APIService("foobar");
 
 describe("submitListens", () => {
@@ -615,6 +617,58 @@ describe("deleteListen", () => {
   it("returns the response code if successful", async () => {
     await expect(apiService.deleteListen("foobar", "foo", 0)).resolves.toEqual(
       200
+    );
+  });
+});
+
+describe("getFeedForUser", () => {
+  const payload = { ...feedProps };
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ payload }),
+      });
+    });
+
+    // Mock function for checkStatus
+    apiService.checkStatus = jest.fn();
+  });
+
+  it("calls fetch with correct parameters", async () => {
+    await apiService.getFeedForUser("fnord", 12345, undefined, 25);
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/user/fnord/feed/listens?min_ts=12345&count=25",
+      {
+        method: "GET",
+      }
+    );
+  });
+
+  it("calls checkStatus once", async () => {
+    await apiService.getFeedForUser("fnord");
+    expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns the feed events array if successful", async () => {
+    const feed = await apiService.getFeedForUser("fnord");
+    expect(feed).toBeDefined();
+    expect(feed).toEqual(payload.feed);
+  });
+
+  it("throws appropriate error if username is missing", async () => {
+    await expect(apiService.getFeedForUser("")).rejects.toThrow(
+      SyntaxError("Username missing")
+    );
+  });
+
+  it("doesn't allow min_ts and max_ts at the same time", async () => {
+    await expect(
+      apiService.getFeedForUser("fnord", 12345, 23456)
+    ).rejects.toThrow(
+      SyntaxError("Cannot have both minTs and maxTs defined at the same time")
     );
   });
 });

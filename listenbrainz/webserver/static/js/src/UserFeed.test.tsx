@@ -22,19 +22,23 @@ import * as React from "react";
 import { shallow } from "enzyme";
 import UserFeedPage from "./UserFeed";
 import FollowerFollowingModal from "./follow/FollowerFollowingModal";
+import * as timelineProps from "./__mocks__/timelineProps.json";
+
+// typescript doesn't recognise string literal values
+const props = {
+  ...timelineProps,
+  events: timelineProps.events as TimelineEvent[],
+  spotify: timelineProps.spotify as SpotifyUser,
+};
 
 describe("<UserFeed />", () => {
   it("renders", () => {
-    const wrapper = shallow(
-      <UserFeedPage currentUser={{ name: "iliekcomputers" }} />
-    );
+    const wrapper = shallow(<UserFeedPage {...props} />);
     expect(wrapper).toBeTruthy();
   });
 
   it("contains the FollowerFollowingModal", () => {
-    const wrapper = shallow(
-      <UserFeedPage currentUser={{ name: "iliekcomputers" }} />
-    );
+    const wrapper = shallow(<UserFeedPage {...props} />);
     expect(wrapper).toBeTruthy();
     expect(wrapper.find(FollowerFollowingModal)).toHaveLength(1);
   });

@@ -178,7 +178,7 @@ export default class UserFeedPage extends React.Component<
 
   renderEventText(event: TimelineEvent) {
     const { currentUser } = this.props;
-    const { event_type, user_name, metadata } = event;
+    const { event_type, user_id, metadata } = event;
     if (event_type === EventType.FOLLOW) {
       const { user_0, user_1 } = metadata as UserRelationshipEvent;
       const currentUserFollows = currentUser.name === user_0;
@@ -207,12 +207,8 @@ export default class UserFeedPage extends React.Component<
 
     return (
       <span className="event-description-text">
-        <a
-          href={`/user/${user_name}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {user_name}
+        <a href={`/user/${user_id}`} target="_blank" rel="noopener noreferrer">
+          {user_id}
         </a>
         &ensp;
         {UserFeedPage.getEventTypePhrase(event_type)}&ensp;
@@ -244,11 +240,11 @@ export default class UserFeedPage extends React.Component<
               <div id="timeline">
                 <ul>
                   {events.map((event) => {
-                    const { created, event_type, user_name } = event;
+                    const { created, event_type, user_id } = event;
                     return (
                       <li
                         className="timeline-event"
-                        key={`event-${user_name}-${created}`}
+                        key={`event-${user_id}-${created}`}
                       >
                         <div className="event-description">
                           <span className={`event-icon ${event_type}`}>

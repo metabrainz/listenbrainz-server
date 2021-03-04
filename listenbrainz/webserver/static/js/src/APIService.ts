@@ -81,6 +81,46 @@ export default class APIService {
     return result.payload.listens;
   };
 
+  getFeedForUser = async (
+    userName: string,
+    minTs?: number,
+    maxTs?: number,
+    count?: number
+  ): Promise<Array<TimelineEvent>> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    if (maxTs && minTs) {
+      throw new SyntaxError(
+        "Cannot have both minTs and maxTs defined at the same time"
+      );
+    }
+
+    let query: string = `${this.APIBaseURI}/user/${userName}/feed/listens`;
+
+    const queryParams: Array<string> = [];
+    if (maxTs) {
+      queryParams.push(`max_ts=${maxTs}`);
+    }
+    if (minTs) {
+      queryParams.push(`min_ts=${minTs}`);
+    }
+    if (count) {
+      queryParams.push(`count=${count}`);
+    }
+    if (queryParams.length) {
+      query += `?${queryParams.join("&")}`;
+    }
+
+    const response = await fetch(query, {
+      method: "GET",
+    });
+    await this.checkStatus(response);
+    const result = await response.json();
+
+    return result.payload.feed;
+  };
+
   getUserListenCount = async (userName: string): Promise<number> => {
     if (!userName) {
       throw new SyntaxError("Username missing");
