@@ -45,6 +45,14 @@ DB_CONNECT_MAPPING = "dbname=musicbrainz_json_dump user=musicbrainz host={{.Addr
 {{end}}
 {{end}}
 
+{{if service "typesense-listenbrainz"}}
+{{with index (service "typesense-listenbrainz") 0}}
+TYPESENSE_HOST = "{{.Address}}"
+TYPESENSE_PORT = {{.Port}}
+{{end}}
+{{end}}
+TYPESENSE_API_KEY = '''{{template "KEY" "typesense_api_key"}}'''
+
 {{if service "listenbrainz-redis"}}
 {{with index (service "listenbrainz-redis") 0}}
 REDIS_HOST = "{{.Address}}"
@@ -61,7 +69,8 @@ INFLUX_DB_NAME  = "listenbrainz"
 {{end}}
 {{end}}
 
-{{- with $rabbitmq_service_name := or (template "KEY" "rabbitmq_service") "rabbitmq"}}
+{{ $rabbitmq_key := (printf "docker-server-configs/LB/config.%s.json/rabbitmq_service" (env "DEPLOY_ENV")) }}
+{{- with $rabbitmq_service_name := keyOrDefault $rabbitmq_key "rabbitmq"}}
 {{- if service $rabbitmq_service_name}}
 {{- with index (service $rabbitmq_service_name) 0}}
 RABBITMQ_HOST = "{{.Address}}"
@@ -162,5 +171,3 @@ WEBSOCKETS_SERVER_URL = '''{{template "KEY" "websockets_server_url"}}'''
 SESSION_REMEMBER_ME_DURATION = 365
 
 LISTEN_DUMP_TEMP_DIR_ROOT = '''{{template "KEY" "listen_dump_temp_dir"}}'''
-
-FEATURE_PLAYLIST = '''{{template "KEY" "feature_playlist"}}'''
