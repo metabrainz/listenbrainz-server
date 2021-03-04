@@ -3,6 +3,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 
 import {
+  faBullhorn,
   faCircle,
   faHeart,
   faListUl,
@@ -338,7 +339,33 @@ export default class UserFeedPage extends React.Component<
 
     return (
       <>
-        <h2>Latest activity</h2>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "baseline",
+            justifyContent: "space-between",
+          }}
+        >
+          <h2>Latest activity</h2>
+          <a
+            id="feedback-button"
+            href="mailto:listenbrainz@metabrainz.org?subject=Feed%20page%20feedback"
+            type="button"
+            className="btn btn-primary"
+          >
+            <span className="fa-layers icon">
+              <FontAwesomeIcon
+                icon={faCircle as IconProp}
+                transform="grow-10"
+              />
+              <FontAwesomeIcon
+                icon={faBullhorn as IconProp}
+                transform="rotate--20"
+              />
+            </span>{" "}
+            Feedback
+          </a>
+        </div>
         <div role="main">
           <AlertList
             position="bottom-right"
