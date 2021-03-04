@@ -209,9 +209,8 @@ export default class UserFeedPage extends React.Component<
       <span className="event-description-text">
         <a href={`/user/${user_id}`} target="_blank" rel="noopener noreferrer">
           {user_id}
-        </a>
-        &ensp;
-        {UserFeedPage.getEventTypePhrase(event_type)}&ensp;
+        </a>{" "}
+        {UserFeedPage.getEventTypePhrase(event_type)}
       </span>
     );
   }
