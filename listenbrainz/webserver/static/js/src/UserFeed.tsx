@@ -374,7 +374,8 @@ export default class UserFeedPage extends React.Component<
             dismissTitle="Dismiss"
             onDismiss={this.onAlertDismissed}
           />
-          <div className="row">
+          {/* display:flex to allow right-column to take all available height, for sticky player */}
+          <div className="row" style={{ display: "flex" }}>
             <div className="col-md-7">
               <div
                 style={{
@@ -460,16 +461,18 @@ export default class UserFeedPage extends React.Component<
             </div>
             <div className="col-md-offset-1 col-md-4">
               <FollowerFollowingModal user={currentUser} />
-              <BrainzPlayer
-                apiService={this.APIService}
-                currentListen={currentListen}
-                direction="down"
-                listens={listens}
-                newAlert={this.newAlert}
-                onCurrentListenChange={this.handleCurrentListenChange}
-                ref={this.brainzPlayer}
-                spotifyUser={spotify}
-              />
+              <div className="sticky-top">
+                <BrainzPlayer
+                  apiService={this.APIService}
+                  currentListen={currentListen}
+                  direction="down"
+                  listens={listens}
+                  newAlert={this.newAlert}
+                  onCurrentListenChange={this.handleCurrentListenChange}
+                  ref={this.brainzPlayer}
+                  spotifyUser={spotify}
+                />
+              </div>
             </div>
           </div>
         </div>
