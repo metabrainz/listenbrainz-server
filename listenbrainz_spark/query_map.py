@@ -2,6 +2,7 @@ import listenbrainz_spark.recommendations.recording.candidate_sets
 import listenbrainz_spark.recommendations.recording.create_dataframes
 import listenbrainz_spark.recommendations.recording.recommend
 import listenbrainz_spark.recommendations.recording.train_models
+import listenbrainz_spark.recommendations.recording.user_similarity
 import listenbrainz_spark.request_consumer.jobs.import_dump
 import listenbrainz_spark.stats.sitewide.entity
 import listenbrainz_spark.stats.user.daily_activity
@@ -35,6 +36,7 @@ functions = {
     'cf.recommendations.recording.recommendations': listenbrainz_spark.recommendations.recording.recommend.main,
     'import.mapping': listenbrainz_spark.request_consumer.jobs.import_dump.import_mapping_to_hdfs,
     'import.artist_relation': listenbrainz_spark.request_consumer.jobs.import_dump.import_artist_relation_to_hdfs,
+    'user_similarity': listenbrainz_spark.recommendations.recording.user_similarity
 }
 
 

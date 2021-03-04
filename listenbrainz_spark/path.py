@@ -56,3 +56,11 @@ IMPORT_METADATA = "/import_metadata.parquet"
 
 # Path to files downloaded from FTP.
 FTP_FILES_PATH = '/rec/listenbrainz_spark'
+
+###########################################
+# paths/dirs used by user similarity jobs #
+###########################################
+USER_SIMILARITY_PARENT_DIR = os.path.join('/', 'user_similarity')
+USER_SIMILARITY_DATAFRAME_DIR = os.path.join(USER_SIMILARITY_PARENT_DIR, 'dataframe')
+USER_SIMILARITY_PLAYCOUNTS_DATAFRAME = os.path.join(USER_SIMILARITY_DATAFRAME_DIR, 'playcounts_df.parquet')
+USER_SIMILARITY_USERS_DATAFRAME = os.path.join(USER_SIMILARITY_DATAFRAME_DIR, 'users_df.parquet')
