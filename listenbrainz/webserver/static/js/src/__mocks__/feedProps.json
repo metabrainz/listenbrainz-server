@@ -1,7 +1,7 @@
 {
 	"user_id":"fnord",
 	"count":25,
-	"feed": [
+	"events": [
 		{
 			"event_type": "recording_recommendation",
 			"user_id": "reosarevok",

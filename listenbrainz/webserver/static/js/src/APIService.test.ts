@@ -640,7 +640,7 @@ describe("getFeedForUser", () => {
   it("calls fetch with correct parameters", async () => {
     await apiService.getFeedForUser("fnord", 12345, undefined, 25);
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/user/fnord/feed/listens?min_ts=12345&count=25",
+      "foobar/1/user/fnord/feed/events?min_ts=12345&count=25",
       {
         method: "GET",
       }
@@ -653,9 +653,9 @@ describe("getFeedForUser", () => {
   });
 
   it("returns the feed events array if successful", async () => {
-    const feed = await apiService.getFeedForUser("fnord");
-    expect(feed).toBeDefined();
-    expect(feed).toEqual(payload.feed);
+    const events = await apiService.getFeedForUser("fnord");
+    expect(events).toBeDefined();
+    expect(events).toEqual(payload.events);
   });
 
   it("throws appropriate error if username is missing", async () => {

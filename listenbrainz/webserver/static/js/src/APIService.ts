@@ -96,7 +96,7 @@ export default class APIService {
       );
     }
 
-    let query: string = `${this.APIBaseURI}/user/${userName}/feed/listens`;
+    let query: string = `${this.APIBaseURI}/user/${userName}/feed/events`;
 
     const queryParams: Array<string> = [];
     if (maxTs) {
@@ -118,7 +118,7 @@ export default class APIService {
     await this.checkStatus(response);
     const result = await response.json();
 
-    return result.payload.feed;
+    return result.payload.events;
   };
 
   getUserListenCount = async (userName: string): Promise<number> => {

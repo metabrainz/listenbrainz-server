@@ -306,7 +306,7 @@ document.addEventListener("DOMContentLoaded", () => {
   ReactDOM.render(
     <UserFeedPage
       currentUser={current_user}
-      events={fakeData.payload.feed as TimelineEvent[]}
+      events={fakeData.payload.events as TimelineEvent[]}
       apiUrl={api_url}
       spotify={spotify}
     />,
