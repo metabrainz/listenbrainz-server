@@ -355,7 +355,7 @@ def main(train_model_window, job_type):
             "metadata": path.RECOMMENDATION_RECORDING_DATAFRAME_METADATA,
             "prefix": "listenbrainz-dataframe-recording-recommendations"
         }
-    elif job_type == "user_similarity":
+    elif job_type == "similar_users":
         paths = {
             "mapped_listens": path.USER_SIMILARITY_MAPPED_LISTENS,
             "playcounts": path.USER_SIMILARITY_PLAYCOUNTS_DATAFRAME,
