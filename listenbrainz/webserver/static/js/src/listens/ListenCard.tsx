@@ -142,6 +142,43 @@ export default class ListenCard extends React.Component<
     );
   };
 
+  preciseTimestamp = (listen: Listen): string => {
+    const listened_at = listen.listened_at_iso || listen.listened_at * 1000;
+    const listenDate: Date = new Date(listened_at);
+    const msDifference = new Date().getTime() - listenDate.getTime();
+
+    if (
+      // over one year old : show with year
+      msDifference / (1000 * 3600 * 24 * 365) >
+      1
+    ) {
+      return `${listenDate.toLocaleString("en-US", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      })}`;
+    }
+    if (
+      // one year to yesterday : show without year
+      msDifference / (1000 * 3600 * 24 * 1) >
+      1
+    ) {
+      return `${listenDate.toLocaleString("en-US", {
+        day: "2-digit",
+        month: "short",
+        // year: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      })}`;
+    }
+    // today : format using timeago
+    return `${timeago.ago(listened_at)}`;
+  };
+
   render() {
     const { listen, mode, className, isCurrentUser } = this.props;
     const { feedback, isDeleted } = this.state;
@@ -161,7 +198,7 @@ export default class ListenCard extends React.Component<
           }`}
         >
           <MediaQuery minWidth={768}>
-            <div className="col-xs-9">
+            <div className="col-xs-8">
               <div className="track-details">
                 <p title={listen.track_metadata?.track_name}>
                   {getTrackLink(listen)}
@@ -176,7 +213,7 @@ export default class ListenCard extends React.Component<
                 </p>
               </div>
             </div>
-            <div className="col-xs-3">
+            <div className="col-xs-4">
               {listen.playing_now ? (
                 <span className="listen-time text-center text-muted">
                   <FontAwesomeIcon icon={faMusic as IconProp} /> Playing now
@@ -189,9 +226,7 @@ export default class ListenCard extends React.Component<
                     new Date(listen.listened_at * 1000).toISOString()
                   }
                 >
-                  {listen.listened_at_iso
-                    ? timeago.ago(listen.listened_at_iso)
-                    : timeago.ago(listen.listened_at * 1000)}
+                  {this.preciseTimestamp(listen)}
                 </span>
               )}
             </div>
@@ -220,14 +255,8 @@ export default class ListenCard extends React.Component<
                           new Date(listen.listened_at * 1000).toISOString()
                         }
                       >
-                        {`
-                          ${
-                            listen.listened_at_iso
-                              ? timeago.ago(listen.listened_at_iso, true)
-                              : timeago.ago(listen.listened_at * 1000, true)
-                          }
-                          `}
-                        ago &#8212; &nbsp;
+                        {this.preciseTimestamp(listen)}
+                        &nbsp; &#8212; &nbsp;
                       </span>
                     )}
                     {getArtistLink(listen)}
