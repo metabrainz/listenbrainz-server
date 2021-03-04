@@ -46,6 +46,42 @@ export default class ListenCard extends React.Component<
   ListenCardProps,
   ListenCardState
 > {
+  static preciseTimestamp = (listen: Listen): string => {
+    const listened_at = listen.listened_at_iso || listen.listened_at * 1000;
+    const listenDate: Date = new Date(listened_at);
+    const msDifference = new Date().getTime() - listenDate.getTime();
+    if (
+      // over one year old : show with year
+      msDifference / (1000 * 3600 * 24 * 365) >
+      1
+    ) {
+      return `${listenDate.toLocaleString("en-US", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      })}`;
+    }
+    if (
+      // one year to yesterday : show without year
+      msDifference / (1000 * 3600 * 24 * 1) >
+      1
+    ) {
+      return `${listenDate.toLocaleString("en-US", {
+        day: "2-digit",
+        month: "short",
+        // year: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      })}`;
+    }
+    // today : format using timeago
+    return `${timeago.ago(listened_at)}`;
+  };
+
   APIService: APIService;
   playListen: (listen: Listen) => void;
 
@@ -140,43 +176,6 @@ export default class ListenCard extends React.Component<
       title || "Error",
       typeof error === "object" ? error.message : error
     );
-  };
-
-  static preciseTimestamp = (listen: Listen): string => {
-    const listened_at = listen.listened_at_iso || listen.listened_at * 1000;
-    const listenDate: Date = new Date(listened_at);
-    const msDifference = new Date().getTime() - listenDate.getTime();
-
-    if (
-      // over one year old : show with year
-      msDifference / (1000 * 3600 * 24 * 365) >
-      1
-    ) {
-      return `${listenDate.toLocaleString("en-US", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        hour12: true,
-      })}`;
-    }
-    if (
-      // one year to yesterday : show without year
-      msDifference / (1000 * 3600 * 24 * 1) >
-      1
-    ) {
-      return `${listenDate.toLocaleString("en-US", {
-        day: "2-digit",
-        month: "short",
-        // year: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        hour12: true,
-      })}`;
-    }
-    // today : format using timeago
-    return `${timeago.ago(listened_at)}`;
   };
 
   render() {
