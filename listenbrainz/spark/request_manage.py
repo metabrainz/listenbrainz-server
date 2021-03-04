@@ -10,7 +10,7 @@ from listenbrainz.webserver import create_app
 
 
 QUERIES_JSON_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'request_queries.json')
-DATAFRAME_JOB_TYPES = ("recommendation_recording", "similar_users")
+DATAFRAME_JOB_TYPES = ("recommendation_recording", "user_similarity")
 
 cli = click.Group()
 
@@ -153,7 +153,7 @@ def request_import_new_incremental_dump(id_: int):
 
 @cli.command(name="request_dataframes")
 @click.option("--days", type=int, default=180, help="Request model to be trained on data of given number of days")
-@click.option("--job_type", default="recommendation_recording", help="The type of dataframes to request. 'recommendation_recording' or 'similar_users' are allowed.")
+@click.option("--job-type", default="recommendation_recording", help="The type of dataframes to request. 'recommendation_recording' or 'similar_users' are allowed.")
 def request_dataframes(days, job_type):
     """ Send the cluster a request to create dataframes.
     """

@@ -41,7 +41,7 @@ response_handler_map = {
     'import_mapping': notify_mapping_import,
     'import_artist_relation': notify_artist_relation_import,
     'missing_musicbrainz_data': handle_missing_musicbrainz_data,
-    'cf_recommendations_recording_mail': notify_cf_recording_recommendations_generation
+    'cf_recommendations_recording_mail': notify_cf_recording_recommendations_generation,
     'similar_users': handle_similar_users,
 }
 
