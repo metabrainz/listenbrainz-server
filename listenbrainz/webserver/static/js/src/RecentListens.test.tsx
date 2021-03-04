@@ -301,11 +301,13 @@ describe("receiveNewListen", () => {
     track_metadata: {
       artist_name: "Coldplay",
       track_name: "Viva La Vida",
+      additional_info: {
+        recording_msid: "2edee875-55c3-4dad-b3ea-e8741484f4b5",
+      },
     },
     listened_at: 1586580524,
     listened_at_iso: "2020-04-10T10:12:04Z",
   };
-
   it("crops the listens array if length is more than or equal to 100", () => {
     /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
      * so that it doesn't get passed as a reference.

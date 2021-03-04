@@ -14,6 +14,7 @@ import FollowUsers from "./FollowUsers";
 import APIService from "./APIService";
 import Loader from "./components/Loader";
 import ListenCard from "./listens/ListenCard";
+import { formatWSMessageToListen } from "./utils";
 
 export interface RecentListensProps {
   apiUrl: string;
@@ -237,57 +238,33 @@ export default class RecentListens extends React.Component<
     let json;
     try {
       json = JSON.parse(newListen);
-      // the websocket message received may not contain the expected track_metadata and listened_at fields
-      // therefore, we look for their alias as well.
-      if (!("track_metadata" in json)) {
-        if ("data" in json) {
-          json.track_metadata = json.data;
-          delete json.data;
-        } else {
-          // eslint-disable-next-line no-console
-          console.debug(
-            `Could not find track_metadata and data in following json: ${json}`
-          );
-          return;
-        }
-      }
-      if (!("listened_at" in json)) {
-        if ("timestamp" in json) {
-          json.listened_at = json.timestamp;
-          delete json.timestamp;
-        } else {
-          // eslint-disable-next-line no-console
-          console.debug(
-            `Could not find listened_at and timestamp in following json: ${json}`
-          );
-          return;
-        }
-      }
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error(error);
+      console.error("Coudn't parse the new listen as JSON: ", error);
       return;
     }
+    const listen = formatWSMessageToListen(json);
 
-    const listen = json as Listen;
-    this.setState((prevState) => {
-      const { listens } = prevState;
-      // Crop listens array to 100 max
-      while (listens.length >= 100) {
-        if (prevState.mode === "follow") {
-          listens.shift();
-        } else {
-          listens.pop();
+    if (listen) {
+      this.setState((prevState) => {
+        const { listens } = prevState;
+        // Crop listens array to 100 max
+        while (listens.length >= 100) {
+          if (prevState.mode === "follow") {
+            listens.shift();
+          } else {
+            listens.pop();
+          }
         }
-      }
 
-      if (prevState.mode === "follow") {
-        listens.push(listen);
-      } else {
-        listens.unshift(listen);
-      }
-      return { listens };
-    });
+        if (prevState.mode === "follow") {
+          listens.push(listen);
+        } else {
+          listens.unshift(listen);
+        }
+        return { listens };
+      });
+    }
   };
 
   receiveNewPlayingNow = (newPlayingNow: string): void => {
