@@ -95,9 +95,6 @@ export default class UserFeedPage extends React.Component<
   private APIService: APIService;
 
   private brainzPlayer = React.createRef<BrainzPlayer>();
-  // private eventsHTMLElement = React.createRef<HTMLTableElement>();
-
-  private expectedEventsPerPage = 25;
 
   constructor(props: UserFeedPageProps) {
     super(props);
@@ -375,7 +372,7 @@ export default class UserFeedPage extends React.Component<
             onDismiss={this.onAlertDismissed}
           />
           {/* display:flex to allow right-column to take all available height, for sticky player */}
-          <div className="row" style={{ display: "flex" }}>
+          <div className="row" style={{ display: "flex", flexWrap: "wrap" }}>
             <div className="col-md-7">
               <div
                 style={{
@@ -427,7 +424,10 @@ export default class UserFeedPage extends React.Component<
                   })}
                 </ul>
               </div>
-              <ul className="pager" style={{ display: "flex" }}>
+              <ul
+                className="pager"
+                style={{ marginRight: "-1em", marginLeft: "1.5em" }}
+              >
                 <li
                   className={`previous ${!previousEventTs ? "disabled" : ""}`}
                 >
