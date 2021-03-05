@@ -35,6 +35,16 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         db_user_relationship.insert(user, following_user['id'], 'follow')
         return following_user
 
+    def remove_own_follow_events(self, payload: dict) -> dict:
+        new_events = []
+        for event in payload['events']:
+            if event['event_type'] == 'follow' and event['user_name'] == self.main_user['musicbrainz_id']:
+                continue
+            new_events.append(event)
+        payload['events'] = new_events
+        payload['count'] = len(new_events)
+        return payload
+
     def setUp(self):
         super(FeedAPITestCase, self).setUp()
         self.main_user = db_user.get_or_create(100, 'param')
@@ -71,7 +81,11 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
         payload = response.json['payload']
 
-        # should only have 4 listens, 2 per user
+        # the payload contains events for the users we've followed, but we don't care about those
+        # for now, so let's remove them for this test.
+        payload = self.remove_own_follow_events(payload)
+
+        # should now only have 4 listens, 2 per user
         self.assertEqual(4, payload['count'])
 
         # first 2 events should have higher timestamps and user should be following_1
@@ -119,7 +133,10 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             query_string={'max_ts': ts + 2}
         )
         self.assert200(r)
-        self.assertEqual(2, r.json['payload']['count'])
+        # the payload contains events for the users we've followed, but we don't care about those
+        # for now, so let's remove them for this test.
+        payload = self.remove_own_follow_events(r.json['payload'])
+        self.assertEqual(2, payload['count'])
 
         # max_ts = 4, should have sent back 4 listens
         r = self.client.get(
@@ -128,7 +145,8 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             query_string={'max_ts': ts + 4}
         )
         self.assert200(r)
-        self.assertEqual(4, r.json['payload']['count'])
+        payload = self.remove_own_follow_events(r.json['payload'])
+        self.assertEqual(4, payload['count'])
 
         # min_ts = 1, should have sent back 4 listens
         r = self.client.get(
@@ -137,7 +155,8 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             query_string={'min_ts': ts + 1}
         )
         self.assert200(r)
-        self.assertEqual(4, r.json['payload']['count'])
+        payload = self.remove_own_follow_events(r.json['payload'])
+        self.assertEqual(4, payload['count'])
 
         # min_ts = 2, should have sent back 2 listens
         r = self.client.get(
@@ -146,7 +165,8 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             query_string={'min_ts': ts + 2}
         )
         self.assert200(r)
-        self.assertEqual(2, r.json['payload']['count'])
+        payload = self.remove_own_follow_events(r.json['payload'])
+        self.assertEqual(2, payload['count'])
 
         # min_ts = 1, max_ts = 3, should have sent back 2 listens
         r = self.client.get(
@@ -155,7 +175,8 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             query_string={'min_ts': ts + 1, 'max_ts': ts + 3}
         )
         self.assert200(r)
-        self.assertEqual(2, r.json['payload']['count'])
+        payload = self.remove_own_follow_events(r.json['payload'])
+        self.assertEqual(2, payload['count'])
 
         # should honor count
         r = self.client.get(
@@ -179,14 +200,43 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             query_string={'max_ts': int(time.time()) + 1}
         )
         self.assert200(r)
-        self.assertEqual(1, r.json['payload']['count'])
+
+        # should contain 3 events, the main user followed 2 people and then we created a new follow event
+        self.assertEqual(3, r.json['payload']['count'])
+
+        # the first event should be the latest one
         self.assertEqual('follow', r.json['payload']['events'][0]['event_type'])
         self.assertEqual('following_1', r.json['payload']['events'][0]['user_name'])
         self.assertEqual('following_1', r.json['payload']['events'][0]['metadata']['user_name_0'])
         self.assertEqual('new_user_1', r.json['payload']['events'][0]['metadata']['user_name_1'])
         self.assertEqual('follow', r.json['payload']['events'][0]['metadata']['relationship_type'])
 
+        # now, check the main user's own following events
+        self.assertEqual('follow', r.json['payload']['events'][1]['event_type'])
+        self.assertEqual(self.main_user['musicbrainz_id'], r.json['payload']['events'][1]['user_name'])
+        self.assertEqual(self.main_user['musicbrainz_id'], r.json['payload']['events'][1]['metadata']['user_name_0'])
+        self.assertEqual(self.following_user_2['musicbrainz_id'], r.json['payload']['events'][1]['metadata']['user_name_1'])
+        self.assertEqual('follow', r.json['payload']['events'][1]['metadata']['relationship_type'])
+
+        self.assertEqual('follow', r.json['payload']['events'][2]['event_type'])
+        self.assertEqual(self.main_user['musicbrainz_id'], r.json['payload']['events'][2]['user_name'])
+        self.assertEqual(self.main_user['musicbrainz_id'], r.json['payload']['events'][2]['metadata']['user_name_0'])
+        self.assertEqual(self.following_user_1['musicbrainz_id'], r.json['payload']['events'][2]['metadata']['user_name_1'])
+        self.assertEqual('follow', r.json['payload']['events'][2]['metadata']['relationship_type'])
+
+
     def test_it_returns_recording_recommendation_events(self):
+        # create a recording recommendation ourselves
+        db_user_timeline_event.create_user_track_recommendation_event(
+            user_id=self.main_user['id'],
+            metadata=UserTimelineEventMetadata(
+                track_name="Lose yourself to dance",
+                artist_name="Daft Punk",
+                recording_msid=str(uuid.uuid4()),
+                artist_msid=str(uuid.uuid4()),
+            )
+        )
+
         # create a recording recommendation for a user we follow
         db_user_timeline_event.create_user_track_recommendation_event(
             user_id=self.following_user_1['id'],
@@ -206,11 +256,21 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             query_string={'max_ts': int(time.time()) + 1}
         )
         self.assert200(r)
-        self.assertEqual(1, r.json['payload']['count'])
-        self.assertEqual('recording_recommendation', r.json['payload']['events'][0]['event_type'])
-        self.assertEqual('following_1', r.json['payload']['events'][0]['user_name'])
-        self.assertEqual('Sunflower', r.json['payload']['events'][0]['metadata']['track_metadata']['track_name'])
-        self.assertEqual('Swae Lee & Post Malone', r.json['payload']['events'][0]['metadata']['track_metadata']['artist_name'])
+
+        # first, let's remove the own follow events, we don't care about those in this test.
+        payload = self.remove_own_follow_events(r.json['payload'])
+
+        # now, check for both the recording recommendations and their order
+        self.assertEqual(2, payload['count'])
+        self.assertEqual('recording_recommendation', payload['events'][0]['event_type'])
+        self.assertEqual('following_1', payload['events'][0]['user_name'])
+        self.assertEqual('Sunflower', payload['events'][0]['metadata']['track_metadata']['track_name'])
+        self.assertEqual('Swae Lee & Post Malone', payload['events'][0]['metadata']['track_metadata']['artist_name'])
+
+        self.assertEqual('recording_recommendation', payload['events'][1]['event_type'])
+        self.assertEqual(self.main_user['musicbrainz_id'], payload['events'][1]['user_name'])
+        self.assertEqual('Lose yourself to dance', payload['events'][1]['metadata']['track_metadata']['track_name'])
+        self.assertEqual('Daft Punk', payload['events'][1]['metadata']['track_metadata']['artist_name'])
 
     def test_it_returns_empty_list_if_user_does_not_follow_anyone(self):
         new_user = db_user.get_or_create(111, 'totally_new_user_with_no_friends')
@@ -231,7 +291,6 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         response = self.send_data(payload, user=self.following_user_1)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
-
 
         # make a user you're following follow a new user
         new_user_1 = db_user.get_or_create(104, 'new_user_1')
@@ -257,7 +316,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
         )
         self.assert200(r)
-        self.assertEqual(3, r.json['payload']['count'])
+        self.assertEqual(5, r.json['payload']['count']) # 3 events we created + 2 own follow events
         self.assertEqual('recording_recommendation', r.json['payload']['events'][0]['event_type'])
         self.assertEqual('follow', r.json['payload']['events'][1]['event_type'])
-        self.assertEqual('listen', r.json['payload']['events'][2]['event_type'])
+        self.assertEqual('listen', r.json['payload']['events'][4]['event_type']) # last event should be a listen

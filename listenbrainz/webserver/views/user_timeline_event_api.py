@@ -123,15 +123,18 @@ def user_feed(user_name: str):
     musicbrainz_ids = [user['musicbrainz_id'] for user in users_following]
     listen_events = get_listen_events(db_conn, musicbrainz_ids, min_ts, max_ts, count, time_range)
 
+    # for events like "follow" and "recording recommendations", we want to show the user
+    # their own events as well
+    users_for_feed_events = users_following + [user]
     follow_events = get_follow_events(
-        user_ids=tuple(user['id'] for user in users_following),
+        user_ids=tuple(user['id'] for user in users_for_feed_events),
         min_ts=min_ts or 0,
         max_ts=max_ts or int(time.time()),
         count=count,
     )
 
     recording_recommendation_events = get_recording_recommendation_events(
-        users_following=users_following,
+        users_for_events=users_for_feed_events,
         min_ts=min_ts or 0,
         max_ts=max_ts or int(time.time()),
         count=count,
@@ -222,10 +225,10 @@ def get_follow_events(user_ids: Tuple[int], min_ts: int, max_ts: int, count: int
         ))
     return events
 
-def get_recording_recommendation_events(users_following: List[dict], min_ts: int, max_ts: int, count: int) -> List[APITimelineEvent]:
-    id_username_map = {user['id']: user['musicbrainz_id'] for user in users_following}
+def get_recording_recommendation_events(users_for_events: List[dict], min_ts: int, max_ts: int, count: int) -> List[APITimelineEvent]:
+    id_username_map = {user['id']: user['musicbrainz_id'] for user in users_for_events}
     recording_recommendation_events_db = db_user_timeline_event.get_recording_recommendation_events_for_feed(
-        user_ids=(user['id'] for user in users_following),
+        user_ids=(user['id'] for user in users_for_events),
         min_ts=min_ts,
         max_ts=max_ts,
         count=count,
