@@ -189,19 +189,26 @@ def get_listen_events(
     events = []
     for user in user_listens_map:
         for listen in user_listens_map[user]:
-            listen_dict = listen.to_api()
-            listen_dict['inserted_at'] = listen_dict['inserted_at'].timestamp()
-            listen = APIListen(**listen_dict)
-            events.append(APITimelineEvent(
-                event_type=UserTimelineEventType.LISTEN,
-                user_name=listen.user_name,
-                created=listen.listened_at,
-                metadata=listen,
-            ))
+            try:
+                listen_dict = listen.to_api()
+                listen_dict['inserted_at'] = listen_dict['inserted_at'].timestamp()
+                listen = APIListen(**listen_dict)
+                events.append(APITimelineEvent(
+                    event_type=UserTimelineEventType.LISTEN,
+                    user_name=listen.user_name,
+                    created=listen.listened_at,
+                    metadata=listen,
+                ))
+            except pydantic.ValidationError as e:
+                current_app.logger.error('Validation error: ' + str(e), exc_info=True)
+                continue
+
     return events
 
 
 def get_follow_events(user_ids: Tuple[int], min_ts: int, max_ts: int, count: int) -> List[APITimelineEvent]:
+    """ Gets all follow events in the feed.
+    """
     follow_events_db = db_user_relationship.get_follow_events(
         user_ids=user_ids,
         min_ts=min_ts,
@@ -211,21 +218,28 @@ def get_follow_events(user_ids: Tuple[int], min_ts: int, max_ts: int, count: int
 
     events = []
     for event in follow_events_db:
-        follow_event = APIFollowEvent(
-            user_name_0=event['user_name_0'],
-            user_name_1=event['user_name_1'],
-            relationship_type='follow',
-            created=event['created'].timestamp(),
-        )
-        events.append(APITimelineEvent(
-            event_type=UserTimelineEventType.FOLLOW,
-            user_name=follow_event.user_name_0,
-            created=follow_event.created,
-            metadata=follow_event,
-        ))
+        try:
+            follow_event = APIFollowEvent(
+                user_name_0=event['user_name_0'],
+                user_name_1=event['user_name_1'],
+                relationship_type='follow',
+                created=event['created'].timestamp(),
+            )
+            events.append(APITimelineEvent(
+                event_type=UserTimelineEventType.FOLLOW,
+                user_name=follow_event.user_name_0,
+                created=follow_event.created,
+                metadata=follow_event,
+            ))
+        except pydantic.ValidationError as e:
+            current_app.logger.error('Validation error: ' + str(e), exc_info=True)
+            continue
     return events
 
 def get_recording_recommendation_events(users_for_events: List[dict], min_ts: int, max_ts: int, count: int) -> List[APITimelineEvent]:
+    """ Gets all recording recommendation events in the feed.
+    """
+
     id_username_map = {user['id']: user['musicbrainz_id'] for user in users_for_events}
     recording_recommendation_events_db = db_user_timeline_event.get_recording_recommendation_events_for_feed(
         user_ids=(user['id'] for user in users_for_events),
@@ -236,24 +250,28 @@ def get_recording_recommendation_events(users_for_events: List[dict], min_ts: in
 
     events = []
     for event in recording_recommendation_events_db:
-        listen = APIListen(
-            user_name=id_username_map[event.user_id],
-            track_metadata=TrackMetadata(
-                artist_name=event.metadata.artist_name,
-                track_name=event.metadata.track_name,
-                release_name=event.metadata.release_name,
-                additional_info=AdditionalInfo(
-                    recording_msid=event.metadata.recording_msid,
-                    recording_mbid=event.metadata.recording_mbid,
-                    artist_msid=event.metadata.artist_msid,
-                )
-            ),
-        )
+        try:
+            listen = APIListen(
+                user_name=id_username_map[event.user_id],
+                track_metadata=TrackMetadata(
+                    artist_name=event.metadata.artist_name,
+                    track_name=event.metadata.track_name,
+                    release_name=event.metadata.release_name,
+                    additional_info=AdditionalInfo(
+                        recording_msid=event.metadata.recording_msid,
+                        recording_mbid=event.metadata.recording_mbid,
+                        artist_msid=event.metadata.artist_msid,
+                    )
+                ),
+            )
 
-        events.append(APITimelineEvent(
-            event_type=UserTimelineEventType.RECORDING_RECOMMENDATION,
-            user_name=listen.user_name,
-            created=event.created.timestamp(),
-            metadata=listen,
-        ))
+            events.append(APITimelineEvent(
+                event_type=UserTimelineEventType.RECORDING_RECOMMENDATION,
+                user_name=listen.user_name,
+                created=event.created.timestamp(),
+                metadata=listen,
+            ))
+        except pydantic.ValidationError as e:
+            current_app.logger.error('Validation error: ' + str(e), exc_info=True)
+            continue
     return events

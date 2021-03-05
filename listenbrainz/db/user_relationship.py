@@ -113,6 +113,17 @@ def get_following_for_user(user: int) -> List[dict]:
         return [dict(row) for row in result.fetchall()]
 
 def get_follow_events(user_ids: Tuple[int], min_ts: int, max_ts: int, count: int) -> List[dict]:
+    """ Gets a list of follow events for specified users.
+
+    user_ids is a tuple of user row IDs.
+
+    Returns a dict of the following format:
+        {
+            user_name_0: str,
+            user_name_1: str,
+            created: datetime,
+        }
+    """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             SELECT follower.musicbrainz_id as user_name_0, followed.musicbrainz_id as user_name_1, ur.created

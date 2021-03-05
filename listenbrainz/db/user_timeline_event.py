@@ -104,6 +104,10 @@ def get_user_track_recommendation_events(user_id: int, count: int = 50) -> List[
     )
 
 def get_recording_recommendation_events_for_feed(user_ids: List[int], min_ts: int, max_ts: int, count: int) -> List[UserTimelineEvent]:
+    """ Gets a list of recording_recommendation events for specified users.
+
+    user_ids is a tuple of user row IDs.
+    """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             SELECT id, user_id, event_type, metadata, created
