@@ -21,7 +21,7 @@ import time
 import ujson
 
 from collections import defaultdict
-from typing import Optional, List
+from typing import Optional, List, Tuple
 from flask import Blueprint, jsonify, request, current_app
 
 import listenbrainz.db.user as db_user
@@ -124,7 +124,7 @@ def user_feed(user_name: str):
     listen_events = get_listen_events(db_conn, musicbrainz_ids, min_ts, max_ts, count, time_range)
 
     follow_events = get_follow_events(
-        user_ids=(user['id'] for user in users_following),
+        user_ids=tuple(user['id'] for user in users_following),
         min_ts=min_ts or 0,
         max_ts=max_ts or int(time.time()),
         count=count,
@@ -198,7 +198,7 @@ def get_listen_events(
     return events
 
 
-def get_follow_events(user_ids: List[int], min_ts: int, max_ts: int, count: int) -> List[APITimelineEvent]:
+def get_follow_events(user_ids: Tuple[int], min_ts: int, max_ts: int, count: int) -> List[APITimelineEvent]:
     follow_events_db = db_user_relationship.get_follow_events(
         user_ids=user_ids,
         min_ts=min_ts,
@@ -211,7 +211,7 @@ def get_follow_events(user_ids: List[int], min_ts: int, max_ts: int, count: int)
         follow_event = APIFollowEvent(
             user_name_0=event['user_name_0'],
             user_name_1=event['user_name_1'],
-            type='follow',
+            relationship_type='follow',
             created=event['created'].timestamp(),
         )
         events.append(APITimelineEvent(
@@ -234,15 +234,15 @@ def get_recording_recommendation_events(users_following: List[dict], min_ts: int
     events = []
     for event in recording_recommendation_events_db:
         listen = APIListen(
-            user_name=id_username_map[event['user_id']],
+            user_name=id_username_map[event.user_id],
             track_metadata=TrackMetadata(
-                artist_name=event['metadata']['artist_name'],
-                track_name=event['metadata']['track_name'],
-                release_name=event['metadata']['release_name'],
+                artist_name=event.metadata.artist_name,
+                track_name=event.metadata.track_name,
+                release_name=event.metadata.release_name,
                 additional_info=AdditionalInfo(
-                    recording_msid=event['metadata']['recording_msid'],
-                    recording_mbid=event['metadata']['recording_mbid'],
-                    artist_msid=event['metadata']['artist_msid'],
+                    recording_msid=event.metadata.recording_msid,
+                    recording_mbid=event.metadata.recording_mbid,
+                    artist_msid=event.metadata.artist_msid,
                 )
             ),
         )
@@ -250,7 +250,7 @@ def get_recording_recommendation_events(users_following: List[dict], min_ts: int
         events.append(APITimelineEvent(
             event_type=UserTimelineEventType.RECORDING_RECOMMENDATION,
             user_name=listen.user_name,
-            created=event['created'].timestamp(),
+            created=event.created.timestamp(),
             metadata=listen,
         ))
     return events

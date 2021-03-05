@@ -16,13 +16,16 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+from data.model.user_timeline_event import UserTimelineEventMetadata
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from flask import url_for, current_app
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
+import listenbrainz.db.user_timeline_event as db_user_timeline_event
 import time
 import json
+import uuid
 
 
 class FeedAPITestCase(ListenAPIIntegrationTestCase):
@@ -162,3 +165,100 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         )
         self.assert200(r)
         self.assertEqual(1, r.json['payload']['count'])
+
+    def test_it_returns_follow_events(self):
+        # make a user you're following follow a new user
+        new_user_1 = db_user.get_or_create(104, 'new_user_1')
+        db_user_relationship.insert(self.following_user_1['id'], new_user_1['id'], 'follow')
+
+
+        # this should show up in the events
+        r = self.client.get(
+            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            headers={'Authorization': f"Token {self.main_user['auth_token']}"},
+            query_string={'max_ts': int(time.time()) + 1}
+        )
+        self.assert200(r)
+        self.assertEqual(1, r.json['payload']['count'])
+        self.assertEqual('follow', r.json['payload']['events'][0]['event_type'])
+        self.assertEqual('following_1', r.json['payload']['events'][0]['user_name'])
+        self.assertEqual('following_1', r.json['payload']['events'][0]['metadata']['user_name_0'])
+        self.assertEqual('new_user_1', r.json['payload']['events'][0]['metadata']['user_name_1'])
+        self.assertEqual('follow', r.json['payload']['events'][0]['metadata']['relationship_type'])
+
+    def test_it_returns_recording_recommendation_events(self):
+        # create a recording recommendation for a user we follow
+        db_user_timeline_event.create_user_track_recommendation_event(
+            user_id=self.following_user_1['id'],
+            metadata=UserTimelineEventMetadata(
+                track_name="Sunflower",
+                artist_name="Swae Lee & Post Malone",
+                recording_msid=str(uuid.uuid4()),
+                artist_msid=str(uuid.uuid4()),
+            )
+        )
+
+
+        # this should show up in the events
+        r = self.client.get(
+            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            headers={'Authorization': f"Token {self.main_user['auth_token']}"},
+            query_string={'max_ts': int(time.time()) + 1}
+        )
+        self.assert200(r)
+        self.assertEqual(1, r.json['payload']['count'])
+        self.assertEqual('recording_recommendation', r.json['payload']['events'][0]['event_type'])
+        self.assertEqual('following_1', r.json['payload']['events'][0]['user_name'])
+        self.assertEqual('Sunflower', r.json['payload']['events'][0]['metadata']['track_metadata']['track_name'])
+        self.assertEqual('Swae Lee & Post Malone', r.json['payload']['events'][0]['metadata']['track_metadata']['artist_name'])
+
+    def test_it_returns_empty_list_if_user_does_not_follow_anyone(self):
+        new_user = db_user.get_or_create(111, 'totally_new_user_with_no_friends')
+        r = self.client.get(
+            url_for('user_timeline_event_api_bp.user_feed', user_name=new_user['musicbrainz_id']),
+            headers={'Authorization': f"Token {new_user['auth_token']}"},
+        )
+        self.assert200(r)
+        self.assertListEqual([], r.json['payload']['events'])
+
+    def test_it_returns_all_types_of_events_sorted_by_time_in_descending_order(self):
+        with open(self.path_to_data_file('valid_single.json'), 'r') as f:
+            payload = json.load(f)
+
+        # send a listen from the past
+        ts = int(time.time())
+        payload['payload'][0]['listened_at'] = ts - 10
+        response = self.send_data(payload, user=self.following_user_1)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+
+        # make a user you're following follow a new user
+        new_user_1 = db_user.get_or_create(104, 'new_user_1')
+        db_user_relationship.insert(self.following_user_1['id'], new_user_1['id'], 'follow')
+
+        time.sleep(1.5) # sleep a bit to avoid ordering conflicts, cannot mock this time as it comes from postgres
+
+        # create a recording recommendation for a user we follow
+        db_user_timeline_event.create_user_track_recommendation_event(
+            user_id=self.following_user_1['id'],
+            metadata=UserTimelineEventMetadata(
+                track_name="Sunflower",
+                artist_name="Swae Lee & Post Malone",
+                recording_msid=str(uuid.uuid4()),
+                artist_msid=str(uuid.uuid4()),
+            )
+        )
+
+        time.sleep(2)
+
+        r = self.client.get(
+            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            headers={'Authorization': f"Token {self.main_user['auth_token']}"},
+        )
+        self.assert200(r)
+        self.assertEqual(3, r.json['payload']['count'])
+        import pdb; pdb.set_trace()
+        self.assertEqual('recording_recommendation', r.json['payload']['events'][0]['event_type'])
+        self.assertEqual('follow', r.json['payload']['events'][1]['event_type'])
+        self.assertEqual('listen', r.json['payload']['events'][2]['event_type'])
