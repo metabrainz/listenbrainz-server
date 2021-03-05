@@ -128,6 +128,47 @@ export default class ListenCard extends React.Component<
     }
   };
 
+  recommendListenToFollowers = async () => {
+    const { listen, currentUser, isCurrentUser, newAlert } = this.props;
+
+    if (isCurrentUser && currentUser?.auth_token) {
+      const metadata: UserTrackRecommendationMetadata = {
+        artist_name: _get(listen, "track_metadata.artist_name"),
+        track_name: _get(listen, "track_metadata.track_name"),
+        release_name: _get(listen, "track_metadata.release_name"),
+        recording_mbid: _get(
+          listen,
+          "track_metadata.additional_info.recording_mbid"
+        ),
+        recording_msid: _get(
+          listen,
+          "track_metadata.additional_info.recording_msid"
+        ),
+        artist_msid: _get(listen, "track_metadata.additional_info.artist_msid"),
+      };
+
+      try {
+        const status = await this.APIService.recommendTrackToFollowers(
+          currentUser.name,
+          currentUser.auth_token,
+          metadata
+        );
+        if (status === 200) {
+          newAlert(
+            "success",
+            `You recommended a track to your followers!`,
+            `${metadata.artist_name} - ${metadata.track_name}`
+          );
+        }
+      } catch (error) {
+        this.handleError(
+          error,
+          "We encountered an error when trying to recommend the track to your followers"
+        );
+      }
+    }
+  };
+
   handleError = (error: string | Error, title?: string): void => {
     const { newAlert } = this.props;
     if (!error) {
@@ -278,6 +319,10 @@ export default class ListenCard extends React.Component<
                     <ListenControl
                       title="Delete Listen"
                       action={this.deleteListen}
+                    />
+                    <ListenControl
+                      title="Recommend recording"
+                      action={this.recommendListenToFollowers}
                     />
                   </ul>
                 </>

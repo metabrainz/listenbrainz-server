@@ -162,6 +162,7 @@ export default class APIService {
       const url = `${this.APIBaseURI}/submit-listens`;
 
       /* eslint-disable no-await-in-loop */
+      /* eslint-disable-next-line no-constant-condition */
       while (true) {
         try {
           const response = await fetch(url, {
@@ -669,8 +670,12 @@ export default class APIService {
     return data;
   };
 
-  recommendTrackToFollowers = async (authToken: string, metadata: any) => {
-    const url = `${this.APIBaseURI}/user-timeline-event/create-user-recommendation/recording`;
+  recommendTrackToFollowers = async (
+    userName: string,
+    authToken: string,
+    metadata: UserTrackRecommendationMetadata
+  ) => {
+    const url = `${this.APIBaseURI}/user/${userName}/timeline-event/create/recording`;
     const response = await fetch(url, {
       method: "POST",
       headers: {
