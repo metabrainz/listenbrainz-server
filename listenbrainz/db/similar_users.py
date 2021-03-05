@@ -32,7 +32,6 @@ def import_user_similarities(data):
                 if len(values) == ROWS_PER_BATCH:
                     execute_values(curs, query, values, template=None)
                     values = []
-            print(values) 
             execute_values(curs, query, values, template=None)
 
     except psycopg2.errors.OperationalError as err:
