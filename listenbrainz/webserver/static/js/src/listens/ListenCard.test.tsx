@@ -4,6 +4,7 @@ import { mount, shallow } from "enzyme";
 import { delay } from "lodash";
 import { WatchIgnorePlugin } from "webpack";
 import ListenCard, { ListenCardProps } from "./ListenCard";
+import * as utils from "../utils";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -68,9 +69,9 @@ describe("ListenCard", () => {
   });
 
   it("should render timestamp using preciseTimestamp", () => {
-    ListenCard.preciseTimestamp = jest.fn(() => "foobar");
+    const preciseTimestamp = jest.spyOn(utils, "preciseTimestamp");
     const wrapper = mount<ListenCard>(<ListenCard {...props} />);
-    expect(ListenCard.preciseTimestamp).toHaveBeenCalledTimes(2);
+    expect(preciseTimestamp).toHaveBeenCalledTimes(2);
 
     expect(wrapper).toMatchSnapshot();
   });

@@ -1,5 +1,3 @@
-import * as timeago from "time-ago";
-
 import * as React from "react";
 import { get as _get } from "lodash";
 import MediaQuery from "react-responsive";
@@ -12,7 +10,7 @@ import {
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { getArtistLink, getTrackLink } from "../utils";
+import { getArtistLink, getTrackLink, preciseTimestamp } from "../utils";
 import Card from "../components/Card";
 import APIService from "../APIService";
 import ListenControl from "./ListenControl";
@@ -46,44 +44,8 @@ export default class ListenCard extends React.Component<
   ListenCardProps,
   ListenCardState
 > {
-  static preciseTimestamp = (listen: Listen): string => {
-    const listened_at = listen.listened_at_iso || listen.listened_at * 1000;
-    const listenDate: Date = new Date(listened_at);
-    const msDifference = new Date().getTime() - listenDate.getTime();
-    if (
-      // over one year old : show with year
-      msDifference / (1000 * 3600 * 24 * 365) >
-      1
-    ) {
-      return `${listenDate.toLocaleString("en-US", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        hour12: true,
-      })}`;
-    }
-    if (
-      // one year to yesterday : show without year
-      msDifference / (1000 * 3600 * 24 * 1) >
-      1
-    ) {
-      return `${listenDate.toLocaleString("en-US", {
-        day: "2-digit",
-        month: "short",
-        // year: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        hour12: true,
-      })}`;
-    }
-    // today : format using timeago
-    return `${timeago.ago(listened_at)}`;
-  };
-
-  APIService: APIService;
   playListen: (listen: Listen) => void;
+  APIService: APIService;
 
   constructor(props: ListenCardProps) {
     super(props);
@@ -225,7 +187,9 @@ export default class ListenCard extends React.Component<
                     new Date(listen.listened_at * 1000).toISOString()
                   }
                 >
-                  {ListenCard.preciseTimestamp(listen)}
+                  {preciseTimestamp(
+                    Number(listen.listened_at_iso) || listen.listened_at * 1000
+                  )}
                 </span>
               )}
             </div>
@@ -254,7 +218,10 @@ export default class ListenCard extends React.Component<
                           new Date(listen.listened_at * 1000).toISOString()
                         }
                       >
-                        {ListenCard.preciseTimestamp(listen)}
+                        {preciseTimestamp(
+                          Number(listen.listened_at_iso) ||
+                            listen.listened_at * 1000
+                        )}
                         &nbsp; &#8212; &nbsp;
                       </span>
                     )}

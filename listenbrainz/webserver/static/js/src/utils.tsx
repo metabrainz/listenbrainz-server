@@ -1,3 +1,4 @@
+import * as timeago from "time-ago";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import * as _ from "lodash";
@@ -102,4 +103,44 @@ const getPlayButton = (listen: any, onClickFunction: () => void) => {
   );
 };
 
-export { searchForSpotifyTrack, getArtistLink, getTrackLink, getPlayButton };
+const preciseTimestamp = (listened_at: number): string => {
+  const listenDate: Date = new Date(listened_at);
+  const msDifference = new Date().getTime() - listenDate.getTime();
+  if (
+    // over one year old : show with year
+    msDifference / (1000 * 3600 * 24 * 365) >
+    1
+  ) {
+    return `${listenDate.toLocaleString(undefined, {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
+    })}`;
+  }
+  if (
+    // one year to yesterday : show without year
+    msDifference / (1000 * 3600 * 24 * 1) >
+    1
+  ) {
+    return `${listenDate.toLocaleString(undefined, {
+      day: "2-digit",
+      month: "short",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
+    })}`;
+  }
+  // today : format using timeago
+  return `${timeago.ago(listened_at)}`;
+};
+
+export {
+  searchForSpotifyTrack,
+  getArtistLink,
+  getTrackLink,
+  getPlayButton,
+  preciseTimestamp,
+};
