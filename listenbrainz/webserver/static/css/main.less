@@ -149,12 +149,25 @@ h2.page-title { @media (max-width: @grid-float-breakpoint) { margin-top: 0px; } 
 }
 
 .similarity-score {
-  .progress {
-    height: 15px;
-    width: 300px;
-    border-radius: 16px;
+  &.regular {
+    .progress {
+      height: 15px;
+      width: 300px;
+    }
   }
-  .progress-bar {
+  &.compact {
+    > * {
+      display: inline-block;
+    }
+
+    .progress {
+      height: 7px;
+      width: 80px;
+      margin: 0 7px 2px 0;
+    }
+   }
+
+  .progress, .progress-bar {
     border-radius: 16px;
   }
 }
