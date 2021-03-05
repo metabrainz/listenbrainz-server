@@ -95,7 +95,7 @@ def create_user_recording_recommendation_event(user_name):
     return jsonify(event_data)
 
 
-@user_timeline_event_api_bp.route('/user/<user_name>/feed', methods=['OPTIONS', 'GET'])
+@user_timeline_event_api_bp.route('/user/<user_name>/feed/events', methods=['OPTIONS', 'GET'])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def user_feed(user_name: str):
