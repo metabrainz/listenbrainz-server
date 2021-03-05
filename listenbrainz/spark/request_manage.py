@@ -10,7 +10,7 @@ from listenbrainz.webserver import create_app
 
 
 QUERIES_JSON_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'request_queries.json')
-DATAFRAME_JOB_TYPES = ("recommendation_recording", "user_similarity")
+DATAFRAME_JOB_TYPES = ("recommendation_recording", "similar_users")
 
 cli = click.Group()
 
@@ -246,7 +246,7 @@ def request_import_artist_relation():
 
 @cli.command(name='request_similar_users')
 @click.option("--threshold", type=float, default=.25, help="Threshold for minimum relationship strenth between two users.")
-def request_similar_users(thresholdi, years):
+def request_similar_users(threshold):
     """ Send the cluster a request to generate similar users.
     """
     params = {
