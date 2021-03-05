@@ -59,7 +59,7 @@ def main(threshold):
         .withColumnRenamed('user_id', 'other_user_id')\
         .withColumnRenamed('user_name', 'other_user_name')
 
-    similar_users_df = sql_context.createDataFrame(similar_users, ['user_id', 'other_user_id', 'similarity'])\
+    similar_users_df = listenbrainz_spark.session.createDataFrame(similar_users, ['user_id', 'other_user_id', 'similarity'])\
         .join(users_df, 'user_id', 'inner')\
         .join(other_users_df, 'other_user_id', 'inner')\
         .select('user_name', struct('other_user_name', 'similarity').alias('similar_user'))\
