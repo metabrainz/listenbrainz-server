@@ -321,7 +321,7 @@ export default class ListenCard extends React.Component<
                       action={this.deleteListen}
                     />
                     <ListenControl
-                      title="Recommend recording"
+                      title="Recommend to my followers"
                       action={this.recommendListenToFollowers}
                     />
                   </ul>

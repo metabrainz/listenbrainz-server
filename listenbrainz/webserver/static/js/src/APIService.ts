@@ -684,7 +684,7 @@ export default class APIService {
       },
       body: JSON.stringify({ metadata }),
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     return response.status;
   };
 }
