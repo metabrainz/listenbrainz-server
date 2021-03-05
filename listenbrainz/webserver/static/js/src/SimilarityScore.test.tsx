@@ -6,11 +6,19 @@ import SimilarityScore, { SimilarityScoreProps } from "./SimilarityScore";
 const props: SimilarityScoreProps = {
   similarityScore: 0.2,
   user: { auth_token: "baz", name: "test" },
+  type: "regular",
 };
 
-describe("ListenCard", () => {
-  it("renders correctly for mode = 'listens'", () => {
+describe("SimilarityScore", () => {
+  it("renders correctly for type = 'regular'", () => {
     const wrapper = mount<SimilarityScoreProps>(<SimilarityScore {...props} />);
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it("renders correctly for type = 'compact'", () => {
+    const wrapper = mount<SimilarityScoreProps>(
+      <SimilarityScore {...{ ...props, type: "compact" }} />
+    );
 
     expect(wrapper).toMatchSnapshot();
   });
