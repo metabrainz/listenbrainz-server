@@ -468,6 +468,7 @@ declare type UserTrackRecommendationMetadata = {
 
 type EventTypeT =
   | "recording_recommendation"
+  | "listen"
   | "like"
   | "follow"
   | "stop_follow"
@@ -484,7 +485,7 @@ type EventMetadata = Listen | JSPFPlaylist | UserRelationshipEvent;
 
 type TimelineEvent = {
   event_type: EventTypeT;
-  user_id: string;
+  user_name: string;
   created: number;
   metadata: EventMetadata;
 };

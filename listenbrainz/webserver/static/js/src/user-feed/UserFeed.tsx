@@ -29,6 +29,7 @@ import { timestampToTimeAgo } from "../utils";
 export enum EventType {
   RECORDING_RECOMMENDATION = "recording_recommendation",
   LIKE = "like",
+  LISTEN = "listen",
   FOLLOW = "follow",
   STOP_FOLLOW = "stop_follow",
   BLOCK_FOLLOW = "block_follow",
@@ -58,13 +59,15 @@ export default class UserFeedPage extends React.Component<
     const { event_type } = event;
     return (
       event_type === EventType.RECORDING_RECOMMENDATION ||
-      event_type === EventType.LIKE
+      event_type === EventType.LIKE ||
+      event_type === EventType.LISTEN
     );
   }
 
   static getEventTypeIcon(eventType: EventTypeT) {
     switch (eventType) {
       case EventType.RECORDING_RECOMMENDATION:
+      case EventType.LISTEN:
         return faMusic;
       case EventType.LIKE:
         return faHeart;
@@ -84,9 +87,11 @@ export default class UserFeedPage extends React.Component<
   static getEventTypePhrase(eventType: EventTypeT): string {
     switch (eventType) {
       case EventType.RECORDING_RECOMMENDATION:
-        return "recommended a song";
+        return "recommended a track";
+      case EventType.LISTEN:
+        return "listened to a track";
       case EventType.LIKE:
-        return "added a song to their favorites";
+        return "added a track to their favorites";
       default:
         return "";
     }
@@ -259,11 +264,8 @@ export default class UserFeedPage extends React.Component<
   };
 
   renderEventContent(event: TimelineEvent) {
-    const { event_type, metadata } = event;
-    if (
-      event_type === EventType.RECORDING_RECOMMENDATION ||
-      event_type === EventType.LIKE
-    ) {
+    if (UserFeedPage.isEventListenable(event)) {
+      const { metadata } = event;
       return (
         <div className="event-content">
           <TimelineEventCard
@@ -282,21 +284,22 @@ export default class UserFeedPage extends React.Component<
 
   renderEventText(event: TimelineEvent) {
     const { currentUser } = this.props;
-    const { event_type, user_id, metadata } = event;
+    const { event_type, user_name, metadata } = event;
     if (event_type === EventType.FOLLOW) {
       const { user_name_0, user_name_1 } = metadata as UserRelationshipEvent;
       const currentUserFollows = currentUser.name === user_name_0;
-      let text;
       if (currentUserFollows) {
         return (
           <span className="event-description-text">
-            You are now following <a href={`/user/${user_name_1}`}>{user_name_1}</a>
+            You are now following{" "}
+            <a href={`/user/${user_name_1}`}>{user_name_1}</a>
           </span>
         );
       }
       return (
         <span className="event-description-text">
-          <a href={`/user/${user_name_0}`}>{user_name_0}</a> is now following you
+          <a href={`/user/${user_name_0}`}>{user_name_0}</a> is now following
+          you
         </span>
       );
     }
@@ -311,8 +314,12 @@ export default class UserFeedPage extends React.Component<
 
     return (
       <span className="event-description-text">
-        <a href={`/user/${user_id}`} target="_blank" rel="noopener noreferrer">
-          {user_id}
+        <a
+          href={`/user/${user_name}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {user_name}
         </a>{" "}
         {UserFeedPage.getEventTypePhrase(event_type)}
       </span>
@@ -387,11 +394,11 @@ export default class UserFeedPage extends React.Component<
               <div id="timeline" style={{ opacity: loading ? "0.4" : "1" }}>
                 <ul>
                   {events.map((event) => {
-                    const { created, event_type, user_id } = event;
+                    const { created, event_type, user_name } = event;
                     return (
                       <li
                         className="timeline-event"
-                        key={`event-${user_id}-${created}`}
+                        key={`event-${user_name}-${created}`}
                       >
                         <div className="event-description">
                           <span className={`event-icon ${event_type}`}>
