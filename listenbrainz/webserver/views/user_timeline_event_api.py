@@ -112,6 +112,12 @@ def user_feed(user_name: str):
         max_ts = int(time.time())
 
     users_following = db_user_relationship.get_following_for_user(user['id'])
+    if len(users_following) == 0:
+        return jsonify({'payload': {
+            'count': 0,
+            'user_id': user_name,
+            'events': [],
+        }})
 
     # get all listen events
     musicbrainz_ids = [user['musicbrainz_id'] for user in users_following]
@@ -119,20 +125,20 @@ def user_feed(user_name: str):
 
     follow_events = get_follow_events(
         user_ids=(user['id'] for user in users_following),
-        min_ts=min_ts,
-        max_ts=max_ts,
+        min_ts=min_ts or 0,
+        max_ts=max_ts or int(time.time()),
         count=count,
     )
 
     recording_recommendation_events = get_recording_recommendation_events(
         users_following=users_following,
-        min_ts=min_ts,
-        max_ts=max_ts,
+        min_ts=min_ts or 0,
+        max_ts=max_ts or int(time.time()),
         count=count,
     )
 
     # TODO: add playlist event and like event
-    all_events = sorted([listen_events + follow_events + recording_recommendation_events], key=lambda event: event.created)
+    all_events = sorted(listen_events + follow_events + recording_recommendation_events, key=lambda event: -event.created)
 
     # sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly
     for index, event in enumerate(all_events):
@@ -143,7 +149,7 @@ def user_feed(user_name: str):
     return jsonify({'payload': {
         'count': len(all_events),
         'user_id': user_name,
-        'events': all_events.dict(),
+        'events': [event.dict() for event in all_events],
     }})
 
 
@@ -160,7 +166,7 @@ def get_listen_events(
 
     # NOTE: For now, we get a bunch of listens for the users the current
     # user is following and take a max of 2 out of them per user. This
-    # could be done better to get the latest 2 listens for each user,
+    # could be done better by writing a complex query to get exactly 2 listens for each user,
     # but I'm happy with this heuristic for now and we can change later.
     db_conn = webserver.create_timescale(current_app)
     listens = db_conn.fetch_listens_for_multiple_users_from_storage(
@@ -180,11 +186,13 @@ def get_listen_events(
     events = []
     for user in user_listens_map:
         for listen in user_listens_map[user]:
-            listen = APIListen(**listen.to_api())
+            listen_dict = listen.to_api()
+            listen_dict['inserted_at'] = listen_dict['inserted_at'].timestamp()
+            listen = APIListen(**listen_dict)
             events.append(APITimelineEvent(
                 event_type=UserTimelineEventType.LISTEN,
                 user_name=listen.user_name,
-                created=listen.listend_at,
+                created=listen.listened_at,
                 metadata=listen,
             ))
     return events

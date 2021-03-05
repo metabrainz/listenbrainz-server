@@ -43,40 +43,53 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             payload = json.load(f)
 
         ts = int(time.time())
-        # send a listen for the following_user_1
-        payload['payload'][0]['listened_at'] = ts
-        response = self.send_data(payload, user=self.following_user_1)
-        self.assert200(response)
-        self.assertEqual(response.json['status'], 'ok')
+        # send 3 listens for the following_user_1
+        for i in range(3):
+            payload['payload'][0]['listened_at'] = ts - i
+            response = self.send_data(payload, user=self.following_user_1)
+            self.assert200(response)
+            self.assertEqual(response.json['status'], 'ok')
 
-        # send a listen with a higher timestamp for following_user_2
-        payload['payload'][0]['listened_at'] = ts + 1
-        response = self.send_data(payload, user=self.following_user_2)
-        self.assert200(response)
-        self.assertEqual(response.json['status'], 'ok')
+        # send 3 listens with lower timestamps for following_user_2
+        for i in range(3):
+            payload['payload'][0]['listened_at'] = ts - 10 - i
+            response = self.send_data(payload, user=self.following_user_2)
+            self.assert200(response)
+            self.assertEqual(response.json['status'], 'ok')
 
         # This sleep allows for the timescale subscriber to take its time in getting
         # the listen submitted from redis and writing it to timescale.
         time.sleep(2)
 
-        response = self.client.get(url_for('api_v1.user_feed', user_name=self.main_user['musicbrainz_id']))
+        response = self.client.get(
+            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            headers={'Authorization': f"Token {self.main_user['auth_token']}"},
+        )
         self.assert200(response)
         payload = response.json['payload']
 
-        # should contain 2 listens
-        self.assertEqual(2, payload['count'])
+        # should only have 4 listens, 2 per user
+        self.assertEqual(4, payload['count'])
 
-        # first listen should have higher timestamp and user should be following_2
-        self.assertEqual(ts + 1, payload['feed'][0]['listened_at'])
-        self.assertEqual('following_2', payload['feed'][0]['user_name'])
+        # first 2 events should have higher timestamps and user should be following_1
+        self.assertEqual('listen', payload['events'][0]['event_type'])
+        self.assertEqual(ts, payload['events'][0]['created'])
+        self.assertEqual('following_1', payload['events'][0]['user_name'])
+        self.assertEqual('listen', payload['events'][1]['event_type'])
+        self.assertEqual(ts - 1, payload['events'][1]['created'])
+        self.assertEqual('following_1', payload['events'][1]['user_name'])
 
-        # second listen should have lower timestamp and user should be following_1
-        self.assertEqual(ts, payload['feed'][1]['listened_at'])
-        self.assertEqual('following_1', payload['feed'][1]['user_name'])
+        # next 2 events should have lower timestamps and user should be following_2
+        self.assertEqual('listen', payload['events'][2]['event_type'])
+        self.assertEqual(ts - 10, payload['events'][2]['created'])
+        self.assertEqual('following_2', payload['events'][2]['user_name'])
+        self.assertEqual('listen', payload['events'][3]['event_type'])
+        self.assertEqual(ts - 11, payload['events'][3]['created'])
+        self.assertEqual('following_2', payload['events'][3]['user_name'])
 
-    def test_it_returns_not_found_for_non_existent_user(self):
-        r = self.client.get('/1/user/doesntexistlol/feed/listens')
-        self.assert404(r)
+    def test_it_raises_unauthorized_for_a_different_user(self):
+        r = self.client.get('/1/user/someotheruser/feed/events')
+        self.assert401(r)
 
     def test_it_honors_request_parameters(self):
         with open(self.path_to_data_file('valid_single.json'), 'r') as f:
@@ -97,31 +110,55 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         time.sleep(5)
 
         # max_ts = 2, should have sent back 2 listens
-        r = self.client.get('/1/user/param/feed/listens', query_string={'max_ts': ts + 2})
+        r = self.client.get(
+            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            headers={'Authorization': f"Token {self.main_user['auth_token']}"},
+            query_string={'max_ts': ts + 2}
+        )
         self.assert200(r)
         self.assertEqual(2, r.json['payload']['count'])
 
-        # max_ts = 4, should have sent back 6 listens
-        r = self.client.get('/1/user/param/feed/listens', query_string={'max_ts': ts + 2})
+        # max_ts = 4, should have sent back 4 listens
+        r = self.client.get(
+            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            headers={'Authorization': f"Token {self.main_user['auth_token']}"},
+            query_string={'max_ts': ts + 4}
+        )
         self.assert200(r)
-        self.assertEqual(2, r.json['payload']['count'])
+        self.assertEqual(4, r.json['payload']['count'])
 
         # min_ts = 1, should have sent back 4 listens
-        r = self.client.get('/1/user/param/feed/listens', query_string={'min_ts': ts + 1})
+        r = self.client.get(
+            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            headers={'Authorization': f"Token {self.main_user['auth_token']}"},
+            query_string={'min_ts': ts + 1}
+        )
         self.assert200(r)
         self.assertEqual(4, r.json['payload']['count'])
 
         # min_ts = 2, should have sent back 2 listens
-        r = self.client.get('/1/user/param/feed/listens', query_string={'min_ts': ts + 2})
+        r = self.client.get(
+            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            headers={'Authorization': f"Token {self.main_user['auth_token']}"},
+            query_string={'min_ts': ts + 2}
+        )
         self.assert200(r)
         self.assertEqual(2, r.json['payload']['count'])
 
         # min_ts = 1, max_ts = 3, should have sent back 2 listens
-        r = self.client.get('/1/user/param/feed/listens', query_string={'min_ts': ts + 1, 'max_ts': ts + 3})
+        r = self.client.get(
+            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            headers={'Authorization': f"Token {self.main_user['auth_token']}"},
+            query_string={'min_ts': ts + 1, 'max_ts': ts + 3}
+        )
         self.assert200(r)
         self.assertEqual(2, r.json['payload']['count'])
 
         # should honor count
-        r = self.client.get('/1/user/param/feed/listens', query_string={'count': 1})
+        r = self.client.get(
+            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            headers={'Authorization': f"Token {self.main_user['auth_token']}"},
+            query_string={'count': 1}
+        )
         self.assert200(r)
         self.assertEqual(1, r.json['payload']['count'])

@@ -20,6 +20,8 @@ import sqlalchemy
 import pydantic
 import ujson
 
+from datetime import datetime
+
 from data.model.user_timeline_event import (
     UserTimelineEvent,
     UserTimelineEventType,
@@ -114,8 +116,8 @@ def get_recording_recommendation_events_for_feed(user_ids: List[int], min_ts: in
              LIMIT :count
         """), {
             "user_ids": tuple(user_ids),
-            "min_ts": min_ts,
-            "max_ts": max_ts,
+            "min_ts": datetime.utcfromtimestamp(min_ts),
+            "max_ts": datetime.utcfromtimestamp(max_ts),
             "count": count,
             "event_type": UserTimelineEventType.RECORDING_RECOMMENDATION.value,
         })

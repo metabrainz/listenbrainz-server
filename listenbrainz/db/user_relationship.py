@@ -16,6 +16,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+from datetime import datetime
 from typing import List, Tuple
 
 from listenbrainz import db
@@ -99,7 +100,7 @@ def get_following_for_user(user: int) -> List[dict]:
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT "user".musicbrainz_id AS musicbrainz_id
+            SELECT "user".musicbrainz_id AS musicbrainz_id, "user".id as id
               FROM user_relationship
               JOIN "user"
                 ON "user".id = user_1
@@ -119,14 +120,14 @@ def get_follow_events(user_ids: Tuple[int], min_ts: int, max_ts: int, count: int
               JOIN "user" follower ON ur.user_0 = follower.id
               JOIN "user" followed ON ur.user_1 = followed.id
              WHERE ur.user_0 IN :user_ids
-               AND created >= :min_ts
-               AND created <= :max_ts
+               AND ur.created >= :min_ts
+               AND ur.created <= :max_ts
           ORDER BY created
              LIMIT :count
         """), {
             "user_ids": tuple(user_ids),
-            "min_ts": min_ts,
-            "max_ts": max_ts,
+            "min_ts": datetime.utcfromtimestamp(min_ts),
+            "max_ts": datetime.utcfromtimestamp(max_ts),
             "count": count
         })
 
