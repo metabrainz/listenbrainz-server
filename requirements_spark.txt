@@ -3,7 +3,8 @@ hdfs == 2.5.8
 Jinja2 == 2.11.3
 pika==0.13.0
 python-dateutil==2.8.0
-numpy==1.20.1
+# Numpy has dropped support for Python 3.6.x from version 1.20.0. So we use version 1.19.5 till we upgrade Python version in Spark images.
+numpy==1.19.5
 git+https://github.com/metabrainz/brainzutils-python.git@v1.16.1
 pytest == 6.2.2
 pytest-cov == 2.10.1
