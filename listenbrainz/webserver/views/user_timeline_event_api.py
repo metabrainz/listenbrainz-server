@@ -39,6 +39,9 @@ from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError,
 from listenbrainz.webserver.views.api_tools import validate_auth_header
 from listenbrainz.webserver.rate_limiter import ratelimit
 
+
+MAX_LISTEN_EVENTS_PER_USER = 2 # the maximum number of listens we want to return in the feed per user
+
 user_timeline_event_api_bp = Blueprint('user_timeline_event_api_bp', __name__)
 
 
@@ -171,7 +174,7 @@ def get_listen_events(
 
     user_listens_map = defaultdict(list)
     for listen in listens:
-        if len(user_listens_map[listen.user_name]) < 2:
+        if len(user_listens_map[listen.user_name]) < MAX_LISTEN_EVENTS_PER_USER:
             user_listens_map[listen.user_name].append(listen)
 
     events = []
