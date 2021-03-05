@@ -3,7 +3,7 @@ import * as React from "react";
 export type SimilarityScoreProps = {
   type: "regular" | "compact";
   similarityScore: number;
-  user: ListenBrainzUser;
+  user?: ListenBrainzUser;
 };
 
 const getclassName = (similarityScore: number): string => {
@@ -42,7 +42,7 @@ const SimilarityScore = (props: SimilarityScoreProps) => {
       </div>
       {type === "regular" ? (
         <p>
-          Your compatibility with {user.name} is {similarityScore * 10}/10
+          Your compatibility with {user?.name} is {similarityScore * 10}/10
         </p>
       ) : (
         <p className="small">{similarityScore * 10}/10</p>
