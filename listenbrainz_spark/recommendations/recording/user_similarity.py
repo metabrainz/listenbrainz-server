@@ -1,5 +1,5 @@
 from flask import current_app
-from pyspark.mllib.linalg.distributed import CoordinateMatrix
+from pyspark.mllib.linalg.distributed import CoordinateMatrix, MatrixEntry
 from pyspark.ml.stat import Correlation
 from pyspark.sql.functions import struct, collect_list
 
@@ -46,7 +46,7 @@ def main(threshold):
         current_app.logger.error(str(err), exc_info=True)
         raise
 
-    tuple_mapped_rdd = playcounts_df.rdd.map(tuple)
+    tuple_mapped_rdd = playcounts_df.rdd.map(lambda x: MatrixEntry(x["recording_id"], x["user_id"], x["count"]))
     coordinate_matrix = CoordinateMatrix(tuple_mapped_rdd)
     indexed_row_matrix = coordinate_matrix.toIndexedRowMatrix()
     vectors_mapped_rdd = indexed_row_matrix.rows.map(lambda r: (r.index, r.vector.asML()))
