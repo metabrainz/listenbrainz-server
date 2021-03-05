@@ -50,7 +50,7 @@ def main(threshold):
     coordinate_matrix = CoordinateMatrix(tuple_mapped_rdd)
     indexed_row_matrix = coordinate_matrix.toIndexedRowMatrix()
     vectors_mapped_rdd = indexed_row_matrix.rows.map(lambda r: (r.index, r.vector.asML()))
-    vectors_df = listenbrainz_spark.sql_context.createDataFrame(vectors_mapped_rdd, ['index', 'vector'])
+    vectors_df = listenbrainz_spark.session.createDataFrame(vectors_mapped_rdd, ['index', 'vector'])
 
     similarity_matrix = Correlation.corr(vectors_df, 'vector', 'pearson').first()['pearson(vector)'].toArray()
     similar_users = threshold_similar_users(similarity_matrix, threshold)
