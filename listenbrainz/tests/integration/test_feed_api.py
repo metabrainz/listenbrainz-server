@@ -258,7 +258,6 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         )
         self.assert200(r)
         self.assertEqual(3, r.json['payload']['count'])
-        import pdb; pdb.set_trace()
         self.assertEqual('recording_recommendation', r.json['payload']['events'][0]['event_type'])
         self.assertEqual('follow', r.json['payload']['events'][1]['event_type'])
         self.assertEqual('listen', r.json['payload']['events'][2]['event_type'])
