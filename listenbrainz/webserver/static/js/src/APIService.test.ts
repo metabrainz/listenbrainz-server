@@ -646,7 +646,7 @@ describe("recommendTrackToFollowers", () => {
       metadata
     );
     expect(window.fetch).toHaveBeenCalledWith(
-      `foobar/1/clark_kent/timeline-event/create/recording`,
+      `foobar/1/user/clark_kent/timeline-event/create/recording`,
       {
         method: "POST",
         headers: {
