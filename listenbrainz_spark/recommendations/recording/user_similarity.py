@@ -4,7 +4,7 @@ from pyspark.ml.stat import Correlation
 from pyspark.sql.functions import struct, collect_list
 
 import listenbrainz_spark
-from listenbrainz_spark import SparkSessionNotInitializedException, utils, path, sql_context
+from listenbrainz_spark import SparkSessionNotInitializedException, utils, path
 from listenbrainz_spark.exceptions import PathNotFoundException, FileNotFetchedException
 
 
@@ -12,7 +12,7 @@ def create_messages(similar_users_df):
     itr = similar_users_df.toLocalIterator()
     message = {}
     for row in itr:
-        message[row.user_name] = {user.second_user_name: user.similarity for user in row.similar_users}
+        message[row.user_name] = {user.other_user_name: user.similarity for user in row.similar_users}
     yield message
 
 
