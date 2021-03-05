@@ -296,14 +296,14 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
             </ListenControl>
             <ListenControl
               action={[Function]}
-              title="Recommend recording"
+              title="Recommend to my followers"
             >
               <button
                 onClick={[Function]}
-                title="Recommend recording"
+                title="Recommend to my followers"
                 type="button"
               >
-                Recommend recording
+                Recommend to my followers
               </button>
             </ListenControl>
           </ul>
@@ -684,14 +684,14 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
             </ListenControl>
             <ListenControl
               action={[Function]}
-              title="Recommend recording"
+              title="Recommend to my followers"
             >
               <button
                 onClick={[Function]}
-                title="Recommend recording"
+                title="Recommend to my followers"
                 type="button"
               >
-                Recommend recording
+                Recommend to my followers
               </button>
             </ListenControl>
           </ul>
