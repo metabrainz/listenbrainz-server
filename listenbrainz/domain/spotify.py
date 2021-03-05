@@ -116,6 +116,8 @@ def refresh_user_token(spotify_user: Spotify):
                 db_spotify.delete_spotify(spotify_user.user_id)
                 return None
 
+            response = None  # some other error during request
+
         retries -= 1
 
     if response is None:

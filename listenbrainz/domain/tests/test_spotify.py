@@ -64,7 +64,7 @@ class SpotifyDomainTestCase(ServerTestCase):
     # apparently, requests_mocker does not follow the usual order in which decorators are applied. :-(
     @requests_mock.Mocker()
     @mock.patch('listenbrainz.db.spotify.delete_spotify')
-    def test_refresh_user_token_bad(self, mock_requests, mock_delete_spotify):
+    def test_refresh_user_token_revoked(self, mock_requests, mock_delete_spotify):
         mock_requests.post(spotify.OAUTH_TOKEN_URL, status_code=400, json={
             'error': 'invalid_grant',
             'error_description': 'Refresh token revoked',
