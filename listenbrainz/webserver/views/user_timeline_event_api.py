@@ -128,6 +128,7 @@ def user_feed(user_name: str):
         count=count,
     )
 
+    # TODO: add playlist event and like event
     all_events = sorted([listen_events + follow_events + recording_recommendation_events], key=lambda event: event.created)
 
     # sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly
@@ -138,6 +139,7 @@ def user_feed(user_name: str):
 
     return jsonify({'payload': {
         'count': len(all_events),
+        'user_id': user_name,
         'events': all_events.dict(),
     }})
 
