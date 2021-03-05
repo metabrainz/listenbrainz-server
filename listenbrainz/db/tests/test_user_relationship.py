@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+import time
 
 from listenbrainz import db
 from listenbrainz.db.testing import DatabaseTestCase
@@ -29,6 +30,7 @@ class UserRelationshipTestCase(DatabaseTestCase):
         super(UserRelationshipTestCase, self).setUp()
         self.main_user = db_user.get_or_create(1, 'iliekcomputers')
         self.followed_user_1 = db_user.get_or_create(2, 'followed_user_1')
+        self.followed_user_2 = db_user.get_or_create(3, 'followed_user_2')
 
     def test_insert(self):
         db_user_relationship.insert(self.main_user['id'], self.followed_user_1['id'], 'follow')
@@ -88,3 +90,72 @@ class UserRelationshipTestCase(DatabaseTestCase):
         # the list of users main_user is following should have 2 elements now
         following = db_user_relationship.get_following_for_user(self.main_user['id'])
         self.assertEqual(2, len(following))
+
+    def test_get_follow_events_returns_correct_events(self):
+        db_user_relationship.insert(self.main_user['id'], self.followed_user_1['id'], 'follow')
+        db_user_relationship.insert(self.main_user['id'], self.followed_user_2['id'], 'follow')
+
+        new_user = db_user.get_or_create(4, 'new_user')
+        db_user_relationship.insert(self.followed_user_1['id'], new_user['id'], 'follow')
+
+        events = db_user_relationship.get_follow_events(
+            user_ids=(self.main_user['id'], self.followed_user_1['id']),
+            min_ts=0,
+            max_ts=int(time.time()) + 10,
+            count=50
+        )
+        self.assertEqual(3, len(events))
+        self.assertEqual('iliekcomputers', events[0]['user_name_0'])
+        self.assertEqual('followed_user_1', events[0]['user_name_1'])
+
+        self.assertEqual('iliekcomputers', events[1]['user_name_0'])
+        self.assertEqual('followed_user_2', events[1]['user_name_1'])
+
+        self.assertEqual('followed_user_1', events[2]['user_name_0'])
+        self.assertEqual('new_user', events[2]['user_name_1'])
+
+    def test_get_follow_events_honors_timestamp_parameters(self):
+        ts = int(time.time())
+
+        db_user_relationship.insert(self.main_user['id'], self.followed_user_1['id'], 'follow')
+        db_user_relationship.insert(self.main_user['id'], self.followed_user_2['id'], 'follow')
+
+        time.sleep(3)
+        new_user = db_user.get_or_create(4, 'new_user')
+        db_user_relationship.insert(self.followed_user_1['id'], new_user['id'], 'follow')
+
+
+        # max_ts is too low, won't return anything
+        events = db_user_relationship.get_follow_events(
+            user_ids=(self.main_user['id'], self.followed_user_1['id']),
+            min_ts=0,
+            max_ts=ts,
+            count=50
+        )
+        self.assertListEqual([], events)
+
+        # check that it honors min_ts as well
+        events = db_user_relationship.get_follow_events(
+            user_ids=(self.main_user['id'], self.followed_user_1['id']),
+            min_ts=ts + 1,
+            max_ts=ts + 10,
+            count=50
+        )
+        self.assertEqual(1, len(events))
+
+    def test_get_follow_events_honors_count_parameter(self):
+        db_user_relationship.insert(self.main_user['id'], self.followed_user_1['id'], 'follow')
+        db_user_relationship.insert(self.main_user['id'], self.followed_user_2['id'], 'follow')
+
+        new_user = db_user.get_or_create(4, 'new_user')
+        db_user_relationship.insert(self.followed_user_1['id'], new_user['id'], 'follow')
+
+        events = db_user_relationship.get_follow_events(
+            user_ids=(self.main_user['id'], self.followed_user_1['id']),
+            min_ts=0,
+            max_ts=int(time.time()) + 10,
+            count=2,
+        )
+
+        # 3 events exist, but should only return 2
+        self.assertEqual(2, len(events))
