@@ -391,4 +391,4 @@ def handle_similar_users(data):
     if current_app.config['TESTING']:
         return
 
-    import_user_similarities(data)
+    import_user_similarities(data['data'])

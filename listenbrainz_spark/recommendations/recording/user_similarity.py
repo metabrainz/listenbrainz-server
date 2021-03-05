@@ -13,7 +13,10 @@ def create_messages(similar_users_df):
     message = {}
     for row in itr:
         message[row.user_name] = {user.other_user_name: user.similarity for user in row.similar_users}
-    yield message
+    yield {
+        'type': 'similar_users',
+        'data': message
+    }
 
 
 def threshold_similar_users(matrix, threshold):
