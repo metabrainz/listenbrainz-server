@@ -1,0 +1,43 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
+<SimilarityScore
+  similarityScore={0.2}
+  user={
+    Object {
+      "auth_token": "baz",
+      "name": "test",
+    }
+  }
+>
+  <div
+    className="similarity-score"
+  >
+    <div
+      aria-label="Similarity Score"
+      aria-valuemax={100}
+      aria-valuemin={0}
+      aria-valuenow={20}
+      className="progress"
+      role="progressbar"
+      tabIndex={0}
+    >
+      <div
+        className="progress-bar progress-bar-danger"
+        style={
+          Object {
+            "width": "20%",
+          }
+        }
+      />
+    </div>
+    <p>
+      Your compatibility with 
+      test
+       is 
+      2
+      /10!
+    </p>
+  </div>
+</SimilarityScore>
+`;
