@@ -111,7 +111,7 @@ def user_feed(user_name: str):
     :param count: Optional, number of events to return. Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` . Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
     :statuscode 200: Successful query, you have feed events!
     :statuscode 400: Bad request, check ``response['error']`` for more details.
-    :statuscode 401: Unauthorized, you do not have permissions to recommend recordings on the behalf of this user
+    :statuscode 401: Unauthorized, you do not have permission to view this user's feed.
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     """
