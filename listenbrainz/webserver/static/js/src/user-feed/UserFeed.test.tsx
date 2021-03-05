@@ -23,8 +23,8 @@ import { mount, shallow } from "enzyme";
 import * as timeago from "time-ago";
 import { sortBy } from "lodash";
 import UserFeedPage from "./UserFeed";
-import FollowerFollowingModal from "./follow/FollowerFollowingModal";
-import BrainzPlayer from "./BrainzPlayer";
+import FollowerFollowingModal from "../follow/FollowerFollowingModal";
+import BrainzPlayer from "../BrainzPlayer";
 import * as timelineProps from "./__mocks__/timelineProps.json";
 
 // typescript doesn't recognise string literal values

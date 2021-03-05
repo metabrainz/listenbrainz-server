@@ -3,12 +3,10 @@ import { faQuestionCircle } from "@fortawesome/free-regular-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { getArtistLink, getTrackLink } from "./utils";
-import Card from "./components/Card";
+import { getArtistLink, getTrackLink } from "../utils";
+import Card from "../components/Card";
 
-export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
-
-export type TimelineEventCardProps = {
+type TimelineEventCardProps = {
   className?: string;
   listen: Listen;
   playListen: (listen: Listen) => void;

@@ -18,13 +18,13 @@ import { AlertList } from "react-bs-notifier";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { isEqual } from "lodash";
-import APIService from "./APIService";
-import BrainzPlayer from "./BrainzPlayer";
-import FollowerFollowingModal from "./follow/FollowerFollowingModal";
-import Loader from "./components/Loader";
+import APIService from "../APIService";
+import BrainzPlayer from "../BrainzPlayer";
+import FollowerFollowingModal from "../follow/FollowerFollowingModal";
+import Loader from "../components/Loader";
 import TimelineEventCard from "./TimelineEventCard";
-import fakeData from "./fake-user-feed.json";
-import { timestampToTimeAgo } from "./utils";
+import fakeData from "./__mocks__/fake-user-feed.json";
+import { timestampToTimeAgo } from "../utils";
 
 export enum EventType {
   RECORDING_RECOMMENDATION = "recording_recommendation",
