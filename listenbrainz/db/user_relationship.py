@@ -122,7 +122,7 @@ def get_follow_events(user_ids: Tuple[int], min_ts: int, max_ts: int, count: int
              WHERE ur.user_0 IN :user_ids
                AND ur.created >= :min_ts
                AND ur.created <= :max_ts
-          ORDER BY created
+          ORDER BY created DESC
              LIMIT :count
         """), {
             "user_ids": tuple(user_ids),

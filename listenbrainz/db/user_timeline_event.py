@@ -112,7 +112,7 @@ def get_recording_recommendation_events_for_feed(user_ids: List[int], min_ts: in
                AND created >= :min_ts
                AND created <= :max_ts
                AND event_type = :event_type
-          ORDER BY created
+          ORDER BY created DESC
              LIMIT :count
         """), {
             "user_ids": tuple(user_ids),

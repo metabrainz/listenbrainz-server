@@ -105,14 +105,14 @@ class UserRelationshipTestCase(DatabaseTestCase):
             count=50
         )
         self.assertEqual(3, len(events))
-        self.assertEqual('iliekcomputers', events[0]['user_name_0'])
-        self.assertEqual('followed_user_1', events[0]['user_name_1'])
+        self.assertEqual('followed_user_1', events[0]['user_name_0'])
+        self.assertEqual('new_user', events[0]['user_name_1'])
 
         self.assertEqual('iliekcomputers', events[1]['user_name_0'])
         self.assertEqual('followed_user_2', events[1]['user_name_1'])
 
-        self.assertEqual('followed_user_1', events[2]['user_name_0'])
-        self.assertEqual('new_user', events[2]['user_name_1'])
+        self.assertEqual('iliekcomputers', events[2]['user_name_0'])
+        self.assertEqual('followed_user_1', events[2]['user_name_1'])
 
     def test_get_follow_events_honors_timestamp_parameters(self):
         ts = int(time.time())
