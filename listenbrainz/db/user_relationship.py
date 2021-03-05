@@ -16,7 +16,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-from typing import List
+from typing import List, Tuple
 
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
@@ -109,4 +109,25 @@ def get_following_for_user(user: int) -> List[dict]:
         """), {
             "user": user,
         })
+        return [dict(row) for row in result.fetchall()]
+
+def get_follow_events(user_ids: Tuple[int], min_ts: int, max_ts: int, count: int) -> List[dict]:
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT follower.musicbrainz_id as user_name_0, followed.musicbrainz_id as user_name_1, ur.created
+              FROM user_relationship ur
+              JOIN "user" follower ON ur.user_0 = follower.id
+              JOIN "user" followed ON ur.user_1 = followed.id
+             WHERE ur.user_0 IN :user_ids
+               AND created >= :min_ts
+               AND created <= :max_ts
+          ORDER BY created
+             LIMIT :count
+        """), {
+            "user_ids": tuple(user_ids),
+            "min_ts": min_ts,
+            "max_ts": max_ts,
+            "count": count
+        })
+
         return [dict(row) for row in result.fetchall()]
