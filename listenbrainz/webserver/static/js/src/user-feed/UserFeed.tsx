@@ -284,19 +284,19 @@ export default class UserFeedPage extends React.Component<
     const { currentUser } = this.props;
     const { event_type, user_id, metadata } = event;
     if (event_type === EventType.FOLLOW) {
-      const { user_0, user_1 } = metadata as UserRelationshipEvent;
-      const currentUserFollows = currentUser.name === user_0;
+      const { user_name_0, user_name_1 } = metadata as UserRelationshipEvent;
+      const currentUserFollows = currentUser.name === user_name_0;
       let text;
       if (currentUserFollows) {
         return (
           <span className="event-description-text">
-            You are now following <a href={`/user/${user_1}`}>{user_1}</a>
+            You are now following <a href={`/user/${user_name_1}`}>{user_name_1}</a>
           </span>
         );
       }
       return (
         <span className="event-description-text">
-          <a href={`/user/${user_0}`}>{user_0}</a> is now following you
+          <a href={`/user/${user_name_0}`}>{user_name_0}</a> is now following you
         </span>
       );
     }

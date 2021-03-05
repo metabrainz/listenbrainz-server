@@ -475,8 +475,8 @@ type EventTypeT =
   | "playlist_created";
 
 type UserRelationshipEvent = {
-  user_0: string;
-  user_1: string;
+  user_name_0: string;
+  user_name_1: string;
   relationship_type: "follow";
   created: number;
 };
