@@ -490,3 +490,8 @@ type TimelineEvent = {
   created: number;
   metadata: EventMetadata;
 };
+
+type SimilarUser = {
+  name: string;
+  similarityScore: number;
+};
