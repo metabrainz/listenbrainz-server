@@ -9,11 +9,11 @@ export type SimilarityScoreProps = {
 const getclassName = (similarityScore: number): string => {
   let className = "";
   if (similarityScore <= 0.3) {
-    className = "progress-bar-danger";
+    className = "red";
   } else if (similarityScore <= 0.7) {
-    className = "progress-bar-warning";
+    className = "orange";
   } else {
-    className = "progress-bar-success";
+    className = "purple";
   }
   return className;
 };
@@ -41,11 +41,11 @@ const SimilarityScore = (props: SimilarityScoreProps) => {
         />
       </div>
       {type === "regular" ? (
-        <p>
+        <p className="text-muted">
           Your compatibility with {user?.name} is {similarityScore * 10}/10
         </p>
       ) : (
-        <p className="small">{similarityScore * 10}/10</p>
+        <p className="small text-muted">{similarityScore * 10}/10</p>
       )}
     </div>
   );

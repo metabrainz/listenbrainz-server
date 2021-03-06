@@ -167,7 +167,22 @@ h2.page-title { @media (max-width: @grid-float-breakpoint) { margin-top: 0px; } 
     }
    }
 
-  .progress, .progress-bar {
+  .progress {
+    box-shadow: none;
     border-radius: 16px;
+    background-color: #fafafa;
+  }
+
+  .progress-bar {
+    border-radius: 16px;
+    &.red {
+      background-color: @red;
+    }
+    &.orange {
+      background-color: @orange;
+    }
+    &.purple {
+      background-color: @purple;
+    }
   }
 }

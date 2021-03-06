@@ -24,26 +24,24 @@ describe("SimilarityScore", () => {
   });
 
   it("updates the class name based on similiarty score", () => {
-    /* sets class progress-bar-danger for score 0.2 */
+    /* sets class red for score 0.2 */
     let wrapper = mount<SimilarityScoreProps>(<SimilarityScore {...props} />);
-    expect(
-      wrapper.find(".progress").childAt(0).hasClass("progress-bar-danger")
-    ).toEqual(true);
+    expect(wrapper.find(".progress").childAt(0).hasClass("red")).toEqual(true);
 
-    /* sets class progress-bar-warning for score 0.5 */
+    /* sets class orange for score 0.5 */
     wrapper = mount<SimilarityScoreProps>(
       <SimilarityScore {...{ ...props, similarityScore: 0.5 }} />
     );
-    expect(
-      wrapper.find(".progress").childAt(0).hasClass("progress-bar-warning")
-    ).toEqual(true);
+    expect(wrapper.find(".progress").childAt(0).hasClass("orange")).toEqual(
+      true
+    );
 
-    /* sets class progress-bar-success for score 0.9 */
+    /* sets class purple for score 0.9 */
     wrapper = mount<SimilarityScoreProps>(
       <SimilarityScore {...{ ...props, similarityScore: 0.9 }} />
     );
-    expect(
-      wrapper.find(".progress").childAt(0).hasClass("progress-bar-success")
-    ).toEqual(true);
+    expect(wrapper.find(".progress").childAt(0).hasClass("purple")).toEqual(
+      true
+    );
   });
 });
