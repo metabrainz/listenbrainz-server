@@ -188,7 +188,7 @@ export default class ListenCard extends React.Component<
                   }
                 >
                   {preciseTimestamp(
-                    Number(listen.listened_at_iso) || listen.listened_at * 1000
+                    listen.listened_at_iso || listen.listened_at * 1000
                   )}
                 </span>
               )}
@@ -219,8 +219,7 @@ export default class ListenCard extends React.Component<
                         }
                       >
                         {preciseTimestamp(
-                          Number(listen.listened_at_iso) ||
-                            listen.listened_at * 1000
+                          listen.listened_at_iso || listen.listened_at * 1000
                         )}
                         &nbsp; &#8212; &nbsp;
                       </span>
