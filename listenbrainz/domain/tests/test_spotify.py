@@ -1,11 +1,12 @@
-import spotipy.oauth2
 import time
 
+import requests_mock
+
 from flask import current_app
+
 from listenbrainz.domain import spotify
 from listenbrainz.webserver.testing import ServerTestCase
 from unittest import mock
-from unittest.mock import MagicMock
 
 
 class SpotifyDomainTestCase(ServerTestCase):
@@ -30,18 +31,18 @@ class SpotifyDomainTestCase(ServerTestCase):
         self.assertIsNone(self.spotify_user.last_updated_iso)
         self.assertIsNone(self.spotify_user.latest_listened_at_iso)
 
+    # apparently, requests_mocker does not follow the usual order in which decorators are applied. :-(
+    @requests_mock.Mocker()
     @mock.patch('listenbrainz.domain.spotify.db_spotify.get_user')
-    @mock.patch('listenbrainz.domain.spotify.get_spotify_oauth')
     @mock.patch('listenbrainz.domain.spotify.db_spotify.update_token')
-    def test_refresh_user_token(self, mock_update_token, mock_get_spotify_oauth, mock_get_user):
+    def test_refresh_user_token(self, mock_requests, mock_update_token, mock_get_user):
         expires_at = int(time.time()) + 3600
-        mock_get_spotify_oauth.return_value.refresh_access_token.return_value = {
+        mock_requests.post(spotify.OAUTH_TOKEN_URL, status_code=200, json={
             'access_token': 'tokentoken',
             'refresh_token': 'refreshtokentoken',
             'expires_at': expires_at,
             'scope': '',
-        }
-
+        })
         spotify.refresh_user_token(self.spotify_user)
         mock_update_token.assert_called_with(
             self.spotify_user.user_id,
@@ -50,6 +51,26 @@ class SpotifyDomainTestCase(ServerTestCase):
             expires_at,
         )
         mock_get_user.assert_called_with(self.spotify_user.user_id)
+
+    @requests_mock.Mocker()
+    def test_refresh_user_token_bad(self, mock_requests):
+        mock_requests.post(spotify.OAUTH_TOKEN_URL, status_code=400, json={
+            'error': 'invalid request',
+            'error_description': 'invalid refresh token',
+        })
+        with self.assertRaises(spotify.SpotifyAPIError):
+            spotify.refresh_user_token(self.spotify_user)
+
+    # apparently, requests_mocker does not follow the usual order in which decorators are applied. :-(
+    @requests_mock.Mocker()
+    @mock.patch('listenbrainz.db.spotify.delete_spotify')
+    def test_refresh_user_token_revoked(self, mock_requests, mock_delete_spotify):
+        mock_requests.post(spotify.OAUTH_TOKEN_URL, status_code=400, json={
+            'error': 'invalid_grant',
+            'error_description': 'Refresh token revoked',
+        })
+        spotify.refresh_user_token(self.spotify_user)
+        mock_delete_spotify.assert_called_with(self.spotify_user.user_id)
 
     def test_get_spotify_oauth(self):
         func_oauth = spotify.get_spotify_oauth()
@@ -75,7 +96,6 @@ class SpotifyDomainTestCase(ServerTestCase):
         self.assertNotIn('user-read-private', func_oauth.scope)
         self.assertNotIn('playlist-modify-public', func_oauth.scope)
         self.assertNotIn('playlist-modify-private', func_oauth.scope)
-
 
     @mock.patch('listenbrainz.domain.spotify.db_spotify.get_user')
     def test_get_user(self, mock_db_get_user):
@@ -166,12 +186,3 @@ class SpotifyDomainTestCase(ServerTestCase):
         t = int(time.time())
         spotify.update_latest_listened_at(1, t)
         mock_update_listened_at.assert_called_once_with(1, t)
-
-    @mock.patch('listenbrainz.domain.spotify.get_spotify_oauth')
-    def test_refresh_user_token_bad(self, mock_get_spotify_oauth):
-        mock_oauth = MagicMock()
-        mock_oauth.refresh_access_token.return_value = None
-        mock_get_spotify_oauth.return_value = mock_oauth
-
-        with self.assertRaises(spotify.SpotifyAPIError):
-            spotify.refresh_user_token(self.spotify_user)
