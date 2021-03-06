@@ -2,11 +2,12 @@ import * as React from "react";
 import { includes as _includes } from "lodash";
 
 import Pill from "../components/Pill";
-import FollowButton from "../FollowButton";
 import APIService from "../APIService";
+import UserListModalEntry from "./UserListModalEntry";
 
 export type FollowerFollowingModalProps = {
   user: ListenBrainzUser;
+  loggedInUser: ListenBrainzUser | null;
 };
 
 type FollowerFollowingModalState = {
@@ -76,7 +77,13 @@ export default class FollowerFollowingModal extends React.Component<
   };
 
   loggedInUserFollowsUser = (user: ListenBrainzUser): boolean => {
+    const { loggedInUser } = this.props;
     const { followingList } = this.state;
+
+    if (!loggedInUser) {
+      return false;
+    }
+
     return _includes(
       followingList.map((listEntry: ListenBrainzUser) => listEntry.name),
       user.name
@@ -84,7 +91,7 @@ export default class FollowerFollowingModal extends React.Component<
   };
 
   render() {
-    const { user } = this.props;
+    const { user, loggedInUser } = this.props;
     const { activeMode, followerList, followingList } = this.state;
     const activeModeList =
       activeMode === "follower" ? followerList : followingList;
@@ -112,23 +119,15 @@ export default class FollowerFollowingModal extends React.Component<
           {activeModeList.map((listEntry: ListenBrainzUser) => {
             return (
               <>
-                <div key={listEntry.name}>
-                  <a
-                    href={`/user/${listEntry.name}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {listEntry.name}
-                  </a>
-                  <FollowButton
-                    type="block"
-                    user={{ name: listEntry.name }}
-                    loggedInUser={user}
-                    loggedInUserFollowsUser={this.loggedInUserFollowsUser(
-                      listEntry
-                    )}
-                  />
-                </div>
+                <UserListModalEntry
+                  mode="follow-following"
+                  key={listEntry.name}
+                  user={{ name: listEntry.name }}
+                  loggedInUser={loggedInUser}
+                  loggedInUserFollowsUser={this.loggedInUserFollowsUser(
+                    listEntry
+                  )}
+                />
               </>
             );
           })}

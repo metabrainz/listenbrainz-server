@@ -25,7 +25,10 @@ import FollowerFollowingModal from "./FollowerFollowingModal";
 describe("<FollowerFollowingModal />", () => {
   it("renders", () => {
     const wrapper = shallow(
-      <FollowerFollowingModal user={{ name: "iliekcomputers" }} />
+      <FollowerFollowingModal
+        user={{ name: "iliekcomputers" }}
+        loggedInUser={null}
+      />
     );
     expect(wrapper).toBeTruthy();
   });
