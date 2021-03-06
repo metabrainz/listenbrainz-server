@@ -1,5 +1,3 @@
-import * as timeago from "time-ago";
-
 import * as React from "react";
 import { get as _get } from "lodash";
 import MediaQuery from "react-responsive";
@@ -12,7 +10,7 @@ import {
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { getArtistLink, getTrackLink } from "../utils";
+import { getArtistLink, getTrackLink, preciseTimestamp } from "../utils";
 import Card from "../components/Card";
 import APIService from "../APIService";
 import ListenControl from "./ListenControl";
@@ -46,8 +44,8 @@ export default class ListenCard extends React.Component<
   ListenCardProps,
   ListenCardState
 > {
-  APIService: APIService;
   playListen: (listen: Listen) => void;
+  APIService: APIService;
 
   constructor(props: ListenCardProps) {
     super(props);
@@ -161,7 +159,7 @@ export default class ListenCard extends React.Component<
           }`}
         >
           <MediaQuery minWidth={768}>
-            <div className="col-xs-9">
+            <div className="col-xs-8">
               <div className="track-details">
                 <p title={listen.track_metadata?.track_name}>
                   {getTrackLink(listen)}
@@ -176,7 +174,7 @@ export default class ListenCard extends React.Component<
                 </p>
               </div>
             </div>
-            <div className="col-xs-3">
+            <div className="col-xs-4">
               {listen.playing_now ? (
                 <span className="listen-time text-center text-muted">
                   <FontAwesomeIcon icon={faMusic as IconProp} /> Playing now
@@ -189,9 +187,9 @@ export default class ListenCard extends React.Component<
                     new Date(listen.listened_at * 1000).toISOString()
                   }
                 >
-                  {listen.listened_at_iso
-                    ? timeago.ago(listen.listened_at_iso)
-                    : timeago.ago(listen.listened_at * 1000)}
+                  {preciseTimestamp(
+                    listen.listened_at_iso || listen.listened_at * 1000
+                  )}
                 </span>
               )}
             </div>
@@ -220,14 +218,10 @@ export default class ListenCard extends React.Component<
                           new Date(listen.listened_at * 1000).toISOString()
                         }
                       >
-                        {`
-                          ${
-                            listen.listened_at_iso
-                              ? timeago.ago(listen.listened_at_iso, true)
-                              : timeago.ago(listen.listened_at * 1000, true)
-                          }
-                          `}
-                        ago &#8212; &nbsp;
+                        {preciseTimestamp(
+                          listen.listened_at_iso || listen.listened_at * 1000
+                        )}
+                        &nbsp; &#8212; &nbsp;
                       </span>
                     )}
                     {getArtistLink(listen)}
