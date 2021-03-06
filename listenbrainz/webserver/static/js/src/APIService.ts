@@ -668,4 +668,18 @@ export default class APIService {
     const data = response.json();
     return data;
   };
+
+  recommendTrackToFollowers = async (authToken: string, metadata: any) => {
+    const url = `${this.APIBaseURI}/user-timeline-event/create-user-recommendation/recording`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${authToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ metadata }),
+    });
+    this.checkStatus(response);
+    return response.status;
+  }
 }

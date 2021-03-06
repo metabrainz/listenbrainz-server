@@ -43,6 +43,7 @@ import {
 
 export interface PlaylistPageProps {
   apiUrl: string;
+  labsApiUrl: string;
   playlist: JSPFObject;
   spotify: SpotifyUser;
   currentUser?: ListenBrainzUser;
@@ -227,16 +228,17 @@ export default class PlaylistPage extends React.Component<
 
   searchForTrack = async (inputValue: string): Promise<OptionType[]> => {
     try {
-      const response = await fetch(
-        "https://datasets.listenbrainz.org/acrm-search/json",
-        {
-          method: "POST",
-          body: JSON.stringify([{ query: inputValue }]),
-          headers: {
-            "Content-type": "application/json; charset=UTF-8",
-          },
-        }
-      );
+      const { labsApiUrl } = this.props;
+      const recordingSearchURI = `${labsApiUrl}${
+        labsApiUrl.endsWith("/") ? "" : "/"
+      }recording-search/json`;
+      const response = await fetch(recordingSearchURI, {
+        method: "POST",
+        body: JSON.stringify([{ query: inputValue }]),
+        headers: {
+          "Content-type": "application/json; charset=UTF-8",
+        },
+      });
       // Converting to JSON
       const parsedResponse: ACRMSearchResult[] = await response.json();
       // Format the received items to a react-select option
@@ -987,6 +989,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   const {
     api_url,
+    labs_api_url,
     playlist,
     spotify,
     web_sockets_server_url,
@@ -997,6 +1000,7 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <PlaylistPage
         apiUrl={api_url}
+        labsApiUrl={labs_api_url}
         playlist={playlist}
         spotify={spotify}
         currentUser={current_user}
