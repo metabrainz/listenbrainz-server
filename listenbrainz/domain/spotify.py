@@ -125,7 +125,10 @@ def refresh_user_token(spotify_user: Spotify):
 
     response = response.json()
     access_token = response['access_token']
-    refresh_token = response['refresh_token']
+    if "refresh_token" in response:
+        refresh_token = response['refresh_token']
+    else:
+        refresh_token = spotify_user.refresh_token
     expires_at = response['expires_at']
     db_spotify.update_token(spotify_user.user_id, access_token, refresh_token, expires_at)
     return get_user(spotify_user.user_id)
