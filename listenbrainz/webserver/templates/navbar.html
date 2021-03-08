@@ -20,7 +20,6 @@
         {% if not hide_navbar_user_menu %}
           {% if current_user.is_authenticated %}
             <li><a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}">My Listens</a></li>
-            <li><a href="{{ url_for('follow.follow') }}">Follow</a></li>
           {% endif %}
         {%- endif -%}
         <li><a href="{{ url_for('index.recent_listens') }}">Recent</a></li>

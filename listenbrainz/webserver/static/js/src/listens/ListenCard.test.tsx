@@ -43,14 +43,6 @@ describe("ListenCard", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("renders correctly for mode = 'follow '", () => {
-    const wrapper = mount<ListenCard>(
-      <ListenCard {...{ ...props, mode: "follow" }} />
-    );
-
-    expect(wrapper).toMatchSnapshot();
-  });
-
   it("renders correctly for mode = 'recent '", () => {
     const wrapper = mount<ListenCard>(
       <ListenCard {...{ ...props, mode: "recent" }} />
