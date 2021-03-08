@@ -171,3 +171,8 @@ WEBSOCKETS_SERVER_URL = '''{{template "KEY" "websockets_server_url"}}'''
 SESSION_REMEMBER_ME_DURATION = 365
 
 LISTEN_DUMP_TEMP_DIR_ROOT = '''{{template "KEY" "listen_dump_temp_dir"}}'''
+
+# Feature flag: only enable follow button in beta and test
+{{if not eq (env "DEPLOY_ENV") "prod"}}
+FEATURE_FOLLOW_BUTTON = True
+{{end}}
