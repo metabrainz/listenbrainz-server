@@ -46,6 +46,7 @@ type UserFeedPageState = {
   alerts: Alert[];
   nextEventTs?: number;
   previousEventTs?: number;
+  earliestEventTs?: number;
   events: TimelineEvent[];
   loading: boolean;
 };
@@ -118,6 +119,8 @@ export default class UserFeedPage extends React.Component<
   async componentDidMount(): Promise<void> {
     // Listen to browser previous/next events and load page accordingly
     window.addEventListener("popstate", this.handleURLChange);
+    // Fetch initial events from API
+    // TODO: Pass the required data in the props and remove this initial API call
     await this.getFeedFromAPI();
   }
 
@@ -150,9 +153,12 @@ export default class UserFeedPage extends React.Component<
   };
 
   handleClickNewer = async () => {
-    const { previousEventTs } = this.state;
+    const { previousEventTs, earliestEventTs } = this.state;
     // No more events to fetch
-    if (!previousEventTs) {
+    if (
+      !previousEventTs ||
+      (earliestEventTs && previousEventTs >= earliestEventTs)
+    ) {
       return;
     }
     await this.getFeedFromAPI(previousEventTs, undefined, () => {
@@ -166,6 +172,7 @@ export default class UserFeedPage extends React.Component<
     successCallback?: () => void
   ) => {
     const { currentUser } = this.props;
+    const { earliestEventTs } = this.state;
     this.setState({ loading: true });
     let newEvents: TimelineEvent[] = [];
     try {
@@ -200,12 +207,19 @@ export default class UserFeedPage extends React.Component<
       }
       return;
     }
+    const optionalProps: { earliestEventTs?: number } = {};
+    if (!earliestEventTs || newEvents[0].created > earliestEventTs) {
+      // We can use the newest event's timestamp to determine if the previous button should be disabled.
+      // Also refresh the earlierst event timestamp if we have received events newer than at first page load.
+      optionalProps.earliestEventTs = newEvents[0].created;
+    }
     this.setState(
       {
         loading: false,
         events: newEvents,
         nextEventTs: newEvents[newEvents.length - 1].created,
         previousEventTs: newEvents[0].created,
+        ...optionalProps,
       },
       successCallback
     );
@@ -336,6 +350,7 @@ export default class UserFeedPage extends React.Component<
       events,
       previousEventTs,
       nextEventTs,
+      earliestEventTs,
       loading,
     } = this.state;
 
@@ -438,7 +453,12 @@ export default class UserFeedPage extends React.Component<
                 style={{ marginRight: "-1em", marginLeft: "1.5em" }}
               >
                 <li
-                  className={`previous ${!previousEventTs ? "disabled" : ""}`}
+                  className={`previous ${
+                    !previousEventTs ||
+                    (earliestEventTs && events[0].created >= earliestEventTs)
+                      ? "disabled"
+                      : ""
+                  }`}
                 >
                   <a
                     role="button"
