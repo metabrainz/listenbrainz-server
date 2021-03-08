@@ -110,9 +110,9 @@ def refresh_user_token(spotify_user: Spotify):
             break
         elif response.status_code == 400:
             error_body = response.json()
-            if "error" in error_body and error_body["error"] == "invalid_grant" and \
-                    "error_description" in error_body and error_body["error_description"] == "Refresh token revoked":
-                # user has revoked authorization through spotify ui, delete from our spotify db as well.
+            if "error" in error_body and error_body["error"] == "invalid_grant":
+                # user has revoked authorization through spotify ui or deleted their spotify account etc.
+                # in any of these case, we should delete usr from our spotify db as well.
                 db_spotify.delete_spotify(spotify_user.user_id)
                 return None
 
