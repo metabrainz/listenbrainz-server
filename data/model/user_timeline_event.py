@@ -22,9 +22,13 @@ from typing import Union, Optional
 
 import pydantic
 
+from data.model.listen import APIListen
+
 
 class UserTimelineEventType(Enum):
     RECORDING_RECOMMENDATION = 'recording_recommendation'
+    FOLLOW = 'follow'
+    LISTEN = 'listen'
 
 
 class RecordingRecommendationMetadata(pydantic.BaseModel):
@@ -45,3 +49,20 @@ class UserTimelineEvent(pydantic.BaseModel):
     metadata: UserTimelineEventMetadata
     event_type: UserTimelineEventType
     created: Optional[datetime]
+
+
+class APIFollowEvent(pydantic.BaseModel):
+    user_name_0: str
+    user_name_1: str
+    relationship_type: str
+    created: int
+
+
+APIEventMetadata = Union[APIListen, APIFollowEvent]
+
+
+class APITimelineEvent(pydantic.BaseModel):
+    event_type: UserTimelineEventType
+    user_name: str
+    created: int
+    metadata: APIEventMetadata
