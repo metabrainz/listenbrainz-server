@@ -668,14 +668,6 @@ describe("getFeedForUser", () => {
       SyntaxError("User token missing")
     );
   });
-
-  it("doesn't allow min_ts and max_ts at the same time", async () => {
-    await expect(
-      apiService.getFeedForUser("fnord", "shhh", 12345, 23456)
-    ).rejects.toThrow(
-      SyntaxError("Cannot have both minTs and maxTs defined at the same time")
-    );
-  });
 });
 
 describe("recommendTrackToFollowers", () => {

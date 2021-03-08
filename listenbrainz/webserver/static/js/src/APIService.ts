@@ -94,11 +94,6 @@ export default class APIService {
     if (!userToken) {
       throw new SyntaxError("User token missing");
     }
-    if (maxTs && minTs) {
-      throw new SyntaxError(
-        "Cannot have both minTs and maxTs defined at the same time"
-      );
-    }
 
     let query: string = `${this.APIBaseURI}/user/${userName}/feed/events`;
 

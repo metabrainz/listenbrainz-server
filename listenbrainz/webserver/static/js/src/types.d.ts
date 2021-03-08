@@ -453,10 +453,7 @@ declare type RecommendationFeedbackMap = {
   [recordingMbid: string]: RecommendationFeedBack | null;
 };
 
-/** ***********************************
- ********  USER FEED TIMELINE  ********
- ************************************* */
-
+/** For recommending a track from the front-end */
 declare type UserTrackRecommendationMetadata = {
   artist_name: string;
   track_name: string;
@@ -465,6 +462,10 @@ declare type UserTrackRecommendationMetadata = {
   recording_msid: string;
   artist_msid: string;
 };
+
+/** ***********************************
+ ********  USER FEED TIMELINE  ********
+ ************************************* */
 
 type EventTypeT =
   | "recording_recommendation"
