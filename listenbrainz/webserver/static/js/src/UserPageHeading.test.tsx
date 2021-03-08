@@ -73,6 +73,7 @@ describe("<UserPageHeading />", () => {
         user={user}
         loggedInUser={loggedInUser}
         loggedInUserFollowsUser={false}
+        enableFollowButtonFeature
       />
     );
     const followButton = wrapper.find(FollowButton).at(0);

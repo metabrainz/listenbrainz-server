@@ -642,6 +642,9 @@ describe("getFeedForUser", () => {
     expect(window.fetch).toHaveBeenCalledWith(
       "foobar/1/user/fnord/feed/events?min_ts=12345&count=25",
       {
+        headers: {
+          Authorization: "Token shhh",
+        },
         method: "GET",
       }
     );
