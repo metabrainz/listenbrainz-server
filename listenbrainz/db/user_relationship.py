@@ -131,8 +131,8 @@ def get_follow_events(user_ids: Tuple[int], min_ts: int, max_ts: int, count: int
               JOIN "user" follower ON ur.user_0 = follower.id
               JOIN "user" followed ON ur.user_1 = followed.id
              WHERE ur.user_0 IN :user_ids
-               AND ur.created >= :min_ts
-               AND ur.created <= :max_ts
+               AND ur.created > :min_ts
+               AND ur.created < :max_ts
           ORDER BY created DESC
              LIMIT :count
         """), {

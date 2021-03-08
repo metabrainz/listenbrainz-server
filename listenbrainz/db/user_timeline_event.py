@@ -113,8 +113,8 @@ def get_recording_recommendation_events_for_feed(user_ids: List[int], min_ts: in
             SELECT id, user_id, event_type, metadata, created
               FROM user_timeline_event
              WHERE user_id IN :user_ids
-               AND created >= :min_ts
-               AND created <= :max_ts
+               AND created > :min_ts
+               AND created < :max_ts
                AND event_type = :event_type
           ORDER BY created DESC
              LIMIT :count
