@@ -277,6 +277,7 @@ def process_one_user(user):
         else:
             if user is None:
                 current_app.logger.debug("%s has revoked spotify authorization", str(user))
+                return
 
     listenbrainz_user = db_user.get(user.user_id)
 
