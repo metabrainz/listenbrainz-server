@@ -46,7 +46,8 @@ def import_user_similarities(data):
             curs.execute("""CREATE TABLE recommendation.tmp_similar_user
                                          (LIKE recommendation.similar_user
                                           EXCLUDING INDEXES
-                                          EXCLUDING CONSTRAINTS)""")
+                                          EXCLUDING CONSTRAINTS
+                                          INCLUDING DEFAULTS)""")
             curs.execute("""INSERT INTO recommendation.tmp_similar_user
                                         SELECT id AS user_id, similar_users
                                           FROM recommendation.similar_user_import
