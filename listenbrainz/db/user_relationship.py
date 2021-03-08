@@ -117,7 +117,7 @@ def get_follow_events(user_ids: Tuple[int], min_ts: int, max_ts: int, count: int
 
     user_ids is a tuple of user row IDs.
 
-    Returns a dict of the following format:
+    Returns a list of dicts of the following format:
         {
             user_name_0: str,
             user_name_1: str,
