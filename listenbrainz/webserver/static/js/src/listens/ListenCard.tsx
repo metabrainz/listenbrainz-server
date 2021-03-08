@@ -317,12 +317,12 @@ export default class ListenCard extends React.Component<
                     aria-labelledby="listenControlsDropdown"
                   >
                     <ListenControl
-                      title="Delete Listen"
-                      action={this.deleteListen}
-                    />
-                    <ListenControl
                       title="Recommend to my followers"
                       action={this.recommendListenToFollowers}
+                    />
+                    <ListenControl
+                      title="Delete Listen"
+                      action={this.deleteListen}
                     />
                   </ul>
                 </>
