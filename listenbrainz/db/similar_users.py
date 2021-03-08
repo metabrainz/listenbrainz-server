@@ -26,7 +26,7 @@ def import_user_similarities(data):
                                 similar_users JSONB)""")
             query = "INSERT INTO recommendation.similar_user_import VALUES %s"
             values = []
-            for user, similar in data.entries():
+            for user, similar in data.items():
                 values.append((user, ujson.dumps(similar)))
                 if len(values) == ROWS_PER_BATCH:
                     execute_values(curs, query, values, template=None)
