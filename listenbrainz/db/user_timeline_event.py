@@ -20,6 +20,8 @@ import sqlalchemy
 import pydantic
 import ujson
 
+from datetime import datetime
+
 from data.model.user_timeline_event import (
     UserTimelineEvent,
     UserTimelineEventType,
@@ -100,3 +102,28 @@ def get_user_track_recommendation_events(user_id: int, count: int = 50) -> List[
         event_type=UserTimelineEventType.RECORDING_RECOMMENDATION,
         count=count,
     )
+
+def get_recording_recommendation_events_for_feed(user_ids: List[int], min_ts: int, max_ts: int, count: int) -> List[UserTimelineEvent]:
+    """ Gets a list of recording_recommendation events for specified users.
+
+    user_ids is a tuple of user row IDs.
+    """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT id, user_id, event_type, metadata, created
+              FROM user_timeline_event
+             WHERE user_id IN :user_ids
+               AND created > :min_ts
+               AND created < :max_ts
+               AND event_type = :event_type
+          ORDER BY created DESC
+             LIMIT :count
+        """), {
+            "user_ids": tuple(user_ids),
+            "min_ts": datetime.utcfromtimestamp(min_ts),
+            "max_ts": datetime.utcfromtimestamp(max_ts),
+            "count": count,
+            "event_type": UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+        })
+
+        return [UserTimelineEvent(**row) for row in result.fetchall()]
