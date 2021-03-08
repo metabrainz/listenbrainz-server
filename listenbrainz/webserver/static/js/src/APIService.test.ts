@@ -618,3 +618,70 @@ describe("deleteListen", () => {
     );
   });
 });
+
+describe("recommendTrackToFollowers", () => {
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+      });
+    });
+
+    // Mock function for checkStatus
+    apiService.checkStatus = jest.fn();
+  });
+
+  it("calls fetch with correct parameters", async () => {
+    const metadata: UserTrackRecommendationMetadata = {
+      artist_name: "Hans Zimmer",
+      track_name: "Flight",
+      artist_msid: "artist_msid",
+      recording_msid: "recording_msid",
+    };
+    await apiService.recommendTrackToFollowers(
+      "clark_kent",
+      "auth_token",
+      metadata
+    );
+    expect(window.fetch).toHaveBeenCalledWith(
+      `foobar/1/user/clark_kent/timeline-event/create/recording`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Token auth_token",
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({ metadata }),
+      }
+    );
+  });
+
+  it("calls checkStatus once", async () => {
+    const metadata: UserTrackRecommendationMetadata = {
+      artist_name: "Hans Zimmer",
+      track_name: "Flight",
+      artist_msid: "artist_msid",
+      recording_msid: "recording_msid",
+    };
+    await apiService.recommendTrackToFollowers(
+      "clark_kent",
+      "auth_token",
+      metadata
+    );
+    expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns the response code if successful", async () => {
+    const metadata: UserTrackRecommendationMetadata = {
+      artist_name: "Hans Zimmer",
+      track_name: "Flight",
+      artist_msid: "artist_msid",
+      recording_msid: "recording_msid",
+    };
+    await expect(
+      apiService.recommendTrackToFollowers("clark_kent", "auth_token", metadata)
+    ).resolves.toEqual(200);
+  });
+});

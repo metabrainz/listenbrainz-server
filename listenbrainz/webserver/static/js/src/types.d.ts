@@ -452,3 +452,12 @@ declare type JSPFTrack = {
 declare type RecommendationFeedbackMap = {
   [recordingMbid: string]: RecommendationFeedBack | null;
 };
+
+declare type UserTrackRecommendationMetadata = {
+  artist_name: string;
+  track_name: string;
+  release_name?: string;
+  recording_mbid?: string;
+  recording_msid: string;
+  artist_msid: string;
+};
