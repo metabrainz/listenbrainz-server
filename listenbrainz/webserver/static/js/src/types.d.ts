@@ -192,10 +192,6 @@ declare type BrainzPlayerError =
   | string
   | { message?: string; status?: number; statusText?: string };
 
-declare type FollowUsersPlayingNow = {
-  [user: string]: Listen;
-};
-
 declare type LastFmScrobblePage = {
   recenttracks: {
     track: any;
@@ -363,7 +359,7 @@ declare type UserArtistMapDatum = {
 
 declare type UserArtistMapData = Array<UserArtistMapDatum>;
 
-declare type ListensListMode = "listens" | "follow" | "recent";
+declare type ListensListMode = "listens" | "recent";
 
 declare type ListenFeedBack = 1 | 0 | -1;
 

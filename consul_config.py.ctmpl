@@ -88,7 +88,7 @@ INCOMING_EXCHANGE = '''{{template "KEY" "incoming_exchange"}}'''
 INCOMING_QUEUE = '''{{template "KEY" "incoming_queue"}}'''
 UNIQUE_EXCHANGE = '''{{template "KEY" "unique_exchange"}}'''
 UNIQUE_QUEUE = '''{{template "KEY" "unique_queue"}}'''
-FOLLOW_LIST_QUEUE = '''{{template "KEY" "follow_list_queue"}}'''
+WEBSOCKETS_QUEUE = '''{{template "KEY" "websockets_queue"}}'''
 PLAYING_NOW_EXCHANGE = '''{{template "KEY" "playing_now_exchange"}}'''
 PLAYING_NOW_QUEUE = '''{{template "KEY" "playing_now_queue"}}'''
 
