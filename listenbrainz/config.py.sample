@@ -38,7 +38,7 @@ INCOMING_EXCHANGE = "incoming"
 INCOMING_QUEUE = "incoming"
 UNIQUE_EXCHANGE = "unique"
 UNIQUE_QUEUE = "unique"
-FOLLOW_LIST_QUEUE = "follow_list"
+WEBSOCKETS_QUEUE = "follow_list"
 PLAYING_NOW_EXCHANGE = "playing_now"
 PLAYING_NOW_QUEUE = "playing_now"
 

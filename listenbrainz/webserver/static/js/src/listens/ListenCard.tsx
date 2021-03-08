@@ -1,5 +1,3 @@
-import * as timeago from "time-ago";
-
 import * as React from "react";
 import { get as _get } from "lodash";
 import MediaQuery from "react-responsive";
@@ -12,7 +10,7 @@ import {
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { getArtistLink, getTrackLink } from "../utils";
+import { getArtistLink, getTrackLink, preciseTimestamp } from "../utils";
 import Card from "../components/Card";
 import APIService from "../APIService";
 import ListenControl from "./ListenControl";
@@ -46,8 +44,8 @@ export default class ListenCard extends React.Component<
   ListenCardProps,
   ListenCardState
 > {
-  APIService: APIService;
   playListen: (listen: Listen) => void;
+  APIService: APIService;
 
   constructor(props: ListenCardProps) {
     super(props);
@@ -130,6 +128,47 @@ export default class ListenCard extends React.Component<
     }
   };
 
+  recommendListenToFollowers = async () => {
+    const { listen, currentUser, isCurrentUser, newAlert } = this.props;
+
+    if (isCurrentUser && currentUser?.auth_token) {
+      const metadata: UserTrackRecommendationMetadata = {
+        artist_name: _get(listen, "track_metadata.artist_name"),
+        track_name: _get(listen, "track_metadata.track_name"),
+        release_name: _get(listen, "track_metadata.release_name"),
+        recording_mbid: _get(
+          listen,
+          "track_metadata.additional_info.recording_mbid"
+        ),
+        recording_msid: _get(
+          listen,
+          "track_metadata.additional_info.recording_msid"
+        ),
+        artist_msid: _get(listen, "track_metadata.additional_info.artist_msid"),
+      };
+
+      try {
+        const status = await this.APIService.recommendTrackToFollowers(
+          currentUser.name,
+          currentUser.auth_token,
+          metadata
+        );
+        if (status === 200) {
+          newAlert(
+            "success",
+            `You recommended a track to your followers!`,
+            `${metadata.artist_name} - ${metadata.track_name}`
+          );
+        }
+      } catch (error) {
+        this.handleError(
+          error,
+          "We encountered an error when trying to recommend the track to your followers"
+        );
+      }
+    }
+  };
+
   handleError = (error: string | Error, title?: string): void => {
     const { newAlert } = this.props;
     if (!error) {
@@ -155,13 +194,13 @@ export default class ListenCard extends React.Component<
       >
         <div
           className={`${
-            isCurrentUser || mode === "recent" || mode === "follow"
+            isCurrentUser || mode === "recent"
               ? " col-xs-9"
               : " col-xs-12"
           }`}
         >
           <MediaQuery minWidth={768}>
-            <div className="col-xs-9">
+            <div className="col-xs-8">
               <div className="track-details">
                 <p title={listen.track_metadata?.track_name}>
                   {getTrackLink(listen)}
@@ -176,7 +215,7 @@ export default class ListenCard extends React.Component<
                 </p>
               </div>
             </div>
-            <div className="col-xs-3">
+            <div className="col-xs-4">
               {listen.playing_now ? (
                 <span className="listen-time text-center text-muted">
                   <FontAwesomeIcon icon={faMusic as IconProp} /> Playing now
@@ -189,9 +228,9 @@ export default class ListenCard extends React.Component<
                     new Date(listen.listened_at * 1000).toISOString()
                   }
                 >
-                  {listen.listened_at_iso
-                    ? timeago.ago(listen.listened_at_iso)
-                    : timeago.ago(listen.listened_at * 1000)}
+                  {preciseTimestamp(
+                    listen.listened_at_iso || listen.listened_at * 1000
+                  )}
                 </span>
               )}
             </div>
@@ -220,14 +259,10 @@ export default class ListenCard extends React.Component<
                           new Date(listen.listened_at * 1000).toISOString()
                         }
                       >
-                        {`
-                          ${
-                            listen.listened_at_iso
-                              ? timeago.ago(listen.listened_at_iso, true)
-                              : timeago.ago(listen.listened_at * 1000, true)
-                          }
-                          `}
-                        ago &#8212; &nbsp;
+                        {preciseTimestamp(
+                          listen.listened_at_iso || listen.listened_at * 1000
+                        )}
+                        &nbsp; &#8212; &nbsp;
                       </span>
                     )}
                     {getArtistLink(listen)}
@@ -239,12 +274,12 @@ export default class ListenCard extends React.Component<
         </div>
         <div
           className={`${
-            isCurrentUser || mode === "recent" || mode === "follow"
+            isCurrentUser || mode === "recent"
               ? " col-xs-3 text-center"
               : "hidden"
           }`}
         >
-          {mode === "follow" || mode === "recent" ? (
+          {mode === "recent" ? (
             <a
               href={`/user/${listen.user_name}`}
               target="_blank"
@@ -281,6 +316,10 @@ export default class ListenCard extends React.Component<
                     className="dropdown-menu dropdown-menu-right"
                     aria-labelledby="listenControlsDropdown"
                   >
+                    <ListenControl
+                      title="Recommend to my followers"
+                      action={this.recommendListenToFollowers}
+                    />
                     <ListenControl
                       title="Delete Listen"
                       action={this.deleteListen}

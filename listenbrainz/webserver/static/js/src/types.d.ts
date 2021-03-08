@@ -192,10 +192,6 @@ declare type BrainzPlayerError =
   | string
   | { message?: string; status?: number; statusText?: string };
 
-declare type FollowUsersPlayingNow = {
-  [user: string]: Listen;
-};
-
 declare type LastFmScrobblePage = {
   recenttracks: {
     track: any;
@@ -363,7 +359,7 @@ declare type UserArtistMapDatum = {
 
 declare type UserArtistMapData = Array<UserArtistMapDatum>;
 
-declare type ListensListMode = "listens" | "follow" | "recent";
+declare type ListensListMode = "listens" | "recent";
 
 declare type ListenFeedBack = 1 | 0 | -1;
 
@@ -455,4 +451,13 @@ declare type JSPFTrack = {
 
 declare type RecommendationFeedbackMap = {
   [recordingMbid: string]: RecommendationFeedBack | null;
+};
+
+declare type UserTrackRecommendationMetadata = {
+  artist_name: string;
+  track_name: string;
+  release_name?: string;
+  recording_mbid?: string;
+  recording_msid: string;
+  artist_msid: string;
 };

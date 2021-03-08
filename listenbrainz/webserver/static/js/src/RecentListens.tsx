@@ -1,25 +1,18 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
-import { faListUl } from "@fortawesome/free-solid-svg-icons";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
-
 import { AlertList } from "react-bs-notifier";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as _ from "lodash";
 import * as io from "socket.io-client";
 import BrainzPlayer from "./BrainzPlayer";
-import FollowUsers from "./FollowUsers";
 import APIService from "./APIService";
 import Loader from "./components/Loader";
 import ListenCard from "./listens/ListenCard";
+import { formatWSMessageToListen } from "./utils";
 
 export interface RecentListensProps {
   apiUrl: string;
-  followList?: string[];
-  followListId?: number;
-  followListName?: string;
   latestListenTs: number;
   latestSpotifyUri?: string;
   listens?: Array<Listen>;
@@ -38,16 +31,12 @@ export interface RecentListensState {
   currentListen?: Listen;
   direction: BrainzPlayDirection;
   endOfTheLine?: boolean; // To indicate we can't fetch listens older than 12 months
-  followList: Array<string>;
   lastFetchedDirection?: "older" | "newer";
-  listId?: number;
-  listName: string;
   listens: Array<Listen>;
   listenCount?: number;
   loading: boolean;
   mode: ListensListMode;
   nextListenTs?: number;
-  playingNowByUser: FollowUsersPlayingNow;
   previousListenTs?: number;
   saveUrl: string;
   recordingFeedbackMap: RecordingFeedbackMap;
@@ -72,12 +61,8 @@ export default class RecentListens extends React.Component<
       alerts: [],
       listens: props.listens || [],
       mode: props.mode,
-      followList: props.followList || [],
-      playingNowByUser: {},
       saveUrl: props.saveUrl || "",
       lastFetchedDirection: "older",
-      listName: props.followListName || "",
-      listId: props.followListId || undefined,
       loading: false,
       nextListenTs: props.listens?.[props.listens.length - 1]?.listened_at,
       previousListenTs: props.listens?.[0]?.listened_at,
@@ -93,14 +78,9 @@ export default class RecentListens extends React.Component<
   }
 
   componentDidMount(): void {
-    const { mode, listens } = this.state;
-    if (mode === "listens" || mode === "follow") {
-      this.connectWebsockets();
-    }
-    if (mode === "follow" && !listens.length) {
-      this.getRecentListensForFollowList();
-    }
+    const { mode } = this.state;
     if (mode === "listens") {
+      this.connectWebsockets();
       // Listen to browser previous/next events and load page accordingly
       window.addEventListener("popstate", this.handleURLChange);
       document.addEventListener("keydown", this.handleKeyDown);
@@ -176,15 +156,9 @@ export default class RecentListens extends React.Component<
   };
 
   addWebsocketsHandlers = (): void => {
-    const { mode, followList } = this.state;
-    const { user } = this.props;
-
     this.socket.on("connect", () => {
-      if (mode === "follow") {
-        this.handleFollowUserListChange(followList, false);
-      } else {
-        this.handleFollowUserListChange([user.name], false);
-      }
+      const { user } = this.props;
+      this.socket.emit("json", { user: user.name });
     });
     this.socket.on("listen", (data: string) => {
       this.receiveNewListen(data);
@@ -192,39 +166,6 @@ export default class RecentListens extends React.Component<
     this.socket.on("playing_now", (data: string) => {
       this.receiveNewPlayingNow(data);
     });
-  };
-
-  handleFollowUserListChange = (
-    userList: string[],
-    dontSendUpdate?: boolean
-  ): void => {
-    const { mode } = this.state;
-    const { user } = this.props;
-    let previousFollowList: string[];
-    this.setState(
-      (prevState) => {
-        previousFollowList = prevState.followList;
-        return {
-          followList: userList,
-        };
-      },
-      () => {
-        if (dontSendUpdate) {
-          return;
-        }
-        if (!this.socket) {
-          this.connectWebsockets();
-          return;
-        }
-        this.socket.emit("json", {
-          user: user.name,
-          follow: userList,
-        });
-        if (mode === "follow" && _.difference(userList, previousFollowList)) {
-          this.getRecentListensForFollowList();
-        }
-      }
-    );
   };
 
   playListen = (listen: Listen): void => {
@@ -237,57 +178,24 @@ export default class RecentListens extends React.Component<
     let json;
     try {
       json = JSON.parse(newListen);
-      // the websocket message received may not contain the expected track_metadata and listened_at fields
-      // therefore, we look for their alias as well.
-      if (!("track_metadata" in json)) {
-        if ("data" in json) {
-          json.track_metadata = json.data;
-          delete json.data;
-        } else {
-          // eslint-disable-next-line no-console
-          console.debug(
-            `Could not find track_metadata and data in following json: ${json}`
-          );
-          return;
-        }
-      }
-      if (!("listened_at" in json)) {
-        if ("timestamp" in json) {
-          json.listened_at = json.timestamp;
-          delete json.timestamp;
-        } else {
-          // eslint-disable-next-line no-console
-          console.debug(
-            `Could not find listened_at and timestamp in following json: ${json}`
-          );
-          return;
-        }
-      }
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error(error);
+      console.error("Coudn't parse the new listen as JSON: ", error);
       return;
     }
+    const listen = formatWSMessageToListen(json);
 
-    const listen = json as Listen;
-    this.setState((prevState) => {
-      const { listens } = prevState;
-      // Crop listens array to 100 max
-      while (listens.length >= 100) {
-        if (prevState.mode === "follow") {
-          listens.shift();
-        } else {
+    if (listen) {
+      this.setState((prevState) => {
+        const { listens } = prevState;
+        // Crop listens array to 100 max
+        while (listens.length >= 100) {
           listens.pop();
-        }
       }
-
-      if (prevState.mode === "follow") {
-        listens.push(listen);
-      } else {
-        listens.unshift(listen);
-      }
-      return { listens };
-    });
+      listens.unshift(listen);
+        return { listens };
+      });
+    }
   };
 
   receiveNewPlayingNow = (newPlayingNow: string): void => {
@@ -295,22 +203,11 @@ export default class RecentListens extends React.Component<
     playingNow.playing_now = true;
 
     this.setState((prevState) => {
-      if (prevState.mode === "follow") {
-        const userName = playingNow.user_name as string;
-        return {
-          playingNowByUser: {
-            ...prevState.playingNowByUser,
-            [userName]: playingNow,
-          },
-          listens: prevState.listens,
-        };
-      }
       const indexOfPreviousPlayingNow = prevState.listens.findIndex(
         (listen) => listen.playing_now
       );
       prevState.listens.splice(indexOfPreviousPlayingNow, 1);
       return {
-        playingNowByUser: prevState.playingNowByUser,
         listens: [playingNow].concat(prevState.listens),
       };
     });
@@ -323,23 +220,6 @@ export default class RecentListens extends React.Component<
   isCurrentListen = (listen: Listen): boolean => {
     const { currentListen } = this.state;
     return Boolean(currentListen && _.isEqual(listen, currentListen));
-  };
-
-  getRecentListensForFollowList = async () => {
-    const { followList } = this.state;
-    if (!followList.length) {
-      return;
-    }
-    try {
-      const listens = await this.APIService.getRecentListensForUsers(
-        followList
-      );
-      this.setState({
-        listens: _.orderBy(listens, "listened_at", "asc"),
-      });
-    } catch (error) {
-      this.newAlert("danger", "Could not get recent listens", error.message);
-    }
   };
 
   newAlert = (
@@ -647,16 +527,12 @@ export default class RecentListens extends React.Component<
       currentListen,
       direction,
       endOfTheLine,
-      followList,
       lastFetchedDirection,
-      listId,
-      listName,
       listens,
       listenCount,
       loading,
       mode,
       nextListenTs,
-      playingNowByUser,
       previousListenTs,
       saveUrl,
     } = this.state;
@@ -691,17 +567,6 @@ export default class RecentListens extends React.Component<
             {!listens.length && (
               <div className="lead text-center">
                 <p>No listens yet</p>
-                {mode === "follow" && (
-                  <button
-                    title="Load recent listens"
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={this.getRecentListensForFollowList}
-                  >
-                    <FontAwesomeIcon icon={faListUl as IconProp} />
-                    &nbsp;&nbsp;Load recent listens
-                  </button>
-                )}
               </div>
             )}
             {listens.length > 0 && (
@@ -848,20 +713,6 @@ export default class RecentListens extends React.Component<
                 )}
               </div>
             )}
-            <br />
-            {mode === "follow" && (
-              <FollowUsers
-                onUserListChange={this.handleFollowUserListChange}
-                followList={followList}
-                playListen={this.playListen}
-                playingNow={playingNowByUser}
-                saveUrl={saveUrl}
-                listName={listName}
-                listId={listId}
-                creator={user}
-                newAlert={this.newAlert}
-              />
-            )}
           </div>
           <div
             className="col-md-4"
@@ -897,9 +748,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   const {
     api_url,
-    follow_list,
-    follow_list_id,
-    follow_list_name,
     latest_listen_ts,
     latest_spotify_uri,
     listens,
@@ -916,9 +764,6 @@ document.addEventListener("DOMContentLoaded", () => {
   ReactDOM.render(
     <RecentListens
       apiUrl={api_url}
-      followList={follow_list}
-      followListId={follow_list_id}
-      followListName={follow_list_name}
       latestListenTs={latest_listen_ts}
       latestSpotifyUri={latest_spotify_uri}
       listens={listens}
