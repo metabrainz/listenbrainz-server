@@ -40,7 +40,7 @@ class SpotifyDomainTestCase(ServerTestCase):
         mock_requests.post(spotify.OAUTH_TOKEN_URL, status_code=200, json={
             'access_token': 'tokentoken',
             'refresh_token': 'refreshtokentoken',
-            'expires_at': expires_at,
+            'expires_in': 3600,
             'scope': '',
         })
         spotify.refresh_user_token(self.spotify_user)
@@ -59,7 +59,7 @@ class SpotifyDomainTestCase(ServerTestCase):
         expires_at = int(time.time()) + 3600
         mock_requests.post(spotify.OAUTH_TOKEN_URL, status_code=200, json={
             'access_token': 'tokentoken',
-            'expires_at': expires_at,
+            'expires_in': 3600,
             'scope': '',
         })
         spotify.refresh_user_token(self.spotify_user)
