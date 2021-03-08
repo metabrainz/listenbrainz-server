@@ -23,7 +23,6 @@ import BrainzPlayer from "../BrainzPlayer";
 import FollowerFollowingModal from "../follow/FollowerFollowingModal";
 import Loader from "../components/Loader";
 import TimelineEventCard from "./TimelineEventCard";
-import fakeData from "./__mocks__/fake-user-feed.json";
 import { preciseTimestamp } from "../utils";
 
 export enum EventType {
@@ -107,7 +106,7 @@ export default class UserFeedPage extends React.Component<
       alerts: [],
       nextEventTs: props.events?.[props.events.length - 1]?.created,
       previousEventTs: props.events?.[0]?.created,
-      events: props.events,
+      events: props.events || [],
       loading: false,
     };
 
@@ -116,9 +115,10 @@ export default class UserFeedPage extends React.Component<
     );
   }
 
-  componentDidMount(): void {
+  async componentDidMount(): Promise<void> {
     // Listen to browser previous/next events and load page accordingly
     window.addEventListener("popstate", this.handleURLChange);
+    await this.getFeedFromAPI();
   }
 
   componentWillUnmount() {
@@ -171,6 +171,7 @@ export default class UserFeedPage extends React.Component<
     try {
       newEvents = await this.APIService.getFeedForUser(
         currentUser.name,
+        currentUser.auth_token as string,
         minTs,
         maxTs
       );
@@ -178,7 +179,8 @@ export default class UserFeedPage extends React.Component<
       this.newAlert(
         "warning",
         "Could not load timeline events",
-        "Something went wrong when we tried to load your events, please try again or contact us if the problem persists."
+        `Something went wrong when we tried to load your events, please try again or contact us if the problem persists.<br/>
+        ${error}`
       );
       this.setState({ loading: false });
       return;
@@ -421,7 +423,7 @@ export default class UserFeedPage extends React.Component<
                           {this.renderEventText(event)}
 
                           <span className="event-time">
-                            {preciseTimestamp(created)}
+                            {preciseTimestamp(created * 1000)}
                           </span>
                         </div>
 
@@ -492,11 +494,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#react-container");
   const propsElement = document.getElementById("react-props");
   const reactProps = JSON.parse(propsElement!.innerHTML);
-  const { api_url, current_user, spotify } = reactProps;
+  const { api_url, current_user, spotify, events } = reactProps;
   ReactDOM.render(
     <UserFeedPage
       currentUser={current_user}
-      events={fakeData.payload.events as TimelineEvent[]}
+      events={events}
       apiUrl={api_url}
       spotify={spotify}
     />,

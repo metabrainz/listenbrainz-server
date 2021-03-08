@@ -83,12 +83,16 @@ export default class APIService {
 
   getFeedForUser = async (
     userName: string,
+    userToken: string,
     minTs?: number,
     maxTs?: number,
     count?: number
   ): Promise<Array<TimelineEvent>> => {
     if (!userName) {
       throw new SyntaxError("Username missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
     }
     if (maxTs && minTs) {
       throw new SyntaxError(
@@ -114,6 +118,9 @@ export default class APIService {
 
     const response = await fetch(query, {
       method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
     });
     await this.checkStatus(response);
     const result = await response.json();

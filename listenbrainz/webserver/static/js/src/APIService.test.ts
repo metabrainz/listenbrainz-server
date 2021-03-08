@@ -638,7 +638,7 @@ describe("getFeedForUser", () => {
   });
 
   it("calls fetch with correct parameters", async () => {
-    await apiService.getFeedForUser("fnord", 12345, undefined, 25);
+    await apiService.getFeedForUser("fnord", "shhh", 12345, undefined, 25);
     expect(window.fetch).toHaveBeenCalledWith(
       "foobar/1/user/fnord/feed/events?min_ts=12345&count=25",
       {
@@ -648,25 +648,30 @@ describe("getFeedForUser", () => {
   });
 
   it("calls checkStatus once", async () => {
-    await apiService.getFeedForUser("fnord");
+    await apiService.getFeedForUser("fnord", "shhh");
     expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
   });
 
   it("returns the feed events array if successful", async () => {
-    const events = await apiService.getFeedForUser("fnord");
+    const events = await apiService.getFeedForUser("fnord", "shhh");
     expect(events).toBeDefined();
     expect(events).toEqual(payload.events);
   });
 
   it("throws appropriate error if username is missing", async () => {
-    await expect(apiService.getFeedForUser("")).rejects.toThrow(
+    await expect(apiService.getFeedForUser("", "")).rejects.toThrow(
       SyntaxError("Username missing")
+    );
+  });
+  it("throws appropriate error if userToken is missing", async () => {
+    await expect(apiService.getFeedForUser("Cthulhu", "")).rejects.toThrow(
+      SyntaxError("User token missing")
     );
   });
 
   it("doesn't allow min_ts and max_ts at the same time", async () => {
     await expect(
-      apiService.getFeedForUser("fnord", 12345, 23456)
+      apiService.getFeedForUser("fnord", "shhh", 12345, 23456)
     ).rejects.toThrow(
       SyntaxError("Cannot have both minTs and maxTs defined at the same time")
     );

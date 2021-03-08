@@ -11,7 +11,7 @@
 	"events": [
 		{
 			"event_type": "recording_recommendation",
-			"user_id": "reosarevok",
+			"user_name": "reosarevok",
 			"created":1614714523,
 			"metadata": {
 				"inserted_at": "Tue, 16 Feb 2021 11:42:11 GMT",
@@ -52,7 +52,7 @@
 		},
 		{
 			"event_type": "recording_recommendation",
-			"user_id": "reosarevok",
+			"user_name": "reosarevok",
 			"created":1614711523,
 			"metadata": {
 				"inserted_at": "Tue, 16 Feb 2021 11:36:11 GMT",
@@ -93,7 +93,7 @@
 		},
 		{
 			"event_type": "like",
-			"user_id": "reosarevok",
+			"user_name": "reosarevok",
 			"created":1614684523,
 			"metadata": {
 				"inserted_at": "Tue, 16 Feb 2021 11:36:11 GMT",
@@ -140,7 +140,7 @@
 				"user_1": "reosarevok",
 				"type": "follow"
 			},
-			"user_id": "iliekcomputers"
+			"user_name": "iliekcomputers"
 		},
 		{
 			"event_type": "follow",
@@ -150,7 +150,7 @@
 				"user_1": "iliekcomputers",
 				"type": "follow"
 			},
-			"user_id": "iliekcomputers"
+			"user_name": "iliekcomputers"
 		},
 		{
 			"event_type": "playlist_created",
@@ -159,11 +159,11 @@
 				"identifier": "https://listenbrainz.org/playlist/4245ccd3-4f0d-4276-95d6-2e09d87b5546",
 				"title": "My top discoveries of 2020"
 			},
-			"user_id": "troi-bot"
+			"user_name": "troi-bot"
 		},
 		{
 			"event_type": "recording_recommendation",
-			"user_id": "reosarevok",
+			"user_name": "reosarevok",
 			"created":1613475505,
 			"metadata": {
 				"inserted_at": "Tue, 16 Feb 2021 11:18:16 GMT",
@@ -204,7 +204,7 @@
 		},
 		{
 			"event_type": "recording_recommendation",
-			"user_id": "reosarevok",
+			"user_name": "reosarevok",
 			"created":1613474078,
 			"metadata": {
 				"inserted_at": "Tue, 16 Feb 2021 11:18:16 GMT",
@@ -245,7 +245,7 @@
 		},
 		{
 			"event_type": "recording_recommendation",
-			"user_id": "reosarevok",
+			"user_name": "reosarevok",
 			"created":1613472575,
 			"metadata": {
 				"inserted_at": "Tue, 16 Feb 2021 10:52:59 GMT",
@@ -292,7 +292,7 @@
 		},
 		{
 			"event_type": "recording_recommendation",
-			"user_id": "reosarevok",
+			"user_name": "reosarevok",
 			"created":1613472374,
 			"metadata": {
 				"inserted_at": "Tue, 16 Feb 2021 10:46:56 GMT",
@@ -339,7 +339,7 @@
 		},
 		{
 			"event_type": "recording_recommendation",
-			"user_id": "reosarevok",
+			"user_name": "reosarevok",
 			"created":1613472254,
 			"metadata": {
 				"inserted_at": "Tue, 16 Feb 2021 10:46:56 GMT",
