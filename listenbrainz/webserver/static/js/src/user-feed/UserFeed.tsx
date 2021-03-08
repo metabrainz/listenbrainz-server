@@ -321,7 +321,7 @@ export default class UserFeedPage extends React.Component<
           target="_blank"
           rel="noopener noreferrer"
         >
-          {user_name}
+          {user_name === currentUser.name ? "You" : user_name}
         </a>{" "}
         {UserFeedPage.getEventTypePhrase(event_type)}
       </span>

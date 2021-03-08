@@ -69,12 +69,12 @@ describe("<UserFeed />", () => {
     const wrapper = mount<UserFeedPage>(<UserFeedPage {...props} />);
     const recEvent = wrapper.find("#timeline > ul >li").at(0);
     const description = recEvent.find(".event-description-text");
-    expect(description.text()).toEqual("reosarevok recommended a song");
+    expect(description.text()).toEqual("reosarevok recommended a track");
     const content = recEvent.find(".event-content");
     expect(content.exists()).toBeTruthy();
     expect(content.children()).toHaveLength(1);
     const time = recEvent.find(".event-time");
-    expect(time.text()).toEqual("Tue, Mar 2, 2021, 7 PM");
+    expect(time.text()).toEqual("Mar 02, 7:48 PM");
   });
 
   it("renders follow relationship events", () => {
@@ -85,7 +85,7 @@ describe("<UserFeed />", () => {
     let content = followedEvent.find(".event-content");
     expect(content.exists()).toBeFalsy();
     let time = followedEvent.find(".event-time");
-    expect(time.text()).toEqual("Tue, Feb 16, 2021, 11 AM");
+    expect(time.text()).toEqual("Feb 16, 11:21 AM");
 
     const followEvent = wrapper.find("#timeline > ul >li").at(4);
     description = followEvent.find(".event-description-text");
@@ -93,7 +93,7 @@ describe("<UserFeed />", () => {
     content = followEvent.find(".event-content");
     expect(content.exists()).toBeFalsy();
     time = followEvent.find(".event-time");
-    expect(time.text()).toEqual("Tue, Feb 16, 2021, 11 AM");
+    expect(time.text()).toEqual("Feb 16, 11:20 AM");
   });
 
   it("renders playlist created events", () => {
@@ -107,7 +107,7 @@ describe("<UserFeed />", () => {
     const content = playlistEvent.find(".event-content");
     expect(content.exists()).toBeFalsy();
     const time = playlistEvent.find(".event-time");
-    expect(time.text()).toEqual("Tue, Feb 16, 2021, 11 AM");
+    expect(time.text()).toEqual("Feb 16, 11:17 AM");
   });
 
   describe("Pagination", () => {
@@ -159,6 +159,7 @@ describe("<UserFeed />", () => {
         await instance.handleClickOlder();
         expect(spy).toHaveBeenCalledWith(
           props.currentUser.name,
+          props.currentUser.auth_token,
           undefined,
           1586450000
         );
@@ -179,6 +180,7 @@ describe("<UserFeed />", () => {
         await instance.handleClickOlder();
         expect(spy).toHaveBeenCalledWith(
           props.currentUser.name,
+          props.currentUser.auth_token,
           undefined,
           1586450000
         );
@@ -263,6 +265,7 @@ describe("<UserFeed />", () => {
         expect(wrapper.state("loading")).toBeFalsy();
         expect(spy).toHaveBeenCalledWith(
           props.currentUser.name,
+          props.currentUser.auth_token,
           123456,
           undefined
         );

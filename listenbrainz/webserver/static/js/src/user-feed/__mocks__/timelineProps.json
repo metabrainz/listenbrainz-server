@@ -1,7 +1,8 @@
 {
     "currentUser": {
         "id": 1,
-        "name": "iliekcomputers"
+        "name": "iliekcomputers",
+        "auth_token": "dontspillthebeans"
     },
     "spotify": {
         "access_token": "access token",
@@ -136,8 +137,8 @@
 			"event_type": "follow",
 			"created":1613474472,
 			"metadata": {
-				"user_0": "iliekcomputers",
-				"user_1": "reosarevok",
+				"user_name_0": "iliekcomputers",
+				"user_name_1": "reosarevok",
 				"type": "follow"
 			},
 			"user_name": "iliekcomputers"
@@ -146,8 +147,8 @@
 			"event_type": "follow",
 			"created":1613474452,
 			"metadata": {
-				"user_0": "reosarevok",
-				"user_1": "iliekcomputers",
+				"user_name_0": "reosarevok",
+				"user_name_1": "iliekcomputers",
 				"type": "follow"
 			},
 			"user_name": "iliekcomputers"
