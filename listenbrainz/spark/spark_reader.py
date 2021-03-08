@@ -105,7 +105,7 @@ class SparkReader:
         """
 
         with self.app.app_context():
-
+            current_app.logger.setLevel(logging.INFO)
             while True:
                 self.init_rabbitmq_connection()
                 self.incoming_ch = utils.create_channel_to_consume(
