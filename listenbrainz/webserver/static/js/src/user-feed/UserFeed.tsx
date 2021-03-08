@@ -24,7 +24,7 @@ import FollowerFollowingModal from "../follow/FollowerFollowingModal";
 import Loader from "../components/Loader";
 import TimelineEventCard from "./TimelineEventCard";
 import fakeData from "./__mocks__/fake-user-feed.json";
-import { timestampToTimeAgo } from "../utils";
+import { preciseTimestamp } from "../utils";
 
 export enum EventType {
   RECORDING_RECOMMENDATION = "recording_recommendation",
@@ -421,7 +421,7 @@ export default class UserFeedPage extends React.Component<
                           {this.renderEventText(event)}
 
                           <span className="event-time">
-                            {timestampToTimeAgo(created)}
+                            {preciseTimestamp(created)}
                           </span>
                         </div>
 
