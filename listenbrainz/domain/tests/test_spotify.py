@@ -53,6 +53,25 @@ class SpotifyDomainTestCase(ServerTestCase):
         mock_get_user.assert_called_with(self.spotify_user.user_id)
 
     @requests_mock.Mocker()
+    @mock.patch('listenbrainz.domain.spotify.db_spotify.get_user')
+    @mock.patch('listenbrainz.domain.spotify.db_spotify.update_token')
+    def test_refresh_user_token_only_access(self, mock_requests, mock_update_token, mock_get_user):
+        expires_at = int(time.time()) + 3600
+        mock_requests.post(spotify.OAUTH_TOKEN_URL, status_code=200, json={
+            'access_token': 'tokentoken',
+            'expires_at': expires_at,
+            'scope': '',
+        })
+        spotify.refresh_user_token(self.spotify_user)
+        mock_update_token.assert_called_with(
+            self.spotify_user.user_id,
+            'tokentoken',
+            'old-refresh-token',
+            expires_at,
+        )
+        mock_get_user.assert_called_with(self.spotify_user.user_id)
+
+    @requests_mock.Mocker()
     def test_refresh_user_token_bad(self, mock_requests):
         mock_requests.post(spotify.OAUTH_TOKEN_URL, status_code=400, json={
             'error': 'invalid request',
