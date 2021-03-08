@@ -20,6 +20,7 @@ const listen: Listen = {
     additional_info: {
       release_mbid: "foo",
       recording_msid: "bar",
+      artist_msid: "artist_msid",
     },
   },
 };
@@ -285,6 +286,79 @@ describe("deleteListen", () => {
     expect(instance.handleError).toHaveBeenCalledWith(
       error,
       "Error while deleting listen"
+    );
+  });
+});
+
+describe("recommendTrackToFollowers", () => {
+  it("calls API, and creates a new alert on success", async () => {
+    const wrapper = shallow<ListenCard>(
+      <ListenCard {...{ ...props, newAlert: jest.fn() }} />
+    );
+    const instance = wrapper.instance();
+
+    const spy = jest.spyOn(instance.APIService, "recommendTrackToFollowers");
+    spy.mockImplementation(() => Promise.resolve(200));
+
+    await instance.recommendListenToFollowers();
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith("test", "baz", {
+      artist_name: instance.props.listen.track_metadata.artist_name,
+      track_name: instance.props.listen.track_metadata.track_name,
+      artist_msid:
+        instance.props.listen.track_metadata.additional_info?.artist_msid,
+      recording_msid:
+        instance.props.listen.track_metadata.additional_info?.recording_msid,
+    });
+
+    expect(instance.props.newAlert).toHaveBeenCalledTimes(1);
+  });
+
+  it("does nothing if isCurrentUser is false", async () => {
+    const wrapper = shallow<ListenCard>(
+      <ListenCard {...{ ...props, isCurrentUser: false }} />
+    );
+    const instance = wrapper.instance();
+
+    const spy = jest.spyOn(instance.APIService, "recommendTrackToFollowers");
+    spy.mockImplementation(() => Promise.resolve(200));
+
+    instance.recommendListenToFollowers();
+    expect(spy).toHaveBeenCalledTimes(0);
+  });
+
+  it("does nothing if CurrentUser.authtoken is not set", async () => {
+    const wrapper = shallow<ListenCard>(
+      <ListenCard
+        {...{ ...props, currentUser: { auth_token: undefined, name: "test" } }}
+      />
+    );
+    const instance = wrapper.instance();
+
+    const spy = jest.spyOn(instance.APIService, "recommendTrackToFollowers");
+    spy.mockImplementation(() => Promise.resolve(200));
+
+    instance.recommendListenToFollowers();
+    expect(spy).toHaveBeenCalledTimes(0);
+  });
+
+  it("calls handleError if error is returned", async () => {
+    const wrapper = shallow<ListenCard>(<ListenCard {...props} />);
+    const instance = wrapper.instance();
+    instance.handleError = jest.fn();
+
+    const error = new Error("error");
+    const spy = jest.spyOn(instance.APIService, "recommendTrackToFollowers");
+    spy.mockImplementation(() => {
+      throw error;
+    });
+
+    instance.recommendListenToFollowers();
+    expect(instance.handleError).toHaveBeenCalledTimes(1);
+    expect(instance.handleError).toHaveBeenCalledWith(
+      error,
+      "We encountered an error when trying to recommend the track to your followers"
     );
   });
 });

@@ -17,6 +17,7 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
       "playing_now": false,
       "track_metadata": Object {
         "additional_info": Object {
+          "artist_msid": "artist_msid",
           "recording_msid": "bar",
           "release_mbid": "foo",
         },
@@ -283,6 +284,18 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
           >
             <ListenControl
               action={[Function]}
+              title="Recommend to my followers"
+            >
+              <button
+                onClick={[Function]}
+                title="Recommend to my followers"
+                type="button"
+              >
+                Recommend to my followers
+              </button>
+            </ListenControl>
+            <ListenControl
+              action={[Function]}
               title="Delete Listen"
             >
               <button
@@ -318,6 +331,7 @@ exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
       "playing_now": false,
       "track_metadata": Object {
         "additional_info": Object {
+          "artist_msid": "artist_msid",
           "recording_msid": "bar",
           "release_mbid": "foo",
         },
@@ -391,6 +405,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
       "playing_now": false,
       "track_metadata": Object {
         "additional_info": Object {
+          "artist_msid": "artist_msid",
           "recording_msid": "bar",
           "release_mbid": "foo",
         },
@@ -657,6 +672,18 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
           >
             <ListenControl
               action={[Function]}
+              title="Recommend to my followers"
+            >
+              <button
+                onClick={[Function]}
+                title="Recommend to my followers"
+                type="button"
+              >
+                Recommend to my followers
+              </button>
+            </ListenControl>
+            <ListenControl
+              action={[Function]}
               title="Delete Listen"
             >
               <button
@@ -692,6 +719,7 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
       "playing_now": false,
       "track_metadata": Object {
         "additional_info": Object {
+          "artist_msid": "artist_msid",
           "recording_msid": "bar",
           "release_mbid": "foo",
         },
@@ -956,6 +984,18 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
             aria-labelledby="listenControlsDropdown"
             className="dropdown-menu dropdown-menu-right"
           >
+            <ListenControl
+              action={[Function]}
+              title="Recommend to my followers"
+            >
+              <button
+                onClick={[Function]}
+                title="Recommend to my followers"
+                type="button"
+              >
+                Recommend to my followers
+              </button>
+            </ListenControl>
             <ListenControl
               action={[Function]}
               title="Delete Listen"
