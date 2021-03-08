@@ -112,7 +112,7 @@ def refresh_user_token(spotify_user: Spotify):
             error_body = response.json()
             if "error" in error_body and error_body["error"] == "invalid_grant":
                 # user has revoked authorization through spotify ui or deleted their spotify account etc.
-                # in any of these case, we should delete usr from our spotify db as well.
+                # in any of these cases, we should delete user from our spotify db as well.
                 db_spotify.delete_spotify(spotify_user.user_id)
                 return None
 
