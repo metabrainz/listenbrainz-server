@@ -5,3 +5,11 @@
 
 cd /code/listenbrainz
 exec "$@"
+
+# we grep the config file rendered by consul to check for missing keys
+errors=$(grep KEYDOESNOTEXIST config.py)
+if [ -n "$errors" ] ;
+then
+  echo "$errors"
+fi
+
