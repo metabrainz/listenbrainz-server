@@ -1,3 +1,6 @@
+import sys
+import math
+
 from flask import current_app
 from pyspark.mllib.linalg.distributed import CoordinateMatrix, MatrixEntry
 from pyspark.ml.stat import Correlation
@@ -23,25 +26,31 @@ def threshold_similar_users(matrix, threshold):
     rows, cols = matrix.shape
     similar_users = list()
 
-    max_similarity = 0.0
-    min_similarity = 100000000.0
+    max_similarity = None
+    min_similarity = None
     for x in range(rows):
         for y in range(cols):
-            if x == y:
+            value = float(matrix[x, y])
+            if x == y or math.isnan(value):
                 continue
-            max_similarity = max(float(matrix[x, y]), max_similarity)
-            min_similarity = min(float(matrix[x, y]), min_similarity)
-    current_app.logger.info("Max similarity: %.5f" % max_similarity)
-    current_app.logger.info("Min similarity: %.5f" % min_similarity)
-    similarity_range = max_similarity - min_similarity
 
+            if max_similarity is None:
+                max_similarity = value
+                min_similarity = value
+
+            max_similarity = max(value, max_similarity)
+            min_similarity = min(value, min_similarity)
+
+    similarity_range = max_similarity - min_similarity
     for x in range(rows):
         for y in range(cols):
             if x == y:
                 continue
+
             similarity = (float(matrix[x, y]) - min_similarity) / similarity_range
             if similarity >= threshold:
                 similar_users.append((x, y, similarity))
+
     return similar_users
 
 
