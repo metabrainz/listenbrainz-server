@@ -1,6 +1,8 @@
 @import "theme/theme.less";
+@import "colors.less";
 @import "listens-page.less";
 @import "playlists.less";
+@import "timeline.less";
 @import "follow.less";
 @import "recommendation-page.less";
 
@@ -185,5 +187,20 @@ h2.page-title { @media (max-width: @grid-float-breakpoint) { margin-top: 0px; } 
     &.purple {
       background-color: @purple;
     }
+  }
+}
+
+.sticky-top {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 20px;
+}
+
+#feedback-button {
+  .icon {
+    > :not(:first-child){
+      color:@orange;
+    }
+    margin-right: 0.7em;
   }
 }
