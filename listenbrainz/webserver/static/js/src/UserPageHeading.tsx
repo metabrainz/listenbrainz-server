@@ -26,26 +26,22 @@ const UserPageHeading = ({
   user,
   loggedInUser,
   loggedInUserFollowsUser = false,
-  enableFollowButtonFeature = false,
 }: {
   user: ListenBrainzUser;
   loggedInUser: ListenBrainzUser | null;
   loggedInUserFollowsUser: boolean;
-  enableFollowButtonFeature?: boolean;
 }) => {
   return (
     <h2 className="page-title">
       {user.name}
-      {loggedInUser &&
-        user.name !== loggedInUser.name &&
-        enableFollowButtonFeature && (
-          <FollowButton
-            type="icon-only"
-            user={user}
-            loggedInUser={loggedInUser}
-            loggedInUserFollowsUser={loggedInUserFollowsUser}
-          />
-        )}
+      {loggedInUser && user.name !== loggedInUser.name && (
+        <FollowButton
+          type="icon-only"
+          user={user}
+          loggedInUser={loggedInUser}
+          loggedInUserFollowsUser={loggedInUserFollowsUser}
+        />
+      )}
     </h2>
   );
 };
@@ -57,18 +53,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const propsElement = document.getElementById("react-props");
   const reactProps = JSON.parse(propsElement!.innerHTML);
-  const {
-    user,
-    current_user,
-    logged_in_user_follows_user,
-    enable_follow_button_feature,
-  } = reactProps;
+  const { user, current_user, logged_in_user_follows_user } = reactProps;
   ReactDOM.render(
     <UserPageHeading
       user={user}
       loggedInUser={current_user || null}
       loggedInUserFollowsUser={logged_in_user_follows_user}
-      enableFollowButtonFeature={enable_follow_button_feature}
     />,
     domContainer
   );

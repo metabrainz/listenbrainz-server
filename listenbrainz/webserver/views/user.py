@@ -144,7 +144,6 @@ def profile(user_name):
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
         "api_url": current_app.config['API_URL'],
         "logged_in_user_follows_user": logged_in_user_follows_user,
-        "enable_follow_button_feature": current_app.config.get("FEATURE_FOLLOW_BUTTON", False)
     }
 
     return render_template("user/profile.html",
