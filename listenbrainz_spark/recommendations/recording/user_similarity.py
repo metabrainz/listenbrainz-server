@@ -33,12 +33,13 @@ def threshold_similar_users(matrix, threshold):
             min_similarity = min(float(matrix[x, y]), min_similarity)
     current_app.logger.info("Max similarity: %.5f" % max_similarity)
     current_app.logger.info("Min similarity: %.5f" % min_similarity)
+    similarity_range = max_similarity - min_similarity
 
     for x in range(rows):
         for y in range(cols):
             if x == y:
                 continue
-            similarity = float(matrix[x, y]) / max_similarity
+            similarity = (float(matrix[x, y]) - min_similarity) / similarity_range
             if similarity >= threshold:
                 similar_users.append((x, y, similarity))
     return similar_users
