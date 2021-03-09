@@ -1,0 +1,32 @@
+#!/bin/bash
+
+function log() {
+  echo $(date '+%Y-%m-%d %H:%M:%S %Z') "$@"
+}
+
+message="api compat terminated. "
+if [ $# -gt 0 ] && [ $1 -eq 0 ]; then
+  message+="Exit status 0 (consul triggered reload or service was stopped)"
+elif [ $# -gt 0 ] && [ $1 -eq 22 ]; then
+  message+="Exit status 22 (uwsgi failed to start app, check container logs)"
+elif [ $# -gt 0 ]; then
+  message+="Exit status $1"
+else
+  message+="unexpectedly called with no arguments"
+fi
+
+log $message
+if [ -z "${SENTRY_SERVICE_ERROR_DSN}" ]; then
+  log "SENTRY_SERVICE_ERROR_DSN environment variable isn't set, not logging"
+else
+  if ! command -v sentry-cli ; then
+    log "Cannot find sentry-cli, not logging"
+  else
+    SENTRY_DSN="${SENTRY_SERVICE_ERROR_DSN}" sentry-cli send-event -m "$message"
+  fi
+fi
+
+if [ "$1" != "0" ]; then
+  log "Exited with non-0 status, sleeping 10 seconds"
+  sleep 10
+fi

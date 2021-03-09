@@ -4,6 +4,10 @@ ENV DOCKERIZE_VERSION v0.6.1
 RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
+ENV SENTRY_CLI_VERSION 1.63.1
+RUN wget -O /usr/local/bin/sentry-cli https://downloads.sentry-cdn.com/sentry-cli/$SENTRY_CLI_VERSION/sentry-cli-Linux-x86_64 \
+    && chmod +x /usr/local/bin/sentry-cli
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
                        build-essential \
@@ -86,6 +90,7 @@ RUN touch /etc/service/cron-config/down
 COPY ./docker/services/api_compat/uwsgi-api-compat.ini /etc/uwsgi/uwsgi-api-compat.ini
 COPY ./docker/services/api_compat/consul-template-api-compat.conf /etc/consul-template-api-compat.conf
 COPY ./docker/services/api_compat/api_compat.service /etc/service/api_compat/run
+COPY ./docker/services/api_compat/api_compat.finish /etc/service/api_compat/finish
 RUN touch /etc/service/api_compat/down
 
 # Websockets server
