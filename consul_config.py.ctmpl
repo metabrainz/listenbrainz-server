@@ -1,9 +1,9 @@
 {{- define "KEY" -}}
-    {{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .)  "KEYDOESNOTEXIST" }}
+    {{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .)  "KEYDOESNOTEXIST_{{.}}" }}
 {{- end -}}
 
 {{- define "KEY_ARRAY" -}}
-    {{- range $index, $element := (keyOrDefault (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .) "[\"KEYDOESNOTEXIST\"]" | parseJSON) -}}
+    {{- range $index, $element := (keyOrDefault (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .) "[\"KEYDOESNOTEXIST_{{.}}\"]" | parseJSON) -}}
         "{{.}}",
     {{- end -}}
 {{- end -}}
@@ -19,7 +19,9 @@ MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@{{.A
 POSTGRES_ADMIN_URI="postgresql://postgres@{{.Address}}:{{.Port}}/postgres"
 {{end}}
 {{else}}
-KEYDOESNOTEXIST = "pgbouncer-master is down"
+SQLALCHEMY_DATABASE_URI = "SERVICEDOESNOTEXIST_pgbouncer-master"
+MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "SERVICEDOESNOTEXIST_pgbouncer-master"
+POSTGRES_ADMIN_URI = "SERVICEDOESNOTEXIST_pgbouncer-master"
 {{end}}
 
 
@@ -32,7 +34,7 @@ MB_DATABASE_URI = 'postgresql://musicbrainz_ro@{{.Address}}:{{.Port}}/musicbrain
 MB_DATABASE_URI = 'postgresql://musicbrainz_ro@{{.Address}}:{{.Port}}/musicbrainz_db'
 {{end}}
 {{else}}
-KEYDOESNOTEXIST = "pgbouncer-slave and pgbouncer-master is down"
+MB_DATABASE_URI = "SERVICEDOESNOTEXIST_pgbouncer-slave_pgbouncer-master"
 {{end}}
 
 {{if service "timescale-listenbrainz"}}
@@ -42,7 +44,9 @@ TIMESCALE_ADMIN_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/postg
 TIMESCALE_ADMIN_LB_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/listenbrainz_ts"
 {{end}}
 {{else}}
-KEYDOESNOTEXIST = "timescale-listenbrainz is down"
+SQLALCHEMY_TIMESCALE_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
+TIMESCALE_ADMIN_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
+TIMESCALE_ADMIN_LB_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
 {{end}}
 
 {{if service "pgbouncer-williams"}}
@@ -50,7 +54,7 @@ KEYDOESNOTEXIST = "timescale-listenbrainz is down"
 DB_CONNECT_MAPPING = "dbname=musicbrainz_json_dump user=musicbrainz host={{.Address}} port={{.Port}} password=musicbrainz"
 {{end}}
 {{else}}
-KEYDOESNOTEXIST = "pgbouncer-williams is down"
+DB_CONNECT_MAPPING = "SERVICEDOESNOTEXIST_pgbouncer-williams"
 {{end}}
 
 {{if service "typesense-listenbrainz"}}
@@ -59,7 +63,8 @@ TYPESENSE_HOST = "{{.Address}}"
 TYPESENSE_PORT = {{.Port}}
 {{end}}
 {{else}}
-KEYDOESNOTEXIST = "typesense-listenbrainz is down"
+TYPESENSE_HOST = "SERVICEDOESNOTEXIST_typesense-listenbrainz"
+TYPESENSE_PORT = "SERVICEDOESNOTEXIST_typesense-listenbrainz"
 {{end}}
 TYPESENSE_API_KEY = '''{{template "KEY" "typesense_api_key"}}'''
 
@@ -70,7 +75,9 @@ REDIS_PORT = {{.Port}}
 REDIS_NAMESPACE = "listenbrainz"
 {{end}}
 {{else}}
-KEYDOESNOTEXIST = "listenbrainz-redis is down"
+REDIS_HOST = "SERVICEDOESNOTEXIST_listenbrainz-redis"
+REDIS_PORT = "SERVICEDOESNOTEXIST_listenbrainz-redis"
+REDIS_NAMESPACE = "SERVICEDOESNOTEXIST_listenbrainz-redis"
 {{end}}
 
 {{if service "listenbrainz-influxdb"}}
@@ -80,7 +87,9 @@ INFLUX_PORT    = {{.Port}}
 INFLUX_DB_NAME  = "listenbrainz"
 {{end}}
 {{else}}
-KEYDOESNOTEXIST = "listenbrainz-influxdb is down"
+INFLUX_HOST    = "SERVICEDOESNOTEXIST_listenbrainz-influxdb"
+INFLUX_PORT    = "SERVICEDOESNOTEXIST_listenbrainz-influxdb"
+INFLUX_DB_NAME  = "SERVICEDOESNOTEXIST_listenbrainz-influxdb"
 {{end}}
 
 {{ $rabbitmq_key := (printf "docker-server-configs/LB/config.%s.json/rabbitmq_service" (env "DEPLOY_ENV")) }}
@@ -91,7 +100,8 @@ RABBITMQ_HOST = "{{.Address}}"
 RABBITMQ_PORT = {{.Port}}
 {{end}}
 {{else}}
-KEYDOESNOTEXIST = "rabbitmq is down"
+RABBITMQ_HOST = "SERVICEDOESNOTEXIST_rabbitmq"
+RABBITMQ_PORT = "SERVICEDOESNOTEXIST_rabbitmq"
 {{end}}
 {{end}}
 RABBITMQ_USERNAME = '''{{template "KEY" "rabbitmq_user"}}'''
@@ -179,6 +189,9 @@ TESTING = False
 SMTP_SERVER = '''{{.Address}}'''
 SMTP_PORT = {{.Port}}
 {{end}}
+{{else}}
+SMTP_SERVER = "SERVICEDOESNOTEXIST_listenbrainz-org.exim-relay"
+SMTP_PORT = "SERVICEDOESNOTEXIST_listenbrainz-org.exim-relay"
 {{end}}
 
 MAIL_FROM_DOMAIN = '''{{template "KEY" "mail_from_domain"}}'''
