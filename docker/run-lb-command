@@ -3,13 +3,24 @@
 # subprocesses do not run in a shell, so we use this wrapper script to correctly set the working directory
 # and then exec to the desired process. We use exec so that signals are passed to the process correctly.
 
+function log() {
+   echo $(date '+%Y-%m-%d %H:%M:%S %Z') "$@"
+}
+
 cd /code/listenbrainz
-exec "$@"
 
 # we grep the config file rendered by consul to check for missing keys
-errors=$(grep KEYDOESNOTEXIST config.py)
-if [ -n "$errors" ] ;
-then
-  echo "$errors"
+keyerrors=$(grep KEYDOESNOTEXIST listenbrainz/config.py)
+if [ -n "$keyerrors" ]; then
+  log "Found keys that are missing from consul"
+  echo "$keyerrors"
+  exit 10
+fi
+serviceerrors=$(grep SERVICEDOESNOTEXIST listenbrainz/config.py)
+if [ -n "serviceerrors" ]; then
+  log "Found services that are missing from consul"
+  echo "$serviceerrors"
+  exit 10
 fi
 
+exec "$@"
