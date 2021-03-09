@@ -192,7 +192,7 @@ def get_listen_events(
         from_ts=min_ts,
         to_ts=max_ts,
         time_range=time_range,
-        order=1,  # descending
+        order=0,  # descending
     )
 
     user_listens_map = defaultdict(list)
