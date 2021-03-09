@@ -81,6 +81,48 @@ export default class APIService {
     return result.payload.listens;
   };
 
+  getFeedForUser = async (
+    userName: string,
+    userToken: string,
+    minTs?: number,
+    maxTs?: number,
+    count?: number
+  ): Promise<Array<TimelineEvent>> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+
+    let query: string = `${this.APIBaseURI}/user/${userName}/feed/events`;
+
+    const queryParams: Array<string> = [];
+    if (maxTs) {
+      queryParams.push(`max_ts=${maxTs}`);
+    }
+    if (minTs) {
+      queryParams.push(`min_ts=${minTs}`);
+    }
+    if (count) {
+      queryParams.push(`count=${count}`);
+    }
+    if (queryParams.length) {
+      query += `?${queryParams.join("&")}`;
+    }
+
+    const response = await fetch(query, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
+    });
+    await this.checkStatus(response);
+    const result = await response.json();
+
+    return result.payload.events;
+  };
+
   getUserListenCount = async (userName: string): Promise<number> => {
     if (!userName) {
       throw new SyntaxError("Username missing");

@@ -33,7 +33,7 @@ module.exports = function (env) {
       userEntityChart: "/static/js/src/stats/UserEntityChart.tsx",
       userReports: "/static/js/src/stats/UserReports.tsx",
       userPageHeading: "/static/js/src/UserPageHeading.tsx",
-      userFeed: "/static/js/src/UserFeed.tsx",
+      userFeed: "/static/js/src/user-feed/UserFeed.tsx",
       playlist: "/static/js/src/playlists/Playlist.tsx",
       playlists: "/static/js/src/playlists/Playlists.tsx",
       recommendations: "/static/js/src/recommendations/Recommendations.tsx",

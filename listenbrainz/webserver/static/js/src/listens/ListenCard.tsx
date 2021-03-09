@@ -194,9 +194,7 @@ export default class ListenCard extends React.Component<
       >
         <div
           className={`${
-            isCurrentUser || mode === "recent"
-              ? " col-xs-9"
-              : " col-xs-12"
+            isCurrentUser || mode === "recent" ? " col-xs-9" : " col-xs-12"
           }`}
         >
           <MediaQuery minWidth={768}>
