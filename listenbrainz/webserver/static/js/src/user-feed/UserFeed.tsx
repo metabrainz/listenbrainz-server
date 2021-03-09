@@ -304,6 +304,7 @@ export default class UserFeedPage extends React.Component<
     if (event_type === EventType.FOLLOW) {
       const { user_name_0, user_name_1 } = metadata as UserRelationshipEvent;
       const currentUserFollows = currentUser.name === user_name_0;
+      const currentUserFollowed = currentUser.name === user_name_1;
       if (currentUserFollows) {
         return (
           <span className="event-description-text">
@@ -312,10 +313,18 @@ export default class UserFeedPage extends React.Component<
           </span>
         );
       }
+      if (currentUserFollowed) {
+        return (
+          <span className="event-description-text">
+            <a href={`/user/${user_name_0}`}>{user_name_0}</a> is now following
+            you
+          </span>
+        );
+      }
       return (
         <span className="event-description-text">
           <a href={`/user/${user_name_0}`}>{user_name_0}</a> is now following
-          you
+          <a href={`/user/${user_name_1}`}>{user_name_1}</a>
         </span>
       );
     }
@@ -328,16 +337,21 @@ export default class UserFeedPage extends React.Component<
       );
     }
 
-    return (
-      <span className="event-description-text">
+    const userLinkOrYou =
+      user_name === currentUser.name ? (
+        "You"
+      ) : (
         <a
           href={`/user/${user_name}`}
           target="_blank"
           rel="noopener noreferrer"
         >
-          {user_name === currentUser.name ? "You" : user_name}
-        </a>{" "}
-        {UserFeedPage.getEventTypePhrase(event_type)}
+          {user_name}
+        </a>
+      );
+    return (
+      <span className="event-description-text">
+        {userLinkOrYou} {UserFeedPage.getEventTypePhrase(event_type)}
       </span>
     );
   }
