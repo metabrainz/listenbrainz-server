@@ -34,13 +34,15 @@ def threshold_similar_users(matrix, threshold):
         for y in range(cols):
             if x == y:
                 continue
-            similarity = float(matrix[x, y])
+            similarity = float(matrix[x, y]) / max_similarity
             if similarity >= threshold:
-                similar_users.append((x, y, similarity / max_similarity))
+                similar_users.append((x, y, similarity))
     return similar_users
 
 
 def main(threshold):
+
+    current_app.logger.info('Start generating similar user matrix')
     try:
         listenbrainz_spark.init_spark_session('User Similarity')
     except SparkSessionNotInitializedException as err:
@@ -76,5 +78,7 @@ def main(threshold):
         .select('user_name', struct('other_user_name', 'similarity').alias('similar_user'))\
         .groupBy('user_name')\
         .agg(collect_list('similar_user').alias('similar_users'))
+
+    current_app.logger.info('Finishing generating similar user matrix')
 
     return create_messages(similar_users_df)
