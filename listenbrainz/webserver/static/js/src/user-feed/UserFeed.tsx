@@ -5,10 +5,11 @@ import * as ReactDOM from "react-dom";
 import {
   faBullhorn,
   faCircle,
+  faHeadphones,
   faHeart,
   faListUl,
-  faMusic,
   faQuestion,
+  faThumbsUp,
   faUserPlus,
   faUserSecret,
   faUserSlash,
@@ -67,8 +68,9 @@ export default class UserFeedPage extends React.Component<
   static getEventTypeIcon(eventType: EventTypeT) {
     switch (eventType) {
       case EventType.RECORDING_RECOMMENDATION:
+        return faThumbsUp;
       case EventType.LISTEN:
-        return faMusic;
+        return faHeadphones;
       case EventType.LIKE:
         return faHeart;
       case EventType.FOLLOW:
