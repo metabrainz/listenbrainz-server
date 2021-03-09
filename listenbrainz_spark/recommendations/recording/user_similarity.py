@@ -22,13 +22,21 @@ def create_messages(similar_users_df):
 def threshold_similar_users(matrix, threshold):
     rows, cols = matrix.shape
     similar_users = list()
+
+    max_similarity = 0.0
+    for x in range(rows):
+        for y in range(cols):
+            if x == y:
+                continue
+            max_similarity = max(float(matrix[x, y]), max_similarity)
+
     for x in range(rows):
         for y in range(cols):
             if x == y:
                 continue
             similarity = float(matrix[x, y])
             if similarity >= threshold:
-                similar_users.append((x, y, similarity))
+                similar_users.append((x, y, similarity / max_similarity))
     return similar_users
 
 
