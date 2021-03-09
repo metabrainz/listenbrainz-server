@@ -388,6 +388,7 @@ def notify_cf_recording_recommendations_generation(data):
 def handle_similar_users(data):
     """ Save the similar users data to the DB
     """
+
     if current_app.config['TESTING']:
         return
 
