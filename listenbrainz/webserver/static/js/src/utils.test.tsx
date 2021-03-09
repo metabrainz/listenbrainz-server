@@ -39,7 +39,7 @@ describe("preciseTimestamp", () => {
   });
 
   it("uses no-year formatting for <1y dates", () => {
-    const testDate : number = currentDate.getTime() - 1000 * 3600 * 24 * 7; // 1 week ago
+    const testDate: number = currentDate.getTime() - 1000 * 3600 * 24 * 7; // 1 week ago
     expect(preciseTimestamp(testDate)).toMatch(
       new Date(testDate).toLocaleString(undefined, {
         day: "2-digit",
@@ -52,7 +52,7 @@ describe("preciseTimestamp", () => {
   });
 
   it("uses with-year formatting for >1y dates", () => {
-    const testDate : number = currentDate.getTime() - 1000 * 3600 * 24 * 730; // 2 years ago
+    const testDate: number = currentDate.getTime() - 1000 * 3600 * 24 * 730; // 2 years ago
     expect(preciseTimestamp(testDate)).toMatch(
       new Date(testDate).toLocaleString(undefined, {
         day: "2-digit",

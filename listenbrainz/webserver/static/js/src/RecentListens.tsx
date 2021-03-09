@@ -191,8 +191,8 @@ export default class RecentListens extends React.Component<
         // Crop listens array to 100 max
         while (listens.length >= 100) {
           listens.pop();
-      }
-      listens.unshift(listen);
+        }
+        listens.unshift(listen);
         return { listens };
       });
     }
