@@ -323,7 +323,7 @@ export default class UserFeedPage extends React.Component<
       }
       return (
         <span className="event-description-text">
-          <a href={`/user/${user_name_0}`}>{user_name_0}</a> is now following
+          <a href={`/user/${user_name_0}`}>{user_name_0}</a> is now following{" "}
           <a href={`/user/${user_name_1}`}>{user_name_1}</a>
         </span>
       );
