@@ -185,7 +185,7 @@ def create_app(config_path=None, debug=None):
         # redirect them to agree to terms page.
         elif current_user.is_authenticated and current_user.gdpr_agreed is None:
             return redirect(url_for('index.gdpr_notice', next=request.full_path))
-
+    app.logger.info("Flask application created!")
     return app
 
 
@@ -206,7 +206,7 @@ def create_api_compat_app(config_path=None, debug=None):
     # add a value into the config dict of the app to note that this is the
     # app for api_compat. This is later used in error handling.
     app.config['IS_API_COMPAT_APP'] = True
-
+    app.logger.info("Flask api compat application created!")
     return app
 
 
