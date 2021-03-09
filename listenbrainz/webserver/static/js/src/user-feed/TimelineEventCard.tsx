@@ -47,7 +47,7 @@ export default class TimelineEventCard extends React.Component<
         onDoubleClick={this.playListen}
         className={`listen-card row ${className}`}
       >
-        <div className="col-xs-9">
+        <div className="col-xs-11">
           <div className="track-details">
             <p title={listen.track_metadata?.track_name}>
               {getTrackLink(listen)}
@@ -62,10 +62,10 @@ export default class TimelineEventCard extends React.Component<
             </p>
           </div>
         </div>
-        <div className="col-xs-3">
-          <div className="text-muted" title="Why am I seeing this?">
+        <div className="col-xs-1">
+          {/* <div className="text-muted" title="Why am I seeing this?">
             <FontAwesomeIcon icon={faQuestionCircle as IconProp} />
-          </div>
+          </div> */}
         </div>
       </Card>
     );
