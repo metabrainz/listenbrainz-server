@@ -257,7 +257,7 @@ def get_similar_users(user_name):
     for a given user. Returns an array of dicts like these:
 
     {
-      "musicbrainz_id": "hwnrwx",
+      "user_name": "hwnrwx",
       "similarity": 0.1938480256
     }
 
@@ -275,7 +275,7 @@ def get_similar_users(user_name):
     response = []
     for user_name in similar_users.similar_users:
         response.append({
-            'musicbrainz_id': user_name,
+            'user_name': user_name,
             'similarity': similar_users.similar_users[user_name]
         })
     return jsonify({'payload': sorted(response, key=itemgetter('similarity'), reverse=True)})
@@ -290,7 +290,7 @@ def get_similar_to_user(user_name, other_user_name):
     Returns a single dict:
 
     {
-      "musicbrainz_id": "other_user",
+      "user_name": "other_user",
       "similarity": 0.1938480256
     }
 
@@ -306,7 +306,7 @@ def get_similar_to_user(user_name, other_user_name):
 
     similar_users = db_user.get_similar_users(user['id'])
     try:
-        return jsonify({'payload': { "musicbrainz_id": other_user_name, "similarity": similar_users.similar_users[other_user_name] } })
+        return jsonify({'payload': { "user_name": other_user_name, "similarity": similar_users.similar_users[other_user_name] } })
     except KeyError:
         raise APINotFound("Similar-to user not found")
 
