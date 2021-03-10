@@ -681,5 +681,5 @@ export default class APIService {
     });
     this.checkStatus(response);
     return response.status;
-  }
+  };
 }
