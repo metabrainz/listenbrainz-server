@@ -1,10 +1,12 @@
 import json
 import time
+from unittest.mock import patch
 
 import pytest
 from flask import url_for
 
 import listenbrainz.db.user as db_user
+from listenbrainz import db
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 
@@ -434,6 +436,34 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertNotIn('track_name', sent_additional_info)
         self.assertNotIn('artist_name', sent_additional_info)
         self.assertNotIn('release_name', sent_additional_info)
+
+
+    def test_000_similar_users(self):
+
+        response = self.client.get(url_for('api_v1.get_similar_users', user_name='my_dear_muppet'))
+        self.assert404(response)
+
+        conn = db.engine.raw_connection()
+        with conn.cursor() as curs:
+            data = { self.user2['musicbrainz_id']: .123 }
+            curs.execute("""INSERT INTO recommendation.similar_user VALUES (%s, %s)""", (self.user['id'], json.dumps(data))) 
+        conn.commit()
+
+        response = self.client.get(url_for('api_v1.get_similar_users', user_name=self.user['musicbrainz_id']))
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+        self.assertEqual(data[0]['user_name'], self.user2['musicbrainz_id'])
+        self.assertEqual(data[0]['similarity'], .123)
+
+        response = self.client.get(url_for('api_v1.get_similar_to_user', user_name=self.user['musicbrainz_id'], other_user_name="muppet"))
+        self.assert404(response)
+
+        response = self.client.get(url_for('api_v1.get_similar_to_user', user_name=self.user['musicbrainz_id'], other_user_name=self.user2['musicbrainz_id']))
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+        self.assertEqual(data['user_name'], self.user2['musicbrainz_id'])
+        self.assertEqual(data['similarity'], .123)
+
 
     def test_latest_import(self):
         """ Test for api.latest_import """
