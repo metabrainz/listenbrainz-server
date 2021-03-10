@@ -1,9 +1,9 @@
 {{- define "KEY" -}}
-    {{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .)  "KEYDOESNOTEXIST_{{.}}" }}
+    {{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .)  (printf "KEYDOESNOTEXIST_%s" .) }}
 {{- end -}}
 
 {{- define "KEY_ARRAY" -}}
-    {{- range $index, $element := (keyOrDefault (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .) "[\"KEYDOESNOTEXIST_{{.}}\"]" | parseJSON) -}}
+    {{- range $index, $element := (keyOrDefault (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .) (printf "[\"KEYDOESNOTEXIST_%s\"]" .) | parseJSON) -}}
         "{{.}}",
     {{- end -}}
 {{- end -}}
