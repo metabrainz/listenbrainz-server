@@ -248,10 +248,25 @@ def get_recent_listens_for_user_list(user_list):
     }})
 
 
-@api_bp.route("/user/<user_name>/similar-users")
-@crossdomain(headers='Authorization, Content-Type')
+@api_bp.route("/user/<user_name>/similar-users", methods=['GET', 'OPTIONS'])
+@crossdomain(headers='Content-Type')
 @ratelimit()
 def get_similar_users(user_name):
+    """
+    Get list of users who have similar music tastes (based on their listen history)
+    for a given user. Returns an array of dicts like these:
+
+    {
+      "musicbrainz_id": "hwnrwx",
+      "similarity": 0.1938480256
+    }
+
+    :param user_name: the MusicBrainz ID of the user whose similar users are being requested.
+    :statuscode 200: Yay, you have data!
+    :resheader Content-Type: *application/json*
+    :statuscode 404: The requested user was not found.
+    """
+
     user = db_user.get_by_mb_id(user_name)
     if not user:
         raise APINotFound("User %s not found" % user_name)
@@ -266,17 +281,32 @@ def get_similar_users(user_name):
     return jsonify({'payload': sorted(response, key=itemgetter('similarity'), reverse=True)})
 
 
-@api_bp.route("/user/<user_name>/similar-to/<other_user_name>")
-@crossdomain(headers='Authorization, Content-Type')
+@api_bp.route("/user/<user_name>/similar-to/<other_user_name>", methods=['GET', 'OPTIONS'])
+@crossdomain(headers='Content-Type')
 @ratelimit()
 def get_similar_to_user(user_name, other_user_name):
+    """
+    Get the similarity of the user and the other user, based on their listening history.
+    Returns a single dict:
+
+    {
+      "musicbrainz_id": "other_user",
+      "similarity": 0.1938480256
+    }
+
+    :param user_name: the MusicBrainz ID of the the one user
+    :param other_user_name: the MusicBrainz ID of the other user whose similar users are 
+    :statuscode 200: Yay, you have data!
+    :resheader Content-Type: *application/json*
+    :statuscode 404: The requested user was not found.
+    """
     user = db_user.get_by_mb_id(user_name)
     if not user:
         raise APINotFound("User %s not found" % user_name)
 
     similar_users = db_user.get_similar_users(user['id'])
     try:
-        return jsonify({'payload': { other_user_name: similar_users.similar_users[other_user_name] } })
+        return jsonify({'payload': { "musicbrainz_id": other_user_name, "similarity": similar_users.similar_users[other_user_name] } })
     except KeyError:
         raise APINotFound("Similar-to user not found")
 
