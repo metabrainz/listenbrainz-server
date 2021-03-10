@@ -59,3 +59,9 @@ MAILTO=""
 
 # user weekly daily_activity
 10 03 * * * listenbrainz_stats_cron /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=daily_activity --range=all_time
+
+# user similarity dataframes
+20 03 * * * listenbrainz_stats_cron /usr/local/bin/python /code/listenbrainz/manage.py spark request_dataframes --job-type="similar_users"
+
+# user similarity
+30 03 * * * listenbrainz_stats_cron /usr/local/bin/python /code/listenbrainz/manage.py spark request_similar_users 

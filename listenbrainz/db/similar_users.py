@@ -74,7 +74,7 @@ def import_user_similarities(data):
     except psycopg2.errors.OperationalError as err:
         conn.rollback()
         current_app.logger.error(
-            "Error: Cannot correlated user similarity user name: %s" % str(err))
+            "Error: Cannot correlate user similarity user name: %s" % str(err))
         return
 
     # Finally rotate the table into place

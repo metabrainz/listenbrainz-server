@@ -467,6 +467,9 @@ def get_users_in_order(user_ids):
 
 
 def get_similar_users(user_id: int) -> SimilarUsers:
+    """ Given a user_id, fetch the similar users for that given user. 
+        Returns a dict { "user_x" : .453, "user_y": .123 } """
+
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             SELECT user_id, similar_users
@@ -480,6 +483,9 @@ def get_similar_users(user_id: int) -> SimilarUsers:
 
 
 def get_users_by_id(user_ids: List[int]):
+    """ Given a list of user ids, fetch one ore more users at the same time.
+        Returns a dict mapping user_ids to user_names. """
+
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             SELECT id, musicbrainz_id
