@@ -222,3 +222,14 @@ class UserTestCase(DatabaseTestCase):
         self.assertDictEqual(similar_users_21, db_user.get_similar_users(user_id_21).similar_users)
         self.assertDictEqual(similar_users_22, db_user.get_similar_users(user_id_22).similar_users)
         self.assertDictEqual(similar_users_23, db_user.get_similar_users(user_id_23).similar_users)
+
+    def test_get_user_by_id(self):
+        user_id_24 = db_user.create(24, "twenty_four")
+        user_id_25 = db_user.create(25, "twenty_five")
+
+        users = {
+            user_id_24: "twenty_four",
+            user_id_25: "twenty_five"
+        }
+
+        self.assertDictEqual(users, db_user.get_users_by_id([user_id_24, user_id_25]))
