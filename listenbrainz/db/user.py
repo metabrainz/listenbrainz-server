@@ -8,7 +8,7 @@ import ujson
 from datetime import datetime
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
-from data.model.similar_user_model import SimilarUserRecord, SimilarUsers
+from data.model.similar_user_model import SimilarUsers
 from typing import Tuple, List
 
 
@@ -479,7 +479,7 @@ def get_similar_users(user_id: int) -> SimilarUsers:
             'user_id': user_id,
         })
         row = result.fetchone()
-        return SimilarUsers(**row['similar_users']) if row else None
+        return SimilarUsers(**row) if row else None
 
 
 def get_users_by_id(user_ids: List[int]):

@@ -1,4 +1,5 @@
 import datetime
+from operator import itemgetter
 import time
 from typing import Tuple
 
@@ -252,17 +253,28 @@ def get_recent_listens_for_user_list(user_list):
 @ratelimit()
 def get_similar_users(user_name):
     user = db_user.get_by_mb_id(user_name)
-    result = db_user.get_similar_users(user['id'])
-    row_id_username_map = db_user.get_users_by_id(
-        [record.user_id for record in result.similar_users])
+    similar_users = db_user.get_similar_users(user['id'])
 
     response = []
-    for record in result.similar_users:
+    for user_name in similar_users.similar_users:
         response.append({
-            'musicbrainz_id': row_id_username_map[record.user_id],
-            'similarity_score': record.similarity_score,
+            'musicbrainz_id': user_name,
+            'similarity': similar_users.similar_users[user_name]
         })
-    return jsonify({'payload': response})
+    return jsonify({'payload': sorted(response, key=itemgetter('similarity'), reverse=True)})
+
+
+@api_bp.route("/user/<user_name>/similar-to/<other_user_name>")
+@crossdomain(headers='Authorization, Content-Type')
+@ratelimit()
+def get_similar_to_user(user_name, other_user_name):
+    user = db_user.get_by_mb_id(user_name)
+
+    similar_users = db_user.get_similar_users(user['id'])
+    try:
+        return jsonify({'payload': { other_user_name: similar_users.similar_users[other_user_name] } })
+    except IndexError:
+        raise APINotFound("Other user not found")
 
 
 @api_bp.route('/latest-import', methods=['GET', 'POST', 'OPTIONS'])
