@@ -192,7 +192,7 @@ def get_listen_events(
         from_ts=min_ts,
         to_ts=max_ts,
         time_range=time_range,
-        order=1,  # descending
+        order=0,  # descending
     )
 
     user_listens_map = defaultdict(list)
@@ -206,12 +206,12 @@ def get_listen_events(
             try:
                 listen_dict = listen.to_api()
                 listen_dict['inserted_at'] = listen_dict['inserted_at'].timestamp()
-                listen = APIListen(**listen_dict)
+                api_listen = APIListen(**listen_dict)
                 events.append(APITimelineEvent(
                     event_type=UserTimelineEventType.LISTEN,
-                    user_name=listen.user_name,
-                    created=listen.listened_at,
-                    metadata=listen,
+                    user_name=api_listen.user_name,
+                    created=api_listen.listened_at,
+                    metadata=api_listen,
                 ))
             except pydantic.ValidationError as e:
                 current_app.logger.error('Validation error: ' + str(e), exc_info=True)
