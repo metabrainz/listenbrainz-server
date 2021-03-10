@@ -253,6 +253,8 @@ def get_recent_listens_for_user_list(user_list):
 @ratelimit()
 def get_similar_users(user_name):
     user = db_user.get_by_mb_id(user_name)
+    if not user:
+        raise APINotFound("User %s not found" % user_name)
     similar_users = db_user.get_similar_users(user['id'])
 
     response = []
@@ -269,12 +271,14 @@ def get_similar_users(user_name):
 @ratelimit()
 def get_similar_to_user(user_name, other_user_name):
     user = db_user.get_by_mb_id(user_name)
+    if not user:
+        raise APINotFound("User %s not found" % user_name)
 
     similar_users = db_user.get_similar_users(user['id'])
     try:
         return jsonify({'payload': { other_user_name: similar_users.similar_users[other_user_name] } })
-    except IndexError:
-        raise APINotFound("Other user not found")
+    except KeyError:
+        raise APINotFound("Similar-to user not found")
 
 
 @api_bp.route('/latest-import', methods=['GET', 'POST', 'OPTIONS'])
