@@ -20,6 +20,7 @@
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
 from unittest import mock
+import time
 import uuid
 
 from listenbrainz.db.testing import DatabaseTestCase
@@ -110,3 +111,117 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
         )
         self.assertEqual(1, len(events))
         self.assertEqual(new_user['id'], events[0].user_id)
+
+    def test_get_events_for_feed_returns_events(self):
+        db_user_timeline_event.create_user_track_recommendation_event(
+            user_id=self.user['id'],
+            metadata=UserTimelineEventMetadata(
+                track_name="Sunflower",
+                artist_name="Swae Lee & Post Malone",
+                recording_msid=str(uuid.uuid4()),
+                artist_msid=str(uuid.uuid4()),
+            )
+        )
+
+        new_user = db_user.get_or_create(2, 'superman')
+        db_user_timeline_event.create_user_track_recommendation_event(
+            user_id=new_user['id'],
+            metadata=UserTimelineEventMetadata(
+                track_name="Sunflower",
+                artist_name="Swae Lee & Post Malone",
+                recording_msid=str(uuid.uuid4()),
+                artist_msid=str(uuid.uuid4()),
+            )
+        )
+
+        events = db_user_timeline_event.get_recording_recommendation_events_for_feed(
+            user_ids=(self.user['id'], new_user['id']),
+            min_ts=0,
+            max_ts=int(time.time()) + 10,
+            count=50,
+        )
+        self.assertEqual(2, len(events))
+        self.assertEqual(new_user['id'], events[0].user_id)
+        self.assertEqual(self.user['id'], events[1].user_id)
+
+    def test_get_events_for_feed_honors_time_parameters(self):
+        ts = int(time.time())
+        db_user_timeline_event.create_user_track_recommendation_event(
+            user_id=self.user['id'],
+            metadata=UserTimelineEventMetadata(
+                track_name="Sunflower",
+                artist_name="Swae Lee & Post Malone",
+                recording_msid=str(uuid.uuid4()),
+                artist_msid=str(uuid.uuid4()),
+            )
+        )
+        db_user_timeline_event.create_user_track_recommendation_event(
+            user_id=self.user['id'],
+            metadata=UserTimelineEventMetadata(
+                track_name="Da Funk",
+                artist_name="Daft Punk",
+                recording_msid=str(uuid.uuid4()),
+                artist_msid=str(uuid.uuid4()),
+            )
+        )
+
+        time.sleep(3)
+        new_user = db_user.get_or_create(4, 'new_user')
+        db_user_timeline_event.create_user_track_recommendation_event(
+            user_id=new_user['id'],
+            metadata=UserTimelineEventMetadata(
+                track_name="Da Funk",
+                artist_name="Daft Punk",
+                recording_msid=str(uuid.uuid4()),
+                artist_msid=str(uuid.uuid4()),
+            )
+        )
+
+        # max_ts is too low, won't return anything
+        events = db_user_timeline_event.get_recording_recommendation_events_for_feed(
+            user_ids=(self.user['id'], new_user['id']),
+            min_ts=0,
+            max_ts=ts,
+            count=50,
+        )
+        self.assertListEqual([], events)
+
+        # check that it honors min_ts as well
+        events = db_user_timeline_event.get_recording_recommendation_events_for_feed(
+            user_ids=(self.user['id'], new_user['id']),
+            min_ts=ts + 1,
+            max_ts=ts + 10,
+            count=50,
+        )
+        self.assertEqual(1, len(events))
+
+    def test_get_events_for_feed_honors_count_parameter(self):
+        db_user_timeline_event.create_user_track_recommendation_event(
+            user_id=self.user['id'],
+            metadata=UserTimelineEventMetadata(
+                track_name="Sunflower",
+                artist_name="Swae Lee & Post Malone",
+                recording_msid=str(uuid.uuid4()),
+                artist_msid=str(uuid.uuid4()),
+            )
+        )
+        db_user_timeline_event.create_user_track_recommendation_event(
+            user_id=self.user['id'],
+            metadata=UserTimelineEventMetadata(
+                track_name="Da Funk",
+                artist_name="Daft Punk",
+                recording_msid=str(uuid.uuid4()),
+                artist_msid=str(uuid.uuid4()),
+            )
+        )
+
+        events = db_user_timeline_event.get_recording_recommendation_events_for_feed(
+            user_ids=(self.user['id'],),
+            min_ts=0,
+            max_ts=int(time.time()) + 10,
+            count=1,
+        )
+
+        # 2 events exist, should return only one, the one that is newer
+        self.assertEqual(1, len(events))
+        self.assertEqual('Da Funk', events[0].metadata.track_name)

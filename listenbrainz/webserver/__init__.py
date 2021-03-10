@@ -253,12 +253,6 @@ def _register_blueprints(app):
     from listenbrainz.webserver.views.profile import profile_bp
     app.register_blueprint(profile_bp, url_prefix='/profile')
 
-    from listenbrainz.webserver.views.follow import follow_bp
-    app.register_blueprint(follow_bp, url_prefix='/follow')
-
-    from listenbrainz.webserver.views.follow_api import follow_api_bp
-    app.register_blueprint(follow_api_bp, url_prefix=API_PREFIX+'/follow')
-
     from listenbrainz.webserver.views.stats_api import stats_api_bp
     app.register_blueprint(stats_api_bp, url_prefix=API_PREFIX+'/stats')
 

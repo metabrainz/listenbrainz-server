@@ -71,7 +71,7 @@ describe("Recentlistens", () => {
 });
 
 describe("componentDidMount", () => {
-  it('calls connectWebsockets if mode is "listens" or "follow"', () => {
+  it('calls connectWebsockets if mode is "listens"', () => {
     const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
     const instance = wrapper.instance();
     instance.connectWebsockets = jest.fn();
@@ -79,28 +79,13 @@ describe("componentDidMount", () => {
     wrapper.setState({ mode: "listens" });
     instance.componentDidMount();
 
-    wrapper.setState({ mode: "follow" });
-    instance.componentDidMount();
-
-    expect(instance.connectWebsockets).toHaveBeenCalledTimes(2);
-  });
-
-  it('calls getRecentListensForFollowList if mode "follow"', () => {
-    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
-    const instance = wrapper.instance();
-    instance.getRecentListensForFollowList = jest.fn();
-
-    wrapper.setState({ mode: "follow", listens: [] });
-    instance.componentDidMount();
-
-    expect(instance.getRecentListensForFollowList).toHaveBeenCalledTimes(1);
+    expect(instance.connectWebsockets).toHaveBeenCalledTimes(1);
   });
 
   it('calls getUserListenCount if mode "listens"', async () => {
     const extraProps = { ...props, mode: "listens" as ListensListMode };
     const wrapper = shallow<RecentListens>(<RecentListens {...extraProps} />);
     const instance = wrapper.instance();
-    instance.getRecentListensForFollowList = jest.fn();
 
     const spy = jest.fn().mockImplementation(() => {
       return Promise.resolve(42);
@@ -170,30 +155,6 @@ describe("createWebsocketsConnection", () => {
 });
 
 describe("addWebsocketsHandlers", () => {
-  it('calls correct handler for "connect" event', () => {
-    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
-    const instance = wrapper.instance();
-
-    wrapper.setState({
-      mode: "follow",
-      followList: ["foo", "bar"],
-    });
-    // eslint-disable-next-line dot-notation
-    const spy = jest.spyOn(instance["socket"], "on");
-    spy.mockImplementation((event, fn): any => {
-      if (event === "connect") {
-        fn();
-      }
-    });
-    instance.handleFollowUserListChange = jest.fn();
-    instance.addWebsocketsHandlers();
-
-    expect(instance.handleFollowUserListChange).toHaveBeenCalledWith(
-      ["foo", "bar"],
-      false
-    );
-  });
-
   it('calls correct handler for "listen" event', () => {
     const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
     const instance = wrapper.instance();
@@ -232,69 +193,6 @@ describe("addWebsocketsHandlers", () => {
     );
   });
 });
-describe("handleFollowUserListChange", () => {
-  it("sets the state correctly", () => {
-    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
-    const instance = wrapper.instance();
-
-    instance.handleFollowUserListChange(["foo", "bar"], true);
-
-    expect(wrapper.state("followList")).toEqual(["foo", "bar"]);
-  });
-
-  it("doesn't do anything if dontSendUpdate is true", () => {
-    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
-    const instance = wrapper.instance();
-
-    wrapper.setState({ mode: "follow", followList: ["bar"] });
-    instance.getRecentListensForFollowList = jest.fn();
-    // eslint-disable-next-line dot-notation
-    const spy = jest.spyOn(instance["socket"], "emit");
-    instance.handleFollowUserListChange(["foo"], true);
-
-    expect(spy).not.toHaveBeenCalled();
-    expect(instance.getRecentListensForFollowList).not.toHaveBeenCalled();
-  });
-
-  it("calls connectWebsockets if socket object hasn't been created", () => {
-    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
-    const instance = wrapper.instance();
-
-    // @ts-ignore undefined can't be assigned to socket but can happen in real life
-    // eslint-disable-next-line dot-notation
-    instance["socket"] = undefined;
-    instance.connectWebsockets = jest.fn();
-    instance.handleFollowUserListChange(["follow"]);
-
-    expect(instance.connectWebsockets).toHaveBeenCalledTimes(1);
-  });
-
-  it("calls socket.emit with correct parameters", () => {
-    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
-    const instance = wrapper.instance();
-
-    // eslint-disable-next-line dot-notation
-    const spy = jest.spyOn(instance["socket"], "emit");
-    instance.handleFollowUserListChange(["foo"]);
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith("json", {
-      user: "iliekcomputers",
-      follow: ["foo"],
-    });
-  });
-
-  it('calls getRecentListensForFollowList if mode is "follow"', () => {
-    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
-    const instance = wrapper.instance();
-
-    wrapper.setState({ mode: "follow", followList: ["bar"] });
-    instance.getRecentListensForFollowList = jest.fn();
-    instance.handleFollowUserListChange(["foo"]);
-
-    expect(instance.getRecentListensForFollowList).toHaveBeenCalledTimes(1);
-  });
-});
 
 describe("receiveNewListen", () => {
   const mockListen: Listen = {
@@ -321,7 +219,6 @@ describe("receiveNewListen", () => {
     );
     const instance = wrapper.instance();
 
-    wrapper.setState({ mode: "follow" });
     instance.receiveNewListen(JSON.stringify(mockListen));
 
     expect(wrapper.state("listens").length).toBeLessThanOrEqual(100);
@@ -338,32 +235,6 @@ describe("receiveNewListen", () => {
     instance.receiveNewListen(JSON.stringify(mockListen));
 
     expect(wrapper.state("listens").length).toBeLessThanOrEqual(100);
-  });
-
-  it('inserts the received listen for "follow"', () => {
-    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
-     * so that it doesn't get passed as a reference.
-     */
-    const wrapper = shallow<RecentListens>(
-      <RecentListens
-        {...(JSON.parse(
-          JSON.stringify(recentListensPropsOneListen)
-        ) as RecentListensProps)}
-      />
-    );
-    const instance = wrapper.instance();
-    wrapper.setState({ mode: "follow" });
-    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
-     * so that it doesn't get passed as a reference.
-     */
-    const result: Array<Listen> = JSON.parse(
-      JSON.stringify(recentListensPropsOneListen.listens)
-    );
-    result.push(mockListen);
-    instance.receiveNewListen(JSON.stringify(mockListen));
-
-    expect(wrapper.state("listens")).toHaveLength(result.length);
-    expect(wrapper.state("listens")).toEqual(result);
   });
 
   it("inserts the received listen for other modes", () => {
@@ -403,40 +274,6 @@ describe("receiveNewPlayingNow", () => {
     listened_at: 1586580524,
     listened_at_iso: "2020-04-10T10:12:04Z",
   };
-  const mockListenTwo: Listen = {
-    track_metadata: {
-      artist_name: "SOHN",
-      track_name: "Falling",
-    },
-    playing_now: true,
-    listened_at: 1586513524,
-    listened_at_iso: "2020-04-10T10:12:04Z",
-  };
-
-  it('sets state correctly if mode is "follow"', () => {
-    const wrapper = shallow<RecentListens>(
-      <RecentListens
-        {...(recentListensPropsPlayingNow as RecentListensProps)}
-      />
-    );
-    const instance = wrapper.instance();
-
-    wrapper.setState({
-      mode: "follow",
-      playingNowByUser: {
-        iliekcomputers: mockListenTwo,
-      },
-    });
-    instance.receiveNewPlayingNow(JSON.stringify(mockListenOne));
-
-    expect(wrapper.state("playingNowByUser")).toEqual({
-      ishaanshah: {
-        playing_now: true,
-        ...mockListenOne,
-      },
-      iliekcomputers: mockListenTwo,
-    });
-  });
 
   it("sets state correctly for other modes", () => {
     /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
@@ -508,48 +345,6 @@ describe("isCurrentListen", () => {
     wrapper.setState({ currentListen: undefined });
 
     expect(instance.isCurrentListen({} as Listen)).toBeFalsy();
-  });
-});
-
-describe("getRecentListensForFollowList", () => {
-  it("calls getRecentListensForUsers", () => {
-    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
-    const instance = wrapper.instance();
-
-    wrapper.setState({
-      followList: ["ishaanshah", "iliekcomputers", "puneruns"],
-    });
-    // eslint-disable-next-line dot-notation
-    const spy = jest.spyOn(instance["APIService"], "getRecentListensForUsers");
-    instance.getRecentListensForFollowList();
-
-    expect(spy).toHaveBeenCalledWith([
-      "ishaanshah",
-      "iliekcomputers",
-      "puneruns",
-    ]);
-  });
-
-  it("creates new alert if anything fails", () => {
-    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
-    const instance = wrapper.instance();
-
-    wrapper.setState({
-      followList: ["ishaanshah", "iliekcomputers", "puneruns"],
-    });
-    // eslint-disable-next-line dot-notation
-    const spy = jest.spyOn(instance["APIService"], "getRecentListensForUsers");
-    spy.mockImplementation(() => {
-      throw new Error("foobar");
-    });
-    instance.newAlert = jest.fn();
-    instance.getRecentListensForFollowList();
-
-    expect(instance.newAlert).toHaveBeenCalledWith(
-      "danger",
-      "Could not get recent listens",
-      "foobar"
-    );
   });
 });
 

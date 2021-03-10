@@ -192,10 +192,6 @@ declare type BrainzPlayerError =
   | string
   | { message?: string; status?: number; statusText?: string };
 
-declare type FollowUsersPlayingNow = {
-  [user: string]: Listen;
-};
-
 declare type LastFmScrobblePage = {
   recenttracks: {
     track: any;
@@ -363,7 +359,7 @@ declare type UserArtistMapDatum = {
 
 declare type UserArtistMapData = Array<UserArtistMapDatum>;
 
-declare type ListensListMode = "listens" | "follow" | "recent";
+declare type ListensListMode = "listens" | "recent";
 
 declare type ListenFeedBack = 1 | 0 | -1;
 
@@ -455,4 +451,42 @@ declare type JSPFTrack = {
 
 declare type RecommendationFeedbackMap = {
   [recordingMbid: string]: RecommendationFeedBack | null;
+};
+
+/** For recommending a track from the front-end */
+declare type UserTrackRecommendationMetadata = {
+  artist_name: string;
+  track_name: string;
+  release_name?: string;
+  recording_mbid?: string;
+  recording_msid: string;
+  artist_msid: string;
+};
+
+/** ***********************************
+ ********  USER FEED TIMELINE  ********
+ ************************************* */
+
+type EventTypeT =
+  | "recording_recommendation"
+  | "listen"
+  | "like"
+  | "follow"
+  | "stop_follow"
+  | "block_follow"
+  | "playlist_created";
+
+type UserRelationshipEvent = {
+  user_name_0: string;
+  user_name_1: string;
+  relationship_type: "follow";
+  created: number;
+};
+type EventMetadata = Listen | JSPFPlaylist | UserRelationshipEvent;
+
+type TimelineEvent = {
+  event_type: EventTypeT;
+  user_name: string;
+  created: number;
+  metadata: EventMetadata;
 };

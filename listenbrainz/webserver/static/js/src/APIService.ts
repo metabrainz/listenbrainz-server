@@ -81,6 +81,48 @@ export default class APIService {
     return result.payload.listens;
   };
 
+  getFeedForUser = async (
+    userName: string,
+    userToken: string,
+    minTs?: number,
+    maxTs?: number,
+    count?: number
+  ): Promise<Array<TimelineEvent>> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+
+    let query: string = `${this.APIBaseURI}/user/${userName}/feed/events`;
+
+    const queryParams: Array<string> = [];
+    if (maxTs) {
+      queryParams.push(`max_ts=${maxTs}`);
+    }
+    if (minTs) {
+      queryParams.push(`min_ts=${minTs}`);
+    }
+    if (count) {
+      queryParams.push(`count=${count}`);
+    }
+    if (queryParams.length) {
+      query += `?${queryParams.join("&")}`;
+    }
+
+    const response = await fetch(query, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
+    });
+    await this.checkStatus(response);
+    const result = await response.json();
+
+    return result.payload.events;
+  };
+
   getUserListenCount = async (userName: string): Promise<number> => {
     if (!userName) {
       throw new SyntaxError("Username missing");
@@ -162,6 +204,7 @@ export default class APIService {
       const url = `${this.APIBaseURI}/submit-listens`;
 
       /* eslint-disable no-await-in-loop */
+      /* eslint-disable-next-line no-constant-condition */
       while (true) {
         try {
           const response = await fetch(url, {
@@ -669,8 +712,12 @@ export default class APIService {
     return data;
   };
 
-  recommendTrackToFollowers = async (authToken: string, metadata: any) => {
-    const url = `${this.APIBaseURI}/user-timeline-event/create-user-recommendation/recording`;
+  recommendTrackToFollowers = async (
+    userName: string,
+    authToken: string,
+    metadata: UserTrackRecommendationMetadata
+  ) => {
+    const url = `${this.APIBaseURI}/user/${userName}/timeline-event/create/recording`;
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -679,7 +726,7 @@ export default class APIService {
       },
       body: JSON.stringify({ metadata }),
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     return response.status;
   };
 }
