@@ -81,15 +81,6 @@ services:
       - redis
       - rabbitmq
 
-  spark_reader:
-    image: web
-    volumes:
-      - ..:/code/listenbrainz:z
-    command: python3 -m "listenbrainz.spark.spark_reader"
-    depends_on:
-      - redis
-      - rabbitmq
-
   websockets:
     image: web
     volumes:
