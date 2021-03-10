@@ -306,7 +306,7 @@ def get_similar_to_user(user_name, other_user_name):
 
     similar_users = db_user.get_similar_users(user['id'])
     try:
-        return jsonify({'payload': { "user_name": other_user_name, "similarity": similar_users.similar_users[other_user_name] } })
+        return jsonify({'payload': {"user_name": other_user_name, "similarity": similar_users.similar_users[other_user_name]}})
     except KeyError:
         raise APINotFound("Similar-to user not found")
 

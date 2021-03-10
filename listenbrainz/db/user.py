@@ -60,7 +60,8 @@ def update_token(id):
             raise
 
 
-USER_GET_COLUMNS = ['id', 'created', 'musicbrainz_id', 'auth_token', 'last_login', 'latest_import', 'gdpr_agreed', 'musicbrainz_row_id', 'login_id']
+USER_GET_COLUMNS = ['id', 'created', 'musicbrainz_id', 'auth_token',
+                    'last_login', 'latest_import', 'gdpr_agreed', 'musicbrainz_row_id', 'login_id']
 
 
 def get(id):
@@ -254,11 +255,12 @@ def update_last_login(musicbrainz_id):
                    SET last_login = NOW()
                  WHERE musicbrainz_id = :musicbrainz_id
                 """), {
-                    "musicbrainz_id": musicbrainz_id,
+                "musicbrainz_id": musicbrainz_id,
             })
         except sqlalchemy.exc.ProgrammingError as err:
             logger.error(err)
-            raise DatabaseException("Couldn't update last_login: %s" % str(err))
+            raise DatabaseException(
+                "Couldn't update last_login: %s" % str(err))
 
 
 def update_latest_import(musicbrainz_id, ts):
@@ -276,9 +278,9 @@ def update_latest_import(musicbrainz_id, ts):
                    SET latest_import = to_timestamp(:ts)
                  WHERE musicbrainz_id = :musicbrainz_id
                 """), {
-                    'ts': ts,
-                    'musicbrainz_id': musicbrainz_id
-                })
+                'ts': ts,
+                'musicbrainz_id': musicbrainz_id
+            })
         except sqlalchemy.exc.ProgrammingError as e:
             logger.error(e)
             raise DatabaseException
@@ -328,9 +330,9 @@ def get_all_users(created_before=None, columns=None):
                   FROM "user"
                  WHERE created <= :created
               ORDER BY id
-            """.format(columns=', '.join(columns))),{
-                "created": created_before,
-            })
+            """.format(columns=', '.join(columns))), {
+            "created": created_before,
+        })
 
         return [dict(row) for row in result]
 
@@ -350,8 +352,8 @@ def delete(id):
                 DELETE FROM "user"
                       WHERE id = :id
                 """), {
-                    'id': id,
-                })
+                'id': id,
+            })
         except sqlalchemy.exc.ProgrammingError as err:
             logger.error(err)
             raise DatabaseException("Couldn't delete user: %s" % str(err))
@@ -370,11 +372,12 @@ def agree_to_gdpr(musicbrainz_id):
                    SET gdpr_agreed = NOW()
                  WHERE LOWER(musicbrainz_id) = LOWER(:mb_id)
                 """), {
-                    'mb_id': musicbrainz_id,
-                })
+                'mb_id': musicbrainz_id,
+            })
         except sqlalchemy.exc.ProgrammingError as err:
             logger.error(err)
-            raise DatabaseException("Couldn't update gdpr agreement for user: %s" % str(err))
+            raise DatabaseException(
+                "Couldn't update gdpr agreement for user: %s" % str(err))
 
 
 def update_musicbrainz_row_id(musicbrainz_id, musicbrainz_row_id):
@@ -391,12 +394,13 @@ def update_musicbrainz_row_id(musicbrainz_id, musicbrainz_row_id):
                    SET musicbrainz_row_id = :musicbrainz_row_id
                  WHERE LOWER(musicbrainz_id) = LOWER(:mb_id)
                 """), {
-                    'musicbrainz_row_id': musicbrainz_row_id,
-                    'mb_id': musicbrainz_id,
-                })
+                'musicbrainz_row_id': musicbrainz_row_id,
+                'mb_id': musicbrainz_id,
+            })
         except sqlalchemy.exc.ProgrammingError as err:
             logger.error(err)
-            raise DatabaseException("Couldn't update musicbrainz row id for user: %s" % str(err))
+            raise DatabaseException(
+                "Couldn't update musicbrainz row id for user: %s" % str(err))
 
 
 def get_by_mb_row_id(musicbrainz_row_id, musicbrainz_id=None):
