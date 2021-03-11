@@ -2,7 +2,6 @@ import * as React from "react";
 import { includes as _includes } from "lodash";
 
 import APIService from "../APIService";
-import UserListModalEntry from "./UserListModalEntry";
 import FollowerFollowingModal from "./FollowerFollowingModal";
 import SimilarUsersModal from "./SimilarUsersModal";
 
@@ -32,11 +31,6 @@ export default class UserSocialNetwork extends React.Component<
       similarUsersList: [],
     };
 
-    // DO NOT CHANGE THIS ORDER
-    // Otherwise react messes up the follow button props;
-    // The way to fix this is to not pass the loggedInUserFollowsUser prop
-    // into the FollowButton compoent.
-    // TODO: fix this
     this.getFollowing();
     this.getFollowers();
     this.getSimilarUsers();
