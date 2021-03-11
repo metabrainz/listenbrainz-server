@@ -32,9 +32,6 @@ The dataframe_id (UUID) along with dataframe metadata are stored to HDFS.
 Note: All the dataframes except the dataframe_metadata overwrite the existing dataframes in HDFS.
 """
 
-import sys
-import uuid
-import logging
 import time
 from datetime import datetime
 from collections import defaultdict
@@ -42,9 +39,8 @@ from pydantic import ValidationError
 
 import listenbrainz_spark
 import listenbrainz_spark.utils.mapping as mapping_utils
-from listenbrainz_spark import path, stats, utils, config, schema
-from listenbrainz_spark.exceptions import (FileNotFetchedException,
-                                           SparkSessionNotInitializedException,
+from listenbrainz_spark import path, utils, schema
+from listenbrainz_spark.exceptions import (SparkSessionNotInitializedException,
                                            DataFrameNotAppendedException,
                                            DataFrameNotCreatedException,
                                            SparkException)
@@ -60,7 +56,6 @@ from listenbrainz_spark.recommendations.dataframe_utils import (get_dataframe_id
                                                                 get_listens_for_training_model_window)
 from flask import current_app
 import pyspark.sql.functions as func
-from pyspark.sql import Row
 from pyspark.sql.window import Window
 from pyspark.sql.functions import rank, col, row_number
 
@@ -123,11 +118,11 @@ from pyspark.sql.functions import rank, col, row_number
 #   ]
 
 
-def save_dataframe_metadata_to_hdfs(metadata, df_metadata_path):
+def save_dataframe_metadata_to_hdfs(metadata: dict, df_metadata_path: str):
     """ Save dataframe metadata.
 
         Args:
-            metadata (dataframe): metadata dataframe to append.
+            metadata (dict): metadata dataframe to append.
             df_metadata_path (str): path where metadata dataframe should be saved.
     """
     # Convert metadata to row object.
