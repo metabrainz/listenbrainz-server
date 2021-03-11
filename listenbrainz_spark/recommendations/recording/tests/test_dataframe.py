@@ -17,6 +17,10 @@ class CreateDataframeTestCase(SparkTestCase):
     listens_path = path.LISTENBRAINZ_DATA_DIRECTORY
     mapping_path = path.MBID_MSID_MAPPING
     mapped_listens_path = path.RECOMMENDATION_RECORDING_MAPPED_LISTENS
+    users_path = path.RECOMMENDATION_RECORDING_USERS_DATAFRAME
+    recordings_path = path.RECOMMENDATION_RECORDINGS_DATAFRAME
+    playcounts_path = path.RECOMMENDATION_RECORDING_PLAYCOUNTS_DATAFRAME
+    metadata_path = path.RECOMMENDATION_RECORDING_DATAFRAME_METADATA
 
     @classmethod
     def setUpClass(cls):
@@ -33,7 +37,7 @@ class CreateDataframeTestCase(SparkTestCase):
     def test_get_users_dataframe(self):
         metadata = {}
         mapped_listens = utils.read_files_from_HDFS(self.mapped_listens_path)
-        users_df = create_dataframes.get_users_dataframe(mapped_listens, metadata)
+        users_df = create_dataframes.get_users_dataframe(mapped_listens, metadata, self.users_path)
         self.assertEqual(users_df.count(), 2)
         self.assertListEqual(sorted(self.get_users_df().columns), sorted(users_df.columns))
         self.assertEqual(metadata['users_count'], users_df.count())
@@ -44,7 +48,7 @@ class CreateDataframeTestCase(SparkTestCase):
     def test_get_recordings_dataframe(self):
         metadata = {}
         mapped_listens = utils.read_files_from_HDFS(self.mapped_listens_path)
-        recordings_df = create_dataframes.get_recordings_df(mapped_listens, metadata)
+        recordings_df = create_dataframes.get_recordings_df(mapped_listens, metadata, self.recordings_path)
         self.assertEqual(recordings_df.count(), 3)
         self.assertListEqual(sorted(self.get_recordings_df().columns), sorted(recordings_df.columns))
         self.assertEqual(metadata['recordings_count'], 3)
@@ -63,11 +67,11 @@ class CreateDataframeTestCase(SparkTestCase):
     def test_save_playcounts_df(self):
         metadata = {}
         mapped_listens = utils.read_files_from_HDFS(self.mapped_listens_path)
-        users_df = create_dataframes.get_users_dataframe(mapped_listens, {})
-        recordings_df = create_dataframes.get_recordings_df(mapped_listens, {})
+        users_df = create_dataframes.get_users_dataframe(mapped_listens, {}, self.users_path)
+        recordings_df = create_dataframes.get_recordings_df(mapped_listens, {}, self.recordings_path)
         listens_df = create_dataframes.get_listens_df(mapped_listens, {})
 
-        create_dataframes.save_playcounts_df(listens_df, recordings_df, users_df, metadata)
+        create_dataframes.save_playcounts_df(listens_df, recordings_df, users_df, metadata, self.playcounts_path)
         playcounts_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_PLAYCOUNTS_DATAFRAME)
         self.assertEqual(playcounts_df.count(), 5)
 
@@ -77,7 +81,7 @@ class CreateDataframeTestCase(SparkTestCase):
     def test_save_dataframe_metadata_to_HDFS(self):
         df_id = "3acb406f-c716-45f8-a8bd-96ca3939c2e5"
         metadata = self.get_dataframe_metadata(df_id)
-        create_dataframes.save_dataframe_metadata_to_hdfs(metadata)
+        create_dataframes.save_dataframe_metadata_to_hdfs(metadata, self.metadata_path)
 
         status = utils.path_exists(path.RECOMMENDATION_RECORDING_DATAFRAME_METADATA)
         self.assertTrue(status)
