@@ -33,6 +33,7 @@ import sys
 import tarfile
 import tempfile
 import time
+import ujson
 
 from datetime import datetime
 from flask import current_app
@@ -176,6 +177,22 @@ def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
 
     current_app.logger.info('Dump of public data created at %s!', public_dump)
 
+    current_app.logger.info('Creating dump of feedback data...')
+    try:
+        public_dump = create_feedback_dump(location, dump_time, threads)
+    except IOError as e:
+        current_app.logger.critical('IOError while creating feedback dump: %s', str(e), exc_info=True)
+        current_app.logger.info('Removing created files and giving up...')
+        shutil.rmtree(location)
+        return
+    except Exception as e:
+        current_app.logger.critical('Unable to create feedback dump due to error %s', str(e), exc_info=True)
+        current_app.logger.info('Removing created files and giving up...')
+        shutil.rmtree(location)
+        return
+
+    current_app.logger.info('Dump of feedback data created at %s!', public_dump)
+
     current_app.logger.info('ListenBrainz PostgreSQL data dump created at %s!', location)
     return private_dump, public_dump
 
@@ -238,23 +255,26 @@ def _create_dump(location, dump_type, tables, dump_time, threads=DUMP_DEFAULT_TH
 
 
             with db.engine.connect() as connection:
-                with connection.begin() as transaction:
-                    cursor = connection.connection.cursor()
-                    for table in tables:
-                        try:
-                            copy_table(
-                                cursor=cursor,
-                                location=archive_tables_dir,
-                                columns=','.join(tables[table]),
-                                table_name=table,
-                            )
-                        except IOError as e:
-                            current_app.logger.error('IOError while copying table %s', table, exc_info=True)
-                            raise
-                        except Exception as e:
-                            current_app.logger.error('Error while copying table %s: %s', table, str(e), exc_info=True)
-                            raise
-                    transaction.rollback()
+                if dump_type == "feedback":
+                    dump_user_feedback(connection, location=archive_tables_dir)
+                else:
+                    with connection.begin() as transaction:
+                        cursor = connection.connection.cursor()
+                        for table in tables:
+                            try:
+                                copy_table(
+                                    cursor=cursor,
+                                    location=archive_tables_dir,
+                                    columns=','.join(tables[table]),
+                                    table_name=table,
+                                )
+                            except IOError as e:
+                                current_app.logger.error('IOError while copying table %s', table, exc_info=True)
+                                raise
+                            except Exception as e:
+                                current_app.logger.error('Error while copying table %s: %s', table, str(e), exc_info=True)
+                                raise
+                        transaction.rollback()
 
 
             tar.add(archive_tables_dir, arcname=os.path.join(archive_name, 'lbdump'.format(dump_type)))
@@ -299,6 +319,59 @@ def create_public_dump(location, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
         dump_time=dump_time,
         threads=threads,
     )
+
+
+def create_feedback_dump(location, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
+    """ Create a spark format dump of user listen and user recommendation feedback. 
+    """
+    return _create_dump(
+        location=location,
+        dump_type='feedback',
+        tables=[],
+        dump_time=dump_time,
+        threads=threads,
+    )
+
+
+def dump_user_feedback(connection, location):
+    """ Carry out the actual dumping of user listen and user recommendation feedback. 
+    """
+
+    with connection.begin() as transaction:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT user_id, recording_msid, score, created,
+                   EXTRACT(YEAR FROM created) AS year,
+                   EXTRACT(MONTH FROM created) AS month,
+                   EXTRACT(DAY FROM created) AS day
+              FROM recording_feedback
+          ORDER BY created"""))
+
+        last_day = ()
+        todays_items = []
+
+        while True:
+            row = result.fetchone()
+            today = (row[4], row[5], row[6]) if row else ()
+            if (not row or today != last_day) and len(todays_items) > 0:
+                full_path = os.path.join(location, str(int(last_day[0])), str(int(last_day[1])), str(int(last_day[2])))
+                os.makedirs(full_path)
+                print("write to %s" % os.path.join(full_path, "data.json"))
+                with open(os.path.join(full_path, "data.json"), "w") as f:
+                    for item in todays_items:
+                        f.write(ujson.dumps(item) + "\n")
+                todays_items = []
+
+            if not row:
+                break
+
+            todays_items.append({ 'user_id': row[0],
+                                  'recording_msid': row[1],
+                                  'score': row[2],
+                                  'created': row[3] })
+            last_day = today
+            
+        transaction.rollback()
+
 
 
 def copy_table(cursor, location, columns, table_name):
