@@ -34,7 +34,7 @@ type FollowButtonProps = {
   user: ListenBrainzUser;
   loggedInUser?: ListenBrainzUser;
   loggedInUserFollowsUser: boolean;
-  updateFollowingList: (
+  updateFollowingList?: (
     user: ListenBrainzUser,
     action: "follow" | "unfollow"
   ) => void;
@@ -91,7 +91,9 @@ class FollowButton extends React.Component<
     this.APIService.followUser(user.name).then(({ status }) => {
       if (status === 200) {
         this.setState({ loggedInUserFollowsUser: true, justFollowed: true });
-        updateFollowingList(user, "follow");
+        if (updateFollowingList) {
+          updateFollowingList(user, "follow");
+        }
       } else {
         this.setState({ error: true });
       }
@@ -103,7 +105,9 @@ class FollowButton extends React.Component<
     this.APIService.unfollowUser(user.name).then(({ status }) => {
       if (status === 200) {
         this.setState({ loggedInUserFollowsUser: false, justFollowed: false });
-        updateFollowingList(user, "unfollow");
+        if (updateFollowingList) {
+          updateFollowingList(user, "unfollow");
+        }
       } else {
         this.setState({ error: true });
       }

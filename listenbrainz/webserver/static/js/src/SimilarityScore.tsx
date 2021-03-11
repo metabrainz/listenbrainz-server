@@ -19,10 +19,9 @@ const getclassName = (similarityScore: number): string => {
 };
 
 const SimilarityScore = (props: SimilarityScoreProps) => {
-  const { user, type } = props;
+  const { user, type, similarityScore } = props;
 
-  let { similarityScore } = props;
-  similarityScore = Math.round(similarityScore * 10) / 10; // Rounding off to nearest digit
+  const roundedSimilarityScore = Math.round(similarityScore * 10) / 10; // Rounding off to nearest digit
 
   const className = getclassName(similarityScore);
   return (
@@ -33,19 +32,20 @@ const SimilarityScore = (props: SimilarityScoreProps) => {
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-valuenow={similarityScore * 100}
+        aria-valuenow={roundedSimilarityScore * 100}
         tabIndex={0}
       >
         <div
           className={`progress-bar ${className}`}
           style={{
-            width: `${similarityScore * 100}%`,
+            width: `${roundedSimilarityScore * 100}%`,
           }}
         />
       </div>
       {type === "regular" ? (
         <p className="text-muted">
-          Your compatibility with {user?.name} is {similarityScore * 10}/10
+          Your compatibility with {user?.name} is {roundedSimilarityScore * 10}
+          /10
         </p>
       ) : (
         <p className="small text-muted">{similarityScore * 10}/10</p>

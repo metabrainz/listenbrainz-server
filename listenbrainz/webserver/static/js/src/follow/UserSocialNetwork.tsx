@@ -51,7 +51,7 @@ export default class UserSocialNetwork extends React.Component<
               return {
                 name: similarUser.user_name,
                 similarityScore: similarUser.similarity,
-              } as SimilarUser;
+              };
             }
           ),
         });

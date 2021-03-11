@@ -70,16 +70,14 @@ export default class FollowerFollowingModal extends React.Component<
         <div className="follower-following-list">
           {activeModeList.map((listEntry: ListenBrainzUser) => {
             return (
-              <>
-                <UserListModalEntry
-                  mode="follow-following"
-                  key={listEntry.name}
-                  user={{ name: listEntry.name }}
-                  loggedInUser={loggedInUser}
-                  loggedInUserFollowsUser={loggedInUserFollowsUser(listEntry)}
-                  updateFollowingList={updateFollowingList}
-                />
-              </>
+              <UserListModalEntry
+                mode="follow-following"
+                key={listEntry.name}
+                user={listEntry}
+                loggedInUser={loggedInUser}
+                loggedInUserFollowsUser={loggedInUserFollowsUser(listEntry)}
+                updateFollowingList={updateFollowingList}
+              />
             );
           })}
         </div>

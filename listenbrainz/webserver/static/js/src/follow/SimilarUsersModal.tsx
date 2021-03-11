@@ -34,9 +34,8 @@ const SimilarUsersModal = (props: SimilarUsersModalProps) => {
             <UserListModalEntry
               mode="similar-users"
               key={listEntry.name}
-              user={{ name: listEntry.name }}
+              user={listEntry}
               loggedInUser={loggedInUser}
-              similarityScore={listEntry.similarityScore}
               loggedInUserFollowsUser={loggedInUserFollowsUser(listEntry)}
               updateFollowingList={updateFollowingList}
             />

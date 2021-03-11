@@ -1,13 +1,13 @@
 import * as React from "react";
 import FollowButton from "../FollowButton";
 import SimilarityScore from "../SimilarityScore";
+import { SimilarUsersModalProps } from "./SimilarUsersModal";
 
 export type UserListModalEntryProps = {
   mode: "follow-following" | "similar-users";
-  user: ListenBrainzUser;
+  user: ListenBrainzUser | SimilarUser;
   loggedInUser: ListenBrainzUser | null;
   loggedInUserFollowsUser: boolean;
-  similarityScore: number;
   updateFollowingList: (
     user: ListenBrainzUser,
     action: "follow" | "unfollow"
@@ -20,7 +20,6 @@ const UserListModalEntry = (props: UserListModalEntryProps) => {
     user,
     loggedInUserFollowsUser,
     loggedInUser,
-    similarityScore,
     updateFollowingList,
   } = props;
   return (
@@ -36,7 +35,7 @@ const UserListModalEntry = (props: UserListModalEntryProps) => {
           </a>
           {loggedInUser && mode === "similar-users" && (
             <SimilarityScore
-              similarityScore={similarityScore}
+              similarityScore={(user as SimilarUser).similarityScore}
               user={user}
               type="compact"
             />
@@ -45,7 +44,7 @@ const UserListModalEntry = (props: UserListModalEntryProps) => {
         {loggedInUser && (
           <FollowButton
             type="block"
-            user={{ name: user.name }}
+            user={user}
             loggedInUser={loggedInUser}
             loggedInUserFollowsUser={loggedInUserFollowsUser}
             updateFollowingList={updateFollowingList}
@@ -54,10 +53,6 @@ const UserListModalEntry = (props: UserListModalEntryProps) => {
       </div>
     </>
   );
-};
-
-UserListModalEntry.defaultProps = {
-  similarityScore: 0,
 };
 
 export default UserListModalEntry;
