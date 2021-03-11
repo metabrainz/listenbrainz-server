@@ -22,14 +22,17 @@ import * as React from "react";
 import { shallow, ShallowWrapper } from "enzyme";
 import FollowerFollowingModal from "./FollowerFollowingModal";
 
+const props = {
+  user: { name: "foobar" },
+  loggedInUser: null,
+  followerList: [],
+  followingList: [],
+  loggedInUserFollowsUser: () => true,
+  updateFollowingList: () => {},
+};
 describe("<FollowerFollowingModal />", () => {
   it("renders", () => {
-    const wrapper = shallow(
-      <FollowerFollowingModal
-        user={{ name: "iliekcomputers" }}
-        loggedInUser={null}
-      />
-    );
+    const wrapper = shallow(<FollowerFollowingModal {...props} />);
     expect(wrapper).toBeTruthy();
   });
 });
