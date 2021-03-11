@@ -1,17 +1,21 @@
 import * as React from "react";
 import { includes as _includes } from "lodash";
 
-import Pill from "../components/Pill";
 import APIService from "../APIService";
 import UserListModalEntry from "./UserListModalEntry";
 
 export type SimilarUsersModalProps = {
   user: ListenBrainzUser;
   loggedInUser: ListenBrainzUser | null;
+  similarUsersList: Array<SimilarUser>;
+  loggedInUserFollowsUser: (user: ListenBrainzUser | SimilarUser) => boolean;
+  updateFollowingList: (
+    user: ListenBrainzUser,
+    action: "follow" | "unfollow"
+  ) => void;
 };
 
 type SimilarUsersModalState = {
-  followerList: Array<ListenBrainzUser>;
   similarUsersList: Array<SimilarUser>;
 };
 
@@ -25,61 +29,35 @@ export default class SimilarUsersModal extends React.Component<
     super(props);
     this.APIService = new APIService(`${window.location.origin}/1`);
     this.state = {
-      followerList: [],
       similarUsersList: [],
     };
-
-    this.getSimilarUsers();
   }
 
-  getSimilarUsers = () => {
-    // TODO: implement the API call
-  };
+  componentDidUpdate(prevProps: SimilarUsersModalProps) {
+    const { similarUsersList } = this.props;
 
-  getFollowers = () => {
-    const { loggedInUser } = this.props;
-    if (!loggedInUser) {
-      return;
+    // UserSocial will update this prop and we need to update the state accordingly
+    if (prevProps.similarUsersList !== similarUsersList) {
+      this.setState({ similarUsersList });
     }
-
-    this.APIService.getFollowersOfUser(loggedInUser.name).then(
-      ({ followers }: { followers: Array<{ musicbrainz_id: string }> }) => {
-        this.setState({
-          followerList: followers.map(({ musicbrainz_id }) => {
-            return {
-              name: musicbrainz_id,
-            };
-          }),
-        });
-      }
-    );
-  };
-
-  loggedInUserFollowsUser = (user: ListenBrainzUser): boolean => {
-    const { loggedInUser } = this.props;
-    const { followerList } = this.state;
-
-    if (!loggedInUser) {
-      return false;
-    }
-
-    return _includes(
-      followerList.map((listEntry: ListenBrainzUser) => listEntry.name),
-      user.name
-    );
-  };
+  }
 
   render() {
-    const { user, loggedInUser } = this.props;
+    const {
+      user,
+      loggedInUser,
+      loggedInUserFollowsUser,
+      updateFollowingList,
+    } = this.props;
     const { similarUsersList } = this.state;
     return (
       <>
         <div className="text-center follower-following-pills" />
-        <h3>
+        <h3 className="text-center">
           People similar to{" "}
           {user.name === loggedInUser?.name ? "you" : user.name}
         </h3>
-        <div className="follower-following-list">
+        <div className="similar-users-list">
           {similarUsersList.map((listEntry: SimilarUser) => {
             return (
               <>
@@ -89,9 +67,8 @@ export default class SimilarUsersModal extends React.Component<
                   user={{ name: listEntry.name }}
                   loggedInUser={loggedInUser}
                   similarityScore={listEntry.similarityScore}
-                  loggedInUserFollowsUser={this.loggedInUserFollowsUser(
-                    listEntry
-                  )}
+                  loggedInUserFollowsUser={loggedInUserFollowsUser(listEntry)}
+                  updateFollowingList={updateFollowingList}
                 />
               </>
             );

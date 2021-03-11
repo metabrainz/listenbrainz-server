@@ -8,6 +8,10 @@ export type UserListModalEntryProps = {
   loggedInUser: ListenBrainzUser | null;
   loggedInUserFollowsUser: boolean;
   similarityScore: number;
+  updateFollowingList: (
+    user: ListenBrainzUser,
+    action: "follow" | "unfollow"
+  ) => void;
 };
 
 const UserListModalEntry = (props: UserListModalEntryProps) => {
@@ -17,6 +21,7 @@ const UserListModalEntry = (props: UserListModalEntryProps) => {
     loggedInUserFollowsUser,
     loggedInUser,
     similarityScore,
+    updateFollowingList,
   } = props;
   return (
     <>
@@ -43,6 +48,7 @@ const UserListModalEntry = (props: UserListModalEntryProps) => {
             user={{ name: user.name }}
             loggedInUser={loggedInUser}
             loggedInUserFollowsUser={loggedInUserFollowsUser}
+            updateFollowingList={updateFollowingList}
           />
         )}
       </div>

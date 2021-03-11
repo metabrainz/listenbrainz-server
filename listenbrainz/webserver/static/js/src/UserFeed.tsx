@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import FollowerFollowingModal from "./follow/FollowerFollowingModal";
+import UserSocialNetwork from "./follow/UserSocialNetwork";
 
 type UserFeedPageProps = {
   currentUser: ListenBrainzUser;
@@ -17,10 +17,7 @@ const UserFeedPage = (props: UserFeedPageProps) => {
             <div className="alert alert-danger">Under construction!</div>
           </div>
           <div className="col-md-4">
-            <FollowerFollowingModal
-              user={currentUser}
-              loggedInUser={currentUser}
-            />
+            <UserSocialNetwork user={currentUser} loggedInUser={currentUser} />
           </div>
         </div>
       </div>

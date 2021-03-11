@@ -8,12 +8,20 @@ import UserListModalEntry from "./UserListModalEntry";
 export type FollowerFollowingModalProps = {
   user: ListenBrainzUser;
   loggedInUser: ListenBrainzUser | null;
+  followerList: Array<ListenBrainzUser>;
+  followingList: Array<ListenBrainzUser>;
+  loggedInUserFollowsUser: (user: ListenBrainzUser | SimilarUser) => boolean;
+  updateFollowingList: (
+    user: ListenBrainzUser,
+    action: "follow" | "unfollow"
+  ) => void;
 };
 
 type FollowerFollowingModalState = {
   activeMode: "follower" | "following";
   followerList: Array<ListenBrainzUser>;
   followingList: Array<ListenBrainzUser>;
+  activeModeList: Array<ListenBrainzUser>;
 };
 
 export default class FollowerFollowingModal extends React.Component<
@@ -29,72 +37,54 @@ export default class FollowerFollowingModal extends React.Component<
       activeMode: "follower",
       followerList: [],
       followingList: [],
+      activeModeList: [],
     };
-
-    // DO NOT CHANGE THIS ORDER
-    // Otherwise react messes up the follow button props;
-    // The way to fix this is to not pass the loggedInUserFollowsUser prop
-    // into the FollowButton compoent.
-    // TODO: fix this
-    this.getFollowing();
-    this.getFollowers();
   }
 
-  getFollowers = () => {
-    const { user } = this.props;
-    this.APIService.getFollowersOfUser(user.name).then(
-      ({ followers }: { followers: Array<{ musicbrainz_id: string }> }) => {
-        this.setState({
-          followerList: followers.map(({ musicbrainz_id }) => {
-            return {
-              name: musicbrainz_id,
-            };
-          }),
-        });
-      }
-    );
-  };
-
-  getFollowing = () => {
-    const { user } = this.props;
-    this.APIService.getFollowingForUser(user.name).then(
-      ({ following }: { following: Array<{ musicbrainz_id: string }> }) => {
-        this.setState({
-          followingList: following.map(({ musicbrainz_id }) => {
-            return { name: musicbrainz_id };
-          }),
-        });
-      }
-    );
-  };
+  componentDidUpdate(prevProps: FollowerFollowingModalProps) {
+    const { followerList, followingList } = this.props;
+    const { activeMode } = this.state;
+    // UserSocial will update this prop and we need to update the state accordingly
+    if (prevProps.followerList !== followerList) {
+      this.setState({
+        followerList,
+        activeModeList:
+          activeMode === "follower" ? followerList : followingList,
+      });
+    }
+    if (prevProps.followingList !== followingList) {
+      this.setState({
+        followingList,
+        activeModeList:
+          activeMode === "follower" ? followerList : followingList,
+      });
+    }
+  }
 
   updateMode = (mode: "follower" | "following") => {
     this.setState({ activeMode: mode }, () => {
       const { activeMode } = this.state;
-      if (activeMode === "follower") this.getFollowers();
-      else this.getFollowing();
+      const { followerList, followingList } = this.state;
+      if (activeMode === "follower") {
+        this.setState({ activeModeList: followerList });
+      } else {
+        this.setState({ activeModeList: followingList });
+      }
     });
   };
 
-  loggedInUserFollowsUser = (user: ListenBrainzUser): boolean => {
-    const { loggedInUser } = this.props;
-    const { followingList } = this.state;
-
-    if (!loggedInUser) {
-      return false;
-    }
-
-    return _includes(
-      followingList.map((listEntry: ListenBrainzUser) => listEntry.name),
-      user.name
-    );
-  };
-
   render() {
-    const { user, loggedInUser } = this.props;
-    const { activeMode, followerList, followingList } = this.state;
-    const activeModeList =
-      activeMode === "follower" ? followerList : followingList;
+    const {
+      loggedInUser,
+      loggedInUserFollowsUser,
+      updateFollowingList,
+    } = this.props;
+    const {
+      activeMode,
+      followerList,
+      followingList,
+      activeModeList,
+    } = this.state;
     return (
       <>
         <div className="text-center follower-following-pills">
@@ -124,9 +114,8 @@ export default class FollowerFollowingModal extends React.Component<
                   key={listEntry.name}
                   user={{ name: listEntry.name }}
                   loggedInUser={loggedInUser}
-                  loggedInUserFollowsUser={this.loggedInUserFollowsUser(
-                    listEntry
-                  )}
+                  loggedInUserFollowsUser={loggedInUserFollowsUser(listEntry)}
+                  updateFollowingList={updateFollowingList}
                 />
               </>
             );
