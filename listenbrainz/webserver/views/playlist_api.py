@@ -403,10 +403,11 @@ def edit_playlist(playlist_mbid):
     # Uniquify collaborators list
     collaborators = list(set(collaborators))
 
+    # Don't allow creator to also be a collaborator
+    if user["musicbrainz_id"] in collaborators:
+        collaborators.remove(user["musicbrainz_id"])
+
     if collaborators:
-        # Don't allow creator to also be a collaborator
-        if user["musicbrainz_id"] in collaborators:
-            collaborators.remove(user["musicbrainz_id"])
         users = db_user.get_many_users_by_mb_id(collaborators)
 
     collaborator_ids = []
