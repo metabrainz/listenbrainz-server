@@ -21,10 +21,10 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { isEqual } from "lodash";
 import APIService from "../APIService";
 import BrainzPlayer from "../BrainzPlayer";
-import FollowerFollowingModal from "../follow/FollowerFollowingModal";
 import Loader from "../components/Loader";
 import TimelineEventCard from "./TimelineEventCard";
 import { preciseTimestamp } from "../utils";
+import UserSocialNetwork from "../follow/UserSocialNetwork";
 
 export enum EventType {
   RECORDING_RECOMMENDATION = "recording_recommendation",
@@ -505,7 +505,10 @@ export default class UserFeedPage extends React.Component<
               </ul>
             </div>
             <div className="col-md-offset-1 col-md-4">
-              <FollowerFollowingModal user={currentUser} />
+              <UserSocialNetwork
+                user={currentUser}
+                loggedInUser={currentUser}
+              />
               <div className="sticky-top">
                 <BrainzPlayer
                   apiService={this.APIService}
