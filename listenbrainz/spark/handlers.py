@@ -385,11 +385,11 @@ def notify_cf_recording_recommendations_generation(data):
     )
 
 
-def handle_similar_users(data):
+def handle_similar_users(message):
     """ Save the similar users data to the DB
     """
 
     if current_app.config['TESTING']:
         return
 
-    import_user_similarities(data['data'])
+    import_user_similarities(message['data'])
