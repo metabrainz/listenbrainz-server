@@ -15,7 +15,8 @@ def create_messages(similar_users_df):
     itr = similar_users_df.toLocalIterator()
     message = {}
     for row in itr:
-        message[row.user_name] = {user.other_user_name: user.similarity for user in row.similar_users}
+        message[row.user_name] = {
+            user.other_user_name: user.similarity for user in row.similar_users}
     yield {
         'type': 'similar_users',
         'data': message
@@ -23,13 +24,21 @@ def create_messages(similar_users_df):
 
 
 def threshold_similar_users(matrix, threshold):
+    """ Determine the minimum and maximum values in the matriz, scale
+        the result to the rang of [0.0 - 1.0] and finally return only
+        values higher than the threshold argument (on a scale of 0.0 - 1.0)
+    """
     rows, cols = matrix.shape
     similar_users = list()
 
+    # Calculate the minimum and maximum values
     max_similarity = None
     min_similarity = None
     for x in range(rows):
         for y in range(cols):
+
+            # Spark sometimes returns nan values and the way to get rid of them is to
+            # cast to a float and discard values that are non a number
             value = float(matrix[x, y])
             if x == y or math.isnan(value):
                 continue
@@ -41,13 +50,16 @@ def threshold_similar_users(matrix, threshold):
             max_similarity = max(value, max_similarity)
             min_similarity = min(value, min_similarity)
 
+    # Now we know the min and max values, calculate the range and select
+    # values higher or equal to the threshold.
     similarity_range = max_similarity - min_similarity
     for x in range(rows):
         for y in range(cols):
             if x == y:
                 continue
 
-            similarity = (float(matrix[x, y]) - min_similarity) / similarity_range
+            similarity = (float(matrix[x, y]) -
+                          min_similarity) / similarity_range
             if similarity >= threshold:
                 similar_users.append((x, y, similarity))
 
@@ -64,8 +76,10 @@ def main(threshold):
         raise
 
     try:
-        playcounts_df = utils.read_files_from_HDFS(path.USER_SIMILARITY_PLAYCOUNTS_DATAFRAME)
-        users_df = utils.read_files_from_HDFS(path.USER_SIMILARITY_USERS_DATAFRAME)
+        playcounts_df = utils.read_files_from_HDFS(
+            path.USER_SIMILARITY_PLAYCOUNTS_DATAFRAME)
+        users_df = utils.read_files_from_HDFS(
+            path.USER_SIMILARITY_USERS_DATAFRAME)
     except PathNotFoundException as err:
         current_app.logger.error(str(err), exc_info=True)
         raise
@@ -73,13 +87,17 @@ def main(threshold):
         current_app.logger.error(str(err), exc_info=True)
         raise
 
-    tuple_mapped_rdd = playcounts_df.rdd.map(lambda x: MatrixEntry(x["recording_id"], x["user_id"], x["count"]))
+    tuple_mapped_rdd = playcounts_df.rdd.map(
+        lambda x: MatrixEntry(x["recording_id"], x["user_id"], x["count"]))
     coordinate_matrix = CoordinateMatrix(tuple_mapped_rdd)
     indexed_row_matrix = coordinate_matrix.toIndexedRowMatrix()
-    vectors_mapped_rdd = indexed_row_matrix.rows.map(lambda r: (r.index, r.vector.asML()))
-    vectors_df = listenbrainz_spark.session.createDataFrame(vectors_mapped_rdd, ['index', 'vector'])
+    vectors_mapped_rdd = indexed_row_matrix.rows.map(
+        lambda r: (r.index, r.vector.asML()))
+    vectors_df = listenbrainz_spark.session.createDataFrame(
+        vectors_mapped_rdd, ['index', 'vector'])
 
-    similarity_matrix = Correlation.corr(vectors_df, 'vector', 'pearson').first()['pearson(vector)'].toArray()
+    similarity_matrix = Correlation.corr(vectors_df, 'vector', 'pearson').first()[
+        'pearson(vector)'].toArray()
     similar_users = threshold_similar_users(similarity_matrix, threshold)
 
     other_users_df = users_df\
