@@ -359,7 +359,7 @@ export default class UserFeedPage extends React.Component<
   }
 
   render() {
-    const { currentUser, spotify } = this.props;
+    const { currentUser, spotify, apiUrl } = this.props;
     const {
       alerts,
       currentListen,
@@ -506,6 +506,7 @@ export default class UserFeedPage extends React.Component<
             </div>
             <div className="col-md-offset-1 col-md-4">
               <UserSocialNetwork
+                apiUrl={apiUrl}
                 user={currentUser}
                 loggedInUser={currentUser}
               />

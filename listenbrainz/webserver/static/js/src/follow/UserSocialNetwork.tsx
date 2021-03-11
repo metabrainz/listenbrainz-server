@@ -6,6 +6,7 @@ import FollowerFollowingModal from "./FollowerFollowingModal";
 import SimilarUsersModal from "./SimilarUsersModal";
 
 export type UserSocialNetworkProps = {
+  apiUrl: string;
   user: ListenBrainzUser;
   loggedInUser: ListenBrainzUser | null;
 };
@@ -24,7 +25,9 @@ export default class UserSocialNetwork extends React.Component<
 
   constructor(props: UserSocialNetworkProps) {
     super(props);
-    this.APIService = new APIService(`${window.location.origin}/1`);
+    this.APIService = new APIService(
+      props.apiUrl || `${window.location.origin}/1`
+    );
     this.state = {
       followerList: [],
       followingList: [],
