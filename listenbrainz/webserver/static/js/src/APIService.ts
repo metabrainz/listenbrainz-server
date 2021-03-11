@@ -729,4 +729,16 @@ export default class APIService {
     await this.checkStatus(response);
     return response.status;
   };
+
+  getSimilarUsersForUser = async (username: string) => {
+    if (!username) {
+      throw new SyntaxError("Username missing");
+    }
+
+    const url = `${this.APIBaseURI}/user/${username}/similar-users`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    const data = response.json();
+    return data;
+  };
 }

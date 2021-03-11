@@ -19,9 +19,12 @@ const getclassName = (similarityScore: number): string => {
 };
 
 const SimilarityScore = (props: SimilarityScoreProps) => {
-  const { similarityScore, user, type } = props;
-  const className = getclassName(similarityScore);
+  const { user, type } = props;
 
+  let { similarityScore } = props;
+  similarityScore = Math.round(similarityScore * 10) / 10; // Rounding off to nearest digit
+
+  const className = getclassName(similarityScore);
   return (
     <div className={`similarity-score ${type}`}>
       <div

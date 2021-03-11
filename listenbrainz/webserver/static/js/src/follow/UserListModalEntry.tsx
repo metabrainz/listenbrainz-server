@@ -51,7 +51,6 @@ const UserListModalEntry = (props: UserListModalEntryProps) => {
 };
 
 UserListModalEntry.defaultProps = {
-  mode: "similar-users",
   similarityScore: 0,
 };
 
