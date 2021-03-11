@@ -456,19 +456,6 @@ def delete_user_stats(user_id):
         })
 
 
-def get_artists_for_all_users(time_range='all_time') -> List[UserArtistStat]:
-    """ Get top artists with listen counts for ALL users in the DB.
-    """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT user_id, artist->:range as {range}, last_updated
-              FROM statistics.user
-        """.format(range=time_range)), {
-            "range": time_range,
-        })
-        # TODO: check for validation errors and skip
-        return [UserArtistStat(**row) for row in result.fetchall()]
-
 # TODO: Add tests for this function
 
 
