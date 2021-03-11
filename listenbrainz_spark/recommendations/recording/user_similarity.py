@@ -128,6 +128,8 @@ def main(threshold: float):
     similarity_matrix = Correlation.corr(vectors_df, 'vector', 'pearson').first()['pearson(vector)'].toArray()
     similar_users = threshold_similar_users(similarity_matrix, threshold)
 
+    # Due to an unresolved bug in Spark (https://issues.apache.org/jira/browse/SPARK-10925), we cannot join twice on
+    # the same dataframe. Hence, we create a modified dataframe with the columns renamed.
     other_users_df = users_df\
         .withColumnRenamed('user_id', 'other_user_id')\
         .withColumnRenamed('user_name', 'other_user_name')
