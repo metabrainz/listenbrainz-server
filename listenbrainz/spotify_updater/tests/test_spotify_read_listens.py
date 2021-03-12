@@ -1,8 +1,7 @@
 import os
 import json
 import listenbrainz.webserver
-from datetime import datetime
-import pytz
+from datetime import datetime, timezone
 
 import listenbrainz.db.user as db_user
 from listenbrainz.domain.spotify import Spotify, SpotifyAPIError, SpotifyListenBrainzError
@@ -25,7 +24,7 @@ class ConvertListensTestCase(DatabaseTestCase):
                     musicbrainz_id='jude',
                     musicbrainz_row_id=312,
                     user_token='token',
-                    token_expires=datetime.max.replace(tzinfo=pytz.UTC),
+                    token_expires=datetime.max.replace(tzinfo=timezone.utc),
                     refresh_token='refresh',
                     last_updated=None,
                     record_listens=True,
