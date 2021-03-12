@@ -47,9 +47,22 @@
   &.block {
     width: 85px;
 
-    &.following, &:hover {
-      background: white;
-      color: @blue;
+    &.following {
+      background: @blue;
+      color:@white;
+      &:hover {
+        background: @orange;
+      }
+    }
+
+    &.just-followed {
+      background: @blue;
+      color:@white;
+    }
+
+    &.not-following {
+      background: @white;
+      color:@blue;
     }
 
     svg {
