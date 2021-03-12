@@ -137,6 +137,7 @@ class RequestManageTestCase(unittest.TestCase):
             'query': 'cf.recommendations.recording.create_dataframes',
             'params': {
                 'train_model_window': 20,
+                'job_type': "recommendation_recording"
             }
         }
         expected_message = ujson.dumps(message)
@@ -192,4 +193,15 @@ class RequestManageTestCase(unittest.TestCase):
 
         expected_message = ujson.dumps({'query': 'import.artist_relation'})
         received_message = request_manage._prepare_query_message('import.artist_relation')
+        self.assertEqual(expected_message, received_message)
+
+        message = {
+            'query': 'similarity.similar_users',
+            'params': {
+                'threshold': .3
+            }
+        }
+        expected_message = ujson.dumps(message)
+        received_message = request_manage._prepare_query_message('similarity.similar_users',
+                                                                 message['params'])
         self.assertEqual(expected_message, received_message)
