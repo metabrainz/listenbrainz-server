@@ -58,7 +58,10 @@ DUMP_TYPE="${1:-full}"
 if [ "$DUMP_TYPE" == "full" ]; then
     SUB_DIR="fullexport"
 else
-    SUB_DIR="incremental"
+    if [ "$DUMP_TYPE" == "incremental" ]; then
+        SUB_DIR="incremental"
+    else
+        SUB_DIR="spark"
 fi
 
 TMPDIR=$(mktemp --tmpdir="$TEMP_DIR" -d -t "$SUB_DIR.XXXXXXXXXX")
@@ -75,6 +78,11 @@ if [ "$DUMP_TYPE" == "full" ]; then
 elif [ "$DUMP_TYPE" == "incremental" ]; then
     if ! /usr/local/bin/python manage.py dump create_incremental -l "$TMPDIR" -t $DUMP_THREADS; then
 	echo "Incremental dump failed, exiting!"
+	exit 1
+    fi
+elif [ "$DUMP_TYPE" == "feedback" ]; then
+    if ! /usr/local/bin/python manage.py dump create_feedback -l "$TMPDIR" -t $DUMP_THREADS; then
+	echo "Feedback dump failed, exiting!"
 	exit 1
     fi
 else
@@ -150,6 +158,9 @@ add_rsync_include_rule \
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
     "listenbrainz-listens-dump-$DUMP_ID-$DUMP_TIMESTAMP-spark-$DUMP_TYPE.tar.xz"
+add_rsync_include_rule \
+    "$FTP_CURRENT_DUMP_DIR" \
+    "listenbrainz-feedback-dump-$DUMP_TIMESTAMP.tar.xz"
 
 EXCLUDE_RULE="exclude *"
 echo "$EXCLUDE_RULE" >> "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
