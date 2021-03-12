@@ -8,7 +8,7 @@
   font-weight: bold;
   padding: 5px 8px;
   border-radius: 4px;
-  transition: color 0.42s, background 0.42s;
+  transition: color 0.2s, background 0.3s;
   text-align: center;
 
 
@@ -22,10 +22,12 @@
       overflow-x: hidden;
     }
 
-    &:hover, &:focus {
-      background: white;
+    &.following {
+      background: @white;
       color:@blue;
+    }
 
+    &:hover {
       > .text {
         width: 4.75em;
         margin-left: 5px;
@@ -36,7 +38,7 @@
   &.block {
     width: 85px;
 
-    &.following, &:hover, &:focus {
+    &.following, &:hover {
       background: white;
       color: @blue;
     }
