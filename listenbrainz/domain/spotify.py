@@ -1,5 +1,4 @@
 import base64
-import pytz
 import requests
 import six
 import time
@@ -7,7 +6,7 @@ from flask import current_app
 import spotipy.oauth2
 
 from listenbrainz.db import spotify as db_spotify
-import datetime
+from datetime import datetime, timezone
 
 SPOTIFY_API_RETRIES = 5
 
@@ -60,8 +59,8 @@ class Spotify:
 
     @property
     def token_expired(self):
-        now = datetime.datetime.utcnow()
-        now = now.replace(tzinfo=pytz.UTC)
+        now = datetime.utcnow()
+        now = now.replace(tzinfo=timezone.utc)
         return now >= self.token_expires
 
     @staticmethod
