@@ -122,6 +122,7 @@ class FollowButton extends React.Component<
       return {
         buttonIcon: faUserCheck as IconProp,
         buttonText: "Following",
+        buttonClass: "following",
       };
     }
 
@@ -143,6 +144,7 @@ class FollowButton extends React.Component<
     return {
       buttonIcon: faUserPlus as IconProp,
       buttonText: "Follow",
+      buttonClass: undefined,
     };
   };
 
