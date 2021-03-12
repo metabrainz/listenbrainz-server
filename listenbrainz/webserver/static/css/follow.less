@@ -2,15 +2,12 @@
 .follow-button {
   margin-left: 10px;
   font-family: "Sintony";
-  color: @white;
-  background: @blue;
   border: 2px solid @blue;
   font-weight: bold;
   padding: 5px 8px;
   border-radius: 4px;
   transition: color 0.2s, background 0.3s;
   text-align: center;
-
 
   &.icon-only {
     > .text {
@@ -22,16 +19,28 @@
       overflow-x: hidden;
     }
 
-    &.following {
-      background: @white;
-      color:@blue;
-    }
-
     &:hover {
       > .text {
         width: 4.75em;
         margin-left: 5px;
       }
+      &.just-followed {
+        background: @blue;
+        color:@white;
+      }
+    }
+
+    &.following {
+      background: @blue;
+      color:@white;
+      &:hover {
+        background: @orange;
+      }
+    }
+
+    &.not-following {
+      background: @white;
+      color:@blue;
     }
   }
 
