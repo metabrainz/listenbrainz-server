@@ -366,6 +366,8 @@ def dump_user_feedback(connection, location):
     """
 
     with connection.begin() as transaction:
+
+        # First dump the user feedback
         result = connection.execute(sqlalchemy.text("""
             SELECT user_id, recording_msid, score, created,
                    EXTRACT(YEAR FROM created) AS year,
@@ -398,6 +400,38 @@ def dump_user_feedback(connection, location):
                                  'created': int(row[3].timestamp())})
             last_day = today
 
+        # Now dump the recommendation feedback
+        result = connection.execute(sqlalchemy.text("""
+            SELECT user_id, recording_mbid, rating, created,
+                   EXTRACT(YEAR FROM created) AS year,
+                   EXTRACT(MONTH FROM created) AS month,
+                   EXTRACT(DAY FROM created) AS day
+              FROM recommendation_feedback
+          ORDER BY created"""))
+
+        last_day = ()
+        todays_items = []
+
+        while True:
+            row = result.fetchone()
+            today = (row[4], row[5], row[6]) if row else ()
+            if (not row or today != last_day) and len(todays_items) > 0:
+                full_path = os.path.join(location, "feedback", "recommendation", str(int(last_day[0])),
+                                         str(int(last_day[1])), str(int(last_day[2])))
+                os.makedirs(full_path)
+                with open(os.path.join(full_path, "data.json"), "wb") as f:
+                    for item in todays_items:
+                        f.write(bytes(ujson.dumps(item) + "\n", "utf-8"))
+                todays_items = []
+
+            if not row:
+                break
+
+            todays_items.append({'user_id': row[0],
+                                 'recording_mbid': str(row[1]),
+                                 'rating': row[2],
+                                 'created': int(row[3].timestamp())})
+            last_day = today
         transaction.rollback()
 
 
