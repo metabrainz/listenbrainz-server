@@ -5,7 +5,7 @@ if [ "$#" -eq 0 ]; then
     exit
 fi
 
-source config.sh
+source spark_config.sh
 
 docker stop $CONTAINER_NAME
 docker rm $CONTAINER_NAME
