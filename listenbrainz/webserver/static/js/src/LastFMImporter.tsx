@@ -6,7 +6,6 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import APIService from "./APIService";
 import Scrobble from "./Scrobble";
 
-import LastFMImporterModal from "./LastFMImporterModal";
 
 export type ImporterProps = {
   user: {
@@ -78,6 +77,7 @@ export default class LastFmImporter extends React.Component<
   private rlReset = -1;
 
   private rlOrigin = -1;
+  private LASTFM_RETRIES = 3;
 
   constructor(props: ImporterProps) {
     super(props);
@@ -151,7 +151,7 @@ export default class LastFmImporter extends React.Component<
     }
   }
 
-  async getPage(page: number) {
+  async getPage(page: number, retries: number) {
     /*
      * Fetch page from Last.fm
      */
@@ -162,7 +162,9 @@ export default class LastFmImporter extends React.Component<
       console.warn(
         `${reason} while fetching last.fm page=${page}, retrying in 3s`
       );
-      setTimeout(() => this.getPage(page), 3000);
+      if (retries > 0) {
+        setTimeout(() => this.getPage(page, retries - 1), 3000);
+      }
     };
 
     const url = `${
@@ -276,7 +278,7 @@ export default class LastFmImporter extends React.Component<
     while (this.page > 0) {
       // Fixing no-await-in-loop will require significant changes to the code, ignoring for now
       this.lastImportedString = "...";
-      const payload = await this.getPage(this.page); // eslint-disable-line
+      const payload = await this.getPage(this.page, this.LASTFM_RETRIES); // eslint-disable-line
       if (payload) {
         // Submit only if response is valid
         this.submitPage(payload);

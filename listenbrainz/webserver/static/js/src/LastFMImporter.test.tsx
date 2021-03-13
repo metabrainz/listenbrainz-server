@@ -133,6 +133,7 @@ describe("getTotalNumberOfScrobbles", () => {
 });
 
 describe("getPage", () => {
+  const RETRIES = 3;
   beforeEach(() => {
     const wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
     instance = wrapper.instance();
@@ -147,7 +148,7 @@ describe("getPage", () => {
   });
 
   it("should call with the correct url", () => {
-    instance.getPage(1);
+    instance.getPage(1, RETRIES);
 
     expect(window.fetch).toHaveBeenCalledWith(
       `${props.lastfmApiUrl}?method=user.getrecenttracks&user=${instance.state.lastfmUsername}&api_key=${props.lastfmApiKey}&from=1&page=1&format=json`
@@ -158,7 +159,7 @@ describe("getPage", () => {
     // Mock function for encodeScrobbles
     LastFmImporter.encodeScrobbles = jest.fn(() => ["foo", "bar"]);
 
-    const data = await instance.getPage(1);
+    const data = await instance.getPage(1, RETRIES);
     expect(LastFmImporter.encodeScrobbles).toHaveBeenCalledTimes(1);
     expect(data).toEqual(["foo", "bar"]);
   });
@@ -172,11 +173,18 @@ describe("getPage", () => {
       });
     });
 
-    await instance.getPage(1);
-    // There is no direct way to check if retry has been called
-    expect(setTimeout).toHaveBeenCalledTimes(1);
+    const getPageSpy = jest.spyOn(instance, "getPage");
+    await instance.getPage(1, RETRIES);
 
-    jest.runAllTimers();
+    // we run the timer sufficient number of timers to ensure retries are not exceeded or undetected due to timeouts
+    for (let i = 0; i < 10; i += 1) {
+      jest.runAllTimers();
+      // make timers and promises play well with jest
+      // eslint-disable-next-line no-await-in-loop
+      await Promise.resolve();
+    }
+
+    expect(getPageSpy).toHaveBeenCalledTimes(4);
   });
 
   it("should skip the page if 40x is recieved", async () => {
@@ -187,9 +195,18 @@ describe("getPage", () => {
         status: 404,
       });
     });
+    const getPageSpy = jest.spyOn(instance, "getPage");
+    await instance.getPage(1, RETRIES);
 
-    await instance.getPage(1);
-    expect(setTimeout).not.toHaveBeenCalled();
+    // we run the timer sufficient number of timers to ensure retries are not exceeded or undetected due to timeouts
+    for (let i = 0; i < 10; i += 1) {
+      jest.runAllTimers();
+      // make timers and promises play well with jest
+      // eslint-disable-next-line no-await-in-loop
+      await Promise.resolve();
+    }
+
+    expect(getPageSpy).toHaveBeenCalledTimes(1);
   });
 
   it("should retry if there is any other error", async () => {
@@ -201,10 +218,18 @@ describe("getPage", () => {
       });
     });
 
-    await instance.getPage(1);
-    // There is no direct way to check if retry has been called
-    expect(setTimeout).toHaveBeenCalledTimes(1);
-    jest.runAllTimers();
+    const getPageSpy = jest.spyOn(instance, "getPage");
+
+    await instance.getPage(1, RETRIES);
+    // we run the timer sufficient number of timers to ensure retries are not exceeded or undetected due to timeouts
+    for (let i = 0; i < 10; i += 1) {
+      jest.runAllTimers();
+      // make timers and promises play well with jest
+      // eslint-disable-next-line no-await-in-loop
+      await Promise.resolve();
+    }
+
+    expect(getPageSpy).toHaveBeenCalledTimes(4);
   });
 });
 
