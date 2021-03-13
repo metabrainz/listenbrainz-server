@@ -534,7 +534,13 @@ def move_playlist_item(playlist_mbid):
     be moved (count). The format of the post data should look as follows:
 
     .. code-block:: json
-       {"mbid" : "<mbid>", “from” : 3, “to” : 4, “count”: 2}
+
+        {
+            "mbid": "<mbid>",
+            "from": 3,
+            "to": 4,
+            "count": 2
+        }
 
     :reqheader Authorization: Token <user token>
     :statuscode 200: move operation succeeded
@@ -579,7 +585,11 @@ def delete_playlist_item(playlist_mbid):
     post data should look as follows:
 
     .. code-block:: json
-      {“index” : 3, “count”: 2}
+
+        {
+            "index": 3,
+            "count": 2
+        }
 
     :reqheader Authorization: Token <user token>
     :statuscode 200: playlist accepted.

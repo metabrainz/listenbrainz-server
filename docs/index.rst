@@ -28,6 +28,7 @@ Contents
    dev/spark-architecture
    dev/api-compat
    dev/faqs
+   dev/develop-sh
 
 Indices and tables
 ==================

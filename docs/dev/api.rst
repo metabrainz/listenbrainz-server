@@ -103,7 +103,7 @@ following headers:
   clocks)
 
 - **X-RateLimit-Reset**: UNIX epoch number of seconds (without timezone) when
-  current time window expires [#]_
+  current time window expires [#]
 
 Rate limiting is automatic and the client must use these headers to determine
 the rate to make API calls. If the client exceeds the number of requests
