@@ -26,7 +26,8 @@ import uuid
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db.exceptions import DatabaseException
 
-from data.model.user_timeline_event import UserTimelineEvent, UserTimelineEventMetadata, UserTimelineEventType
+from data.model.user_timeline_event import UserTimelineEvent, UserTimelineEventMetadata, UserTimelineEventType, \
+    RecordingRecommendationMetadata
 
 
 class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
@@ -44,7 +45,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
         event = db_user_timeline_event.create_user_timeline_event(
             user_id=self.user['id'],
             event_type=UserTimelineEventType.RECORDING_RECOMMENDATION,
-            metadata=UserTimelineEventMetadata(
+            metadata=RecordingRecommendationMetadata(
                 track_name="Sunflower",
                 artist_name="Swae Lee & Post Malone",
                 recording_msid=str(uuid.uuid4()),
@@ -66,7 +67,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
             db_user_timeline_event.create_user_timeline_event(
                 user_id=self.user['id'],
                 event_type=UserTimelineEventType.RECORDING_RECOMMENDATION,
-                metadata=UserTimelineEventMetadata(
+                metadata=RecordingRecommendationMetadata(
                     track_name="Sunflower",
                     artist_name="Swae Lee & Post Malone",
                     recording_msid=str(uuid.uuid4()),
@@ -77,7 +78,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
     def test_create_user_track_recommendation_sets_event_type_correctly(self):
         event = db_user_timeline_event.create_user_track_recommendation_event(
             user_id=self.user['id'],
-            metadata=UserTimelineEventMetadata(
+            metadata=RecordingRecommendationMetadata(
                 track_name="Sunflower",
                 artist_name="Swae Lee & Post Malone",
                 recording_msid=str(uuid.uuid4()),
@@ -89,7 +90,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
     def test_get_events_only_gets_events_for_the_specified_user(self):
         db_user_timeline_event.create_user_track_recommendation_event(
             user_id=self.user['id'],
-            metadata=UserTimelineEventMetadata(
+            metadata=RecordingRecommendationMetadata(
                 track_name="Sunflower",
                 artist_name="Swae Lee & Post Malone",
                 recording_msid=str(uuid.uuid4()),
@@ -99,7 +100,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
         new_user = db_user.get_or_create(2, 'captain america')
         db_user_timeline_event.create_user_track_recommendation_event(
             user_id=new_user['id'],
-            metadata=UserTimelineEventMetadata(
+            metadata=RecordingRecommendationMetadata(
                 track_name="Fade",
                 artist_name="Kanye West",
                 recording_msid=str(uuid.uuid4()),
@@ -115,7 +116,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
     def test_get_events_for_feed_returns_events(self):
         db_user_timeline_event.create_user_track_recommendation_event(
             user_id=self.user['id'],
-            metadata=UserTimelineEventMetadata(
+            metadata=RecordingRecommendationMetadata(
                 track_name="Sunflower",
                 artist_name="Swae Lee & Post Malone",
                 recording_msid=str(uuid.uuid4()),
@@ -126,7 +127,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
         new_user = db_user.get_or_create(2, 'superman')
         db_user_timeline_event.create_user_track_recommendation_event(
             user_id=new_user['id'],
-            metadata=UserTimelineEventMetadata(
+            metadata=RecordingRecommendationMetadata(
                 track_name="Sunflower",
                 artist_name="Swae Lee & Post Malone",
                 recording_msid=str(uuid.uuid4()),
@@ -148,7 +149,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
         ts = int(time.time())
         db_user_timeline_event.create_user_track_recommendation_event(
             user_id=self.user['id'],
-            metadata=UserTimelineEventMetadata(
+            metadata=RecordingRecommendationMetadata(
                 track_name="Sunflower",
                 artist_name="Swae Lee & Post Malone",
                 recording_msid=str(uuid.uuid4()),
@@ -157,7 +158,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
         )
         db_user_timeline_event.create_user_track_recommendation_event(
             user_id=self.user['id'],
-            metadata=UserTimelineEventMetadata(
+            metadata=RecordingRecommendationMetadata(
                 track_name="Da Funk",
                 artist_name="Daft Punk",
                 recording_msid=str(uuid.uuid4()),
@@ -169,7 +170,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
         new_user = db_user.get_or_create(4, 'new_user')
         db_user_timeline_event.create_user_track_recommendation_event(
             user_id=new_user['id'],
-            metadata=UserTimelineEventMetadata(
+            metadata=RecordingRecommendationMetadata(
                 track_name="Da Funk",
                 artist_name="Daft Punk",
                 recording_msid=str(uuid.uuid4()),
@@ -198,7 +199,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
     def test_get_events_for_feed_honors_count_parameter(self):
         db_user_timeline_event.create_user_track_recommendation_event(
             user_id=self.user['id'],
-            metadata=UserTimelineEventMetadata(
+            metadata=RecordingRecommendationMetadata(
                 track_name="Sunflower",
                 artist_name="Swae Lee & Post Malone",
                 recording_msid=str(uuid.uuid4()),
@@ -207,7 +208,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
         )
         db_user_timeline_event.create_user_track_recommendation_event(
             user_id=self.user['id'],
-            metadata=UserTimelineEventMetadata(
+            metadata=RecordingRecommendationMetadata(
                 track_name="Da Funk",
                 artist_name="Daft Punk",
                 recording_msid=str(uuid.uuid4()),
