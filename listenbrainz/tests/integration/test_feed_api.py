@@ -16,7 +16,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-from data.model.user_timeline_event import UserTimelineEventMetadata, RecordingRecommendationMetadata
+from data.model.user_timeline_event import UserTimelineEventMetadata
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from flask import url_for, current_app
 
@@ -229,7 +229,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         # create a recording recommendation ourselves
         db_user_timeline_event.create_user_track_recommendation_event(
             user_id=self.main_user['id'],
-            metadata=RecordingRecommendationMetadata(
+            metadata=UserTimelineEventMetadata(
                 track_name="Lose yourself to dance",
                 artist_name="Daft Punk",
                 recording_msid=str(uuid.uuid4()),
@@ -240,7 +240,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         # create a recording recommendation for a user we follow
         db_user_timeline_event.create_user_track_recommendation_event(
             user_id=self.following_user_1['id'],
-            metadata=RecordingRecommendationMetadata(
+            metadata=UserTimelineEventMetadata(
                 track_name="Sunflower",
                 artist_name="Swae Lee & Post Malone",
                 recording_msid=str(uuid.uuid4()),
@@ -301,7 +301,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         # create a recording recommendation for a user we follow
         db_user_timeline_event.create_user_track_recommendation_event(
             user_id=self.following_user_1['id'],
-            metadata=RecordingRecommendationMetadata(
+            metadata=UserTimelineEventMetadata(
                 track_name="Sunflower",
                 artist_name="Swae Lee & Post Malone",
                 recording_msid=str(uuid.uuid4()),
