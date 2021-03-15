@@ -21,6 +21,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { ReactSortable } from "react-sortablejs";
 import debounceAsync from "debounce-async";
 import { sanitize } from "dompurify";
+import * as Sentry from "@sentry/react";
 import APIService from "../APIService";
 import SpotifyAPIService from "../SpotifyAPIService";
 import BrainzPlayer from "../BrainzPlayer";
@@ -991,7 +992,10 @@ document.addEventListener("DOMContentLoaded", () => {
     spotify,
     web_sockets_server_url,
     current_user,
+    sentry_dsn,
   } = reactProps;
+
+  Sentry.init({ dsn: sentry_dsn });
 
   ReactDOM.render(
     <ErrorBoundary>
