@@ -42,24 +42,29 @@ export default class UserSocialNetwork extends React.Component<
   getSimilarUsers = () => {
     const { user } = this.props;
 
-    this.APIService.getSimilarUsersForUser(user.name).then(
-      ({
-        payload,
-      }: {
-        payload: Array<{ user_name: string; similarity: number }>;
-      }) => {
-        this.setState({
-          similarUsersList: payload.map(
-            (similarUser: { user_name: string; similarity: number }) => {
-              return {
-                name: similarUser.user_name,
-                similarityScore: similarUser.similarity,
-              };
-            }
-          ),
-        });
-      }
-    );
+    this.APIService.getSimilarUsersForUser(user.name)
+      .then(
+        ({
+          payload,
+        }: {
+          payload: Array<{ user_name: string; similarity: number }>;
+        }) => {
+          this.setState({
+            similarUsersList: payload.map(
+              (similarUser: { user_name: string; similarity: number }) => {
+                return {
+                  name: similarUser.user_name,
+                  similarityScore: similarUser.similarity,
+                };
+              }
+            ),
+          });
+        }
+      )
+      .catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error(err);
+      });
   };
 
   getFollowers = () => {
@@ -68,30 +73,40 @@ export default class UserSocialNetwork extends React.Component<
       return;
     }
 
-    this.APIService.getFollowersOfUser(loggedInUser.name).then(
-      ({ followers }: { followers: Array<{ musicbrainz_id: string }> }) => {
-        this.setState({
-          followerList: followers.map(({ musicbrainz_id }) => {
-            return {
-              name: musicbrainz_id,
-            };
-          }),
-        });
-      }
-    );
+    this.APIService.getFollowersOfUser(loggedInUser.name)
+      .then(
+        ({ followers }: { followers: Array<{ musicbrainz_id: string }> }) => {
+          this.setState({
+            followerList: followers.map(({ musicbrainz_id }) => {
+              return {
+                name: musicbrainz_id,
+              };
+            }),
+          });
+        }
+      )
+      .catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error(err);
+      });
   };
 
   getFollowing = () => {
     const { user } = this.props;
-    this.APIService.getFollowingForUser(user.name).then(
-      ({ following }: { following: Array<{ musicbrainz_id: string }> }) => {
-        this.setState({
-          followingList: following.map(({ musicbrainz_id }) => {
-            return { name: musicbrainz_id };
-          }),
-        });
-      }
-    );
+    this.APIService.getFollowingForUser(user.name)
+      .then(
+        ({ following }: { following: Array<{ musicbrainz_id: string }> }) => {
+          this.setState({
+            followingList: following.map(({ musicbrainz_id }) => {
+              return { name: musicbrainz_id };
+            }),
+          });
+        }
+      )
+      .catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error(err);
+      });
   };
 
   loggedInUserFollowsUser = (user: ListenBrainzUser): boolean => {
