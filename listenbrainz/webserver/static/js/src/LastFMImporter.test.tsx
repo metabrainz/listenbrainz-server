@@ -133,19 +133,20 @@ describe("getTotalNumberOfScrobbles", () => {
 });
 
 describe("getPage", () => {
+  const originalTimeout = window.setTimeout;
   beforeAll(() => {
-    // The timeout we use in getPage's implementation does not work with Jest fake timers
-    // so we disable fake timers for this section
-    // and give enough time for the real timeouts to run
-    // see https://stackoverflow.com/questions/50783013/how-to-timeout-promises-in-jest
-    jest.useRealTimers();
-    jest.setTimeout(3000 * (LASTFM_RETRIES + 2));
+    // Ugly hack: Jest fake timers don't play well with promises and setTimeout
+    // so we replace the setTimeout function.
+    // see https://github.com/facebook/jest/issues/7151
+    // @ts-ignore
+    window.setTimeout = (fn: () => void, _timeout: number): number => {
+      fn();
+      return _timeout;
+    };
   });
 
   afterAll(() => {
-    // Back to default
-    jest.setTimeout(5000);
-    jest.useFakeTimers();
+    window.setTimeout = originalTimeout;
   });
 
   beforeEach(() => {
