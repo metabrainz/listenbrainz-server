@@ -569,20 +569,17 @@ export default class PlaylistPage extends React.Component<
       return;
     }
     try {
-      // Replace keys that have changed but keep all other attributres
-      const editedPlaylist: JSPFPlaylist = defaultsDeep(
-        {
-          annotation: description,
-          title: name,
-          extension: {
-            [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
-              public: isPublic,
-              collaborators,
-            },
+      const editedPlaylist: JSPFPlaylist = {
+        ...playlist,
+        annotation: description,
+        title: name,
+        extension: {
+          [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
+            public: isPublic,
+            collaborators,
           },
         },
-        playlist
-      );
+      };
 
       await this.APIService.editPlaylist(currentUser.auth_token, id, {
         playlist: omit(editedPlaylist, "track") as JSPFPlaylist,
