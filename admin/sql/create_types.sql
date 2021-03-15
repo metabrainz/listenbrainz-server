@@ -6,4 +6,4 @@ CREATE TYPE user_relationship_enum AS ENUM('follow');
 
 CREATE TYPE recommendation_feedback_type_enum AS ENUM('like', 'love', 'dislike', 'hate', 'bad_recommendation');
 
-CREATE TYPE user_timeline_event_type_enum AS ENUM('recording_recommendation', 'notification');
+CREATE TYPE user_timeline_event_type_enum AS ENUM('recording_recommendation');
