@@ -99,7 +99,7 @@ def create_user_recording_recommendation_event(user_name):
     return jsonify(event_data)
 
 
-@user_timeline_event_api_bp.route('/user/<user_name>/timeline-event/create/notification', methods=['POST', 'OPTIONS'])
+@user_timeline_event_api_bp.route('/user/<user_name>/timeline-event/create/recording', methods=['POST', 'OPTIONS'])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def create_user_notification_event(user_name):
@@ -125,7 +125,7 @@ def create_user_notification_event(user_name):
     """
     creator = validate_auth_header()
     if creator["musicbrainz_id"] not in current_app.config['APPROVED_PLAYLIST_BOTS']:
-        raise APIUnauthorized("Only approved users are allowed to submit playlists made for someone else.")
+        raise APIUnauthorized("Only approved users are allowed to submit playlists made for someone else")
 
     user = db_user.get_by_mb_id(user_name)
     if user is None:
@@ -142,11 +142,14 @@ def create_user_notification_event(user_name):
         raise APIBadRequest(f"Invalid metadata: {str(e)}")
 
     try:
-        db_user_timeline_event.create_user_notification_event(user['id'], metadata)
+        event = db_user_timeline_event.create_user_notification_event(user['id'], metadata)
     except DatabaseException:
         raise APIInternalServerError("Something went wrong, please try again.")
 
-    return jsonify({'status': 'ok'})
+    event_data = event.dict()
+    event_data['created'] = event_data['created'].timestamp()
+    event_data['event_type'] = event_data['event_type'].value
+    return jsonify(event_data)
 
 
 @user_timeline_event_api_bp.route('/user/<user_name>/feed/events', methods=['OPTIONS', 'GET'])
