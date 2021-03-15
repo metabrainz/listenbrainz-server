@@ -62,6 +62,7 @@ else
         SUB_DIR="incremental"
     else
         SUB_DIR="spark"
+    fi
 fi
 
 TMPDIR=$(mktemp --tmpdir="$TEMP_DIR" -d -t "$SUB_DIR.XXXXXXXXXX")
@@ -160,7 +161,7 @@ add_rsync_include_rule \
     "listenbrainz-listens-dump-$DUMP_ID-$DUMP_TIMESTAMP-spark-$DUMP_TYPE.tar.xz"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
-    "listenbrainz-feedback-dump-$DUMP_TIMESTAMP.tar.xz"
+    "listenbrainz-feedback-dump-$DUMP_TIMESTAMP-full.tar.xz"
 
 EXCLUDE_RULE="exclude *"
 echo "$EXCLUDE_RULE" >> "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
