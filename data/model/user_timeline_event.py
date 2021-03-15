@@ -42,7 +42,7 @@ class RecordingRecommendationMetadata(pydantic.BaseModel):
 
 
 class NotificationMetadata(pydantic.BaseModel):
-    creator_id: int
+    creator: str
     message: str
     link: str
 

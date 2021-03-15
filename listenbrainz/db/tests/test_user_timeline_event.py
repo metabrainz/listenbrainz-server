@@ -26,7 +26,8 @@ import uuid
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db.exceptions import DatabaseException
 
-from data.model.user_timeline_event import UserTimelineEventType, RecordingRecommendationMetadata, NotificationMetadata
+from data.model.user_timeline_event import UserTimelineEvent, UserTimelineEventMetadata, UserTimelineEventType, \
+    RecordingRecommendationMetadata
 
 
 class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
@@ -85,21 +86,6 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
             )
         )
         self.assertEqual(UserTimelineEventType.RECORDING_RECOMMENDATION, event.event_type)
-
-    def test_create_user_notification_event(self):
-        event = db_user_timeline_event.create_user_notification_event(
-            user_id=self.user['id'],
-            metadata=NotificationMetadata(
-                creator_id=self.user['id'],
-                message='Test Message',
-                link='Test Link'
-            )
-        )
-        self.assertEqual(self.user['id'], event.user_id)
-        self.assertEqual('Test Message', event.metadata.message)
-        self.assertEqual('Test Link', event.metadata.link)
-        self.assertEqual(self.user['id'], event.metadata.creator_id)
-        self.assertEqual(UserTimelineEventType.NOTIFICATION, event.event_type)
 
     def test_get_events_only_gets_events_for_the_specified_user(self):
         db_user_timeline_event.create_user_track_recommendation_event(

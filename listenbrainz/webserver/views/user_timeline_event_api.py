@@ -132,15 +132,14 @@ def create_user_notification_event(user_name):
         raise APINotFound(f"Cannot find user: {user_name}")
 
     try:
-        data = ujson.loads(request.get_data())['metadata']
-    except (ValueError, KeyError) as e:
+        data = ujson.loads(request.get_data())
+    except ValueError as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
     try:
-        metadata = NotificationMetadata(creator_id=creator['id'], message=data['message'], link=data['link'])
+        metadata = NotificationMetadata(**data['metadata'], creator=creator["musicbrainz_id"])
     except pydantic.ValidationError as e:
         raise APIBadRequest(f"Invalid metadata: {str(e)}")
-
     try:
         event = db_user_timeline_event.create_user_notification_event(user['id'], metadata)
     except DatabaseException:
