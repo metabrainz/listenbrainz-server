@@ -18,6 +18,8 @@ def import_user_similarities(data):
         and then rotating the table into place atomically.
     """
 
+    user_count = 0
+    target_user_count = 0
     # Start by importing the data into an import table
     conn = db.engine.raw_connection()
     try:
@@ -31,6 +33,8 @@ def import_user_similarities(data):
             values = []
             for user, similar in data.items():
                 values.append((user, ujson.dumps(similar)))
+                user_count += 1
+                target_user_count += len(similar.keys())
                 if len(values) == ROWS_PER_BATCH:
                     execute_values(curs, query, values, template=None)
                     values = []
@@ -41,7 +45,7 @@ def import_user_similarities(data):
         conn.rollback()
         current_app.logger.error(
             "Error: Cannot import user similarites: %s" % str(err))
-        return
+        return (0, 0.0, "Error: Cannot import user similarites: %s" % str(err))
 
     # Next lookup user names and insert them into the new similar_users table
     try:
@@ -75,7 +79,7 @@ def import_user_similarities(data):
         conn.rollback()
         current_app.logger.error(
             "Error: Cannot correlate user similarity user name: %s" % str(err))
-        return
+        return (0, 0.0, "Error: Cannot correlate user similarity user name: %s" % str(err))
 
     # Finally rotate the table into place
     try:
@@ -89,7 +93,7 @@ def import_user_similarities(data):
         conn.rollback()
         current_app.logger.error(
             "Error: Failed to rotate similar_users table into place: %s" % str(err))
-        return
+        return (0, 0.0, "Error: Failed to rotate similar_users table into place: %s" % str(err))
 
     # Last, delete the old table
     try:
@@ -102,4 +106,6 @@ def import_user_similarities(data):
         conn.rollback()
         current_app.logger.error(
             "Error: Failed to clean up old similar user table: %s" % str(err))
-        return
+        return (0, 0.0, "Error: Failed to clean up old similar user table: %s" % str(err))
+
+    return (user_count, target_user_count / user_count, "")
