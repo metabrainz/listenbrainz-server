@@ -183,7 +183,7 @@ describe("getPage", () => {
       await Promise.resolve();
     }
 
-    expect(getPageSpy).toHaveBeenCalledTimes(4);
+    expect(getPageSpy).toHaveBeenCalledTimes(1 + LASTFM_RETRIES);
   });
 
   it("should skip the page if 40x is recieved", async () => {
@@ -228,7 +228,7 @@ describe("getPage", () => {
       await Promise.resolve();
     }
 
-    expect(getPageSpy).toHaveBeenCalledTimes(4);
+    expect(getPageSpy).toHaveBeenCalledTimes(1 + LASTFM_RETRIES);
   });
 });
 

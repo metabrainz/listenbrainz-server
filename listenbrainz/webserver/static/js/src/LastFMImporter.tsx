@@ -150,19 +150,23 @@ export default class LastFmImporter extends React.Component<
     }
   }
 
+  /*
+   * @param {number} page - the page to fetch from Last.fm
+   * @param {number} retries - number times to retry in case of errors other than 40x
+   * Fetch page from Last.fm
+   */
   async getPage(page: number, retries: number) {
-    /*
-     * Fetch page from Last.fm
-     */
     const { lastfmUsername } = this.state;
 
     const retry = (reason: string) => {
       // eslint-disable-next-line no-console
+      const timeout = 3000;
       console.warn(
-        `${reason} while fetching last.fm page=${page}, retrying in 3s`
+        `${reason} while fetching last.fm page=${page}, retrying in 
+        ${timeout / 1000}s`
       );
       if (retries > 0) {
-        setTimeout(() => this.getPage(page, retries - 1), 3000);
+        setTimeout(() => this.getPage(page, retries - 1), timeout);
       }
     };
 
