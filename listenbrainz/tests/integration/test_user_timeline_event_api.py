@@ -16,7 +16,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-from flask import url_for
+from flask import url_for, current_app
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from unittest import mock
@@ -135,3 +135,30 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.assert401(r)
         data = json.loads(r.data)
         self.assertEqual("You don't have permissions to post to this user's timeline.", data['error'])
+
+    def test_post_notification_authorization_fails(self):
+        metadata = {
+            "message": "Testing",
+            "link": "http://localhost"
+        }
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_user_notification_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({"metadata": metadata}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
+        )
+        self.assert401(r)
+        data = json.loads(r.data)
+        self.assertEqual("Only approved users are allowed to submit playlists made for someone else.", data['error'])
+
+    def test_post_notification_success(self):
+        metadata = {
+            "message": "Testing",
+            "link": "http://localhost"
+        }
+        approved_user = db_user.get_or_create(11, "troi-bot")
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_user_notification_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({"metadata": metadata}),
+            headers={'Authorization': 'Token {}'.format(approved_user['auth_token'])}
+        )
+        self.assert200(r)
