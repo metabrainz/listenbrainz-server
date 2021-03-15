@@ -1,6 +1,6 @@
 import * as React from "react";
 import { mount, shallow } from "enzyme";
-import LastFmImporter, {LASTFM_RETRIES} from "./LastFMImporter";
+import LastFmImporter, { LASTFM_RETRIES } from "./LastFMImporter";
 // Mock data to test functions
 import * as page from "./__mocks__/page.json";
 import * as getInfo from "./__mocks__/getInfo.json";
@@ -133,6 +133,21 @@ describe("getTotalNumberOfScrobbles", () => {
 });
 
 describe("getPage", () => {
+  beforeAll(() => {
+    // The timeout we use in getPage's implementation does not work with Jest fake timers
+    // so we disable fake timers for this section
+    // and give enough time for the real timeouts to run
+    // see https://stackoverflow.com/questions/50783013/how-to-timeout-promises-in-jest
+    jest.useRealTimers();
+    jest.setTimeout(3000 * (LASTFM_RETRIES + 2));
+  });
+
+  afterAll(() => {
+    // Back to default
+    jest.setTimeout(5000);
+    jest.useFakeTimers();
+  });
+
   beforeEach(() => {
     const wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
     instance = wrapper.instance();
@@ -154,15 +169,6 @@ describe("getPage", () => {
     );
   });
 
-  it("should call encodeScrobbles", async () => {
-    // Mock function for encodeScrobbles
-    LastFmImporter.encodeScrobbles = jest.fn(() => ["foo", "bar"]);
-
-    const data = await instance.getPage(1, LASTFM_RETRIES);
-    expect(LastFmImporter.encodeScrobbles).toHaveBeenCalledTimes(1);
-    expect(data).toEqual(["foo", "bar"]);
-  });
-
   it("should retry if 50x error is recieved", async () => {
     // Mock function for fetch
     window.fetch = jest.fn().mockImplementation(() => {
@@ -173,17 +179,41 @@ describe("getPage", () => {
     });
 
     const getPageSpy = jest.spyOn(instance, "getPage");
-    await instance.getPage(1, LASTFM_RETRIES);
 
-    // we run the timer sufficient number of times to ensure retries are not exceeded or undetected due to timeouts
-    for (let i = 0; i < LASTFM_RETRIES + 2; i += 1) {
-      jest.runAllTimers();
-      // make timers and promises play well with jest
-      // eslint-disable-next-line no-await-in-loop
-      await Promise.resolve();
-    }
+    const finalValue = await instance.getPage(1, LASTFM_RETRIES);
 
     expect(getPageSpy).toHaveBeenCalledTimes(1 + LASTFM_RETRIES);
+    expect(finalValue).toBeNull();
+  });
+
+  it("should return the expected value if retry is successful", async () => {
+    // Mock function for fetch
+    window.fetch = jest
+      .fn()
+      .mockImplementationOnce(() => {
+        return Promise.resolve({
+          ok: false,
+          status: 503,
+        });
+      })
+      .mockImplementationOnce(() => {
+        return Promise.resolve({
+          ok: false,
+          status: 503,
+        });
+      })
+      .mockImplementationOnce(() => {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(page),
+        });
+      });
+
+    const getPageSpy = jest.spyOn(instance, "getPage");
+    const finalValue = await instance.getPage(1, LASTFM_RETRIES);
+
+    expect(getPageSpy).toHaveBeenCalledTimes(3);
+    expect(finalValue).toEqual(encodeScrobbleOutput);
   });
 
   it("should skip the page if 40x is recieved", async () => {
@@ -195,40 +225,49 @@ describe("getPage", () => {
       });
     });
     const getPageSpy = jest.spyOn(instance, "getPage");
-    await instance.getPage(1, LASTFM_RETRIES);
-
-    // we run the timer sufficient number of times to ensure retries are not exceeded or undetected due to timeouts
-    for (let i = 0; i < LASTFM_RETRIES + 2; i += 1) {
-      jest.runAllTimers();
-      // make timers and promises play well with jest
-      // eslint-disable-next-line no-await-in-loop
-      await Promise.resolve();
-    }
+    const finalValue = await instance.getPage(1, LASTFM_RETRIES);
 
     expect(getPageSpy).toHaveBeenCalledTimes(1);
+    expect(finalValue).toEqual(undefined);
   });
 
   it("should retry if there is any other error", async () => {
     // Mock function for fetch
-    window.fetch = jest.fn().mockImplementation(() => {
-      return Promise.resolve({
-        ok: true,
-        json: () => Promise.reject(),
+    window.fetch = jest
+      .fn()
+      .mockImplementationOnce(() => {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.reject(),
+        });
+      })
+      .mockImplementationOnce(() => {
+        return Promise.resolve({
+          ok: false,
+          status: 600,
+        });
+      })
+      .mockImplementationOnce(() => {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(page),
+        });
       });
-    });
 
     const getPageSpy = jest.spyOn(instance, "getPage");
+    const finalValue = await instance.getPage(1, LASTFM_RETRIES);
 
-    await instance.getPage(1, LASTFM_RETRIES);
-    // we run the timer sufficient number of times to ensure retries are not exceeded or undetected due to timeouts
-    for (let i = 0; i < LASTFM_RETRIES + 2; i += 1) {
-      jest.runAllTimers();
-      // make timers and promises play well with jest
-      // eslint-disable-next-line no-await-in-loop
-      await Promise.resolve();
-    }
+    expect(getPageSpy).toHaveBeenCalledTimes(3);
+    expect(finalValue).toEqual(encodeScrobbleOutput);
+  });
 
-    expect(getPageSpy).toHaveBeenCalledTimes(1 + LASTFM_RETRIES);
+  it("should call encodeScrobbles", async () => {
+    // Mock function for encodeScrobbles
+    LastFmImporter.encodeScrobbles = jest.fn(() => ["foo", "bar"]);
+
+    const data = await instance.getPage(1, LASTFM_RETRIES);
+    expect(LastFmImporter.encodeScrobbles).toHaveBeenCalledTimes(1);
+    expect(data).toEqual(["foo", "bar"]);
   });
 });
 

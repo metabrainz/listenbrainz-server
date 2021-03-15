@@ -154,23 +154,15 @@ export default class LastFmImporter extends React.Component<
    * @param {number} page - the page to fetch from Last.fm
    * @param {number} retries - number times to retry in case of errors other than 40x
    * Fetch page from Last.fm
+   * @returns Returns an array of Listens if successful, null if it exceeds the max number of retries (consider that an error)
+   * and undefined if we receive a 40X error for the page
    */
-  async getPage(page: number, retries: number): Promise<Array<Listen> | null> {
+  async getPage(
+    page: number,
+    retries: number
+  ): Promise<Array<Listen> | undefined | null> {
     const { lastfmUsername } = this.state;
-
-    const retry = async (reason: string): Promise<Array<Listen> | null> => {
-      // eslint-disable-next-line no-console
-      const timeout = 3000;
-      console.warn(
-        `${reason} while fetching last.fm page=${page}, retrying in 
-        ${timeout / 1000}s`
-      );
-      if (retries > 0) {
-        await new Promise((resolve) => setTimeout(resolve, timeout));
-        await this.getPage(page, retries - 1);
-      }
-      return null;
-    };
+    const timeout = 3000;
 
     const url = `${
       this.lastfmURL
@@ -196,16 +188,36 @@ export default class LastFmImporter extends React.Component<
         this.countReceived += payload.length;
         return payload;
       }
-      if (/^5/.test(response.status.toString())) {
-        return await retry(`Got ${response.status}`);
+      // ignore 40x errors
+      if (!/^4/.test(response.status.toString())) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          `Got ${
+            response.status
+          } while fetching last.fm page=${page}, retrying in
+          ${timeout / 1000}s`
+        );
+        if (retries <= 0) {
+          return null;
+        }
+        await new Promise((resolve) => setTimeout(resolve, timeout));
+        return await this.getPage(page, retries - 1);
       }
-      // ignore 40x
-      // console.warn(`Got ${response.status} while fetching page last.fm page=${page}, skipping`);
     } catch {
       // Retry if there is a network error
-      await retry("Network error");
+      // eslint-disable-next-line no-console
+      console.warn(
+        `Network error while fetching last.fm page=${page}, retrying in
+        ${timeout / 1000}s`
+      );
+      if (retries <= 0) {
+        return null;
+      }
+      await new Promise((resolve) => setTimeout(resolve, timeout));
+      // eslint-disable-next-line no-return-await
+      return await this.getPage(page, retries - 1);
     }
-    return null;
+    return undefined;
   }
 
   static getlastImportedString(listen: Listen) {
@@ -283,6 +295,17 @@ export default class LastFmImporter extends React.Component<
       // Fixing no-await-in-loop will require significant changes to the code, ignoring for now
       this.lastImportedString = "...";
       const payload = await this.getPage(this.page, LASTFM_RETRIES); // eslint-disable-line
+      if (payload === null) {
+        const msg = (
+          <p>
+            We were unable to import from LastFM, please try again.
+            <br />
+            If the problem persists please contact us.
+          </p>
+        );
+        this.setState({ msg });
+        return;
+      }
       if (payload) {
         // Submit only if response is valid
         this.submitPage(payload);
