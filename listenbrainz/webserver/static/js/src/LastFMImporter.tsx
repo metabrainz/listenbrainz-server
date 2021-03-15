@@ -155,10 +155,10 @@ export default class LastFmImporter extends React.Component<
    * @param {number} retries - number times to retry in case of errors other than 40x
    * Fetch page from Last.fm
    */
-  async getPage(page: number, retries: number) {
+  async getPage(page: number, retries: number): Promise<Array<Listen> | null> {
     const { lastfmUsername } = this.state;
 
-    const retry = (reason: string) => {
+    const retry = async (reason: string): Promise<Array<Listen> | null> => {
       // eslint-disable-next-line no-console
       const timeout = 3000;
       console.warn(
@@ -166,8 +166,10 @@ export default class LastFmImporter extends React.Component<
         ${timeout / 1000}s`
       );
       if (retries > 0) {
-        setTimeout(() => this.getPage(page, retries - 1), timeout);
+        await new Promise((resolve) => setTimeout(resolve, timeout));
+        await this.getPage(page, retries - 1);
       }
+      return null;
     };
 
     const url = `${
@@ -195,14 +197,13 @@ export default class LastFmImporter extends React.Component<
         return payload;
       }
       if (/^5/.test(response.status.toString())) {
-        retry(`Got ${response.status}`);
-      } else {
-        // ignore 40x
-        // console.warn(`Got ${response.status} while fetching page last.fm page=${page}, skipping`);
+        return await retry(`Got ${response.status}`);
       }
+      // ignore 40x
+      // console.warn(`Got ${response.status} while fetching page last.fm page=${page}, skipping`);
     } catch {
       // Retry if there is a network error
-      retry("Network error");
+      await retry("Network error");
     }
     return null;
   }
