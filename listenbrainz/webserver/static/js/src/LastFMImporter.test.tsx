@@ -1,6 +1,6 @@
 import * as React from "react";
 import { mount, shallow } from "enzyme";
-import LastFmImporter from "./LastFMImporter";
+import LastFmImporter, {LASTFM_RETRIES} from "./LastFMImporter";
 // Mock data to test functions
 import * as page from "./__mocks__/page.json";
 import * as getInfo from "./__mocks__/getInfo.json";
@@ -133,7 +133,6 @@ describe("getTotalNumberOfScrobbles", () => {
 });
 
 describe("getPage", () => {
-  const RETRIES = 3;
   beforeEach(() => {
     const wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
     instance = wrapper.instance();
@@ -148,7 +147,7 @@ describe("getPage", () => {
   });
 
   it("should call with the correct url", () => {
-    instance.getPage(1, RETRIES);
+    instance.getPage(1, LASTFM_RETRIES);
 
     expect(window.fetch).toHaveBeenCalledWith(
       `${props.lastfmApiUrl}?method=user.getrecenttracks&user=${instance.state.lastfmUsername}&api_key=${props.lastfmApiKey}&from=1&page=1&format=json`
@@ -159,7 +158,7 @@ describe("getPage", () => {
     // Mock function for encodeScrobbles
     LastFmImporter.encodeScrobbles = jest.fn(() => ["foo", "bar"]);
 
-    const data = await instance.getPage(1, RETRIES);
+    const data = await instance.getPage(1, LASTFM_RETRIES);
     expect(LastFmImporter.encodeScrobbles).toHaveBeenCalledTimes(1);
     expect(data).toEqual(["foo", "bar"]);
   });
@@ -174,10 +173,10 @@ describe("getPage", () => {
     });
 
     const getPageSpy = jest.spyOn(instance, "getPage");
-    await instance.getPage(1, RETRIES);
+    await instance.getPage(1, LASTFM_RETRIES);
 
-    // we run the timer sufficient number of timers to ensure retries are not exceeded or undetected due to timeouts
-    for (let i = 0; i < 10; i += 1) {
+    // we run the timer sufficient number of times to ensure retries are not exceeded or undetected due to timeouts
+    for (let i = 0; i < LASTFM_RETRIES + 2; i += 1) {
       jest.runAllTimers();
       // make timers and promises play well with jest
       // eslint-disable-next-line no-await-in-loop
@@ -196,10 +195,10 @@ describe("getPage", () => {
       });
     });
     const getPageSpy = jest.spyOn(instance, "getPage");
-    await instance.getPage(1, RETRIES);
+    await instance.getPage(1, LASTFM_RETRIES);
 
-    // we run the timer sufficient number of timers to ensure retries are not exceeded or undetected due to timeouts
-    for (let i = 0; i < 10; i += 1) {
+    // we run the timer sufficient number of times to ensure retries are not exceeded or undetected due to timeouts
+    for (let i = 0; i < LASTFM_RETRIES + 2; i += 1) {
       jest.runAllTimers();
       // make timers and promises play well with jest
       // eslint-disable-next-line no-await-in-loop
@@ -220,9 +219,9 @@ describe("getPage", () => {
 
     const getPageSpy = jest.spyOn(instance, "getPage");
 
-    await instance.getPage(1, RETRIES);
-    // we run the timer sufficient number of timers to ensure retries are not exceeded or undetected due to timeouts
-    for (let i = 0; i < 10; i += 1) {
+    await instance.getPage(1, LASTFM_RETRIES);
+    // we run the timer sufficient number of times to ensure retries are not exceeded or undetected due to timeouts
+    for (let i = 0; i < LASTFM_RETRIES + 2; i += 1) {
       jest.runAllTimers();
       // make timers and promises play well with jest
       // eslint-disable-next-line no-await-in-loop

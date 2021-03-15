@@ -6,7 +6,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import APIService from "./APIService";
 import Scrobble from "./Scrobble";
 
-
+export const LASTFM_RETRIES = 3;
 export type ImporterProps = {
   user: {
     id?: string;
@@ -77,7 +77,6 @@ export default class LastFmImporter extends React.Component<
   private rlReset = -1;
 
   private rlOrigin = -1;
-  private LASTFM_RETRIES = 3;
 
   constructor(props: ImporterProps) {
     super(props);
@@ -278,7 +277,7 @@ export default class LastFmImporter extends React.Component<
     while (this.page > 0) {
       // Fixing no-await-in-loop will require significant changes to the code, ignoring for now
       this.lastImportedString = "...";
-      const payload = await this.getPage(this.page, this.LASTFM_RETRIES); // eslint-disable-line
+      const payload = await this.getPage(this.page, LASTFM_RETRIES); // eslint-disable-line
       if (payload) {
         // Submit only if response is valid
         this.submitPage(payload);
