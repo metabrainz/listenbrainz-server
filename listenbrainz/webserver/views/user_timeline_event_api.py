@@ -29,14 +29,13 @@ import listenbrainz.db.user_relationship as db_user_relationship
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
 
 from data.model.listen import APIListen, TrackMetadata, AdditionalInfo
-from data.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, \
-    APIFollowEvent, NotificationMetadata
+from data.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, APIFollowEvent
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.listenstore import TimescaleListenStore
 from listenbrainz.webserver.views.api import _validate_get_endpoint_params
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized
 from listenbrainz.webserver.views.api_tools import validate_auth_header
 from listenbrainz.webserver.rate_limiter import ratelimit
 
@@ -90,58 +89,6 @@ def create_user_recording_recommendation_event(user_name):
 
     try:
         event = db_user_timeline_event.create_user_track_recommendation_event(user['id'], metadata)
-    except DatabaseException:
-        raise APIInternalServerError("Something went wrong, please try again.")
-
-    event_data = event.dict()
-    event_data['created'] = event_data['created'].timestamp()
-    event_data['event_type'] = event_data['event_type'].value
-    return jsonify(event_data)
-
-
-@user_timeline_event_api_bp.route('/user/<user_name>/timeline-event/create/recording', methods=['POST', 'OPTIONS'])
-@crossdomain(headers="Authorization, Content-Type")
-@ratelimit()
-def create_user_notification_event(user_name):
-    """ Post a message with a link on a user's timeline. Only approved users are allowed to perform this action.
-
-    The request should contain the following data:
-
-        {
-            "metadata": {
-                "message": <the message ot post, required>,
-                "link": <the link to include with the message, required>
-            }
-        }
-
-    :param user_name: The MusicBrainz ID of the user who is recommending the recording.
-    :type user_name: ``str``
-    :statuscode 200: Successful query, message has been posted!
-    :statuscode 400: Bad request, check ``response['error']`` for more details.
-    :statuscode 401: Unauthorized, you are not an approved user.
-    :statuscode 404: User not found
-    :resheader Content-Type: *application/json*
-
-    """
-    creator = validate_auth_header()
-    if creator["musicbrainz_id"] not in current_app.config['APPROVED_PLAYLIST_BOTS']:
-        raise APIUnauthorized("Only approved users are allowed to submit playlists made for someone else")
-
-    user = db_user.get_by_mb_id(user_name)
-    if user is None:
-        raise APINotFound(f"Cannot find user: {user_name}")
-
-    try:
-        data = ujson.loads(request.get_data())
-    except ValueError as e:
-        raise APIBadRequest(f"Invalid JSON: {str(e)}")
-
-    try:
-        metadata = NotificationMetadata(**data['metadata'], creator=creator["musicbrainz_id"])
-    except pydantic.ValidationError as e:
-        raise APIBadRequest(f"Invalid metadata: {str(e)}")
-    try:
-        event = db_user_timeline_event.create_user_notification_event(user['id'], metadata)
     except DatabaseException:
         raise APIInternalServerError("Something went wrong, please try again.")
 
