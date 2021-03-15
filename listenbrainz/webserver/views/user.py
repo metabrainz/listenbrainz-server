@@ -144,6 +144,7 @@ def profile(user_name):
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
         "api_url": current_app.config['API_URL'],
         "logged_in_user_follows_user": logged_in_user_follows_user,
+        "sentry_dsn": current_app.config["LOG_SENTRY"]["dsn"]
     }
 
     return render_template("user/profile.html",
@@ -182,7 +183,8 @@ def charts(user_name):
 
     props = {
         "user": user_data,
-        "api_url": current_app.config["API_URL"]
+        "api_url": current_app.config["API_URL"],
+        "sentry_dsn": current_app.config["LOG_SENTRY"]["dsn"]
     }
 
     return render_template(
@@ -205,7 +207,8 @@ def reports(user_name: str):
 
     props = {
         "user": user_data,
-        "api_url": current_app.config["API_URL"]
+        "api_url": current_app.config["API_URL"],
+        "sentry_dsn": current_app.config["LOG_SENTRY"]["dsn"]
     }
 
     return render_template(
@@ -265,6 +268,7 @@ def playlists(user_name: str):
         "playlist_count": playlist_count,
         "pagination_offset": offset,
         "playlists_per_page": count,
+        "sentry_dsn": current_app.config["LOG_SENTRY"]["dsn"]
     }
 
     return render_template(
@@ -321,6 +325,7 @@ def recommendation_playlists(user_name: str):
         "user": user_data,
         "active_section": "recommendations",
         "playlist_count": playlist_count,
+        "sentry_dsn": current_app.config["LOG_SENTRY"]["dsn"]
     }
 
     return render_template(
@@ -378,6 +383,7 @@ def collaborations(user_name: str):
         "user": user_data,
         "active_section": "collaborations",
         "playlist_count": playlist_count,
+        "sentry_dsn": current_app.config["LOG_SENTRY"]["dsn"]
     }
 
     return render_template(

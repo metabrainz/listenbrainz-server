@@ -155,6 +155,7 @@ def recent_listens():
         "mode": "recent",
         "spotify": spotify_user,
         "api_url": current_app.config["API_URL"],
+        "sentry_dsn": current_app.config["LOG_SENTRY"]["dsn"]
     }
 
     return render_template("index/recent.html",
