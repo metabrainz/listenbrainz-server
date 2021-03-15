@@ -40,6 +40,7 @@ import {
   JSPFTrackToListen,
   listenToJSPFTrack,
 } from "./utils";
+import * as Sentry from "@sentry/react";
 
 export interface PlaylistPageProps {
   apiUrl: string;
@@ -991,7 +992,10 @@ document.addEventListener("DOMContentLoaded", () => {
     spotify,
     web_sockets_server_url,
     current_user,
+    sentry_dsn,
   } = reactProps;
+
+  Sentry.init({ dsn: sentry_dsn });
 
   ReactDOM.render(
     <ErrorBoundary>

@@ -5,6 +5,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { isEqual, get } from "lodash";
 
+import * as Sentry from "@sentry/react";
 import BrainzPlayer from "../BrainzPlayer";
 import APIService from "../APIService";
 import Loader from "../components/Loader";
@@ -386,7 +387,10 @@ document.addEventListener("DOMContentLoaded", () => {
     user,
     web_sockets_server_url,
     current_user,
+    sentry_dsn,
   } = reactProps;
+
+  Sentry.init({ dsn: sentry_dsn });
 
   ReactDOM.render(
     <Recommendations

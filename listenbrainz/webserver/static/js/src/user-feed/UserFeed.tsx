@@ -19,6 +19,7 @@ import { AlertList } from "react-bs-notifier";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { isEqual } from "lodash";
+import * as Sentry from "@sentry/react";
 import APIService from "../APIService";
 import BrainzPlayer from "../BrainzPlayer";
 import FollowerFollowingModal from "../follow/FollowerFollowingModal";
@@ -530,7 +531,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#react-container");
   const propsElement = document.getElementById("react-props");
   const reactProps = JSON.parse(propsElement!.innerHTML);
-  const { api_url, current_user, spotify, events } = reactProps;
+  const { api_url, current_user, spotify, events, sentry_dsn } = reactProps;
+
+  Sentry.init({ dsn: sentry_dsn });
+
   ReactDOM.render(
     <UserFeedPage
       currentUser={current_user}
