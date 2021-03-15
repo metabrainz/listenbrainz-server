@@ -9,3 +9,6 @@ MAILTO=""
 0 12 * * * lbdumps flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh incremental >> /logs/dumps.log 2>&1
 ## Around 1 hour later, trigger an incremental import into the spark cluster, blocking for the lock in case the dump was not complete
 0 13 * * * lbdumps flock -x /var/lock/lb-dumps.lock /usr/local/bin/python /code/listenbrainz/manage.py spark request_import_incremental >> /logs/dumps.log 2>&1
+
+# Dump user feedback every monday before we generate recommenations
+00 4 * * 1 lbdumps flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh feeedback >> /logs/dumps.log 2>&1
