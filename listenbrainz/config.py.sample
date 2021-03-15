@@ -89,11 +89,11 @@ PLAYING_NOW_MAX_DURATION = 10 * 60
 #    'level': 'ERROR',
 # }
 
-# LOG_SENTRY = {
-#    'dsn':'',
-#    'environment': 'development',
-#    'level': 'ERROR',
-# }
+LOG_SENTRY = {
+    'dsn':'https://examplePublicKey@o0.ingest.sentry.io/0',
+    'environment': 'development',
+    'level': 'ERROR',
+}
 
 
 # MISCELLANEOUS
