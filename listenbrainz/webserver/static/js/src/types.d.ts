@@ -12,6 +12,7 @@ declare type Alert = {
   type: AlertType;
   headline: string;
   message: string | JSX.Element;
+  count?: number;
 };
 
 // TODO: Remove "| null" when backend stops sending fields with null

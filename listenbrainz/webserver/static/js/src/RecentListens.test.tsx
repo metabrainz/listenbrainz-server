@@ -362,11 +362,31 @@ describe("newAlert", () => {
     expect(wrapper.state().alerts).toEqual([
       { id: 0, type: "warning", headline: "Test", message: "foobar" },
     ]);
-
+    instance.newAlert("warning", "Test", "foobar");
+    expect(wrapper.state().alerts).toEqual([
+      {
+        id: 0,
+        type: "warning",
+        headline: "Test (2)",
+        message: "foobar",
+        count: 2,
+      },
+    ]);
     instance.newAlert("danger", "test", <p>foobar</p>);
     expect(wrapper.state().alerts).toEqual([
-      { id: 0, type: "warning", headline: "Test", message: "foobar" },
-      { id: 0, type: "danger", headline: "test", message: <p>foobar</p> },
+      {
+        id: 0,
+        type: "warning",
+        headline: "Test (2)",
+        message: "foobar",
+        count: 2,
+      },
+      {
+        id: 0,
+        type: "danger",
+        headline: "test",
+        message: <p>foobar</p>,
+      },
     ]);
   });
 });
