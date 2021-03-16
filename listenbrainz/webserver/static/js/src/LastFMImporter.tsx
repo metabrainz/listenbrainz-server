@@ -5,7 +5,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import APIService from "./APIService";
 import Scrobble from "./Scrobble";
-
 import LastFMImporterModal from "./LastFMImporterModal";
 
 export type ImporterProps = {
@@ -423,39 +422,33 @@ export default class LastFmImporter extends React.Component<
   render() {
     const { show, canClose, lastfmUsername, msg } = this.state;
     return (
-      <div className="alert alert-danger">
-        We are having some issues with the LastFM importer, but we are working
-        on fixing it. Please try again later. Our apologies for the delay!
+      <div className="Importer">
+        <form onSubmit={this.handleSubmit}>
+          <input
+            type="text"
+            onChange={this.handleChange}
+            value={lastfmUsername}
+            placeholder="Last.fm Username"
+            size={30}
+          />
+          <input type="submit" value="Import Now!" disabled={!lastfmUsername} />
+        </form>
+        {show && (
+          <LastFMImporterModal onClose={this.toggleModal} disable={!canClose}>
+            <img
+              src="/static/img/listenbrainz-logo.svg"
+              height="75"
+              className="img-responsive"
+              alt=""
+            />
+            <br />
+            <br />
+            <div>{msg}</div>
+            <br />
+          </LastFMImporterModal>
+        )}
       </div>
     );
-    // return (
-    //   <div className="Importer">
-    //     <form onSubmit={this.handleSubmit}>
-    //       <input
-    //         type="text"
-    //         onChange={this.handleChange}
-    //         value={lastfmUsername}
-    //         placeholder="Last.fm Username"
-    //         size={30}
-    //       />
-    //       <input type="submit" value="Import Now!" disabled={!lastfmUsername} />
-    //     </form>
-    //     {show && (
-    //       <LastFMImporterModal onClose={this.toggleModal} disable={!canClose}>
-    //         <img
-    //           src="/static/img/listenbrainz-logo.svg"
-    //           height="75"
-    //           className="img-responsive"
-    //           alt=""
-    //         />
-    //         <br />
-    //         <br />
-    //         <div>{msg}</div>
-    //         <br />
-    //       </LastFMImporterModal>
-    //     )}
-    //   </div>
-    // );
   }
 }
 
