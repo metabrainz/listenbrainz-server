@@ -23,10 +23,8 @@ function cleanup {
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
                    down --remove-orphans
-    docker ps -a --no-trunc  | grep $COMPOSE_PROJECT_NAME \
-        | awk '{print $1}' | xargs --no-run-if-empty docker stop
-    docker ps -a --no-trunc  | grep $COMPOSE_PROJECT_NAME \
-        | awk '{print $1}' | xargs --no-run-if-empty docker rm
+    # Untag LB images that were built before this test run
+    docker image rm $(docker images --filter="before=$COMPOSE_PROJECT_NAME_listenbrainz" --filter "label=org.label-schema.name=ListenBrainz" --format '{{.Repository}}:{{.Tag}}')
 }
 
 function run_tests {

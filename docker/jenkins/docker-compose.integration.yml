@@ -20,6 +20,8 @@ services:
       context: ../..
       dockerfile: Dockerfile
       target: listenbrainz-dev
+      args:
+        VCS_REF: HEAD
     command: py.test listenbrainz/tests/integration
     image: listenbrainz
     depends_on:
