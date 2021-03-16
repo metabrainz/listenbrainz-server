@@ -121,11 +121,13 @@ export default class UserSocialNetwork extends React.Component<
     action: "follow" | "unfollow"
   ) => {
     const { followingList } = this.state;
-    if (action === "follow") {
+    const index = followingList.findIndex(
+      (following) => following.name === user.name
+    );
+    if (action === "follow" && index === -1) {
       followingList.push(user);
-    } else {
-      const index = followingList.indexOf(user);
-
+    }
+    if (action === "unfollow" && index !== -1) {
       followingList.splice(index, 1);
     }
     this.setState({ followingList });

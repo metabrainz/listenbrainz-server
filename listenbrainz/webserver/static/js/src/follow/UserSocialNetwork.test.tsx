@@ -109,4 +109,119 @@ describe("<UserSocialNetwork />", () => {
     expect(instance.state.followerList).toEqual(followingFollowersInState);
     expect(instance.state.followingList).toEqual(followingFollowersInState);
   });
+
+  describe("updateFollowingList", () => {
+    it("updates the state when called with action follow", async () => {
+      const wrapper = shallow<UserSocialNetwork>(
+        <UserSocialNetwork {...props} />
+      );
+      const instance = wrapper.instance();
+      await instance.componentDidMount();
+
+      // initial state after first fetch
+      expect(instance.state.followingList).toEqual([
+        { name: "bob" },
+        { name: "fnord" },
+      ]);
+
+      instance.updateFollowingList({ name: "Baldur" }, "follow");
+      expect(instance.state.followingList).toEqual([
+        { name: "bob" },
+        { name: "fnord" },
+        { name: "Baldur" },
+      ]);
+    });
+
+    it("updates the state when called with action unfollow", async () => {
+      const wrapper = shallow<UserSocialNetwork>(
+        <UserSocialNetwork {...props} />
+      );
+      const instance = wrapper.instance();
+      await instance.componentDidMount();
+
+      // initial state after first fetch
+      expect(instance.state.followingList).toEqual([
+        { name: "bob" },
+        { name: "fnord" },
+      ]);
+
+      instance.updateFollowingList({ name: "fnord" }, "unfollow");
+      expect(instance.state.followingList).toEqual([{ name: "bob" }]);
+    });
+
+    it("only allows adding a user once", async () => {
+      const wrapper = shallow<UserSocialNetwork>(
+        <UserSocialNetwork {...props} />
+      );
+      const instance = wrapper.instance();
+      await instance.componentDidMount();
+
+      instance.updateFollowingList({ name: "Baldur" }, "follow");
+      expect(instance.state.followingList).toEqual([
+        { name: "bob" },
+        { name: "fnord" },
+        { name: "Baldur" },
+      ]);
+
+      // Ensure we can't add a user twice
+      instance.updateFollowingList({ name: "Baldur" }, "follow");
+      expect(instance.state.followingList).toEqual([
+        { name: "bob" },
+        { name: "fnord" },
+        { name: "Baldur" },
+      ]);
+    });
+
+    it("does nothing when trying to unfollow a user that is not followed", async () => {
+      const wrapper = shallow<UserSocialNetwork>(
+        <UserSocialNetwork {...props} />
+      );
+      const instance = wrapper.instance();
+      await instance.componentDidMount();
+
+      expect(instance.state.followingList).toEqual([
+        { name: "bob" },
+        { name: "fnord" },
+      ]);
+
+      instance.updateFollowingList({ name: "Baldur" }, "unfollow");
+      expect(instance.state.followingList).toEqual([
+        { name: "bob" },
+        { name: "fnord" },
+      ]);
+    });
+  });
+
+  describe("loggedInUserFollowsUser", () => {
+    it("returns false if there is no logged in user", () => {
+      const wrapper = shallow<UserSocialNetwork>(
+        <UserSocialNetwork {...props} loggedInUser={null} />
+      );
+      const instance = wrapper.instance();
+
+      expect(instance.loggedInUserFollowsUser({ name: "bob" })).toEqual(false);
+    });
+
+    it("returns false if user is not in followingList", async () => {
+      const wrapper = shallow<UserSocialNetwork>(
+        <UserSocialNetwork {...props} />
+      );
+      const instance = wrapper.instance();
+      await instance.componentDidMount();
+
+      expect(
+        instance.loggedInUserFollowsUser({ name: "notarealuser" })
+      ).toEqual(false);
+    });
+
+    it("returns true if user is in followingList", async () => {
+      const wrapper = shallow<UserSocialNetwork>(
+        <UserSocialNetwork {...props} />
+      );
+      const instance = wrapper.instance();
+      await instance.componentDidMount();
+
+      expect(instance.loggedInUserFollowsUser({ name: "fnord" })).toEqual(true);
+    });
+  });
 });
