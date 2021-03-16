@@ -149,16 +149,19 @@ export default class APIService {
   };
 
   followUser = async (username: string): Promise<{ status: number }> => {
-    const response = await fetch(`/user/${username}/follow`, {
+    const response = await fetch(`${this.APIBaseURI}/user/${username}/follow`, {
       method: "POST",
     });
     return { status: response.status };
   };
 
   unfollowUser = async (username: string): Promise<{ status: number }> => {
-    const response = await fetch(`/user/${username}/unfollow`, {
-      method: "POST",
-    });
+    const response = await fetch(
+      `${this.APIBaseURI}/user/${username}/unfollow`,
+      {
+        method: "POST",
+      }
+    );
     return { status: response.status };
   };
 
@@ -169,7 +172,7 @@ export default class APIService {
       throw new SyntaxError("Username missing");
     }
 
-    const url = `/user/${username}/followers`;
+    const url = `${this.APIBaseURI}/user/${username}/followers`;
     const response = await fetch(url);
     await this.checkStatus(response);
     const data = response.json();
@@ -183,7 +186,7 @@ export default class APIService {
       throw new SyntaxError("Username missing");
     }
 
-    const url = `/user/${username}/following`;
+    const url = `${this.APIBaseURI}/user/${username}/following`;
     const response = await fetch(url);
     await this.checkStatus(response);
     const data = response.json();
