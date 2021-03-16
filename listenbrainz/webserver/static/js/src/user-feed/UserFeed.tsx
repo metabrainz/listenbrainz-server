@@ -188,8 +188,14 @@ export default class UserFeedPage extends React.Component<
       this.newAlert(
         "warning",
         "Could not load timeline events",
-        `Something went wrong when we tried to load your events, please try again or contact us if the problem persists.<br/>
-        ${error}`
+        <>
+          Something went wrong when we tried to load your events, please try
+          again or contact us if the problem persists.
+          <br />
+          <strong>
+            {error.name}: {error.message}
+          </strong>
+        </>
       );
       this.setState({ loading: false });
       return;
