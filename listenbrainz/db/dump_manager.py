@@ -45,7 +45,8 @@ from listenbrainz.webserver.timescale_connection import init_timescale_connectio
 
 
 NUMBER_OF_FULL_DUMPS_TO_KEEP = 2
-NUMBER_OF_INCREMENTAL_DUMPS_TO_KEEP = 6
+NUMBER_OF_INCREMENTAL_DUMPS_TO_KEEP = 30
+NUMBER_OF_FEEDBACK_DUMPS_TO_KEEP = 6
 
 cli = click.Group()
 
@@ -310,6 +311,8 @@ def delete_old_dumps(location):
 def get_dump_id(dump_name):
     return int(dump_name.split('-')[2])
 
+def get_dump_ts(dump_name):
+    return dump_name.split('-')[0] + dump_name.split('-')[1]
 
 def _cleanup_dumps(location):
     """ Delete old dumps while keeping the latest two dumps in the specified directory
@@ -320,6 +323,8 @@ def _cleanup_dumps(location):
     Returns:
         (int, int): the number of dumps remaining, the number of dumps deleted
     """
+
+    # Clean up full dumps
     full_dump_re = re.compile('listenbrainz-dump-[0-9]*-[0-9]*-[0-9]*-full')
     dump_files = [x for x in os.listdir(location) if full_dump_re.match(x)]
     full_dumps = [x for x in sorted(dump_files, key=get_dump_id, reverse=True)]
@@ -328,6 +333,8 @@ def _cleanup_dumps(location):
     else:
         remove_dumps(location, full_dumps, NUMBER_OF_FULL_DUMPS_TO_KEEP)
 
+
+    # Clean up incremental dumps
     incremental_dump_re = re.compile(
         'listenbrainz-dump-[0-9]*-[0-9]*-[0-9]*-incremental')
     dump_files = [x for x in os.listdir(
@@ -335,10 +342,23 @@ def _cleanup_dumps(location):
     incremental_dumps = [x for x in sorted(
         dump_files, key=get_dump_id, reverse=True)]
     if not incremental_dumps:
-        print('No full dumps present in specified directory!')
+        print('No incremental dumps present in specified directory!')
     else:
         remove_dumps(location, incremental_dumps,
                      NUMBER_OF_INCREMENTAL_DUMPS_TO_KEEP)
+
+    # Clean up spark / feedback dumps
+    spark_dump_re = re.compile(
+        'listenbrainz-dump-[0-9]*-[0-9]*-spark')
+    dump_files = [x for x in os.listdir(
+        location) if spark_dump_re.match(x)]
+    spark_dumps = [x for x in sorted(
+        dump_files, key=get_dump_ts, reverse=True)]
+    if not spark_dumps:
+        print('No spark feedback dumps present in specified directory!')
+    else:
+        remove_dumps(location, spark_dumps,
+                     NUMBER_OF_FEEDBACK_DUMPS_TO_KEEP)
 
 
 def remove_dumps(location, dumps, remaining_count):
