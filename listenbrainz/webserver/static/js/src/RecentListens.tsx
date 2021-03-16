@@ -242,7 +242,7 @@ export default class RecentListens extends React.Component<
         const item = alertsList[i];
         if (
           item.type === newAlert.type &&
-          item.headline.includes(newAlert.headline) &&
+          item.headline.startsWith(newAlert.headline) &&
           item.message === newAlert.message
         ) {
           if (!alertsList[i].count) {
