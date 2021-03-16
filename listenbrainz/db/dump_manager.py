@@ -311,8 +311,10 @@ def delete_old_dumps(location):
 def get_dump_id(dump_name):
     return int(dump_name.split('-')[2])
 
+
 def get_dump_ts(dump_name):
     return dump_name.split('-')[0] + dump_name.split('-')[1]
+
 
 def _cleanup_dumps(location):
     """ Delete old dumps while keeping the latest two dumps in the specified directory
@@ -332,7 +334,6 @@ def _cleanup_dumps(location):
         print('No full dumps present in specified directory!')
     else:
         remove_dumps(location, full_dumps, NUMBER_OF_FULL_DUMPS_TO_KEEP)
-
 
     # Clean up incremental dumps
     incremental_dump_re = re.compile(
