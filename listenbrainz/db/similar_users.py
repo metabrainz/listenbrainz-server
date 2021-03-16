@@ -15,7 +15,13 @@ ROWS_PER_BATCH = 1000
 
 def import_user_similarities(data):
     """ Import the user similarities into the DB by inserting the data into a new table
-        and then rotating the table into place atomically.
+        and then rotating the table into place atomically. 
+
+        Returns a tuple of three values:
+            (user_count, avr_similar_users_per_user, error) 
+        If an error occurs rotating the tables in place, error will be a non-empty
+        string and the user count values will be 0. Upon success error will be empty
+        and the user count values will be set accordingly.
     """
 
     user_count = 0
