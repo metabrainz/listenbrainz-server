@@ -423,32 +423,6 @@ def unfollow_user(user_name: str):
     return jsonify({"status": 200, "message": "Success!"})
 
 
-@user_bp.route('/<user_name>/followers')
-@login_required
-def get_followers(user_name: str):
-    user = _get_user(user_name)
-    try:
-        followers = db_user_relationship.get_followers_of_user(user.id)
-    except Exception:
-        current_app.logger.critical("Error while trying to fetch followers", exc_info=True)
-        raise APIInternalServerError("Something went wrong, please try again later")
-
-    return jsonify({"followers": followers, "user": user.musicbrainz_id})
-
-
-@user_bp.route('/<user_name>/following')
-@login_required
-def get_following(user_name: str):
-    user = _get_user(user_name)
-    try:
-        following = db_user_relationship.get_following_for_user(user.id)
-    except Exception:
-        current_app.logger.critical("Error while trying to fetch following", exc_info=True)
-        raise APIInternalServerError("Something went wrong, please try again later")
-
-    return jsonify({"following": following, "user": user.musicbrainz_id})
-
-
 def _get_user(user_name):
     """ Get current username """
     if current_user.is_authenticated and \

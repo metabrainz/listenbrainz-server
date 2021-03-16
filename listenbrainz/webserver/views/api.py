@@ -590,6 +590,34 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
+@api_bp.route("/user/<user_name>/followers", methods=["GET", "OPTIONS"])
+@crossdomain(headers="Content-Type")
+@ratelimit()
+def get_followers(user_name: str):
+    user = db_user.get_by_mb_id(user_name)
+    try:
+        followers = db_user_relationship.get_followers_of_user(user["id"])
+    except Exception:
+        current_app.logger.critical("Error while trying to fetch followers", exc_info=True)
+        raise APIInternalServerError("Something went wrong, please try again later")
+
+    return jsonify({"followers": followers, "user": user["musicbrainz_id"]})
+
+
+@api_bp.route("/user/<user_name>/following", methods=["GET", "OPTIONS"])
+@crossdomain(headers="Content-Type")
+@ratelimit()
+def get_following(user_name: str):
+    user = db_user.get_by_mb_id(user_name)
+    try:
+        following = db_user_relationship.get_following_for_user(user["id"])
+    except Exception:
+        current_app.logger.critical("Error while trying to fetch following", exc_info=True)
+        raise APIInternalServerError("Something went wrong, please try again later")
+
+    return jsonify({"following": following, "user": user["musicbrainz_id"]})
+
+
 def _parse_int_arg(name, default=None):
     value = request.args.get(name)
     if value:

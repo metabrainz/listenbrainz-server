@@ -765,3 +765,25 @@ class APITestCase(ListenAPIIntegrationTestCase):
         )
         self.assertEqual(
             response.json["error"], "invalid recording_msid: Recording MSID format invalid.")
+
+    def test_followers_returns_the_followers_of_a_user(self):
+        # create a new user, and follow them
+        followed_user = db_user.get_or_create(3, 'followed_user')
+        self.temporary_login(self.user.login_id)
+        r = self.client.post(url_for("user.follow_user", user_name=followed_user["musicbrainz_id"]))
+        self.assert200(r)
+
+        r = self.client.get(url_for("api_v1.get_followers", user_name=followed_user["musicbrainz_id"]))
+        self.assert200(r)
+        self.assertListEqual([{'musicbrainz_id': self.user.musicbrainz_id}], r.json['followers'])
+
+    def test_following_returns_the_people_who_follow_the_user(self):
+        # create a new user, and follow them
+        followed_user = db_user.get_or_create(3, 'followed_user')
+        self.temporary_login(self.user.login_id)
+        r = self.client.post(url_for("user.follow_user", user_name=followed_user["musicbrainz_id"]))
+        self.assert200(r)
+
+        r = self.client.get(url_for("api_v1.get_following", user_name=self.user["musicbrainz_id"]))
+        self.assert200(r)
+        self.assertListEqual([{'musicbrainz_id': 'followed_user', 'id': followed_user['id']}], r.json['following'])

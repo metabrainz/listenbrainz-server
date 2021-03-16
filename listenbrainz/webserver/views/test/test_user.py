@@ -194,29 +194,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         r = self.client.post('/user/followed_user/unfollow')
         self.assertNotEqual(r.status_code, 200)
 
-    def test_followers_returns_the_followers_of_a_user(self):
-        # create a new user, and follow them
-        followed_user = db_user.get_or_create(3, 'followed_user')
-        self.temporary_login(self.user.login_id)
-        r = self.client.post('/user/followed_user/follow')
-        self.assert200(r)
-
-        r = self.client.get(f'/user/followed_user/followers')
-        self.assert200(r)
-        self.assertListEqual([{'musicbrainz_id': self.user.musicbrainz_id}], r.json['followers'])
-
-
-    def test_following_returns_the_people_who_follow_the_user(self):
-        # create a new user, and follow them
-        followed_user = db_user.get_or_create(3, 'followed_user')
-        self.temporary_login(self.user.login_id)
-        r = self.client.post('/user/followed_user/follow')
-        self.assert200(r)
-
-        r = self.client.get(f'/user/{self.user.musicbrainz_id}/following')
-        self.assert200(r)
-        self.assertListEqual([{'musicbrainz_id': 'followed_user', 'id': followed_user['id']}], r.json['following'])
-
     def _create_test_data(self, user_name):
         min_ts = -1
         max_ts = -1
