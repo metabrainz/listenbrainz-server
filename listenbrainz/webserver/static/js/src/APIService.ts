@@ -162,7 +162,9 @@ export default class APIService {
     return { status: response.status };
   };
 
-  getFollowersOfUser = async (username: string) => {
+  getFollowersOfUser = async (
+    username: string
+  ): Promise<{ followers: Array<{ musicbrainz_id: string }> }> => {
     if (!username) {
       throw new SyntaxError("Username missing");
     }
@@ -174,7 +176,9 @@ export default class APIService {
     return data;
   };
 
-  getFollowingForUser = async (username: string) => {
+  getFollowingForUser = async (
+    username: string
+  ): Promise<{ following: Array<{ musicbrainz_id: string }> }> => {
     if (!username) {
       throw new SyntaxError("Username missing");
     }
@@ -730,7 +734,11 @@ export default class APIService {
     return response.status;
   };
 
-  getSimilarUsersForUser = async (username: string) => {
+  getSimilarUsersForUser = async (
+    username: string
+  ): Promise<{
+    payload: Array<{ user_name: string; similarity: number }>;
+  }> => {
     if (!username) {
       throw new SyntaxError("Username missing");
     }

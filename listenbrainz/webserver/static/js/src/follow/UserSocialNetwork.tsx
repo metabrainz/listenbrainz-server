@@ -33,80 +33,71 @@ export default class UserSocialNetwork extends React.Component<
       followingList: [],
       similarUsersList: [],
     };
-
-    this.getFollowing();
-    this.getFollowers();
-    this.getSimilarUsers();
   }
 
-  getSimilarUsers = () => {
-    const { user } = this.props;
+  async componentDidMount() {
+    await this.getFollowing();
+    await this.getFollowers();
+    await this.getSimilarUsers();
+  }
 
-    this.APIService.getSimilarUsersForUser(user.name)
-      .then(
-        ({
-          payload,
-        }: {
-          payload: Array<{ user_name: string; similarity: number }>;
-        }) => {
-          this.setState({
-            similarUsersList: payload.map(
-              (similarUser: { user_name: string; similarity: number }) => {
-                return {
-                  name: similarUser.user_name,
-                  similarityScore: similarUser.similarity,
-                };
-              }
-            ),
-          });
-        }
-      )
-      .catch((err) => {
-        // eslint-disable-next-line no-console
-        console.error(err);
+  getSimilarUsers = async () => {
+    const { user } = this.props;
+    try {
+      const response = await this.APIService.getSimilarUsersForUser(user.name);
+      const { payload } = response;
+      const similarUsersList = payload.map((similarUser) => {
+        return {
+          name: similarUser.user_name,
+          similarityScore: similarUser.similarity,
+        };
       });
+      this.setState({
+        similarUsersList,
+      });
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(err);
+    }
   };
 
-  getFollowers = () => {
+  getFollowers = async () => {
     const { loggedInUser } = this.props;
     if (!loggedInUser) {
       return;
     }
+    try {
+      const response = await this.APIService.getFollowersOfUser(
+        loggedInUser.name
+      );
+      const { followers } = response;
 
-    this.APIService.getFollowersOfUser(loggedInUser.name)
-      .then(
-        ({ followers }: { followers: Array<{ musicbrainz_id: string }> }) => {
-          this.setState({
-            followerList: followers.map(({ musicbrainz_id }) => {
-              return {
-                name: musicbrainz_id,
-              };
-            }),
-          });
-        }
-      )
-      .catch((err) => {
-        // eslint-disable-next-line no-console
-        console.error(err);
+      this.setState({
+        followerList: followers.map(({ musicbrainz_id }) => {
+          return { name: musicbrainz_id };
+        }),
       });
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(err);
+    }
   };
 
-  getFollowing = () => {
+  getFollowing = async () => {
     const { user } = this.props;
-    this.APIService.getFollowingForUser(user.name)
-      .then(
-        ({ following }: { following: Array<{ musicbrainz_id: string }> }) => {
-          this.setState({
-            followingList: following.map(({ musicbrainz_id }) => {
-              return { name: musicbrainz_id };
-            }),
-          });
-        }
-      )
-      .catch((err) => {
-        // eslint-disable-next-line no-console
-        console.error(err);
+    try {
+      const response = await this.APIService.getFollowingForUser(user.name);
+      const { following } = response;
+
+      this.setState({
+        followingList: following.map(({ musicbrainz_id }) => {
+          return { name: musicbrainz_id };
+        }),
       });
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(err);
+    }
   };
 
   loggedInUserFollowsUser = (user: ListenBrainzUser): boolean => {
