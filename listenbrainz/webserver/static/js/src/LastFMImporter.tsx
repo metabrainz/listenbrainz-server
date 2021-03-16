@@ -188,31 +188,28 @@ export default class LastFmImporter extends React.Component<
         this.countReceived += payload.length;
         return payload;
       }
-      // ignore 40x errors
-      if (!/^4/.test(response.status.toString())) {
+      // Retry if we receive a 5xx server error
+      if (/^5/.test(response.status.toString())) {
         // eslint-disable-next-line no-console
         console.warn(
-          `Got ${
-            response.status
-          } while fetching last.fm page=${page}, retrying in
-          ${timeout / 1000}s`
+          `Got ${response.status} while fetching last.fm page ${page}`
         );
         if (retries <= 0) {
           return null;
         }
+        // eslint-disable-next-line no-console
+        console.warn(`Retrying in ${timeout / 1000}s, ${retries} retries left`);
         await new Promise((resolve) => setTimeout(resolve, timeout));
         return await this.getPage(page, retries - 1);
       }
     } catch {
       // Retry if there is a network error
       // eslint-disable-next-line no-console
-      console.warn(
-        `Network error while fetching last.fm page=${page}, retrying in
-        ${timeout / 1000}s`
-      );
+      console.warn(`Network error while fetching last.fm page ${page}`);
       if (retries <= 0) {
         return null;
       }
+      console.warn(`Retrying in ${timeout / 1000}s, ${retries} retries left`);
       await new Promise((resolve) => setTimeout(resolve, timeout));
       // eslint-disable-next-line no-return-await
       return await this.getPage(page, retries - 1);

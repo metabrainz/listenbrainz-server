@@ -232,6 +232,21 @@ describe("getPage", () => {
     expect(finalValue).toEqual(undefined);
   });
 
+  it("should skip the page if 30x is recieved", async () => {
+    // Mock function for failed fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: false,
+        status: 301,
+      });
+    });
+    const getPageSpy = jest.spyOn(instance, "getPage");
+    const finalValue = await instance.getPage(1, LASTFM_RETRIES);
+
+    expect(getPageSpy).toHaveBeenCalledTimes(1);
+    expect(finalValue).toEqual(undefined);
+  });
+
   it("should retry if there is any other error", async () => {
     // Mock function for fetch
     window.fetch = jest
@@ -239,13 +254,7 @@ describe("getPage", () => {
       .mockImplementationOnce(() => {
         return Promise.resolve({
           ok: true,
-          json: () => Promise.reject(),
-        });
-      })
-      .mockImplementationOnce(() => {
-        return Promise.resolve({
-          ok: false,
-          status: 600,
+          json: () => Promise.reject(new Error("Error")),
         });
       })
       .mockImplementationOnce(() => {
@@ -258,7 +267,7 @@ describe("getPage", () => {
     const getPageSpy = jest.spyOn(instance, "getPage");
     const finalValue = await instance.getPage(1, LASTFM_RETRIES);
 
-    expect(getPageSpy).toHaveBeenCalledTimes(3);
+    expect(getPageSpy).toHaveBeenCalledTimes(2);
     expect(finalValue).toEqual(encodeScrobbleOutput);
   });
 
