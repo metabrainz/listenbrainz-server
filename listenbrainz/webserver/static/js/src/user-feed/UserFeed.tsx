@@ -236,16 +236,37 @@ export default class UserFeedPage extends React.Component<
   newAlert = (
     type: AlertType,
     title: string,
-    message: string | JSX.Element
+    message: string | JSX.Element,
+    count?: number
   ): void => {
     const newAlert: Alert = {
       id: new Date().getTime(),
       type,
       headline: title,
       message,
+      count,
     };
 
     this.setState((prevState) => {
+      const alertsList = prevState.alerts;
+      for (let i = 0; i < alertsList.length; i += 1) {
+        const item = alertsList[i];
+        if (
+          item.type === newAlert.type &&
+          item.headline.includes(newAlert.headline) &&
+          item.message === newAlert.message
+        ) {
+          if (!alertsList[i].count) {
+            // If the count attribute is undefined, then Initializing it as 2
+            alertsList[i].count = 2;
+          } else {
+            alertsList[i].count! += 1;
+          }
+          alertsList[i].headline = `${newAlert.headline} (${alertsList[i]
+            .count!})`;
+          return { alerts: alertsList };
+        }
+      }
       return {
         alerts: [...prevState.alerts, newAlert],
       };
