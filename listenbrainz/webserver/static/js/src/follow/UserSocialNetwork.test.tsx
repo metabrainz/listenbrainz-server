@@ -27,8 +27,32 @@ import SimilarUsersModal from "./SimilarUsersModal";
 
 import * as props from "./__mocks__/userSocialNetworkProps.json";
 
+jest.useFakeTimers();
+
+const similarUsers = [
+  {
+    similarity: 0.0839745792,
+    user_name: "Cthulhu",
+  },
+  {
+    similarity: 0.0779623581,
+    user_name: "Dagon",
+  },
+];
+
+const followingFollowers = [
+  {
+    id: 1,
+    musicbrainz_id: "bob",
+  },
+  {
+    id: 2,
+    musicbrainz_id: "fnord",
+  },
+];
+
 describe("<UserSocialNetwork />", () => {
-  beforeAll(() => {
+  beforeEach(() => {
     // Mock function for fetch
     window.fetch = jest.fn().mockImplementation(() => {
       return Promise.resolve({
@@ -37,19 +61,9 @@ describe("<UserSocialNetwork />", () => {
         json: () =>
           Promise.resolve({
             // For similar users endpoint
-            payload: [
-              {
-                similarity: 0.0839745792,
-                user_name: "Cthulhu",
-              },
-              {
-                similarity: 0.0779623581,
-                user_name: "Dagon",
-              },
-            ],
-            // For following/followers endpoint
-            following: [],
-            followers: [],
+            payload: similarUsers,
+            following: followingFollowers,
+            followers: followingFollowers,
           }),
       });
     });
@@ -67,41 +81,32 @@ describe("<UserSocialNetwork />", () => {
     expect(wrapper.find(SimilarUsersModal)).toHaveLength(1);
   });
 
-  it("calls getSimilarUsers with the right user name", () => {
+  it("initializes by calling the API to get data", async () => {
+    const consoleErrorSpy = jest.spyOn(console, "error");
+
     const wrapper = shallow<UserSocialNetwork>(
       <UserSocialNetwork {...props} />
     );
     const instance = wrapper.instance();
 
-    const spy = jest.fn().mockImplementation(() => Promise.resolve({}));
-    // eslint-disable-next-line dot-notation
-    instance["APIService"].getSimilarUsersForUser = spy;
+    await instance.componentDidMount();
 
-    expect(spy).toHaveBeenCalledWith("bob");
-  });
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
 
-  it("calls getFollowers with the right user name", () => {
-    const wrapper = shallow<UserSocialNetwork>(
-      <UserSocialNetwork {...props} />
-    );
-    const instance = wrapper.instance();
+    const similarUsersInState = [
+      {
+        name: "Cthulhu",
+        similarityScore: 0.0839745792,
+      },
+      {
+        name: "Dagon",
+        similarityScore: 0.0779623581,
+      },
+    ];
+    expect(instance.state.similarUsersList).toEqual(similarUsersInState);
 
-    const spy = jest.fn().mockImplementation(() => Promise.resolve({}));
-    // eslint-disable-next-line dot-notation
-    instance["APIService"].getFollowersOfUser = spy;
-
-    expect(spy).toHaveBeenCalledWith("iliekcomputers");
-  });
-  it("calls getFollowing with the right user name", () => {
-    const wrapper = shallow<UserSocialNetwork>(
-      <UserSocialNetwork {...props} />
-    );
-    const instance = wrapper.instance();
-
-    const spy = jest.fn().mockImplementation(() => Promise.resolve({}));
-    // eslint-disable-next-line dot-notation
-    instance["APIService"].getFollowingForUser = spy;
-
-    expect(spy).toHaveBeenCalledWith("bob");
+    const followingFollowersInState = [{ name: "bob" }, { name: "fnord" }];
+    expect(instance.state.followerList).toEqual(followingFollowersInState);
+    expect(instance.state.followingList).toEqual(followingFollowersInState);
   });
 });
