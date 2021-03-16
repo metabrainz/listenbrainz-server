@@ -180,11 +180,20 @@ describe("getPage", () => {
     });
 
     const getPageSpy = jest.spyOn(instance, "getPage");
+    let finalValue;
+    try {
+      finalValue = await instance.getPage(1, LASTFM_RETRIES);
+    } catch (err) {
+      expect(getPageSpy).toHaveBeenCalledTimes(1 + LASTFM_RETRIES);
+      expect(finalValue).toBeUndefined();
 
-    const finalValue = await instance.getPage(1, LASTFM_RETRIES);
-
-    expect(getPageSpy).toHaveBeenCalledTimes(1 + LASTFM_RETRIES);
-    expect(finalValue).toBeNull();
+      // This error message is also displayed to the user
+      expect(err).toEqual(
+        new Error(
+          `Failed to fetch page 1 from last.fm after ${LASTFM_RETRIES} retries.`
+        )
+      );
+    }
   });
 
   it("should return the expected value if retry is successful", async () => {
@@ -404,8 +413,9 @@ describe("LastFmImporter Page", () => {
 });
 
 describe("importLoop", () => {
+  let wrapper: any;
   beforeEach(() => {
-    const wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
+    wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
     instance = wrapper.instance();
     instance.setState({ lastfmUsername: "dummyUser" });
     // needed for startImport
@@ -454,7 +464,7 @@ describe("importLoop", () => {
   });
 
   it("should show error message on unhandled exception / network error", async () => {
-    const errorMsg = "Testing: something went wrong !!!";
+    const errorMsg = `Some error`;
     // Mock function for failed importLoop
     instance.importLoop = jest.fn().mockImplementation(async () => {
       const error = new Error();
@@ -463,9 +473,19 @@ describe("importLoop", () => {
       throw error;
     });
 
+    const consoleErrorSpy = jest.spyOn(console, "error");
+
     // startImport shouldn't throw error
     await expect(instance.startImport()).resolves.toBe(null);
     // verify message is failure message
-    expect(instance.state.msg?.props.children).toContain(errorMsg);
+    expect(instance.state.msg?.props.children).toContain(
+      " We were unable to import from LastFM, please try again."
+    );
+    expect(instance.state.msg?.props.children).toContain(
+      "If the problem persists please contact us."
+    );
+    expect(instance.state.msg?.props.children).toContain("Error: Some error");
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(new Error("Some error"));
   });
 });
