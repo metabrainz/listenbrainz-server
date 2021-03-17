@@ -33,6 +33,10 @@ from flask import current_app, render_template
 from listenbrainz.db import dump_manager
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.listenstore.tests.util import generate_data
+from listenbrainz.db.model.feedback import Feedback
+import listenbrainz.db.feedback as db_feedback
+from listenbrainz.db.model.recommendation_feedback import RecommendationFeedbackSubmit
+import listenbrainz.db.recommendations_cf_recording_feedback as db_rec_feedback
 from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app
 from listenbrainz.webserver.timescale_connection import init_timescale_connection
@@ -114,15 +118,15 @@ class DumpManagerTestCase(DatabaseTestCase):
         create_path(os.path.join(self.tempdir, 'listenbrainz-dump-3-20180312-000003-full'))
         create_path(os.path.join(self.tempdir, 'listenbrainz-dump-4-20180312-000004-full'))
 
-        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-1-20180312-000001-incremental'))
-        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-2-20180312-000002-incremental'))
-        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-3-20180312-000003-incremental'))
-        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-4-20180312-000004-incremental'))
-        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-5-20180312-000005-incremental'))
-        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-6-20180312-000006-incremental'))
-        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-7-20180312-000007-incremental'))
+        for i in range(1, 50):
+            create_path(os.path.join(self.tempdir, 'listenbrainz-dump-%d-20180312-%06d-incremental' % (i,i)))
         create_path(os.path.join(self.tempdir, 'listenbrainz-dump-99-20200124-000007-incremental'))
         create_path(os.path.join(self.tempdir, 'listenbrainz-dump-100-20200124-000008-incremental'))
+
+        create_path(os.path.join(self.tempdir, 'listenbrainz-feedback-20180312-000001-full'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-feedback-20180312-000002-full'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-feedback-20180312-000003-full'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-feedback-20180312-000004-full'))
 
         create_path(os.path.join(self.tempdir, 'not-a-dump'))
 
@@ -138,13 +142,19 @@ class DumpManagerTestCase(DatabaseTestCase):
         self.assertNotIn('listenbrainz-dump-1-20180312-000001-incremental', newdirs)
         self.assertNotIn('listenbrainz-dump-2-20180312-000002-incremental', newdirs)
         self.assertNotIn('listenbrainz-dump-3-20180312-000003-incremental', newdirs)
+        self.assertNotIn('listenbrainz-dump-21-20180312-000003-incremental', newdirs)
 
-        self.assertIn('listenbrainz-dump-4-20180312-000004-incremental', newdirs)
-        self.assertIn('listenbrainz-dump-5-20180312-000005-incremental', newdirs)
-        self.assertIn('listenbrainz-dump-6-20180312-000006-incremental', newdirs)
-        self.assertIn('listenbrainz-dump-7-20180312-000007-incremental', newdirs)
+        for i in range(22, 50):
+            self.assertIn('listenbrainz-dump-%d-20180312-%06d-incremental' % (i, i), newdirs)
+
         self.assertIn('listenbrainz-dump-99-20200124-000007-incremental', newdirs)
         self.assertIn('listenbrainz-dump-100-20200124-000008-incremental', newdirs)
+
+        self.assertNotIn('listenbrainz-feedback-20180312-000001-full', newdirs)
+        self.assertNotIn('listenbrainz-feedback-20180312-000002-full', newdirs)
+
+        self.assertIn('listenbrainz-feedback-20180312-000003-full', newdirs)
+        self.assertIn('listenbrainz-feedback-20180312-000004-full', newdirs)
 
         self.assertIn('not-a-dump', newdirs)
 
@@ -266,3 +276,69 @@ class DumpManagerTestCase(DatabaseTestCase):
             if file_name.endswith('.tar.xz'):
                 archive_count += 1
         self.assertEqual(archive_count, 2)
+
+
+    @patch('listenbrainz.db.dump_manager.send_dump_creation_notification')
+    def test_create_feedback(self, mock_notify):
+
+        self.user = db_user.get_or_create(1, "ernie")
+        self.user2 = db_user.get_or_create(2, "bert")
+        sample_feedback = [
+            {
+                "user_id": self.user['id'],
+                "recording_msid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
+                "score": 1
+            },
+            {
+                "user_id": self.user2['id'],
+                "recording_msid": "222eb00d-9ead-42de-aec9-8f8c1509413d",
+                "score": -1
+            }
+        ]
+        for fb in sample_feedback:
+            db_feedback.insert(
+                Feedback(
+                    user_id=fb["user_id"],
+                    recording_msid=fb["recording_msid"],
+                    score=fb["score"]
+                )
+            )
+
+        rec_feedback = [
+            {
+                "recording_mbid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
+                "rating": 'love',
+                'user_id': self.user['id']
+            },
+            {
+                "recording_mbid": "222eb00d-9ead-42de-aec9-8f8c1509413d",
+                "rating": 'bad_recommendation',
+                "user_id": self.user['id']
+            },
+            {
+                "recording_mbid": "922eb00d-9ead-42de-aec9-8f8c1509413d",
+                "rating": 'hate',
+                "user_id": self.user2['id']
+            }
+        ]
+        for fb in rec_feedback:
+            db_rec_feedback.insert(
+                RecommendationFeedbackSubmit(
+                    user_id=fb['user_id'],
+                    recording_mbid=fb["recording_mbid"],
+                    rating=fb["rating"]
+                )
+            )
+
+        # create a feedback dump
+        self.runner.invoke(dump_manager.create_feedback, ['--location', self.tempdir])
+        self.assertEqual(len(os.listdir(self.tempdir)), 1)
+        dump_name = os.listdir(self.tempdir)[0]
+        mock_notify.assert_called_with(dump_name, 'feedback')
+
+        # make sure that the dump contains a feedback dump
+        archive_count = 0
+        for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
+            if file_name.endswith('.tar.xz'):
+                archive_count += 1
+        self.assertEqual(archive_count, 1)

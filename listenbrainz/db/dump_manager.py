@@ -46,7 +46,7 @@ from listenbrainz.webserver.timescale_connection import init_timescale_connectio
 
 NUMBER_OF_FULL_DUMPS_TO_KEEP = 2
 NUMBER_OF_INCREMENTAL_DUMPS_TO_KEEP = 30
-NUMBER_OF_FEEDBACK_DUMPS_TO_KEEP = 6
+NUMBER_OF_FEEDBACK_DUMPS_TO_KEEP = 2
 
 cli = click.Group()
 
@@ -313,7 +313,7 @@ def get_dump_id(dump_name):
 
 
 def get_dump_ts(dump_name):
-    return dump_name.split('-')[0] + dump_name.split('-')[1]
+    return dump_name.split('-')[2] + dump_name.split('-')[3]
 
 
 def _cleanup_dumps(location):
@@ -342,6 +342,7 @@ def _cleanup_dumps(location):
         location) if incremental_dump_re.match(x)]
     incremental_dumps = [x for x in sorted(
         dump_files, key=get_dump_id, reverse=True)]
+    print(incremental_dumps)
     if not incremental_dumps:
         print('No incremental dumps present in specified directory!')
     else:
@@ -350,7 +351,7 @@ def _cleanup_dumps(location):
 
     # Clean up spark / feedback dumps
     spark_dump_re = re.compile(
-        'listenbrainz-dump-[0-9]*-[0-9]*-spark')
+        'listenbrainz-feedback-[0-9]*-[0-9]*-full')
     dump_files = [x for x in os.listdir(
         location) if spark_dump_re.match(x)]
     spark_dumps = [x for x in sorted(
