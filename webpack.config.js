@@ -56,6 +56,8 @@ module.exports = function (env) {
                 [
                   "@babel/preset-env",
                   {
+                    useBuiltIns: "usage",
+                    corejs: { version: "3.9", proposals: true },
                     targets: {
                       node: "10",
                       browsers: ["> 0.2% and not dead", "firefox >= 44"],
