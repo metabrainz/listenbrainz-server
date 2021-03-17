@@ -261,52 +261,54 @@ def process_one_user(user):
                                           or if we get errors while submitting the data to ListenBrainz
 
     """
-    if user.token_expired:
-        try:
+    try:
+        if user.token_expired:
             user = spotify.refresh_user_token(user)
-        except spotify.SpotifyAPIError as e:
-            # if it is an error from the Spotify API, show the error message to the user
-            spotify.update_last_updated(
-                user_id=user.user_id,
-                success=False,
-                error_message=str(e),
-            )
-            if not current_app.config['TESTING']:
-                notify_error(user.musicbrainz_row_id, str(e))
-            raise spotify.SpotifyListenBrainzError("Could not refresh user token from spotify")
-        except spotify.SpotifyInvalidGrantError:
-            if not current_app.config['TESTING']:
-                notify_error(user.musicbrainz_row_id, "User has revoked authorization through spotify")
-            # user has revoked authorization through spotify ui or deleted their spotify account etc.
-            # in any of these cases, we should delete user from our spotify db as well.
-            db_spotify.delete_spotify(user.user_id)
-            raise spotify.SpotifyListenBrainzError("User has revoked spotify authorization")
 
-    listenbrainz_user = db_user.get(user.user_id)
+        listenbrainz_user = db_user.get(user.user_id)
 
-    currently_playing = get_user_currently_playing(user)
-    if currently_playing is not None and 'item' in currently_playing:
-        current_app.logger.debug('Received a currently playing track for %s', str(user))
-        listens = parse_and_validate_spotify_plays([currently_playing['item']], LISTEN_TYPE_PLAYING_NOW)
-        submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTEN_TYPE_PLAYING_NOW)
+        currently_playing = get_user_currently_playing(user)
+        if currently_playing is not None and 'item' in currently_playing:
+            current_app.logger.debug('Received a currently playing track for %s', str(user))
+            listens = parse_and_validate_spotify_plays([currently_playing['item']], LISTEN_TYPE_PLAYING_NOW)
+            submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTEN_TYPE_PLAYING_NOW)
 
-    recently_played = get_user_recently_played(user)
-    if recently_played is not None and 'items' in recently_played:
-        listens = parse_and_validate_spotify_plays(recently_played['items'], LISTEN_TYPE_IMPORT)
-        current_app.logger.debug('Received %d tracks for %s', len(listens), str(user))
+        recently_played = get_user_recently_played(user)
+        if recently_played is not None and 'items' in recently_played:
+            listens = parse_and_validate_spotify_plays(recently_played['items'], LISTEN_TYPE_IMPORT)
+            current_app.logger.debug('Received %d tracks for %s', len(listens), str(user))
 
-    # if we don't have any new listens, return
-    if len(listens) == 0:
-        return
+        # if we don't have any new listens, return
+        if len(listens) == 0:
+            return
 
-    latest_listened_at = max(listen['listened_at'] for listen in listens)
-    submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTEN_TYPE_IMPORT)
+        latest_listened_at = max(listen['listened_at'] for listen in listens)
+        submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTEN_TYPE_IMPORT)
 
-    # we've succeeded so update the last_updated field for this user
-    spotify.update_latest_listened_at(user.user_id, latest_listened_at)
-    spotify.update_last_updated(user.user_id)
+        # we've succeeded so update the last_updated field for this user
+        spotify.update_latest_listened_at(user.user_id, latest_listened_at)
+        spotify.update_last_updated(user.user_id)
 
-    current_app.logger.info('imported %d listens for %s' % (len(listens), str(user)))
+        current_app.logger.info('imported %d listens for %s' % (len(listens), str(user)))
+
+    except spotify.SpotifyAPIError as e:
+        # if it is an error from the Spotify API, show the error message to the user
+        spotify.update_last_updated(
+            user_id=user.user_id,
+            success=False,
+            error_message=str(e),
+        )
+        if not current_app.config['TESTING']:
+            notify_error(user.musicbrainz_row_id, str(e))
+        raise spotify.SpotifyListenBrainzError("Could not refresh user token from spotify")
+
+    except spotify.SpotifyInvalidGrantError:
+        if not current_app.config['TESTING']:
+            notify_error(user.musicbrainz_row_id, "User has revoked authorization through spotify")
+        # user has revoked authorization through spotify ui or deleted their spotify account etc.
+        # in any of these cases, we should delete user from our spotify db as well.
+        db_spotify.delete_spotify(user.user_id)
+        raise spotify.SpotifyListenBrainzError("User has revoked spotify authorization")
 
 
 def process_all_spotify_users():
