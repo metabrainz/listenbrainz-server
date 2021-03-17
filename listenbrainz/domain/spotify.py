@@ -280,6 +280,8 @@ def get_user_dict(user_id):
 
 
 class SpotifyInvalidGrantError(Exception):
+    """ Raised if spotify API returns invalid_grant during authorization. This usually means that the user has revoked
+    authorization to the ListenBrainz application through Spotify UI."""
     pass
 
 
