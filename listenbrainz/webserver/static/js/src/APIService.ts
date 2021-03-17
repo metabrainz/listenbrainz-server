@@ -148,18 +148,42 @@ export default class APIService {
     return result.user_token;
   };
 
-  followUser = async (username: string): Promise<{ status: number }> => {
-    const response = await fetch(`${this.APIBaseURI}/user/${username}/follow`, {
+  followUser = async (
+    userName: string,
+    userToken: string
+  ): Promise<{ status: number }> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+    const response = await fetch(`${this.APIBaseURI}/user/${userName}/follow`, {
       method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
     });
     return { status: response.status };
   };
 
-  unfollowUser = async (username: string): Promise<{ status: number }> => {
+  unfollowUser = async (
+    userName: string,
+    userToken: string
+  ): Promise<{ status: number }> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
     const response = await fetch(
-      `${this.APIBaseURI}/user/${username}/unfollow`,
+      `${this.APIBaseURI}/user/${userName}/unfollow`,
       {
         method: "POST",
+        headers: {
+          Authorization: `Token ${userToken}`,
+        },
       }
     );
     return { status: response.status };
