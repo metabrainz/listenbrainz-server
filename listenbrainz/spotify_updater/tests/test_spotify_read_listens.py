@@ -108,13 +108,12 @@ class ConvertListensTestCase(DatabaseTestCase):
         mock_send_mail.assert_called_once()
         self.assertListEqual(mock_send_mail.call_args[1]['recipients'], ['example@listenbrainz.org'])
 
-
     @patch('listenbrainz.spotify_updater.spotify_read_listens.spotify.update_last_updated')
     @patch('listenbrainz.spotify_updater.spotify_read_listens.notify_error')
-    @patch('listenbrainz.spotify_updater.spotify_read_listens.process_one_user')
+    @patch('listenbrainz.spotify_updater.spotify_read_listens.make_api_request')
     @patch('listenbrainz.domain.spotify.get_active_users_to_process')
-    def test_notification_on_api_error(self, mock_get_active_users, mock_process_one_user, mock_notify_error, mock_update):
-        mock_process_one_user.side_effect = SpotifyAPIError('api borked')
+    def test_notification_on_api_error(self, mock_get_active_users, mock_make_api_request, mock_notify_error, mock_update):
+        mock_make_api_request.side_effect = SpotifyAPIError('api borked')
         mock_get_active_users.return_value = [self.spotify_user]
         app = listenbrainz.webserver.create_app()
         app.config['TESTING'] = False
