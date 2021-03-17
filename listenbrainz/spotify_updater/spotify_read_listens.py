@@ -12,6 +12,7 @@ from flask import current_app, render_template
 from listenbrainz.domain import spotify
 from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen, LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
 from listenbrainz.db import user as db_user
+from listenbrainz.db import spotify as db_spotify
 from listenbrainz.db.exceptions import DatabaseException
 from spotipy import SpotifyException
 from werkzeug.exceptions import BadRequest, InternalServerError, ServiceUnavailable
@@ -169,11 +170,7 @@ def make_api_request(user, spotipy_call, **kwargs):
                 # give up and report to the user.
                 # We only try to refresh the token once, if we still get 401 after that, we give up.
                 if not tried_to_refresh_token:
-                    try:
-                        user = spotify.refresh_user_token(user)
-                    except (SpotifyException, spotify.SpotifyInvalidGrantError) as err:
-                        raise spotify.SpotifyAPIError('Could not authenticate with Spotify, please unlink and link your account again.')
-
+                    user = spotify.refresh_user_token(user)
                     tried_to_refresh_token = True
 
                 else:
@@ -267,12 +264,23 @@ def process_one_user(user):
     if user.token_expired:
         try:
             user = spotify.refresh_user_token(user)
-        except spotify.SpotifyAPIError:
-            current_app.logger.error('Could not refresh user token from spotify', exc_info=True)
-            raise
+        except spotify.SpotifyAPIError as e:
+            # if it is an error from the Spotify API, show the error message to the user
+            spotify.update_last_updated(
+                user_id=user.user_id,
+                success=False,
+                error_message=str(e),
+            )
+            if not current_app.config['TESTING']:
+                notify_error(user.musicbrainz_row_id, str(e))
+            raise spotify.SpotifyListenBrainzError("Could not refresh user token from spotify")
         except spotify.SpotifyInvalidGrantError:
-            current_app.logger.error("%s has revoked spotify authorization", str(user), exc_info=True)
-            raise
+            if not current_app.config['TESTING']:
+                notify_error(user.musicbrainz_row_id, "User has revoked authorization through spotify")
+            # user has revoked authorization through spotify ui or deleted their spotify account etc.
+            # in any of these cases, we should delete user from our spotify db as well.
+            db_spotify.delete_spotify(user.user_id)
+            raise spotify.SpotifyListenBrainzError("User has revoked spotify authorization")
 
     listenbrainz_user = db_user.get(user.user_id)
 
@@ -281,7 +289,6 @@ def process_one_user(user):
         current_app.logger.debug('Received a currently playing track for %s', str(user))
         listens = parse_and_validate_spotify_plays([currently_playing['item']], LISTEN_TYPE_PLAYING_NOW)
         submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTEN_TYPE_PLAYING_NOW)
-
 
     recently_played = get_user_recently_played(user)
     if recently_played is not None and 'items' in recently_played:
@@ -323,20 +330,9 @@ def process_all_spotify_users():
     success = 0
     failure = 0
     for u in users:
-        t = time.time()
         try:
             process_one_user(u)
             success += 1
-        except spotify.SpotifyAPIError as e:
-            # if it is an error from the Spotify API, show the error message to the user
-            spotify.update_last_updated(
-                user_id=u.user_id,
-                success=False,
-                error_message=str(e),
-            )
-            if not current_app.config['TESTING']:
-                notify_error(u.musicbrainz_row_id, str(e))
-            failure += 1
         except spotify.SpotifyListenBrainzError as e:
             current_app.logger.critical('spotify_reader could not import listens: %s', str(e), exc_info=True)
             failure += 1
