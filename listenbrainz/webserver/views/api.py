@@ -1,19 +1,15 @@
-import datetime
 from operator import itemgetter
-import time
 from typing import Tuple
 
 import ujson
 import psycopg2
 from flask import Blueprint, request, jsonify, current_app
-from werkzeug.exceptions import NotFound
 
 from listenbrainz.listenstore import TimescaleListenStore
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, APIServiceUnavailable
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz import webserver
-from listenbrainz.db.model.playlist import Playlist
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
@@ -595,6 +591,24 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
 @crossdomain(headers="Content-Type")
 @ratelimit()
 def get_followers(user_name: str):
+    """
+    Fetch the list of followers of the user ``user_name``. Returns a JSON with an array of dicts like these:
+    {
+        "followers": [
+            {
+                "musicbrainz_id": "rob"
+            },
+            {
+                "musicbrainz_id": "mr_monkey"
+            }
+            ...
+        ],
+        "user": "shivam-kapila"
+    }
+
+    :statuscode 200: Yay, you have data!
+    :statuscode 404: User not found
+    """
     user = db_user.get_by_mb_id(user_name)
 
     if user is None:
@@ -613,6 +627,24 @@ def get_followers(user_name: str):
 @crossdomain(headers="Content-Type")
 @ratelimit()
 def get_following(user_name: str):
+    """
+    Fetch the list of users followed by the user ``user_name``. Returns a JSON with an array of dicts like these:
+    {
+        "following": [
+            {
+                "musicbrainz_id": "rob"
+            },
+            {
+                "musicbrainz_id": "mr_monkey"
+            }
+            ...
+        ],
+        "user": "shivam-kapila"
+    }
+
+    :statuscode 200: Yay, you have data!
+    :statuscode 404: User not found
+    """
     user = db_user.get_by_mb_id(user_name)
 
     if user is None:
@@ -631,6 +663,19 @@ def get_following(user_name: str):
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def follow_user(user_name: str):
+    """
+    Follow the user ``user_name``. A user token (found on  https://listenbrainz.org/profile/ ) must
+    be provided in the Authorization header!
+
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
+    :statuscode 200: Successfully followed the user ``user_name``.
+    :statuscode 400:
+                    - Already following the user ``user_name``.
+                    - Trying to follow yourself.
+    :statuscode 401: invalid authorization. See error message for details.
+    :resheader Content-Type: *application/json*
+    """
     current_user = validate_auth_header()
     user = db_user.get_by_mb_id(user_name)
 
@@ -656,6 +701,17 @@ def follow_user(user_name: str):
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def unfollow_user(user_name: str):
+    """
+    Unfollow the user ``user_name``. A user token (found on  https://listenbrainz.org/profile/ ) must
+    be provided in the Authorization header!
+
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
+    :statuscode 200: Successfully unfollowed the user ``user_name``.
+    :statuscode 400: Not following the user ``user_name``.
+    :statuscode 401: invalid authorization. See error message for details.
+    :resheader Content-Type: *application/json*
+    """
     current_user = validate_auth_header()
     user = db_user.get_by_mb_id(user_name)
 
