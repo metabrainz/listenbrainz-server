@@ -47,7 +47,8 @@ module.exports = function (env) {
       rules: [
         {
           test: /\.(js|ts)x?$/,
-          exclude: /node_modules/,
+          // some nivo/D3 dependencies need to be transpiled, we include them with the following regex
+          exclude: /node_modules\/(?!(d3-array|d3-scale|internmap)\/).*/,
           use: {
             loader: "babel-loader",
             options: {
