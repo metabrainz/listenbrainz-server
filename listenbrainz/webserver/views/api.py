@@ -6,6 +6,7 @@ from typing import Tuple
 import ujson
 import psycopg2
 from flask import Blueprint, request, jsonify, current_app
+from werkzeug.exceptions import NotFound
 
 from listenbrainz.listenstore import TimescaleListenStore
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, APIServiceUnavailable
@@ -595,6 +596,10 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
 @ratelimit()
 def get_followers(user_name: str):
     user = db_user.get_by_mb_id(user_name)
+
+    if user is None:
+        raise APINotFound("Cannot find user: %s" % user_name)
+
     try:
         followers = db_user_relationship.get_followers_of_user(user["id"])
     except Exception:
@@ -609,6 +614,10 @@ def get_followers(user_name: str):
 @ratelimit()
 def get_following(user_name: str):
     user = db_user.get_by_mb_id(user_name)
+
+    if user is None:
+        raise APINotFound("Cannot find user: %s" % user_name)
+
     try:
         following = db_user_relationship.get_following_for_user(user["id"])
     except Exception:
@@ -616,6 +625,52 @@ def get_following(user_name: str):
         raise APIInternalServerError("Something went wrong, please try again later")
 
     return jsonify({"following": following, "user": user["musicbrainz_id"]})
+
+
+@api_bp.route("/user/<user_name>/follow", methods=["POST", "OPTIONS"])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
+def follow_user(user_name: str):
+    current_user = validate_auth_header()
+    user = db_user.get_by_mb_id(user_name)
+
+    if user is None:
+        raise APINotFound("Cannot find user: %s" % user_name)
+
+    if user["musicbrainz_id"] == current_user["musicbrainz_id"]:
+        raise APIBadRequest("Whoops, cannot follow yourself.")
+
+    if db_user_relationship.is_following_user(current_user["id"], user["id"]):
+        raise APIBadRequest(f"{current_user['musicbrainz_id']} is already following user {user['musicbrainz_id']}")
+
+    try:
+        db_user_relationship.insert(current_user["id"], user["id"], "follow")
+    except Exception:
+        current_app.logger.critical("Error while trying to insert a relationship", exc_info=True)
+        raise APIInternalServerError("Something went wrong, please try again later")
+
+    return jsonify({"status": 200, "message": "Success!"})
+
+
+@api_bp.route("/user/<user_name>/unfollow", methods=["POST", "OPTIONS"])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
+def unfollow_user(user_name: str):
+    current_user = validate_auth_header()
+    user = db_user.get_by_mb_id(user_name)
+
+    if user is None:
+        raise APINotFound("Cannot find user: %s" % user_name)
+
+    if not db_user_relationship.is_following_user(current_user["id"], user["id"]):
+        raise APIBadRequest(f"{current_user['musicbrainz_id']} is not following user {user['musicbrainz_id']}")
+    try:
+        db_user_relationship.delete(current_user["id"], user["id"], "follow")
+    except Exception:
+        current_app.logger.critical("Error while trying to delete a relationship", exc_info=True)
+        raise APIInternalServerError("Something went wrong, please try again later")
+
+    return jsonify({"status": 200, "message": "Success!"})
 
 
 def _parse_int_arg(name, default=None):
