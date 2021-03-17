@@ -187,7 +187,7 @@ def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
 
 
 def dump_feedback_for_spark(location, dump_time=datetime.today(), threads=None):
-    """ Dump user/recommendation feedback from postgres into spark format. 
+    """ Dump user/recommendation feedback from postgres into spark format.
 
         Arguments:
             location: Directory where the final dump will be stored
@@ -350,7 +350,7 @@ def create_public_dump(location, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
 
 
 def create_feedback_dump(location, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
-    """ Create a spark format dump of user listen and user recommendation feedback. 
+    """ Create a spark format dump of user listen and user recommendation feedback.
     """
     return _create_dump(
         location=location,
@@ -362,7 +362,7 @@ def create_feedback_dump(location, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT)
 
 
 def dump_user_feedback(connection, location):
-    """ Carry out the actual dumping of user listen and user recommendation feedback. 
+    """ Carry out the actual dumping of user listen and user recommendation feedback.
     """
 
     with connection.begin() as transaction:
