@@ -20,6 +20,9 @@ listenbrainz-listens*
 # ListenBrainz application data
 docker/data
 
+# Spark source code
+listenbrainz_spark.zip
+
 # Virtualenv
 # http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
 .Python
