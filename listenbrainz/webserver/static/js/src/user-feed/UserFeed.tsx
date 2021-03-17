@@ -510,7 +510,7 @@ export default class UserFeedPage extends React.Component<
                 user={currentUser}
                 loggedInUser={currentUser}
               />
-              <div className="sticky-top">
+              <div className="sticky-top mt-15">
                 <BrainzPlayer
                   apiService={this.APIService}
                   currentListen={currentListen}
