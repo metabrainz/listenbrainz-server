@@ -92,10 +92,10 @@ def refresh_user_token(spotify_user: Spotify):
 
     Returns:
         user (domain.spotify.Spotify): the same user with updated tokens
-        None: if the user has revoked authorization to spotify
 
     Raises:
         SpotifyAPIError: if unable to refresh spotify user token
+        SpotifyInvalidGrantError: if the user has revoked authorization to spotify
 
     Note: spotipy eats up the json body in case of error but we need it for checking
     whether the user has revoked our authorization. hence, we use our own
@@ -114,10 +114,9 @@ def refresh_user_token(spotify_user: Spotify):
                 # user has revoked authorization through spotify ui or deleted their spotify account etc.
                 # in any of these cases, we should delete user from our spotify db as well.
                 db_spotify.delete_spotify(spotify_user.user_id)
-                return None
+                raise SpotifyInvalidGrantError(error_body)
 
-            response = None  # some other error during request
-
+        response = None  # some other error occurred
         retries -= 1
 
     if response is None:
@@ -281,6 +280,10 @@ def get_user_dict(user_id):
         'access_token': user.user_token,
         'permission': user.permission,
     }
+
+
+class SpotifyInvalidGrantError(Exception):
+    pass
 
 
 class SpotifyImporterException(Exception):

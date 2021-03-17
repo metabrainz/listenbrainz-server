@@ -1,11 +1,13 @@
 import os
 import json
+import time
+
 import listenbrainz.webserver
 from datetime import datetime
 import pytz
 
 import listenbrainz.db.user as db_user
-from listenbrainz.domain.spotify import Spotify, SpotifyAPIError, SpotifyListenBrainzError
+from listenbrainz.domain.spotify import Spotify, SpotifyAPIError, SpotifyInvalidGrantError
 from listenbrainz.spotify_updater import spotify_read_listens
 from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_IMPORT
 from unittest.mock import patch, MagicMock
@@ -142,3 +144,22 @@ class ConvertListensTestCase(DatabaseTestCase):
             spotify_read_listens.process_all_spotify_users()
             self.spotify_user.get_spotipy_client().current_user_playing_track.assert_called_once()
             self.spotify_user.get_spotipy_client().current_user_recently_played.assert_called_once_with(limit=50, after=0)
+
+    @patch('listenbrainz.domain.spotify.refresh_user_token')
+    def process_one_user(self, mock_refresh_user_token):
+        mock_refresh_user_token.side_effect = SpotifyInvalidGrantError
+        expired_token_spotify_user = Spotify(
+            user_id=1,
+            musicbrainz_id='spotify_user',
+            musicbrainz_row_id=312,
+            user_token='old-token',
+            token_expires=int(time.time()),
+            refresh_token='old-refresh-token',
+            last_updated=None,
+            record_listens=True,
+            error_message=None,
+            latest_listened_at=None,
+            permission='user-read-recently-played',
+        )
+        with self.assertRaises(SpotifyInvalidGrantError):
+            spotify_read_listens.process_one_user(expired_token_spotify_user)
