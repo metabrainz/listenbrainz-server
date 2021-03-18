@@ -28,12 +28,13 @@ Core API Endpoints
   Get the timestamp of the newest listen submitted by a user in previous imports to ListenBrainz.
 
   In order to get the timestamp for a user, make a GET request to this endpoint. The data returned will
-  be JSON of the following format::
+  be JSON of the following format:
+
+  .. code-block:: json
 
       {
-          'musicbrainz_id': the MusicBrainz ID of the user,
-          'latest_import': the timestamp of the newest listen submitted in previous imports.
-                           Defaults to 0
+          "musicbrainz_id": "the MusicBrainz ID of the user",
+          "latest_import": "the timestamp of the newest listen submitted in previous imports. Defaults to 0"
       }
 
   :param user_name: the MusicBrainz ID of the user whose data is needed
@@ -46,11 +47,13 @@ Core API Endpoints
 
   In order to update the timestamp of a user, you'll have to provide a user token in the Authorization Header. User tokens can be found on https://listenbrainz.org/profile/.
 
-  The JSON that needs to be posted must contain a field named `ts` in the root with a valid unix timestamp. Example::
+  The JSON that needs to be posted must contain a field named `ts` in the root with a valid unix timestamp. Example:
 
-    {
-      'ts': 0
-    }
+  .. code-block:: json
+
+     {
+        "ts": 0
+     }
 
   :reqheader Authorization: Token <user token>
   :statuscode 200: latest import timestamp updated
