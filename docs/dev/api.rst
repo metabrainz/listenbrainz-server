@@ -77,6 +77,17 @@ allow to fetch the raw collaborative filtered recording IDs.
    :include-empty-docstring:
    :undoc-static:
 
+Recording Recommendation Feedback API Endpoints
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ListenBrainz uses collaborative filtering to generate recording recommendations,
+which may be further processed to generate playlists for users. These api endpoints
+allow to submit and retrieve feedback for raw collaborative filtered recordings.
+
+.. autoflask:: listenbrainz.webserver:create_app_rtfd()
+   :blueprints: recommendation_feedback_api_v1
+   :include-empty-docstring:
+   :undoc-static:
+
 Statistics API Endpoints
 ^^^^^^^^^^^^^^^^^^^^^^^^
 ListenBrainz has a statistics infrastructure that collects and computes statistics
