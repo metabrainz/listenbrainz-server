@@ -284,3 +284,5 @@ FAQ
 --------------
 We have a :doc:`FAQ page <faqs>` for questions that come up often. Please take a look
 if you have any issues.
+
+.. include:: develop-sh.rst
