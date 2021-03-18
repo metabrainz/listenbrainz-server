@@ -107,6 +107,15 @@ Status API Endpoints
    :include-empty-docstring:
    :undoc-static:
 
+User Timeline API Endpoints
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+These api endpoints allow to create and fetch timeline events for a user.
+
+.. autoflask:: listenbrainz.webserver:create_app_rtfd()
+   :blueprints: user_timeline_event_api_bp
+   :include-empty-docstring:
+   :undoc-static:
+
 Rate limiting
 ^^^^^^^^^^^^^
 
