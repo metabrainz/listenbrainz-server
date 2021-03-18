@@ -1,14 +1,10 @@
-.kitchen
-.vagrant
 .DS_Store
 *.pyc
 *.swp
 config.py
-custom_config.py
 *.log
 .cache
 env
-bigquery-credentials.json
 *.bak
 
 # tmp folder
