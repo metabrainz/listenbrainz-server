@@ -105,16 +105,16 @@ def create_user_recording_recommendation_event(user_name):
 def create_user_notification_event(user_name):
     """ Post a message with a link on a user's timeline. Only approved users are allowed to perform this action.
 
-    The request should contain the following data:
+    The request should contain the following data::
 
         {
             "metadata": {
-                "message": <the message ot post, required>,
+                "message": <the message to post, required>,
                 "link": <the link to include with the message, required>
             }
         }
 
-    :param user_name: The MusicBrainz ID of the user who is recommending the recording.
+    :param user_name: The MusicBrainz ID of the user on whose timeline the message is to be posted.
     :type user_name: ``str``
     :statuscode 200: Successful query, message has been posted!
     :statuscode 400: Bad request, check ``response['error']`` for more details.
@@ -125,7 +125,7 @@ def create_user_notification_event(user_name):
     """
     creator = validate_auth_header()
     if creator["musicbrainz_id"] not in current_app.config['APPROVED_PLAYLIST_BOTS']:
-        raise APIUnauthorized("Only approved users are allowed to submit playlists made for someone else.")
+        raise APIUnauthorized("Only approved users are allowed to post a message on a user's timeline.")
 
     user = db_user.get_by_mb_id(user_name)
     if user is None:
@@ -137,7 +137,7 @@ def create_user_notification_event(user_name):
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
     try:
-        metadata = NotificationMetadata(creator_id=creator['id'], message=data['message'], link=data['link'])
+        metadata = NotificationMetadata(creator_id=creator['id'], **data)
     except pydantic.ValidationError as e:
         raise APIBadRequest(f"Invalid metadata: {str(e)}")
 
