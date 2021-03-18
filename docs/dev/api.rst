@@ -66,6 +66,15 @@ The playlists API allows for the creation and editing of lists of recordings
    :include-empty-docstring:
    :undoc-static:
 
+Feedback API Endpoints
+^^^^^^^^^^^^^^^^^^^^^^
+These API endpoints allow to submit and retrieve feedback for a user's recordings
+
+.. autoflask:: listenbrainz.webserver:create_app_rtfd()
+   :blueprints: feedback_api_v1
+   :include-empty-docstring:
+   :undoc-static:
+
 Recording Recommendation API Endpoints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ListenBrainz uses collaborative filtering to generate recording recommendations,
