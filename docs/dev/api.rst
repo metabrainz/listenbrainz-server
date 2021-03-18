@@ -88,6 +88,16 @@ allow to submit and retrieve feedback for raw collaborative filtered recordings.
    :include-empty-docstring:
    :undoc-static:
 
+Missing MusicBrainz Data API Endpoints
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+These api endpoints allow to retrieve data which the user has submitted to
+ListenBrainz but is missing from MusicBrainz.
+
+.. autoflask:: listenbrainz.webserver:create_app_rtfd()
+   :blueprints: missing_musicbrainz_data_v1
+   :include-empty-docstring:
+   :undoc-static:
+
 Statistics API Endpoints
 ^^^^^^^^^^^^^^^^^^^^^^^^
 ListenBrainz has a statistics infrastructure that collects and computes statistics
