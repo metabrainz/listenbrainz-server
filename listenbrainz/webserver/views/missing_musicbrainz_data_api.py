@@ -43,7 +43,7 @@ def get_missing_musicbrainz_data(user_name):
 
         .. code-block:: json
 
-           {
+            {
                 "payload":
                 {
                     "last_updated": 1588494361,
@@ -72,7 +72,7 @@ def get_missing_musicbrainz_data(user_name):
                     "total_data_count": 25,
                     "user_name": "Vansika"
                 }
-           }
+            }
 
         :param count: Optional, number of records to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
             Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`

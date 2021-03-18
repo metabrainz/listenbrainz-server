@@ -37,10 +37,10 @@ def submit_recommendation_feedback():
 
     .. code-block:: json
 
-       {
+        {
             "recording_mbid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
             "rating": "love"
-       }
+        }
 
     :reqheader Authorization: Token <user token>
     :statuscode 200: feedback accepted.
@@ -85,9 +85,9 @@ def delete_recommendation_feedback():
 
     .. code-block:: json
 
-       {
+        {
             "recording_mbid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
-       }
+        }
 
     :reqheader Authorization: Token <user token>
     :statuscode 200: feedback deleted.
@@ -130,7 +130,7 @@ def get_feedback_for_user(user_name):
 
     .. code-block:: json
 
-       {
+        {
             "count": 1,
             "feedback": [
                 {
@@ -143,7 +143,7 @@ def get_feedback_for_user(user_name):
             "offset": 0,
             "total_count": 1,
             "user_name": "Vansika"
-       }
+        }
 
     If the optional argument ``rating`` is not given, this endpoint will return all the feedback submitted by the user.
     Otherwise filters the feedback to be returned by rating.
@@ -202,7 +202,7 @@ def get_feedback_for_recordings_for_user(user_name):
 
     .. code-block:: json
 
-       {
+        {
             "feedback": [
                 {
                     "created": 1604033691,
@@ -216,7 +216,7 @@ def get_feedback_for_recordings_for_user(user_name):
                 }
             ],
             "user_name": "Vansika Pareek"
-       }
+        }
 
     An empty response will be returned if the feedback for given recording MBID doesn't exist.
 

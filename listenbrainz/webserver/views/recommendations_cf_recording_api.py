@@ -30,7 +30,7 @@ def get_recommendations(user_name):
 
         .. code-block:: json
 
-           {
+            {
                 "payload": {
                     "last_updated": 1588494361,
                     "type": "<artist_type>",
@@ -50,7 +50,7 @@ def get_recommendations(user_name):
                     "total_mbid_count": 30,
                     "offset": 10
                 }
-           }
+            }
 
 
         .. note::

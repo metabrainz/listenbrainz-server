@@ -55,7 +55,7 @@ def create_user_recording_recommendation_event(user_name):
 
     .. code-block:: json
 
-       {
+        {
             "metadata": {
                 "artist_name": "<The name of the artist, required>",
                 "track_name": "<The name of the track, required>",
@@ -64,7 +64,7 @@ def create_user_recording_recommendation_event(user_name):
                 "release_name": "<The name of the release, optional>",
                 "recording_mbid": "<The MusicBrainz ID of the recording, optional>"
             }
-       }
+        }
 
 
     :param user_name: The MusicBrainz ID of the user who is recommending the recording.
