@@ -33,12 +33,14 @@ def submit_recommendation_feedback():
     Submit recommendation feedback. A user token (found on  https://listenbrainz.org/profile/ )
     must be provided in the Authorization header! Each request should contain only one feedback in the payload.
 
-    A sample feedback may look like::
+    A sample feedback may look like:
 
-        {
+    .. code-block:: json
+
+       {
             "recording_mbid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
             "rating": "love"
-        }
+       }
 
     :reqheader Authorization: Token <user token>
     :statuscode 200: feedback accepted.
