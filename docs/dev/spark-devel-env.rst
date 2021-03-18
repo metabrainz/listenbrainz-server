@@ -43,7 +43,7 @@ container.
 
     ./develop.sh spark format
 
-.. seealso::
+.. note::
 
     You can run ``./develop.sh spark format`` any time that you want to delete all of the
     data that is loaded in spark. This will shut down the spark docker cluster, remove
