@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { get, findIndex, omit, isNil, has, defaultsDeep } from "lodash";
+import { get, findIndex, omit, isNil, has } from "lodash";
 import * as io from "socket.io-client";
 
 import { ActionMeta, InputActionMeta, ValueType } from "react-select";
