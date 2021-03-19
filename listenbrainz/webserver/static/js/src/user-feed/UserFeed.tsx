@@ -14,13 +14,17 @@ import {
   faUserSecret,
   faUserSlash,
 } from "@fortawesome/free-solid-svg-icons";
-
-import { AlertList } from "react-bs-notifier";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { isEqual } from "lodash";
+import {
+  WithAlertNotificationsInjectedProps,
+  withAlertNotifications,
+} from "../AlertNotificationsHOC";
+
 import APIService from "../APIService";
 import BrainzPlayer from "../BrainzPlayer";
+import ErrorBoundary from "../ErrorBoundary";
 import FollowerFollowingModal from "../follow/FollowerFollowingModal";
 import Loader from "../components/Loader";
 import TimelineEventCard from "./TimelineEventCard";
@@ -41,7 +45,8 @@ type UserFeedPageProps = {
   currentUser: ListenBrainzUser;
   events: TimelineEvent[];
   spotify: SpotifyUser;
-};
+} & WithAlertNotificationsInjectedProps;
+
 type UserFeedPageState = {
   currentListen?: Listen;
   alerts: Alert[];
@@ -173,7 +178,7 @@ export default class UserFeedPage extends React.Component<
     maxTs?: number,
     successCallback?: () => void
   ) => {
-    const { currentUser } = this.props;
+    const { currentUser, newAlert } = this.props;
     const { earliestEventTs } = this.state;
     this.setState({ loading: true });
     let newEvents: TimelineEvent[] = [];
@@ -185,7 +190,7 @@ export default class UserFeedPage extends React.Component<
         maxTs
       );
     } catch (error) {
-      this.newAlert(
+      newAlert(
         "warning",
         "Could not load timeline events",
         <>
@@ -239,60 +244,6 @@ export default class UserFeedPage extends React.Component<
     }
   };
 
-  newAlert = (
-    type: AlertType,
-    title: string,
-    message: string | JSX.Element,
-    count?: number
-  ): void => {
-    const newAlert: Alert = {
-      id: new Date().getTime(),
-      type,
-      headline: title,
-      message,
-      count,
-    };
-
-    this.setState((prevState) => {
-      const alertsList = prevState.alerts;
-      for (let i = 0; i < alertsList.length; i += 1) {
-        const item = alertsList[i];
-        if (
-          item.type === newAlert.type &&
-          item.headline.startsWith(newAlert.headline) &&
-          item.message === newAlert.message
-        ) {
-          if (!alertsList[i].count) {
-            // If the count attribute is undefined, then Initializing it as 2
-            alertsList[i].count = 2;
-          } else {
-            alertsList[i].count! += 1;
-          }
-          alertsList[i].headline = `${newAlert.headline} (${alertsList[i]
-            .count!})`;
-          return { alerts: alertsList };
-        }
-      }
-      return {
-        alerts: [...prevState.alerts, newAlert],
-      };
-    });
-  };
-
-  onAlertDismissed = (alert: Alert): void => {
-    const { alerts } = this.state;
-
-    // find the index of the alert that was dismissed
-    const idx = alerts.indexOf(alert);
-
-    if (idx >= 0) {
-      this.setState({
-        // remove the alert from the array
-        alerts: [...alerts.slice(0, idx), ...alerts.slice(idx + 1)],
-      });
-    }
-  };
-
   handleCurrentListenChange = (listen: Listen | JSPFTrack): void => {
     this.setState({ currentListen: listen as Listen });
   };
@@ -311,6 +262,7 @@ export default class UserFeedPage extends React.Component<
   renderEventContent(event: TimelineEvent) {
     if (UserFeedPage.isEventListenable(event)) {
       const { metadata } = event;
+      const { newAlert } = this.props;
       return (
         <div className="event-content">
           <TimelineEventCard
@@ -318,7 +270,7 @@ export default class UserFeedPage extends React.Component<
               this.isCurrentListen(metadata as Listen) ? " current-listen" : ""
             }
             listen={metadata as Listen}
-            newAlert={this.newAlert}
+            newAlert={newAlert}
             playListen={this.playListen}
           />
         </div>
@@ -386,7 +338,7 @@ export default class UserFeedPage extends React.Component<
   }
 
   render() {
-    const { currentUser, spotify } = this.props;
+    const { currentUser, spotify, newAlert } = this.props;
     const {
       alerts,
       currentListen,
@@ -431,13 +383,6 @@ export default class UserFeedPage extends React.Component<
           </a>
         </div>
         <div role="main">
-          <AlertList
-            position="bottom-right"
-            alerts={alerts}
-            timeout={15000}
-            dismissTitle="Dismiss"
-            onDismiss={this.onAlertDismissed}
-          />
           {/* display:flex to allow right-column to take all available height, for sticky player */}
           <div className="row" style={{ display: "flex", flexWrap: "wrap" }}>
             <div className="col-md-7">
@@ -539,7 +484,7 @@ export default class UserFeedPage extends React.Component<
                   currentListen={currentListen}
                   direction="down"
                   listens={listens}
-                  newAlert={this.newAlert}
+                  newAlert={newAlert}
                   onCurrentListenChange={this.handleCurrentListenChange}
                   ref={this.brainzPlayer}
                   spotifyUser={spotify}
@@ -558,13 +503,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const propsElement = document.getElementById("react-props");
   const reactProps = JSON.parse(propsElement!.innerHTML);
   const { api_url, current_user, spotify, events } = reactProps;
+
+  const UserFeedPageWithAlertNotifications = withAlertNotifications(
+    UserFeedPage
+  );
+
   ReactDOM.render(
-    <UserFeedPage
-      currentUser={current_user}
-      events={events}
-      apiUrl={api_url}
-      spotify={spotify}
-    />,
+    <ErrorBoundary>
+      <UserFeedPageWithAlertNotifications
+        currentUser={current_user}
+        events={events}
+        apiUrl={api_url}
+        spotify={spotify}
+      />
+    </ErrorBoundary>,
     domContainer
   );
 });

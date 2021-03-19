@@ -32,6 +32,7 @@ const props = {
   ...timelineProps,
   events: timelineProps.events as TimelineEvent[],
   spotify: timelineProps.spotify as SpotifyUser,
+  newAlert: () => {},
 };
 
 describe("<UserFeed />", () => {
