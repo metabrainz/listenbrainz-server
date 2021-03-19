@@ -725,27 +725,26 @@ document.addEventListener("DOMContentLoaded", () => {
     current_user,
   } = reactProps;
 
-  const componentProps = {
-    apiUrl: api_url,
-    latestListenTs: latest_listen_ts,
-    latestSpotifyUri: latest_spotify_uri,
-    listens,
-    mode,
-    oldestListenTs: oldest_listen_ts,
-    profileUrl: profile_url,
-    saveUrl: save_url,
-    spotify,
-    user,
-    webSocketsServerUrl: web_sockets_server_url,
-    currentUser: current_user,
-  };
   const RecentListensWithAlertNotifications = withAlertNotifications(
     RecentListens
   );
 
   ReactDOM.render(
     <ErrorBoundary>
-      <RecentListensWithAlertNotifications {...componentProps} />
+      <RecentListensWithAlertNotifications
+        apiUrl={api_url}
+        latestListenTs={latest_listen_ts}
+        latestSpotifyUri={latest_spotify_uri}
+        listens={listens}
+        mode={mode}
+        oldestListenTs={oldest_listen_ts}
+        profileUrl={profile_url}
+        saveUrl={save_url}
+        spotify={spotify}
+        user={user}
+        webSocketsServerUrl={web_sockets_server_url}
+        currentUser={current_user}
+      />
     </ErrorBoundary>,
     domContainer
   );
