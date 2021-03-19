@@ -1,27 +1,39 @@
 import * as React from "react";
 import { AlertList } from "react-bs-notifier";
-import RecentListens from "./RecentListens";
+
+export interface AlertNotificationsI {
+  newAlert: (
+    type: AlertType,
+    title: string,
+    message: string | JSX.Element
+  ) => void;
+  onAlertDismissed: (alert: Alert) => void;
+}
 
 export interface AlertNotificationsProps {
   initialAlerts?: Array<Alert>;
-  [name: string]: any;
 }
 
 export interface AlertNotificationsState {
   alerts: Array<Alert>;
 }
-function getDisplayName(WrappedComponent: React.ComponentType) {
-  return WrappedComponent.displayName || WrappedComponent.name || "Component";
-}
 
-export function withAlertNotifications(
-  WrappedComponent: React.ElementType
-): React.ComponentType<AlertNotificationsProps> {
-  class AlertNotifications extends React.Component<
-    AlertNotificationsProps,
-    AlertNotificationsState
-  > {
-    constructor(props: AlertNotificationsProps) {
+export type WithAlertNotificationsInjectedProps = {
+  newAlert: (
+    type: AlertType,
+    title: string,
+    message: string | JSX.Element
+  ) => void;
+};
+
+export function withAlertNotifications<P extends object>(
+  WrappedComponent: React.ComponentType<P & WithAlertNotificationsInjectedProps>
+) {
+  type CombinedProps = P & AlertNotificationsProps;
+  class AlertNotifications
+    extends React.Component<CombinedProps, AlertNotificationsState>
+    implements AlertNotificationsI {
+    constructor(props: CombinedProps) {
       super(props);
       this.state = {
         alerts: props.initialAlerts ?? [],
@@ -68,7 +80,7 @@ export function withAlertNotifications(
       });
     };
 
-    private onAlertDismissed = (alert: Alert): void => {
+    onAlertDismissed = (alert: Alert): void => {
       const { alerts } = this.state;
 
       // find the index of the alert that was dismissed
@@ -95,14 +107,17 @@ export function withAlertNotifications(
             dismissTitle="Dismiss"
             onDismiss={this.onAlertDismissed}
           />
-          <WrappedComponent {...passthroughProps} newAlert={this.newAlert} />
+          <WrappedComponent
+            {...(passthroughProps as P)}
+            newAlert={this.newAlert}
+          />
         </>
       );
     }
   }
 
-  (AlertNotifications as React.ComponentType).displayName = `WithAlertNotifications(${getDisplayName(
-    WrappedComponent as React.ComponentType
-  )})`;
+  (AlertNotifications as any).displayName = `WithAlertNotifications(${
+    WrappedComponent.displayName || WrappedComponent.name || "Component"
+  })`;
   return AlertNotifications;
 }

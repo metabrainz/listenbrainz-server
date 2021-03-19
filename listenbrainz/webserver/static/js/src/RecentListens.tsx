@@ -8,10 +8,13 @@ import BrainzPlayer from "./BrainzPlayer";
 import ErrorBoundary from "./ErrorBoundary";
 import Loader from "./components/Loader";
 import ListenCard from "./listens/ListenCard";
-import { withAlertNotifications } from "./AlertNotificationsHOC";
+import {
+  withAlertNotifications,
+  WithAlertNotificationsInjectedProps,
+} from "./AlertNotificationsHOC";
 import { formatWSMessageToListen } from "./utils";
 
-export interface RecentListensProps {
+export type RecentListensProps = {
   apiUrl: string;
   latestListenTs: number;
   latestSpotifyUri?: string;
@@ -24,12 +27,7 @@ export interface RecentListensProps {
   user: ListenBrainzUser;
   webSocketsServerUrl: string;
   currentUser?: ListenBrainzUser;
-  newAlert: (
-    type: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
-}
+} & WithAlertNotificationsInjectedProps;
 
 export interface RecentListensState {
   alerts: Array<Alert>;
