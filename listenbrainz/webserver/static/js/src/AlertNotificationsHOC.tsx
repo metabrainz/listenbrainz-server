@@ -14,7 +14,9 @@ function getDisplayName(WrappedComponent: React.ComponentType) {
   return WrappedComponent.displayName || WrappedComponent.name || "Component";
 }
 
-export function withAlertNotifications(WrappedComponent: React.ElementType) {
+export function withAlertNotifications(
+  WrappedComponent: React.ElementType
+): React.ComponentType<AlertNotificationsProps> {
   class AlertNotifications extends React.Component<
     AlertNotificationsProps,
     AlertNotificationsState

@@ -3,7 +3,6 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as _ from "lodash";
 import * as io from "socket.io-client";
-import AlertNotifications from "./AlertNotifications";
 import APIService from "./APIService";
 import BrainzPlayer from "./BrainzPlayer";
 import ErrorBoundary from "./ErrorBoundary";
@@ -53,7 +52,6 @@ export default class RecentListens extends React.Component<
   RecentListensState
 > {
   private APIService: APIService;
-  private alertNotifications: any = React.createRef<AlertNotifications>();
 
   private brainzPlayer = React.createRef<BrainzPlayer>();
   private listensTable = React.createRef<HTMLTableElement>();
@@ -522,14 +520,6 @@ export default class RecentListens extends React.Component<
 
     return (
       <div role="main">
-        <button
-          onClick={() => {
-            newAlert("success", "FNORD", "Hello there");
-          }}
-        >
-          Click me!
-        </button>
-        <AlertNotifications ref={this.alertNotifications} />
         <div className="row">
           <div className="col-md-8">
             <h3>
