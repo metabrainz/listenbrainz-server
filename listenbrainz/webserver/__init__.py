@@ -285,3 +285,6 @@ def _register_blueprints(app):
 
     from listenbrainz.webserver.views.user_timeline_event_api import user_timeline_event_api_bp
     app.register_blueprint(user_timeline_event_api_bp, url_prefix=API_PREFIX)
+
+    from listenbrainz.webserver.views.social_api import social_api_bp
+    app.register_blueprint(social_api_bp, url_prefix=API_PREFIX)
