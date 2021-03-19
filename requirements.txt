@@ -33,7 +33,7 @@ six == 1.15.0
 pydantic == 1.8.1
 pycountry == 20.7.3
 Flask==1.1.2
-Jinja2==2.11.2
+Jinja2==2.11.3
 werkzeug==1.0.1
 Flask-DebugToolbar==0.11.0
 Flask-UUID==0.2
