@@ -40,16 +40,7 @@ const similarUsers = [
   },
 ];
 
-const followingFollowers = [
-  {
-    id: 1,
-    musicbrainz_id: "bob",
-  },
-  {
-    id: 2,
-    musicbrainz_id: "fnord",
-  },
-];
+const followingFollowers = ["bob", "fnord"];
 
 describe("<UserSocialNetwork />", () => {
   beforeEach(() => {
@@ -105,9 +96,13 @@ describe("<UserSocialNetwork />", () => {
     ];
     expect(instance.state.similarUsersList).toEqual(similarUsersInState);
 
-    const followingFollowersInState = [{ name: "bob" }, { name: "fnord" }];
-    expect(instance.state.followerList).toEqual(followingFollowersInState);
-    expect(instance.state.followingList).toEqual(followingFollowersInState);
+    const expectedFollowingFollowersState = ["bob", "fnord"];
+    expect(instance.state.followerList).toEqual(
+      expectedFollowingFollowersState
+    );
+    expect(instance.state.followingList).toEqual(
+      expectedFollowingFollowersState
+    );
   });
 
   describe("updateFollowingList", () => {
@@ -119,17 +114,10 @@ describe("<UserSocialNetwork />", () => {
       await instance.componentDidMount();
 
       // initial state after first fetch
-      expect(instance.state.followingList).toEqual([
-        { name: "bob" },
-        { name: "fnord" },
-      ]);
+      expect(instance.state.followingList).toEqual(["bob", "fnord"]);
 
       instance.updateFollowingList({ name: "Baldur" }, "follow");
-      expect(instance.state.followingList).toEqual([
-        { name: "bob" },
-        { name: "fnord" },
-        { name: "Baldur" },
-      ]);
+      expect(instance.state.followingList).toEqual(["bob", "fnord", "Baldur"]);
     });
 
     it("updates the state when called with action unfollow", async () => {
@@ -140,13 +128,10 @@ describe("<UserSocialNetwork />", () => {
       await instance.componentDidMount();
 
       // initial state after first fetch
-      expect(instance.state.followingList).toEqual([
-        { name: "bob" },
-        { name: "fnord" },
-      ]);
+      expect(instance.state.followingList).toEqual(["bob", "fnord"]);
 
       instance.updateFollowingList({ name: "fnord" }, "unfollow");
-      expect(instance.state.followingList).toEqual([{ name: "bob" }]);
+      expect(instance.state.followingList).toEqual(["bob"]);
     });
 
     it("only allows adding a user once", async () => {
@@ -157,19 +142,11 @@ describe("<UserSocialNetwork />", () => {
       await instance.componentDidMount();
 
       instance.updateFollowingList({ name: "Baldur" }, "follow");
-      expect(instance.state.followingList).toEqual([
-        { name: "bob" },
-        { name: "fnord" },
-        { name: "Baldur" },
-      ]);
+      expect(instance.state.followingList).toEqual(["bob", "fnord", "Baldur"]);
 
       // Ensure we can't add a user twice
       instance.updateFollowingList({ name: "Baldur" }, "follow");
-      expect(instance.state.followingList).toEqual([
-        { name: "bob" },
-        { name: "fnord" },
-        { name: "Baldur" },
-      ]);
+      expect(instance.state.followingList).toEqual(["bob", "fnord", "Baldur"]);
     });
 
     it("does nothing when trying to unfollow a user that is not followed", async () => {
@@ -179,16 +156,10 @@ describe("<UserSocialNetwork />", () => {
       const instance = wrapper.instance();
       await instance.componentDidMount();
 
-      expect(instance.state.followingList).toEqual([
-        { name: "bob" },
-        { name: "fnord" },
-      ]);
+      expect(instance.state.followingList).toEqual(["bob", "fnord"]);
 
       instance.updateFollowingList({ name: "Baldur" }, "unfollow");
-      expect(instance.state.followingList).toEqual([
-        { name: "bob" },
-        { name: "fnord" },
-      ]);
+      expect(instance.state.followingList).toEqual(["bob", "fnord"]);
     });
   });
 

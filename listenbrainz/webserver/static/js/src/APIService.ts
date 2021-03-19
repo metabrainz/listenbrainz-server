@@ -191,7 +191,7 @@ export default class APIService {
 
   getFollowersOfUser = async (
     username: string
-  ): Promise<{ followers: Array<{ musicbrainz_id: string }> }> => {
+  ): Promise<{ followers: Array<string> }> => {
     if (!username) {
       throw new SyntaxError("Username missing");
     }
@@ -205,7 +205,7 @@ export default class APIService {
 
   getFollowingForUser = async (
     username: string
-  ): Promise<{ following: Array<{ musicbrainz_id: string }> }> => {
+  ): Promise<{ following: Array<string> }> => {
     if (!username) {
       throw new SyntaxError("Username missing");
     }

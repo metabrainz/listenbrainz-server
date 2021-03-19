@@ -1,5 +1,4 @@
 import * as React from "react";
-import { includes as _includes } from "lodash";
 
 import APIService from "../APIService";
 import FollowerFollowingModal from "./FollowerFollowingModal";
@@ -12,8 +11,8 @@ export type UserSocialNetworkProps = {
 };
 
 type UserSocialNetworkState = {
-  followerList: Array<ListenBrainzUser>;
-  followingList: Array<ListenBrainzUser>;
+  followerList: Array<string>;
+  followingList: Array<string>;
   similarUsersList: Array<SimilarUser>;
 };
 
@@ -72,11 +71,7 @@ export default class UserSocialNetwork extends React.Component<
       );
       const { followers } = response;
 
-      this.setState({
-        followerList: followers.map(({ musicbrainz_id }) => {
-          return { name: musicbrainz_id };
-        }),
-      });
+      this.setState({ followerList: followers });
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err);
@@ -89,11 +84,7 @@ export default class UserSocialNetwork extends React.Component<
       const response = await this.APIService.getFollowingForUser(user.name);
       const { following } = response;
 
-      this.setState({
-        followingList: following.map(({ musicbrainz_id }) => {
-          return { name: musicbrainz_id };
-        }),
-      });
+      this.setState({ followingList: following });
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err);
@@ -108,12 +99,7 @@ export default class UserSocialNetwork extends React.Component<
       return false;
     }
 
-    return _includes(
-      followingList.map(
-        (listEntry: ListenBrainzUser | SimilarUser) => listEntry.name
-      ),
-      user.name
-    );
+    return followingList.includes(user.name);
   };
 
   updateFollowingList = (
@@ -121,16 +107,17 @@ export default class UserSocialNetwork extends React.Component<
     action: "follow" | "unfollow"
   ) => {
     const { followingList } = this.state;
-    const index = followingList.findIndex(
-      (following) => following.name === user.name
+    const newFollowingList = [...followingList];
+    const index = newFollowingList.findIndex(
+      (following) => following === user.name
     );
     if (action === "follow" && index === -1) {
-      followingList.push(user);
+      newFollowingList.push(user.name);
     }
     if (action === "unfollow" && index !== -1) {
-      followingList.splice(index, 1);
+      newFollowingList.splice(index, 1);
     }
-    this.setState({ followingList });
+    this.setState({ followingList: newFollowingList });
   };
 
   render() {

@@ -25,8 +25,8 @@ import FollowerFollowingModal from "./FollowerFollowingModal";
 const props = {
   user: { name: "foobar" },
   loggedInUser: null,
-  followerList: [{ name: "foo" }],
-  followingList: [{ name: "bar" }],
+  followerList: ["foo"],
+  followingList: ["bar"],
   loggedInUserFollowsUser: () => true,
   updateFollowingList: () => {},
 };

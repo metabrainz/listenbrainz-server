@@ -7,8 +7,8 @@ import UserListModalEntry from "./UserListModalEntry";
 export type FollowerFollowingModalProps = {
   user: ListenBrainzUser;
   loggedInUser: ListenBrainzUser | null;
-  followerList: Array<ListenBrainzUser>;
-  followingList: Array<ListenBrainzUser>;
+  followerList: Array<string>;
+  followingList: Array<string>;
   loggedInUserFollowsUser: (user: ListenBrainzUser | SimilarUser) => boolean;
   updateFollowingList: (
     user: ListenBrainzUser,
@@ -68,14 +68,19 @@ export default class FollowerFollowingModal extends React.Component<
           </div>
         </div>
         <div className="follower-following-list">
-          {activeModeList.map((listEntry: ListenBrainzUser) => {
+          {activeModeList.map((listEntry: string) => {
+            const formattedAsUser: ListenBrainzUser = {
+              name: listEntry,
+            };
             return (
               <UserListModalEntry
                 mode="follow-following"
-                key={listEntry.name}
-                user={listEntry}
+                key={listEntry}
+                user={formattedAsUser}
                 loggedInUser={loggedInUser}
-                loggedInUserFollowsUser={loggedInUserFollowsUser(listEntry)}
+                loggedInUserFollowsUser={loggedInUserFollowsUser(
+                  formattedAsUser
+                )}
                 updateFollowingList={updateFollowingList}
               />
             );
