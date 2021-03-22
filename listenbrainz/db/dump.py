@@ -383,8 +383,8 @@ def dump_user_feedback(connection, location):
             row = result.fetchone()
             today = (row[4], row[5], row[6]) if row else ()
             if (not row or today != last_day) and len(todays_items) > 0:
-                full_path = os.path.join(location, "feedback", "user", str(int(last_day[0])),
-                                         str(int(last_day[1])), str(int(last_day[2])))
+                full_path = os.path.join(location, "feedback", "user", "%02d" % int(last_day[0]),
+                                         "%02d" % int(last_day[1]), "%02d" % int(last_day[2]))
                 os.makedirs(full_path)
                 with open(os.path.join(full_path, "data.json"), "wb") as f:
                     for item in todays_items:
@@ -397,7 +397,7 @@ def dump_user_feedback(connection, location):
             todays_items.append({'user_id': row[0],
                                  'recording_msid': str(row[1]),
                                  'score': row[2],
-                                 'created': int(row[3].timestamp())})
+                                 'created': row[3].isoformat()})
             last_day = today
 
         # Now dump the recommendation feedback
@@ -416,8 +416,8 @@ def dump_user_feedback(connection, location):
             row = result.fetchone()
             today = (row[4], row[5], row[6]) if row else ()
             if (not row or today != last_day) and len(todays_items) > 0:
-                full_path = os.path.join(location, "feedback", "recommendation", str(int(last_day[0])),
-                                         str(int(last_day[1])), str(int(last_day[2])))
+                full_path = os.path.join(location, "feedback", "recommendation", "%02d" % int(last_day[0]),
+                                         "%02d" % int(last_day[1]), "%02d" % int(last_day[2]))
                 os.makedirs(full_path)
                 with open(os.path.join(full_path, "data.json"), "wb") as f:
                     for item in todays_items:
@@ -430,7 +430,7 @@ def dump_user_feedback(connection, location):
             todays_items.append({'user_id': row[0],
                                  'recording_mbid': str(row[1]),
                                  'rating': row[2],
-                                 'created': int(row[3].timestamp())})
+                                 'created': row[3].isoformat()})
             last_day = today
         transaction.rollback()
 
