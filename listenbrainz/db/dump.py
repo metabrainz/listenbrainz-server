@@ -433,7 +433,7 @@ def dump_user_feedback(connection, location):
 
             todays_items.append({'user_name': row[0],
                                  'mb_recording_mbid': str(row[1]),
-                                 'rating': row[2],
+                                 'feedback': row[2],
                                  'created': row[3].isoformat()})
             last_day = today
         transaction.rollback()
