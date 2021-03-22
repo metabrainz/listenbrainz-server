@@ -428,7 +428,7 @@ def dump_user_feedback(connection, location):
                 break
 
             todays_items.append({'user_id': row[0],
-                                 'recording_mbid': str(row[1]),
+                                 'mb_recording_mbid': str(row[1]),
                                  'rating': row[2],
                                  'created': row[3].isoformat()})
             last_day = today
