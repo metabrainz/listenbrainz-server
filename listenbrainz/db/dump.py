@@ -369,11 +369,13 @@ def dump_user_feedback(connection, location):
 
         # First dump the user feedback
         result = connection.execute(sqlalchemy.text("""
-            SELECT user_id, recording_msid, score, created,
-                   EXTRACT(YEAR FROM created) AS year,
-                   EXTRACT(MONTH FROM created) AS month,
-                   EXTRACT(DAY FROM created) AS day
-              FROM recording_feedback
+            SELECT musicbrainz_id, recording_msid, score, r.created,
+                   EXTRACT(YEAR FROM r.created) AS year,
+                   EXTRACT(MONTH FROM r.created) AS month,
+                   EXTRACT(DAY FROM r.created) AS day
+              FROM recording_feedback r
+              JOIN "user"
+                ON r.user_id = "user".id
           ORDER BY created"""))
 
         last_day = ()
@@ -394,19 +396,21 @@ def dump_user_feedback(connection, location):
             if not row:
                 break
 
-            todays_items.append({'user_id': row[0],
+            todays_items.append({'user_name': row[0],
                                  'recording_msid': str(row[1]),
-                                 'score': row[2],
+                                 'feedback': row[2],
                                  'created': row[3].isoformat()})
             last_day = today
 
         # Now dump the recommendation feedback
         result = connection.execute(sqlalchemy.text("""
-            SELECT user_id, recording_mbid, rating, created,
-                   EXTRACT(YEAR FROM created) AS year,
-                   EXTRACT(MONTH FROM created) AS month,
-                   EXTRACT(DAY FROM created) AS day
-              FROM recommendation_feedback
+            SELECT musicbrainz_id, recording_mbid, rating, r.created,
+                   EXTRACT(YEAR FROM r.created) AS year,
+                   EXTRACT(MONTH FROM r.created) AS month,
+                   EXTRACT(DAY FROM r.created) AS day
+              FROM recommendation_feedback r
+              JOIN "user"
+                ON r.user_id = "user".id
           ORDER BY created"""))
 
         last_day = ()
@@ -427,7 +431,7 @@ def dump_user_feedback(connection, location):
             if not row:
                 break
 
-            todays_items.append({'user_id': row[0],
+            todays_items.append({'user_name': row[0],
                                  'mb_recording_mbid': str(row[1]),
                                  'rating': row[2],
                                  'created': row[3].isoformat()})
