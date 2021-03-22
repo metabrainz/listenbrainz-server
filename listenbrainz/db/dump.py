@@ -385,7 +385,7 @@ def dump_user_feedback(connection, location):
             row = result.fetchone()
             today = (row[4], row[5], row[6]) if row else ()
             if (not row or today != last_day) and len(todays_items) > 0:
-                full_path = os.path.join(location, "feedback", "user", "%02d" % int(last_day[0]),
+                full_path = os.path.join(location, "feedback", "listens", "%02d" % int(last_day[0]),
                                          "%02d" % int(last_day[1]), "%02d" % int(last_day[2]))
                 os.makedirs(full_path)
                 with open(os.path.join(full_path, "data.json"), "wb") as f:
