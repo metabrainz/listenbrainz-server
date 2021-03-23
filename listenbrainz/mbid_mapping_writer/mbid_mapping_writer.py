@@ -4,6 +4,7 @@ import time
 import threading
 
 from flask import current_app
+from listenbrainz.webserver import create_app
 from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_PLAYING_NOW
 from listenbrainz.mbid_mapping_writer.job_queue import MappingJobQueue
 
@@ -13,12 +14,12 @@ class MBIDMappingWriter(threading.Thread):
     def __init__(self, app):
         threading.Thread.__init__(self)
         self.app = app
-        self.queue = MappingJobQueue(app)
+        self.queue = None
 
     def callback(self, channel, method, properties, body):
         # When we receive new listens, add the listens to the priority queue
         listens = json.loads(body)
-        self.queue.add_new_listens(listens, delivery_tag)
+        self.queue.add_new_listens(listens, method.delivery_tag)
 
         # Now check to see if other jobs have completed that we need to ack.
         tags = self.queue.get_completed_delivery_tags()
@@ -33,7 +34,7 @@ class MBIDMappingWriter(threading.Thread):
 
     def on_open_callback(self, channel):
         self.create_and_bind_exchange_and_queue(channel, current_app.config['UNIQUE_EXCHANGE'], current_app.config['UNIQUE_QUEUE'])
-        channel.basic_consume(self.callback_listen, queue=current_app.config['UNIQUE_QUEUE'])
+        channel.basic_consume(self.callback, queue=current_app.config['UNIQUE_QUEUE'])
 
     def on_open(self, connection):
         connection.channel(self.on_open_callback)
@@ -57,10 +58,12 @@ class MBIDMappingWriter(threading.Thread):
 
     def run(self):
 
-        # start the queue stuffer thread
-        self.queue.start()
-
         with self.app.app_context():
+
+            current_app.logger.info("Starting queue stuffer...")
+            self.queue = MappingJobQueue(app)
+            # start the queue stuffer thread
+            self.queue.start()
             while True:
                 current_app.logger.info("Starting MBID mapping writer...")
                 self.init_rabbitmq_connection()
@@ -73,3 +76,8 @@ class MBIDMappingWriter(threading.Thread):
                 except Exception as e:
                     current_app.logger.error("Error in MBID Mapping Writer: %s", str(e), exc_info=True)
                     time.sleep(3)
+
+if __name__ == "__main__":
+    app = create_app()
+    mw = MBIDMappingWriter(app)
+    mw.start()

@@ -1,17 +1,17 @@
-from queue import PriorityQueue, Queue
-from  concurrent.futures import ThreadPoolExecutor
+from queue import PriorityQueue, Queue, Empty
+from  concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 import threading
+from time import sleep
 
 from flask import current_app
 from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_PLAYING_NOW
 
 MAX_THREADS = 4
 MAX_QUEUED_JOBS = MAX_THREADS * 2
-JOB_ENTRY_NEW_LISTENS = 0
-JOB_ENTRY_OLD_LISTENS = 1
 
 
 def lookup_new_listens(listens, delivery_tag):
+#    current_app.logger.info("listen lookup!")
     return delivery_tag
 
 
@@ -23,42 +23,50 @@ class MappingJobQueue(threading.Thread):
         self.app = app
         self.queue = PriorityQueue()
         self.delivery_tag_queue = Queue()
+        self.priority = 1
 
     def get_completed_delivery_tags(self):
 
         tags = []
         while True:
-            tag = self.self.delivery_tag_queue.get(False)
-            if not tag:
+            try:
+                tag = self.delivery_tag_queue.get(False)
+            except Empty:
                 break
+
             tags.append(tag)
 
         return tags
 
     def add_new_listens(self, listens, delivery_tag):
-        self.queue.put((JOB_ENTRY_NEW_LISTENS, listens, delivery_tag))
+        self.queue.put((self.priority, listens, delivery_tag))
+        self.priority += 1
 
     def terminate(self):
         self.done = True
         self.join()
 
     def run(self):
+        self.app.logger.info("start job queue thread")
         with self.app.app_context():
-            with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
+            with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
+                futures = {}
                 while not self.done:
-                    completed, uncompleted = concurrent.futures.wait(
-                        futures, timeout=1.0, return_when=concurrent.futures.FIRST_COMPLETED
-                    )
+
+                    completed, uncompleted = wait(futures, return_when=FIRST_COMPLETED)
                     for complete in completed:
-                        job = futures.pop(complete)
-                        self.self.delivery_tag_queue.put(job.result())
+                        self.delivery_tag_queue.put(complete.result())
+                        del futures[complete]
 
                     for i in range(MAX_QUEUED_JOBS - len(uncompleted)):
-                        job = self.queue.get(False)
-                        if not job:
+                        try:
+                            job = self.queue.get(False)
+                        except Empty:
                             break
 
-                        if job[0] == JOB_ENTRY_NEW_LISTENS:
-                            executor.submit(lookup_new_listens, job[1], job[2])
+                        if job[0] > 0:
+                            futures[executor.submit(lookup_new_listens, job[1], job[2])] = job[0]
                         else:
-                            self.app.error("Unsupported job type in MappingJobQueue (MBID Mapping Writer).")
+                            self.app.logger.info("Unsupported job type in MappingJobQueue (MBID Mapping Writer).")
+
+        self.app.logger.info("job queue thread finished")
