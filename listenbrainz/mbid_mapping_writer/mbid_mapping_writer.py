@@ -16,8 +16,15 @@ class MBIDMappingWriter(threading.Thread):
         self.queue = MappingJobQueue(app)
 
     def callback(self, channel, method, properties, body):
+        # When we receive new listens, add the listens to the priority queue
         listens = json.loads(body)
         self.queue.add_new_listens(listens, delivery_tag)
+
+        # Now check to see if other jobs have completed that we need to ack.
+        tags = self.queue.get_completed_delivery_tags()
+        for tag in tags:
+            channel.basic_ack(delivery_tag=tag)
+
 
     def create_and_bind_exchange_and_queue(self, channel, exchange, queue):
         channel.exchange_declare(exchange=exchange, exchange_type='fanout')
@@ -60,6 +67,7 @@ class MBIDMappingWriter(threading.Thread):
                 try:
                     self.connection.ioloop.start()
                 except KeyboardInterrupt:
+                    self.queue.terminate()
                     current_app.logger.error("Keyboard interrupt!")
                     break
                 except Exception as e:
