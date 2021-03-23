@@ -5,6 +5,7 @@ import threading
 
 from flask import current_app
 from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_PLAYING_NOW
+from listenbrainz.mbid_mapping_writer.job_queue import MappingJobQueue
 
 
 class MBIDMappingWriter(threading.Thread):
@@ -12,18 +13,11 @@ class MBIDMappingWriter(threading.Thread):
     def __init__(self, app):
         threading.Thread.__init__(self)
         self.app = app
-
-    def lookup_listens(self, listens, delivery_tag):
-
-        for listen in listens:
-            pass  # do stuff here
-
-        # At some point this needs to be called when the batch of listens is processed
-        #channel.basic_ack(delivery_tag=method.delivery_tag)
+        self.queue = MappingJobQueue(app)
 
     def callback(self, channel, method, properties, body):
         listens = json.loads(body)
-        self.lookup_listens(listens, delivery_tag=method.delivery_tag)
+        self.queue.add_new_listens(listens, delivery_tag)
 
     def create_and_bind_exchange_and_queue(self, channel, exchange, queue):
         channel.exchange_declare(exchange=exchange, exchange_type='fanout')
@@ -55,6 +49,10 @@ class MBIDMappingWriter(threading.Thread):
 
 
     def run(self):
+
+        # start the queue stuffer thread
+        self.queue.start()
+
         with self.app.app_context():
             while True:
                 current_app.logger.info("Starting MBID mapping writer...")
