@@ -8,7 +8,8 @@
   },
   "scripts": {
     "build:dev": "webpack --progress --colors",
-    "build:prod": "webpack -p --env production --progress --colors",
+    "build:prod": "webpack -p --env production --progress --colors & npm run build:prod:less",
+    "build:prod:less": "lessc /static/css/main.less > /static/css/main.css",
     "build:types": "tsc --emitDeclarationOnly",
     "build": "npm run build:dev",
     "format": "eslint ./static/js/src --ext .js,jsx,ts,tsx --fix --quiet",
