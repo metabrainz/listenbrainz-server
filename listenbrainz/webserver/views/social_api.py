@@ -124,7 +124,6 @@ def unfollow_user(user_name: str):
     :reqheader Authorization: Token <user token>
     :reqheader Content-Type: *application/json*
     :statuscode 200: Successfully unfollowed the user ``user_name``.
-    :statuscode 400: Not following the user ``user_name``.
     :statuscode 401: invalid authorization. See error message for details.
     :resheader Content-Type: *application/json*
     """
@@ -134,8 +133,6 @@ def unfollow_user(user_name: str):
     if not user:
         raise APINotFound("User %s not found" % user_name)
 
-    if not db_user_relationship.is_following_user(current_user["id"], user["id"]):
-        raise APIBadRequest("%s is not following user %s" % (current_user["musicbrainz_id"], user["musicbrainz_id"]))
     try:
         db_user_relationship.delete(current_user["id"], user["id"], "follow")
     except Exception as e:

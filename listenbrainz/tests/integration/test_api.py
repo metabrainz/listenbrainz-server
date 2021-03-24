@@ -828,6 +828,12 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert200(r)
         self.assertFalse(db_user_relationship.is_following_user(self.user.id, self.followed_user['id']))
 
+    def test_unfollow_not_following_user(self):
+        r = self.client.post(url_for("social_api_v1.unfollow_user", user_name=self.followed_user["musicbrainz_id"]),
+                             headers=self.follow_user_headers)
+        self.assert200(r)
+        self.assertFalse(db_user_relationship.is_following_user(self.user.id, self.followed_user['id']))
+
     def test_unfollow_user_requires_login(self):
         r = self.client.post(url_for("social_api_v1.unfollow_user", user_name=self.followed_user["musicbrainz_id"]))
         self.assert401(r)
