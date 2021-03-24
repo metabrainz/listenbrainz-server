@@ -4,6 +4,7 @@ import sys
 from time import sleep
 from shutil import copyfile
 
+from brainzutils import metrics
 from brainzutils.flask import CustomFlask
 from flask import request, url_for, redirect
 from flask_login import current_user
@@ -101,6 +102,9 @@ def gen_app(config_path=None, debug=None):
 
     # Timescale connection
     create_timescale(app)
+
+    # Metrics
+    metrics.init('listenbrainz')
 
     # RabbitMQ connection
     try:
@@ -240,6 +244,9 @@ def _register_blueprints(app):
 
     from listenbrainz.webserver.views.api import api_bp
     app.register_blueprint(api_bp, url_prefix=API_PREFIX)
+
+    from listenbrainz.webserver.views.api_internal import api_internal
+    app.register_blueprint(api_internal, url_prefix='/internal')
 
     from listenbrainz.webserver.views.api_compat import api_bp as api_bp_compat
     app.register_blueprint(api_bp_compat)
