@@ -375,13 +375,19 @@ def latest_import():
 
 
 @api_bp.route('/validate-token', methods=['GET'])
+@crossdomain(headers='Authorization')
 @ratelimit()
 def validate_token():
     """
     Check whether a User Token is a valid entry in the database.
 
-    In order to query this endpoint, send a GET request with the token to check
-    as the `token` argument (example: /validate-token?token=token-to-check)
+    In order to query this endpoint, send a GET request with the token in
+    the Authorization header.
+
+    .. note::
+        - This endpoint also checks for `token` argument in query
+        params (example: /validate-token?token=token-to-check) if the
+        Authorization header is missing for backward compatibility.
 
     A JSON response, with the following format, will be returned.
 
@@ -405,7 +411,12 @@ def validate_token():
     :statuscode 200: The user token is valid/invalid.
     :statuscode 400: No token was sent to the endpoint.
     """
-    auth_token = request.args.get('token', '')
+    header = request.headers.get('Authorization')
+    if header:
+        auth_token = header.split(" ")[1]
+    else:  # for backward compatibility, check for auth token in query parameters as well
+        auth_token = request.args.get('token', '')
+
     if not auth_token:
         raise APIBadRequest("You need to provide an Authorization token.")
     user = db_user.get_by_token(auth_token)

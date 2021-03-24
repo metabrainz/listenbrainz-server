@@ -605,6 +605,19 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(response.json['user_name'],
                          self.user['musicbrainz_id'])
 
+    def test_token_validation_auth_header(self):
+        """Sends a valid token to api.validate_token in the Authorization header"""
+        url = url_for('api_v1.validate_token')
+        response = self.client.get(url, headers={
+            "Authorization": "Token {}".format(self.user['auth_token'])
+        })
+        self.assert200(response)
+        self.assertEqual(response.json['code'], 200)
+        self.assertEqual('Token valid.', response.json['message'])
+        self.assertTrue(response.json['valid'])
+        self.assertEqual(response.json['user_name'], self.user['musicbrainz_id'])
+
+
     def test_get_playing_now(self):
         """ Test for valid submission and retrieval of listen_type 'playing_now'
         """
