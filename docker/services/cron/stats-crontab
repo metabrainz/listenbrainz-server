@@ -65,3 +65,6 @@ MAILTO=""
 
 # user similarity
 30 03 * * * listenbrainz_stats_cron /usr/local/bin/python /code/listenbrainz/manage.py spark request_similar_users 
+
+# Request recommendations every Monday after dump and mapping has been imported into the spark cluster
+30 4 * * 1 listenbrainz_stats_cron /code/listenbrainz/docker/cf_recommendation.sh cf
