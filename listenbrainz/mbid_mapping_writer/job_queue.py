@@ -7,13 +7,30 @@ from time import sleep
 from flask import current_app
 from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_PLAYING_NOW
 from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery
+from listenbrainz.db import timescale
 
 MAX_THREADS = 4
 MAX_QUEUED_JOBS = MAX_THREADS * 2
 
 
 def lookup_new_listens(app, listens, delivery_tag):
-    app.logger.info("listen lookup!")
+
+    msids = [ listen.recording_msid for listen in listens ]
+    to_lookup = []
+    with timescale.engine.connect() as connection:
+        query = """SELECT recording_msid 
+                     FROM listen_mbid_mapping
+                    WHERE recording_msid NOT IN (:msids)"""
+        curs = connection.execute(sqlalchemy.text(query), msids=tuple(msids))
+        while True:
+            result = curs.fetchone()
+            if not result:
+                break
+
+            to_lookup.append(result[0])
+
+    app.logger.info(str(to_lookup))
+
     q = MBIDMappingQuery()
     return delivery_tag
 
