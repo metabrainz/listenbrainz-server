@@ -41,4 +41,18 @@ CREATE TABLE  playlist.playlist_collaborator (
     collaborator_id int not null  -- link to user.id in main database
 );
 
+-- MBID Mapping
+
+CREATE TABLE listen_mbid_mapping (
+        id              SERIAL,
+        recording_msid  UUID NOT NULL,
+        recording_mbid  UUID NOT NULL,
+        release_mbid    UUID NOT NULL,
+        artist_mbids    UUID[] NOT NULL,
+        artist_name     TEXT NOT NULL,
+        recording_name  TEXT NOT NULL,
+        confidence      SMALLINT NOT NULL,
+        last_updated    TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+);
+
 COMMIT;
