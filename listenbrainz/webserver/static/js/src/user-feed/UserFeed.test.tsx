@@ -110,6 +110,25 @@ describe("<UserFeed />", () => {
     expect(time.text()).toEqual("Feb 16, 11:17 AM");
   });
 
+  it("renders notification events", () => {
+    const wrapper = mount<UserFeedPage>(<UserFeedPage {...props} />);
+    const notificationEvent = wrapper.find("#timeline > ul >li").at(6);
+    const description = notificationEvent.find(".event-description-text");
+    // Ensure it parsed and reconstituted the html message
+    expect(description.text()).toEqual(
+      // @ts-ignore
+      `We have created a playlist for you: My top discoveries of 2020`
+    );
+    expect(description.html()).toEqual(
+      // @ts-ignore
+      '<span class="event-description-text">We have created a playlist for you: <a href="https://listenbrainz.org/playlist/4245ccd3-4f0d-4276-95d6-2e09d87b5546">My top discoveries of 2020</a></span>'
+    );
+    const content = notificationEvent.find(".event-content");
+    expect(content.exists()).toBeFalsy();
+    const time = notificationEvent.find(".event-time");
+    expect(time.text()).toEqual("Feb 16, 11:17 AM");
+  });
+
   describe("Pagination", () => {
     const pushStateSpy = jest.spyOn(window.history, "pushState");
 
