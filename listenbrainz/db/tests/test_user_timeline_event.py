@@ -87,17 +87,16 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(UserTimelineEventType.RECORDING_RECOMMENDATION, event.event_type)
 
     def test_create_user_notification_event(self):
+        message = 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'
         event = db_user_timeline_event.create_user_notification_event(
             user_id=self.user['id'],
             metadata=NotificationMetadata(
                 creator_id=self.user['id'],
-                message='Test Message',
-                link='Test Link'
+                message=message,
             )
         )
         self.assertEqual(self.user['id'], event.user_id)
-        self.assertEqual('Test Message', event.metadata.message)
-        self.assertEqual('Test Link', event.metadata.link)
+        self.assertEqual(message, event.metadata.message)
         self.assertEqual(self.user['id'], event.metadata.creator_id)
         self.assertEqual(UserTimelineEventType.NOTIFICATION, event.event_type)
 

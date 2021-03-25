@@ -146,7 +146,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             data=json.dumps({"metadata": metadata}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
         )
-        self.assert401(r)
+        self.assert403(r)
         data = json.loads(r.data)
         self.assertEqual("Only approved users are allowed to post a message on a user's timeline.", data['error'])
 

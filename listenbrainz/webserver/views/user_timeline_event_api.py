@@ -36,7 +36,8 @@ from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.listenstore import TimescaleListenStore
 from listenbrainz.webserver.views.api import _validate_get_endpoint_params
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, \
+    APIForbidden
 from listenbrainz.webserver.views.api_tools import validate_auth_header, _filter_description_html
 from listenbrainz.webserver.rate_limiter import ratelimit
 
@@ -119,14 +120,14 @@ def create_user_notification_event(user_name):
     :type user_name: ``str``
     :statuscode 200: Successful query, message has been posted!
     :statuscode 400: Bad request, check ``response['error']`` for more details.
-    :statuscode 401: Unauthorized, you are not an approved user.
+    :statuscode 403: Forbidden, you are not an approved user.
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
 
     """
     creator = validate_auth_header()
     if creator["musicbrainz_id"] not in current_app.config['APPROVED_PLAYLIST_BOTS']:
-        raise APIUnauthorized("Only approved users are allowed to post a message on a user's timeline.")
+        raise APIForbidden("Only approved users are allowed to post a message on a user's timeline.")
 
     user = db_user.get_by_mb_id(user_name)
     if user is None:
