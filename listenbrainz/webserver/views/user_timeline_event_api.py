@@ -37,7 +37,7 @@ from listenbrainz.listenstore import TimescaleListenStore
 from listenbrainz.webserver.views.api import _validate_get_endpoint_params
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound
-from listenbrainz.webserver.views.api_tools import validate_auth_header
+from listenbrainz.webserver.views.api_tools import validate_auth_header, _filter_description_html
 from listenbrainz.webserver.rate_limiter import ratelimit
 
 
@@ -105,12 +105,13 @@ def create_user_recording_recommendation_event(user_name):
 def create_user_notification_event(user_name):
     """ Post a message with a link on a user's timeline. Only approved users are allowed to perform this action.
 
-    The request should contain the following data::
+    The request should contain the following data:
+
+    .. code-block:: json
 
         {
             "metadata": {
                 "message": <the message to post, required>,
-                "link": <the link to include with the message, required>
             }
         }
 
@@ -136,10 +137,11 @@ def create_user_notification_event(user_name):
     except (ValueError, KeyError) as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
-    try:
-        metadata = NotificationMetadata(creator_id=creator['id'], **data)
-    except pydantic.ValidationError as e:
-        raise APIBadRequest(f"Invalid metadata: {str(e)}")
+    if "message" not in data:
+        raise APIBadRequest("Invalid metadata: message is missing")
+
+    message = _filter_description_html(data["message"])
+    metadata = NotificationMetadata(creator_id=creator['id'], message=message)
 
     try:
         db_user_timeline_event.create_user_notification_event(user['id'], metadata)

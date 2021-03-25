@@ -148,13 +148,10 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
         self.assert401(r)
         data = json.loads(r.data)
-        self.assertEqual("Only approved users are allowed to submit playlists made for someone else.", data['error'])
+        self.assertEqual("Only approved users are allowed to post a message on a user's timeline.", data['error'])
 
     def test_post_notification_success(self):
-        metadata = {
-            "message": "Testing",
-            "link": "http://localhost"
-        }
+        metadata = {"message": 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'}
         approved_user = db_user.get_or_create(11, "troi-bot")
         r = self.client.post(
             url_for('user_timeline_event_api_bp.create_user_notification_event', user_name=self.user['musicbrainz_id']),

@@ -44,7 +44,6 @@ class RecordingRecommendationMetadata(pydantic.BaseModel):
 class NotificationMetadata(pydantic.BaseModel):
     creator_id: int
     message: str
-    link: str
 
 
 UserTimelineEventMetadata = Union[RecordingRecommendationMetadata, NotificationMetadata]
