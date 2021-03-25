@@ -3,6 +3,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 
 import {
+  faBell,
   faBullhorn,
   faCircle,
   faHeadphones,
@@ -19,6 +20,7 @@ import { AlertList } from "react-bs-notifier";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { isEqual } from "lodash";
+import { sanitize } from "dompurify";
 import APIService from "../APIService";
 import BrainzPlayer from "../BrainzPlayer";
 import FollowerFollowingModal from "../follow/FollowerFollowingModal";
@@ -34,6 +36,7 @@ export enum EventType {
   STOP_FOLLOW = "stop_follow",
   BLOCK_FOLLOW = "block_follow",
   PLAYLIST_CREATED = "playlist_created",
+  NOTIFICATION = "notification",
 }
 
 type UserFeedPageProps = {
@@ -81,6 +84,8 @@ export default class UserFeedPage extends React.Component<
         return faUserSecret;
       case EventType.PLAYLIST_CREATED:
         return faListUl;
+      case EventType.NOTIFICATION:
+        return faBell;
       default:
         return faQuestion;
     }
@@ -363,6 +368,19 @@ export default class UserFeedPage extends React.Component<
         <span className="event-description-text">
           We created a playlist for you: <a href={identifier}>{title}</a>
         </span>
+      );
+    }
+    if (event_type === EventType.NOTIFICATION) {
+      const { message } = metadata as NotificationEvent;
+      return (
+        <span
+          className="event-description-text"
+          // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{
+            __html: sanitize(message),
+          }}
+        />
       );
     }
 
