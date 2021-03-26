@@ -1,3 +1,4 @@
+import json
 import os
 import pprint
 import sys
@@ -44,7 +45,7 @@ def create_rabbitmq(app):
 
 def load_config(app):
     # Load configuration files: If we're running under a docker deployment, wait until
-    config_file = os.path.join( os.path.dirname(os.path.realpath(__file__)), '..', 'config.py' )
+    config_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'config.py')
     if deploy_env:
         print("Checking if consul template generated config file exists: %s" % config_file)
         for i in range(CONSUL_CONFIG_FILE_RETRY_COUNT):
@@ -52,7 +53,7 @@ def load_config(app):
                 sleep(1)
 
         if not os.path.exists(config_file):
-            print("No configuration file generated yet. Retried %d times, exiting." % CONSUL_CONFIG_FILE_RETRY_COUNT);
+            print("No configuration file generated yet. Retried %d times, exiting." % CONSUL_CONFIG_FILE_RETRY_COUNT)
             sys.exit(-1)
 
         print("loading consul config file %s)" % config_file)
@@ -144,11 +145,19 @@ def gen_app(debug=None):
 def create_app(debug=None):
     app = gen_app(debug=debug)
 
+    global_props = {
+        "api_url": app.config["API_URL"],
+    }
+
     # Static files
     import listenbrainz.webserver.static_manager
     static_manager.read_manifest()
-    app.context_processor(lambda: dict(get_static_path=static_manager.get_static_path))
     app.static_folder = '/static'
+
+    app.context_processor(lambda: dict(
+        get_static_path=static_manager.get_static_path,
+        global_props=json.dumps(global_props)
+    ))
 
     _register_blueprints(app)
 

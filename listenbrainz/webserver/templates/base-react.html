@@ -7,5 +7,6 @@
 
 {% block scripts %}
   {{ super() }}
+  <script id="global-react-props" type="application/json">{{ global_props|safe }}</script>
   <script id="react-props" type="application/json">{{ props|safe }}</script>
 {% endblock %}
