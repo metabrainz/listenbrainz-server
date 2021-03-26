@@ -1,37 +1,73 @@
-from queue import PriorityQueue, Queue, Empty
 from  concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
+from queue import PriorityQueue, Queue, Empty
 import threading
-import traceback
 from time import sleep
+import traceback
 
+import sqlalchemy
+import psycopg2
+from psycopg2.extras import execute_values
 from flask import current_app
 from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_PLAYING_NOW
-from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery
+from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery, MATCH_TYPE_NO_MATCH
 from listenbrainz.db import timescale
 
 MAX_THREADS = 4
 MAX_QUEUED_JOBS = MAX_THREADS * 2
 
+MATCH_TYPES = ('no_match', 'low_quality', 'med_quality', 'high_quality', 'exact_match')
 
 def lookup_new_listens(app, listens, delivery_tag):
 
-    msids = [ listen.recording_msid for listen in listens ]
-    to_lookup = []
+    msids = { listen['recording_msid']:listen for listen in listens }
     with timescale.engine.connect() as connection:
         query = """SELECT recording_msid 
                      FROM listen_mbid_mapping
-                    WHERE recording_msid NOT IN (:msids)"""
-        curs = connection.execute(sqlalchemy.text(query), msids=tuple(msids))
+                    WHERE recording_msid IN (:msids)"""
+        curs = connection.execute(sqlalchemy.text(query), msids=tuple(msids.keys()))
         while True:
             result = curs.fetchone()
             if not result:
                 break
-
-            to_lookup.append(result[0])
-
-    app.logger.info(str(to_lookup))
+            del msids[str(result[0])]
 
     q = MBIDMappingQuery()
+    params = []
+    for listen in listens:
+        params.append({'[artist_credit_name]': listen["data"]["artist_name"], 
+                       '[recording_name]': listen["data"]["track_name"]})
+
+    rows = []
+    hits = q.fetch(params)
+    for hit in hits:
+        listen = listens[hit["index"]]
+        rows.append((listen['recording_msid'],
+                    hit["recording_mbid"],
+                    hit["release_mbid"],
+                    hit["artist_mbids"],
+                    hit["artist_name"],
+                    hit["recording_name"],
+                    MATCH_TYPES[hit["match_type"]]))
+        del msids[listen['recording_msid']]
+
+    for msid in msids:
+        rows.append((listen['recording_msid'], None, None, None, None, None, MATCH_TYPES[0]))
+        
+    conn = timescale.engine.raw_connection() 
+    with conn.cursor() as curs:
+        query = """INSERT INTO listen_mbid_mapping (recording_msid, recording_mbid, release_mbid, artist_mbids,
+                                                    artist_name, recording_name, match_type)
+                        VALUES %s
+                   ON CONFLICT DO NOTHING"""
+        try:
+            execute_values(curs, query, rows, template=None)
+        except psycopg2.OperationalError as err:
+            app.logger.info("Cannot insert MBID mapping rows. (%s)" % str(err))
+            conn.rollback()
+            return None
+
+    conn.commit()
+
     return delivery_tag
 
 
@@ -59,7 +95,6 @@ class MappingJobQueue(threading.Thread):
         return tags
 
     def add_new_listens(self, listens, delivery_tag):
-        self.app.logger.info("delivery tag %s" % str(delivery_tag))
         self.queue.put((self.priority, listens, delivery_tag))
         self.priority += 1
 
@@ -82,7 +117,7 @@ class MappingJobQueue(threading.Thread):
                             if exc:
                                 self.app.logger.info("job %s failed" % futures[complete])
                                 # TODO: What happens to items that fail??
-                                self.app.logger.error("\n".join(traceback.format_tb(exc.__traceback__)))
+                                self.app.logger.error("\n".join(traceback.format_exception(None, exc, exc.__traceback__)))
                             else:
                                 self.app.logger.info("job %s complete" % futures[complete])
                                 self.delivery_tag_queue.put(complete.result())

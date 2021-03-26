@@ -221,6 +221,9 @@ def init_ts_db(force, create_db):
         ts.run_sql_script(os.path.join(
             TIMESCALE_SQL_DIR, 'create_schemas.sql'))
 
+        print('TS: Creating Types...')
+        db.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_types.sql'))
+
         print('TS: Creating tables...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_tables.sql'))
 

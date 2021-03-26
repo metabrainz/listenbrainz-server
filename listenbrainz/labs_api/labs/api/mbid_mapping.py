@@ -11,6 +11,15 @@ from Levenshtein import distance
 from listenbrainz import config
 
 COLLECTION_NAME = "mbid_mapping_latest"
+MATCH_TYPES = ('no_match', 'low_quality', 'med_quality', 'high_quality', 'exact_match')
+MATCH_TYPE_NO_MATCH = 0
+MATCH_TYPE_LOW_QUALITY = 1
+MATCH_TYPE_MED_QUALITY = 2
+MATCH_TYPE_HIGH_QUALITY = 3
+MATCH_TYPE_EXACT_MATCH = 4
+
+MATCH_TYPE_HIGH_QUALITY_MAX_EDIT_DISTANCE = 2
+MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE = 5
 
 
 def prepare_query(text):
@@ -38,7 +47,8 @@ class MBIDMappingQuery(Query):
         debug output remains since more debugging/tuning will need to be done later on.
     """
 
-    EDIT_DIST_THRESHOLD = 5
+    MATCH_TYPE_HIGH_QUALITY_MAX_EDIT_DISTANCE = 2
+    MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE = 5
 
     def __init__(self):
         self.debug = False
@@ -126,23 +136,42 @@ class MBIDMappingQuery(Query):
         ac_detuned = self.detune_query_string(ac_hit)
         r_detuned = self.detune_query_string(r_hit)
 
+        is_ac_detuned = False
+        is_r_detuned = False
         while True:
             ac_dist, r_dist = self.compare(
                 artist_credit_name, recording_name, prepare_query(ac_hit), prepare_query(r_hit))
-            if ac_dist <= self.EDIT_DIST_THRESHOLD and r_dist <= self.EDIT_DIST_THRESHOLD:
-                return hit
 
-            if ac_dist > self.EDIT_DIST_THRESHOLD and ac_detuned:
+            # If we detuned one or more fields and it matches, the best it can get is a low quality match
+            if (is_ac_detuned or is_r_detuned) and ac_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and r_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE:
+                return (hit, MATCH_TYPE_LOW_QUALITY)
+
+            # For exact matches, return exact match. duh.
+            if ac_dist == 0 and r_dist == 0:
+                return (hit, MATCH_TYPE_EXACT_MATCH)
+
+            # If both fields are above the high quality threshold, call it high quality
+            if ac_dist <= self.MATCH_TYPE_HIGH_QUALITY_MAX_EDIT_DISTANCE and r_dist <= self.MATCH_TYPE_HIGH_QUALITY_MAX_EDIT_DISTANCE:
+                return (hit, MATCH_TYPE_HIGH_QUALITY)
+
+            # If both fields are above the medium quality threshold, call it medium quality
+            if ac_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and r_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE:
+                return (hit, MATCH_TYPE_MED_QUALITY)
+
+            # Poor results so far, lets try detuning fields and try again
+            if ac_dist > self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and ac_detuned:
                 ac_hit = ac_detuned
                 ac_detuned = ""
+                is_ac_detuned = True
                 continue
 
-            if r_dist > self.EDIT_DIST_THRESHOLD and r_detuned:
+            if r_dist > self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and r_detuned:
                 r_hit = r_detuned
                 r_detuned = ""
+                is_r_detuned = True
                 continue
 
-            return None
+            return (None, MATCH_TYPE_NO_MATCH)
 
     def lookup(self, artist_credit_name_p, recording_name_p):
 
@@ -150,7 +179,7 @@ class MBIDMappingQuery(Query):
             'q': artist_credit_name_p + " " + recording_name_p,
             'query_by': "combined",
             'prefix': 'no',
-            'num_typos': self.EDIT_DIST_THRESHOLD
+            'num_typos': self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE
         }
 
         while True:
@@ -191,7 +220,7 @@ class MBIDMappingQuery(Query):
         while True:
             hit = self.lookup(artist_credit_name_p, recording_name_p)
             if hit:
-                hit = self.evaluate_hit(
+                (hit, match_type) = self.evaluate_hit(
                     hit, artist_credit_name_p, recording_name_p)
 
             if not hit:
@@ -221,4 +250,5 @@ class MBIDMappingQuery(Query):
                 'release_name': hit['document']['release_name'],
                 'release_mbid': hit['document']['release_mbid'],
                 'recording_name': hit['document']['recording_name'],
-                'recording_mbid': hit['document']['recording_mbid']}
+                'recording_mbid': hit['document']['recording_mbid'],
+                'match_type': match_type }
