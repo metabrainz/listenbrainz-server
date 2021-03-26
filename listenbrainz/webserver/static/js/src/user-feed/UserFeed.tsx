@@ -8,7 +8,6 @@ import {
   faCircle,
   faHeadphones,
   faHeart,
-  faListUl,
   faQuestion,
   faThumbsUp,
   faUserPlus,
