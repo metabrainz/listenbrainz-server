@@ -332,7 +332,10 @@ export default class UserFeedPage extends React.Component<
     const { currentUser } = this.props;
     const { event_type, user_name, metadata } = event;
     if (event_type === EventType.FOLLOW) {
-      const { user_name_0, user_name_1 } = metadata as UserRelationshipEvent;
+      const {
+        user_name_0,
+        user_name_1,
+      } = metadata as UserRelationshipEventMetadata;
       const currentUserFollows = currentUser.name === user_name_0;
       const currentUserFollowed = currentUser.name === user_name_1;
       if (currentUserFollows) {
@@ -359,7 +362,7 @@ export default class UserFeedPage extends React.Component<
       );
     }
     if (event_type === EventType.NOTIFICATION) {
-      const { message } = metadata as NotificationEvent;
+      const { message } = metadata as NotificationEventMetadata;
       return (
         <span
           className="event-description-text"
