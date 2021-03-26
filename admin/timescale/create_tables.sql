@@ -44,15 +44,15 @@ CREATE TABLE  playlist.playlist_collaborator (
 -- MBID Mapping
 
 CREATE TABLE listen_mbid_mapping (
-        id              SERIAL,
-        recording_msid  UUID NOT NULL,
-        recording_mbid  UUID,
-        release_mbid    UUID,
-        artist_mbids    UUID[],
-        artist_name     TEXT,
-        recording_name  TEXT,
-        match_type      mbid_mapping_match_type_enum NOT NULL,
-        last_updated    TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+        id                 SERIAL,
+        recording_msid     UUID NOT NULL,
+        recording_mbid     UUID,
+        release_mbid       UUID,
+        artist_credit_id   INTEGER,
+        artist_credit_name TEXT,
+        recording_name     TEXT,
+        match_type         mbid_mapping_match_type_enum NOT NULL,
+        last_updated       TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
 
 COMMIT;

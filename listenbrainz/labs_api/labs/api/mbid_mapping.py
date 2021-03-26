@@ -186,7 +186,6 @@ class MBIDMappingQuery(Query):
             try:
                 hits = self.client.collections[COLLECTION_NAME].documents.search(
                     search_parameters)
-                print("hits: ", hits)
                 break
             except requests.exceptions.ReadTimeout:
                 print("Got socket timeout, sleeping 5 seconds, trying again.")

@@ -20,9 +20,9 @@ class MBIDMappingWriter(threading.Thread):
         # When we receive new listens, add the listens to the priority queue
         listens = json.loads(body)
         self.queue.add_new_listens(listens, method.delivery_tag)
-        self.submit_delivery_tags()
+        self.submit_delivery_tags(channel)
 
-    def submit_delivery_tags(self):
+    def submit_delivery_tags(self, channel):
         # Check to see if other jobs have completed that we need to ack.
         tags = self.queue.get_completed_delivery_tags()
         for tag in tags:

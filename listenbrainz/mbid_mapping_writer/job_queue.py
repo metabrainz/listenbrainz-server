@@ -19,11 +19,11 @@ MATCH_TYPES = ('no_match', 'low_quality', 'med_quality', 'high_quality', 'exact_
 
 def lookup_new_listens(app, listens, delivery_tag):
 
-    msids = { listen['recording_msid']:listen for listen in listens }
+    msids = { str(listen['recording_msid']):listen for listen in listens }
     with timescale.engine.connect() as connection:
         query = """SELECT recording_msid 
                      FROM listen_mbid_mapping
-                    WHERE recording_msid IN (:msids)"""
+                    WHERE recording_msid IN :msids"""
         curs = connection.execute(sqlalchemy.text(query), msids=tuple(msids.keys()))
         while True:
             result = curs.fetchone()
@@ -33,30 +33,33 @@ def lookup_new_listens(app, listens, delivery_tag):
 
     q = MBIDMappingQuery()
     params = []
-    for listen in listens:
+    param_listens = []
+    for msid in msids:
+        listen = msids[msid] 
         params.append({'[artist_credit_name]': listen["data"]["artist_name"], 
                        '[recording_name]': listen["data"]["track_name"]})
+        param_listens.append(listen)
 
     rows = []
     hits = q.fetch(params)
     for hit in hits:
-        listen = listens[hit["index"]]
+        listen = param_listens[hit["index"]]
         rows.append((listen['recording_msid'],
                     hit["recording_mbid"],
                     hit["release_mbid"],
-                    hit["artist_mbids"],
-                    hit["artist_name"],
+                    hit["artist_credit_id"],
+                    hit["artist_credit_name"],
                     hit["recording_name"],
                     MATCH_TYPES[hit["match_type"]]))
-        del msids[listen['recording_msid']]
+        del msids[str(listen['recording_msid'])]
 
     for msid in msids:
         rows.append((listen['recording_msid'], None, None, None, None, None, MATCH_TYPES[0]))
         
     conn = timescale.engine.raw_connection() 
     with conn.cursor() as curs:
-        query = """INSERT INTO listen_mbid_mapping (recording_msid, recording_mbid, release_mbid, artist_mbids,
-                                                    artist_name, recording_name, match_type)
+        query = """INSERT INTO listen_mbid_mapping (recording_msid, recording_mbid, release_mbid, artist_credit_id,
+                                                    artist_credit_name, recording_name, match_type)
                         VALUES %s
                    ON CONFLICT DO NOTHING"""
         try:

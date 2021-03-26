@@ -43,4 +43,7 @@ then
     rm -f /etc/service/cron-config/down
 fi
 
-
+if [ "${CONTAINER_NAME}" = "listenbrainz-mbid-mapping-writer-${DEPLOY_ENV}" ]
+then
+    rm -f /etc/service/mbid_mapping_writer/down
+fi

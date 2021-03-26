@@ -114,6 +114,11 @@ COPY ./docker/services/timescale_writer/consul-template-timescale-writer.conf /e
 COPY ./docker/services/timescale_writer/timescale_writer.service /etc/service/timescale_writer/run
 RUN touch /etc/service/timescale_writer/down
 
+# MBID-mapping writer
+COPY ./docker/services/mbid_mapping_writer/consul-template-mbid-mapping-writer.conf /etc/consul-template-mbid-mapping-writer.conf
+COPY ./docker/services/mbid_mapping_writer/mbid_mapping_writer.service /etc/service/mbid_mapping_writer/run
+RUN touch /etc/service/mbid_mapping_writer/down
+
 # uwsgi (website)
 COPY ./docker/services/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
 COPY ./docker/services/uwsgi/consul-template-uwsgi.conf /etc/consul-template-uwsgi.conf
