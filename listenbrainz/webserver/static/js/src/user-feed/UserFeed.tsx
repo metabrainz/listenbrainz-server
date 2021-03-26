@@ -35,7 +35,6 @@ export enum EventType {
   FOLLOW = "follow",
   STOP_FOLLOW = "stop_follow",
   BLOCK_FOLLOW = "block_follow",
-  PLAYLIST_CREATED = "playlist_created",
   NOTIFICATION = "notification",
 }
 
@@ -82,8 +81,6 @@ export default class UserFeedPage extends React.Component<
         return faUserSlash;
       case EventType.BLOCK_FOLLOW:
         return faUserSecret;
-      case EventType.PLAYLIST_CREATED:
-        return faListUl;
       case EventType.NOTIFICATION:
         return faBell;
       default:
@@ -359,14 +356,6 @@ export default class UserFeedPage extends React.Component<
         <span className="event-description-text">
           <a href={`/user/${user_name_0}`}>{user_name_0}</a> is now following{" "}
           <a href={`/user/${user_name_1}`}>{user_name_1}</a>
-        </span>
-      );
-    }
-    if (event_type === EventType.PLAYLIST_CREATED) {
-      const { identifier, title } = metadata as JSPFPlaylist;
-      return (
-        <span className="event-description-text">
-          We created a playlist for you: <a href={identifier}>{title}</a>
         </span>
       );
     }

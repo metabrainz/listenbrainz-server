@@ -154,15 +154,6 @@
 			"user_name": "iliekcomputers"
 		},
 		{
-			"event_type": "playlist_created",
-			"created":1613474252,
-			"metadata": {
-				"identifier": "https://listenbrainz.org/playlist/4245ccd3-4f0d-4276-95d6-2e09d87b5546",
-				"title": "My top discoveries of 2020"
-			},
-			"user_name": "troi-bot"
-		},
-		{
 			"event_type": "notification",
 			"created":1613474250,
 			"metadata": {

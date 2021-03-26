@@ -475,7 +475,6 @@ type EventTypeT =
   | "follow"
   | "stop_follow"
   | "block_follow"
-  | "playlist_created"
   | "notification";
 
 type UserRelationshipEvent = {

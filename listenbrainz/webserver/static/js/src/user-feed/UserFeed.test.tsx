@@ -96,23 +96,9 @@ describe("<UserFeed />", () => {
     expect(time.text()).toEqual("Feb 16, 11:20 AM");
   });
 
-  it("renders playlist created events", () => {
-    const wrapper = mount<UserFeedPage>(<UserFeedPage {...props} />);
-    const playlistEvent = wrapper.find("#timeline > ul >li").at(5);
-    const description = playlistEvent.find(".event-description-text");
-    expect(description.text()).toEqual(
-      // @ts-ignore
-      `We created a playlist for you: ${props.events[5].metadata.title}`
-    );
-    const content = playlistEvent.find(".event-content");
-    expect(content.exists()).toBeFalsy();
-    const time = playlistEvent.find(".event-time");
-    expect(time.text()).toEqual("Feb 16, 11:17 AM");
-  });
-
   it("renders notification events", () => {
     const wrapper = mount<UserFeedPage>(<UserFeedPage {...props} />);
-    const notificationEvent = wrapper.find("#timeline > ul >li").at(6);
+    const notificationEvent = wrapper.find("#timeline > ul >li").at(5);
     const description = notificationEvent.find(".event-description-text");
     // Ensure it parsed and reconstituted the html message
     expect(description.text()).toEqual(
