@@ -180,16 +180,13 @@ def user_feed(user_name: str):
         max_ts = int(time.time())
 
     users_following = db_user_relationship.get_following_for_user(user['id'])
-    if len(users_following) == 0:
-        return jsonify({'payload': {
-            'count': 0,
-            'user_id': user_name,
-            'events': [],
-        }})
 
     # get all listen events
     musicbrainz_ids = [user['musicbrainz_id'] for user in users_following]
-    listen_events = get_listen_events(db_conn, musicbrainz_ids, min_ts, max_ts, count, time_range)
+    if len(users_following) == 0:
+        listen_events = []
+    else:
+        listen_events = get_listen_events(db_conn, musicbrainz_ids, min_ts, max_ts, count, time_range)
 
     # for events like "follow" and "recording recommendations", we want to show the user
     # their own events as well
