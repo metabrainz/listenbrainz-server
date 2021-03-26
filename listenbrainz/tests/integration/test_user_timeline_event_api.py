@@ -172,20 +172,12 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             url_for('user_timeline_event_api_bp.user_feed', user_name=self.user['musicbrainz_id']),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
         )
-        expected_json = {
-            'payload': {
-                'count': 1,
-                'events': [
-                    {
-                        'created': 1616745110,
-                        'event_type': 'notification',
-                        'metadata': {
-                            'message': 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'
-                        },
-                        'user_name': approved_user['musicbrainz_id']
-                    }
-                ],
-                'user_id': self.user['musicbrainz_id']
-            }
-        }
-        self.assertEqual(expected_json, r.json)
+
+        payload = r.json['payload']
+        self.assertEqual(1, payload['count'])
+        self.assertEqual(self.user['musicbrainz_id'], payload['user_id'])
+
+        event = payload['events'][0]
+        self.assertEqual('notification', event['event_type'])
+        self.assertEqual('You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>',event['metadata']['message'])
+        self.assertEqual(approved_user['musicbrainz_id'], event['user_name'])
