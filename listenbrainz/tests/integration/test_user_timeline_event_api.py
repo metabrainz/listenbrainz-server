@@ -179,5 +179,6 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         event = payload['events'][0]
         self.assertEqual('notification', event['event_type'])
-        self.assertEqual('You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>',event['metadata']['message'])
+        self.assertEqual('You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>',
+                         event['metadata']['message'])
         self.assertEqual(approved_user['musicbrainz_id'], event['user_name'])
