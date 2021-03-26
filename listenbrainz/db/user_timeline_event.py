@@ -138,3 +138,15 @@ def get_recording_recommendation_events_for_feed(user_ids: List[int], min_ts: in
         })
 
         return [UserTimelineEvent(**row) for row in result.fetchall()]
+
+
+def get_user_notification_events(user_id: int, count: int = 50) -> List[UserTimelineEvent]:
+    """ Gets notification posted on the user's timeline.
+
+    The optional `count` parameter can be used to control the number of events being returned.
+    """
+    return get_user_timeline_events(
+        user_id=user_id,
+        event_type=UserTimelineEventType.NOTIFICATION,
+        count=count
+    )

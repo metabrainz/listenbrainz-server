@@ -159,3 +159,33 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             headers={'Authorization': 'Token {}'.format(approved_user['auth_token'])}
         )
         self.assert200(r)
+
+    def test_get_notification_event(self):
+        metadata = {"message": 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'}
+        approved_user = db_user.get_or_create(11, "troi-bot")
+        self.client.post(
+            url_for('user_timeline_event_api_bp.create_user_notification_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({"metadata": metadata}),
+            headers={'Authorization': 'Token {}'.format(approved_user['auth_token'])}
+        )
+        r = self.client.get(
+            url_for('user_timeline_event_api_bp.user_feed', user_name=self.user['musicbrainz_id']),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
+        )
+        expected_json = {
+            'payload': {
+                'count': 1,
+                'events': [
+                    {
+                        'created': 1616745110,
+                        'event_type': 'notification',
+                        'metadata': {
+                            'message': 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'
+                        },
+                        'user_name': approved_user['musicbrainz_id']
+                    }
+                ],
+                'user_id': self.user['musicbrainz_id']
+            }
+        }
+        self.assertEqual(expected_json, r.json)
