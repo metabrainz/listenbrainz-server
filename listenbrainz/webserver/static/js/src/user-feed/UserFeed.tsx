@@ -46,6 +46,7 @@ type UserFeedPageProps = {
   currentUser: ListenBrainzUser;
   events: TimelineEvent[];
   spotify: SpotifyUser;
+  youtube: YoutubeUser;
 } & WithAlertNotificationsInjectedProps;
 
 type UserFeedPageState = {
@@ -353,7 +354,7 @@ export default class UserFeedPage extends React.Component<
   }
 
   render() {
-    const { currentUser, spotify, apiUrl, newAlert } = this.props;
+    const { currentUser, spotify, apiUrl, youtube, newAlert } = this.props;
     const {
       alerts,
       currentListen,
@@ -513,6 +514,7 @@ export default class UserFeedPage extends React.Component<
                   onCurrentListenChange={this.handleCurrentListenChange}
                   ref={this.brainzPlayer}
                   spotifyUser={spotify}
+                  youtubeUser={youtube}
                 />
               </div>
             </div>
@@ -527,21 +529,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#react-container");
   const propsElement = document.getElementById("react-props");
   const reactProps = JSON.parse(propsElement!.innerHTML);
-  const { api_url, current_user, spotify, events } = reactProps;
+  const { api_url, current_user, spotify, youtube, events } = reactProps;
 
   const UserFeedPageWithAlertNotifications = withAlertNotifications(
     UserFeedPage
   );
-
   ReactDOM.render(
     <ErrorBoundary>
       <UserFeedPageWithAlertNotifications
-        currentUser={current_user}
-        events={events}
-        apiUrl={api_url}
-        spotify={spotify}
-      />
-    </ErrorBoundary>,
+      currentUser={current_user}
+      events={events}
+      apiUrl={api_url}
+      spotify={spotify}
+      youtube={youtube}
+    /></ErrorBoundary>,
     domContainer
   );
 });

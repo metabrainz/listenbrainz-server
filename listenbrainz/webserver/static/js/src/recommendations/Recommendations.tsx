@@ -20,6 +20,7 @@ export type RecommendationsProps = {
   recommendations?: Array<Recommendation>;
   profileUrl?: string;
   spotify: SpotifyUser;
+  youtube: YoutubeUser;
   user: ListenBrainzUser;
   webSocketsServerUrl: string;
   currentUser?: ListenBrainzUser;
@@ -227,7 +228,7 @@ export default class Recommendations extends React.Component<
       currRecPage,
       totalRecPages,
     } = this.state;
-    const { spotify, user, currentUser, apiUrl, newAlert } = this.props;
+    const { spotify, youtube, user, currentUser, apiUrl, newAlert } = this.props;
 
     return (
       <div role="main">
@@ -327,6 +328,7 @@ export default class Recommendations extends React.Component<
               onCurrentListenChange={this.handleCurrentRecommendationChange}
               ref={this.brainzPlayer}
               spotifyUser={spotify}
+              youtubeUser={youtube}
             />
           </div>
         </div>
@@ -348,6 +350,7 @@ document.addEventListener("DOMContentLoaded", () => {
     api_url,
     recommendations,
     spotify,
+    youtube,
     user,
     web_sockets_server_url,
     current_user,
@@ -358,14 +361,14 @@ document.addEventListener("DOMContentLoaded", () => {
   ReactDOM.render(
     <ErrorBoundary>
       <RecommendationsWithAlertNotifications
-        apiUrl={api_url}
-        recommendations={recommendations}
-        spotify={spotify}
-        user={user}
-        webSocketsServerUrl={web_sockets_server_url}
-        currentUser={current_user}
-      />
-    </ErrorBoundary>,
+      apiUrl={api_url}
+      recommendations={recommendations}
+      spotify={spotify}
+      user={user}
+      webSocketsServerUrl={web_sockets_server_url}
+      currentUser={current_user}
+      youtube={youtube}
+    /></ErrorBoundary>,
     domContainer
   );
 });

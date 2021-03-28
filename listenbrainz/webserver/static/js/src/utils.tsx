@@ -54,6 +54,58 @@ const searchForSpotifyTrack = async (
   return null;
 };
 
+const searchForYoutubeTrack = async (
+  apiKey?: string,
+  accessToken?: string,
+  trackName?: string,
+  artistName?: string,
+  releaseName?: string,
+  refreshToken?: () => Promise<string>
+): Promise<Array<string> | null> => {
+  if (!apiKey) return null;
+  if (!accessToken) return null;
+  let query = trackName;
+  if (artistName) {
+    query += ` ${artistName}`;
+  }
+  if (releaseName) {
+    query += ` ${releaseName}`;
+  }
+  const response = await fetch(
+    `https://youtube.googleapis.com/youtube/v3/search?part=snippet&q=${query}&key=${apiKey}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  if (response.status === 401) {
+    if (refreshToken) {
+      const newAccessToken = await refreshToken();
+      return searchForYoutubeTrack(
+        apiKey,
+        newAccessToken,
+        trackName,
+        artistName,
+        releaseName,
+        undefined
+      );
+    }
+  }
+
+  const responseBody = await response.json();
+  if (!response.ok) {
+    throw responseBody.error;
+  }
+  const tracks: Array<any> = _.get(responseBody, "items");
+  const videoIds = tracks.map((track) => track.id.videoId);
+  if (videoIds.length) return videoIds;
+  return null;
+};
+
 const getArtistLink = (listen: Listen) => {
   const artistName = _.get(listen, "track_metadata.artist_name");
   const firstArtist = _.first(
@@ -212,4 +264,5 @@ export {
   getPlayButton,
   formatWSMessageToListen,
   preciseTimestamp,
+  searchForYoutubeTrack,
 };

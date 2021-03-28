@@ -8,9 +8,15 @@ import {
 } from "lodash";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
 import { getTrackExtension } from "./playlists/utils";
+import { searchForYoutubeTrack } from "./utils";
 
 type YoutubePlayerState = {
   currentListen?: Listen;
+};
+
+type SpotifyPlayerProps = DataSourceProps & {
+  youtubeUser: YoutubeUser;
+  refreshYoutubeToken: () => Promise<string>;
 };
 
 // For some reason Youtube types do not document getVideoData,
@@ -20,7 +26,7 @@ type ExtendedYoutubePlayer = {
 } & YT.Player;
 
 export default class YoutubePlayer
-  extends React.Component<DataSourceProps, YoutubePlayerState>
+  extends React.Component<SpotifyPlayerProps, YoutubePlayerState>
   implements DataSourceType {
   youtubePlayer?: ExtendedYoutubePlayer;
   youtubePlayerStateTimerID = null;
@@ -85,16 +91,18 @@ export default class YoutubePlayer
       handleWarning("Not enough info to search on Youtube");
       onTrackNotFound();
     } else if (this.youtubePlayer) {
-      let query = trackName;
-      if (artistName) {
-        query += ` ${artistName}`;
-      }
-      if (releaseName) {
-        query += ` ${releaseName}`;
-      }
-      this.youtubePlayer.loadPlaylist({
-        list: query,
-        listType: "search",
+      const { youtubeUser, refreshYoutubeToken } = this.props;
+      const { api_key, access_token } = youtubeUser;
+      searchForYoutubeTrack(
+        api_key,
+        access_token,
+        trackName,
+        artistName,
+        releaseName,
+        refreshYoutubeToken
+      ).then((videoIds) => {
+        if (!videoIds || !this.youtubePlayer) return;
+        this.youtubePlayer.loadPlaylist(videoIds);
       });
     }
   };

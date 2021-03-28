@@ -80,6 +80,11 @@ declare type SpotifyUser = {
   permission?: Array<SpotifyPermission>;
 };
 
+declare type YoutubeUser = {
+  api_key?: string;
+  access_token?: string;
+};
+
 declare type SpotifyPermission =
   | "user-read-currently-playing"
   | "user-read-recently-played"

@@ -139,6 +139,15 @@ export default class APIService {
     return parseInt(result.payload.count, 10);
   };
 
+  refreshYoutubeToken = async (): Promise<string> => {
+    const response = await fetch("/profile/connect-youtube/refresh/", {
+      method: "POST",
+    });
+    await this.checkStatus(response);
+    const result = await response.json();
+    return result.access_token;
+  };
+
   refreshSpotifyToken = async (): Promise<string> => {
     const response = await fetch("/profile/refresh-spotify-token", {
       method: "POST",
