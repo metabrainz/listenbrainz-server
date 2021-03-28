@@ -16,6 +16,7 @@ from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound
 
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
+from listenbrainz.domain import spotify, youtube
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.login import api_login_required
 from listenbrainz.webserver.views.feedback_api import _feedback_to_api
@@ -279,6 +280,53 @@ def connect_spotify():
         only_import_url=only_import_sp_oauth,
         both_url=both_sp_oauth,
     )
+
+
+@profile_bp.route('/connect-youtube/', methods=['GET', 'POST'])
+@login_required
+def connect_youtube():
+    if request.method == 'POST' and request.form.get('delete') == 'yes':
+        youtube.remove_user(current_user.id)
+        flash.success('Your Youtube account has been unlinked')
+
+    authorize_url = youtube.get_authorize_url()
+    user = youtube.get_user(current_user.id)
+
+    return render_template(
+        'user/youtube.html',
+        account=user,
+        last_updated=None,
+        authorize_url=authorize_url
+    )
+
+
+@profile_bp.route('/connect-youtube/callback/')
+@login_required
+def connect_youtube_callback():
+    code = request.args.get('code')
+    if not code:
+        raise BadRequest('missing code')
+    token = youtube.fetch_access_token(code)
+    youtube.add_new_user(current_user.id, token)
+    flash.success('Successfully authenticated with Youtube!')
+    return redirect(url_for('profile.connect_youtube'))
+
+
+@profile_bp.route('/connect-youtube/refresh/', methods=['POST'])
+@crossdomain()
+@api_login_required
+def refresh_youtube_token():
+    youtube_user = youtube.get_user(current_user.id)
+    if not youtube_user:
+        raise APINotFound("User has not authenticated to Youtube")
+
+    if youtube_user["token_expired"]:
+        try:
+            youtube_user = youtube.refresh_token(current_user.id)
+        except Exception:
+            raise APIServiceUnavailable("Cannot refresh Youtube token right now")
+
+    return jsonify({"access_token": youtube_user["access_token"]})
 
 
 @profile_bp.route('/connect-spotify/callback')

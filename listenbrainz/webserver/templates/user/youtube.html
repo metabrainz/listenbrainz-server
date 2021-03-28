@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Link youtube account - ListenBrainz{% endblock %}
+
+{% block content %}
+  <div id="user-profile">
+    <h2 class="page-title">Link Youtube Account</h2>
+
+    <h3>Youtube features</h3>
+
+    <p>
+       ListenBrainz integrates with Youtube to let you play music tracks from ListenBrainz pages. ListenBrainz has a
+        number of music discovery features that require authentication to search and play tracks from Youtube.
+    </p>
+
+    <p>
+      You can revoke these permissions whenever you want by unlinking your Youtube account.
+    </p>
+
+    <h3>Account Linking Status</h3>
+    {% if account %}
+      <p>Your account is linked. Click the button below to unlink it</p>
+      <form method="POST">
+        <input type="hidden" name="delete" value="yes" />
+        <input class="btn btn-primary btn-lg" type="submit" value="Unlink" />
+      </form>
+
+    {% else %}
+      <p>
+      Your account is currently not linked. To link your account, please choose one of the following:
+      </p>
+      <p><a href="{{ authorize_url }}" class="btn btn-primary btn-lg">Link my account to play music</a></p>
+    {% endif %}
+
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script src="{{ url_for('static', filename='js/lib/jquery.timeago.js') }}"></script>
+  <script type="text/javascript">
+    $(document).ready(function() {
+      $("abbr.timeago").timeago();
+    });
+  </script>
+{% endblock %}
