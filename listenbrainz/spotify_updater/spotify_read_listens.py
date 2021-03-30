@@ -147,7 +147,10 @@ def make_api_request(user, spotipy_call, **kwargs):
                 # Rate Limit Problems -- the client handles these, but it can still give up
                 # after a certain number of retries, so we look at the header and try the
                 # request again, if the error is raised
-                time_to_sleep = int(e.headers.get('Retry-After', delay))
+                try:
+                    time_to_sleep = int(e.headers.get('Retry-After', delay))
+                except ValueError:
+                    time_to_sleep = delay
                 current_app.logger.warn('Encountered a rate limit, sleeping %d seconds and trying again...', time_to_sleep)
                 time.sleep(time_to_sleep)
                 delay += 1
@@ -304,7 +307,7 @@ def process_one_user(user):
 
     except spotify.SpotifyInvalidGrantError:
         if not current_app.config['TESTING']:
-            notify_error(user.musicbrainz_row_id, "User has revoked authorization through spotify")
+            notify_error(user.musicbrainz_row_id, "It seems like you've revoked permission for us to read your spotify account")
         # user has revoked authorization through spotify ui or deleted their spotify account etc.
         # in any of these cases, we should delete user from our spotify db as well.
         db_spotify.delete_spotify(user.user_id)
