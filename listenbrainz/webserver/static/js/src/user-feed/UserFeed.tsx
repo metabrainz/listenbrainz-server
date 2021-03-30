@@ -3,11 +3,11 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 
 import {
+  faBell,
   faBullhorn,
   faCircle,
   faHeadphones,
   faHeart,
-  faListUl,
   faQuestion,
   faThumbsUp,
   faUserPlus,
@@ -19,6 +19,7 @@ import { AlertList } from "react-bs-notifier";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { isEqual } from "lodash";
+import { sanitize } from "dompurify";
 import APIService from "../APIService";
 import BrainzPlayer from "../BrainzPlayer";
 import Loader from "../components/Loader";
@@ -33,7 +34,7 @@ export enum EventType {
   FOLLOW = "follow",
   STOP_FOLLOW = "stop_follow",
   BLOCK_FOLLOW = "block_follow",
-  PLAYLIST_CREATED = "playlist_created",
+  NOTIFICATION = "notification",
 }
 
 type UserFeedPageProps = {
@@ -79,8 +80,8 @@ export default class UserFeedPage extends React.Component<
         return faUserSlash;
       case EventType.BLOCK_FOLLOW:
         return faUserSecret;
-      case EventType.PLAYLIST_CREATED:
-        return faListUl;
+      case EventType.NOTIFICATION:
+        return faBell;
       default:
         return faQuestion;
     }
@@ -188,8 +189,14 @@ export default class UserFeedPage extends React.Component<
       this.newAlert(
         "warning",
         "Could not load timeline events",
-        `Something went wrong when we tried to load your events, please try again or contact us if the problem persists.<br/>
-        ${error}`
+        <>
+          Something went wrong when we tried to load your events, please try
+          again or contact us if the problem persists.
+          <br />
+          <strong>
+            {error.name}: {error.message}
+          </strong>
+        </>
       );
       this.setState({ loading: false });
       return;
@@ -236,16 +243,37 @@ export default class UserFeedPage extends React.Component<
   newAlert = (
     type: AlertType,
     title: string,
-    message: string | JSX.Element
+    message: string | JSX.Element,
+    count?: number
   ): void => {
     const newAlert: Alert = {
       id: new Date().getTime(),
       type,
       headline: title,
       message,
+      count,
     };
 
     this.setState((prevState) => {
+      const alertsList = prevState.alerts;
+      for (let i = 0; i < alertsList.length; i += 1) {
+        const item = alertsList[i];
+        if (
+          item.type === newAlert.type &&
+          item.headline.startsWith(newAlert.headline) &&
+          item.message === newAlert.message
+        ) {
+          if (!alertsList[i].count) {
+            // If the count attribute is undefined, then Initializing it as 2
+            alertsList[i].count = 2;
+          } else {
+            alertsList[i].count! += 1;
+          }
+          alertsList[i].headline = `${newAlert.headline} (${alertsList[i]
+            .count!})`;
+          return { alerts: alertsList };
+        }
+      }
       return {
         alerts: [...prevState.alerts, newAlert],
       };
@@ -304,7 +332,10 @@ export default class UserFeedPage extends React.Component<
     const { currentUser } = this.props;
     const { event_type, user_name, metadata } = event;
     if (event_type === EventType.FOLLOW) {
-      const { user_name_0, user_name_1 } = metadata as UserRelationshipEvent;
+      const {
+        user_name_0,
+        user_name_1,
+      } = metadata as UserRelationshipEventMetadata;
       const currentUserFollows = currentUser.name === user_name_0;
       const currentUserFollowed = currentUser.name === user_name_1;
       if (currentUserFollows) {
@@ -330,12 +361,17 @@ export default class UserFeedPage extends React.Component<
         </span>
       );
     }
-    if (event_type === EventType.PLAYLIST_CREATED) {
-      const { identifier, title } = metadata as JSPFPlaylist;
+    if (event_type === EventType.NOTIFICATION) {
+      const { message } = metadata as NotificationEventMetadata;
       return (
-        <span className="event-description-text">
-          We created a playlist for you: <a href={identifier}>{title}</a>
-        </span>
+        <span
+          className="event-description-text"
+          // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{
+            __html: sanitize(message),
+          }}
+        />
       );
     }
 

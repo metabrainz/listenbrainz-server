@@ -1,3 +1,7 @@
+from urllib.parse import urlparse
+
+import bleach
+
 import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
 import listenbrainz.webserver.redis_connection as redis_connection
 import listenbrainz.db.user as db_user
@@ -380,6 +384,7 @@ def parse_param_list(params: str) -> list:
 
     return param_list
 
+
 def validate_auth_header(optional=False):
     """ Examine the current request headers for an Authorization: Token <uuid>
         header that identifies a LB user and then load the corresponding user
@@ -406,3 +411,24 @@ def validate_auth_header(optional=False):
         raise APIUnauthorized("Invalid authorization token.")
 
     return user
+
+
+def _allow_metabrainz_domains(tag, name, value):
+    """A bleach attribute cleaner for <a> tags that only allows hrefs to point
+    to metabrainz-controlled domains"""
+
+    metabrainz_domains = ["acousticbrainz.org", "critiquebrainz.org", "listenbrainz.org",
+                          "metabrainz.org", "musicbrainz.org"]
+
+    if name == "rel":
+        return True
+    elif name == "href":
+        p = urlparse(value)
+        return (not p.netloc) or p.netloc in metabrainz_domains
+    else:
+        return False
+
+
+def _filter_description_html(description):
+    ok_tags = [u"a", u"strong", u"b", u"em", u"i", u"u", u"ul", u"li", u"p", u"br"]
+    return bleach.clean(description, tags=ok_tags, attributes={"a": _allow_metabrainz_domains}, strip=True)

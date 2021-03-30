@@ -252,10 +252,12 @@ def get_similar_users(user_name):
     Get list of users who have similar music tastes (based on their listen history)
     for a given user. Returns an array of dicts like these:
 
-    {
-      "user_name": "hwnrwx",
-      "similarity": 0.1938480256
-    }
+    .. code-block:: json
+
+        {
+            "user_name": "hwnrwx",
+            "similarity": 0.1938480256
+        }
 
     :param user_name: the MusicBrainz ID of the user whose similar users are being requested.
     :statuscode 200: Yay, you have data!
@@ -285,10 +287,12 @@ def get_similar_to_user(user_name, other_user_name):
     Get the similarity of the user and the other user, based on their listening history.
     Returns a single dict:
 
-    {
-      "user_name": "other_user",
-      "similarity": 0.1938480256
-    }
+    .. code-block:: json
+
+        {
+            "user_name": "other_user",
+            "similarity": 0.1938480256
+        }
 
     :param user_name: the MusicBrainz ID of the the one user
     :param other_user_name: the MusicBrainz ID of the other user whose similar users are 
@@ -319,7 +323,6 @@ def latest_import():
 
     {
         'musicbrainz_id': the MusicBrainz ID of the user,
-
         'latest_import': the timestamp of the newest listen submitted in previous imports. Defaults to 0
     }
 
@@ -426,6 +429,8 @@ def delete_listen():
     This checks for the correct authorization token and deletes the listen.
 
     The format of the JSON to be POSTed to this endpoint is:
+
+    .. code-block:: json
 
         {
             "listened_at": 1,

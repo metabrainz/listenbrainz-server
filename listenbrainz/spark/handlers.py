@@ -392,4 +392,20 @@ def handle_similar_users(message):
     if current_app.config['TESTING']:
         return
 
-    import_user_similarities(message['data'])
+    user_count, avg_similar_users, error = import_user_similarities(message['data'])
+    if error:
+        send_mail(
+            subject='Similar User data failed to be calculated',
+            text=render_template('emails/similar_users_failed_notification.txt', error=error),
+            recipients=['listenbrainz-observability@metabrainz.org'],
+            from_name='ListenBrainz',
+            from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
+        )
+    else:
+        send_mail(
+            subject='Similar User data has been calculated',
+            text=render_template('emails/similar_users_updated_notification.txt', user_count=str(user_count), avg_similar_users="%.1f" % avg_similar_users),
+            recipients=['listenbrainz-observability@metabrainz.org'],
+            from_name='ListenBrainz',
+            from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
+        )
