@@ -30,7 +30,7 @@ import listenbrainz.db.user_timeline_event as db_user_timeline_event
 
 from data.model.listen import APIListen, TrackMetadata, AdditionalInfo
 from data.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, \
-    APIFollowEvent, NotificationMetadata
+    APIFollowEvent, NotificationMetadata, APINotificationEvent
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.listenstore import TimescaleListenStore
@@ -142,7 +142,7 @@ def create_user_notification_event(user_name):
         raise APIBadRequest("Invalid metadata: message is missing")
 
     message = _filter_description_html(data["message"])
-    metadata = NotificationMetadata(creator_id=creator['id'], message=message)
+    metadata = NotificationMetadata(creator=creator['musicbrainz_id'], message=message)
 
     try:
         db_user_timeline_event.create_user_notification_event(user['id'], metadata)
@@ -180,16 +180,13 @@ def user_feed(user_name: str):
         max_ts = int(time.time())
 
     users_following = db_user_relationship.get_following_for_user(user['id'])
-    if len(users_following) == 0:
-        return jsonify({'payload': {
-            'count': 0,
-            'user_id': user_name,
-            'events': [],
-        }})
 
     # get all listen events
     musicbrainz_ids = [user['musicbrainz_id'] for user in users_following]
-    listen_events = get_listen_events(db_conn, musicbrainz_ids, min_ts, max_ts, count, time_range)
+    if len(users_following) == 0:
+        listen_events = []
+    else:
+        listen_events = get_listen_events(db_conn, musicbrainz_ids, min_ts, max_ts, count, time_range)
 
     # for events like "follow" and "recording recommendations", we want to show the user
     # their own events as well
@@ -208,8 +205,11 @@ def user_feed(user_name: str):
         count=count,
     )
 
+    notification_events = get_notification_events(user, count)
+
     # TODO: add playlist event and like event
-    all_events = sorted(listen_events + follow_events + recording_recommendation_events, key=lambda event: -event.created)
+    all_events = sorted(listen_events + follow_events + recording_recommendation_events + notification_events,
+                        key=lambda event: -event.created)
 
     # sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly
     for index, event in enumerate(all_events):
@@ -303,6 +303,21 @@ def get_follow_events(user_ids: Tuple[int], min_ts: int, max_ts: int, count: int
             current_app.logger.error('Validation error: ' + str(e), exc_info=True)
             continue
     return events
+
+
+def get_notification_events(user: dict, count: int) -> List[APITimelineEvent]:
+    """ Gets notification events for the user in the feed."""
+    notification_events_db = db_user_timeline_event.get_user_notification_events(user_id=user['id'], count=count)
+    events = []
+    for event in notification_events_db:
+        events.append(APITimelineEvent(
+            event_type=UserTimelineEventType.NOTIFICATION,
+            user_name=event.metadata.creator,
+            created=event.created.timestamp(),
+            metadata=APINotificationEvent(message=event.metadata.message)
+        ))
+    return events
+
 
 def get_recording_recommendation_events(users_for_events: List[dict], min_ts: int, max_ts: int, count: int) -> List[APITimelineEvent]:
     """ Gets all recording recommendation events in the feed.
