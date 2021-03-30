@@ -121,7 +121,7 @@ export default class UserSocialNetwork extends React.Component<
   };
 
   render() {
-    const { user, loggedInUser } = this.props;
+    const { user, loggedInUser, apiUrl } = this.props;
     const { followerList, followingList, similarUsersList } = this.state;
     return (
       <>
@@ -130,6 +130,7 @@ export default class UserSocialNetwork extends React.Component<
           loggedInUser={loggedInUser}
           followerList={followerList}
           followingList={followingList}
+          apiUrl={apiUrl}
           loggedInUserFollowsUser={this.loggedInUserFollowsUser}
           updateFollowingList={this.updateFollowingList}
         />
@@ -137,6 +138,7 @@ export default class UserSocialNetwork extends React.Component<
           user={user}
           loggedInUser={loggedInUser}
           similarUsersList={similarUsersList}
+          apiUrl={apiUrl}
           loggedInUserFollowsUser={this.loggedInUserFollowsUser}
           updateFollowingList={this.updateFollowingList}
         />

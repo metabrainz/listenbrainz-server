@@ -38,6 +38,7 @@ type FollowButtonProps = {
     user: ListenBrainzUser,
     action: "follow" | "unfollow"
   ) => void;
+  apiUrl: string;
 };
 
 type FollowButtonState = {
@@ -62,7 +63,11 @@ class FollowButton extends React.Component<
       error: false,
     };
 
-    this.APIService = new APIService(`${window.location.origin}/1`);
+    const { apiUrl } = this.props;
+
+    this.APIService = new APIService(
+      props.apiUrl || `${window.location.origin}/1`
+    );
   }
 
   componentDidUpdate(prevProps: FollowButtonProps) {
