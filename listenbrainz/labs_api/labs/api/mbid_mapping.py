@@ -55,8 +55,8 @@ class MBIDMappingQuery(Query):
 
         self.client = typesense.Client({
             'nodes': [{
-                'host': config.TYPESENSE_HOST,
-                'port': config.TYPESENSE_PORT,
+                'host': "10.2.2.31", #config.TYPESENSE_HOST,
+                'port': 8109, #config.TYPESENSE_PORT,
                 'protocol': 'http',
             }],
             'api_key': config.TYPESENSE_API_KEY,
