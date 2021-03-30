@@ -4,7 +4,7 @@ import { mount } from "enzyme";
 import SimilarityScore, { SimilarityScoreProps } from "./SimilarityScore";
 
 const props: SimilarityScoreProps = {
-  similarityScore: 0.2,
+  similarityScore: 0.239745792,
   user: { auth_token: "baz", name: "test" },
   type: "regular",
 };
@@ -30,7 +30,7 @@ describe("SimilarityScore", () => {
 
     /* sets class orange for score 0.5 */
     wrapper = mount<SimilarityScoreProps>(
-      <SimilarityScore {...{ ...props, similarityScore: 0.5 }} />
+      <SimilarityScore {...{ ...props, similarityScore: 0.57457 }} />
     );
     expect(wrapper.find(".progress").childAt(0).hasClass("orange")).toEqual(
       true
@@ -38,7 +38,7 @@ describe("SimilarityScore", () => {
 
     /* sets class purple for score 0.9 */
     wrapper = mount<SimilarityScoreProps>(
-      <SimilarityScore {...{ ...props, similarityScore: 0.9 }} />
+      <SimilarityScore {...{ ...props, similarityScore: 0.945792 }} />
     );
     expect(wrapper.find(".progress").childAt(0).hasClass("purple")).toEqual(
       true

@@ -23,7 +23,7 @@ import { mount, shallow } from "enzyme";
 import * as timeago from "time-ago";
 import { sortBy } from "lodash";
 import UserFeedPage from "./UserFeed";
-import FollowerFollowingModal from "../follow/FollowerFollowingModal";
+import UserSocialNetwork from "../follow/UserSocialNetwork";
 import BrainzPlayer from "../BrainzPlayer";
 import * as timelineProps from "./__mocks__/timelineProps.json";
 
@@ -43,10 +43,10 @@ describe("<UserFeed />", () => {
     expect(wrapper.html()).toMatchSnapshot();
   });
 
-  it("contains the FollowerFollowingModal", () => {
+  it("contains a UserSocialNetwork component", () => {
     const wrapper = shallow(<UserFeedPage {...props} />);
     expect(wrapper).toBeTruthy();
-    expect(wrapper.find(FollowerFollowingModal)).toHaveLength(1);
+    expect(wrapper.find(UserSocialNetwork)).toHaveLength(1);
   });
 
   it("contains a BrainzPlayer instance", () => {

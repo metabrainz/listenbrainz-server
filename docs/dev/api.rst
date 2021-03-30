@@ -86,6 +86,15 @@ Status API Endpoints
    :include-empty-docstring:
    :undoc-static:
 
+Social API Endpoints
+^^^^^^^^^^^^^^^^^^^^
+These apis allow to interact with social features of ListenBrainz.
+
+.. autoflask:: listenbrainz.webserver:create_app_rtfd()
+   :blueprints: social_api_v1
+   :include-empty-docstring:
+   :undoc-static:
+
 Rate limiting
 ^^^^^^^^^^^^^
 

@@ -22,10 +22,10 @@ import { isEqual } from "lodash";
 import { sanitize } from "dompurify";
 import APIService from "../APIService";
 import BrainzPlayer from "../BrainzPlayer";
-import FollowerFollowingModal from "../follow/FollowerFollowingModal";
 import Loader from "../components/Loader";
 import TimelineEventCard from "./TimelineEventCard";
 import { preciseTimestamp } from "../utils";
+import UserSocialNetwork from "../follow/UserSocialNetwork";
 
 export enum EventType {
   RECORDING_RECOMMENDATION = "recording_recommendation",
@@ -395,7 +395,7 @@ export default class UserFeedPage extends React.Component<
   }
 
   render() {
-    const { currentUser, spotify } = this.props;
+    const { currentUser, spotify, apiUrl } = this.props;
     const {
       alerts,
       currentListen,
@@ -541,8 +541,12 @@ export default class UserFeedPage extends React.Component<
               </ul>
             </div>
             <div className="col-md-offset-1 col-md-4">
-              <FollowerFollowingModal user={currentUser} />
-              <div className="sticky-top">
+              <UserSocialNetwork
+                apiUrl={apiUrl}
+                user={currentUser}
+                loggedInUser={currentUser}
+              />
+              <div className="sticky-top mt-15">
                 <BrainzPlayer
                   apiService={this.APIService}
                   currentListen={currentListen}

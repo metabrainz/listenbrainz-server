@@ -1,6 +1,4 @@
-import datetime
 from operator import itemgetter
-import time
 from typing import Tuple
 
 import ujson
@@ -8,14 +6,12 @@ import psycopg2
 from flask import Blueprint, request, jsonify, current_app
 
 from listenbrainz.listenstore import TimescaleListenStore
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, APIServiceUnavailable
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz import webserver
-from listenbrainz.db.model.playlist import Playlist
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
-import listenbrainz.db.user_relationship as db_user_relationship
 from listenbrainz.webserver.rate_limiter import ratelimit
 import listenbrainz.webserver.redis_connection as redis_connection
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list,\
