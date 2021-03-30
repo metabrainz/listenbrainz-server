@@ -12,7 +12,7 @@ from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_PLAYING_NOW
 from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery, MATCH_TYPE_NO_MATCH
 from listenbrainz.db import timescale
 
-MAX_THREADS = 4
+MAX_THREADS = 1
 MAX_QUEUED_JOBS = MAX_THREADS * 2
 
 MATCH_TYPES = ('no_match', 'low_quality', 'med_quality', 'high_quality', 'exact_match')
