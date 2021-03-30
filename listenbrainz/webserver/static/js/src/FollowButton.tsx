@@ -65,7 +65,9 @@ class FollowButton extends React.Component<
 
     const { apiUrl } = this.props;
 
-    this.APIService = new APIService(apiUrl);
+    this.APIService = new APIService(
+      props.apiUrl || `${window.location.origin}/1`
+    );
   }
 
   componentDidUpdate(prevProps: FollowButtonProps) {
