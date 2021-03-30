@@ -91,13 +91,13 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
         event = db_user_timeline_event.create_user_notification_event(
             user_id=self.user['id'],
             metadata=NotificationMetadata(
-                creator_id=self.user['id'],
+                creator=self.user['musicbrainz_id'],
                 message=message,
             )
         )
         self.assertEqual(self.user['id'], event.user_id)
         self.assertEqual(message, event.metadata.message)
-        self.assertEqual(self.user['id'], event.metadata.creator_id)
+        self.assertEqual(self.user['musicbrainz_id'], event.metadata.creator)
         self.assertEqual(UserTimelineEventType.NOTIFICATION, event.event_type)
 
     def test_get_events_only_gets_events_for_the_specified_user(self):

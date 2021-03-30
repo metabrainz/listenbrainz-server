@@ -159,3 +159,26 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             headers={'Authorization': 'Token {}'.format(approved_user['auth_token'])}
         )
         self.assert200(r)
+
+    def test_get_notification_event(self):
+        metadata = {"message": 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'}
+        approved_user = db_user.get_or_create(11, "troi-bot")
+        self.client.post(
+            url_for('user_timeline_event_api_bp.create_user_notification_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({"metadata": metadata}),
+            headers={'Authorization': 'Token {}'.format(approved_user['auth_token'])}
+        )
+        r = self.client.get(
+            url_for('user_timeline_event_api_bp.user_feed', user_name=self.user['musicbrainz_id']),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
+        )
+
+        payload = r.json['payload']
+        self.assertEqual(1, payload['count'])
+        self.assertEqual(self.user['musicbrainz_id'], payload['user_id'])
+
+        event = payload['events'][0]
+        self.assertEqual('notification', event['event_type'])
+        self.assertEqual('You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>',
+                         event['metadata']['message'])
+        self.assertEqual(approved_user['musicbrainz_id'], event['user_name'])
