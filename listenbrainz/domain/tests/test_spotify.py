@@ -56,7 +56,6 @@ class SpotifyDomainTestCase(ServerTestCase):
     @mock.patch('listenbrainz.domain.spotify.db_spotify.get_user')
     @mock.patch('listenbrainz.domain.spotify.db_spotify.update_token')
     def test_refresh_user_token_only_access(self, mock_requests, mock_update_token, mock_get_user):
-        expires_at = int(time.time()) + 3600
         mock_requests.post(spotify.OAUTH_TOKEN_URL, status_code=200, json={
             'access_token': 'tokentoken',
             'expires_in': 3600,
@@ -67,7 +66,8 @@ class SpotifyDomainTestCase(ServerTestCase):
             self.spotify_user.user_id,
             'tokentoken',
             'old-refresh-token',
-            expires_at,
+            mock.ANY  # expires_at cannot be accurately calculated hence using mock.ANY
+            # another option is using a range for expires_at and a Matcher but that seems far more work
         )
         mock_get_user.assert_called_with(self.spotify_user.user_id)
 
@@ -82,14 +82,13 @@ class SpotifyDomainTestCase(ServerTestCase):
 
     # apparently, requests_mocker does not follow the usual order in which decorators are applied. :-(
     @requests_mock.Mocker()
-    @mock.patch('listenbrainz.db.spotify.delete_spotify')
-    def test_refresh_user_token_revoked(self, mock_requests, mock_delete_spotify):
+    def test_refresh_user_token_revoked(self, mock_requests):
         mock_requests.post(spotify.OAUTH_TOKEN_URL, status_code=400, json={
             'error': 'invalid_grant',
             'error_description': 'Refresh token revoked',
         })
-        spotify.refresh_user_token(self.spotify_user)
-        mock_delete_spotify.assert_called_with(self.spotify_user.user_id)
+        with self.assertRaises(spotify.SpotifyInvalidGrantError):
+            spotify.refresh_user_token(self.spotify_user)
 
     def test_get_spotify_oauth(self):
         func_oauth = spotify.get_spotify_oauth()
