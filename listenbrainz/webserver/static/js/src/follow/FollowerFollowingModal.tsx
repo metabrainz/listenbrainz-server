@@ -5,6 +5,7 @@ import Pill from "../components/Pill";
 import UserListModalEntry from "./UserListModalEntry";
 
 export type FollowerFollowingModalProps = {
+  apiUrl: string;
   user: ListenBrainzUser;
   loggedInUser: ListenBrainzUser | null;
   followerList: Array<string>;
@@ -42,6 +43,7 @@ export default class FollowerFollowingModal extends React.Component<
       updateFollowingList,
       followerList,
       followingList,
+      apiUrl,
     } = this.props;
     const { activeMode } = this.state;
 
@@ -76,6 +78,7 @@ export default class FollowerFollowingModal extends React.Component<
               <UserListModalEntry
                 mode="follow-following"
                 key={listEntry}
+                apiUrl={apiUrl}
                 user={formattedAsUser}
                 loggedInUser={loggedInUser}
                 loggedInUserFollowsUser={loggedInUserFollowsUser(
