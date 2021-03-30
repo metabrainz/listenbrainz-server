@@ -34,6 +34,10 @@ type FollowButtonProps = {
   user: ListenBrainzUser;
   loggedInUser?: ListenBrainzUser;
   loggedInUserFollowsUser: boolean;
+  updateFollowingList?: (
+    user: ListenBrainzUser,
+    action: "follow" | "unfollow"
+  ) => void;
 };
 
 type FollowButtonState = {
@@ -83,25 +87,38 @@ class FollowButton extends React.Component<
   };
 
   followUser = () => {
-    const { user } = this.props;
-    this.APIService.followUser(user.name).then(({ status }) => {
-      if (status === 200) {
-        this.setState({ loggedInUserFollowsUser: true, justFollowed: true });
-      } else {
-        this.setState({ error: true });
+    const { user, loggedInUser, updateFollowingList } = this.props;
+    this.APIService.followUser(user.name, loggedInUser?.auth_token!).then(
+      ({ status }) => {
+        if (status === 200) {
+          this.setState({ loggedInUserFollowsUser: true, justFollowed: true });
+          if (updateFollowingList) {
+            updateFollowingList(user, "follow");
+          }
+        } else {
+          this.setState({ error: true });
+        }
       }
-    });
+    );
   };
 
   unfollowUser = () => {
-    const { user } = this.props;
-    this.APIService.unfollowUser(user.name).then(({ status }) => {
-      if (status === 200) {
-        this.setState({ loggedInUserFollowsUser: false, justFollowed: false });
-      } else {
-        this.setState({ error: true });
+    const { user, loggedInUser, updateFollowingList } = this.props;
+    this.APIService.unfollowUser(user.name, loggedInUser?.auth_token!).then(
+      ({ status }) => {
+        if (status === 200) {
+          this.setState({
+            loggedInUserFollowsUser: false,
+            justFollowed: false,
+          });
+          if (updateFollowingList) {
+            updateFollowingList(user, "unfollow");
+          }
+        } else {
+          this.setState({ error: true });
+        }
       }
-    });
+    );
   };
 
   getButtonDetails = (): {
