@@ -272,7 +272,7 @@ def process_one_user(user):
         listenbrainz_user = db_user.get(user.user_id)
 
         currently_playing = get_user_currently_playing(user)
-        if currently_playing is not None and 'item' in currently_playing:
+        if currently_playing is not None and 'item' in currently_playing and currently_playing['item'] is not None:
             current_app.logger.debug('Received a currently playing track for %s', str(user))
             listens = parse_and_validate_spotify_plays([currently_playing['item']], LISTEN_TYPE_PLAYING_NOW)
             if listens:
