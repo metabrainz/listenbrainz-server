@@ -31,6 +31,9 @@ def notify_error(musicbrainz_row_id, error):
         error (str): a description of the error encountered.
     """
     user_email = mb_editor.get_editor_by_id(musicbrainz_row_id)['email']
+    if not user_email:
+        return
+
     spotify_url = current_app.config['SERVER_ROOT_URL'] + '/profile/connect-spotify'
     text = render_template('emails/spotify_import_error.txt', error=error, link=spotify_url)
     send_mail(
