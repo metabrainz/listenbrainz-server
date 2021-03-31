@@ -5,9 +5,9 @@ import json
 
 from datetime import datetime
 from listenbrainz.utils import safely_import_config
-from listenbrainz.webserver.errors import APIBadRequest
-
 safely_import_config()
+
+from listenbrainz.webserver.errors import APIBadRequest
 
 from dateutil import parser
 from flask import current_app, render_template
@@ -275,11 +275,13 @@ def process_one_user(user):
         listenbrainz_user = db_user.get(user.user_id)
 
         currently_playing = get_user_currently_playing(user)
-        if currently_playing is not None and 'item' in currently_playing and currently_playing['item'] is not None:
-            current_app.logger.debug('Received a currently playing track for %s', str(user))
-            listens = parse_and_validate_spotify_plays([currently_playing['item']], LISTEN_TYPE_PLAYING_NOW)
-            if listens:
-                submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTEN_TYPE_PLAYING_NOW)
+        if currently_playing is not None:
+            currently_playing_item = currently_playing.get('item', None)
+            if currently_playing_item is not None:
+                current_app.logger.debug('Received a currently playing track for %s', str(user))
+                listens = parse_and_validate_spotify_plays([currently_playing_item], LISTEN_TYPE_PLAYING_NOW)
+                if listens:
+                    submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTEN_TYPE_PLAYING_NOW)
 
         recently_played = get_user_recently_played(user)
         if recently_played is not None and 'items' in recently_played:
