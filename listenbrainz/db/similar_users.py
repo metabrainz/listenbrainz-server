@@ -123,7 +123,7 @@ def get_top_similar_users(count=200):
         Fetch the count top similar users and return a tuple(user1, user2, score(0.0-1.0))
     """
 
-    similar_users = []
+    similar_users = {}
     conn = db.engine.raw_connection()
     try:
         with conn.cursor() as curs:
@@ -135,9 +135,16 @@ def get_top_similar_users(count=200):
             for row in curs.fetchall():
                 user_name = row[0]
                 for other_user in row[1]:
-                    similar_users.append((user_name, other_user, row[1][other_user]))
+                    if user_name < other_user:
+                        similar_users[user_name + other_user] = (user_name, other_user, row[1][other_user])
+                    else:
+                        similar_users[other_user + user_name] = (other_user, user_name, row[1][other_user])
+
     except psycopg2.errors.OperationalError as err:
         current_app.logger.error( "Error: Failed to fetch top similar users %s" % str(err))
         return []
 
+    similar_users = [ similar_users[u] for u in similar_users ]
     return sorted(similar_users, key=itemgetter(2), reverse=True)[:count]
+
+
