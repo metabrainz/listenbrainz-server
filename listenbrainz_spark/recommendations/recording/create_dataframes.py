@@ -213,7 +213,7 @@ def save_playcounts_df(listens_df, recordings_df, users_df, threshold, metadata,
                               .join(recordings_df, 'mb_recording_mbid', 'inner') \
                               .groupBy('user_id', 'recording_id') \
                               .agg(func.count('recording_id').alias('count')) \
-                              .where(listens_df.count > threshold)
+                              .where('count > {}'.format(threshold))
 
     metadata['playcounts_count'] = playcounts_df.count()
     save_dataframe(playcounts_df, save_path)
