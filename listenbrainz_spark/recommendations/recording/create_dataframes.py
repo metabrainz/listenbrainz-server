@@ -193,15 +193,17 @@ def get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df):
     return missing_musicbrainz_data_itr
 
 
-def save_playcounts_df(listens_df, recordings_df, users_df, metadata, save_path):
+def save_playcounts_df(listens_df, recordings_df, users_df, threshold, metadata, save_path):
     """ Prepare and save playcounts dataframe.
 
         Args:
-            listens_df : Dataframe containing recording_mbids corresponding to a user.
-            recordings_df : Dataframe containing distinct recordings and corresponding
+            listens_df (dataframe): Dataframe containing recording_mbids corresponding to a user.
+            recordings_df (dataframe): Dataframe containing distinct recordings and corresponding
                                        mbids and names.
-            users_df : Dataframe containing user names and user ids.
-            save_path: path where playcounts_df should be saved.
+            users_df (dataframe): Dataframe containing user names and user ids.
+            threshold (int): minimum number of listens a user should have to be saved in the dataframe.
+            metadata (dict): metadata dataframe to append.
+            save_path (str): path where playcounts_df should be saved.
     """
     # listens_df is joined with users_df on user_name.
     # The output is then joined with recording_df on recording_mbid.
@@ -210,7 +212,8 @@ def save_playcounts_df(listens_df, recordings_df, users_df, metadata, save_path)
     playcounts_df = listens_df.join(users_df, 'user_name', 'inner') \
                               .join(recordings_df, 'mb_recording_mbid', 'inner') \
                               .groupBy('user_id', 'recording_id') \
-                              .agg(func.count('recording_id').alias('count'))
+                              .agg(func.count('recording_id').alias('count')) \
+                              .where(listens_df.count > threshold)
 
     metadata['playcounts_count'] = playcounts_df.count()
     save_dataframe(playcounts_df, save_path)
@@ -339,7 +342,7 @@ def prepare_messages(missing_musicbrainz_data_itr, from_date, to_date, ti):
     return messages
 
 
-def main(train_model_window, job_type):
+def main(train_model_window, job_type, minimum_listens_threshold=0):
 
     if job_type == "recommendation_recording":
         paths = {
@@ -402,7 +405,7 @@ def main(train_model_window, job_type):
     current_app.logger.info('Preparing listen data dump and playcounts, saving playcounts to HDFS...')
     listens_df = get_listens_df(mapped_listens_df, metadata)
 
-    save_playcounts_df(listens_df, recordings_df, users_df, metadata, paths["playcounts"])
+    save_playcounts_df(listens_df, recordings_df, users_df, minimum_listens_threshold, metadata, paths["playcounts"])
 
     metadata['dataframe_id'] = get_dataframe_id(paths["prefix"])
     save_dataframe_metadata_to_hdfs(metadata, paths["metadata"])
