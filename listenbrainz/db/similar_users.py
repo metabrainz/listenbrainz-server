@@ -1,3 +1,4 @@
+from operator import itemgetter
 import time
 
 import sqlalchemy
@@ -115,3 +116,28 @@ def import_user_similarities(data):
         return (0, 0.0, "Error: Failed to clean up old similar user table: %s" % str(err))
 
     return (user_count, target_user_count / user_count, "")
+
+
+def get_top_similar_users(count=200):
+    """
+        Fetch the count top similar users and return a tuple(user1, user2, score(0.0-1.0))
+    """
+
+    similar_users = []
+    conn = db.engine.raw_connection()
+    try:
+        with conn.cursor() as curs:
+            curs.execute("""SELECT musicbrainz_id AS user_name, similar_users
+                             FROM  recommendation.similar_user su
+                              JOIN "user" u
+                                ON user_id = u.id""")
+
+            for row in curs.fetchall():
+                user_name = row[0]
+                for other_user in row[1]:
+                    similar_users.append((user_name, other_user, row[1][other_user]))
+    except psycopg2.errors.OperationalError as err:
+        current_app.logger.error( "Error: Failed to fetch top similar users %s" % str(err))
+        return []
+
+    return sorted(similar_users, key=itemgetter(2), reverse=True)[:count]
