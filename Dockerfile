@@ -142,3 +142,6 @@ COPY . /code/listenbrainz/
 WORKDIR /code/listenbrainz
 RUN rm -rf ./listenbrainz/webserver/static/
 RUN rm -f /code/listenbrainz/listenbrainz/config.py /code/listenbrainz/listenbrainz/config.pyc
+
+ARG GIT_COMMIT_SHA
+ENV GIT_SHA ${GIT_COMMIT_SHA}
