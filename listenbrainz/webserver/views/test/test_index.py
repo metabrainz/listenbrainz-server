@@ -306,3 +306,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.temporary_login(user['login_id'])
         r = self.client.get('/feed')
         self.assert200(r)
+
+    def test_similar_users(self):
+        resp = self.client.get(url_for('index.similar_users'))
+        self.assert200(resp)

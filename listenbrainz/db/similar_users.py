@@ -136,9 +136,9 @@ def get_top_similar_users(count=200):
                 user_name = row[0]
                 for other_user in row[1]:
                     if user_name < other_user:
-                        similar_users[user_name + other_user] = (user_name, other_user, row[1][other_user])
+                        similar_users[user_name + other_user] = (user_name, other_user, "%.3f" % row[1][other_user])
                     else:
-                        similar_users[other_user + user_name] = (other_user, user_name, row[1][other_user])
+                        similar_users[other_user + user_name] = (other_user, user_name, "%.3f" % row[1][other_user])
 
     except psycopg2.errors.OperationalError as err:
         current_app.logger.error( "Error: Failed to fetch top similar users %s" % str(err))
