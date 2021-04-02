@@ -5,6 +5,8 @@ import json
 
 from datetime import datetime
 from listenbrainz.utils import safely_import_config
+from listenbrainz.webserver.errors import APIBadRequest
+
 safely_import_config()
 
 from dateutil import parser
@@ -246,9 +248,8 @@ def parse_and_validate_spotify_plays(plays, listen_type):
         try:
             validate_listen(listen, listen_type)
             listens.append(listen)
-        except BadRequest as e:
-            current_app.logger.error(str(e))
-            raise
+        except APIBadRequest:
+            pass
     return listens
 
 
@@ -274,7 +275,8 @@ def process_one_user(user):
         if currently_playing is not None and 'item' in currently_playing:
             current_app.logger.debug('Received a currently playing track for %s', str(user))
             listens = parse_and_validate_spotify_plays([currently_playing['item']], LISTEN_TYPE_PLAYING_NOW)
-            submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTEN_TYPE_PLAYING_NOW)
+            if listens:
+                submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTEN_TYPE_PLAYING_NOW)
 
         recently_played = get_user_recently_played(user)
         if recently_played is not None and 'items' in recently_played:
