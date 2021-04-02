@@ -107,7 +107,7 @@ def handle_user_listening_activity(data):
     musicbrainz_id = data['musicbrainz_id']
     user = db_user.get_by_mb_id(musicbrainz_id)
     if not user:
-        current_app.logger.critical("Calculated stats for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
+        current_app.logger.info("Calculated stats for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
         return
 
     # send a notification if this is a new batch of stats
@@ -136,7 +136,7 @@ def handle_user_daily_activity(data):
     musicbrainz_id = data['musicbrainz_id']
     user = db_user.get_by_mb_id(musicbrainz_id)
     if not user:
-        current_app.logger.critical("Calculated stats for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
+        current_app.logger.info("Calculated stats for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
         return
 
     # send a notification if this is a new batch of stats
