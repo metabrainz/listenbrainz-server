@@ -348,7 +348,7 @@ def notify_artist_relation_import(data):
     if current_app.config['TESTING']:
         return
 
-    artist_relation_name = data['import_artist_relation']
+    artist_relation_name = data['imported_artist_relation']
     import_time = data['import_time']
     time_taken_to_import = data['time_taken_to_import']
 
