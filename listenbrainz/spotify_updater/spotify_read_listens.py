@@ -275,6 +275,9 @@ def process_one_user(user):
         listenbrainz_user = db_user.get(user.user_id)
 
         currently_playing = get_user_currently_playing(user)
+        # There are two playing types, track and episode. We use only track.
+        # When the user's playback type is an episode, Spotify will set the
+        # field to null which becomes None after parsing the JSON.
         if currently_playing is not None:
             currently_playing_item = currently_playing.get('item', None)
             if currently_playing_item is not None:
