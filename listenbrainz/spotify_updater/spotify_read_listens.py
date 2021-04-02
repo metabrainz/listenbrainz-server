@@ -5,9 +5,9 @@ import json
 
 from datetime import datetime
 from listenbrainz.utils import safely_import_config
-from listenbrainz.webserver.errors import APIBadRequest
-
 safely_import_config()
+
+from listenbrainz.webserver.errors import APIBadRequest
 
 from dateutil import parser
 from flask import current_app, render_template
@@ -31,6 +31,9 @@ def notify_error(musicbrainz_row_id, error):
         error (str): a description of the error encountered.
     """
     user_email = mb_editor.get_editor_by_id(musicbrainz_row_id)['email']
+    if not user_email:
+        return
+
     spotify_url = current_app.config['SERVER_ROOT_URL'] + '/profile/connect-spotify'
     text = render_template('emails/spotify_import_error.txt', error=error, link=spotify_url)
     send_mail(
@@ -271,12 +274,20 @@ def process_one_user(user):
 
         listenbrainz_user = db_user.get(user.user_id)
 
+        # If there is no playback, currently_playing will be None.
+        # There are two playing types, track and episode. We use only the
+        # track type. Therefore, when the user's playback type is not a track,
+        # Spotify will set the item field to null which becomes None after
+        # parsing the JSON. Due to these reasons, we cannot simplify the
+        # checks below.
         currently_playing = get_user_currently_playing(user)
-        if currently_playing is not None and 'item' in currently_playing:
-            current_app.logger.debug('Received a currently playing track for %s', str(user))
-            listens = parse_and_validate_spotify_plays([currently_playing['item']], LISTEN_TYPE_PLAYING_NOW)
-            if listens:
-                submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTEN_TYPE_PLAYING_NOW)
+        if currently_playing is not None:
+            currently_playing_item = currently_playing.get('item', None)
+            if currently_playing_item is not None:
+                current_app.logger.debug('Received a currently playing track for %s', str(user))
+                listens = parse_and_validate_spotify_plays([currently_playing_item], LISTEN_TYPE_PLAYING_NOW)
+                if listens:
+                    submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTEN_TYPE_PLAYING_NOW)
 
         recently_played = get_user_recently_played(user)
         if recently_played is not None and 'items' in recently_played:

@@ -268,7 +268,10 @@ def get_similar_users(user_name):
     user = db_user.get_by_mb_id(user_name)
     if not user:
         raise APINotFound("User %s not found" % user_name)
+
     similar_users = db_user.get_similar_users(user['id'])
+    if not similar_users:
+        return jsonify({'payload': []})
 
     response = []
     for user_name in similar_users.similar_users:

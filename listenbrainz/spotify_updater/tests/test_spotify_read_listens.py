@@ -124,6 +124,7 @@ class ConvertListensTestCase(DatabaseTestCase):
     @patch('listenbrainz.domain.spotify.get_active_users_to_process')
     def test_spotipy_methods_are_called_with_correct_params(self, mock_get_active_users):
         self.spotify_user.get_spotipy_client = MagicMock()
+        self.spotify_user.get_spotipy_client.return_value.current_user_playing_track.return_value = None
         mock_get_active_users.return_value = [self.spotify_user]
 
         with listenbrainz.webserver.create_app().app_context():
@@ -136,6 +137,7 @@ class ConvertListensTestCase(DatabaseTestCase):
     def test_spotipy_methods_are_called_with_correct_params_with_no_latest_listened_at(self, mock_get_active_users):
         self.spotify_user.latest_listened_at = None
         self.spotify_user.get_spotipy_client = MagicMock()
+        self.spotify_user.get_spotipy_client.return_value.current_user_playing_track.return_value = None
         mock_get_active_users.return_value = [self.spotify_user]
 
         with listenbrainz.webserver.create_app().app_context():
