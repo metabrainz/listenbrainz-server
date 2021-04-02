@@ -133,7 +133,6 @@ def get_top_similar_users(count=200):
                                 ON user_id = u.id""")
 
             for row in curs.fetchall():
-                print("simiar user row: ", row)
                 user_name = row[0]
                 for other_user in row[1]:
                     if user_name < other_user:
@@ -141,13 +140,9 @@ def get_top_similar_users(count=200):
                     else:
                         similar_users[other_user + user_name] = (other_user, user_name, "%.3f" % row[1][other_user])
 
-            print("similar users: ", similar_users)
-
     except psycopg2.errors.OperationalError as err:
-        current_app.logger.error( "Error: Failed to fetch top similar users %s" % str(err))
+        current_app.logger.error("Error: Failed to fetch top similar users %s" % str(err))
         return []
 
-    similar_users = [ similar_users[u] for u in similar_users ]
+    similar_users = [similar_users[u] for u in similar_users]
     return sorted(similar_users, key=itemgetter(2), reverse=True)[:count]
-
-
