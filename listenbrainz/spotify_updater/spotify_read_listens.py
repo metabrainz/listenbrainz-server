@@ -248,8 +248,8 @@ def parse_and_validate_spotify_plays(plays, listen_type):
         try:
             validate_listen(listen, listen_type)
             listens.append(listen)
-        except APIBadRequest as e:
-            current_app.logger.info(str(e))
+        except APIBadRequest:
+            pass
     return listens
 
 
