@@ -155,15 +155,15 @@ def validate_listen(listen, listen_type):
     # Basic metadata
     try:
         if not listen['track_metadata']['track_name']:
-            raise APIBadRequest("JSON document does not contain required "
-                                "track_metadata.track_name.", listen)
+            raise APIBadRequest("JSON document does contain required field "
+                                "track_metadata.track_name.", listen, "but is empty.")
         if not listen['track_metadata']['artist_name']:
-            raise APIBadRequest("JSON document does not contain required "
-                                "track_metadata.artist_name.", listen)
+            raise APIBadRequest("JSON document does not contain required field "
+                                "track_metadata.artist_name.", listen, "but is empty.")
         if not isinstance(listen['track_metadata']['artist_name'], str):
             raise APIBadRequest("artist_name must be a single string.", listen)
     except KeyError:
-        raise APIBadRequest("JSON document does not contain a valid metadata.track_name "
+        raise APIBadRequest("JSON document does not contain a valid track_metadata.track_name "
                        "and/or track_metadata.artist_name.", listen)
 
     if 'additional_info' in listen['track_metadata']:
