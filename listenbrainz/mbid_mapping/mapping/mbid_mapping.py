@@ -1,3 +1,5 @@
+import re
+
 import psycopg2
 from psycopg2.errors import OperationalError
 from unidecode import unidecode
@@ -53,7 +55,7 @@ def create_indexes(conn):
         with conn.cursor() as curs:
             curs.execute("""CREATE INDEX tmp_mbid_mapping_idx_artist_credit_recording_name
                                       ON mapping.tmp_mbid_mapping(artist_credit_name, recording_name)""")
-            curs.execute("""CREATE UNIQUE INDEX tmp_mbid_mapping_idx_combined_lookup
+            curs.execute("""CREATE INDEX tmp_mbid_mapping_idx_combined_lookup
                                       ON mapping.tmp_mbid_mapping(combined_lookup)""")
         conn.commit()
     except OperationalError as err:
@@ -176,8 +178,9 @@ def create_mbid_mapping():
         with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
 
             # Create the dest table (perhaps dropping the old one first)
-            log("mbid mapping: drop old tables, create new tables")
+            log("mbid mapping: create schema")
             create_schema(mb_conn)
+            log("mbid mapping: drop old tables, create new tables")
             create_tables(mb_conn)
 
             create_temp_release_table(mb_conn)
