@@ -1,5 +1,6 @@
 import psycopg2
 from psycopg2.errors import OperationalError
+from unidecode import unidecode
 
 from mapping.utils import create_schema, insert_rows, log
 from mapping.formats import create_formats_table
@@ -29,7 +30,7 @@ def create_tables(mb_conn):
                                          artist_credit_id          INTEGER NOT NULL,
                                          release_name              TEXT NOT NULL,
                                          release_id                INTEGER NOT NULL,
-                                         year                      INTEGER,
+                                         combined_lookup           TEXT NOT NULL,
                                          score                     INTEGER NOT NULL)""")
             curs.execute("DROP TABLE IF EXISTS mapping.tmp_mbid_mapping_releases")
             curs.execute("""CREATE TABLE mapping.tmp_mbid_mapping_releases (
@@ -52,6 +53,8 @@ def create_indexes(conn):
         with conn.cursor() as curs:
             curs.execute("""CREATE INDEX tmp_mbid_mapping_idx_artist_credit_recording_name
                                       ON mapping.tmp_mbid_mapping(artist_credit_name, recording_name)""")
+            curs.execute("""CREATE UNIQUE INDEX tmp_mbid_mapping_idx_combined_lookup
+                                      ON mapping.tmp_mbid_mapping(combined_lookup)""")
         conn.commit()
     except OperationalError as err:
         log("mbid mapping: failed to mbid mapping", err)
@@ -146,6 +149,8 @@ def swap_table_and_indexes(conn):
 
             curs.execute("""ALTER INDEX mapping.tmp_mbid_mapping_idx_artist_credit_recording_name
                             RENAME TO mbid_mapping_idx_artist_credit_recording_name""")
+            curs.execute("""ALTER INDEX mapping.tmp_mbid_mapping_idx_combined_lookup
+                            RENAME TO mbid_mapping_idx_cobined_lookup""")
             curs.execute("""ALTER INDEX mapping.tmp_mbid_mapping_releases_idx_release
                             RENAME TO mbid_mapping_releases_idx_release""")
             curs.execute("""ALTER INDEX mapping.tmp_mbid_mapping_releases_idx_id
@@ -189,7 +194,6 @@ def create_mbid_mapping():
                                           ac.id AS artist_credit_id,
                                           rl.name AS release_name,
                                           rl.id AS release_id,
-                                          date_year AS year,
                                           rpr.id AS score
                                      FROM recording r
                                      JOIN artist_credit ac
@@ -206,7 +210,7 @@ def create_mbid_mapping():
                                        ON rl.id = rpr.release
                                 LEFT JOIN release_country rc
                                        ON rc.release = rl.id
-                                    GROUP BY rpr.id, ac.id, rl.id, artist_credit_name, r.id, r.name, release_name, year
+                                    GROUP BY rpr.id, ac.id, rl.id, artist_credit_name, r.id, r.name, release_name
                                     ORDER BY ac.id, rpr.id""")
                 while True:
                     row = mb_curs.fetchone()
@@ -235,10 +239,11 @@ def create_mbid_mapping():
                         recording_name = row['recording_name']
                         artist_credit_name = row['artist_credit_name']
                         release_name = row['release_name']
+                        combined_lookup = unidecode(re.sub(r'[^\w]+', '', artist_credit_name + recording_name).lower())
                         if recording_name not in artist_recordings:
                             artist_recordings[recording_name] = (recording_name, row['recording_id'],
                                                                  artist_credit_name, row['artist_credit_id'],
-                                                                 release_name, row['release_id'], row['year'],
+                                                                 release_name, row['release_id'], combined_lookup,
                                                                  row['score'])
                     except TypeError:
                         log(row)
