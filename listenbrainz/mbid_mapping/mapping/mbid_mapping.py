@@ -169,7 +169,7 @@ def swap_table_and_indexes(conn):
             curs.execute("""ALTER INDEX mapping.tmp_mbid_mapping_idx_artist_credit_recording_name
                             RENAME TO mbid_mapping_idx_artist_credit_recording_name""")
             curs.execute("""ALTER INDEX mapping.tmp_mbid_mapping_idx_combined_lookup
-                            RENAME TO mbid_mapping_idx_cobined_lookup""")
+                            RENAME TO mbid_mapping_idx_combined_lookup""")
             curs.execute("""ALTER INDEX mapping.tmp_mbid_mapping_releases_idx_release
                             RENAME TO mbid_mapping_releases_idx_release""")
             curs.execute("""ALTER INDEX mapping.tmp_mbid_mapping_releases_idx_id
