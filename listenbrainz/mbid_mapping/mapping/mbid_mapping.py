@@ -35,7 +35,8 @@ def create_tables(mb_conn):
                                          release_mbid              UUID NOT NULL,
                                          combined_lookup           TEXT NOT NULL,
                                          score                     INTEGER NOT NULL)""")
-            curs.execute("DROP TABLE IF EXISTS mapping.tmp_mbid_mapping_releases")
+            curs.execute(
+                "DROP TABLE IF EXISTS mapping.tmp_mbid_mapping_releases")
             curs.execute("""CREATE TABLE mapping.tmp_mbid_mapping_releases (
                                             id      SERIAL,
                                             release INTEGER)""")
@@ -52,23 +53,22 @@ def create_indexes(conn):
         Create indexes for the mapping
     """
 
-
     try:
         with conn.cursor() as curs:
             curs.execute("""CREATE INDEX tmp_mbid_mapping_idx_artist_credit_recording_name
                                       ON mapping.tmp_mbid_mapping(artist_credit_name, recording_name)""")
 
             # Remove any duplicate rows so we can create a unique index and not get dups in the results
-            curs.execute("""DELETE FROM mapping.mbid_mapping
+            curs.execute("""DELETE FROM mapping.tmp_mbid_mapping
                                   WHERE id IN (
                                                 SELECT id 
                                                   FROM (
                                                           SELECT id, combined_lookup, score,
                                                                  row_number() OVER (PARTITION BY combined_lookup ORDER BY score)
-                                                            FROM mapping.mbid_mapping
+                                                            FROM mapping.tmp_mbid_mapping
                                                         GROUP BY combined_lookup, score, id
                                                        ) AS q
-                                                 WHERE row_number > 1)""");
+                                                 WHERE row_number > 1)""")
             curs.execute("""CREATE UNIQUE INDEX tmp_mbid_mapping_idx_combined_lookup
                                       ON mapping.tmp_mbid_mapping(combined_lookup)""")
         conn.commit()
@@ -112,7 +112,8 @@ def create_temp_release_table(conn):
 
         if config.USE_MINIMAL_DATASET:
             log("mbid mapping temp tables: Using a minimal dataset for artist credit pairs")
-            curs.execute(query % ('AND rg.artist_credit = %d' % TEST_ARTIST_ID))
+            curs.execute(query %
+                         ('AND rg.artist_credit = %d' % TEST_ARTIST_ID))
         else:
             log("mbid mapping temp tables: Using a full dataset for artist credit pairs")
             curs.execute(query % "")
@@ -132,14 +133,16 @@ def create_temp_release_table(conn):
                 count += 1
                 rows.append((count, row[0]))
                 if len(rows) == BATCH_SIZE:
-                    insert_rows(curs_insert, "mapping.tmp_mbid_mapping_releases", rows)
+                    insert_rows(
+                        curs_insert, "mapping.tmp_mbid_mapping_releases", rows)
                     rows = []
 
                 if count % 1000000 == 0:
                     log("mbid mapping temp tables: inserted %s rows." % count)
 
             if rows:
-                insert_rows(curs_insert, "mapping.tmp_mbid_mapping_releases", rows)
+                insert_rows(
+                    curs_insert, "mapping.tmp_mbid_mapping_releases", rows)
 
         log("mbid mapping temp tables: create indexes")
         curs.execute("""CREATE INDEX tmp_mbid_mapping_releases_idx_release
@@ -244,7 +247,8 @@ def create_mbid_mapping():
                         artist_recordings = {}
 
                         if len(rows) > BATCH_SIZE:
-                            insert_rows(mb_curs2, "mapping.tmp_mbid_mapping", rows)
+                            insert_rows(
+                                mb_curs2, "mapping.tmp_mbid_mapping", rows)
                             count += len(rows)
                             mb_conn.commit()
                             rows = []
@@ -257,7 +261,8 @@ def create_mbid_mapping():
                         recording_name = row['recording_name']
                         artist_credit_name = row['artist_credit_name']
                         release_name = row['release_name']
-                        combined_lookup = unidecode(re.sub(r'[^\w]+', '', artist_credit_name + recording_name).lower())
+                        combined_lookup = unidecode(
+                            re.sub(r'[^\w]+', '', artist_credit_name + recording_name).lower())
                         if recording_name not in artist_recordings:
                             artist_recordings[recording_name] = (serial, recording_name, row['recording_mbid'],
                                                                  artist_credit_name, row['artist_credit_id'],
