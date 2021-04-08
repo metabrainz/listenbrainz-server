@@ -348,6 +348,10 @@ export default class RecentListens extends React.Component<
   };
 
   handleKeyDown = (event: KeyboardEvent) => {
+    if (document.activeElement?.localName === "input") {
+      // Don't allow arrow keys navigation if an input is currently in focus
+      return;
+    }
     switch (event.key) {
       case "ArrowLeft":
         this.handleClickNewer();
