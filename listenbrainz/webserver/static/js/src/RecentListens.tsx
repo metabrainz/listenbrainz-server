@@ -663,7 +663,7 @@ export default class RecentListens extends React.Component<
                 )}
 
                 {mode === "listens" && (
-                  <ul className="pager" style={{ display: "flex" }}>
+                  <ul className="pager" id="navigation">
                     <li
                       className={`previous ${
                         listens[0].listened_at >= latestListenTs
@@ -700,7 +700,7 @@ export default class RecentListens extends React.Component<
                         &larr; Newer
                       </a>
                     </li>
-                    <li style={{ marginLeft: "auto" }}>
+                    <li className="date-time-picker">
                       <DateTimePicker
                         onChange={this.onChangeDateTimePicker}
                         value={dateTimePickerValue}
