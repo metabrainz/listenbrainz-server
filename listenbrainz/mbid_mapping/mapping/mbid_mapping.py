@@ -26,7 +26,7 @@ def create_tables(mb_conn):
         with mb_conn.cursor() as curs:
             curs.execute("DROP TABLE IF EXISTS mapping.tmp_mbid_mapping")
             curs.execute("""CREATE TABLE mapping.tmp_mbid_mapping (
-                                         id                        SERIAL,
+                                         id                        INTEGER NOT NULL,
                                          recording_name            TEXT NOT NULL,
                                          recording_mbid            UUID NOT NULL,
                                          artist_credit_name        TEXT NOT NULL,

@@ -60,6 +60,6 @@ class ArtistCreditRecordingLookupQuery(Query):
                     data["recording_arg"] = params[index]["[recording_name]"]
                     data["artist_credit_arg"] = params[index]["[artist_credit_name]"]
                     data["index"] = index
-                    results.append(dict(data))
+                    results.append(data)
 
                 return results
