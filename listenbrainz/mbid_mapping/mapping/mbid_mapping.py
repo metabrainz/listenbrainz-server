@@ -26,6 +26,7 @@ def create_tables(mb_conn):
         with mb_conn.cursor() as curs:
             curs.execute("DROP TABLE IF EXISTS mapping.tmp_mbid_mapping")
             curs.execute("""CREATE TABLE mapping.tmp_mbid_mapping (
+                                         id                        SERIAL,
                                          recording_name            TEXT NOT NULL,
                                          recording_mbid            UUID NOT NULL,
                                          artist_credit_name        TEXT NOT NULL,
@@ -51,11 +52,24 @@ def create_indexes(conn):
         Create indexes for the mapping
     """
 
+
     try:
         with conn.cursor() as curs:
             curs.execute("""CREATE INDEX tmp_mbid_mapping_idx_artist_credit_recording_name
                                       ON mapping.tmp_mbid_mapping(artist_credit_name, recording_name)""")
-            curs.execute("""CREATE INDEX tmp_mbid_mapping_idx_combined_lookup
+
+            # Remove any duplicate rows so we can create a unique index and not get dups in the results
+            curs.execute("""DELETE FROM mapping.mbid_mapping
+                                  WHERE id IN (
+                                                SELECT id 
+                                                  FROM (
+                                                          SELECT id, combined_lookup, score,
+                                                                 row_number() OVER (PARTITION BY combined_lookup ORDER BY score)
+                                                            FROM mapping.mbid_mapping
+                                                        GROUP BY combined_lookup, score, id
+                                                       ) AS q
+                                                 WHERE row_number > 1)""");
+            curs.execute("""CREATE UNIQUE INDEX tmp_mbid_mapping_idx_combined_lookup
                                       ON mapping.tmp_mbid_mapping(combined_lookup)""")
         conn.commit()
     except OperationalError as err:
@@ -190,6 +204,7 @@ def create_mbid_mapping():
                 artist_recordings = {}
                 count = 0
                 batch_count = 0
+                serial = 1
                 log("mbid mapping: fetch recordings")
                 mb_curs.execute("""SELECT r.name AS recording_name,
                                           r.gid AS recording_mbid,
@@ -244,10 +259,11 @@ def create_mbid_mapping():
                         release_name = row['release_name']
                         combined_lookup = unidecode(re.sub(r'[^\w]+', '', artist_credit_name + recording_name).lower())
                         if recording_name not in artist_recordings:
-                            artist_recordings[recording_name] = (recording_name, row['recording_mbid'],
+                            artist_recordings[recording_name] = (serial, recording_name, row['recording_mbid'],
                                                                  artist_credit_name, row['artist_credit_id'],
                                                                  release_name, row['release_mbid'], combined_lookup,
                                                                  row['score'])
+                            serial += 1
                     except TypeError:
                         log(row)
                         raise
