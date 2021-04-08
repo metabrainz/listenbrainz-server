@@ -25,31 +25,21 @@ class ArtistCreditRecordingLookupQuery(Query):
                 'artist_credit_id', 'release_mbid', 'recording_mbid']
 
     def fetch(self, params, offset=-1, count=-1):
-        artists = []
-        recordings = []
+        lookup_strings = []
         for param in params:
-            artists.append("".join(unidecode(param['artist_credit_name'].lower()).split()))
-            recordings.append("".join(unidecode(param['recording_name'].lower()).split()))
-        artists = tuple(artists)
-        recordings = tuple(recordings)
+            lookup_strings = unidecode(re.sub(r'[^\w]+', '', param["artist_credit_name"] + param["recording_name"]).lower())
+        lookup_strings = tuple(lookup_strings)
 
         with psycopg2.connect(config.DB_CONNECT_MB) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
-                curs.execute("""SELECT DISTINCT ac.name AS artist_credit_name, 
-                                       rl.name AS release_name, 
-                                       r.name AS recording_name,
-                                       rl.gid AS release_mbid,
-                                       r.gid AS recording_mbid,
-                                       artist_credit_id
-                                  FROM mapping.recording_artist_credit_pairs
-                                  JOIN recording r
-                                    ON r.id = recording_id
-                                  JOIN release rl
-                                    ON rl.id = release_id
-                                  JOIN artist_credit ac
-                                    ON r.artist_credit = ac.id
-                                 WHERE artist_credit_name IN %s
-                                   AND recording_name IN %s""", (artists, recordings))
+                curs.execute("""SELECT artist_credit_name,
+                                       artist_credit_id,
+                                       release_name,
+                                       release_mbid,
+                                       recording_name,
+                                       recording_mbid
+                                  FROM mapping.mbid_mapping
+                                   AND combined_lookup IN %s""", (lookup_strings,))
 
                 results = []
                 while True:

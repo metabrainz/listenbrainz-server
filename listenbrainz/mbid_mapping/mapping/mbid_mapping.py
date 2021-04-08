@@ -27,11 +27,11 @@ def create_tables(mb_conn):
             curs.execute("DROP TABLE IF EXISTS mapping.tmp_mbid_mapping")
             curs.execute("""CREATE TABLE mapping.tmp_mbid_mapping (
                                          recording_name            TEXT NOT NULL,
-                                         recording_id              INTEGER NOT NULL,
+                                         recording_mbid            UUID NOT NULL,
                                          artist_credit_name        TEXT NOT NULL,
                                          artist_credit_id          INTEGER NOT NULL,
                                          release_name              TEXT NOT NULL,
-                                         release_id                INTEGER NOT NULL,
+                                         release_mbid              UUID NOT NULL,
                                          combined_lookup           TEXT NOT NULL,
                                          score                     INTEGER NOT NULL)""")
             curs.execute("DROP TABLE IF EXISTS mapping.tmp_mbid_mapping_releases")
@@ -192,11 +192,11 @@ def create_mbid_mapping():
                 batch_count = 0
                 log("mbid mapping: fetch recordings")
                 mb_curs.execute("""SELECT r.name AS recording_name,
-                                          r.id AS recording_id,
+                                          r.gid AS recording_mbid,
                                           ac.name AS artist_credit_name,
                                           ac.id AS artist_credit_id,
                                           rl.name AS release_name,
-                                          rl.id AS release_id,
+                                          rl.gid AS release_mbid,
                                           rpr.id AS score
                                      FROM recording r
                                      JOIN artist_credit ac
@@ -213,7 +213,7 @@ def create_mbid_mapping():
                                        ON rl.id = rpr.release
                                 LEFT JOIN release_country rc
                                        ON rc.release = rl.id
-                                    GROUP BY rpr.id, ac.id, rl.id, artist_credit_name, r.id, r.name, release_name
+                                    GROUP BY rpr.id, ac.id, rl.gid, artist_credit_name, r.gid, r.name, release_name
                                     ORDER BY ac.id, rpr.id""")
                 while True:
                     row = mb_curs.fetchone()
@@ -244,9 +244,9 @@ def create_mbid_mapping():
                         release_name = row['release_name']
                         combined_lookup = unidecode(re.sub(r'[^\w]+', '', artist_credit_name + recording_name).lower())
                         if recording_name not in artist_recordings:
-                            artist_recordings[recording_name] = (recording_name, row['recording_id'],
+                            artist_recordings[recording_name] = (recording_name, row['recording_mbid'],
                                                                  artist_credit_name, row['artist_credit_id'],
-                                                                 release_name, row['release_id'], combined_lookup,
+                                                                 release_name, row['release_mbid'], combined_lookup,
                                                                  row['score'])
                     except TypeError:
                         log(row)
