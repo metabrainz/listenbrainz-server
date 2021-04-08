@@ -19,7 +19,7 @@ class ArtistCreditRecordingLookupQuery(Query):
 
     def introduction(self):
         return """This lookup performs an semi-exact string match on Artist Credit and Recording. The given parameters will have non-word
-                  characters removed, unaccted and lower cased before being looked up in the database."""
+                  characters removed, unaccented and lower cased before being looked up in the database."""
 
     def outputs(self):
         return ['index', 'artist_credit_arg', 'recording_arg',
