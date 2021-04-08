@@ -1,17 +1,24 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
+
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as _ from "lodash";
 import * as io from "socket.io-client";
+
+import DateTimePicker from "react-datetime-picker";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { faCalendar } from "@fortawesome/free-regular-svg-icons";
+import {
+  WithAlertNotificationsInjectedProps,
+  withAlertNotifications,
+} from "./AlertNotificationsHOC";
+
 import APIService from "./APIService";
 import BrainzPlayer from "./BrainzPlayer";
 import ErrorBoundary from "./ErrorBoundary";
-import Loader from "./components/Loader";
 import ListenCard from "./listens/ListenCard";
-import {
-  withAlertNotifications,
-  WithAlertNotificationsInjectedProps,
-} from "./AlertNotificationsHOC";
+import Loader from "./components/Loader";
 import { formatWSMessageToListen } from "./utils";
 
 export type RecentListensProps = {
@@ -43,6 +50,7 @@ export interface RecentListensState {
   previousListenTs?: number;
   saveUrl: string;
   recordingFeedbackMap: RecordingFeedbackMap;
+  dateTimePickerValue: Date;
 }
 
 export default class RecentListens extends React.Component<
@@ -60,6 +68,7 @@ export default class RecentListens extends React.Component<
 
   constructor(props: RecentListensProps) {
     super(props);
+    const nextListenTs = props.listens?.[props.listens.length - 1]?.listened_at;
     this.state = {
       alerts: [],
       listens: props.listens || [],
@@ -67,10 +76,11 @@ export default class RecentListens extends React.Component<
       saveUrl: props.saveUrl || "",
       lastFetchedDirection: "older",
       loading: false,
-      nextListenTs: props.listens?.[props.listens.length - 1]?.listened_at,
+      nextListenTs,
       previousListenTs: props.listens?.[0]?.listened_at,
       direction: "down",
       recordingFeedbackMap: {},
+      dateTimePickerValue: nextListenTs ? new Date(nextListenTs) : new Date(),
     };
 
     this.APIService = new APIService(
@@ -483,12 +493,60 @@ export default class RecentListens extends React.Component<
     }
   };
 
+  onChangeDateTimePicker = (newValue: Date) => {
+    this.setState({ dateTimePickerValue: newValue });
+  };
+
+  onNavigateToDate = async () => {
+    const { oldestListenTs, user } = this.props;
+    const { dateTimePickerValue } = this.state;
+    const jsTimestamp = dateTimePickerValue.getTime();
+    if (!dateTimePickerValue) {
+      return;
+    }
+    // Constrain to oldest listen for that user
+    const timestampInSeconds = Math.max(
+      // convert JS time (milliseconds) to seconds
+      Math.round(jsTimestamp / 1000),
+      oldestListenTs
+    );
+    this.setState({ loading: true });
+    const newListens = await this.APIService.getListensForUser(
+      user.name,
+      timestampInSeconds,
+      undefined
+    );
+    if (!newListens.length) {
+      // No more listens to fetch
+      this.setState({
+        loading: false,
+      });
+      return;
+    }
+    this.setState(
+      {
+        listens: newListens,
+        nextListenTs: newListens[newListens.length - 1].listened_at,
+        previousListenTs: newListens[0].listened_at,
+        lastFetchedDirection: "newer",
+      },
+      this.afterListensFetch
+    );
+    window.history.pushState(null, "", `?min_ts=${timestampInSeconds}`);
+  };
+
   afterListensFetch() {
     this.checkListensRange();
+    this.setState((prevState) => ({
+      loading: false,
+      dateTimePickerValue: prevState.nextListenTs
+        ? new Date(prevState.nextListenTs * 1000)
+        : new Date(),
+    }));
+    // Scroll to the top of the listens list
     if (this.listensTable?.current) {
       this.listensTable.current.scrollIntoView({ behavior: "smooth" });
     }
-    this.setState({ loading: false });
   }
 
   render() {
@@ -505,6 +563,7 @@ export default class RecentListens extends React.Component<
       nextListenTs,
       previousListenTs,
       saveUrl,
+      dateTimePickerValue,
     } = this.state;
     const {
       latestListenTs,
@@ -633,6 +692,32 @@ export default class RecentListens extends React.Component<
                         tabIndex={0}
                       >
                         &larr; Newer
+                      </a>
+                    </li>
+                    <li style={{ marginLeft: "auto" }}>
+                      <DateTimePicker
+                        onChange={this.onChangeDateTimePicker}
+                        value={dateTimePickerValue}
+                        clearIcon={null}
+                        maxDate={new Date()}
+                        minDate={
+                          oldestListenTs
+                            ? new Date(oldestListenTs * 1000)
+                            : null
+                        }
+                        calendarIcon={
+                          <FontAwesomeIcon icon={faCalendar as IconProp} />
+                        }
+                      />
+                      <a
+                        onClick={this.onNavigateToDate}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") this.onNavigateToDate();
+                        }}
+                        role="button"
+                        tabIndex={0}
+                      >
+                        Go!
                       </a>
                     </li>
                     <li
