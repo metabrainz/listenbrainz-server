@@ -80,7 +80,9 @@ export default class RecentListens extends React.Component<
       previousListenTs: props.listens?.[0]?.listened_at,
       direction: "down",
       recordingFeedbackMap: {},
-      dateTimePickerValue: nextListenTs ? new Date(nextListenTs) : new Date(),
+      dateTimePickerValue: nextListenTs
+        ? new Date(nextListenTs * 1000)
+        : new Date(),
     };
 
     this.APIService = new APIService(
