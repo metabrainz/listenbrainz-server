@@ -414,7 +414,8 @@ def validate_token():
     header = request.headers.get('Authorization')
     if header:
         auth_token = header.split(" ")[1]
-    else:  # for backward compatibility, check for auth token in query parameters as well
+    else:
+        # for backwards compatibility, check for auth token in query parameters as well
         auth_token = request.args.get('token', '')
 
     if not auth_token:
