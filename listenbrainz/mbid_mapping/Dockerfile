@@ -18,7 +18,6 @@ COPY . /code/mapper
 FROM mbid-mapping-base as mbid-mapping-prod
 
 # service start up scripts
-RUN mkdir /etc/service/mapper
 COPY ./docker/consul-template.conf /etc/consul-template-mbid-mapping.conf
 COPY ./docker/mapper.service /etc/service/mapper/run
 
