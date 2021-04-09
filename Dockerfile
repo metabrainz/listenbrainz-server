@@ -96,33 +96,39 @@ RUN touch /etc/service/api_compat/down
 # Websockets server
 COPY ./docker/services/websockets/consul-template-websockets.conf /etc/consul-template-websockets.conf
 COPY ./docker/services/websockets/websockets.service /etc/service/websockets/run
+COPY ./docker/services/websockets/websockets.finish /etc/service/websockets/finish
 RUN touch /etc/service/websockets/down
 
 # Labs API
 COPY ./docker/services/labs_api/uwsgi-labs-api.ini /etc/uwsgi/uwsgi-labs-api.ini
 COPY ./docker/services/labs_api/consul-template-labs-api.conf /etc/consul-template-labs-api.conf
 COPY ./docker/services/labs_api/labs_api.service /etc/service/labs_api/run
+COPY ./docker/services/labs_api/labs_api.finish /etc/service/labs_api/finish
 RUN touch /etc/service/labs_api/down
 
 # Spark reader
 COPY ./docker/services/spark_reader/consul-template-spark-reader.conf /etc/consul-template-spark-reader.conf
 COPY ./docker/services/spark_reader/spark_reader.service /etc/service/spark_reader/run
+COPY ./docker/services/spark_reader/spark_reader.finish /etc/service/spark_reader/finish
 RUN touch /etc/service/spark_reader/down
 
 # Spotify reader
 COPY ./docker/services/spotify_reader/consul-template-spotify-reader.conf /etc/consul-template-spotify-reader.conf
 COPY ./docker/services/spotify_reader/spotify_reader.service /etc/service/spotify_reader/run
+COPY ./docker/services/spotify_reader/spotify_reader.finish /etc/service/spotify_reader/finish
 RUN touch /etc/service/spotify_reader/down
 
 # Timescale writer
 COPY ./docker/services/timescale_writer/consul-template-timescale-writer.conf /etc/consul-template-timescale-writer.conf
 COPY ./docker/services/timescale_writer/timescale_writer.service /etc/service/timescale_writer/run
+COPY ./docker/services/timescale_writer/timescale_writer.finish /etc/service/timescale_writer/finish
 RUN touch /etc/service/timescale_writer/down
 
 # uwsgi (website)
 COPY ./docker/services/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
 COPY ./docker/services/uwsgi/consul-template-uwsgi.conf /etc/consul-template-uwsgi.conf
 COPY ./docker/services/uwsgi/uwsgi.service /etc/service/uwsgi/run
+COPY ./docker/services/uwsgi/uwsgi.finish /etc/service/uwsgi/finish
 RUN touch /etc/service/uwsgi/down
 
 COPY ./docker/rc.local /etc/rc.local
