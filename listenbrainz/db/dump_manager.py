@@ -237,7 +237,7 @@ def create_feedback(location, threads):
 
         try:
             if not sanity_check_dumps(dump_path, 3):
-                return sys.exit(-1)
+                sys.exit(-1)
         except OSError as e:
             sys.exit(-1)
 
@@ -342,7 +342,6 @@ def _cleanup_dumps(location):
         location) if incremental_dump_re.match(x)]
     incremental_dumps = [x for x in sorted(
         dump_files, key=get_dump_id, reverse=True)]
-    print(incremental_dumps)
     if not incremental_dumps:
         print('No incremental dumps present in specified directory!')
     else:
