@@ -25,6 +25,9 @@ jobs:
     - name: Pull docker images
       run: docker-compose -f docker/ci/docker-compose.unit.yml pull
 
+    - uses: satackey/action-docker-layer-caching@v0.0.11
+      continue-on-error: true
+
     - name: Build the Docker image
       run: docker-compose -f docker/ci/docker-compose.unit.yml -p listenbrainz_unit_test build
 
