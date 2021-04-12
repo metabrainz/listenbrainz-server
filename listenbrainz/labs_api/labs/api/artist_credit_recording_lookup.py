@@ -37,7 +37,7 @@ class ArtistCreditRecordingLookupQuery(Query):
 
         lookup_strings = tuple(lookup_strings)
 
-        with psycopg2.connect(current_app.config['DB_CONNECT_MAPPING']) as conn:
+        with psycopg2.connect(current_app.config['MB_DATABASE_URI']) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
                 curs.execute("""SELECT artist_credit_name,
                                        artist_credit_id,
