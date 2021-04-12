@@ -22,4 +22,8 @@ ALTER TABLE external_service_oauth
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
+CREATE INDEX user_id_ndx_external_service_oauth ON external_service_oauth (user_id);
+CREATE INDEX service_ndx_external_service_oauth ON external_service_oauth (service);
+CREATE UNIQUE INDEX user_id_service_ndx_external_service_oauth ON external_service_oauth (user_id, service);
+
 COMMIT;
