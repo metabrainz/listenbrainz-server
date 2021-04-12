@@ -104,10 +104,10 @@ CREATE TABLE spotify_auth (
   permission                VARCHAR NOT NULL
 );
 
-CREATE TABLE external_auth (
+CREATE TABLE external_service_oauth (
     id                      SERIAL,
     user_id                 INTEGER NOT NULL,
-    service                 external_auth_service NOT NULL,
+    service                 external_service_oauth_type NOT NULL,
     access_token            TEXT NOT NULL,
     refresh_token           TEXT,
     token_expires           TIMESTAMP WITH TIME ZONE,

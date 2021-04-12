@@ -1,5 +1,5 @@
 BEGIN;
-INSERT INTO external_auth
+INSERT INTO external_service_oauth
     (
      user_id,
      service,
