@@ -1,0 +1,47 @@
+name: ListenBrainz Spark Tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Create configuration file
+      run: cp listenbrainz/config.py.sample listenbrainz/config.py
+
+    - name: Login to Docker Hub
+      run: echo ${{ secrets.DOCKER_HUB_PASSWORD }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+      continue-on-error: true
+
+    - name: Pull docker images
+      run: docker-compose -f docker/docker-compose.spark.test.yml pull
+
+    - uses: satackey/action-docker-layer-caching@v0.0.11
+      continue-on-error: true
+
+    - name: Build the Docker image
+      run: docker-compose -f docker/docker-compose.spark.test.yml -p listenbrainz_spark_test build
+
+    - name: Format namenode
+      run: docker-compose -f docker/docker-compose.spark.test.yml -p listenbrainz_spark_test run --rm hadoop-master hdfs namenode -format
+
+    - name: Bring up dependencies
+      run: docker-compose -f docker/docker-compose.spark.test.yml -p listenbrainz_spark_test up -d hadoop-master datanode
+
+    - name: Run tests
+      run: docker-compose -f docker/docker-compose.spark.test.yml -p listenbrainz_spark_test up -d test
+
+    - name: Display test logs
+      run: docker-compose -f docker/docker-compose.spark.test.yml -p listenbrainz_spark_test logs -f test
+
+    - name: Bring down containers
+      run: docker-compose -f docker/docker-compose.spark.test.yml -p listenbrainz_spark_test down
