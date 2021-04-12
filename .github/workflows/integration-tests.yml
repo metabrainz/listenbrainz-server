@@ -1,0 +1,54 @@
+name: ListenBrainz Integration Tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Create configuration file
+      run: cp listenbrainz/config.py.sample listenbrainz/config.py
+
+    - name: Login to Docker Hub
+      run: echo ${{ secrets.DOCKER_HUB_PASSWORD }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+      continue-on-error: true
+
+    - name: Pull docker images
+      run: docker-compose -f docker/docker-compose.integration.yml pull
+
+    - uses: satackey/action-docker-layer-caching@v0.0.11
+      continue-on-error: true
+
+    - name: Build the Docker image
+      run: docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_integration_test build
+
+    - name: Bring up dependencies
+      run: docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_integration_test up -d db redis timescale_writer rabbitmq
+
+    - name: Setup database
+      run: >
+        docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_integration_test run --rm listenbrainz
+        dockerize -wait tcp://db:5432 -timeout 60s 
+        bash -c 
+        "ls && python3 manage.py init_db --create-db && python3 manage.py init_msb_db --create-db && python3 manage.py init_ts_db --create-db"
+
+    - name: Run tests
+      run: >
+        docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_integration_test run --rm listenbrainz
+        dockerize
+        -wait tcp://db:5432 -timeout 60s
+        -wait tcp://redis:6379 -timeout 60s
+        -wait tcp://rabbitmq:5672 -timeout 60s
+        pytest listenbrainz/tests/integration
+
+    - name: Bring down containers
+      run: docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_integration_test down
