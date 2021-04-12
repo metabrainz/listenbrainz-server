@@ -24,6 +24,12 @@ ALTER TABLE spotify_auth
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
+ALTER TABLE external_auth
+    ADD CONSTRAINT external_auth_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
 ALTER TABLE recommendation.cf_recording
     ADD CONSTRAINT cf_recording_user_id_foreign_key
     FOREIGN KEY (user_id)

@@ -104,6 +104,18 @@ CREATE TABLE spotify_auth (
   permission                VARCHAR NOT NULL
 );
 
+CREATE TABLE external_auth (
+    id                      SERIAL,
+    user_id                 INTEGER NOT NULL,
+    service                 external_auth_service NOT NULL,
+    access_token            TEXT NOT NULL,
+    refresh_token           TEXT,
+    token_expires           TIMESTAMP WITH TIME ZONE,
+    last_updated            TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    record_listens          BOOLEAN NOT NULL,
+    service_details         JSONB
+);
+
 CREATE TABLE statistics.artist (
     id                      SERIAL, -- PK
     msid                    UUID NOT NULL,
