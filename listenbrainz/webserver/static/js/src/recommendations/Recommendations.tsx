@@ -1,16 +1,21 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
-import { AlertList } from "react-bs-notifier";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { isEqual, get } from "lodash";
 
-import BrainzPlayer from "../BrainzPlayer";
+import { get, isEqual } from "lodash";
+import {
+  WithAlertNotificationsInjectedProps,
+  withAlertNotifications,
+} from "../AlertNotificationsHOC";
+
 import APIService from "../APIService";
+import BrainzPlayer from "../BrainzPlayer";
+import ErrorBoundary from "../ErrorBoundary";
 import Loader from "../components/Loader";
 import RecommendationCard from "./RecommendationCard";
 
-export interface RecommendationsProps {
+export type RecommendationsProps = {
   apiUrl: string;
   recommendations?: Array<Recommendation>;
   profileUrl?: string;
@@ -18,7 +23,7 @@ export interface RecommendationsProps {
   user: ListenBrainzUser;
   webSocketsServerUrl: string;
   currentUser?: ListenBrainzUser;
-}
+} & WithAlertNotificationsInjectedProps;
 
 export interface RecommendationsState {
   alerts: Array<Alert>;
@@ -75,7 +80,7 @@ export default class Recommendations extends React.Component<
   }
 
   getFeedback = async () => {
-    const { user } = this.props;
+    const { user, newAlert } = this.props;
     const { recommendations } = this.state;
     const recordings: string[] = [];
 
@@ -96,7 +101,7 @@ export default class Recommendations extends React.Component<
         );
         return data.feedback;
       } catch (error) {
-        this.newAlert(
+        newAlert(
           "danger",
           "Playback error",
           typeof error === "object" ? error.message : error
@@ -146,60 +151,6 @@ export default class Recommendations extends React.Component<
     recommendation: Recommendation | JSPFTrack
   ): void => {
     this.setState({ currentRecommendation: recommendation as Recommendation });
-  };
-
-  newAlert = (
-    type: AlertType,
-    headline: string,
-    message?: string | JSX.Element,
-    count?: number
-  ): void => {
-    const newAlert = {
-      id: new Date().getTime(),
-      type,
-      headline,
-      message,
-      count,
-    } as Alert;
-
-    this.setState((prevState) => {
-      const alertsList = prevState.alerts;
-      for (let i = 0; i < alertsList.length; i += 1) {
-        const item = alertsList[i];
-        if (
-          item.type === newAlert.type &&
-          item.headline.startsWith(newAlert.headline) &&
-          item.message === newAlert.message
-        ) {
-          if (!alertsList[i].count) {
-            // If the count attribute is undefined, then Initializing it as 2
-            alertsList[i].count = 2;
-          } else {
-            alertsList[i].count! += 1;
-          }
-          alertsList[i].headline = `${newAlert.headline} (${alertsList[i]
-            .count!})`;
-          return { alerts: alertsList };
-        }
-      }
-      return {
-        alerts: [...prevState.alerts, newAlert],
-      };
-    });
-  };
-
-  onAlertDismissed = (alert: Alert): void => {
-    const { alerts } = this.state;
-
-    // find the index of the alert that was dismissed
-    const idx = alerts.indexOf(alert);
-
-    if (idx >= 0) {
-      this.setState({
-        // remove the alert from the array
-        alerts: [...alerts.slice(0, idx), ...alerts.slice(idx + 1)],
-      });
-    }
   };
 
   handleClickPrevious = () => {
@@ -276,17 +227,10 @@ export default class Recommendations extends React.Component<
       currRecPage,
       totalRecPages,
     } = this.state;
-    const { spotify, user, currentUser, apiUrl } = this.props;
+    const { spotify, user, currentUser, apiUrl, newAlert } = this.props;
 
     return (
       <div role="main">
-        <AlertList
-          position="bottom-right"
-          alerts={alerts}
-          timeout={15000}
-          dismissTitle="Dismiss"
-          onDismiss={this.onAlertDismissed}
-        />
         <div className="row">
           <div className="col-md-8">
             <div>
@@ -324,7 +268,7 @@ export default class Recommendations extends React.Component<
                       )}
                       updateFeedback={this.updateFeedback}
                       apiUrl={apiUrl}
-                      newAlert={this.newAlert}
+                      newAlert={newAlert}
                     />
                   );
                 })}
@@ -379,7 +323,7 @@ export default class Recommendations extends React.Component<
               currentListen={currentRecommendation}
               direction={direction}
               listens={recommendations}
-              newAlert={this.newAlert}
+              newAlert={newAlert}
               onCurrentListenChange={this.handleCurrentRecommendationChange}
               ref={this.brainzPlayer}
               spotifyUser={spotify}
@@ -408,16 +352,20 @@ document.addEventListener("DOMContentLoaded", () => {
     web_sockets_server_url,
     current_user,
   } = reactProps;
-
+  const RecommendationsWithAlertNotifications = withAlertNotifications(
+    Recommendations
+  );
   ReactDOM.render(
-    <Recommendations
-      apiUrl={api_url}
-      recommendations={recommendations}
-      spotify={spotify}
-      user={user}
-      webSocketsServerUrl={web_sockets_server_url}
-      currentUser={current_user}
-    />,
+    <ErrorBoundary>
+      <RecommendationsWithAlertNotifications
+        apiUrl={api_url}
+        recommendations={recommendations}
+        spotify={spotify}
+        user={user}
+        webSocketsServerUrl={web_sockets_server_url}
+        currentUser={current_user}
+      />
+    </ErrorBoundary>,
     domContainer
   );
 });
