@@ -35,8 +35,8 @@ class YearFromArtistCreditRecordingQuery(Query):
         return ['artist_credit_name', 'recording_name', 'year']
 
     def fetch(self, params, offset=-1, count=-1):
-        artists = tuple([p['[artist_credit_name]'] for p in params])
-        recordings = tuple([p['[recording_name]'] for p in params])
+        artists = tuple([p['[artist_credit_name]'.lower()] for p in params])
+        recordings = tuple([p['[recording_name]'.lower()] for p in params])
         with psycopg2.connect(current_app.config['MB_DATABASE_URI']) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
                 curs.execute("""SELECT DISTINCT artist_credit_name,
