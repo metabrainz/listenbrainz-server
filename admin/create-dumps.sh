@@ -57,12 +57,13 @@ DUMP_TYPE="${1:-full}"
 
 if [ "$DUMP_TYPE" == "full" ]; then
     SUB_DIR="fullexport"
+elif [ "$DUMP_TYPE" == "incremental" ]; then
+    SUB_DIR="incremental"
+elif [ "$DUMP_TYPE" == "feedback" ]; then
+    SUB_DIR="spark"
 else
-    if [ "$DUMP_TYPE" == "incremental" ]; then
-        SUB_DIR="incremental"
-    else
-        SUB_DIR="spark"
-    fi
+    echo "Dump type must be one of 'full', 'incremental' or 'feedback'"
+    exit
 fi
 
 TMPDIR=$(mktemp --tmpdir="$TEMP_DIR" -d -t "$SUB_DIR.XXXXXXXXXX")
