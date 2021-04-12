@@ -528,7 +528,7 @@ export default class UserFeedPage extends React.Component<
                     href={
                       isNewerButtonDisabled
                         ? undefined
-                        : `${window.location.origin}${window.location.pathname}?min_ts=${previousEventTs}`
+                        : `?min_ts=${previousEventTs}`
                     }
                   >
                     &larr; Newer
@@ -545,11 +545,7 @@ export default class UserFeedPage extends React.Component<
                       if (e.key === "Enter") this.handleClickOlder();
                     }}
                     tabIndex={0}
-                    href={
-                      !nextEventTs
-                        ? undefined
-                        : `${window.location.origin}${window.location.pathname}?max_ts=${nextEventTs}`
-                    }
+                    href={!nextEventTs ? undefined : `?max_ts=${nextEventTs}`}
                   >
                     Older &rarr;
                   </a>

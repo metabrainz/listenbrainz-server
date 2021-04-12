@@ -690,7 +690,7 @@ export default class RecentListens extends React.Component<
                         href={
                           isNewestButtonDisabled
                             ? undefined
-                            : `${window.location.origin}${window.location.pathname}`
+                            : window.location.pathname
                         }
                       >
                         &#x21E4;
@@ -711,7 +711,7 @@ export default class RecentListens extends React.Component<
                         href={
                           isNewerButtonDisabled
                             ? undefined
-                            : `${window.location.origin}${window.location.pathname}?min_ts=${previousListenTs}`
+                            : `?min_ts=${previousListenTs}`
                         }
                       >
                         &larr; Newer
@@ -733,7 +733,7 @@ export default class RecentListens extends React.Component<
                         href={
                           isOlderButtonDisabled
                             ? undefined
-                            : `${window.location.origin}${window.location.pathname}?max_ts=${nextListenTs}`
+                            : `?max_ts=${nextListenTs}`
                         }
                       >
                         Older &rarr;
@@ -754,9 +754,7 @@ export default class RecentListens extends React.Component<
                         href={
                           isOldestButtonDisabled
                             ? undefined
-                            : `${window.location.origin}${
-                                window.location.pathname
-                              }?min_ts=${oldestListenTs - 1}`
+                            : `?min_ts=${oldestListenTs - 1}`
                         }
                       >
                         &#x21E5;
