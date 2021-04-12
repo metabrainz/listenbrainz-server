@@ -1,17 +1,20 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
-
-import { AlertList } from "react-bs-notifier";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as _ from "lodash";
 import * as io from "socket.io-client";
-import BrainzPlayer from "./BrainzPlayer";
 import APIService from "./APIService";
+import BrainzPlayer from "./BrainzPlayer";
+import ErrorBoundary from "./ErrorBoundary";
 import Loader from "./components/Loader";
 import ListenCard from "./listens/ListenCard";
+import {
+  withAlertNotifications,
+  WithAlertNotificationsInjectedProps,
+} from "./AlertNotificationsHOC";
 import { formatWSMessageToListen } from "./utils";
 
-export interface RecentListensProps {
+export type RecentListensProps = {
   apiUrl: string;
   latestListenTs: number;
   latestSpotifyUri?: string;
@@ -24,7 +27,7 @@ export interface RecentListensProps {
   user: ListenBrainzUser;
   webSocketsServerUrl: string;
   currentUser?: ListenBrainzUser;
-}
+} & WithAlertNotificationsInjectedProps;
 
 export interface RecentListensState {
   alerts: Array<Alert>;
@@ -222,60 +225,6 @@ export default class RecentListens extends React.Component<
     return Boolean(currentListen && _.isEqual(listen, currentListen));
   };
 
-  newAlert = (
-    type: AlertType,
-    title: string,
-    message: string | JSX.Element,
-    count?: number
-  ): void => {
-    const newAlert: Alert = {
-      id: new Date().getTime(),
-      type,
-      headline: title,
-      message,
-      count,
-    };
-
-    this.setState((prevState) => {
-      const alertsList = prevState.alerts;
-      for (let i = 0; i < alertsList.length; i += 1) {
-        const item = alertsList[i];
-        if (
-          item.type === newAlert.type &&
-          item.headline.startsWith(newAlert.headline) &&
-          item.message === newAlert.message
-        ) {
-          if (!alertsList[i].count) {
-            // If the count attribute is undefined, then Initializing it as 2
-            alertsList[i].count = 2;
-          } else {
-            alertsList[i].count! += 1;
-          }
-          alertsList[i].headline = `${newAlert.headline} (${alertsList[i]
-            .count!})`;
-          return { alerts: alertsList };
-        }
-      }
-      return {
-        alerts: [...prevState.alerts, newAlert],
-      };
-    });
-  };
-
-  onAlertDismissed = (alert: Alert): void => {
-    const { alerts } = this.state;
-
-    // find the index of the alert that was dismissed
-    const idx = alerts.indexOf(alert);
-
-    if (idx >= 0) {
-      this.setState({
-        // remove the alert from the array
-        alerts: [...alerts.slice(0, idx), ...alerts.slice(idx + 1)],
-      });
-    }
-  };
-
   handleClickOlder = async (event?: React.MouseEvent) => {
     if (event) {
       event.preventDefault();
@@ -412,7 +361,7 @@ export default class RecentListens extends React.Component<
   };
 
   getFeedback = async () => {
-    const { user, listens } = this.props;
+    const { user, listens, newAlert } = this.props;
     let recordings = "";
 
     if (listens) {
@@ -432,7 +381,7 @@ export default class RecentListens extends React.Component<
         );
         return data.feedback;
       } catch (error) {
-        this.newAlert(
+        newAlert(
           "danger",
           "Playback error",
           typeof error === "object" ? error.message : error
@@ -576,6 +525,7 @@ export default class RecentListens extends React.Component<
       user,
       apiUrl,
       currentUser,
+      newAlert,
     } = this.props;
 
     const isNewestButtonDisabled = listens?.[0]?.listened_at >= latestListenTs;
@@ -587,13 +537,6 @@ export default class RecentListens extends React.Component<
       listens?.[listens?.length - 1]?.listened_at <= oldestListenTs;
     return (
       <div role="main">
-        <AlertList
-          position="bottom-right"
-          alerts={alerts}
-          timeout={15000}
-          dismissTitle="Dismiss"
-          onDismiss={this.onAlertDismissed}
-        />
         <div className="row">
           <div className="col-md-8">
             <h3>
@@ -654,7 +597,7 @@ export default class RecentListens extends React.Component<
                             this.removeListenFromListenList
                           }
                           updateFeedback={this.updateFeedback}
-                          newAlert={this.newAlert}
+                          newAlert={newAlert}
                           className={`${
                             this.isCurrentListen(listen)
                               ? " current-listen"
@@ -776,7 +719,7 @@ export default class RecentListens extends React.Component<
               currentListen={currentListen}
               direction={direction}
               listens={listens}
-              newAlert={this.newAlert}
+              newAlert={newAlert}
               onCurrentListenChange={this.handleCurrentListenChange}
               ref={this.brainzPlayer}
               spotifyUser={spotify}
@@ -812,21 +755,27 @@ document.addEventListener("DOMContentLoaded", () => {
     current_user,
   } = reactProps;
 
+  const RecentListensWithAlertNotifications = withAlertNotifications(
+    RecentListens
+  );
+
   ReactDOM.render(
-    <RecentListens
-      apiUrl={api_url}
-      latestListenTs={latest_listen_ts}
-      latestSpotifyUri={latest_spotify_uri}
-      listens={listens}
-      mode={mode}
-      oldestListenTs={oldest_listen_ts}
-      profileUrl={profile_url}
-      saveUrl={save_url}
-      spotify={spotify}
-      user={user}
-      webSocketsServerUrl={web_sockets_server_url}
-      currentUser={current_user}
-    />,
+    <ErrorBoundary>
+      <RecentListensWithAlertNotifications
+        apiUrl={api_url}
+        latestListenTs={latest_listen_ts}
+        latestSpotifyUri={latest_spotify_uri}
+        listens={listens}
+        mode={mode}
+        oldestListenTs={oldest_listen_ts}
+        profileUrl={profile_url}
+        saveUrl={save_url}
+        spotify={spotify}
+        user={user}
+        webSocketsServerUrl={web_sockets_server_url}
+        currentUser={current_user}
+      />
+    </ErrorBoundary>,
     domContainer
   );
 });
