@@ -47,8 +47,8 @@ module.exports = function (env) {
       rules: [
         {
           test: /\.(js|ts)x?$/,
-          // some nivo/D3 dependencies need to be transpiled, we include them with the following regex
-          exclude: /node_modules\/(?!(d3-array|d3-scale|internmap)\/).*/,
+          // some dependencies break old browsers and need to be transpiled, we include them with the following regex
+          exclude: /node_modules\/(?!(d3-array|d3-scale|internmap|react-date-picker|react-calendar)\/).*/,
           use: {
             loader: "babel-loader",
             options: {

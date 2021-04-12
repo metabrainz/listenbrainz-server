@@ -5,7 +5,7 @@ import * as ReactDOM from "react-dom";
 import * as _ from "lodash";
 import * as io from "socket.io-client";
 
-import DateTimePicker from "react-datetime-picker";
+import DatePicker from "react-date-picker/dist/entry.nostyle";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
@@ -50,7 +50,7 @@ export interface RecentListensState {
   previousListenTs?: number;
   saveUrl: string;
   recordingFeedbackMap: RecordingFeedbackMap;
-  dateTimePickerValue: Date;
+  dateTimePickerValue: Date | Date[];
 }
 
 export default class RecentListens extends React.Component<
@@ -349,7 +349,7 @@ export default class RecentListens extends React.Component<
 
   handleKeyDown = (event: KeyboardEvent) => {
     if (document.activeElement?.localName === "input") {
-      // Don't allow arrow keys navigation if an input is currently in focus
+      // Don't allow keyboard navigation if an input is currently in focus
       return;
     }
     switch (event.key) {
@@ -499,28 +499,34 @@ export default class RecentListens extends React.Component<
     }
   };
 
-  onChangeDateTimePicker = (newValue: Date) => {
-    this.setState({ dateTimePickerValue: newValue });
-  };
-
-  onNavigateToDate = async () => {
-    const { oldestListenTs, user } = this.props;
-    const { dateTimePickerValue } = this.state;
-    const jsTimestamp = dateTimePickerValue.getTime();
-    if (!dateTimePickerValue) {
+  onChangeDateTimePicker = async (newDateTimePickerValue: Date | Date[]) => {
+    if (!newDateTimePickerValue) {
       return;
     }
-    // Constrain to oldest listen for that user
-    const timestampInSeconds = Math.max(
+    this.setState({
+      dateTimePickerValue: newDateTimePickerValue,
+      loading: true,
+      lastFetchedDirection: "newer",
+    });
+    const { oldestListenTs, user } = this.props;
+    let minJSTimestamp;
+    if (Array.isArray(newDateTimePickerValue)) {
+      // Range of dates
+      minJSTimestamp = newDateTimePickerValue[0].getTime();
+    } else {
+      minJSTimestamp = newDateTimePickerValue.getTime();
+    }
+
+    // Constrain to oldest listen TS for that user
+    const minTimestampInSeconds = Math.max(
       // convert JS time (milliseconds) to seconds
-      Math.round(jsTimestamp / 1000),
+      Math.round(minJSTimestamp / 1000),
       oldestListenTs
     );
-    this.setState({ loading: true });
+
     const newListens = await this.APIService.getListensForUser(
       user.name,
-      timestampInSeconds,
-      undefined
+      minTimestampInSeconds
     );
     if (!newListens.length) {
       // No more listens to fetch
@@ -538,7 +544,7 @@ export default class RecentListens extends React.Component<
       },
       this.afterListensFetch
     );
-    window.history.pushState(null, "", `?min_ts=${timestampInSeconds}`);
+    window.history.pushState(null, "", `?min_ts=${minTimestampInSeconds}`);
   };
 
   afterListensFetch() {
@@ -701,7 +707,7 @@ export default class RecentListens extends React.Component<
                       </a>
                     </li>
                     <li className="date-time-picker">
-                      <DateTimePicker
+                      <DatePicker
                         onChange={this.onChangeDateTimePicker}
                         value={dateTimePickerValue}
                         clearIcon={null}
@@ -709,22 +715,12 @@ export default class RecentListens extends React.Component<
                         minDate={
                           oldestListenTs
                             ? new Date(oldestListenTs * 1000)
-                            : null
+                            : undefined
                         }
                         calendarIcon={
                           <FontAwesomeIcon icon={faCalendar as IconProp} />
                         }
                       />
-                      <a
-                        onClick={this.onNavigateToDate}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") this.onNavigateToDate();
-                        }}
-                        role="button"
-                        tabIndex={0}
-                      >
-                        Go!
-                      </a>
                     </li>
                     <li
                       className={`next ${
