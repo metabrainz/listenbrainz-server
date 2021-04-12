@@ -12,7 +12,8 @@ import listenbrainz.db.user as db_user
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden
 from listenbrainz.webserver.rate_limiter import ratelimit
-from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, validate_auth_header
+from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, validate_auth_header, \
+    _filter_description_html
 from listenbrainz.db.model.playlist import Playlist, WritablePlaylist, WritablePlaylistRecording
 
 playlist_api_bp = Blueprint('playlist_api_v1', __name__)
@@ -37,27 +38,6 @@ def _parse_boolean_arg(name, default=None):
         raise APIBadRequest("Invalid %s argument: %s. Must be 'true' or 'false'" % (name, value))
 
     return True if value == "true" else False
-
-
-def _allow_metabrainz_domains(tag, name, value):
-    """A bleach attribute cleaner for <a> tags that only allows hrefs to point
-    to metabrainz-controlled domains"""
-
-    metabrainz_domains = ["acousticbrainz.org", "critiquebrainz.org", "listenbrainz.org",
-                          "metabrainz.org", "musicbrainz.org"]
-
-    if name == "rel":
-        return True
-    elif name == "href":
-        p = urlparse(value)
-        return (not p.netloc) or p.netloc in metabrainz_domains
-    else:
-        return False
-
-
-def _filter_description_html(description):
-    ok_tags = [u"a", u"strong", u"b", u"em", u"i", u"u", u"ul", u"li", u"p", u"br"]
-    return bleach.clean(description, tags=ok_tags, attributes={"a": _allow_metabrainz_domains}, strip=True)
 
 
 def validate_create_playlist_required_items(jspf):
@@ -534,7 +514,13 @@ def move_playlist_item(playlist_mbid):
     be moved (count). The format of the post data should look as follows:
 
     .. code-block:: json
-       {"mbid" : "<mbid>", “from” : 3, “to” : 4, “count”: 2}
+
+        {
+            "mbid": "<mbid>",
+            "from": 3,
+            "to": 4,
+            "count": 2
+        }
 
     :reqheader Authorization: Token <user token>
     :statuscode 200: move operation succeeded
@@ -579,7 +565,11 @@ def delete_playlist_item(playlist_mbid):
     post data should look as follows:
 
     .. code-block:: json
-      {“index” : 3, “count”: 2}
+
+        {
+            "index": 3,
+            "count": 2
+        }
 
     :reqheader Authorization: Token <user token>
     :statuscode 200: playlist accepted.

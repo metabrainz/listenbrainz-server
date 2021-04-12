@@ -382,6 +382,7 @@ def get_listening_activity(user_name: str):
                 "user_id": "ishaanshah"
             }
         }
+
     .. note::
         - This endpoint is currently in beta
         - The example above shows the data for three days only, however we calculate the statistics for
@@ -460,6 +461,7 @@ def get_daily_activity(user_name: str):
                 "user_id": "ishaanshah"
             }
         }
+
     .. note::
         - This endpoint is currently in beta
 
@@ -542,6 +544,7 @@ def get_artist_map(user_name: str):
                 "user_id": "ishaanshah"
             }
         }
+
     .. note::
         - This endpoint is currently in beta
         - We cache the results for this query for a week to improve page load times, if you want to request fresh data you

@@ -1,5 +1,4 @@
 import base64
-import pytz
 import requests
 import six
 import time
@@ -7,7 +6,7 @@ from flask import current_app
 import spotipy.oauth2
 
 from listenbrainz.db import spotify as db_spotify
-import datetime
+from datetime import datetime, timezone
 
 SPOTIFY_API_RETRIES = 5
 
@@ -60,8 +59,8 @@ class Spotify:
 
     @property
     def token_expired(self):
-        now = datetime.datetime.utcnow()
-        now = now.replace(tzinfo=pytz.UTC)
+        now = datetime.utcnow()
+        now = now.replace(tzinfo=timezone.utc)
         return now >= self.token_expires
 
     @staticmethod
@@ -92,10 +91,10 @@ def refresh_user_token(spotify_user: Spotify):
 
     Returns:
         user (domain.spotify.Spotify): the same user with updated tokens
-        None: if the user has revoked authorization to spotify
 
     Raises:
         SpotifyAPIError: if unable to refresh spotify user token
+        SpotifyInvalidGrantError: if the user has revoked authorization to spotify
 
     Note: spotipy eats up the json body in case of error but we need it for checking
     whether the user has revoked our authorization. hence, we use our own
@@ -111,13 +110,9 @@ def refresh_user_token(spotify_user: Spotify):
         elif response.status_code == 400:
             error_body = response.json()
             if "error" in error_body and error_body["error"] == "invalid_grant":
-                # user has revoked authorization through spotify ui or deleted their spotify account etc.
-                # in any of these cases, we should delete user from our spotify db as well.
-                db_spotify.delete_spotify(spotify_user.user_id)
-                return None
+                raise SpotifyInvalidGrantError(error_body)
 
-            response = None  # some other error during request
-
+        response = None  # some other error occurred
         retries -= 1
 
     if response is None:
@@ -281,6 +276,12 @@ def get_user_dict(user_id):
         'access_token': user.user_token,
         'permission': user.permission,
     }
+
+
+class SpotifyInvalidGrantError(Exception):
+    """ Raised if spotify API returns invalid_grant during authorization. This usually means that the user has revoked
+    authorization to the ListenBrainz application through Spotify UI."""
+    pass
 
 
 class SpotifyImporterException(Exception):

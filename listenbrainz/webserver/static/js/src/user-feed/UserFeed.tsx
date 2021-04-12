@@ -3,11 +3,11 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 
 import {
+  faBell,
   faBullhorn,
   faCircle,
   faHeadphones,
   faHeart,
-  faListUl,
   faQuestion,
   faThumbsUp,
   faUserPlus,
@@ -19,12 +19,13 @@ import { AlertList } from "react-bs-notifier";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { isEqual } from "lodash";
+import { sanitize } from "dompurify";
 import APIService from "../APIService";
 import BrainzPlayer from "../BrainzPlayer";
-import FollowerFollowingModal from "../follow/FollowerFollowingModal";
 import Loader from "../components/Loader";
 import TimelineEventCard from "./TimelineEventCard";
 import { preciseTimestamp } from "../utils";
+import UserSocialNetwork from "../follow/UserSocialNetwork";
 
 export enum EventType {
   RECORDING_RECOMMENDATION = "recording_recommendation",
@@ -33,7 +34,7 @@ export enum EventType {
   FOLLOW = "follow",
   STOP_FOLLOW = "stop_follow",
   BLOCK_FOLLOW = "block_follow",
-  PLAYLIST_CREATED = "playlist_created",
+  NOTIFICATION = "notification",
 }
 
 type UserFeedPageProps = {
@@ -79,8 +80,8 @@ export default class UserFeedPage extends React.Component<
         return faUserSlash;
       case EventType.BLOCK_FOLLOW:
         return faUserSecret;
-      case EventType.PLAYLIST_CREATED:
-        return faListUl;
+      case EventType.NOTIFICATION:
+        return faBell;
       default:
         return faQuestion;
     }
@@ -331,7 +332,10 @@ export default class UserFeedPage extends React.Component<
     const { currentUser } = this.props;
     const { event_type, user_name, metadata } = event;
     if (event_type === EventType.FOLLOW) {
-      const { user_name_0, user_name_1 } = metadata as UserRelationshipEvent;
+      const {
+        user_name_0,
+        user_name_1,
+      } = metadata as UserRelationshipEventMetadata;
       const currentUserFollows = currentUser.name === user_name_0;
       const currentUserFollowed = currentUser.name === user_name_1;
       if (currentUserFollows) {
@@ -357,12 +361,17 @@ export default class UserFeedPage extends React.Component<
         </span>
       );
     }
-    if (event_type === EventType.PLAYLIST_CREATED) {
-      const { identifier, title } = metadata as JSPFPlaylist;
+    if (event_type === EventType.NOTIFICATION) {
+      const { message } = metadata as NotificationEventMetadata;
       return (
-        <span className="event-description-text">
-          We created a playlist for you: <a href={identifier}>{title}</a>
-        </span>
+        <span
+          className="event-description-text"
+          // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{
+            __html: sanitize(message),
+          }}
+        />
       );
     }
 
@@ -386,7 +395,7 @@ export default class UserFeedPage extends React.Component<
   }
 
   render() {
-    const { currentUser, spotify } = this.props;
+    const { currentUser, spotify, apiUrl } = this.props;
     const {
       alerts,
       currentListen,
@@ -532,8 +541,12 @@ export default class UserFeedPage extends React.Component<
               </ul>
             </div>
             <div className="col-md-offset-1 col-md-4">
-              <FollowerFollowingModal user={currentUser} />
-              <div className="sticky-top">
+              <UserSocialNetwork
+                apiUrl={apiUrl}
+                user={currentUser}
+                loggedInUser={currentUser}
+              />
+              <div className="sticky-top mt-15">
                 <BrainzPlayer
                   apiService={this.APIService}
                   currentListen={currentListen}
