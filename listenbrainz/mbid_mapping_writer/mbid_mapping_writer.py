@@ -19,14 +19,8 @@ class MBIDMappingWriter(threading.Thread):
     def callback(self, channel, method, properties, body):
         # When we receive new listens, add the listens to the priority queue
         listens = json.loads(body)
-        self.queue.add_new_listens(listens, method.delivery_tag)
-        self.submit_delivery_tags(channel)
-
-    def submit_delivery_tags(self, channel):
-        # Check to see if other jobs have completed that we need to ack.
-        tags = self.queue.get_completed_delivery_tags()
-        for tag in tags:
-            channel.basic_ack(delivery_tag=tag)
+        self.queue.add_new_listens(listens)
+        channel.basic_ack(method.delivery_tag)
 
     def create_and_bind_exchange_and_queue(self, channel, exchange, queue):
         channel.exchange_declare(exchange=exchange, exchange_type='fanout')

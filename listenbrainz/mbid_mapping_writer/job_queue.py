@@ -17,24 +17,10 @@ class MappingJobQueue(threading.Thread):
         self.done = False
         self.app = app
         self.queue = PriorityQueue()
-        self.delivery_tag_queue = Queue()
         self.priority = 1
 
-    def get_completed_delivery_tags(self):
-
-        tags = []
-        while True:
-            try:
-                tag = self.delivery_tag_queue.get(False)
-            except Empty:
-                break
-
-            tags.append(tag)
-
-        return tags
-
-    def add_new_listens(self, listens, delivery_tag):
-        self.queue.put((self.priority, listens, delivery_tag))
+    def add_new_listens(self, listens):
+        self.queue.put((self.priority, listens))
         self.priority += 1
 
     def terminate(self):
