@@ -19,33 +19,41 @@ const getclassName = (similarityScore: number): string => {
 };
 
 const SimilarityScore = (props: SimilarityScoreProps) => {
-  const { similarityScore, user, type } = props;
+  const { user, type, similarityScore } = props;
+
+  // We transform the similarity score from a scale 0-1 to 0-10
+  const adjustedSimilarityScore = Number((similarityScore * 10).toFixed(1));
   const className = getclassName(similarityScore);
+  const percentage = adjustedSimilarityScore * 10;
 
   return (
-    <div className={`similarity-score ${type}`}>
+    <div
+      className={`similarity-score ${type}`}
+      title="Your similarity score with that user"
+    >
       <div
         className="progress"
-        aria-label="Similarity Score"
+        aria-label="Similarity score"
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-valuenow={similarityScore * 100}
+        aria-valuenow={percentage}
         tabIndex={0}
       >
         <div
           className={`progress-bar ${className}`}
           style={{
-            width: `${similarityScore * 100}%`,
+            width: `${percentage}%`,
           }}
         />
       </div>
       {type === "regular" ? (
         <p className="text-muted">
-          Your compatibility with {user?.name} is {similarityScore * 10}/10
+          Your compatibility with {user?.name} is {adjustedSimilarityScore}
+          /10
         </p>
       ) : (
-        <p className="small text-muted">{similarityScore * 10}/10</p>
+        <p className="small text-muted">{adjustedSimilarityScore}/10</p>
       )}
     </div>
   );

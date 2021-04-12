@@ -18,9 +18,8 @@ COPY . /code/mapper
 FROM mbid-mapping-base as mbid-mapping-prod
 
 # service start up scripts
-COPY docker/consul-template.conf /etc/consul-template.conf
-RUN mkdir /etc/service/mapper
-COPY docker/mapper.service /etc/service/mapper/run
+COPY ./docker/consul-template.conf /etc/consul-template-mbid-mapping.conf
+COPY ./docker/mapper.service /etc/service/mapper/run
 
 # Add cron jobs
 COPY docker/crontab /etc/cron.d/mapper

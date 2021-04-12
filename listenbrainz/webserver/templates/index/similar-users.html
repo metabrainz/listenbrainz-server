@@ -1,0 +1,26 @@
+{%- extends 'base.html' -%}
+{%- block title -%}Top Similar Users - ListenBrainz{%- endblock -%}
+{%- block content -%}
+  <h2 class="page-title">Top Similar Users</h2>
+
+  <p>
+    Below is a list of the top similar users and how similar they are. Sometimes this page can show bugs in how we calculate
+    similar users, but more often it can show that some of our users are behaving in naughty ways: Sockpuppet accounts and
+    listen spammers. This page should help us find these bad actors and let us report them.
+  </p>
+
+  <table class="table table-striped">
+    {% for row in similar_users %}
+       <tr>
+         <td><a href="{{ url_for("user.profile", user_name=row[0]) }}">{{ row[0] }}</a></td>
+         <td><a href="{{ url_for("user.profile", user_name=row[1]) }}">{{ row[1] }}</a></td>
+         <td>{{ row[2] }}</td>
+       </tr>
+    {% else %}
+       <tr>
+         <td>No similar users to show.</td>
+       </tr>
+    {% endfor %}
+  </table>
+
+{%- endblock -%}

@@ -8,7 +8,8 @@
   },
   "scripts": {
     "build:dev": "webpack --progress --colors",
-    "build:prod": "webpack -p --env production --progress --colors",
+    "build:prod": "webpack -p --env production --progress --colors & npm run build:prod:less",
+    "build:prod:less": "lessc /static/css/main.less > /static/css/main.css",
     "build:types": "tsc --emitDeclarationOnly",
     "build": "npm run build:dev",
     "format": "eslint ./static/js/src --ext .js,jsx,ts,tsx --fix --quiet",
@@ -41,6 +42,7 @@
     "@nivo/legends": "^0.62.0",
     "@nivo/tooltip": "^0.62.0",
     "clean-css": "^4.2.1",
+    "core-js": "^3.9.1",
     "d3-format": "^1.4.4",
     "d3-scale": "^3.2.1",
     "d3-scale-chromatic": "^1.5.0",

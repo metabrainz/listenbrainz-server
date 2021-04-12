@@ -37,10 +37,6 @@ REDIS_NAMESPACE = "messybrainz"
 #LOG_FILE_ENABLED = True
 #LOG_FILE = "./messybrainz.log"
 
-#LOG_EMAIL_ENABLED = True
-#LOG_EMAIL_TOPIC = "MessyBrainz Webserver Failure"
-#LOG_EMAIL_RECIPIENTS = []  # List of email addresses (strings)
-
 #LOG_SENTRY_ENABLED = True
 #SENTRY_DSN = ""
 

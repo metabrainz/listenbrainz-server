@@ -1,14 +1,10 @@
-.kitchen
-.vagrant
 .DS_Store
 *.pyc
 *.swp
 config.py
-custom_config.py
 *.log
 .cache
 env
-bigquery-credentials.json
 *.bak
 
 # tmp folder
@@ -19,6 +15,9 @@ listenbrainz-listens*
 
 # ListenBrainz application data
 docker/data
+
+# Spark source code
+listenbrainz_spark.zip
 
 # Virtualenv
 # http://iamzed.com/2009/05/07/a-primer-on-virtualenv/

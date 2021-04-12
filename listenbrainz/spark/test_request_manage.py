@@ -137,7 +137,8 @@ class RequestManageTestCase(unittest.TestCase):
             'query': 'cf.recommendations.recording.create_dataframes',
             'params': {
                 'train_model_window': 20,
-                'job_type': "recommendation_recording"
+                'job_type': "recommendation_recording",
+                'minimum_listens_threshold': 0,
             }
         }
         expected_message = ujson.dumps(message)

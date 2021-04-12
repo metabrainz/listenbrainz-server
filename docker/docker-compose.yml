@@ -51,17 +51,17 @@ services:
       - db
       - rabbitmq
 
-#  api_compat:
-#    image: web
-#    command: python3 /code/listenbrainz/manage.py run_api_compat_server -h 0.0.0.0 -p 8080 -d
-#    ports:
-#      - "8080:8080"
-#    volumes:
-#      - ..:/code/listenbrainz:z
-#    depends_on:
-#      - redis
-#      - db
-#      - rabbitmq
+  api_compat:
+    image: web
+    command: python3 /code/listenbrainz/manage.py run_api_compat_server -h 0.0.0.0 -p 8080 -d
+    ports:
+      - "8080:8080"
+    volumes:
+      - ..:/code/listenbrainz:z
+    depends_on:
+      - redis
+      - db
+      - rabbitmq
 
   timescale_writer:
     image: web

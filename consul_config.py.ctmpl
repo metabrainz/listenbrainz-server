@@ -7,6 +7,7 @@
         "{{.}}",
     {{- end -}}
 {{- end -}}
+import os
 
 DEBUG = False
 
@@ -127,10 +128,10 @@ LISTENBRAINZ_LABS_API_URL = 'https://labs.api.listenbrainz.org'
 
 # Sentry config
 LOG_SENTRY = {
-    'dsn': '''{{template "KEY" "sentry/dsn_private"}}''',
+    'dsn': '''{{template "KEY" "sentry/dsn"}}''',
     'environment': '''{{template "KEY" "sentry/environment"}}''',
+    'release': os.getenv('GIT_SHA', None),
 }
-SENTRY_DSN_PUBLIC = '''{{template "KEY" "sentry/dsn_public"}}'''
 DATASETS_SENTRY_DSN = '''{{template "KEY" "sentry/datasets_dsn"}}'''
 
 
