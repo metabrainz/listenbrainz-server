@@ -578,13 +578,13 @@ export default class RecentListens extends React.Component<
       currentUser,
     } = this.props;
 
-    const isNewestButtonDisabled = listens[0].listened_at >= latestListenTs;
+    const isNewestButtonDisabled = listens?.[0]?.listened_at >= latestListenTs;
     const isNewerButtonDisabled =
       !previousListenTs || previousListenTs >= latestListenTs;
     const isOlderButtonDisabled =
       !nextListenTs || nextListenTs <= oldestListenTs;
     const isOldestButtonDisabled =
-      listens[listens?.length - 1]?.listened_at <= oldestListenTs;
+      listens?.[listens?.length - 1]?.listened_at <= oldestListenTs;
     return (
       <div role="main">
         <AlertList
