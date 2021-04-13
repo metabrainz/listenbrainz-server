@@ -70,4 +70,4 @@ set -e
 
 run_tests
 extract_results
-cleanup            # Initial cleanup
+cleanup
