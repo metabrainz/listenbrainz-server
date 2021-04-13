@@ -80,7 +80,9 @@ def threshold_similar_users(matrix: ndarray, max_user_count: int) -> List[Tuple[
 
             row.append((x, y, (float(matrix[x, y]) - min_similarity) / similarity_range))
 
-        similar_users.extend(sorted(row, itemgetter(2), reverse=True)[:max_user_count])
+        row = sorted(row, key=itemgetter(2), reverse=True)[:max_user_count]
+        current_app.logger.info(row)
+        similar_users.extend(row)
 
     return similar_users
 
