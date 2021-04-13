@@ -162,17 +162,17 @@ class TestTimescaleListenStore(DatabaseTestCase):
         with self.assertRaises(ValueError):
             self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000101, to_ts=1400000001)
 
-    def test_fetch_listens_time_range(self):
+    def test_fetch_listens_time_ranges(self):
         self._create_test_data(self.testuser_name,
                                test_data_file_name='timescale_listenstore_test_listens_over_greater_time_range.json')
 
-        # test to_ts without time_range
+        # test to_ts without gaps
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1402000050)
         self.assertEqual(len(listens), 1)
         self.assertEqual(listens[0].ts_since_epoch, 1402000000)
 
-        # test to_ts with time_range=5
-        listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1402000050, time_range=5)
+        # test to_ts with gaps
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1402000050)
         self.assertEqual(len(listens), 6)
         self.assertEqual(listens[0].ts_since_epoch, 1402000000)
         self.assertEqual(listens[1].ts_since_epoch, 1400000200)
@@ -181,24 +181,13 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[4].ts_since_epoch, 1400000050)
         self.assertEqual(listens[5].ts_since_epoch, 1400000000)
 
-        # test to_ts with time_range=-1
-        listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1402000050, time_range=-1)
-        self.assertEqual(len(listens), 7)
-        self.assertEqual(listens[0].ts_since_epoch, 1402000000)
-        self.assertEqual(listens[1].ts_since_epoch, 1400000200)
-        self.assertEqual(listens[2].ts_since_epoch, 1400000150)
-        self.assertEqual(listens[3].ts_since_epoch, 1400000100)
-        self.assertEqual(listens[4].ts_since_epoch, 1400000050)
-        self.assertEqual(listens[5].ts_since_epoch, 1400000000)
-        self.assertEqual(listens[6].ts_since_epoch, 1398000000)
-
-        # test from_ts without time_range
+        # test from_ts without gaps
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1397999999)
         self.assertEqual(len(listens), 1)
         self.assertEqual(listens[0].ts_since_epoch, 1398000000)
 
-        # test from_ts with time_range=5
-        listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1397999999, time_range=5)
+        # test from_ts with gaps
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1397999999)
         self.assertEqual(len(listens), 6)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
@@ -206,17 +195,6 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[3].ts_since_epoch, 1400000050)
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
         self.assertEqual(listens[5].ts_since_epoch, 1398000000)
-
-        # test from_ts with time_range=-1
-        listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1397999999, time_range=-1)
-        self.assertEqual(len(listens), 7)
-        self.assertEqual(listens[0].ts_since_epoch, 1402000000)
-        self.assertEqual(listens[1].ts_since_epoch, 1400000200)
-        self.assertEqual(listens[2].ts_since_epoch, 1400000150)
-        self.assertEqual(listens[3].ts_since_epoch, 1400000100)
-        self.assertEqual(listens[4].ts_since_epoch, 1400000050)
-        self.assertEqual(listens[5].ts_since_epoch, 1400000000)
-        self.assertEqual(listens[6].ts_since_epoch, 1398000000)
 
     def test_get_listen_count_for_user(self):
         uid = random.randint(2000, 1 << 31)

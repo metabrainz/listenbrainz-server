@@ -33,7 +33,6 @@ DUMP_CHUNK_SIZE = 100000
 NUMBER_OF_USERS_PER_DIRECTORY = 1000
 DUMP_FILE_SIZE_LIMIT = 1024 * 1024 * 1024  # 1 GB
 DATA_START_YEAR = 2005
-SECONDS_IN_TIME_RANGE = 432000
 
 
 class TimescaleListenStore(ListenStore):
@@ -43,7 +42,7 @@ class TimescaleListenStore(ListenStore):
 
     REDIS_TIMESCALE_TOTAL_LISTEN_COUNT = "ls.listencount.total"
     TOTAL_LISTEN_COUNT_CACHE_TIME = 5 * 60
-    USER_LISTEN_COUNT_CACHE_TIME = 3600  # in seconds. 1 hour
+    USER_LISTEN_COUNT_CACHE_TIME = 86400  # in seconds. 1 day, since we update the values stored in redis
 
     def __init__(self, conf, logger):
         super(TimescaleListenStore, self).__init__(logger)
@@ -216,7 +215,7 @@ class TimescaleListenStore(ListenStore):
 
         return inserted_rows
 
-    def fetch_listens_from_storage(self, user_name, from_ts, to_ts, limit, order, time_range):
+    def fetch_listens_from_storage(self, user_name, from_ts, to_ts, limit, order):
         """ The timestamps are stored as UTC in the postgres datebase while on retrieving
             the value they are converted to the local server's timezone. So to compare
             datetime object we need to create a object in the same timezone as the server.
@@ -225,14 +224,11 @@ class TimescaleListenStore(ListenStore):
             to_ts: seconds since epoch, in float
             limit: the maximum number of items to return
             order: 0 for ASCending order, 1 for DESCending order
-            time_range: the time range (in units of 5 days) to search for listens. If none is given
-                        3 ranges (15 days) are searched. If -1 is given then all listens are searched
-                        which is slow and should be avoided if at all possible.
         """
 
-        return self.fetch_listens_for_multiple_users_from_storage([user_name], from_ts, to_ts, limit, order, time_range)
+        return self.fetch_listens_for_multiple_users_from_storage([user_name], from_ts, to_ts, limit, order)
 
-    def fetch_listens_for_multiple_users_from_storage(self, user_names: List[str], from_ts: float, to_ts: float, limit: int, order: int, time_range: int=3):
+    def fetch_listens_for_multiple_users_from_storage(self, user_names: List[str], from_ts: float, to_ts: float, limit: int, order: int):
         """ The timestamps are stored as UTC in the postgres datebase while on retrieving
             the value they are converted to the local server's timezone. So to compare
             datetime object we need to create a object in the same timezone as the server.
@@ -241,44 +237,34 @@ class TimescaleListenStore(ListenStore):
             to_ts: seconds since epoch, in float
             limit: the maximum number of items to return
             order: 0 for DESCending order, 1 for ASCending order
-            time_range: the time range (in units of 5 days) to search for listens. If none is given
-                        3 ranges (15 days) are searched. If -1 is given then all listens are searched
-                        which is slow and should be avoided if at all possible.
         """
 
-        if time_range is None:
-            time_range = 3
+        count_query = """SELECT listened_at_bucket, count
+                           FROM listen_count_week
+                          WHERE user_name IN :user_names """
 
-        if time_range < 0:
-            max_timestamp_window = -1
+        if from_ts and to_ts:
+            count_query += """AND listened_at_bucket > :from_ts
+                        AND listened_at_bucket < :to_ts """
+        elif from_ts is not None:
+            count_query += "AND listened_at_bucket > :from_ts "
         else:
-            max_timestamp_window = SECONDS_IN_TIME_RANGE * time_range
-            if to_ts is None:
-                to_ts = from_ts + max_timestamp_window
-            elif from_ts is None:
-                from_ts = to_ts - max_timestamp_window
+            count_query += "AND listened_at_bucket < :to_ts "
+        count_query += " ORDER BY listened_at " + ORDER_TEXT[order]
 
-        query = """SELECT listened_at, track_name, created, data, user_name
-                     FROM listen
-                    WHERE user_name IN :user_names """
-
-
-        if max_timestamp_window < 0:
-            if from_ts and to_ts:
-                query += """AND listened_at > :from_ts
-                            AND listened_at < :to_ts """
-            elif from_ts is not None:
-                query += "AND listened_at > :from_ts "
-            else:
-                query += "AND listened_at < :to_ts "
-        else:
-            query += """AND listened_at > :from_ts
-                        AND listened_at < :to_ts """
-
-        query += "ORDER BY listened_at " + ORDER_TEXT[order] + " LIMIT :limit"
 
         listens = []
         with timescale.engine.connect() as connection:
+            curs = connection.execute(sqlalchemy.text(count_query), user_names=tuple(user_names), from_ts=from_ts, to_ts=to_ts, limit=limit)
+
+            # TODO: Finish me
+
+            query = """SELECT listened_at, track_name, created, data, user_name
+                         FROM listen
+                        WHERE user_name IN :user_names """
+            query += query_where_clause
+            query += " ORDER BY listened_at " + ORDER_TEXT[order] + " LIMIT :limit"
+
             curs = connection.execute(sqlalchemy.text(query), user_names=tuple(user_names), from_ts=from_ts, to_ts=to_ts, limit=limit)
             while True:
                 result = curs.fetchone()
