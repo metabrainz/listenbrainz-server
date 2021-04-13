@@ -52,7 +52,6 @@ function run_tests {
 }
 
 set -e
-cleanup            # Initial cleanup
-trap cleanup EXIT  # Cleanup after tests finish running
 
 run_tests
+cleanup
