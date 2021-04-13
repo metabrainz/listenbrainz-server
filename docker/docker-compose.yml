@@ -36,7 +36,7 @@ services:
       dockerfile: Dockerfile
       target: listenbrainz-dev
       args:
-        VCS_REF: HEAD
+        GIT_COMMIT_SHA: HEAD
     environment:
       FLASK_APP: listenbrainz.webserver
       FLASK_ENV: development
