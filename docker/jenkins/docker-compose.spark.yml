@@ -25,6 +25,6 @@ services:
       context: ../..
       dockerfile: Dockerfile.spark
       args:
-        VCS_REF: HEAD
+        GIT_COMMIT_SHA: HEAD
       target: metabrainz-spark-dev
     command: dockerize -wait tcp://hadoop-master:9000 -timeout 60s bash -c "cp listenbrainz_spark/config.py.sample listenbrainz_spark/config.py; python -m pytest -c pytest.spark.ini --junitxml=/data/test_report.xml --cov-report xml:/data/coverage.xml"

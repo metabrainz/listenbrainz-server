@@ -21,7 +21,7 @@ services:
       dockerfile: Dockerfile
       target: listenbrainz-dev
       args:
-        VCS_REF: HEAD
+        GIT_COMMIT_SHA: HEAD
     command: py.test listenbrainz/tests/integration
     image: listenbrainz
     depends_on:

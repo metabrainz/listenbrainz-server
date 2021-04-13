@@ -23,7 +23,7 @@ services:
       dockerfile: Dockerfile
       target: listenbrainz-dev
       args:
-        VCS_REF: HEAD
+        GIT_COMMIT_SHA: HEAD
     depends_on:
       - redis
       - db
