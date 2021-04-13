@@ -199,7 +199,7 @@ class RequestManageTestCase(unittest.TestCase):
         message = {
             'query': 'similarity.similar_users',
             'params': {
-                'threshold': .3
+                'max_num_users': 25 
             }
         }
         expected_message = ujson.dumps(message)
