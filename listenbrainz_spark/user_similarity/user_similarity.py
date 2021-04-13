@@ -79,7 +79,7 @@ def threshold_similar_users(matrix: ndarray, max_user_count: int) -> List[Tuple[
             if x == y or math.isnan(value):
                 continue
 
-            row.append((x, y, value - min_similarity) / similarity_range))
+            row.append((x, y, (value - min_similarity) / similarity_range))
 
         row = sorted(row, key=itemgetter(2), reverse=True)[:max_user_count]
         current_app.logger.info(row)
