@@ -147,7 +147,7 @@
     "name": "similarity.similar_users",
     "description": "Generate similar user correlation",
     "params": [
-      "threshold"
+      "max_num_users"
     ]
   }
 }
