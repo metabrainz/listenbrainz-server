@@ -24,7 +24,7 @@ function cleanup {
                    -p "$COMPOSE_PROJECT_NAME" \
                    down --remove-orphans
     # Untag LB images that were built before this test run
-    docker image rm "$(docker images --filter="before=${COMPOSE_PROJECT_NAME}_listenbrainz" --filter "label=org.label-schema.name=ListenBrainz" --format '{{.Repository}}:{{.Tag}}')" || true
+    docker image rm "$(docker images --filter="reference=listenbrainzintegrationjenkinsbuild*_listenbrainz" --filter="before=${COMPOSE_PROJECT_NAME}_listenbrainz" --filter "label=org.label-schema.name=ListenBrainz" --format '{{.Repository}}:{{.Tag}}')" || true
 }
 
 function run_tests {

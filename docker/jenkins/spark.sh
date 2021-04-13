@@ -4,7 +4,7 @@
 COMPOSE_FILE_LOC="docker/jenkins/docker-compose.spark.yml"
 TEST_CONTAINER_NAME="test"
 
-COMPOSE_PROJECT_NAME_ORIGINAL="jenkinsbuild_${BUILD_TAG}"
+COMPOSE_PROJECT_NAME_ORIGINAL="listenbrainzspark_jenkinsbuild_${BUILD_TAG}"
 
 # Project name is sanitized by Compose, so we need to do the same thing.
 # See https://github.com/docker/compose/issues/2119.
@@ -22,7 +22,7 @@ function cleanup {
                    -p "$COMPOSE_PROJECT_NAME" \
                    down --remove-orphans
     # Untag LB images that were built before this test run
-    docker image rm "$(docker images --filter="before=${COMPOSE_PROJECT_NAME}_listenbrainz" --filter "label=org.label-schema.name=ListenBrainz" --format '{{.Repository}}:{{.Tag}}')"
+    docker image rm "$(docker images --filter="reference=listenbrainzsparkjenkinsbuild*_listenbrainz" --filter="before=${COMPOSE_PROJECT_NAME}_listenbrainz" --filter "label=org.label-schema.name=ListenBrainz" --format '{{.Repository}}:{{.Tag}}')"
     docker volume rm "${COMPOSE_PROJECT_NAME}_datanode" "${COMPOSE_PROJECT_NAME}_namenode"
 }
 
