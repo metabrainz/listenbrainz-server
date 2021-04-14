@@ -39,13 +39,6 @@ const fixSpotifyPlayerStyleIssue = () => {
   }
 };
 
-const loadDynamicScript = () => {
-  const script = document.createElement("script");
-  script.src = "https://sdk.scdn.co/spotify-player.js";
-  script.id = "SpotifyPlayerSDK";
-  document.body.appendChild(script);
-};
-
 type SpotifyPlayerProps = DataSourceProps & {
   spotifyUser: SpotifyUser;
   refreshSpotifyToken: () => Promise<string>;
@@ -98,8 +91,7 @@ export default class SpotifyPlayer
     // Do an initial check of the spotify token permissions (scopes) before loading the SDK library
     if (SpotifyPlayer.hasPermissions(props.spotifyUser)) {
       window.onSpotifyWebPlaybackSDKReady = this.connectSpotifyPlayer;
-      // const spotifyPlayerSDKLib = require("../lib/spotify-player-sdk-1.7.1"); // eslint-disable-line global-require
-      loadDynamicScript();
+      const spotifyPlayerSDKLib = require("../lib/spotify-player-sdk-1.7.1"); // eslint-disable-line global-require
     } else {
       this.handleAccountError();
     }
