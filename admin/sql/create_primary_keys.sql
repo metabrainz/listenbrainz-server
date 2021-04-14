@@ -3,6 +3,7 @@ BEGIN;
 ALTER TABLE "user" ADD CONSTRAINT user_pkey PRIMARY KEY (id);
 ALTER TABLE api_compat.session ADD CONSTRAINT session_pkey PRIMARY KEY (sid);
 ALTER TABLE spotify_auth ADD CONSTRAINT spotify_auth_pkey PRIMARY KEY (user_id);
+ALTER TABLE external_service_oauth ADD CONSTRAINT external_service_oauth_pkey PRIMARY KEY (id);
 
 ALTER TABLE statistics.user ADD CONSTRAINT stats_user_pkey PRIMARY KEY (user_id);
 ALTER TABLE statistics.artist ADD CONSTRAINT stats_artist_pkey PRIMARY KEY (id);
