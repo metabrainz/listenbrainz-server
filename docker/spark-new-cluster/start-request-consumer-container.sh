@@ -11,12 +11,13 @@ docker pull metabrainz/listenbrainz-spark-new-cluster:latest
 zip -rq listenbrainz_spark_request_consumer.zip listenbrainz_spark/
 docker run \
     -d \
-    -v /spark:/spark
+    -v /spark:/spark \
+    -v /hadoop:/hadoop \
     -v `pwd`:/rec \
     --network host \
     --name $CONTAINER_NAME \
-    metabrainz/listenbrainz-spark-request-consumer:latest \
-    spark/bin/spark-submit \
+    metabrainz/listenbrainz-spark-new-cluster:latest \
+    /spark/bin/spark-submit \
         --packages org.apache.spark:spark-avro_2.11:2.4.1 \
         --master yarn \
         --conf "spark.scheduler.listenerbus.eventqueue.capacity"=$LISTENERBUS_CAPACITY \
