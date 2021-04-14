@@ -3,15 +3,15 @@ BEGIN;
 CREATE INDEX listened_at_user_name_ndx_listen ON listen (listened_at DESC, user_name);
 CREATE UNIQUE INDEX listened_at_track_name_user_name_ndx_listen ON listen (listened_at DESC, track_name, user_name);
 
-# This index cannot work, because the view is not materialized
-#CREATE INDEX user_name_ndx_listen_count ON listen_count (user_name);
+-- This index cannot work, because the view is not materialized
+--CREATE INDEX user_name_ndx_listen_count ON listen_count (user_name);
 
-# Use 
-# SELECT view_name, materialization_hypertable FROM timescaledb_information.continuous_aggregates;
-# to find materialized aggregates that can be used to create indexes:
-#CREATE INDEX user_name_ndx_listen_count ON _timescaledb_internal._materialized_hypertable_30 (user_name);
-#CREATE INDEX user_name_ndx_listened_at_max ON _timescaledb_internal._materialized_hypertable_31 (user_name);
-#CREATE INDEX user_name_ndx_listened_at_min ON _timescaledb_internal._materialized_hypertable_32 (user_name);
+-- Use 
+-- SELECT view_name, materialization_hypertable FROM timescaledb_information.continuous_aggregates;
+-- to find materialized aggregates that can be used to create indexes:
+--CREATE INDEX user_name_ndx_listen_count ON _timescaledb_internal._materialized_hypertable_30 (user_name);
+--CREATE INDEX user_name_ndx_listened_at_max ON _timescaledb_internal._materialized_hypertable_31 (user_name);
+--CREATE INDEX user_name_ndx_listened_at_min ON _timescaledb_internal._materialized_hypertable_32 (user_name);
 
 -- Playlists
 

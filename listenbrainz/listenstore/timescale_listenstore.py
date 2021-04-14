@@ -34,6 +34,10 @@ NUMBER_OF_USERS_PER_DIRECTORY = 1000
 DUMP_FILE_SIZE_LIMIT = 1024 * 1024 * 1024  # 1 GB
 DATA_START_YEAR = 2005
 
+# This value MUST match the time_bucket definition of the listen_count view.
+# See admin/timescale/create_views.sql for more details.
+LISTEN_COUNT_BUCKET_WIDTH = 86400
+
 
 class TimescaleListenStore(ListenStore):
     '''
@@ -239,8 +243,8 @@ class TimescaleListenStore(ListenStore):
             order: 0 for DESCending order, 1 for ASCending order
         """
 
-        count_query = """SELECT listened_at_bucket, count
-                           FROM listen_count_week
+        count_query = """SELECT count, listened_at_bucket
+                           FROM listen_count
                           WHERE user_name IN :user_names """
 
         if from_ts and to_ts:
@@ -250,22 +254,30 @@ class TimescaleListenStore(ListenStore):
             count_query += "AND listened_at_bucket > :from_ts "
         else:
             count_query += "AND listened_at_bucket < :to_ts "
-        count_query += " ORDER BY listened_at " + ORDER_TEXT[order]
-
+        count_query += " ORDER BY listened_at_bucket " + ORDER_TEXT[order]
 
         listens = []
+        clauses = []
+        found_listens = 0
         with timescale.engine.connect() as connection:
             curs = connection.execute(sqlalchemy.text(count_query), user_names=tuple(user_names), from_ts=from_ts, to_ts=to_ts, limit=limit)
+            while True:
+                result = curs.fetchone()
+                if not result:
+                    break
 
-            # TODO: Finish me
+                found_listens += result[0]
+                clauses.append("(listened_at >= %d AND listened_at <= %d)" % (result[1], result[1] + LISTEN_COUNT_BUCKET_WIDTH))
+                if found_listens >= limit:
+                    break
 
             query = """SELECT listened_at, track_name, created, data, user_name
                          FROM listen
-                        WHERE user_name IN :user_names """
-            query += query_where_clause
+                        WHERE user_name IN :user_names AND """
+            query += clauses.join(" OR ")  
             query += " ORDER BY listened_at " + ORDER_TEXT[order] + " LIMIT :limit"
 
-            curs = connection.execute(sqlalchemy.text(query), user_names=tuple(user_names), from_ts=from_ts, to_ts=to_ts, limit=limit)
+            curs = connection.execute(sqlalchemy.text(query), user_names=tuple(user_names), limit=limit)
             while True:
                 result = curs.fetchone()
                 if not result:
