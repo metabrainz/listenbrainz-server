@@ -1,6 +1,6 @@
 import { enableFetchMocks } from "jest-fetch-mock";
 import * as React from "react";
-import { shallow } from "enzyme";
+import { shallow, mount } from "enzyme";
 import * as timeago from "time-ago";
 import * as io from "socket.io-client";
 
@@ -15,7 +15,6 @@ import * as getFeedbackByMsidResponse from "./__mocks__/getFeedbackByMsidRespons
 import RecentListens, { RecentListensProps } from "./RecentListens";
 
 enableFetchMocks();
-
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
@@ -423,12 +422,8 @@ describe("Pagination", () => {
       // Random nextListenTs to ensure that is the value set in browser history
       wrapper.setState({ listens: [], nextListenTs: 1586440600 });
 
-      const sortedListens = sortBy(listens, "listened_at").reverse();
-      const nextListenTs = sortedListens[sortedListens.length - 1].listened_at;
-      const previousListenTs = sortedListens[0].listened_at;
-
       const spy = jest.fn().mockImplementation((username, minTs, maxTs) => {
-        return Promise.resolve(sortedListens);
+        return Promise.resolve(listens);
       });
       // eslint-disable-next-line dot-notation
       instance["APIService"].getListensForUser = spy;
@@ -436,12 +431,49 @@ describe("Pagination", () => {
 
       await instance.handleClickOlder();
 
-      expect(wrapper.state("listens")).toEqual(sortedListens);
+      await new Promise((done) => setTimeout(done, 500));
+
+      expect(wrapper.state("listens")).toEqual(listens);
       expect(wrapper.state("loading")).toBeFalsy();
-      expect(wrapper.state("nextListenTs")).toEqual(nextListenTs);
-      expect(wrapper.state("previousListenTs")).toEqual(previousListenTs);
+      expect(wrapper.state("nextListenTs")).toEqual(
+        listens[listens.length - 1].listened_at
+      );
+      expect(wrapper.state("previousListenTs")).toEqual(listens[0].listened_at);
       expect(pushStateSpy).toHaveBeenCalledWith(null, "", `?max_ts=1586440600`);
       expect(scrollSpy).toHaveBeenCalled();
+      expect(spy).toHaveBeenCalledWith(user.name, undefined, 1586440600);
+    });
+
+    it("disables 'next' pagination if returned less listens than expected", async () => {
+      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      wrapper.setState({ nextListenTs: 1586440539 });
+      const instance = wrapper.instance();
+
+      const expectedListensArray = [
+        {
+          track_metadata: {
+            artist_name: "Beyonc\u00e9, Frank Ocean",
+            track_name: "Superpower (feat. Frank Ocean)",
+            release_name: "BEYONC\u00c9 [Platinum Edition]",
+          },
+          listened_at: 1586450001,
+        },
+      ];
+      const spy = jest
+        .fn()
+        .mockImplementation(() => Promise.resolve(expectedListensArray));
+      // eslint-disable-next-line dot-notation
+      instance["APIService"].getListensForUser = spy;
+      instance.getFeedback = jest.fn();
+
+      await instance.handleClickOlder();
+      await new Promise((done) => setTimeout(done, 500));
+
+      expect(wrapper.state("loading")).toBeFalsy();
+      expect(wrapper.state("nextListenTs")).toBeUndefined();
+      expect(wrapper.state("previousListenTs")).toEqual(1586450001);
+      expect(wrapper.state("listens")).toEqual(expectedListensArray);
+      expect(spy).toHaveBeenCalledWith(user.name, undefined, 1586440539);
     });
   });
 
@@ -511,12 +543,8 @@ describe("Pagination", () => {
 
       wrapper.setState({ previousListenTs: 123456 });
 
-      const sortedListens = sortBy(listens, "listened_at");
-      const nextListenTs = sortedListens[listens.length - 1].listened_at;
-      const previousListenTs = sortedListens[0].listened_at;
-
       const spy = jest.fn().mockImplementation((username, minTs, maxTs) => {
-        return Promise.resolve(sortedListens);
+        return Promise.resolve(listens);
       });
       // eslint-disable-next-line dot-notation
       instance["APIService"].getListensForUser = spy;
@@ -524,12 +552,45 @@ describe("Pagination", () => {
 
       await instance.handleClickNewer();
 
-      expect(wrapper.state("listens")).toEqual(sortedListens);
+      await new Promise((done) => setTimeout(done, 500));
+
+      expect(wrapper.state("listens")).toEqual(listens);
       expect(wrapper.state("loading")).toBeFalsy();
-      expect(wrapper.state("nextListenTs")).toEqual(nextListenTs);
-      expect(wrapper.state("previousListenTs")).toEqual(previousListenTs);
+      expect(wrapper.state("nextListenTs")).toEqual(
+        listens[listens.length - 1].listened_at
+      );
+      expect(wrapper.state("previousListenTs")).toEqual(listens[0].listened_at);
       expect(pushStateSpy).toHaveBeenCalledWith(null, "", `?min_ts=123456`);
       expect(scrollSpy).toHaveBeenCalled();
+    });
+    it("disables pagination if returned less listens than expected", async () => {
+      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const instance = wrapper.instance();
+      wrapper.setState({ previousListenTs: 123456 });
+
+      const expectedListensArray = [
+        {
+          track_metadata: {
+            artist_name: "Beyonc\u00e9, Frank Ocean",
+            track_name: "Superpower (feat. Frank Ocean)",
+            release_name: "BEYONC\u00c9 [Platinum Edition]",
+          },
+          listened_at: 1586450001,
+        },
+      ];
+      const spy = jest
+        .fn()
+        .mockImplementation(() => Promise.resolve(expectedListensArray));
+      // eslint-disable-next-line dot-notation
+      instance["APIService"].getListensForUser = spy;
+
+      await instance.handleClickNewer();
+
+      expect(wrapper.state("listens")).toEqual(expectedListensArray);
+      expect(wrapper.state("loading")).toBeFalsy();
+      expect(wrapper.state("nextListenTs")).toBeUndefined();
+      expect(wrapper.state("previousListenTs")).toBeUndefined();
+      expect(spy).toHaveBeenCalledWith(user.name, 123456, undefined);
     });
   });
 
@@ -666,191 +727,10 @@ describe("Pagination", () => {
       expect(spy).toHaveBeenCalledWith(user.name);
       expect(wrapper.state("listens")).toEqual(newestListen);
       expect(wrapper.state("loading")).toBeFalsy();
-      expect(wrapper.state("nextListenTs")).toEqual(123456);
+      expect(wrapper.state("nextListenTs")).toEqual(undefined);
       expect(wrapper.state("previousListenTs")).toEqual(undefined);
       expect(pushStateSpy).toHaveBeenCalledWith(null, "", "");
       expect(scrollSpy).toHaveBeenCalled();
-    });
-  });
-  describe("checkListensRange", () => {
-    it("sets endOfTheLine to false and returns if there are enough listens", async () => {
-      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
-      const instance = wrapper.instance();
-
-      wrapper.setState({ endOfTheLine: true });
-
-      const getListensForUserSpy = jest.spyOn(
-        // eslint-disable-next-line dot-notation
-        instance["APIService"],
-        "getListensForUser"
-      );
-      const checkListensRangeSpy = jest.spyOn(instance, "checkListensRange");
-
-      expect(instance.state.endOfTheLine).toBeTruthy();
-      await instance.checkListensRange();
-      expect(instance.state.endOfTheLine).toBeFalsy();
-      expect(getListensForUserSpy).not.toHaveBeenCalled();
-      expect(checkListensRangeSpy).toHaveBeenCalledTimes(1);
-    });
-
-    it("sets endOfTheLine to true if max API time range is reached", async () => {
-      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
-      const instance = wrapper.instance();
-
-      wrapper.setState({ endOfTheLine: false, listens: [] });
-
-      const getListensForUserSpy = jest.spyOn(
-        // eslint-disable-next-line dot-notation
-        instance["APIService"],
-        "getListensForUser"
-      );
-      const checkListensRangeSpy = jest.spyOn(instance, "checkListensRange");
-
-      expect(instance.state.endOfTheLine).toBeFalsy();
-      // Max API time range is 73. Anything over and we abort and set endOfTheLine=true
-      await instance.checkListensRange(80);
-      expect(instance.state.endOfTheLine).toBeTruthy();
-      expect(getListensForUserSpy).not.toHaveBeenCalled();
-      expect(checkListensRangeSpy).toHaveBeenCalledTimes(1);
-    });
-    it("detects if we were loading older or more recent listens", async () => {
-      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
-      const instance = wrapper.instance();
-
-      wrapper.setState({
-        lastFetchedDirection: "older",
-        nextListenTs: 1234567891,
-        // We're not expecting to see this ts as it will be updated by checkListensRange
-        previousListenTs: 1234567881,
-        listens: [],
-      });
-      const sortedListens = sortBy(listens, "listened_at");
-      const getListensForUserSpy = jest
-        .fn()
-        .mockImplementation(() => Promise.resolve(sortedListens.slice(0, 25)));
-      // eslint-disable-next-line dot-notation
-      instance["APIService"].getListensForUser = getListensForUserSpy;
-      const checkListensRangeSpy = jest.spyOn(instance, "checkListensRange");
-
-      await instance.checkListensRange();
-
-      wrapper.setState({ lastFetchedDirection: "newer", listens: [] });
-      await instance.checkListensRange();
-
-      expect(instance.state.endOfTheLine).toBeFalsy();
-      expect(getListensForUserSpy).toHaveBeenNthCalledWith(
-        1,
-        user.name,
-        undefined,
-        1234567891,
-        25,
-        6
-      );
-      expect(getListensForUserSpy).toHaveBeenNthCalledWith(
-        2,
-        user.name,
-        sortedListens[0].listened_at,
-        undefined,
-        25,
-        6
-      );
-      expect(checkListensRangeSpy).toHaveBeenCalledTimes(4);
-    });
-    it("retries loading more listens with increasing time range", async () => {
-      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
-      const instance = wrapper.instance();
-
-      wrapper.setState({
-        lastFetchedDirection: "older",
-        nextListenTs: 1234567891,
-        listens: [],
-      });
-
-      const getListensForUserSpy = jest
-        .fn()
-        .mockImplementation(() => Promise.resolve([]));
-      // eslint-disable-next-line dot-notation
-      instance["APIService"].getListensForUser = getListensForUserSpy;
-      const checkListensRangeSpy = jest.spyOn(instance, "checkListensRange");
-
-      await instance.checkListensRange();
-      // Give it time to retry
-      await new Promise((done) => setImmediate(done));
-
-      expect(getListensForUserSpy).toHaveBeenNthCalledWith(
-        1,
-        user.name,
-        undefined,
-        1234567891,
-        25,
-        6
-      );
-      expect(getListensForUserSpy).toHaveBeenNthCalledWith(
-        2,
-        user.name,
-        undefined,
-        1234567891,
-        25,
-        12
-      );
-      expect(getListensForUserSpy).toHaveBeenNthCalledWith(
-        3,
-        user.name,
-        undefined,
-        1234567891,
-        25,
-        24
-      );
-      expect(getListensForUserSpy).toHaveBeenNthCalledWith(
-        4,
-        user.name,
-        undefined,
-        1234567891,
-        25,
-        48
-      );
-      expect(getListensForUserSpy).toHaveBeenNthCalledWith(
-        5,
-        user.name,
-        undefined,
-        1234567891,
-        25,
-        73
-      );
-      expect(getListensForUserSpy).toHaveBeenCalledTimes(5);
-      expect(checkListensRangeSpy).toHaveBeenCalledTimes(6);
-      expect(instance.state.endOfTheLine).toBeTruthy();
-    });
-    it("stops retrying once it has enough listens", async () => {
-      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
-      const instance = wrapper.instance();
-
-      wrapper.setState({
-        lastFetchedDirection: "older",
-        nextListenTs: 1234567891,
-        listens: [],
-      });
-
-      const getListensForUserSpy = jest
-        .fn()
-        .mockImplementationOnce(() => Promise.resolve([]))
-        .mockImplementationOnce(() => Promise.resolve(listens));
-      // eslint-disable-next-line dot-notation
-      instance["APIService"].getListensForUser = getListensForUserSpy;
-      const checkListensRangeSpy = jest.spyOn(instance, "checkListensRange");
-
-      await instance.checkListensRange();
-      expect(instance.state.endOfTheLine).toBeFalsy();
-      expect(checkListensRangeSpy).toHaveBeenCalledTimes(3);
-      expect(getListensForUserSpy).toHaveBeenCalledTimes(2);
-      expect(getListensForUserSpy).toHaveBeenNthCalledWith(
-        2,
-        user.name,
-        undefined,
-        1234567891,
-        25,
-        12
-      );
     });
   });
 });
