@@ -1,16 +1,13 @@
 import { enableFetchMocks } from "jest-fetch-mock";
 import * as React from "react";
-import { shallow, mount } from "enzyme";
+import { shallow } from "enzyme";
 import * as timeago from "time-ago";
 import * as io from "socket.io-client";
-
-import { sortBy } from "lodash";
 
 import * as recentListensProps from "./__mocks__/recentListensProps.json";
 import * as recentListensPropsTooManyListens from "./__mocks__/recentListensPropsTooManyListens.json";
 import * as recentListensPropsOneListen from "./__mocks__/recentListensPropsOneListen.json";
 import * as recentListensPropsPlayingNow from "./__mocks__/recentListensPropsPlayingNow.json";
-import * as getFeedbackByMsidResponse from "./__mocks__/getFeedbackByMsidResponse.json";
 
 import RecentListens, { RecentListensProps } from "./RecentListens";
 
