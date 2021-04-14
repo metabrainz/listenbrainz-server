@@ -1,5 +1,8 @@
 BEGIN;
 
+# TODO: Undo this
+# ALTER VIEW listen_count_week SET (timescaledb.max_interval_per_job = '31536000');
+
 CREATE VIEW listen_count_week
        WITH (timescaledb.continuous, timescaledb.create_group_indexes, timescaledb.refresh_lag=3600, timescaledb.refresh_interval=3600)
          AS SELECT time_bucket(bigint '604800', listened_at) AS listened_at_bucket, user_name, count(listen)
