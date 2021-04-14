@@ -1,6 +1,6 @@
-HDFS_HTTP_URI = 'http://hadoop-master:9870' # the URI of the http webclient for HDFS
+HDFS_HTTP_URI = 'http://leader:9870' # the URI of the http webclient for HDFS
 
-HDFS_CLUSTER_URI = 'hdfs://hadoop-master:9000' # the URI to be used with Spark
+HDFS_CLUSTER_URI = 'hdfs://leader:9000' # the URI to be used with Spark
 
 # rabbitmq
 RABBITMQ_HOST = "rabbitmq"

@@ -1,0 +1,10 @@
+FROM metabrainz/python:3.7-20210115
+
+RUN pip3 install pip==21.0.1
+
+RUN mkdir /rec
+WORKDIR /rec
+COPY requirements_spark.txt /rec/requirements_spark.txt
+RUN pip3 install -r requirements_spark.txt
+
+COPY . /rec
