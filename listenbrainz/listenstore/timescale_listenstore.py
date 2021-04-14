@@ -197,14 +197,14 @@ class TimescaleListenStore(ListenStore):
         with conn.cursor() as curs:
             try:
                 execute_values(curs, query, submit, template=None)
+                while True:
+                    result = curs.fetchone()
+                    if not result:
+                        break
+                    inserted_rows.append((result[0], result[1], result[2]))
             except UntranslatableCharacter:
-                pass
-
-            while True:
-                result = curs.fetchone()
-                if not result:
-                    break
-                inserted_rows.append((result[0], result[1], result[2]))
+                conn.rollback()
+                return
 
         conn.commit()
 
