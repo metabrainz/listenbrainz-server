@@ -29,13 +29,15 @@ jobs:
       run: docker-compose -f docker/docker-compose.test.yml -p listenbrainz_frontend_test build frontend_tester
 
     - name: Run frontend tests
-      run: docker-compose -f docker/docker-compose.test.yml -p listenbrainz_frontend_test run frontend_tester npm run test:ci || true
+      run: docker-compose -f docker/docker-compose.test.yml -p listenbrainz_frontend_test run frontend_tester npm run test:ci
 
     - name: Run linter
-      run: docker-compose -f docker/docker-compose.test.yml -p listenbrainz_frontend_test run frontend_tester npm run format:ci || true
+      run: docker-compose -f docker/docker-compose.test.yml -p listenbrainz_frontend_test run frontend_tester npm run format:ci
+      if: ${{ always() }}
 
     - name: Run type checker
-      run: docker-compose -f docker/docker-compose.test.yml -p listenbrainz_frontend_test run frontend_tester npm run type-check || true
+      run: docker-compose -f docker/docker-compose.test.yml -p listenbrainz_frontend_test run frontend_tester npm run type-check
+      if: ${{ always() }}
 
     - name: Bring down containers
       run: docker-compose -f docker/docker-compose.test.yml -p listenbrainz_frontend_test down
