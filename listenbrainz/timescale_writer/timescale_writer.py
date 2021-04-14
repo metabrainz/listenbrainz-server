@@ -34,7 +34,10 @@ class TimescaleWriterSubscriber(ListenWriter):
 
         submit = []
         for listen in listens:
-            submit.append(Listen.from_json(listen))
+            try:
+                submit.append(Listen.from_json(listen))
+            except ValueError:
+                pass
 
         ret = self.insert_to_listenstore(submit)
         if not ret:
