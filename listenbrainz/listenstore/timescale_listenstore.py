@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 import ujson
 import psycopg2
 from psycopg2.extras import execute_values
+from psycopg2.errors import UntranslatableCharacter
 from typing import List
 import sqlalchemy
 
@@ -194,7 +195,11 @@ class TimescaleListenStore(ListenStore):
         inserted_rows = []
         conn = timescale.engine.raw_connection()
         with conn.cursor() as curs:
-            execute_values(curs, query, submit, template=None)
+            try:
+                execute_values(curs, query, submit, template=None)
+            except UntranslatableCharacter:
+                pass
+
             while True:
                 result = curs.fetchone()
                 if not result:
