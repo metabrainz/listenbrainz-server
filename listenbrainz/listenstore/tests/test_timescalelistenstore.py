@@ -1,7 +1,7 @@
 # coding=utf-8
 
 import os
-from time import time
+from time import time, sleep
 from datetime import datetime
 import logging
 import shutil
@@ -47,6 +47,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_functions.sql'))
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))
+        ts.create_view_indexes()
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_primary_keys.sql'))
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_foreign_keys.sql'))
         ts.engine.dispose()

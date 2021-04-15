@@ -110,7 +110,7 @@ def get_listens(user_name):
     :resheader Content-Type: *application/json*
     """
     db_conn = webserver.create_timescale(current_app)
-    min_ts, max_ts, count, time_range = _validate_get_endpoint_params(
+    min_ts, max_ts, count = _validate_get_endpoint_params(
         db_conn, user_name)
     _, max_ts_per_user = db_conn.get_timestamps_for_user(user_name)
 
@@ -122,8 +122,7 @@ def get_listens(user_name):
         user_name,
         limit=count,
         from_ts=min_ts,
-        to_ts=max_ts,
-        time_range=time_range
+        to_ts=max_ts
     )
     listen_data = []
     for listen in listens:
@@ -638,4 +637,4 @@ def _validate_get_endpoint_params(db_conn: TimescaleListenStore, user_name: str)
     if count < 0:
         log_raise_400("Number of items requested should be positive")
 
-    return min_ts, max_ts, count, time_range
+    return min_ts, max_ts, count

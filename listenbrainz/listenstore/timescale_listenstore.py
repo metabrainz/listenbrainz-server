@@ -112,20 +112,27 @@ class TimescaleListenStore(ListenStore):
                 user_name: the user for whom to fetch the timestamp.
         """
 
+        sort_clause = "DESC"
         if select_min_timestamp:
-            query = "SELECT min(min_value) AS value FROM listened_at_min WHERE user_name = :user_name"
-        else:
-            query = "SELECT max(max_value) AS value FROM listened_at_max WHERE user_name = :user_name"
+            sort_clause = ""
 
+        query = """SELECT listened_at_bucket AS value
+                     FROM listen_count
+                     WHERE user_name = :user_name
+                  ORDER BY listened_at_bucket %s
+                     LIMIT 1""" % sort_clause
         try:
             with timescale.engine.connect() as connection:
                 result = connection.execute(sqlalchemy.text(query), {
                     "user_name": user_name
                 })
-                val = result.fetchone()["value"] or 0
-                return val
+                row = result.fetchone()
+                if not row:
+                    return 0
+
+                return row["value"] 
         except psycopg2.OperationalError as e:
-            self.log.error("Cannot query timescale listened_at_min/max: %s" % str(e), exc_info=True)
+            self.log.error("Cannot fetch min/max timestamp: %s" % str(e), exc_info=True)
             raise
 
     def get_total_listen_count(self, cache_value=True):
@@ -247,35 +254,44 @@ class TimescaleListenStore(ListenStore):
                            FROM listen_count
                           WHERE user_name IN :user_names """
 
-        if from_ts and to_ts:
-            count_query += """AND listened_at_bucket > :from_ts
-                        AND listened_at_bucket < :to_ts """
-        elif from_ts is not None:
-            count_query += "AND listened_at_bucket > :from_ts "
-        else:
-            count_query += "AND listened_at_bucket < :to_ts "
+#        if from_ts and to_ts:
+#            count_query += """AND listened_at_bucket >= :from_ts
+#                        AND listened_at_bucket <= :to_ts """
+#        elif from_ts is not None:
+#            count_query += "AND listened_at_bucket >= :from_ts "
+#        else:
+#            count_query += "AND listened_at_bucket <= :to_ts "
         count_query += " ORDER BY listened_at_bucket " + ORDER_TEXT[order]
 
         listens = []
         clauses = []
         found_listens = 0
         with timescale.engine.connect() as connection:
+            print("from ts %d, to ts %d" % (from_ts or -1, to_ts or -1))
             curs = connection.execute(sqlalchemy.text(count_query), user_names=tuple(user_names), from_ts=from_ts, to_ts=to_ts, limit=limit)
             while True:
                 result = curs.fetchone()
                 if not result:
                     break
+                print("%d %d" % (result[0], result[1]))
 
                 found_listens += result[0]
-                clauses.append("(listened_at >= %d AND listened_at <= %d)" % (result[1], result[1] + LISTEN_COUNT_BUCKET_WIDTH))
+                clauses.append("(listened_at > %d AND listened_at < %d)" % (result[1], result[1] + LISTEN_COUNT_BUCKET_WIDTH))
                 if found_listens >= limit:
                     break
 
+            if not clauses:
+                print("no listen_count rows returned")
+                return []
+
+            print(clauses)
+
             query = """SELECT listened_at, track_name, created, data, user_name
                          FROM listen
-                        WHERE user_name IN :user_names AND """
-            query += clauses.join(" OR ")  
-            query += " ORDER BY listened_at " + ORDER_TEXT[order] + " LIMIT :limit"
+                        WHERE user_name IN :user_names AND ("""
+            query += " OR ".join(clauses)  
+            query += ") ORDER BY listened_at " + ORDER_TEXT[order] + " LIMIT :limit"
+            print(query)
 
             curs = connection.execute(sqlalchemy.text(query), user_names=tuple(user_names), limit=limit)
             while True:
