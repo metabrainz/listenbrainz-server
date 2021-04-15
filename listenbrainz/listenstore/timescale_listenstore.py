@@ -265,10 +265,22 @@ class TimescaleListenStore(ListenStore):
             order: 0 for DESCending order, 1 for ASCending order
         """
 
+        # To make this process fast, there is some serious fancy footwork necessary. :(
+        #
+        # First, we query the listen_count continuous aggregate to see which chunks of
+        # the DB we need to query, in order to properly bound the query.
+        # Each chunk in the hypertable as a row for every user in the listen_count
+        # aggregate. Each row also contains the timestamp of the database chuck
+        # chunk and then number of listens for that user in that chunk. This allows
+        # us to find the right lower and upper timestamp, that we can use to 
+        # craft an exact query for listens.
+
+        # Build the base of the listen_count query
         count_query = """SELECT count, listened_at_bucket
                            FROM listen_count_5day
                           WHERE user_name IN :user_names """
 
+        # Add where clause based on timestamps
         if from_ts and to_ts:
             count_query += """AND listened_at_bucket >= :from_ts
                         AND listened_at_bucket <= :to_ts """
@@ -278,30 +290,37 @@ class TimescaleListenStore(ListenStore):
             count_query += "AND listened_at_bucket <= :to_ts "
         count_query += " ORDER BY listened_at_bucket " + ORDER_TEXT[order]
 
+        # If we have a from_ts, align it to a bucket boundary
         if from_ts:
             listen_count_from_ts = from_ts - (from_ts % LISTEN_COUNT_BUCKET_WIDTH)
         else:
             listen_count_from_ts = 0
-        if to_ts:
-            listen_count_to_ts = to_ts + LISTEN_COUNT_BUCKET_WIDTH
-        else:
-            listen_count_to_ts = 0
 
         listens = []
         clauses = []
         found_listens = 0
+        first_time = True
         with timescale.engine.connect() as connection:
             self.log.info("from ts %d to ts %d" % (from_ts or 0, to_ts or 0))
             curs = connection.execute(sqlalchemy.text(count_query), user_names=tuple(user_names),
                                                                     from_ts=listen_count_from_ts,
-                                                                    to_ts=listen_count_to_ts, limit=limit)
+                                                                    to_ts=to_ts, limit=limit)
+
+            # Iterate over the rows in the listen_count table
             while True:
                 result = curs.fetchone()
                 if not result:
                     break
 
                 self.log.info("%d  %d" % (result[0], result[1]))
-                found_listens += result[0]
+                # The first row may contain elements outside of the given range, so we don't 
+                # include the first chunk in the accounting, so that we're ensured to fetch enough
+                # listens 
+                if first_time:
+                    first_time = False
+                else:
+                    found_listens += result[0]
+
                 chunk_ts_min = result[1]
                 chunk_ts_max = result[1] + LISTEN_COUNT_BUCKET_WIDTH
 
