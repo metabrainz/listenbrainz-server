@@ -342,7 +342,7 @@ class TimescaleListenStore(ListenStore):
             if not clauses:
                 return []
 
-            fetch_counts_time = t0 - time.time()
+            fetch_counts_time = time.time() - t0
             t0 = time.time()
 
             # Finally, construct the query, execute it and return the data.
@@ -359,12 +359,12 @@ class TimescaleListenStore(ListenStore):
                     break
 
                 listens.append(Listen.from_timescale(result[0], result[1], result[4], result[2], result[3]))
-            fetch_listens_time = t0 - time.time()
+            fetch_listens_time = time.time() - t0
 
         if order == ORDER_ASC:
             listens.reverse()
 
-        self.log.info("listen fetch: %.2f counts, %.2f listens" % (fetch_counts_time, fetch_listens_time))
+        self.log.info("listen counts %.2fs, listens %.2fs" % (fetch_counts_time, fetch_listens_time))
 
         return listens
 
