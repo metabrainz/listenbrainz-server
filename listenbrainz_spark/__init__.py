@@ -19,7 +19,6 @@ def init_spark_session(app_name):
         session = SparkSession \
                 .builder \
                 .appName(app_name) \
-                .config("spark.driver.maxResultSize", "4g") \
                 .getOrCreate()
         context = session.sparkContext
         context.setLogLevel("ERROR")
