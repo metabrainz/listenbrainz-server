@@ -38,6 +38,8 @@ DATA_START_YEAR = 2005
 # See admin/timescale/create_views.sql for more details.
 LISTEN_COUNT_BUCKET_WIDTH = 86400 * 5
 
+# How many listens to fetch on the first attempt. If we don't fetch enough, doublt it, try again.
+DEFAULT_FETCH_WINDOW = 30 * 86400  # 30 days
 
 class TimescaleListenStore(ListenStore):
     '''
@@ -271,26 +273,51 @@ class TimescaleListenStore(ListenStore):
                      FROM listen
                     WHERE user_name IN :user_names """
 
+        self.log.info("from_ts: %d, to_ts: %d" % (from_ts, to_ts))
         if from_ts and to_ts:
             query += """AND listened_at > :from_ts
                         AND listened_at < :to_ts """
+            to_dynamic = False
+            from_dynamic = False
         elif from_ts is not None:
             query += "AND listened_at > :from_ts "
+            to_ts = from_ts + window_size
+            to_dynamic = True
+            from_dynamic = False
         else:
             query += "AND listened_at < :to_ts "
+            from_ts = to_ts - window_size
+            to_dynamic = False
+            from_dynamic = True
+
         query += " ORDER BY listened_at " + ORDER_TEXT[order] + " LIMIT :limit"
 
         listens = []
+        window_size = DEFAULT_FETCH_WINDOW
         with timescale.engine.connect() as connection:
             t0 = time.time()
+            fetch_listens_time = time.time() - t0
+
             curs = connection.execute(sqlalchemy.text(query), user_names=tuple(user_names), from_ts=from_ts, to_ts=to_ts, limit=limit)
             while True:
                 result = curs.fetchone()
                 if not result:
                     break
-                listens.append(Listen.from_timescale(result[0], result[1], result[4], result[2], result[3]))
 
-            fetch_listens_time = time.time() - t0
+                listens.append(Listen.from_timescale(result[0], result[1], result[4], result[2], result[3]))
+                if len(listens) == limit:
+                    break
+
+            if len(listens) == limit:
+                break
+
+            window_size =* 2
+            if to_dynamic:
+                to_ts += window_size 
+
+            if from_dynamic:
+                from_ts -= window_size
+
 
         if order == ORDER_ASC:
             listens.reverse()
