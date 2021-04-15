@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd "$(dirname "${BASH_SOURCE[0]}")/../"
+cd "$(dirname "${BASH_SOURCE[0]}")/../../"
 
 source spark_config.sh
 
@@ -13,6 +13,7 @@ docker run \
     -d \
     -v /spark:/spark \
     -v /hadoop:/hadoop \
+    -v /usr/lib/jvm/adoptopenjdk-11-hotspot-amd64:/usr/lib/jvm/adoptopenjdk-11-hotspot-amd64 \
     -v `pwd`:/rec \
     --network host \
     --name $CONTAINER_NAME \
@@ -20,6 +21,7 @@ docker run \
     /spark/bin/spark-submit \
         --packages org.apache.spark:spark-avro_2.11:2.4.1 \
         --master yarn \
+        --deploy-mode cluster \
         --conf "spark.scheduler.listenerbus.eventqueue.capacity"=$LISTENERBUS_CAPACITY \
         --conf "spark.cores.max"=$MAX_CORES \
         --conf "spark.executor.cores"=$EXECUTOR_CORES \
