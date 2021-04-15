@@ -36,7 +36,7 @@ DATA_START_YEAR = 2005
 
 # This value MUST match the time_bucket definition of the listen_count view.
 # See admin/timescale/create_views.sql for more details.
-LISTEN_COUNT_BUCKET_WIDTH = 86400
+LISTEN_COUNT_BUCKET_WIDTH = 86400 * 5
 
 
 class TimescaleListenStore(ListenStore):
@@ -254,44 +254,57 @@ class TimescaleListenStore(ListenStore):
                            FROM listen_count
                           WHERE user_name IN :user_names """
 
-#        if from_ts and to_ts:
-#            count_query += """AND listened_at_bucket >= :from_ts
-#                        AND listened_at_bucket <= :to_ts """
-#        elif from_ts is not None:
-#            count_query += "AND listened_at_bucket >= :from_ts "
-#        else:
-#            count_query += "AND listened_at_bucket <= :to_ts "
+        if from_ts and to_ts:
+            count_query += """AND listened_at_bucket >= :from_ts
+                        AND listened_at_bucket <= :to_ts """
+        elif from_ts is not None:
+            count_query += "AND listened_at_bucket >= :from_ts "
+        else:
+            count_query += "AND listened_at_bucket <= :to_ts "
         count_query += " ORDER BY listened_at_bucket " + ORDER_TEXT[order]
+
+        if from_ts:
+            listen_count_from_ts = from_ts - (from_ts % LISTEN_COUNT_BUCKET_WIDTH)
+        else:
+            listen_count_from_ts = 0
+        if to_ts:
+            listen_count_to_ts = to_ts - (to_ts % LISTEN_COUNT_BUCKET_WIDTH) + LISTEN_COUNT_BUCKET_WIDTH - 1
+        else:
+            listen_count_to_ts = 0
 
         listens = []
         clauses = []
         found_listens = 0
         with timescale.engine.connect() as connection:
-            print("from ts %d, to ts %d" % (from_ts or -1, to_ts or -1))
-            curs = connection.execute(sqlalchemy.text(count_query), user_names=tuple(user_names), from_ts=from_ts, to_ts=to_ts, limit=limit)
+            curs = connection.execute(sqlalchemy.text(count_query), user_names=tuple(user_names),
+                                                                    from_ts=listen_count_from_ts,
+                                                                    to_ts=listen_count_to_ts, limit=limit)
             while True:
                 result = curs.fetchone()
                 if not result:
                     break
-                print("%d %d" % (result[0], result[1]))
 
                 found_listens += result[0]
-                clauses.append("(listened_at > %d AND listened_at < %d)" % (result[1], result[1] + LISTEN_COUNT_BUCKET_WIDTH))
+                chunk_ts_min = result[1]
+                chunk_ts_max = result[1] + LISTEN_COUNT_BUCKET_WIDTH
+
+                if to_ts and to_ts > chunk_ts_min and to_ts < chunk_ts_max:
+                    chunk_ts_max = to_ts
+                if from_ts and from_ts > chunk_ts_min and from_ts < chunk_ts_max:
+                    chunk_ts_min = from_ts
+
+                clauses.append("(listened_at > %d AND listened_at < %d)" % (chunk_ts_min, chunk_ts_max))
                 if found_listens >= limit:
                     break
 
             if not clauses:
-                print("no listen_count rows returned")
                 return []
-
-            print(clauses)
 
             query = """SELECT listened_at, track_name, created, data, user_name
                          FROM listen
                         WHERE user_name IN :user_names AND ("""
             query += " OR ".join(clauses)  
             query += ") ORDER BY listened_at " + ORDER_TEXT[order] + " LIMIT :limit"
-            print(query)
 
             curs = connection.execute(sqlalchemy.text(query), user_names=tuple(user_names), limit=limit)
             while True:
