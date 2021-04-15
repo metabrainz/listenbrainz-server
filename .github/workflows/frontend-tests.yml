@@ -8,7 +8,7 @@ on:
 
 jobs:
 
-  build:
+  test:
 
     runs-on: ubuntu-latest
 
@@ -25,19 +25,13 @@ jobs:
     - uses: satackey/action-docker-layer-caching@v0.0.11
       continue-on-error: true
 
-    - name: Build the Docker image
-      run: docker-compose -f docker/docker-compose.test.yml -p listenbrainz_frontend_test build frontend_tester
-
     - name: Run frontend tests
-      run: docker-compose -f docker/docker-compose.test.yml -p listenbrainz_frontend_test run frontend_tester npm run test:ci
+      run: ./test.sh fe
 
     - name: Run linter
-      run: docker-compose -f docker/docker-compose.test.yml -p listenbrainz_frontend_test run frontend_tester npm run format:ci
+      run: ./test.sh fe -f -ci
       if: ${{ always() }}
 
     - name: Run type checker
-      run: docker-compose -f docker/docker-compose.test.yml -p listenbrainz_frontend_test run frontend_tester npm run type-check
+      run: ./test.sh fe -t
       if: ${{ always() }}
-
-    - name: Bring down containers
-      run: docker-compose -f docker/docker-compose.test.yml -p listenbrainz_frontend_test down

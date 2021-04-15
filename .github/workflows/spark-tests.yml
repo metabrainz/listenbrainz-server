@@ -8,7 +8,7 @@ on:
 
 jobs:
 
-  build:
+  test:
 
     runs-on: ubuntu-latest
 
@@ -28,20 +28,5 @@ jobs:
     - uses: satackey/action-docker-layer-caching@v0.0.11
       continue-on-error: true
 
-    - name: Build the Docker image
-      run: docker-compose -f docker/docker-compose.spark.test.yml -p listenbrainz_spark_test build
-
-    - name: Format namenode
-      run: docker-compose -f docker/docker-compose.spark.test.yml -p listenbrainz_spark_test run --rm hadoop-master hdfs namenode -format
-
-    - name: Bring up dependencies
-      run: docker-compose -f docker/docker-compose.spark.test.yml -p listenbrainz_spark_test up -d hadoop-master datanode
-
     - name: Run tests
-      run: docker-compose -f docker/docker-compose.spark.test.yml -p listenbrainz_spark_test up -d test
-
-    - name: Display test logs
-      run: docker-compose -f docker/docker-compose.spark.test.yml -p listenbrainz_spark_test logs -f test
-
-    - name: Bring down containers
-      run: docker-compose -f docker/docker-compose.spark.test.yml -p listenbrainz_spark_test down
+      run: ./test.sh spark

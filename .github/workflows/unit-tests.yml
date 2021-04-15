@@ -8,7 +8,7 @@ on:
 
 jobs:
 
-  build:
+  test:
 
     runs-on: ubuntu-latest
 
@@ -28,26 +28,5 @@ jobs:
     - uses: satackey/action-docker-layer-caching@v0.0.11
       continue-on-error: true
 
-    - name: Build the Docker image
-      run: docker-compose -f docker/docker-compose.test.yml -p listenbrainz_unit_test build
-
-    - name: Bring up dependencies
-      run: docker-compose -f docker/docker-compose.test.yml -p listenbrainz_unit_test up -d db redis rabbitmq
-
-    - name: Setup database
-      run: >
-        docker-compose -f docker/docker-compose.test.yml -p listenbrainz_unit_test run --rm listenbrainz
-        dockerize -wait tcp://db:5432 -timeout 60s 
-        bash -c 
-        "ls && python3 manage.py init_db --create-db && python3 manage.py init_msb_db --create-db && python3 manage.py init_ts_db --create-db"
-
     - name: Run tests
-      run: >
-        docker-compose -f docker/docker-compose.test.yml -p listenbrainz_unit_test run --rm listenbrainz
-        dockerize
-        -wait tcp://db:5432 -timeout 60s
-        -wait tcp://redis:6379 -timeout 60s
-        pytest
-
-    - name: Bring down containers
-      run: docker-compose -f docker/docker-compose.test.yml -p listenbrainz_unit_test down
+      run: ./test.sh
