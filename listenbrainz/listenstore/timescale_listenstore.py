@@ -130,7 +130,11 @@ class TimescaleListenStore(ListenStore):
                 if not row:
                     return 0
 
-                return row["value"] 
+                value = row["value"]
+                if not select_min_timestamp:
+                    value += LISTEN_COUNT_BUCKET_WIDTH - 1
+
+                return value
         except psycopg2.OperationalError as e:
             self.log.error("Cannot fetch min/max timestamp: %s" % str(e), exc_info=True)
             raise

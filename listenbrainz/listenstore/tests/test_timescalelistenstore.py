@@ -211,8 +211,8 @@ class TestTimescaleListenStore(DatabaseTestCase):
 
         self._create_test_data(testuser_name)
         (min_ts, max_ts) = self.logstore.get_timestamps_for_user(user_name=testuser_name)
-        self.assertEqual(min_ts, 1400000000)
-        self.assertEqual(max_ts, 1400000200)
+        self.assertEqual(min_ts, 1399680000)
+        self.assertEqual(max_ts, 1400111999)
 
     def test_fetch_recent_listens(self):
         user = db_user.get_or_create(2, 'someuser')
