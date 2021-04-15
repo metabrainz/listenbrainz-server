@@ -267,104 +267,35 @@ class TimescaleListenStore(ListenStore):
             order: 0 for DESCending order, 1 for ASCending order
         """
 
-        # To make this process fast, there is some serious fancy footwork necessary. :(
-        #
-        # First, we query the listen_count continuous aggregate to see which chunks of
-        # the DB we need to query, in order to properly bound the query.
-        # Each chunk in the hypertable as a row for every user in the listen_count
-        # aggregate. Each row also contains the timestamp of the database chuck
-        # chunk and then number of listens for that user in that chunk. This allows
-        # us to find the right lower and upper timestamp, that we can use to 
-        # craft an exact query for listens.
+        query = """SELECT listened_at, track_name, created, data, user_name
+                     FROM listen
+                    WHERE user_name IN :user_names """
 
-        # Build the base of the listen_count query
-        count_query = """SELECT count, listened_at_bucket
-                           FROM listen_count_5day
-                          WHERE user_name IN :user_names """
-
-        # Add where clause based on timestamps
         if from_ts and to_ts:
-            count_query += """AND listened_at_bucket >= :from_ts
-                        AND listened_at_bucket <= :to_ts """
+            query += """AND listened_at > :from_ts
+                        AND listened_at < :to_ts """
         elif from_ts is not None:
-            count_query += "AND listened_at_bucket >= :from_ts "
+            query += "AND listened_at > :from_ts "
         else:
-            count_query += "AND listened_at_bucket <= :to_ts "
-        count_query += " ORDER BY listened_at_bucket " + ORDER_TEXT[order]
-
-        # If we have a from_ts, align it to a bucket boundary
-        if from_ts:
-            listen_count_from_ts = from_ts - (from_ts % LISTEN_COUNT_BUCKET_WIDTH)
-        else:
-            listen_count_from_ts = 0
+            query += "AND listened_at < :to_ts "
+        query += " ORDER BY listened_at " + ORDER_TEXT[order] + " LIMIT :limit"
 
         listens = []
-        clauses = []
-        found_listens = 0
-        first_time = True
         with timescale.engine.connect() as connection:
             t0 = time.time()
-            curs = connection.execute(sqlalchemy.text(count_query), user_names=tuple(user_names),
-                                                                    from_ts=listen_count_from_ts,
-                                                                    to_ts=to_ts, limit=limit)
-
-            # Iterate over the rows in the listen_count table
+            curs = connection.execute(sqlalchemy.text(query), user_names=tuple(user_names), from_ts=from_ts, to_ts=to_ts, limit=limit)
             while True:
                 result = curs.fetchone()
                 if not result:
                     break
-
-                # The first row may contain elements outside of the given range, so we don't 
-                # include the first chunk in the accounting, so that we're ensured to fetch enough
-                # listens 
-                if first_time:
-                    first_time = False
-                else:
-                    found_listens += result[0]
-
-                # Set the boundaries for this chunk
-                chunk_ts_min = result[1]
-                chunk_ts_max = result[1] + LISTEN_COUNT_BUCKET_WIDTH
-
-                # if a timestamp falls into the middle of the chunk,
-                # adjust the boundary to exclude listens outside our range
-                if to_ts and to_ts > chunk_ts_min and to_ts < chunk_ts_max:
-                    chunk_ts_max = to_ts
-                if from_ts and from_ts > chunk_ts_min and from_ts < chunk_ts_max:
-                    chunk_ts_min = from_ts
-
-                # Turn this into a where clause and stash it
-                clauses.append("(listened_at > %d AND listened_at < %d)" % (chunk_ts_min, chunk_ts_max))
-                if found_listens >= limit:
-                    break
-
-            # If we have no where clauses, we have no data
-            if not clauses:
-                return []
-
-            fetch_counts_time = time.time() - t0
-            t0 = time.time()
-
-            # Finally, construct the query, execute it and return the data.
-            query = """SELECT listened_at, track_name, created, data, user_name
-                         FROM listen
-                        WHERE user_name IN :user_names AND ("""
-            query += " OR ".join(clauses)  
-            query += ") ORDER BY listened_at " + ORDER_TEXT[order] + " LIMIT :limit"
-
-            curs = connection.execute(sqlalchemy.text(query), user_names=tuple(user_names), limit=limit)
-            while True:
-                result = curs.fetchone()
-                if not result:
-                    break
-
                 listens.append(Listen.from_timescale(result[0], result[1], result[4], result[2], result[3]))
+
             fetch_listens_time = time.time() - t0
 
         if order == ORDER_ASC:
             listens.reverse()
 
-        self.log.info("listen counts %.2fs, listens %.2fs" % (fetch_counts_time, fetch_listens_time))
+        self.log.info("fetch listens %.2fs" % (fetch_listens_time))
 
         return listens
 
