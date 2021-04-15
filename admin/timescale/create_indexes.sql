@@ -9,9 +9,8 @@ CREATE UNIQUE INDEX listened_at_track_name_user_name_ndx_listen ON listen (liste
 # Use 
 # SELECT view_name, materialization_hypertable FROM timescaledb_information.continuous_aggregates;
 # to find materialized aggregates that can be used to create indexes:
-#CREATE INDEX user_name_ndx_listen_count ON _timescaledb_internal._materialized_hypertable_30 (user_name);
-#CREATE INDEX user_name_ndx_listened_at_max ON _timescaledb_internal._materialized_hypertable_31 (user_name);
-#CREATE INDEX user_name_ndx_listened_at_min ON _timescaledb_internal._materialized_hypertable_32 (user_name);
+#CREATE INDEX user_name_ndx_listen_count_5day ON _timescaledb_internal._materialized_hypertable_35 (user_name);
+#CREATE INDEX listened_at_user_name_ndx_listen_count_5day ON _timescaledb_internal._materialized_hypertable_35 (listened_at_bucket, user_name);
 
 -- Playlists
 
