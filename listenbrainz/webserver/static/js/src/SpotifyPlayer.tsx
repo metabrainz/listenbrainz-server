@@ -5,7 +5,7 @@ import {
   has as _has,
   debounce as _debounce,
 } from "lodash";
-import { searchForSpotifyTrack } from "./utils";
+import { searchForSpotifyTrack, loadScriptAsync } from "./utils";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
 
 const getSpotifyUriFromListen = (listen: Listen): string => {
@@ -91,7 +91,7 @@ export default class SpotifyPlayer
     // Do an initial check of the spotify token permissions (scopes) before loading the SDK library
     if (SpotifyPlayer.hasPermissions(props.spotifyUser)) {
       window.onSpotifyWebPlaybackSDKReady = this.connectSpotifyPlayer;
-      const spotifyPlayerSDKLib = require("../lib/spotify-player-sdk-1.7.1"); // eslint-disable-line global-require
+      loadScriptAsync(document, "https://sdk.scdn.co/spotify-player.js");
     } else {
       this.handleAccountError();
     }
