@@ -113,10 +113,12 @@ class TimescaleListenStore(ListenStore):
         """
 
         sort_clause = "DESC"
+        function = "max"
         if select_min_timestamp:
             sort_clause = ""
+            function = "min"
 
-        query = """SELECT listened_at_bucket AS value
+        query = """SELECT listened_at_bucket AS ts
                      FROM listen_count
                      WHERE user_name = :user_name
                   ORDER BY listened_at_bucket %s
@@ -130,11 +132,20 @@ class TimescaleListenStore(ListenStore):
                 if not row:
                     return 0
 
-                value = row["value"]
-                if not select_min_timestamp:
-                    value += LISTEN_COUNT_BUCKET_WIDTH - 1
+                query = """SELECT %s(listened_at) AS ts
+                             FROM listen
+                            WHERE user_name = :user_name
+                              AND listened_at >= %d AND listened_at < %d""" % (function, row['ts'],
+                                                                               row['ts'] + LISTEN_COUNT_BUCKET_WIDTH - 1)
+                result = connection.execute(sqlalchemy.text(query), {
+                    "user_name": user_name
+                })
+                row = result.fetchone()
+                if not row:
+                    return 0
 
-                return value
+                return row['ts']
+
         except psycopg2.OperationalError as e:
             self.log.error("Cannot fetch min/max timestamp: %s" % str(e), exc_info=True)
             raise
