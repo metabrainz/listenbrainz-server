@@ -78,7 +78,7 @@ class TimescaleListenStore(ListenStore):
             if count:
                 return int(count)
 
-        query = "SELECT SUM(count) FROM listen_count WHERE user_name = :user_name"
+        query = "SELECT SUM(count) FROM listen_count_5day WHERE user_name = :user_name"
 
         try:
             with timescale.engine.connect() as connection:
@@ -119,7 +119,7 @@ class TimescaleListenStore(ListenStore):
             function = "min"
 
         query = """SELECT listened_at_bucket AS ts
-                     FROM listen_count
+                     FROM listen_count_5day
                      WHERE user_name = :user_name
                   ORDER BY listened_at_bucket %s
                      LIMIT 1""" % sort_clause
@@ -161,14 +161,14 @@ class TimescaleListenStore(ListenStore):
             if count:
                 return int(count)
 
-        query = "SELECT SUM(count) AS value FROM listen_count"
+        query = "SELECT SUM(count) AS value FROM listen_count_5day"
 
         try:
             with timescale.engine.connect() as connection:
                 result = connection.execute(sqlalchemy.text(query))
                 count = int(result.fetchone()["value"] or "0")
         except psycopg2.OperationalError as e:
-            self.log.error("Cannot query timescale listen_count: %s" % str(e), exc_info=True)
+            self.log.error("Cannot query timescale listen_count_5day: %s" % str(e), exc_info=True)
             raise
 
         if cache_value:
@@ -266,7 +266,7 @@ class TimescaleListenStore(ListenStore):
         """
 
         count_query = """SELECT count, listened_at_bucket
-                           FROM listen_count
+                           FROM listen_count_5day
                           WHERE user_name IN :user_names """
 
         if from_ts and to_ts:

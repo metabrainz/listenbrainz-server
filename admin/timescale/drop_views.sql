@@ -1,5 +1,5 @@
 BEGIN;
 
-DROP VIEW listen_count CASCADE;
+DROP VIEW listen_count_5day CASCADE;
 
 COMMIT;

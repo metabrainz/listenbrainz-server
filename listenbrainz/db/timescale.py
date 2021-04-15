@@ -77,22 +77,22 @@ def create_view_indexes():
     with admin_engine.connect() as connection:
         query = """SELECT materialization_hypertable
                      FROM timescaledb_information.continuous_aggregates
-                    WHERE view_name = 'listen_count'::regclass"""
+                    WHERE view_name = 'listen_count_5day'::regclass"""
         curs = connection.execute(sqlalchemy.text(query))
         view_name = curs.fetchone()[0]
         if not view_name:
             raise RuntimeError("Cannot find materialized view name for listen_count view.")
 
-        query = """CREATE INDEX listened_at_bucket_user_name_ndx_listen_count
+        query = """CREATE INDEX listened_at_bucket_user_name_ndx_listen_count_5day
                              ON %s (listened_at_bucket, user_name)""" % view_name
         try:
             connection.execute(sqlalchemy.text(query))
         except Exception as err: 
-            raise RuntimeError("Cannot create index on materilized view of listen_count")
+            raise RuntimeError("Cannot create index on materilized view of listen_count_5day")
 
-        query = """CREATE INDEX user_name_ndx_listen_count
+        query = """CREATE INDEX user_name_ndx_listen_count_5day
                              ON %s (user_name)""" % view_name
         try:
             connection.execute(sqlalchemy.text(query))
         except Exception as err: 
-            raise RuntimeError("Cannot create index on materilized view of listen_count")
+            raise RuntimeError("Cannot create index on materilized view of listen_count_5day")
