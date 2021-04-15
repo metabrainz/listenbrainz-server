@@ -283,7 +283,7 @@ class TimescaleListenStore(ListenStore):
         else:
             listen_count_from_ts = 0
         if to_ts:
-            listen_count_to_ts = to_ts - (to_ts % LISTEN_COUNT_BUCKET_WIDTH) + LISTEN_COUNT_BUCKET_WIDTH - 1
+            listen_count_to_ts = to_ts + LISTEN_COUNT_BUCKET_WIDTH
         else:
             listen_count_to_ts = 0
 
@@ -291,6 +291,7 @@ class TimescaleListenStore(ListenStore):
         clauses = []
         found_listens = 0
         with timescale.engine.connect() as connection:
+            self.log.info("from ts %d to ts %d" % (from_ts or 0, to_ts or 0))
             curs = connection.execute(sqlalchemy.text(count_query), user_names=tuple(user_names),
                                                                     from_ts=listen_count_from_ts,
                                                                     to_ts=listen_count_to_ts, limit=limit)
@@ -299,14 +300,17 @@ class TimescaleListenStore(ListenStore):
                 if not result:
                     break
 
+                self.log.info("%d  %d" % (result[0], result[1]))
                 found_listens += result[0]
                 chunk_ts_min = result[1]
                 chunk_ts_max = result[1] + LISTEN_COUNT_BUCKET_WIDTH
 
                 if to_ts and to_ts > chunk_ts_min and to_ts < chunk_ts_max:
                     chunk_ts_max = to_ts
+                    self.log.info("    adjust ts max to %s" % to_ts)
                 if from_ts and from_ts > chunk_ts_min and from_ts < chunk_ts_max:
                     chunk_ts_min = from_ts
+                    self.log.info("    adjust ts min to %s" % from_ts)
 
                 clauses.append("(listened_at > %d AND listened_at < %d)" % (chunk_ts_min, chunk_ts_max))
                 if found_listens >= limit:
