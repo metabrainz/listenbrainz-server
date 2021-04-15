@@ -190,8 +190,10 @@ class TimescaleListenStore(ListenStore):
             min_ts = int(min_ts)
             max_ts = int(max_ts)
         else:
+            t0 = time.time()
             min_ts = self._select_single_timestamp(True, user_name)
             max_ts = self._select_single_timestamp(False, user_name)
+            self.log.info("ts fetch: %.2f" % (time.time() - t0))
 
             if min_ts and max_ts:
                 cache.set(self.ns + REDIS_USER_TIMESTAMPS % user_name, "%d,%d" % (min_ts, max_ts), USER_CACHE_TIME)
@@ -301,6 +303,7 @@ class TimescaleListenStore(ListenStore):
         found_listens = 0
         first_time = True
         with timescale.engine.connect() as connection:
+            t0 = time.time()
             curs = connection.execute(sqlalchemy.text(count_query), user_names=tuple(user_names),
                                                                     from_ts=listen_count_from_ts,
                                                                     to_ts=to_ts, limit=limit)
@@ -339,6 +342,9 @@ class TimescaleListenStore(ListenStore):
             if not clauses:
                 return []
 
+            fetch_counts_time = t0 - time.time()
+            t0 = time.time()
+
             # Finally, construct the query, execute it and return the data.
             query = """SELECT listened_at, track_name, created, data, user_name
                          FROM listen
@@ -353,9 +359,12 @@ class TimescaleListenStore(ListenStore):
                     break
 
                 listens.append(Listen.from_timescale(result[0], result[1], result[4], result[2], result[3]))
+            fetch_listens_time = t0 - time.time()
 
         if order == ORDER_ASC:
             listens.reverse()
+
+        self.log.info("listen fetch: %.2f counts, %.2f listens" % (fetch_counts_time, fetch_listens_time))
 
         return listens
 
