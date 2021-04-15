@@ -1,4 +1,4 @@
-FROM metabrainz/python:3.7-20210115
+FROM metabrainz/python:3.8-20210115
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
