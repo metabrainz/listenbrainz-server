@@ -301,7 +301,6 @@ class TimescaleListenStore(ListenStore):
         found_listens = 0
         first_time = True
         with timescale.engine.connect() as connection:
-            self.log.info("from ts %d to ts %d" % (from_ts or 0, to_ts or 0))
             curs = connection.execute(sqlalchemy.text(count_query), user_names=tuple(user_names),
                                                                     from_ts=listen_count_from_ts,
                                                                     to_ts=to_ts, limit=limit)
@@ -312,7 +311,6 @@ class TimescaleListenStore(ListenStore):
                 if not result:
                     break
 
-                self.log.info("%d  %d" % (result[0], result[1]))
                 # The first row may contain elements outside of the given range, so we don't 
                 # include the first chunk in the accounting, so that we're ensured to fetch enough
                 # listens 
@@ -321,23 +319,27 @@ class TimescaleListenStore(ListenStore):
                 else:
                     found_listens += result[0]
 
+                # Set the boundaries for this chunk
                 chunk_ts_min = result[1]
                 chunk_ts_max = result[1] + LISTEN_COUNT_BUCKET_WIDTH
 
+                # if a timestamp falls into the middle of the chunk,
+                # adjust the boundary to exclude listens outside our range
                 if to_ts and to_ts > chunk_ts_min and to_ts < chunk_ts_max:
                     chunk_ts_max = to_ts
-                    self.log.info("    adjust ts max to %s" % to_ts)
                 if from_ts and from_ts > chunk_ts_min and from_ts < chunk_ts_max:
                     chunk_ts_min = from_ts
-                    self.log.info("    adjust ts min to %s" % from_ts)
 
+                # Turn this into a where clause and stash it
                 clauses.append("(listened_at > %d AND listened_at < %d)" % (chunk_ts_min, chunk_ts_max))
                 if found_listens >= limit:
                     break
 
+            # If we have no where clauses, we have no data
             if not clauses:
                 return []
 
+            # Finally, construct the query, execute it and return the data.
             query = """SELECT listened_at, track_name, created, data, user_name
                          FROM listen
                         WHERE user_name IN :user_names AND ("""
