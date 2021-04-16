@@ -76,6 +76,11 @@ def profile(user_name):
         except ValueError:
             raise BadRequest("Incorrect timestamp argument min_ts: %s" % request.args.get("min_ts"))
 
+    args = {}
+    if max_ts:
+        args['to_ts'] = max_ts
+    else:
+        args['from_ts'] = min_ts
     listens, min_ts_per_user, max_ts_per_user = db_conn.fetch_listens(user_name, limit=LISTENS_PER_PAGE, **args)
     for listen in listens:
         listens.append({
