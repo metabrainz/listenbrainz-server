@@ -33,6 +33,7 @@ DUMP_CHUNK_SIZE = 100000
 NUMBER_OF_USERS_PER_DIRECTORY = 1000
 DUMP_FILE_SIZE_LIMIT = 1024 * 1024 * 1024  # 1 GB
 DATA_START_YEAR = 2005
+DATA_START_YEAR_IN_SECONDS = 1104537600
 
 # This value MUST match the time_bucket definition of the listen_count view.
 # See admin/timescale/create_views.sql for more details.
@@ -40,6 +41,9 @@ LISTEN_COUNT_BUCKET_WIDTH = 86400 * 5
 
 # How many listens to fetch on the first attempt. If we don't fetch enough, doublt it, try again.
 DEFAULT_FETCH_WINDOW = 30 * 86400  # 30 days
+
+# When expanding the search, how fast should the bounds be moved out
+WINDOW_SIZE_MULTIPLIER = 3
 
 class TimescaleListenStore(ListenStore):
     '''
@@ -269,60 +273,85 @@ class TimescaleListenStore(ListenStore):
             order: 0 for DESCending order, 1 for ASCending order
         """
 
+#        self.log.warn("from_ts: %d, to_ts: %d" % (from_ts or 0, to_ts or 0))
+        window_size = DEFAULT_FETCH_WINDOW
         query = """SELECT listened_at, track_name, created, data, user_name
                      FROM listen
-                    WHERE user_name IN :user_names """
+                    WHERE user_name IN :user_names
+                      AND listened_at > :from_ts
+                      AND listened_at < :to_ts
+                 ORDER BY listened_at """ + ORDER_TEXT[order] + " LIMIT :limit"
 
-        self.log.info("from_ts: %d, to_ts: %d" % (from_ts, to_ts))
         if from_ts and to_ts:
-            query += """AND listened_at > :from_ts
-                        AND listened_at < :to_ts """
             to_dynamic = False
             from_dynamic = False
         elif from_ts is not None:
-            query += "AND listened_at > :from_ts "
             to_ts = from_ts + window_size
             to_dynamic = True
             from_dynamic = False
         else:
-            query += "AND listened_at < :to_ts "
             from_ts = to_ts - window_size
             to_dynamic = False
             from_dynamic = True
 
-        query += " ORDER BY listened_at " + ORDER_TEXT[order] + " LIMIT :limit"
+        # TODO: Bound this by the known timestamps 
 
         listens = []
-        window_size = DEFAULT_FETCH_WINDOW
+        done = False
         with timescale.engine.connect() as connection:
             t0 = time.time()
-            fetch_listens_time = time.time() - t0
 
-            curs = connection.execute(sqlalchemy.text(query), user_names=tuple(user_names), from_ts=from_ts, to_ts=to_ts, limit=limit)
+            passes = 0
             while True:
-                result = curs.fetchone()
-                if not result:
+                passes += 1
+
+                # TODO Remove me
+                if passes == 25:
+                    done = True
+
+#                self.log.warn("   pass %d: from_ts: %d, to_ts: %d window: %d" % (passes, from_ts, to_ts, window_size))
+                curs = connection.execute(sqlalchemy.text(query), user_names=tuple(user_names),
+                                          from_ts=from_ts, to_ts=to_ts, limit=limit)
+                while True:
+                    result = curs.fetchone()
+                    if not result:
+                        if not to_dynamic and not from_dynamic:
+                            done = True
+                            break
+
+                        if to_dynamic:
+                            from_ts += window_size - 1
+                            window_size *= WINDOW_SIZE_MULTIPLIER
+                            to_ts += window_size 
+
+                        if from_dynamic:
+                            to_ts -= window_size
+                            window_size *= WINDOW_SIZE_MULTIPLIER
+                            from_ts -= window_size
+
+                        if from_ts < DATA_START_YEAR_IN_SECONDS:
+                            done = True
+
+                        if to_ts > int(time.time()) + 3600:
+                            done = True
+
+                        break
+
+                    listens.append(Listen.from_timescale(result[0], result[1], result[4], result[2], result[3]))
+                    if len(listens) == limit:
+                        done = True
+                        break
+
+
+                if done:
                     break
 
-                listens.append(Listen.from_timescale(result[0], result[1], result[4], result[2], result[3]))
-                if len(listens) == limit:
-                    break
-
-            if len(listens) == limit:
-                break
-
-            window_size =* 2
-            if to_dynamic:
-                to_ts += window_size 
-
-            if from_dynamic:
-                from_ts -= window_size
-
+            fetch_listens_time = time.time() - t0
 
         if order == ORDER_ASC:
             listens.reverse()
 
-        self.log.info("fetch listens %.2fs" % (fetch_listens_time))
+        self.log.info("fetch listens %.2fs in %d passes" % (fetch_listens_time, passes))
 
         return listens
 

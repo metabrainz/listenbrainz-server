@@ -125,7 +125,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(len(listens), 1)
         self.assertEqual(listens[0].ts_since_epoch, 1400000050)
 
-    def test_fetch_listens_1(self):
+    def test_000_fetch_listens_1(self):
         self._create_test_data(self.testuser_name)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000000)
         self.assertEqual(len(listens), 4)
@@ -141,7 +141,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
 
-    def test_fetch_listens_3(self):
+    def test_001_fetch_listens_3(self):
         self._create_test_data(self.testuser_name)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
         self.assertEqual(len(listens), 5)
@@ -170,22 +170,22 @@ class TestTimescaleListenStore(DatabaseTestCase):
         # test from_ts with gaps
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1399999999)
         self.assertEqual(len(listens), 4)
-        self.assertEqual(listens[0].ts_since_epoch, 1402000050)
-        self.assertEqual(listens[1].ts_since_epoch, 1402000000)
+        self.assertEqual(listens[0].ts_since_epoch, 1420000050)
+        self.assertEqual(listens[1].ts_since_epoch, 1420000000)
         self.assertEqual(listens[2].ts_since_epoch, 1400000050)
         self.assertEqual(listens[3].ts_since_epoch, 1400000000)
 
         # test from_ts and to_ts with gaps
-        listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000049, to_ts=1402000001)
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000049, to_ts=1420000001)
         self.assertEqual(len(listens), 2)
-        self.assertEqual(listens[0].ts_since_epoch, 1402000000)
+        self.assertEqual(listens[0].ts_since_epoch, 1420000000)
         self.assertEqual(listens[1].ts_since_epoch, 1400000050)
 
         # test to_ts with gaps
-        listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1402000051)
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1420000051)
         self.assertEqual(len(listens), 4)
-        self.assertEqual(listens[0].ts_since_epoch, 1402000050)
-        self.assertEqual(listens[1].ts_since_epoch, 1402000000)
+        self.assertEqual(listens[0].ts_since_epoch, 1420000050)
+        self.assertEqual(listens[1].ts_since_epoch, 1420000000)
         self.assertEqual(listens[2].ts_since_epoch, 1400000050)
         self.assertEqual(listens[3].ts_since_epoch, 1400000000)
 
