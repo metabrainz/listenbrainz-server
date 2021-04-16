@@ -13,6 +13,10 @@
 # ./test.sh fe -u          run frontend tests, update snapshots
 # ./test.sh fe -b          build frontend test containers
 # ./test.sh fe -t          run type-checker
+# ./test.sh fe -f          run linter
+
+# ./test.sh fe -ci         run frontend tests in ci mode
+# ./test.sh fe -f -ci      run linter in ci mode
 
 # SPARK TESTS
 # ./test.sh spark          run spark tests
@@ -38,7 +42,7 @@ INT_COMPOSE_PROJECT_NAME_ORIGINAL=listenbrainz_int
 
 if [[ ! -d "docker" ]]; then
     echo "This script must be run from the top level directory of the listenbrainz-server source."
-    exit -1
+    exit 255
 fi
 
 function build_unit_containers {
@@ -111,6 +115,30 @@ function update_snapshots {
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
                 run --rm frontend_tester npm run test:update-snapshots
+}
+
+function run_lint_check {
+    if [ "$1" == "-ci" ] ; then
+        docker-compose -f $COMPOSE_FILE_LOC \
+                       -p $COMPOSE_PROJECT_NAME \
+                    run --rm frontend_tester npm run format:ci
+    else
+        docker-compose -f $COMPOSE_FILE_LOC \
+                       -p $COMPOSE_PROJECT_NAME \
+                    run --rm frontend_tester npm run format
+    fi
+}
+
+function run_frontend_tests {
+    if [ "$1" == "-ci" ] ; then
+        docker-compose -f $COMPOSE_FILE_LOC \
+                       -p $COMPOSE_PROJECT_NAME \
+                    run --rm frontend_tester npm run test:ci
+    else
+        docker-compose -f $COMPOSE_FILE_LOC \
+                       -p $COMPOSE_PROJECT_NAME \
+                    run --rm frontend_tester npm test
+    fi
 }
 
 function run_type_check {
@@ -215,7 +243,7 @@ if [ "$1" == "int" ]; then
                   -wait tcp://db:5432 -timeout 60s \
                   -wait tcp://redis:6379 -timeout 60s \
                   -wait tcp://rabbitmq:5672 -timeout 60s \
-                bash -c "py.test $TESTS_TO_RUN"
+                bash -c "pytest $TESTS_TO_RUN"
     echo "Taking containers down"
     int_dcdown
     exit 0
@@ -246,10 +274,14 @@ if [ "$1" == "fe" ]; then
         exit 0
     fi
 
+    if [ "$2" == "-f" ]; then
+        echo "Running linter"
+        run_lint_check "$3"
+        exit 0
+    fi
+
     echo "Running tests"
-    docker-compose -f $COMPOSE_FILE_LOC \
-                   -p $COMPOSE_PROJECT_NAME \
-                run --rm frontend_tester npm test
+    run_frontend_tests "$2"
     exit 0
 fi
 
@@ -295,12 +327,12 @@ if [ $DB_EXISTS -eq 1 -a $DB_RUNNING -eq 1 ]; then
     echo "Running tests"
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                run --rm listenbrainz py.test "$@"
+                run --rm listenbrainz pytest "$@"
     unit_dcdown
 else
     # Else, we have containers, just run tests
     echo "Running tests"
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                run --rm listenbrainz py.test "$@"
+                run --rm listenbrainz pytest "$@"
 fi
