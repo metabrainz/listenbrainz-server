@@ -68,12 +68,14 @@ def run_sql_script_without_transaction(sql_file_path):
                 connection.close()
         return True
 
+
 def create_view_indexes():
     """ This function is needed since we need to create an index on a materialized view, whose
         name we need to query - its not a constant, thus it cannot be done in pure SQL.
     """
 
-    admin_engine = create_engine(config.TIMESCALE_ADMIN_LB_URI, poolclass=NullPool)
+    admin_engine = create_engine(
+        config.TIMESCALE_ADMIN_LB_URI, poolclass=NullPool)
     with admin_engine.connect() as connection:
         query = """SELECT materialization_hypertable
                      FROM timescaledb_information.continuous_aggregates
@@ -81,18 +83,21 @@ def create_view_indexes():
         curs = connection.execute(sqlalchemy.text(query))
         view_name = curs.fetchone()[0]
         if not view_name:
-            raise RuntimeError("Cannot find materialized view name for listen_count view.")
+            raise RuntimeError(
+                "Cannot find materialized view name for listen_count view.")
 
         query = """CREATE INDEX listened_at_bucket_user_name_ndx_listen_count_5day
                              ON %s (listened_at_bucket, user_name)""" % view_name
         try:
             connection.execute(sqlalchemy.text(query))
-        except Exception as err: 
-            raise RuntimeError("Cannot create index on materilized view of listen_count_5day")
+        except Exception as err:
+            raise RuntimeError(
+                "Cannot create index on materilized view of listen_count_5day")
 
         query = """CREATE INDEX user_name_ndx_listen_count_5day
                              ON %s (user_name)""" % view_name
         try:
             connection.execute(sqlalchemy.text(query))
-        except Exception as err: 
-            raise RuntimeError("Cannot create index on materilized view of listen_count_5day")
+        except Exception as err:
+            raise RuntimeError(
+                "Cannot create index on materilized view of listen_count_5day")

@@ -40,11 +40,12 @@ DATA_START_YEAR_IN_SECONDS = 1104537600
 # See admin/timescale/create_views.sql for more details.
 LISTEN_COUNT_BUCKET_WIDTH = 86400 * 5
 
-# How many listens to fetch on the first attempt. If we don't fetch enough, doublt it, try again.
+# How many listens to fetch on the first attempt. If we don't fetch enough, increase it by WINDOW_SIZE_MULTIPLIER
 DEFAULT_FETCH_WINDOW = 30 * 86400  # 30 days
 
 # When expanding the search, how fast should the bounds be moved out
 WINDOW_SIZE_MULTIPLIER = 3
+
 
 class TimescaleListenStore(ListenStore):
     '''
@@ -53,7 +54,8 @@ class TimescaleListenStore(ListenStore):
 
     REDIS_TIMESCALE_TOTAL_LISTEN_COUNT = "ls.listencount.total"
     TOTAL_LISTEN_COUNT_CACHE_TIME = 5 * 60
-    USER_LISTEN_COUNT_CACHE_TIME = 86400  # in seconds. 1 day, since we update the values stored in redis
+    # in seconds. 1 day, since we update the values stored in redis
+    USER_LISTEN_COUNT_CACHE_TIME = 86400
 
     def __init__(self, conf, logger):
         super(TimescaleListenStore, self).__init__(logger)
@@ -62,8 +64,10 @@ class TimescaleListenStore(ListenStore):
 
         # Initialize brainzutils cache
         self.ns = conf['REDIS_NAMESPACE']
-        init_cache(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'], namespace=conf['REDIS_NAMESPACE'])
-        self.dump_temp_dir_root = conf.get('LISTEN_DUMP_TEMP_DIR_ROOT', tempfile.mkdtemp())
+        init_cache(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'],
+                   namespace=conf['REDIS_NAMESPACE'])
+        self.dump_temp_dir_root = conf.get(
+            'LISTEN_DUMP_TEMP_DIR_ROOT', tempfile.mkdtemp())
 
     def get_listen_count_for_user(self, user_name, need_exact=False):
         """Get the total number of listens for a user. The number of listens comes from
@@ -80,7 +84,8 @@ class TimescaleListenStore(ListenStore):
             # decode is set to False as we have not encoded the value when we set it
             # in brainzutils cache as we need to call increment operation which requires
             # an integer value
-            user_key = '{}{}'.format(self.ns + REDIS_TIMESCALE_USER_LISTEN_COUNT, user_name)
+            user_key = '{}{}'.format(
+                self.ns + REDIS_TIMESCALE_USER_LISTEN_COUNT, user_name)
             count = cache.get(user_key, decode=False)
             if count:
                 return int(count)
@@ -95,12 +100,15 @@ class TimescaleListenStore(ListenStore):
                 count = int(result.fetchone()[0] or 0)
 
         except psycopg2.OperationalError as e:
-            self.log.error("Cannot query timescale listen_count: %s" % str(e), exc_info=True)
+            self.log.error("Cannot query timescale listen_count: %s" %
+                           str(e), exc_info=True)
             raise
 
         # put this value into brainzutils cache with an expiry time
-        user_key = "{}{}".format(self.ns + REDIS_TIMESCALE_USER_LISTEN_COUNT, user_name)
-        cache.set(user_key, count, TimescaleListenStore.USER_LISTEN_COUNT_CACHE_TIME, encode=False)
+        user_key = "{}{}".format(
+            self.ns + REDIS_TIMESCALE_USER_LISTEN_COUNT, user_name)
+        cache.set(user_key, count,
+                  TimescaleListenStore.USER_LISTEN_COUNT_CACHE_TIME, encode=False)
         return count
 
     def reset_listen_count(self, user_name):
@@ -154,7 +162,8 @@ class TimescaleListenStore(ListenStore):
                 return row['ts']
 
         except psycopg2.OperationalError as e:
-            self.log.error("Cannot fetch min/max timestamp: %s" % str(e), exc_info=True)
+            self.log.error("Cannot fetch min/max timestamp: %s" %
+                           str(e), exc_info=True)
             raise
 
     def get_total_listen_count(self, cache_value=True):
@@ -164,7 +173,8 @@ class TimescaleListenStore(ListenStore):
         """
 
         if cache_value:
-            count = cache.get(self.ns + TimescaleListenStore.REDIS_TIMESCALE_TOTAL_LISTEN_COUNT, decode=False)
+            count = cache.get(
+                self.ns + TimescaleListenStore.REDIS_TIMESCALE_TOTAL_LISTEN_COUNT, decode=False)
             if count:
                 return int(count)
 
@@ -175,7 +185,8 @@ class TimescaleListenStore(ListenStore):
                 result = connection.execute(sqlalchemy.text(query))
                 count = int(result.fetchone()["value"] or "0")
         except psycopg2.OperationalError as e:
-            self.log.error("Cannot query timescale listen_count_5day: %s" % str(e), exc_info=True)
+            self.log.error(
+                "Cannot query timescale listen_count_5day: %s" % str(e), exc_info=True)
             raise
 
         if cache_value:
@@ -203,7 +214,8 @@ class TimescaleListenStore(ListenStore):
             self.log.info("ts fetch: %.2f" % (time.time() - t0))
 
             if min_ts and max_ts:
-                cache.set(self.ns + REDIS_USER_TIMESTAMPS % user_name, "%d,%d" % (min_ts, max_ts), USER_CACHE_TIME)
+                cache.set(self.ns + REDIS_USER_TIMESTAMPS % user_name,
+                          "%d,%d" % (min_ts, max_ts), USER_CACHE_TIME)
 
         return min_ts, max_ts
 
@@ -243,7 +255,8 @@ class TimescaleListenStore(ListenStore):
 
         # So update the listen counts of the users cached in brainzutils cache.
         for _, _, user_name in inserted_rows:
-            user_key = "{}{}".format(self.ns + REDIS_TIMESCALE_USER_LISTEN_COUNT, user_name)
+            user_key = "{}{}".format(
+                self.ns + REDIS_TIMESCALE_USER_LISTEN_COUNT, user_name)
             cached_count = cache.get(user_key, decode=False)
             if cached_count:
                 cache.increment(user_key)
@@ -299,7 +312,7 @@ class TimescaleListenStore(ListenStore):
             to_dynamic = False
             from_dynamic = True
 
-        # TODO: Bound this by the known timestamps 
+        # TODO: Bound this by the known timestamps
 
         listens = []
         done = False
@@ -327,7 +340,7 @@ class TimescaleListenStore(ListenStore):
                         if to_dynamic:
                             from_ts += window_size - 1
                             window_size *= WINDOW_SIZE_MULTIPLIER
-                            to_ts += window_size 
+                            to_ts += window_size
 
                         if from_dynamic:
                             to_ts -= window_size
@@ -342,11 +355,11 @@ class TimescaleListenStore(ListenStore):
 
                         break
 
-                    listens.append(Listen.from_timescale(result[0], result[1], result[4], result[2], result[3]))
+                    listens.append(Listen.from_timescale(
+                        result[0], result[1], result[4], result[2], result[3]))
                     if len(listens) == limit:
                         done = True
                         break
-
 
                 if done:
                     break
@@ -356,7 +369,8 @@ class TimescaleListenStore(ListenStore):
         if order == ORDER_ASC:
             listens.reverse()
 
-        self.log.info("fetch listens %.2fs in %d passes" % (fetch_listens_time, passes))
+        self.log.info("fetch listens %.2fs in %d passes" %
+                      (fetch_listens_time, passes))
 
         return listens
 
@@ -369,7 +383,8 @@ class TimescaleListenStore(ListenStore):
             max_age: Only return listens if they are no more than max_age seconds old. Default 3600 seconds
         """
 
-        args = {'user_list': tuple(user_list), 'ts': int(time.time()) - max_age, 'limit': limit}
+        args = {'user_list': tuple(user_list), 'ts': int(
+            time.time()) - max_age, 'limit': limit}
         query = """SELECT * FROM (
                               SELECT listened_at, track_name, user_name, created, data,
                                      row_number() OVER (partition by user_name ORDER BY listened_at DESC) AS rownum
@@ -388,7 +403,8 @@ class TimescaleListenStore(ListenStore):
                 if not result:
                     break
 
-                listens.append(Listen.from_timescale(result[0], result[1], result[2], result[3], result[4]))
+                listens.append(Listen.from_timescale(
+                    result[0], result[1], result[2], result[3], result[4]))
 
         return listens
 
@@ -447,7 +463,8 @@ class TimescaleListenStore(ListenStore):
                 tar.add(timestamp_path,
                         arcname=os.path.join(archive_name, 'TIMESTAMP'))
             else:
-                start_timestamp_path = os.path.join(temp_dir, 'START_TIMESTAMP')
+                start_timestamp_path = os.path.join(
+                    temp_dir, 'START_TIMESTAMP')
                 with open(start_timestamp_path, 'w') as f:
                     f.write(start_time.isoformat(' '))
                 tar.add(start_timestamp_path,
@@ -470,10 +487,12 @@ class TimescaleListenStore(ListenStore):
                     arcname=os.path.join(archive_name, 'COPYING'))
 
         except IOError as e:
-            self.log.critical('IOError while writing metadata dump files: %s', str(e), exc_info=True)
+            self.log.critical(
+                'IOError while writing metadata dump files: %s', str(e), exc_info=True)
             raise
         except Exception as e:
-            self.log.error('Exception while adding dump metadata: %s', str(e), exc_info=True)
+            self.log.error(
+                'Exception while adding dump metadata: %s', str(e), exc_info=True)
             raise
 
     def write_listens(self, temp_dir, tar_file, archive_name, start_time_range=None, end_time_range=None, full_dump=True):
@@ -492,9 +511,11 @@ class TimescaleListenStore(ListenStore):
         # If you pass the wrong one and a test invokes a command line any failures are
         # invisible causing massive hair-pulling. FUCK DATETIME.
         if start_time_range:
-            start_time_range = datetime.utcfromtimestamp(datetime.timestamp(start_time_range))
+            start_time_range = datetime.utcfromtimestamp(
+                datetime.timestamp(start_time_range))
         if end_time_range:
-            end_time_range = datetime.utcfromtimestamp(datetime.timestamp(end_time_range))
+            end_time_range = datetime.utcfromtimestamp(
+                datetime.timestamp(end_time_range))
 
         year = start_time_range.year
         month = start_time_range.month
@@ -526,7 +547,8 @@ class TimescaleListenStore(ListenStore):
                 query, args = self.get_listens_query_for_dump(int(start_time.strftime('%s')),
                                                               int(end_time.strftime('%s')))
             else:
-                query, args = self.get_incremental_listens_query(start_time, end_time)
+                query, args = self.get_incremental_listens_query(
+                    start_time, end_time)
 
             rows_added = 0
             with timescale.engine.connect() as connection:
@@ -538,10 +560,12 @@ class TimescaleListenStore(ListenStore):
                             if not result:
                                 break
 
-                            listen = Listen.from_timescale(result[0], result[1], result[2], result[3], result[4]).to_json()
+                            listen = Listen.from_timescale(
+                                result[0], result[1], result[2], result[3], result[4]).to_json()
                             out_file.write(ujson.dumps(listen) + "\n")
                             rows_added += 1
-                    tar_file.add(filename, arcname=os.path.join(archive_name, 'listens', str(year), "%d.listens" % month))
+                    tar_file.add(filename, arcname=os.path.join(
+                        archive_name, 'listens', str(year), "%d.listens" % month))
 
                     listen_count += rows_added
                     self.log.info("%d listens dumped for %s at %.2f listens/s", listen_count, start_time.strftime("%Y-%m-%d"),
@@ -584,20 +608,26 @@ class TimescaleListenStore(ListenStore):
             archive_name = '{}-full'.format(archive_name)
         else:
             archive_name = '{}-incremental'.format(archive_name)
-        archive_path = os.path.join(location, '{filename}.tar.xz'.format(filename=archive_name))
+        archive_path = os.path.join(
+            location, '{filename}.tar.xz'.format(filename=archive_name))
         with open(archive_path, 'w') as archive:
 
-            pxz_command = ['pxz', '--compress', '-T{threads}'.format(threads=threads)]
-            pxz = subprocess.Popen(pxz_command, stdin=subprocess.PIPE, stdout=archive)
+            pxz_command = ['pxz', '--compress',
+                           '-T{threads}'.format(threads=threads)]
+            pxz = subprocess.Popen(
+                pxz_command, stdin=subprocess.PIPE, stdout=archive)
 
             with tarfile.open(fileobj=pxz.stdin, mode='w|') as tar:
 
-                temp_dir = os.path.join(self.dump_temp_dir_root, str(uuid.uuid4()))
+                temp_dir = os.path.join(
+                    self.dump_temp_dir_root, str(uuid.uuid4()))
                 create_path(temp_dir)
-                self.write_dump_metadata(archive_name, start_time, end_time, temp_dir, tar, full_dump)
+                self.write_dump_metadata(
+                    archive_name, start_time, end_time, temp_dir, tar, full_dump)
 
                 listens_path = os.path.join(temp_dir, 'listens')
-                self.write_listens(listens_path, tar, archive_name, start_time, end_time, full_dump)
+                self.write_listens(listens_path, tar, archive_name,
+                                   start_time, end_time, full_dump)
 
                 # remove the temporary directory
                 shutil.rmtree(temp_dir)
@@ -621,10 +651,12 @@ class TimescaleListenStore(ListenStore):
             int: the number of users for whom listens have been imported
         """
 
-        self.log.info('Beginning import of listens from dump %s...', archive_path)
+        self.log.info(
+            'Beginning import of listens from dump %s...', archive_path)
 
         # construct the pxz command to decompress the archive
-        pxz_command = ['pxz', '--decompress', '--stdout', archive_path, '-T{threads}'.format(threads=threads)]
+        pxz_command = ['pxz', '--decompress', '--stdout',
+                       archive_path, '-T{threads}'.format(threads=threads)]
         pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
 
         schema_checked = False
@@ -633,8 +665,10 @@ class TimescaleListenStore(ListenStore):
             listens = []
             for member in tar:
                 if member.name.endswith('SCHEMA_SEQUENCE'):
-                    self.log.info('Checking if schema version of dump matches...')
-                    schema_seq = int(tar.extractfile(member).read().strip() or '-1')
+                    self.log.info(
+                        'Checking if schema version of dump matches...')
+                    schema_seq = int(tar.extractfile(
+                        member).read().strip() or '-1')
                     if schema_seq != LISTENS_DUMP_SCHEMA_VERSION:
                         raise SchemaMismatchException('Incorrect schema version! Expected: %d, got: %d.'
                                                       'Please ensure that the data dump version matches the code version'
@@ -644,9 +678,11 @@ class TimescaleListenStore(ListenStore):
 
                 if member.name.endswith(".listens"):
                     if not schema_checked:
-                        raise SchemaMismatchException("SCHEMA_SEQUENCE file missing from listen dump.")
+                        raise SchemaMismatchException(
+                            "SCHEMA_SEQUENCE file missing from listen dump.")
 
-                    with tar.extractfile(member) as tarf:  # tarf, really? That's the name you're going with? Yep.
+                    # tarf, really? That's the name you're going with? Yep.
+                    with tar.extractfile(member) as tarf:
                         while True:
                             line = tarf.readline()
                             if not line:
@@ -665,14 +701,14 @@ class TimescaleListenStore(ListenStore):
                 self.insert(listens)
 
         if not schema_checked:
-            raise SchemaMismatchException("SCHEMA_SEQUENCE file missing from listen dump.")
+            raise SchemaMismatchException(
+                "SCHEMA_SEQUENCE file missing from listen dump.")
 
         self.log.info('Import of listens from dump %s done!', archive_path)
         pxz.stdout.close()
 
         return total_imported
 
-     
     def delete(self, musicbrainz_id):
         """ Delete all listens for user with specified MusicBrainz ID.
 
@@ -703,7 +739,8 @@ class TimescaleListenStore(ListenStore):
         Raises: TimescaleListenStoreException if unable to delete the listen
         """
 
-        args = {'listened_at': listened_at, 'user_name': user_name, 'recording_msid': recording_msid}
+        args = {'listened_at': listened_at, 'user_name': user_name,
+                'recording_msid': recording_msid}
         query = """DELETE FROM listen
                     WHERE listened_at = :listened_at
                       AND user_name = :user_name
@@ -713,11 +750,13 @@ class TimescaleListenStore(ListenStore):
             with timescale.engine.connect() as connection:
                 connection.execute(sqlalchemy.text(query), args)
 
-            user_key = "{}{}".format(self.ns + REDIS_TIMESCALE_USER_LISTEN_COUNT, user_name)
+            user_key = "{}{}".format(
+                self.ns + REDIS_TIMESCALE_USER_LISTEN_COUNT, user_name)
             cache.delete(user_key)
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listen for user: %s" % str(e))
             raise TimescaleListenStoreException
+
 
 class TimescaleListenStoreException(Exception):
     pass
