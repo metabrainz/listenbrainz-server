@@ -9,6 +9,7 @@ from datetime import datetime
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
 from data.model.similar_user_model import SimilarUsers
+#from listenbrainz.listenstore import TimescaleListenStore
 from typing import Tuple, List
 
 
@@ -36,6 +37,9 @@ def create(musicbrainz_row_id: int, musicbrainz_id: str) -> int:
             "token": str(uuid.uuid4()),
             "mb_row_id": musicbrainz_row_id,
         })
+#        ls = TimescaleListenStore({})
+#        ls.set_empty_cache_values_for_user(musicbrainz_id)
+
         return result.fetchone()["id"]
 
 

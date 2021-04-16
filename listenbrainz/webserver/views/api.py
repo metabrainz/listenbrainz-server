@@ -110,14 +110,7 @@ def get_listens(user_name):
     :resheader Content-Type: *application/json*
     """
     db_conn = webserver.create_timescale(current_app)
-    min_ts, max_ts, count = _validate_get_endpoint_params(
-        db_conn, user_name)
-    _, max_ts_per_user = db_conn.get_timestamps_for_user(user_name)
-
-    # If none are given, start with now and go down
-    if max_ts == None and min_ts == None:
-        max_ts = max_ts_per_user + 1
-
+    min_ts, max_ts, count = _validate_get_endpoint_params(db_conn, user_name)
     listens = db_conn.fetch_listens(
         user_name,
         limit=count,
