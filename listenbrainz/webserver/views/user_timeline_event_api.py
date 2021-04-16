@@ -239,7 +239,7 @@ def get_listen_events(
     # could be done better by writing a complex query to get exactly 2 listens for each user,
     # but I'm happy with this heuristic for now and we can change later.
     db_conn = webserver.create_timescale(current_app)
-    listens = db_conn.fetch_listens_for_multiple_users_from_storage(
+    listens, _, _ = db_conn.fetch_listens_for_multiple_users_from_storage(
         musicbrainz_ids,
         limit=count,
         from_ts=min_ts,
