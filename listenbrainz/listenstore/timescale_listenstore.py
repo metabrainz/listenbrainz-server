@@ -131,7 +131,13 @@ class TimescaleListenStore(ListenStore):
             saved in the cache, otherwise the user timestamps remain unchanged.
         """
 
-        cache.set(self.ns + REDIS_USER_TIMESTAMPS % user_name, "%d,%d" % (min_ts, max_ts))
+        cached_min_ts, cached_max_ts = get_timestamps_for_user(user_name)
+        if min_ts < cached_min_ts or max_ts > cached_max_ts:
+            if min_ts < cached_min_ts:
+                min_ts = cached_min_ts
+            if max_ts > cached_max_ts:
+                max_ts = cached_max_ts
+            cache.set(self.ns + REDIS_USER_TIMESTAMPS % user_name, "%d,%d" % (min_ts, max_ts))
 
 
     def get_timestamps_for_user(self, user_name):
@@ -323,8 +329,8 @@ class TimescaleListenStore(ListenStore):
 
         self.log.warn("min user ts: %d max user ts: %d" % (min_user_ts, max_user_ts))
 
-        if max_ts == None and min_ts == None:
-            max_ts = max_user_ts + 1
+        if to_ts == None and from_ts == None:
+            to_ts = max_user_ts + 1
 
         if min_user_ts == 0 and max_user_ts == 0:
             return ([], min_user_ts, max_user_ts)

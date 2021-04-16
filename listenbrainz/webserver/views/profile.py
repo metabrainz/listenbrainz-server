@@ -130,7 +130,7 @@ def fetch_listens(musicbrainz_id, to_ts):
     """
     db_conn = webserver.create_timescale(current_app)
     while True:
-        batch = db_conn.fetch_listens(current_user.musicbrainz_id, to_ts=to_ts, limit=EXPORT_FETCH_COUNT)
+        batch, _, _ = db_conn.fetch_listens(current_user.musicbrainz_id, to_ts=to_ts, limit=EXPORT_FETCH_COUNT)
         if not batch:
             break
         yield from batch

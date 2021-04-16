@@ -110,8 +110,12 @@ def get_listens(user_name):
     :resheader Content-Type: *application/json*
     """
     db_conn = webserver.create_timescale(current_app)
+
     min_ts, max_ts, count = _validate_get_endpoint_params(db_conn, user_name)
-    listens = db_conn.fetch_listens(
+    if min_ts and max_ts and min_ts >= max_ts:
+        raise APIBadRequest("min_ts should be less than max_ts")
+
+    listens, _, max_ts_per_user = db_conn.fetch_listens(
         user_name,
         limit=count,
         from_ts=min_ts,

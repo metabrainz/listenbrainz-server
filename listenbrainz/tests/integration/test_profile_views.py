@@ -47,6 +47,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         # now export data and check if contains all the listens we just sent
         resp = self.client.post(url_for('profile.export_data'))
         self.assert200(resp)
+        current_app.logger.warn(str(resp.data))
         data = json.loads(resp.data)
         self.assertEqual(len(data), 3)
 

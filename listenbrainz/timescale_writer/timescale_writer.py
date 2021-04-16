@@ -88,6 +88,7 @@ class TimescaleWriterSubscriber(ListenWriter):
             else:
                 user_timestamps[user] = [listen.timestamp, listen.timestamp]
 
+        current_app.logger.warn(str(user_timestamps))
         for user in user_timestamps:
             ls.update_timestamps_for_user(user, user_timestamps[user][0], user_timestamps[user][1])
 
