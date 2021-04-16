@@ -36,10 +36,6 @@ DUMP_FILE_SIZE_LIMIT = 1024 * 1024 * 1024  # 1 GB
 DATA_START_YEAR = 2005
 DATA_START_YEAR_IN_SECONDS = 1104537600
 
-# This value MUST match the time_bucket definition of the listen_count view.
-# See admin/timescale/create_views.sql for more details.
-LISTEN_COUNT_BUCKET_WIDTH = 86400 * 5
-
 # How many listens to fetch on the first attempt. If we don't fetch enough, increase it by WINDOW_SIZE_MULTIPLIER
 DEFAULT_FETCH_WINDOW = 30 * 86400  # 30 days
 
@@ -90,7 +86,7 @@ class TimescaleListenStore(ListenStore):
             if count:
                 return int(count)
 
-        query = "SELECT SUM(count) FROM listen_count_5day WHERE user_name = :user_name"
+        query = "SELECT SUM(count) FROM listen_count_30day WHERE user_name = :user_name"
 
         try:
             with timescale.engine.connect() as connection:
@@ -134,7 +130,7 @@ class TimescaleListenStore(ListenStore):
             function = "min"
 
         query = """SELECT listened_at_bucket AS ts
-                     FROM listen_count_5day
+                     FROM listen_count_30day
                      WHERE user_name = :user_name
                   ORDER BY listened_at_bucket %s
                      LIMIT 1""" % sort_clause
@@ -178,7 +174,7 @@ class TimescaleListenStore(ListenStore):
             if count:
                 return int(count)
 
-        query = "SELECT SUM(count) AS value FROM listen_count_5day"
+        query = "SELECT SUM(count) AS value FROM listen_count_30day"
 
         try:
             with timescale.engine.connect() as connection:
@@ -186,7 +182,7 @@ class TimescaleListenStore(ListenStore):
                 count = int(result.fetchone()["value"] or "0")
         except psycopg2.OperationalError as e:
             self.log.error(
-                "Cannot query timescale listen_count_5day: %s" % str(e), exc_info=True)
+                "Cannot query timescale listen_count_30day: %s" % str(e), exc_info=True)
             raise
 
         if cache_value:

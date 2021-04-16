@@ -101,7 +101,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
             with ts.engine.connect() as connection:
                 result = connection.execute(sqlalchemy.text("""SELECT column_name
                                                                  FROM information_schema.columns
-                                                                WHERE table_name = 'listen_count_5day'
+                                                                WHERE table_name = 'listen_count_30day'
                                                              ORDER BY column_name"""))
                 cols = result.fetchall()
         except psycopg2.OperationalError as e:
