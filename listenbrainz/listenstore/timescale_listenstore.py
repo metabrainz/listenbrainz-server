@@ -25,11 +25,14 @@ from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.db.dump import SchemaMismatchException
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import ListenStore
-from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, \
-     REDIS_USER_TIMESTAMPS, LISTENS_DUMP_SCHEMA_VERSION
+from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, LISTENS_DUMP_SCHEMA_VERSION
 from listenbrainz.utils import create_path, init_cache
 
-REDIS_TIMESCALE_USER_LISTEN_COUNT = "ls.listencount."  # append username
+# Append the user name for both of these keys
+REDIS_USER_LISTEN_COUNT = ".lc."
+REDIS_USER_TIMESTAMPS = ".ts."
+REDIS_TOTAL_LISTEN_COUNT = "lc-total"
+
 DUMP_CHUNK_SIZE = 100000
 NUMBER_OF_USERS_PER_DIRECTORY = 1000
 DUMP_FILE_SIZE_LIMIT = 1024 * 1024 * 1024  # 1 GB
@@ -50,7 +53,6 @@ class TimescaleListenStore(ListenStore):
         The listenstore implementation for the timescale DB.
     '''
 
-    REDIS_TIMESCALE_TOTAL_LISTEN_COUNT = "ls.listencount.total"
 
     def __init__(self, conf, logger):
         super(TimescaleListenStore, self).__init__(logger)
@@ -69,9 +71,9 @@ class TimescaleListenStore(ListenStore):
            can avoid the expensive lookup for a brand new user."""
 
         user_key = "{}{}".format(
-            self.ns + REDIS_TIMESCALE_USER_LISTEN_COUNT, user_name)
+            self.ns + REDIS_USER_LISTEN_COUNT, user_name)
         cache.set(user_key, 0, encode=False)
-        cache.set(self.ns + REDIS_USER_TIMESTAMPS % user_name, "0,0")
+        cache.set(self.ns + REDIS_USER_TIMESTAMPS + user_name, "0,0")
 
     def get_listen_count_for_user(self, user_name, need_exact=False):
         """Get the total number of listens for a user. The number of listens comes from
@@ -88,9 +90,7 @@ class TimescaleListenStore(ListenStore):
             # decode is set to False as we have not encoded the value when we set it
             # in brainzutils cache as we need to call increment operation which requires
             # an integer value
-            user_key = '{}{}'.format(
-                self.ns + REDIS_TIMESCALE_USER_LISTEN_COUNT, user_name)
-            count = cache.get(user_key, decode=False)
+            count = cache.get(self.ns + REDIS_USER_LISTEN_COUNT + user_name, decode=False)
             if count:
                 return int(count)
 
@@ -109,9 +109,7 @@ class TimescaleListenStore(ListenStore):
             raise
 
         # put this value into brainzutils cache with an expiry time
-        user_key = "{}{}".format(
-            self.ns + REDIS_TIMESCALE_USER_LISTEN_COUNT, user_name)
-        cache.set(user_key, count, encode=False)
+        cache.set(self.ns + REDIS_USER_LISTEN_COUNT + user_name, count, encode=False)
         return count
 
     def reset_listen_count(self, user_name):
@@ -131,20 +129,21 @@ class TimescaleListenStore(ListenStore):
             saved in the cache, otherwise the user timestamps remain unchanged.
         """
 
-        cached_min_ts, cached_max_ts = get_timestamps_for_user(user_name)
+
+        cached_min_ts, cached_max_ts = self.get_timestamps_for_user(user_name)
         if min_ts < cached_min_ts or max_ts > cached_max_ts:
             if min_ts < cached_min_ts:
-                min_ts = cached_min_ts
+                cached_min_ts = min_ts
             if max_ts > cached_max_ts:
-                max_ts = cached_max_ts
-            cache.set(self.ns + REDIS_USER_TIMESTAMPS % user_name, "%d,%d" % (min_ts, max_ts))
+                cached_max_ts = max_ts
+            cache.set(self.ns + REDIS_USER_TIMESTAMPS + user_name, "%d,%d" % (cached_min_ts, cached_max_ts))
 
 
     def get_timestamps_for_user(self, user_name):
         """ Return the max_ts and min_ts for a given user and cache the result in brainzutils cache
         """
 
-        tss = cache.get(self.ns + REDIS_USER_TIMESTAMPS % user_name)
+        tss = cache.get(self.ns + REDIS_USER_TIMESTAMPS + user_name)
         if tss:
             (min_ts, max_ts) = tss.split(",")
             min_ts = int(min_ts)
@@ -156,7 +155,7 @@ class TimescaleListenStore(ListenStore):
             self.log.info("ts fetch: %.2f" % (time.time() - t0))
 
             if min_ts and max_ts:
-                cache.set(self.ns + REDIS_USER_TIMESTAMPS % user_name, "%d,%d" % (min_ts, max_ts))
+                cache.set(self.ns + REDIS_USER_TIMESTAMPS + user_name, "%d,%d" % (min_ts, max_ts))
 
         return min_ts, max_ts
 
@@ -215,7 +214,7 @@ class TimescaleListenStore(ListenStore):
 
         if cache_value:
             count = cache.get(
-                self.ns + TimescaleListenStore.REDIS_TIMESCALE_TOTAL_LISTEN_COUNT, decode=False)
+                self.ns + TimescaleListenStore.REDIS_TOTAL_LISTEN_COUNT, decode=False)
             if count:
                 return int(count)
 
@@ -232,7 +231,7 @@ class TimescaleListenStore(ListenStore):
 
         if cache_value:
             cache.set(
-                self.ns + TimescaleListenStore.REDIS_TIMESCALE_TOTAL_LISTEN_COUNT,
+                self.ns + TimescaleListenStore.REDIS_TOTAL_LISTEN_COUNT,
                 count,
                 encode=False,
             )
@@ -245,9 +244,17 @@ class TimescaleListenStore(ListenStore):
         """
 
         submit = []
-        user_names = {}
+        user_timestamps = {}
         for listen in listens:
-            user_names[listen.user_name] = 1
+            ts = datetime.timestamp(listen.timestamp)
+            if listen.user_name in user_timestamps:
+                if ts < user_timestamps[listen.user_name][0]:
+                    user_timestamps[listen.user_name][0] = ts
+                if ts > user_timestamps[listen.user_name][1]:
+                    user_timestamps[listen.user_name][1] = ts
+            else:
+                user_timestamps[listen.user_name] = [ts, ts]
+
             submit.append(listen.to_timescale())
 
         query = """INSERT INTO listen (listened_at, track_name, user_name, data)
@@ -272,17 +279,15 @@ class TimescaleListenStore(ListenStore):
 
         conn.commit()
 
-        # So update the listen counts of the users cached in brainzutils cache.
+        # So update the listen counts and timestamps for the users 
         for _, _, user_name in inserted_rows:
-            user_key = "{}{}".format(
-                self.ns + REDIS_TIMESCALE_USER_LISTEN_COUNT, user_name)
+            user_key = self.ns + REDIS_USER_LISTEN_COUNT + user_name
             cached_count = cache.get(user_key, decode=False)
             if cached_count:
                 cache.increment(user_key)
 
-        # Invalidate cached data for user
-        for user_name in user_names:
-            cache.delete(self.ns + REDIS_USER_TIMESTAMPS % user_name)
+        for user in user_timestamps:
+            self.update_timestamps_for_user(user, user_timestamps[user][0], user_timestamps[user][1])
 
         return inserted_rows
 
@@ -327,8 +332,6 @@ class TimescaleListenStore(ListenStore):
             if max_ts and max_ts > max_user_ts:
                 max_user_ts = min_ts
 
-        self.log.warn("min user ts: %d max user ts: %d" % (min_user_ts, max_user_ts))
-
         if to_ts == None and from_ts == None:
             to_ts = max_user_ts + 1
 
@@ -368,7 +371,7 @@ class TimescaleListenStore(ListenStore):
                 if passes == 25:
                     done = True
 
-                self.log.warn("query from %d to %d" % (from_ts, to_ts))
+                self.log.warning("query from %d to %d" % (from_ts, to_ts))
                 curs = connection.execute(sqlalchemy.text(query), user_names=tuple(user_names),
                                           from_ts=from_ts, to_ts=to_ts, limit=limit)
                 while True:
@@ -399,7 +402,7 @@ class TimescaleListenStore(ListenStore):
 
                         break
 
-                    self.log.warn("   %d" % result[0])
+                    self.log.warning("   %d" % result[0])
                     listens.append(Listen.from_timescale(
                         result[0], result[1], result[4], result[2], result[3]))
                     if len(listens) == limit:
@@ -765,8 +768,8 @@ class TimescaleListenStore(ListenStore):
         Raises: Exception if unable to delete the user in 5 retries
         """
 
-        cache.delete('{}{}'.format(self.ns + REDIS_TIMESCALE_USER_LISTEN_COUNT, musicbrainz_id))
-        cache.delete(self.ns + REDIS_USER_TIMESTAMPS % musicbrainz_id)
+        cache.delete(self.ns + REDIS_USER_LISTEN_COUNT + musicbrainz_id)
+        cache.delete(self.ns + REDIS_USER_TIMESTAMPS + musicbrainz_id)
 
         args = {'user_name': musicbrainz_id}
         query = "DELETE FROM listen WHERE user_name = :user_name"
@@ -798,9 +801,7 @@ class TimescaleListenStore(ListenStore):
             with timescale.engine.connect() as connection:
                 connection.execute(sqlalchemy.text(query), args)
 
-            user_key = "{}{}".format(
-                self.ns + REDIS_TIMESCALE_USER_LISTEN_COUNT, user_name)
-            cache.delete(user_key)
+            cache.delete(self.ns + REDIS_USER_LISTEN_COUNT + user_name)
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listen for user: %s" % str(e))
             raise TimescaleListenStoreException

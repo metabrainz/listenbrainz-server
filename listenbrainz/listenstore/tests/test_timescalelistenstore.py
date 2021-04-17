@@ -22,7 +22,7 @@ from listenbrainz.listenstore.tests.util import create_test_data_for_timescaleli
 from listenbrainz.webserver.timescale_connection import init_timescale_connection
 from listenbrainz.db.dump import SchemaMismatchException
 from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION
-from listenbrainz.listenstore.timescale_listenstore import REDIS_TIMESCALE_USER_LISTEN_COUNT
+from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT
 from brainzutils import cache
 
 TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', '..', 'admin', 'timescale')
@@ -415,7 +415,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
     def test_listen_counts_in_cache(self):
         count = self._create_test_data(self.testuser_name)
         self.assertEqual(count, self.logstore.get_listen_count_for_user(self.testuser_name, need_exact=True))
-        user_key = '{}{}'.format(self.ns + REDIS_TIMESCALE_USER_LISTEN_COUNT, self.testuser_name)
+        user_key = '{}{}'.format(self.ns + REDIS_USER_LISTEN_COUNT, self.testuser_name)
         self.assertEqual(count, int(cache.get(user_key, decode=False)))
 
         batch = generate_data(self.testuser_id, self.testuser_name, int(time()), 1)

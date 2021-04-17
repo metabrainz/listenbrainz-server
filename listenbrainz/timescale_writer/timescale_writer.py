@@ -78,20 +78,6 @@ class TimescaleWriterSubscriber(ListenWriter):
         if not rows_inserted:
             return len(data)
 
-        user_timestamps = {}
-        for listen in listens:
-            if listen.user_name in user_timestamps:
-                if listen.timestamp < user_timestamps[user][0]:
-                    user_timestamps[user][0] = listen.timestamp
-                if listen.timestamp > user_timestamps[user][1]:
-                    user_timestamps[user][1] = listen.timestamp
-            else:
-                user_timestamps[user] = [listen.timestamp, listen.timestamp]
-
-        current_app.logger.warn(str(user_timestamps))
-        for user in user_timestamps:
-            ls.update_timestamps_for_user(user, user_timestamps[user][0], user_timestamps[user][1])
-
         try:
             self.redis_listenstore.increment_listen_count_for_day(day=datetime.utcnow(), count=len(rows_inserted))
         except Exception:
