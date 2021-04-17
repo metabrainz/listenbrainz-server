@@ -214,7 +214,7 @@ class TimescaleListenStore(ListenStore):
 
         if cache_value:
             count = cache.get(
-                self.ns + TimescaleListenStore.REDIS_TOTAL_LISTEN_COUNT, decode=False)
+                self.ns + REDIS_TOTAL_LISTEN_COUNT, decode=False)
             if count:
                 return int(count)
 
@@ -231,7 +231,7 @@ class TimescaleListenStore(ListenStore):
 
         if cache_value:
             cache.set(
-                self.ns + TimescaleListenStore.REDIS_TOTAL_LISTEN_COUNT,
+                self.ns + REDIS_TOTAL_LISTEN_COUNT,
                 count,
                 encode=False,
             )

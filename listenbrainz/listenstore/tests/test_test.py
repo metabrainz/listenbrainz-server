@@ -20,7 +20,6 @@ from listenbrainz.listenstore.tests.util import create_test_data_for_timescaleli
 from listenbrainz.webserver.timescale_connection import init_timescale_connection
 from listenbrainz.db.dump import SchemaMismatchException
 from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION
-from listenbrainz.listenstore.timescale_listenstore import REDIS_TIMESCALE_USER_LISTEN_COUNT
 from brainzutils import cache
 
 TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', '..', 'admin', 'timescale')
