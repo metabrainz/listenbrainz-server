@@ -116,26 +116,25 @@ function update_snapshots {
 
 function run_lint_check {
     if [ "$CI" == "true" ] ; then
-        docker-compose -f $COMPOSE_FILE_LOC \
-                       -p $COMPOSE_PROJECT_NAME \
-                    run --rm frontend_tester npm run format:ci
+        command="format:ci"
     else
-        docker-compose -f $COMPOSE_FILE_LOC \
-                       -p $COMPOSE_PROJECT_NAME \
-                    run --rm frontend_tester npm run format
+        command="format"
     fi
+
+    docker-compose -f $COMPOSE_FILE_LOC \
+                   -p $COMPOSE_PROJECT_NAME \
+                run --rm frontend_tester npm run $command
 }
 
 function run_frontend_tests {
     if [ "$CI" == "true" ] ; then
-        docker-compose -f $COMPOSE_FILE_LOC \
-                       -p $COMPOSE_PROJECT_NAME \
-                    run --rm frontend_tester npm run test:ci
+        command="test:ci"
     else
-        docker-compose -f $COMPOSE_FILE_LOC \
-                       -p $COMPOSE_PROJECT_NAME \
-                    run --rm frontend_tester npm test
+        command="test"
     fi
+    docker-compose -f $COMPOSE_FILE_LOC \
+                   -p $COMPOSE_PROJECT_NAME \
+                run --rm frontend_tester npm run $command
 }
 
 function run_type_check {
