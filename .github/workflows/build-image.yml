@@ -16,6 +16,9 @@ jobs:
     
     - name: Login to Docker Hub
       run: echo ${{ secrets.DOCKER_HUB_PASSWORD }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+      
+    - uses: satackey/action-docker-layer-caching@v0.0.11
+      continue-on-error: true
     
     - name: Build and push image
       # Github stores the current tag in an enviroment variable (GITHUB_REF) in the format /refs/tags/TAG_NAME. 
