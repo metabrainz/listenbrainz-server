@@ -69,30 +69,30 @@ class TimescaleListenStore(ListenStore):
         """When a user is created, set the listen_count and timestamp keys so that we
            can avoid the expensive lookup for a brand new user."""
 
-        cache.set(REDIS_USER_LISTEN_COUNT + user_name, 0, time=0)
+        cache.set(REDIS_USER_LISTEN_COUNT + user_name, 0, time=0, encode=False)
         cache.set(REDIS_USER_TIMESTAMPS + user_name, "0,0", time=0)
 
-    def get_listen_count_for_user(self, user_name, need_exact=False):
+    def get_listen_count_for_user(self, user_name):
         """Get the total number of listens for a user. The number of listens comes from
            brainzutils cache unless an exact number is asked for.
 
         Args:
             user_name: the user to get listens for
-            need_exact: if True, get an exact number of listens directly from the ListenStore
         """
 
-        if not need_exact:
-            # check if the user's listen count is already in cache
-            # if already present return it directly instead of calculating it again
-            # decode is set to False as we have not encoded the value when we set it
-            # in brainzutils cache as we need to call increment operation which requires
-            # an integer value
-            count = cache.get(REDIS_USER_LISTEN_COUNT + user_name)
-            if count:
-                return int(count)
+        count = int(cache.get(REDIS_USER_LISTEN_COUNT + user_name, decode=False) or 0)
+        if count:
+            return int(count)
+        else:
+            return 0
 
+    def reset_listen_count(self, user_name):
+        """ Reset the listen count of a user from cache and put in a new calculated value.
+
+            Args:
+                user_name: the musicbrainz id of user whose listen count needs to be reset
+        """
         query = "SELECT SUM(count) FROM listen_count_30day WHERE user_name = :user_name"
-
         try:
             with timescale.engine.connect() as connection:
                 result = connection.execute(sqlalchemy.text(query), {
@@ -105,17 +105,8 @@ class TimescaleListenStore(ListenStore):
                            str(e), exc_info=True)
             raise
 
-        # put this value into brainzutils cache with an expiry time
-        cache.set(REDIS_USER_LISTEN_COUNT + user_name, count, time=0)
-        return count
-
-    def reset_listen_count(self, user_name):
-        """ Reset the listen count of a user from cache and put in a new calculated value.
-
-            Args:
-                user_name: the musicbrainz id of user whose listen count needs to be reset
-        """
-        self.get_listen_count_for_user(user_name, need_exact=True)
+        # put this value into brainzutils cache without an expiry time
+        cache.set(REDIS_USER_LISTEN_COUNT + user_name, count, time=0, encode=False)
 
     def update_timestamps_for_user(self, user_name, min_ts, max_ts):
         """
@@ -225,17 +216,7 @@ class TimescaleListenStore(ListenStore):
         """
 
         submit = []
-        user_timestamps = {}
         for listen in listens:
-            ts = datetime.timestamp(listen.timestamp)
-            if listen.user_name in user_timestamps:
-                if ts < user_timestamps[listen.user_name][0]:
-                    user_timestamps[listen.user_name][0] = ts
-                if ts > user_timestamps[listen.user_name][1]:
-                    user_timestamps[listen.user_name][1] = ts
-            else:
-                user_timestamps[listen.user_name] = [ts, ts]
-
             submit.append(listen.to_timescale())
 
         query = """INSERT INTO listen (listened_at, track_name, user_name, data)
@@ -260,12 +241,22 @@ class TimescaleListenStore(ListenStore):
 
         conn.commit()
 
-        # So update the listen counts and timestamps for the users 
-        for _, _, user_name in inserted_rows:
-            user_key = REDIS_USER_LISTEN_COUNT + user_name
-            cached_count = cache.get(user_key)
-            if cached_count:
-                cache.increment(user_key)
+        # update the listen counts and timestamps for the users 
+        user_timestamps = {}
+        user_counts = defaultdict(int)
+        for ts, _, user_name in inserted_rows:
+            if listen.user_name in user_timestamps:
+                if ts < user_timestamps[listen.user_name][0]:
+                    user_timestamps[listen.user_name][0] = ts
+                if ts > user_timestamps[listen.user_name][1]:
+                    user_timestamps[listen.user_name][1] = ts
+            else:
+                user_timestamps[listen.user_name] = [ts, ts]
+
+            user_counts[user_name] += 1
+
+        for user_name in user_counts:
+            cache._r.incrby(cache._prep_key(REDIS_USER_LISTEN_COUNT + user_name), user_counts[user_name])
 
         for user in user_timestamps:
             self.update_timestamps_for_user(user, user_timestamps[user][0], user_timestamps[user][1])
@@ -365,7 +356,7 @@ class TimescaleListenStore(ListenStore):
                             done = True
                             break
 
-                        self.log.warning("max ts check: %d > %d" % (to_ts, max_user_ts + 1))
+#                        self.log.warning("max ts check: %d > %d" % (to_ts, max_user_ts + 1))
 #                        if to_ts > max_user_ts + 1:
 #                            self.log.warning("max ts out of bounds")
 #                            done = True

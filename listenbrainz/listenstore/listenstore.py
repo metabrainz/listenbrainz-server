@@ -26,13 +26,11 @@ class ListenStore(object):
         """ Return the total number of listens stored in the ListenStore """
         raise NotImplementedError()
 
-    def get_listen_count_for_user(self, user_name, need_exact):
+    def get_listen_count_for_user(self, user_name):
         """ Override this method in ListenStore implementation class
 
         Args:
             user_name: the user to get listens for
-            need_exact: if True, get an exact number of listens directly from the ListenStore
-                        otherwise, can get from a cache also
         """
         raise NotImplementedError()
 

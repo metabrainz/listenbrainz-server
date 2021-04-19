@@ -120,7 +120,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1399999999)
         self.assertEqual(len(listens), count)
 
-    def test_000_fetch_listens_0(self):
+    def test_fetch_listens_0(self):
         self._create_test_data(self.testuser_name)
         listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000000, limit=1)
         self.assertEqual(len(listens), 1)
@@ -273,7 +273,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
 
         shutil.rmtree(temp_dir)
 
-    def test_time_range_full_dumps(self):
+    def test_000_time_range_full_dumps(self):
         base = 1500000000
         listens = generate_data(1, self.testuser_name, base + 1, 5)  # generate 5 listens with ts 1-5
         self.logstore.insert(listens)
@@ -412,15 +412,18 @@ class TestTimescaleListenStore(DatabaseTestCase):
         with self.assertRaises(SchemaMismatchException):
             self.logstore.import_listens_dump(archive_path)
 
-    def test_listen_counts_in_cache(self):
-        count = self._create_test_data(self.testuser_name)
-        self.assertEqual(count, self.logstore.get_listen_count_for_user(self.testuser_name, need_exact=True))
-        user_key = '{}{}'.format(self.ns + REDIS_USER_LISTEN_COUNT, self.testuser_name)
-        self.assertEqual(count, int(cache.get(user_key)))
+    def test_000_listen_counts_in_cache(self):
+        uid = random.randint(2000, 1 << 31)
+        testuser = db_user.get_or_create(uid, "user_%d" % uid)
+        testuser_name = testuser['musicbrainz_id']
+        count = self._create_test_data(testuser_name)
+        user_key = REDIS_USER_LISTEN_COUNT + testuser_name
+        self.assertEqual(count, self.logstore.get_listen_count_for_user(testuser_name))
+        self.assertEqual(count, int(cache.get(user_key, decode=False) or 0))
 
-        batch = generate_data(self.testuser_id, self.testuser_name, int(time()), 1)
+        batch = generate_data(uid, testuser_name, int(time()), 1)
         self.logstore.insert(batch)
-        self.assertEqual(count + 1, int(cache.get(user_key)))
+        self.assertEqual(count + 1, int(cache.get(user_key, decode=False) or 0))
 
     def test_delete_listens(self):
         self._create_test_data(self.testuser_name)
