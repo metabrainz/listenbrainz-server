@@ -8,9 +8,21 @@ CONTAINER_NAME="spark-request-consumer"
 
 docker pull metabrainz/listenbrainz-spark-new-cluster:latest
 
+python -m venv pyspark_venv
+source pyspark_venv/bin/activate
+pip install -r requirements_spark.txt
+pip uninstall pyspark py4j
+venv-pack -o pyspark_venv.tar.gz
+
+export PYSPARK_DRIVER_PYTHON=python
+export PYSPARK_PYTHON=./environment/bin/python
+
 zip -rq listenbrainz_spark_request_consumer.zip listenbrainz_spark/
+
 docker run \
     -d \
+    -e PYSPARK_DRIVER_PYTHON \
+    -e PYSPARK_PYTHON \
     -v /spark:/spark \
     -v /hadoop:/hadoop \
     -v /usr/lib/jvm/adoptopenjdk-11-hotspot-amd64:/usr/lib/jvm/adoptopenjdk-11-hotspot-amd64 \
@@ -19,9 +31,9 @@ docker run \
     --name $CONTAINER_NAME \
     metabrainz/listenbrainz-spark-new-cluster:latest \
     /spark/bin/spark-submit \
-        --packages org.apache.spark:spark-avro_2.11:2.4.1 \
+        --packages org.apache.spark:spark-avro_2.12:3.1.1 \
         --master yarn \
-        --deploy-mode cluster \
+        --conf "spark.yarn.dist.archives"=pyspark_venv.tar.gz#environment \
         --conf "spark.scheduler.listenerbus.eventqueue.capacity"=$LISTENERBUS_CAPACITY \
         --conf "spark.cores.max"=$MAX_CORES \
         --conf "spark.executor.cores"=$EXECUTOR_CORES \
