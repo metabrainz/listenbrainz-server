@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ -z "$CI" ]; then
+if [ "$CI" == "true" ]; then
     set -e
 fi
 
@@ -119,7 +119,7 @@ function update_snapshots {
 }
 
 function run_lint_check {
-    if [ -z "$CI" ] ; then
+    if [ "$CI" == "true" ] ; then
         docker-compose -f $COMPOSE_FILE_LOC \
                        -p $COMPOSE_PROJECT_NAME \
                     run --rm frontend_tester npm run format:ci
@@ -131,7 +131,7 @@ function run_lint_check {
 }
 
 function run_frontend_tests {
-    if [ -z "$CI" ] ; then
+    if [ "$CI" == "true" ] ; then
         docker-compose -f $COMPOSE_FILE_LOC \
                        -p $COMPOSE_PROJECT_NAME \
                     run --rm frontend_tester npm run test:ci
