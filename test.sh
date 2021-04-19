@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Github Actions automatically sets the CI environment variable. We use this variable to detect if the script is running
+# inside a CI environment and modify its execution as needed.
+if [ "$CI" == "true" ] ; then
+    echo "Running in CI mode"
+fi
+
 # UNIT TESTS
 # ./test.sh                build unit test containers, bring up, make database, test, bring down
 # for development:
