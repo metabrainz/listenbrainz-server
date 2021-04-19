@@ -29,14 +29,16 @@ import listenbrainz.db.user_relationship as db_user_relationship
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
 
 from data.model.listen import APIListen, TrackMetadata, AdditionalInfo
-from data.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, APIFollowEvent
+from data.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, \
+    APIFollowEvent, NotificationMetadata
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.listenstore import TimescaleListenStore
 from listenbrainz.webserver.views.api import _validate_get_endpoint_params
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized
-from listenbrainz.webserver.views.api_tools import validate_auth_header
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, \
+    APIForbidden
+from listenbrainz.webserver.views.api_tools import validate_auth_header, _filter_description_html
 from listenbrainz.webserver.rate_limiter import ratelimit
 
 
@@ -96,6 +98,58 @@ def create_user_recording_recommendation_event(user_name):
     event_data['created'] = event_data['created'].timestamp()
     event_data['event_type'] = event_data['event_type'].value
     return jsonify(event_data)
+
+
+@user_timeline_event_api_bp.route('/user/<user_name>/timeline-event/create/notification', methods=['POST', 'OPTIONS'])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
+def create_user_notification_event(user_name):
+    """ Post a message with a link on a user's timeline. Only approved users are allowed to perform this action.
+
+    The request should contain the following data:
+
+    .. code-block:: json
+
+        {
+            "metadata": {
+                "message": <the message to post, required>,
+            }
+        }
+
+    :param user_name: The MusicBrainz ID of the user on whose timeline the message is to be posted.
+    :type user_name: ``str``
+    :statuscode 200: Successful query, message has been posted!
+    :statuscode 400: Bad request, check ``response['error']`` for more details.
+    :statuscode 403: Forbidden, you are not an approved user.
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+
+    """
+    creator = validate_auth_header()
+    if creator["musicbrainz_id"] not in current_app.config['APPROVED_PLAYLIST_BOTS']:
+        raise APIForbidden("Only approved users are allowed to post a message on a user's timeline.")
+
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise APINotFound(f"Cannot find user: {user_name}")
+
+    try:
+        data = ujson.loads(request.get_data())['metadata']
+    except (ValueError, KeyError) as e:
+        raise APIBadRequest(f"Invalid JSON: {str(e)}")
+
+    if "message" not in data:
+        raise APIBadRequest("Invalid metadata: message is missing")
+
+    message = _filter_description_html(data["message"])
+    metadata = NotificationMetadata(creator_id=creator['id'], message=message)
+
+    try:
+        db_user_timeline_event.create_user_notification_event(user['id'], metadata)
+    except DatabaseException:
+        raise APIInternalServerError("Something went wrong, please try again.")
+
+    return jsonify({'status': 'ok'})
 
 
 @user_timeline_event_api_bp.route('/user/<user_name>/feed/events', methods=['OPTIONS', 'GET'])
@@ -192,7 +246,7 @@ def get_listen_events(
         from_ts=min_ts,
         to_ts=max_ts,
         time_range=time_range,
-        order=1,  # descending
+        order=0,  # descending
     )
 
     user_listens_map = defaultdict(list)
@@ -206,12 +260,12 @@ def get_listen_events(
             try:
                 listen_dict = listen.to_api()
                 listen_dict['inserted_at'] = listen_dict['inserted_at'].timestamp()
-                listen = APIListen(**listen_dict)
+                api_listen = APIListen(**listen_dict)
                 events.append(APITimelineEvent(
                     event_type=UserTimelineEventType.LISTEN,
-                    user_name=listen.user_name,
-                    created=listen.listened_at,
-                    metadata=listen,
+                    user_name=api_listen.user_name,
+                    created=api_listen.listened_at,
+                    metadata=api_listen,
                 ))
             except pydantic.ValidationError as e:
                 current_app.logger.error('Validation error: ' + str(e), exc_info=True)

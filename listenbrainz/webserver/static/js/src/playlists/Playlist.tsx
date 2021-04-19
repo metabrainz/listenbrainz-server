@@ -340,16 +340,37 @@ export default class PlaylistPage extends React.Component<
   newAlert = (
     type: AlertType,
     title: string,
-    message: string | JSX.Element
+    message: string | JSX.Element,
+    count?: number
   ): void => {
     const newAlert: Alert = {
       id: new Date().getTime(),
       type,
       headline: title,
       message,
+      count,
     };
 
     this.setState((prevState) => {
+      const alertsList = prevState.alerts;
+      for (let i = 0; i < alertsList.length; i += 1) {
+        const item = alertsList[i];
+        if (
+          item.type === newAlert.type &&
+          item.headline.startsWith(newAlert.headline) &&
+          item.message === newAlert.message
+        ) {
+          if (!alertsList[i].count) {
+            // If the count attribute is undefined, then Initializing it as 2
+            alertsList[i].count = 2;
+          } else {
+            alertsList[i].count! += 1;
+          }
+          alertsList[i].headline = `${newAlert.headline} (${alertsList[i]
+            .count!})`;
+          return { alerts: alertsList };
+        }
+      }
       return {
         alerts: [...prevState.alerts, newAlert],
       };
@@ -569,20 +590,17 @@ export default class PlaylistPage extends React.Component<
       return;
     }
     try {
-      // Replace keys that have changed but keep all other attributres
-      const editedPlaylist: JSPFPlaylist = defaultsDeep(
-        {
-          annotation: description,
-          title: name,
-          extension: {
-            [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
-              public: isPublic,
-              collaborators,
-            },
+      const editedPlaylist: JSPFPlaylist = {
+        ...playlist,
+        annotation: description,
+        title: name,
+        extension: {
+          [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
+            public: isPublic,
+            collaborators,
           },
         },
-        playlist
-      );
+      };
 
       await this.APIService.editPlaylist(currentUser.auth_token, id, {
         playlist: omit(editedPlaylist, "track") as JSPFPlaylist,

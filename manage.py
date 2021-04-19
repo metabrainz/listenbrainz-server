@@ -1,3 +1,5 @@
+import listenbrainz.db.dump_manager as dump_manager
+import listenbrainz.spark.request_manage as spark_request_manage
 from listenbrainz import db
 from listenbrainz.db import timescale as ts
 from listenbrainz import webserver
@@ -15,9 +17,13 @@ safely_import_config()
 def cli():
     pass
 
-ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'admin', 'sql')
-MSB_ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'admin', 'messybrainz', 'sql')
-TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'admin', 'timescale')
+
+ADMIN_SQL_DIR = os.path.join(os.path.dirname(
+    os.path.realpath(__file__)), 'admin', 'sql')
+MSB_ADMIN_SQL_DIR = os.path.join(os.path.dirname(
+    os.path.realpath(__file__)), 'admin', 'messybrainz', 'sql')
+TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(
+    os.path.realpath(__file__)), 'admin', 'timescale')
 
 
 @cli.command(name="run_api_compat_server")
@@ -62,19 +68,24 @@ def init_db(force, create_db):
     from listenbrainz import config
     db.init_db_connection(config.POSTGRES_ADMIN_URI)
     if force:
-        res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'drop_db.sql'))
+        res = db.run_sql_script_without_transaction(
+            os.path.join(ADMIN_SQL_DIR, 'drop_db.sql'))
         if not res:
-            raise Exception('Failed to drop existing database and user! Exit code: %i' % res)
+            raise Exception(
+                'Failed to drop existing database and user! Exit code: %i' % res)
 
     if create_db or force:
         print('PG: Creating user and a database...')
-        res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_db.sql'))
+        res = db.run_sql_script_without_transaction(
+            os.path.join(ADMIN_SQL_DIR, 'create_db.sql'))
         if not res:
-            raise Exception('Failed to create new database and user! Exit code: %i' % res)
+            raise Exception(
+                'Failed to create new database and user! Exit code: %i' % res)
 
         db.init_db_connection(config.POSTGRES_ADMIN_LB_URI)
         print('PG: Creating database extensions...')
-        res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'))
+        res = db.run_sql_script_without_transaction(
+            os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'))
     # Don't raise an exception if the extension already exists
 
     application = webserver.create_app()
@@ -89,8 +100,10 @@ def init_db(force, create_db):
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_tables.sql'))
 
         print('PG: Creating primary and foreign keys...')
-        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_primary_keys.sql'))
-        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
+        db.run_sql_script(os.path.join(
+            ADMIN_SQL_DIR, 'create_primary_keys.sql'))
+        db.run_sql_script(os.path.join(
+            ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
 
         print('PG: Creating indexes...')
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
@@ -111,18 +124,23 @@ def init_msb_db(force, create_db):
     from listenbrainz import config
     db.init_db_connection(config.POSTGRES_ADMIN_URI)
     if force:
-        res = db.run_sql_script_without_transaction(os.path.join(MSB_ADMIN_SQL_DIR, 'drop_db.sql'))
+        res = db.run_sql_script_without_transaction(
+            os.path.join(MSB_ADMIN_SQL_DIR, 'drop_db.sql'))
         if not res:
-            raise Exception('Failed to drop existing database and user! Exit code: %s' % res)
+            raise Exception(
+                'Failed to drop existing database and user! Exit code: %s' % res)
 
     if create_db or force:
         print('PG: Creating user and a database...')
-        res = db.run_sql_script_without_transaction(os.path.join(MSB_ADMIN_SQL_DIR, 'create_db.sql'))
+        res = db.run_sql_script_without_transaction(
+            os.path.join(MSB_ADMIN_SQL_DIR, 'create_db.sql'))
         if not res:
-            raise Exception('Failed to create new database and user! Exit code: %s' % res)
+            raise Exception(
+                'Failed to create new database and user! Exit code: %s' % res)
 
     print('PG: Creating database extensions...')
-    res = db.run_sql_script_without_transaction(os.path.join(MSB_ADMIN_SQL_DIR, 'create_extensions.sql'))
+    res = db.run_sql_script_without_transaction(
+        os.path.join(MSB_ADMIN_SQL_DIR, 'create_extensions.sql'))
     # Don't raise an exception if the extension already exists
 
     db.engine.dispose()
@@ -137,8 +155,10 @@ def init_msb_db(force, create_db):
     db.run_sql_script(os.path.join(MSB_ADMIN_SQL_DIR, 'create_tables.sql'))
 
     print('PG: Creating primary and foreign keys...')
-    db.run_sql_script(os.path.join(MSB_ADMIN_SQL_DIR, 'create_primary_keys.sql'))
-    db.run_sql_script(os.path.join(MSB_ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
+    db.run_sql_script(os.path.join(
+        MSB_ADMIN_SQL_DIR, 'create_primary_keys.sql'))
+    db.run_sql_script(os.path.join(
+        MSB_ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
 
     print('PG: Creating functions...')
     db.run_sql_script(os.path.join(MSB_ADMIN_SQL_DIR, 'create_functions.sql'))
@@ -162,16 +182,19 @@ def init_ts_db(force, create_db):
     from listenbrainz import config
     ts.init_db_connection(config.TIMESCALE_ADMIN_URI)
     if force:
-        res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'drop_db.sql'))
+        res = ts.run_sql_script_without_transaction(
+            os.path.join(TIMESCALE_SQL_DIR, 'drop_db.sql'))
         if not res:
-            raise Exception('Failed to drop existing database and user! Exit code: %i' % res)
+            raise Exception(
+                'Failed to drop existing database and user! Exit code: %i' % res)
 
     if create_db or force:
         print('TS: Creating user and a database...')
         retries = 0
         while True:
             try:
-                res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_db.sql'))
+                res = ts.run_sql_script_without_transaction(
+                    os.path.join(TIMESCALE_SQL_DIR, 'create_db.sql'))
                 break
             except sqlalchemy.exc.OperationalError:
                 print("Trapped template1 access error, FFS! Sleeping, trying again.")
@@ -180,44 +203,56 @@ def init_ts_db(force, create_db):
                     raise
                 sleep(1)
                 continue
-            
+
         if not res:
-            raise Exception('Failed to create new database and user! Exit code: %i' % res)
+            raise Exception(
+                'Failed to create new database and user! Exit code: %i' % res)
 
         ts.init_db_connection(config.TIMESCALE_ADMIN_LB_URI)
         print('TS: Creating database extensions...')
-        res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_extensions.sql'))
+        res = ts.run_sql_script_without_transaction(
+            os.path.join(TIMESCALE_SQL_DIR, 'create_extensions.sql'))
     # Don't raise an exception if the extension already exists
 
     ts.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
     application = webserver.create_app()
     with application.app_context():
         print('TS: Creating Schemas...')
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_schemas.sql'))
+        ts.run_sql_script(os.path.join(
+            TIMESCALE_SQL_DIR, 'create_schemas.sql'))
 
         print('TS: Creating tables...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_tables.sql'))
 
         print('TS: Creating Functions...')
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_functions.sql'))
+        ts.run_sql_script(os.path.join(
+            TIMESCALE_SQL_DIR, 'create_functions.sql'))
 
         print('TS: Creating views...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))
 
         print('TS: Creating indexes...')
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))
+        ts.run_sql_script(os.path.join(
+            TIMESCALE_SQL_DIR, 'create_indexes.sql'))
 
         print('TS: Creating Primary and Foreign Keys...')
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_primary_keys.sql'))
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_foreign_keys.sql'))
+        ts.run_sql_script(os.path.join(
+            TIMESCALE_SQL_DIR, 'create_primary_keys.sql'))
+        ts.run_sql_script(os.path.join(
+            TIMESCALE_SQL_DIR, 'create_foreign_keys.sql'))
 
         print("Done!")
 
 
+@cli.command(name="calculate_user_similarity")
+def calculate_user_similarity():
+    application = webserver.create_app()
+    with application.app_context():
+        user_similarity.calculate_similar_users()
+
+
 # Add other commands here
-import listenbrainz.spark.request_manage as spark_request_manage
 cli.add_command(spark_request_manage.cli, name="spark")
-import listenbrainz.db.dump_manager as dump_manager
 cli.add_command(dump_manager.cli, name="dump")
 
 

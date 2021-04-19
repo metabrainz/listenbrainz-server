@@ -19,6 +19,7 @@ from data.model.user_release_stat import UserReleaseStatJson
 from data.model.user_recording_stat import UserRecordingStatJson
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
 from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
+from listenbrainz.db.similar_users import import_user_similarities
 
 
 
@@ -382,3 +383,29 @@ def notify_cf_recording_recommendations_generation(data):
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
     )
+
+
+def handle_similar_users(message):
+    """ Save the similar users data to the DB
+    """
+
+    if current_app.config['TESTING']:
+        return
+
+    user_count, avg_similar_users, error = import_user_similarities(message['data'])
+    if error:
+        send_mail(
+            subject='Similar User data failed to be calculated',
+            text=render_template('emails/similar_users_failed_notification.txt', error=error),
+            recipients=['listenbrainz-observability@metabrainz.org'],
+            from_name='ListenBrainz',
+            from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
+        )
+    else:
+        send_mail(
+            subject='Similar User data has been calculated',
+            text=render_template('emails/similar_users_updated_notification.txt', user_count=str(user_count), avg_similar_users="%.1f" % avg_similar_users),
+            recipients=['listenbrainz-observability@metabrainz.org'],
+            from_name='ListenBrainz',
+            from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
+        )

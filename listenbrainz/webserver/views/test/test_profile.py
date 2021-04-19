@@ -1,11 +1,10 @@
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import listenbrainz.db.spotify as db_spotify
-import pytz
 import time
 import ujson
 
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import url_for
 from listenbrainz.domain import spotify
 from listenbrainz.db.testing import DatabaseTestCase
@@ -173,7 +172,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
     def test_spotify_refresh_token_which_has_expired(self, mock_refresh_user_token, mock_get_user):
         self.temporary_login(self.user['login_id'])
         # token hasn't expired
-        expires = datetime.utcfromtimestamp(int(time.time()) + 10).replace(tzinfo=pytz.UTC)
+        expires = datetime.utcfromtimestamp(int(time.time()) + 10).replace(tzinfo=timezone.utc)
         mock_get_user.return_value = spotify.Spotify(
             user_id=self.user['id'],
             musicbrainz_id=self.user['musicbrainz_id'],
@@ -202,7 +201,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
     def test_spotify_refresh_token_which_has_not_expired(self, mock_refresh_user_token, mock_get_user):
         self.temporary_login(self.user['login_id'])
         # token hasn't expired
-        expires = datetime.utcfromtimestamp(int(time.time()) - 10).replace(tzinfo=pytz.UTC)
+        expires = datetime.utcfromtimestamp(int(time.time()) - 10).replace(tzinfo=timezone.utc)
         spotify_user = spotify.Spotify(
             user_id=self.user['id'],
             musicbrainz_id=self.user['musicbrainz_id'],
@@ -234,7 +233,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
     def test_spotify_refresh_token_which_has_been_revoked(self, mock_refresh_user_token, mock_get_user):
         self.temporary_login(self.user['login_id'])
         # token hasn't expired
-        expires = datetime.utcfromtimestamp(int(time.time()) - 10).replace(tzinfo=pytz.UTC)
+        expires = datetime.utcfromtimestamp(int(time.time()) - 10).replace(tzinfo=timezone.utc)
         spotify_user = spotify.Spotify(
             user_id=self.user['id'],
             musicbrainz_id=self.user['musicbrainz_id'],
