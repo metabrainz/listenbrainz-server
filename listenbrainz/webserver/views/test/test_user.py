@@ -165,9 +165,11 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
     def test_ts_filters(self, timescale):
         """Check that max_ts and min_ts are passed to timescale """
 
+        timescale.return_value = ([], 0, 0)
+
         # If no parameter is given, use current time as the to_ts
         self.client.get(url_for('user.profile', user_name='iliekcomputers'))
-        req_call = mock.call('iliekcomputers', limit=25, to_ts=1400000201)
+        req_call = mock.call('iliekcomputers', limit=25, from_ts=None)
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
