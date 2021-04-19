@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [ -z "$CI" ]; then
+    set -e
+fi
+
 # UNIT TESTS
 # ./test.sh                build unit test containers, bring up, make database, test, bring down
 # for development:
@@ -14,9 +18,6 @@
 # ./test.sh fe -b          build frontend test containers
 # ./test.sh fe -t          run type-checker
 # ./test.sh fe -f          run linter
-
-# ./test.sh fe -ci         run frontend tests in ci mode
-# ./test.sh fe -f -ci      run linter in ci mode
 
 # SPARK TESTS
 # ./test.sh spark          run spark tests
@@ -118,7 +119,7 @@ function update_snapshots {
 }
 
 function run_lint_check {
-    if [ "$1" == "-ci" ] ; then
+    if [ -z "$CI" ] ; then
         docker-compose -f $COMPOSE_FILE_LOC \
                        -p $COMPOSE_PROJECT_NAME \
                     run --rm frontend_tester npm run format:ci
@@ -130,7 +131,7 @@ function run_lint_check {
 }
 
 function run_frontend_tests {
-    if [ "$1" == "-ci" ] ; then
+    if [ -z "$CI" ] ; then
         docker-compose -f $COMPOSE_FILE_LOC \
                        -p $COMPOSE_PROJECT_NAME \
                     run --rm frontend_tester npm run test:ci
@@ -276,12 +277,12 @@ if [ "$1" == "fe" ]; then
 
     if [ "$2" == "-f" ]; then
         echo "Running linter"
-        run_lint_check "$3"
+        run_lint_check
         exit 0
     fi
 
     echo "Running tests"
-    run_frontend_tests "$2"
+    run_frontend_tests
     exit 0
 fi
 
