@@ -47,6 +47,7 @@ class DumpTestCase(DatabaseTestCase):
         shutil.rmtree(self.tempdir)
 
     def test_create_private_dump(self):
+        assert False
         time_now = datetime.today()
         dump_location = db_dump.create_private_dump(self.tempdir, time_now)
         self.assertTrue(os.path.isfile(dump_location))
