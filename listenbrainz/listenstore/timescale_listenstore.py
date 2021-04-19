@@ -133,7 +133,7 @@ class TimescaleListenStore(ListenStore):
                 cached_min_ts = min_ts
             if max_ts > cached_max_ts:
                 cached_max_ts = max_ts
-            cache.set(REDIS_USER_TIMESTAMPS + user_name, "%d,%d" % (cached_min_ts, cached_max_ts), time=0, decode=False)
+            cache.set(REDIS_USER_TIMESTAMPS + user_name, "%d,%d" % (cached_min_ts, cached_max_ts), time=0, encode=False)
 
 
     def get_timestamps_for_user(self, user_name):
@@ -152,7 +152,7 @@ class TimescaleListenStore(ListenStore):
             self.log.info("ts fetch: %.2f" % (time.time() - t0))
 
             if min_ts and max_ts:
-                cache.set(REDIS_USER_TIMESTAMPS + user_name, "%d,%d" % (min_ts, max_ts), time=0, decode=False)
+                cache.set(REDIS_USER_TIMESTAMPS + user_name, "%d,%d" % (min_ts, max_ts), time=0, encode=False)
 
         return min_ts, max_ts
 
@@ -170,25 +170,14 @@ class TimescaleListenStore(ListenStore):
             sort_clause = ""
             function = "min"
 
-        query = """SELECT listened_at_bucket AS ts
-                     FROM listen_count_30day
+        query = """SELECT %s(listened_at) AS ts
+                     FROM listen
                      WHERE user_name = :user_name
-                  ORDER BY listened_at_bucket %s
-                     LIMIT 1""" % sort_clause
+                  GROUP BY listened_at
+                  ORDER BY listened_at %s
+                     LIMIT 1""" % (function, sort_clause)
         try:
             with timescale.engine.connect() as connection:
-                result = connection.execute(sqlalchemy.text(query), {
-                    "user_name": user_name
-                })
-                row = result.fetchone()
-                if not row:
-                    return 0
-
-                query = """SELECT %s(listened_at) AS ts
-                             FROM listen
-                            WHERE user_name = :user_name
-                              AND listened_at >= %d AND listened_at < %d""" % (function, row['ts'],
-                                                                               row['ts'] + LISTEN_COUNT_BUCKET_WIDTH - 1)
                 result = connection.execute(sqlalchemy.text(query), {
                     "user_name": user_name
                 })
