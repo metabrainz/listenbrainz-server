@@ -61,6 +61,14 @@ class FollowButton extends React.Component<
     this.APIService = new APIService(`${window.location.origin}/1`);
   }
 
+  componentDidUpdate(prevProps: FollowButtonProps) {
+    const { loggedInUserFollowsUser } = this.props;
+    // FollowerFollowingModal will update this prop and we need to update the state accordingly
+    if (prevProps.loggedInUserFollowsUser !== loggedInUserFollowsUser) {
+      this.setState({ loggedInUserFollowsUser });
+    }
+  }
+
   setHover = (value: boolean) => {
     this.setState({ hover: value, justFollowed: false });
   };

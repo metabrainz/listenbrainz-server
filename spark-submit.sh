@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source config.sh
+source spark_config.sh
 
 zip -r listenbrainz_spark.zip listenbrainz_spark/
 time ./run.sh /usr/local/spark/bin/spark-submit \

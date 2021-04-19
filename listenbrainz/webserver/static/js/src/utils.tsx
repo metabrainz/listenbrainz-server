@@ -1,8 +1,7 @@
-import * as timeago from "time-ago";
-
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import * as _ from "lodash";
+import * as timeago from "time-ago";
 import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
