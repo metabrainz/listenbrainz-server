@@ -26,10 +26,10 @@ jobs:
       continue-on-error: true
 
     - name: Run frontend tests
-      run: ./test.sh fe -ci
+      run: ./test.sh fe
 
     - name: Run linter
-      run: ./test.sh fe -f -ci
+      run: ./test.sh fe -f
       if: ${{ always() }}
 
     - name: Run type checker
