@@ -324,6 +324,7 @@ class TimescaleListenStore(ListenStore):
         min_user_ts = max_user_ts = -1
         for user_name in user_names:
             min_ts, max_ts = self.get_timestamps_for_user(user_name)
+            self.log.warning("fetched ts: %d %d" % (min_ts, max_ts))
             if min_user_ts < 0:
                 min_user_ts = min_ts
                 max_user_ts = max_ts
@@ -378,16 +379,21 @@ class TimescaleListenStore(ListenStore):
                     result = curs.fetchone()
                     if not result:
                         if not to_dynamic and not from_dynamic:
+                            self.log.warning("fixed range exit")
                             done = True
                             break
 
+                        self.log.warning("min ts check: %d < %d" % (from_ts, min_user_ts - 1))
                         if from_ts < min_user_ts - 1:
+                            self.log.warning("min ts out of bounds")
                             done = True
                             break
 
-                        if to_ts > max_user_ts + 1:
-                            done = True
-                            break
+                        self.log.warning("max ts check: %d > %d" % (to_ts, max_user_ts + 1))
+#                        if to_ts > max_user_ts + 1:
+#                            self.log.warning("max ts out of bounds")
+#                            done = True
+#                            break
 
                         if to_dynamic:
                             from_ts += window_size - 1
@@ -406,6 +412,7 @@ class TimescaleListenStore(ListenStore):
                     listens.append(Listen.from_timescale(
                         result[0], result[1], result[4], result[2], result[3]))
                     if len(listens) == limit:
+                        self.log.warning("fetched all")
                         done = True
                         break
 

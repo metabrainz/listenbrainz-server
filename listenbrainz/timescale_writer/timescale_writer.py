@@ -84,12 +84,6 @@ class TimescaleWriterSubscriber(ListenWriter):
             # Not critical, so if this errors out, just log it to Sentry and move forward
             current_app.logger.error("Could not update listen count per day in redis", exc_info=True)
 
-        try:
-            self.redis_listenstore.increment_listen_count_for_day(day=datetime.utcnow(), count=len(rows_inserted))
-        except Exception:
-            # Not critical, so if this errors out, just log it to Sentry and move forward
-            current_app.logger.error("Could not update listen count per day in redis", exc_info=True)
-
         unique = []
         inserted_index = {}
         for inserted in rows_inserted:
