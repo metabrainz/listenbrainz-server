@@ -24,7 +24,7 @@ import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
 } from "../AlertNotificationsHOC";
-import APIService from "../APIService";
+import { APIService, APIContext } from "../APIService";
 import SpotifyAPIService from "../SpotifyAPIService";
 import BrainzPlayer from "../BrainzPlayer";
 import Card from "../components/Card";
@@ -77,7 +77,7 @@ export default class PlaylistPage extends React.Component<
     };
   }
 
-  private APIService: APIService;
+  private APIService!: APIService;
   private SpotifyAPIService?: SpotifyAPIService;
   private spotifyPlaylist?: SpotifyPlaylistObject;
   private searchForTrackDebounced: any;
@@ -105,10 +105,6 @@ export default class PlaylistPage extends React.Component<
       cachedSearchResults: [],
     };
 
-    this.APIService = new APIService(
-      props.apiUrl || `${window.location.origin}/1`
-    );
-
     if (props.spotify) {
       // Do we want to check current permissions?
       this.SpotifyAPIService = new SpotifyAPIService(props.spotify);
@@ -121,6 +117,7 @@ export default class PlaylistPage extends React.Component<
 
   componentDidMount(): void {
     this.connectWebsockets();
+    this.APIService = this.context;
     /* Deactivating feedback until the feedback system works with MBIDs instead of MSIDs */
     /* const recordingFeedbackMap = await this.loadFeedback();
     this.setState({ recordingFeedbackMap }); */
@@ -919,7 +916,6 @@ export default class PlaylistPage extends React.Component<
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
             <BrainzPlayer
-              apiService={this.APIService}
               currentListen={currentTrack}
               direction="down"
               listens={tracks}
@@ -957,16 +953,22 @@ document.addEventListener("DOMContentLoaded", () => {
     PlaylistPage
   );
 
+  const apiService: APIService = new APIService(
+    api_url || `${window.location.origin}/1`
+  );
+
   ReactDOM.render(
     <ErrorBoundary>
-      <PlaylistPageWithAlertNotifications
-        apiUrl={api_url}
-        labsApiUrl={labs_api_url}
-        playlist={playlist}
-        spotify={spotify}
-        currentUser={current_user}
-        webSocketsServerUrl={web_sockets_server_url}
-      />
+      <APIContext.Provider value={apiService}>
+        <PlaylistPageWithAlertNotifications
+          apiUrl={api_url}
+          labsApiUrl={labs_api_url}
+          playlist={playlist}
+          spotify={spotify}
+          currentUser={current_user}
+          webSocketsServerUrl={web_sockets_server_url}
+        />
+      </APIContext.Provider>
     </ErrorBoundary>,
     domContainer
   );

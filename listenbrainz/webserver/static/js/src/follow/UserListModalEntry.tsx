@@ -2,12 +2,12 @@ import * as React from "react";
 import FollowButton from "../FollowButton";
 import SimilarityScore from "../SimilarityScore";
 import { SimilarUsersModalProps } from "./SimilarUsersModal";
+import { APIContext, APIService } from "../APIService";
 
 export type UserListModalEntryProps = {
   mode: "follow-following" | "similar-users";
   user: ListenBrainzUser | SimilarUser;
   loggedInUser: ListenBrainzUser | null;
-  apiUrl: string;
   loggedInUserFollowsUser: boolean;
   updateFollowingList: (
     user: ListenBrainzUser,
@@ -22,7 +22,6 @@ const UserListModalEntry = (props: UserListModalEntryProps) => {
     loggedInUserFollowsUser,
     loggedInUser,
     updateFollowingList,
-    apiUrl,
   } = props;
   return (
     <>
@@ -47,7 +46,6 @@ const UserListModalEntry = (props: UserListModalEntryProps) => {
           <FollowButton
             type="block"
             user={user}
-            apiUrl={apiUrl}
             loggedInUser={loggedInUser}
             loggedInUserFollowsUser={loggedInUserFollowsUser}
             updateFollowingList={updateFollowingList}

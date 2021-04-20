@@ -1,3 +1,4 @@
+/* eslint-disable react/static-property-placement */
 import * as React from "react";
 import { get as _get } from "lodash";
 import MediaQuery from "react-responsive";
@@ -11,14 +12,13 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { getArtistLink, getTrackLink, preciseTimestamp } from "../utils";
+import { APIContext } from "../APIService";
 import Card from "../components/Card";
-import APIService from "../APIService";
 import ListenControl from "./ListenControl";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
 export type ListenCardProps = {
-  apiUrl: string;
   listen: Listen;
   mode: ListensListMode;
   className?: string;
@@ -44,8 +44,10 @@ export default class ListenCard extends React.Component<
   ListenCardProps,
   ListenCardState
 > {
+  static contextType = APIContext;
+  context!: React.ContextType<typeof APIContext>;
+
   playListen: (listen: Listen) => void;
-  APIService: APIService;
 
   constructor(props: ListenCardProps) {
     super(props);
@@ -54,11 +56,6 @@ export default class ListenCard extends React.Component<
       isDeleted: false,
       feedback: props.currentFeedback || 0,
     };
-
-    this.APIService = new APIService(
-      props.apiUrl || `${window.location.origin}/1`
-    );
-
     this.playListen = props.playListen.bind(this, props.listen);
   }
 
@@ -71,6 +68,7 @@ export default class ListenCard extends React.Component<
 
   submitFeedback = async (score: ListenFeedBack) => {
     const { listen, currentUser, isCurrentUser, updateFeedback } = this.props;
+    const { submitFeedback } = this.context;
     if (isCurrentUser && currentUser?.auth_token) {
       const recordingMSID = _get(
         listen,
@@ -78,7 +76,7 @@ export default class ListenCard extends React.Component<
       );
 
       try {
-        const status = await this.APIService.submitFeedback(
+        const status = await submitFeedback(
           currentUser.auth_token,
           recordingMSID,
           score
@@ -107,9 +105,10 @@ export default class ListenCard extends React.Component<
         listen,
         "track_metadata.additional_info.recording_msid"
       );
+      const { deleteListen } = this.context;
 
       try {
-        const status = await this.APIService.deleteListen(
+        const status = await deleteListen(
           currentUser.auth_token,
           recordingMSID,
           listenedAt
@@ -146,9 +145,9 @@ export default class ListenCard extends React.Component<
         ),
         artist_msid: _get(listen, "track_metadata.additional_info.artist_msid"),
       };
-
+      const { recommendTrackToFollowers } = this.context;
       try {
-        const status = await this.APIService.recommendTrackToFollowers(
+        const status = await recommendTrackToFollowers(
           currentUser.name,
           currentUser.auth_token,
           metadata
@@ -332,3 +331,5 @@ export default class ListenCard extends React.Component<
     );
   }
 }
+
+ListenCard.contextType = APIContext;

@@ -9,14 +9,13 @@ import {
   withAlertNotifications,
 } from "../AlertNotificationsHOC";
 
-import APIService from "../APIService";
+import { APIService, APIContext } from "../APIService";
 import BrainzPlayer from "../BrainzPlayer";
 import ErrorBoundary from "../ErrorBoundary";
 import Loader from "../components/Loader";
 import RecommendationCard from "./RecommendationCard";
 
 export type RecommendationsProps = {
-  apiUrl: string;
   recommendations?: Array<Recommendation>;
   profileUrl?: string;
   spotify: SpotifyUser;
@@ -42,7 +41,8 @@ export default class Recommendations extends React.Component<
 > {
   private brainzPlayer = React.createRef<BrainzPlayer>();
   private recommendationsTable = React.createRef<HTMLTableElement>();
-  private APIService: APIService;
+
+  private APIService!: APIService;
 
   private expectedRecommendationsPerPage = 25;
 
@@ -65,14 +65,12 @@ export default class Recommendations extends React.Component<
     };
 
     this.recommendationsTable = React.createRef();
-    this.APIService = new APIService(
-      props.apiUrl || `${window.location.origin}/1`
-    );
   }
 
   componentDidMount(): void {
     const { user, currentUser } = this.props;
     const { currRecPage } = this.state;
+    this.APIService = this.context;
     if (currentUser?.name === user?.name) {
       this.loadFeedback();
     }
@@ -227,7 +225,7 @@ export default class Recommendations extends React.Component<
       currRecPage,
       totalRecPages,
     } = this.state;
-    const { spotify, user, currentUser, apiUrl, newAlert } = this.props;
+    const { spotify, user, currentUser, newAlert } = this.props;
 
     return (
       <div role="main">
@@ -267,7 +265,6 @@ export default class Recommendations extends React.Component<
                           ?.recording_mbid
                       )}
                       updateFeedback={this.updateFeedback}
-                      apiUrl={apiUrl}
                       newAlert={newAlert}
                     />
                   );
@@ -319,7 +316,6 @@ export default class Recommendations extends React.Component<
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
             <BrainzPlayer
-              apiService={this.APIService}
               currentListen={currentRecommendation}
               direction={direction}
               listens={recommendations}
@@ -334,6 +330,7 @@ export default class Recommendations extends React.Component<
     );
   }
 }
+Recommendations.contextType = APIContext;
 
 document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#react-container");
@@ -352,19 +349,23 @@ document.addEventListener("DOMContentLoaded", () => {
     web_sockets_server_url,
     current_user,
   } = reactProps;
+
+  const apiService = new APIService(api_url || `${window.location.origin}/1`);
+
   const RecommendationsWithAlertNotifications = withAlertNotifications(
     Recommendations
   );
   ReactDOM.render(
     <ErrorBoundary>
-      <RecommendationsWithAlertNotifications
-        apiUrl={api_url}
-        recommendations={recommendations}
-        spotify={spotify}
-        user={user}
-        webSocketsServerUrl={web_sockets_server_url}
-        currentUser={current_user}
-      />
+      <APIContext.Provider value={apiService}>
+        <RecommendationsWithAlertNotifications
+          recommendations={recommendations}
+          spotify={spotify}
+          user={user}
+          webSocketsServerUrl={web_sockets_server_url}
+          currentUser={current_user}
+        />
+      </APIContext.Provider>
     </ErrorBoundary>,
     domContainer
   );
