@@ -39,7 +39,6 @@ const recommendation: Recommendation = {
 };
 
 const props: RecommendationCardProps = {
-  apiUrl: "foobar",
   recommendation,
   isCurrentUser: true,
   currentUser: { auth_token: "lalala", name: "test" },
@@ -83,7 +82,7 @@ describe("submitFeedback", () => {
     const instance = wrapper.instance();
     const updateFeedbackSpy = jest.spyOn(instance.props, "updateFeedback");
 
-    const spy = jest.spyOn(instance.APIService, "submitRecommendationFeedback");
+    const spy = jest.spyOn(instance.context, "submitRecommendationFeedback");
     spy.mockImplementation(() => Promise.resolve(200));
 
     // Check initial values of HTML elements
@@ -136,7 +135,7 @@ describe("submitFeedback", () => {
     const instance = wrapper.instance();
     const updateFeedbackSpy = jest.spyOn(instance.props, "updateFeedback");
 
-    const spy = jest.spyOn(instance.APIService, "submitRecommendationFeedback");
+    const spy = jest.spyOn(instance.context, "submitRecommendationFeedback");
     spy.mockImplementation(() => Promise.resolve(200));
 
     instance.submitFeedback("dislike");
@@ -158,7 +157,7 @@ describe("submitFeedback", () => {
     const instance = wrapper.instance();
     const updateFeedbackSpy = jest.spyOn(instance.props, "updateFeedback");
 
-    const spy = jest.spyOn(instance.APIService, "submitRecommendationFeedback");
+    const spy = jest.spyOn(instance.context, "submitRecommendationFeedback");
     spy.mockImplementation(() => Promise.resolve(200));
 
     instance.submitFeedback("love");
@@ -174,7 +173,7 @@ describe("submitFeedback", () => {
     const instance = wrapper.instance();
     const updateFeedbackSpy = jest.spyOn(instance.props, "updateFeedback");
 
-    const spy = jest.spyOn(instance.APIService, "submitRecommendationFeedback");
+    const spy = jest.spyOn(instance.context, "submitRecommendationFeedback");
     spy.mockImplementation(() => Promise.resolve(201));
 
     instance.submitFeedback("hate");
@@ -194,7 +193,7 @@ describe("submitFeedback", () => {
     const updateFeedbackSpy = jest.spyOn(instance.props, "updateFeedback");
     instance.handleError = jest.fn();
 
-    const spy = jest.spyOn(instance.APIService, "submitRecommendationFeedback");
+    const spy = jest.spyOn(instance.context, "submitRecommendationFeedback");
     spy.mockImplementation(() => {
       throw new Error("error");
     });
@@ -247,7 +246,7 @@ describe("deleteFeedback", () => {
     const instance = wrapper.instance();
     const updateFeedbackSpy = jest.spyOn(instance.props, "updateFeedback");
 
-    const spy = jest.spyOn(instance.APIService, "deleteRecommendationFeedback");
+    const spy = jest.spyOn(instance.context, "deleteRecommendationFeedback");
     spy.mockImplementation(() => Promise.resolve(200));
 
     await instance.deleteFeedback();
@@ -302,7 +301,7 @@ describe("deleteFeedback", () => {
     const instance = wrapper.instance();
     const updateFeedbackSpy = jest.spyOn(instance.props, "updateFeedback");
 
-    const spy = jest.spyOn(instance.APIService, "deleteRecommendationFeedback");
+    const spy = jest.spyOn(instance.context, "deleteRecommendationFeedback");
     spy.mockImplementation(() => Promise.resolve(200));
 
     instance.deleteFeedback();
@@ -324,7 +323,7 @@ describe("deleteFeedback", () => {
     const instance = wrapper.instance();
     const updateFeedbackSpy = jest.spyOn(instance.props, "updateFeedback");
 
-    const spy = jest.spyOn(instance.APIService, "deleteRecommendationFeedback");
+    const spy = jest.spyOn(instance.context, "deleteRecommendationFeedback");
     spy.mockImplementation(() => Promise.resolve(200));
 
     instance.deleteFeedback();
@@ -340,7 +339,7 @@ describe("deleteFeedback", () => {
     const instance = wrapper.instance();
     const updateFeedbackSpy = jest.spyOn(instance.props, "updateFeedback");
 
-    const spy = jest.spyOn(instance.APIService, "deleteRecommendationFeedback");
+    const spy = jest.spyOn(instance.context, "deleteRecommendationFeedback");
     spy.mockImplementation(() => Promise.resolve(201));
 
     instance.deleteFeedback();
@@ -359,7 +358,7 @@ describe("deleteFeedback", () => {
     const updateFeedbackSpy = jest.spyOn(instance.props, "updateFeedback");
     instance.handleError = jest.fn();
 
-    const spy = jest.spyOn(instance.APIService, "deleteRecommendationFeedback");
+    const spy = jest.spyOn(instance.context, "deleteRecommendationFeedback");
     spy.mockImplementation(() => {
       throw new Error("error");
     });

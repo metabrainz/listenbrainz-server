@@ -26,7 +26,6 @@ const listen: Listen = {
 };
 
 const props: ListenCardProps = {
-  apiUrl: "foobar",
   listen,
   mode: "listens",
   currentFeedback: 1,
@@ -88,7 +87,7 @@ describe("submitFeedback", () => {
     );
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "submitFeedback");
+    const spy = jest.spyOn(instance.context, "submitFeedback");
     spy.mockImplementation(() => Promise.resolve(200));
 
     expect(wrapper.state("feedback")).toEqual(1);
@@ -109,7 +108,7 @@ describe("submitFeedback", () => {
     );
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "submitFeedback");
+    const spy = jest.spyOn(instance.context, "submitFeedback");
     spy.mockImplementation(() => Promise.resolve(200));
 
     expect(wrapper.state("feedback")).toEqual(1);
@@ -127,7 +126,7 @@ describe("submitFeedback", () => {
     );
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "submitFeedback");
+    const spy = jest.spyOn(instance.context, "submitFeedback");
     spy.mockImplementation(() => Promise.resolve(200));
 
     expect(wrapper.state("feedback")).toEqual(1);
@@ -142,7 +141,7 @@ describe("submitFeedback", () => {
     const instance = wrapper.instance();
     props.updateFeedback = jest.fn();
 
-    const spy = jest.spyOn(instance.APIService, "submitFeedback");
+    const spy = jest.spyOn(instance.context, "submitFeedback");
     spy.mockImplementation(() => Promise.resolve(201));
 
     expect(wrapper.state("feedback")).toEqual(1);
@@ -162,7 +161,7 @@ describe("submitFeedback", () => {
     instance.handleError = jest.fn();
 
     const error = new Error("error");
-    const spy = jest.spyOn(instance.APIService, "submitFeedback");
+    const spy = jest.spyOn(instance.context, "submitFeedback");
     spy.mockImplementation(() => {
       throw error;
     });
@@ -201,7 +200,7 @@ describe("deleteListen", () => {
     );
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "deleteListen");
+    const spy = jest.spyOn(instance.context, "deleteListen");
     spy.mockImplementation(() => Promise.resolve(200));
 
     expect(wrapper.state("isDeleted")).toEqual(false);
@@ -229,7 +228,7 @@ describe("deleteListen", () => {
     );
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "deleteListen");
+    const spy = jest.spyOn(instance.context, "deleteListen");
     spy.mockImplementation(() => Promise.resolve(200));
 
     instance.deleteListen();
@@ -245,7 +244,7 @@ describe("deleteListen", () => {
     );
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "deleteListen");
+    const spy = jest.spyOn(instance.context, "deleteListen");
     spy.mockImplementation(() => Promise.resolve(200));
 
     instance.deleteListen();
@@ -258,7 +257,7 @@ describe("deleteListen", () => {
     const instance = wrapper.instance();
     props.removeListenFromListenList = jest.fn();
 
-    const spy = jest.spyOn(instance.APIService, "deleteListen");
+    const spy = jest.spyOn(instance.context, "deleteListen");
     spy.mockImplementation(() => Promise.resolve(201));
 
     instance.deleteListen();
@@ -276,7 +275,7 @@ describe("deleteListen", () => {
     instance.handleError = jest.fn();
 
     const error = new Error("error");
-    const spy = jest.spyOn(instance.APIService, "deleteListen");
+    const spy = jest.spyOn(instance.context, "deleteListen");
     spy.mockImplementation(() => {
       throw error;
     });
@@ -297,7 +296,7 @@ describe("recommendTrackToFollowers", () => {
     );
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "recommendTrackToFollowers");
+    const spy = jest.spyOn(instance.context, "recommendTrackToFollowers");
     spy.mockImplementation(() => Promise.resolve(200));
 
     await instance.recommendListenToFollowers();
@@ -321,7 +320,7 @@ describe("recommendTrackToFollowers", () => {
     );
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "recommendTrackToFollowers");
+    const spy = jest.spyOn(instance.context, "recommendTrackToFollowers");
     spy.mockImplementation(() => Promise.resolve(200));
 
     instance.recommendListenToFollowers();
@@ -336,7 +335,7 @@ describe("recommendTrackToFollowers", () => {
     );
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "recommendTrackToFollowers");
+    const spy = jest.spyOn(instance.context, "recommendTrackToFollowers");
     spy.mockImplementation(() => Promise.resolve(200));
 
     instance.recommendListenToFollowers();
@@ -349,7 +348,7 @@ describe("recommendTrackToFollowers", () => {
     instance.handleError = jest.fn();
 
     const error = new Error("error");
-    const spy = jest.spyOn(instance.APIService, "recommendTrackToFollowers");
+    const spy = jest.spyOn(instance.context, "recommendTrackToFollowers");
     spy.mockImplementation(() => {
       throw error;
     });
