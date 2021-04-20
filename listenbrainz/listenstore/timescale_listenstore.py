@@ -45,14 +45,13 @@ DEFAULT_FETCH_WINDOW = 30 * 86400  # 30 days
 # When expanding the search, how fast should the bounds be moved out
 WINDOW_SIZE_MULTIPLIER = 3
 
-LISTEN_COUNT_BUCKET_WIDTH = 2592000 
+LISTEN_COUNT_BUCKET_WIDTH = 2592000
 
 
 class TimescaleListenStore(ListenStore):
     '''
         The listenstore implementation for the timescale DB.
     '''
-
 
     def __init__(self, conf, logger):
         super(TimescaleListenStore, self).__init__(logger)
@@ -108,18 +107,18 @@ class TimescaleListenStore(ListenStore):
             raise
 
         # put this value into brainzutils cache without an expiry time
-        cache.set(REDIS_USER_LISTEN_COUNT + user_name, count, time=0, encode=False)
+        cache.set(REDIS_USER_LISTEN_COUNT + user_name,
+                  count, time=0, encode=False)
         return count
 
     def update_timestamps_for_user(self, user_name, min_ts, max_ts):
         """
             If any code adds/removes listens it should update the timestamps for the user
             using this function, so that they values in redis are always current.
-            
+
             If the given timestamps represent a new min or max value, these values will be
             saved in the cache, otherwise the user timestamps remain unchanged.
         """
-
 
         cached_min_ts, cached_max_ts = self.get_timestamps_for_user(user_name)
         if min_ts < cached_min_ts or max_ts > cached_max_ts:
@@ -127,8 +126,8 @@ class TimescaleListenStore(ListenStore):
                 cached_min_ts = min_ts
             if max_ts > cached_max_ts:
                 cached_max_ts = max_ts
-            cache.set(REDIS_USER_TIMESTAMPS + user_name, "%d,%d" % (cached_min_ts, cached_max_ts), time=0)
-
+            cache.set(REDIS_USER_TIMESTAMPS + user_name, "%d,%d" %
+                      (cached_min_ts, cached_max_ts), time=0)
 
     def get_timestamps_for_user(self, user_name):
         """ Return the max_ts and min_ts for a given user and cache the result in brainzutils cache
@@ -146,7 +145,8 @@ class TimescaleListenStore(ListenStore):
             self.log.info("ts fetch: %.2f" % (time.time() - t0))  # intended for production monitoring
 
             if min_ts and max_ts:
-                cache.set(REDIS_USER_TIMESTAMPS + user_name, "%d,%d" % (min_ts, max_ts), time=0)
+                cache.set(REDIS_USER_TIMESTAMPS + user_name,
+                          "%d,%d" % (min_ts, max_ts), time=0)
 
         return min_ts, max_ts
 
@@ -244,7 +244,7 @@ class TimescaleListenStore(ListenStore):
 
         conn.commit()
 
-        # update the listen counts and timestamps for the users 
+        # update the listen counts and timestamps for the users
         user_timestamps = {}
         user_counts = defaultdict(int)
         for ts, _, user_name in inserted_rows:
@@ -259,10 +259,12 @@ class TimescaleListenStore(ListenStore):
             user_counts[user_name] += 1
 
         for user_name in user_counts:
-            cache._r.incrby(cache._prep_key(REDIS_USER_LISTEN_COUNT + user_name), user_counts[user_name])
+            cache._r.incrby(cache._prep_key(
+                REDIS_USER_LISTEN_COUNT + user_name), user_counts[user_name])
 
         for user in user_timestamps:
-            self.update_timestamps_for_user(user, user_timestamps[user][0], user_timestamps[user][1])
+            self.update_timestamps_for_user(
+                user, user_timestamps[user][0], user_timestamps[user][1])
 
         return inserted_rows
 
@@ -374,7 +376,6 @@ class TimescaleListenStore(ListenStore):
                             window_size *= WINDOW_SIZE_MULTIPLIER
                             from_ts -= window_size
 
-
                         break
 
                     listens.append(Listen.from_timescale(
@@ -391,7 +392,8 @@ class TimescaleListenStore(ListenStore):
         if order == ORDER_ASC:
             listens.reverse()
 
-        self.log.info("fetch listens %.2fs in %d passes" % (fetch_listens_time, passes))
+        self.log.info("fetch listens %.2fs in %d passes" %
+                      (fetch_listens_time, passes))
 
         return (listens, min_user_ts, max_user_ts)
 
@@ -404,7 +406,8 @@ class TimescaleListenStore(ListenStore):
             max_age: Only return listens if they are no more than max_age seconds old. Default 3600 seconds
         """
 
-        args = {'user_list': tuple(user_list), 'ts': int(time.time()) - max_age, 'limit': limit}
+        args = {'user_list': tuple(user_list), 'ts': int(
+            time.time()) - max_age, 'limit': limit}
         query = """SELECT * FROM (
                               SELECT listened_at, track_name, user_name, created, data,
                                      row_number() OVER (partition by user_name ORDER BY listened_at DESC) AS rownum
