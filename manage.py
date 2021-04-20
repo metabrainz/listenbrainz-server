@@ -250,6 +250,20 @@ def calculate_user_similarity():
     with application.app_context():
         user_similarity.calculate_similar_users()
 
+@cli.command(name="recalculate_all_user_data")
+def recalculate_all_user_data():
+    from listenbrainz import config
+    from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStore
+    import logging
+    ts = TimescaleListenStore({
+            'REDIS_HOST': config.REDIS_HOST,
+            'REDIS_PORT': config.REDIS_PORT,
+            'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
+            'SQLALCHEMY_TIMESCALE_URI': config.SQLALCHEMY_TIMESCALE_URI,
+        },  logging.getLogger(__name__))
+    application = webserver.create_app()
+    with application.app_context():
+        ts.recalculate_all_user_data()
 
 # Add other commands here
 cli.add_command(spark_request_manage.cli, name="spark")
