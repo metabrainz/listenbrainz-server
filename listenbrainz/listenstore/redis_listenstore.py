@@ -1,28 +1,31 @@
-# coding=utf-8
+from datetime import datetime
+from time import time
 
 import ujson
-import redis
-from time import time
-from redis import Redis
 from typing import Optional
 
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import ListenStore
-from datetime import datetime
+from brainzutils import cache
+from listenbrainz.utils import create_path, init_cache
 
 
 class RedisListenStore(ListenStore):
 
-    RECENT_LISTENS_KEY = "lb_recent_sorted"
+    RECENT_LISTENS_KEY = "rl-"
     RECENT_LISTENS_MAX = 100
+    PLAYING_NOW_KEY = "pn."
     LISTEN_COUNT_PER_DAY_EXPIRY_TIME = 3 * 24 * 60 * 60  # 3 days in seconds
-    LISTEN_COUNT_PER_DAY_KEY_FORMAT = "lb_listen_count_for_day_{}"
+    LISTEN_COUNT_PER_DAY_KEY_FORMAT = "lc-day-"
 
 
     def __init__(self, log, conf):
         super(RedisListenStore, self).__init__(log)
-        self.redis = Redis(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'], decode_responses=True)
-        self.ns = conf['REDIS_NAMESPACE']
+
+        # Initialize brainzutils cache
+        init_cache(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'],
+                   namespace=conf['REDIS_NAMESPACE'])
+        self.redis = cache._r
 
     def get_playing_now(self, user_id):
         """ Return the current playing song of the user
@@ -34,7 +37,7 @@ class RedisListenStore(ListenStore):
                 Listen object which is the currently playing song of the user
 
         """
-        data = self.redis.get(self.ns + 'playing_now:{}'.format(user_id))
+        data = cache.get(self.PLAYING_NOW_KEY + str(user_id))
         if not data:
             return None
         data = ujson.loads(data)
@@ -49,16 +52,12 @@ class RedisListenStore(ListenStore):
             listen (dict): the listen data
             expire_time (int): the time in seconds in which the `playing_now` listen should expire
         """
-        self.redis.setex(
-            self.ns + 'playing_now:{}'.format(user_id),
-            time=expire_time,
-            value=ujson.dumps(listen).encode('utf-8')
-        )
+        cache.set(PLAYING_NOW_KEY + str(user_id), ujson.dumps(listen).encode('utf-8'), time=expire_time)
 
     def check_connection(self):
         """ Pings the redis server to check if the connection works or not """
         try:
-            self.redis.ping()
+            cache._r.ping()
         except redis.exceptions.ConnectionError as e:
             self.log.error("Redis ping didn't work: {}".format(str(e)))
             raise
@@ -76,12 +75,12 @@ class RedisListenStore(ListenStore):
 
         # Don't take this very seriously -- if it fails, really no big deal. Let is go.
         if recent:
-            self.redis.zadd(self.ns + self.RECENT_LISTENS_KEY, recent, nx=True)
+            cache._r.zadd(cache._prep_key(self.RECENT_LISTENS_KEY), recent, nx=True)
 
             # Don't prune the sorted list each time, but only when it reaches twice the desired size 
-            count = self.redis.zcard(self.ns + self.RECENT_LISTENS_KEY)
+            count = cache._r.zcard(cache._prep_key(self.RECENT_LISTENS_KEY))
             if count > (self.RECENT_LISTENS_MAX * 2):
-                self.redis.zpopmin(self.ns + self.RECENT_LISTENS_KEY, count - self.RECENT_LISTENS_MAX - 1)
+                cache._r.zpopmin(cache._prep_key(self.RECENT_LISTENS_KEY), count - self.RECENT_LISTENS_MAX - 1)
 
 
     def get_recent_listens(self, max = RECENT_LISTENS_MAX):
@@ -89,7 +88,7 @@ class RedisListenStore(ListenStore):
             Get the max number of most recent listens
         """
         recent = []
-        for listen in self.redis.zrevrange(self.ns + self.RECENT_LISTENS_KEY, 0, max - 1):
+        for listen in cache._r.zrevrange(cache._prep_key(self.RECENT_LISTENS_KEY), 0, max - 1):
             recent.append(Listen.from_json(ujson.loads(listen)))
 
         return recent
@@ -98,17 +97,15 @@ class RedisListenStore(ListenStore):
         """ Increment the number of listens submitted on the day `day`
         by `count`.
         """
-        key = self.LISTEN_COUNT_PER_DAY_KEY_FORMAT.format(day.strftime('%Y%m%d'))
-        if self.redis.exists(key):
-            self.redis.incrby(key, count)
-        else:
-            self.redis.setex(key, self.LISTEN_COUNT_PER_DAY_EXPIRY_TIME, count)
+        key = cache._prep_key(self.LISTEN_COUNT_PER_DAY_KEY_FORMAT + day.strftime('%Y%m%d'))
+        cache._r.incrby(key, count)
+        cache._r.expire(key, LISTEN_COUNT_PER_DAY_EXPIRY_TIME)
 
     def get_listen_count_for_day(self, day: datetime) -> Optional[int]:
         """ Get the number of listens submitted for day `day`, return None if not available.
         """
-        key = self.LISTEN_COUNT_PER_DAY_KEY_FORMAT.format(day.strftime('%Y%m%d'))
-        listen_count = self.redis.get(key)
+        key = self.LISTEN_COUNT_PER_DAY_KEY_FORMAT + day.strftime('%Y%m%d')
+        listen_count = cache.get(key, decode=False)
         if listen_count:
             return int(listen_count)
         return None
