@@ -5,7 +5,6 @@ import UserListModalEntry from "./UserListModalEntry";
 
 export type SimilarUsersModalProps = {
   user: ListenBrainzUser;
-  apiUrl: string;
   loggedInUser: ListenBrainzUser | null;
   similarUsersList: Array<SimilarUser>;
   loggedInUserFollowsUser: (user: ListenBrainzUser | SimilarUser) => boolean;
@@ -22,7 +21,6 @@ const SimilarUsersModal = (props: SimilarUsersModalProps) => {
     loggedInUserFollowsUser,
     updateFollowingList,
     similarUsersList,
-    apiUrl,
   } = props;
 
   return (
@@ -37,7 +35,6 @@ const SimilarUsersModal = (props: SimilarUsersModalProps) => {
               mode="similar-users"
               key={listEntry.name}
               user={listEntry}
-              apiUrl={apiUrl}
               loggedInUser={loggedInUser}
               loggedInUserFollowsUser={loggedInUserFollowsUser(listEntry)}
               updateFollowingList={updateFollowingList}

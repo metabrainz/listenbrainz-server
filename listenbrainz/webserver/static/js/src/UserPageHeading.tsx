@@ -21,15 +21,14 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import FollowButton from "./FollowButton";
+import { APIService, APIContext } from "./APIService";
 
 const UserPageHeading = ({
   user,
-  apiUrl,
   loggedInUser,
   loggedInUserFollowsUser = false,
 }: {
   user: ListenBrainzUser;
-  apiUrl: string;
   loggedInUser: ListenBrainzUser | null;
   loggedInUserFollowsUser: boolean;
 }) => {
@@ -40,7 +39,6 @@ const UserPageHeading = ({
         <FollowButton
           type="icon-only"
           user={user}
-          apiUrl={apiUrl}
           loggedInUser={loggedInUser}
           loggedInUserFollowsUser={loggedInUserFollowsUser}
         />
@@ -62,13 +60,19 @@ document.addEventListener("DOMContentLoaded", () => {
     logged_in_user_follows_user,
     api_url,
   } = reactProps;
+
+  const apiService: APIService = new APIService(
+    api_url || `${window.location.origin}/1`
+  );
+
   ReactDOM.render(
-    <UserPageHeading
-      user={user}
-      apiUrl={api_url}
-      loggedInUser={current_user || null}
-      loggedInUserFollowsUser={logged_in_user_follows_user}
-    />,
+    <APIContext.Provider value={apiService}>
+      <UserPageHeading
+        user={user}
+        loggedInUser={current_user || null}
+        loggedInUserFollowsUser={logged_in_user_follows_user}
+      />
+    </APIContext.Provider>,
     domContainer
   );
 });
