@@ -135,18 +135,6 @@ export default class SpotifyPlayer
         artistName,
         releaseName
       );
-      if (_has(track, "name") && _has(track, "artists")) {
-        handleSuccess(
-          <span>
-            {track?.name} —{" "}
-            <small>
-              {track?.artists
-                .map((artist: SpotifyArtist) => artist.name)
-                .join(", ")}
-            </small>
-          </span>
-        );
-      }
       if (track?.uri) {
         this.playSpotifyURI(track.uri);
         return;
