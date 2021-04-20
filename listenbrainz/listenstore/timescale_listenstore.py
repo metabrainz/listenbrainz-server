@@ -250,16 +250,23 @@ class TimescaleListenStore(ListenStore):
         self.log.info("Setting updated cache entries.")
         # Set the timestamps and listen counts for all users
         for user_name in user_list:
-            cache._r.incrby(cache._prep_key(REDIS_USER_LISTEN_COUNT + user_name), listen_counts[user_name])
-            tss = cache.get(REDIS_USER_TIMESTAMPS + user_name)
-            (min_ts, max_ts) = tss.split(",")
-            min_ts = int(min_ts)
-            max_ts = int(max_ts)
-            if min_ts and min_ts < user_timestamps[user_name][0]:
-                user_timestamps[user_name][0] = min_ts
-            if max_ts and max_ts > user_timestamps[user_name][1]:
-                user_timestamps[user_name][1] = max_ts
-            cache.set(REDIS_USER_TIMESTAMPS + user_name, "%d,%d" % (user_timestamps[user_name][0], user_timestamps[user_name][1]), time=0)
+            try:
+                cache._r.incrby(cache._prep_key(REDIS_USER_LISTEN_COUNT + user_name), listen_counts[user_name])
+            except KeyError:
+                pass
+
+            try:
+                tss = cache.get(REDIS_USER_TIMESTAMPS + user_name)
+                (min_ts, max_ts) = tss.split(",")
+                min_ts = int(min_ts)
+                max_ts = int(max_ts)
+                if min_ts and min_ts < user_timestamps[user_name][0]:
+                    user_timestamps[user_name][0] = min_ts
+                if max_ts and max_ts > user_timestamps[user_name][1]:
+                    user_timestamps[user_name][1] = max_ts
+                cache.set(REDIS_USER_TIMESTAMPS + user_name, "%d,%d" % (user_timestamps[user_name][0], user_timestamps[user_name][1]), time=0)
+            except KeyError:
+                pass
 
 
     def get_total_listen_count(self, cache_value=True):
