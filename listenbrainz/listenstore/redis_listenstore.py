@@ -52,7 +52,7 @@ class RedisListenStore(ListenStore):
             listen (dict): the listen data
             expire_time (int): the time in seconds in which the `playing_now` listen should expire
         """
-        cache.set(PLAYING_NOW_KEY + str(user_id), ujson.dumps(listen).encode('utf-8'), time=expire_time)
+        cache.set(self.PLAYING_NOW_KEY + str(user_id), ujson.dumps(listen).encode('utf-8'), time=expire_time)
 
     def check_connection(self):
         """ Pings the redis server to check if the connection works or not """
@@ -99,7 +99,7 @@ class RedisListenStore(ListenStore):
         """
         key = cache._prep_key(self.LISTEN_COUNT_PER_DAY_KEY_FORMAT + day.strftime('%Y%m%d'))
         cache._r.incrby(key, count)
-        cache._r.expire(key, LISTEN_COUNT_PER_DAY_EXPIRY_TIME)
+        cache._r.expire(key, self.LISTEN_COUNT_PER_DAY_EXPIRY_TIME)
 
     def get_listen_count_for_day(self, day: datetime) -> Optional[int]:
         """ Get the number of listens submitted for day `day`, return None if not available.
