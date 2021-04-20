@@ -294,7 +294,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
 
         # We expect three calls to fetch_listens, and we return two, one, and
         # zero listens in the batch. This tests that we fetch all batches.
-        mock_fetch_listens.side_effect = [(listens[0:2], 0, 0), (listens[2:3], 0,0), ([], 0, 0)]
+        mock_fetch_listens.side_effect = [(listens[0:2], 0, 0), (listens[2:3], 0, 0), ([], 0, 0)]
 
         r = self.client.post(url_for('profile.export_data'))
         self.assert200(r)
