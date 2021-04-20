@@ -116,8 +116,8 @@ export default class PlaylistPage extends React.Component<
   }
 
   componentDidMount(): void {
-    this.connectWebsockets();
     this.APIService = this.context;
+    this.connectWebsockets();
     /* Deactivating feedback until the feedback system works with MBIDs instead of MSIDs */
     /* const recordingFeedbackMap = await this.loadFeedback();
     this.setState({ recordingFeedbackMap }); */
@@ -930,6 +930,7 @@ export default class PlaylistPage extends React.Component<
     );
   }
 }
+PlaylistPage.contextType = APIContext;
 
 document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#react-container");
