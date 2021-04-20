@@ -4,7 +4,7 @@ import BrainzPlayer, { DataSourceType } from "./BrainzPlayer";
 import SoundcloudPlayer from "./SoundcloudPlayer";
 import YoutubePlayer from "./YoutubePlayer";
 import SpotifyPlayer from "./SpotifyPlayer";
-import APIService from "./APIService";
+import { APIService } from "./APIService";
 
 const props = {
   spotifyUser: {

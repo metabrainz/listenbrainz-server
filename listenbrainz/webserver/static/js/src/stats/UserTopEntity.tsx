@@ -3,7 +3,7 @@ import { faExclamationCircle, faLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
-import APIService from "../APIService";
+import { APIService } from "../APIService";
 import Card from "../components/Card";
 import Loader from "../components/Loader";
 import getEntityLink from "./utils";

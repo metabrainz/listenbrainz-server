@@ -15,7 +15,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { getTrackExtension, millisecondsToStr } from "./utils";
 import Card from "../components/Card";
-import APIService from "../APIService";
+import { APIService } from "../APIService";
 import ListenControl from "../listens/ListenControl";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";

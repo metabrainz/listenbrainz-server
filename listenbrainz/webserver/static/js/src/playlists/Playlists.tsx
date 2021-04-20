@@ -19,7 +19,7 @@ import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
 } from "../AlertNotificationsHOC";
-import APIService from "../APIService";
+import { APIService } from "../APIService";
 import Card from "../components/Card";
 import Loader from "../components/Loader";
 import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
