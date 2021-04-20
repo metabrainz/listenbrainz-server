@@ -39,7 +39,6 @@ describe("<FollowButton />", () => {
       <FollowButton
         type="icon-only"
         user={user}
-        apiUrl="http://0.0.0.0"
         loggedInUser={loggedInUser}
         loggedInUserFollowsUser
       />
@@ -51,7 +50,6 @@ describe("<FollowButton />", () => {
       <FollowButton
         type="block"
         user={user}
-        apiUrl="http://0.0.0.0"
         loggedInUser={loggedInUser}
         loggedInUserFollowsUser={false}
       />
@@ -65,7 +63,6 @@ describe("<FollowButton />", () => {
       <FollowButton
         type="icon-only"
         user={user}
-        apiUrl="http://0.0.0.0"
         loggedInUser={loggedInUser}
         loggedInUserFollowsUser
       />
@@ -77,7 +74,6 @@ describe("<FollowButton />", () => {
       <FollowButton
         type="icon-only"
         user={user}
-        apiUrl="http://0.0.0.0"
         loggedInUser={loggedInUser}
         loggedInUserFollowsUser={false}
       />
@@ -113,7 +109,6 @@ describe("<FollowButton />", () => {
         <FollowButton
           type="icon-only"
           user={user}
-          apiUrl="http://0.0.0.0"
           loggedInUser={loggedInUser}
           loggedInUserFollowsUser={false}
         />
@@ -130,7 +125,6 @@ describe("<FollowButton />", () => {
         <FollowButton
           type="icon-only"
           user={user}
-          apiUrl="http://0.0.0.0"
           loggedInUser={loggedInUser}
           loggedInUserFollowsUser
         />

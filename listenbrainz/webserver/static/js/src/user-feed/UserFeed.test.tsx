@@ -132,7 +132,7 @@ describe("<UserFeed />", () => {
 
         const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
         // eslint-disable-next-line dot-notation
-        instance["APIService"].getFeedForUser = spy;
+        instance["context"].getFeedForUser = spy;
 
         await instance.handleClickOlder();
         expect(wrapper.state("loading")).toBeFalsy();
@@ -160,7 +160,7 @@ describe("<UserFeed />", () => {
           .fn()
           .mockImplementation(() => Promise.resolve(expectedEventsArray));
         // eslint-disable-next-line dot-notation
-        instance["APIService"].getFeedForUser = spy;
+        instance["context"].getFeedForUser = spy;
 
         await instance.handleClickOlder();
         expect(spy).toHaveBeenCalledWith(
@@ -181,7 +181,7 @@ describe("<UserFeed />", () => {
 
         const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
         // eslint-disable-next-line dot-notation
-        instance["APIService"].getFeedForUser = spy;
+        instance["context"].getFeedForUser = spy;
 
         await instance.handleClickOlder();
         expect(spy).toHaveBeenCalledWith(
@@ -210,7 +210,7 @@ describe("<UserFeed />", () => {
           return Promise.resolve(sortedEvents);
         });
         // eslint-disable-next-line dot-notation
-        instance["APIService"].getFeedForUser = spy;
+        instance["context"].getFeedForUser = spy;
 
         await instance.handleClickOlder();
 
@@ -235,7 +235,7 @@ describe("<UserFeed />", () => {
 
         const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
         // eslint-disable-next-line dot-notation
-        instance["APIService"].getFeedForUser = spy;
+        instance["context"].getFeedForUser = spy;
 
         await instance.handleClickNewer();
         expect(wrapper.state("loading")).toBeFalsy();
@@ -263,7 +263,7 @@ describe("<UserFeed />", () => {
           .fn()
           .mockImplementation(() => Promise.resolve(expectedEventsArray));
         // eslint-disable-next-line dot-notation
-        instance["APIService"].getFeedForUser = spy;
+        instance["context"].getFeedForUser = spy;
 
         await instance.handleClickNewer();
 
@@ -285,7 +285,7 @@ describe("<UserFeed />", () => {
 
         const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
         // eslint-disable-next-line dot-notation
-        instance["APIService"].getFeedForUser = spy;
+        instance["context"].getFeedForUser = spy;
 
         await instance.handleClickNewer();
         expect(wrapper.state("loading")).toBeFalsy();
@@ -307,7 +307,7 @@ describe("<UserFeed />", () => {
           return Promise.resolve(sortedEvents);
         });
         // eslint-disable-next-line dot-notation
-        instance["APIService"].getFeedForUser = spy;
+        instance["context"].getFeedForUser = spy;
 
         await instance.handleClickNewer();
 
