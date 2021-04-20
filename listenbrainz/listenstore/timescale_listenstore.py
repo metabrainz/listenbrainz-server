@@ -342,9 +342,10 @@ class TimescaleListenStore(ListenStore):
             while True:
                 passes += 1
 
-                # On shit valve. I'm keeping it here for the time being. :)
-                if passes == 25:
+                # Oh shit valve. I'm keeping it here for the time being. :)
+                if passes == 10:
                     done = True
+                    break
 
                 curs = connection.execute(sqlalchemy.text(query), user_names=tuple(user_names),
                                           from_ts=from_ts, to_ts=to_ts, limit=limit)
@@ -359,11 +360,9 @@ class TimescaleListenStore(ListenStore):
                             done = True
                             break
 
-#                        self.log.warning("max ts check: %d > %d" % (to_ts, max_user_ts + 1))
-#                        if to_ts > max_user_ts + 1:
-#                            self.log.warning("max ts out of bounds")
-#                            done = True
-#                            break
+                        if to_ts > int(time.time()) + ListenStore.MAX_FUTURE_SECONDS:
+                            done = True
+                            break
 
                         if to_dynamic:
                             from_ts += window_size - 1
