@@ -80,18 +80,20 @@ class TimescaleListenStore(ListenStore):
             user_name: the user to get listens for
         """
 
-        count = int(cache.get(REDIS_USER_LISTEN_COUNT + user_name, decode=False) or 0)
-        if count:
-            return int(count)
+        count = cache.get(REDIS_USER_LISTEN_COUNT + user_name, decode=False)
+        if count is None:
+            return self.reset_listen_count(user_name)
         else:
-            return 0
+            return int(count)
 
     def reset_listen_count(self, user_name):
         """ Reset the listen count of a user from cache and put in a new calculated value.
+            returns the re-calculated listen count.
 
             Args:
                 user_name: the musicbrainz id of user whose listen count needs to be reset
         """
+        self.log.warning("Recalculate listen counts for %s" % user_name)
         query = "SELECT SUM(count) FROM listen_count_30day WHERE user_name = :user_name"
         try:
             with timescale.engine.connect() as connection:
@@ -107,6 +109,7 @@ class TimescaleListenStore(ListenStore):
 
         # put this value into brainzutils cache without an expiry time
         cache.set(REDIS_USER_LISTEN_COUNT + user_name, count, time=0, encode=False)
+        return count
 
     def update_timestamps_for_user(self, user_name, min_ts, max_ts):
         """
