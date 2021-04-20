@@ -93,7 +93,7 @@ class TimescaleListenStore(ListenStore):
             Args:
                 user_name: the musicbrainz id of user whose listen count needs to be reset
         """
-        self.log.warning("Recalculate listen counts for %s" % user_name)
+        self.log.info("Recalculate listen counts for %s" % user_name)  # intended for production monitoring
         query = "SELECT SUM(count) FROM listen_count_30day WHERE user_name = :user_name"
         try:
             with timescale.engine.connect() as connection:
@@ -143,7 +143,7 @@ class TimescaleListenStore(ListenStore):
             t0 = time.time()
             min_ts = self._select_single_timestamp(True, user_name)
             max_ts = self._select_single_timestamp(False, user_name)
-            self.log.info("ts fetch: %.2f" % (time.time() - t0))
+            self.log.info("ts fetch: %.2f" % (time.time() - t0))  # intended for production monitoring
 
             if min_ts and max_ts:
                 cache.set(REDIS_USER_TIMESTAMPS + user_name, "%d,%d" % (min_ts, max_ts), time=0)

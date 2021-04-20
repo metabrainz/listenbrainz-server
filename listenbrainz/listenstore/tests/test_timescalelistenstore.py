@@ -273,7 +273,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
 
         shutil.rmtree(temp_dir)
 
-    def test_000_time_range_full_dumps(self):
+    def test_time_range_full_dumps(self):
         base = 1500000000
         listens = generate_data(1, self.testuser_name, base + 1, 5)  # generate 5 listens with ts 1-5
         self.logstore.insert(listens)
@@ -412,7 +412,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         with self.assertRaises(SchemaMismatchException):
             self.logstore.import_listens_dump(archive_path)
 
-    def test_000_listen_counts_in_cache(self):
+    def test_listen_counts_in_cache(self):
         uid = random.randint(2000, 1 << 31)
         testuser = db_user.get_or_create(uid, "user_%d" % uid)
         testuser_name = testuser['musicbrainz_id']
