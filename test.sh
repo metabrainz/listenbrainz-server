@@ -111,7 +111,7 @@ function unit_dcdown {
 function build_frontend_containers {
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                build listenbrainz frontend_tester
+                build frontend_tester
 }
 
 function update_snapshots {

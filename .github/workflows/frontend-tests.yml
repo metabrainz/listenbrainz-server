@@ -25,6 +25,9 @@ jobs:
     - uses: satackey/action-docker-layer-caching@v0.0.11
       continue-on-error: true
 
+    - name: Build frontend tests
+      run: ./test.sh fe -b
+
     - name: Run frontend tests
       run: ./test.sh fe
 
