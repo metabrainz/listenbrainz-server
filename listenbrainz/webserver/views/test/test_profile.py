@@ -177,14 +177,13 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
             user_id=self.user['id'],
             musicbrainz_id=self.user['musicbrainz_id'],
             musicbrainz_row_id=self.user['musicbrainz_row_id'],
-            user_token='old-token',
+            access_token='old-token',
             token_expires=expires, # token hasn't expired
             refresh_token='old-refresh-token',
             last_updated=None,
-            record_listens=True,
             error_message=None,
             latest_listened_at=None,
-            permission='user-read-recently-played some-other-permission',
+            scopes=['user-read-recently-played', 'some-other-permission']
         )
         r = self.client.post(url_for('profile.refresh_spotify_token'))
         self.assert200(r)
@@ -206,17 +205,16 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
             user_id=self.user['id'],
             musicbrainz_id=self.user['musicbrainz_id'],
             musicbrainz_row_id=self.user['musicbrainz_row_id'],
-            user_token='old-token',
+            access_token='old-token',
             token_expires=expires, # token has expired
             refresh_token='old-refresh-token',
             last_updated=None,
-            record_listens=True,
             error_message=None,
             latest_listened_at=None,
-            permission='user-read-recently-played',
+            scopes=['user-read-recently-played']
         )
         mock_get_user.return_value = spotify_user
-        spotify_user.user_token = 'new-token'
+        spotify_user.access_token = 'new-token'
         mock_refresh_user_token.return_value = spotify_user
         r = self.client.post(url_for('profile.refresh_spotify_token'))
         self.assert200(r)
@@ -225,7 +223,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
             'id': self.user['id'],
             'musicbrainz_id': self.user['musicbrainz_id'],
             'user_token': 'new-token',
-            'permission': 'user-read-recently-played',
+            'scopes': ['user-read-recently-played'],
         })
 
     @patch('listenbrainz.domain.spotify.get_user')
@@ -238,14 +236,13 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
             user_id=self.user['id'],
             musicbrainz_id=self.user['musicbrainz_id'],
             musicbrainz_row_id=self.user['musicbrainz_row_id'],
-            user_token='old-token',
+            access_token='old-token',
             token_expires=expires,  # token has expired
             refresh_token='old-refresh-token',
             last_updated=None,
-            record_listens=True,
             error_message=None,
             latest_listened_at=None,
-            permission='user-read-recently-played',
+            scopes=['user-read-recently-played']
         )
         mock_get_user.return_value = spotify_user
         mock_refresh_user_token.side_effect = spotify.SpotifyInvalidGrantError

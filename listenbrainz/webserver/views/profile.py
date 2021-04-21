@@ -323,6 +323,6 @@ def refresh_spotify_token():
     return jsonify({
         'id': current_user.id,
         'musicbrainz_id': current_user.musicbrainz_id,
-        'user_token': spotify_user.user_token,
+        'user_token': spotify_user.access_token,
         'permission': spotify_user.permission,
     })

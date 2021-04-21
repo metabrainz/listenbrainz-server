@@ -17,7 +17,7 @@ class SpotifyDomainTestCase(ServerTestCase):
                 user_id=1,
                 musicbrainz_id='spotify_user',
                 musicbrainz_row_id=312,
-                user_token='old-token',
+                access_token='old-token',
                 token_expires=int(time.time()),
                 refresh_token='old-refresh-token',
                 last_updated=None,
@@ -136,7 +136,7 @@ class SpotifyDomainTestCase(ServerTestCase):
         self.assertIsInstance(user, spotify.Spotify)
         self.assertEqual(user.user_id, 1)
         self.assertEqual(user.musicbrainz_id, 'spotify_user')
-        self.assertEqual(user.user_token, 'token-token-token')
+        self.assertEqual(user.access_token, 'token-token-token')
         self.assertEqual(user.token_expires, t)
         self.assertEqual(user.last_updated, None)
         self.assertEqual(user.record_listens, True)

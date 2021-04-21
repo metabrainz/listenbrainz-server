@@ -27,23 +27,21 @@ OAUTH_TOKEN_URL = 'https://accounts.spotify.com/api/token'
 
 
 class Spotify:
-    def __init__(self, user_id, musicbrainz_id, musicbrainz_row_id, user_token, token_expires,
-                 refresh_token, last_updated, record_listens, error_message, latest_listened_at,
-                 permission):
+    def __init__(self, user_id, musicbrainz_id, musicbrainz_row_id, access_token, token_expires,
+                 refresh_token, last_updated, error_message, latest_listened_at, scopes):
         self.user_id = user_id
-        self.user_token = user_token
+        self.access_token = access_token
         self.token_expires = token_expires
         self.refresh_token = refresh_token
         self.last_updated = last_updated
-        self.record_listens = record_listens
         self.error_message = error_message
         self.musicbrainz_id = musicbrainz_id
         self.latest_listened_at = latest_listened_at
         self.musicbrainz_row_id = musicbrainz_row_id
-        self.permission = permission
+        self.scopes = scopes
 
     def get_spotipy_client(self):
-        return spotipy.Spotify(auth=self.user_token)
+        return spotipy.Spotify(auth=self.access_token)
 
     @property
     def last_updated_iso(self):
@@ -67,16 +65,15 @@ class Spotify:
     def from_dbrow(row):
         return Spotify(
            user_id=row['user_id'],
-           user_token=row['user_token'],
+           access_token=row['user_token'],
            token_expires=row['token_expires'],
            refresh_token=row['refresh_token'],
            last_updated=row['last_updated'],
-           record_listens=row['record_listens'],
            error_message=row['error_message'],
            musicbrainz_id=row['musicbrainz_id'],
            musicbrainz_row_id=row['musicbrainz_row_id'],
            latest_listened_at=row['latest_listened_at'],
-           permission=row['permission'],
+           scopes=row['scopes'],
         )
 
     def __str__(self):
@@ -273,8 +270,8 @@ def get_user_dict(user_id):
     if not user:
         return {}
     return {
-        'access_token': user.user_token,
-        'permission': user.permission,
+        'access_token': user.access_token,
+        'permission': user.scopes,
     }
 
 

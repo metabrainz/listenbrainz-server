@@ -6,21 +6,21 @@ import sqlalchemy
 import listenbrainz.db.external_service_oauth as db_oauth
 
 
-def create_spotify(user_id, user_token, refresh_token, token_expires_ts, record_listens, permission):
+def create_spotify(user_id, access_token, refresh_token, token_expires_ts, record_listens, scopes):
     """ Add a row to the spotify table for specified user with corresponding
     Spotify tokens and information.
 
     Args:
         user_id (int): the ListenBrainz row ID of the user
-        user_token (str): the Spotify access token used to access the user's Spotify listens.
+        access_token (str): the Spotify access token used to access the user's Spotify listens.
         refresh_token (str): the token used to refresh Spotify access tokens once they expire
         token_expires_ts (int): the unix timestamp at which the user_token will expire
         record_listens (bool): True if user wishes to import listens from Spotify, False otherwise
-        permission (list): list of the scope of the permissions granted to us
+        scopes (list): list of the scope of the permissions granted to us
     """
-    db_oauth.save_token(user_id=user_id, service=ExternalService.SPOTIFY, access_token=user_token,
+    db_oauth.save_token(user_id=user_id, service=ExternalService.SPOTIFY, access_token=access_token,
                         refresh_token=refresh_token, token_expires_ts=token_expires_ts,
-                        record_listens=record_listens, scopes=permission)
+                        record_listens=record_listens, scopes=scopes)
 
 
 def delete_spotify(user_id):

@@ -22,11 +22,11 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
         self.user = db_user.get(1)
         db_spotify.create_spotify(
             user_id=self.user['id'],
-            user_token='token',
+            access_token='token',
             refresh_token='refresh_token',
             token_expires_ts=int(time.time()),
             record_listens=True,
-            permission='user-read-recently-played',
+            scopes=['user-read-recently-played']
         )
 
 
@@ -34,11 +34,11 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
         db_user.create(2, 'spotify')
         db_spotify.create_spotify(
             user_id=2,
-            user_token='token',
+            access_token='token',
             refresh_token='refresh_token',
             token_expires_ts=int(time.time()),
             record_listens=True,
-            permission='user-read-recently-played',
+            scopes=['user-read-recently-played']
         )
         token = db_spotify.get_token_for_user(2)
         self.assertEqual(token, 'token')
@@ -80,7 +80,7 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
             expires_at=int(time.time()),
         )
         spotify_user = db_spotify.get_user(self.user['id'])
-        self.assertEqual(spotify_user['user_token'], 'testtoken')
+        self.assertEqual(spotify_user['access_token'], 'testtoken')
         self.assertEqual(spotify_user['refresh_token'], 'refreshtesttoken')
 
     def test_update_latest_listened_at(self):
@@ -95,11 +95,11 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
         db_user.create(2, 'newspotifyuser')
         db_spotify.create_spotify(
             user_id=2,
-            user_token='token',
+            access_token='token',
             refresh_token='refresh_token',
             token_expires_ts=int(time.time()),
             record_listens=True,
-            permission='user-read-recently-played',
+            scopes=['user-read-recently-played']
         )
         users = db_spotify.get_active_users_to_process()
         self.assertEqual(len(users), 2)
@@ -112,11 +112,11 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
         db_user.create(3, 'newnewspotifyuser')
         db_spotify.create_spotify(
             user_id=3,
-            user_token='tokentoken',
+            access_token='tokentoken',
             refresh_token='newrefresh_token',
             token_expires_ts=int(time.time()),
             record_listens=True,
-            permission='user-read-recently-played',
+            scopes=['user-read-recently-played']
         )
         t = int(time.time())
         db_spotify.update_latest_listened_at(2, t + 20)
@@ -138,11 +138,9 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(user['user_id'], self.user['id'])
         self.assertEqual(user['musicbrainz_id'], self.user['musicbrainz_id'])
         self.assertEqual(user['musicbrainz_row_id'], self.user['musicbrainz_row_id'])
-        self.assertEqual(user['user_token'], 'token')
+        self.assertEqual(user['access_token'], 'token')
         self.assertEqual(user['refresh_token'], 'refresh_token')
         self.assertIn('last_updated', user)
         self.assertIn('latest_listened_at', user)
         self.assertIn('token_expires', user)
         self.assertIn('token_expired', user)
-        self.assertIn('record_listens', user)
-        self.assertIn('error_message', user)
