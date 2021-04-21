@@ -66,7 +66,7 @@ def update_last_updated(user_id, success=True):
     if success:
         with db.engine.connect() as connection:
             connection.execute(sqlalchemy.text("""
-                UPDATE external_service_oauth
+                UPDATE listens_importer
                     SET last_updated = now()
                     , error_message = NULL
                 WHERE user_id = :user_id
@@ -133,7 +133,7 @@ def get_active_users_to_process():
                 ON "user".id = external_service_oauth.user_id
               JOIN listens_importer
                 ON listens_importer.external_service_oauth_id = external_service_oauth.id
-              WHERE service = 'spotify'
+              WHERE external_service_oauth.service = 'spotify'
           ORDER BY latest_listened_at DESC NULLS LAST
         """))
         return [dict(row) for row in result.fetchall()]

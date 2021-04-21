@@ -15,7 +15,6 @@ from unittest.mock import MagicMock
 
 class SpotifyDatabaseTestCase(DatabaseTestCase):
 
-
     def setUp(self):
         super(SpotifyDatabaseTestCase, self).setUp()
         db_user.create(1, 'testspotifyuser')
@@ -28,7 +27,6 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
             record_listens=True,
             scopes=['user-read-recently-played']
         )
-
 
     def test_create_spotify(self):
         db_user.create(2, 'spotify')
