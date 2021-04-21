@@ -24,9 +24,9 @@ ALTER TABLE spotify_auth
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
-ALTER TABLE follow_list
-    ADD CONSTRAINT follow_list_user_id_foreign_key
-    FOREIGN KEY (creator)
+ALTER TABLE external_service_oauth
+    ADD CONSTRAINT external_service_oauth_user_id_foreign_key
+    FOREIGN KEY (user_id)
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
@@ -54,8 +54,21 @@ ALTER TABLE recommendation.recommender_session
     REFERENCES recommendation.recommender (id)
     ON DELETE CASCADE;
 
+ALTER TABLE user_timeline_event
+    ADD CONSTRAINT user_timeline_event_user_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
 ALTER TABLE recording_feedback
     ADD CONSTRAINT recording_feedback_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
+-- NOTE: If the foreign keys for the similar_user table changes, update the code in listenbrainz/db/similar_users.py !
+ALTER TABLE recommendation.similar_user
+    ADD CONSTRAINT similar_user_user_id_foreign_key
     FOREIGN KEY (user_id)
     REFERENCES "user" (id)
     ON DELETE CASCADE;

@@ -121,7 +121,7 @@ def dataframes(days):
     """ Invoke script responsible for pre-processing data.
     """
     from listenbrainz_spark.recommendations.recording import create_dataframes
-    _ = create_dataframes.main(train_model_window=days)
+    _ = create_dataframes.main(train_model_window=days, job_type="recommendations")
 
 
 def parse_list(ctx, args):

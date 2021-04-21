@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { get, findIndex, omit, isNil, has, defaultsDeep } from "lodash";
+import { get, findIndex, omit, isNil, has } from "lodash";
 import * as io from "socket.io-client";
 
 import { ActionMeta, InputActionMeta, ValueType } from "react-select";
@@ -14,13 +14,16 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { faSpotify } from "@fortawesome/free-brands-svg-icons";
 
-import { AlertList } from "react-bs-notifier";
 import AsyncSelect from "react-select/async";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { ReactSortable } from "react-sortablejs";
 import debounceAsync from "debounce-async";
 import { sanitize } from "dompurify";
+import {
+  withAlertNotifications,
+  WithAlertNotificationsInjectedProps,
+} from "../AlertNotificationsHOC";
 import APIService from "../APIService";
 import SpotifyAPIService from "../SpotifyAPIService";
 import BrainzPlayer from "../BrainzPlayer";
@@ -41,13 +44,14 @@ import {
   listenToJSPFTrack,
 } from "./utils";
 
-export interface PlaylistPageProps {
+export type PlaylistPageProps = {
   apiUrl: string;
+  labsApiUrl: string;
   playlist: JSPFObject;
   spotify: SpotifyUser;
   currentUser?: ListenBrainzUser;
   webSocketsServerUrl: string;
-}
+} & WithAlertNotificationsInjectedProps;
 
 export interface PlaylistPageState {
   alerts: Array<Alert>;
@@ -186,7 +190,7 @@ export default class PlaylistPage extends React.Component<
         return;
       }
       const { label, value: selectedRecording } = track as OptionType;
-      const { currentUser } = this.props;
+      const { currentUser, newAlert } = this.props;
       const { playlist } = this.state;
       if (!currentUser?.auth_token) {
         this.alertMustBeLoggedIn();
@@ -203,7 +207,7 @@ export default class PlaylistPage extends React.Component<
           getPlaylistId(playlist),
           [jspfTrack]
         );
-        this.newAlert("success", "Added track", `Added track ${label}`);
+        newAlert("success", "Added track", `Added track ${label}`);
         /* Deactivating feedback until the feedback system works with MBIDs instead of MSIDs */
         /* const recordingFeedbackMap = await this.loadFeedback([
           selectedRecording.recording_mbid,
@@ -227,16 +231,17 @@ export default class PlaylistPage extends React.Component<
 
   searchForTrack = async (inputValue: string): Promise<OptionType[]> => {
     try {
-      const response = await fetch(
-        "https://datasets.listenbrainz.org/acrm-search/json",
-        {
-          method: "POST",
-          body: JSON.stringify([{ query: inputValue }]),
-          headers: {
-            "Content-type": "application/json; charset=UTF-8",
-          },
-        }
-      );
+      const { labsApiUrl } = this.props;
+      const recordingSearchURI = `${labsApiUrl}${
+        labsApiUrl.endsWith("/") ? "" : "/"
+      }recording-search/json`;
+      const response = await fetch(recordingSearchURI, {
+        method: "POST",
+        body: JSON.stringify([{ query: inputValue }]),
+        headers: {
+          "Content-type": "application/json; charset=UTF-8",
+        },
+      });
       // Converting to JSON
       const parsedResponse: ACRMSearchResult[] = await response.json();
       // Format the received items to a react-select option
@@ -254,14 +259,14 @@ export default class PlaylistPage extends React.Component<
   };
 
   copyPlaylist = async (): Promise<void> => {
-    const { currentUser } = this.props;
+    const { currentUser, newAlert } = this.props;
     const { playlist } = this.state;
     if (!currentUser?.auth_token) {
       this.alertMustBeLoggedIn();
       return;
     }
     if (!playlist) {
-      this.newAlert("danger", "Error", "No playlist to copy");
+      newAlert("danger", "Error", "No playlist to copy");
       return;
     }
     try {
@@ -269,7 +274,7 @@ export default class PlaylistPage extends React.Component<
         currentUser.auth_token,
         getPlaylistId(playlist)
       );
-      this.newAlert(
+      newAlert(
         "success",
         "Duplicated playlist",
         <>
@@ -283,7 +288,7 @@ export default class PlaylistPage extends React.Component<
   };
 
   deletePlaylist = async (): Promise<void> => {
-    const { currentUser } = this.props;
+    const { currentUser, newAlert } = this.props;
     const { playlist } = this.state;
     if (!currentUser?.auth_token) {
       this.alertMustBeLoggedIn();
@@ -299,7 +304,7 @@ export default class PlaylistPage extends React.Component<
         getPlaylistId(playlist)
       );
       // redirect
-      this.newAlert(
+      newAlert(
         "success",
         "Deleted playlist",
         `Deleted playlist ${playlist.title}`
@@ -335,41 +340,8 @@ export default class PlaylistPage extends React.Component<
     return false;
   };
 
-  newAlert = (
-    type: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ): void => {
-    const newAlert: Alert = {
-      id: new Date().getTime(),
-      type,
-      headline: title,
-      message,
-    };
-
-    this.setState((prevState) => {
-      return {
-        alerts: [...prevState.alerts, newAlert],
-      };
-    });
-  };
-
-  onAlertDismissed = (alert: Alert): void => {
-    const { alerts } = this.state;
-
-    // find the index of the alert that was dismissed
-    const idx = alerts.indexOf(alert);
-
-    if (idx >= 0) {
-      this.setState({
-        // remove the alert from the array
-        alerts: [...alerts.slice(0, idx), ...alerts.slice(idx + 1)],
-      });
-    }
-  };
-
   getFeedback = async (mbids?: string[]): Promise<FeedbackResponse[]> => {
-    const { currentUser } = this.props;
+    const { currentUser, newAlert } = this.props;
     const { playlist } = this.state;
     const { track: tracks } = playlist;
     if (currentUser && tracks) {
@@ -381,7 +353,7 @@ export default class PlaylistPage extends React.Component<
         );
         return data.feedback;
       } catch (error) {
-        this.newAlert(
+        newAlert(
           "danger",
           "Playback error",
           typeof error === "object" ? error.message : error
@@ -405,7 +377,7 @@ export default class PlaylistPage extends React.Component<
 
   updateFeedback = async (recordingMbid: string, score: ListenFeedBack) => {
     const { recordingFeedbackMap } = this.state;
-    const { currentUser } = this.props;
+    const { currentUser, newAlert } = this.props;
     if (currentUser?.auth_token) {
       try {
         const status = await this.APIService.submitFeedback(
@@ -419,11 +391,7 @@ export default class PlaylistPage extends React.Component<
           this.setState({ recordingFeedbackMap: newRecordingFeedbackMap });
         }
       } catch (error) {
-        this.newAlert(
-          "danger",
-          "Error while submitting feedback",
-          error.message
-        );
+        newAlert("danger", "Error while submitting feedback", error.message);
       }
     }
   };
@@ -537,8 +505,9 @@ export default class PlaylistPage extends React.Component<
     collaborators: string[],
     id?: string
   ) => {
+    const { newAlert } = this.props;
     if (!id) {
-      this.newAlert(
+      newAlert(
         "danger",
         "Error",
         "Trying to edit a playlist without an id. This shouldn't have happened, please contact us with the error message."
@@ -567,41 +536,36 @@ export default class PlaylistPage extends React.Component<
       return;
     }
     try {
-      // Replace keys that have changed but keep all other attributres
-      const editedPlaylist: JSPFPlaylist = defaultsDeep(
-        {
-          annotation: description,
-          title: name,
-          extension: {
-            [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
-              public: isPublic,
-              collaborators,
-            },
+      const editedPlaylist: JSPFPlaylist = {
+        ...playlist,
+        annotation: description,
+        title: name,
+        extension: {
+          [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
+            public: isPublic,
+            collaborators,
           },
         },
-        playlist
-      );
+      };
 
       await this.APIService.editPlaylist(currentUser.auth_token, id, {
         playlist: omit(editedPlaylist, "track") as JSPFPlaylist,
       });
       this.setState({ playlist: editedPlaylist }, this.emitPlaylistChanged);
-      this.newAlert("success", "Saved playlist", "");
+      newAlert("success", "Saved playlist", "");
     } catch (error) {
       this.handleError(error);
     }
   };
 
   alertMustBeLoggedIn = () => {
-    this.newAlert(
-      "danger",
-      "Error",
-      "You must be logged in for this operation"
-    );
+    const { newAlert } = this.props;
+    newAlert("danger", "Error", "You must be logged in for this operation");
   };
 
   alertNotAuthorized = () => {
-    this.newAlert(
+    const { newAlert } = this.props;
+    newAlert(
       "danger",
       "Not allowed",
       "You are not authorized to modify this playlist"
@@ -609,16 +573,18 @@ export default class PlaylistPage extends React.Component<
   };
 
   handleError = (error: any) => {
-    this.newAlert("danger", "Error", error.message);
+    const { newAlert } = this.props;
+    newAlert("danger", "Error", error.message);
   };
 
   exportToSpotify = async () => {
+    const { newAlert } = this.props;
     const { playlist } = this.state;
     if (!playlist || !this.SpotifyAPIService) {
       return;
     }
     if (!playlist.track.length) {
-      this.newAlert(
+      newAlert(
         "warning",
         "Empty playlist",
         "Why don't you fill up the playlist a bit before trying to export it?"
@@ -651,7 +617,7 @@ export default class PlaylistPage extends React.Component<
         spotifyURIs
       );
       const playlistLink = `https://open.spotify.com/playlist/${newPlaylist.id}`;
-      this.newAlert(
+      newAlert(
         "success",
         "Playlist exported to Spotify",
         <>
@@ -680,7 +646,7 @@ export default class PlaylistPage extends React.Component<
         error.error?.status === 403 &&
         error.error?.message === "Invalid token scopes."
       ) {
-        this.newAlert(
+        newAlert(
           "danger",
           "Spotify permissions missing",
           <>
@@ -717,7 +683,7 @@ export default class PlaylistPage extends React.Component<
       searchInputValue,
       cachedSearchResults,
     } = this.state;
-    const { spotify, currentUser, apiUrl } = this.props;
+    const { spotify, currentUser, apiUrl, newAlert } = this.props;
     const { track: tracks } = playlist;
     const hasRightToEdit = this.hasRightToEdit();
     const isOwner = this.isOwner();
@@ -730,13 +696,6 @@ export default class PlaylistPage extends React.Component<
           isLoading={loading}
           loaderText="Exporting playlist to Spotify"
           className="full-page-loader"
-        />
-        <AlertList
-          position="bottom-right"
-          alerts={alerts}
-          timeout={15000}
-          dismissTitle="Dismiss"
-          onDismiss={this.onAlertDismissed}
         />
         <div className="row">
           <div id="playlist" className="col-md-8">
@@ -906,7 +865,7 @@ export default class PlaylistPage extends React.Component<
                         playTrack={this.playTrack}
                         removeTrackFromPlaylist={this.deletePlaylistItem}
                         updateFeedback={this.updateFeedback}
-                        newAlert={this.newAlert}
+                        newAlert={newAlert}
                       />
                     );
                   })}
@@ -964,7 +923,7 @@ export default class PlaylistPage extends React.Component<
               currentListen={currentTrack}
               direction="down"
               listens={tracks}
-              newAlert={this.newAlert}
+              newAlert={newAlert}
               onCurrentListenChange={this.handleCurrentTrackChange}
               ref={this.brainzPlayer}
               spotifyUser={spotify}
@@ -987,16 +946,22 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   const {
     api_url,
+    labs_api_url,
     playlist,
     spotify,
     web_sockets_server_url,
     current_user,
   } = reactProps;
 
+  const PlaylistPageWithAlertNotifications = withAlertNotifications(
+    PlaylistPage
+  );
+
   ReactDOM.render(
     <ErrorBoundary>
-      <PlaylistPage
+      <PlaylistPageWithAlertNotifications
         apiUrl={api_url}
+        labsApiUrl={labs_api_url}
         playlist={playlist}
         spotify={spotify}
         currentUser={current_user}

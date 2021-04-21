@@ -108,7 +108,10 @@ class RequestConsumer:
                 self.request_channel.basic_ack(delivery_tag=method.delivery_tag)
                 break
             except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed) as e:
-                logger.error('RabbitMQ Connection error when acknowledging request: %s', str(e), exc_info=True)
+                if str(e).find("is larger than configured max size") >= 0:
+                    logger.error("Spark attempted to send a message larger than the allowed maximum message size.")
+                else:
+                    logger.error('RabbitMQ Connection error when acknowledging request: %s', str(e), exc_info=True)
                 time.sleep(1)
                 self.rabbitmq.close()
                 self.connect_to_rabbitmq()

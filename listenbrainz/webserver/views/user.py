@@ -219,9 +219,6 @@ def reports(user_name: str):
 def playlists(user_name: str):
     """ Show user playlists """
     
-    if not current_app.config.get("FEATURE_PLAYLIST", False):
-        raise NotFound()
-    
     offset = request.args.get('offset', 0)
     try:
         offset = int(offset)
@@ -282,9 +279,6 @@ def playlists(user_name: str):
 def recommendation_playlists(user_name: str):
     """ Show playlists created for user """
     
-    if not current_app.config.get("FEATURE_PLAYLIST", False):
-        raise NotFound()
-    
     offset = request.args.get('offset', 0)
     try:
         offset = int(offset)
@@ -340,9 +334,6 @@ def recommendation_playlists(user_name: str):
 def collaborations(user_name: str):
     """ Show playlists a user collaborates on """
     
-    if not current_app.config.get("FEATURE_PLAYLIST", False):
-        raise NotFound()
-    
     offset = request.args.get('offset', 0)
     try:
         offset = int(offset)
@@ -395,67 +386,6 @@ def collaborations(user_name: str):
         props=ujson.dumps(props),
         user=user
     )
-
-
-@user_bp.route('/<user_name>/follow', methods=['OPTIONS', 'POST'])
-@login_required
-def follow_user(user_name: str):
-    user = _get_user(user_name)
-
-    if user.musicbrainz_id == current_user.musicbrainz_id:
-        raise APIBadRequest("Whoops, cannot follow yourself.")
-
-    if db_user_relationship.is_following_user(current_user.id, user.id):
-        raise APIBadRequest(f"{current_user.musicbrainz_id} is already following user {user.musicbrainz_id}")
-
-    try:
-        db_user_relationship.insert(current_user.id, user.id, 'follow')
-    except Exception:
-        current_app.logger.critical("Error while trying to insert a relationship", exc_info=True)
-        raise APIInternalServerError("Something went wrong, please try again later")
-
-    return jsonify({"status": 200, "message": "Success!"})
-
-
-@user_bp.route('/<user_name>/unfollow', methods=['OPTIONS', 'POST'])
-@login_required
-def unfollow_user(user_name: str):
-    user = _get_user(user_name)
-    if not db_user_relationship.is_following_user(current_user.id, user.id):
-        raise APIBadRequest(f"{current_user.musicbrainz_id} is not following user {user.musicbrainz_id}")
-    try:
-        db_user_relationship.delete(current_user.id, user.id, 'follow')
-    except Exception:
-        current_app.logger.critical("Error while trying to delete a relationship", exc_info=True)
-        raise APIInternalServerError("Something went wrong, please try again later")
-
-    return jsonify({"status": 200, "message": "Success!"})
-
-
-@user_bp.route('/<user_name>/followers')
-@login_required
-def get_followers(user_name: str):
-    user = _get_user(user_name)
-    try:
-        followers = db_user_relationship.get_followers_of_user(user.id)
-    except Exception:
-        current_app.logger.critical("Error while trying to fetch followers", exc_info=True)
-        raise APIInternalServerError("Something went wrong, please try again later")
-
-    return jsonify({"followers": followers, "user": user.musicbrainz_id})
-
-
-@user_bp.route('/<user_name>/following')
-@login_required
-def get_following(user_name: str):
-    user = _get_user(user_name)
-    try:
-        following = db_user_relationship.get_following_for_user(user.id)
-    except Exception:
-        current_app.logger.critical("Error while trying to fetch following", exc_info=True)
-        raise APIInternalServerError("Something went wrong, please try again later")
-
-    return jsonify({"following": following, "user": user.musicbrainz_id})
 
 
 def _get_user(user_name):

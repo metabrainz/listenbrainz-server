@@ -8,12 +8,6 @@ DB_CONNECT_MB = "dbname=musicbrainz_json_dump user=musicbrainz host={{.Address}}
 {{end}}
 {{end}}
 
-{{if service "pgbouncer-master"}}
-{{with index (service "pgbouncer-master") 0}}
-DB_CONNECT_MSB = "dbname=messybrainz user=messybrainz host={{.Address}} port={{.Port}} password=messybrainz"
-{{end}}
-{{end}}
-
 {{if service "typesense-listenbrainz"}}
 {{with index (service "typesense-listenbrainz") 0}}
 TYPESENSE_HOST = "{{.Address}}"
@@ -27,9 +21,3 @@ TYPESENSE_API_KEY = '''{{template "KEY" "typesense_api_key"}}'''
 
 # For debugging, only fetches a tiny portion of the data if True
 USE_MINIMAL_DATASET = False
-
-# Turn this off during debugging, it makes the test data easier to read
-REMOVE_NON_WORD_CHARS = True  
-
-# Show matches as the algorithms go
-SHOW_MATCHES = False

@@ -19,11 +19,10 @@ SPARK_RESULT_QUEUE = "spark_result"
 # calculate stats on X months data
 STATS_CALCULATION_WINDOW = 1
 
-#LOG_SENTRY = {
-#    'dsn':'',
-#    'environment': 'development',
-#}
-SENTRY_DSN_PUBLIC = ''
+LOG_SENTRY = {
+    'dsn':'',
+    'environment': 'development',
+}
 
 # Model id is made up of two parts.
 # String + UUID

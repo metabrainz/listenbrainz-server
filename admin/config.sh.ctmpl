@@ -28,5 +28,11 @@ RSYNC_FULLEXPORT_HOST="{{template "KEY" "rsync_fullexport_host"}}"
 RSYNC_FULLEXPORT_PORT="{{template "KEY" "rsync_fullexport_port"}}"
 RSYNC_FULLEXPORT_DIR="$FTP_DIR/fullexport"
 RSYNC_INCREMENTAL_DIR="$FTP_DIR/incremental"
+RSYNC_SPARK_DIR="$FTP_DIR/spark"
 RSYNC_FULLEXPORT_KEY='/home/{{template "KEY" "user"}}/.ssh/rsync-listenbrainz-dumps-full'
 RSYNC_INCREMENTAL_KEY='/home/{{template "KEY" "user"}}/.ssh/rsync-listenbrainz-dumps-incremental'
+RSYNC_SPARK_KEY='/home/{{template "KEY" "user"}}/.ssh/rsync-listenbrainz-dumps-spark'
+
+# Check to make sure that this container is the prod cron container, otherwise never rsync anything!
+PROD="{{ (env "DEPLOY_ENV") }}"
+CONTAINER_NAME="{{ (env "CONTAINER_NAME") }}"

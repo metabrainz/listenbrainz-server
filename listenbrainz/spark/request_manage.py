@@ -9,7 +9,9 @@ from flask import current_app
 from listenbrainz.webserver import create_app
 
 
-QUERIES_JSON_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'request_queries.json')
+QUERIES_JSON_PATH = os.path.join(os.path.dirname(
+    os.path.realpath(__file__)), 'request_queries.json')
+DATAFRAME_JOB_TYPES = ("recommendation_recording", "similar_users")
 
 cli = click.Group()
 
@@ -73,7 +75,8 @@ def send_request_to_spark_cluster(message):
         )
         try:
             channel = rabbitmq_connection.channel()
-            channel.exchange_declare(exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], exchange_type='fanout')
+            channel.exchange_declare(
+                exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], exchange_type='fanout')
             channel.basic_publish(
                 exchange=current_app.config['SPARK_REQUEST_EXCHANGE'],
                 routing_key='',
@@ -83,7 +86,8 @@ def send_request_to_spark_cluster(message):
         except Exception:
             # this is a relatively non critical part of LB for now, so just log the error and
             # move ahead
-            current_app.logger.error('Could not send message to spark cluster: %s', ujson.dumps(message), exc_info=True)
+            current_app.logger.error(
+                'Could not send message to spark cluster: %s', ujson.dumps(message), exc_info=True)
 
 
 @cli.command(name="request_user_stats")
@@ -133,9 +137,11 @@ def request_import_new_full_dump(id_: int):
     """ Send the cluster a request to import a new full data dump
     """
     if id_:
-        send_request_to_spark_cluster(_prepare_query_message('import.dump.full_id', params={'id': id_}))
+        send_request_to_spark_cluster(_prepare_query_message(
+            'import.dump.full_id', params={'id': id_}))
     else:
-        send_request_to_spark_cluster(_prepare_query_message('import.dump.full_newest'))
+        send_request_to_spark_cluster(
+            _prepare_query_message('import.dump.full_newest'))
 
 
 @cli.command(name="request_import_incremental")
@@ -145,20 +151,32 @@ def request_import_new_incremental_dump(id_: int):
     """ Send the cluster a request to import a new incremental data dump
     """
     if id_:
-        send_request_to_spark_cluster(_prepare_query_message('import.dump.incremental_id', params={'id': id_}))
+        send_request_to_spark_cluster(_prepare_query_message(
+            'import.dump.incremental_id', params={'id': id_}))
     else:
-        send_request_to_spark_cluster(_prepare_query_message('import.dump.incremental_newest'))
+        send_request_to_spark_cluster(
+            _prepare_query_message('import.dump.incremental_newest'))
 
 
 @cli.command(name="request_dataframes")
 @click.option("--days", type=int, default=180, help="Request model to be trained on data of given number of days")
-def request_dataframes(days):
+@click.option("--job-type", default="recommendation_recording", help="The type of dataframes to request. 'recommendation_recording' or 'similar_users' are allowed.")
+@click.option("--listens-threshold", type=int, default=0, help="The minimum number of listens a user should have to be included in the dataframes.")
+def request_dataframes(days, job_type, listens_threshold):
     """ Send the cluster a request to create dataframes.
     """
+
+    if job_type not in DATAFRAME_JOB_TYPES:
+        print("job_type must be one of ", DATAFRAME_JOB_TYPES)
+        sys.exit(-1)
+
     params = {
         'train_model_window': days,
+        'job_type': job_type,
+        'minimum_listens_threshold': listens_threshold
     }
-    send_request_to_spark_cluster(_prepare_query_message('cf.recommendations.recording.create_dataframes', params=params))
+    send_request_to_spark_cluster(_prepare_query_message(
+        'cf.recommendations.recording.create_dataframes', params=params))
 
 
 def parse_list(ctx, args):
@@ -181,7 +199,8 @@ def request_model(rank, itr, lmbda, alpha):
         'alpha': alpha,
     }
 
-    send_request_to_spark_cluster(_prepare_query_message('cf.recommendations.recording.train_model', params=params))
+    send_request_to_spark_cluster(_prepare_query_message(
+        'cf.recommendations.recording.train_model', params=params))
 
 
 @cli.command(name='request_candidate_sets')
@@ -201,7 +220,8 @@ def request_candidate_sets(days, top, similar, users, html):
         "users": users,
         "html_flag": html
     }
-    send_request_to_spark_cluster(_prepare_query_message('cf.recommendations.recording.candidate_sets', params=params))
+    send_request_to_spark_cluster(_prepare_query_message(
+        'cf.recommendations.recording.candidate_sets', params=params))
 
 
 @cli.command(name='request_recommendations')
@@ -217,7 +237,8 @@ def request_recommendations(top, similar, users):
         'recommendation_similar_artist_limit': similar,
         'users': users
     }
-    send_request_to_spark_cluster(_prepare_query_message('cf.recommendations.recording.recommendations', params=params))
+    send_request_to_spark_cluster(_prepare_query_message(
+        'cf.recommendations.recording.recommendations', params=params))
 
 
 @cli.command(name='request_import_mapping')
@@ -233,4 +254,17 @@ def request_import_artist_relation():
     """ Send the spark cluster a request to import artist relation.
     """
 
-    send_request_to_spark_cluster(_prepare_query_message('import.artist_relation'))
+    send_request_to_spark_cluster(
+        _prepare_query_message('import.artist_relation'))
+
+
+@cli.command(name='request_similar_users')
+@click.option("--max-num-users", type=int, default=25, help="The maxiumum number of similar users to return for any given user.")
+def request_similar_users(max_num_users):
+    """ Send the cluster a request to generate similar users.
+    """
+    params = {
+        'max_num_users': max_num_users
+    }
+    send_request_to_spark_cluster(_prepare_query_message(
+        'similarity.similar_users', params=params))
