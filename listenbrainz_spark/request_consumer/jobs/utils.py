@@ -12,6 +12,9 @@ from pyspark.sql import Row
 from pyspark.sql.functions import col
 
 
+logger = logging.getLogger(__name__)
+
+
 def get_latest_full_dump() -> Optional[dict]:
     """ Get the latest imported dump information.
 
@@ -57,7 +60,7 @@ def insert_dump_data(dump_id: int, dump_type: str, imported_at: datetime):
     try:
         import_meta_df = read_files_from_HDFS(IMPORT_METADATA)
     except PathNotFoundException:
-        logging.info("Import metadata file not found, creating...")
+        logger.info("Import metadata file not found, creating...")
 
     data = create_dataframe(Row(dump_id, dump_type, imported_at), schema=import_metadata_schema)
     if import_meta_df:

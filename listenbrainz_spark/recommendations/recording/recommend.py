@@ -35,6 +35,9 @@ from pyspark.sql.types import DoubleType
 from pyspark.mllib.recommendation import MatrixFactorizationModel
 
 
+logger = logging.getLogger(__name__)
+
+
 class RecommendationParams:
 
     def __init__(self, recordings_df, model, top_artist_candidate_set_df, similar_artist_candidate_set_df,
@@ -56,10 +59,10 @@ def get_most_recent_model_id():
     try:
         model_metadata = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_MODEL_METADATA)
     except PathNotFoundException as err:
-        logging.error(str(err), exc_info=True)
+        logger.error(str(err), exc_info=True)
         raise
     except FileNotFetchedException as err:
-        logging.error(str(err), exc_info=True)
+        logger.error(str(err), exc_info=True)
         raise
 
     latest_ts = model_metadata.select(func.max('model_created').alias('model_created')).take(1)[0].model_created
@@ -78,7 +81,7 @@ def load_model():
         model = MatrixFactorizationModel.load(listenbrainz_spark.context, dest_path)
         return model
     except Py4JJavaError as err:
-        logging.error('Unable to load model "{}"\n{}\nAborting...'.format(model_id, str(err.java_exception)),
+        logger.error('Unable to load model "{}"\n{}\nAborting...'.format(model_id, str(err.java_exception)),
                                  exc_info=True)
         raise
 
@@ -256,10 +259,12 @@ def check_for_ratings_beyond_range(top_artist_rec_df, similar_artist_rec_df):
     min_rating = min(similar_artist_rec_df.select(func.min('rating').alias('rating')).take(1)[0].rating, min_rating)
 
     if max_rating > 1.0:
-        logging.info('Some ratings are greater than 1 \nMax rating: {}'.format(max_rating))
+        logger.info('Some ratings are greater than 1 \nMax rating: {}'.format(max_rating))
 
     if min_rating < -1.0:
-        logging.info('Some ratings are less than -1 \nMin rating: {}'.format(min_rating))
+        logger.info('Some ratings are less than -1 \nMin rating: {}'.format(min_rating))
+
+    return (max_rating > 1.0, min_rating < -1.0)
 
 
 def create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_user_count, total_time,
@@ -357,27 +362,27 @@ def get_recommendations_for_all(params: RecommendationParams, users):
     try:
         top_artist_candidate_set_rdd = get_candidate_set_rdd_for_user(params.top_artist_candidate_set_df, users)
     except EmptyDataframeExcpetion:
-        logging.error('Top artist candidate set not found for any user.', exc_info=True)
+        logger.error('Top artist candidate set not found for any user.', exc_info=True)
         raise
 
     try:
         similar_artist_candidate_set_rdd = get_candidate_set_rdd_for_user(params.similar_artist_candidate_set_df, users)
     except EmptyDataframeExcpetion:
-        logging.error('Similar artist candidate set not found for any user.', exc_info=True)
+        logger.error('Similar artist candidate set not found for any user.', exc_info=True)
         raise
 
     try:
         top_artist_rec_df = generate_recommendations(top_artist_candidate_set_rdd, params,
                                                      params.recommendation_top_artist_limit)
     except RecommendationsNotGeneratedException:
-        logging.error('Top artist recommendations not generated for any user', exc_info=True)
+        logger.error('Top artist recommendations not generated for any user', exc_info=True)
         raise
 
     try:
         similar_artist_rec_df = generate_recommendations(similar_artist_candidate_set_rdd, params,
                                                          params.recommendation_similar_artist_limit)
     except RecommendationsNotGeneratedException:
-        logging.error('Similar artist recommendations not generated for any user', exc_info=True)
+        logger.error('Similar artist recommendations not generated for any user', exc_info=True)
         raise
 
     return top_artist_rec_df, similar_artist_rec_df
@@ -395,7 +400,7 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
     try:
         listenbrainz_spark.init_spark_session('Recommendations')
     except SparkSessionNotInitializedException as err:
-        logging.error(str(err), exc_info=True)
+        logger.error(str(err), exc_info=True)
         raise
 
     try:
@@ -403,13 +408,13 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
         top_artist_candidate_set_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_TOP_ARTIST_CANDIDATE_SET)
         similar_artist_candidate_set_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_SIMILAR_ARTIST_CANDIDATE_SET)
     except PathNotFoundException as err:
-        logging.error(str(err), exc_info=True)
+        logger.error(str(err), exc_info=True)
         raise
     except FileNotFetchedException as err:
-        logging.error(str(err), exc_info=True)
+        logger.error(str(err), exc_info=True)
         raise
 
-    logging.info('Loading model...')
+    logger.info('Loading model...')
     model = load_model()
 
     # an action must be called to persist data in memory
@@ -430,39 +435,39 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
         # active in the last week. Ideally, top_artist_candidate_set should give the active user count.
         active_user_count = users_df.count()
         users_df.persist()
-        logging.info('Took {:.2f}sec to get active user count'.format(time.monotonic() - ts_initial))
+        logger.info('Took {:.2f}sec to get active user count'.format(time.monotonic() - ts_initial))
     except EmptyDataframeExcpetion as err:
-        logging.error(str(err), exc_info=True)
+        logger.error(str(err), exc_info=True)
         raise
 
-    logging.info('Generating recommendations...')
+    logger.info('Generating recommendations...')
     ts = time.monotonic()
     top_artist_rec_df, similar_artist_rec_df = get_recommendations_for_all(params, users)
-    logging.info('Recommendations generated!')
-    logging.info('Took {:.2f}sec to generate recommendations for all active users'.format(time.monotonic() - ts))
+    logger.info('Recommendations generated!')
+    logger.info('Took {:.2f}sec to generate recommendations for all active users'.format(time.monotonic() - ts))
 
     ts = time.monotonic()
     top_artist_rec_user_count = get_user_count(top_artist_rec_df)
     similar_artist_rec_user_count = get_user_count(similar_artist_rec_df)
-    logging.info('Took {:.2f}sec to get top artist and similar artist user count'.format(time.monotonic() - ts))
+    logger.info('Took {:.2f}sec to get top artist and similar artist user count'.format(time.monotonic() - ts))
 
     ts = time.monotonic()
     check_for_ratings_beyond_range(top_artist_rec_df, similar_artist_rec_df)
 
     top_artist_rec_scaled_df = scale_rating(top_artist_rec_df)
     similar_artist_rec_scaled_df = scale_rating(similar_artist_rec_df)
-    logging.info('Took {:.2f}sec to scale the ratings'.format(time.monotonic() - ts))
+    logger.info('Took {:.2f}sec to scale the ratings'.format(time.monotonic() - ts))
 
     ts = time.monotonic()
     top_artist_rec_mbid_df = get_recording_mbids(params, top_artist_rec_scaled_df, users_df)
     similar_artist_rec_mbid_df = get_recording_mbids(params, similar_artist_rec_scaled_df, users_df)
-    logging.info('Took {:.2f}sec to get mbids corresponding to recording ids'.format(time.monotonic() - ts))
+    logger.info('Took {:.2f}sec to get mbids corresponding to recording ids'.format(time.monotonic() - ts))
 
     # persisted data must be cleared from memory after usage to avoid OOM
     recordings_df.unpersist()
 
     total_time = time.monotonic() - ts_initial
-    logging.info('Total time: {:.2f}sec'.format(total_time))
+    logger.info('Total time: {:.2f}sec'.format(total_time))
 
     result = create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_user_count, total_time,
                              top_artist_rec_user_count, similar_artist_rec_user_count)

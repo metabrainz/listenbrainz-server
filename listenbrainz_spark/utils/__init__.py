@@ -19,6 +19,9 @@ from listenbrainz_spark.exceptions import (DataFrameNotAppendedException,
                                            PathNotFoundException,
                                            ViewNotRegisteredException)
 
+
+logger = logging.getLogger(__name__)
+
 # A typical listen is of the form:
 # {
 #   "artist_mbids": [],
@@ -52,7 +55,7 @@ def append(df, dest_path):
         raise DataFrameNotAppendedException(err.java_exception, df.schema)
 
 
-def init_rabbitmq(username, password, host, port, vhost, log=logging.error, heartbeat=None):
+def init_rabbitmq(username, password, host, port, vhost, log=logger.error, heartbeat=None):
     while True:
         try:
             credentials = pika.PlainCredentials(username, password)
@@ -143,13 +146,13 @@ def get_listens(from_date, to_date, dest_path):
             month = read_files_from_HDFS('{}/{}/{}.parquet'.format(dest_path, from_date.year, from_date.month))
             df = df.union(month) if df else month
         except PathNotFoundException as err:
-            logging.debug('{}\nFetching file for next date...'.format(err))
+            logger.debug('{}\nFetching file for next date...'.format(err))
         # go to the next month of from_date
         from_date = stats.offset_months(date=from_date, months=1, shift_backwards=False)
         # shift to the first of the month
         from_date = stats.replace_days(from_date, 1)
     if not df:
-        logging.error('Listening history missing form HDFS')
+        logger.error('Listening history missing form HDFS')
         raise HDFSException("Listening history missing from HDFS")
     return df
 

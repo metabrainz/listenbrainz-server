@@ -25,6 +25,9 @@ time_range_schema = StructType((StructField('time_range', StringType()), StructF
     'start', TimestampType()), StructField('end', TimestampType())))
 
 
+logger = logging.getLogger(__name__)
+
+
 def get_listening_activity():
     """ Calculate number of listens for each user in time ranges given in the 'time_range' table """
     # Calculate the number of listens in each time range for each user except the time ranges which have zero listens.
@@ -67,7 +70,7 @@ def get_listening_activity():
 
 def get_listening_activity_week() -> Iterator[Optional[UserListeningActivityStatMessage]]:
     """ Calculate number of listens for an user on each day of the past and current week. """
-    logging.debug("Calculating listening_activity_week")
+    logger.debug("Calculating listening_activity_week")
 
     to_date = get_latest_listen_ts()
     from_date = offset_days(get_last_monday(to_date), 7)
@@ -89,14 +92,14 @@ def get_listening_activity_week() -> Iterator[Optional[UserListeningActivityStat
     data = get_listening_activity()
     messages = create_messages(data=data, stats_range='week', from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
-    logging.debug("Done!")
+    logger.debug("Done!")
 
     return messages
 
 
 def get_listening_activity_month() -> Iterator[Optional[UserListeningActivityStatMessage]]:
     """ Calculate number of listens for an user on each day of the past month and current month. """
-    logging.debug("Calculating listening_activity_month")
+    logger.debug("Calculating listening_activity_month")
 
     to_date = get_latest_listen_ts()
     from_date = offset_months(replace_days(to_date, 1), 1)
@@ -118,14 +121,14 @@ def get_listening_activity_month() -> Iterator[Optional[UserListeningActivitySta
     data = get_listening_activity()
     messages = create_messages(data=data, stats_range='month', from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
-    logging.debug("Done!")
+    logger.debug("Done!")
 
     return messages
 
 
 def get_listening_activity_year() -> Iterator[Optional[UserListeningActivityStatMessage]]:
     """ Calculate the number of listens for an user in each month of the past and current year. """
-    logging.debug("Calculating listening_activity_year")
+    logger.debug("Calculating listening_activity_year")
 
     to_date = get_latest_listen_ts()
     from_date = datetime(to_date.year-1, 1, 1)
@@ -145,14 +148,14 @@ def get_listening_activity_year() -> Iterator[Optional[UserListeningActivityStat
     data = get_listening_activity()
     messages = create_messages(data=data, stats_range='year', from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
-    logging.debug("Done!")
+    logger.debug("Done!")
 
     return messages
 
 
 def get_listening_activity_all_time() -> Iterator[Optional[UserListeningActivityStatMessage]]:
     """ Calculate the number of listens for an user in each year starting from LAST_FM_FOUNDING_YEAR (2002). """
-    logging.debug("Calculating listening_activity_all_time")
+    logger.debug("Calculating listening_activity_all_time")
 
     to_date = get_latest_listen_ts()
     from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
@@ -185,7 +188,7 @@ def get_listening_activity_all_time() -> Iterator[Optional[UserListeningActivity
 
     messages = create_messages(data=data, stats_range='all_time', from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
-    logging.debug("Done!")
+    logger.debug("Done!")
 
     return messages
 
@@ -214,7 +217,7 @@ def create_messages(data, stats_range: str, from_ts: int, to_ts: int) -> Iterato
             result = model.dict(exclude_none=True)
             yield result
         except ValidationError:
-            logging.error("""ValidationError while calculating {stats_range} listening_activity for user: {user_name}.
+            logger.error("""ValidationError while calculating {stats_range} listening_activity for user: {user_name}.
                                      Data: {data}""".format(stats_range=stats_range, user_name=_dict['user_name'],
                                                             data=json.dumps(_dict, indent=3)),
                                      exc_info=True)

@@ -14,6 +14,9 @@ from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
 from listenbrainz_spark.request_consumer import request_consumer
 
 
+logger = logging.getLogger(__name__)
+
+
 def import_dump_to_hdfs(dump_type, overwrite, dump_id=None):
     temp_dir = tempfile.mkdtemp()
     dump_type = 'incremental' if dump_type == 'incremental' else 'full'
@@ -49,7 +52,7 @@ def import_newest_incremental_dump_handler():
     if latest_full_dump is None:
         # If no prior full dump is present, just import the lates incremental dump
         imported_dumps.append(import_dump_to_hdfs('incremental', overwrite=False))
-        logging.warn("No previous full dump found, importing latest incremental dump", exc_info=True)
+        logger.warning("No previous full dump found, importing latest incremental dump", exc_info=True)
     else:
         # Import all missing dumps from last full dump import
         dump_id = latest_full_dump["dump_id"] + 1
@@ -62,7 +65,7 @@ def import_newest_incremental_dump_handler():
                     break
                 except Exception as e:
                     # Exit if any other error occurs during import
-                    logging.error(f"Error while importing incremental dump with ID {dump_id}: {e}", exc_info=True)
+                    logger.error(f"Error while importing incremental dump with ID {dump_id}: {e}", exc_info=True)
                     break
             dump_id += 1
             request_consumer.rc.ping()

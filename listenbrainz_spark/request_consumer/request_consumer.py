@@ -31,6 +31,7 @@ from py4j.protocol import Py4JJavaError
 RABBITMQ_HEARTBEAT_TIME = 2 * 60 * 60  # 2 hours -- a full dump import takes 40 minutes right now
 
 rc = None
+logger = logging.getLogger(__name__)
 
 
 class RequestConsumer:
@@ -40,30 +41,30 @@ class RequestConsumer:
             query = request['query']
             params = request.get('params', {})
         except Exception:
-            logging.error('Bad query sent to spark request consumer: %s', json.dumps(request), exc_info=True)
+            logger.error('Bad query sent to spark request consumer: %s', json.dumps(request), exc_info=True)
             return None
 
         try:
             query_handler = listenbrainz_spark.query_map.get_query_handler(query)
         except KeyError:
-            logging.error("Bad query sent to spark request consumer: %s", query, exc_info=True)
+            logger.error("Bad query sent to spark request consumer: %s", query, exc_info=True)
             return None
         except Exception as e:
-            logging.error("Error while mapping query to function: %s", str(e), exc_info=True)
+            logger.error("Error while mapping query to function: %s", str(e), exc_info=True)
             return None
 
         try:
             return query_handler(**params)
         except TypeError as e:
-            logging.error(
+            logger.error(
                 "TypeError in the query handler for query '%s', maybe bad params. Error: %s", query, str(e), exc_info=True)
             return None
         except Exception as e:
-            logging.error("Error in the query handler for query '%s': %s", query, str(e), exc_info=True)
+            logger.error("Error in the query handler for query '%s': %s", query, str(e), exc_info=True)
             return None
 
     def push_to_result_queue(self, messages):
-        logging.debug("Pushing result to RabbitMQ...")
+        logger.debug("Pushing result to RabbitMQ...")
         num_of_messages = 0
         avg_size_of_message = 0
         for message in messages:
@@ -80,7 +81,7 @@ class RequestConsumer:
                     )
                     break
                 except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed) as e:
-                    logging.error('RabbitMQ Connection error while publishing results: %s', str(e), exc_info=True)
+                    logger.error('RabbitMQ Connection error while publishing results: %s', str(e), exc_info=True)
                     time.sleep(1)
                     self.rabbitmq.close()
                     self.connect_to_rabbitmq()
@@ -92,13 +93,13 @@ class RequestConsumer:
             avg_size_of_message = 0
             logging.warn("No messages calculated", exc_info=True)
 
-        logging.info("Done!")
-        logging.info("Number of messages sent: {}".format(num_of_messages))
-        logging.info("Average size of message: {} bytes".format(avg_size_of_message))
+        logger.info("Done!")
+        logger.info("Number of messages sent: {}".format(num_of_messages))
+        logger.info("Average size of message: {} bytes".format(avg_size_of_message))
 
     def callback(self, channel, method, properties, body):
         request = json.loads(body.decode('utf-8'))
-        logging.info('Received a request!')
+        logger.info('Received a request!')
         messages = self.get_result(request)
         if messages:
             self.push_to_result_queue(messages)
@@ -107,12 +108,12 @@ class RequestConsumer:
                 self.request_channel.basic_ack(delivery_tag=method.delivery_tag)
                 break
             except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed) as e:
-                logging.error('RabbitMQ Connection error when acknowledging request: %s', str(e), exc_info=True)
+                logger.error('RabbitMQ Connection error when acknowledging request: %s', str(e), exc_info=True)
                 time.sleep(1)
                 self.rabbitmq.close()
                 self.connect_to_rabbitmq()
                 self.init_rabbitmq_channels()
-        logging.info('Request done!')
+        logger.info('Request done!')
 
     def connect_to_rabbitmq(self):
         self.rabbitmq = init_rabbitmq(
@@ -121,7 +122,7 @@ class RequestConsumer:
             host=config.RABBITMQ_HOST,
             port=config.RABBITMQ_PORT,
             vhost=config.RABBITMQ_VHOST,
-            log=logging.critical,
+            log=logger.critical,
             heartbeat=RABBITMQ_HEARTBEAT_TIME,
         )
 
@@ -143,21 +144,21 @@ class RequestConsumer:
             try:
                 self.connect_to_rabbitmq()
                 self.init_rabbitmq_channels()
-                logging.info('Request consumer started!')
+                logger.info('Request consumer started!')
 
                 try:
                     self.request_channel.start_consuming()
                 except pika.exceptions.ConnectionClosed as e:
-                    logging.error('connection to rabbitmq closed: %s', str(e), exc_info=True)
+                    logger.error('connection to rabbitmq closed: %s', str(e), exc_info=True)
                     self.rabbitmq.close()
                     continue
                 self.rabbitmq.close()
             except Py4JJavaError as e:
-                logging.critical("Critical: JAVA error in spark-request consumer: %s, message: %s",
+                logger.critical("Critical: JAVA error in spark-request consumer: %s, message: %s",
                                             str(e), str(e.java_exception), exc_info=True)
                 time.sleep(2)
             except Exception as e:
-                logging.critical("Error in spark-request-consumer: %s", str(e), exc_info=True)
+                logger.critical("Error in spark-request-consumer: %s", str(e), exc_info=True)
                 time.sleep(2)
 
     def ping(self):

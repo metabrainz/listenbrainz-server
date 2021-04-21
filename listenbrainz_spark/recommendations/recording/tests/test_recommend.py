@@ -13,6 +13,8 @@ from pyspark.sql.functions import col
 
 # for test data/dataframes refer to listenbrainzspark/tests/__init__.py
 
+logger = logging.getLogger(__name__)
+
 
 class RecommendTestClass(SparkTestCase):
 
@@ -394,17 +396,13 @@ class RecommendTestClass(SparkTestCase):
         ))
         return df
 
-    @patch('logging.Logger.info')
-    def test_check_for_ratings_beyond_range(self, mock_logger):
+    def test_check_for_ratings_beyond_range(self):
         top_artist_rec_df = self.get_top_artist_rec_df()
         similar_artist_rec_df = self.get_similar_artist_rec_df()
 
-        recommend.check_for_ratings_beyond_range(top_artist_rec_df, similar_artist_rec_df)
-
-        mock_logger.assert_has_calls([
-            call('Some ratings are greater than 1 \nMax rating: 1.8'),
-            call('Some ratings are less than -1 \nMin rating: -2.8')
-        ])
+        min_test, max_test = recommend.check_for_ratings_beyond_range(top_artist_rec_df, similar_artist_rec_df)
+        self.assertEqual(min_test, True)
+        self.assertEqual(max_test, True)
 
     def test_create_messages(self):
         top_artist_rec_df = self.get_top_artist_rec_df()

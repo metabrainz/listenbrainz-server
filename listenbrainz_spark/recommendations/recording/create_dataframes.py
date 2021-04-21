@@ -59,6 +59,9 @@ from pyspark.sql import Row
 from pyspark.sql.window import Window
 from pyspark.sql.functions import rank, col, row_number
 
+
+logger = logging.getLogger(__name__)
+
 # Some useful dataframe fields/columns.
 # partial_listens_df:
 #   [
@@ -132,14 +135,14 @@ def save_dataframe_metadata_to_hdfs(metadata):
         # Create dataframe from the row object.
         dataframe_metadata = utils.create_dataframe(metadata_row, schema.dataframe_metadata_schema)
     except DataFrameNotCreatedException as err:
-        logging.error(str(err), exc_info=True)
+        logger.error(str(err), exc_info=True)
         raise
 
     try:
         # Append the dataframe to existing dataframe if already exists or create a new one.
         utils.append(dataframe_metadata, path.RECOMMENDATION_RECORDING_DATAFRAME_METADATA)
     except DataFrameNotAppendedException as err:
-        logging.error(str(err), exc_info=True)
+        logger.error(str(err), exc_info=True)
         raise
 
 
@@ -171,7 +174,7 @@ def get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df):
                            .where(col('msb_recording_name_matchable').isNull() &
                                   col('msb_artist_credit_name_matchable').isNull())
 
-    logging.info('Number of (artist, recording) pairs missing from mapping: {}'.format(df.count()))
+    logger.info('Number of (artist, recording) pairs missing from mapping: {}'.format(df.count()))
     window = Window.partitionBy('user_name').orderBy(col('listened_at').desc())
 
     # limiting listens to 200 for each user so that messages don't drop
@@ -307,7 +310,7 @@ def prepare_messages(missing_musicbrainz_data_itr, from_date, to_date, ti):
                 }
             ).dict())
         except ValidationError:
-            logging.warning("""Invalid entry present in missing musicbrainz data for user: {user_name}, skipping"""
+            logger.warning("""Invalid entry present in missing musicbrainz data for user: {user_name}, skipping"""
                                        .format(user_name=row.user_name), exc_info=True)
 
     total_time = '{:.2f}'.format((time.monotonic() - ti) / 60)
@@ -320,7 +323,7 @@ def prepare_messages(missing_musicbrainz_data_itr, from_date, to_date, ti):
             'to_date': str(to_date.strftime('%b %Y')),
         }).dict()]
     except ValidationError:
-        logging.warning("Invalid entry present in dataframe creation message", exc_info=True)
+        logger.warning("Invalid entry present in dataframe creation message", exc_info=True)
 
     for user_name, data in missing_musicbrainz_data.items():
         try:
@@ -331,7 +334,7 @@ def prepare_messages(missing_musicbrainz_data_itr, from_date, to_date, ti):
                 'source': 'cf'
             }).dict())
         except ValidationError:
-            logging.warning("ValidationError while calculating missing_musicbrainz_data for {user_name}."
+            logger.warning("ValidationError while calculating missing_musicbrainz_data for {user_name}."
                                        "\nData: {data}".format(user_name=user_name, data=data), exc_info=True)
 
     return messages
@@ -347,36 +350,36 @@ def main(train_model_window=None):
     try:
         listenbrainz_spark.init_spark_session('Create Dataframes')
     except SparkSessionNotInitializedException as err:
-        logging.error(str(err), exc_info=True)
+        logger.error(str(err), exc_info=True)
         raise
 
-    logging.info('Fetching listens to create dataframes...')
+    logger.info('Fetching listens to create dataframes...')
     to_date, from_date = get_dates_to_train_data(train_model_window)
 
     metadata['to_date'] = to_date
     metadata['from_date'] = from_date
 
     partial_listens_df = get_listens_for_training_model_window(to_date, from_date, path.LISTENBRAINZ_DATA_DIRECTORY)
-    logging.info('Listen count from {from_date} to {to_date}: {listens_count}'
+    logger.info('Listen count from {from_date} to {to_date}: {listens_count}'
                             .format(from_date=from_date, to_date=to_date, listens_count=partial_listens_df.count()))
 
-    logging.info('Loading mapping from HDFS...')
+    logger.info('Loading mapping from HDFS...')
     df = utils.read_files_from_HDFS(path.MBID_MSID_MAPPING)
     msid_mbid_mapping_df = mapping_utils.get_unique_rows_from_mapping(df)
-    logging.info('Number of distinct rows in the mapping: {}'.format(msid_mbid_mapping_df.count()))
+    logger.info('Number of distinct rows in the mapping: {}'.format(msid_mbid_mapping_df.count()))
 
-    logging.info('Mapping listens...')
+    logger.info('Mapping listens...')
     mapped_listens_df = get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_df,
                                                               path.RECOMMENDATION_RECORDING_MAPPED_LISTENS)
-    logging.info('Listen count after mapping: {}'.format(mapped_listens_df.count()))
+    logger.info('Listen count after mapping: {}'.format(mapped_listens_df.count()))
 
-    logging.info('Preparing users data and saving to HDFS...')
+    logger.info('Preparing users data and saving to HDFS...')
     users_df = get_users_dataframe(mapped_listens_df, metadata)
 
-    logging.info('Preparing recordings data and saving to HDFS...')
+    logger.info('Preparing recordings data and saving to HDFS...')
     recordings_df = get_recordings_df(mapped_listens_df, metadata)
 
-    logging.info('Preparing listen data dump and playcounts, saving playcounts to HDFS...')
+    logger.info('Preparing listen data dump and playcounts, saving playcounts to HDFS...')
     listens_df = get_listens_df(mapped_listens_df, metadata)
 
     save_playcounts_df(listens_df, recordings_df, users_df, metadata)
@@ -384,7 +387,7 @@ def main(train_model_window=None):
     metadata['dataframe_id'] = get_dataframe_id(DATAFRAME_ID_PREFIX)
     save_dataframe_metadata_to_hdfs(metadata)
 
-    logging.info('Preparing missing MusicBrainz data...')
+    logger.info('Preparing missing MusicBrainz data...')
     missing_musicbrainz_data_itr = get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df)
 
     messages = prepare_messages(missing_musicbrainz_data_itr, from_date, to_date, ti)

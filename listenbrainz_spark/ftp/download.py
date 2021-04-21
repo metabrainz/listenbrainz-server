@@ -13,6 +13,8 @@ ARTIST_RELATION_DUMP_ID_POS = 5
 FULL = 'full'
 INCREMENTAL = 'incremental'
 
+logger = logging.getLogger(__name__)
+
 
 class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
 
