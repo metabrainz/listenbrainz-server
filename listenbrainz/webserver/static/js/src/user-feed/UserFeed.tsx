@@ -1,6 +1,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+import * as Sentry from "@sentry/react";
 
 import {
   faBell,
@@ -521,7 +522,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#react-container");
   const propsElement = document.getElementById("react-props");
   const reactProps = JSON.parse(propsElement!.innerHTML);
-  const { api_url, current_user, spotify, events } = reactProps;
+  const { api_url, current_user, spotify, events, sentry_dsn } = reactProps;
+
+  if (sentry_dsn) {
+    Sentry.init({ dsn: sentry_dsn });
+  }
 
   const apiService = new APIService(api_url || `${window.location.origin}/1`);
 

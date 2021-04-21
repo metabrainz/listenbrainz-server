@@ -1,11 +1,12 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import * as ReactDOM from "react-dom";
 import * as React from "react";
+import * as Sentry from "@sentry/react";
 import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-
 import { APIService } from "../APIService";
+
 import Bar from "./Bar";
 import Loader from "../components/Loader";
 import ErrorBoundary from "../ErrorBoundary";
@@ -593,7 +594,12 @@ document.addEventListener("DOMContentLoaded", () => {
   } catch (err) {
     // Show error to the user and ask to reload page
   }
-  const { user, api_url: apiUrl } = reactProps;
+  const { user, api_url: apiUrl, sentry_dsn } = reactProps;
+
+  if (sentry_dsn) {
+    Sentry.init({ dsn: sentry_dsn });
+  }
+
   ReactDOM.render(
     <ErrorBoundary>
       <UserEntityChart apiUrl={apiUrl} user={user} />

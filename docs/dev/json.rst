@@ -38,16 +38,20 @@ the ``submit-listens`` endpoint. Submit one of three types JSON documents:
 The ``listen_type`` element defines different types of submissions. The element
 is placed at the top-most level of the JSON document. The only other required
 element is the ``payload`` element. This provides an array of listens – the
-payload may be one or more listens (as designated by ``listen_type``)::
+payload may be one or more listens (as designated by ``listen_type``):
+
+.. code-block:: json
 
     {
       "listen_type": "single",
       "payload": [
-          --- listen data here ---
+          "--- listen data here ---"
       ]
     }
 
-A sample listen payload may look like::
+A sample listen payload may look like:
+
+.. code-block:: json
 
     {
       "listened_at": 1443521965,
@@ -66,7 +70,9 @@ A sample listen payload may look like::
       }
     }
 
-A complete submit listen JSON document may look like::
+A complete submit listen JSON document may look like:
+
+.. code-block:: json
 
     {
       "listen_type": "single",
@@ -95,7 +101,9 @@ A complete submit listen JSON document may look like::
 Fetching listen JSON
 --------------------
 
-The JSON documents returned from our API look like the following::
+The JSON documents returned from our API look like the following:
+
+.. code-block:: json
 
     {
       "payload": {
@@ -121,7 +129,9 @@ Payload JSON details
 --------------------
 
 A minimal payload must include
-``track_metadata/artist_name`` and ``track_metadata/track_name`` elements::
+``track_metadata/artist_name`` and ``track_metadata/track_name`` elements:
+
+.. code-block:: json
 
     {
       "track_metadata": {

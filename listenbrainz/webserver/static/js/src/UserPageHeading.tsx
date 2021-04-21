@@ -20,6 +20,7 @@
 
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+import * as Sentry from "@sentry/react";
 import FollowButton from "./FollowButton";
 import { APIService, APIContext } from "./APIService";
 
@@ -58,12 +59,17 @@ document.addEventListener("DOMContentLoaded", () => {
     user,
     current_user,
     logged_in_user_follows_user,
+    sentry_dsn,
     api_url,
   } = reactProps;
 
   const apiService: APIService = new APIService(
     api_url || `${window.location.origin}/1`
   );
+
+  if (sentry_dsn) {
+    Sentry.init({ dsn: sentry_dsn });
+  }
 
   ReactDOM.render(
     <APIContext.Provider value={apiService}>
