@@ -1,5 +1,6 @@
 import listenbrainz.db.dump_manager as dump_manager
 import listenbrainz.spark.request_manage as spark_request_manage
+from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data
 from listenbrainz import db
 from listenbrainz.db import timescale as ts
 from listenbrainz import webserver
@@ -252,18 +253,7 @@ def calculate_user_similarity():
 
 @cli.command(name="recalculate_all_user_data")
 def recalculate_all_user_data():
-    from listenbrainz import config
-    from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStore
-    import logging
-    ts = TimescaleListenStore({
-            'REDIS_HOST': config.REDIS_HOST,
-            'REDIS_PORT': config.REDIS_PORT,
-            'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
-            'SQLALCHEMY_TIMESCALE_URI': config.SQLALCHEMY_TIMESCALE_URI,
-        },  logging.getLogger(__name__))
-    application = webserver.create_app()
-    with application.app_context():
-        ts.recalculate_all_user_data()
+    ts_recalculate_all_user_data()
 
 # Add other commands here
 cli.add_command(spark_request_manage.cli, name="spark")
