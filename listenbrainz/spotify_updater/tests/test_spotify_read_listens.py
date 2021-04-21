@@ -29,10 +29,9 @@ class ConvertListensTestCase(DatabaseTestCase):
                     token_expires=datetime.max.replace(tzinfo=timezone.utc),
                     refresh_token='refresh',
                     last_updated=None,
-                    record_listens=True,
                     error_message=None,
                     latest_listened_at=datetime(2014, 5, 13, 16, 53, 20),  # ts in ms = 140000000000000
-                    permission='user-read-recently-played',
+                    scopes=['user-read-recently-played'],
                 )
 
     def test_parse_play_to_listen_no_isrc(self):
@@ -156,10 +155,9 @@ class ConvertListensTestCase(DatabaseTestCase):
             token_expires=int(time.time()),
             refresh_token='old-refresh-token',
             last_updated=None,
-            record_listens=True,
             error_message=None,
             latest_listened_at=None,
-            permission='user-read-recently-played',
+            scopes=['user-read-recently-played'],
         )
         with self.assertRaises(SpotifyInvalidGrantError):
             spotify_read_listens.process_one_user(expired_token_spotify_user)

@@ -192,7 +192,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
             'id': self.user['id'],
             'musicbrainz_id': self.user['musicbrainz_id'],
             'user_token': 'old-token',
-            'permission': 'user-read-recently-played some-other-permission',
+            'scopes': ['user-read-recently-played', 'some-other-permission'],
         })
 
     @patch('listenbrainz.webserver.views.profile.spotify.get_user')
