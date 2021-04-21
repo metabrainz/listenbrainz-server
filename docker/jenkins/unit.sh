@@ -23,7 +23,10 @@ function cleanup {
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p "$COMPOSE_PROJECT_NAME" \
                    down --remove-orphans
-    docker images --filter="before=${COMPOSE_PROJECT_NAME}_listenbrainz" --filter "label=org.label-schema.name=ListenBrainz" --format '{{.Repository}}:{{.Tag}}'
+    docker images --filter="before=${COMPOSE_PROJECT_NAME}_listenbrainz" \
+                  --filter "label=org.label-schema.name=ListenBrainz" \
+                  --filter="reference=listenbrainzunittest_jenkinsbuild_*" \
+                  --format '{{.Repository}}:{{.Tag}}'
     # Untag LB images that were built before this test run
     docker image rm "$(docker images --filter="reference=listenbrainzunittestjenkinsbuild*_listenbrainz" --filter="before=${COMPOSE_PROJECT_NAME}_listenbrainz" --filter "label=org.label-schema.name=ListenBrainz" --format '{{.Repository}}:{{.Tag}}')"
 }
