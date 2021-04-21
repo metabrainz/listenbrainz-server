@@ -1,4 +1,14 @@
-FROM airdock/oraclejdk:1.8 as metabrainz-spark-base
+ARG JAVA_VERSION=1.8
+FROM airdock/oraclejdk:$JAVA_VERSION as metabrainz-spark-base
+
+ARG GIT_COMMIT_SHA
+
+LABEL org.label-schema.vcs-url="https://github.com/metabrainz/listenbrainz-server.git" \
+      org.label-schema.vcs-ref=$GIT_COMMIT_SHA \
+      org.label-schema.schema-version="1.0.0-rc1" \
+      org.label-schema.vendor="MetaBrainz Foundation" \
+      org.label-schema.name="ListenBrainz" \
+      org.metabrainz.based-on-image="airdock/oraclejdk:$JAVA_VERSION"
 
 # Compile and install specific version of Python
 # The jdk image comes with jessie which has python 3.4 which

@@ -56,10 +56,6 @@ PLAYING_NOW_MAX_DURATION = 10 * 60
 #LOG_FILE_ENABLED = True
 #LOG_FILE = "./listenbrainz.log"
 
-#LOG_EMAIL_ENABLED = True
-#LOG_EMAIL_TOPIC = "ListenBrainz Webserver Failure"
-#LOG_EMAIL_RECIPIENTS = []  # List of email addresses (strings)
-
 #LOG_SENTRY_ENABLED = True
 #SENTRY_DSN = ""
 

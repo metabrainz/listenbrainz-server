@@ -148,38 +148,69 @@ export default class APIService {
     return result.user_token;
   };
 
-  followUser = async (username: string): Promise<{ status: number }> => {
-    const response = await fetch(`/user/${username}/follow`, {
+  followUser = async (
+    userName: string,
+    userToken: string
+  ): Promise<{ status: number }> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+    const response = await fetch(`${this.APIBaseURI}/user/${userName}/follow`, {
       method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
     });
     return { status: response.status };
   };
 
-  unfollowUser = async (username: string): Promise<{ status: number }> => {
-    const response = await fetch(`/user/${username}/unfollow`, {
-      method: "POST",
-    });
+  unfollowUser = async (
+    userName: string,
+    userToken: string
+  ): Promise<{ status: number }> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+    const response = await fetch(
+      `${this.APIBaseURI}/user/${userName}/unfollow`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Token ${userToken}`,
+        },
+      }
+    );
     return { status: response.status };
   };
 
-  getFollowersOfUser = async (username: string) => {
+  getFollowersOfUser = async (
+    username: string
+  ): Promise<{ followers: Array<string> }> => {
     if (!username) {
       throw new SyntaxError("Username missing");
     }
 
-    const url = `/user/${username}/followers`;
+    const url = `${this.APIBaseURI}/user/${username}/followers`;
     const response = await fetch(url);
     await this.checkStatus(response);
     const data = response.json();
     return data;
   };
 
-  getFollowingForUser = async (username: string) => {
+  getFollowingForUser = async (
+    username: string
+  ): Promise<{ following: Array<string> }> => {
     if (!username) {
       throw new SyntaxError("Username missing");
     }
 
-    const url = `/user/${username}/following`;
+    const url = `${this.APIBaseURI}/user/${username}/following`;
     const response = await fetch(url);
     await this.checkStatus(response);
     const data = response.json();
@@ -728,5 +759,21 @@ export default class APIService {
     });
     await this.checkStatus(response);
     return response.status;
+  };
+
+  getSimilarUsersForUser = async (
+    username: string
+  ): Promise<{
+    payload: Array<{ user_name: string; similarity: number }>;
+  }> => {
+    if (!username) {
+      throw new SyntaxError("Username missing");
+    }
+
+    const url = `${this.APIBaseURI}/user/${username}/similar-users`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    const data = response.json();
+    return data;
   };
 }

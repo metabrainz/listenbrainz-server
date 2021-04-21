@@ -17,6 +17,10 @@ CREATE UNIQUE INDEX msid_ndx_recording_stats ON statistics.recording (msid);
 
 CREATE INDEX latest_listened_at_spotify_auth ON spotify_auth (latest_listened_at DESC NULLS LAST);
 
+CREATE INDEX user_id_ndx_external_service_oauth ON external_service_oauth (user_id);
+CREATE INDEX service_ndx_external_service_oauth ON external_service_oauth (service);
+CREATE UNIQUE INDEX user_id_service_ndx_external_service_oauth ON external_service_oauth (user_id, service);
+
 CREATE UNIQUE INDEX user_id_rec_msid_ndx_feedback ON recording_feedback (user_id, recording_msid);
 
 -- NOTE: If the indexes for the similar_user table changes, update the code in listenbrainz/db/similar_users.py !
