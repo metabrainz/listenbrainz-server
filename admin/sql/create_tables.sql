@@ -113,7 +113,7 @@ CREATE TABLE external_service_oauth (
     token_expires           TIMESTAMP WITH TIME ZONE,
     last_updated            TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     record_listens          BOOLEAN NOT NULL,
-    service_details         JSONB
+    scopes                  TEXT[]
 );
 
 CREATE TABLE listens_importer (
