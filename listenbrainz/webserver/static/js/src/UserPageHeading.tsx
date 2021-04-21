@@ -20,6 +20,7 @@
 
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+import * as Sentry from "@sentry/react";
 import FollowButton from "./FollowButton";
 
 const UserPageHeading = ({
@@ -60,8 +61,14 @@ document.addEventListener("DOMContentLoaded", () => {
     user,
     current_user,
     logged_in_user_follows_user,
+    sentry_dsn,
     api_url,
   } = reactProps;
+
+  if (sentry_dsn) {
+    Sentry.init({ dsn: sentry_dsn });
+  }
+
   ReactDOM.render(
     <UserPageHeading
       user={user}
