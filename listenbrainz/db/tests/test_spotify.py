@@ -56,7 +56,7 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
 
     def test_update_last_updated(self):
         db_spotify.update_last_updated(self.user['id'])
-        spotify_user = db_spotify.get_user(self.user['id'])
+        spotify_user = db_spotify.get_user_import_details(self.user['id'])
         self.assertIsNone(spotify_user['error_message'])
         self.assertIsNotNone(spotify_user['last_updated'])
 
@@ -73,11 +73,11 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(spotify_user['refresh_token'], 'refreshtesttoken')
 
     def test_update_latest_listened_at(self):
-        old_spotify_user = db_spotify.get_user(self.user['id'])
+        old_spotify_user = db_spotify.get_user_import_details(self.user['id'])
         self.assertIsNone(old_spotify_user['latest_listened_at'])
         t = int(time.time())
         db_spotify.update_latest_listened_at(self.user['id'], t)
-        spotify_user = db_spotify.get_user(self.user['id'])
+        spotify_user = db_spotify.get_user_import_details(self.user['id'])
         self.assertEqual(t, int(spotify_user['latest_listened_at'].strftime('%s')))
 
     def test_get_active_users_to_process(self):
@@ -129,7 +129,13 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(user['musicbrainz_row_id'], self.user['musicbrainz_row_id'])
         self.assertEqual(user['access_token'], 'token')
         self.assertEqual(user['refresh_token'], 'refresh_token')
-        self.assertIn('last_updated', user)
-        self.assertIn('latest_listened_at', user)
         self.assertIn('token_expires', user)
         self.assertIn('token_expired', user)
+
+    def test_get_user_import_details(self):
+        user = db_spotify.get_user_import_details(self.user['id'])
+        self.assertEqual(user['user_id'], self.user['id'])
+        self.assertIn('external_service_oauth_id', user)
+        self.assertIn('last_updated', user)
+        self.assertIn('latest_listened_at', user)
+        self.assertIn('error_message', user)
