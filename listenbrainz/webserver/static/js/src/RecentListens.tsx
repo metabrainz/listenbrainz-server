@@ -225,7 +225,10 @@ export default class RecentListens extends React.Component<
     return Boolean(currentListen && _.isEqual(listen, currentListen));
   };
 
-  handleClickOlder = async () => {
+  handleClickOlder = async (event?: React.MouseEvent) => {
+    if (event) {
+      event.preventDefault();
+    }
     const { oldestListenTs, user } = this.props;
     const { nextListenTs } = this.state;
     // No more listens to fetch
@@ -258,7 +261,10 @@ export default class RecentListens extends React.Component<
     window.history.pushState(null, "", `?max_ts=${nextListenTs}`);
   };
 
-  handleClickNewer = async () => {
+  handleClickNewer = async (event?: React.MouseEvent) => {
+    if (event) {
+      event.preventDefault();
+    }
     const { latestListenTs, user } = this.props;
     const { previousListenTs } = this.state;
     // No more listens to fetch
@@ -291,7 +297,10 @@ export default class RecentListens extends React.Component<
     window.history.pushState(null, "", `?min_ts=${previousListenTs}`);
   };
 
-  handleClickNewest = async () => {
+  handleClickNewest = async (event?: React.MouseEvent) => {
+    if (event) {
+      event.preventDefault();
+    }
     const { user, latestListenTs } = this.props;
     const { listens } = this.state;
     if (listens?.[0]?.listened_at >= latestListenTs) {
@@ -311,7 +320,10 @@ export default class RecentListens extends React.Component<
     window.history.pushState(null, "", "");
   };
 
-  handleClickOldest = async () => {
+  handleClickOldest = async (event?: React.MouseEvent) => {
+    if (event) {
+      event.preventDefault();
+    }
     const { user, oldestListenTs } = this.props;
     const { listens } = this.state;
     // No more listens to fetch
@@ -516,6 +528,13 @@ export default class RecentListens extends React.Component<
       newAlert,
     } = this.props;
 
+    const isNewestButtonDisabled = listens?.[0]?.listened_at >= latestListenTs;
+    const isNewerButtonDisabled =
+      !previousListenTs || previousListenTs >= latestListenTs;
+    const isOlderButtonDisabled =
+      !nextListenTs || nextListenTs <= oldestListenTs;
+    const isOldestButtonDisabled =
+      listens?.[listens?.length - 1]?.listened_at <= oldestListenTs;
     return (
       <div role="main">
         <div className="row">
@@ -601,9 +620,7 @@ export default class RecentListens extends React.Component<
                   <ul className="pager" style={{ display: "flex" }}>
                     <li
                       className={`previous ${
-                        listens[0].listened_at >= latestListenTs
-                          ? "disabled"
-                          : ""
+                        isNewestButtonDisabled ? "disabled" : ""
                       }`}
                     >
                       <a
@@ -613,15 +630,18 @@ export default class RecentListens extends React.Component<
                           if (e.key === "Enter") this.handleClickNewest();
                         }}
                         tabIndex={0}
+                        href={
+                          isNewestButtonDisabled
+                            ? undefined
+                            : window.location.pathname
+                        }
                       >
                         &#x21E4;
                       </a>
                     </li>
                     <li
                       className={`previous ${
-                        !previousListenTs || previousListenTs >= latestListenTs
-                          ? "disabled"
-                          : ""
+                        isNewerButtonDisabled ? "disabled" : ""
                       }`}
                     >
                       <a
@@ -631,15 +651,18 @@ export default class RecentListens extends React.Component<
                           if (e.key === "Enter") this.handleClickNewer();
                         }}
                         tabIndex={0}
+                        href={
+                          isNewerButtonDisabled
+                            ? undefined
+                            : `?min_ts=${previousListenTs}`
+                        }
                       >
                         &larr; Newer
                       </a>
                     </li>
                     <li
                       className={`next ${
-                        !nextListenTs || nextListenTs <= oldestListenTs
-                          ? "disabled"
-                          : ""
+                        isOlderButtonDisabled ? "disabled" : ""
                       }`}
                       style={{ marginLeft: "auto" }}
                     >
@@ -650,16 +673,18 @@ export default class RecentListens extends React.Component<
                           if (e.key === "Enter") this.handleClickOlder();
                         }}
                         tabIndex={0}
+                        href={
+                          isOlderButtonDisabled
+                            ? undefined
+                            : `?max_ts=${nextListenTs}`
+                        }
                       >
                         Older &rarr;
                       </a>
                     </li>
                     <li
                       className={`next ${
-                        listens[listens.length - 1].listened_at <=
-                        oldestListenTs
-                          ? "disabled"
-                          : ""
+                        isOldestButtonDisabled ? "disabled" : ""
                       }`}
                     >
                       <a
@@ -669,6 +694,11 @@ export default class RecentListens extends React.Component<
                           if (e.key === "Enter") this.handleClickOldest();
                         }}
                         tabIndex={0}
+                        href={
+                          isOldestButtonDisabled
+                            ? undefined
+                            : `?min_ts=${oldestListenTs - 1}`
+                        }
                       >
                         &#x21E5;
                       </a>

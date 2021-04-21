@@ -1,3 +1,4 @@
+from operator import itemgetter
 import math
 from typing import List, Tuple
 from pyspark.sql.dataframe import DataFrame
@@ -41,10 +42,10 @@ def create_messages(similar_users_df: DataFrame) -> dict:
     }
 
 
-def threshold_similar_users(matrix: ndarray, threshold: float) -> List[Tuple[int, int, float]]:
+def threshold_similar_users(matrix: ndarray, max_num_users: int) -> List[Tuple[int, int, float]]:
     """ Determine the minimum and maximum values in the matriz, scale
-        the result to the rang of [0.0 - 1.0] and finally return only
-        values higher than the threshold argument (on a scale of 0.0 - 1.0)
+        the result to the range of [0.0 - 1.0] and limit each user to max of
+        max_num_users other users.
     """
     rows, cols = matrix.shape
     similar_users = list()
@@ -68,17 +69,19 @@ def threshold_similar_users(matrix: ndarray, threshold: float) -> List[Tuple[int
             max_similarity = max(value, max_similarity)
             min_similarity = min(value, min_similarity)
 
-    # Now we know the min and max values, calculate the range and select
-    # values higher or equal to the threshold.
+    # Now we know the min and max values, calculate the range,
+    # sort by relation and remove any relations greater than max users
     similarity_range = max_similarity - min_similarity
     for x in range(rows):
+        row = []
         for y in range(cols):
-            if x == y:
+            value = float(matrix[x, y])
+            if x == y or math.isnan(value):
                 continue
 
-            similarity = (float(matrix[x, y]) - min_similarity) / similarity_range
-            if similarity >= threshold:
-                similar_users.append((x, y, similarity))
+            row.append((x, y, (value - min_similarity) / similarity_range))
+
+        similar_users.extend(sorted(row, key=itemgetter(2), reverse=True)[:max_num_users])
 
     return similar_users
 
@@ -104,7 +107,7 @@ def get_vectors_df(playcounts_df):
     return listenbrainz_spark.session.createDataFrame(vectors_mapped_rdd, ['index', 'vector'])
 
 
-def main(threshold: float):
+def main(max_num_users: int):
 
     current_app.logger.info('Start generating similar user matrix')
     try:
@@ -126,7 +129,7 @@ def main(threshold: float):
     vectors_df = get_vectors_df(playcounts_df)
 
     similarity_matrix = Correlation.corr(vectors_df, 'vector', 'pearson').first()['pearson(vector)'].toArray()
-    similar_users = threshold_similar_users(similarity_matrix, threshold)
+    similar_users = threshold_similar_users(similarity_matrix, max_num_users)
 
     # Due to an unresolved bug in Spark (https://issues.apache.org/jira/browse/SPARK-10925), we cannot join twice on
     # the same dataframe. Hence, we create a modified dataframe with the columns renamed.
