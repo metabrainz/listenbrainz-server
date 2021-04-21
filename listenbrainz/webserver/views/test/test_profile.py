@@ -192,7 +192,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
             'id': self.user['id'],
             'musicbrainz_id': self.user['musicbrainz_id'],
             'user_token': 'old-token',
-            'scopes': ['user-read-recently-played', 'some-other-permission'],
+            'permission': ['user-read-recently-played', 'some-other-permission'],
         })
 
     @patch('listenbrainz.webserver.views.profile.spotify.get_user')
@@ -223,7 +223,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
             'id': self.user['id'],
             'musicbrainz_id': self.user['musicbrainz_id'],
             'user_token': 'new-token',
-            'scopes': ['user-read-recently-played'],
+            'permission': ['user-read-recently-played'],
         })
 
     @patch('listenbrainz.domain.spotify.get_user')
