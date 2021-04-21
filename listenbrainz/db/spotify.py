@@ -3,7 +3,7 @@ import json
 from data.model.external_service import ExternalService
 from listenbrainz import db, utils
 import sqlalchemy
-import external_service as db_service
+import listenbrainz.db.external_service_oauth as db_oauth
 
 
 def create_spotify(user_id, user_token, refresh_token, token_expires_ts, record_listens, permission):
@@ -18,9 +18,9 @@ def create_spotify(user_id, user_token, refresh_token, token_expires_ts, record_
         record_listens (bool): True if user wishes to import listens from Spotify, False otherwise
         permission (str): the scope of the permissions granted to us by the user as a space seperated string
     """
-    db_service.save_token(user_id=user_id, service=ExternalService.SPOTIFY, access_token=user_token,
-                          refresh_token=refresh_token, token_expires_ts=token_expires_ts,
-                          record_listens=record_listens, service_details={"permission": permission})
+    db_oauth.save_token(user_id=user_id, service=ExternalService.SPOTIFY, access_token=user_token,
+                        refresh_token=refresh_token, token_expires_ts=token_expires_ts,
+                        record_listens=record_listens, service_details={"permission": permission})
 
 
 def delete_spotify(user_id):
@@ -29,7 +29,7 @@ def delete_spotify(user_id):
     Args:
         user_id (int): the ListenBrainz row ID of the user
     """
-    db_service.delete_token(user_id=user_id, service=ExternalService.SPOTIFY)
+    db_oauth.delete_token(user_id=user_id, service=ExternalService.SPOTIFY)
 
 
 def add_update_error(user_id, error_message):
@@ -106,9 +106,9 @@ def update_token(user_id, access_token, refresh_token, expires_at):
     Returns:
         the new token in dict form
     """
-    db_service.update_token(user_id=user_id, service=ExternalService.SPOTIFY,
-                            access_token=access_token, refresh_token=refresh_token,
-                            expires_at=expires_at)
+    db_oauth.update_token(user_id=user_id, service=ExternalService.SPOTIFY,
+                          access_token=access_token, refresh_token=refresh_token,
+                          expires_at=expires_at)
 
 
 def get_active_users_to_process():
@@ -166,4 +166,4 @@ def get_user(user_id):
     Args:
         user_id (int): the ListenBrainz row ID of the user
     """
-    return db_service.get_token(user_id=user_id, service=ExternalService.SPOTIFY)
+    return db_oauth.get_token(user_id=user_id, service=ExternalService.SPOTIFY)
