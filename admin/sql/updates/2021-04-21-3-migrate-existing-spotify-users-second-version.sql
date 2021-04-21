@@ -15,8 +15,8 @@ WITH migration AS
         )
         SELECT
             user_id,
-            'spotify' as service,
-            user_token as access_token,
+            'spotify',
+            user_token,
             refresh_token,
             token_expires,
             last_updated,
