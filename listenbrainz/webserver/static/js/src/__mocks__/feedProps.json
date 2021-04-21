@@ -146,11 +146,10 @@
 			"user_id": "reosarevok"
 		},
 		{
-			"event_type": "playlist_created",
+			"event_type": "notification",
 			"created":1613474252,
 			"metadata": {
-				"identifier": "https://listenbrainz.org/playlist/4245ccd3-4f0d-4276-95d6-2e09d87b5546",
-				"title": "My top discoveries of 2020"
+				"message": "We have created a playlist for you: <a href='https://listenbrainz.org/playlist/4245ccd3-4f0d-4276-95d6-2e09d87b5546'>My top discoveries of 2020</a>"
 			},
 			"user_id": "troi-bot"
 		},

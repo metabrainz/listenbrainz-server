@@ -475,19 +475,32 @@ type EventTypeT =
   | "follow"
   | "stop_follow"
   | "block_follow"
-  | "playlist_created";
+  | "notification";
 
-type UserRelationshipEvent = {
+type UserRelationshipEventMetadata = {
   user_name_0: string;
   user_name_1: string;
   relationship_type: "follow";
   created: number;
 };
-type EventMetadata = Listen | JSPFPlaylist | UserRelationshipEvent;
+
+type NotificationEventMetadata = {
+  message: string;
+};
+
+type EventMetadata =
+  | Listen
+  | UserRelationshipEventMetadata
+  | NotificationEventMetadata;
 
 type TimelineEvent = {
   event_type: EventTypeT;
   user_name: string;
   created: number;
   metadata: EventMetadata;
+};
+
+type SimilarUser = {
+  name: string;
+  similarityScore: number;
 };

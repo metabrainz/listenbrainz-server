@@ -248,7 +248,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
             permission='user-read-recently-played',
         )
         mock_get_user.return_value = spotify_user
-        mock_refresh_user_token.return_value = None
+        mock_refresh_user_token.side_effect = spotify.SpotifyInvalidGrantError
         response = self.client.post(url_for('profile.refresh_spotify_token'))
         self.assertEqual(response.json, {'code': 404, 'error': 'User has revoked authorization to Spotify'})
 

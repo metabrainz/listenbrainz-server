@@ -16,7 +16,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-from flask import url_for
+from flask import url_for, current_app
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from unittest import mock
@@ -135,3 +135,50 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.assert401(r)
         data = json.loads(r.data)
         self.assertEqual("You don't have permissions to post to this user's timeline.", data['error'])
+
+    def test_post_notification_authorization_fails(self):
+        metadata = {
+            "message": "Testing",
+            "link": "http://localhost"
+        }
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_user_notification_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({"metadata": metadata}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
+        )
+        self.assert403(r)
+        data = json.loads(r.data)
+        self.assertEqual("Only approved users are allowed to post a message on a user's timeline.", data['error'])
+
+    def test_post_notification_success(self):
+        metadata = {"message": 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'}
+        approved_user = db_user.get_or_create(11, "troi-bot")
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_user_notification_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({"metadata": metadata}),
+            headers={'Authorization': 'Token {}'.format(approved_user['auth_token'])}
+        )
+        self.assert200(r)
+
+    def test_get_notification_event(self):
+        metadata = {"message": 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'}
+        approved_user = db_user.get_or_create(11, "troi-bot")
+        self.client.post(
+            url_for('user_timeline_event_api_bp.create_user_notification_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({"metadata": metadata}),
+            headers={'Authorization': 'Token {}'.format(approved_user['auth_token'])}
+        )
+        r = self.client.get(
+            url_for('user_timeline_event_api_bp.user_feed', user_name=self.user['musicbrainz_id']),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
+        )
+
+        payload = r.json['payload']
+        self.assertEqual(1, payload['count'])
+        self.assertEqual(self.user['musicbrainz_id'], payload['user_id'])
+
+        event = payload['events'][0]
+        self.assertEqual('notification', event['event_type'])
+        self.assertEqual('You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>',
+                         event['metadata']['message'])
+        self.assertEqual(approved_user['musicbrainz_id'], event['user_name'])

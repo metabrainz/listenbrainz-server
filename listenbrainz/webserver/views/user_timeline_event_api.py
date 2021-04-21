@@ -29,14 +29,16 @@ import listenbrainz.db.user_relationship as db_user_relationship
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
 
 from data.model.listen import APIListen, TrackMetadata, AdditionalInfo
-from data.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, APIFollowEvent
+from data.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, \
+    APIFollowEvent, NotificationMetadata, APINotificationEvent
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.listenstore import TimescaleListenStore
 from listenbrainz.webserver.views.api import _validate_get_endpoint_params
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized
-from listenbrainz.webserver.views.api_tools import validate_auth_header
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, \
+    APIForbidden
+from listenbrainz.webserver.views.api_tools import validate_auth_header, _filter_description_html
 from listenbrainz.webserver.rate_limiter import ratelimit
 
 
@@ -100,6 +102,58 @@ def create_user_recording_recommendation_event(user_name):
     return jsonify(event_data)
 
 
+@user_timeline_event_api_bp.route('/user/<user_name>/timeline-event/create/notification', methods=['POST', 'OPTIONS'])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
+def create_user_notification_event(user_name):
+    """ Post a message with a link on a user's timeline. Only approved users are allowed to perform this action.
+
+    The request should contain the following data:
+
+    .. code-block:: json
+
+        {
+            "metadata": {
+                "message": <the message to post, required>,
+            }
+        }
+
+    :param user_name: The MusicBrainz ID of the user on whose timeline the message is to be posted.
+    :type user_name: ``str``
+    :statuscode 200: Successful query, message has been posted!
+    :statuscode 400: Bad request, check ``response['error']`` for more details.
+    :statuscode 403: Forbidden, you are not an approved user.
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+
+    """
+    creator = validate_auth_header()
+    if creator["musicbrainz_id"] not in current_app.config['APPROVED_PLAYLIST_BOTS']:
+        raise APIForbidden("Only approved users are allowed to post a message on a user's timeline.")
+
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise APINotFound(f"Cannot find user: {user_name}")
+
+    try:
+        data = ujson.loads(request.get_data())['metadata']
+    except (ValueError, KeyError) as e:
+        raise APIBadRequest(f"Invalid JSON: {str(e)}")
+
+    if "message" not in data:
+        raise APIBadRequest("Invalid metadata: message is missing")
+
+    message = _filter_description_html(data["message"])
+    metadata = NotificationMetadata(creator=creator['musicbrainz_id'], message=message)
+
+    try:
+        db_user_timeline_event.create_user_notification_event(user['id'], metadata)
+    except DatabaseException:
+        raise APIInternalServerError("Something went wrong, please try again.")
+
+    return jsonify({'status': 'ok'})
+
+
 @user_timeline_event_api_bp.route('/user/<user_name>/feed/events', methods=['OPTIONS', 'GET'])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
@@ -128,16 +182,13 @@ def user_feed(user_name: str):
         max_ts = int(time.time())
 
     users_following = db_user_relationship.get_following_for_user(user['id'])
-    if len(users_following) == 0:
-        return jsonify({'payload': {
-            'count': 0,
-            'user_id': user_name,
-            'events': [],
-        }})
 
     # get all listen events
     musicbrainz_ids = [user['musicbrainz_id'] for user in users_following]
-    listen_events = get_listen_events(db_conn, musicbrainz_ids, min_ts, max_ts, count, time_range)
+    if len(users_following) == 0:
+        listen_events = []
+    else:
+        listen_events = get_listen_events(db_conn, musicbrainz_ids, min_ts, max_ts, count, time_range)
 
     # for events like "follow" and "recording recommendations", we want to show the user
     # their own events as well
@@ -156,8 +207,11 @@ def user_feed(user_name: str):
         count=count,
     )
 
+    notification_events = get_notification_events(user, count)
+
     # TODO: add playlist event and like event
-    all_events = sorted(listen_events + follow_events + recording_recommendation_events, key=lambda event: -event.created)
+    all_events = sorted(listen_events + follow_events + recording_recommendation_events + notification_events,
+                        key=lambda event: -event.created)
 
     # sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly
     for index, event in enumerate(all_events):
@@ -251,6 +305,21 @@ def get_follow_events(user_ids: Tuple[int], min_ts: int, max_ts: int, count: int
             current_app.logger.error('Validation error: ' + str(e), exc_info=True)
             continue
     return events
+
+
+def get_notification_events(user: dict, count: int) -> List[APITimelineEvent]:
+    """ Gets notification events for the user in the feed."""
+    notification_events_db = db_user_timeline_event.get_user_notification_events(user_id=user['id'], count=count)
+    events = []
+    for event in notification_events_db:
+        events.append(APITimelineEvent(
+            event_type=UserTimelineEventType.NOTIFICATION,
+            user_name=event.metadata.creator,
+            created=event.created.timestamp(),
+            metadata=APINotificationEvent(message=event.metadata.message)
+        ))
+    return events
+
 
 def get_recording_recommendation_events(users_for_events: List[dict], min_ts: int, max_ts: int, count: int) -> List[APITimelineEvent]:
     """ Gets all recording recommendation events in the feed.

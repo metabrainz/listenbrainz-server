@@ -24,10 +24,12 @@ import FollowButton from "./FollowButton";
 
 const UserPageHeading = ({
   user,
+  apiUrl,
   loggedInUser,
   loggedInUserFollowsUser = false,
 }: {
   user: ListenBrainzUser;
+  apiUrl: string;
   loggedInUser: ListenBrainzUser | null;
   loggedInUserFollowsUser: boolean;
 }) => {
@@ -38,6 +40,7 @@ const UserPageHeading = ({
         <FollowButton
           type="icon-only"
           user={user}
+          apiUrl={apiUrl}
           loggedInUser={loggedInUser}
           loggedInUserFollowsUser={loggedInUserFollowsUser}
         />
@@ -53,10 +56,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const propsElement = document.getElementById("react-props");
   const reactProps = JSON.parse(propsElement!.innerHTML);
-  const { user, current_user, logged_in_user_follows_user } = reactProps;
+  const {
+    user,
+    current_user,
+    logged_in_user_follows_user,
+    api_url,
+  } = reactProps;
   ReactDOM.render(
     <UserPageHeading
       user={user}
+      apiUrl={api_url}
       loggedInUser={current_user || null}
       loggedInUserFollowsUser={logged_in_user_follows_user}
     />,
