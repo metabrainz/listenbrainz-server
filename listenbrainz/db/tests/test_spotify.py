@@ -49,25 +49,16 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
         self.assertIsNone(token)
 
     def test_add_update_error(self):
-        old_spotify_user = db_spotify.get_user(self.user['id'])
-        self.assertTrue(old_spotify_user['record_listens'])
         db_spotify.add_update_error(self.user['id'], 'test error message')
-        spotify_user = db_spotify.get_user(self.user['id'])
-        self.assertFalse(spotify_user['record_listens'])
+        spotify_user = db_spotify.get_user_import_details(self.user['id'])
         self.assertEqual(spotify_user['error_message'], 'test error message')
         self.assertIsNotNone(spotify_user['last_updated'])
 
     def test_update_last_updated(self):
-        old_spotify_user = db_spotify.get_user(self.user['id'])
         db_spotify.update_last_updated(self.user['id'])
         spotify_user = db_spotify.get_user(self.user['id'])
-        self.assertTrue(spotify_user['record_listens'])
+        self.assertIsNone(spotify_user['error_message'])
         self.assertIsNotNone(spotify_user['last_updated'])
-
-        db_spotify.update_last_updated(self.user['id'], success=False)
-        new_spotify_user = db_spotify.get_user(self.user['id'])
-        self.assertFalse(new_spotify_user['record_listens'])
-        self.assertGreater(new_spotify_user['last_updated'], spotify_user['last_updated'])
 
     def test_update_token(self):
         old_spotify_user = db_spotify.get_user(self.user['id'])
