@@ -174,7 +174,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   const { user, api_url: apiUrl, sentry_dsn } = reactProps;
 
-  Sentry.init({ dsn: sentry_dsn });
+  if (sentry_dsn) {
+    Sentry.init({ dsn: sentry_dsn });
+  }
 
   ReactDOM.render(
     <ErrorBoundary>

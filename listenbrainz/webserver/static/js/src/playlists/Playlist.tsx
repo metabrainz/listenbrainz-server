@@ -955,7 +955,9 @@ document.addEventListener("DOMContentLoaded", () => {
     sentry_dsn,
   } = reactProps;
 
-  Sentry.init({ dsn: sentry_dsn });
+  if (sentry_dsn) {
+    Sentry.init({ dsn: sentry_dsn });
+  }
 
   const PlaylistPageWithAlertNotifications = withAlertNotifications(
     PlaylistPage

@@ -45,7 +45,7 @@ def load_playlist(playlist_mbid: str):
         "labs_api_url": current_app.config["LISTENBRAINZ_LABS_API_URL"],
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
         "playlist": serialize_jspf(playlist),
-        "sentry_dsn": current_app.config["LOG_SENTRY"]["dsn"]
+        "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn")`
     }
 
     return render_template(

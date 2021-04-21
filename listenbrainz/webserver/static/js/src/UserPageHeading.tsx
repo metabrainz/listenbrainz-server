@@ -65,7 +65,9 @@ document.addEventListener("DOMContentLoaded", () => {
     api_url,
   } = reactProps;
 
-  Sentry.init({ dsn: sentry_dsn });
+  if (sentry_dsn) {
+    Sentry.init({ dsn: sentry_dsn });
+  }
 
   ReactDOM.render(
     <UserPageHeading

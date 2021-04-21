@@ -60,7 +60,7 @@ def load():
         "spotify": spotify_data,
         "api_url": current_app.config["API_URL"],
         "recommendations": listens,
-        "sentry_dsn": current_app.config["LOG_SENTRY"]["dsn"]
+        "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn")`
     }
 
     return render_template(
