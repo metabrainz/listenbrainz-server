@@ -4,19 +4,25 @@ import ujson
 import redis
 from time import time
 from redis import Redis
+from typing import Optional
 
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import ListenStore
+from datetime import datetime
+
 
 class RedisListenStore(ListenStore):
 
     RECENT_LISTENS_KEY = "lb_recent_sorted"
-    RECENT_LISTENS_MAX = 100 
+    RECENT_LISTENS_MAX = 100
+    LISTEN_COUNT_PER_DAY_EXPIRY_TIME = 3 * 24 * 60 * 60  # 3 days in seconds
+    LISTEN_COUNT_PER_DAY_KEY_FORMAT = "lb_listen_count_for_day_{}"
+
 
     def __init__(self, log, conf):
         super(RedisListenStore, self).__init__(log)
-        self.log.info('Connecting to redis: %s:%s', conf['REDIS_HOST'], conf['REDIS_PORT'])
         self.redis = Redis(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'], decode_responses=True)
+        self.ns = conf['REDIS_NAMESPACE']
 
     def get_playing_now(self, user_id):
         """ Return the current playing song of the user
@@ -28,7 +34,7 @@ class RedisListenStore(ListenStore):
                 Listen object which is the currently playing song of the user
 
         """
-        data = self.redis.get('playing_now:{}'.format(user_id))
+        data = self.redis.get(self.ns + 'playing_now:{}'.format(user_id))
         if not data:
             return None
         data = ujson.loads(data)
@@ -44,7 +50,7 @@ class RedisListenStore(ListenStore):
             expire_time (int): the time in seconds in which the `playing_now` listen should expire
         """
         self.redis.setex(
-            'playing_now:{}'.format(user_id),
+            self.ns + 'playing_now:{}'.format(user_id),
             time=expire_time,
             value=ujson.dumps(listen).encode('utf-8')
         )
@@ -66,17 +72,16 @@ class RedisListenStore(ListenStore):
 
         recent = {}
         for listen in unique:
-            listen['listened_at'] = listen['listened_at'].timestamp()
-            recent[ujson.dumps(listen).encode('utf-8')] = float(listen['listened_at'])
+            recent[ujson.dumps(listen.to_json()).encode('utf-8')] = float(listen.ts_since_epoch)
 
         # Don't take this very seriously -- if it fails, really no big deal. Let is go.
         if recent:
-            self.redis.zadd(self.RECENT_LISTENS_KEY, recent, nx=True)
+            self.redis.zadd(self.ns + self.RECENT_LISTENS_KEY, recent, nx=True)
 
             # Don't prune the sorted list each time, but only when it reaches twice the desired size 
-            count = self.redis.zcard(self.RECENT_LISTENS_KEY) 
+            count = self.redis.zcard(self.ns + self.RECENT_LISTENS_KEY)
             if count > (self.RECENT_LISTENS_MAX * 2):
-                self.redis.zpopmin(self.RECENT_LISTENS_KEY, count - self.RECENT_LISTENS_MAX - 1)
+                self.redis.zpopmin(self.ns + self.RECENT_LISTENS_KEY, count - self.RECENT_LISTENS_MAX - 1)
 
 
     def get_recent_listens(self, max = RECENT_LISTENS_MAX):
@@ -84,7 +89,26 @@ class RedisListenStore(ListenStore):
             Get the max number of most recent listens
         """
         recent = []
-        for listen in self.redis.zrevrange(self.RECENT_LISTENS_KEY, 0, max - 1):
+        for listen in self.redis.zrevrange(self.ns + self.RECENT_LISTENS_KEY, 0, max - 1):
             recent.append(Listen.from_json(ujson.loads(listen)))
 
         return recent
+
+    def increment_listen_count_for_day(self, day: datetime, count: int):
+        """ Increment the number of listens submitted on the day `day`
+        by `count`.
+        """
+        key = self.LISTEN_COUNT_PER_DAY_KEY_FORMAT.format(day.strftime('%Y%m%d'))
+        if self.redis.exists(key):
+            self.redis.incrby(key, count)
+        else:
+            self.redis.setex(key, self.LISTEN_COUNT_PER_DAY_EXPIRY_TIME, count)
+
+    def get_listen_count_for_day(self, day: datetime) -> Optional[int]:
+        """ Get the number of listens submitted for day `day`, return None if not available.
+        """
+        key = self.LISTEN_COUNT_PER_DAY_KEY_FORMAT.format(day.strftime('%Y%m%d'))
+        listen_count = self.redis.get(key)
+        if listen_count:
+            return int(listen_count)
+        return None

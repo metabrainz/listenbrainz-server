@@ -1,0 +1,23 @@
+{{- define "KEY" -}}
+    {{ key (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .) }}
+{{- end -}}
+
+{{if service "pgbouncer-williams"}}
+{{with index (service "pgbouncer-williams") 0}}
+DB_CONNECT_MB = "dbname=musicbrainz_json_dump user=musicbrainz host={{.Address}} port={{.Port}} password=musicbrainz"
+{{end}}
+{{end}}
+
+{{if service "typesense-listenbrainz"}}
+{{with index (service "typesense-listenbrainz") 0}}
+TYPESENSE_HOST = "{{.Address}}"
+TYPESENSE_PORT = {{.Port}}
+{{end}}
+{{end}}
+
+TYPESENSE_API_KEY = '''{{template "KEY" "typesense_api_key"}}'''
+
+# Mapping specific settings
+
+# For debugging, only fetches a tiny portion of the data if True
+USE_MINIMAL_DATASET = False

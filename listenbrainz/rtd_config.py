@@ -9,26 +9,16 @@ SECRET_KEY = "CHANGE_ME"
 SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@db:5432/listenbrainz"
 MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@db:5432/messybrainz"
 
-POSTGRES_ADMIN_URI="postgresql://postgres@db/template1"
+POSTGRES_ADMIN_URI = "postgresql://postgres@db/postgres"
 
-# Other postgres configuration options
-# Oldest listens which can be stored in the database, in days.
-MAX_POSTGRES_LISTEN_HISTORY = "-1"
-# Log Postgres queries if they execeed this time, in milliseconds.
-PG_QUERY_TIMEOUT = "3000"
-# Set to True to enable 'synchronous_commit' for Postgres. Default: False
-PG_ASYNC_LISTEN_COMMIT = False
-
+SQLALCHEMY_TIMESCALE_URI = "postgresql://listenbrainz_ts:listenbrainz_ts@db/listenbrainz_ts"
+TIMESCALE_ADMIN_URI = "postgresql://postgres:postgres@db/postgres"
+TIMESCALE_ADMIN_LB_URI = "postgresql://postgres:postgres@db/listenbrainz_ts"
 
 # Redis
 REDIS_HOST = "redis"
 REDIS_PORT = 6379
 REDIS_NAMESPACE = "listenbrainz"
-
-# Influx DB (main listen store)
-INFLUX_HOST    = "influx"
-INFLUX_PORT    = 8086
-INFLUX_DB_NAME  = "listenbrainz"
 
 # RabbitMQ
 RABBITMQ_HOST = "rabbitmq"
@@ -43,8 +33,6 @@ INCOMING_EXCHANGE = "incoming"
 INCOMING_QUEUE = "incoming"
 UNIQUE_EXCHANGE = "unique"
 UNIQUE_QUEUE = "unique"
-BIGQUERY_EXCHANGE = "bigquery"
-BIGQUERY_QUEUE = "bigquery"
 
 # MusicBrainz OAuth
 MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"
@@ -53,14 +41,6 @@ MUSICBRAINZ_CLIENT_SECRET = "CLIENT_SECRET"
 # Lastfm API
 LASTFM_API_URL = "https://ws.audioscrobbler.com/2.0/"
 LASTFM_API_KEY = "USE_LASTFM_API_KEY"
-
-# BigQuery support
-# Enable/disable support. If enabled, the Application Credentials must reside in
-# bigquery-credentials.json in the top level directory.
-WRITE_TO_BIGQUERY = False
-BIGQUERY_PROJECT_ID = "listenbrainz"
-BIGQUERY_DATASET_ID = "listenbrainz_test"
-BIGQUERY_TABLE_ID = "listen"
 
 # Stats
 STATS_ENTITY_LIMIT = 100 # the number of entities to calculate at max with BQ
@@ -75,10 +55,6 @@ PLAYING_NOW_MAX_DURATION = 10 * 60
 
 #LOG_FILE_ENABLED = True
 #LOG_FILE = "./listenbrainz.log"
-
-#LOG_EMAIL_ENABLED = True
-#LOG_EMAIL_TOPIC = "ListenBrainz Webserver Failure"
-#LOG_EMAIL_RECIPIENTS = []  # List of email addresses (strings)
 
 #LOG_SENTRY_ENABLED = True
 #SENTRY_DSN = ""

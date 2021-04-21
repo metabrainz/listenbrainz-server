@@ -5,39 +5,25 @@ version: "3.4"
 # `../` to refer to a directory in the main code checkout
 
 volumes:
-  postgres:
   redis:
-  influxdb:
+  timescaledb:
   rabbitmq:
+  # The contents of /root, so that bash and ipython can store history
+  web_home:
 
 services:
-
-  db:
-    image: postgres:12.3
-    volumes:
-      - postgres:/var/lib/postgresql/data:z
-    environment:
-      POSTGRES_PASSWORD: 'postgres'
 
   redis:
     image: redis:5.0.3
     volumes:
       - redis:/data:z
 
-  influx:
-    image: influxdb:1.7.9
+  db:
+    image: timescale/timescaledb:1.7.4-pg12
     volumes:
-      - influxdb:/var/lib/influxdb:z
+      - timescaledb:/var/lib/postgresql/data:z
     environment:
-      INFLUXDB_REPORTING_DISABLED: 'true'
-      INFLUXDB_META_LOGGING_ENABLED: 'false'
-      INFLUXDB_DATA_QUERY_LOG_ENABLED: 'false'
-      INFLUXDB_DATA_WAL_LOGGING_ENABLED: 'false'
-      INFLUXDB_DATA_DATA_LOGGING_ENABLED: 'false'
-      INFLUXDB_HTTP_LOG_ENABLED: 'false'
-      INFLUXDB_CONTINUOUS_QUERIES_LOG_ENABLED: 'false'
-      INFLUXDB_DATA_INDEX_VERSION: 'tsi1'
-      INFLUXDB_DATA_MAX_INDEX_LOG_FILE_SIZE: '5m'
+      POSTGRES_PASSWORD: 'postgres'
 
   rabbitmq:
     image: rabbitmq:3.6.5
@@ -49,9 +35,15 @@ services:
       context: ..
       dockerfile: Dockerfile
       target: listenbrainz-dev
-    command: python3 /code/listenbrainz/manage.py runserver -h 0.0.0.0 -p 80 -d
+      args:
+        GIT_COMMIT_SHA: HEAD
+    environment:
+      FLASK_APP: listenbrainz.webserver
+      FLASK_ENV: development
+    command: flask run -h 0.0.0.0 -p 80
     image: web
     volumes:
+      - web_home:/root
       - ..:/code/listenbrainz:z
       - ../listenbrainz/webserver/static:/static
     ports:
@@ -59,7 +51,6 @@ services:
     depends_on:
       - redis
       - db
-      - influx
       - rabbitmq
 
   api_compat:
@@ -72,17 +63,15 @@ services:
     depends_on:
       - redis
       - db
-      - influx
       - rabbitmq
 
-  influx_writer:
+  timescale_writer:
     image: web
-    command: python3 -m "listenbrainz.influx_writer.influx_writer"
+    command: python3 -m "listenbrainz.timescale_writer.timescale_writer"
     volumes:
       - ..:/code/listenbrainz:z
     depends_on:
       - redis
-      - influx
       - rabbitmq
 
   spotify_reader:
@@ -92,28 +81,15 @@ services:
     command: python3 -m "listenbrainz.spotify_updater.spotify_read_listens"
     depends_on:
       - redis
-      - influx
       - rabbitmq
 
-  bigquery:
-    image: web
-    volumes:
-      - ../credentials:/code/credentials:z
-      - ..:/code/listenbrainz:z
-    environment:
-      GOOGLE_APPLICATION_CREDENTIALS: '/code/credentials/bigquery-credentials.json'
-    command: python3 -m "listenbrainz.bigquery_writer.bigquery_writer"
-    depends_on:
-      - redis
-      - rabbitmq
-
-  follow_server:
+  websockets:
     image: web
     volumes:
       - ..:/code/listenbrainz:z
-    command: python manage.py run_follow_server -h 0.0.0.0 -p 8081
+    command: python manage.py run_websockets -h 0.0.0.0 -p 8082
     ports:
-      - "8081:8081"
+      - "8082:8082"
     depends_on:
       - redis
       - rabbitmq
@@ -122,17 +98,14 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.webpack
+      # We target webpack-base and mount the JS code folder as a volume
+      # as opposed to using webpack-with-source target and having to rebuild the image each time
+      target: webpack-base
     command: npm run build:dev
     volumes:
+      # Mount source front-end files
       - ../listenbrainz/webserver/static:/code/static:z
-      - ../listenbrainz/webserver/static:/static:z
-
-  type_checker:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.webpack
-    command: npm run type-check:watch
-    volumes:
-      - ../listenbrainz/webserver/static:/code/static:z
+      # We mount this as a sort of shared volume
+      # where we put the compiled output to be served by the service "web"
       - ../listenbrainz/webserver/static:/static:z
 

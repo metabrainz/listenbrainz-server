@@ -11,10 +11,6 @@ site [#]_.
 
 *Note*: All ListenBrainz services are only available on **HTTPS**!
 
-.. [#] The beta endpoints (i.e. ``beta.listenbrainz.org``) were deprecated in
-   Fall 2017. If you were using this endpoint, please use the current,
-   production endpoints instead.
-
 Reference
 ---------
 
@@ -25,7 +21,7 @@ Core API Endpoints
    :blueprints: api_v1
    :include-empty-docstring:
    :undoc-static:
-   :undoc-endpoints: api_v1.latest_import
+   :undoc-endpoints: api_v1.latest_import, api_v1.user_feed
 
 .. http:get:: /1/latest-import
 
@@ -61,13 +57,21 @@ Core API Endpoints
   :statuscode 400: invalid JSON sent, see error message for details.
   :statuscode 401: invalid authorization. See error message for details.
 
+Playlists API Endpoints
+^^^^^^^^^^^^^^^^^^^^^^^
+The playlists API allows for the creation and editing of lists of recordings
+
+.. autoflask:: listenbrainz.webserver:create_app_rtfd()
+   :blueprints: playlist_api_v1
+   :include-empty-docstring:
+   :undoc-static:
+
+
 Statistics API Endpoints
-^^^^^^^^^^^^^^^^^^^^
-ListenBrainz now has a statistics infrastructure that collects and computes statistics
+^^^^^^^^^^^^^^^^^^^^^^^^
+ListenBrainz has a statistics infrastructure that collects and computes statistics
 from the listen data that has been stored in the database. The endpoints in this section
-offer a way to get this data programmatically. Right now, we only calculate statistics
-for the top artists that a user has listened to.However, we plan to add more statistics
-in the near future.
+offer a way to get this data programmatically.
 
 .. autoflask:: listenbrainz.webserver:create_app_rtfd()
    :blueprints: stats_api_v1
@@ -79,6 +83,15 @@ Status API Endpoints
 
 .. autoflask:: listenbrainz.webserver:create_app_rtfd()
    :blueprints: status_api_v1
+   :include-empty-docstring:
+   :undoc-static:
+
+Social API Endpoints
+^^^^^^^^^^^^^^^^^^^^
+These apis allow to interact with social features of ListenBrainz.
+
+.. autoflask:: listenbrainz.webserver:create_app_rtfd()
+   :blueprints: social_api_v1
    :include-empty-docstring:
    :undoc-static:
 
@@ -99,7 +112,7 @@ following headers:
   clocks)
 
 - **X-RateLimit-Reset**: UNIX epoch number of seconds (without timezone) when
-  current time window expires [#]_
+  current time window expires [#]
 
 Rate limiting is automatic and the client must use these headers to determine
 the rate to make API calls. If the client exceeds the number of requests
@@ -127,4 +140,3 @@ Constants that are relevant to using the API:
 .. autodata:: listenbrainz.webserver.views.api_tools.DEFAULT_ITEMS_PER_GET
 .. autodata:: listenbrainz.webserver.views.api_tools.MAX_TAGS_PER_LISTEN
 .. autodata:: listenbrainz.webserver.views.api_tools.MAX_TAG_SIZE
-

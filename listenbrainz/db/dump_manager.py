@@ -21,6 +21,7 @@ create and import postgres data dumps.
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import click
+from datetime import datetime
 import listenbrainz.db.dump as db_dump
 import logging
 import os
@@ -28,29 +29,37 @@ import re
 import shutil
 import subprocess
 import sys
+import tarfile
+import tempfile
 
-from brainzutils.mail import send_mail
-from datetime import datetime
+import psycopg2
+import ujson
 from flask import current_app, render_template
-from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
+from brainzutils.mail import send_mail
 from listenbrainz import db
+from listenbrainz.listen import convert_dump_row_to_spark_row
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app
-from listenbrainz.webserver.influx_connection import init_influx_connection
+from listenbrainz.webserver.timescale_connection import init_timescale_connection
 
 
 NUMBER_OF_FULL_DUMPS_TO_KEEP = 2
-NUMBER_OF_INCREMENTAL_DUMPS_TO_KEEP = 6
+NUMBER_OF_INCREMENTAL_DUMPS_TO_KEEP = 30
+NUMBER_OF_FEEDBACK_DUMPS_TO_KEEP = 2
 
 cli = click.Group()
 
+
 def send_dump_creation_notification(dump_name, dump_type):
     if not current_app.config['TESTING']:
-        dump_link = 'http://ftp.musicbrainz.org/pub/musicbrainz/listenbrainz/{}/{}'.format(dump_type, dump_name)
+        dump_link = 'http://ftp.musicbrainz.org/pub/musicbrainz/listenbrainz/{}/{}'.format(
+            dump_type, dump_name)
         send_mail(
-            subject="ListenBrainz {} dump created - {}".format(dump_type, dump_name),
-            text=render_template('emails/data_dump_created_notification.txt', dump_name=dump_name, dump_link=dump_link),
+            subject="ListenBrainz {} dump created - {}".format(
+                dump_type, dump_name),
+            text=render_template('emails/data_dump_created_notification.txt',
+                                 dump_name=dump_name, dump_link=dump_link),
             recipients=['listenbrainz-observability@metabrainz.org'],
             from_name='ListenBrainz',
             from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN']
@@ -64,7 +73,7 @@ def send_dump_creation_notification(dump_name, dump_type):
 @click.option('--last-dump-id', is_flag=True)
 def create_full(location, threads, dump_id, last_dump_id):
     """ Create a ListenBrainz data dump which includes a private dump, a statistics dump
-        and a dump of the actual listens from InfluxDB
+        and a dump of the actual listens from the listenstore
 
         Args:
             location (str): path to the directory where the dump should be made
@@ -74,11 +83,12 @@ def create_full(location, threads, dump_id, last_dump_id):
     """
     app = create_app()
     with app.app_context():
-        from listenbrainz.webserver.influx_connection import _influx as ls
+        from listenbrainz.webserver.timescale_connection import _ts as ls
         if last_dump_id:
             all_dumps = db_dump.get_dump_entries()
             if len(all_dumps) == 0:
-                current_app.logger.error("Cannot create full dump with last dump's ID, no dump exists!")
+                current_app.logger.error(
+                    "Cannot create full dump with last dump's ID, no dump exists!")
                 sys.exit(-1)
             dump_id = all_dumps[0]['id']
 
@@ -92,22 +102,45 @@ def create_full(location, threads, dump_id, last_dump_id):
                 sys.exit(-1)
             end_time = dump_entry['created']
 
-        dump_name = 'listenbrainz-dump-{dump_id}-{time}-full'.format(dump_id=dump_id, time=end_time.strftime('%Y%m%d-%H%M%S'))
+        ts = end_time.strftime('%Y%m%d-%H%M%S')
+        dump_name = 'listenbrainz-dump-{dump_id}-{time}-full'.format(
+            dump_id=dump_id, time=ts)
         dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
         db_dump.dump_postgres_db(dump_path, end_time, threads)
-        ls.dump_listens(dump_path, dump_id=dump_id, end_time=end_time, threads=threads, spark_format=False)
-        ls.dump_listens(dump_path, dump_id=dump_id, end_time=end_time, threads=threads, spark_format=True)
+
+        listens_dump_file = ls.dump_listens(
+            dump_path, dump_id=dump_id, end_time=end_time, threads=threads)
+        spark_dump_file = 'listenbrainz-listens-dump-{dump_id}-{time}-spark-full.tar.xz'.format(dump_id=dump_id,
+                                                                                                time=ts)
+        spark_dump_path = os.path.join(location, dump_path, spark_dump_file)
+        transmogrify_dump_file_to_spark_import_format(
+            listens_dump_file, spark_dump_path, threads)
+
         try:
             write_hashes(dump_path)
         except IOError as e:
-            current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
-            return
+            current_app.logger.error(
+                'Unable to create hash files! Error: %s', str(e), exc_info=True)
+            sys.exit(-1)
+
+        try:
+            if not sanity_check_dumps(dump_path, 12):
+                return sys.exit(-1)
+        except OSError as e:
+            sys.exit(-1)
 
         # if in production, send an email to interested people for observability
         send_dump_creation_notification(dump_name, 'fullexport')
 
-        current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
+        current_app.logger.info(
+            'Dumps created and hashes written at %s' % dump_path)
+
+        # Write the DUMP_ID file so that the FTP sync scripts can be more robust
+        with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
+            f.write("%s %s full\n" % (ts, dump_id))
+
+        sys.exit(0)
 
 
 @cli.command(name="create_incremental")
@@ -117,57 +150,108 @@ def create_full(location, threads, dump_id, last_dump_id):
 def create_incremental(location, threads, dump_id):
     app = create_app()
     with app.app_context():
-        from listenbrainz.webserver.influx_connection import _influx as ls
+        from listenbrainz.webserver.timescale_connection import _ts as ls
         if dump_id is None:
             end_time = datetime.now()
             dump_id = db_dump.add_dump_entry(int(end_time.strftime('%s')))
         else:
             dump_entry = db_dump.get_dump_entry(dump_id)
             if dump_entry is None:
-                current_app.logger.error("No dump with ID %d found, exiting!", dump_id)
+                current_app.logger.error(
+                    "No dump with ID %d found, exiting!", dump_id)
                 sys.exit(-1)
             end_time = dump_entry['created']
 
         prev_dump_entry = db_dump.get_dump_entry(dump_id - 1)
-        if prev_dump_entry is None: # incremental dumps must have a previous dump in the series
-            current_app.logger.error("Invalid dump ID %d, could not find previous dump", dump_id)
+        if prev_dump_entry is None:  # incremental dumps must have a previous dump in the series
+            current_app.logger.error(
+                "Invalid dump ID %d, could not find previous dump", dump_id)
             sys.exit(-1)
         start_time = prev_dump_entry['created']
-        current_app.logger.info("Dumping data from %s to %s", start_time, end_time)
+        current_app.logger.info(
+            "Dumping data from %s to %s", start_time, end_time)
 
-        dump_name = 'listenbrainz-dump-{dump_id}-{time}-incremental'.format(dump_id=dump_id, time=end_time.strftime('%Y%m%d-%H%M%S'))
+        dump_name = 'listenbrainz-dump-{dump_id}-{time}-incremental'.format(
+            dump_id=dump_id, time=end_time.strftime('%Y%m%d-%H%M%S'))
         dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
-        ls.dump_listens(dump_path, dump_id=dump_id, start_time=start_time, end_time=end_time, threads=threads, spark_format=False)
-        ls.dump_listens(dump_path, dump_id=dump_id, start_time=start_time, end_time=end_time, threads=threads, spark_format=True)
+        listens_dump_file = ls.dump_listens(
+            dump_path, dump_id=dump_id, start_time=start_time, end_time=end_time, threads=threads)
+        spark_dump_file = 'listenbrainz-listens-dump-{dump_id}-{time}-spark-incremental.tar.xz'.format(dump_id=dump_id,
+                                                                                                       time=end_time.strftime('%Y%m%d-%H%M%S'))
+        spark_dump_path = os.path.join(location, dump_path, spark_dump_file)
+        transmogrify_dump_file_to_spark_import_format(
+            listens_dump_file, spark_dump_path, threads)
         try:
             write_hashes(dump_path)
         except IOError as e:
-            current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
-            return
+            current_app.logger.error(
+                'Unable to create hash files! Error: %s', str(e), exc_info=True)
+            sys.exit(-1)
+
+        try:
+            if not sanity_check_dumps(dump_path, 6):
+                return sys.exit(-1)
+        except OSError as e:
+            sys.exit(-1)
 
         # if in production, send an email to interested people for observability
         send_dump_creation_notification(dump_name, 'incremental')
 
-        current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
+        # Write the DUMP_ID file so that the FTP sync scripts can be more robust
+        with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
+            f.write("%s %s incremental\n" %
+                    (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
+
+        current_app.logger.info(
+            'Dumps created and hashes written at %s' % dump_path)
+        sys.exit(0)
 
 
-@cli.command()
+@cli.command(name="create_feedback")
 @click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'))
 @click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
-def create_spark_dump(location, threads):
-    with create_app().app_context():
-        from listenbrainz.webserver.influx_connection import _influx as ls
-        time_now = datetime.today()
-        dump_path = os.path.join(location, 'listenbrainz-spark-dump-{time}'.format(time=time_now.strftime('%Y%m%d-%H%M%S')))
+def create_feedback(location, threads):
+    """ Create a spark formatted dump of user/recommendation feedback data.
+
+        Args:
+            location (str): path to the directory where the dump should be made
+            threads (int): the number of threads to be used while compression
+    """
+    app = create_app()
+    with app.app_context():
+
+        end_time = datetime.now()
+        ts = end_time.strftime('%Y%m%d-%H%M%S')
+        dump_name = 'listenbrainz-feedback-{time}-full'.format(time=ts)
+        dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
-        ls.dump_listens(dump_path, time_now, threads, spark_format=True)
+        db_dump.dump_feedback_for_spark(dump_path, end_time, threads)
+
         try:
             write_hashes(dump_path)
         except IOError as e:
-            current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
-            return
-        current_app.logger.info('Dump created and hash written at %s', dump_path)
+            current_app.logger.error(
+                'Unable to create hash files! Error: %s', str(e), exc_info=True)
+            sys.exit(-1)
+
+        try:
+            if not sanity_check_dumps(dump_path, 3):
+                sys.exit(-1)
+        except OSError as e:
+            sys.exit(-1)
+
+        # if in production, send an email to interested people for observability
+        send_dump_creation_notification(dump_name, 'feedback')
+
+        # Write the DUMP_ID file so that the FTP sync scripts can be more robust
+        with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
+            f.write("%s 0 feedback\n" % (end_time.strftime('%Y%m%d-%H%M%S')))
+
+        current_app.logger.info(
+            'Feedback dump created and hashes written at %s' % dump_path)
+
+        sys.exit(0)
 
 
 @cli.command(name="import_dump")
@@ -198,31 +282,38 @@ def import_dump(private_archive, public_archive, listen_archive, threads):
     with app.app_context():
         db_dump.import_postgres_dump(private_archive, public_archive, threads)
 
-        from listenbrainz.webserver.influx_connection import _influx as ls
+        from listenbrainz.webserver.timescale_connection import _ts as ls
         try:
             ls.import_listens_dump(listen_archive, threads)
+        except psycopg2.OperationalError as e:
+            current_app.logger.critical(
+                'OperationalError while trying to import data: %s', str(e), exc_info=True)
+            raise
         except IOError as e:
-            current_app.logger.critical('IOError while trying to import data into Influx: %s', str(e), exc_info=True)
-            raise
-        except InfluxDBClientError as e:
-            current_app.logger.critical('Error while sending data to Influx: %s', str(e), exc_info=True)
-            raise
-        except InfluxDBServerError as e:
-            current_app.logger.critical('InfluxDB Server Error while importing data: %s', str(e), exc_info=True)
+            current_app.logger.critical(
+                'IOError while trying to import data: %s', str(e), exc_info=True)
             raise
         except Exception as e:
-            current_app.logger.critical('Unexpected error while importing data: %s', str(e), exc_info=True)
+            current_app.logger.critical(
+                'Unexpected error while importing data: %s', str(e), exc_info=True)
             raise
+
+    sys.exit(0)
 
 
 @cli.command(name="delete_old_dumps")
 @click.argument('location', type=str)
 def delete_old_dumps(location):
     _cleanup_dumps(location)
+    sys.exit(0)
 
 
 def get_dump_id(dump_name):
     return int(dump_name.split('-')[2])
+
+
+def get_dump_ts(dump_name):
+    return dump_name.split('-')[2] + dump_name.split('-')[3]
 
 
 def _cleanup_dumps(location):
@@ -234,6 +325,8 @@ def _cleanup_dumps(location):
     Returns:
         (int, int): the number of dumps remaining, the number of dumps deleted
     """
+
+    # Clean up full dumps
     full_dump_re = re.compile('listenbrainz-dump-[0-9]*-[0-9]*-[0-9]*-full')
     dump_files = [x for x in os.listdir(location) if full_dump_re.match(x)]
     full_dumps = [x for x in sorted(dump_files, key=get_dump_id, reverse=True)]
@@ -242,13 +335,31 @@ def _cleanup_dumps(location):
     else:
         remove_dumps(location, full_dumps, NUMBER_OF_FULL_DUMPS_TO_KEEP)
 
-    incremental_dump_re = re.compile('listenbrainz-dump-[0-9]*-[0-9]*-[0-9]*-incremental')
-    dump_files = [x for x in os.listdir(location) if incremental_dump_re.match(x)]
-    incremental_dumps = [x for x in sorted(dump_files, key=get_dump_id, reverse=True)]
+    # Clean up incremental dumps
+    incremental_dump_re = re.compile(
+        'listenbrainz-dump-[0-9]*-[0-9]*-[0-9]*-incremental')
+    dump_files = [x for x in os.listdir(
+        location) if incremental_dump_re.match(x)]
+    incremental_dumps = [x for x in sorted(
+        dump_files, key=get_dump_id, reverse=True)]
     if not incremental_dumps:
-        print('No full dumps present in specified directory!')
+        print('No incremental dumps present in specified directory!')
     else:
-        remove_dumps(location, incremental_dumps, NUMBER_OF_INCREMENTAL_DUMPS_TO_KEEP)
+        remove_dumps(location, incremental_dumps,
+                     NUMBER_OF_INCREMENTAL_DUMPS_TO_KEEP)
+
+    # Clean up spark / feedback dumps
+    spark_dump_re = re.compile(
+        'listenbrainz-feedback-[0-9]*-[0-9]*-full')
+    dump_files = [x for x in os.listdir(
+        location) if spark_dump_re.match(x)]
+    spark_dumps = [x for x in sorted(
+        dump_files, key=get_dump_ts, reverse=True)]
+    if not spark_dumps:
+        print('No spark feedback dumps present in specified directory!')
+    else:
+        remove_dumps(location, spark_dumps,
+                     NUMBER_OF_FEEDBACK_DUMPS_TO_KEEP)
 
 
 def remove_dumps(location, dumps, remaining_count):
@@ -265,7 +376,8 @@ def remove_dumps(location, dumps, remaining_count):
         shutil.rmtree(os.path.join(location, dump))
         remove_count += 1
 
-    print('Deleted %d old exports, kept %d exports!' % (remove_count, keep_count))
+    print('Deleted %d old exports, kept %d exports!' %
+          (remove_count, keep_count))
     return keep_count, remove_count
 
 
@@ -278,11 +390,90 @@ def write_hashes(location):
     for file in os.listdir(location):
         try:
             with open(os.path.join(location, '{}.md5'.format(file)), 'w') as f:
-                md5sum = subprocess.check_output(['md5sum', os.path.join(location, file)]).decode('utf-8').split()[0]
+                md5sum = subprocess.check_output(
+                    ['md5sum', os.path.join(location, file)]).decode('utf-8').split()[0]
                 f.write(md5sum)
             with open(os.path.join(location, '{}.sha256'.format(file)), 'w') as f:
-                sha256sum = subprocess.check_output(['sha256sum', os.path.join(location, file)]).decode('utf-8').split()[0]
+                sha256sum = subprocess.check_output(
+                    ['sha256sum', os.path.join(location, file)]).decode('utf-8').split()[0]
                 f.write(sha256sum)
-        except IOError as e:
-            current_app.logger.error('IOError while trying to write hash files for file %s: %s', file, str(e), exc_info=True)
+        except OSError as e:
+            current_app.logger.error(
+                'IOError while trying to write hash files for file %s: %s', file, str(e), exc_info=True)
             raise
+
+
+def sanity_check_dumps(location, expected_count):
+    """ Sanity check the generated dumps to ensure that none are empty
+        and make sure that the right number of dump files exist.
+
+    Args:
+        location (str): the path in which the dump archive files are present
+        expected_count (int): the number of files that are expected to be present
+    Return:
+        boolean: true if the dump passes the sanity check
+    """
+
+    count = 0
+    for file in os.listdir(location):
+        try:
+            dump_file = os.path.join(location, file)
+            if os.path.getsize(dump_file) == 0:
+                print("Dump file %s is empty!" % dump_file)
+                return False
+            count += 1
+        except OSError as e:
+            return False
+
+    if expected_count == count:
+        return True
+
+    print("Expected %d dump files, found %d. Aborting." %
+          (expected_count, count))
+    return False
+
+
+def transmogrify_dump_file_to_spark_import_format(in_file, out_file, threads):
+    """ Decompress and convert an LB dump,  ready for spark.
+
+    Args:
+        in_file: The tar.xz dump file to import
+        out_file: The spark dump file the dump should be mogrified to.
+        threads: The number of threads to use to compress the spark dump
+    """
+    try:
+        with tarfile.open(in_file, "r:xz") as tarf:  # yep, going with that one again!
+            with open(out_file, 'w') as archive:
+                pxz_command = ['pxz', '--compress',
+                               '-T{threads}'.format(threads=threads)]
+                pxz = subprocess.Popen(
+                    pxz_command, stdin=subprocess.PIPE, stdout=archive)
+
+                with tarfile.open(fileobj=pxz.stdin, mode='w|') as out_tar:
+                    for member in tarf:
+                        if member.name.endswith(".listens"):
+                            filename = member.name.replace(".listens", ".json")
+                            filename = filename.replace("-full", "-spark-full")
+                            print("mogrify: ", filename)
+                            tmp_file = tempfile.mkstemp()
+                            with os.fdopen(tmp_file[0], "w") as out_f:
+                                with tarf.extractfile(member) as f:
+                                    while True:
+                                        line = f.readline()
+                                        if not line:
+                                            break
+
+                                        listen = ujson.loads(line)
+                                        out_f.write(ujson.dumps(
+                                            convert_dump_row_to_spark_row(listen)) + "\n")
+                            out_tar.add(tmp_file[1], arcname=filename)
+                            os.unlink(tmp_file[1])
+
+                pxz.stdin.close()
+
+            pxz.wait()
+
+    except IOError as e:
+        current_app.logger.error('IOError while trying to mogrify spark dump file for file %s -> %s: %s',
+                                 in_file, out_file, str(e), exc_info=True)
+        raise

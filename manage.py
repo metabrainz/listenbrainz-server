@@ -1,13 +1,13 @@
+import listenbrainz.db.dump_manager as dump_manager
+import listenbrainz.spark.request_manage as spark_request_manage
 from listenbrainz import db
+from listenbrainz.db import timescale as ts
 from listenbrainz import webserver
-from listenbrainz import stats
 from werkzeug.serving import run_simple
-import subprocess
 import os
 import click
-import subprocess
-from urllib.parse import urlsplit
-from influxdb import InfluxDBClient
+import sqlalchemy
+from time import sleep
 
 from listenbrainz.utils import safely_import_config
 safely_import_config()
@@ -17,27 +17,13 @@ safely_import_config()
 def cli():
     pass
 
-ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'admin', 'sql')
-MSB_ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'admin', 'messybrainz', 'sql')
-ADMIN_INFLUX_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'admin', 'influx')
 
-
-@cli.command()
-@click.option("--host", "-h", default="0.0.0.0", show_default=True)
-@click.option("--port", "-p", default=8080, show_default=True)
-@click.option("--debug", "-d", is_flag=True,
-              help="Turns debugging mode on or off. If specified, overrides "
-                   "'DEBUG' value in the config file.")
-def runserver(host, port, debug=False):
-    application = webserver.create_app()
-    run_simple(
-        hostname=host,
-        port=port,
-        application=application,
-        use_debugger=debug,
-        use_reloader=debug,
-        processes=5
-    )
+ADMIN_SQL_DIR = os.path.join(os.path.dirname(
+    os.path.realpath(__file__)), 'admin', 'sql')
+MSB_ADMIN_SQL_DIR = os.path.join(os.path.dirname(
+    os.path.realpath(__file__)), 'admin', 'messybrainz', 'sql')
+TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(
+    os.path.realpath(__file__)), 'admin', 'timescale')
 
 
 @cli.command(name="run_api_compat_server")
@@ -57,15 +43,16 @@ def run_api_compat_server(host, port, debug=False):
         processes=5
     )
 
-@cli.command(name="run_follow_server")
+
+@cli.command(name="run_websockets")
 @click.option("--host", "-h", default="0.0.0.0", show_default=True)
-@click.option("--port", "-p", default=8081, show_default=True)
+@click.option("--port", "-p", default=8082, show_default=True)
 @click.option("--debug", "-d", is_flag=True,
               help="Turns debugging mode on or off. If specified, overrides "
                    "'DEBUG' value in the config file.")
-def run_follow_server(host, port, debug=True):
-    from listenbrainz.follow_server.follow_server import run_follow_server
-    run_follow_server(host=host, port=port, debug=debug)
+def run_websockets(host, port, debug=True):
+    from listenbrainz.websockets.websockets import run_websockets
+    run_websockets(host=host, port=port, debug=debug)
 
 
 @cli.command(name="init_db")
@@ -81,37 +68,44 @@ def init_db(force, create_db):
     from listenbrainz import config
     db.init_db_connection(config.POSTGRES_ADMIN_URI)
     if force:
-        res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'drop_db.sql'))
+        res = db.run_sql_script_without_transaction(
+            os.path.join(ADMIN_SQL_DIR, 'drop_db.sql'))
         if not res:
-            raise Exception('Failed to drop existing database and user! Exit code: %i' % res)
+            raise Exception(
+                'Failed to drop existing database and user! Exit code: %i' % res)
 
     if create_db or force:
-        print('Creating user and a database...')
-        res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_db.sql'))
+        print('PG: Creating user and a database...')
+        res = db.run_sql_script_without_transaction(
+            os.path.join(ADMIN_SQL_DIR, 'create_db.sql'))
         if not res:
-            raise Exception('Failed to create new database and user! Exit code: %i' % res)
+            raise Exception(
+                'Failed to create new database and user! Exit code: %i' % res)
 
         db.init_db_connection(config.POSTGRES_ADMIN_LB_URI)
-        print('Creating database extensions...')
-        res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'))
+        print('PG: Creating database extensions...')
+        res = db.run_sql_script_without_transaction(
+            os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'))
     # Don't raise an exception if the extension already exists
 
     application = webserver.create_app()
     with application.app_context():
-        print('Creating schema...')
+        print('PG: Creating schema...')
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_schema.sql'))
 
-        print('Creating Types...')
+        print('PG: Creating Types...')
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_types.sql'))
 
-        print('Creating tables...')
+        print('PG: Creating tables...')
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_tables.sql'))
 
-        print('Creating primary and foreign keys...')
-        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_primary_keys.sql'))
-        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
+        print('PG: Creating primary and foreign keys...')
+        db.run_sql_script(os.path.join(
+            ADMIN_SQL_DIR, 'create_primary_keys.sql'))
+        db.run_sql_script(os.path.join(
+            ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
 
-        print('Creating indexes...')
+        print('PG: Creating indexes...')
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
 
         print("Done!")
@@ -130,70 +124,136 @@ def init_msb_db(force, create_db):
     from listenbrainz import config
     db.init_db_connection(config.POSTGRES_ADMIN_URI)
     if force:
-        res = db.run_sql_script_without_transaction(os.path.join(MSB_ADMIN_SQL_DIR, 'drop_db.sql'))
+        res = db.run_sql_script_without_transaction(
+            os.path.join(MSB_ADMIN_SQL_DIR, 'drop_db.sql'))
         if not res:
-            raise Exception('Failed to drop existing database and user! Exit code: %s' % res)
+            raise Exception(
+                'Failed to drop existing database and user! Exit code: %s' % res)
 
     if create_db or force:
-        print('Creating user and a database...')
-        res = db.run_sql_script_without_transaction(os.path.join(MSB_ADMIN_SQL_DIR, 'create_db.sql'))
+        print('PG: Creating user and a database...')
+        res = db.run_sql_script_without_transaction(
+            os.path.join(MSB_ADMIN_SQL_DIR, 'create_db.sql'))
         if not res:
-            raise Exception('Failed to create new database and user! Exit code: %s' % res)
+            raise Exception(
+                'Failed to create new database and user! Exit code: %s' % res)
 
-    print('Creating database extensions...')
-    res = db.run_sql_script_without_transaction(os.path.join(MSB_ADMIN_SQL_DIR, 'create_extensions.sql'))
+    print('PG: Creating database extensions...')
+    res = db.run_sql_script_without_transaction(
+        os.path.join(MSB_ADMIN_SQL_DIR, 'create_extensions.sql'))
     # Don't raise an exception if the extension already exists
 
     db.engine.dispose()
 
-#    print('Creating schema...')
+#    print('PG: Creating schema...')
 #    exit_code = run_psql_script('create_schema.sql')
 #    if exit_code != 0:
 #        raise Exception('Failed to create database schema! Exit code: %i' % exit_code)
 
     db.init_db_connection(config.MESSYBRAINZ_SQLALCHEMY_DATABASE_URI)
-    print('Creating tables...')
+    print('PG: Creating tables...')
     db.run_sql_script(os.path.join(MSB_ADMIN_SQL_DIR, 'create_tables.sql'))
 
-    print('Creating primary and foreign keys...')
-    db.run_sql_script(os.path.join(MSB_ADMIN_SQL_DIR, 'create_primary_keys.sql'))
-    db.run_sql_script(os.path.join(MSB_ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
+    print('PG: Creating primary and foreign keys...')
+    db.run_sql_script(os.path.join(
+        MSB_ADMIN_SQL_DIR, 'create_primary_keys.sql'))
+    db.run_sql_script(os.path.join(
+        MSB_ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
 
-    print('Creating functions...')
+    print('PG: Creating functions...')
     db.run_sql_script(os.path.join(MSB_ADMIN_SQL_DIR, 'create_functions.sql'))
 
-    print('Creating indexes...')
+    print('PG: Creating indexes...')
     db.run_sql_script(os.path.join(MSB_ADMIN_SQL_DIR, 'create_indexes.sql'))
 
     print("Done!")
 
 
-@cli.command(name="init_influx")
-def init_influx():
-    """ Initializes influx database. """
+@cli.command(name="init_ts_db")
+@click.option("--force", "-f", is_flag=True, help="Drop existing database and user.")
+@click.option("--create-db", is_flag=True, help="Create the database and user.")
+def init_ts_db(force, create_db):
+    """Initializes database.
+    This process involves several steps:
+    1. Table structure is created.
+    2. Indexes are created.
+    3. Views are created
+    """
     from listenbrainz import config
-    print("Connecting to Influx...")
-    influx_client = InfluxDBClient(
-        host=config.INFLUX_HOST,
-        port=config.INFLUX_PORT,
-        database=config.INFLUX_DB_NAME,
-    )
-    print("Connected to Influx!")
+    ts.init_db_connection(config.TIMESCALE_ADMIN_URI)
+    if force:
+        res = ts.run_sql_script_without_transaction(
+            os.path.join(TIMESCALE_SQL_DIR, 'drop_db.sql'))
+        if not res:
+            raise Exception(
+                'Failed to drop existing database and user! Exit code: %i' % res)
 
-    print("Creating influx database...")
-    influx_client.create_database(config.INFLUX_DB_NAME)
-    influx_client.create_retention_policy("one_week", "1w", 1, "listenbrainz")
+    if create_db or force:
+        print('TS: Creating user and a database...')
+        retries = 0
+        while True:
+            try:
+                res = ts.run_sql_script_without_transaction(
+                    os.path.join(TIMESCALE_SQL_DIR, 'create_db.sql'))
+                break
+            except sqlalchemy.exc.OperationalError:
+                print("Trapped template1 access error, FFS! Sleeping, trying again.")
+                retries += 1
+                if retries == 5:
+                    raise
+                sleep(1)
+                continue
 
-    print("Done!")
+        if not res:
+            raise Exception(
+                'Failed to create new database and user! Exit code: %i' % res)
+
+        ts.init_db_connection(config.TIMESCALE_ADMIN_LB_URI)
+        print('TS: Creating database extensions...')
+        res = ts.run_sql_script_without_transaction(
+            os.path.join(TIMESCALE_SQL_DIR, 'create_extensions.sql'))
+    # Don't raise an exception if the extension already exists
+
+    ts.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
+    application = webserver.create_app()
+    with application.app_context():
+        print('TS: Creating Schemas...')
+        ts.run_sql_script(os.path.join(
+            TIMESCALE_SQL_DIR, 'create_schemas.sql'))
+
+        print('TS: Creating tables...')
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_tables.sql'))
+
+        print('TS: Creating Functions...')
+        ts.run_sql_script(os.path.join(
+            TIMESCALE_SQL_DIR, 'create_functions.sql'))
+
+        print('TS: Creating views...')
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))
+
+        print('TS: Creating indexes...')
+        ts.run_sql_script(os.path.join(
+            TIMESCALE_SQL_DIR, 'create_indexes.sql'))
+
+        print('TS: Creating Primary and Foreign Keys...')
+        ts.run_sql_script(os.path.join(
+            TIMESCALE_SQL_DIR, 'create_primary_keys.sql'))
+        ts.run_sql_script(os.path.join(
+            TIMESCALE_SQL_DIR, 'create_foreign_keys.sql'))
+
+        print("Done!")
+
+
+@cli.command(name="calculate_user_similarity")
+def calculate_user_similarity():
+    application = webserver.create_app()
+    with application.app_context():
+        user_similarity.calculate_similar_users()
 
 
 # Add other commands here
-import listenbrainz.spark.request_manage as spark_request_manage
 cli.add_command(spark_request_manage.cli, name="spark")
-import listenbrainz.db.dump_manager as dump_manager
 cli.add_command(dump_manager.cli, name="dump")
-import listenbrainz.listen_replay.cli as listen_replay
-cli.add_command(listen_replay.cli, name="replay")
 
 
 if __name__ == '__main__':

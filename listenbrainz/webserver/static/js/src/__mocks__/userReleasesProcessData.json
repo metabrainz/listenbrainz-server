@@ -1,0 +1,252 @@
+[
+  {
+    "id": "24",
+    "entity": "The Hits--Chapter One",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Backstreet Boys",
+    "artistMBID": [],
+    "idx": 25,
+    "count": 8
+  },
+  {
+    "id": "23",
+    "entity": "Aalas Ka Pedh",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "The Local train",
+    "artistMBID": [],
+    "idx": 24,
+    "count": 9
+  },
+  {
+    "id": "22",
+    "entity": "Kala",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "M.I.A.",
+    "artistMBID": [],
+    "idx": 23,
+    "count": 10
+  },
+  {
+    "id": "21",
+    "entity": "One More Light",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Linkin Park",
+    "artistMBID": [],
+    "idx": 22,
+    "count": 10
+  },
+  {
+    "id": "20",
+    "entity": "Cheap Thrills (feat. Sean Paul)",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Sia",
+    "artistMBID": [],
+    "idx": 21,
+    "count": 11
+  },
+  {
+    "id": "19",
+    "entity": "My Head Is an Animal",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Of Monsters and Men",
+    "artistMBID": [],
+    "idx": 20,
+    "count": 11
+  },
+  {
+    "id": "18",
+    "entity": "Overexposed",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Maroon 5",
+    "artistMBID": [],
+    "idx": 19,
+    "count": 11
+  },
+  {
+    "id": "17",
+    "entity": "Singles",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Maroon 5",
+    "artistMBID": [],
+    "idx": 18,
+    "count": 11
+  },
+  {
+    "id": "16",
+    "entity": "#3",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "The Script",
+    "artistMBID": [],
+    "idx": 17,
+    "count": 12
+  },
+  {
+    "id": "15",
+    "entity": "In The End",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Tommee Profitt",
+    "artistMBID": [],
+    "idx": 16,
+    "count": 12
+  },
+  {
+    "id": "14",
+    "entity": "13 Reasons Why (Season 2)",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "OneRepublic",
+    "artistMBID": [],
+    "idx": 15,
+    "count": 13
+  },
+  {
+    "id": "13",
+    "entity": "Two (Expanded Edition)",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Lenka",
+    "artistMBID": [],
+    "idx": 14,
+    "count": 13
+  },
+  {
+    "id": "12",
+    "entity": "Staying at Tamara's",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "George Ezra",
+    "artistMBID": [],
+    "idx": 13,
+    "count": 15
+  },
+  {
+    "id": "11",
+    "entity": "A Head Full Of Dreams",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Coldplay",
+    "artistMBID": [],
+    "idx": 12,
+    "count": 16
+  },
+  {
+    "id": "10",
+    "entity": "A Thousand Years",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Christina Perri",
+    "artistMBID": [],
+    "idx": 11,
+    "count": 16
+  },
+  {
+    "id": "9",
+    "entity": "Halcyon Days",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Ellie Goulding",
+    "artistMBID": [],
+    "idx": 10,
+    "count": 16
+  },
+  {
+    "id": "8",
+    "entity": "1989",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Taylor Swift",
+    "artistMBID": [],
+    "idx": 9,
+    "count": 17
+  },
+  {
+    "id": "7",
+    "entity": "Night Visions (Deluxe)",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Imagine Dragons",
+    "artistMBID": [],
+    "idx": 8,
+    "count": 17
+  },
+  {
+    "id": "6",
+    "entity": "÷ (Deluxe)",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Ed Sheeran",
+    "artistMBID": [],
+    "idx": 7,
+    "count": 17
+  },
+  {
+    "id": "5",
+    "entity": "Dream Your Life Away (Special Edition)",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Vance Joy",
+    "artistMBID": [],
+    "idx": 6,
+    "count": 18
+  },
+  {
+    "id": "4",
+    "entity": "Native",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "OneRepublic",
+    "artistMBID": [],
+    "idx": 5,
+    "count": 18
+  },
+  {
+    "id": "3",
+    "entity": "Udd Gaye (Bacardi House Party Sessions)",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Ritviz",
+    "artistMBID": [],
+    "idx": 4,
+    "count": 20
+  },
+  {
+    "id": "2",
+    "entity": "Delirium (Deluxe)",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Ellie Goulding",
+    "artistMBID": [],
+    "idx": 3,
+    "count": 25
+  },
+  {
+    "id": "1",
+    "entity": "How to Save a Life",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "The Fray",
+    "artistMBID": [],
+    "idx": 2,
+    "count": 25
+  },
+  {
+    "id": "0",
+    "entity": "Live in Buenos Aires",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Coldplay",
+    "artistMBID": [],
+    "idx": 1,
+    "count": 26
+  }
+]

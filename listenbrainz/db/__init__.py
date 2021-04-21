@@ -24,7 +24,6 @@ def init_db_connection(connect_str):
     while True:
         try:
             engine = create_engine(connect_str, poolclass=NullPool)
-            print("Connection to db established!")
             break
         except psycopg2.OperationalError as e:
             print("Couldn't establish connection to db: {}".format(str(e)))

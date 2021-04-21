@@ -1,0 +1,95 @@
+{
+  "payload": {
+    "from_ts": 1590969600,
+    "last_updated": 1593539726,
+    "listening_activity": [
+      {
+        "from_ts": 1590969600,
+        "listen_count": 22,
+        "time_range": "Monday 01 June 2020",
+        "to_ts": 1591055999
+      },
+      {
+        "from_ts": 1591056000,
+        "listen_count": 10,
+        "time_range": "Tuesday 02 June 2020",
+        "to_ts": 1591142399
+      },
+      {
+        "from_ts": 1591142400,
+        "listen_count": 18,
+        "time_range": "Wednesday 03 June 2020",
+        "to_ts": 1591228799
+      },
+      {
+        "from_ts": 1591228800,
+        "listen_count": 35,
+        "time_range": "Thursday 04 June 2020",
+        "to_ts": 1591315199
+      },
+      {
+        "from_ts": 1591315200,
+        "listen_count": 30,
+        "time_range": "Friday 05 June 2020",
+        "to_ts": 1591401599
+      },
+      {
+        "from_ts": 1591401600,
+        "listen_count": 3,
+        "time_range": "Saturday 06 June 2020",
+        "to_ts": 1591487999
+      },
+      {
+        "from_ts": 1591488000,
+        "listen_count": 0,
+        "time_range": "Sunday 07 June 2020",
+        "to_ts": 1591574399
+      },
+      {
+        "from_ts": 1591574400,
+        "listen_count": 36,
+        "time_range": "Monday 08 June 2020",
+        "to_ts": 1591660799
+      },
+      {
+        "from_ts": 1591660800,
+        "listen_count": 13,
+        "time_range": "Tuesday 09 June 2020",
+        "to_ts": 1591747199
+      },
+      {
+        "from_ts": 1591747200,
+        "listen_count": 8,
+        "time_range": "Wednesday 10 June 2020",
+        "to_ts": 1591833599
+      },
+      {
+        "from_ts": 1591833600,
+        "listen_count": 37,
+        "time_range": "Thursday 11 June 2020",
+        "to_ts": 1591919999
+      },
+      {
+        "from_ts": 1591920000,
+        "listen_count": 17,
+        "time_range": "Friday 12 June 2020",
+        "to_ts": 1592006399
+      },
+      {
+        "from_ts": 1592006400,
+        "listen_count": 22,
+        "time_range": "Saturday 13 June 2020",
+        "to_ts": 1592092799
+      },
+      {
+        "from_ts": 1592092800,
+        "listen_count": 8,
+        "time_range": "Sunday 14 June 2020",
+        "to_ts": 1592179199
+      }
+    ],
+    "range": "week",
+    "to_ts": 1592179200,
+    "user_id": "ishaanshah"
+  }
+}

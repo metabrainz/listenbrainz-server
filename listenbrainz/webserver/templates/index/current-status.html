@@ -28,16 +28,25 @@
             <td>{{ listen_count }}</td>
           </tr>
         {% endif %}
+        {% if listen_counts_per_day %}
+          {% for data in listen_counts_per_day %}
           <tr>
-            <td>Number of incoming batches queued</td>
-            <td>{{ incoming_len }}</td>
+            <td>Number of listens submitted {{ data['label'] }} ({{ data['date'] }})</td>
+            <td>{{ data['listen_count'] }}</td>
           </tr>
-          <tr>
-            <td>Number of unique incoming batches queued</td>
-            <td>{{ unique_len }}</td>
-          </tr>
+          {% endfor %}
+        {% endif %}
         </tbody>
       </table>
+
+      <p>
+        If you are curious about the state of our Listen ingestion pipelines, you can
+        create yourself a free account on our <a href="https://stats.metabrainz.org">infrastructure
+        statistics site</a>. In particular,
+        the
+        <a href="https://stats.metabrainz.org/d/000000059/rabbitmq?orgId=1&refresh=1m&var-queue_vhost=%2Flistenbrainz">
+        RabbitMQ ListenBrainz view</a> shows how many listens we are currently processing, and the number of incoming listens currently queued for processing.
+      </p>
 
       <h3>load average</h3>
 

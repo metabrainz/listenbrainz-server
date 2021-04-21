@@ -38,7 +38,7 @@ the ``submit-listens`` endpoint. Submit one of three types JSON documents:
 The ``listen_type`` element defines different types of submissions. The element
 is placed at the top-most level of the JSON document. The only other required
 element is the ``payload`` element. This provides an array of listens – the
-payload may be one or mote listens (as designated by ``listen_type``)::
+payload may be one or more listens (as designated by ``listen_type``)::
 
     {
       "listen_type": "single",

@@ -45,7 +45,7 @@ td, th {
 			<th>Best model lmbda</th>
 			<th>Best model iteration</th>
 			<th>Best model RMSE</th>
-			<th>Best model RMSE computation time(min)</th>			
+			<th>Best model RMSE computation time(min)</th>
 		</tr>
 		<tr>
 			<td>{{ best_model.model_id }}</td>
@@ -53,7 +53,7 @@ td, th {
 			<td>{{ best_model.rank }}</td>
 			<td>{{ best_model.lmbda }}</td>
 			<td>{{ best_model.iteration }}</td>
-			<td>{{ best_model.error }}</td>
+			<td>{{ best_model.validation_rmse }}</td>
 			<td>{{ best_model.rmse_time }}</td>
 		</tr>
 	</table>

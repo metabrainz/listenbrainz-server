@@ -1,0 +1,50 @@
+{
+  "user1": [
+    {
+      "listen_count": 9,
+      "artist_name": "artist2",
+      "artist_msid": null,
+      "artist_mbids": ["2"]
+    },
+    {
+      "listen_count": 8,
+      "artist_name": "artist1",
+      "artist_msid": "1",
+      "artist_mbids": []
+    },
+    {
+      "listen_count": 4,
+      "artist_name": "artist3",
+      "artist_msid": null,
+      "artist_mbids": ["3"]
+    }
+  ],
+  "user3": [
+    {
+      "listen_count": 2,
+      "artist_name": "artist1",
+      "artist_msid": "1",
+      "artist_mbids": []
+    }
+  ],
+  "user2": [
+    {
+      "listen_count": 7,
+      "artist_name": "artist3",
+      "artist_msid": null,
+      "artist_mbids": ["3"]
+    },
+    {
+      "listen_count": 4,
+      "artist_name": "artist1",
+      "artist_msid": null,
+      "artist_mbids": []
+    },
+    {
+      "listen_count": 2,
+      "artist_name": "artist4",
+      "artist_msid": null,
+      "artist_mbids": ["4"]
+    }
+  ]
+}

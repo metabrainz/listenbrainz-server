@@ -10,7 +10,6 @@ FAQs
     sudo usermod -aG docker $USER
 
 - After this command, restart the computer and then again run ``./develop.sh build.``
-|
 
 **How to resolve 'datanode is running as process 1. Stop it first' or 'namenode is running as process 1. Stop it first'?**
 
@@ -21,7 +20,6 @@ FAQs
     ./develop.sh spark down
 
 - When the containers shut down, run ``./develop.sh spark up`` again.
-|
 
 **How to resolve 'sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) FATAL: role "listenbrainz" does not exist' on running './test.sh'?**
 

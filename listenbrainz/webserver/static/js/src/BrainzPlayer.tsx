@@ -1,18 +1,25 @@
 import * as React from "react";
-import { isEqual as _isEqual, get as _get } from "lodash";
+import {
+  isEqual as _isEqual,
+  isNil as _isNil,
+  isString as _isString,
+  get as _get,
+  has as _has,
+} from "lodash";
 import * as _ from "lodash";
 import PlaybackControls from "./PlaybackControls";
 import APIService from "./APIService";
 import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
+import SoundcloudPlayer from "./SoundcloudPlayer";
 
 export type DataSourceType = {
-  playListen: (listen: Listen) => void;
+  playListen: (listen: Listen | JSPFTrack) => void;
   togglePlay: () => void;
   seekToPositionMs: (msTimecode: number) => void;
 };
 
-export type DataSourceTypes = SpotifyPlayer | YoutubePlayer;
+export type DataSourceTypes = SpotifyPlayer | YoutubePlayer | SoundcloudPlayer;
 
 export type DataSourceProps = {
   show: boolean;
@@ -23,7 +30,7 @@ export type DataSourceProps = {
   onTrackInfoChange: (title: string, artist?: string) => void;
   onTrackEnd: () => void;
   onTrackNotFound: () => void;
-  handleError: (error: string | Error, title?: string) => void;
+  handleError: (error: BrainzPlayerError, title?: string) => void;
   handleWarning: (message: string | JSX.Element, title?: string) => void;
   handleSuccess: (message: string | JSX.Element, title?: string) => void;
   onInvalidateDataSource: (
@@ -35,9 +42,9 @@ export type DataSourceProps = {
 type BrainzPlayerProps = {
   spotifyUser: SpotifyUser;
   direction: BrainzPlayDirection;
-  onCurrentListenChange: (listen: Listen) => void;
-  currentListen?: Listen;
-  listens: Array<Listen>;
+  onCurrentListenChange: (listen: Listen | JSPFTrack) => void;
+  currentListen?: Listen | JSPFTrack;
+  listens: Array<Listen | JSPFTrack>;
   newAlert: (
     alertType: AlertType,
     title: string,
@@ -63,6 +70,7 @@ export default class BrainzPlayer extends React.Component<
 > {
   spotifyPlayer?: React.RefObject<SpotifyPlayer>;
   youtubePlayer?: React.RefObject<YoutubePlayer>;
+  soundcloudPlayer?: React.RefObject<SoundcloudPlayer>;
   dataSources: Array<React.RefObject<DataSourceTypes>> = [];
 
   // Since we don't want autoplay on our pages, we need a way to know
@@ -75,15 +83,16 @@ export default class BrainzPlayer extends React.Component<
   constructor(props: BrainzPlayerProps) {
     super(props);
 
-    const { access_token, permission } = props.spotifyUser;
-
     this.spotifyPlayer = React.createRef<SpotifyPlayer>();
-    if (access_token && permission) {
+    if (SpotifyPlayer.hasPermissions(props.spotifyUser)) {
       this.dataSources.push(this.spotifyPlayer);
     }
 
     this.youtubePlayer = React.createRef<YoutubePlayer>();
     this.dataSources.push(this.youtubePlayer);
+
+    this.soundcloudPlayer = React.createRef<SoundcloudPlayer>();
+    this.dataSources.push(this.soundcloudPlayer);
 
     this.state = {
       currentDataSourceIndex: 0,
@@ -97,9 +106,16 @@ export default class BrainzPlayer extends React.Component<
     };
   }
 
-  isCurrentListen = (element: Listen): boolean => {
+  isCurrentListen = (element: Listen | JSPFTrack): boolean => {
     const { currentListen } = this.props;
-    return (currentListen && _isEqual(element, currentListen)) as boolean;
+    if (_isNil(currentListen)) {
+      return false;
+    }
+    if (_has(element, "identifier")) {
+      // JSPF Track format
+      return (element as JSPFTrack).id === (currentListen as JSPFTrack).id;
+    }
+    return _isEqual(element, currentListen);
   };
 
   playPreviousTrack = (): void => {
@@ -145,7 +161,7 @@ export default class BrainzPlayer extends React.Component<
     this.playListen(nextListen);
   };
 
-  handleError = (error: string | Error, title?: string): void => {
+  handleError = (error: BrainzPlayerError, title?: string): void => {
     const { newAlert } = this.props;
     if (!error) {
       return;
@@ -153,7 +169,11 @@ export default class BrainzPlayer extends React.Component<
     newAlert(
       "danger",
       title || "Playback error",
-      typeof error === "object" ? error.message : error
+      _isString(error)
+        ? error
+        : `${!_isNil(error.status) ? `Error ${error.status}:` : ""} ${
+            error.message || error.statusText
+          }`
     );
   };
 
@@ -185,13 +205,28 @@ export default class BrainzPlayer extends React.Component<
     }
   };
 
-  playListen = (listen: Listen, datasourceIndex: number = 0): void => {
-    const { onCurrentListenChange } = this.props;
-    onCurrentListenChange(listen);
+  playListen = (
+    listen: Listen | JSPFTrack,
+    datasourceIndex: number = 0
+  ): void => {
     if (this.firstRun) {
       this.firstRun = false;
     }
-    this.setState({ currentDataSourceIndex: datasourceIndex }, () => {
+
+    /** If available, retreive the service the listen was listened with */
+    let selectedDatasourceIndex = this.getSourceIndexByListenData(listen);
+
+    /** If no matching datasource was found, revert to the default bahaviour
+     * (play from source 0 or if called from failedToFindTrack, try next source)
+     */
+    if (selectedDatasourceIndex === -1) {
+      selectedDatasourceIndex = datasourceIndex;
+    }
+
+    const { onCurrentListenChange } = this.props;
+    onCurrentListenChange(listen);
+
+    this.setState({ currentDataSourceIndex: selectedDatasourceIndex }, () => {
       const { currentDataSourceIndex } = this.state;
       const dataSource =
         this.dataSources[currentDataSourceIndex] &&
@@ -203,6 +238,44 @@ export default class BrainzPlayer extends React.Component<
 
       dataSource.playListen(listen);
     });
+  };
+
+  getSourceIndexByListenData = (listen: Listen | JSPFTrack): number => {
+    let selectedDatasourceIndex = -1;
+    const listeningFrom = _get(
+      listen,
+      "track_metadata.additional_info.listening_from"
+    );
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+
+    /** Spotify */
+    if (
+      listeningFrom === "spotify" ||
+      _get(listen, "track_metadata.additional_info.spotify_id")
+    ) {
+      selectedDatasourceIndex = this.dataSources.findIndex(
+        (ds) => ds.current instanceof SpotifyPlayer
+      );
+    }
+
+    /** Youtube */
+    if (
+      listeningFrom === "youtube" ||
+      /youtube\.com\/watch\?/.test(originURL)
+    ) {
+      selectedDatasourceIndex = this.dataSources.findIndex(
+        (ds) => ds.current instanceof YoutubePlayer
+      );
+    }
+
+    /** SoundCloud */
+    if (listeningFrom === "soundcloud" || /soundcloud\.com/.test(originURL)) {
+      selectedDatasourceIndex = this.dataSources.findIndex(
+        (ds) => ds.current instanceof SoundcloudPlayer
+      );
+    }
+
+    return selectedDatasourceIndex;
   };
 
   togglePlay = async (): Promise<void> => {
@@ -217,7 +290,7 @@ export default class BrainzPlayer extends React.Component<
       }
       await dataSource.togglePlay();
     } catch (error) {
-      this.handleError(error.message);
+      this.handleError(error);
     }
   };
 
@@ -241,6 +314,7 @@ export default class BrainzPlayer extends React.Component<
       return;
     }
     dataSource.seekToPositionMs(msTimecode);
+    this.progressChange(msTimecode);
   };
 
   toggleDirection = (): void => {
@@ -375,6 +449,24 @@ export default class BrainzPlayer extends React.Component<
             }
             onInvalidateDataSource={this.invalidateDataSource}
             ref={this.youtubePlayer}
+            playerPaused={playerPaused}
+            onPlayerPausedChange={this.playerPauseChange}
+            onProgressChange={this.progressChange}
+            onDurationChange={this.durationChange}
+            onTrackInfoChange={this.trackInfoChange}
+            onTrackEnd={this.playNextTrack}
+            onTrackNotFound={this.failedToFindTrack}
+            handleError={this.handleError}
+            handleWarning={this.handleWarning}
+            handleSuccess={this.handleSuccess}
+          />
+          <SoundcloudPlayer
+            show={
+              this.dataSources[currentDataSourceIndex]?.current instanceof
+              SoundcloudPlayer
+            }
+            onInvalidateDataSource={this.invalidateDataSource}
+            ref={this.soundcloudPlayer}
             playerPaused={playerPaused}
             onPlayerPausedChange={this.playerPauseChange}
             onProgressChange={this.progressChange}

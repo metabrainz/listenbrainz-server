@@ -39,16 +39,14 @@ CREATE TABLE data_dump (
   created     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE follow_list (
-  id                SERIAL, -- PK
-  name              TEXT NOT NULL,
-  creator           INTEGER NOT NULL, -- FK to "user".id
-  private           BOOLEAN NOT NULL DEFAULT FALSE,
-  members           INTEGER ARRAY NOT NULL DEFAULT ARRAY[]::INTEGER[],
-  created           TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  last_saved        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+CREATE TABLE missing_musicbrainz_data (
+    id              SERIAL, -- PK
+    user_id         INTEGER NOT NULL, --FK to "user".id
+    data            JSONB NOT NULL,
+    source          MB_MISSING_DATA_SOURCE_ENUM NOT NULL,
+    created         TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
-ALTER TABLE follow_list ADD CONSTRAINT follow_list_name_creator_key UNIQUE (name, creator);
+ALTER TABLE missing_musicbrainz_data ADD CONSTRAINT user_id_unique UNIQUE (user_id);
 
 CREATE TABLE recommendation.cf_recording (
   id                  SERIAL, -- PK
@@ -80,6 +78,20 @@ CREATE TABLE recommendation.recording_session (
   session_id          INTEGER NOT NULL --FK to recommendation.recommender_session.id
 );
 
+CREATE TABLE recommendation.similar_user (
+  user_id         INTEGER NOT NULL, -- FK to "user".id
+  similar_users   JSONB,
+  last_updated    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE user_timeline_event (
+  id                    SERIAL, -- PK
+  user_id               INTEGER, -- FK to "user"
+  event_type            user_timeline_event_type_enum,
+  metadata              JSONB,
+  created               TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+);
+
 CREATE TABLE spotify_auth (
   user_id                   INTEGER NOT NULL, -- PK and FK to user.id
   user_token                VARCHAR NOT NULL,
@@ -90,6 +102,18 @@ CREATE TABLE spotify_auth (
   record_listens            BOOLEAN DEFAULT TRUE,
   error_message             VARCHAR,
   permission                VARCHAR NOT NULL
+);
+
+CREATE TABLE external_service_oauth (
+    id                      SERIAL,
+    user_id                 INTEGER NOT NULL,
+    service                 external_service_oauth_type NOT NULL,
+    access_token            TEXT NOT NULL,
+    refresh_token           TEXT,
+    token_expires           TIMESTAMP WITH TIME ZONE,
+    last_updated            TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    record_listens          BOOLEAN NOT NULL,
+    service_details         JSONB
 );
 
 CREATE TABLE statistics.artist (
@@ -131,7 +155,30 @@ CREATE TABLE statistics.user (
     artist                  JSONB,
     release                 JSONB,
     recording               JSONB,
+    listening_activity      JSONB,
+    daily_activity          JSONB,
+    artist_map              JSONB,
     last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE statistics.sitewide (
+    id                      SERIAL, --pk
+    stats_range             TEXT,
+    artist                  JSONB,
+    release                 JSONB,
+    recording               JSONB,
+    listening_activity      JSONB,
+    last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE statistics.sitewide ADD CONSTRAINT stats_range_uniq UNIQUE (stats_range);
+
+CREATE TABLE recommendation_feedback (
+    id                      SERIAL, -- PK
+    user_id                 INTEGER NOT NULL, -- FK to "user".id
+    recording_mbid          UUID NOT NULL,
+    rating                  recommendation_feedback_type_enum NOT NULL,
+    created                 TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE recording_feedback (
@@ -141,5 +188,16 @@ CREATE TABLE recording_feedback (
     score                   SMALLINT NOT NULL,
     created                 TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
+
+CREATE TABLE user_relationship (
+    -- relationships go from 0 to 1
+    -- for example, if relationship type is "follow", then user_0 follows user_1
+    user_0              INTEGER NOT NULL, -- FK to "user".id
+    user_1              INTEGER NOT NULL, -- FK to "user".id
+    relationship_type   user_relationship_enum NOT NULL,
+    created             TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listenbrainz;
 
 COMMIT;

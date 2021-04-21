@@ -20,13 +20,15 @@
 
 
 import time
+import logging
 import listenbrainz.db.user as db_user
 
 from hashlib import md5
 from flask import url_for
 from werkzeug.exceptions import BadRequest
 from listenbrainz.db.lastfm_session import Session
-from listenbrainz.listenstore import InfluxListenStore
+from listenbrainz.listenstore import TimescaleListenStore
+from listenbrainz.webserver.timescale_connection import init_timescale_connection
 from listenbrainz.tests.integration import APICompatIntegrationTestCase
 from listenbrainz.webserver.views.api_compat_deprecated import _get_audioscrobbler_auth_token, _get_session, \
     _to_native_api
@@ -39,14 +41,14 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
     def setUp(self):
         super(APICompatDeprecatedTestCase, self).setUp()
         self.user = db_user.get_or_create(1, 'apicompatoldtestuser')
-        self.ls = InfluxListenStore({
+
+        self.log = logging.getLogger(__name__)
+        self.ls = init_timescale_connection(self.log, {
             'REDIS_HOST': config.REDIS_HOST,
             'REDIS_PORT': config.REDIS_PORT,
             'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
-            'INFLUX_HOST': config.INFLUX_HOST,
-            'INFLUX_PORT': config.INFLUX_PORT,
-            'INFLUX_DB_NAME': config.INFLUX_DB_NAME,
-        }, self.app.logger)
+            'SQLALCHEMY_TIMESCALE_URI': config.SQLALCHEMY_TIMESCALE_URI,
+        })
 
 
     def handshake(self, user_name, auth_token, timestamp):
@@ -155,7 +157,7 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
 
         time.sleep(1)
         to_ts = int(time.time())
-        listens = self.ls.fetch_listens(self.user['musicbrainz_id'], to_ts=to_ts)
+        listens = self.ls.fetch_listens(self.user['musicbrainz_id'], to_ts=to_ts, time_range=-1)
         self.assertEqual(len(listens), 1)
 
 

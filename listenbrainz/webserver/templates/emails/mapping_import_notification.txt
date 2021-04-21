@@ -1,0 +1,7 @@
+Hey! 👋
+
+MSID MBID mapping has been successfully imported into the spark cluster at {{ import_time }}.
+
+Took {{ time_taken_to_import }}s to import the mapping
+
+Your Friendly Neighbourhood Brainzbot 🤖

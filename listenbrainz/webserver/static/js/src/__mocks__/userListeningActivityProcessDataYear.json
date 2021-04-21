@@ -1,0 +1,74 @@
+[
+  {
+    "id": "Jan",
+    "lastRangeCount": 0,
+    "lastRangeTs": 1546300800,
+    "thisRangeCount": 0,
+    "thisRangeTs": 1577836800
+  },
+  {
+    "id": "Feb",
+    "lastRangeCount": 0,
+    "lastRangeTs": 1548979200,
+    "thisRangeCount": 425,
+    "thisRangeTs": 1580515200
+  },
+  {
+    "id": "Mar",
+    "lastRangeCount": 0,
+    "lastRangeTs": 1551398400,
+    "thisRangeCount": 1429,
+    "thisRangeTs": 1583020800
+  },
+  {
+    "id": "Apr",
+    "lastRangeCount": 0,
+    "lastRangeTs": 1554076800,
+    "thisRangeCount": 722,
+    "thisRangeTs": 1585699200
+  },
+  {
+    "id": "May",
+    "lastRangeCount": 0,
+    "lastRangeTs": 1556668800,
+    "thisRangeCount": 645,
+    "thisRangeTs": 1588291200
+  },
+  {
+    "id": "Jun",
+    "lastRangeCount": 0,
+    "lastRangeTs": 1559347200,
+    "thisRangeCount": 359,
+    "thisRangeTs": 1590969600
+  },
+  {
+    "id": "Jul",
+    "lastRangeCount": 0,
+    "lastRangeTs": 1561939200
+  },
+  {
+    "id": "Aug",
+    "lastRangeCount": 0,
+    "lastRangeTs": 1564617600
+  },
+  {
+    "id": "Sep",
+    "lastRangeCount": 0,
+    "lastRangeTs": 1567296000
+  },
+  {
+    "id": "Oct",
+    "lastRangeCount": 0,
+    "lastRangeTs": 1569888000
+  },
+  {
+    "id": "Nov",
+    "lastRangeCount": 0,
+    "lastRangeTs": 1572566400
+  },
+  {
+    "id": "Dec",
+    "lastRangeCount": 0,
+    "lastRangeTs": 1575158400
+  }
+]

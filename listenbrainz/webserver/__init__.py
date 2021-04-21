@@ -17,12 +17,11 @@ deploy_env = os.environ.get('DEPLOY_ENV', '')
 CONSUL_CONFIG_FILE_RETRY_COUNT = 10
 API_LISTENED_AT_ALLOWED_SKEW = 60 * 60 # allow a skew of 1 hour in listened_at submissions
 
-def create_influx(app):
-    from listenbrainz.webserver.influx_connection import init_influx_connection
-    return init_influx_connection(app.logger, {
-        'INFLUX_HOST': app.config['INFLUX_HOST'],
-        'INFLUX_PORT': app.config['INFLUX_PORT'],
-        'INFLUX_DB_NAME': app.config['INFLUX_DB_NAME'],
+
+def create_timescale(app):
+    from listenbrainz.webserver.timescale_connection import init_timescale_connection
+    return init_timescale_connection(app.logger, {
+        'SQLALCHEMY_TIMESCALE_URI': app.config['SQLALCHEMY_TIMESCALE_URI'],
         'REDIS_HOST': app.config['REDIS_HOST'],
         'REDIS_PORT': app.config['REDIS_PORT'],
         'REDIS_NAMESPACE': app.config['REDIS_NAMESPACE'],
@@ -32,7 +31,7 @@ def create_influx(app):
 
 def create_redis(app):
     from listenbrainz.webserver.redis_connection import init_redis_connection
-    init_redis_connection(app.logger, app.config['REDIS_HOST'], app.config['REDIS_PORT'])
+    init_redis_connection(app.logger, app.config['REDIS_HOST'], app.config['REDIS_PORT'], app.config['REDIS_NAMESPACE'])
 
 
 def create_rabbitmq(app):
@@ -45,7 +44,6 @@ def create_rabbitmq(app):
 
 def load_config(app):
 
-    print("Starting metabrainz service with %s environment." % deploy_env);
 
     # Load configuration files: If we're running under a docker deployment, wait until
     config_file = os.path.join( os.path.dirname(os.path.realpath(__file__)), '..', 'config.py' )
@@ -63,11 +61,12 @@ def load_config(app):
 
     app.config.from_pyfile(config_file)
     # Output config values and some other info
-    print('Configuration values are as follows: ')
-    print(pprint.pformat(app.config, indent=4))
+    if deploy_env in ['prod', 'test']:
+        print('Configuration values are as follows: ')
+        print(pprint.pformat(app.config, indent=4))
     try:
         with open('.git-version') as git_version_file:
-            print('Running on git commit: %s', git_version_file.read().strip())
+            print('Running on git commit: %s' % git_version_file.read().strip())
     except IOError as e:
         print('Unable to retrieve git commit. Error: %s', str(e))
 
@@ -93,15 +92,14 @@ def gen_app(config_path=None, debug=None):
     # Logging
     app.init_loggers(
         file_config=app.config.get('LOG_FILE'),
-        email_config=app.config.get('LOG_EMAIL'),
         sentry_config=app.config.get('LOG_SENTRY')
     )
 
     # Redis connection
     create_redis(app)
 
-    # Influx connection
-    create_influx(app)
+    # Timescale connection
+    create_timescale(app)
 
     # RabbitMQ connection
     try:
@@ -109,10 +107,11 @@ def gen_app(config_path=None, debug=None):
     except ConnectionError:
         app.logger.critical("RabbitMQ service is not up!", exc_info=True)
 
-
-    # Database connection
+    # Database connections
     from listenbrainz import db
+    from listenbrainz.db import timescale as ts
     db.init_db_connection(app.config['SQLALCHEMY_DATABASE_URI'])
+    ts.init_db_connection(app.config['SQLALCHEMY_TIMESCALE_URI'])
     from listenbrainz.webserver.external import messybrainz
     messybrainz.init_db_connection(app.config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
 
@@ -233,24 +232,58 @@ def create_app_rtfd():
 
 def _register_blueprints(app):
     from listenbrainz.webserver.views.index import index_bp
-    from listenbrainz.webserver.views.login import login_bp
-    from listenbrainz.webserver.views.api import api_bp
-    from listenbrainz.webserver.views.api_compat import api_bp as api_bp_compat
-    from listenbrainz.webserver.views.user import user_bp
-    from listenbrainz.webserver.views.profile import profile_bp
-    from listenbrainz.webserver.views.follow import follow_bp
-    from listenbrainz.webserver.views.follow_api import follow_api_bp
-    from listenbrainz.webserver.views.stats_api import stats_api_bp
-    from listenbrainz.webserver.views.status_api import status_api_bp
-    from listenbrainz.webserver.views.player import player_bp
     app.register_blueprint(index_bp)
+
+    from listenbrainz.webserver.views.login import login_bp
     app.register_blueprint(login_bp, url_prefix='/login')
-    app.register_blueprint(user_bp, url_prefix='/user')
-    app.register_blueprint(profile_bp, url_prefix='/profile')
-    app.register_blueprint(follow_bp, url_prefix='/follow')
-    app.register_blueprint(player_bp, url_prefix='/player')
+
+    from listenbrainz.webserver.views.api import api_bp
     app.register_blueprint(api_bp, url_prefix=API_PREFIX)
-    app.register_blueprint(follow_api_bp, url_prefix=API_PREFIX+'/follow')
-    app.register_blueprint(stats_api_bp, url_prefix=API_PREFIX+'/stats')
-    app.register_blueprint(status_api_bp, url_prefix=API_PREFIX+'/status')
+
+    from listenbrainz.webserver.views.api_compat import api_bp as api_bp_compat
     app.register_blueprint(api_bp_compat)
+
+    from listenbrainz.webserver.views.user import user_bp
+    app.register_blueprint(user_bp, url_prefix='/user')
+
+    from listenbrainz.webserver.views.user import redirect_bp
+    app.register_blueprint(redirect_bp, url_prefix='/my')
+
+    from listenbrainz.webserver.views.profile import profile_bp
+    app.register_blueprint(profile_bp, url_prefix='/profile')
+
+    from listenbrainz.webserver.views.stats_api import stats_api_bp
+    app.register_blueprint(stats_api_bp, url_prefix=API_PREFIX+'/stats')
+
+    from listenbrainz.webserver.views.status_api import status_api_bp
+    app.register_blueprint(status_api_bp, url_prefix=API_PREFIX+'/status')
+
+    from listenbrainz.webserver.views.player import player_bp
+    app.register_blueprint(player_bp, url_prefix='/player')
+
+    from listenbrainz.webserver.views.feedback_api import feedback_api_bp
+    app.register_blueprint(feedback_api_bp, url_prefix=API_PREFIX+'/feedback')
+
+    from listenbrainz.webserver.views.recommendations_cf_recording_feedback_api import recommendation_feedback_api_bp
+    app.register_blueprint(recommendation_feedback_api_bp, url_prefix=API_PREFIX+'/recommendation/feedback')
+
+    from listenbrainz.webserver.views.recommendations_cf_recording_api import recommendations_cf_recording_api_bp
+    app.register_blueprint(recommendations_cf_recording_api_bp, url_prefix=API_PREFIX+'/cf/recommendation')
+
+    from listenbrainz.webserver.views.missing_musicbrainz_data_api import missing_musicbrainz_data_api_bp
+    app.register_blueprint(missing_musicbrainz_data_api_bp, url_prefix=API_PREFIX+'/missing/musicbrainz')
+
+    from listenbrainz.webserver.views.recommendations_cf_recording import recommendations_cf_recording_bp
+    app.register_blueprint(recommendations_cf_recording_bp, url_prefix='/recommended/tracks')
+
+    from listenbrainz.webserver.views.playlist import playlist_bp
+    app.register_blueprint(playlist_bp, url_prefix='/playlist')
+
+    from listenbrainz.webserver.views.playlist_api import playlist_api_bp
+    app.register_blueprint(playlist_api_bp, url_prefix=API_PREFIX+'/playlist')
+
+    from listenbrainz.webserver.views.user_timeline_event_api import user_timeline_event_api_bp
+    app.register_blueprint(user_timeline_event_api_bp, url_prefix=API_PREFIX)
+
+    from listenbrainz.webserver.views.social_api import social_api_bp
+    app.register_blueprint(social_api_bp, url_prefix=API_PREFIX)

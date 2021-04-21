@@ -36,8 +36,7 @@ class ListenWriter:
                                                     error_logger=current_app.logger.error,
                                                     error_retry_delay=self.ERROR_RETRY_DELAY)
 
-
-    def _collect_and_log_stats(self, count, call_method=lambda: None):
+    def _collect_and_log_stats(self, count):
         self.inserts += count
         if self.inserts >= self.REPORT_FREQUENCY:
             self.total_inserts += self.inserts
@@ -46,8 +45,6 @@ class ListenWriter:
                     (self.inserts, self.time, count / self.time, self.total_inserts))
             self.inserts = 0
             self.time = 0
-
-            call_method()
 
 
     def _verify_hosts_in_config(self):

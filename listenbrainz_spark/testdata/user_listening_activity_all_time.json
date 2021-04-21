@@ -1,0 +1,54 @@
+[
+  {
+    "user_name": "user_1",
+    "year": 2017
+  },
+  {
+    "user_name": "user_1",
+    "year": 2017
+  },
+  {
+    "user_name": "user_1",
+    "year": 2017
+  },
+  {
+    "user_name": "user_2",
+    "year": 2017
+  },
+  {
+    "user_name": "user_1",
+    "year": 2018
+  },
+  {
+    "user_name": "user_2",
+    "year": 2018
+  },
+  {
+    "user_name": "user_2",
+    "year": 2018
+  },
+  {
+    "user_name": "user_3",
+    "year": 2018
+  },
+  {
+    "user_name": "user_2",
+    "year": 2019
+  },
+  {
+    "user_name": "user_3",
+    "year": 2019
+  },
+  {
+    "user_name": "user_3",
+    "year": 2019
+  },
+  {
+    "user_name": "user_1",
+    "year": 2020
+  },
+  {
+    "user_name": "user_2",
+    "year": 2020
+  }
+]

@@ -1,17 +1,22 @@
 import logging
+from typing import List
+
 import sqlalchemy
 import uuid
+import ujson
 
 from datetime import datetime
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
+from data.model.similar_user_model import SimilarUsers
+from typing import Tuple, List
 
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def create(musicbrainz_row_id, musicbrainz_id):
+def create(musicbrainz_row_id: int, musicbrainz_id: str) -> int:
     """Create a new user.
 
     Args:
@@ -55,7 +60,8 @@ def update_token(id):
             raise
 
 
-USER_GET_COLUMNS = ['id', 'created', 'musicbrainz_id', 'auth_token', 'last_login', 'latest_import', 'gdpr_agreed', 'musicbrainz_row_id', 'login_id']
+USER_GET_COLUMNS = ['id', 'created', 'musicbrainz_id', 'auth_token',
+                    'last_login', 'latest_import', 'gdpr_agreed', 'musicbrainz_row_id', 'login_id']
 
 
 def get(id):
@@ -67,10 +73,15 @@ def get(id):
     Returns:
         Dictionary with the following structure:
         {
-            "id": <user id>,
+            "id": <listenbrainz user id>,
             "created": <account creation time>,
             "musicbrainz_id": <MusicBrainz username>,
             "auth_token": <authentication token>,
+            "last_login": <date that this user last logged in>,
+            "latest_import": <date that this user last performed a data import>
+            "gdpr_agreed": <boolean, if the user has agreed to terms and conditions>,
+            "musicbrainz_row_id": <musicbrainz row id associated with this user>,
+            "login_id": <token used for login sessions>
         }
     """
     with db.engine.connect() as connection:
@@ -92,10 +103,15 @@ def get_by_login_id(login_id):
     Returns:
         Dictionary with the following structure:
         {
-            "id": <user id>,
+            "id": <listenbrainz user id>,
             "created": <account creation time>,
             "musicbrainz_id": <MusicBrainz username>,
             "auth_token": <authentication token>,
+            "last_login": <date that this user last logged in>,
+            "latest_import": <date that this user last performed a data import>
+            "gdpr_agreed": <boolean, if the user has agreed to terms and conditions>,
+            "musicbrainz_row_id": <musicbrainz row id associated with this user>,
+            "login_id": <token used for login sessions>
         }
     """
     with db.engine.connect() as connection:
@@ -108,6 +124,26 @@ def get_by_login_id(login_id):
         return dict(row) if row else None
 
 
+def get_many_users_by_mb_id(musicbrainz_ids: List[str]):
+    """Load a list of users given their musicbrainz login name
+
+    Args:
+        musicbrainz_ids: A list of musicbrainz usernames
+
+    Returns:
+        A dictionary where keys are the username, and values are dictionaries of user information
+        following the same format as `get_by_mb_id`.
+        If a provided username doesn't exist, it won't be returned.
+    """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT {columns}
+              FROM "user"
+             WHERE LOWER(musicbrainz_id) in :mb_ids
+        """.format(columns=','.join(USER_GET_COLUMNS))), {"mb_ids": tuple([mbname.lower() for mbname in musicbrainz_ids])})
+        return {row['musicbrainz_id'].lower(): dict(row) for row in result.fetchall()}
+
+
 def get_by_mb_id(musicbrainz_id):
     """Get user with a specified MusicBrainz ID.
 
@@ -117,10 +153,15 @@ def get_by_mb_id(musicbrainz_id):
     Returns:
         Dictionary with the following structure:
         {
-            "id": <user id>,
+            "id": <listenbrainz user id>,
             "created": <account creation time>,
             "musicbrainz_id": <MusicBrainz username>,
             "auth_token": <authentication token>,
+            "last_login": <date that this user last logged in>,
+            "latest_import": <date that this user last performed a data import>
+            "gdpr_agreed": <boolean, if the user has agreed to terms and conditions>,
+            "musicbrainz_row_id": <musicbrainz row id associated with this user>,
+            "login_id": <token used for login sessions>
         }
     """
     with db.engine.connect() as connection:
@@ -177,7 +218,7 @@ def get_user_count():
             raise
 
 
-def get_or_create(musicbrainz_row_id, musicbrainz_id):
+def get_or_create(musicbrainz_row_id: int, musicbrainz_id: str) -> dict:
     """Get user with a specified MusicBrainz ID, or create if there's no account.
 
     Args:
@@ -214,11 +255,12 @@ def update_last_login(musicbrainz_id):
                    SET last_login = NOW()
                  WHERE musicbrainz_id = :musicbrainz_id
                 """), {
-                    "musicbrainz_id": musicbrainz_id,
+                "musicbrainz_id": musicbrainz_id,
             })
         except sqlalchemy.exc.ProgrammingError as err:
             logger.error(err)
-            raise DatabaseException("Couldn't update last_login: %s" % str(err))
+            raise DatabaseException(
+                "Couldn't update last_login: %s" % str(err))
 
 
 def update_latest_import(musicbrainz_id, ts):
@@ -236,9 +278,9 @@ def update_latest_import(musicbrainz_id, ts):
                    SET latest_import = to_timestamp(:ts)
                  WHERE musicbrainz_id = :musicbrainz_id
                 """), {
-                    'ts': ts,
-                    'musicbrainz_id': musicbrainz_id
-                })
+                'ts': ts,
+                'musicbrainz_id': musicbrainz_id
+            })
         except sqlalchemy.exc.ProgrammingError as e:
             logger.error(e)
             raise DatabaseException
@@ -288,9 +330,9 @@ def get_all_users(created_before=None, columns=None):
                   FROM "user"
                  WHERE created <= :created
               ORDER BY id
-            """.format(columns=', '.join(columns))),{
-                "created": created_before,
-            })
+            """.format(columns=', '.join(columns))), {
+            "created": created_before,
+        })
 
         return [dict(row) for row in result]
 
@@ -310,8 +352,8 @@ def delete(id):
                 DELETE FROM "user"
                       WHERE id = :id
                 """), {
-                    'id': id,
-                })
+                'id': id,
+            })
         except sqlalchemy.exc.ProgrammingError as err:
             logger.error(err)
             raise DatabaseException("Couldn't delete user: %s" % str(err))
@@ -330,11 +372,12 @@ def agree_to_gdpr(musicbrainz_id):
                    SET gdpr_agreed = NOW()
                  WHERE LOWER(musicbrainz_id) = LOWER(:mb_id)
                 """), {
-                    'mb_id': musicbrainz_id,
-                })
+                'mb_id': musicbrainz_id,
+            })
         except sqlalchemy.exc.ProgrammingError as err:
             logger.error(err)
-            raise DatabaseException("Couldn't update gdpr agreement for user: %s" % str(err))
+            raise DatabaseException(
+                "Couldn't update gdpr agreement for user: %s" % str(err))
 
 
 def update_musicbrainz_row_id(musicbrainz_id, musicbrainz_row_id):
@@ -351,12 +394,13 @@ def update_musicbrainz_row_id(musicbrainz_id, musicbrainz_row_id):
                    SET musicbrainz_row_id = :musicbrainz_row_id
                  WHERE LOWER(musicbrainz_id) = LOWER(:mb_id)
                 """), {
-                    'musicbrainz_row_id': musicbrainz_row_id,
-                    'mb_id': musicbrainz_id,
-                })
+                'musicbrainz_row_id': musicbrainz_row_id,
+                'mb_id': musicbrainz_id,
+            })
         except sqlalchemy.exc.ProgrammingError as err:
             logger.error(err)
-            raise DatabaseException("Couldn't update musicbrainz row id for user: %s" % str(err))
+            raise DatabaseException(
+                "Couldn't update musicbrainz row id for user: %s" % str(err))
 
 
 def get_by_mb_row_id(musicbrainz_row_id, musicbrainz_id=None):
@@ -424,3 +468,37 @@ def get_users_in_order(user_ids):
             'user_ids': user_ids,
         })
         return [dict(row) for row in r.fetchall() if row['musicbrainz_id'] is not None]
+
+
+def get_similar_users(user_id: int) -> SimilarUsers:
+    """ Given a user_id, fetch the similar users for that given user. 
+        Returns a dict { "user_x" : .453, "user_y": .123 } """
+
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT user_id, similar_users
+              FROM recommendation.similar_user
+             WHERE user_id = :user_id
+        """), {
+            'user_id': user_id,
+        })
+        row = result.fetchone()
+        return SimilarUsers(**row) if row else None
+
+
+def get_users_by_id(user_ids: List[int]):
+    """ Given a list of user ids, fetch one ore more users at the same time.
+        Returns a dict mapping user_ids to user_names. """
+
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT id, musicbrainz_id
+              FROM "user"
+             WHERE id IN :user_ids
+        """), {
+            'user_ids': tuple(user_ids)
+        })
+        row_id_username_map = {}
+        for row in result.fetchall():
+            row_id_username_map[row['id']] = row['musicbrainz_id']
+        return row_id_username_map

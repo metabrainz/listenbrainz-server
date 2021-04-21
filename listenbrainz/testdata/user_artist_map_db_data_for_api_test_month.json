@@ -1,0 +1,58 @@
+{
+  "artist_map": [
+    {
+      "artist_count": 6,
+      "country": "GBR",
+      "listen_count": 92
+    },
+    {
+      "artist_count": 14,
+      "country": "USA",
+      "listen_count": 91
+    },
+    {
+      "artist_count": 3,
+      "country": "AUS",
+      "listen_count": 25
+    },
+    {
+      "artist_count": 1,
+      "country": "ISL",
+      "listen_count": 7
+    },
+    {
+      "artist_count": 1,
+      "country": "ARG",
+      "listen_count": 6
+    },
+    {
+      "artist_count": 1,
+      "country": "DEU",
+      "listen_count": 3
+    },
+    {
+      "artist_count": 1,
+      "country": "CAN",
+      "listen_count": 3
+    },
+    {
+      "artist_count": 1,
+      "country": "NLD",
+      "listen_count": 2
+    },
+    {
+      "artist_count": 1,
+      "country": "DNK",
+      "listen_count": 1
+    },
+    {
+      "artist_count": 1,
+      "country": "SWE",
+      "listen_count": 1
+    }
+  ],
+  "from_ts": 1588373458,
+  "last_updated": 1599918137,
+  "to_ts": 1589496658,
+  "user_id": "ishaanshah"
+}

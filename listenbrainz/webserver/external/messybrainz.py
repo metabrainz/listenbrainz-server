@@ -18,7 +18,6 @@ def init_db_connection(uri):
     while True:
         try:
             messybrainz.db.init_db_engine(uri)
-            print("Connection to db established")
             break
         except psycopg2.OperationalError as e:
             print("Couldn't establish connection to db: {}".format(str(e)))

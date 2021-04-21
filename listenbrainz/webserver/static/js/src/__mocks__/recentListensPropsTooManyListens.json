@@ -829,8 +829,7 @@
       "listened_at_iso": "2020-04-10T10:12:04Z"
     }
   ],
-  "previousListenTs": 1586513524,
-  "nextListenTs": 1586440536,
+  "oldestListenTs": 1586440536,
   "latestListenTs": 1586632818,
   "latestSpotifyUri": "spotify:track:5svEhroDfeTt0ePvASUtZ6",
   "haveListenCount": true,
@@ -842,6 +841,7 @@
     "access_token": "access token",
     "permission": ["streaming user-read-email", "user-read-private"]
   },
-  "webSocketsServerUrl": "http://localhost:8081",
-  "apiUrl": "http://0.0.0.0"
+  "webSocketsServerUrl": "http://localhost:8082",
+  "apiUrl": "http://0.0.0.0",
+  "searchLargerTimeRange": 0
 }

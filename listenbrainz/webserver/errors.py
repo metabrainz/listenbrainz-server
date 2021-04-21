@@ -4,7 +4,11 @@ import yattag
 import ujson
 import collections
 
+from listenbrainz.webserver.decorators import crossdomain
+from listenbrainz.webserver import API_PREFIX
+
 LastFMError = collections.namedtuple('LastFMError', ['code', 'message'])
+
 
 class APIError(Exception):
     def __init__(self, message, status_code, payload=None):
@@ -21,6 +25,11 @@ class APIError(Exception):
 
     def __str__(self):
         return self.message
+
+
+class APINoContent(APIError):
+    def __init__(self, message, payload=None):
+        super(APINoContent, self).__init__(message, 204, payload)
 
 
 class APINotFound(APIError):
@@ -153,13 +162,29 @@ def init_error_handlers(app):
 
     @app.errorhandler(500)
     def internal_server_error(error):
-        return handle_error(error, 500)
+        if request.path.startswith(API_PREFIX):
+            error = APIError("An unknown error occured.", 500)
+            return jsonify(error.to_dict()), error.status_code
+        else:
+            return handle_error(error, 500)
+
+    
+    @app.errorhandler(502)
+    def bad_gateway(error):
+        return handle_error(error, 502)
+
 
     @app.errorhandler(503)
     def service_unavailable(error):
         return handle_error(error, 503)
 
+    @app.errorhandler(504)
+    def gateway_timeout(error):
+        return handle_error(error, 504)
+
+
     @app.errorhandler(APIError)
+    @crossdomain()
     def api_error(error):
         return jsonify(error.to_dict()), error.status_code
 
@@ -171,6 +196,7 @@ def init_error_handlers(app):
 
 class InvalidAPIUsage(Exception):
     """ General error class for the API_compat to render errors in multiple formats """
+
     def __init__(self, api_error, status_code=500, output_format="xml"):
         Exception.__init__(self)
         self.api_error = api_error

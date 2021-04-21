@@ -1,0 +1,50 @@
+[
+  {
+    "artist_name": "artist_1",
+    "artist_mbids": [],
+    "artist_msid": "1",
+    "release_name": "release_1",
+    "release_msid": "1",
+    "release_mbid": "",
+    "track_name": "track_1",
+    "recording_msid": "1",
+    "recording_mbid": "",
+    "listen_count": 1
+  },
+  {
+    "artist_name": null,
+    "artist_mbids": [],
+    "artist_msid": "",
+    "release_name": "release_1",
+    "release_msid": "1",
+    "release_mbid": null,
+    "track_name": "track_1",
+    "recording_msid": "1",
+    "recording_mbid": "",
+    "listen_count": 1
+  },
+  {
+    "artist_name": "artist_2",
+    "artist_mbids": [],
+    "artist_msid": "2",
+    "release_name": "release_2",
+    "release_msid": "2",
+    "release_mbid": null,
+    "track_name": "track_2",
+    "recording_msid": "2",
+    "recording_mbid": "",
+    "listen_count": null
+  },
+  {
+    "artist_name": "artist_2",
+    "artist_mbids": [],
+    "artist_msid": "2",
+    "release_name": "release_2",
+    "release_msid": "2",
+    "release_mbid": null,
+    "track_name": null,
+    "recording_msid": "2",
+    "recording_mbid": "",
+    "listen_count": null
+  }
+]

@@ -1,3 +1,4 @@
+import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
@@ -20,12 +21,10 @@ from werkzeug.utils import secure_filename
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain import spotify
-from listenbrainz.stats.utils import construct_stats_queue_key
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.login import api_login_required
-from listenbrainz.webserver.redis_connection import _redis
-from listenbrainz.webserver.influx_connection import _influx
 from listenbrainz.webserver.utils import sizeof_readable
+from listenbrainz.webserver.views.feedback_api import _feedback_to_api
 from listenbrainz.webserver.views.user import delete_user, _get_user, delete_listens_history
 from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen, \
     LISTEN_TYPE_IMPORT, publish_data_to_queue
@@ -87,18 +86,9 @@ def reset_latest_import_timestamp():
 @login_required
 def info():
 
-    # check if user is in stats calculation queue or if valid stats already exist
-    in_stats_queue = _redis.redis.get(construct_stats_queue_key(current_user.musicbrainz_id)) == 'queued'
-    try:
-        stats_exist = db_stats.valid_stats_exist(current_user.id, current_app.config['STATS_CALCULATION_INTERVAL'])
-    except DatabaseException:
-        stats_exist = False
-
     return render_template(
         "profile/info.html",
-        user=current_user,
-        in_stats_queue=in_stats_queue,
-        stats_exist=stats_exist,
+        user=current_user
     )
 
 
@@ -132,19 +122,34 @@ def import_data():
     )
 
 
-def fetch_listens(musicbrainz_id, to_ts):
+def fetch_listens(musicbrainz_id, to_ts, time_range=None):
     """
     Fetch all listens for the user from listenstore by making repeated queries
     to listenstore until we get all the data. Returns a generator that streams
     the results.
     """
-    db_conn = webserver.create_influx(current_app)
+    db_conn = webserver.create_timescale(current_app)
     while True:
-        batch = db_conn.fetch_listens(current_user.musicbrainz_id, to_ts=to_ts, limit=EXPORT_FETCH_COUNT)
+        batch = db_conn.fetch_listens(current_user.musicbrainz_id, to_ts=to_ts, limit=EXPORT_FETCH_COUNT, time_range=time_range)
         if not batch:
             break
         yield from batch
         to_ts = batch[-1].ts_since_epoch  # new to_ts will be the the timestamp of the last listen fetched
+
+
+def fetch_feedback(user_id):
+    """
+    Fetch feedback by making repeated queries to DB until we get all the data.
+    Returns a generator that streams the results.
+    """
+    batch = []
+    offset = 0
+    while True:
+        batch = db_feedback.get_feedback_for_user(user_id=current_user.id, limit=EXPORT_FETCH_COUNT, offset=offset)
+        if not batch:
+            break
+        yield from batch
+        offset += len(batch)
 
 
 def stream_json_array(elements):
@@ -160,14 +165,14 @@ def stream_json_array(elements):
 def export_data():
     """ Exporting the data to json """
     if request.method == "POST":
-        db_conn = webserver.create_influx(current_app)
+        db_conn = webserver.create_timescale(current_app)
         filename = current_user.musicbrainz_id + "_lb-" + datetime.today().strftime('%Y-%m-%d') + ".json"
 
         # Build a generator that streams the json response. We never load all
         # listens into memory at once, and we can start serving the response
         # immediately.
         to_ts = int(time())
-        listens = fetch_listens(current_user.musicbrainz_id, to_ts)
+        listens = fetch_listens(current_user.musicbrainz_id, to_ts, time_range=-1)
         output = stream_json_array(listen.to_api() for listen in listens)
 
         response = Response(stream_with_context(output))
@@ -179,34 +184,23 @@ def export_data():
         return render_template("user/export.html", user=current_user)
 
 
-@profile_bp.route('/request-stats', methods=['GET'])
+@profile_bp.route("/export-feedback", methods=["POST"])
 @login_required
-def request_stats():
-    """ Check if the current user's statistics have been calculated and if not,
-        put them in the stats queue for stats_calculator.
-    """
-    status = _redis.redis.get(construct_stats_queue_key(current_user.musicbrainz_id)) == 'queued'
-    if status == 'queued':
-        flash.info('You have already been added to the stats calculation queue! Please check back later.')
-    elif db_stats.valid_stats_exist(current_user.id, current_app.config['STATS_CALCULATION_INTERVAL']):
-        flash.info('Your stats were calculated in the most recent stats calculation interval,'
-            ' please wait until the next interval! We calculate new statistics every Monday at 00:00 UTC.')
-    else:
-        # publish to rabbitmq queue that the stats-calculator consumes
-        data = {
-            'type': 'user',
-            'id': current_user.id,
-            'musicbrainz_id': current_user.musicbrainz_id,
-        }
-        publish_data_to_queue(
-            data=data,
-            exchange=current_app.config['BIGQUERY_EXCHANGE'],
-            queue=current_app.config['BIGQUERY_QUEUE'],
-            error_msg='Could not put user %s into statistics calculation queue, please try again later',
-        )
-        _redis.redis.set(construct_stats_queue_key(current_user.musicbrainz_id), 'queued')
-        flash.info('You have been added to the stats calculation queue! Please check back later.')
-    return redirect(url_for('profile.info'))
+def export_feedback():
+    """ Exporting the feedback data to json """
+    filename = current_user.musicbrainz_id + "_lb_feedback-" + datetime.today().strftime('%Y-%m-%d') + ".json"
+
+    # Build a generator that streams the json response. We never load all
+    # feedback into memory at once, and we can start serving the response
+    # immediately.
+    feedback = fetch_feedback(current_user.id)
+    output = stream_json_array(_feedback_to_api(fb=fb) for fb in feedback)
+
+    response = Response(stream_with_context(output))
+    response.headers["Content-Disposition"] = "attachment; filename=" + filename
+    response.headers['Content-Type'] = 'application/json; charset=utf-8'
+    response.mimetype = "text/json"
+    return response
 
 
 @profile_bp.route('/delete', methods=['GET', 'POST'])
@@ -245,10 +239,10 @@ def delete_listens():
     """ Delete all the listens for the currently logged-in user from ListenBrainz.
 
     If POST request, this view checks for the correct authorization token and
-    deletes the listens. If deletion is successful, redirects to user's profile page, 
+    deletes the listens. If deletion is successful, redirects to user's profile page,
     else flashes an error and redirects to user's info page.
 
-    If GET request, this view renders a page asking the user to confirm that they 
+    If GET request, this view renders a page asking the user to confirm that they
     wish to delete their listens.
     """
     if request.method == 'POST':
@@ -317,11 +311,14 @@ def refresh_spotify_token():
     spotify_user = spotify.get_user(current_user.id)
     if not spotify_user:
         raise APINotFound("User has not authenticated to Spotify")
+
     if spotify_user.token_expired:
         try:
             spotify_user = spotify.refresh_user_token(spotify_user)
         except spotify.SpotifyAPIError:
             raise APIServiceUnavailable("Cannot refresh Spotify token right now")
+        except spotify.SpotifyInvalidGrantError:
+            raise APINotFound("User has revoked authorization to Spotify")
 
     return jsonify({
         'id': current_user.id,

@@ -1,0 +1,38 @@
+[
+  {
+    "user_name": "user1",
+    "timestamp": 1592587273
+  },
+  {
+    "user_name": "user2",
+    "timestamp": 1592587275
+  },
+  {
+    "user_name": "user3",
+    "timestamp": 1592587275
+  },
+  {
+    "user_name": "user1",
+    "timestamp": 1592587275
+  },
+  {
+    "user_name": "user3",
+    "timestamp": 1592587282
+  },
+  {
+    "user_name": "user2",
+    "timestamp": 1592587284
+  },
+  {
+    "user_name": "user3",
+    "timestamp": 1592587288
+  },
+  {
+    "user_name": "user2",
+    "timestamp": 1592587292
+  },
+  {
+    "user_name": "user1",
+    "timestamp": 1592587298
+  }
+]

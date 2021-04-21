@@ -1,0 +1,7 @@
+#!/bin/bash
+# In consul-template's exec mode (https://github.com/hashicorp/consul-template/blob/master/docs/modes.md#exec-mode)
+# subprocesses do not run in a shell, so we use this wrapper script to correctly set the working directory
+# and then exec to the desired process. We use exec so that signals are passed to the process correctly.
+
+cd /code/listenbrainz
+exec "$@"

@@ -1,0 +1,38 @@
+{
+  "payload": {
+    "artist_map": [
+      { "artist_count": 50, "country": "GBR", "listen_count": 1846 },
+      { "artist_count": 135, "country": "USA", "listen_count": 2705 },
+      { "artist_count": 6, "country": "AUS", "listen_count": 534 },
+      { "artist_count": 2, "country": "BEL", "listen_count": 227 },
+      { "artist_count": 10, "country": "DEU", "listen_count": 216 },
+      { "artist_count": 10, "country": "CAN", "listen_count": 152 },
+      { "artist_count": 1, "country": "ARG", "listen_count": 77 },
+      { "artist_count": 1, "country": "ESP", "listen_count": 73 },
+      { "artist_count": 1, "country": "PRT", "listen_count": 61 },
+      { "artist_count": 3, "country": "ISL", "listen_count": 63 },
+      { "artist_count": 6, "country": "NLD", "listen_count": 63 },
+      { "artist_count": 2, "country": "NOR", "listen_count": 28 },
+      { "artist_count": 10, "country": "SWE", "listen_count": 48 },
+      { "artist_count": 30, "country": "IND", "listen_count": 92 },
+      { "artist_count": 5, "country": "IRL", "listen_count": 27 },
+      { "artist_count": 5, "country": "FRA", "listen_count": 15 },
+      { "artist_count": 1, "country": "URY", "listen_count": 4 },
+      { "artist_count": 2, "country": "DNK", "listen_count": 3 },
+      { "artist_count": 1, "country": "PAK", "listen_count": 2 },
+      { "artist_count": 1, "country": "TUR", "listen_count": 1 },
+      { "artist_count": 1, "country": "JAM", "listen_count": 1 },
+      { "artist_count": 1, "country": "SGP", "listen_count": 1 },
+      { "artist_count": 2, "country": "IDN", "listen_count": 2 },
+      { "artist_count": 1, "country": "PHL", "listen_count": 1 },
+      { "artist_count": 1, "country": "PRI", "listen_count": 1 },
+      { "artist_count": 1, "country": "NZL", "listen_count": 1 },
+      { "artist_count": 1, "country": "MYS", "listen_count": 1 }
+    ],
+    "from_ts": 1009843200,
+    "last_updated": 1606535789,
+    "range": "all_time",
+    "to_ts": 1606499986,
+    "user_id": "ishaanshah"
+  }
+}

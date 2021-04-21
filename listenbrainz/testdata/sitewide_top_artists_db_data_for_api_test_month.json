@@ -1,0 +1,380 @@
+{
+  "from_ts": 1588291200,
+  "to_ts": 1592956800,
+  "time_ranges": [
+    {
+      "artists": [
+        {
+          "artist_mbids": [],
+          "artist_msid": "a200b8a0-2248-4abb-9454-5f99750be117",
+          "artist_name": "Dance Gavin Dance",
+          "listen_count": 90
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "b9956564-f7fd-4c97-a3fa-b88b157affa1",
+          "artist_name": "Vader",
+          "listen_count": 42
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "b5e3b53e-34e1-4dd3-bb39-6ffcf61e0855",
+          "artist_name": "The Clash",
+          "listen_count": 31
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "000a993a-03af-48f4-a810-e0524fda111a",
+          "artist_name": "Webb Pierce",
+          "listen_count": 25
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "b6082729-fc87-4a0f-b874-00ae560c6f29",
+          "artist_name": "Citizen Bravo & Raymond MacDonald",
+          "listen_count": 24
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "e29fd013-45c0-4edd-abe2-8635fdd0502a",
+          "artist_name": "Lana Del Rey",
+          "listen_count": 20
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "517ac5e2-0a9f-4974-8233-44be9bec9c42",
+          "artist_name": "Grinderman",
+          "listen_count": 20
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "52758846-744f-4295-8dbc-6a4caf77459c",
+          "artist_name": "Pink Floyd",
+          "listen_count": 18
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "aa5bc83f-70a7-4f21-8b00-60309b7fa1d1",
+          "artist_name": "The Colorist & Emil\u00edana Torrini",
+          "listen_count": 17
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "3f4ed551-99ce-422a-aaee-04829c60cbb9",
+          "artist_name": "David Thomas Broughton",
+          "listen_count": 17
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "bf4cb1ee-7a93-44d6-9463-c46063506a20",
+          "artist_name": "Portishead",
+          "listen_count": 16
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "50789a5a-0fcf-4427-b105-2270cd9baf0b",
+          "artist_name": "Witchcraft",
+          "listen_count": 15
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "abe14328-4e15-413c-8ad6-ac8a174aedcd",
+          "artist_name": "Sampa The Great",
+          "listen_count": 15
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "92867b62-c838-4bbd-97dc-07681b3b0439",
+          "artist_name": "Moacir Santos",
+          "listen_count": 14
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "8bf0a378-f5e9-4029-9733-debf6bbf75f8",
+          "artist_name": "Crash Test Dummies",
+          "listen_count": 14
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "bfff03a0-bb31-4225-a12b-fc11df420cc6",
+          "artist_name": "Code Orange",
+          "listen_count": 14
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "855e2998-40bc-4dbb-8ea5-4b28cd9447e0",
+          "artist_name": "Bring Me the Horizon",
+          "listen_count": 14
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "f7c2b580-1935-4bbb-8f3b-476cc6215ef2",
+          "artist_name": "The Warlocks",
+          "listen_count": 13
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "c8fee4af-cf1c-4676-809b-930251b57289",
+          "artist_name": "Solange",
+          "listen_count": 13
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "aebd2c50-9eed-447d-b8b0-dbdbe5850ba8",
+          "artist_name": "Snow Patrol",
+          "listen_count": 13
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "c613a9c8-9b8d-4cf6-89a8-fd40afe62e59",
+          "artist_name": "Suzanne Vega",
+          "listen_count": 12
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "38ff2a96-ef90-42ef-b4f7-ef6afc9de0b7",
+          "artist_name": "Jace Everett",
+          "listen_count": 12
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "0a93648a-7c2f-4346-b117-f6eeb4395fa9",
+          "artist_name": "Inka",
+          "listen_count": 12
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "6f5db00a-3ddc-47cf-aa90-0fffc4fb6d58",
+          "artist_name": "EL VY",
+          "listen_count": 12
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "f7422d0f-6dd6-4c16-97b9-8c8500a0567a",
+          "artist_name": "Alex Rex",
+          "listen_count": 12
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "b55293d2-87eb-4ca3-93bd-72d1529e21ae",
+          "artist_name": "Rokia Traor\u00e9",
+          "listen_count": 11
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "bba02547-375b-46cb-b5e4-c94bdfc29693",
+          "artist_name": "Havok",
+          "listen_count": 11
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "feff5fdb-cfba-40b7-af26-541445a15ef9",
+          "artist_name": "Bonny Light Horseman",
+          "listen_count": 11
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "24a56abe-bcbc-4408-835e-739124e9f818",
+          "artist_name": "Westside Gunn",
+          "listen_count": 10
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "92423ebd-10d7-478d-85db-920b1fb94ead",
+          "artist_name": "Voivod",
+          "listen_count": 10
+        }
+      ],
+      "from_ts": 1588291200,
+      "time_range": "01 May 2020",
+      "to_ts": 1588377599
+    },
+    {
+      "artists": [
+        {
+          "artist_mbids": [],
+          "artist_msid": "a200b8a0-2248-4abb-9454-5f99750be117",
+          "artist_name": "Dance Gavin Dance",
+          "listen_count": 95
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "e29fd013-45c0-4edd-abe2-8635fdd0502a",
+          "artist_name": "Lana Del Rey",
+          "listen_count": 52
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "1fd33ffc-d262-4fbd-9d8a-0cc28795cec1",
+          "artist_name": "Vel the Wonder",
+          "listen_count": 34
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "97d4de44-fd69-4865-b25c-2f93a5110046",
+          "artist_name": "Fu Manchu",
+          "listen_count": 30
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "fcee89d2-70a6-4149-afd3-90806ddc650d",
+          "artist_name": "Death Cab for Cutie",
+          "listen_count": 28
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "61b56aa7-6b17-4a12-987d-f6e3027d1a3c",
+          "artist_name": "Karnivool",
+          "listen_count": 26
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "855e2998-40bc-4dbb-8ea5-4b28cd9447e0",
+          "artist_name": "Bring Me the Horizon",
+          "listen_count": 19
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "ff73b406-2a9f-430a-9ea3-eebd241ae0b3",
+          "artist_name": "R.E.M.",
+          "listen_count": 16
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "bb89657c-c0c6-4c2d-9233-619823a3b043",
+          "artist_name": "Seth Lakeman",
+          "listen_count": 10
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "32150f6d-5ad6-4913-83fc-7b15bd847588",
+          "artist_name": "Mastodon",
+          "listen_count": 9
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "00a2e257-eccc-466e-9c3f-c424281e20d3",
+          "artist_name": "Torgeir Waldemar",
+          "listen_count": 8
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "732032de-66d9-44d0-8db8-eb139db32824",
+          "artist_name": "Rita Marley",
+          "listen_count": 8
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "afa1780e-1194-476e-aa3a-31466ce62f2c",
+          "artist_name": "New Order",
+          "listen_count": 8
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "9f5e9335-ca47-4f2d-979b-1890076ededc",
+          "artist_name": "Silverstein",
+          "listen_count": 7
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "093b9f69-79bc-4e9c-bd00-040e926b0bf3",
+          "artist_name": "Kaukasus",
+          "listen_count": 7
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "b63ad51b-f30e-405a-abb3-75c57f4bc2f7",
+          "artist_name": "Bones",
+          "listen_count": 7
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "be444ee2-0c08-4b49-9f7c-cf848ea27c69",
+          "artist_name": "Trevor Daniel",
+          "listen_count": 6
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "e9e1e99c-7439-4152-a170-d52d607b90b1",
+          "artist_name": "Doja Cat",
+          "listen_count": 6
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "cb43ab86-25c7-49b4-a086-83af74393978",
+          "artist_name": "The fin.",
+          "listen_count": 5
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "42b34077-464d-4e09-877e-077db701469d",
+          "artist_name": "Jaira Burns",
+          "listen_count": 5
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "4ffe7e89-a6f2-449a-92be-4ce0a62d9257",
+          "artist_name": "IAMDDB",
+          "listen_count": 5
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "0006cb8e-897f-43a0-bdc4-b56b62d6ec29",
+          "artist_name": "Black Veil Brides",
+          "listen_count": 5
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "54a3ad2a-a98e-436f-b0bf-8e48c4b79106",
+          "artist_name": "Yorkston/Thorne/Khan",
+          "listen_count": 4
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "b8e44f2e-3e42-4f0d-b7ef-6f874b882bad",
+          "artist_name": "Whitechapel",
+          "listen_count": 4
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "139e13e9-1ebc-48fb-af90-97cf9909e632",
+          "artist_name": "Vulfpeck",
+          "listen_count": 4
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "9820da6d-66d9-424d-9f67-2654ed2f31e4",
+          "artist_name": "Tame Impala",
+          "listen_count": 4
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "9e5f26f1-95ab-43ad-b7f9-22ff5cd29dee",
+          "artist_name": "System of a Down",
+          "listen_count": 4
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "50fa106f-e40d-49ec-bca1-9802fb2157e7",
+          "artist_name": "Radiohead",
+          "listen_count": 4
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "4aa12451-67b1-413e-86e4-71416e913aa6",
+          "artist_name": "New Hope Club",
+          "listen_count": 4
+        },
+        {
+          "artist_mbids": [],
+          "artist_msid": "78df245f-0fe0-4a21-b1d4-e79f695354fd",
+          "artist_name": "Gorillaz",
+          "listen_count": 4
+        }
+      ],
+      "from_ts": 1588377600,
+      "time_range": "02 May 2020",
+      "to_ts": 1588463999
+    }
+  ]
+}

@@ -13,7 +13,7 @@ const props = {
   onTrackInfoChange: (title: string, artist?: string) => {},
   onTrackEnd: () => {},
   onTrackNotFound: () => {},
-  handleError: (error: string | Error, title?: string) => {},
+  handleError: (error: BrainzPlayerError, title?: string) => {},
   handleWarning: (message: string | JSX.Element, title?: string) => {},
   handleSuccess: (message: string | JSX.Element, title?: string) => {},
   onInvalidateDataSource: (
@@ -157,5 +157,25 @@ describe("YoutubePlayer", () => {
     expect(playVideo).toHaveBeenCalledTimes(1);
     expect(instance.props.onPlayerPausedChange).toHaveBeenCalledTimes(1);
     expect(instance.props.onPlayerPausedChange).toHaveBeenCalledWith(false);
+  });
+
+  it("should play from youtube URL if present on the listen", () => {
+    const wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...props} />);
+    const instance = wrapper.instance();
+    const playTrackById = jest.fn();
+    instance.playTrackById = playTrackById;
+    const youtubeListen: Listen = {
+      listened_at: 0,
+      track_metadata: {
+        artist_name: "Moondog",
+        track_name: "Bird's Lament",
+        additional_info: {
+          origin_url: "https://www.youtube.com/watch?v=RW8SBwGNcF8",
+        },
+      },
+    };
+    instance.playListen(youtubeListen);
+    expect(playTrackById).toHaveBeenCalledTimes(1);
+    expect(playTrackById).toHaveBeenCalledWith("RW8SBwGNcF8");
   });
 });

@@ -34,15 +34,17 @@
     {% endwith %}
 
     {%- block wrapper -%}
+    <div class ="wrapper">
+
       {%- block content -%}
-        <!-- Page content -->
+      <!-- Page content -->
       {%- endblock -%}
+    </div>
     {%- endblock -%}
-    <div class="clearfix"></div>
 
     {%- block footer -%}
+    <div class="footer">
       <hr />
-      <div class="footer clearfix">
         <ul class="list-inline pull-left">
           <li><a href="http://blog.musicbrainz.org/category/listenbrainz/">Blog</a></li>
           <li><a href="https://twitter.com/ListenBrainz">Twitter</a></li>

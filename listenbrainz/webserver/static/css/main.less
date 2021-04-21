@@ -1,5 +1,10 @@
 @import "theme/theme.less";
+@import "colors.less";
 @import "listens-page.less";
+@import "playlists.less";
+@import "timeline.less";
+@import "follow.less";
+@import "recommendation-page.less";
 
 @import "highlight.css"; // Styles for highlight.js
 
@@ -60,8 +65,14 @@ body {
   }
 }
 
+// Content Wrapper
+.wrapper {
+  min-height: 70vh;
+}
+
 // Footer
 .footer {
+  height: 70px;
   img { height: 45px; }
 }
 
@@ -87,5 +98,109 @@ h2.page-title { @media (max-width: @grid-float-breakpoint) { margin-top: 0px; } 
     @media (max-width: @grid-float-breakpoint) {
       height: 80px;
     }
+  }
+}
+
+.mt-5 {
+  margin-top: 5px
+}
+
+.mt-10 {
+  margin-top: 10px
+}
+
+.mt-15 {
+  margin-top: 15px
+}
+
+.mb-5 {
+  margin-bottom: 5px
+}
+
+.mb-10 {
+  margin-bottom: 10px
+}
+
+.mb-15 {
+  margin-bottom: 15px
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Allows styling of elements other than <a> in Bootstrap dropdowns
+.dropdown-menu > li > * {
+  &:extend(.dropdown-menu>li>a all);
+  background: inherit;
+  border: none;
+  width: 100%;
+  text-align: left;
+}
+
+.full-page-loader {
+  position: fixed;
+  background: #000000a6;
+  width: 100vw;
+  height: 100vh;
+  top: 0;
+  left: 0;
+  z-index: 10;
+}
+
+.similarity-score {
+  &.regular {
+    .progress {
+      height: 15px;
+      width: 300px;
+    }
+  }
+  &.compact {
+    > * {
+      display: inline-block;
+      margin-bottom: 0px;
+    }
+
+    .progress {
+      height: 7px;
+      width: 80px;
+      margin-right: 5px;
+    }
+   }
+
+  .progress {
+    box-shadow: none;
+    border-radius: 16px;
+    background-color: #fafafa;
+  }
+
+  .progress-bar {
+    border-radius: 16px;
+    &.red {
+      background-color: @red;
+    }
+    &.orange {
+      background-color: @orange;
+    }
+    &.purple {
+      background-color: @blue;
+    }
+  }
+}
+
+.sticky-top {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 20px;
+}
+
+#feedback-button {
+  .icon {
+    > :not(:first-child){
+      color:@orange;
+    }
+    margin-right: 0.7em;
   }
 }

@@ -3,6 +3,6 @@ Hey! 👋
 Data has been successfully trained to create a model.
 
 upload time = {{ time_to_upload }}
-time taken to create model = {{ total_time }}h
+time taken to create model = {{ total_time }}s
 
 Your Friendly Neighbourhood Brainzbot 🤖

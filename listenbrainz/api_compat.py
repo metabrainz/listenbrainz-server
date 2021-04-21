@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from listenbrainz.webserver import create_api_compat_app
 import argparse
-from werkzeug.contrib.profiler import ProfilerMiddleware
 
 application = create_api_compat_app()
 

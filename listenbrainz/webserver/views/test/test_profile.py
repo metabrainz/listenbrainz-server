@@ -1,17 +1,17 @@
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import listenbrainz.db.spotify as db_spotify
-import pytz
 import time
 import ujson
 
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import url_for
 from listenbrainz.domain import spotify
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.listen import Listen
 from listenbrainz.webserver.testing import ServerTestCase
 from unittest.mock import patch
+from listenbrainz.db.model.feedback import Feedback
 
 
 class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
@@ -82,19 +82,6 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertStatus(response, 302)
         self.assertRedirects(response, url_for('login.index', next=profile_info_url))
 
-    @patch('listenbrainz.webserver.views.user.publish_data_to_queue')
-    def test_delete(self, mock_publish_data_to_queue):
-        self.temporary_login(self.user['login_id'])
-        r = self.client.get(url_for('profile.delete'))
-        self.assert200(r)
-
-        r = self.client.post(url_for('profile.delete'), data={'token': self.user['auth_token']})
-        mock_publish_data_to_queue.assert_called_once()
-        self.assertRedirects(r, '/')
-        user = db_user.get(self.user['id'])
-        self.assertIsNone(user)
-
-    
     def test_delete_listens(self):
         """Tests delete listens end point"""
         self.temporary_login(self.user['login_id'])
@@ -185,7 +172,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
     def test_spotify_refresh_token_which_has_expired(self, mock_refresh_user_token, mock_get_user):
         self.temporary_login(self.user['login_id'])
         # token hasn't expired
-        expires = datetime.utcfromtimestamp(int(time.time()) + 10).replace(tzinfo=pytz.UTC)
+        expires = datetime.utcfromtimestamp(int(time.time()) + 10).replace(tzinfo=timezone.utc)
         mock_get_user.return_value = spotify.Spotify(
             user_id=self.user['id'],
             musicbrainz_id=self.user['musicbrainz_id'],
@@ -209,13 +196,12 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
             'permission': ['user-read-recently-played', 'some-other-permission'],
         })
 
-
     @patch('listenbrainz.webserver.views.profile.spotify.get_user')
     @patch('listenbrainz.webserver.views.profile.spotify.refresh_user_token')
     def test_spotify_refresh_token_which_has_not_expired(self, mock_refresh_user_token, mock_get_user):
         self.temporary_login(self.user['login_id'])
         # token hasn't expired
-        expires = datetime.utcfromtimestamp(int(time.time()) - 10).replace(tzinfo=pytz.UTC)
+        expires = datetime.utcfromtimestamp(int(time.time()) - 10).replace(tzinfo=timezone.utc)
         spotify_user = spotify.Spotify(
             user_id=self.user['id'],
             musicbrainz_id=self.user['musicbrainz_id'],
@@ -242,7 +228,31 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
             'permission': ['user-read-recently-played'],
         })
 
-    @patch('listenbrainz.listenstore.influx_listenstore.InfluxListenStore.fetch_listens')
+    @patch('listenbrainz.domain.spotify.get_user')
+    @patch('listenbrainz.domain.spotify.refresh_user_token')
+    def test_spotify_refresh_token_which_has_been_revoked(self, mock_refresh_user_token, mock_get_user):
+        self.temporary_login(self.user['login_id'])
+        # token hasn't expired
+        expires = datetime.utcfromtimestamp(int(time.time()) - 10).replace(tzinfo=timezone.utc)
+        spotify_user = spotify.Spotify(
+            user_id=self.user['id'],
+            musicbrainz_id=self.user['musicbrainz_id'],
+            musicbrainz_row_id=self.user['musicbrainz_row_id'],
+            user_token='old-token',
+            token_expires=expires,  # token has expired
+            refresh_token='old-refresh-token',
+            last_updated=None,
+            record_listens=True,
+            error_message=None,
+            latest_listened_at=None,
+            permission='user-read-recently-played',
+        )
+        mock_get_user.return_value = spotify_user
+        mock_refresh_user_token.side_effect = spotify.SpotifyInvalidGrantError
+        response = self.client.post(url_for('profile.refresh_spotify_token'))
+        self.assertEqual(response.json, {'code': 404, 'error': 'User has revoked authorization to Spotify'})
+
+    @patch('listenbrainz.listenstore.timescale_listenstore.TimescaleListenStore.fetch_listens')
     def test_export_streaming(self, mock_fetch_listens):
         self.temporary_login(self.user['login_id'])
 
@@ -293,6 +303,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
         results = ujson.loads(r.data.decode('utf-8'))
 
         self.assertDictEqual(results[0], {
+            'inserted_at': 0,
             'listened_at': 1539509881,
             'recording_msid': '6c617681-281e-4dae-af59-8e00f93c4376',
             'user_name': None,
@@ -306,6 +317,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
             },
         })
         self.assertDictEqual(results[1], {
+            'inserted_at': 0,
             'listened_at': 1539441702,
             'recording_msid': '7ad53fd7-5b40-4e13-b680-52716fb86d5f',
             'user_name': None,
@@ -319,6 +331,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
             },
         })
         self.assertDictEqual(results[2], {
+            'inserted_at': 0,
             'listened_at': 1539441531,
             'recording_msid': None,
             'user_name': None,
@@ -331,3 +344,61 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
                 },
             },
         })
+
+    @patch('listenbrainz.db.feedback.get_feedback_for_user')
+    def test_export_feedback_streaming(self, mock_fetch_feedback):
+        self.temporary_login(self.user['login_id'])
+
+        # Three example feedback, with only basic data for the purpose of this test.
+        feedback = [
+            Feedback(
+                recording_msid='6c617681-281e-4dae-af59-8e00f93c4376',
+                score=1,
+                user_id=1,
+            ),
+            Feedback(
+                recording_msid='7ad53fd7-5b40-4e13-b680-52716fb86d5f',
+                score=1,
+                user_id=1,
+            ),
+            Feedback(
+                recording_msid='7816411a-2cc6-4e43-b7a1-60ad093c2c31',
+                score=-1,
+                user_id=1,
+            ),
+        ]
+
+        # We expect three calls to get_feedback_for_user, and we return two, one, and
+        # zero feedback in the batch. This tests that we fetch all batches.
+        mock_fetch_feedback.side_effect = [feedback[0:2], feedback[2:3], []]
+
+        r = self.client.post(url_for('profile.export_feedback'))
+        self.assert200(r)
+
+        # r.json returns None, so we decode the response manually.
+        results = ujson.loads(r.data.decode('utf-8'))
+
+        self.assertDictEqual(results[0], {
+            'recording_msid': '6c617681-281e-4dae-af59-8e00f93c4376',
+            'score': 1,
+            'user_id': None,
+            'created': None,
+        })
+        self.assertDictEqual(results[1], {
+            'recording_msid': '7ad53fd7-5b40-4e13-b680-52716fb86d5f',
+            'score': 1,
+            'user_id': None,
+            'created': None,
+        })
+        self.assertDictEqual(results[2], {
+            'recording_msid': '7816411a-2cc6-4e43-b7a1-60ad093c2c31',
+            'score': -1,
+            'user_id': None,
+            'created': None,
+        })
+
+    def test_export_feedback_streaming_not_logged_in(self):
+        export_feedback_url = url_for('profile.export_feedback')
+        response = self.client.post(export_feedback_url)
+        self.assertStatus(response, 302)
+        self.assertRedirects(response, url_for('login.index', next=export_feedback_url))

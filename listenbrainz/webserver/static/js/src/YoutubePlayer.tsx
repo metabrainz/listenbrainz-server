@@ -1,7 +1,13 @@
 import * as React from "react";
 import YouTube, { Options } from "react-youtube";
-import { isEqual as _isEqual, get as _get, isNil as _isNil } from "lodash";
+import {
+  isEqual as _isEqual,
+  get as _get,
+  isNil as _isNil,
+  isString as _isString,
+} from "lodash";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
+import { getTrackExtension } from "./playlists/utils";
 
 type YoutubePlayerState = {
   currentListen?: Listen;
@@ -48,7 +54,10 @@ export default class YoutubePlayer
       onTrackEnd();
       return;
     }
-    if (state === YouTube.PlayerState.UNSTARTED) {
+    if (
+      state === YouTube.PlayerState.UNSTARTED ||
+      state === YouTube.PlayerState.BUFFERING
+    ) {
       const { onTrackInfoChange } = this.props;
       const title = _get(player, "playerInfo.videoData.title", "");
       onTrackInfoChange(title);
@@ -65,9 +74,11 @@ export default class YoutubePlayer
     onProgressChange(player.getCurrentTime() * 1000);
   };
 
-  searchAndPlayTrack = (listen: Listen): void => {
-    const trackName = _get(listen, "track_metadata.track_name");
-    const artistName = _get(listen, "track_metadata.artist_name");
+  searchAndPlayTrack = (listen: Listen | JSPFTrack): void => {
+    const trackName =
+      _get(listen, "track_metadata.track_name") || _get(listen, "title");
+    const artistName =
+      _get(listen, "track_metadata.artist_name") || _get(listen, "creator");
     const releaseName = _get(listen, "track_metadata.release_name");
     const { handleWarning, onTrackNotFound } = this.props;
     if (!trackName) {
@@ -99,18 +110,22 @@ export default class YoutubePlayer
     }
   };
 
-  playListen = (listen: Listen) => {
+  playListen = (listen: Listen | JSPFTrack) => {
     const { show } = this.props;
     if (!show) {
       return;
     }
-    const youtubeURI = _get(
-      listen,
-      "track_metadata.additional_info.youtube_id"
-    );
-
-    if (youtubeURI) {
-      this.playTrackById(youtubeURI);
+    let youtubeId = _get(listen, "track_metadata.additional_info.youtube_id");
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    if (!youtubeId && _isString(originURL) && originURL.length) {
+      const parsedURL = new URL(originURL);
+      const { hostname, searchParams } = parsedURL;
+      if (/youtube\.com/.test(hostname)) {
+        youtubeId = searchParams.get("v");
+      }
+    }
+    if (youtubeId) {
+      this.playTrackById(youtubeId);
     } else {
       this.searchAndPlayTrack(listen);
     }

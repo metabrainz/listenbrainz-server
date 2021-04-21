@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Github Actions automatically sets the CI environment variable. We use this variable to detect if the script is running
+# inside a CI environment and modify its execution as needed.
+if [ "$CI" == "true" ] ; then
+    echo "Running in CI mode"
+fi
+
 # UNIT TESTS
 # ./test.sh                build unit test containers, bring up, make database, test, bring down
 # for development:
@@ -13,6 +19,7 @@
 # ./test.sh fe -u          run frontend tests, update snapshots
 # ./test.sh fe -b          build frontend test containers
 # ./test.sh fe -t          run type-checker
+# ./test.sh fe -f          run linter
 
 # SPARK TESTS
 # ./test.sh spark          run spark tests
@@ -38,19 +45,19 @@ INT_COMPOSE_PROJECT_NAME_ORIGINAL=listenbrainz_int
 
 if [[ ! -d "docker" ]]; then
     echo "This script must be run from the top level directory of the listenbrainz-server source."
-    exit -1
+    exit 255
 fi
 
 function build_unit_containers {
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                build db influx redis rabbitmq listenbrainz
+                build db redis rabbitmq listenbrainz
 }
 
 function bring_up_unit_db {
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                up -d db influx redis rabbitmq
+                up -d db redis rabbitmq
 }
 
 function unit_setup {
@@ -60,11 +67,10 @@ function unit_setup {
                    -p $COMPOSE_PROJECT_NAME \
                 run --rm listenbrainz dockerize \
                   -wait tcp://db:5432 -timeout 60s \
-                  -wait tcp://influx:8086 -timeout 60s \
                   -wait tcp://rabbitmq:5672 -timeout 60s \
                 bash -c "python3 manage.py init_db --create-db && \
                          python3 manage.py init_msb_db --create-db && \
-                         python3 manage.py init_influx"
+                         python3 manage.py init_ts_db --create-db"
 }
 
 function is_unit_db_running {
@@ -105,13 +111,36 @@ function unit_dcdown {
 function build_frontend_containers {
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                build listenbrainz frontend_tester
+                build frontend_tester
 }
 
 function update_snapshots {
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
                 run --rm frontend_tester npm run test:update-snapshots
+}
+
+function run_lint_check {
+    if [ "$CI" == "true" ] ; then
+        command="format:ci"
+    else
+        command="format"
+    fi
+
+    docker-compose -f $COMPOSE_FILE_LOC \
+                   -p $COMPOSE_PROJECT_NAME \
+                run --rm frontend_tester npm run $command
+}
+
+function run_frontend_tests {
+    if [ "$CI" == "true" ] ; then
+        command="test:ci"
+    else
+        command="test"
+    fi
+    docker-compose -f $COMPOSE_FILE_LOC \
+                   -p $COMPOSE_PROJECT_NAME \
+                run --rm frontend_tester npm run $command
 }
 
 function run_type_check {
@@ -137,13 +166,13 @@ function spark_dcdown {
                 down
 }
 
-function int_dcdown {
+function int_build {
     docker-compose -f $INT_COMPOSE_FILE_LOC \
                    -p $INT_COMPOSE_PROJECT_NAME \
-                down
+                build
 }
 
-function int_build {
+function int_dcdown {
     # Shutting down all integration test containers associated with this project
     docker-compose -f $INT_COMPOSE_FILE_LOC \
                    -p $INT_COMPOSE_PROJECT_NAME \
@@ -156,16 +185,15 @@ function int_setup {
                    -p $INT_COMPOSE_PROJECT_NAME \
                 run --rm listenbrainz dockerize \
                   -wait tcp://db:5432 -timeout 60s \
-                  -wait tcp://influx:8086 -timeout 60s \
                 bash -c "python3 manage.py init_db --create-db && \
                          python3 manage.py init_msb_db --create-db && \
-                         python3 manage.py init_influx"
+                         python3 manage.py init_ts_db --create-db"
 }
 
 function bring_up_int_containers {
     docker-compose -f $INT_COMPOSE_FILE_LOC \
                    -p $INT_COMPOSE_PROJECT_NAME \
-                up -d db influx redis influx_writer rabbitmq
+                up -d db redis timescale_writer rabbitmq
 }
 
 # Exit immediately if a command exits with a non-zero status.
@@ -184,8 +212,9 @@ if [ "$1" == "spark" ]; then
     docker-compose -f $SPARK_COMPOSE_FILE_LOC \
                    -p $SPARK_COMPOSE_PROJECT_NAME \
                 up test
+    RET=$?
     spark_dcdown
-    exit 0
+    exit $RET
 fi
 
 if [ "$1" == "int" ]; then
@@ -203,18 +232,25 @@ if [ "$1" == "int" ]; then
     int_setup
     echo "Bringing containers up"
     bring_up_int_containers
-    echo "Running tests"
+    shift
+    if [ -z "$@" ]; then
+        TESTS_TO_RUN="listenbrainz/tests/integration"
+    else
+        TESTS_TO_RUN="$@"
+    fi
+    echo "Running tests $TESTS_TO_RUN"
+
     docker-compose -f $INT_COMPOSE_FILE_LOC \
                    -p $INT_COMPOSE_PROJECT_NAME \
                 run --rm listenbrainz dockerize \
                   -wait tcp://db:5432 -timeout 60s \
-                  -wait tcp://influx:8086 -timeout 60s \
                   -wait tcp://redis:6379 -timeout 60s \
                   -wait tcp://rabbitmq:5672 -timeout 60s \
-                bash -c "py.test listenbrainz/tests/integration"
+                bash -c "pytest $TESTS_TO_RUN"
+    RET=$?
     echo "Taking containers down"
     int_dcdown
-    exit 0
+    exit $RET
 fi
 
 # Project name is sanitized by Compose, so we need to do the same thing.
@@ -239,14 +275,18 @@ if [ "$1" == "fe" ]; then
     if [ "$2" == "-t" ]; then
         echo "Running type checker"
         run_type_check
-        exit 0
+        exit $?
+    fi
+
+    if [ "$2" == "-f" ]; then
+        echo "Running linter"
+        run_lint_check
+        exit $?
     fi
 
     echo "Running tests"
-    docker-compose -f $COMPOSE_FILE_LOC \
-                   -p $COMPOSE_PROJECT_NAME \
-                run --rm frontend_tester npm test
-    exit 0
+    run_frontend_tests
+    exit $?
 fi
 
 if [ "$1" == "-s" ]; then
@@ -291,12 +331,15 @@ if [ $DB_EXISTS -eq 1 -a $DB_RUNNING -eq 1 ]; then
     echo "Running tests"
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                run --rm listenbrainz py.test "$@"
+                run --rm listenbrainz pytest "$@"
+    RET=$?
     unit_dcdown
+    exit $RET
 else
     # Else, we have containers, just run tests
     echo "Running tests"
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                run --rm listenbrainz py.test "$@"
+                run --rm listenbrainz pytest "$@"
+    exit $?
 fi

@@ -46,12 +46,16 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         resp = self.client.get(url_for('index.faq'))
         self.assert200(resp)
 
-    def test_api_docs(self):
-        resp = self.client.get(url_for('index.api_docs'))
-        self.assert200(resp)
-
     def test_roadmap(self):
         resp = self.client.get(url_for('index.roadmap'))
+        self.assert200(resp)
+
+    def test_add_data_info(self):
+        resp = self.client.get(url_for('index.add_data_info'))
+        self.assert200(resp)
+
+    def test_import_data_info(self):
+        resp = self.client.get(url_for('index.import_data_info'))
         self.assert200(resp)
 
     def test_404(self):
@@ -78,20 +82,6 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
     def test_current_status(self):
         resp = self.client.get(url_for('index.current_status'))
         self.assert200(resp)
-
-    @mock.patch('listenbrainz.webserver.views.index.rabbitmq_connection')
-    def test_current_status_ise(self, mock_rabbitmq_connection_module):
-        mock_rabbitmq_connection_module._rabbitmq.get.side_effect = InternalServerError
-        r = self.client.get(url_for('index.current_status'))
-        self.assert500(r)
-
-        mock_rabbitmq_connection_module._rabbitmq.get.side_effect = ConnectionClosed
-        r = self.client.get(url_for('index.current_status'))
-        self.assert200(r)
-
-        mock_rabbitmq_connection_module._rabbitmq.get.side_effect = ConnectionClosed
-        r = self.client.get(url_for('index.current_status'))
-        self.assert200(r)
 
     @mock.patch('listenbrainz.db.user.get')
     def test_menu_not_logged_in(self, mock_user_get):
@@ -309,3 +299,14 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         props = ujson.loads(self.get_context_variable('props'))
         self.assertEqual(props['mode'], 'recent')
         self.assertDictEqual(props['spotify'], {})
+
+    def test_feed_page(self):
+        user = db_user.get_or_create(1, 'iliekcomputers') # dev
+        db_user.agree_to_gdpr(user['musicbrainz_id'])
+        self.temporary_login(user['login_id'])
+        r = self.client.get('/feed')
+        self.assert200(r)
+
+    def test_similar_users(self):
+        resp = self.client.get(url_for('index.similar_users'))
+        self.assert200(resp)

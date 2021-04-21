@@ -1,0 +1,7 @@
+Hey! 👋
+
+Artist relation has been successfully imported into the spark cluster at {{ import_time }}.
+
+Took {{ time_taken_to_import }}s to import the artist relation.
+
+Your Friendly Neighbourhood Brainzbot 🤖

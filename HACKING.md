@@ -9,26 +9,19 @@ To open a Redis command prompt:
     docker exec -it listenbrainz_redis_1 redis-cli
 
 
-### Influx
-
-To open an Influxdb command prompt:
-
-    docker exec -it listenbrainz_influx_1 influx
-
-and to drop all the listens in influx db:
-
-    drop database listenbrainz
-
-After dropping the database, you'll probably need to create the database again:
-
-    create database listenbrainz
-
-
 ### Postgres
 
 To get a postgres command prompt:
 
     ./develop.sh psql
+
+
+### Timescale
+
+To get a timescale/postgres command prompt:
+
+    ./develop.sh timescale
+
 
 ### Tests
 

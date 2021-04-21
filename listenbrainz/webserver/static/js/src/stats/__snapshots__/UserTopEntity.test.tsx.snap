@@ -1,0 +1,4798 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`UserTopEntity renders corectly when range is invalid 1`] = `
+<UserTopEntity
+  apiUrl="foobar"
+  entity="artist"
+  range="invalid_range"
+  user={
+    Object {
+      "name": "test_user",
+    }
+  }
+>
+  <ForwardRef
+    style={
+      Object {
+        "alignItems": "center",
+        "display": "flex",
+        "flexDirection": "column",
+        "marginTop": 20,
+        "minHeight": 550,
+      }
+    }
+  >
+    <div
+      style={
+        Object {
+          "alignItems": "center",
+          "background": "#FFFFFF",
+          "border": "1px solid #EEEEEE",
+          "borderRadius": "8px",
+          "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
+          "boxSizing": "border-box",
+          "display": "flex",
+          "flexDirection": "column",
+          "height": "100%",
+          "marginTop": 20,
+          "minHeight": 550,
+        }
+      }
+    >
+      <h3
+        className="capitalize-bold"
+        style={
+          Object {
+            "display": "inline",
+          }
+        }
+      >
+        Top 
+        artists
+      </h3>
+      <h4
+        style={
+          Object {
+            "display": "inline",
+            "marginTop": 20,
+            "position": "absolute",
+            "right": 20,
+          }
+        }
+      >
+        <a
+          href="#top-entity"
+        >
+          <FontAwesomeIcon
+            border={false}
+            className=""
+            color="#46443A"
+            fixedWidth={false}
+            flip={null}
+            icon={
+              Object {
+                "icon": Array [
+                  512,
+                  512,
+                  Array [],
+                  "f0c1",
+                  "M326.612 185.391c59.747 59.809 58.927 155.698.36 214.59-.11.12-.24.25-.36.37l-67.2 67.2c-59.27 59.27-155.699 59.262-214.96 0-59.27-59.26-59.27-155.7 0-214.96l37.106-37.106c9.84-9.84 26.786-3.3 27.294 10.606.648 17.722 3.826 35.527 9.69 52.721 1.986 5.822.567 12.262-3.783 16.612l-13.087 13.087c-28.026 28.026-28.905 73.66-1.155 101.96 28.024 28.579 74.086 28.749 102.325.51l67.2-67.19c28.191-28.191 28.073-73.757 0-101.83-3.701-3.694-7.429-6.564-10.341-8.569a16.037 16.037 0 0 1-6.947-12.606c-.396-10.567 3.348-21.456 11.698-29.806l21.054-21.055c5.521-5.521 14.182-6.199 20.584-1.731a152.482 152.482 0 0 1 20.522 17.197zM467.547 44.449c-59.261-59.262-155.69-59.27-214.96 0l-67.2 67.2c-.12.12-.25.25-.36.37-58.566 58.892-59.387 154.781.36 214.59a152.454 152.454 0 0 0 20.521 17.196c6.402 4.468 15.064 3.789 20.584-1.731l21.054-21.055c8.35-8.35 12.094-19.239 11.698-29.806a16.037 16.037 0 0 0-6.947-12.606c-2.912-2.005-6.64-4.875-10.341-8.569-28.073-28.073-28.191-73.639 0-101.83l67.2-67.19c28.239-28.239 74.3-28.069 102.325.51 27.75 28.3 26.872 73.934-1.155 101.96l-13.087 13.087c-4.35 4.35-5.769 10.79-3.783 16.612 5.864 17.194 9.042 34.999 9.69 52.721.509 13.906 17.454 20.446 27.294 10.606l37.106-37.106c59.271-59.259 59.271-155.699.001-214.959z",
+                ],
+                "iconName": "link",
+                "prefix": "fas",
+              }
+            }
+            inverse={false}
+            listItem={false}
+            mask={null}
+            pull={null}
+            pulse={false}
+            rotation={null}
+            size="sm"
+            spin={false}
+            style={
+              Object {
+                "marginRight": 20,
+              }
+            }
+            swapOpacity={false}
+            symbol={false}
+            title=""
+            transform={null}
+          >
+            <svg
+              aria-hidden="true"
+              className="svg-inline--fa fa-link fa-w-16 fa-sm "
+              color="#46443A"
+              data-icon="link"
+              data-prefix="fas"
+              focusable="false"
+              role="img"
+              style={
+                Object {
+                  "marginRight": 20,
+                }
+              }
+              viewBox="0 0 512 512"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M326.612 185.391c59.747 59.809 58.927 155.698.36 214.59-.11.12-.24.25-.36.37l-67.2 67.2c-59.27 59.27-155.699 59.262-214.96 0-59.27-59.26-59.27-155.7 0-214.96l37.106-37.106c9.84-9.84 26.786-3.3 27.294 10.606.648 17.722 3.826 35.527 9.69 52.721 1.986 5.822.567 12.262-3.783 16.612l-13.087 13.087c-28.026 28.026-28.905 73.66-1.155 101.96 28.024 28.579 74.086 28.749 102.325.51l67.2-67.19c28.191-28.191 28.073-73.757 0-101.83-3.701-3.694-7.429-6.564-10.341-8.569a16.037 16.037 0 0 1-6.947-12.606c-.396-10.567 3.348-21.456 11.698-29.806l21.054-21.055c5.521-5.521 14.182-6.199 20.584-1.731a152.482 152.482 0 0 1 20.522 17.197zM467.547 44.449c-59.261-59.262-155.69-59.27-214.96 0l-67.2 67.2c-.12.12-.25.25-.36.37-58.566 58.892-59.387 154.781.36 214.59a152.454 152.454 0 0 0 20.521 17.196c6.402 4.468 15.064 3.789 20.584-1.731l21.054-21.055c8.35-8.35 12.094-19.239 11.698-29.806a16.037 16.037 0 0 0-6.947-12.606c-2.912-2.005-6.64-4.875-10.341-8.569-28.073-28.073-28.191-73.639 0-101.83l67.2-67.19c28.239-28.239 74.3-28.069 102.325.51 27.75 28.3 26.872 73.934-1.155 101.96l-13.087 13.087c-4.35 4.35-5.769 10.79-3.783 16.612 5.864 17.194 9.042 34.999 9.69 52.721.509 13.906 17.454 20.446 27.294 10.606l37.106-37.106c59.271-59.259 59.271-155.699.001-214.959z"
+                fill="currentColor"
+                style={Object {}}
+              />
+            </svg>
+          </FontAwesomeIcon>
+        </a>
+      </h4>
+      <Loader
+        isLoading={false}
+      >
+        <table
+          style={
+            Object {
+              "tableLayout": "fixed",
+              "whiteSpace": "nowrap",
+              "width": "90%",
+            }
+          }
+        >
+          <tbody>
+            <tr
+              style={
+                Object {
+                  "height": 440,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "fontSize": 24,
+                    "textAlign": "center",
+                    "whiteSpace": "initial",
+                  }
+                }
+              >
+                <FontAwesomeIcon
+                  border={false}
+                  className=""
+                  fixedWidth={false}
+                  flip={null}
+                  icon={
+                    Object {
+                      "icon": Array [
+                        512,
+                        512,
+                        Array [],
+                        "f06a",
+                        "M504 256c0 136.997-111.043 248-248 248S8 392.997 8 256C8 119.083 119.043 8 256 8s248 111.083 248 248zm-248 50c-25.405 0-46 20.595-46 46s20.595 46 46 46 46-20.595 46-46-20.595-46-46-46zm-43.673-165.346l7.418 136c.347 6.364 5.609 11.346 11.982 11.346h48.546c6.373 0 11.635-4.982 11.982-11.346l7.418-136c.375-6.874-5.098-12.654-11.982-12.654h-63.383c-6.884 0-12.356 5.78-11.981 12.654z",
+                      ],
+                      "iconName": "exclamation-circle",
+                      "prefix": "fas",
+                    }
+                  }
+                  inverse={false}
+                  listItem={false}
+                  mask={null}
+                  pull={null}
+                  pulse={false}
+                  rotation={null}
+                  size={null}
+                  spin={false}
+                  swapOpacity={false}
+                  symbol={false}
+                  title=""
+                  transform={null}
+                >
+                  <svg
+                    aria-hidden="true"
+                    className="svg-inline--fa fa-exclamation-circle fa-w-16 "
+                    data-icon="exclamation-circle"
+                    data-prefix="fas"
+                    focusable="false"
+                    role="img"
+                    style={Object {}}
+                    viewBox="0 0 512 512"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M504 256c0 136.997-111.043 248-248 248S8 392.997 8 256C8 119.083 119.043 8 256 8s248 111.083 248 248zm-248 50c-25.405 0-46 20.595-46 46s20.595 46 46 46 46-20.595 46-46-20.595-46-46-46zm-43.673-165.346l7.418 136c.347 6.364 5.609 11.346 11.982 11.346h48.546c6.373 0 11.635-4.982 11.982-11.346l7.418-136c.375-6.874-5.098-12.654-11.982-12.654h-63.383c-6.884 0-12.356 5.78-11.981 12.654z"
+                      fill="currentColor"
+                      style={Object {}}
+                    />
+                  </svg>
+                </FontAwesomeIcon>
+                 
+                Invalid range: invalid_range
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </Loader>
+    </div>
+  </ForwardRef>
+</UserTopEntity>
+`;
+
+exports[`UserTopEntity renders correctly for artist 1`] = `
+<UserTopEntity
+  apiUrl="foobar"
+  entity="artist"
+  range="week"
+  user={
+    Object {
+      "name": "test_user",
+    }
+  }
+>
+  <ForwardRef
+    style={
+      Object {
+        "alignItems": "center",
+        "display": "flex",
+        "flexDirection": "column",
+        "marginTop": 20,
+        "minHeight": 550,
+      }
+    }
+  >
+    <div
+      style={
+        Object {
+          "alignItems": "center",
+          "background": "#FFFFFF",
+          "border": "1px solid #EEEEEE",
+          "borderRadius": "8px",
+          "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
+          "boxSizing": "border-box",
+          "display": "flex",
+          "flexDirection": "column",
+          "height": "100%",
+          "marginTop": 20,
+          "minHeight": 550,
+        }
+      }
+    >
+      <h3
+        className="capitalize-bold"
+        style={
+          Object {
+            "display": "inline",
+          }
+        }
+      >
+        Top 
+        artists
+      </h3>
+      <h4
+        style={
+          Object {
+            "display": "inline",
+            "marginTop": 20,
+            "position": "absolute",
+            "right": 20,
+          }
+        }
+      >
+        <a
+          href="#top-entity"
+        >
+          <FontAwesomeIcon
+            border={false}
+            className=""
+            color="#46443A"
+            fixedWidth={false}
+            flip={null}
+            icon={
+              Object {
+                "icon": Array [
+                  512,
+                  512,
+                  Array [],
+                  "f0c1",
+                  "M326.612 185.391c59.747 59.809 58.927 155.698.36 214.59-.11.12-.24.25-.36.37l-67.2 67.2c-59.27 59.27-155.699 59.262-214.96 0-59.27-59.26-59.27-155.7 0-214.96l37.106-37.106c9.84-9.84 26.786-3.3 27.294 10.606.648 17.722 3.826 35.527 9.69 52.721 1.986 5.822.567 12.262-3.783 16.612l-13.087 13.087c-28.026 28.026-28.905 73.66-1.155 101.96 28.024 28.579 74.086 28.749 102.325.51l67.2-67.19c28.191-28.191 28.073-73.757 0-101.83-3.701-3.694-7.429-6.564-10.341-8.569a16.037 16.037 0 0 1-6.947-12.606c-.396-10.567 3.348-21.456 11.698-29.806l21.054-21.055c5.521-5.521 14.182-6.199 20.584-1.731a152.482 152.482 0 0 1 20.522 17.197zM467.547 44.449c-59.261-59.262-155.69-59.27-214.96 0l-67.2 67.2c-.12.12-.25.25-.36.37-58.566 58.892-59.387 154.781.36 214.59a152.454 152.454 0 0 0 20.521 17.196c6.402 4.468 15.064 3.789 20.584-1.731l21.054-21.055c8.35-8.35 12.094-19.239 11.698-29.806a16.037 16.037 0 0 0-6.947-12.606c-2.912-2.005-6.64-4.875-10.341-8.569-28.073-28.073-28.191-73.639 0-101.83l67.2-67.19c28.239-28.239 74.3-28.069 102.325.51 27.75 28.3 26.872 73.934-1.155 101.96l-13.087 13.087c-4.35 4.35-5.769 10.79-3.783 16.612 5.864 17.194 9.042 34.999 9.69 52.721.509 13.906 17.454 20.446 27.294 10.606l37.106-37.106c59.271-59.259 59.271-155.699.001-214.959z",
+                ],
+                "iconName": "link",
+                "prefix": "fas",
+              }
+            }
+            inverse={false}
+            listItem={false}
+            mask={null}
+            pull={null}
+            pulse={false}
+            rotation={null}
+            size="sm"
+            spin={false}
+            style={
+              Object {
+                "marginRight": 20,
+              }
+            }
+            swapOpacity={false}
+            symbol={false}
+            title=""
+            transform={null}
+          >
+            <svg
+              aria-hidden="true"
+              className="svg-inline--fa fa-link fa-w-16 fa-sm "
+              color="#46443A"
+              data-icon="link"
+              data-prefix="fas"
+              focusable="false"
+              role="img"
+              style={
+                Object {
+                  "marginRight": 20,
+                }
+              }
+              viewBox="0 0 512 512"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M326.612 185.391c59.747 59.809 58.927 155.698.36 214.59-.11.12-.24.25-.36.37l-67.2 67.2c-59.27 59.27-155.699 59.262-214.96 0-59.27-59.26-59.27-155.7 0-214.96l37.106-37.106c9.84-9.84 26.786-3.3 27.294 10.606.648 17.722 3.826 35.527 9.69 52.721 1.986 5.822.567 12.262-3.783 16.612l-13.087 13.087c-28.026 28.026-28.905 73.66-1.155 101.96 28.024 28.579 74.086 28.749 102.325.51l67.2-67.19c28.191-28.191 28.073-73.757 0-101.83-3.701-3.694-7.429-6.564-10.341-8.569a16.037 16.037 0 0 1-6.947-12.606c-.396-10.567 3.348-21.456 11.698-29.806l21.054-21.055c5.521-5.521 14.182-6.199 20.584-1.731a152.482 152.482 0 0 1 20.522 17.197zM467.547 44.449c-59.261-59.262-155.69-59.27-214.96 0l-67.2 67.2c-.12.12-.25.25-.36.37-58.566 58.892-59.387 154.781.36 214.59a152.454 152.454 0 0 0 20.521 17.196c6.402 4.468 15.064 3.789 20.584-1.731l21.054-21.055c8.35-8.35 12.094-19.239 11.698-29.806a16.037 16.037 0 0 0-6.947-12.606c-2.912-2.005-6.64-4.875-10.341-8.569-28.073-28.073-28.191-73.639 0-101.83l67.2-67.19c28.239-28.239 74.3-28.069 102.325.51 27.75 28.3 26.872 73.934-1.155 101.96l-13.087 13.087c-4.35 4.35-5.769 10.79-3.783 16.612 5.864 17.194 9.042 34.999 9.69 52.721.509 13.906 17.454 20.446 27.294 10.606l37.106-37.106c59.271-59.259 59.271-155.699.001-214.959z"
+                fill="currentColor"
+                style={Object {}}
+              />
+            </svg>
+          </FontAwesomeIcon>
+        </a>
+      </h4>
+      <Loader
+        isLoading={false}
+      >
+        <table
+          style={
+            Object {
+              "tableLayout": "fixed",
+              "whiteSpace": "nowrap",
+              "width": "90%",
+            }
+          }
+        >
+          <tbody>
+            <tr
+              key="0"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                1
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Coldplay
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                70
+              </td>
+            </tr>
+            <tr
+              key="1"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                2
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Ellie Goulding
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                54
+              </td>
+            </tr>
+            <tr
+              key="2"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                3
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Maroon 5
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                38
+              </td>
+            </tr>
+            <tr
+              key="3"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                4
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                OneRepublic
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                36
+              </td>
+            </tr>
+            <tr
+              key="4"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                5
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                The Fray
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                31
+              </td>
+            </tr>
+            <tr
+              key="5"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                6
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Ritviz
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                26
+              </td>
+            </tr>
+            <tr
+              key="6"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                7
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Imagine Dragons
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                26
+              </td>
+            </tr>
+            <tr
+              key="7"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                8
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Lenka
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                25
+              </td>
+            </tr>
+            <tr
+              key="8"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                9
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Vance Joy
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                20
+              </td>
+            </tr>
+            <tr
+              key="9"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                10
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Taylor Swift
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                20
+              </td>
+            </tr>
+            <tr
+              key="10"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                11
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Ed Sheeran
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                19
+              </td>
+            </tr>
+            <tr
+              key="11"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                12
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                George Ezra
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                17
+              </td>
+            </tr>
+            <tr
+              key="12"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                13
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Christina Perri
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                16
+              </td>
+            </tr>
+            <tr
+              key="13"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                14
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                The Script
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                15
+              </td>
+            </tr>
+            <tr
+              key="14"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                15
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                The Local train
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                13
+              </td>
+            </tr>
+            <tr
+              key="15"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                16
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Tommee Profitt
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                12
+              </td>
+            </tr>
+            <tr
+              key="16"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                17
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                The Chainsmokers
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                12
+              </td>
+            </tr>
+            <tr
+              key="17"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                18
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Sia
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                12
+              </td>
+            </tr>
+            <tr
+              key="18"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                19
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Of Monsters and Men
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                11
+              </td>
+            </tr>
+            <tr
+              key="19"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                20
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                M.I.A.
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                10
+              </td>
+            </tr>
+            <tr
+              key="20"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                21
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Linkin Park
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                10
+              </td>
+            </tr>
+            <tr
+              key="21"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                22
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                The Weeknd
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                8
+              </td>
+            </tr>
+            <tr
+              key="22"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                23
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Backstreet Boys
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                8
+              </td>
+            </tr>
+            <tr
+              key="23"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                24
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Train
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                6
+              </td>
+            </tr>
+            <tr
+              key="24"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                25
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                The Lumineers
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                6
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <a
+          className="mt-15"
+          href="http://localhost/user/test_user/charts?range=week&entity=artist"
+        >
+          View More
+        </a>
+      </Loader>
+    </div>
+  </ForwardRef>
+</UserTopEntity>
+`;
+
+exports[`UserTopEntity renders correctly for recording 1`] = `
+<UserTopEntity
+  apiUrl="foobar"
+  entity="recording"
+  range="week"
+  user={
+    Object {
+      "name": "test_user",
+    }
+  }
+>
+  <ForwardRef
+    style={
+      Object {
+        "alignItems": "center",
+        "display": "flex",
+        "flexDirection": "column",
+        "marginTop": 20,
+        "minHeight": 550,
+      }
+    }
+  >
+    <div
+      style={
+        Object {
+          "alignItems": "center",
+          "background": "#FFFFFF",
+          "border": "1px solid #EEEEEE",
+          "borderRadius": "8px",
+          "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
+          "boxSizing": "border-box",
+          "display": "flex",
+          "flexDirection": "column",
+          "height": "100%",
+          "marginTop": 20,
+          "minHeight": 550,
+        }
+      }
+    >
+      <h3
+        className="capitalize-bold"
+        style={
+          Object {
+            "display": "inline",
+          }
+        }
+      >
+        Top 
+        recordings
+      </h3>
+      <h4
+        style={
+          Object {
+            "display": "inline",
+            "marginTop": 20,
+            "position": "absolute",
+            "right": 20,
+          }
+        }
+      >
+        <a
+          href="#top-entity"
+        >
+          <FontAwesomeIcon
+            border={false}
+            className=""
+            color="#46443A"
+            fixedWidth={false}
+            flip={null}
+            icon={
+              Object {
+                "icon": Array [
+                  512,
+                  512,
+                  Array [],
+                  "f0c1",
+                  "M326.612 185.391c59.747 59.809 58.927 155.698.36 214.59-.11.12-.24.25-.36.37l-67.2 67.2c-59.27 59.27-155.699 59.262-214.96 0-59.27-59.26-59.27-155.7 0-214.96l37.106-37.106c9.84-9.84 26.786-3.3 27.294 10.606.648 17.722 3.826 35.527 9.69 52.721 1.986 5.822.567 12.262-3.783 16.612l-13.087 13.087c-28.026 28.026-28.905 73.66-1.155 101.96 28.024 28.579 74.086 28.749 102.325.51l67.2-67.19c28.191-28.191 28.073-73.757 0-101.83-3.701-3.694-7.429-6.564-10.341-8.569a16.037 16.037 0 0 1-6.947-12.606c-.396-10.567 3.348-21.456 11.698-29.806l21.054-21.055c5.521-5.521 14.182-6.199 20.584-1.731a152.482 152.482 0 0 1 20.522 17.197zM467.547 44.449c-59.261-59.262-155.69-59.27-214.96 0l-67.2 67.2c-.12.12-.25.25-.36.37-58.566 58.892-59.387 154.781.36 214.59a152.454 152.454 0 0 0 20.521 17.196c6.402 4.468 15.064 3.789 20.584-1.731l21.054-21.055c8.35-8.35 12.094-19.239 11.698-29.806a16.037 16.037 0 0 0-6.947-12.606c-2.912-2.005-6.64-4.875-10.341-8.569-28.073-28.073-28.191-73.639 0-101.83l67.2-67.19c28.239-28.239 74.3-28.069 102.325.51 27.75 28.3 26.872 73.934-1.155 101.96l-13.087 13.087c-4.35 4.35-5.769 10.79-3.783 16.612 5.864 17.194 9.042 34.999 9.69 52.721.509 13.906 17.454 20.446 27.294 10.606l37.106-37.106c59.271-59.259 59.271-155.699.001-214.959z",
+                ],
+                "iconName": "link",
+                "prefix": "fas",
+              }
+            }
+            inverse={false}
+            listItem={false}
+            mask={null}
+            pull={null}
+            pulse={false}
+            rotation={null}
+            size="sm"
+            spin={false}
+            style={
+              Object {
+                "marginRight": 20,
+              }
+            }
+            swapOpacity={false}
+            symbol={false}
+            title=""
+            transform={null}
+          >
+            <svg
+              aria-hidden="true"
+              className="svg-inline--fa fa-link fa-w-16 fa-sm "
+              color="#46443A"
+              data-icon="link"
+              data-prefix="fas"
+              focusable="false"
+              role="img"
+              style={
+                Object {
+                  "marginRight": 20,
+                }
+              }
+              viewBox="0 0 512 512"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M326.612 185.391c59.747 59.809 58.927 155.698.36 214.59-.11.12-.24.25-.36.37l-67.2 67.2c-59.27 59.27-155.699 59.262-214.96 0-59.27-59.26-59.27-155.7 0-214.96l37.106-37.106c9.84-9.84 26.786-3.3 27.294 10.606.648 17.722 3.826 35.527 9.69 52.721 1.986 5.822.567 12.262-3.783 16.612l-13.087 13.087c-28.026 28.026-28.905 73.66-1.155 101.96 28.024 28.579 74.086 28.749 102.325.51l67.2-67.19c28.191-28.191 28.073-73.757 0-101.83-3.701-3.694-7.429-6.564-10.341-8.569a16.037 16.037 0 0 1-6.947-12.606c-.396-10.567 3.348-21.456 11.698-29.806l21.054-21.055c5.521-5.521 14.182-6.199 20.584-1.731a152.482 152.482 0 0 1 20.522 17.197zM467.547 44.449c-59.261-59.262-155.69-59.27-214.96 0l-67.2 67.2c-.12.12-.25.25-.36.37-58.566 58.892-59.387 154.781.36 214.59a152.454 152.454 0 0 0 20.521 17.196c6.402 4.468 15.064 3.789 20.584-1.731l21.054-21.055c8.35-8.35 12.094-19.239 11.698-29.806a16.037 16.037 0 0 0-6.947-12.606c-2.912-2.005-6.64-4.875-10.341-8.569-28.073-28.073-28.191-73.639 0-101.83l67.2-67.19c28.239-28.239 74.3-28.069 102.325.51 27.75 28.3 26.872 73.934-1.155 101.96l-13.087 13.087c-4.35 4.35-5.769 10.79-3.783 16.612 5.864 17.194 9.042 34.999 9.69 52.721.509 13.906 17.454 20.446 27.294 10.606l37.106-37.106c59.271-59.259 59.271-155.699.001-214.959z"
+                fill="currentColor"
+                style={Object {}}
+              />
+            </svg>
+          </FontAwesomeIcon>
+        </a>
+      </h4>
+      <Loader
+        isLoading={false}
+      >
+        <table
+          style={
+            Object {
+              "tableLayout": "fixed",
+              "whiteSpace": "nowrap",
+              "width": "90%",
+            }
+          }
+        >
+          <tbody>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                1
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  className="underlined-link"
+                  href="https://musicbrainz.org/recording/0fe11cd3-0be4-467b-84fa-0bd524d45d74"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Love Me Like You Do - From "Fifty Shades of Grey"
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                25
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Ellie Goulding
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                2
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  className="underlined-link"
+                  href="https://musicbrainz.org/recording/0008ab49-a6ad-40b5-aa90-9d2779265c22"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  How to Save a Life
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                23
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                The Fray
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                3
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Udd Gaye - Bacardi House Party Sessions
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                20
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Ritviz
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                4
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  className="underlined-link"
+                  href="https://musicbrainz.org/recording/00d32e28-0df2-486c-9829-750301962fb2"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Counting Stars
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                18
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                OneRepublic
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                5
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  className="underlined-link"
+                  href="https://musicbrainz.org/recording/017cd117-e343-408f-95fe-ee4c1018e312"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Burn
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                16
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Ellie Goulding
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                6
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  className="underlined-link"
+                  href="https://musicbrainz.org/recording/01236d26-9f46-435f-adc5-6c92e6e76f53"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Blank Space
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                16
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Taylor Swift
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                7
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  className="underlined-link"
+                  href="https://musicbrainz.org/recording/03a0cdfb-f964-434f-bfb7-379203dc139d"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  A Thousand Years
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                16
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Christina Perri
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                8
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  className="underlined-link"
+                  href="https://musicbrainz.org/recording/003196a1-f6ab-4fe8-9683-b970d163cfa4"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Riptide
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                15
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Vance Joy
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                9
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  className="underlined-link"
+                  href="https://musicbrainz.org/recording/02ba28bc-6d79-44fb-b770-c49395661117"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Castle on the Hill
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                14
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Ed Sheeran
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                10
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Start Again (feat. Logic)
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                13
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                OneRepublic
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                11
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  className="underlined-link"
+                  href="https://musicbrainz.org/recording/0a4c5dfd-02c7-43dc-ba7f-1b4ce7a02994"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Shotgun
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                12
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                George Ezra
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                12
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                In The End - Mellen Gi Remix
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                12
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Tommee Profitt
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                13
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  className="underlined-link"
+                  href="https://musicbrainz.org/recording/045cdbf9-796e-4949-91f6-e05d9ce3ed21"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Hall of Fame
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                12
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                The Script
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                14
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Moves Like Jagger - Studio Recording From The Voice Performance
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                11
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Maroon 5
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                15
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  className="underlined-link"
+                  href="https://musicbrainz.org/recording/0031fba1-dde0-3755-bcb2-63b2544159f8"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Little Talks
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                11
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Of Monsters and Men
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                16
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Cheap Thrills (feat. Sean Paul)
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                11
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Sia
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                17
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  className="underlined-link"
+                  href="https://musicbrainz.org/recording/0126d206-3894-4d97-b5c2-f6cf037a323a"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Payphone
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                10
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Maroon 5
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                18
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  className="underlined-link"
+                  href="https://musicbrainz.org/recording/234ae263-ffad-472a-8077-dab64bcedf99"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Paper Planes
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                10
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                M.I.A.
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                19
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  className="underlined-link"
+                  href="https://musicbrainz.org/recording/14c913e9-db47-40fa-ae1a-81099a67e4bf"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Battle Symphony
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                10
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Linkin Park
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                20
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  className="underlined-link"
+                  href="https://musicbrainz.org/recording/0040980c-4f9a-43df-8be0-142dce4374f4"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  I Want It That Way
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                8
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Backstreet Boys
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                21
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  className="underlined-link"
+                  href="https://musicbrainz.org/recording/036e67df-baae-4626-a2ab-951dd162e332"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Everything at Once
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                8
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Lenka
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                22
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Choo Lo
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                8
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                The Local train
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                23
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  className="underlined-link"
+                  href="https://musicbrainz.org/recording/02b47acf-3bc5-47dc-a516-e8c2c95bc07b"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Up&Up
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                6
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Coldplay
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                24
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                <a
+                  className="underlined-link"
+                  href="https://musicbrainz.org/recording/0132a6b9-a04f-48ea-81e7-5f3a5d608f75"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  On Top of the World
+                </a>
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                6
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Imagine Dragons
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                25
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Close to Me (with Diplo) (feat. Swae Lee)
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                6
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Ellie Goulding
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <a
+          className="mt-15"
+          href="http://localhost/user/test_user/charts?range=week&entity=recording"
+        >
+          View More
+        </a>
+      </Loader>
+    </div>
+  </ForwardRef>
+</UserTopEntity>
+`;
+
+exports[`UserTopEntity renders correctly for release 1`] = `
+<UserTopEntity
+  apiUrl="foobar"
+  entity="release"
+  range="week"
+  user={
+    Object {
+      "name": "test_user",
+    }
+  }
+>
+  <ForwardRef
+    style={
+      Object {
+        "alignItems": "center",
+        "display": "flex",
+        "flexDirection": "column",
+        "marginTop": 20,
+        "minHeight": 550,
+      }
+    }
+  >
+    <div
+      style={
+        Object {
+          "alignItems": "center",
+          "background": "#FFFFFF",
+          "border": "1px solid #EEEEEE",
+          "borderRadius": "8px",
+          "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
+          "boxSizing": "border-box",
+          "display": "flex",
+          "flexDirection": "column",
+          "height": "100%",
+          "marginTop": 20,
+          "minHeight": 550,
+        }
+      }
+    >
+      <h3
+        className="capitalize-bold"
+        style={
+          Object {
+            "display": "inline",
+          }
+        }
+      >
+        Top 
+        releases
+      </h3>
+      <h4
+        style={
+          Object {
+            "display": "inline",
+            "marginTop": 20,
+            "position": "absolute",
+            "right": 20,
+          }
+        }
+      >
+        <a
+          href="#top-entity"
+        >
+          <FontAwesomeIcon
+            border={false}
+            className=""
+            color="#46443A"
+            fixedWidth={false}
+            flip={null}
+            icon={
+              Object {
+                "icon": Array [
+                  512,
+                  512,
+                  Array [],
+                  "f0c1",
+                  "M326.612 185.391c59.747 59.809 58.927 155.698.36 214.59-.11.12-.24.25-.36.37l-67.2 67.2c-59.27 59.27-155.699 59.262-214.96 0-59.27-59.26-59.27-155.7 0-214.96l37.106-37.106c9.84-9.84 26.786-3.3 27.294 10.606.648 17.722 3.826 35.527 9.69 52.721 1.986 5.822.567 12.262-3.783 16.612l-13.087 13.087c-28.026 28.026-28.905 73.66-1.155 101.96 28.024 28.579 74.086 28.749 102.325.51l67.2-67.19c28.191-28.191 28.073-73.757 0-101.83-3.701-3.694-7.429-6.564-10.341-8.569a16.037 16.037 0 0 1-6.947-12.606c-.396-10.567 3.348-21.456 11.698-29.806l21.054-21.055c5.521-5.521 14.182-6.199 20.584-1.731a152.482 152.482 0 0 1 20.522 17.197zM467.547 44.449c-59.261-59.262-155.69-59.27-214.96 0l-67.2 67.2c-.12.12-.25.25-.36.37-58.566 58.892-59.387 154.781.36 214.59a152.454 152.454 0 0 0 20.521 17.196c6.402 4.468 15.064 3.789 20.584-1.731l21.054-21.055c8.35-8.35 12.094-19.239 11.698-29.806a16.037 16.037 0 0 0-6.947-12.606c-2.912-2.005-6.64-4.875-10.341-8.569-28.073-28.073-28.191-73.639 0-101.83l67.2-67.19c28.239-28.239 74.3-28.069 102.325.51 27.75 28.3 26.872 73.934-1.155 101.96l-13.087 13.087c-4.35 4.35-5.769 10.79-3.783 16.612 5.864 17.194 9.042 34.999 9.69 52.721.509 13.906 17.454 20.446 27.294 10.606l37.106-37.106c59.271-59.259 59.271-155.699.001-214.959z",
+                ],
+                "iconName": "link",
+                "prefix": "fas",
+              }
+            }
+            inverse={false}
+            listItem={false}
+            mask={null}
+            pull={null}
+            pulse={false}
+            rotation={null}
+            size="sm"
+            spin={false}
+            style={
+              Object {
+                "marginRight": 20,
+              }
+            }
+            swapOpacity={false}
+            symbol={false}
+            title=""
+            transform={null}
+          >
+            <svg
+              aria-hidden="true"
+              className="svg-inline--fa fa-link fa-w-16 fa-sm "
+              color="#46443A"
+              data-icon="link"
+              data-prefix="fas"
+              focusable="false"
+              role="img"
+              style={
+                Object {
+                  "marginRight": 20,
+                }
+              }
+              viewBox="0 0 512 512"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M326.612 185.391c59.747 59.809 58.927 155.698.36 214.59-.11.12-.24.25-.36.37l-67.2 67.2c-59.27 59.27-155.699 59.262-214.96 0-59.27-59.26-59.27-155.7 0-214.96l37.106-37.106c9.84-9.84 26.786-3.3 27.294 10.606.648 17.722 3.826 35.527 9.69 52.721 1.986 5.822.567 12.262-3.783 16.612l-13.087 13.087c-28.026 28.026-28.905 73.66-1.155 101.96 28.024 28.579 74.086 28.749 102.325.51l67.2-67.19c28.191-28.191 28.073-73.757 0-101.83-3.701-3.694-7.429-6.564-10.341-8.569a16.037 16.037 0 0 1-6.947-12.606c-.396-10.567 3.348-21.456 11.698-29.806l21.054-21.055c5.521-5.521 14.182-6.199 20.584-1.731a152.482 152.482 0 0 1 20.522 17.197zM467.547 44.449c-59.261-59.262-155.69-59.27-214.96 0l-67.2 67.2c-.12.12-.25.25-.36.37-58.566 58.892-59.387 154.781.36 214.59a152.454 152.454 0 0 0 20.521 17.196c6.402 4.468 15.064 3.789 20.584-1.731l21.054-21.055c8.35-8.35 12.094-19.239 11.698-29.806a16.037 16.037 0 0 0-6.947-12.606c-2.912-2.005-6.64-4.875-10.341-8.569-28.073-28.073-28.191-73.639 0-101.83l67.2-67.19c28.239-28.239 74.3-28.069 102.325.51 27.75 28.3 26.872 73.934-1.155 101.96l-13.087 13.087c-4.35 4.35-5.769 10.79-3.783 16.612 5.864 17.194 9.042 34.999 9.69 52.721.509 13.906 17.454 20.446 27.294 10.606l37.106-37.106c59.271-59.259 59.271-155.699.001-214.959z"
+                fill="currentColor"
+                style={Object {}}
+              />
+            </svg>
+          </FontAwesomeIcon>
+        </a>
+      </h4>
+      <Loader
+        isLoading={false}
+      >
+        <table
+          style={
+            Object {
+              "tableLayout": "fixed",
+              "whiteSpace": "nowrap",
+              "width": "90%",
+            }
+          }
+        >
+          <tbody>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                1
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Live in Buenos Aires
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                26
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Coldplay
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                2
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                How to Save a Life
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                25
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                The Fray
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                3
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Delirium (Deluxe)
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                25
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Ellie Goulding
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                4
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Udd Gaye (Bacardi House Party Sessions)
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                20
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Ritviz
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                5
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Native
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                18
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                OneRepublic
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                6
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Dream Your Life Away (Special Edition)
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                18
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Vance Joy
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                7
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                ÷ (Deluxe)
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                17
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Ed Sheeran
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                8
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Night Visions (Deluxe)
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                17
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Imagine Dragons
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                9
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                1989
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                17
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Taylor Swift
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                10
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Halcyon Days
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                16
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Ellie Goulding
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                11
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                A Thousand Years
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                16
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Christina Perri
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                12
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                A Head Full Of Dreams
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                16
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Coldplay
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                13
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Staying at Tamara's
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                15
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                George Ezra
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                14
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Two (Expanded Edition)
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                13
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Lenka
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                15
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                13 Reasons Why (Season 2)
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                13
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                OneRepublic
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                16
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                In The End
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                12
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Tommee Profitt
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                17
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                #3
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                12
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                The Script
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                18
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Singles
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                11
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Maroon 5
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                19
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Overexposed
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                11
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Maroon 5
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                20
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                My Head Is an Animal
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                11
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Of Monsters and Men
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                21
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Cheap Thrills (feat. Sean Paul)
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                11
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Sia
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                22
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                One More Light
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                10
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Linkin Park
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                23
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Kala
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                10
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                M.I.A.
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                24
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Aalas Ka Pedh
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                9
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                The Local train
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td
+                style={
+                  Object {
+                    "textAlign": "end",
+                    "width": "10%",
+                  }
+                }
+              >
+                25
+                . 
+              </td>
+              <td
+                style={
+                  Object {
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                The Hits--Chapter One
+              </td>
+              <td
+                style={
+                  Object {
+                    "width": "10%",
+                  }
+                }
+              >
+                8
+              </td>
+            </tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
+              <td />
+              <td
+                style={
+                  Object {
+                    "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
+                  }
+                }
+              >
+                Backstreet Boys
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <a
+          className="mt-15"
+          href="http://localhost/user/test_user/charts?range=week&entity=release"
+        >
+          View More
+        </a>
+      </Loader>
+    </div>
+  </ForwardRef>
+</UserTopEntity>
+`;

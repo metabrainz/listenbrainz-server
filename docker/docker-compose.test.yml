@@ -7,7 +7,7 @@ version: "3.4"
 services:
 
   db:
-    image: postgres:12.3
+    image: timescale/timescaledb:1.7.4-pg12
     command: postgres -F
     environment:
       POSTGRES_PASSWORD: 'postgres'
@@ -15,37 +15,19 @@ services:
   redis:
     image: redis:5.0.3
 
-  influx:
-    image: influxdb:1.7.9
-    environment:
-      INFLUXDB_REPORTING_DISABLED: 'true'
-      INFLUXDB_META_LOGGING_ENABLED: 'false'
-      INFLUXDB_DATA_QUERY_LOG_ENABLED: 'false'
-      INFLUXDB_DATA_WAL_LOGGING_ENABLED: 'false'
-      INFLUXDB_DATA_DATA_LOGGING_ENABLED: 'false'
-      INFLUXDB_HTTP_LOG_ENABLED: 'false'
-      INFLUXDB_CONTINUOUS_QUERIES_LOG_ENABLED: 'false'
-      INFLUXDB_DATA_INDEX_VERSION: 'tsi1' 
-      INFLUXDB_DATA_MAX_INDEX_LOG_FILE_SIZE: '5m'
-
   rabbitmq:
     image: rabbitmq:3.6.5
-    ports:
-      - "5672:5672"
 
   listenbrainz:
     build:
       context: ..
       dockerfile: Dockerfile
       target: listenbrainz-dev
-    environment:
-      GOOGLE_APPLICATION_CREDENTIALS: '/code/credentials/bigquery-credentials.json'
     volumes:
       - ..:/code/listenbrainz:z
     depends_on:
       - redis
       - db
-      - influx
       - rabbitmq
  
   frontend_tester:

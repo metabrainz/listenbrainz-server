@@ -12,7 +12,7 @@ SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@db:5432/messybra
 TEST_SQLALCHEMY_DATABASE_URI = "postgresql://msb_test:msb_test@db:5432/msb_test"
 
 # Admin database
-POSTGRES_ADMIN_URI = "postgresql://postgres:postgres@db/template1"
+POSTGRES_ADMIN_URI = "postgresql://postgres:postgres@db/postgres"
 
 
 
@@ -32,10 +32,6 @@ REDIS_NAMESPACE = "messybrainz"
 
 #LOG_FILE_ENABLED = True
 #LOG_FILE = "./messybrainz.log"
-
-#LOG_EMAIL_ENABLED = True
-#LOG_EMAIL_TOPIC = "MessyBrainz Webserver Failure"
-#LOG_EMAIL_RECIPIENTS = []  # List of email addresses (strings)
 
 #LOG_SENTRY_ENABLED = True
 #SENTRY_DSN = ""

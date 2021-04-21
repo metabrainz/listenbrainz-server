@@ -1,9 +1,4 @@
 {
-  "stats.user.all": {
-    "name": "stats.user.all",
-    "description": "All user statistics that ListenBrainz calculates for all ListenBrainz users",
-    "params": []
-  },
   "stats.user.entity.week": {
     "name": "stats.user.entity.week",
     "description": "Entity statistics for all users in the last week",
@@ -24,29 +19,135 @@
     "description": "All time entity statistics for all users",
     "params": ["entity"]
   },
-  "import.dump.full": {
-    "name": "import.dump.full",
-    "description": "Import a new full dump into the spark cluster",
+  "stats.user.listening_activity.week": {
+    "name": "stats.user.listening_activity.week",
+    "description": "Calculate number of listens for an user on each day of the past and current week.",
     "params": []
   },
-  "cf_recording.recommendations.create_dataframes": {
-    "name": "cf_recording.recommendations.create_dataframes",
+  "stats.user.listening_activity.month": {
+    "name": "stats.user.listening_activity.month",
+    "description": "Calculate number of listens for an user on each day of the past month and current month.",
+    "params": []
+  },
+  "stats.user.listening_activity.year": {
+    "name": "stats.user.listening_activity.year",
+    "description": "Calculate the number of listens for an user in each month of the past and current year.",
+    "params": []
+  },
+  "stats.user.listening_activity.all_time": {
+    "name": "stats.user.listening_activity.all_time",
+    "description": "Calculate the number of listens for an user in each year starting from LAST_FM_FOUNDING_YEAR (2002).",
+    "params": []
+  },
+  "stats.user.daily_activity.week": {
+    "name": "stats.user.daily_activity.week",
+    "description": "Calculate number of listens for an user per hour on each day of the past week.",
+    "params": []
+  },
+  "stats.user.daily_activity.month": {
+    "name": "stats.user.daily_activity.month",
+    "description": "Calculate number of listens for an user per hour on each day of week of the current month.",
+    "params": []
+  },
+  "stats.user.daily_activity.year": {
+    "name": "stats.user.daily_activity.year",
+    "description": "Calculate number of listens for an user per hour on each day of week of the current year.",
+    "params": []
+  },
+  "stats.user.daily_activity.all_time": {
+    "name": "stats.user.daily_activity.all_time",
+    "description": "Calculate number of listens for an user per hour on each day of week.",
+    "params": []
+  },
+  "stats.sitewide.entity.week": {
+    "name": "stats.sitewide.entity.week",
+    "description": "Calculate top entites listened to on the website in the past week",
+    "params": ["entity", "use_mapping"]
+  },
+  "stats.sitewide.entity.month": {
+    "name": "stats.sitewide.entity.month",
+    "description": "Calculate top entites listened to on the website in the past month",
+    "params": ["entity", "use_mapping"]
+  },
+  "stats.sitewide.entity.year": {
+    "name": "stats.sitewide.entity.year",
+    "description": "Calculate top entites listened to on the website in the past year",
+    "params": ["entity", "use_mapping"]
+  },
+  "stats.sitewide.entity.all_time": {
+    "name": "stats.sitewide.entity.all_time",
+    "description": "Calculate top entites listened to on the website in the past all_time",
+    "params": ["entity", "use_mapping"]
+  },
+  "import.dump.full_newest": {
+    "name": "import.dump.full_newest",
+    "description": "Import the newest available full dump into the spark cluster",
+    "params": []
+  },
+  "import.dump.full_id": {
+    "name": "import.dump.full_id",
+    "description": "Import full dump with the specified ID into the spark cluster",
+    "params": ["id"]
+  },
+  "import.dump.incremental_newest": {
+    "name": "import.dump.incremental_newest",
+    "description": "Import the newest available incremental dump into the spark cluster",
+    "params": []
+  },
+  "import.dump.incremental_id": {
+    "name": "import.dump.incremental_id",
+    "description": "Import incremental dump with the specified ID into the spark cluster",
+    "params": ["id"]
+  },
+  "cf.recommendations.recording.create_dataframes": {
+    "name": "cf.recommendations.recording.create_dataframes",
     "description": "Create dataframes to prepare trainable data.",
-    "params": ["train_model_window"]
+    "params": [
+      "train_model_window",
+      "job_type",
+      "minimum_listens_threshold"
+    ]
   },
-  "cf_recording.recommendations.train_model": {
-    "name": "cf_recording.recommendations.train_model",
+  "cf.recommendations.recording.train_model": {
+    "name": "cf.recommendations.recording.train_model",
     "description": "Train data to yield a model.",
-    "params": []
+    "params": ["ranks", "lambdas", "iterations", "alpha"]
   },
-  "cf_recording.recommendations.candidate_sets": {
-    "name": "cf_recording.recommendations.candidate_sets",
+  "cf.recommendations.recording.candidate_sets": {
+    "name": "cf.recommendations.recording.candidate_sets",
     "description": "Create candidate sets to generate recommendations",
+    "params": [
+      "recommendation_generation_window",
+      "top_artist_limit",
+      "similar_artist_limit",
+      "users",
+      "html_flag"
+    ]
+  },
+  "cf.recommendations.recording.recommendations": {
+    "name": "cf.recommendations.recording.recommendations",
+    "description": "Generate recommendations for all active ListenBrainz users.",
+    "params": [
+      "recommendation_top_artist_limit",
+      "recommendation_similar_artist_limit",
+      "users"
+    ]
+  },
+  "import.mapping": {
+    "name": "import.mapping",
+    "description": "Import msid mbid mapping into the spark cluster.",
     "params": []
   },
-  "cf_recording.recommendations.recommend": {
-    "name": "cf_recording.recommendations.recommend",
-    "description": "Generate recommendations for all active ListenBrainz users.",
+  "import.artist_relation": {
+    "name": "import.artist_relation",
+    "description": "Import artist relation into the spark cluster.",
     "params": []
+  },
+  "similarity.similar_users": {
+    "name": "similarity.similar_users",
+    "description": "Generate similar user correlation",
+    "params": [
+      "max_num_users"
+    ]
   }
 }

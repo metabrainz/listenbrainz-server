@@ -1,0 +1,29 @@
+{
+  "payload": {
+    "from_ts": 1009843200,
+    "last_updated": 1593539726,
+    "listening_activity": [
+      {
+        "from_ts": 1483228800,
+        "listen_count": 96,
+        "time_range": "2017",
+        "to_ts": 1514764799
+      },
+      {
+        "from_ts": 1514764800,
+        "listen_count": 169,
+        "time_range": "2018",
+        "to_ts": 1546300799
+      },
+      {
+        "from_ts": 1577836800,
+        "listen_count": 3580,
+        "time_range": "2020",
+        "to_ts": 1609459199
+      }
+    ],
+    "range": "all_time",
+    "to_ts": 1592611115,
+    "user_id": "ishaanshah"
+  }
+}

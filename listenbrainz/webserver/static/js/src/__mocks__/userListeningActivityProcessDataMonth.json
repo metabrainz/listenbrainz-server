@@ -1,0 +1,193 @@
+[
+  {
+    "id": "01",
+    "lastRangeCount": 26,
+    "lastRangeTs": 1588291200,
+    "thisRangeCount": 22,
+    "thisRangeTs": 1590969600
+  },
+  {
+    "id": "02",
+    "lastRangeCount": 17,
+    "lastRangeTs": 1588377600,
+    "thisRangeCount": 10,
+    "thisRangeTs": 1591056000
+  },
+  {
+    "id": "03",
+    "lastRangeCount": 26,
+    "lastRangeTs": 1588464000,
+    "thisRangeCount": 18,
+    "thisRangeTs": 1591142400
+  },
+  {
+    "id": "04",
+    "lastRangeCount": 32,
+    "lastRangeTs": 1588550400,
+    "thisRangeCount": 35,
+    "thisRangeTs": 1591228800
+  },
+  {
+    "id": "05",
+    "lastRangeCount": 26,
+    "lastRangeTs": 1588636800,
+    "thisRangeCount": 30,
+    "thisRangeTs": 1591315200
+  },
+  {
+    "id": "06",
+    "lastRangeCount": 28,
+    "lastRangeTs": 1588723200,
+    "thisRangeCount": 3,
+    "thisRangeTs": 1591401600
+  },
+  {
+    "id": "07",
+    "lastRangeCount": 21,
+    "lastRangeTs": 1588809600,
+    "thisRangeCount": 0,
+    "thisRangeTs": 1591488000
+  },
+  {
+    "id": "08",
+    "lastRangeCount": 26,
+    "lastRangeTs": 1588896000,
+    "thisRangeCount": 36,
+    "thisRangeTs": 1591574400
+  },
+  {
+    "id": "09",
+    "lastRangeCount": 0,
+    "lastRangeTs": 1588982400,
+    "thisRangeCount": 13,
+    "thisRangeTs": 1591660800
+  },
+  {
+    "id": "10",
+    "lastRangeCount": 4,
+    "lastRangeTs": 1589068800,
+    "thisRangeCount": 8,
+    "thisRangeTs": 1591747200
+  },
+  {
+    "id": "11",
+    "lastRangeCount": 28,
+    "lastRangeTs": 1589155200,
+    "thisRangeCount": 37,
+    "thisRangeTs": 1591833600
+  },
+  {
+    "id": "12",
+    "lastRangeCount": 21,
+    "lastRangeTs": 1589241600,
+    "thisRangeCount": 17,
+    "thisRangeTs": 1591920000
+  },
+  {
+    "id": "13",
+    "lastRangeCount": 0,
+    "lastRangeTs": 1589328000,
+    "thisRangeCount": 22,
+    "thisRangeTs": 1592006400
+  },
+  {
+    "id": "14",
+    "lastRangeCount": 15,
+    "lastRangeTs": 1589414400,
+    "thisRangeCount": 8,
+    "thisRangeTs": 1592092800
+  },
+  {
+    "id": "15",
+    "lastRangeCount": 31,
+    "lastRangeTs": 1589500800,
+    "thisRangeCount": 66,
+    "thisRangeTs": 1592179200
+  },
+  {
+    "id": "16",
+    "lastRangeCount": 8,
+    "lastRangeTs": 1589587200,
+    "thisRangeCount": 34,
+    "thisRangeTs": 1592265600
+  },
+  {
+    "id": "17",
+    "lastRangeCount": 5,
+    "lastRangeTs": 1589673600,
+    "thisRangeCount": 0,
+    "thisRangeTs": 1592352000
+  },
+  {
+    "id": "18",
+    "lastRangeCount": 37,
+    "lastRangeTs": 1589760000,
+    "thisRangeCount": 0,
+    "thisRangeTs": 1592438400
+  },
+  {
+    "id": "19",
+    "lastRangeCount": 50,
+    "lastRangeTs": 1589846400
+  },
+  {
+    "id": "20",
+    "lastRangeCount": 26,
+    "lastRangeTs": 1589932800
+  },
+  {
+    "id": "21",
+    "lastRangeCount": 34,
+    "lastRangeTs": 1590019200
+  },
+  {
+    "id": "22",
+    "lastRangeCount": 36,
+    "lastRangeTs": 1590105600
+  },
+  {
+    "id": "23",
+    "lastRangeCount": 14,
+    "lastRangeTs": 1590192000
+  },
+  {
+    "id": "24",
+    "lastRangeCount": 0,
+    "lastRangeTs": 1590278400
+  },
+  {
+    "id": "25",
+    "lastRangeCount": 5,
+    "lastRangeTs": 1590364800
+  },
+  {
+    "id": "26",
+    "lastRangeCount": 25,
+    "lastRangeTs": 1590451200
+  },
+  {
+    "id": "27",
+    "lastRangeCount": 53,
+    "lastRangeTs": 1590537600
+  },
+  {
+    "id": "28",
+    "lastRangeCount": 21,
+    "lastRangeTs": 1590624000
+  },
+  {
+    "id": "29",
+    "lastRangeCount": 8,
+    "lastRangeTs": 1590710400
+  },
+  {
+    "id": "30",
+    "lastRangeCount": 11,
+    "lastRangeTs": 1590796800
+  },
+  {
+    "id": "31",
+    "lastRangeCount": 11,
+    "lastRangeTs": 1590883200
+  }
+]

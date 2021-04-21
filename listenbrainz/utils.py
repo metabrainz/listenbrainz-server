@@ -1,75 +1,15 @@
 import errno
 import os
 import pika
-import pytz
 import time
 
-from datetime import datetime
+from datetime import datetime, timezone
 from redis import Redis
-
-INFLUX_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
-INFLUX_TIME_FORMAT_NANO = "%Y-%m-%dT%H:%M:%S"
 
 def escape(value):
     """ Escapes backslashes, quotes and new lines present in the string value
     """
     return value.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")
-
-
-def quote(user_name):
-    # we have to always quote the user name to get the measurement name which we pass to
-    # influx write_points and replace the new line characters with \n because parse
-    # errors are thrown if we don't.
-    return "\"{0}\"".format(user_name.replace("\n", "\\n"))
-
-
-def get_measurement_name(user_name):
-    """ Function to return the measurement name that influx has saved for given user name"""
-
-    # Note: there are we have to replace each \ with two backslashes because influxdb-python
-    # adds an extra backslash for each backslash in the measurement name itself
-    return '"{}"'.format(user_name.replace('\\', '\\\\').replace('\n', '\\\\n'))
-
-
-def get_escaped_measurement_name(user_name):
-    """ Function to return the string which can directly be passed into influx queries for a
-        user's measurement
-    """
-
-    # Note: influxdb-python first replaces each backslash in the username with two backslashes
-    # and because in influx queries, we have to escape each backslash, overall each backslash
-    # must be replaced by 4 backslashes. Yes, this is hacky and ugly.
-    return '"\\"{}\\""'.format(user_name.replace('\\', '\\\\\\\\').replace('"', '\\"').replace('\n', '\\\\\\\\n'))
-
-
-def get_influx_query_timestamp(ts):
-    """ Influx queries require timestamps in nanoseconds so convert ts into nanoseconds and return a string"""
-    return "{}000000000".format(ts)
-
-
-def convert_to_unix_timestamp(influx_row_time):
-    """ Converts time retreived from influxdb into unix timestamp """
-    dt = datetime.strptime(influx_row_time, INFLUX_TIME_FORMAT)
-    return int(dt.strftime('%s'))
-
-def convert_influx_to_datetime(influx_row_time):
-    return datetime.strptime(influx_row_time, INFLUX_TIME_FORMAT)
-
-
-def convert_timestamp_to_influx_row_format(ts):
-    return datetime.fromtimestamp(ts).strftime(INFLUX_TIME_FORMAT)
-
-
-def convert_influx_nano_to_python_time(influx_row_time):
-    """ Converts time retreived from influxdb into python floating point time """
-    date_bits = influx_row_time.split(".")
-    dt = datetime.strptime(date_bits[0], INFLUX_TIME_FORMAT_NANO)
-    fractional = int(date_bits[1][:-1])
-    return float(dt.strftime('%s')) + (fractional / 100000000.0)
-
-
-def convert_python_time_to_nano_int(t):
-    return int(t * 100000000)
 
 
 def create_path(path):
@@ -95,7 +35,8 @@ def connect_to_rabbitmq(username, password,
                         connection_type=pika.BlockingConnection,
                         credentials_type=pika.PlainCredentials,
                         error_logger=print,
-                        error_retry_delay=3):
+                        error_retry_delay=3,
+                        heartbeat=None):
     """Connects to RabbitMQ
 
     Args:
@@ -116,6 +57,7 @@ def connect_to_rabbitmq(username, password,
                 port=port,
                 virtual_host=virtual_host,
                 credentials=credentials,
+                heartbeat=heartbeat,
             )
             return connection_type(connection_parameters)
         except Exception as err:
@@ -130,7 +72,7 @@ def init_cache(host, port, namespace):
     cache.init(host=host, port=port, namespace=namespace)
 
 
-def create_channel_to_consume(connection, exchange, queue, callback_function):
+def create_channel_to_consume(connection, exchange, queue, callback_function, no_ack=False):
     """ Returns a newly created channel that can consume from the specified queue.
 
     Args:
@@ -146,7 +88,7 @@ def create_channel_to_consume(connection, exchange, queue, callback_function):
     ch.exchange_declare(exchange=exchange, exchange_type='fanout')
     ch.queue_declare(queue, durable=True)
     ch.queue_bind(exchange=exchange, queue=queue)
-    ch.basic_consume(callback_function, queue=queue, no_ack=False)
+    ch.basic_consume(callback_function, queue=queue, no_ack=no_ack)
     return ch
 
 
@@ -196,6 +138,6 @@ def unix_timestamp_to_datetime(timestamp):
     Returns:
         A datetime object with timezone UTC corresponding to the provided timestamp
     """
-    return datetime.utcfromtimestamp(timestamp).replace(tzinfo=pytz.UTC)
+    return datetime.utcfromtimestamp(timestamp).replace(tzinfo=timezone.utc)
 
 

@@ -27,15 +27,19 @@ module.exports = {
     "react/prop-tyes": "off",
     "react/jsx-filename-extension": "off",
     "react/jsx-props-no-spreading": "off",
+    "react/no-did-update-set-state": "off",
     "import/extensions": "off",
     "no-unused-vars": "off",
-    camelcase: "warn",
-    "prettier/prettier": "error",
+    camelcase: "off",
+    "prettier/prettier": "warn",
     "lines-between-class-members": [
       "error",
       "always",
       { exceptAfterSingleLine: true },
     ],
+    "jsx-a11y/label-has-associated-control": ['error', {
+      "assert":"either"
+    }],
   },
   settings: {
     "import/resolver": {

@@ -19,7 +19,7 @@ const props = {
   onTrackInfoChange: (title: string, artist?: string) => {},
   onTrackEnd: () => {},
   onTrackNotFound: () => {},
-  handleError: (error: string | Error, title?: string) => {},
+  handleError: (error: BrainzPlayerError, title?: string) => {},
   handleWarning: (message: string | JSX.Element, title?: string) => {},
   handleSuccess: (message: string | JSX.Element, title?: string) => {},
   onInvalidateDataSource: (
@@ -29,13 +29,50 @@ const props = {
 };
 
 describe("SpotifyPlayer", () => {
+  const permissionsErrorMessage = (
+    <p>
+      In order to play music with Spotify, you will need a Spotify Premium
+      account linked to your ListenBrainz account.
+      <br />
+      Please try to{" "}
+      <a href="/profile/connect-spotify" target="_blank">
+        link for &quot;playing music&quot; feature
+      </a>{" "}
+      and refresh this page
+    </p>
+  );
   it("renders", () => {
     window.fetch = jest.fn();
     const wrapper = mount(<SpotifyPlayer {...props} />);
     expect(wrapper).toMatchSnapshot();
   });
 
-  describe("checkSpotifyToken", () => {
+  it("should play from spotify_id if it exists on the listen", () => {
+    const spotifyListen: Listen = {
+      listened_at: 0,
+      track_metadata: {
+        artist_name: "Moondog",
+        track_name: "Bird's Lament",
+        additional_info: {
+          spotify_id: "https://open.spotify.com/track/surprise!",
+        },
+      },
+    };
+    const wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...props} />);
+    const instance = wrapper.instance();
+
+    instance.playSpotifyURI = jest.fn();
+    instance.searchAndPlayTrack = jest.fn();
+    // play listen should extract the spotify track ID
+    instance.playListen(spotifyListen);
+    expect(instance.playSpotifyURI).toHaveBeenCalledTimes(1);
+    expect(instance.playSpotifyURI).toHaveBeenCalledWith(
+      "spotify:track:surprise!"
+    );
+    expect(instance.searchAndPlayTrack).not.toHaveBeenCalled();
+  });
+
+  describe("hasPermissions", () => {
     it("calls onInvalidateDataSource (via handleAccountError) if no access token or no permission", () => {
       const onInvalidateDataSource = jest.fn();
       const mockProps = {
@@ -43,23 +80,14 @@ describe("SpotifyPlayer", () => {
         onInvalidateDataSource,
         spotifyUser: {},
       };
+      expect(SpotifyPlayer.hasPermissions(mockProps.spotifyUser)).toEqual(
+        false
+      );
       const wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
       const instance = wrapper.instance();
-      const errorMsg = (
-        <p>
-          In order to play music, it is required that you link your Spotify
-          Premium account.
-          <br />
-          Please try to{" "}
-          <a href="/profile/connect-spotify" target="_blank">
-            link for &quot;playing music&quot; feature
-          </a>{" "}
-          and refresh this page
-        </p>
-      );
       expect(instance.props.onInvalidateDataSource).toHaveBeenCalledWith(
         instance,
-        errorMsg
+        permissionsErrorMessage
       );
     });
 
@@ -69,12 +97,15 @@ describe("SpotifyPlayer", () => {
         ...props,
         onInvalidateDataSource,
       };
+      expect(SpotifyPlayer.hasPermissions(mockProps.spotifyUser)).toEqual(
+        false
+      );
       const wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
       const instance = wrapper.instance();
       expect(instance.props.onInvalidateDataSource).toHaveBeenCalledTimes(1);
       expect(instance.props.onInvalidateDataSource).toHaveBeenCalledWith(
         instance,
-        "Permission to play songs not granted"
+        permissionsErrorMessage
       );
     });
     it("should not call onInvalidateDataSource if permissions are accurate", async () => {
@@ -87,6 +118,7 @@ describe("SpotifyPlayer", () => {
           "user-read-private",
         ] as SpotifyPermission[],
       };
+      expect(SpotifyPlayer.hasPermissions(spotifyUser)).toEqual(true);
       const mockProps = {
         ...props,
         onInvalidateDataSource,
@@ -97,12 +129,6 @@ describe("SpotifyPlayer", () => {
 
       expect.assertions(2);
       expect(instance.props.onInvalidateDataSource).not.toHaveBeenCalled();
-      await expect(
-        instance.checkSpotifyToken(
-          spotifyUser.access_token,
-          spotifyUser.permission
-        )
-      ).resolves.toEqual(true);
     });
   });
 
@@ -129,21 +155,9 @@ describe("SpotifyPlayer", () => {
 
       instance.handleAccountError();
       expect(instance.props.onInvalidateDataSource).toHaveBeenCalledTimes(1);
-      const errorMsg = (
-        <p>
-          In order to play music, it is required that you link your Spotify
-          Premium account.
-          <br />
-          Please try to{" "}
-          <a href="/profile/connect-spotify" target="_blank">
-            link for &quot;playing music&quot; feature
-          </a>{" "}
-          and refresh this page
-        </p>
-      );
       expect(instance.props.onInvalidateDataSource).toHaveBeenCalledWith(
         instance,
-        errorMsg
+        permissionsErrorMessage
       );
     });
   });

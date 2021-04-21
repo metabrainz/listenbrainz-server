@@ -7,32 +7,23 @@ SECRET_KEY = "CHANGE_ME"
 
 # DATABASES
 
-# Primary database
+# Primary databases
 SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@db:5432/listenbrainz"
 MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@db:5432/messybrainz"
 
-POSTGRES_ADMIN_URI="postgresql://postgres:postgres@db/template1"
+POSTGRES_ADMIN_URI="postgresql://postgres:postgres@db/postgres"
 POSTGRES_ADMIN_LB_URI = "postgresql://postgres:postgres@db/listenbrainz"
 MB_DATABASE_URI = ""
 
-# Other postgres configuration options
-# Oldest listens which can be stored in the database, in days.
-MAX_POSTGRES_LISTEN_HISTORY = "-1"
-# Log Postgres queries if they execeed this time, in milliseconds.
-PG_QUERY_TIMEOUT = "3000"
-# Set to True to enable 'synchronous_commit' for Postgres. Default: False
-PG_ASYNC_LISTEN_COMMIT = False
+SQLALCHEMY_TIMESCALE_URI = "postgresql://listenbrainz_ts:listenbrainz_ts@db/listenbrainz_ts"
+TIMESCALE_ADMIN_URI = "postgresql://postgres:postgres@db/postgres"
+TIMESCALE_ADMIN_LB_URI = "postgresql://postgres:postgres@db/listenbrainz_ts"
 
 
 # Redis
 REDIS_HOST = "redis"
 REDIS_PORT = 6379
 REDIS_NAMESPACE = "listenbrainz"
-
-# Influx DB (main listen store)
-INFLUX_HOST    = "influx"
-INFLUX_PORT    = 8086
-INFLUX_DB_NAME  = "listenbrainz"
 
 # RabbitMQ
 RABBITMQ_HOST = "rabbitmq"
@@ -47,9 +38,7 @@ INCOMING_EXCHANGE = "incoming"
 INCOMING_QUEUE = "incoming"
 UNIQUE_EXCHANGE = "unique"
 UNIQUE_QUEUE = "unique"
-FOLLOW_LIST_QUEUE = "follow_list"
-BIGQUERY_EXCHANGE = "bigquery"
-BIGQUERY_QUEUE = "bigquery"
+WEBSOCKETS_QUEUE = "follow_list"
 PLAYING_NOW_EXCHANGE = "playing_now"
 PLAYING_NOW_QUEUE = "playing_now"
 
@@ -58,6 +47,11 @@ SPARK_RESULT_QUEUE = "spark_result"
 SPARK_REQUEST_EXCHANGE = "spark_request"
 SPARK_REQUEST_QUEUE = "spark_request"
 
+# Typesense -- this is only needed if you plan to run the Labs API end point for MBID mapping
+TYPESENSE_HOST = "localhost"
+TYPESENSE_PORT = 8108
+TYPESENSE_API_KEY = "API_KEY"
+
 # MusicBrainz OAuth
 MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"
 MUSICBRAINZ_CLIENT_SECRET = "CLIENT_SECRET"
@@ -65,14 +59,6 @@ MUSICBRAINZ_CLIENT_SECRET = "CLIENT_SECRET"
 # Lastfm API
 LASTFM_API_URL = "https://ws.audioscrobbler.com/2.0/"
 LASTFM_API_KEY = "USE_LASTFM_API_KEY"
-
-# BigQuery support
-# Enable/disable support. If enabled, the Application Credentials must reside in
-# bigquery-credentials.json in the top level directory.
-WRITE_TO_BIGQUERY = False
-BIGQUERY_PROJECT_ID = "listenbrainz"
-BIGQUERY_DATASET_ID = "listenbrainz_test"
-BIGQUERY_TABLE_ID = "listen"
 
 # Stats
 STATS_ENTITY_LIMIT = 100 # the number of entities to calculate at max with BQ
@@ -92,15 +78,6 @@ PLAYING_NOW_MAX_DURATION = 10 * 60
 #    'filename': './logs/listenbrainz.txt',
 #    'max_bytes': 512 * 1024, # optional
 #    'backup_count': 100, # optional
-# }
-
-# LOG_EMAIL = {
-#    'mail_server': 'localhost',
-#    'mail_port': 25,
-#    'mail_from_host': 'listenbrainz.org',
-#    'log_email_recipients': [],
-#    'log_email_topic': 'ListenBrainz Error',
-#    'level': 'ERROR',
 # }
 
 # LOG_SENTRY = {
@@ -123,18 +100,24 @@ MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
 # The path must be absolute path
 UPLOAD_FOLDER = "/tmp/lastfm-backup-upload"
 
-
+# Set to "https://api.listenbrainz.org" if you want to work on frontend for user statistics
+# without going through the process of generating the stats in local environment. Otherwise,
+# set it to "http://localhost"
 API_URL = 'https://api.listenbrainz.org'
 LASTFM_PROXY_URL = 'http://localhost:8080/'
 SERVER_ROOT_URL = 'http://localhost'
-WEBSOCKETS_SERVER_URL = 'http://localhost:8081'
+WEBSOCKETS_SERVER_URL = 'http://localhost:8082'
 MUSICBRAINZ_OAUTH_URL = 'https://musicbrainz.org/oauth2/userinfo'
+LISTENBRAINZ_LABS_API_URL = 'https://labs.api.listenbrainz.org'
 
 # Flask Debug redirect
 # Set to True if you want Flask-Debug to intercept redirects
 DEBUG_TB_INTERCEPT_REDIRECTS = False
 
+# Users who are allowed to view the LB admin interface
 ADMINS = []
+# Users who are allowed to submit playlists made for someone else.
+APPROVED_PLAYLIST_BOTS = ['troi-bot']
 
 # SPOTIFY
 SPOTIFY_CLIENT_ID = 'needs a non empty default value for tests, change this'
