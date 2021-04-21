@@ -29,6 +29,7 @@ class UserTimelineEventType(Enum):
     RECORDING_RECOMMENDATION = 'recording_recommendation'
     FOLLOW = 'follow'
     LISTEN = 'listen'
+    NOTIFICATION = 'notification'
 
 
 class RecordingRecommendationMetadata(pydantic.BaseModel):
@@ -40,7 +41,12 @@ class RecordingRecommendationMetadata(pydantic.BaseModel):
     artist_msid: str
 
 
-UserTimelineEventMetadata = Union[RecordingRecommendationMetadata]
+class NotificationMetadata(pydantic.BaseModel):
+    creator: str
+    message: str
+
+
+UserTimelineEventMetadata = Union[RecordingRecommendationMetadata, NotificationMetadata]
 
 
 class UserTimelineEvent(pydantic.BaseModel):
@@ -51,6 +57,10 @@ class UserTimelineEvent(pydantic.BaseModel):
     created: Optional[datetime]
 
 
+class APINotificationEvent(pydantic.BaseModel):
+    message: str
+
+
 class APIFollowEvent(pydantic.BaseModel):
     user_name_0: str
     user_name_1: str
@@ -58,7 +68,7 @@ class APIFollowEvent(pydantic.BaseModel):
     created: int
 
 
-APIEventMetadata = Union[APIListen, APIFollowEvent]
+APIEventMetadata = Union[APIListen, APIFollowEvent, APINotificationEvent]
 
 
 class APITimelineEvent(pydantic.BaseModel):

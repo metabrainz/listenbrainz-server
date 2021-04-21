@@ -30,6 +30,7 @@ const props = {
   },
   currentUser,
   webSocketsServerUrl,
+  newAlert: () => {},
 };
 
 describe("PlaylistPage", () => {

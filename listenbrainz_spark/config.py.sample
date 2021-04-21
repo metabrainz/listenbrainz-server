@@ -23,7 +23,6 @@ LOG_SENTRY = {
     'dsn':'',
     'environment': 'development',
 }
-SENTRY_DSN_PUBLIC = ''
 
 # Model id is made up of two parts.
 # String + UUID

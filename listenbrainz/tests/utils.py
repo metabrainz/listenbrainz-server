@@ -7,7 +7,6 @@ import os
 
 from listenbrainz.listen import Listen
 import uuid
-import pytz
 import listenbrainz.db.user as db_user
 
 

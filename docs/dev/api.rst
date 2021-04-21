@@ -86,6 +86,15 @@ Status API Endpoints
    :include-empty-docstring:
    :undoc-static:
 
+Social API Endpoints
+^^^^^^^^^^^^^^^^^^^^
+These apis allow to interact with social features of ListenBrainz.
+
+.. autoflask:: listenbrainz.webserver:create_app_rtfd()
+   :blueprints: social_api_v1
+   :include-empty-docstring:
+   :undoc-static:
+
 Rate limiting
 ^^^^^^^^^^^^^
 
@@ -103,7 +112,7 @@ following headers:
   clocks)
 
 - **X-RateLimit-Reset**: UNIX epoch number of seconds (without timezone) when
-  current time window expires [#]_
+  current time window expires [#]
 
 Rate limiting is automatic and the client must use these headers to determine
 the rate to make API calls. If the client exceeds the number of requests

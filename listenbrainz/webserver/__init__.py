@@ -92,7 +92,6 @@ def gen_app(config_path=None, debug=None):
     # Logging
     app.init_loggers(
         file_config=app.config.get('LOG_FILE'),
-        email_config=app.config.get('LOG_EMAIL'),
         sentry_config=app.config.get('LOG_SENTRY')
     )
 
@@ -285,3 +284,6 @@ def _register_blueprints(app):
 
     from listenbrainz.webserver.views.user_timeline_event_api import user_timeline_event_api_bp
     app.register_blueprint(user_timeline_event_api_bp, url_prefix=API_PREFIX)
+
+    from listenbrainz.webserver.views.social_api import social_api_bp
+    app.register_blueprint(social_api_bp, url_prefix=API_PREFIX)

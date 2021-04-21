@@ -1,6 +1,4 @@
-import datetime
 from operator import itemgetter
-import time
 from typing import Tuple
 
 import ujson
@@ -8,14 +6,12 @@ import psycopg2
 from flask import Blueprint, request, jsonify, current_app
 
 from listenbrainz.listenstore import TimescaleListenStore
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, APIServiceUnavailable
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz import webserver
-from listenbrainz.db.model.playlist import Playlist
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
-import listenbrainz.db.user_relationship as db_user_relationship
 from listenbrainz.webserver.rate_limiter import ratelimit
 import listenbrainz.webserver.redis_connection as redis_connection
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list,\
@@ -256,10 +252,12 @@ def get_similar_users(user_name):
     Get list of users who have similar music tastes (based on their listen history)
     for a given user. Returns an array of dicts like these:
 
-    {
-      "user_name": "hwnrwx",
-      "similarity": 0.1938480256
-    }
+    .. code-block:: json
+
+        {
+            "user_name": "hwnrwx",
+            "similarity": 0.1938480256
+        }
 
     :param user_name: the MusicBrainz ID of the user whose similar users are being requested.
     :statuscode 200: Yay, you have data!
@@ -270,7 +268,10 @@ def get_similar_users(user_name):
     user = db_user.get_by_mb_id(user_name)
     if not user:
         raise APINotFound("User %s not found" % user_name)
+
     similar_users = db_user.get_similar_users(user['id'])
+    if not similar_users:
+        return jsonify({'payload': []})
 
     response = []
     for user_name in similar_users.similar_users:
@@ -289,10 +290,12 @@ def get_similar_to_user(user_name, other_user_name):
     Get the similarity of the user and the other user, based on their listening history.
     Returns a single dict:
 
-    {
-      "user_name": "other_user",
-      "similarity": 0.1938480256
-    }
+    .. code-block:: json
+
+        {
+            "user_name": "other_user",
+            "similarity": 0.1938480256
+        }
 
     :param user_name: the MusicBrainz ID of the the one user
     :param other_user_name: the MusicBrainz ID of the other user whose similar users are 
@@ -323,7 +326,6 @@ def latest_import():
 
     {
         'musicbrainz_id': the MusicBrainz ID of the user,
-
         'latest_import': the timestamp of the newest listen submitted in previous imports. Defaults to 0
     }
 
@@ -372,13 +374,19 @@ def latest_import():
 
 
 @api_bp.route('/validate-token', methods=['GET'])
+@crossdomain(headers='Authorization')
 @ratelimit()
 def validate_token():
     """
     Check whether a User Token is a valid entry in the database.
 
-    In order to query this endpoint, send a GET request with the token to check
-    as the `token` argument (example: /validate-token?token=token-to-check)
+    In order to query this endpoint, send a GET request with the token in
+    the Authorization header.
+
+    .. note::
+        - This endpoint also checks for `token` argument in query
+        params (example: /validate-token?token=token-to-check) if the
+        Authorization header is missing for backward compatibility.
 
     A JSON response, with the following format, will be returned.
 
@@ -402,7 +410,13 @@ def validate_token():
     :statuscode 200: The user token is valid/invalid.
     :statuscode 400: No token was sent to the endpoint.
     """
-    auth_token = request.args.get('token', '')
+    header = request.headers.get('Authorization')
+    if header:
+        auth_token = header.split(" ")[1]
+    else:
+        # for backwards compatibility, check for auth token in query parameters as well
+        auth_token = request.args.get('token', '')
+
     if not auth_token:
         raise APIBadRequest("You need to provide an Authorization token.")
     user = db_user.get_by_token(auth_token)
@@ -430,6 +444,8 @@ def delete_listen():
     This checks for the correct authorization token and deletes the listen.
 
     The format of the JSON to be POSTed to this endpoint is:
+
+    .. code-block:: json
 
         {
             "listened_at": 1,

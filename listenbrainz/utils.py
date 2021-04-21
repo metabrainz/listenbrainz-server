@@ -1,10 +1,9 @@
 import errno
 import os
 import pika
-import pytz
 import time
 
-from datetime import datetime
+from datetime import datetime, timezone
 from redis import Redis
 
 def escape(value):
@@ -139,6 +138,6 @@ def unix_timestamp_to_datetime(timestamp):
     Returns:
         A datetime object with timezone UTC corresponding to the provided timestamp
     """
-    return datetime.utcfromtimestamp(timestamp).replace(tzinfo=pytz.UTC)
+    return datetime.utcfromtimestamp(timestamp).replace(tzinfo=timezone.utc)
 
 

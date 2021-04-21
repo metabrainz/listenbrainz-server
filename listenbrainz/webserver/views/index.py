@@ -14,6 +14,7 @@ import ujson
 from werkzeug.exceptions import Unauthorized, NotFound
 
 import listenbrainz.db.user as db_user
+from listenbrainz.db.similar_users import get_top_similar_users
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain import spotify
 from listenbrainz import webserver
@@ -270,3 +271,17 @@ def _get_user_count():
             raise
         cache.set(user_count_key, int(user_count), CACHE_TIME, encode=False)
         return user_count
+
+
+@index_bp.route("/similar-users")
+def similar_users():
+    """ Show all of the users with the highest similarity in order to make
+        them visible to all of our users. This view can show bugs in the algorithm
+        and spammers as well.
+    """
+
+    similar_users = get_top_similar_users()
+    return render_template(
+        "index/similar-users.html",
+        similar_users=similar_users
+    )

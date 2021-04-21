@@ -50,6 +50,14 @@
             <li><a href="{{ url_for('index.data') }}">Using our data</a></li>
           </ul>
         </li>
+        <li class="dropdown">
+          <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+             Reports<span class="caret"></span>
+          </a>
+          <ul class="dropdown-menu" role="menu">
+            <li><a href="{{ url_for('index.similar_users') }}">Top similar users</a></li>
+          </ul>
+        </li>
     </ul>
 
     {% if not hide_navbar_user_menu %}

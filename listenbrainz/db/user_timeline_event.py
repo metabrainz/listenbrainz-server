@@ -26,7 +26,7 @@ from data.model.user_timeline_event import (
     UserTimelineEvent,
     UserTimelineEventType,
     UserTimelineEventMetadata,
-    RecordingRecommendationMetadata,
+    RecordingRecommendationMetadata, NotificationMetadata,
 )
 from enum import Enum
 from listenbrainz import db
@@ -70,6 +70,16 @@ def create_user_track_recommendation_event(user_id: int, metadata: RecordingReco
     )
 
 
+def create_user_notification_event(user_id: int, metadata: NotificationMetadata) -> UserTimelineEvent:
+    """ Create a notification event in the database and returns it.
+    """
+    return create_user_timeline_event(
+        user_id=user_id,
+        event_type=UserTimelineEventType.NOTIFICATION,
+        metadata=metadata
+    )
+
+
 def get_user_timeline_events(user_id: int, event_type: UserTimelineEventType, count: int = 50) -> List[UserTimelineEvent]:
     """ Gets user timeline events of the specified type associated with the specified user.
 
@@ -103,6 +113,7 @@ def get_user_track_recommendation_events(user_id: int, count: int = 50) -> List[
         count=count,
     )
 
+
 def get_recording_recommendation_events_for_feed(user_ids: List[int], min_ts: int, max_ts: int, count: int) -> List[UserTimelineEvent]:
     """ Gets a list of recording_recommendation events for specified users.
 
@@ -127,3 +138,15 @@ def get_recording_recommendation_events_for_feed(user_ids: List[int], min_ts: in
         })
 
         return [UserTimelineEvent(**row) for row in result.fetchall()]
+
+
+def get_user_notification_events(user_id: int, count: int = 50) -> List[UserTimelineEvent]:
+    """ Gets notification posted on the user's timeline.
+
+    The optional `count` parameter can be used to control the number of events being returned.
+    """
+    return get_user_timeline_events(
+        user_id=user_id,
+        event_type=UserTimelineEventType.NOTIFICATION,
+        count=count
+    )
