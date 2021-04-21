@@ -383,6 +383,24 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
 
+    def test_empty_track_name(self):
+        """ Test for invalid submission in which a listen contains an empty track name
+        """
+        with open(self.path_to_data_file('empty_track_name.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+
+    def test_empty_artist_name(self):
+        """ Test for invalid submission in which a listen contains an empty track name
+        """
+        with open(self.path_to_data_file('empty_artist_name.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+
     def test_too_many_tags_in_listen(self):
         """ Test for invalid submission in which a listen contains more than the allowed
             number of tags in additional_info.
