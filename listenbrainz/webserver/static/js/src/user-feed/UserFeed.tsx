@@ -149,7 +149,10 @@ export default class UserFeedPage extends React.Component<
     await this.getFeedFromAPI(minTs, maxTs);
   };
 
-  handleClickOlder = async () => {
+  handleClickOlder = async (event?: React.MouseEvent) => {
+    if (event) {
+      event.preventDefault();
+    }
     const { nextEventTs } = this.state;
     // No more events to fetch
     if (!nextEventTs) {
@@ -160,7 +163,10 @@ export default class UserFeedPage extends React.Component<
     });
   };
 
-  handleClickNewer = async () => {
+  handleClickNewer = async (event?: React.MouseEvent) => {
+    if (event) {
+      event.preventDefault();
+    }
     const { previousEventTs, earliestEventTs } = this.state;
     // No more events to fetch
     if (
@@ -362,6 +368,9 @@ export default class UserFeedPage extends React.Component<
       .filter(UserFeedPage.isEventListenable)
       .map((event) => event.metadata) as Listen[];
 
+    const isNewerButtonDisabled =
+      !previousEventTs ||
+      (earliestEventTs && events?.[0]?.created >= earliestEventTs);
     return (
       <>
         <div
@@ -451,10 +460,7 @@ export default class UserFeedPage extends React.Component<
               >
                 <li
                   className={`previous ${
-                    !previousEventTs ||
-                    (earliestEventTs && events[0].created >= earliestEventTs)
-                      ? "disabled"
-                      : ""
+                    isNewerButtonDisabled ? "disabled" : ""
                   }`}
                 >
                   <a
@@ -464,6 +470,11 @@ export default class UserFeedPage extends React.Component<
                       if (e.key === "Enter") this.handleClickNewer();
                     }}
                     tabIndex={0}
+                    href={
+                      isNewerButtonDisabled
+                        ? undefined
+                        : `?min_ts=${previousEventTs}`
+                    }
                   >
                     &larr; Newer
                   </a>
@@ -479,6 +490,7 @@ export default class UserFeedPage extends React.Component<
                       if (e.key === "Enter") this.handleClickOlder();
                     }}
                     tabIndex={0}
+                    href={!nextEventTs ? undefined : `?max_ts=${nextEventTs}`}
                   >
                     Older &rarr;
                   </a>
