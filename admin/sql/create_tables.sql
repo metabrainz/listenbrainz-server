@@ -112,7 +112,6 @@ CREATE TABLE external_service_oauth (
     refresh_token           TEXT,
     token_expires           TIMESTAMP WITH TIME ZONE,
     last_updated            TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    record_listens          BOOLEAN NOT NULL,
     scopes                  TEXT[]
 );
 
