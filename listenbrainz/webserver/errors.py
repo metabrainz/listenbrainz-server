@@ -160,8 +160,13 @@ def init_error_handlers(app):
     def file_size_too_large(error):
         return handle_error(error, 413)
 
-    @app.errorhandler(InternalServerError)
+    @app.errorhandler(500)
     def internal_server_error(error):
+        # This error handler gets triggered on any uncaught exception.
+        # `error` is always InternalServerError, and error.original_exception
+        # is the exception that was thrown
+        # https://flask.palletsprojects.com/en/1.1.x/errorhandling/#unhandled-exceptions
+        # We specifically return json in the case that the request was within our API path
         original = getattr(error, "original_exception", None)
 
         if request.path.startswith(API_PREFIX):
