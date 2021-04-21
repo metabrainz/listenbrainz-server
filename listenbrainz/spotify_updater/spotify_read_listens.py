@@ -309,21 +309,19 @@ def process_one_user(user):
 
     except spotify.SpotifyAPIError as e:
         # if it is an error from the Spotify API, show the error message to the user
-        spotify.update_last_updated(
-            user_id=user.user_id,
-            success=False,
-            error_message=str(e),
-        )
+        spotify.update_last_updated(user_id=user.user_id, error_message=str(e))
         if not current_app.config['TESTING']:
             notify_error(user.musicbrainz_row_id, str(e))
         raise spotify.SpotifyListenBrainzError("Could not refresh user token from spotify")
 
     except spotify.SpotifyInvalidGrantError:
+        error_message = "It seems like you've revoked permission for us to read your spotify account"
+        spotify.update_last_updated(user_id=user.user_id, error_message=error_message)
         if not current_app.config['TESTING']:
-            notify_error(user.musicbrainz_row_id, "It seems like you've revoked permission for us to read your spotify account")
+            notify_error(user.musicbrainz_row_id, error_message)
         # user has revoked authorization through spotify ui or deleted their spotify account etc.
-        # in any of these cases, we should delete user from our spotify db as well.
-        db_spotify.delete_spotify(user.user_id)
+        # in any of these cases, we should delete the user's token from.
+        db_spotify.delete_spotify(user.user_id, stop_import=False)
         raise spotify.SpotifyListenBrainzError("User has revoked spotify authorization")
 
 

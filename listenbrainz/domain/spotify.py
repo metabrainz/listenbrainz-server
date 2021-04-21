@@ -183,22 +183,19 @@ def get_active_users_to_process():
     return [Spotify.from_dbrow(row) for row in db_spotify.get_active_users_to_process()]
 
 
-def update_last_updated(user_id, success=True, error_message=None):
+def update_last_updated(user_id, error_message=None):
     """ Update the last_update field for user with specified user ID.
-    Also, set the user as active or inactive depending on whether their listens
-    were imported without error.
 
     If there was an error, add the error to the db.
 
     Args:
         user_id (int): the ListenBrainz row ID of the user
-        success (bool): flag representing whether the last import was successful or not.
         error_message (str): the user-friendly error message to be displayed.
     """
     if error_message:
         db_spotify.add_update_error(user_id, error_message)
     else:
-        db_spotify.update_last_updated(user_id, success)
+        db_spotify.update_last_updated(user_id)
 
 
 def update_latest_listened_at(user_id, timestamp):

@@ -1,5 +1,3 @@
-import json
-
 from data.model.external_service import ExternalService
 from listenbrainz import db, utils
 import sqlalchemy
@@ -23,23 +21,23 @@ def create_spotify(user_id, access_token, refresh_token, token_expires_ts, recor
                         record_listens=record_listens, scopes=scopes)
 
 
-def delete_spotify(user_id):
+def delete_spotify(user_id, stop_import=True):
     """ Delete a user from the spotify table.
 
     Args:
         user_id (int): the ListenBrainz row ID of the user
+        stop_import (bool): whether the (user, service) combination should be removed from the listens_importer table also
     """
-    db_oauth.delete_token(user_id=user_id, service=ExternalService.SPOTIFY)
+    db_oauth.delete_token(user_id=user_id, service=ExternalService.SPOTIFY, stop_import=stop_import)
 
 
 def add_update_error(user_id, error_message):
-    """ Add an error message to be shown to the user and set the user as inactive.
+    """ Add an error message to be shown to the user, thereby setting the user as inactive.
 
     Args:
         user_id (int): the ListenBrainz row ID of the user
         error_message (str): the user-friendly error message to be displayed
     """
-
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
             UPDATE listens_importer
@@ -49,30 +47,25 @@ def add_update_error(user_id, error_message):
                 AND service = 'spotify'
         """), {
             "user_id": user_id,
-            "error_message": json.dumps(error_message)
+            "error_message": error_message
         })
 
 
-def update_last_updated(user_id, success=True):
+def update_last_updated(user_id):
     """ Update the last_updated field for the user with specified LB user_id.
-    Also, set the user as active or inactive depending on whether their listens
-    were imported correctly.
 
     Args:
         user_id (int): the ListenBrainz row ID of the user
-        success (bool): flag representing whether the user's import was successful or not
-                        if False, this function marks the user as inactive.
     """
-    if success:
-        with db.engine.connect() as connection:
-            connection.execute(sqlalchemy.text("""
-                UPDATE listens_importer
-                    SET last_updated = now()
-                    , error_message = NULL
-                WHERE user_id = :user_id
-            """), {
-                "user_id": user_id,
-            })
+    with db.engine.connect() as connection:
+        connection.execute(sqlalchemy.text("""
+            UPDATE listens_importer
+                SET last_updated = now()
+                , error_message = NULL
+            WHERE user_id = :user_id
+        """), {
+            "user_id": user_id,
+        })
 
 
 def update_latest_listened_at(user_id, timestamp):
@@ -134,6 +127,7 @@ def get_active_users_to_process():
               JOIN listens_importer
                 ON listens_importer.external_service_oauth_id = external_service_oauth.id
               WHERE external_service_oauth.service = 'spotify'
+                AND error_message IS NULL
           ORDER BY latest_listened_at DESC NULLS LAST
         """))
         return [dict(row) for row in result.fetchall()]

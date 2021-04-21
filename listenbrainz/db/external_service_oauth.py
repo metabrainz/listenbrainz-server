@@ -45,7 +45,7 @@ def save_token(user_id, service, access_token, refresh_token, token_expires_ts, 
             })
 
 
-def delete_token(user_id, service, stop_import=True):
+def delete_token(user_id, service, stop_import):
     """ Delete a user from the external service table.
 
     Args:
