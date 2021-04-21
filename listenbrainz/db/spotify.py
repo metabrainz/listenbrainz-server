@@ -1,9 +1,9 @@
+import json
+
+from data.model.external_service import ExternalService
 from listenbrainz import db, utils
 import sqlalchemy
-from listenbrainz.db.exceptions import DatabaseException
-from datetime import datetime
-from flask import current_app, url_for
-import spotipy.oauth2
+import external_service as db_service
 
 
 def create_spotify(user_id, user_token, refresh_token, token_expires_ts, record_listens, permission):
@@ -18,19 +18,9 @@ def create_spotify(user_id, user_token, refresh_token, token_expires_ts, record_
         record_listens (bool): True if user wishes to import listens from Spotify, False otherwise
         permission (str): the scope of the permissions granted to us by the user as a space seperated string
     """
-    token_expires = utils.unix_timestamp_to_datetime(token_expires_ts)
-    with db.engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
-            INSERT INTO spotify_auth (user_id, user_token, refresh_token, token_expires, record_listens, permission)
-                 VALUES (:user_id, :user_token, :refresh_token, :token_expires, :record_listens, :permission)
-            """), {
-                "user_id": user_id,
-                "user_token": user_token,
-                "refresh_token": refresh_token,
-                "token_expires": token_expires,
-                "record_listens": record_listens,
-                "permission": permission,
-            })
+    db_service.save_token(user_id=user_id, service=ExternalService.SPOTIFY, access_token=user_token,
+                          refresh_token=refresh_token, token_expires_ts=token_expires_ts,
+                          record_listens=record_listens, service_details={"permission": permission})
 
 
 def delete_spotify(user_id):
@@ -39,13 +29,7 @@ def delete_spotify(user_id):
     Args:
         user_id (int): the ListenBrainz row ID of the user
     """
-    with db.engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
-            DELETE FROM spotify_auth
-                  WHERE user_id = :user_id
-        """), {
-            "user_id": user_id
-        })
+    db_service.delete_token(user_id=user_id, service=ExternalService.SPOTIFY)
 
 
 def add_update_error(user_id, error_message):
@@ -58,14 +42,14 @@ def add_update_error(user_id, error_message):
 
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
-            UPDATE spotify_auth
+            UPDATE external_service_oauth
                SET last_updated = now()
                  , record_listens = 'f'
-                 , error_message = :error_message
+                 , service_details = jsonb_set(coalesce(service_details, '{}'), '{error_message}', :error_message) 
               WHERE user_id = :user_id
         """), {
             "user_id": user_id,
-            "error_message": error_message
+            "error_message": json.dumps(error_message)
         })
 
 
@@ -81,7 +65,7 @@ def update_last_updated(user_id, success=True):
     """
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
-            UPDATE spotify_auth
+            UPDATE external_service_oauth
                SET last_updated = now()
                  , record_listens = :record_listens
               WHERE user_id = :user_id
@@ -101,12 +85,12 @@ def update_latest_listened_at(user_id, timestamp):
     """
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
-            UPDATE spotify_auth
-               SET latest_listened_at = :timestamp
+            UPDATE external_service_oauth
+               SET service_details = jsonb_set(service_details, '{latest_listened_at}', :timestamp)
              WHERE user_id = :user_id
             """), {
                 'user_id': user_id,
-                'timestamp': utils.unix_timestamp_to_datetime(timestamp),
+                'timestamp': json.dumps(utils.unix_timestamp_to_datetime(timestamp).isoformat()),
             })
 
 
@@ -122,20 +106,9 @@ def update_token(user_id, access_token, refresh_token, expires_at):
     Returns:
         the new token in dict form
     """
-    token_expires = utils.unix_timestamp_to_datetime(expires_at)
-    with db.engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
-            UPDATE spotify_auth
-               SET user_token = :user_token
-                 , refresh_token = :refresh_token
-                 , token_expires = :token_expires
-             WHERE user_id = :user_id
-        """), {
-            "user_token": access_token,
-            "refresh_token": refresh_token,
-            "token_expires": token_expires,
-            "user_id": user_id,
-        })
+    db_service.update_token(user_id=user_id, service=ExternalService.SPOTIFY,
+                            access_token=access_token, refresh_token=refresh_token,
+                            expires_at=expires_at)
 
 
 def get_active_users_to_process():
@@ -146,19 +119,19 @@ def get_active_users_to_process():
             SELECT user_id
                  , "user".musicbrainz_id
                  , "user".musicbrainz_row_id
-                 , user_token
+                 , access_token
                  , refresh_token
                  , last_updated
-                 , latest_listened_at
                  , token_expires
                  , token_expires < now() as token_expired
                  , record_listens
-                 , error_message
-                 , permission
-              FROM spotify_auth
+                 , service_details ->> latest_listened_at
+                 , service_details ->> error_message
+                 , service_details ->> permission
+              FROM external_service_oauth
               JOIN "user"
-                ON "user".id = spotify_auth.user_id
-             WHERE spotify_auth.record_listens = 't'
+                ON "user".id = external_service_oauth.user_id
+             WHERE external_service_oauth.record_listens = 't'
           ORDER BY latest_listened_at DESC NULLS LAST
         """))
         return [dict(row) for row in result.fetchall()]
@@ -175,15 +148,15 @@ def get_token_for_user(user_id):
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT user_token
-              FROM spotify_auth
+            SELECT access_token
+              FROM external_service_oauth
              WHERE user_id = :user_id
             """), {
                 'user_id': user_id,
             })
 
         if result.rowcount > 0:
-            return result.fetchone()['user_token']
+            return result.fetchone()['access_token']
         return None
 
 
@@ -193,27 +166,4 @@ def get_user(user_id):
     Args:
         user_id (int): the ListenBrainz row ID of the user
     """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT user_id
-                 , "user".musicbrainz_id
-                 , "user".musicbrainz_row_id
-                 , user_token
-                 , refresh_token
-                 , last_updated
-                 , latest_listened_at
-                 , token_expires
-                 , token_expires < now() as token_expired
-                 , record_listens
-                 , error_message
-                 , permission
-              FROM spotify_auth
-              JOIN "user"
-                ON "user".id = spotify_auth.user_id
-             WHERE user_id = :user_id
-            """), {
-                'user_id': user_id,
-            })
-        if result.rowcount > 0:
-            return dict(result.fetchone())
-        return None
+    return db_service.get_token(user_id=user_id, service=ExternalService.SPOTIFY)
