@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+import * as Sentry from "@sentry/react";
 
 import { get, isEqual } from "lodash";
 import {
@@ -348,9 +349,14 @@ document.addEventListener("DOMContentLoaded", () => {
     user,
     web_sockets_server_url,
     current_user,
+    sentry_dsn,
   } = reactProps;
 
   const apiService = new APIService(api_url || `${window.location.origin}/1`);
+
+  if (sentry_dsn) {
+    Sentry.init({ dsn: sentry_dsn });
+  }
 
   const RecommendationsWithAlertNotifications = withAlertNotifications(
     Recommendations

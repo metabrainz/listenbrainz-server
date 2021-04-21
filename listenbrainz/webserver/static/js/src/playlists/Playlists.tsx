@@ -15,6 +15,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { sanitize } from "dompurify";
+import * as Sentry from "@sentry/react";
 import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
@@ -681,7 +682,12 @@ document.addEventListener("DOMContentLoaded", () => {
     active_section: activeSection,
     pagination_offset: paginationOffset,
     playlists_per_page: playlistsPerPage,
+    sentry_dsn,
   } = reactProps;
+
+  if (sentry_dsn) {
+    Sentry.init({ dsn: sentry_dsn });
+  }
 
   const UserPlaylistsWithAlertNotifications = withAlertNotifications(
     UserPlaylists
