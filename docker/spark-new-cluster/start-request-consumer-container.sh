@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 cd "$(dirname "${BASH_SOURCE[0]}")/../../"
 
@@ -8,10 +9,11 @@ CONTAINER_NAME="spark-request-consumer"
 
 docker pull metabrainz/listenbrainz-spark-new-cluster:latest
 
-python -m venv pyspark_venv
+python3 -m venv pyspark_venv
 source pyspark_venv/bin/activate
 pip install -r requirements_spark.txt
-pip uninstall pyspark py4j
+pip uninstall pyspark py4j -y
+pip install venv-pack
 venv-pack -o pyspark_venv.tar.gz
 
 export PYSPARK_DRIVER_PYTHON=python
