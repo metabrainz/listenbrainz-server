@@ -270,7 +270,7 @@ def connect_spotify():
         spotify.remove_user(current_user.id)
         flash.success('Your Spotify account has been unlinked')
 
-    user = spotify.get_user(current_user.id)
+    user = spotify.get_user_import_details(current_user.id)
     only_listen_sp_oauth = spotify.get_spotify_oauth(spotify.SPOTIFY_LISTEN_PERMISSIONS)
     only_import_sp_oauth = spotify.get_spotify_oauth(spotify.SPOTIFY_IMPORT_PERMISSIONS)
     both_sp_oauth = spotify.get_spotify_oauth(spotify.SPOTIFY_LISTEN_PERMISSIONS + spotify.SPOTIFY_IMPORT_PERMISSIONS)
@@ -278,8 +278,8 @@ def connect_spotify():
     return render_template(
         'user/spotify.html',
         account=user,
-        last_updated=user.last_updated_iso if user else None,
-        latest_listened_at=user.latest_listened_at_iso if user else None,
+        last_updated=user['last_updated_iso'] if user else None,
+        latest_listened_at=user['latest_listened_at_iso'] if user else None,
         only_listen_url=only_listen_sp_oauth.get_authorize_url(),
         only_import_url=only_import_sp_oauth.get_authorize_url(),
         both_url=both_sp_oauth.get_authorize_url(),

@@ -164,3 +164,22 @@ def get_user(user_id):
         user_id (int): the ListenBrainz row ID of the user
     """
     return db_oauth.get_token(user_id=user_id, service=ExternalService.SPOTIFY)
+
+
+def get_user_import_details(user_id):
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT user_id
+                 , external_service_oauth_id
+                 , last_updated
+                 , latest_listened_at
+                 , error_message
+              FROM listens_importer
+              WHERE user_id = :user_id
+                AND service = 'spotify'
+            """), {
+                'user_id': user_id,
+            })
+        if result.rowcount > 0:
+            return dict(result.fetchone())
+    return None

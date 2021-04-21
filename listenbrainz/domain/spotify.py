@@ -183,6 +183,18 @@ def get_active_users_to_process():
     return [Spotify.from_dbrow(row) for row in db_spotify.get_active_users_to_process()]
 
 
+def get_user_import_details(user_id):
+    user = db_spotify.get_user_import_details(user_id)
+
+    if user:
+        if user['latest_listened_at']:
+            user['latest_listened_at_iso'] = user['latest_listened_at'].isoformat() + "Z"
+        if user['last_updated']:
+            user['last_updated_iso'] = user['last_updated'].isoformat() + "Z"
+
+    return user
+
+
 def update_last_updated(user_id, error_message=None):
     """ Update the last_update field for user with specified user ID.
 

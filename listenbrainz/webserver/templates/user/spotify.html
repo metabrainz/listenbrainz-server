@@ -64,21 +64,21 @@
         <input class="btn btn-primary btn-lg" type="submit" value="Unlink" />
       </form>
 
-      {% if account.error_message %}
+      {% if account['error_message'] %}
         <h3>Import Errors</h3>
         <p>There was an error while importing listens from your Spotify account:</p>
         <div class="alert alert-danger">
-          <p> {{account.error_message}} </p>
+          <p> {{account['error_message']}} </p>
         </div>
       {% endif %}
 
       <h3>Activity Status</h3>
-      {% if not account.record_listens %}
+      {% if not account['error_message'] %}
         <p>ListenBrainz is currently not importing your Spotify listens. This may be due to errors,
         please unlink and link your Spotify account to try again.</p>
       {% endif %}
 
-      {% if not account.last_updated %}
+      {% if not account['last_updated'] %}
         <p>We haven't gotten around to importing your listens yet, please check back later!</p>
       {% else %}
       <p>We imported your listens <abbr class="timeago" title="{{last_updated}}">{{last_updated}}</abbr> and the last song we imported was listened to <abbr class="timeago" title="{{latest_listened_at}}">{{latest_listened_at}}</abbr>.</p>
