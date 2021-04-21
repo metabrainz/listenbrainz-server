@@ -92,18 +92,14 @@ def build(client, collection_name):
             curs.execute("SELECT max(score) FROM mapping.mbid_mapping")
             max_score = curs.fetchone()[0]
 
-            query = ("""SELECT recording_name AS recording_name,
-                               r.gid AS recording_mbid,
-                               release_name AS release_name,
-                               rl.gid AS release_mbid,
-                               artist_credit_name AS artist_credit_name,
+            query = ("""SELECT recording_name,
+                               recording_mbid,
+                               release_name,
+                               release_mbid,
+                               artist_credit_name,
                                artist_credit_id,
                                score
-                          FROM mapping.mbid_mapping
-                          JOIN recording r
-                            ON r.id = recording_id
-                          JOIN release rl
-                            ON rl.id = release_id""")
+                          FROM mapping.mbid_mapping""")
 
             if config.USE_MINIMAL_DATASET:
                 query += " WHERE artist_credit_id = 1160983"

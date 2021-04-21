@@ -22,7 +22,7 @@
 
 
 import json
-from typing import Optional
+from typing import Optional, List
 
 import sqlalchemy
 from data.model.sitewide_artist_stat import (SitewideArtistStat,
@@ -105,7 +105,8 @@ def insert_user_artists(user_id: int, artists: UserArtistStatJson):
         Args: user_id: the row id of the user,
               artists: the top artists listened to by the user
     """
-    _insert_user_jsonb_data(user_id=user_id, column='artist', data=artists.dict(exclude_none=True))
+    _insert_user_jsonb_data(user_id=user_id, column='artist',
+                            data=artists.dict(exclude_none=True))
 
 
 def insert_user_releases(user_id: int, releases: UserReleaseStatJson):
@@ -117,7 +118,8 @@ def insert_user_releases(user_id: int, releases: UserReleaseStatJson):
        Args: user_id: the row id of the user,
              releases: the top releases listened to by the user
     """
-    _insert_user_jsonb_data(user_id=user_id, column='release', data=releases.dict(exclude_none=True))
+    _insert_user_jsonb_data(user_id=user_id, column='release',
+                            data=releases.dict(exclude_none=True))
 
 
 def insert_user_recordings(user_id: int, recordings: UserRecordingStatJson):
@@ -129,7 +131,8 @@ def insert_user_recordings(user_id: int, recordings: UserRecordingStatJson):
        Args: user_id: the row id of the user,
              recordings: the top releases listened to by the user
     """
-    _insert_user_jsonb_data(user_id=user_id, column='recording', data=recordings.dict(exclude_none=True))
+    _insert_user_jsonb_data(
+        user_id=user_id, column='recording', data=recordings.dict(exclude_none=True))
 
 
 def insert_user_listening_activity(user_id: int, listening_activity: UserListeningActivityStatJson):
@@ -141,7 +144,8 @@ def insert_user_listening_activity(user_id: int, listening_activity: UserListeni
        Args: user_id: the row id of the user,
              listening_activity: the listening_activity stats of the user
     """
-    _insert_user_jsonb_data(user_id=user_id, column='listening_activity', data=listening_activity.dict(exclude_none=True))
+    _insert_user_jsonb_data(user_id=user_id, column='listening_activity',
+                            data=listening_activity.dict(exclude_none=True))
 
 
 def insert_user_daily_activity(user_id: int, daily_activity: UserDailyActivityStatJson):
@@ -153,7 +157,8 @@ def insert_user_daily_activity(user_id: int, daily_activity: UserDailyActivitySt
        Args: user_id: the row id of the user,
              daily_activity: the daily_activity stats of the user
     """
-    _insert_user_jsonb_data(user_id=user_id, column='daily_activity', data=daily_activity.dict(exclude_none=True))
+    _insert_user_jsonb_data(user_id=user_id, column='daily_activity',
+                            data=daily_activity.dict(exclude_none=True))
 
 
 def insert_user_artist_map(user_id: int, artist_map: UserArtistMapStatJson):
@@ -165,7 +170,8 @@ def insert_user_artist_map(user_id: int, artist_map: UserArtistMapStatJson):
        Args: user_id: the row id of the user,
              artist_map: the artist_map stats of the user
     """
-    _insert_user_jsonb_data(user_id=user_id, column='artist_map', data=artist_map.dict(exclude_none=True))
+    _insert_user_jsonb_data(
+        user_id=user_id, column='artist_map', data=artist_map.dict(exclude_none=True))
 
 
 def insert_sitewide_artists(stats_range: str, artists: SitewideArtistStatJson):
@@ -177,7 +183,8 @@ def insert_sitewide_artists(stats_range: str, artists: SitewideArtistStatJson):
        Args: stats_range: the range for which the stats have been calculated,
              artists: the top artists for a particular stats_range
     """
-    _insert_sitewide_jsonb_data(stats_range, column='artist', data=artists.dict(exclude_none=True))
+    _insert_sitewide_jsonb_data(
+        stats_range, column='artist', data=artists.dict(exclude_none=True))
 
 
 def get_user_stats(user_id, columns):
@@ -450,6 +457,8 @@ def delete_user_stats(user_id):
 
 
 # TODO: Add tests for this function
+
+
 def delete_sitewide_stats(stats_range: str):
     """ Delete stats for a particular time_range
 

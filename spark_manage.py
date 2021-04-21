@@ -127,7 +127,7 @@ def dataframes(days):
     """
     from listenbrainz_spark.recommendations.recording import create_dataframes
     with app.app_context():
-        _ = create_dataframes.main(train_model_window=days)
+        _ = create_dataframes.main(train_model_window=days, job_type="recommendations")
 
 
 def parse_list(ctx, args):

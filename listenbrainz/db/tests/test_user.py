@@ -8,6 +8,7 @@ import time
 import ujson
 
 from listenbrainz import db
+from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.db.testing import DatabaseTestCase
 from data.model.user_artist_stat import UserArtistStatJson
 
@@ -200,3 +201,35 @@ class UserTestCase(DatabaseTestCase):
         self.assertEqual(len(users), 2)
         self.assertEqual(users[0]['id'], id2)
         self.assertEqual(users[1]['id'], id1)
+
+    def test_get_similar_users(self):
+        user_id_21 = db_user.create(21, "twenty_one")
+        user_id_22 = db_user.create(22, "twenty_two")
+        user_id_23 = db_user.create(23, "twenty_three")
+
+        similar_users_21 = {"twenty_two": 0.4, "twenty_three": 0.7}
+        similar_users_22 = {"twenty_one": 0.4}
+        similar_users_23 = {"twenty_one": 0.7}
+
+        similar_users = {
+            "twenty_one": similar_users_21,
+            "twenty_two": similar_users_22,
+            "twenty_three": similar_users_23,
+        }
+
+        import_user_similarities(similar_users)
+
+        self.assertDictEqual(similar_users_21, db_user.get_similar_users(user_id_21).similar_users)
+        self.assertDictEqual(similar_users_22, db_user.get_similar_users(user_id_22).similar_users)
+        self.assertDictEqual(similar_users_23, db_user.get_similar_users(user_id_23).similar_users)
+
+    def test_get_user_by_id(self):
+        user_id_24 = db_user.create(24, "twenty_four")
+        user_id_25 = db_user.create(25, "twenty_five")
+
+        users = {
+            user_id_24: "twenty_four",
+            user_id_25: "twenty_five"
+        }
+
+        self.assertDictEqual(users, db_user.get_users_by_id([user_id_24, user_id_25]))
