@@ -116,6 +116,15 @@ CREATE TABLE external_service_oauth (
     service_details         JSONB
 );
 
+CREATE TABLE listens_importer (
+    id                          SERIAL,
+    external_service_oauth_id   INTEGER,
+    user_id                     INTEGER NOT NULL,
+    service                     external_service_oauth_type NOT NULL,
+    latest_listened_at          TIMESTAMP WITH TIME ZONE,
+    error_message               TEXT
+);
+
 CREATE TABLE statistics.artist (
     id                      SERIAL, -- PK
     msid                    UUID NOT NULL,
