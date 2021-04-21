@@ -45,7 +45,7 @@ function add_rsync_include_rule {
 function on_exit {
     echo "Disk space when create-dumps ends:"; df -m
 
-    if [ -n "$TMPDIR" ]; then
+    if [ -n "$TMPDIR" ] && [ "$TMPDIR" != "/" ]; then
         rm -rf "$TMPDIR"
     fi
 
