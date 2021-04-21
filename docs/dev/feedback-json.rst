@@ -1,3 +1,5 @@
+:orphan:
+
 .. _feedback-json-doc:
 
 Feedback JSON Documentation

@@ -116,7 +116,6 @@ class ListenTestCase(unittest.TestCase):
         self.assertEqual(json_data['user_id'], listen.user_id)
         self.assertEqual(json_data['track_metadata']['artist_name'], listen.data['artist_name'])
 
-
     def test_from_json(self):
         json_row = {
                     "track_metadata": {
@@ -134,3 +133,16 @@ class ListenTestCase(unittest.TestCase):
         listen = Listen.from_json(json_row)
 
         self.assertEqual(listen.timestamp, None)
+
+    def test_from_json_null_values(self):
+        data = {
+            "listened_at": 1618353413, "track_metadata": {
+                "additional_info": {"recording_mbid": "99e087e1-5649-4e8c-b84f-eea05b8e143a",
+                                    "release_mbid": "4b6ca48c-f7db-439d-ba57-6104b5fec61e",
+                                    "artist_mbid": "e1564e98-978b-4947-8698-f6fd6f8b0181\u0000\ufeff9ad10546-b081-4cc8-a487-3d2eece82d9e\u0000\ufeff5245e5cd-4408-4d9e-a037-c71a53edce83",
+                                    "artist_msid": "392f2883-724f-4c63-b155-81a7cc89a499",
+                                    "release_msid": "632207f8-150f-4342-99ad-0fd5a6687e63"},
+                "artist_name": "Fort Minor Feat. Holly Brook & Jonah Matranga", "track_name": "some name"}
+            }
+        with self.assertRaises(ValueError):
+            Listen.from_json(data)

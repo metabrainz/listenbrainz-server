@@ -5,8 +5,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import APIService from "./APIService";
 import Scrobble from "./Scrobble";
-
 import LastFMImporterModal from "./LastFMImporterModal";
+
+export const LASTFM_RETRIES = 3;
 
 export type ImporterProps = {
   user: {
@@ -151,19 +152,19 @@ export default class LastFmImporter extends React.Component<
     }
   }
 
-  async getPage(page: number) {
-    /*
-     * Fetch page from Last.fm
-     */
+  /*
+   * @param {number} page - the page to fetch from Last.fm
+   * @param {number} retries - number times to retry in case of errors other than 40x
+   * Fetch page from Last.fm
+   * @returns Returns an array of Listens if successful, null if it exceeds the max number of retries (consider that an error)
+   * and undefined if we receive a 40X error for the page
+   */
+  async getPage(
+    page: number,
+    retries: number
+  ): Promise<Array<Listen> | undefined> {
     const { lastfmUsername } = this.state;
-
-    const retry = (reason: string) => {
-      // eslint-disable-next-line no-console
-      console.warn(
-        `${reason} while fetching last.fm page=${page}, retrying in 3s`
-      );
-      setTimeout(() => this.getPage(page), 3000);
-    };
+    const timeout = 3000;
 
     const url = `${
       this.lastfmURL
@@ -189,17 +190,26 @@ export default class LastFmImporter extends React.Component<
         this.countReceived += payload.length;
         return payload;
       }
+      // Retry if we receive a 5xx server error
       if (/^5/.test(response.status.toString())) {
-        retry(`Got ${response.status}`);
-      } else {
-        // ignore 40x
-        // console.warn(`Got ${response.status} while fetching page last.fm page=${page}, skipping`);
+        throw new Error(`Status ${response.status}`);
       }
-    } catch {
+    } catch (err) {
       // Retry if there is a network error
-      retry("Network error");
+      // eslint-disable-next-line no-console
+      console.warn(`Error while fetching last.fm page ${page}:`, err);
+      if (retries <= 0) {
+        throw new Error(
+          `Failed to fetch page ${page} from last.fm after ${LASTFM_RETRIES} retries.`
+        );
+      }
+      // eslint-disable-next-line no-console
+      console.warn(`Retrying in ${timeout / 1000}s, ${retries} retries left`);
+      await new Promise((resolve) => setTimeout(resolve, timeout));
+      // eslint-disable-next-line no-return-await
+      return await this.getPage(page, retries - 1);
     }
-    return null;
+    return undefined;
   }
 
   static getlastImportedString(listen: Listen) {
@@ -276,7 +286,8 @@ export default class LastFmImporter extends React.Component<
     while (this.page > 0) {
       // Fixing no-await-in-loop will require significant changes to the code, ignoring for now
       this.lastImportedString = "...";
-      const payload = await this.getPage(this.page); // eslint-disable-line
+      const payload = await this.getPage(this.page, LASTFM_RETRIES); // eslint-disable-line
+
       if (payload) {
         // Submit only if response is valid
         this.submitPage(payload);
@@ -332,11 +343,12 @@ export default class LastFmImporter extends React.Component<
       // import failed, show final message on unhandled exception / unrecoverable network error
       finalMsg = (
         <p>
-          <FontAwesomeIcon icon={faTimes as IconProp} /> Import failed due to a
-          network error, please retry.
+          <FontAwesomeIcon icon={faTimes as IconProp} /> We were unable to
+          import from LastFM, please try again.
           <br />
-          Message: &quot;{err.message}&quot;
+          If the problem persists please contact us.
           <br />
+          {err.toString()}
           <br />
           <span style={{ fontSize: `${10}pt` }}>
             <a href={`${profileUrl}`}>
@@ -346,7 +358,7 @@ export default class LastFmImporter extends React.Component<
         </p>
       );
       // eslint-disable-next-line no-console
-      console.debug(err);
+      console.error(err);
       this.setState({ canClose: true, msg: finalMsg });
       return Promise.resolve(null);
     }
@@ -422,7 +434,6 @@ export default class LastFmImporter extends React.Component<
 
   render() {
     const { show, canClose, lastfmUsername, msg } = this.state;
-
     return (
       <div className="Importer">
         <form onSubmit={this.handleSubmit}>

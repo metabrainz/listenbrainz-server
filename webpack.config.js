@@ -33,7 +33,7 @@ module.exports = function (env) {
       userEntityChart: "/static/js/src/stats/UserEntityChart.tsx",
       userReports: "/static/js/src/stats/UserReports.tsx",
       userPageHeading: "/static/js/src/UserPageHeading.tsx",
-      userFeed: "/static/js/src/UserFeed.tsx",
+      userFeed: "/static/js/src/user-feed/UserFeed.tsx",
       playlist: "/static/js/src/playlists/Playlist.tsx",
       playlists: "/static/js/src/playlists/Playlists.tsx",
       recommendations: "/static/js/src/recommendations/Recommendations.tsx",
@@ -47,7 +47,8 @@ module.exports = function (env) {
       rules: [
         {
           test: /\.(js|ts)x?$/,
-          exclude: /node_modules/,
+          // some nivo/D3 dependencies need to be transpiled, we include them with the following regex
+          exclude: /node_modules\/(?!(d3-array|d3-scale|internmap)\/).*/,
           use: {
             loader: "babel-loader",
             options: {
@@ -55,6 +56,8 @@ module.exports = function (env) {
                 [
                   "@babel/preset-env",
                   {
+                    useBuiltIns: "usage",
+                    corejs: { version: "3.9", proposals: true },
                     targets: {
                       node: "10",
                       browsers: ["> 0.2% and not dead", "firefox >= 44"],

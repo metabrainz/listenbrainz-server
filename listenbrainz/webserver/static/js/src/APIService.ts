@@ -81,6 +81,48 @@ export default class APIService {
     return result.payload.listens;
   };
 
+  getFeedForUser = async (
+    userName: string,
+    userToken: string,
+    minTs?: number,
+    maxTs?: number,
+    count?: number
+  ): Promise<Array<TimelineEvent>> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+
+    let query: string = `${this.APIBaseURI}/user/${userName}/feed/events`;
+
+    const queryParams: Array<string> = [];
+    if (maxTs) {
+      queryParams.push(`max_ts=${maxTs}`);
+    }
+    if (minTs) {
+      queryParams.push(`min_ts=${minTs}`);
+    }
+    if (count) {
+      queryParams.push(`count=${count}`);
+    }
+    if (queryParams.length) {
+      query += `?${queryParams.join("&")}`;
+    }
+
+    const response = await fetch(query, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
+    });
+    await this.checkStatus(response);
+    const result = await response.json();
+
+    return result.payload.events;
+  };
+
   getUserListenCount = async (userName: string): Promise<number> => {
     if (!userName) {
       throw new SyntaxError("Username missing");
@@ -106,38 +148,69 @@ export default class APIService {
     return result.user_token;
   };
 
-  followUser = async (username: string): Promise<{ status: number }> => {
-    const response = await fetch(`/user/${username}/follow`, {
+  followUser = async (
+    userName: string,
+    userToken: string
+  ): Promise<{ status: number }> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+    const response = await fetch(`${this.APIBaseURI}/user/${userName}/follow`, {
       method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
     });
     return { status: response.status };
   };
 
-  unfollowUser = async (username: string): Promise<{ status: number }> => {
-    const response = await fetch(`/user/${username}/unfollow`, {
-      method: "POST",
-    });
+  unfollowUser = async (
+    userName: string,
+    userToken: string
+  ): Promise<{ status: number }> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+    const response = await fetch(
+      `${this.APIBaseURI}/user/${userName}/unfollow`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Token ${userToken}`,
+        },
+      }
+    );
     return { status: response.status };
   };
 
-  getFollowersOfUser = async (username: string) => {
+  getFollowersOfUser = async (
+    username: string
+  ): Promise<{ followers: Array<string> }> => {
     if (!username) {
       throw new SyntaxError("Username missing");
     }
 
-    const url = `/user/${username}/followers`;
+    const url = `${this.APIBaseURI}/user/${username}/followers`;
     const response = await fetch(url);
     await this.checkStatus(response);
     const data = response.json();
     return data;
   };
 
-  getFollowingForUser = async (username: string) => {
+  getFollowingForUser = async (
+    username: string
+  ): Promise<{ following: Array<string> }> => {
     if (!username) {
       throw new SyntaxError("Username missing");
     }
 
-    const url = `/user/${username}/following`;
+    const url = `${this.APIBaseURI}/user/${username}/following`;
     const response = await fetch(url);
     await this.checkStatus(response);
     const data = response.json();
@@ -162,6 +235,7 @@ export default class APIService {
       const url = `${this.APIBaseURI}/submit-listens`;
 
       /* eslint-disable no-await-in-loop */
+      /* eslint-disable-next-line no-constant-condition */
       while (true) {
         try {
           const response = await fetch(url, {
@@ -665,6 +739,40 @@ export default class APIService {
     const url = `${this.APIBaseURI}/recommendation/feedback/user/${userName}/recordings?mbids=${recordings}`;
     const response = await fetch(url);
     this.checkStatus(response);
+    const data = response.json();
+    return data;
+  };
+
+  recommendTrackToFollowers = async (
+    userName: string,
+    authToken: string,
+    metadata: UserTrackRecommendationMetadata
+  ) => {
+    const url = `${this.APIBaseURI}/user/${userName}/timeline-event/create/recording`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${authToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ metadata }),
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
+  getSimilarUsersForUser = async (
+    username: string
+  ): Promise<{
+    payload: Array<{ user_name: string; similarity: number }>;
+  }> => {
+    if (!username) {
+      throw new SyntaxError("Username missing");
+    }
+
+    const url = `${this.APIBaseURI}/user/${username}/similar-users`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
     const data = response.json();
     return data;
   };

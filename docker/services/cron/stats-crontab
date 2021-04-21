@@ -59,3 +59,12 @@ MAILTO=""
 
 # user weekly daily_activity
 10 03 * * * listenbrainz_stats_cron /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=daily_activity --range=all_time
+
+# user similarity dataframes
+20 03 * * * listenbrainz_stats_cron /usr/local/bin/python /code/listenbrainz/manage.py spark request_dataframes --job-type="similar_users" --days=365 --listens-threshold=50
+
+# user similarity
+30 03 * * * listenbrainz_stats_cron /usr/local/bin/python /code/listenbrainz/manage.py spark request_similar_users 
+
+# Request recommendations every Monday after dump and mapping has been imported into the spark cluster
+30 4 * * 1 listenbrainz_stats_cron /code/listenbrainz/docker/cf_recommendation.sh cf
