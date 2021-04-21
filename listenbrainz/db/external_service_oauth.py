@@ -116,7 +116,6 @@ def get_token(user_id, service):
                  , refresh_token
                  , token_expires
                  , token_expires < now() as token_expired
-                 , record_listens
                  , scopes
               FROM external_service_oauth
               JOIN "user"
