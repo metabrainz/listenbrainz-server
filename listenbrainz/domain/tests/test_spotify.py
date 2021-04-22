@@ -6,11 +6,11 @@ from flask import current_app
 
 from data.model.external_service import ExternalService
 from listenbrainz.domain import spotify
-from listenbrainz.webserver.testing import ServerTestCase
+from listenbrainz.tests.integration import IntegrationTestCase
 from unittest import mock
 
 
-class SpotifyDomainTestCase(ServerTestCase):
+class SpotifyDomainTestCase(IntegrationTestCase):
 
     def setUp(self):
         super(SpotifyDomainTestCase, self).setUp()
