@@ -12,6 +12,12 @@ CREATE TABLE listens_importer (
 ALTER TABLE listens_importer ADD CONSTRAINT listens_importer_pkey PRIMARY KEY (id);
 
 ALTER TABLE listens_importer
+    ADD CONSTRAINT listens_importer_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE listens_importer
     ADD CONSTRAINT listens_importer_external_service_oauth_id_foreign_key
     FOREIGN KEY (external_service_oauth_id)
     REFERENCES external_service_oauth (id)
