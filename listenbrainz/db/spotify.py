@@ -4,33 +4,6 @@ import sqlalchemy
 import listenbrainz.db.external_service_oauth as db_oauth
 
 
-def create_spotify(user_id, access_token, refresh_token, token_expires_ts, record_listens, scopes):
-    """ Add a row to the spotify table for specified user with corresponding
-    Spotify tokens and information.
-
-    Args:
-        user_id (int): the ListenBrainz row ID of the user
-        access_token (str): the Spotify access token used to access the user's Spotify listens.
-        refresh_token (str): the token used to refresh Spotify access tokens once they expire
-        token_expires_ts (int): the unix timestamp at which the user_token will expire
-        record_listens (bool): True if user wishes to import listens from Spotify, False otherwise
-        scopes (list): list of the scope of the permissions granted to us
-    """
-    db_oauth.save_token(user_id=user_id, service=ExternalService.SPOTIFY, access_token=access_token,
-                        refresh_token=refresh_token, token_expires_ts=token_expires_ts,
-                        record_listens=record_listens, scopes=scopes)
-
-
-def delete_spotify(user_id, stop_import=True):
-    """ Delete a user from the spotify table.
-
-    Args:
-        user_id (int): the ListenBrainz row ID of the user
-        stop_import (bool): whether the (user, service) combination should be removed from the listens_importer table also
-    """
-    db_oauth.delete_token(user_id=user_id, service=ExternalService.SPOTIFY, stop_import=stop_import)
-
-
 def add_update_error(user_id, error_message):
     """ Add an error message to be shown to the user, thereby setting the user as inactive.
 
@@ -88,23 +61,6 @@ def update_latest_listened_at(user_id, timestamp):
             })
 
 
-def update_token(user_id, access_token, refresh_token, expires_at):
-    """ Update token for user with specified LB user ID.
-
-    Args:
-        user_id (int): the ListenBrainz row ID of the user
-        access_token (str): the new access token,
-        refresh_token (str): the new token used to refresh access tokens,
-        expires_at (int): the unix timestamp at which the access token expires
-
-    Returns:
-        the new token in dict form
-    """
-    db_oauth.update_token(user_id=user_id, service=ExternalService.SPOTIFY,
-                          access_token=access_token, refresh_token=refresh_token,
-                          expires_at=expires_at)
-
-
 def get_active_users_to_process():
     """ Returns a list of users whose listens should be imported from Spotify.
     """
@@ -131,39 +87,6 @@ def get_active_users_to_process():
           ORDER BY latest_listened_at DESC NULLS LAST
         """))
         return [dict(row) for row in result.fetchall()]
-
-
-def get_token_for_user(user_id):
-    """Gets token for user with specified User ID if user has already authenticated.
-
-    Args:
-        user_id (int): the ListenBrainz row ID of the user
-
-    Returns:
-        token: the user token if it exists, None otherwise
-    """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT access_token
-              FROM external_service_oauth
-              WHERE user_id = :user_id
-                AND service = 'spotify'
-            """), {
-                'user_id': user_id,
-            })
-
-        if result.rowcount > 0:
-            return result.fetchone()['access_token']
-        return None
-
-
-def get_user(user_id):
-    """ Get spotify details for user with specified user ID.
-
-    Args:
-        user_id (int): the ListenBrainz row ID of the user
-    """
-    return db_oauth.get_token(user_id=user_id, service=ExternalService.SPOTIFY)
 
 
 def get_user_import_details(user_id):
