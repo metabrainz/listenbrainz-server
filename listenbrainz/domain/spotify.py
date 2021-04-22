@@ -71,7 +71,6 @@ class Spotify:
            token_expires=row['token_expires'],
            refresh_token=row['refresh_token'],
            last_updated=row['last_updated'],
-           error_message=row['error_message'],
            musicbrainz_id=row['musicbrainz_id'],
            musicbrainz_row_id=row['musicbrainz_row_id'],
            latest_listened_at=row['latest_listened_at'],
