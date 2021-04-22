@@ -181,7 +181,6 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
             token_expires=expires, # token hasn't expired
             refresh_token='old-refresh-token',
             last_updated=None,
-            error_message=None,
             latest_listened_at=None,
             scopes=['user-read-recently-played', 'some-other-permission']
         )
@@ -209,7 +208,6 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
             token_expires=expires, # token has expired
             refresh_token='old-refresh-token',
             last_updated=None,
-            error_message=None,
             latest_listened_at=None,
             scopes=['user-read-recently-played']
         )
@@ -240,7 +238,6 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
             token_expires=expires,  # token has expired
             refresh_token='old-refresh-token',
             last_updated=None,
-            error_message=None,
             latest_listened_at=None,
             scopes=['user-read-recently-played']
         )

@@ -29,7 +29,6 @@ class ConvertListensTestCase(DatabaseTestCase):
                     token_expires=datetime.max.replace(tzinfo=timezone.utc),
                     refresh_token='refresh',
                     last_updated=None,
-                    error_message=None,
                     latest_listened_at=datetime(2014, 5, 13, 16, 53, 20),  # ts in ms = 140000000000000
                     scopes=['user-read-recently-played'],
                 )
@@ -155,7 +154,6 @@ class ConvertListensTestCase(DatabaseTestCase):
             token_expires=int(time.time()),
             refresh_token='old-refresh-token',
             last_updated=None,
-            error_message=None,
             latest_listened_at=None,
             scopes=['user-read-recently-played'],
         )
