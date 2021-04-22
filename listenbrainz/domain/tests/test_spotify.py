@@ -4,10 +4,10 @@ import listenbrainz.db.user as db_user
 
 from flask import current_app
 
-from data.model.external_service import ExternalService
 from listenbrainz.domain import spotify
 from listenbrainz.tests.integration import IntegrationTestCase
 from unittest import mock
+from datetime import datetime, timezone
 
 
 class SpotifyDomainTestCase(IntegrationTestCase):
@@ -23,10 +23,6 @@ class SpotifyDomainTestCase(IntegrationTestCase):
         })
         self.spotify_user = spotify.get_user(self.user_id)
 
-    def test_none_values_for_last_updated_and_latest_listened_at(self):
-        self.assertIsNone(self.spotify_user.last_updated_iso)
-        self.assertIsNone(self.spotify_user.latest_listened_at_iso)
-
     # apparently, requests_mocker does not follow the usual order in which decorators are applied. :-(
     @requests_mock.Mocker()
     @mock.patch('time.time')
@@ -38,32 +34,26 @@ class SpotifyDomainTestCase(IntegrationTestCase):
             'expires_in': 3600,
             'scope': '',
         })
-        spotify.refresh_user_token(self.spotify_user)
-        user = spotify.get_user(self.user_id)
+        user = spotify.refresh_user_token(self.spotify_user)
         self.assertEqual(self.user_id, user.user_id)
         self.assertEqual('tokentoken', user.access_token)
         self.assertEqual('refreshtokentoken', user.refresh_token)
-        self.assertEqual(3600, user.token_expires)
+        self.assertEqual(datetime.fromtimestamp(3600, tz=timezone.utc), user.token_expires)
 
     @requests_mock.Mocker()
-    @mock.patch('listenbrainz.domain.spotify.db_oauth.get_token')
-    @mock.patch('listenbrainz.domain.spotify.db_oauth.update_token')
-    def test_refresh_user_token_only_access(self, mock_requests, mock_update_token, mock_get_token):
+    @mock.patch('time.time')
+    def test_refresh_user_token_only_access(self, mock_requests, mock_time):
+        mock_time.return_value = 0
         mock_requests.post(spotify.OAUTH_TOKEN_URL, status_code=200, json={
             'access_token': 'tokentoken',
             'expires_in': 3600,
-            'scope': '',
+            'scope': [],
         })
-        spotify.refresh_user_token(self.spotify_user)
-        mock_update_token.assert_called_with(
-            self.spotify_user.user_id,
-            ExternalService.SPOTIFY,
-            'tokentoken',
-            'old-refresh-token',
-            mock.ANY  # expires_at cannot be accurately calculated hence using mock.ANY
-            # another option is using a range for expires_at and a Matcher but that seems far more work
-        )
-        mock_get_token.assert_called_with(self.spotify_user.user_id)
+        user = spotify.refresh_user_token(self.spotify_user)
+        self.assertEqual(self.user_id, user.user_id)
+        self.assertEqual('tokentoken', user.access_token)
+        self.assertEqual('old-refresh-token', user.refresh_token)
+        self.assertEqual(datetime.fromtimestamp(3600, tz=timezone.utc), user.token_expires)
 
     @requests_mock.Mocker()
     def test_refresh_user_token_bad(self, mock_requests):
@@ -88,7 +78,7 @@ class SpotifyDomainTestCase(IntegrationTestCase):
         func_oauth = spotify.get_spotify_oauth()
         self.assertEqual(func_oauth.client_id, current_app.config['SPOTIFY_CLIENT_ID'])
         self.assertEqual(func_oauth.client_secret, current_app.config['SPOTIFY_CLIENT_SECRET'])
-        self.assertEqual(func_oauth.redirect_uri, 'http://localhost/profile/connect-spotify/callback')
+        self.assertEqual(func_oauth.redirect_uri, current_app.config['SPOTIFY_CALLBACK_URL'])
         self.assertIsNone(func_oauth.scope)
 
         func_oauth = spotify.get_spotify_oauth(spotify.SPOTIFY_LISTEN_PERMISSIONS)
@@ -109,84 +99,61 @@ class SpotifyDomainTestCase(IntegrationTestCase):
         self.assertNotIn('playlist-modify-public', func_oauth.scope)
         self.assertNotIn('playlist-modify-private', func_oauth.scope)
 
-    @mock.patch('listenbrainz.domain.spotify.db_oauth.get_token')
-    def test_get_user(self, mock_db_get_user):
-        t = int(time.time())
-        mock_db_get_user.return_value = {
-            'user_id': 1,
-            'musicbrainz_id': 'spotify_user',
-            'musicbrainz_row_id': 312,
-            'access_token': 'token-token-token',
-            'token_expires': t,
-            'refresh_token': 'refresh-refresh-refresh',
-            'last_updated': None,
-            'latest_listened_at': None,
-            'scopes': ['user-read-recently-played'],
-        }
+    def test_remove_user(self):
+        spotify.remove_user(self.user_id)
+        self.assertIsNone(spotify.get_user(self.user_id))
 
-        user = spotify.get_user(1)
+    def test_get_user(self):
+        user = spotify.get_user(self.user_id)
         self.assertIsInstance(user, spotify.Spotify)
-        self.assertEqual(user.user_id, 1)
+        self.assertEqual(user.user_id, self.user_id)
         self.assertEqual(user.musicbrainz_id, 'spotify_user')
-        self.assertEqual(user.access_token, 'token-token-token')
-        self.assertEqual(user.token_expires, t)
-        self.assertEqual(user.last_updated, None)
+        self.assertEqual(user.access_token, 'old-token')
+        self.assertEqual(user.refresh_token, 'old-refresh-token')
+        self.assertIsNotNone(user.last_updated)
 
-    @mock.patch('listenbrainz.domain.spotify.db_oauth.delete_token')
-    def test_remove_user(self, mock_delete):
-        spotify.remove_user(1)
-        mock_delete.assert_called_with(1)
-
-    @mock.patch('listenbrainz.domain.spotify.db_oauth.save_token')
     @mock.patch('listenbrainz.domain.spotify.time.time')
-    def test_add_new_user(self, mock_time, mock_create):
+    def test_add_new_user(self, mock_time):
         mock_time.return_value = 0
-        spotify.add_new_user(1, {
+        spotify.remove_user(self.user_id)
+        spotify.add_new_user(self.user_id, {
             'access_token': 'access-token',
             'refresh_token': 'refresh-token',
             'expires_in': 3600,
             'scope': [],
         })
-        mock_create.assert_called_with(1, ExternalService.SPOTIFY, 'access-token', 'refresh-token', 3600, False, [])
+        user = spotify.get_user(self.user_id)
+        self.assertEqual(self.user_id, user.user_id)
+        self.assertEqual('access-token', user.access_token)
+        self.assertEqual('refresh-token', user.refresh_token)
 
-    @mock.patch('listenbrainz.domain.spotify.db_spotify.get_active_users_to_process')
-    def test_get_active_users(self, mock_get_active_users):
-        t = int(time.time())
-        mock_get_active_users.return_value = [
-            {
-                'user_id': 1,
-                'musicbrainz_id': 'spotify_user',
-                'musicbrainz_row_id': 312,
-                'access_token': 'token-token-token',
-                'token_expires': t,
-                'refresh_token': 'refresh-refresh-refresh',
-                'last_updated': None,
-                'latest_listened_at': None,
-                'scopes': ['user-read-recently-played'],
-            },
-            {
-                'user_id': 2,
-                'musicbrainz_id': 'spotify_user_2',
-                'musicbrainz_row_id': 321,
-                'access_token': 'token-token-token321',
-                'token_expires': t + 31,
-                'refresh_token': 'refresh-refresh-refresh321',
-                'last_updated': None,
-                'latest_listened_at': None,
-                'scopes': ['user-read-recently-played'],
-            },
-        ]
+    def test_get_active_users(self):
+        user_id_1 = db_user.create(666, 'user-1')
+        user_id_2 = db_user.create(999, 'user-2')
+        spotify.add_new_user(user_id_1, {
+            'access_token': 'access-token',
+            'refresh_token': 'refresh-token',
+            'expires_in': 3600,
+            'scope': [],
+        })
+        spotify.add_new_user(user_id_2, {
+            'access_token': 'access-token999',
+            'refresh_token': 'refresh-token999',
+            'expires_in': 3600,
+            'scope': [],
+        })
+
+        spotify.update_last_updated(user_id_2, error_message="add an error and check this user doesn't get selected")
 
         lst = spotify.get_active_users_to_process()
-        mock_get_active_users.assert_called_once()
         self.assertEqual(len(lst), 2)
         self.assertIsInstance(lst[0], spotify.Spotify)
         self.assertIsInstance(lst[1], spotify.Spotify)
-        self.assertEqual(lst[0].user_id, 1)
-        self.assertEqual(lst[1].user_id, 2)
+        self.assertEqual(lst[0].user_id, self.user_id)
+        self.assertEqual(lst[1].user_id, user_id_1)
 
-    @mock.patch('listenbrainz.domain.spotify.db_spotify.update_latest_listened_at')
-    def test_update_latest_listened_at(self, mock_update_listened_at):
+    def test_update_latest_listened_at(self):
         t = int(time.time())
-        spotify.update_latest_listened_at(1, t)
-        mock_update_listened_at.assert_called_once_with(1, t)
+        spotify.update_latest_listened_at(self.user_id, t)
+        user = spotify.get_user(self.user_id)
+        self.assertEqual(datetime.fromtimestamp(t, tz=timezone.utc), user.latest_listened_at)
