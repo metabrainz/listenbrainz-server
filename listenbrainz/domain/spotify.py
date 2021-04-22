@@ -65,7 +65,7 @@ class Spotify:
     def from_dbrow(row):
         return Spotify(
            user_id=row['user_id'],
-           access_token=row['user_token'],
+           access_token=row['access_token'],
            token_expires=row['token_expires'],
            refresh_token=row['refresh_token'],
            last_updated=row['last_updated'],
