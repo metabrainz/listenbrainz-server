@@ -28,13 +28,12 @@ OAUTH_TOKEN_URL = 'https://accounts.spotify.com/api/token'
 
 class Spotify:
     def __init__(self, user_id, musicbrainz_id, musicbrainz_row_id, access_token, token_expires,
-                 refresh_token, last_updated, error_message, latest_listened_at, scopes):
+                 refresh_token, last_updated, latest_listened_at, scopes):
         self.user_id = user_id
         self.access_token = access_token
         self.token_expires = token_expires
         self.refresh_token = refresh_token
         self.last_updated = last_updated
-        self.error_message = error_message
         self.musicbrainz_id = musicbrainz_id
         self.latest_listened_at = latest_listened_at
         self.musicbrainz_row_id = musicbrainz_row_id
@@ -63,6 +62,9 @@ class Spotify:
 
     @staticmethod
     def from_dbrow(row):
+        if 'latest_listened_at' not in row:
+            row['latest_listened_at'] = None
+
         return Spotify(
            user_id=row['user_id'],
            access_token=row['access_token'],

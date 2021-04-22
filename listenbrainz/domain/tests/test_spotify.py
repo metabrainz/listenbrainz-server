@@ -124,7 +124,6 @@ class SpotifyDomainTestCase(ServerTestCase):
             'token_expires': t,
             'refresh_token': 'refresh-refresh-refresh',
             'last_updated': None,
-            'error_message': 'oops',
             'latest_listened_at': None,
             'scopes': ['user-read-recently-played'],
         }
@@ -136,7 +135,6 @@ class SpotifyDomainTestCase(ServerTestCase):
         self.assertEqual(user.access_token, 'token-token-token')
         self.assertEqual(user.token_expires, t)
         self.assertEqual(user.last_updated, None)
-        self.assertEqual(user.error_message, 'oops')
 
     @mock.patch('listenbrainz.domain.spotify.db_spotify.delete_spotify')
     def test_remove_user(self, mock_delete):

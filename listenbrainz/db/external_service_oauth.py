@@ -114,6 +114,7 @@ def get_token(user_id, service):
                  , service
                  , access_token
                  , refresh_token
+                 , last_updated
                  , token_expires
                  , token_expires < now() as token_expired
                  , scopes
@@ -128,4 +129,3 @@ def get_token(user_id, service):
         if result.rowcount > 0:
             return dict(result.fetchone())
         return None
-
