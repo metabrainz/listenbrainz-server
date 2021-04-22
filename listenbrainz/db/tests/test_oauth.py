@@ -50,7 +50,7 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(spotify_user['refresh_token'], 'refreshtesttoken')
 
     def test_get_oauth(self):
-        user = db_oauth.get_token(self.user['id'])
+        user = db_oauth.get_token(self.user['id'], ExternalService.SPOTIFY)
         self.assertEqual(user['user_id'], self.user['id'])
         self.assertEqual(user['musicbrainz_id'], self.user['musicbrainz_id'])
         self.assertEqual(user['musicbrainz_row_id'], self.user['musicbrainz_row_id'])

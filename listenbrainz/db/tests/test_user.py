@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import listenbrainz.db.user as db_user
-import listenbrainz.db.spotify as db_spotify
+import listenbrainz.db.external_service_oauth as db_oauth
 import listenbrainz.db.stats as db_stats
 import sqlalchemy
 import time
 import ujson
 
+from data.model.external_service import ExternalService
 from listenbrainz import db
 from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.db.testing import DatabaseTestCase
@@ -150,12 +151,13 @@ class UserTestCase(DatabaseTestCase):
         user_id = db_user.create(11, 'kishore')
         user = db_user.get(user_id)
         self.assertIsNotNone(user)
-        db_spotify.create_spotify(user_id, 'user token', 'refresh token', 0, True, ['user-read-recently-played'])
+        db_oauth.save_token(user_id, ExternalService.SPOTIFY, 'user token',
+                            'refresh token', 0, True, ['user-read-recently-played'])
 
         db_user.delete(user_id)
         user = db_user.get(user_id)
         self.assertIsNone(user)
-        token = db_spotify.get_token_for_user(user_id)
+        token = db_oauth.get_token(user_id, ExternalService.SPOTIFY)
         self.assertIsNone(token)
 
     def test_validate_usernames(self):

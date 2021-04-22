@@ -16,6 +16,15 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
         super(SpotifyDatabaseTestCase, self).setUp()
         db_user.create(1, 'testspotifyuser')
         self.user = db_user.get(1)
+        db_oauth.save_token(
+            user_id=1,
+            service=ExternalService.SPOTIFY,
+            access_token='token',
+            refresh_token='refresh_token',
+            token_expires_ts=int(time.time()),
+            record_listens=True,
+            scopes=['user-read-recently-played']
+        )
 
     def test_add_update_error(self):
         db_spotify.add_update_error(self.user['id'], 'test error message')
