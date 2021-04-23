@@ -139,10 +139,9 @@ export default class YoutubePlayer
     const { onTrackNotFound } = this.props;
     // We use cueVideoById("") as a means to clear any playlist.
     // If search or loadVideoByID yield no results we can detect that nothing was found
-    if (
-      this.youtubePlayer.getVideoData &&
-      !this.youtubePlayer.getVideoData().video_id
-    ) {
+    const videoData =
+      this.youtubePlayer.getVideoData && this.youtubePlayer.getVideoData();
+    if (videoData && !videoData.video_id) {
       onTrackNotFound();
     }
   };
