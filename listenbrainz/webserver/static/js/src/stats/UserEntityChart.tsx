@@ -208,6 +208,9 @@ export default class UserEntityChart extends React.Component<
     const offset = (page - 1) * this.ROWS_PER_PAGE;
 
     let result = {} as UserEntityData;
+    if (!data?.payload) {
+      return result;
+    }
     if (entity === "artist") {
       result = (data as UserArtistsResponse).payload.artists
         .map((elem, idx: number) => {

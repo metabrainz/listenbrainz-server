@@ -140,19 +140,23 @@ export default class UserListeningActivity extends React.Component<
     data: UserListeningActivityResponse
   ): UserListeningActivityData => {
     const { range } = this.props;
+    let result = {} as UserListeningActivityData;
+    if (!data?.payload) {
+      return result;
+    }
     if (range === "week") {
-      return this.processWeek(data);
+      result = this.processWeek(data);
     }
     if (range === "month") {
-      return this.processMonth(data);
+      result = this.processMonth(data);
     }
     if (range === "year") {
-      return this.processYear(data);
+      result = this.processYear(data);
     }
     if (range === "all_time") {
-      return this.processAllTime(data);
+      result = this.processAllTime(data);
     }
-    return {} as UserListeningActivityData;
+    return result;
   };
 
   processWeek = (
