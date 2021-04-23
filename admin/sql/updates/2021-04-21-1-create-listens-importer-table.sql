@@ -5,6 +5,7 @@ CREATE TABLE listens_importer (
     external_service_oauth_id   INTEGER,
     user_id                     INTEGER NOT NULL,
     service                     external_service_oauth_type NOT NULL,
+    last_updated                TIMESTAMP WITH TIME ZONE,
     latest_listened_at          TIMESTAMP WITH TIME ZONE,
     error_message               TEXT
 );
