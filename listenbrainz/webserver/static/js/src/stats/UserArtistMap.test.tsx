@@ -192,7 +192,7 @@ describe("processData", () => {
     // When stats haven't been calculated, processData is called with an empty object
     const result = instance.processData({} as UserArtistMapResponse, "listen");
 
-    expect(result).toEqual(userArtistMapProcessedDataListen);
+    expect(result).toEqual([]);
   });
 });
 

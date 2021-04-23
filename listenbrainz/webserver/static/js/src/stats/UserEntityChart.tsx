@@ -207,7 +207,7 @@ export default class UserEntityChart extends React.Component<
     }
     const offset = (page - 1) * this.ROWS_PER_PAGE;
 
-    let result = {} as UserEntityData;
+    let result = [] as UserEntityData;
     if (!data?.payload) {
       return result;
     }

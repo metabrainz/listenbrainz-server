@@ -140,7 +140,7 @@ export default class UserListeningActivity extends React.Component<
     data: UserListeningActivityResponse
   ): UserListeningActivityData => {
     const { range } = this.props;
-    let result = {} as UserListeningActivityData;
+    let result = [] as UserListeningActivityData;
     if (!data?.payload) {
       return result;
     }
