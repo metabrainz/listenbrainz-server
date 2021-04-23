@@ -197,8 +197,13 @@ def get_user_import_details(user_id):
     if user:
         if user['latest_listened_at']:
             user['latest_listened_at_iso'] = user['latest_listened_at'].isoformat() + "Z"
+        else:
+            user['latest_listened_at_iso'] = None
+
         if user['last_updated']:
             user['last_updated_iso'] = user['last_updated'].isoformat() + "Z"
+        else:
+            user['last_updated_iso'] = None
 
     return user
 
