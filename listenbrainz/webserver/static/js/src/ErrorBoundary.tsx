@@ -15,9 +15,31 @@ export default class ErrorBoundary extends React.Component<
     this.state = { hasError: false, error: null };
   }
 
+  componentDidMount() {
+    // Add an event listener to the window to catch unhandled promise rejections & stash the error in the state
+    window.addEventListener(
+      "unhandledrejection",
+      this.promiseRejectionHandler.bind(this)
+    );
+  }
+
   componentDidCatch(error: Error) {
     // Update state so the next render will show the fallback UI.
     this.setState({ hasError: true, error });
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener(
+      "unhandledrejection",
+      this.promiseRejectionHandler
+    );
+  }
+
+  promiseRejectionHandler(event: PromiseRejectionEvent) {
+    this.setState({
+      error: event.reason,
+      hasError: true,
+    });
   }
 
   render() {

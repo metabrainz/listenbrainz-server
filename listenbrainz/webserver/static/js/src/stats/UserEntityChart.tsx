@@ -328,12 +328,7 @@ export default class UserEntityChart extends React.Component<
           entity,
         });
       } else {
-        // Error Boundaries don't catch errors in async code.
-        // Throwing an error in setState fixes this.
-        // This is a hacky solution but should be fixed with upcoming concurrent mode in React.
-        this.setState(() => {
-          throw error;
-        });
+        throw error;
       }
     }
   };
