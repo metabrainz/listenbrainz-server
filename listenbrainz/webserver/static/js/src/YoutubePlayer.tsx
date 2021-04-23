@@ -23,7 +23,7 @@ export default class YoutubePlayer
   extends React.Component<DataSourceProps, YoutubePlayerState>
   implements DataSourceType {
   youtubePlayer?: ExtendedYoutubePlayer;
-  youtubePlayerStateTimerID = null;
+  checkVideoLoadedTimerId?: NodeJS.Timeout;
 
   componentDidUpdate(prevProps: DataSourceProps) {
     const { show } = this.props;
@@ -129,7 +129,10 @@ export default class YoutubePlayer
     } else {
       this.searchAndPlayTrack(listen);
     }
-    setTimeout(this.checkVideoLoaded.bind(this), 1500);
+    this.checkVideoLoadedTimerId = setTimeout(
+      this.checkVideoLoaded.bind(this),
+      1500
+    );
   };
 
   checkVideoLoaded = () => {
@@ -171,6 +174,9 @@ export default class YoutubePlayer
   onError = (event: YT.OnErrorEvent): void => {
     const { data: errorNumber } = event;
     const { handleError, onTrackNotFound } = this.props;
+    if (this.checkVideoLoadedTimerId) {
+      clearTimeout(this.checkVideoLoadedTimerId);
+    }
     let message = "Something went wrong";
     switch (errorNumber) {
       case 101:
