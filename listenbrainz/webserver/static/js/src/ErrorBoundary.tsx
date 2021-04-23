@@ -17,10 +17,7 @@ export default class ErrorBoundary extends React.Component<
 
   componentDidMount() {
     // Add an event listener to the window to catch unhandled promise rejections & stash the error in the state
-    window.addEventListener(
-      "unhandledrejection",
-      this.promiseRejectionHandler.bind(this)
-    );
+    window.addEventListener("unhandledrejection", this.promiseRejectionHandler);
   }
 
   componentDidCatch(error: Error) {
@@ -35,12 +32,12 @@ export default class ErrorBoundary extends React.Component<
     );
   }
 
-  promiseRejectionHandler(event: PromiseRejectionEvent) {
+  promiseRejectionHandler = (event: PromiseRejectionEvent) => {
     this.setState({
       error: event.reason,
       hasError: true,
     });
-  }
+  };
 
   render() {
     const { children } = this.props;
