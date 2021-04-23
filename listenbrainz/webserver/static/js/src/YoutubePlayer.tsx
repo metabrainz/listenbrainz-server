@@ -205,7 +205,7 @@ export default class YoutubePlayer
         iv_load_policy: 3,
         modestbranding: 1,
         rel: 0,
-        origin: window.location.origin.toString(),
+        origin: window.location.origin,
       },
       width: "100%",
       height: "100%",
@@ -215,6 +215,7 @@ export default class YoutubePlayer
         <YouTube
           opts={options}
           onStateChange={this.handlePlayerStateChanged}
+          onError={this.onError}
           onReady={this.onReady}
         />
       </div>
