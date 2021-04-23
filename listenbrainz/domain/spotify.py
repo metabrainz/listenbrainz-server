@@ -172,7 +172,7 @@ def add_new_user(user_id, spot_access_token):
     access_token = spot_access_token['access_token']
     refresh_token = spot_access_token['refresh_token']
     expires_at = int(time.time()) + spot_access_token['expires_in']
-    permissions = spot_access_token['scope']
+    permissions = spot_access_token['scope'].split()
     active = SPOTIFY_IMPORT_PERMISSIONS[0] in permissions and SPOTIFY_IMPORT_PERMISSIONS[1] in permissions
 
     db_spotify.create_spotify(user_id, access_token, refresh_token, expires_at, active, permissions)

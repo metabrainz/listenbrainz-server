@@ -148,9 +148,9 @@ class SpotifyDomainTestCase(ServerTestCase):
             'access_token': 'access-token',
             'refresh_token': 'refresh-token',
             'expires_in': 3600,
-            'scope': '',
+            'scope': [],
         })
-        mock_create.assert_called_with(1, 'access-token', 'refresh-token', 3600, False, '')
+        mock_create.assert_called_with(1, 'access-token', 'refresh-token', 3600, False, [])
 
     @mock.patch('listenbrainz.domain.spotify.db_spotify.get_active_users_to_process')
     def test_get_active_users(self, mock_get_active_users):
