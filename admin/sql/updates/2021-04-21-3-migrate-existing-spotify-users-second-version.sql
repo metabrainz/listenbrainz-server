@@ -29,6 +29,7 @@ INSERT INTO listens_importer
      user_id,
      service,
      latest_listened_at,
+     last_updated,
      error_message
     )
 SELECT
@@ -36,6 +37,7 @@ SELECT
     spotify_auth.user_id,
     'spotify',
     latest_listened_at,
+    last_updated,
     error_message
 FROM spotify_auth
 JOIN migration ON spotify_auth.user_id = migration.user_id
