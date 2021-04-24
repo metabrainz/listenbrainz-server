@@ -58,6 +58,8 @@ class Spotify:
 
     @property
     def token_expired(self):
+        if not self.token_expires:
+            return False
         now = datetime.utcnow()
         now = now.replace(tzinfo=timezone.utc)
         return now >= self.token_expires
