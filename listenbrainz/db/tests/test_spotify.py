@@ -93,7 +93,6 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
     def test_get_user_import_details(self):
         user = db_spotify.get_user_import_details(self.user['id'])
         self.assertEqual(user['user_id'], self.user['id'])
-        self.assertIn('external_service_oauth_id', user)
         self.assertIn('last_updated', user)
         self.assertIn('latest_listened_at', user)
         self.assertIn('error_message', user)

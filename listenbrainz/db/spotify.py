@@ -1,7 +1,5 @@
-from data.model.external_service import ExternalService
 from listenbrainz import db, utils
 import sqlalchemy
-import listenbrainz.db.external_service_oauth as db_oauth
 
 
 def add_update_error(user_id, error_message):
@@ -92,14 +90,16 @@ def get_active_users_to_process():
 def get_user_import_details(user_id):
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT user_id
-                 , external_service_oauth_id
-                 , last_updated
+            SELECT external_service_oauth.user_id
+                 , listens_importer.id
+                 , listens_importer.last_updated
                  , latest_listened_at
                  , error_message
-              FROM listens_importer
-              WHERE user_id = :user_id
-                AND service = 'spotify'
+              FROM external_service_oauth
+   LEFT OUTER JOIN listens_importer
+                ON listens_importer.external_service_oauth_id = external_service_oauth.id
+             WHERE external_service_oauth.user_id = :user_id
+               AND external_service_oauth.service = 'spotify'
             """), {
                 'user_id': user_id,
             })

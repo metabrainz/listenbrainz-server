@@ -19,7 +19,7 @@ class SpotifyDomainTestCase(IntegrationTestCase):
             'access_token': 'old-token',
             'refresh_token': 'old-refresh-token',
             'expires_in': 3600,
-            'scope': ['user-read-recently-played']
+            'scope': 'user-read-currently-playing user-read-recently-played'
         })
         self.spotify_user = spotify.get_user(self.user_id)
 
@@ -47,7 +47,7 @@ class SpotifyDomainTestCase(IntegrationTestCase):
         mock_requests.post(spotify.OAUTH_TOKEN_URL, status_code=200, json={
             'access_token': 'tokentoken',
             'expires_in': 3600,
-            'scope': [],
+            'scope': '',
         })
         user = spotify.refresh_user_token(self.spotify_user)
         self.assertEqual(self.user_id, user.user_id)
@@ -120,7 +120,7 @@ class SpotifyDomainTestCase(IntegrationTestCase):
             'access_token': 'access-token',
             'refresh_token': 'refresh-token',
             'expires_in': 3600,
-            'scope': [],
+            'scope': '',
         })
         user = spotify.get_user(self.user_id)
         self.assertEqual(self.user_id, user.user_id)
@@ -128,32 +128,40 @@ class SpotifyDomainTestCase(IntegrationTestCase):
         self.assertEqual('refresh-token', user.refresh_token)
 
     def test_get_active_users(self):
-        user_id_1 = db_user.create(666, 'user-1')
-        user_id_2 = db_user.create(999, 'user-2')
-        spotify.add_new_user(user_id_1, {
+        user_id_1 = db_user.create(333, 'user-1')
+        user_id_2 = db_user.create(666, 'user-2')
+        user_id_3 = db_user.create(999, 'user-3')
+
+        spotify.add_new_user(user_id_2, {
             'access_token': 'access-token',
             'refresh_token': 'refresh-token',
             'expires_in': 3600,
-            'scope': [],
+            'scope': 'streaming',
         })
-        spotify.add_new_user(user_id_2, {
+
+        spotify.add_new_user(user_id_3, {
             'access_token': 'access-token999',
             'refresh_token': 'refresh-token999',
             'expires_in': 3600,
-            'scope': [],
+            'scope': 'user-read-currently-playing user-read-recently-played',
         })
+        spotify.update_last_updated(user_id_3, error_message="add an error and check this user doesn't get selected")
 
-        spotify.update_last_updated(user_id_2, error_message="add an error and check this user doesn't get selected")
+        spotify.add_new_user(user_id_1, {
+            'access_token': 'access-token333',
+            'refresh_token': 'refresh-token333',
+            'expires_in': 3600,
+            'scope': 'user-read-currently-playing user-read-recently-played',
+        })
+        spotify.update_latest_listened_at(user_id_1, int(time.time()))
 
-        lst = spotify.get_active_users_to_process()
-        self.assertEqual(len(lst), 2)
-        self.assertIsInstance(lst[0], spotify.Spotify)
-        self.assertIsInstance(lst[1], spotify.Spotify)
-        self.assertEqual(lst[0].user_id, self.user_id)
-        self.assertEqual(lst[1].user_id, user_id_1)
+        active_users = spotify.get_active_users_to_process()
+        self.assertEqual(len(active_users), 2)
+        self.assertEqual(active_users[0].user_id, user_id_1)
+        self.assertEqual(active_users[1].user_id, self.user_id)
 
     def test_update_latest_listened_at(self):
         t = int(time.time())
         spotify.update_latest_listened_at(self.user_id, t)
-        user = spotify.get_user(self.user_id)
-        self.assertEqual(datetime.fromtimestamp(t, tz=timezone.utc), user.latest_listened_at)
+        user = spotify.get_user_import_details(self.user_id)
+        self.assertEqual(datetime.fromtimestamp(t, tz=timezone.utc), user['latest_listened_at'])
