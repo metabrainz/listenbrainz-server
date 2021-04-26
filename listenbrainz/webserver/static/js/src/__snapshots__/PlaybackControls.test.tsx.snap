@@ -23,9 +23,7 @@ exports[`PlaybackControls renders 1`] = `
     >
       <div
         className="no-album-art"
-      >
-        No album art
-      </div>
+      />
     </div>
     <div
       className="info showControls"
