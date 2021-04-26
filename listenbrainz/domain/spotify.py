@@ -5,7 +5,9 @@ import time
 from flask import current_app
 import spotipy.oauth2
 
+from data.model.external_service import ExternalService
 from listenbrainz.db import spotify as db_spotify
+from listenbrainz.db import external_service_oauth as db_oauth
 from datetime import datetime, timezone
 
 SPOTIFY_API_RETRIES = 5
@@ -56,6 +58,8 @@ class Spotify:
 
     @property
     def token_expired(self):
+        if not self.token_expires:
+            return False
         now = datetime.utcnow()
         now = now.replace(tzinfo=timezone.utc)
         return now >= self.token_expires
@@ -123,7 +127,9 @@ def refresh_user_token(spotify_user: Spotify):
     else:
         refresh_token = spotify_user.refresh_token
     expires_at = int(time.time()) + response['expires_in']
-    db_spotify.update_token(spotify_user.user_id, access_token, refresh_token, expires_at)
+    db_oauth.update_token(user_id=spotify_user.user_id, service=ExternalService.SPOTIFY,
+                          access_token=access_token, refresh_token=refresh_token,
+                          expires_at=expires_at)
     return get_user(spotify_user.user_id)
 
 
@@ -146,19 +152,20 @@ def get_user(user_id):
     Args:
         user_id (int): the ListenBrainz row ID of the user
     """
-    row = db_spotify.get_user(user_id)
+    row = db_oauth.get_token(user_id=user_id, service=ExternalService.SPOTIFY)
     if row:
         return Spotify.from_dbrow(row)
     return None
 
 
-def remove_user(user_id):
+def remove_user(user_id, stop_import=True):
     """ Delete user entry for user with specified ListenBrainz user ID.
 
     Args:
         user_id (int): the ListenBrainz row ID of the user
+        stop_import (bool): whether the (user, service) combination should be removed from the listens_importer table also
     """
-    db_spotify.delete_spotify(user_id)
+    db_oauth.delete_token(user_id=user_id, service=ExternalService.SPOTIFY, stop_import=stop_import)
 
 
 def add_new_user(user_id, spot_access_token):
@@ -172,10 +179,12 @@ def add_new_user(user_id, spot_access_token):
     access_token = spot_access_token['access_token']
     refresh_token = spot_access_token['refresh_token']
     expires_at = int(time.time()) + spot_access_token['expires_in']
-    permissions = spot_access_token['scope'].split()
-    active = SPOTIFY_IMPORT_PERMISSIONS[0] in permissions and SPOTIFY_IMPORT_PERMISSIONS[1] in permissions
+    scopes = spot_access_token['scope'].split()
+    active = SPOTIFY_IMPORT_PERMISSIONS[0] in scopes and SPOTIFY_IMPORT_PERMISSIONS[1] in scopes
 
-    db_spotify.create_spotify(user_id, access_token, refresh_token, expires_at, active, permissions)
+    db_oauth.save_token(user_id=user_id, service=ExternalService.SPOTIFY, access_token=access_token,
+                        refresh_token=refresh_token, token_expires_ts=expires_at,
+                        record_listens=active, scopes=scopes)
 
 
 def get_active_users_to_process():
@@ -190,8 +199,13 @@ def get_user_import_details(user_id):
     if user:
         if user['latest_listened_at']:
             user['latest_listened_at_iso'] = user['latest_listened_at'].isoformat() + "Z"
+        else:
+            user['latest_listened_at_iso'] = None
+
         if user['last_updated']:
             user['last_updated_iso'] = user['last_updated'].isoformat() + "Z"
+        else:
+            user['last_updated_iso'] = None
 
     return user
 
@@ -294,8 +308,10 @@ class SpotifyInvalidGrantError(Exception):
 class SpotifyImporterException(Exception):
     pass
 
+
 class SpotifyListenBrainzError(Exception):
     pass
+
 
 class SpotifyAPIError(Exception):
     pass

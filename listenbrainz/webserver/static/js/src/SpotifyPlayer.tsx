@@ -59,12 +59,12 @@ export default class SpotifyPlayer
     if (!accessToken || !permission) {
       return false;
     }
-    const scopes = permission.split(" ");
+    const scopes = permission;
     const requiredScopes = [
       "streaming",
       "user-read-email",
       "user-read-private",
-    ];
+    ] as Array<SpotifyPermission>;
     for (let i = 0; i < requiredScopes.length; i += 1) {
       if (!scopes.includes(requiredScopes[i])) {
         return false;

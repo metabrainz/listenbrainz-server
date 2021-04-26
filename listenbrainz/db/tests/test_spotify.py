@@ -2,15 +2,12 @@
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.spotify as db_spotify
-import spotipy.oauth2
-import sqlalchemy
+import listenbrainz.db.external_service_oauth as db_oauth
+
 import time
 
-from datetime import datetime
-from listenbrainz import db
+from data.model.external_service import ExternalService
 from listenbrainz.db.testing import DatabaseTestCase
-from unittest import mock
-from unittest.mock import MagicMock
 
 
 class SpotifyDatabaseTestCase(DatabaseTestCase):
@@ -19,34 +16,15 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
         super(SpotifyDatabaseTestCase, self).setUp()
         db_user.create(1, 'testspotifyuser')
         self.user = db_user.get(1)
-        db_spotify.create_spotify(
-            user_id=self.user['id'],
+        db_oauth.save_token(
+            user_id=1,
+            service=ExternalService.SPOTIFY,
             access_token='token',
             refresh_token='refresh_token',
             token_expires_ts=int(time.time()),
             record_listens=True,
             scopes=['user-read-recently-played']
         )
-
-    def test_create_spotify(self):
-        db_user.create(2, 'spotify')
-        db_spotify.create_spotify(
-            user_id=2,
-            access_token='token',
-            refresh_token='refresh_token',
-            token_expires_ts=int(time.time()),
-            record_listens=True,
-            scopes=['user-read-recently-played']
-        )
-        token = db_spotify.get_token_for_user(2)
-        self.assertEqual(token, 'token')
-
-    def test_delete_spotify(self):
-        token = db_spotify.get_token_for_user(self.user['id'])
-        self.assertIsNotNone(token)
-        db_spotify.delete_spotify(self.user['id'])
-        token = db_spotify.get_token_for_user(self.user['id'])
-        self.assertIsNone(token)
 
     def test_add_update_error(self):
         db_spotify.add_update_error(self.user['id'], 'test error message')
@@ -60,18 +38,6 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
         self.assertIsNone(spotify_user['error_message'])
         self.assertIsNotNone(spotify_user['last_updated'])
 
-    def test_update_token(self):
-        old_spotify_user = db_spotify.get_user(self.user['id'])
-        db_spotify.update_token(
-            user_id=self.user['id'],
-            access_token='testtoken',
-            refresh_token='refreshtesttoken',
-            expires_at=int(time.time()),
-        )
-        spotify_user = db_spotify.get_user(self.user['id'])
-        self.assertEqual(spotify_user['access_token'], 'testtoken')
-        self.assertEqual(spotify_user['refresh_token'], 'refreshtesttoken')
-
     def test_update_latest_listened_at(self):
         old_spotify_user = db_spotify.get_user_import_details(self.user['id'])
         self.assertIsNone(old_spotify_user['latest_listened_at'])
@@ -82,8 +48,9 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
 
     def test_get_active_users_to_process(self):
         db_user.create(2, 'newspotifyuser')
-        db_spotify.create_spotify(
+        db_oauth.save_token(
             user_id=2,
+            service=ExternalService.SPOTIFY,
             access_token='token',
             refresh_token='refresh_token',
             token_expires_ts=int(time.time()),
@@ -99,8 +66,9 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
 
         # check order, the users should be sorted by latest_listened_at timestamp
         db_user.create(3, 'newnewspotifyuser')
-        db_spotify.create_spotify(
+        db_oauth.save_token(
             user_id=3,
+            service=ExternalService.SPOTIFY,
             access_token='tokentoken',
             refresh_token='newrefresh_token',
             token_expires_ts=int(time.time()),
@@ -122,20 +90,9 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(len(users), 1)
         self.assertEqual(users[0]['user_id'], 1)
 
-    def test_get_user(self):
-        user = db_spotify.get_user(self.user['id'])
-        self.assertEqual(user['user_id'], self.user['id'])
-        self.assertEqual(user['musicbrainz_id'], self.user['musicbrainz_id'])
-        self.assertEqual(user['musicbrainz_row_id'], self.user['musicbrainz_row_id'])
-        self.assertEqual(user['access_token'], 'token')
-        self.assertEqual(user['refresh_token'], 'refresh_token')
-        self.assertIn('token_expires', user)
-        self.assertIn('token_expired', user)
-
     def test_get_user_import_details(self):
         user = db_spotify.get_user_import_details(self.user['id'])
         self.assertEqual(user['user_id'], self.user['id'])
-        self.assertIn('external_service_oauth_id', user)
         self.assertIn('last_updated', user)
         self.assertIn('latest_listened_at', user)
         self.assertIn('error_message', user)

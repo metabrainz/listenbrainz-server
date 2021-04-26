@@ -77,7 +77,7 @@ declare type SubmitListensPayload = {
 
 declare type SpotifyUser = {
   access_token?: string;
-  permission?: SpotifyPermission;
+  permission?: Array<SpotifyPermission>;
 };
 
 declare type SpotifyPermission =

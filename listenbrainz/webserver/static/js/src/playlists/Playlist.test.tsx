@@ -26,7 +26,7 @@ const props = {
   playlist: playlist as JSPFObject,
   spotify: {
     access_token: "heyo",
-    permission: "streaming" as SpotifyPermission,
+    permission: ["streaming"] as Array<SpotifyPermission>,
   },
   currentUser,
   webSocketsServerUrl,
