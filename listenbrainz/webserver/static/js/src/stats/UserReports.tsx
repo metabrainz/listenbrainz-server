@@ -1,6 +1,7 @@
 import * as ReactDOM from "react-dom";
 import * as React from "react";
 
+import * as Sentry from "@sentry/react";
 import ErrorBoundary from "../ErrorBoundary";
 import Pill from "../components/Pill";
 import UserListeningActivity from "./UserListeningActivity";
@@ -171,7 +172,12 @@ document.addEventListener("DOMContentLoaded", () => {
   } catch (err) {
     // Show error to the user and ask to reload page
   }
-  const { user, api_url: apiUrl } = reactProps;
+  const { user, api_url: apiUrl, sentry_dsn } = reactProps;
+
+  if (sentry_dsn) {
+    Sentry.init({ dsn: sentry_dsn });
+  }
+
   ReactDOM.render(
     <ErrorBoundary>
       <UserReports apiUrl={apiUrl} user={user} />
