@@ -20,6 +20,9 @@
 
 set -e
 
+source "admin/config.sh"
+source "admin/functions.sh"
+
 # This variable contains the name of a directory that is deleted when the script
 # exits, so we sanitise it here in case it was included in the environment.
 TMPDIR=""
@@ -67,9 +70,6 @@ echo "Disk space when create-dumps starts:" ; df -m
 
 LB_SERVER_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)
 cd "$LB_SERVER_ROOT" || exit 1
-
-source "admin/config.sh"
-source "admin/functions.sh"
 
 DUMP_TYPE="${1:-full}"
 
