@@ -212,7 +212,7 @@ export default class SpotifyPlayer
         }
       })
       .catch((error) => {
-        handleError(error.message);
+        handleError(error);
       });
   };
 
