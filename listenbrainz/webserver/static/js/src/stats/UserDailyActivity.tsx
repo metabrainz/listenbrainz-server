@@ -118,6 +118,9 @@ export default class UserDailyActivity extends React.Component<
     ];
 
     const result: UserDailyActivityData = [];
+    if (!data?.payload) {
+      return result;
+    }
 
     const tzOffset = -Math.floor(new Date().getTimezoneOffset() / 60);
 

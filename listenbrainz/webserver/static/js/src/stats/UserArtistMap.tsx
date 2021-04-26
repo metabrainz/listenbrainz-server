@@ -131,6 +131,9 @@ export default class UserArtistMap extends React.Component<
     data: UserArtistMapResponse,
     selectedMetric: "artist" | "listen"
   ): UserArtistMapData => {
+    if (!data?.payload) {
+      return [];
+    }
     return data.payload.artist_map.map((country) => {
       return {
         id: country.country,
