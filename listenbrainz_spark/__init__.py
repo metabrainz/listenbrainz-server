@@ -1,5 +1,4 @@
 import sentry_sdk
-from sentry_sdk.integrations.spark import SparkIntegration
 
 from py4j.protocol import Py4JJavaError
 from pyspark.sql import SparkSession, SQLContext
@@ -19,7 +18,7 @@ def init_spark_session(app_name):
             app_name (str): Name of the Spark application. This will also occur in the Spark UI.
     """
     if hasattr(config, 'LOG_SENTRY'):  # attempt to initialize sentry_sdk only if configuration available
-        sentry_sdk.init(**config.LOG_SENTRY, integrations=[SparkIntegration()])
+        sentry_sdk.init(**config.LOG_SENTRY)
     global session, context, sql_context
     try:
         session = SparkSession \
