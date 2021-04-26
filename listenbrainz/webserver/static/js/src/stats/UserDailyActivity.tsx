@@ -86,9 +86,7 @@ export default class UserDailyActivity extends React.Component<
           errorMessage: "Statistics for the user have not been calculated",
         });
       } else {
-        this.setState(() => {
-          throw error;
-        });
+        throw error;
       }
     }
     return {} as UserDailyActivityResponse;
