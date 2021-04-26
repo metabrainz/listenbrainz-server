@@ -1,8 +1,10 @@
+from typing import List
+
 from listenbrainz import db
 import sqlalchemy
 
 
-def get_active_users_to_process():
+def get_active_users_to_process() -> List[dict]:
     """ Returns a list of users whose listens should be imported from Spotify.
     """
     with db.engine.connect() as connection:
@@ -30,7 +32,12 @@ def get_active_users_to_process():
         return [dict(row) for row in result.fetchall()]
 
 
-def get_user_import_details(user_id):
+def get_user_import_details(user_id: int):
+    """ Return user's spotify linking details to display on connect spotify page
+
+    Args:
+        user_id (int): the ListenBrainz row ID of the user
+    """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             SELECT external_service_oauth.user_id

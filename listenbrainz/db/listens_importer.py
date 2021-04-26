@@ -30,7 +30,7 @@ def update_last_updated(user_id: int, service: ExternalServiceType):
 
     Args:
         user_id (int): the ListenBrainz row ID of the user
-        service (data.model.ExternalServiceType): service to declare safe import was needed
+        service (data.model.ExternalServiceType): service to declare import was successful
     """
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""

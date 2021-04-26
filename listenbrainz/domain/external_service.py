@@ -6,8 +6,14 @@ from listenbrainz.db import external_service_oauth as db_oauth
 
 
 class ExternalService(ABC):
+    """ Base class that external music services only allowing streaming should
+    implement to integrate with ListenBrainz. """
 
     def __init__(self, service: ExternalServiceType):
+        """
+        Args:
+            service (data.model.external_service.ExternalServiceType): unique name identifying the service
+        """
         self.service = service
 
     def add_new_user(self, user_id: int, token: dict):
@@ -38,12 +44,10 @@ class ExternalService(ABC):
 
 
 class ExternalServiceInvalidGrantError(Exception):
-    """ Raised if spotify API returns invalid_grant during authorization. This usually means that the user has revoked
-    authorization to the ListenBrainz application through Spotify UI."""
-    pass
-
-
-class ExternalServiceImporterError(Exception):
+    """ Raised if the external music services' API returns invalid_grant during authorization.
+    This usually means that the user has revoked authorization to the ListenBrainz application
+    through external means without unlinking the account from ListenBrainz.
+    """
     pass
 
 

@@ -173,6 +173,12 @@ class SpotifyService(ImporterService):
         return self.get_user(user_id)
 
     def revoke_user(self, user_id: int):
+        """ Delete the user's connection to external service but retain
+        the last import error message.
+
+        Args:
+            user_id (int): the ListenBrainz row ID of the user
+        """
         db_oauth.delete_token(user_id, self.service, stop_import=False)
 
     def get_user_connection_details(self, user_id: int):
@@ -196,25 +202,3 @@ class SpotifyService(ImporterService):
         """
         return db_spotify.get_active_users_to_process()
 
-    def update_latest_listen_ts(self, user_id: int, timestamp: int):
-        """ Update the latest_listened_at field for user with specified ListenBrainz user ID.
-
-        Args:
-            user_id (int): the ListenBrainz row ID of the user
-            timestamp (int): the unix timestamp of the latest listen imported for the user
-        """
-        db_import.update_latest_listened_at(user_id, self.service, timestamp)
-
-    def update_user_import_status(self, user_id: int, error: str = None):
-        """ Update the last_update field for user with specified user ID.
-
-        If there was an error, add the error to the db.
-
-        Args:
-            user_id (int): the ListenBrainz row ID of the user
-            error (str): the user-friendly error message to be displayed.
-        """
-        if error:
-            db_import.add_update_error(user_id, self.service, error)
-        else:
-            db_import.update_last_updated(user_id, self.service)

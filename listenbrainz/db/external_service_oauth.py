@@ -1,13 +1,17 @@
+from typing import List
+
+from data.model.external_service import ExternalServiceType
 from listenbrainz import db, utils
 import sqlalchemy
 
 
-def save_token(user_id, service, access_token, refresh_token, token_expires_ts, record_listens, scopes):
+def save_token(user_id: int, service: ExternalServiceType, access_token: str, refresh_token: str,
+               token_expires_ts: int, record_listens: bool, scopes: List[str]):
     """ Add a row to the external_service_oauth table for specified user with corresponding tokens and information.
 
     Args:
         user_id (int): the ListenBrainz row ID of the user
-        service (data.model.external_service.ExternalServiceType): the service for which the token can be used for
+        service (data.model.external_service.ExternalServiceType): the service for which the token can be used
         access_token (str): the access token used to access the user's listens
         refresh_token (str): the token used to refresh access tokens once they expire
         token_expires_ts (int): the unix timestamp at which the user_token will expire
@@ -45,7 +49,7 @@ def save_token(user_id, service, access_token, refresh_token, token_expires_ts, 
             })
 
 
-def delete_token(user_id, service, stop_import):
+def delete_token(user_id: int, service: ExternalServiceType, stop_import: bool):
     """ Delete a user from the external service table.
 
     Args:
@@ -71,7 +75,8 @@ def delete_token(user_id, service, stop_import):
             })
 
 
-def update_token(user_id, service, access_token, refresh_token, expires_at):
+def update_token(user_id: int, service: ExternalServiceType, access_token: str,
+                 refresh_token: str, expires_at: int):
     """ Update the token for user with specified LB user ID and external service.
 
     Args:
@@ -99,7 +104,7 @@ def update_token(user_id, service, access_token, refresh_token, expires_at):
         })
 
 
-def get_token(user_id, service):
+def get_token(user_id: int, service: ExternalServiceType):
     """ Get details for user with specified user ID and service.
 
     Args:
