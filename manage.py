@@ -14,6 +14,8 @@ import sqlalchemy
 from time import sleep
 
 from listenbrainz.utils import safely_import_config
+from listenbrainz_spark.user_similarity import user_similarity
+
 safely_import_config()
 
 
@@ -256,15 +258,6 @@ def set_rate_limits(per_token_limit, per_ip_limit, window_size):
     set_rate_limits(per_token_limit, per_ip_limit, window_size)
 
 
-@cli.command(name="calculate_user_similarity")
-def calculate_user_similarity():
-    """
-        Calculate the user similarity data.
-    """
-    application = webserver.create_app()
-    with application.app_context():
-        user_similarity.calculate_similar_users()
-
 @cli.command(name="recalculate_all_user_data")
 def recalculate_all_user_data():
     """
@@ -272,6 +265,7 @@ def recalculate_all_user_data():
         WHAT YOU ARE DOING!
     """
     ts_recalculate_all_user_data()
+
 
 @cli.command(name="refresh_continuous_aggregates")
 def refresh_continuous_aggregates():
