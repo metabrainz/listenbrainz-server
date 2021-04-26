@@ -249,6 +249,9 @@ def check_for_ratings_beyond_range(top_artist_rec_df, similar_artist_rec_df):
         Args:
             top_artist_rec_df (dataframe): Top artist recommendations for all users.
             similar_artist_rec_df (dataframe): Similar artist recommendations for all users.
+
+        Returns:
+            a tuple of booleans (max out of range, min out of range)
     """
     max_rating = top_artist_rec_df.select(func.max('rating').alias('rating')).take(1)[0].rating
 
@@ -264,7 +267,7 @@ def check_for_ratings_beyond_range(top_artist_rec_df, similar_artist_rec_df):
     if min_rating < -1.0:
         logger.info('Some ratings are less than -1 \nMin rating: {}'.format(min_rating))
 
-    return (max_rating > 1.0, min_rating < -1.0)
+    return max_rating > 1.0, min_rating < -1.0
 
 
 def create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_user_count, total_time,

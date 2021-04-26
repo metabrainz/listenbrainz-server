@@ -91,7 +91,7 @@ class RequestConsumer:
             avg_size_of_message //= num_of_messages
         except ZeroDivisionError:
             avg_size_of_message = 0
-            logging.warn("No messages calculated", exc_info=True)
+            logger.warning("No messages calculated", exc_info=True)
 
         logger.info("Done!")
         logger.info("Number of messages sent: {}".format(num_of_messages))
