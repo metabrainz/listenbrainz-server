@@ -1,34 +1,25 @@
 import listenbrainz.db.feedback as db_feedback
-import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
-import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
+from listenbrainz.domain.external_service import ExternalServiceInvalidGrantError, ExternalServiceAPIError
+from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIONS, SPOTIFY_IMPORT_PERMISSIONS
 from listenbrainz.webserver.decorators import crossdomain
-import os
-import re
 import ujson
-import zipfile
 
 
 from datetime import datetime
 from flask import Blueprint, Response, render_template, request, url_for, \
-    redirect, current_app, make_response, jsonify, stream_with_context
+    redirect, current_app, jsonify, stream_with_context
 from flask_login import current_user, login_required
 import spotipy.oauth2
-from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError, Unauthorized
-from listenbrainz.webserver.errors import APIBadRequest, APIServiceUnavailable, APINotFound
-from werkzeug.utils import secure_filename
+from werkzeug.exceptions import NotFound, BadRequest, Unauthorized
+from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound
 
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz.domain import spotify
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.login import api_login_required
-from listenbrainz.webserver.utils import sizeof_readable
 from listenbrainz.webserver.views.feedback_api import _feedback_to_api
-from listenbrainz.webserver.views.user import delete_user, _get_user, delete_listens_history
-from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen, \
-    LISTEN_TYPE_IMPORT, publish_data_to_queue
-from os import path, makedirs
+from listenbrainz.webserver.views.user import delete_user, delete_listens_history
 from time import time
 
 profile_bp = Blueprint("profile", __name__)
@@ -233,6 +224,7 @@ def delete():
             user=current_user,
         )
 
+
 @profile_bp.route('/delete-listens', methods=['GET', 'POST'])
 @login_required
 def delete_listens():
@@ -263,26 +255,29 @@ def delete_listens():
             user=current_user,
         )
 
+
 @profile_bp.route('/connect-spotify', methods=['GET', 'POST'])
 @login_required
 def connect_spotify():
+    service = SpotifyService()
+
     if request.method == 'POST' and request.form.get('delete') == 'yes':
-        spotify.remove_user(current_user.id)
+        service.remove_user(current_user.id)
         flash.success('Your Spotify account has been unlinked')
 
-    user = spotify.get_user_import_details(current_user.id)
-    only_listen_sp_oauth = spotify.get_spotify_oauth(spotify.SPOTIFY_LISTEN_PERMISSIONS)
-    only_import_sp_oauth = spotify.get_spotify_oauth(spotify.SPOTIFY_IMPORT_PERMISSIONS)
-    both_sp_oauth = spotify.get_spotify_oauth(spotify.SPOTIFY_LISTEN_PERMISSIONS + spotify.SPOTIFY_IMPORT_PERMISSIONS)
+    user = service.get_user_connection_details(current_user.id)
+    only_listen_sp_oauth = service.get_authorize_url(SPOTIFY_LISTEN_PERMISSIONS)
+    only_import_sp_oauth = service.get_authorize_url(SPOTIFY_IMPORT_PERMISSIONS)
+    both_sp_oauth = service.get_authorize_url(SPOTIFY_LISTEN_PERMISSIONS + SPOTIFY_IMPORT_PERMISSIONS)
 
     return render_template(
         'user/spotify.html',
         account=user,
         last_updated=user['last_updated_iso'] if user else None,
         latest_listened_at=user['latest_listened_at_iso'] if user else None,
-        only_listen_url=only_listen_sp_oauth.get_authorize_url(),
-        only_import_url=only_import_sp_oauth.get_authorize_url(),
-        both_url=both_sp_oauth.get_authorize_url(),
+        only_listen_url=only_listen_sp_oauth,
+        only_import_url=only_import_sp_oauth,
+        both_url=both_sp_oauth,
     )
 
 
@@ -294,8 +289,9 @@ def connect_spotify_callback():
         raise BadRequest('missing code')
 
     try:
-        token = spotify.get_access_token(code)
-        spotify.add_new_user(current_user.id, token)
+        service = SpotifyService()
+        token = service.fetch_access_token(code)
+        service.add_new_user(current_user.id, token)
         flash.success('Successfully authenticated with Spotify!')
     except spotipy.oauth2.SpotifyOauthError as e:
         current_app.logger.error('Unable to authenticate with Spotify: %s', str(e), exc_info=True)
@@ -308,21 +304,23 @@ def connect_spotify_callback():
 @crossdomain()
 @api_login_required
 def refresh_spotify_token():
-    spotify_user = spotify.get_user(current_user.id)
+    service = SpotifyService()
+    spotify_user = service.get_user(current_user.id)
+
     if not spotify_user:
         raise APINotFound("User has not authenticated to Spotify")
 
-    if spotify_user.token_expired:
+    if spotify_user['token_expired']:
         try:
-            spotify_user = spotify.refresh_user_token(spotify_user)
-        except spotify.SpotifyAPIError:
+            spotify_user = service.refresh_access_token(spotify_user['user_id'], spotify_user['refresh_token'])
+        except ExternalServiceAPIError:
             raise APIServiceUnavailable("Cannot refresh Spotify token right now")
-        except spotify.SpotifyInvalidGrantError:
+        except ExternalServiceInvalidGrantError:
             raise APINotFound("User has revoked authorization to Spotify")
 
     return jsonify({
         'id': current_user.id,
         'musicbrainz_id': current_user.musicbrainz_id,
-        'user_token': spotify_user.access_token,
-        'permission': spotify_user.scopes,
+        'user_token': spotify_user['access_token'],
+        'permission': spotify_user['scopes'],
     })

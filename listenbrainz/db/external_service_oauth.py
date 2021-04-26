@@ -7,7 +7,7 @@ def save_token(user_id, service, access_token, refresh_token, token_expires_ts, 
 
     Args:
         user_id (int): the ListenBrainz row ID of the user
-        service (data.model.external_service.ExternalService): the service for which the token can be used for
+        service (data.model.external_service.ExternalServiceType): the service for which the token can be used for
         access_token (str): the access token used to access the user's listens
         refresh_token (str): the token used to refresh access tokens once they expire
         token_expires_ts (int): the unix timestamp at which the user_token will expire
@@ -50,7 +50,7 @@ def delete_token(user_id, service, stop_import):
 
     Args:
         user_id (int): the ListenBrainz row ID of the user
-        service (data.model.external_service.ExternalService): the service for which the token should be deleted
+        service (data.model.external_service.ExternalServiceType): the service for which the token should be deleted
         stop_import (bool): whether the (user, service) combination should be removed from the listens_importer table also
     """
     with db.engine.connect() as connection:
@@ -76,7 +76,7 @@ def update_token(user_id, service, access_token, refresh_token, expires_at):
 
     Args:
         user_id (int): the ListenBrainz row ID of the user
-        service (data.model.external_service.ExternalService): the service for which the token should be updated
+        service (data.model.external_service.ExternalServiceType): the service for which the token should be updated
         access_token (str): the new access token
         refresh_token (str): the new token used to refresh access tokens
         expires_at (int): the unix timestamp at which the access token expires
@@ -104,7 +104,7 @@ def get_token(user_id, service):
 
     Args:
         user_id (int): the ListenBrainz row ID of the user
-        service (data.model.external_service.ExternalService): the service for which the token should be fetched
+        service (data.model.external_service.ExternalServiceType): the service for which the token should be fetched
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""

@@ -1,5 +1,5 @@
 from enum import Enum
 
 
-class ExternalService(Enum):
+class ExternalServiceType(Enum):
     SPOTIFY = 'spotify'

@@ -1,25 +1,26 @@
 #!/usr/bin/python3
 import time
-import listenbrainz.webserver
-import json
 
-from datetime import datetime
+import spotipy
+import listenbrainz.webserver
+
 from listenbrainz.utils import safely_import_config
 safely_import_config()
+
+from listenbrainz.domain.external_service import ExternalServiceListenBrainzError, ExternalServiceAPIError, \
+    ExternalServiceInvalidGrantError
+from listenbrainz.domain.spotify import SpotifyService
 
 from listenbrainz.webserver.errors import APIBadRequest
 
 from dateutil import parser
 from flask import current_app, render_template
-from listenbrainz.domain import spotify
 from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen, LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
 from listenbrainz.db import user as db_user
-from listenbrainz.db import spotify as db_spotify
 from listenbrainz.db.exceptions import DatabaseException
 from spotipy import SpotifyException
-from werkzeug.exceptions import BadRequest, InternalServerError, ServiceUnavailable
+from werkzeug.exceptions import InternalServerError, ServiceUnavailable
 from brainzutils.mail import send_mail
-from brainzutils import musicbrainz_db
 from brainzutils.musicbrainz_db import editor as mb_editor
 
 
@@ -124,12 +125,12 @@ def _convert_spotify_play_to_listen(play, listen_type):
     return listen
 
 
-def make_api_request(user, spotipy_call, **kwargs):
+def make_api_request(user, spotipy_call: callable, **kwargs):
     """ Make an request to the Spotify API for particular user at specified endpoint with args.
 
     Args:
         user (spotify.Spotify): the user whose plays are to be imported.
-        spotipy_call (function): the Spotipy function which makes request to the required API endpoint
+        spotipy_call (callable): the Spotipy function which makes request to the required API endpoint
 
     Returns:
         the response from the spotify API
@@ -160,17 +161,17 @@ def make_api_request(user, spotipy_call, **kwargs):
                 time.sleep(time_to_sleep)
                 delay += 1
                 if retries == 0:
-                    raise spotify.SpotifyListenBrainzError('Encountered a rate limit.')
+                    raise ExternalServiceListenBrainzError('Encountered a rate limit.')
 
             elif e.http_status in (400, 403):
-                current_app.logger.critical('Error from the Spotify API for user %s: %s', str(user), str(e), exc_info=True)
-                raise spotify.SpotifyAPIError('Error from the Spotify API while getting listens: %s', str(e))
+                current_app.logger.critical('Error from the Spotify API for user %s: %s', user['musicbrainz_id'], str(e), exc_info=True)
+                raise ExternalServiceAPIError('Error from the Spotify API while getting listens: %s', str(e))
 
             elif e.http_status >= 500 and e.http_status < 600:
                 # these errors are not our fault, most probably. so just log them and retry.
-                current_app.logger.error('Error while trying to get listens for user %s: %s', str(user), str(e), exc_info=True)
+                current_app.logger.error('Error while trying to get listens for user %s: %s', user['musicbrainz_id'], str(e), exc_info=True)
                 if retries == 0:
-                    raise spotify.SpotifyAPIError('Error from the spotify API while getting listens: %s', str(e))
+                    raise ExternalServiceAPIError('Error from the spotify API while getting listens: %s', str(e))
 
             elif e.http_status == 401:
                 # if we get 401 Unauthorized from Spotify, that means our token might have expired.
@@ -178,20 +179,20 @@ def make_api_request(user, spotipy_call, **kwargs):
                 # give up and report to the user.
                 # We only try to refresh the token once, if we still get 401 after that, we give up.
                 if not tried_to_refresh_token:
-                    user = spotify.refresh_user_token(user)
+                    user = SpotifyService().refresh_access_token(user['user_id'], user['refresh_token'])
                     tried_to_refresh_token = True
 
                 else:
-                    raise spotify.SpotifyAPIError('Could not authenticate with Spotify, please unlink and link your account again.')
+                    raise ExternalServiceAPIError('Could not authenticate with Spotify, please unlink and link your account again.')
             elif e.http_status == 404:
                 current_app.logger.error("404 while trying to get listens for user %s", str(user), exc_info=True)
                 if retries == 0:
-                    raise spotify.SpotifyListenBrainzError("404 while trying to get listens for user %s" % str(user))
+                    raise ExternalServiceListenBrainzError("404 while trying to get listens for user %s" % str(user))
         except Exception as e:
             retries -= 1
             current_app.logger.error('Unexpected error while getting listens: %s', str(e), exc_info=True)
             if retries == 0:
-                raise spotify.SpotifyListenBrainzError('Unexpected error while getting listens: %s' % str(e))
+                raise ExternalServiceListenBrainzError('Unexpected error while getting listens: %s' % str(e))
 
     return recently_played
 
@@ -200,16 +201,16 @@ def get_user_recently_played(user):
     """ Get tracks from the current user’s recently played tracks.
     """
     latest_listened_at_ts = 0
-    if user.latest_listened_at:
-        latest_listened_at_ts = int(user.latest_listened_at.timestamp() * 1000)  # latest listen UNIX ts in ms
+    if user['latest_listened_at']:
+        latest_listened_at_ts = int(user['latest_listened_at'].timestamp() * 1000)  # latest listen UNIX ts in ms
 
-    return make_api_request(user, user.get_spotipy_client().current_user_recently_played, limit=50, after=latest_listened_at_ts)
+    return make_api_request(user, spotipy.Spotify(auth=user['access_token']).current_user_recently_played, limit=50, after=latest_listened_at_ts)
 
 
 def get_user_currently_playing(user):
     """ Get the user's currently playing track.
     """
-    return make_api_request(user, user.get_spotipy_client().current_user_playing_track)
+    return make_api_request(user, spotipy.Spotify(auth=user['access_token']).current_user_playing_track)
 
 
 def submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTEN_TYPE_IMPORT):
@@ -232,7 +233,7 @@ def submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTE
             retries -= 1
             current_app.logger.error('ISE while trying to import listens for %s: %s', username, str(e))
             if retries == 0:
-                raise spotify.SpotifyListenBrainzError('ISE while trying to import listens: %s', str(e))
+                raise ExternalServiceListenBrainzError('ISE while trying to import listens: %s', str(e))
 
 
 def parse_and_validate_spotify_plays(plays, listen_type):
@@ -256,11 +257,12 @@ def parse_and_validate_spotify_plays(plays, listen_type):
     return listens
 
 
-def process_one_user(user):
+def process_one_user(user: dict, service: SpotifyService):
     """ Get recently played songs for this user and submit them to ListenBrainz.
 
     Args:
         user (spotify.Spotify): the user whose plays are to be imported.
+        service (listenbrainz.domain.spotify.SpotifyService): service to process users
 
     Raises:
         spotify.SpotifyAPIError: if we encounter errors from the Spotify API.
@@ -269,10 +271,12 @@ def process_one_user(user):
 
     """
     try:
-        if user.token_expired:
-            user = spotify.refresh_user_token(user)
+        if user['token_expired']:
+            user = service.refresh_access_token(user['user_id'], user['refresh_token'])
 
-        listenbrainz_user = db_user.get(user.user_id)
+        listenbrainz_user = db_user.get(user['user_id'])
+
+        listens = []
 
         # If there is no playback, currently_playing will be None.
         # There are two playing types, track and episode. We use only the
@@ -302,27 +306,27 @@ def process_one_user(user):
         submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTEN_TYPE_IMPORT)
 
         # we've succeeded so update the last_updated field for this user
-        spotify.update_latest_listened_at(user.user_id, latest_listened_at)
-        spotify.update_last_updated(user.user_id)
+        service.update_latest_listen_ts(user['user_id'], latest_listened_at)
+        service.update_user_import_status(user['user_id'])
 
-        current_app.logger.info('imported %d listens for %s' % (len(listens), str(user)))
+        current_app.logger.info('imported %d listens for %s' % (len(listens), str(user['musicbrainz_id'])))
 
-    except spotify.SpotifyAPIError as e:
+    except ExternalServiceAPIError as e:
         # if it is an error from the Spotify API, show the error message to the user
-        spotify.update_last_updated(user_id=user.user_id, error_message=str(e))
+        service.update_user_import_status(user_id=user['user_id'], error=str(e))
         if not current_app.config['TESTING']:
-            notify_error(user.musicbrainz_row_id, str(e))
-        raise spotify.SpotifyListenBrainzError("Could not refresh user token from spotify")
+            notify_error(user['musicbrainz_row_id'], str(e))
+        raise ExternalServiceListenBrainzError("Could not refresh user token from spotify")
 
-    except spotify.SpotifyInvalidGrantError:
+    except ExternalServiceInvalidGrantError:
         error_message = "It seems like you've revoked permission for us to read your spotify account"
-        spotify.update_last_updated(user_id=user.user_id, error_message=error_message)
+        service.update_user_import_status(user_id=user['user_id'], error=error_message)
         if not current_app.config['TESTING']:
-            notify_error(user.musicbrainz_row_id, error_message)
+            notify_error(user['musicbrainz_row_id'], error_message)
         # user has revoked authorization through spotify ui or deleted their spotify account etc.
         # in any of these cases, we should delete the user's token from.
-        db_spotify.delete_spotify(user.user_id, stop_import=False)
-        raise spotify.SpotifyListenBrainzError("User has revoked spotify authorization")
+        service.revoke_user(user['user_id'])
+        raise ExternalServiceListenBrainzError("User has revoked spotify authorization")
 
 
 def process_all_spotify_users():
@@ -333,8 +337,10 @@ def process_all_spotify_users():
             success: the number of users whose plays were successfully imported.
             failure: the number of users for whom we faced errors while importing.
     """
+
+    service = SpotifyService()
     try:
-        users = spotify.get_active_users_to_process()
+        users = service.get_active_users_to_process()
     except DatabaseException as e:
         current_app.logger.error('Cannot get list of users due to error %s', str(e), exc_info=True)
         return 0, 0
@@ -347,9 +353,9 @@ def process_all_spotify_users():
     failure = 0
     for u in users:
         try:
-            process_one_user(u)
+            process_one_user(u, service)
             success += 1
-        except spotify.SpotifyListenBrainzError as e:
+        except ExternalServiceListenBrainzError as e:
             current_app.logger.critical('spotify_reader could not import listens: %s', str(e), exc_info=True)
             failure += 1
         except Exception as e:

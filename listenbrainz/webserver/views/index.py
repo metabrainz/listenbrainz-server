@@ -16,13 +16,12 @@ from werkzeug.exceptions import Unauthorized, NotFound
 import listenbrainz.db.user as db_user
 from listenbrainz.db.similar_users import get_top_similar_users
 from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz.domain import spotify
-from listenbrainz import webserver
+from listenbrainz.domain.spotify import SpotifyService
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.views.user import delete_user
-
+from listenbrainz.webserver.views.views_utils import get_current_spotify_user
 
 index_bp = Blueprint('index', __name__)
 locale.setlocale(locale.LC_ALL, '')
@@ -40,7 +39,6 @@ def index():
     except Exception as e:
         current_app.logger.error('Error while trying to get total listen count: %s', str(e))
         listen_count = None
-
 
     return render_template(
         "index/index.html",
@@ -149,7 +147,7 @@ def recent_listens():
 
     spotify_user = {}
     if current_user.is_authenticated:
-        spotify_user = spotify.get_user_dict(current_user.id)
+        spotify_user = SpotifyService().get_user_for_views(current_user.id)
 
     props = {
         "listens": recent,
@@ -167,9 +165,7 @@ def recent_listens():
 @login_required
 def feed():
 
-    spotify_user = {}
-    if current_user.is_authenticated:
-        spotify_user = spotify.get_user_dict(current_user.id)
+    spotify_user = get_current_spotify_user()
 
     current_user_data = {
         "id": current_user.id,

@@ -3,10 +3,11 @@ from werkzeug.exceptions import NotFound, BadRequest
 
 from flask import Blueprint, render_template, current_app
 from flask_login import current_user
-from listenbrainz.domain import spotify
+from listenbrainz.domain.spotify import SpotifyService
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 from listenbrainz.webserver.views.playlist_api import serialize_jspf, fetch_playlist_recording_metadata
 import listenbrainz.db.playlist as db_playlist
+from listenbrainz.webserver.views.views_utils import get_current_spotify_user
 
 playlist_bp = Blueprint("playlist", __name__)
 
@@ -28,11 +29,9 @@ def load_playlist(playlist_mbid: str):
 
     fetch_playlist_recording_metadata(playlist)
 
-    spotify_data = {}
+    spotify_data = get_current_spotify_user()
     current_user_data = {}
     if current_user.is_authenticated:
-        spotify_data = spotify.get_user_dict(current_user.id)
-
         current_user_data = {
                 "id": current_user.id,
                 "name": current_user.musicbrainz_id,
