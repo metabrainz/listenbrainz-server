@@ -144,16 +144,16 @@ export default class UserListeningActivity extends React.Component<
     if (!data?.payload) {
       return result;
     }
-    if (range === "week") {
+    else if (range === "week") {
       result = this.processWeek(data);
     }
-    if (range === "month") {
+    else if (range === "month") {
       result = this.processMonth(data);
     }
-    if (range === "year") {
+    else if (range === "year") {
       result = this.processYear(data);
     }
-    if (range === "all_time") {
+    else if (range === "all_time") {
       result = this.processAllTime(data);
     }
     return result;
