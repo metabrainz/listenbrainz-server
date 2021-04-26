@@ -154,6 +154,9 @@ def validate_listen(listen, listen_type):
 
     # Basic metadata
     if 'track_name' in listen['track_metadata']:
+        if not isinstance(listen['track_metadata']['track_name'], str):
+            raise APIBadRequest("track_metadata.track_name must be a single string.", listen)
+
         listen['track_metadata']['track_name'] = listen['track_metadata']['track_name'].strip()
         if len(listen['track_metadata']['track_name']) == 0:
             raise APIBadRequest("required field track_metadata.track_name is empty.", listen)
@@ -163,7 +166,7 @@ def validate_listen(listen, listen_type):
 
     if 'artist_name' in listen['track_metadata']:
         if not isinstance(listen['track_metadata']['artist_name'], str):
-            raise APIBadRequest("artist_name must be a single string.", listen)
+            raise APIBadRequest("track_metadata.artist_name must be a single string.", listen)
 
         listen['track_metadata']['artist_name'] = listen['track_metadata']['artist_name'].strip()
         if len(listen['track_metadata']['artist_name']) == 0:
