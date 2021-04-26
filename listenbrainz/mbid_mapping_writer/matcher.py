@@ -1,10 +1,8 @@
 from operator import itemgetter
 
-from operator import itemgetter
-
 import sqlalchemy
 import psycopg2
-import psycopg2.extras import execute_values
+from psycopg2.extras import execute_values
 from flask import current_app
 from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery, MATCH_TYPE_NO_MATCH, MATCH_TYPE_EXACT_MATCH
 from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery
@@ -16,9 +14,14 @@ MAX_QUEUED_JOBS = MAX_THREADS * 2
 
 MATCH_TYPES = ('no_match', 'low_quality', 'med_quality', 'high_quality', 'exact_match')
 
+def log(msg):
+    with open("/tmp/matcher.log") as f:
+        f.write(msg + "\n")
+
 
 def lookup_new_listens(app, listens):
 
+    log("received %d listens" % len(listens))
     msids = { str(listen['recording_msid']):listen for listen in listens }
     with timescale.engine.connect() as connection:
         query = """SELECT recording_msid 

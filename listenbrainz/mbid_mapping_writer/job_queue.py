@@ -41,7 +41,6 @@ class MappingJobQueue(threading.Thread):
                             exc = complete.exception()
                             if exc:
                                 self.app.logger.info("job %s failed" % futures[complete])
-                                # TODO: What happens to items that fail??
                                 self.app.logger.error("\n".join(traceback.format_exception(None, exc, exc.__traceback__)))
                             else:
                                 self.app.logger.info("job %s complete" % futures[complete])
@@ -55,6 +54,7 @@ class MappingJobQueue(threading.Thread):
                                 break
 
                             if job[0] > 0:
+                                self.app.logger.info("submit job")
                                 futures[executor.submit(lookup_new_listens, self.app, job[1], job[2])] = job[0]
                             else:
                                 self.app.logger.info("Unsupported job type in MappingJobQueue (MBID Mapping Writer).")
