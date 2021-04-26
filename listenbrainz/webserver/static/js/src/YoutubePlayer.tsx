@@ -23,7 +23,7 @@ export default class YoutubePlayer
   extends React.Component<DataSourceProps, YoutubePlayerState>
   implements DataSourceType {
   youtubePlayer?: ExtendedYoutubePlayer;
-  youtubePlayerStateTimerID = null;
+  checkVideoLoadedTimerId?: NodeJS.Timeout;
 
   componentDidUpdate(prevProps: DataSourceProps) {
     const { show } = this.props;
@@ -129,7 +129,10 @@ export default class YoutubePlayer
     } else {
       this.searchAndPlayTrack(listen);
     }
-    setTimeout(this.checkVideoLoaded.bind(this), 1500);
+    this.checkVideoLoadedTimerId = setTimeout(
+      this.checkVideoLoaded.bind(this),
+      1500
+    );
   };
 
   checkVideoLoaded = () => {
@@ -138,12 +141,13 @@ export default class YoutubePlayer
     }
     const { onTrackNotFound } = this.props;
     // We use cueVideoById("") as a means to clear any playlist.
-    // If search or loadVideoByID yield no results we can detect that nothing was found
-    if (
-      this.youtubePlayer.getVideoData &&
-      !this.youtubePlayer.getVideoData().video_id
-    ) {
-      onTrackNotFound();
+    // If there was an undetected error loading a video, the getVideoData method won't exist
+    // or getVideoData.video_id will be null and we should go to the next track
+    if (this.youtubePlayer?.getVideoData) {
+      const videoData = this.youtubePlayer.getVideoData();
+      if (videoData?.video_id === null) {
+        onTrackNotFound();
+      }
     }
   };
 
@@ -172,6 +176,9 @@ export default class YoutubePlayer
   onError = (event: YT.OnErrorEvent): void => {
     const { data: errorNumber } = event;
     const { handleError, onTrackNotFound } = this.props;
+    if (this.checkVideoLoadedTimerId) {
+      clearTimeout(this.checkVideoLoadedTimerId);
+    }
     let message = "Something went wrong";
     switch (errorNumber) {
       case 101:
@@ -206,7 +213,7 @@ export default class YoutubePlayer
         iv_load_policy: 3,
         modestbranding: 1,
         rel: 0,
-        origin: window.location.origin.toString(),
+        origin: window.location.origin,
       },
       width: "100%",
       height: "100%",
@@ -216,6 +223,7 @@ export default class YoutubePlayer
         <YouTube
           opts={options}
           onStateChange={this.handlePlayerStateChanged}
+          onError={this.onError}
           onReady={this.onReady}
         />
       </div>
