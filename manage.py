@@ -10,6 +10,8 @@ import sqlalchemy
 from time import sleep
 
 from listenbrainz.utils import safely_import_config
+from listenbrainz_spark.user_similarity import user_similarity
+
 safely_import_config()
 
 
@@ -251,13 +253,6 @@ def init_ts_db(force, create_db):
 def set_rate_limits(per_token_limit, per_ip_limit, window_size):
     from brainzutils.ratelimit import set_rate_limits
     set_rate_limits(per_token_limit, per_ip_limit, window_size)
-
-
-@cli.command(name="calculate_user_similarity")
-def calculate_user_similarity():
-    application = webserver.create_app()
-    with application.app_context():
-        user_similarity.calculate_similar_users()
 
 
 # Add other commands here
