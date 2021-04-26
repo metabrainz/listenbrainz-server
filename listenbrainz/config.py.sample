@@ -81,9 +81,9 @@ PLAYING_NOW_MAX_DURATION = 10 * 60
 # }
 
 # LOG_SENTRY = {
-#    'dsn':'',
-#    'environment': 'development',
-#    'level': 'ERROR',
+#     'dsn':'',
+#     'environment': 'development',
+#     'level': 'ERROR',
 # }
 
 

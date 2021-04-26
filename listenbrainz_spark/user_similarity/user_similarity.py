@@ -1,10 +1,10 @@
+import logging
 from operator import itemgetter
 import math
 from typing import List, Tuple
 from pyspark.sql.dataframe import DataFrame
 from numpy import ndarray
 
-from flask import current_app
 from pyspark.mllib.linalg.distributed import CoordinateMatrix, MatrixEntry
 from pyspark.ml.stat import Correlation
 from pyspark.sql.functions import struct, collect_list
@@ -12,6 +12,9 @@ from pyspark.sql.functions import struct, collect_list
 import listenbrainz_spark
 from listenbrainz_spark import SparkSessionNotInitializedException, utils, path
 from listenbrainz_spark.exceptions import PathNotFoundException, FileNotFetchedException
+
+
+logger = logging.getLogger(__name__)
 
 
 def create_messages(similar_users_df: DataFrame) -> dict:
@@ -109,21 +112,21 @@ def get_vectors_df(playcounts_df):
 
 def main(max_num_users: int):
 
-    current_app.logger.info('Start generating similar user matrix')
+    logger.info('Start generating similar user matrix')
     try:
         listenbrainz_spark.init_spark_session('User Similarity')
     except SparkSessionNotInitializedException as err:
-        current_app.logger.error(str(err), exc_info=True)
+        logger.error(str(err), exc_info=True)
         raise
 
     try:
         playcounts_df = utils.read_files_from_HDFS(path.USER_SIMILARITY_PLAYCOUNTS_DATAFRAME)
         users_df = utils.read_files_from_HDFS(path.USER_SIMILARITY_USERS_DATAFRAME)
     except PathNotFoundException as err:
-        current_app.logger.error(str(err), exc_info=True)
+        logger.error(str(err), exc_info=True)
         raise
     except FileNotFetchedException as err:
-        current_app.logger.error(str(err), exc_info=True)
+        logger.error(str(err), exc_info=True)
         raise
 
     vectors_df = get_vectors_df(playcounts_df)
@@ -144,6 +147,6 @@ def main(max_num_users: int):
         .groupBy('user_name')\
         .agg(collect_list('similar_user').alias('similar_users'))
 
-    current_app.logger.info('Finishing generating similar user matrix')
+    logger.info('Finishing generating similar user matrix')
 
     return create_messages(similar_users_df)

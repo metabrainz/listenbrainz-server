@@ -324,10 +324,12 @@ def latest_import():
     In order to get the timestamp for a user, make a GET request to this endpoint. The data returned will
     be JSON of the following format:
 
-    {
-        'musicbrainz_id': the MusicBrainz ID of the user,
-        'latest_import': the timestamp of the newest listen submitted in previous imports. Defaults to 0
-    }
+    .. code-block:: json
+
+        {
+            "musicbrainz_id": "the MusicBrainz ID of the user",
+            "latest_import": "the timestamp of the newest listen submitted in previous imports. Defaults to 0"
+        }
 
     :param user_name: the MusicBrainz ID of the user whose data is needed
     :statuscode 200: Yay, you have data!
@@ -390,21 +392,25 @@ def validate_token():
 
     A JSON response, with the following format, will be returned.
 
-    - If the given token is valid::
+    - If the given token is valid:
+
+    .. code-block:: json
 
         {
             "code": 200,
             "message": "Token valid.",
-            "valid": True,
+            "valid": true,
             "user": "MusicBrainz ID of the user with the passed token"
         }
 
-    - If the given token is invalid::
+    - If the given token is invalid:
+
+    .. code-block:: json
 
         {
             "code": 200,
             "message": "Token invalid.",
-            "valid": False,
+            "valid": false,
         }
 
     :statuscode 200: The user token is valid/invalid.

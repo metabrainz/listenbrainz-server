@@ -186,6 +186,17 @@ describe("processData", () => {
 
     expect(result).toEqual(userDailyActivityProcessedData);
   });
+  it("returns an empty array if no payload", () => {
+    const wrapper = shallow<UserDailyActivity>(
+      <UserDailyActivity {...{ ...props, range: "all_time" }} />
+    );
+    const instance = wrapper.instance();
+
+    // When stats haven't been calculated, processData is called with an empty object
+    const result = instance.processData({} as UserDailyActivityResponse);
+
+    expect(result).toEqual([]);
+  });
 });
 
 describe("loadData", () => {
