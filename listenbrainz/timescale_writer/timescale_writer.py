@@ -167,6 +167,9 @@ class TimescaleWriterSubscriber(ListenWriter):
 
                     self.unique_ch = self.connection.channel()
                     self.unique_ch.exchange_declare(exchange=current_app.config['UNIQUE_EXCHANGE'], exchange_type='fanout')
+                    self.unique_ch.queue_declare(current_app.config['UNIQUE_QUEUE'], durable=True)
+                    self.unique_ch.queue_bind(exchange=current_app.config['UNIQUE_EXCHANGE'],
+                                              queue=current_app.config['UNIQUE_QUEUE'])
 
                     try:
                         self.incoming_ch.start_consuming()
