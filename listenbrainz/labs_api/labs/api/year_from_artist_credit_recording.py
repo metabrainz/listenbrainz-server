@@ -7,7 +7,6 @@ import psycopg2.extras
 from datasethoster import Query
 from unidecode import unidecode
 from listenbrainz import config
-import config
 
 
 class YearFromArtistCreditRecordingQuery(Query):

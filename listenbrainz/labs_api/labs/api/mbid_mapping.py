@@ -10,6 +10,7 @@ from Levenshtein import distance
 
 from listenbrainz import config
 
+
 COLLECTION_NAME = "mbid_mapping_latest"
 MATCH_TYPES = ('no_match', 'low_quality', 'med_quality', 'high_quality', 'exact_match')
 MATCH_TYPE_NO_MATCH = 0

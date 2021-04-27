@@ -3,7 +3,8 @@
 import psycopg2
 import psycopg2.extras
 from datasethoster import Query
-import config
+from listenbrainz import config
+
 
 class ArtistCreditIdFromArtistMSIDQuery(Query):
 

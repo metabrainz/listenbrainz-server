@@ -6,7 +6,7 @@ import psycopg2
 import psycopg2.extras
 from datasethoster import Query
 from unidecode import unidecode
-import config
+from listenbrainz import config
 
 
 class ArtistCreditRecordingLookupQuery(Query):

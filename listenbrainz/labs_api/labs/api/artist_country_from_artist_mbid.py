@@ -4,7 +4,7 @@ from datasethoster import Query
 import psycopg2
 import psycopg2.extras
 from werkzeug.exceptions import NotFound
-import config
+from listenbrainz import config
 
 
 class ArtistCountryFromArtistMBIDQuery(Query):
