@@ -34,8 +34,14 @@ from pyspark.sql.functions import col, udf, row_number
 from pyspark.sql.types import DoubleType
 from pyspark.mllib.recommendation import MatrixFactorizationModel
 
+handler = logging.StreamHandler()
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter("%(asctime)s %(name)-20s %(levelname)-8s %(message)s")
+handler.setFormatter(formatter)
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.addHandler(handler)
 
 
 class RecommendationParams:
