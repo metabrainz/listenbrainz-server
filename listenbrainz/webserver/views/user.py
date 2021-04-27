@@ -4,13 +4,10 @@ import listenbrainz.db.user_relationship as db_user_relationship
 import ujson
 import time
 
-from flask import Blueprint, render_template, request, url_for, redirect, current_app, jsonify
+from flask import Blueprint, render_template, request, url_for, redirect, current_app
 from flask_login import current_user
 from listenbrainz import webserver
 from listenbrainz.db.playlist import get_playlists_for_user, get_playlists_created_for_user, get_playlists_collaborated_on
-from listenbrainz.domain import spotify, youtube
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
-from listenbrainz.domain.spotify import SpotifyService
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
@@ -18,7 +15,7 @@ from werkzeug.exceptions import NotFound, BadRequest
 from listenbrainz.webserver.views.playlist_api import serialize_jspf
 from pydantic import ValidationError
 
-from listenbrainz.webserver.views.views_utils import get_current_spotify_user
+from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user
 
 LISTENS_PER_PAGE = 25
 
@@ -119,13 +116,10 @@ def profile(user_name):
         artist_count = None
 
     spotify_data = get_current_spotify_user()
-    youtube_data = {}
+    youtube_data = get_current_youtube_user()
     current_user_data = {}
     logged_in_user_follows_user = None
     if current_user.is_authenticated:
-        youtube_data = youtube.get_user(current_user.id)
-        if youtube_data:
-            youtube_data['api_key'] = current_app.config["YOUTUBE_API_KEY"]
         current_user_data = {
             "id": current_user.id,
             "name": current_user.musicbrainz_id,

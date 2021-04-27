@@ -123,12 +123,12 @@ class ProfileViewsTestCase(IntegrationTestCase):
         response = self.client.post(delete_listens_url, data={'token': invalid_auth_token}) # auth token is invalid
         self.assertStatus(response, 401)
 
-    def test_connect_spotify(self):
+    def test_music_services_details(self):
         self.temporary_login(self.user['login_id'])
-        r = self.client.get(url_for('profile.connect_spotify'))
+        r = self.client.get(url_for('profile.music_services_details'))
         self.assert200(r)
 
-        r = self.client.post(url_for('profile.connect_spotify'), data={'delete': 'yes'})
+        r = self.client.post(url_for('music_services_disconnect'), data={'delete': 'yes'})
         self.assert200(r)
 
         self.assertIsNone(self.service.get_user(self.user['id']))
@@ -143,7 +143,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         }
         self.temporary_login(self.user['login_id'])
 
-        r = self.client.get(url_for('profile.connect_spotify_callback', code='code'))
+        r = self.client.get(url_for('profile.music_services_callback', service_name='spotify', code='code'))
 
         self.assertStatus(r, 302)
         mock_fetch_access_token.assert_called_once_with('code')
@@ -153,16 +153,16 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.assertEqual('token', user['access_token'])
         self.assertEqual('refresh', user['refresh_token'])
 
-        r = self.client.get(url_for('profile.connect_spotify_callback'))
+        r = self.client.get(url_for('profile.music_services_callback', service_name='spotify'))
         self.assert400(r)
 
     def test_spotify_refresh_token_logged_out(self):
-        r = self.client.post(url_for('profile.refresh_spotify_token'))
+        r = self.client.post(url_for('profile.refresh_service_token', service_name='spotify'))
         self.assert401(r)
 
     def test_spotify_refresh_token_no_token(self):
         self.temporary_login(self.user['login_id'])
-        r = self.client.post(url_for('profile.refresh_spotify_token'))
+        r = self.client.post(url_for('profile.refresh_service_token', service_name='spotify'))
         self.assert404(r)
 
     def _create_spotify_user(self, expired):
@@ -178,14 +178,12 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.temporary_login(self.user['login_id'])
         self._create_spotify_user(expired=False)
 
-        r = self.client.post(url_for('profile.refresh_spotify_token'))
+        r = self.client.post(url_for('profile.refresh_service_token', service_name='spotify'))
 
         self.assert200(r)
         mock_refresh_access_token.assert_not_called()
         self.assertDictEqual(r.json, {
-            'id': self.user['id'],
-            'musicbrainz_id': self.user['musicbrainz_id'],
-            'user_token': 'old-token',
+            'access_token': 'old-token',
             'permission': ['user-read-recently-played', 'some-other-permission'],
         })
 
@@ -200,13 +198,11 @@ class ProfileViewsTestCase(IntegrationTestCase):
             'scope': 'user-read-recently-played some-other-permission',
         })
 
-        r = self.client.post(url_for('profile.refresh_spotify_token'))
+        r = self.client.post(url_for('profile.refresh_service_token', service_name='spotify'))
 
         self.assert200(r)
         self.assertDictEqual(r.json, {
-            'id': self.user['id'],
-            'musicbrainz_id': self.user['musicbrainz_id'],
-            'user_token': 'new-token',
+            'access_token': 'new-token',
             'permission': ['user-read-recently-played', 'some-other-permission'],
         })
 
@@ -216,7 +212,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self._create_spotify_user(expired=True)
         mock_refresh_user_token.side_effect = ExternalServiceInvalidGrantError
 
-        response = self.client.post(url_for('profile.refresh_spotify_token'))
+        response = self.client.post(url_for('profile.refresh_service_token', service_name='spotify'))
 
         self.assertEqual(response.json, {'code': 404, 'error': 'User has revoked authorization to Spotify'})
 

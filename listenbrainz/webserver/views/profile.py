@@ -1,7 +1,9 @@
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
-from listenbrainz.domain.external_service import ExternalServiceInvalidGrantError, ExternalServiceAPIError
+from data.model.external_service import ExternalServiceType
+from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIONS, SPOTIFY_IMPORT_PERMISSIONS
+from listenbrainz.domain.youtube import YoutubeService, YOUTUBE_SCOPES
 from listenbrainz.webserver.decorators import crossdomain
 import ujson
 
@@ -257,118 +259,86 @@ def delete_listens():
         )
 
 
-@profile_bp.route('/connect-spotify', methods=['GET', 'POST'])
-@login_required
-def connect_spotify():
-    service = SpotifyService()
+def _get_service_or_raise_404(name: str) -> ExternalService:
+    """Returns the music service for the given name and raise 404 if
+    service is not found
 
-    if request.method == 'POST' and request.form.get('delete') == 'yes':
-        service.remove_user(current_user.id)
-        flash.success('Your Spotify account has been unlinked')
-
-    user = service.get_user_connection_details(current_user.id)
-    only_listen_sp_oauth = service.get_authorize_url(SPOTIFY_LISTEN_PERMISSIONS)
-    only_import_sp_oauth = service.get_authorize_url(SPOTIFY_IMPORT_PERMISSIONS)
-    both_sp_oauth = service.get_authorize_url(SPOTIFY_LISTEN_PERMISSIONS + SPOTIFY_IMPORT_PERMISSIONS)
-
-    return render_template(
-        'user/spotify.html',
-        account=user,
-        last_updated=user['last_updated_iso'] if user else None,
-        latest_listened_at=user['latest_listened_at_iso'] if user else None,
-        only_listen_url=only_listen_sp_oauth,
-        only_import_url=only_import_sp_oauth,
-        both_url=both_sp_oauth,
-    )
-
-
-@profile_bp.route('/connect-youtube/', methods=['GET', 'POST'])
-@login_required
-def connect_youtube():
-    if request.method == 'POST' and request.form.get('delete') == 'yes':
-        youtube.remove_user(current_user.id)
-        flash.success('Your Youtube account has been unlinked')
-
-    authorize_url = youtube.get_authorize_url()
-    user = youtube.get_user(current_user.id)
-
-    return render_template(
-        'user/youtube.html',
-        account=user,
-        last_updated=None,
-        authorize_url=authorize_url
-    )
-
-
-@profile_bp.route('/connect-youtube/callback/')
-@login_required
-def connect_youtube_callback():
-    code = request.args.get('code')
-    if not code:
-        raise BadRequest('missing code')
-    token = youtube.fetch_access_token(code)
-    youtube.add_new_user(current_user.id, token)
-    flash.success('Successfully authenticated with Youtube!')
-    return redirect(url_for('profile.connect_youtube'))
-
-
-@profile_bp.route('/connect-youtube/refresh/', methods=['POST'])
-@crossdomain()
-@api_login_required
-def refresh_youtube_token():
-    youtube_user = youtube.get_user(current_user.id)
-    if not youtube_user:
-        raise APINotFound("User has not authenticated to Youtube")
-
-    if youtube_user["token_expired"]:
-        try:
-            youtube_user = youtube.refresh_token(current_user.id)
-        except Exception:
-            raise APIServiceUnavailable("Cannot refresh Youtube token right now")
-
-    return jsonify({"access_token": youtube_user["access_token"]})
-
-
-@profile_bp.route('/connect-spotify/callback')
-@login_required
-def connect_spotify_callback():
-    code = request.args.get('code')
-    if not code:
-        raise BadRequest('missing code')
-
+    Args:
+        name (str): Name of the service
+    """
     try:
-        service = SpotifyService()
-        token = service.fetch_access_token(code)
-        service.add_new_user(current_user.id, token)
-        flash.success('Successfully authenticated with Spotify!')
-    except spotipy.oauth2.SpotifyOauthError as e:
-        current_app.logger.error('Unable to authenticate with Spotify: %s', str(e), exc_info=True)
-        flash.warn('Unable to authenticate with Spotify (error {})'.format(e.args[0]))
-
-    return redirect(url_for('profile.connect_spotify'))
+        service = ExternalServiceType[name.upper()]
+        if service == ExternalServiceType.YOUTUBE:
+            return YoutubeService()
+        elif service == ExternalServiceType.SPOTIFY:
+            return SpotifyService()
+    except KeyError:
+        raise NotFound("Service %s is invalid." % name)
 
 
-@profile_bp.route('/refresh-spotify-token', methods=['POST'])
+@profile_bp.route('/music-services/details/', methods=['GET'])
+@login_required
+def music_services_details():
+    spotify_service = SpotifyService()
+    spotify_user = spotify_service.get_user(current_user.id)
+    spotify_only_listen_oauth = spotify_service.get_authorize_url(SPOTIFY_LISTEN_PERMISSIONS)
+    spotify_only_import_oauth = spotify_service.get_authorize_url(SPOTIFY_IMPORT_PERMISSIONS)
+    spotify_both_oauth = spotify_service.get_authorize_url(SPOTIFY_LISTEN_PERMISSIONS + SPOTIFY_IMPORT_PERMISSIONS)
+
+    youtube_service = YoutubeService()
+    youtube_user = youtube_service.get_user(current_user.id)
+    youtube_listen_oauth = youtube_service.get_authorize_url(YOUTUBE_SCOPES)
+
+    return render_template(
+        'user/music_services.html',
+        spotify_user=spotify_user,
+        spotify_only_listen_oauth=spotify_only_listen_oauth,
+        spotify_only_import_oauth=spotify_only_import_oauth,
+        spotify_both_oauth=spotify_both_oauth,
+        youtube_user=youtube_user,
+        youtube_listen_oauth=youtube_listen_oauth
+    )
+
+
+@profile_bp.route('/music-services/<service_name>/callback/')
+@login_required
+def music_services_callback(service_name: str):
+    service = _get_service_or_raise_404(service_name)
+    code = request.args.get('code')
+    if not code:
+        raise BadRequest('missing code')
+    token = service.fetch_access_token(code)
+    service.add_new_user(current_user.id, token)
+    flash.success('Successfully authenticated with %s!' % service_name.capitalize())
+    return redirect(url_for('profile.music_services_details'))
+
+
+@profile_bp.route('/music-services/<service_name>/refresh/', methods=['POST'])
 @crossdomain()
 @api_login_required
-def refresh_spotify_token():
-    service = SpotifyService()
-    spotify_user = service.get_user(current_user.id)
+def refresh_service_token(service_name: str):
+    service = _get_service_or_raise_404(service_name)
+    user = service.get_user(current_user.id)
+    if not user:
+        raise APINotFound("User has not authenticated to %s" % service_name.capitalize())
 
-    if not spotify_user:
-        raise APINotFound("User has not authenticated to Spotify")
-
-    if spotify_user['token_expired']:
+    if user["token_expired"]:
         try:
-            spotify_user = service.refresh_access_token(spotify_user['user_id'], spotify_user['refresh_token'])
-        except ExternalServiceAPIError:
-            raise APIServiceUnavailable("Cannot refresh Spotify token right now")
+            user = service.refresh_access_token(current_user.id, user["refresh_token"])
         except ExternalServiceInvalidGrantError:
             raise APINotFound("User has revoked authorization to Spotify")
+        except Exception:
+            raise APIServiceUnavailable("Cannot refresh %s token right now" % service_name.capitalize())
 
-    return jsonify({
-        'id': current_user.id,
-        'musicbrainz_id': current_user.musicbrainz_id,
-        'user_token': spotify_user['access_token'],
-        'permission': spotify_user['scopes'],
-    })
+    return jsonify({"access_token": user["access_token"]})
+
+
+@profile_bp.route('/music-services/<service_name>/disconnect/', methods=['POST'])
+@crossdomain()
+@api_login_required
+def music_services_disconnect(service_name: str):
+    service = _get_service_or_raise_404(service_name)
+    if request.form.get('delete') == 'yes':
+        service.remove_user(current_user.id)
+        flash.success('Your Spotify account has been unlinked')
+    return redirect(url_for('profile.music_services_details'))

@@ -537,12 +537,13 @@ document.addEventListener("DOMContentLoaded", () => {
   ReactDOM.render(
     <ErrorBoundary>
       <UserFeedPageWithAlertNotifications
-      currentUser={current_user}
-      events={events}
-      apiUrl={api_url}
-      spotify={spotify}
-      youtube={youtube}
-    /></ErrorBoundary>,
+        currentUser={current_user}
+        events={events}
+        apiUrl={api_url}
+        spotify={spotify}
+        youtube={youtube}
+      />
+    </ErrorBoundary>,
     domContainer
   );
 });

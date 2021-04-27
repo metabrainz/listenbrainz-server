@@ -228,7 +228,14 @@ export default class Recommendations extends React.Component<
       currRecPage,
       totalRecPages,
     } = this.state;
-    const { spotify, youtube, user, currentUser, apiUrl, newAlert } = this.props;
+    const {
+      spotify,
+      youtube,
+      user,
+      currentUser,
+      apiUrl,
+      newAlert,
+    } = this.props;
 
     return (
       <div role="main">
@@ -361,14 +368,15 @@ document.addEventListener("DOMContentLoaded", () => {
   ReactDOM.render(
     <ErrorBoundary>
       <RecommendationsWithAlertNotifications
-      apiUrl={api_url}
-      recommendations={recommendations}
-      spotify={spotify}
-      user={user}
-      webSocketsServerUrl={web_sockets_server_url}
-      currentUser={current_user}
-      youtube={youtube}
-    /></ErrorBoundary>,
+        apiUrl={api_url}
+        recommendations={recommendations}
+        spotify={spotify}
+        user={user}
+        webSocketsServerUrl={web_sockets_server_url}
+        currentUser={current_user}
+        youtube={youtube}
+      />
+    </ErrorBoundary>,
     domContainer
   );
 });
