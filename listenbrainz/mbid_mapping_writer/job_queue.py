@@ -1,13 +1,17 @@
 from  concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 from queue import PriorityQueue, Queue, Empty
+from time import time
 import threading
 import traceback
 
 from flask import current_app
 from listenbrainz.mbid_mapping_writer.matcher import lookup_new_listens
+from listenbrainz.labs_api.labs.api.mbid_mapping import MATCH_TYPES
 
-MAX_THREADS = 2
+MAX_THREADS = 1
 MAX_QUEUED_JOBS = MAX_THREADS * 2
+
+UPDATE_INTERVAL = 3
 
 
 class MappingJobQueue(threading.Thread):
@@ -30,6 +34,11 @@ class MappingJobQueue(threading.Thread):
     def run(self):
         self.app.logger.info("start job queue thread")
 
+        stats = { "processed": 0, "total": 0, "errors": 0 }
+        for typ in MATCH_TYPES:
+            stats[typ] = 0
+
+        update_time = time() + UPDATE_INTERVAL
         try:
             with self.app.app_context():
                 with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
@@ -40,11 +49,12 @@ class MappingJobQueue(threading.Thread):
                         for complete in completed:
                             exc = complete.exception()
                             if exc:
-                                self.app.logger.info("job %s failed" % futures[complete])
                                 self.app.logger.error("\n".join(traceback.format_exception(None, exc, exc.__traceback__)))
+                                stats["errors"] += 1
                             else:
-                                self.app.logger.info("job %s complete" % futures[complete])
-                                self.delivery_tag_queue.put(complete.result())
+                                job_stats = complete.result()
+                                for stat in job_stats:
+                                    stats[stat] += job_stats[stat]
                             del futures[complete]
 
                         for i in range(MAX_QUEUED_JOBS - len(uncompleted)):
@@ -54,10 +64,16 @@ class MappingJobQueue(threading.Thread):
                                 break
 
                             if job[0] > 0:
-                                self.app.logger.info("submit job")
                                 futures[executor.submit(lookup_new_listens, self.app, job[1])] = job[0]
                             else:
                                 self.app.logger.info("Unsupported job type in MappingJobQueue (MBID Mapping Writer).")
+                        if time() > update_time: 
+                            update_time = time() + UPDATE_INTERVAL
+                            self.app.logger.info("%d (%d) listens: exact %d high %d med %d low %d no %d err %d" %
+                                    (stats["total"], stats["processed"], stats["exact_match"], stats["high_quality"],
+                                     stats["med_quality"], stats["low_quality"], stats["no_match"], stats["errors"]))
+                            
+
         except Exception as err:
             self.app.logger.info(traceback.format_exc())
 

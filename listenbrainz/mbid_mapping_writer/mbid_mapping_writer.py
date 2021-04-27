@@ -17,7 +17,6 @@ class MBIDMappingWriter(threading.Thread):
         self.queue = None
 
     def callback(self, channel, method, properties, body):
-        current_app.logger.info("Received listens")
         listens = json.loads(body)
         self.queue.add_new_listens(listens)
         channel.basic_ack(method.delivery_tag)
