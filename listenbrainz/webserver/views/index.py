@@ -166,20 +166,16 @@ def recent_listens():
 @login_required
 def feed():
 
-    spotify_user = {}
-    if current_user.is_authenticated:
-        spotify_user = spotify.get_user_dict(current_user.id)
-
-    current_user_data = {
-        "id": current_user.id,
-        "name": current_user.musicbrainz_id,
-        "auth_token": current_user.auth_token,
-    }
+    # TODO (param): remove this when feed feature is ready for release #feedfeatureflag
+    if current_user.musicbrainz_id not in ['rob', 'iliekcomputers', 'mr_monkey', 'shivam-kapila', 'ishaanshah']:
+        raise NotFound
 
     props = {
-        "current_user": current_user_data,
-        "spotify": spotify_user,
-        "api_url": current_app.config["API_URL"],
+        'current_user': {
+            'id': current_user.id,
+            'name': current_user.musicbrainz_id,
+            'auth_token': current_user.auth_token,
+        }
     }
     return render_template('index/feed.html', props=ujson.dumps(props))
 

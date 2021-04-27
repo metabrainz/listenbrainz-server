@@ -141,6 +141,36 @@ def get_listens(user_name):
     }})
 
 
+@api_bp.route('/user/<user_name>/feed/listens', methods=['OPTIONS', 'GET'])
+def user_feed(user_name: str):
+    db_conn = webserver.create_timescale(current_app)
+    min_ts, max_ts, count, time_range = _validate_get_endpoint_params(db_conn, user_name)
+    if min_ts is None and max_ts is None:
+        max_ts = int(time.time())
+
+    user = db_user.get_by_mb_id(user_name)
+    if not user:
+        raise APINotFound(f"User {user_name} not found")
+
+    users_following = [user['musicbrainz_id'] for user in db_user_relationship.get_following_for_user(user['id'])]
+
+    listens = db_conn.fetch_listens_for_multiple_users_from_storage(
+        users_following,
+        limit=count,
+        from_ts=min_ts,
+        to_ts=max_ts,
+        time_range=time_range,
+        order=1,  # descending
+    )
+    listen_data = []
+    for listen in listens:
+        listen_data.append(listen.to_api())
+
+    return jsonify({'payload': {
+        'user_id': user_name,
+        'count': len(listen_data),
+        'feed': listen_data,
+    }})
 
 
 @api_bp.route("/user/<user_name>/listen-count")

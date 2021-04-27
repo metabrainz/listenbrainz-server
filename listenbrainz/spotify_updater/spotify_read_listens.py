@@ -173,10 +173,6 @@ def make_api_request(user, spotipy_call, **kwargs):
                         user = spotify.refresh_user_token(user)
                     except SpotifyException as err:
                         raise spotify.SpotifyAPIError('Could not authenticate with Spotify, please unlink and link your account again.')
-                    else:
-                        if user is None:
-                            raise spotify.SpotifyAPIError(
-                                'Could not authenticate with Spotify, please unlink and link your account again.')
 
                     tried_to_refresh_token = True
 
@@ -274,9 +270,6 @@ def process_one_user(user):
         except spotify.SpotifyAPIError:
             current_app.logger.error('Could not refresh user token from spotify', exc_info=True)
             raise
-        else:
-            if user is None:
-                current_app.logger.debug("%s has revoked spotify authorization", str(user))
 
     listenbrainz_user = db_user.get(user.user_id)
 

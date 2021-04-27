@@ -81,48 +81,6 @@ export default class APIService {
     return result.payload.listens;
   };
 
-  getFeedForUser = async (
-    userName: string,
-    userToken: string,
-    minTs?: number,
-    maxTs?: number,
-    count?: number
-  ): Promise<Array<TimelineEvent>> => {
-    if (!userName) {
-      throw new SyntaxError("Username missing");
-    }
-    if (!userToken) {
-      throw new SyntaxError("User token missing");
-    }
-
-    let query: string = `${this.APIBaseURI}/user/${userName}/feed/events`;
-
-    const queryParams: Array<string> = [];
-    if (maxTs) {
-      queryParams.push(`max_ts=${maxTs}`);
-    }
-    if (minTs) {
-      queryParams.push(`min_ts=${minTs}`);
-    }
-    if (count) {
-      queryParams.push(`count=${count}`);
-    }
-    if (queryParams.length) {
-      query += `?${queryParams.join("&")}`;
-    }
-
-    const response = await fetch(query, {
-      method: "GET",
-      headers: {
-        Authorization: `Token ${userToken}`,
-      },
-    });
-    await this.checkStatus(response);
-    const result = await response.json();
-
-    return result.payload.events;
-  };
-
   getUserListenCount = async (userName: string): Promise<number> => {
     if (!userName) {
       throw new SyntaxError("Username missing");
@@ -203,34 +161,32 @@ export default class APIService {
 
       const url = `${this.APIBaseURI}/submit-listens`;
 
-      /* eslint-disable no-await-in-loop */
-      /* eslint-disable-next-line no-constant-condition */
-      while (true) {
-        try {
-          const response = await fetch(url, {
-            method: "POST",
-            headers: {
-              Authorization: `Token ${userToken}`,
-              "Content-Type": "application/json;charset=UTF-8",
-            },
-            body: JSON.stringify(struct),
-          });
-          // we skip listens if we get an error code that's not a rate limit
-          if (response.status !== 429) {
-            return response; // Return response so that caller can handle appropriately
-          }
+      try {
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            Authorization: `Token ${userToken}`,
+            "Content-Type": "application/json;charset=UTF-8",
+          },
+          body: JSON.stringify(struct),
+        });
+
+        // we skip listens if we get an error code that's not a rate limit
+        if (response.status === 429) {
           // Rate limit error, this should never happen, but if it does, try again in 3 seconds.
-          await new Promise((resolve) => {
-            setTimeout(resolve, 3000);
-          });
-        } catch {
-          // Retry if there is an network error
-          await new Promise((resolve) => {
-            setTimeout(resolve, 3000);
-          });
+          setTimeout(
+            () => this.submitListens(userToken, listenType, payload),
+            3000
+          );
         }
+        return response; // Return response so that caller can handle appropriately
+      } catch {
+        // Retry if there is an network error
+        setTimeout(
+          () => this.submitListens(userToken, listenType, payload),
+          3000
+        );
       }
-      /* eslint-enable no-await-in-loop */
     }
 
     // Payload is not within submission limit, split and submit
@@ -364,19 +320,13 @@ export default class APIService {
     if (response.status >= 200 && response.status < 300) {
       return;
     }
+    const data = response.body || (response.json && (await response.json()));
     let message;
-    try {
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.indexOf("application/json") !== -1) {
-        const jsonError = await response.json();
-        message = jsonError.error;
-      } else {
-        message = await response.text();
-      }
-    } catch (error) {
+    if (data?.error) {
+      message = data?.error;
+    } else {
       message = `HTTP Error ${response.statusText}`;
     }
-
     const error = new APIError(`HTTP Error ${response.statusText}`);
     error.status = response.statusText;
     error.response = response;
@@ -710,23 +660,5 @@ export default class APIService {
     this.checkStatus(response);
     const data = response.json();
     return data;
-  };
-
-  recommendTrackToFollowers = async (
-    userName: string,
-    authToken: string,
-    metadata: UserTrackRecommendationMetadata
-  ) => {
-    const url = `${this.APIBaseURI}/user/${userName}/timeline-event/create/recording`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Token ${authToken}`,
-        "Content-Type": "application/json;charset=UTF-8",
-      },
-      body: JSON.stringify({ metadata }),
-    });
-    await this.checkStatus(response);
-    return response.status;
   };
 }

@@ -4,8 +4,6 @@ from listenbrainz import webserver
 from werkzeug.serving import run_simple
 import os
 import click
-import sqlalchemy
-from time import sleep
 
 from listenbrainz.utils import safely_import_config
 safely_import_config()
@@ -37,16 +35,15 @@ def run_api_compat_server(host, port, debug=False):
         processes=5
     )
 
-
-@cli.command(name="run_websockets")
+@cli.command(name="run_follow_server")
 @click.option("--host", "-h", default="0.0.0.0", show_default=True)
-@click.option("--port", "-p", default=8082, show_default=True)
+@click.option("--port", "-p", default=8081, show_default=True)
 @click.option("--debug", "-d", is_flag=True,
               help="Turns debugging mode on or off. If specified, overrides "
                    "'DEBUG' value in the config file.")
-def run_websockets(host, port, debug=True):
-    from listenbrainz.websockets.websockets import run_websockets
-    run_websockets(host=host, port=port, debug=debug)
+def run_follow_server(host, port, debug=True):
+    from listenbrainz.follow_server.follow_server import run_follow_server
+    run_follow_server(host=host, port=port, debug=debug)
 
 
 @cli.command(name="init_db")
@@ -168,19 +165,7 @@ def init_ts_db(force, create_db):
 
     if create_db or force:
         print('TS: Creating user and a database...')
-        retries = 0
-        while True:
-            try:
-                res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_db.sql'))
-                break
-            except sqlalchemy.exc.OperationalError:
-                print("Trapped template1 access error, FFS! Sleeping, trying again.")
-                retries += 1
-                if retries == 5:
-                    raise
-                sleep(1)
-                continue
-            
+        res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_db.sql'))
         if not res:
             raise Exception('Failed to create new database and user! Exit code: %i' % res)
 

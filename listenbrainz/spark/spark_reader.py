@@ -118,6 +118,7 @@ class SparkReader:
                 try:
                     self.incoming_ch.start_consuming()
                 except pika.exceptions.ConnectionClosed:
+                    current_app.logger.warning("Connection to rabbitmq closed. Re-opening.")
                     self.connection = None
                     continue
 

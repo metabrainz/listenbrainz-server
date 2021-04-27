@@ -1,14 +1,16 @@
+@purple: #353070;
+@white: #ffffff;
 
 .follow-button {
   margin-left: 10px;
   font-family: "Sintony";
   color: @white;
-  background: @blue;
-  border: 2px solid @blue;
+  background: @purple;
+  border: 2px solid @purple;
   font-weight: bold;
   padding: 5px 8px;
   border-radius: 4px;
-  transition: color 0.2s, background 0.3s;
+  transition: color 0.42s, background 0.42s;
   text-align: center;
 
 
@@ -22,12 +24,10 @@
       overflow-x: hidden;
     }
 
-    &.following {
-      background: @white;
-      color:@blue;
-    }
+    &:hover, &:focus {
+      background: white;
+      color:@purple;
 
-    &:hover {
       > .text {
         width: 4.75em;
         margin-left: 5px;
@@ -38,9 +38,9 @@
   &.block {
     width: 85px;
 
-    &.following, &:hover {
+    &.following, &:hover, &:focus {
       background: white;
-      color: @blue;
+      color: @purple;
     }
 
     svg {
@@ -54,7 +54,7 @@
 }
 
 .follower-following-list {
-  max-height: 250px;
+  height: 250px;
   padding: 10px;
   overflow-y: scroll;
   border-radius: 2px;

@@ -240,7 +240,7 @@ class TimescaleListenStore(ListenStore):
             from_ts: seconds since epoch, in float
             to_ts: seconds since epoch, in float
             limit: the maximum number of items to return
-            order: 0 for DESCending order, 1 for ASCending order
+            order: 0 for ASCending order, 1 for DESCending order
             time_range: the time range (in units of 5 days) to search for listens. If none is given
                         3 ranges (15 days) are searched. If -1 is given then all listens are searched
                         which is slow and should be avoided if at all possible.

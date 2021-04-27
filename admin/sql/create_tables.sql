@@ -39,6 +39,17 @@ CREATE TABLE data_dump (
   created     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE follow_list (
+  id                SERIAL, -- PK
+  name              TEXT NOT NULL,
+  creator           INTEGER NOT NULL, -- FK to "user".id
+  private           BOOLEAN NOT NULL DEFAULT FALSE,
+  members           INTEGER ARRAY NOT NULL DEFAULT ARRAY[]::INTEGER[],
+  created           TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  last_saved        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+ALTER TABLE follow_list ADD CONSTRAINT follow_list_name_creator_key UNIQUE (name, creator);
+
 CREATE TABLE missing_musicbrainz_data (
     id              SERIAL, -- PK
     user_id         INTEGER NOT NULL, --FK to "user".id
@@ -76,14 +87,6 @@ CREATE TABLE recommendation.recording_session (
   last_used           TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
   recording_msid      UUID NOT NULL,
   session_id          INTEGER NOT NULL --FK to recommendation.recommender_session.id
-);
-
-CREATE TABLE user_timeline_event (
-  id                    SERIAL, -- PK
-  user_id               INTEGER, -- FK to "user"
-  event_type            user_timeline_event_type_enum,
-  metadata              JSONB,
-  created               TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
 
 CREATE TABLE spotify_auth (

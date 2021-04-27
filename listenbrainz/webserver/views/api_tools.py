@@ -112,9 +112,6 @@ def _send_listens_to_queue(listen_type, listens):
 def validate_listen(listen, listen_type):
     """Make sure that required keys are present, filled out and not too large."""
 
-    if listen is None:
-        raise APIBadRequest("Listen is empty and cannot be validated.")
-
     if listen_type in (LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT):
         if 'listened_at' not in listen:
             raise APIBadRequest("JSON document must contain the key listened_at at the top level.", listen)
@@ -135,13 +132,14 @@ def validate_listen(listen, listen_type):
             raise APIBadRequest("Value for key listened_at is too high.", listen)
 
     elif listen_type == LISTEN_TYPE_PLAYING_NOW:
-        if 'listened_at' in listen:
-            raise APIBadRequest("JSON document must not contain listened_at while submitting "
-                                "playing_now.", listen)
+        if listen is not None:
+            if 'listened_at' in listen:
+                raise APIBadRequest("JSON document must not contain listened_at while submitting "
+                                    "playing_now.", listen)
 
-        if 'track_metadata' in listen and len(listen) > 1:
-            raise APIBadRequest("JSON document may only contain track_metadata as top level "
-                                "key when submitting playing_now.", listen)
+            if 'track_metadata' in listen and len(listen) > 1:
+                raise APIBadRequest("JSON document may only contain track_metadata as top level "
+                                    "key when submitting playing_now.", listen)
 
     # Basic metadata
     try:

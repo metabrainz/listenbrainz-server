@@ -45,14 +45,6 @@ DB_CONNECT_MAPPING = "dbname=musicbrainz_json_dump user=musicbrainz host={{.Addr
 {{end}}
 {{end}}
 
-{{if service "typesense-listenbrainz"}}
-{{with index (service "typesense-listenbrainz") 0}}
-TYPESENSE_HOST = "{{.Address}}"
-TYPESENSE_PORT = {{.Port}}
-{{end}}
-{{end}}
-TYPESENSE_API_KEY = '''{{template "KEY" "typesense_api_key"}}'''
-
 {{if service "listenbrainz-redis"}}
 {{with index (service "listenbrainz-redis") 0}}
 REDIS_HOST = "{{.Address}}"
@@ -69,13 +61,10 @@ INFLUX_DB_NAME  = "listenbrainz"
 {{end}}
 {{end}}
 
-{{ $rabbitmq_key := (printf "docker-server-configs/LB/config.%s.json/rabbitmq_service" (env "DEPLOY_ENV")) }}
-{{- with $rabbitmq_service_name := keyOrDefault $rabbitmq_key "rabbitmq"}}
-{{- if service $rabbitmq_service_name}}
-{{- with index (service $rabbitmq_service_name) 0}}
+{{if service "rabbitmq"}}
+{{with index (service "rabbitmq") 0}}
 RABBITMQ_HOST = "{{.Address}}"
 RABBITMQ_PORT = {{.Port}}
-{{end}}
 {{end}}
 {{end}}
 RABBITMQ_USERNAME = '''{{template "KEY" "rabbitmq_user"}}'''
@@ -88,7 +77,7 @@ INCOMING_EXCHANGE = '''{{template "KEY" "incoming_exchange"}}'''
 INCOMING_QUEUE = '''{{template "KEY" "incoming_queue"}}'''
 UNIQUE_EXCHANGE = '''{{template "KEY" "unique_exchange"}}'''
 UNIQUE_QUEUE = '''{{template "KEY" "unique_queue"}}'''
-WEBSOCKETS_QUEUE = '''{{template "KEY" "websockets_queue"}}'''
+FOLLOW_LIST_QUEUE = '''{{template "KEY" "follow_list_queue"}}'''
 PLAYING_NOW_EXCHANGE = '''{{template "KEY" "playing_now_exchange"}}'''
 PLAYING_NOW_QUEUE = '''{{template "KEY" "playing_now_queue"}}'''
 
@@ -171,3 +160,5 @@ WEBSOCKETS_SERVER_URL = '''{{template "KEY" "websockets_server_url"}}'''
 SESSION_REMEMBER_ME_DURATION = 365
 
 LISTEN_DUMP_TEMP_DIR_ROOT = '''{{template "KEY" "listen_dump_temp_dir"}}'''
+
+FEATURE_PLAYLIST = '''{{template "KEY" "feature_playlist"}}'''
