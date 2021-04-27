@@ -8,5 +8,5 @@ numpy==1.19.5
 pytest == 6.2.2
 pytest-cov == 2.10.1
 pydantic == 1.8.1
-sentry-sdk[pyspark] == 0.20.3
+sentry-sdk == 0.20.3
 unidecode == 1.2.0
