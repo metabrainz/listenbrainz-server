@@ -1,10 +1,10 @@
 from operator import itemgetter
 
 from datasethoster import Query
-from flask import current_app
 import psycopg2
 import psycopg2.extras
 from werkzeug.exceptions import NotFound
+import config
 
 
 class ArtistCountryFromArtistMBIDQuery(Query):
@@ -25,7 +25,7 @@ class ArtistCountryFromArtistMBIDQuery(Query):
 
     def fetch(self, params, count=-1, offset=-1):
 
-        with psycopg2.connect(current_app.config['MB_DATABASE_URI']) as conn:
+        with psycopg2.connect(config.MB_DATABASE_URI) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
 
                 acs = tuple([r['artist_mbid'] for r in params])
