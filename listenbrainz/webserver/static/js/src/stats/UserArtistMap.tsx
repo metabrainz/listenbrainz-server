@@ -119,7 +119,9 @@ export default class UserArtistMap extends React.Component<
           errorMessage: "Statistics for the user have not been calculated",
         });
       } else {
-        throw error;
+        this.setState(() => {
+          throw error;
+        });
       }
     }
     return {} as UserArtistMapResponse;
@@ -129,9 +131,6 @@ export default class UserArtistMap extends React.Component<
     data: UserArtistMapResponse,
     selectedMetric: "artist" | "listen"
   ): UserArtistMapData => {
-    if (!data?.payload) {
-      return [];
-    }
     return data.payload.artist_map.map((country) => {
       return {
         id: country.country,

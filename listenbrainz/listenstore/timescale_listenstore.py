@@ -12,7 +12,6 @@ from datetime import datetime, timedelta
 import ujson
 import psycopg2
 from psycopg2.extras import execute_values
-from psycopg2.errors import UntranslatableCharacter
 from typing import List
 import sqlalchemy
 
@@ -195,16 +194,12 @@ class TimescaleListenStore(ListenStore):
         inserted_rows = []
         conn = timescale.engine.raw_connection()
         with conn.cursor() as curs:
-            try:
-                execute_values(curs, query, submit, template=None)
-                while True:
-                    result = curs.fetchone()
-                    if not result:
-                        break
-                    inserted_rows.append((result[0], result[1], result[2]))
-            except UntranslatableCharacter:
-                conn.rollback()
-                return
+            execute_values(curs, query, submit, template=None)
+            while True:
+                result = curs.fetchone()
+                if not result:
+                    break
+                inserted_rows.append((result[0], result[1], result[2]))
 
         conn.commit()
 
@@ -245,7 +240,7 @@ class TimescaleListenStore(ListenStore):
             from_ts: seconds since epoch, in float
             to_ts: seconds since epoch, in float
             limit: the maximum number of items to return
-            order: 0 for DESCending order, 1 for ASCending order
+            order: 0 for ASCending order, 1 for DESCending order
             time_range: the time range (in units of 5 days) to search for listens. If none is given
                         3 ranges (15 days) are searched. If -1 is given then all listens are searched
                         which is slow and should be avoided if at all possible.

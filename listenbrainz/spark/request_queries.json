@@ -102,11 +102,7 @@
   "cf.recommendations.recording.create_dataframes": {
     "name": "cf.recommendations.recording.create_dataframes",
     "description": "Create dataframes to prepare trainable data.",
-    "params": [
-      "train_model_window",
-      "job_type",
-      "minimum_listens_threshold"
-    ]
+    "params": ["train_model_window"]
   },
   "cf.recommendations.recording.train_model": {
     "name": "cf.recommendations.recording.train_model",
@@ -142,12 +138,5 @@
     "name": "import.artist_relation",
     "description": "Import artist relation into the spark cluster.",
     "params": []
-  },
-  "similarity.similar_users": {
-    "name": "similarity.similar_users",
-    "description": "Generate similar user correlation",
-    "params": [
-      "max_num_users"
-    ]
   }
 }

@@ -43,24 +43,17 @@ def load():
             error_msg="'Listens' array must have one or more items."
         )
 
-    current_user_data = {
+    user_data = {
         "id": current_user.id,
         "name": current_user.musicbrainz_id,
         "auth_token": current_user.auth_token,
     }
     spotify_data = spotify.get_user_dict(current_user.id)
-    # `user` == `curent_user` since player isn't for a user but the recommendation component
-    # it uses expects `user` and `current_user` as keys.
     props = {
-        "user": {
-            "id": current_user.id,
-            "name": current_user.musicbrainz_id,
-        },
-        "current_user": current_user_data,
+        "user": user_data,
         "spotify": spotify_data,
         "api_url": current_app.config["API_URL"],
-        "recommendations": listens,
-        "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn")
+        "listens": listens
     }
 
     return render_template(

@@ -120,7 +120,9 @@ export default class UserListeningActivity extends React.Component<
           errorMessage: "Statistics for the user have not been calculated",
         });
       } else {
-        throw error;
+        this.setState(() => {
+          throw error;
+        });
       }
     }
     return {} as UserListeningActivityResponse;
@@ -138,23 +140,19 @@ export default class UserListeningActivity extends React.Component<
     data: UserListeningActivityResponse
   ): UserListeningActivityData => {
     const { range } = this.props;
-    let result = [] as UserListeningActivityData;
-    if (!data?.payload) {
-      return result;
-    }
     if (range === "week") {
-      result = this.processWeek(data);
+      return this.processWeek(data);
     }
-    else if (range === "month") {
-      result = this.processMonth(data);
+    if (range === "month") {
+      return this.processMonth(data);
     }
-    else if (range === "year") {
-      result = this.processYear(data);
+    if (range === "year") {
+      return this.processYear(data);
     }
-    else if (range === "all_time") {
-      result = this.processAllTime(data);
+    if (range === "all_time") {
+      return this.processAllTime(data);
     }
-    return result;
+    return {} as UserListeningActivityData;
   };
 
   processWeek = (

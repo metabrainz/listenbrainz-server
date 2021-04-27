@@ -33,16 +33,11 @@ from flask import current_app, render_template
 from listenbrainz.db import dump_manager
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.listenstore.tests.util import generate_data
-from listenbrainz.db.model.feedback import Feedback
-import listenbrainz.db.feedback as db_feedback
-from listenbrainz.db.model.recommendation_feedback import RecommendationFeedbackSubmit
-import listenbrainz.db.recommendations_cf_recording_feedback as db_rec_feedback
 from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app
 from listenbrainz.webserver.timescale_connection import init_timescale_connection
 from time import sleep
 from unittest.mock import patch
-
 
 class DumpManagerTestCase(DatabaseTestCase):
 
@@ -70,28 +65,22 @@ class DumpManagerTestCase(DatabaseTestCase):
 
             # should not call send mail when testing
             current_app.config['TESTING'] = True
-            dump_manager.send_dump_creation_notification(
-                'listenbrainz-dump-1-20180312-000001-full', 'fullexport')
+            dump_manager.send_dump_creation_notification('listenbrainz-dump-1-20180312-000001-full', 'fullexport')
             mock_send_mail.assert_not_called()
 
             # should be called when in production
             current_app.config['TESTING'] = False
-            dump_manager.send_dump_creation_notification(
-                'listenbrainz-dump-1-20180312-000001-full', 'fullexport')
+            dump_manager.send_dump_creation_notification('listenbrainz-dump-1-20180312-000001-full', 'fullexport')
             mock_send_mail.assert_called_once()
             expected_dump_name = 'listenbrainz-dump-1-20180312-000001-full'
-            expected_dump_link = 'http://ftp.musicbrainz.org/pub/musicbrainz/listenbrainz/fullexport/{}'.format(
-                expected_dump_name)
-            expected_text = render_template(
-                'emails/data_dump_created_notification.txt', dump_name=expected_dump_name, dump_link=expected_dump_link)
+            expected_dump_link = 'http://ftp.musicbrainz.org/pub/musicbrainz/listenbrainz/fullexport/{}'.format(expected_dump_name)
+            expected_text = render_template('emails/data_dump_created_notification.txt', dump_name=expected_dump_name, dump_link=expected_dump_link)
 
             self.assertEqual(
                 mock_send_mail.call_args[1]['subject'],
-                'ListenBrainz fullexport dump created - {}'.format(
-                    expected_dump_name)
+                'ListenBrainz fullexport dump created - {}'.format(expected_dump_name)
             )
-            self.assertEqual(
-                mock_send_mail.call_args[1]['text'], expected_text)
+            self.assertEqual(mock_send_mail.call_args[1]['text'], expected_text)
 
     @patch('listenbrainz.db.dump_manager.send_mail')
     def test_send_dump_creation_notification_incremental(self, mock_send_mail):
@@ -99,57 +88,41 @@ class DumpManagerTestCase(DatabaseTestCase):
 
             # should not call send mail when testing
             current_app.config['TESTING'] = True
-            dump_manager.send_dump_creation_notification(
-                'listenbrainz-dump-1-20180312-000001-incremental', 'incremental')
+            dump_manager.send_dump_creation_notification('listenbrainz-dump-1-20180312-000001-incremental', 'incremental')
             mock_send_mail.assert_not_called()
 
             # should be called when in production
             current_app.config['TESTING'] = False
-            dump_manager.send_dump_creation_notification(
-                'listenbrainz-dump-1-20180312-000001-incremental', 'incremental')
+            dump_manager.send_dump_creation_notification('listenbrainz-dump-1-20180312-000001-incremental', 'incremental')
             mock_send_mail.assert_called_once()
             expected_dump_name = 'listenbrainz-dump-1-20180312-000001-incremental'
-            expected_dump_link = 'http://ftp.musicbrainz.org/pub/musicbrainz/listenbrainz/incremental/{}'.format(
-                expected_dump_name)
-            expected_text = render_template(
-                'emails/data_dump_created_notification.txt', dump_name=expected_dump_name, dump_link=expected_dump_link)
+            expected_dump_link = 'http://ftp.musicbrainz.org/pub/musicbrainz/listenbrainz/incremental/{}'.format(expected_dump_name)
+            expected_text = render_template('emails/data_dump_created_notification.txt', dump_name=expected_dump_name, dump_link=expected_dump_link)
 
             self.assertEqual(
                 mock_send_mail.call_args[1]['subject'],
-                'ListenBrainz incremental dump created - {}'.format(
-                    expected_dump_name)
+                'ListenBrainz incremental dump created - {}'.format(expected_dump_name)
             )
-            self.assertEqual(
-                mock_send_mail.call_args[1]['text'], expected_text)
-            self.assertIn('listenbrainz-observability@metabrainz.org',
-                          mock_send_mail.call_args[1]['recipients'])
+            self.assertEqual(mock_send_mail.call_args[1]['text'], expected_text)
+            self.assertIn('listenbrainz-observability@metabrainz.org', mock_send_mail.call_args[1]['recipients'])
+
+
 
     def test_cleanup_dumps(self):
-        create_path(os.path.join(
-            self.tempdir, 'listenbrainz-dump-1-20180312-000001-full'))
-        create_path(os.path.join(
-            self.tempdir, 'listenbrainz-dump-2-20180312-000002-full'))
-        create_path(os.path.join(
-            self.tempdir, 'listenbrainz-dump-3-20180312-000003-full'))
-        create_path(os.path.join(
-            self.tempdir, 'listenbrainz-dump-4-20180312-000004-full'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-1-20180312-000001-full'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-2-20180312-000002-full'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-3-20180312-000003-full'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-4-20180312-000004-full'))
 
-        for i in range(1, 50):
-            create_path(os.path.join(
-                self.tempdir, 'listenbrainz-dump-%d-20180312-%06d-incremental' % (i, i)))
-        create_path(os.path.join(
-            self.tempdir, 'listenbrainz-dump-99-20200124-000007-incremental'))
-        create_path(os.path.join(
-            self.tempdir, 'listenbrainz-dump-100-20200124-000008-incremental'))
-
-        create_path(os.path.join(
-            self.tempdir, 'listenbrainz-feedback-20180312-000001-full'))
-        create_path(os.path.join(
-            self.tempdir, 'listenbrainz-feedback-20180312-000002-full'))
-        create_path(os.path.join(
-            self.tempdir, 'listenbrainz-feedback-20180312-000003-full'))
-        create_path(os.path.join(
-            self.tempdir, 'listenbrainz-feedback-20180312-000004-full'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-1-20180312-000001-incremental'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-2-20180312-000002-incremental'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-3-20180312-000003-incremental'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-4-20180312-000004-incremental'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-5-20180312-000005-incremental'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-6-20180312-000006-incremental'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-7-20180312-000007-incremental'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-99-20200124-000007-incremental'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-100-20200124-000008-incremental'))
 
         create_path(os.path.join(self.tempdir, 'not-a-dump'))
 
@@ -162,29 +135,16 @@ class DumpManagerTestCase(DatabaseTestCase):
         self.assertIn('listenbrainz-dump-3-20180312-000003-full', newdirs)
         self.assertIn('listenbrainz-dump-4-20180312-000004-full', newdirs)
 
-        self.assertNotIn(
-            'listenbrainz-dump-1-20180312-000001-incremental', newdirs)
-        self.assertNotIn(
-            'listenbrainz-dump-2-20180312-000002-incremental', newdirs)
-        self.assertNotIn(
-            'listenbrainz-dump-3-20180312-000003-incremental', newdirs)
-        self.assertNotIn(
-            'listenbrainz-dump-21-20180312-000003-incremental', newdirs)
+        self.assertNotIn('listenbrainz-dump-1-20180312-000001-incremental', newdirs)
+        self.assertNotIn('listenbrainz-dump-2-20180312-000002-incremental', newdirs)
+        self.assertNotIn('listenbrainz-dump-3-20180312-000003-incremental', newdirs)
 
-        for i in range(22, 50):
-            self.assertIn(
-                'listenbrainz-dump-%d-20180312-%06d-incremental' % (i, i), newdirs)
-
-        self.assertIn(
-            'listenbrainz-dump-99-20200124-000007-incremental', newdirs)
-        self.assertIn(
-            'listenbrainz-dump-100-20200124-000008-incremental', newdirs)
-
-        self.assertNotIn('listenbrainz-feedback-20180312-000001-full', newdirs)
-        self.assertNotIn('listenbrainz-feedback-20180312-000002-full', newdirs)
-
-        self.assertIn('listenbrainz-feedback-20180312-000003-full', newdirs)
-        self.assertIn('listenbrainz-feedback-20180312-000004-full', newdirs)
+        self.assertIn('listenbrainz-dump-4-20180312-000004-incremental', newdirs)
+        self.assertIn('listenbrainz-dump-5-20180312-000005-incremental', newdirs)
+        self.assertIn('listenbrainz-dump-6-20180312-000006-incremental', newdirs)
+        self.assertIn('listenbrainz-dump-7-20180312-000007-incremental', newdirs)
+        self.assertIn('listenbrainz-dump-99-20200124-000007-incremental', newdirs)
+        self.assertIn('listenbrainz-dump-100-20200124-000008-incremental', newdirs)
 
         self.assertIn('not-a-dump', newdirs)
 
@@ -196,8 +156,7 @@ class DumpManagerTestCase(DatabaseTestCase):
         sleep(1)
 
         # create a full dump
-        self.runner.invoke(dump_manager.create_full, [
-                           '--location', self.tempdir])
+        self.runner.invoke(dump_manager.create_full, ['--location', self.tempdir])
         self.assertEqual(len(os.listdir(self.tempdir)), 1)
         dump_name = os.listdir(self.tempdir)[0]
         mock_notify.assert_called_with(dump_name, 'fullexport')
@@ -212,8 +171,7 @@ class DumpManagerTestCase(DatabaseTestCase):
 
         # now, remove the old dump and create a new one with the same id
         shutil.rmtree(os.path.join(self.tempdir, dump_name))
-        self.runner.invoke(dump_manager.create_full, [
-                           '--location', self.tempdir, '--last-dump-id'])
+        self.runner.invoke(dump_manager.create_full, ['--location', self.tempdir, '--last-dump-id'])
         self.assertEqual(len(os.listdir(self.tempdir)), 1)
         recreated_dump_name = os.listdir(self.tempdir)[0]
 
@@ -229,19 +187,15 @@ class DumpManagerTestCase(DatabaseTestCase):
 
     def test_create_full_dump_with_id(self):
 
-        self.listenstore.insert(generate_data(
-            1, self.user_name, 1500000000, 5))
+        self.listenstore.insert(generate_data(1, self.user_name, 1500000000, 5))
         # if the dump ID does not exist, it should exit with a -1
-        result = self.runner.invoke(dump_manager.create_full, [
-                                    '--location', self.tempdir, '--dump-id', 1000])
+        result = self.runner.invoke(dump_manager.create_full, ['--location', self.tempdir, '--dump-id', 1000])
         self.assertEqual(result.exit_code, -1)
-        # make sure no directory was created either
-        self.assertEqual(len(os.listdir(self.tempdir)), 0)
+        self.assertEqual(len(os.listdir(self.tempdir)), 0) # make sure no directory was created either
 
         # now, add a dump entry to the database and create a dump with that specific dump id
         dump_id = db_dump.add_dump_entry(int(time.time()))
-        result = self.runner.invoke(dump_manager.create_full, [
-                                    '--location', self.tempdir, '--dump-id', dump_id])
+        result = self.runner.invoke(dump_manager.create_full, ['--location', self.tempdir, '--dump-id', dump_id])
         self.assertEqual(len(os.listdir(self.tempdir)), 1)
         dump_name = os.listdir(self.tempdir)[0]
         created_dump_id = int(dump_name.split('-')[2])
@@ -258,8 +212,7 @@ class DumpManagerTestCase(DatabaseTestCase):
     def test_create_incremental(self, mock_notify):
         # create a incremental dump, this won't work because the incremental dump does
         # not have a previous dump
-        result = self.runner.invoke(dump_manager.create_incremental, [
-                                    '--location', self.tempdir])
+        result = self.runner.invoke(dump_manager.create_incremental, ['--location', self.tempdir])
         self.assertEqual(result.exit_code, -1)
         self.assertEqual(len(os.listdir(self.tempdir)), 0)
 
@@ -268,8 +221,7 @@ class DumpManagerTestCase(DatabaseTestCase):
         print("%d dump id" % dump_id)
         sleep(1)
         self.listenstore.insert(generate_data(1, self.user_name, base - 30, 5))
-        result = self.runner.invoke(dump_manager.create_incremental, [
-                                    '--location', self.tempdir])
+        result = self.runner.invoke(dump_manager.create_incremental, ['--location', self.tempdir])
         self.assertEqual(len(os.listdir(self.tempdir)), 1)
         dump_name = os.listdir(self.tempdir)[0]
         mock_notify.assert_called_with(dump_name, 'incremental')
@@ -289,23 +241,20 @@ class DumpManagerTestCase(DatabaseTestCase):
     def test_create_incremental_dump_with_id(self):
 
         # if the dump ID does not exist, it should exit with a -1
-        result = self.runner.invoke(dump_manager.create_incremental, [
-                                    '--location', self.tempdir, '--dump-id', 1000])
+        result = self.runner.invoke(dump_manager.create_incremental, ['--location', self.tempdir, '--dump-id', 1000])
         self.assertEqual(result.exit_code, -1)
 
         # create a base dump entry
         t = int(time.time())
         db_dump.add_dump_entry(t)
         sleep(1)
-        self.listenstore.insert(generate_data(
-            1, self.user_name, 1500000000, 5))
+        self.listenstore.insert(generate_data(1, self.user_name, 1500000000, 5))
         sleep(1)
 
         # create a new dump ID to recreate later
         dump_id = db_dump.add_dump_entry(int(time.time()))
         # now, create a dump with that specific dump id
-        result = self.runner.invoke(dump_manager.create_incremental, [
-                                    '--location', self.tempdir, '--dump-id', dump_id])
+        result = self.runner.invoke(dump_manager.create_incremental, ['--location', self.tempdir, '--dump-id', dump_id])
         self.assertEqual(len(os.listdir(self.tempdir)), 1)
         dump_name = os.listdir(self.tempdir)[0]
         created_dump_id = int(dump_name.split('-')[2])
@@ -317,69 +266,3 @@ class DumpManagerTestCase(DatabaseTestCase):
             if file_name.endswith('.tar.xz'):
                 archive_count += 1
         self.assertEqual(archive_count, 2)
-
-    @patch('listenbrainz.db.dump_manager.send_dump_creation_notification')
-    def test_create_feedback(self, mock_notify):
-
-        self.user = db_user.get_or_create(1, "ernie")
-        self.user2 = db_user.get_or_create(2, "bert")
-        sample_feedback = [
-            {
-                "user_id": self.user['id'],
-                "recording_msid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
-                "score": 1
-            },
-            {
-                "user_id": self.user2['id'],
-                "recording_msid": "222eb00d-9ead-42de-aec9-8f8c1509413d",
-                "score": -1
-            }
-        ]
-        for fb in sample_feedback:
-            db_feedback.insert(
-                Feedback(
-                    user_id=fb["user_id"],
-                    recording_msid=fb["recording_msid"],
-                    score=fb["score"]
-                )
-            )
-
-        rec_feedback = [
-            {
-                "recording_mbid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
-                "rating": 'love',
-                'user_id': self.user['id']
-            },
-            {
-                "recording_mbid": "222eb00d-9ead-42de-aec9-8f8c1509413d",
-                "rating": 'bad_recommendation',
-                "user_id": self.user['id']
-            },
-            {
-                "recording_mbid": "922eb00d-9ead-42de-aec9-8f8c1509413d",
-                "rating": 'hate',
-                "user_id": self.user2['id']
-            }
-        ]
-        for fb in rec_feedback:
-            db_rec_feedback.insert(
-                RecommendationFeedbackSubmit(
-                    user_id=fb['user_id'],
-                    recording_mbid=fb["recording_mbid"],
-                    rating=fb["rating"]
-                )
-            )
-
-        # create a feedback dump
-        self.runner.invoke(dump_manager.create_feedback,
-                           ['--location', self.tempdir])
-        self.assertEqual(len(os.listdir(self.tempdir)), 1)
-        dump_name = os.listdir(self.tempdir)[0]
-        mock_notify.assert_called_with(dump_name, 'feedback')
-
-        # make sure that the dump contains a feedback dump
-        archive_count = 0
-        for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
-            if file_name.endswith('.tar.xz'):
-                archive_count += 1
-        self.assertEqual(archive_count, 1)

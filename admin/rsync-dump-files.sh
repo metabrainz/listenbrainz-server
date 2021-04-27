@@ -34,11 +34,8 @@ if [ $DUMP_TYPE == "full" ]; then
 elif [ $DUMP_TYPE == "incremental" ]; then
     SOURCE_DIR=$RSYNC_INCREMENTAL_DIR
     SSH_KEY=$RSYNC_INCREMENTAL_KEY
-elif [ $DUMP_TYPE == "feedback" ]; then
-    SOURCE_DIR=$RSYNC_SPARK_DIR
-    SSH_KEY=$RSYNC_SPARK_KEY
 else
-    echo "Could not determine which directory (full, incremental or feedback) to copy over, exiting!"
+    echo "Could not determine which directory (full or incremental) to copy over, exiting!"
     exit 1
 fi
 

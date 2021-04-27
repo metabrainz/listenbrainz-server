@@ -15,11 +15,12 @@ def create_schema(conn):
 
     try:
         with conn.cursor() as curs:
+            log("create schema")
             curs.execute("CREATE SCHEMA IF NOT EXISTS mapping")
             conn.commit()
     except OperationalError:
+        log("failed to create schema 'mapping'")
         conn.rollback()
-        raise
 
 
 def insert_rows(curs, table, values):
@@ -33,7 +34,7 @@ def insert_rows(curs, table, values):
 
 def log(*args):
     '''
-        Super simple logging function that prepends timestamps. Did I mention I hate python's logging module?
+        Super simple logging function that prepends timestamps. Did I mention I had python's logging module?
     '''
     print(asctime(), *args)
     sys.stdout.flush()

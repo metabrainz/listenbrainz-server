@@ -38,7 +38,7 @@ INCOMING_EXCHANGE = "incoming"
 INCOMING_QUEUE = "incoming"
 UNIQUE_EXCHANGE = "unique"
 UNIQUE_QUEUE = "unique"
-WEBSOCKETS_QUEUE = "follow_list"
+FOLLOW_LIST_QUEUE = "follow_list"
 PLAYING_NOW_EXCHANGE = "playing_now"
 PLAYING_NOW_QUEUE = "playing_now"
 
@@ -46,11 +46,6 @@ SPARK_RESULT_EXCHANGE = "spark_result"
 SPARK_RESULT_QUEUE = "spark_result"
 SPARK_REQUEST_EXCHANGE = "spark_request"
 SPARK_REQUEST_QUEUE = "spark_request"
-
-# Typesense -- this is only needed if you plan to run the Labs API end point for MBID mapping
-TYPESENSE_HOST = "localhost"
-TYPESENSE_PORT = 8108
-TYPESENSE_API_KEY = "API_KEY"
 
 # MusicBrainz OAuth
 MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"
@@ -80,10 +75,19 @@ PLAYING_NOW_MAX_DURATION = 10 * 60
 #    'backup_count': 100, # optional
 # }
 
+# LOG_EMAIL = {
+#    'mail_server': 'localhost',
+#    'mail_port': 25,
+#    'mail_from_host': 'listenbrainz.org',
+#    'log_email_recipients': [],
+#    'log_email_topic': 'ListenBrainz Error',
+#    'level': 'ERROR',
+# }
+
 # LOG_SENTRY = {
-#     'dsn':'',
-#     'environment': 'development',
-#     'level': 'ERROR',
+#    'dsn':'',
+#    'environment': 'development',
+#    'level': 'ERROR',
 # }
 
 
@@ -106,7 +110,7 @@ UPLOAD_FOLDER = "/tmp/lastfm-backup-upload"
 API_URL = 'https://api.listenbrainz.org'
 LASTFM_PROXY_URL = 'http://localhost:8080/'
 SERVER_ROOT_URL = 'http://localhost'
-WEBSOCKETS_SERVER_URL = 'http://localhost:8082'
+WEBSOCKETS_SERVER_URL = 'http://localhost:8081'
 MUSICBRAINZ_OAUTH_URL = 'https://musicbrainz.org/oauth2/userinfo'
 LISTENBRAINZ_LABS_API_URL = 'https://labs.api.listenbrainz.org'
 
@@ -141,3 +145,6 @@ SESSION_REMEMBER_ME_DURATION = 365
 
 # listen dumps creation dir
 LISTEN_DUMP_TEMP_DIR_ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'tmp')
+
+# Feature configs that enable/disable new features that are merged in master, but not ready for release
+FEATURE_PLAYLIST=True

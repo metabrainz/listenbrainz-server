@@ -1,0 +1,43 @@
+#!/bin/bash
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-web-prod" ]
+then
+    exec uwsgi /etc/uwsgi/uwsgi.ini
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-timescale-writer-prod" ]
+then
+    cd /code/listenbrainz
+    exec python3 -u -m listenbrainz.timescale_writer.timescale_writer
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-api-compat-prod" ]
+then
+    exec uwsgi /etc/uwsgi/uwsgi-api-compat.ini
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-follow-dispatcher-prod" ]
+then
+    cd /code/listenbrainz
+    exec python manage.py run_follow_server -h 0.0.0.0 -p 3031
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-spotify-reader-prod" ]
+then
+    cd /code/listenbrainz
+    exec python3 -m listenbrainz.spotify_updater.spotify_read_listens
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-spark-reader-prod" ]
+then
+    cd /code/listenbrainz
+    exec python3 -m listenbrainz.spark.spark_reader
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-labs-api-prod" ]
+then
+    cd /code/listenbrainz
+    exec uwsgi /etc/uwsgi/uwsgi-labs-api.ini
+fi
+
+echo "init script has no clue which service to start. Set env var CONTAINER_NAME!"

@@ -1,27 +1,22 @@
 #!/bin/bash
 
-function retry {
+retry() {
     local attempts_remaining=5
     local delay=15
-    local exit_status=0
-
     while true; do
-        if "$@"; then
-            return
-        else
-            exit_status=$?
+        "$@"
+        status=$?
+        if [[ $status -eq 0 ]]; then
+            break
         fi
-
-        (( attempts_remaining-- )) || :
-        if [ $attempts_remaining -gt 0 ]; then
-            echo "Command failed with exit status $exit_status: retrying in ${delay}s"
+        let 'attempts_remaining -= 1'
+        if [[ $attempts_remaining -gt 0 ]]; then
+            echo "Command failed with exit status $status; retrying in $delay seconds"
             sleep $delay
-            (( delay *= 2 )) || :
+            let 'delay *= 2'
         else
             echo 'Failed to execute command after 5 attempts'
             break
         fi
     done
-
-    return $exit_status
 }

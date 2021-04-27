@@ -1,6 +1,6 @@
 import uuid
-import logging
 
+from listenbrainz_spark import path
 import listenbrainz_spark.utils.mapping as mapping_utils
 from listenbrainz_spark.stats import (replace_days,
                                       offset_days)
@@ -9,9 +9,7 @@ from listenbrainz_spark.utils import save_parquet, get_listens
 from listenbrainz_spark.exceptions import (FileNotSavedException,
                                            FileNotFetchedException)
 
-
-logger = logging.getLogger(__name__)
-
+from flask import current_app
 
 def get_dataframe_id(prefix):
     """ Generate dataframe id.
@@ -29,7 +27,7 @@ def save_dataframe(df, dest_path):
     try:
         save_parquet(df, dest_path)
     except FileNotSavedException as err:
-        logger.error(str(err), exc_info=True)
+        current_app.logger.error(str(err), exc_info=True)
         raise
 
 
@@ -96,10 +94,10 @@ def get_listens_for_training_model_window(to_date, from_date, dest_path):
     try:
         training_df = get_listens(from_date, to_date, dest_path)
     except ValueError as err:
-        logger.error(str(err), exc_info=True)
+        current_app.logger.error(str(err), exc_info=True)
         raise
     except FileNotFetchedException as err:
-        logger.error(str(err), exc_info=True)
+        current_app.logger.error(str(err), exc_info=True)
         raise
 
     partial_listens_df = mapping_utils.convert_text_fields_to_matchable(training_df)

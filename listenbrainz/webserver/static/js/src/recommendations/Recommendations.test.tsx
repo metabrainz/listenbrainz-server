@@ -30,7 +30,6 @@ const props = {
   spotify: spotify as SpotifyUser,
   user,
   webSocketsServerUrl,
-  newAlert: () => {},
 };
 
 const feedback = {
