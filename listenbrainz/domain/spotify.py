@@ -1,7 +1,5 @@
 import time
 import base64
-from datetime import datetime, timezone
-from typing import Union
 
 import requests
 
@@ -10,7 +8,6 @@ from spotipy import SpotifyOAuth
 
 from data.model.external_service import ExternalServiceType
 from listenbrainz.db import external_service_oauth as db_oauth
-from listenbrainz.db import listens_importer as db_import
 from listenbrainz.db import spotify as db_spotify
 
 from listenbrainz.domain.external_service import ExternalServiceListenBrainzError, \
@@ -68,19 +65,6 @@ class SpotifyService(ImporterService):
         self.client_id = current_app.config['SPOTIFY_CLIENT_ID']
         self.client_secret = current_app.config['SPOTIFY_CLIENT_SECRET']
         self.redirect_url = current_app.config['SPOTIFY_CALLBACK_URL']
-
-    def get_user(self, user_id: int) -> Union[dict, None]:
-        user = db_oauth.get_token(user_id=user_id, service=self.service)
-
-        if user is None:
-            return None
-
-        if user['token_expires']:
-            now = datetime.utcnow()
-            now = now.replace(tzinfo=timezone.utc)
-            user['token_expired'] = now >= user['token_expires']
-
-        return user
 
     def add_new_user(self, user_id: int, token: dict):
         """Create a spotify row for a user based on OAuth access tokens

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 
 from data.model.external_service import ExternalServiceType
 from listenbrainz import db, utils
@@ -104,7 +104,7 @@ def update_token(user_id: int, service: ExternalServiceType, access_token: str,
         })
 
 
-def get_token(user_id: int, service: ExternalServiceType):
+def get_token(user_id: int, service: ExternalServiceType) -> Union[dict, None]:
     """ Get details for user with specified user ID and service.
 
     Args:

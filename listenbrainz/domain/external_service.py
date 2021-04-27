@@ -1,4 +1,5 @@
 from abc import ABC
+from typing import Union
 
 from data.model.external_service import ExternalServiceType
 
@@ -27,8 +28,8 @@ class ExternalService(ABC):
         """
         db_oauth.delete_token(user_id=user_id, service=self.service, stop_import=True)
 
-    def get_user(self, user_id: int):
-        raise NotImplementedError()
+    def get_user(self, user_id: int) -> Union[dict, None]:
+        return db_oauth.get_token(user_id=user_id, service=self.service)
 
     def get_authorize_url(self, scopes: list):
         raise NotImplementedError()
