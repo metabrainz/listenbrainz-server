@@ -60,8 +60,6 @@ export default class LastFmImporter extends React.Component<
   private userName: string;
   private userToken: string;
 
-  private userIsPrivate: boolean;
-
   private page = 1;
   private totalPages = 0;
 
@@ -100,8 +98,6 @@ export default class LastFmImporter extends React.Component<
 
     this.userName = props.user.name;
     this.userToken = props.user.auth_token || "";
-
-    this.userIsPrivate = false;
   }
 
   async getTotalNumberOfScrobbles() {
@@ -155,20 +151,6 @@ export default class LastFmImporter extends React.Component<
     }
   }
 
-  async getUserPrivacy() {
-    // fetch page from Last.fm
-    const { lastfmUsername } = this.state;
-    const url = `${this.lastfmURL}?method=user.getrecenttracks&user=${lastfmUsername}&api_key=${this.lastfmKey}&format=json`;
-    const response = await fetch(encodeURI(url));
-
-    const data = await response.json();
-    if (data.error === 17) {
-      // user is private
-      return true;
-    }
-    return false;
-  }
-
   async getPage(page: number) {
     /*
      * Fetch page from Last.fm
@@ -176,7 +158,10 @@ export default class LastFmImporter extends React.Component<
     const { lastfmUsername } = this.state;
 
     const retry = (reason: string) => {
-      // console.warn(`${reason} while fetching last.fm page=${page}, retrying in 3s`);
+      // eslint-disable-next-line no-console
+      console.warn(
+        `${reason} while fetching last.fm page=${page}, retrying in 3s`
+      );
       setTimeout(() => this.getPage(page), 3000);
     };
 
@@ -212,14 +197,14 @@ export default class LastFmImporter extends React.Component<
       }
     } catch {
       // Retry if there is a network error
-      retry("Error");
+      retry("Network error");
     }
     return null;
   }
 
-  static getlastImportedString(listenedAt: number) {
+  static getlastImportedString(listen: Listen) {
     // Retrieve first track's timestamp from payload and convert it into string for display
-    const lastImportedDate = new Date(listenedAt * 1000);
+    const lastImportedDate = new Date(listen.listened_at * 1000);
     return lastImportedDate.toLocaleString("en-US", {
       month: "short",
       day: "2-digit",
@@ -272,6 +257,12 @@ export default class LastFmImporter extends React.Component<
     this.startImport();
   };
 
+  progressBarPercentage() {
+    if (this.totalPages > this.numCompleted)
+      return (this.numCompleted / this.totalPages) * 100;
+    return 50;
+  }
+
   async submitPage(payload: Array<Listen>) {
     const delay = this.getRateLimitDelay();
     // Halt execution for some time
@@ -287,30 +278,21 @@ export default class LastFmImporter extends React.Component<
     this.updateRateLimitParameters(response);
   }
 
-  async startImport() {
-    this.updateModalAction(<p>Your import from Last.fm is starting!</p>, false);
-    this.latestImportTime = await this.APIService.getLatestImport(
-      this.userName
-    );
-    this.incrementalImport = this.latestImportTime > 0;
-    this.playCount = await this.getTotalNumberOfScrobbles();
-    this.totalPages = await this.getNumberOfPages();
-    this.userIsPrivate = await this.getUserPrivacy();
-    this.page = this.totalPages; // Start from the last page so that oldest scrobbles are imported first
-
+  async importLoop() {
     while (this.page > 0) {
       // Fixing no-await-in-loop will require significant changes to the code, ignoring for now
+      this.lastImportedString = "...";
       const payload = await this.getPage(this.page); // eslint-disable-line
       if (payload) {
         // Submit only if response is valid
         this.submitPage(payload);
+        this.lastImportedString = LastFmImporter.getlastImportedString(
+          payload[0]
+        );
       }
 
       this.page -= 1;
       this.numCompleted += 1;
-      this.lastImportedString = LastFmImporter.getlastImportedString(
-        payload[0].listened_at
-      );
 
       // Update message
       const msg = (
@@ -326,18 +308,75 @@ export default class LastFmImporter extends React.Component<
               </span>
             )}
             <span>
-              Closing this page during import may require a full restart of the
-              importer from the beginning.
+              Please don&apos;t close this page while this is running.
             </span>{" "}
             <br /> <br />
+            <div
+              className="progress"
+              style={{
+                height: `${7}px`,
+              }}
+            >
+              <div
+                className="progress-bar progress-bar-striped progress-bar-animated"
+                aria-label="Importer Progress"
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={this.progressBarPercentage()}
+                tabIndex={0}
+                style={{
+                  width: `${this.progressBarPercentage()}%`,
+                }}
+              />
+            </div>
             <span> Latest import timestamp: {this.lastImportedString} </span>
           </span>
         </p>
       );
       this.setState({ msg });
     }
+  }
 
-    // Update latest import time on LB server
+  async startImport() {
+    this.updateModalAction(<p>Your import from Last.fm is starting!</p>, false);
+    this.latestImportTime = await this.APIService.getLatestImport(
+      this.userName
+    );
+    this.incrementalImport = this.latestImportTime > 0;
+    this.playCount = await this.getTotalNumberOfScrobbles();
+    this.totalPages = await this.getNumberOfPages();
+    this.page = this.totalPages; // Start from the last page so that oldest scrobbles are imported first
+
+    let finalMsg: JSX.Element;
+    const { profileUrl } = this.props;
+
+    try {
+      await this.importLoop(); // import pages
+    } catch (err) {
+      // import failed, show final message on unhandled exception / unrecoverable network error
+      finalMsg = (
+        <p>
+          <FontAwesomeIcon icon={faTimes as IconProp} /> Import failed due to a
+          network error, please retry.
+          <br />
+          Message: &quot;{err.message}&quot;
+          <br />
+          <br />
+          <span style={{ fontSize: `${10}pt` }}>
+            <a href={`${profileUrl}`}>
+              Close and go to your ListenBrainz profile
+            </a>
+          </span>
+        </p>
+      );
+      // eslint-disable-next-line no-console
+      console.debug(err);
+      this.setState({ canClose: true, msg: finalMsg });
+      return Promise.resolve(null);
+    }
+
+    // import was successful
     try {
       this.maxTimestampForImport = Math.max(
         Number(this.maxTimestampForImport),
@@ -358,11 +397,10 @@ export default class LastFmImporter extends React.Component<
         3000
       );
     }
-    const { profileUrl } = this.props;
-
-    let finalMsg = (
+    finalMsg = (
       <p>
-        <FontAwesomeIcon icon={faCheck as IconProp} /> Import finished
+        <FontAwesomeIcon icon={faCheck as IconProp} />
+        Import finished
         <br />
         <span style={{ fontSize: `${8}pt` }}>
           Successfully submitted {this.countReceived} listens to ListenBrainz
@@ -396,36 +434,8 @@ export default class LastFmImporter extends React.Component<
         </span>
       </p>
     );
-
-    // If the user is private, cancel the import and prompt them to change their settings
-    if (this.userIsPrivate) {
-      finalMsg = (
-        <p>
-          <FontAwesomeIcon icon={faTimes as IconProp} /> Import failed
-          <br />
-          <br />
-          <b>
-            <span style={{ fontSize: `${10}pt` }} className="text-danger">
-              Please make sure your Last.fm recent listening information is
-              public by updating your privacy settings
-              <a href="https://www.last.fm/settings/privacy"> here. </a>
-              <br />
-            </span>
-          </b>
-          <span style={{ fontSize: `${8}pt` }}>
-            Thank you for using ListenBrainz!
-          </span>
-          <br />
-          <br />
-          <span style={{ fontSize: `${10}pt` }}>
-            <a href={`${profileUrl}`}>
-              Close and go to your ListenBrainz profile
-            </a>
-          </span>
-        </p>
-      );
-    }
     this.setState({ canClose: true, msg: finalMsg });
+    return Promise.resolve(null);
   }
 
   updateRateLimitParameters(response: Response) {

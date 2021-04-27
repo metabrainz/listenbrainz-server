@@ -24,6 +24,9 @@ SPOTIFY_LISTEN_PERMISSIONS = (
     'playlist-modify-private',
 )
 
+OAUTH_TOKEN_URL = 'https://accounts.spotify.com/api/token'
+
+
 class Spotify:
     def __init__(self, user_id, musicbrainz_id, musicbrainz_row_id, user_token, token_expires,
                  refresh_token, last_updated, record_listens, error_message, latest_listened_at,
@@ -81,7 +84,7 @@ class Spotify:
         return "<Spotify(user:%s): %s>" % (self.user_id, self.musicbrainz_id)
 
 
-def refresh_user_token(spotify_user):
+def refresh_user_token(spotify_user: Spotify):
     """ Refreshes the user token for the given spotify user.
 
     Args:
@@ -89,22 +92,44 @@ def refresh_user_token(spotify_user):
 
     Returns:
         user (domain.spotify.Spotify): the same user with updated tokens
-    """
-    auth = get_spotify_oauth()
+        None: if the user has revoked authorization to spotify
 
+    Raises:
+        SpotifyAPIError: if unable to refresh spotify user token
+
+    Note: spotipy eats up the json body in case of error but we need it for checking
+    whether the user has revoked our authorization. hence, we use our own
+    code instead of spotipy to fetch refresh token.
+    """
     retries = SPOTIFY_API_RETRIES
-    new_token = None
+    response = None
     while retries > 0:
-        new_token = auth.refresh_access_token(spotify_user.refresh_token)
-        if new_token:
+        response = _get_spotify_token("refresh_token", spotify_user.refresh_token)
+
+        if response.status_code == 200:
             break
+        elif response.status_code == 400:
+            error_body = response.json()
+            if "error" in error_body and error_body["error"] == "invalid_grant":
+                # user has revoked authorization through spotify ui or deleted their spotify account etc.
+                # in any of these cases, we should delete user from our spotify db as well.
+                db_spotify.delete_spotify(spotify_user.user_id)
+                return None
+
+            response = None  # some other error during request
+
         retries -= 1
-    if new_token is None:
+
+    if response is None:
         raise SpotifyAPIError('Could not refresh API Token for Spotify user')
 
-    access_token = new_token['access_token']
-    refresh_token = new_token['refresh_token']
-    expires_at = new_token['expires_at']
+    response = response.json()
+    access_token = response['access_token']
+    if "refresh_token" in response:
+        refresh_token = response['refresh_token']
+    else:
+        refresh_token = spotify_user.refresh_token
+    expires_at = int(time.time()) + response['expires_in']
     db_spotify.update_token(spotify_user.user_id, access_token, refresh_token, expires_at)
     return get_user(spotify_user.user_id)
 
@@ -194,7 +219,7 @@ def update_latest_listened_at(user_id, timestamp):
     db_spotify.update_latest_listened_at(user_id, timestamp)
 
 
-def get_access_token(code):
+def get_access_token(code: str):
     """ Get a valid Spotify Access token given the code.
 
     Returns:
@@ -211,23 +236,36 @@ def get_access_token(code):
     is a bug in the spotipy code which leads to loss of the scope received from the
     Spotify API.
     """
-    OAUTH_TOKEN_URL = 'https://accounts.spotify.com/api/token'
-
-    def _make_authorization_headers(client_id, client_secret):
-        auth_header = base64.b64encode(six.text_type(client_id + ':' + client_secret).encode('ascii'))
-        return {'Authorization': 'Basic %s' % auth_header.decode('ascii')}
-
-    payload = {
-        'redirect_uri': current_app.config['SPOTIFY_CALLBACK_URL'],
-        'code': code,
-        'grant_type': 'authorization_code',
-    }
-
-    headers = _make_authorization_headers(current_app.config['SPOTIFY_CLIENT_ID'], current_app.config['SPOTIFY_CLIENT_SECRET'])
-    r = requests.post(OAUTH_TOKEN_URL, data=payload, headers=headers, verify=True)
+    r = _get_spotify_token("authorization_code", code)
     if r.status_code != 200:
         raise SpotifyListenBrainzError(r.reason)
     return r.json()
+
+
+def _get_spotify_token(grant_type: str, token: str) -> requests.Response:
+    """ Fetch access token or refresh token from spotify auth api
+
+    Args:
+        grant_type (str): should be "authorization_code" to retrieve access token and "refresh_token" to refresh tokens
+        token (str): authorization code to retrieve access token first time and refresh token to refresh access tokens
+
+    Returns:
+        response from the spotify authentication endpoint
+    """
+
+    client_id = current_app.config['SPOTIFY_CLIENT_ID']
+    client_secret = current_app.config['SPOTIFY_CLIENT_SECRET']
+    auth_header = base64.b64encode(six.text_type(client_id + ':' + client_secret).encode('ascii'))
+    headers = {'Authorization': 'Basic %s' % auth_header.decode('ascii')}
+
+    token_key = "refresh_token" if grant_type == "refresh_token" else "code"
+    payload = {
+        'redirect_uri': current_app.config['SPOTIFY_CALLBACK_URL'],
+        token_key: token,
+        'grant_type': grant_type,
+    }
+
+    return requests.post(OAUTH_TOKEN_URL, data=payload, headers=headers, verify=True)
 
 
 def get_user_dict(user_id):

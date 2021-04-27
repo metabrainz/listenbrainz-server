@@ -1,5 +1,7 @@
 import APIService from "./APIService";
 
+const feedProps = require("./__mocks__/feedProps.json");
+
 const apiService = new APIService("foobar");
 
 describe("submitListens", () => {
@@ -11,7 +13,6 @@ describe("submitListens", () => {
         status: 200,
       });
     });
-
     jest.useFakeTimers();
   });
 
@@ -46,11 +47,12 @@ describe("submitListens", () => {
     });
   });
 
-  it("retries if submit fails", async () => {
-    // Overide mock for fetch
+  it("retries if network error / submit fails", async () => {
+    // Overide mock for fetch:
     window.fetch = jest
       .fn()
       .mockImplementationOnce(() => {
+        // 1st call will recieve a network error
         return Promise.reject(Error);
       })
       .mockImplementation(() => {
@@ -60,7 +62,7 @@ describe("submitListens", () => {
         });
       });
 
-    await apiService.submitListens("foobar", "import", [
+    apiService.submitListens("foobar", "import", [
       {
         listened_at: 1000,
         track_metadata: {
@@ -69,19 +71,34 @@ describe("submitListens", () => {
         },
       },
     ]);
+
+    jest.runAllTimers();
+    // Flush all promises
+    // https://stackoverflow.com/questions/51126786/jest-fake-timers-with-promises
+    await new Promise((resolve) => setImmediate(resolve));
+
     expect(setTimeout).toHaveBeenCalledTimes(1);
   });
 
-  it("retries if error 429 is recieved fails", async () => {
+  it("retries if error 429 is recieved (rate limited)", async () => {
     // Overide mock for fetch
-    window.fetch = jest.fn().mockImplementation(() => {
-      return Promise.resolve({
-        ok: true,
-        status: 429,
+    window.fetch = jest
+      .fn()
+      .mockImplementationOnce(() => {
+        // 1st call will recieve a 429 error
+        return Promise.resolve({
+          ok: true,
+          status: 429,
+        });
+      })
+      .mockImplementation(() => {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+        });
       });
-    });
 
-    await apiService.submitListens("foobar", "import", [
+    apiService.submitListens("foobar", "import", [
       {
         listened_at: 1000,
         track_metadata: {
@@ -90,6 +107,12 @@ describe("submitListens", () => {
         },
       },
     ]);
+
+    jest.runAllTimers();
+    // Flush all promises
+    // https://stackoverflow.com/questions/51126786/jest-fake-timers-with-promises
+    await new Promise((resolve) => setImmediate(resolve));
+
     expect(setTimeout).toHaveBeenCalledTimes(1);
   });
 
@@ -111,7 +134,7 @@ describe("submitListens", () => {
         },
       },
     ]);
-    expect(setTimeout).not.toHaveBeenCalled(); // no setTimeout calls for future retries
+    expect(setTimeout).not.toHaveBeenCalled(); // should return response with no calls for additional retries
   });
 
   it("returns the response if successful", async () => {
@@ -595,5 +618,124 @@ describe("deleteListen", () => {
     await expect(apiService.deleteListen("foobar", "foo", 0)).resolves.toEqual(
       200
     );
+  });
+});
+
+describe("getFeedForUser", () => {
+  const payload = { ...feedProps };
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ payload }),
+      });
+    });
+
+    // Mock function for checkStatus
+    apiService.checkStatus = jest.fn();
+  });
+
+  it("calls fetch with correct parameters", async () => {
+    await apiService.getFeedForUser("fnord", "shhh", 12345, undefined, 25);
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/user/fnord/feed/events?min_ts=12345&count=25",
+      {
+        headers: {
+          Authorization: "Token shhh",
+        },
+        method: "GET",
+      }
+    );
+  });
+
+  it("calls checkStatus once", async () => {
+    await apiService.getFeedForUser("fnord", "shhh");
+    expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns the feed events array if successful", async () => {
+    const events = await apiService.getFeedForUser("fnord", "shhh");
+    expect(events).toBeDefined();
+    expect(events).toEqual(payload.events);
+  });
+
+  it("throws appropriate error if username is missing", async () => {
+    await expect(apiService.getFeedForUser("", "")).rejects.toThrow(
+      SyntaxError("Username missing")
+    );
+  });
+  it("throws appropriate error if userToken is missing", async () => {
+    await expect(apiService.getFeedForUser("Cthulhu", "")).rejects.toThrow(
+      SyntaxError("User token missing")
+    );
+  });
+});
+
+describe("recommendTrackToFollowers", () => {
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+      });
+    });
+
+    // Mock function for checkStatus
+    apiService.checkStatus = jest.fn();
+  });
+
+  it("calls fetch with correct parameters", async () => {
+    const metadata: UserTrackRecommendationMetadata = {
+      artist_name: "Hans Zimmer",
+      track_name: "Flight",
+      artist_msid: "artist_msid",
+      recording_msid: "recording_msid",
+    };
+    await apiService.recommendTrackToFollowers(
+      "clark_kent",
+      "auth_token",
+      metadata
+    );
+    expect(window.fetch).toHaveBeenCalledWith(
+      `foobar/1/user/clark_kent/timeline-event/create/recording`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Token auth_token",
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({ metadata }),
+      }
+    );
+  });
+
+  it("calls checkStatus once", async () => {
+    const metadata: UserTrackRecommendationMetadata = {
+      artist_name: "Hans Zimmer",
+      track_name: "Flight",
+      artist_msid: "artist_msid",
+      recording_msid: "recording_msid",
+    };
+    await apiService.recommendTrackToFollowers(
+      "clark_kent",
+      "auth_token",
+      metadata
+    );
+    expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns the response code if successful", async () => {
+    const metadata: UserTrackRecommendationMetadata = {
+      artist_name: "Hans Zimmer",
+      track_name: "Flight",
+      artist_msid: "artist_msid",
+      recording_msid: "recording_msid",
+    };
+    await expect(
+      apiService.recommendTrackToFollowers("clark_kent", "auth_token", metadata)
+    ).resolves.toEqual(200);
   });
 });

@@ -5,7 +5,6 @@ import LastFmImporter from "./LastFMImporter";
 import * as page from "./__mocks__/page.json";
 import * as getInfo from "./__mocks__/getInfo.json";
 import * as getInfoNoPlayCount from "./__mocks__/getInfoNoPlayCount.json";
-import * as getUserPrivacy from "./__mocks__/getUserPrivacy.json";
 // Output for the mock data
 import * as encodeScrobbleOutput from "./__mocks__/encodeScrobbleOutput.json";
 
@@ -287,45 +286,6 @@ describe("submitPage", () => {
   });
 });
 
-describe("getUserPrivacy", () => {
-  beforeEach(() => {
-    const wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
-    instance = wrapper.instance();
-    instance.setState({ lastfmUsername: "dummyUser" });
-    // Mock function for fetch
-    window.fetch = jest.fn().mockImplementation(() => {
-      return {
-        json: () => page,
-      };
-    });
-  });
-
-  it("should call with the correct url", () => {
-    instance.getUserPrivacy();
-
-    expect(window.fetch).toHaveBeenCalledWith(
-      `${props.lastfmApiUrl}?method=user.getrecenttracks&user=${instance.state.lastfmUsername}&api_key=${props.lastfmApiKey}&format=json`
-    );
-  });
-
-  it("should return false if last.fm error =/= 17", async () => {
-    const userIsPrivate = await instance.getUserPrivacy();
-    expect(userIsPrivate).toEqual(false);
-  });
-
-  it("should return true if last.fm error == 17", async () => {
-    // Override mock function for fetch
-    window.fetch = jest.fn().mockImplementation(() => {
-      return {
-        json: () => getUserPrivacy,
-      };
-    });
-
-    const userIsPrivate = await instance.getUserPrivacy();
-    expect(userIsPrivate).toEqual(true);
-  });
-});
-
 describe("LastFmImporter Page", () => {
   it("renders", () => {
     const wrapper = mount(<LastFmImporter {...props} />);
@@ -354,8 +314,8 @@ describe("LastFmImporter Page", () => {
 
   it("should properly convert latest imported timestamp to string", () => {
     // Check getlastImportedString() and formatting
-    const testDate = Number(page.recenttracks.track[0].date.uts);
-    const lastImportedDate = new Date(testDate * 1000);
+    const data = LastFmImporter.encodeScrobbles(page);
+    const lastImportedDate = new Date(data[0].listened_at * 1000);
     const msg = lastImportedDate.toLocaleString("en-US", {
       month: "short",
       day: "2-digit",
@@ -365,9 +325,74 @@ describe("LastFmImporter Page", () => {
       hour12: true,
     });
 
-    expect(LastFmImporter.getlastImportedString(testDate)).toMatch(msg);
-    expect(LastFmImporter.getlastImportedString(testDate).length).not.toEqual(
-      0
+    expect(LastFmImporter.getlastImportedString(data[0])).toMatch(msg);
+    expect(LastFmImporter.getlastImportedString(data[0])).not.toHaveLength(0);
+  });
+});
+
+describe("importLoop", () => {
+  beforeEach(() => {
+    const wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
+    instance = wrapper.instance();
+    instance.setState({ lastfmUsername: "dummyUser" });
+    // needed for startImport
+    instance.APIService.getLatestImport = jest.fn().mockImplementation(() => {
+      return Promise.resolve(0);
+    });
+
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(getInfo),
+      });
+    });
+  });
+
+  it("should not contain any uncaught exceptions", async () => {
+    instance.getPage = jest.fn().mockImplementation(() => {
+      return null;
+    });
+
+    let error = null;
+    try {
+      await instance.importLoop();
+    } catch (e) {
+      error = e;
+    }
+    expect(error).toBeNull();
+  });
+
+  it("should show success message on import completion", async () => {
+    // Mock function for successful importLoop
+    instance.importLoop = jest.fn().mockImplementation(async () => {
+      return Promise.resolve({
+        ok: true,
+      });
+    });
+
+    await expect(instance.startImport()).resolves.toBe(null);
+    // verify message is success message
+    expect(instance.state.msg?.props.children).toContain("Import finished");
+    // verify message isn't failure message
+    expect(instance.state.msg?.props.children).not.toContain(
+      "Something went wrong"
     );
+  });
+
+  it("should show error message on unhandled exception / network error", async () => {
+    const errorMsg = "Testing: something went wrong !!!";
+    // Mock function for failed importLoop
+    instance.importLoop = jest.fn().mockImplementation(async () => {
+      const error = new Error();
+      // Changing the error message to make sure it gets reflected in the modal.
+      error.message = errorMsg;
+      throw error;
+    });
+
+    // startImport shouldn't throw error
+    await expect(instance.startImport()).resolves.toBe(null);
+    // verify message is failure message
+    expect(instance.state.msg?.props.children).toContain(errorMsg);
   });
 });

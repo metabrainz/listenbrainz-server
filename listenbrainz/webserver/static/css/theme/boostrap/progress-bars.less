@@ -53,6 +53,9 @@
 // `.progress-bar`.
 .progress-striped .progress-bar,
 .progress-bar-striped {
+  &.progress-bar-animated {
+    .animation(progress-bar-stripes 2s linear infinite);
+  }
   #gradient > .striped();
   background-size: 40px 40px;
 }

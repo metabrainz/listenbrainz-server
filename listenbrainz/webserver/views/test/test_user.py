@@ -215,7 +215,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
 
         r = self.client.get(f'/user/{self.user.musicbrainz_id}/following')
         self.assert200(r)
-        self.assertListEqual([{'musicbrainz_id': 'followed_user'}], r.json['following'])
+        self.assertListEqual([{'musicbrainz_id': 'followed_user', 'id': followed_user['id']}], r.json['following'])
 
     def _create_test_data(self, user_name):
         min_ts = -1

@@ -311,11 +311,15 @@ def refresh_spotify_token():
     spotify_user = spotify.get_user(current_user.id)
     if not spotify_user:
         raise APINotFound("User has not authenticated to Spotify")
+
     if spotify_user.token_expired:
         try:
             spotify_user = spotify.refresh_user_token(spotify_user)
         except spotify.SpotifyAPIError:
             raise APIServiceUnavailable("Cannot refresh Spotify token right now")
+        else:
+            if spotify_user is None:
+                raise APINotFound("User has revoked authorization to Spotify")
 
     return jsonify({
         'id': current_user.id,

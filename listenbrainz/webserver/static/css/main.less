@@ -1,6 +1,8 @@
 @import "theme/theme.less";
+@import "colors.less";
 @import "listens-page.less";
 @import "playlists.less";
+@import "timeline.less";
 @import "follow.less";
 @import "recommendation-page.less";
 
@@ -146,4 +148,59 @@ h2.page-title { @media (max-width: @grid-float-breakpoint) { margin-top: 0px; } 
   top: 0;
   left: 0;
   z-index: 10;
+}
+
+.similarity-score {
+  &.regular {
+    .progress {
+      height: 15px;
+      width: 300px;
+    }
+  }
+  &.compact {
+    > * {
+      display: inline-block;
+      margin-bottom: 0px;
+    }
+
+    .progress {
+      height: 7px;
+      width: 80px;
+      margin-right: 5px;
+    }
+   }
+
+  .progress {
+    box-shadow: none;
+    border-radius: 16px;
+    background-color: #fafafa;
+  }
+
+  .progress-bar {
+    border-radius: 16px;
+    &.red {
+      background-color: @red;
+    }
+    &.orange {
+      background-color: @orange;
+    }
+    &.purple {
+      background-color: @purple;
+    }
+  }
+}
+
+.sticky-top {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 20px;
+}
+
+#feedback-button {
+  .icon {
+    > :not(:first-child){
+      color:@orange;
+    }
+    margin-right: 0.7em;
+  }
 }
