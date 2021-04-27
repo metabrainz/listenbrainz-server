@@ -14,6 +14,7 @@ import ujson
 from werkzeug.exceptions import Unauthorized, NotFound
 
 import listenbrainz.db.user as db_user
+from listenbrainz.db.similar_users import get_top_similar_users
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain import spotify
 from listenbrainz import webserver
@@ -155,6 +156,7 @@ def recent_listens():
         "mode": "recent",
         "spotify": spotify_user,
         "api_url": current_app.config["API_URL"],
+        "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn")
     }
 
     return render_template("index/recent.html",
@@ -166,16 +168,20 @@ def recent_listens():
 @login_required
 def feed():
 
-    # TODO (param): remove this when feed feature is ready for release #feedfeatureflag
-    if current_user.musicbrainz_id not in ['rob', 'iliekcomputers', 'mr_monkey', 'shivam-kapila', 'ishaanshah']:
-        raise NotFound
+    spotify_user = {}
+    if current_user.is_authenticated:
+        spotify_user = spotify.get_user_dict(current_user.id)
+
+    current_user_data = {
+        "id": current_user.id,
+        "name": current_user.musicbrainz_id,
+        "auth_token": current_user.auth_token,
+    }
 
     props = {
-        'current_user': {
-            'id': current_user.id,
-            'name': current_user.musicbrainz_id,
-            'auth_token': current_user.auth_token,
-        }
+        "current_user": current_user_data,
+        "spotify": spotify_user,
+        "api_url": current_app.config["API_URL"],
     }
     return render_template('index/feed.html', props=ujson.dumps(props))
 
@@ -265,3 +271,17 @@ def _get_user_count():
             raise
         cache.set(user_count_key, int(user_count), CACHE_TIME, encode=False)
         return user_count
+
+
+@index_bp.route("/similar-users")
+def similar_users():
+    """ Show all of the users with the highest similarity in order to make
+        them visible to all of our users. This view can show bugs in the algorithm
+        and spammers as well.
+    """
+
+    similar_users = get_top_similar_users()
+    return render_template(
+        "index/similar-users.html",
+        similar_users=similar_users
+    )

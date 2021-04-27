@@ -131,7 +131,7 @@ export default class PlaybackControls extends React.Component<
       <div id="music-player" aria-label="Playback control">
         <div className="content">
           {children}
-          <div className="no-album-art">No album art</div>
+          <div className="no-album-art" />
         </div>
         <div
           className={`info ${

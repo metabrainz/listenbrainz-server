@@ -22,7 +22,8 @@ from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          notify_artist_relation_import,
                                          notify_mapping_import,
                                          handle_missing_musicbrainz_data,
-                                         notify_cf_recording_recommendations_generation)
+                                         notify_cf_recording_recommendations_generation,
+                                         handle_similar_users)
 
 from listenbrainz.webserver import create_app
 
@@ -40,7 +41,8 @@ response_handler_map = {
     'import_mapping': notify_mapping_import,
     'import_artist_relation': notify_artist_relation_import,
     'missing_musicbrainz_data': handle_missing_musicbrainz_data,
-    'cf_recommendations_recording_mail': notify_cf_recording_recommendations_generation
+    'cf_recommendations_recording_mail': notify_cf_recording_recommendations_generation,
+    'similar_users': handle_similar_users,
 }
 
 RABBITMQ_HEARTBEAT_TIME = 60 * 60  # 1 hour, in seconds
@@ -73,20 +75,20 @@ class SparkReader:
         try:
             response_type = response['type']
         except KeyError:
-            current_app.logger.error('Bad response sent to spark_reader: %s', json.dumps(response, indent=4), exc_info=True)
+            current_app.logger.error('Bad response sent to spark_reader: %s' % json.dumps(response, indent=4), exc_info=True)
             return
 
         try:
             response_handler = self.get_response_handler(response_type)
         except Exception:
-            current_app.logger.error('Unknown response type: %s, doing nothing.', response_type, exc_info=True)
+            current_app.logger.error('Unknown response type: %s, doing nothing.' % response_type, exc_info=True)
             return
 
         try:
             response_handler(response)
         except Exception as e:
-            current_app.logger.error('Error in the response handler: %s, data: %s',
-                                     str(e), json.dumps(response, indent=4), exc_info=True)
+            current_app.logger.error('Error in the response handler: %s, data: %s %'
+                                     (str(e), json.dumps(response, indent=4)), exc_info=True)
             return
 
     def callback(self, ch, method, properties, body):
@@ -103,7 +105,6 @@ class SparkReader:
         """
 
         with self.app.app_context():
-
             while True:
                 self.init_rabbitmq_connection()
                 self.incoming_ch = utils.create_channel_to_consume(
@@ -118,7 +119,6 @@ class SparkReader:
                 try:
                     self.incoming_ch.start_consuming()
                 except pika.exceptions.ConnectionClosed:
-                    current_app.logger.warning("Connection to rabbitmq closed. Re-opening.")
                     self.connection = None
                     continue
 

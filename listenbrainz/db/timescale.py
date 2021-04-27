@@ -42,16 +42,26 @@ def run_sql_script_without_transaction(sql_file_path):
         connection = engine.connect()
         connection.connection.set_isolation_level(0)
         lines = sql.read().splitlines()
-        try:
-            for line in lines:
-                # TODO: Not a great way of removing comments. The alternative is to catch
-                # the exception sqlalchemy.exc.ProgrammingError "can't execute an empty query"
-                if line and not line.startswith("--"):
-                    connection.execute(line)
-        except sqlalchemy.exc.ProgrammingError as e:
-            print("Error: {}".format(e))
-            return False
-        finally:
-            connection.connection.set_isolation_level(1)
-            connection.close()
+        retries = 0
+        while True:
+            try:
+                for line in lines:
+                    # TODO: Not a great way of removing comments. The alternative is to catch
+                    # the exception sqlalchemy.exc.ProgrammingError "can't execute an empty query"
+                    if line and not line.startswith("--"):
+                        connection.execute(line)
+                break
+            except sqlalchemy.exc.ProgrammingError as e:
+                print("Error: {}".format(e))
+                return False
+            except sqlalchemy.exc.OperationalError:
+                print("Trapped template1 access error, FFS! Sleeping, trying again.")
+                retries += 1
+                if retries == 5:
+                    raise
+                time.sleep(1)
+                continue
+            finally:
+                connection.connection.set_isolation_level(1)
+                connection.close()
         return True

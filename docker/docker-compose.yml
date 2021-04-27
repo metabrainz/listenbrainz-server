@@ -35,6 +35,8 @@ services:
       context: ..
       dockerfile: Dockerfile
       target: listenbrainz-dev
+      args:
+        GIT_COMMIT_SHA: HEAD
     environment:
       FLASK_APP: listenbrainz.webserver
       FLASK_ENV: development
@@ -81,13 +83,13 @@ services:
       - redis
       - rabbitmq
 
-  follow_server:
+  websockets:
     image: web
     volumes:
       - ..:/code/listenbrainz:z
-    command: python manage.py run_follow_server -h 0.0.0.0 -p 8081
+    command: python manage.py run_websockets -h 0.0.0.0 -p 8082
     ports:
-      - "8081:8081"
+      - "8082:8082"
     depends_on:
       - redis
       - rabbitmq
@@ -96,8 +98,14 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.webpack
+      # We target webpack-base and mount the JS code folder as a volume
+      # as opposed to using webpack-with-source target and having to rebuild the image each time
+      target: webpack-base
     command: npm run build:dev
     volumes:
+      # Mount source front-end files
       - ../listenbrainz/webserver/static:/code/static:z
+      # We mount this as a sort of shared volume
+      # where we put the compiled output to be served by the service "web"
       - ../listenbrainz/webserver/static:/static:z
 
