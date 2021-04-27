@@ -24,22 +24,15 @@ import logging
 import listenbrainz_spark
 import listenbrainz_spark.query_map
 from listenbrainz_spark import config
-from listenbrainz_spark.utils import init_rabbitmq
+from listenbrainz_spark.utils import init_rabbitmq, configure_base_logger
 
 from py4j.protocol import Py4JJavaError
 
 RABBITMQ_HEARTBEAT_TIME = 2 * 60 * 60  # 2 hours -- a full dump import takes 40 minutes right now
 
 rc = None
-
-handler = logging.StreamHandler()
-handler.setLevel(logging.INFO)
-formatter = logging.Formatter("%(asctime)s %(name)-20s %(levelname)-8s %(message)s")
-handler.setFormatter(formatter)
-
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-logger.addHandler(handler)
+
 
 class RequestConsumer:
 
@@ -184,4 +177,5 @@ def main(app_name):
 
 
 if __name__ == '__main__':
+    configure_base_logger()
     main('spark-writer')

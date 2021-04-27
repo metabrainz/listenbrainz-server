@@ -20,6 +20,17 @@ from listenbrainz_spark.exceptions import (DataFrameNotAppendedException,
                                            ViewNotRegisteredException)
 
 
+def configure_base_logger():
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.INFO)
+    formatter = logging.Formatter("%(asctime)s %(name)-20s %(levelname)-8s %(message)s")
+    handler.setFormatter(formatter)
+
+    _logger = logging.getLogger("listenbrainz_spark")
+    _logger.setLevel(logging.INFO)
+    _logger.addHandler(handler)
+
+
 logger = logging.getLogger(__name__)
 
 # A typical listen is of the form:
