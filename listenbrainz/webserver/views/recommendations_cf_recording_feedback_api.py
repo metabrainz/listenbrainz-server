@@ -33,7 +33,9 @@ def submit_recommendation_feedback():
     Submit recommendation feedback. A user token (found on  https://listenbrainz.org/profile/ )
     must be provided in the Authorization header! Each request should contain only one feedback in the payload.
 
-    A sample feedback may look like::
+    A sample feedback may look like:
+
+    .. code-block:: json
 
         {
             "recording_mbid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
@@ -79,7 +81,9 @@ def delete_recommendation_feedback():
     """
     Delete feedback for a user. A user token (found on  https://listenbrainz.org/profile/ )
     must be provided in the Authorization header! Each request should contain only one recording mbid in the payload.
-    A sample feedback may look like::
+    A sample feedback may look like:
+
+    .. code-block:: json
 
         {
             "recording_mbid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
@@ -123,9 +127,12 @@ def get_feedback_for_user(user_name):
     Get feedback given by user ``user_name``.
 
     A sample response may look like:
+
+    .. code-block:: json
+
         {
-            count: 1,
-            feedback: [
+            "count": 1,
+            "feedback": [
                 {
                     "created": "1345679998",
                     "recording_mbid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
@@ -133,9 +140,9 @@ def get_feedback_for_user(user_name):
                 },
                 "-- more feedback data here ---"
             ],
-            offset: 0,
-            total_count: 1,
-            user_name: 'Vansika'
+            "offset": 0,
+            "total_count": 1,
+            "user_name": "Vansika"
         }
 
     If the optional argument ``rating`` is not given, this endpoint will return all the feedback submitted by the user.
@@ -192,21 +199,24 @@ def get_feedback_for_recordings_for_user(user_name):
     Get feedback given by user ``user_name`` for the list of recordings supplied.
 
     A sample response may look like:
-    {
-        "feedback": [
-            {
-                "created": 1604033691,
-                "rating": "bad_recommendation",
-                "recording_mbid": "9ffabbe4-e078-4906-80a7-3a02b537e251"
-            },
-            {
-                "created": 1604032934,
-                "rating": "hate",
-                "recording_mbid": "28111d2c-a80d-418f-8b77-6aba58abe3e7"
-            }
-        ],
-        "user_name": "Vansika Pareek"
-    }
+
+    .. code-block:: json
+
+        {
+            "feedback": [
+                {
+                    "created": 1604033691,
+                    "rating": "bad_recommendation",
+                    "recording_mbid": "9ffabbe4-e078-4906-80a7-3a02b537e251"
+                },
+                {
+                    "created": 1604032934,
+                    "rating": "hate",
+                    "recording_mbid": "28111d2c-a80d-418f-8b77-6aba58abe3e7"
+                }
+            ],
+            "user_name": "Vansika Pareek"
+        }
 
     An empty response will be returned if the feedback for given recording MBID doesn't exist.
 

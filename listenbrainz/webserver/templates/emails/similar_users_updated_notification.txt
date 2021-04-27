@@ -1,0 +1,9 @@
+Hey! 👋
+
+Similar users were received by the spark consumer
+and are being written into the database.
+
+{{ user_count }} users had similar users calculated with an average
+of {{ avg_similar_users }} being generated per user.
+
+Your Friendly Neighbourhood Brainzbot 🤖

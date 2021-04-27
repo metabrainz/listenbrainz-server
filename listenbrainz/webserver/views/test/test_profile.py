@@ -1,11 +1,10 @@
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import listenbrainz.db.spotify as db_spotify
-import pytz
 import time
 import ujson
 
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import url_for
 from listenbrainz.domain import spotify
 from listenbrainz.db.testing import DatabaseTestCase
@@ -173,7 +172,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
     def test_spotify_refresh_token_which_has_expired(self, mock_refresh_user_token, mock_get_user):
         self.temporary_login(self.user['login_id'])
         # token hasn't expired
-        expires = datetime.utcfromtimestamp(int(time.time()) + 10).replace(tzinfo=pytz.UTC)
+        expires = datetime.utcfromtimestamp(int(time.time()) + 10).replace(tzinfo=timezone.utc)
         mock_get_user.return_value = spotify.Spotify(
             user_id=self.user['id'],
             musicbrainz_id=self.user['musicbrainz_id'],
@@ -197,13 +196,12 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
             'permission': 'user-read-recently-played some-other-permission',
         })
 
-
     @patch('listenbrainz.webserver.views.profile.spotify.get_user')
     @patch('listenbrainz.webserver.views.profile.spotify.refresh_user_token')
     def test_spotify_refresh_token_which_has_not_expired(self, mock_refresh_user_token, mock_get_user):
         self.temporary_login(self.user['login_id'])
         # token hasn't expired
-        expires = datetime.utcfromtimestamp(int(time.time()) - 10).replace(tzinfo=pytz.UTC)
+        expires = datetime.utcfromtimestamp(int(time.time()) - 10).replace(tzinfo=timezone.utc)
         spotify_user = spotify.Spotify(
             user_id=self.user['id'],
             musicbrainz_id=self.user['musicbrainz_id'],
@@ -229,6 +227,30 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
             'user_token': 'new-token',
             'permission': 'user-read-recently-played',
         })
+
+    @patch('listenbrainz.domain.spotify.get_user')
+    @patch('listenbrainz.domain.spotify.refresh_user_token')
+    def test_spotify_refresh_token_which_has_been_revoked(self, mock_refresh_user_token, mock_get_user):
+        self.temporary_login(self.user['login_id'])
+        # token hasn't expired
+        expires = datetime.utcfromtimestamp(int(time.time()) - 10).replace(tzinfo=timezone.utc)
+        spotify_user = spotify.Spotify(
+            user_id=self.user['id'],
+            musicbrainz_id=self.user['musicbrainz_id'],
+            musicbrainz_row_id=self.user['musicbrainz_row_id'],
+            user_token='old-token',
+            token_expires=expires,  # token has expired
+            refresh_token='old-refresh-token',
+            last_updated=None,
+            record_listens=True,
+            error_message=None,
+            latest_listened_at=None,
+            permission='user-read-recently-played',
+        )
+        mock_get_user.return_value = spotify_user
+        mock_refresh_user_token.side_effect = spotify.SpotifyInvalidGrantError
+        response = self.client.post(url_for('profile.refresh_spotify_token'))
+        self.assertEqual(response.json, {'code': 404, 'error': 'User has revoked authorization to Spotify'})
 
     @patch('listenbrainz.listenstore.timescale_listenstore.TimescaleListenStore.fetch_listens')
     def test_export_streaming(self, mock_fetch_listens):

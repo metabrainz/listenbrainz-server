@@ -1,3 +1,7 @@
+from urllib.parse import urlparse
+
+import bleach
+
 import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
 import listenbrainz.webserver.redis_connection as redis_connection
 import listenbrainz.db.user as db_user
@@ -9,6 +13,8 @@ import ujson
 import uuid
 
 from flask import current_app, request
+from sqlalchemy.exc import DataError
+
 from listenbrainz.listen import Listen
 from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
 from listenbrainz.webserver.external import messybrainz
@@ -36,6 +42,7 @@ LISTEN_TYPE_SINGLE = 1
 LISTEN_TYPE_IMPORT = 2
 LISTEN_TYPE_PLAYING_NOW = 3
 
+
 def insert_payload(payload, user, listen_type=LISTEN_TYPE_IMPORT):
     """ Convert the payload into augmented listens then submit them.
         Returns: augmented_listens
@@ -45,6 +52,8 @@ def insert_payload(payload, user, listen_type=LISTEN_TYPE_IMPORT):
         _send_listens_to_queue(listen_type, augmented_listens)
     except (APIInternalServerError, APIServiceUnavailable) as e:
         raise
+    except DataError:
+        raise APIBadRequest("Listen submission contains invalid characters.")
     except Exception as e:
         current_app.logger.error("Error while inserting payload: %s", str(e), exc_info=True)
         raise APIInternalServerError("Something went wrong. Please try again.")
@@ -112,6 +121,9 @@ def _send_listens_to_queue(listen_type, listens):
 def validate_listen(listen, listen_type):
     """Make sure that required keys are present, filled out and not too large."""
 
+    if listen is None:
+        raise APIBadRequest("Listen is empty and cannot be validated.")
+
     if listen_type in (LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT):
         if 'listened_at' not in listen:
             raise APIBadRequest("JSON document must contain the key listened_at at the top level.", listen)
@@ -132,28 +144,36 @@ def validate_listen(listen, listen_type):
             raise APIBadRequest("Value for key listened_at is too high.", listen)
 
     elif listen_type == LISTEN_TYPE_PLAYING_NOW:
-        if listen is not None:
-            if 'listened_at' in listen:
-                raise APIBadRequest("JSON document must not contain listened_at while submitting "
-                                    "playing_now.", listen)
+        if 'listened_at' in listen:
+            raise APIBadRequest("JSON document must not contain listened_at while submitting "
+                                "playing_now.", listen)
 
-            if 'track_metadata' in listen and len(listen) > 1:
-                raise APIBadRequest("JSON document may only contain track_metadata as top level "
-                                    "key when submitting playing_now.", listen)
+        if 'track_metadata' in listen and len(listen) > 1:
+            raise APIBadRequest("JSON document may only contain track_metadata as top level "
+                                "key when submitting playing_now.", listen)
 
     # Basic metadata
-    try:
-        if not listen['track_metadata']['track_name']:
-            raise APIBadRequest("JSON document does not contain required "
-                                "track_metadata.track_name.", listen)
-        if not listen['track_metadata']['artist_name']:
-            raise APIBadRequest("JSON document does not contain required "
-                                "track_metadata.artist_name.", listen)
+    if 'track_name' in listen['track_metadata']:
+        if not isinstance(listen['track_metadata']['track_name'], str):
+            raise APIBadRequest("track_metadata.track_name must be a single string.", listen)
+
+        listen['track_metadata']['track_name'] = listen['track_metadata']['track_name'].strip()
+        if len(listen['track_metadata']['track_name']) == 0:
+            raise APIBadRequest("required field track_metadata.track_name is empty.", listen)
+    else:
+        raise APIBadRequest("JSON document does not contain required track_metadata.track_name.", listen)
+
+
+    if 'artist_name' in listen['track_metadata']:
         if not isinstance(listen['track_metadata']['artist_name'], str):
-            raise APIBadRequest("artist_name must be a single string.", listen)
-    except KeyError:
-        raise APIBadRequest("JSON document does not contain a valid metadata.track_name "
-                       "and/or track_metadata.artist_name.", listen)
+            raise APIBadRequest("track_metadata.artist_name must be a single string.", listen)
+
+        listen['track_metadata']['artist_name'] = listen['track_metadata']['artist_name'].strip()
+        if len(listen['track_metadata']['artist_name']) == 0:
+            raise APIBadRequest("required field track_metadata.artist_name is empty.", listen)
+    else:
+        raise APIBadRequest("JSON document does not contain required track_metadata.artist_name.", listen)
+
 
     if 'additional_info' in listen['track_metadata']:
         # Tags
@@ -378,6 +398,7 @@ def parse_param_list(params: str) -> list:
 
     return param_list
 
+
 def validate_auth_header(optional=False):
     """ Examine the current request headers for an Authorization: Token <uuid>
         header that identifies a LB user and then load the corresponding user
@@ -404,3 +425,24 @@ def validate_auth_header(optional=False):
         raise APIUnauthorized("Invalid authorization token.")
 
     return user
+
+
+def _allow_metabrainz_domains(tag, name, value):
+    """A bleach attribute cleaner for <a> tags that only allows hrefs to point
+    to metabrainz-controlled domains"""
+
+    metabrainz_domains = ["acousticbrainz.org", "critiquebrainz.org", "listenbrainz.org",
+                          "metabrainz.org", "musicbrainz.org"]
+
+    if name == "rel":
+        return True
+    elif name == "href":
+        p = urlparse(value)
+        return (not p.netloc) or p.netloc in metabrainz_domains
+    else:
+        return False
+
+
+def _filter_description_html(description):
+    ok_tags = [u"a", u"strong", u"b", u"em", u"i", u"u", u"ul", u"li", u"p", u"br"]
+    return bleach.clean(description, tags=ok_tags, attributes={"a": _allow_metabrainz_domains}, strip=True)
