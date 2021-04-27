@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# Github Actions automatically sets the CI environment variable. We use this variable to detect if the script is running
-# inside a CI environment and modify its execution as needed.
-if [ "$CI" == "true" ] ; then
-    echo "Running in CI mode"
-fi
-
 # UNIT TESTS
 # ./test.sh                build unit test containers, bring up, make database, test, bring down
 # for development:
@@ -19,7 +13,6 @@ fi
 # ./test.sh fe -u          run frontend tests, update snapshots
 # ./test.sh fe -b          build frontend test containers
 # ./test.sh fe -t          run type-checker
-# ./test.sh fe -f          run linter
 
 # SPARK TESTS
 # ./test.sh spark          run spark tests
@@ -45,7 +38,7 @@ INT_COMPOSE_PROJECT_NAME_ORIGINAL=listenbrainz_int
 
 if [[ ! -d "docker" ]]; then
     echo "This script must be run from the top level directory of the listenbrainz-server source."
-    exit 255
+    exit -1
 fi
 
 function build_unit_containers {
@@ -111,36 +104,13 @@ function unit_dcdown {
 function build_frontend_containers {
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                build frontend_tester
+                build listenbrainz frontend_tester
 }
 
 function update_snapshots {
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
                 run --rm frontend_tester npm run test:update-snapshots
-}
-
-function run_lint_check {
-    if [ "$CI" == "true" ] ; then
-        command="format:ci"
-    else
-        command="format"
-    fi
-
-    docker-compose -f $COMPOSE_FILE_LOC \
-                   -p $COMPOSE_PROJECT_NAME \
-                run --rm frontend_tester npm run $command
-}
-
-function run_frontend_tests {
-    if [ "$CI" == "true" ] ; then
-        command="test:ci"
-    else
-        command="test"
-    fi
-    docker-compose -f $COMPOSE_FILE_LOC \
-                   -p $COMPOSE_PROJECT_NAME \
-                run --rm frontend_tester npm run $command
 }
 
 function run_type_check {
@@ -212,9 +182,8 @@ if [ "$1" == "spark" ]; then
     docker-compose -f $SPARK_COMPOSE_FILE_LOC \
                    -p $SPARK_COMPOSE_PROJECT_NAME \
                 up test
-    RET=$?
     spark_dcdown
-    exit $RET
+    exit 0
 fi
 
 if [ "$1" == "int" ]; then
@@ -246,11 +215,10 @@ if [ "$1" == "int" ]; then
                   -wait tcp://db:5432 -timeout 60s \
                   -wait tcp://redis:6379 -timeout 60s \
                   -wait tcp://rabbitmq:5672 -timeout 60s \
-                bash -c "pytest $TESTS_TO_RUN"
-    RET=$?
+                bash -c "py.test $TESTS_TO_RUN"
     echo "Taking containers down"
     int_dcdown
-    exit $RET
+    exit 0
 fi
 
 # Project name is sanitized by Compose, so we need to do the same thing.
@@ -275,18 +243,14 @@ if [ "$1" == "fe" ]; then
     if [ "$2" == "-t" ]; then
         echo "Running type checker"
         run_type_check
-        exit $?
-    fi
-
-    if [ "$2" == "-f" ]; then
-        echo "Running linter"
-        run_lint_check
-        exit $?
+        exit 0
     fi
 
     echo "Running tests"
-    run_frontend_tests
-    exit $?
+    docker-compose -f $COMPOSE_FILE_LOC \
+                   -p $COMPOSE_PROJECT_NAME \
+                run --rm frontend_tester npm test
+    exit 0
 fi
 
 if [ "$1" == "-s" ]; then
@@ -331,15 +295,12 @@ if [ $DB_EXISTS -eq 1 -a $DB_RUNNING -eq 1 ]; then
     echo "Running tests"
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                run --rm listenbrainz pytest "$@"
-    RET=$?
+                run --rm listenbrainz py.test "$@"
     unit_dcdown
-    exit $RET
 else
     # Else, we have containers, just run tests
     echo "Running tests"
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                run --rm listenbrainz pytest "$@"
-    exit $?
+                run --rm listenbrainz py.test "$@"
 fi

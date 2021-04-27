@@ -5,7 +5,6 @@ import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
-import * as Sentry from "@sentry/react";
 import APIService from "../APIService";
 import Bar from "./Bar";
 import Loader from "../components/Loader";
@@ -207,10 +206,7 @@ export default class UserEntityChart extends React.Component<
     }
     const offset = (page - 1) * this.ROWS_PER_PAGE;
 
-    let result = [] as UserEntityData;
-    if (!data?.payload) {
-      return result;
-    }
+    let result = {} as UserEntityData;
     if (entity === "artist") {
       result = (data as UserArtistsResponse).payload.artists
         .map((elem, idx: number) => {
@@ -331,7 +327,12 @@ export default class UserEntityChart extends React.Component<
           entity,
         });
       } else {
-        throw error;
+        // Error Boundaries don't catch errors in async code.
+        // Throwing an error in setState fixes this.
+        // This is a hacky solution but should be fixed with upcoming concurrent mode in React.
+        this.setState(() => {
+          throw error;
+        });
       }
     }
   };
@@ -592,12 +593,7 @@ document.addEventListener("DOMContentLoaded", () => {
   } catch (err) {
     // Show error to the user and ask to reload page
   }
-  const { user, api_url: apiUrl, sentry_dsn } = reactProps;
-
-  if (sentry_dsn) {
-    Sentry.init({ dsn: sentry_dsn });
-  }
-
+  const { user, api_url: apiUrl } = reactProps;
   ReactDOM.render(
     <ErrorBoundary>
       <UserEntityChart apiUrl={apiUrl} user={user} />

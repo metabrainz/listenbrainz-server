@@ -400,15 +400,6 @@ describe("processData", () => {
       instance.processData(userRecordingsResponse as UserRecordingsResponse, 1)
     ).toEqual(userRecordingsProcessDataOutput);
   });
-  it("returns an empty array if no payload", () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
-    const instance = wrapper.instance();
-
-    // When stats haven't been calculated, processData is called with an empty object
-    const result = instance.processData({} as UserRecordingsResponse, 1);
-
-    expect(result).toEqual([]);
-  });
 });
 
 describe("syncStateWithURL", () => {

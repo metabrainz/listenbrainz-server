@@ -20,32 +20,45 @@
 
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import * as Sentry from "@sentry/react";
 import FollowButton from "./FollowButton";
+
+// Using this function to limit access to the follow button
+// while it does nothing. Will eventually remove this function.
+// TODO (param, 2020-09-30): remove this function
+const followUsersFeatureEnabled = (currentUser: string): boolean => {
+  const usersAllowedIn = [
+    "rob",
+    "iliekcomputers",
+    "shivam-kapila",
+    "ishaanshah",
+    "mr_monkey",
+  ].map((username: string) => username.toLowerCase());
+  return usersAllowedIn.includes(currentUser.toLowerCase());
+};
 
 const UserPageHeading = ({
   user,
-  apiUrl,
   loggedInUser,
   loggedInUserFollowsUser = false,
 }: {
   user: ListenBrainzUser;
-  apiUrl: string;
   loggedInUser: ListenBrainzUser | null;
   loggedInUserFollowsUser: boolean;
 }) => {
   return (
     <h2 className="page-title">
       {user.name}
-      {loggedInUser && user.name !== loggedInUser.name && (
-        <FollowButton
-          type="icon-only"
-          user={user}
-          apiUrl={apiUrl}
-          loggedInUser={loggedInUser}
-          loggedInUserFollowsUser={loggedInUserFollowsUser}
-        />
-      )}
+      {loggedInUser &&
+        // TODO (param): Remove this when the feed feature is ready for release #feedfeatureflag
+        followUsersFeatureEnabled(loggedInUser.name) &&
+        user.name !== loggedInUser.name && (
+          <FollowButton
+            type="icon-only"
+            user={user}
+            loggedInUser={loggedInUser}
+            loggedInUserFollowsUser={loggedInUserFollowsUser}
+          />
+        )}
     </h2>
   );
 };
@@ -57,22 +70,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const propsElement = document.getElementById("react-props");
   const reactProps = JSON.parse(propsElement!.innerHTML);
-  const {
-    user,
-    current_user,
-    logged_in_user_follows_user,
-    sentry_dsn,
-    api_url,
-  } = reactProps;
-
-  if (sentry_dsn) {
-    Sentry.init({ dsn: sentry_dsn });
-  }
-
+  const { user, current_user, logged_in_user_follows_user } = reactProps;
   ReactDOM.render(
     <UserPageHeading
       user={user}
-      apiUrl={api_url}
       loggedInUser={current_user || null}
       loggedInUserFollowsUser={logged_in_user_follows_user}
     />,

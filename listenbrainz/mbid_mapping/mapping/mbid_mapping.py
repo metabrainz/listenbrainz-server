@@ -1,8 +1,5 @@
-import re
-
 import psycopg2
 from psycopg2.errors import OperationalError
-from unidecode import unidecode
 
 from mapping.utils import create_schema, insert_rows, log
 from mapping.formats import create_formats_table
@@ -26,24 +23,22 @@ def create_tables(mb_conn):
         with mb_conn.cursor() as curs:
             curs.execute("DROP TABLE IF EXISTS mapping.tmp_mbid_mapping")
             curs.execute("""CREATE TABLE mapping.tmp_mbid_mapping (
-                                         id                        INTEGER NOT NULL,
                                          recording_name            TEXT NOT NULL,
-                                         recording_mbid            UUID NOT NULL,
+                                         recording_id              INTEGER NOT NULL,
                                          artist_credit_name        TEXT NOT NULL,
                                          artist_credit_id          INTEGER NOT NULL,
                                          release_name              TEXT NOT NULL,
-                                         release_mbid              UUID NOT NULL,
-                                         combined_lookup           TEXT NOT NULL,
+                                         release_id                INTEGER NOT NULL,
+                                         year                      INTEGER,
                                          score                     INTEGER NOT NULL)""")
-            curs.execute(
-                "DROP TABLE IF EXISTS mapping.tmp_mbid_mapping_releases")
+            curs.execute("DROP TABLE IF EXISTS mapping.tmp_mbid_mapping_releases")
             curs.execute("""CREATE TABLE mapping.tmp_mbid_mapping_releases (
                                             id      SERIAL,
                                             release INTEGER)""")
             create_formats_table(mb_conn)
             mb_conn.commit()
     except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable) as err:
-        log("mbid mapping: failed to mbid mapping tables", err)
+        log("failed to create mbid mapping tables", err)
         mb_conn.rollback()
         raise
 
@@ -57,23 +52,9 @@ def create_indexes(conn):
         with conn.cursor() as curs:
             curs.execute("""CREATE INDEX tmp_mbid_mapping_idx_artist_credit_recording_name
                                       ON mapping.tmp_mbid_mapping(artist_credit_name, recording_name)""")
-
-            # Remove any duplicate rows so we can create a unique index and not get dups in the results
-            curs.execute("""DELETE FROM mapping.tmp_mbid_mapping
-                                  WHERE id IN (
-                                                SELECT id 
-                                                  FROM (
-                                                          SELECT id, combined_lookup, score,
-                                                                 row_number() OVER (PARTITION BY combined_lookup ORDER BY score)
-                                                            FROM mapping.tmp_mbid_mapping
-                                                        GROUP BY combined_lookup, score, id
-                                                       ) AS q
-                                                 WHERE row_number > 1)""")
-            curs.execute("""CREATE UNIQUE INDEX tmp_mbid_mapping_idx_combined_lookup
-                                      ON mapping.tmp_mbid_mapping(combined_lookup)""")
         conn.commit()
     except OperationalError as err:
-        log("mbid mapping: failed to mbid mapping", err)
+        log("failed to create mbid mapping", err)
         conn.rollback()
         raise
 
@@ -90,7 +71,7 @@ def create_temp_release_table(conn):
     """
 
     with conn.cursor() as curs:
-        log("mbid mapping temp tables: Create temp release table: select")
+        log("Create temp release table: select")
         query = """             SELECT r.id AS release
                                   FROM musicbrainz.release_group rg
                                   JOIN musicbrainz.release r ON rg.id = r.release_group
@@ -111,11 +92,9 @@ def create_temp_release_table(conn):
                                           country, rg.artist_credit, rg.name"""
 
         if config.USE_MINIMAL_DATASET:
-            log("mbid mapping temp tables: Using a minimal dataset for artist credit pairs")
-            curs.execute(query %
-                         ('AND rg.artist_credit = %d' % TEST_ARTIST_ID))
+            log("Create temp release table: Using a minimal dataset!")
+            curs.execute(query % ('AND rg.artist_credit = %d' % TEST_ARTIST_ID))
         else:
-            log("mbid mapping temp tables: Using a full dataset for artist credit pairs")
             curs.execute(query % "")
 
         # Fetch releases and toss out duplicates -- using DISTINCT in the query above is not possible as it will
@@ -133,23 +112,20 @@ def create_temp_release_table(conn):
                 count += 1
                 rows.append((count, row[0]))
                 if len(rows) == BATCH_SIZE:
-                    insert_rows(
-                        curs_insert, "mapping.tmp_mbid_mapping_releases", rows)
+                    insert_rows(curs_insert, "mapping.tmp_mbid_mapping_releases", rows)
                     rows = []
 
-                if count % 1000000 == 0:
-                    log("mbid mapping temp tables: inserted %s rows." % count)
+                if count % 100000 == 0:
+                    print("Fetch mapping releases: inserted %s rows." % count)
 
             if rows:
-                insert_rows(
-                    curs_insert, "mapping.tmp_mbid_mapping_releases", rows)
+                insert_rows(curs_insert, "mapping.tmp_mbid_mapping_releases", rows)
 
-        log("mbid mapping temp tables: create indexes")
+        log("Create temp release table: create indexes")
         curs.execute("""CREATE INDEX tmp_mbid_mapping_releases_idx_release
                                   ON mapping.tmp_mbid_mapping_releases(release)""")
         curs.execute("""CREATE INDEX tmp_mbid_mapping_releases_idx_id
                                   ON mapping.tmp_mbid_mapping_releases(id)""")
-        log("mbid mapping temp tables: done")
 
 
 def swap_table_and_indexes(conn):
@@ -168,15 +144,13 @@ def swap_table_and_indexes(conn):
 
             curs.execute("""ALTER INDEX mapping.tmp_mbid_mapping_idx_artist_credit_recording_name
                             RENAME TO mbid_mapping_idx_artist_credit_recording_name""")
-            curs.execute("""ALTER INDEX mapping.tmp_mbid_mapping_idx_combined_lookup
-                            RENAME TO mbid_mapping_idx_combined_lookup""")
             curs.execute("""ALTER INDEX mapping.tmp_mbid_mapping_releases_idx_release
                             RENAME TO mbid_mapping_releases_idx_release""")
             curs.execute("""ALTER INDEX mapping.tmp_mbid_mapping_releases_idx_id
                             RENAME TO mbid_mapping_releases_idx_id""")
         conn.commit()
     except OperationalError as err:
-        log("mbid mapping: failed to swap in new mbid mapping tables", str(err))
+        log("failed to swap in new mbid mapping tables", str(err))
         conn.rollback()
         raise
 
@@ -190,14 +164,12 @@ def create_mbid_mapping():
         them suitable for inclusion in the msid-mapping.
     """
 
-    log("mbid mapping: start")
     with psycopg2.connect(config.DB_CONNECT_MB) as mb_conn:
         with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
 
             # Create the dest table (perhaps dropping the old one first)
-            log("mbid mapping: create schema")
+            log("Create mbid mapping: drop old tables, create new tables")
             create_schema(mb_conn)
-            log("mbid mapping: drop old tables, create new tables")
             create_tables(mb_conn)
 
             create_temp_release_table(mb_conn)
@@ -207,14 +179,14 @@ def create_mbid_mapping():
                 artist_recordings = {}
                 count = 0
                 batch_count = 0
-                serial = 1
-                log("mbid mapping: fetch recordings")
+                log("Create mbid mapping: fetch recordings")
                 mb_curs.execute("""SELECT r.name AS recording_name,
-                                          r.gid AS recording_mbid,
+                                          r.id AS recording_id,
                                           ac.name AS artist_credit_name,
                                           ac.id AS artist_credit_id,
                                           rl.name AS release_name,
-                                          rl.gid AS release_mbid,
+                                          rl.id AS release_id,
+                                          date_year AS year,
                                           rpr.id AS score
                                      FROM recording r
                                      JOIN artist_credit ac
@@ -231,8 +203,9 @@ def create_mbid_mapping():
                                        ON rl.id = rpr.release
                                 LEFT JOIN release_country rc
                                        ON rc.release = rl.id
-                                    GROUP BY rpr.id, ac.id, rl.gid, artist_credit_name, r.gid, r.name, release_name
+                                    GROUP BY rpr.id, ac.id, rl.id, artist_credit_name, r.id, r.name, release_name, year
                                     ORDER BY ac.id, rpr.id""")
+                log("Create mbid mapping: Insert rows into DB.")
                 while True:
                     row = mb_curs.fetchone()
                     if not row:
@@ -247,30 +220,26 @@ def create_mbid_mapping():
                         artist_recordings = {}
 
                         if len(rows) > BATCH_SIZE:
-                            insert_rows(
-                                mb_curs2, "mapping.tmp_mbid_mapping", rows)
+                            insert_rows(mb_curs2, "mapping.tmp_mbid_mapping", rows)
                             count += len(rows)
                             mb_conn.commit()
                             rows = []
                             batch_count += 1
 
-                            if batch_count % 200 == 0:
-                                log("mbid mapping: inserted %d rows." % count)
+                            if batch_count % 10 == 0:
+                                log("Create mbid mapping: inserted %d rows." % count)
 
                     try:
                         recording_name = row['recording_name']
                         artist_credit_name = row['artist_credit_name']
                         release_name = row['release_name']
-                        combined_lookup = unidecode(
-                            re.sub(r'[^\w]+', '', artist_credit_name + recording_name).lower())
                         if recording_name not in artist_recordings:
-                            artist_recordings[recording_name] = (serial, recording_name, row['recording_mbid'],
+                            artist_recordings[recording_name] = (recording_name, row['recording_id'],
                                                                  artist_credit_name, row['artist_credit_id'],
-                                                                 release_name, row['release_mbid'], combined_lookup,
+                                                                 release_name, row['release_id'], row['year'],
                                                                  row['score'])
-                            serial += 1
                     except TypeError:
-                        log(row)
+                        print(row)
                         raise
 
                     last_ac_id = row['artist_credit_id']
@@ -281,11 +250,12 @@ def create_mbid_mapping():
                     mb_conn.commit()
                     count += len(rows)
 
-            log("mbid mapping: inserted %d rows total." % count)
-            log("mbid mapping: create indexes")
+            log("Create mbid mapping: inserted %d rows total." % count)
+            log("Create mbid mapping: create indexes")
             create_indexes(mb_conn)
 
-            log("mbid mapping: swap tables and indexes into production.")
+            log("Create mbid mapping: swap tables and indexes into production.")
             swap_table_and_indexes(mb_conn)
 
-    log("mbid mapping: done")
+    log("done")
+    print()

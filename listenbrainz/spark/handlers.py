@@ -19,7 +19,6 @@ from data.model.user_release_stat import UserReleaseStatJson
 from data.model.user_recording_stat import UserRecordingStatJson
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
 from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
-from listenbrainz.db.similar_users import import_user_similarities
 
 
 
@@ -73,6 +72,7 @@ def handle_user_entity(data):
     musicbrainz_id = data['musicbrainz_id']
     user = db_user.get_by_mb_id(musicbrainz_id)
     if not user:
+        current_app.logger.critical("Calculated stats for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
         return
 
     # send a notification if this is a new batch of stats
@@ -107,7 +107,7 @@ def handle_user_listening_activity(data):
     musicbrainz_id = data['musicbrainz_id']
     user = db_user.get_by_mb_id(musicbrainz_id)
     if not user:
-        current_app.logger.info("Calculated stats for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
+        current_app.logger.critical("Calculated stats for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
         return
 
     # send a notification if this is a new batch of stats
@@ -136,7 +136,7 @@ def handle_user_daily_activity(data):
     musicbrainz_id = data['musicbrainz_id']
     user = db_user.get_by_mb_id(musicbrainz_id)
     if not user:
-        current_app.logger.info("Calculated stats for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
+        current_app.logger.critical("Calculated stats for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
         return
 
     # send a notification if this is a new batch of stats
@@ -233,6 +233,8 @@ def handle_missing_musicbrainz_data(data):
     user = db_user.get_by_mb_id(musicbrainz_id)
 
     if not user:
+        current_app.logger.critical("Calculated data missing from MusicBrainz for a user that doesn't exist"
+                                    " in the Postgres database: {}".format(musicbrainz_id))
         return
 
     current_app.logger.debug("Inserting missing musicbrainz data for {}".format(musicbrainz_id))
@@ -348,7 +350,7 @@ def notify_artist_relation_import(data):
     if current_app.config['TESTING']:
         return
 
-    artist_relation_name = data['imported_artist_relation']
+    artist_relation_name = data['import_artist_relation']
     import_time = data['import_time']
     time_taken_to_import = data['time_taken_to_import']
 
@@ -383,29 +385,3 @@ def notify_cf_recording_recommendations_generation(data):
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
     )
-
-
-def handle_similar_users(message):
-    """ Save the similar users data to the DB
-    """
-
-    if current_app.config['TESTING']:
-        return
-
-    user_count, avg_similar_users, error = import_user_similarities(message['data'])
-    if error:
-        send_mail(
-            subject='Similar User data failed to be calculated',
-            text=render_template('emails/similar_users_failed_notification.txt', error=error),
-            recipients=['listenbrainz-observability@metabrainz.org'],
-            from_name='ListenBrainz',
-            from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
-        )
-    else:
-        send_mail(
-            subject='Similar User data has been calculated',
-            text=render_template('emails/similar_users_updated_notification.txt', user_count=str(user_count), avg_similar_users="%.1f" % avg_similar_users),
-            recipients=['listenbrainz-observability@metabrainz.org'],
-            from_name='ListenBrainz',
-            from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
-        )

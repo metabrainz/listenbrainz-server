@@ -17,6 +17,8 @@ The top artist and similar artist candidate set dataframes are saved to HDFS. Fo
 Note: users and recordings that are in candidate set but not in the training set will be discarded by the recommender.
 """
 
+import os
+import sys
 import uuid
 import logging
 import time
@@ -35,14 +37,11 @@ from listenbrainz_spark.exceptions import (SparkSessionNotInitializedException,
                                            SimilarArtistNotFetchedException,
                                            FileNotSavedException)
 
+from flask import current_app
 import pyspark.sql.functions as func
 from pyspark.sql.window import Window
 from pyspark.sql.functions import col, row_number
 from pyspark.sql.types import StringType, ArrayType
-
-
-logger = logging.getLogger(__name__)
-
 
 # Some useful dataframe fields/columns.
 # top_artist_df:
@@ -290,13 +289,13 @@ def get_top_artists(mapped_listens_subset, top_artist_limit, users):
                                                  .where(top_artist_df.user_name.isin(users))
 
         if _is_empty_dataframe(top_artist_given_users_df):
-            logger.error('Top artists for {} not fetched'.format(users), exc_info=True)
+            current_app.logger.error('Top artists for {} not fetched'.format(users), exc_info=True)
             raise TopArtistNotFetchedException('Users inactive or data missing from msid->mbid mapping')
 
         return top_artist_given_users_df
 
     if _is_empty_dataframe(top_artist_df):
-        logger.error('Top artists not fetched', exc_info=True)
+        current_app.logger.error('Top artists not fetched', exc_info=True)
         raise TopArtistNotFetchedException('Users inactive or data missing from msid->mbid mapping')
 
     return top_artist_df
@@ -389,7 +388,7 @@ def get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
                                               .distinct()
 
     if _is_empty_dataframe(similar_artist_df):
-        logger.error('Similar artists not generated.', exc_info=True)
+        current_app.logger.error('Similar artists not generated.', exc_info=True)
         raise SimilarArtistNotFetchedException('Artists missing from artist relation')
 
     return similar_artist_df, similar_artist_df_html
@@ -514,13 +513,13 @@ def save_candidate_sets(top_artist_candidate_set_df, similar_artist_candidate_se
     try:
         utils.save_parquet(top_artist_candidate_set_df, path.RECOMMENDATION_RECORDING_TOP_ARTIST_CANDIDATE_SET)
     except FileNotSavedException as err:
-        logger.error(str(err), exc_info=True)
+        current_app.logger.error(str(err), exc_info=True)
         raise
 
     try:
         utils.save_parquet(similar_artist_candidate_set_df, path.RECOMMENDATION_RECORDING_SIMILAR_ARTIST_CANDIDATE_SET)
     except FileNotSavedException as err:
-        logger.error(str(err), exc_info=True)
+        current_app.logger.error(str(err), exc_info=True)
         raise
 
 
@@ -625,7 +624,7 @@ def main(recommendation_generation_window=None, top_artist_limit=None, similar_a
     try:
         listenbrainz_spark.init_spark_session('Candidate_set')
     except SparkSessionNotInitializedException as err:
-        logger.error(str(err), exc_info=True)
+        current_app.logger.error(str(err), exc_info=True)
         raise
 
     try:
@@ -634,37 +633,37 @@ def main(recommendation_generation_window=None, top_artist_limit=None, similar_a
         users_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_USERS_DATAFRAME)
         artist_relation_df = utils.read_files_from_HDFS(path.SIMILAR_ARTIST_DATAFRAME_PATH)
     except PathNotFoundException as err:
-        logger.error(str(err), exc_info=True)
+        current_app.logger.error(str(err), exc_info=True)
         raise
     except FileNotFetchedException as err:
-        logger.error(str(err), exc_info=True)
+        current_app.logger.error(str(err), exc_info=True)
         raise
 
     from_date, to_date = get_dates_to_generate_candidate_sets(mapped_listens_df, recommendation_generation_window)
 
-    logger.info('Fetching listens to get top artists...')
+    current_app.logger.info('Fetching listens to get top artists...')
     mapped_listens_subset = get_listens_to_fetch_top_artists(mapped_listens_df, from_date, to_date)
 
-    logger.info('Fetching top artists...')
+    current_app.logger.info('Fetching top artists...')
     top_artist_df = get_top_artists(mapped_listens_subset, top_artist_limit, users)
 
-    logger.info('Preparing top artists candidate set...')
+    current_app.logger.info('Preparing top artists candidate set...')
     top_artist_candidate_set_df, top_artist_candidate_set_df_html = get_top_artist_candidate_set(top_artist_df, recordings_df,
                                                                                                  users_df, mapped_listens_subset)
 
-    logger.info('Fetching similar artists...')
+    current_app.logger.info('Fetching similar artists...')
     similar_artist_df, similar_artist_df_html = get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
 
-    logger.info('Preparing similar artists candidate set...')
+    current_app.logger.info('Preparing similar artists candidate set...')
     similar_artist_candidate_set_df, similar_artist_candidate_set_df_html = get_similar_artist_candidate_set(
                                                                                 similar_artist_df,
                                                                                 recordings_df,
                                                                                 users_df,
                                                                                 mapped_listens_subset)
 
-    logger.info('Saving candidate sets...')
+    current_app.logger.info('Saving candidate sets...')
     save_candidate_sets(top_artist_candidate_set_df, similar_artist_candidate_set_df)
-    logger.info('Done!')
+    current_app.logger.info('Done!')
 
     # time taken to generate candidate_sets
     total_time = '{:.2f}'.format((time.monotonic() - time_initial) / 60)
@@ -672,9 +671,9 @@ def main(recommendation_generation_window=None, top_artist_limit=None, similar_a
         user_data = get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_candidate_set_df_html,
                                             top_artist_df, similar_artist_df_html)
 
-        logger.info('Saving HTML...')
+        current_app.logger.info('Saving HTML...')
         save_candidate_html(user_data, total_time, from_date, to_date)
-        logger.info('Done!')
+        current_app.logger.info('Done!')
 
     message = [{
         'type': 'cf_recommendations_recording_candidate_sets',

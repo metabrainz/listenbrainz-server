@@ -34,10 +34,7 @@ class TimescaleWriterSubscriber(ListenWriter):
 
         submit = []
         for listen in listens:
-            try:
-                submit.append(Listen.from_json(listen))
-            except ValueError:
-                pass
+            submit.append(Listen.from_json(listen))
 
         ret = self.insert_to_listenstore(submit)
         if not ret:
@@ -179,7 +176,7 @@ class TimescaleWriterSubscriber(ListenWriter):
 
             except Exception as err:
                 traceback.print_exc()
-                current_app.logger.error("failed to start timescale loop ", str(err, errors='ignore'))
+                current_app.logger.error("failed to start timescale loop ", str(err))
 
 
 if __name__ == "__main__":

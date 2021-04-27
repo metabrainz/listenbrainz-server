@@ -43,7 +43,7 @@ container.
 
     ./develop.sh spark format
 
-.. note::
+.. info::
 
     You can run ``./develop.sh spark format`` any time that you want to delete all of the
     data that is loaded in spark. This will shut down the spark docker cluster, remove
@@ -57,13 +57,7 @@ in action!
 Bring containers up
 --------------------
 
-First, ensure that you are running the main ListenBrainz development environment:
-
-.. code-block:: bash
-
-    ./develop.sh up
-
-Start the ListenBrainz Spark environment:
+Start the ListenBrainz Spark containers by executing ``develop.sh spark up``.
 
 .. code-block:: bash
 
@@ -74,7 +68,7 @@ Import data into the spark environment
 
 We provide small data dumps that are helpful for working with real ListenBrainz data.
 Download and import a data dump into your spark environment using the following
-commands in a separate terminal.
+commands.
 
 .. code-block:: bash
 

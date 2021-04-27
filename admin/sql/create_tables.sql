@@ -39,6 +39,17 @@ CREATE TABLE data_dump (
   created     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE follow_list (
+  id                SERIAL, -- PK
+  name              TEXT NOT NULL,
+  creator           INTEGER NOT NULL, -- FK to "user".id
+  private           BOOLEAN NOT NULL DEFAULT FALSE,
+  members           INTEGER ARRAY NOT NULL DEFAULT ARRAY[]::INTEGER[],
+  created           TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  last_saved        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+ALTER TABLE follow_list ADD CONSTRAINT follow_list_name_creator_key UNIQUE (name, creator);
+
 CREATE TABLE missing_musicbrainz_data (
     id              SERIAL, -- PK
     user_id         INTEGER NOT NULL, --FK to "user".id
@@ -78,20 +89,6 @@ CREATE TABLE recommendation.recording_session (
   session_id          INTEGER NOT NULL --FK to recommendation.recommender_session.id
 );
 
-CREATE TABLE recommendation.similar_user (
-  user_id         INTEGER NOT NULL, -- FK to "user".id
-  similar_users   JSONB,
-  last_updated    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE user_timeline_event (
-  id                    SERIAL, -- PK
-  user_id               INTEGER, -- FK to "user"
-  event_type            user_timeline_event_type_enum,
-  metadata              JSONB,
-  created               TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
-);
-
 CREATE TABLE spotify_auth (
   user_id                   INTEGER NOT NULL, -- PK and FK to user.id
   user_token                VARCHAR NOT NULL,
@@ -102,18 +99,6 @@ CREATE TABLE spotify_auth (
   record_listens            BOOLEAN DEFAULT TRUE,
   error_message             VARCHAR,
   permission                VARCHAR NOT NULL
-);
-
-CREATE TABLE external_service_oauth (
-    id                      SERIAL,
-    user_id                 INTEGER NOT NULL,
-    service                 external_service_oauth_type NOT NULL,
-    access_token            TEXT NOT NULL,
-    refresh_token           TEXT,
-    token_expires           TIMESTAMP WITH TIME ZONE,
-    last_updated            TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    record_listens          BOOLEAN NOT NULL,
-    service_details         JSONB
 );
 
 CREATE TABLE statistics.artist (

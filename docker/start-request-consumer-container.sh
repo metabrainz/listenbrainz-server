@@ -2,7 +2,7 @@
 
 cd "$(dirname "${BASH_SOURCE[0]}")/../"
 
-source spark_config.sh
+source config.sh
 
 CONTAINER_NAME="spark-request-consumer"
 

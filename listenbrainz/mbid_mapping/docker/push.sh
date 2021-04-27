@@ -12,7 +12,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")/../"
 
 git describe --tags --dirty --always > .git-version
 
-TAG=${1:-prod}
+TAG=${1:-test}
 echo "building tag $TAG"
-docker build -t metabrainz/listenbrainz-mbid-mapping:$TAG --target mbid-mapping-prod . && \
-    docker push metabrainz/listenbrainz-mbid-mapping:$TAG
+docker build -t metabrainz/listenbrainz-msb-mapper:$TAG . && \
+    docker push metabrainz/listenbrainz-msb-mapper:$TAG

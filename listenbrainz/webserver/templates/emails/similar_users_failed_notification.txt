@@ -1,7 +1,0 @@
-Hey! 👋
-
-Similar users were not able to be written to the database, due to:
-
-{{ error }}
-
-Your Friendly Neighbourhood Brainzbot 🤖

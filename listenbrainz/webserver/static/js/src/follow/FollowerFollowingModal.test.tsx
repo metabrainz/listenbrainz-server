@@ -19,42 +19,14 @@
  */
 
 import * as React from "react";
-import { shallow } from "enzyme";
+import { shallow, ShallowWrapper } from "enzyme";
 import FollowerFollowingModal from "./FollowerFollowingModal";
-
-const props = {
-  user: { name: "foobar" },
-  apiUrl: "http://0.0.0.0",
-  loggedInUser: null,
-  followerList: ["foo"],
-  followingList: ["bar"],
-  loggedInUserFollowsUser: () => true,
-  updateFollowingList: () => {},
-};
 
 describe("<FollowerFollowingModal />", () => {
   it("renders", () => {
-    const wrapper = shallow(<FollowerFollowingModal {...props} />);
-    expect(wrapper.html()).toMatchSnapshot();
-  });
-});
-
-describe("updateMode()", () => {
-  it("updates the mode correctly", () => {
-    const wrapper = shallow<FollowerFollowingModal>(
-      <FollowerFollowingModal {...props} />
+    const wrapper = shallow(
+      <FollowerFollowingModal user={{ name: "iliekcomputers" }} />
     );
-    const instance = wrapper.instance();
-
-    // initial state after first fetch
-    expect(instance.state.activeMode).toEqual("follower");
-
-    // does nothing if the same mode as the current mode is passed
-    instance.updateMode("follower");
-    expect(instance.state.activeMode).toEqual("follower");
-
-    // updates the mode correctly
-    instance.updateMode("following");
-    expect(instance.state.activeMode).toEqual("following");
+    expect(wrapper).toBeTruthy();
   });
 });

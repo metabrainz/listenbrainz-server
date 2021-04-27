@@ -2,6 +2,7 @@ import os
 import pprint
 import sys
 from time import sleep
+from shutil import copyfile
 
 from brainzutils.flask import CustomFlask
 from flask import request, url_for, redirect
@@ -41,8 +42,9 @@ def create_rabbitmq(app):
         app.logger.error('Could not connect to RabbitMQ: %s', str(e))
         return
 
-
 def load_config(app):
+
+
     # Load configuration files: If we're running under a docker deployment, wait until
     config_file = os.path.join( os.path.dirname(os.path.realpath(__file__)), '..', 'config.py' )
     if deploy_env:
@@ -69,7 +71,7 @@ def load_config(app):
         print('Unable to retrieve git commit. Error: %s', str(e))
 
 
-def gen_app(debug=None):
+def gen_app(config_path=None, debug=None):
     """ Generate a Flask app for LB with all configurations done and connections established.
 
     In the Flask app returned, blueprints are not registered.
@@ -90,6 +92,7 @@ def gen_app(debug=None):
     # Logging
     app.init_loggers(
         file_config=app.config.get('LOG_FILE'),
+        email_config=app.config.get('LOG_EMAIL'),
         sentry_config=app.config.get('LOG_SENTRY')
     )
 
@@ -141,8 +144,9 @@ def gen_app(debug=None):
     return app
 
 
-def create_app(debug=None):
-    app = gen_app(debug=debug)
+def create_app(config_path=None, debug=None):
+
+    app = gen_app(config_path=config_path, debug=debug)
 
     # Static files
     import listenbrainz.webserver.static_manager
@@ -166,6 +170,7 @@ def create_app(debug=None):
     admin.add_view(UserAdminView(UserModel, model.db.session, endpoint='user_model'))
     admin.add_view(SpotifyAdminView(SpotifyModel, model.db.session, endpoint='spotify_model'))
 
+
     @app.before_request
     def before_request_gdpr_check():
         # skip certain pages, static content and the API
@@ -184,14 +189,14 @@ def create_app(debug=None):
     return app
 
 
-def create_api_compat_app(debug=None):
+def create_api_compat_app(config_path=None, debug=None):
     """ Creates application for the AudioScrobbler API.
 
     The AudioScrobbler API v1.2 requires special views for the root URL so we
     need to create a different app and only register the api_compat blueprints
     """
 
-    app = gen_app(debug=debug)
+    app = gen_app(config_path=config_path, debug=debug)
 
     from listenbrainz.webserver.views.api_compat import api_bp as api_compat_bp
     from listenbrainz.webserver.views.api_compat_deprecated import api_compat_old_bp
@@ -228,58 +233,41 @@ def create_app_rtfd():
 
 def _register_blueprints(app):
     from listenbrainz.webserver.views.index import index_bp
-    app.register_blueprint(index_bp)
-
     from listenbrainz.webserver.views.login import login_bp
-    app.register_blueprint(login_bp, url_prefix='/login')
-
     from listenbrainz.webserver.views.api import api_bp
-    app.register_blueprint(api_bp, url_prefix=API_PREFIX)
-
     from listenbrainz.webserver.views.api_compat import api_bp as api_bp_compat
-    app.register_blueprint(api_bp_compat)
-
     from listenbrainz.webserver.views.user import user_bp
-    app.register_blueprint(user_bp, url_prefix='/user')
-
     from listenbrainz.webserver.views.user import redirect_bp
-    app.register_blueprint(redirect_bp, url_prefix='/my')
-
     from listenbrainz.webserver.views.profile import profile_bp
-    app.register_blueprint(profile_bp, url_prefix='/profile')
-
+    from listenbrainz.webserver.views.follow import follow_bp
+    from listenbrainz.webserver.views.follow_api import follow_api_bp
     from listenbrainz.webserver.views.stats_api import stats_api_bp
-    app.register_blueprint(stats_api_bp, url_prefix=API_PREFIX+'/stats')
-
     from listenbrainz.webserver.views.status_api import status_api_bp
-    app.register_blueprint(status_api_bp, url_prefix=API_PREFIX+'/status')
-
     from listenbrainz.webserver.views.player import player_bp
-    app.register_blueprint(player_bp, url_prefix='/player')
-
     from listenbrainz.webserver.views.feedback_api import feedback_api_bp
-    app.register_blueprint(feedback_api_bp, url_prefix=API_PREFIX+'/feedback')
-
     from listenbrainz.webserver.views.recommendations_cf_recording_feedback_api import recommendation_feedback_api_bp
-    app.register_blueprint(recommendation_feedback_api_bp, url_prefix=API_PREFIX+'/recommendation/feedback')
-
     from listenbrainz.webserver.views.recommendations_cf_recording_api import recommendations_cf_recording_api_bp
-    app.register_blueprint(recommendations_cf_recording_api_bp, url_prefix=API_PREFIX+'/cf/recommendation')
-
     from listenbrainz.webserver.views.missing_musicbrainz_data_api import missing_musicbrainz_data_api_bp
-    app.register_blueprint(missing_musicbrainz_data_api_bp, url_prefix=API_PREFIX+'/missing/musicbrainz')
-
     from listenbrainz.webserver.views.recommendations_cf_recording import recommendations_cf_recording_bp
-    app.register_blueprint(recommendations_cf_recording_bp, url_prefix='/recommended/tracks')
-
     from listenbrainz.webserver.views.playlist import playlist_bp
-    app.register_blueprint(playlist_bp, url_prefix='/playlist')
-
     from listenbrainz.webserver.views.playlist_api import playlist_api_bp
-    app.register_blueprint(playlist_api_bp, url_prefix=API_PREFIX+'/playlist')
-
-    from listenbrainz.webserver.views.user_timeline_event_api import user_timeline_event_api_bp
-    app.register_blueprint(user_timeline_event_api_bp, url_prefix=API_PREFIX)
-
-    from listenbrainz.webserver.views.social_api import social_api_bp
-    app.register_blueprint(social_api_bp, url_prefix=API_PREFIX)
+    app.register_blueprint(index_bp)
+    app.register_blueprint(login_bp, url_prefix='/login')
+    app.register_blueprint(redirect_bp, url_prefix='/my')
+    app.register_blueprint(user_bp, url_prefix='/user')
+    app.register_blueprint(profile_bp, url_prefix='/profile')
+    app.register_blueprint(follow_bp, url_prefix='/follow')
+    app.register_blueprint(player_bp, url_prefix='/player')
+    app.register_blueprint(api_bp, url_prefix=API_PREFIX)
+    app.register_blueprint(follow_api_bp, url_prefix=API_PREFIX+'/follow')
+    app.register_blueprint(stats_api_bp, url_prefix=API_PREFIX+'/stats')
+    app.register_blueprint(status_api_bp, url_prefix=API_PREFIX+'/status')
+    app.register_blueprint(feedback_api_bp, url_prefix=API_PREFIX+'/feedback')
+    app.register_blueprint(recommendation_feedback_api_bp, url_prefix=API_PREFIX+'/recommendation/feedback')
+    app.register_blueprint(api_bp_compat)
+    app.register_blueprint(recommendations_cf_recording_api_bp, url_prefix=API_PREFIX+'/cf/recommendation')
+    app.register_blueprint(missing_musicbrainz_data_api_bp, url_prefix=API_PREFIX+'/missing/musicbrainz')
+    app.register_blueprint(recommendations_cf_recording_bp, url_prefix='/recommended/tracks')
+    if app.config.get("FEATURE_PLAYLIST", False):
+        app.register_blueprint(playlist_bp, url_prefix='/playlist')
+        app.register_blueprint(playlist_api_bp, url_prefix=API_PREFIX+'/playlist')

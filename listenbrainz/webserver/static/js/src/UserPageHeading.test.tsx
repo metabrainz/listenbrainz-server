@@ -38,7 +38,6 @@ describe("<UserPageHeading />", () => {
     const wrapper = shallow(
       <UserPageHeading
         user={user}
-        apiUrl="http://0.0.0.0"
         loggedInUser={loggedInUser}
         loggedInUserFollowsUser
       />
@@ -50,7 +49,6 @@ describe("<UserPageHeading />", () => {
     const wrapper = shallow(
       <UserPageHeading
         user={user}
-        apiUrl="http://0.0.0.0"
         loggedInUser={null}
         loggedInUserFollowsUser={false}
       />
@@ -62,7 +60,6 @@ describe("<UserPageHeading />", () => {
     const wrapper = shallow(
       <UserPageHeading
         user={user}
-        apiUrl="http://0.0.0.0"
         loggedInUser={user}
         loggedInUserFollowsUser={false}
       />
@@ -74,7 +71,6 @@ describe("<UserPageHeading />", () => {
     const wrapper = shallow(
       <UserPageHeading
         user={user}
-        apiUrl="http://0.0.0.0"
         loggedInUser={loggedInUser}
         loggedInUserFollowsUser={false}
       />
@@ -83,7 +79,6 @@ describe("<UserPageHeading />", () => {
     expect(followButton.props()).toEqual({
       type: "icon-only",
       user: { id: 1, name: "followed_user" },
-      apiUrl: "http://0.0.0.0",
       loggedInUser: { id: 2, name: "iliekcomputers" },
       loggedInUserFollowsUser: false,
     });

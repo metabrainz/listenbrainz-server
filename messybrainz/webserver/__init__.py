@@ -46,6 +46,7 @@ def create_app(debug=None, config_path=None):
     # Logging
     app.init_loggers(
         file_config=app.config.get('LOG_FILE'),
+        email_config=app.config.get('LOG_EMAIL'),
         sentry_config=app.config.get('LOG_SENTRY')
     )
 
