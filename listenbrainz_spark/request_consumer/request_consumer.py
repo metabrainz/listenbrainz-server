@@ -24,14 +24,13 @@ import logging
 import listenbrainz_spark
 import listenbrainz_spark.query_map
 from listenbrainz_spark import config
-from listenbrainz_spark.utils import init_rabbitmq, configure_base_logger
+from listenbrainz_spark.utils import init_rabbitmq
 
 from py4j.protocol import Py4JJavaError
 
 RABBITMQ_HEARTBEAT_TIME = 2 * 60 * 60  # 2 hours -- a full dump import takes 40 minutes right now
 
 rc = None
-configure_base_logger()
 logger = logging.getLogger(__name__)
 
 
