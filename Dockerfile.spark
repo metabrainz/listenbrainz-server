@@ -185,3 +185,10 @@ COPY . /rec
 
 FROM metabrainz-spark-base as metabrainz-spark-request-consumer
 COPY . /rec
+
+FROM metabrainz-spark-base as metabrainz-spark-test
+COPY . /rec
+COPY /rec/listenbrainz_spark/config.py.sample /rec/listenbrainz_spark/config.py
+
+COPY requirements_development.txt /rec/requirements_development.txt
+RUN pip3 install -r requirements_development.txt
