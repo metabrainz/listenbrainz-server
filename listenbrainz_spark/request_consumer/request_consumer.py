@@ -31,8 +31,15 @@ from py4j.protocol import Py4JJavaError
 RABBITMQ_HEARTBEAT_TIME = 2 * 60 * 60  # 2 hours -- a full dump import takes 40 minutes right now
 
 rc = None
-logger = logging.getLogger(__name__)
 
+handler = logging.StreamHandler()
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter("%(asctime)s %(name)-20s %(levelname)-8s %(message)s")
+handler.setFormatter(formatter)
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.addHandler(handler)
 
 class RequestConsumer:
 
