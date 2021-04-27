@@ -34,6 +34,8 @@ from pyspark.sql.functions import col, udf, row_number
 from pyspark.sql.types import DoubleType
 from pyspark.mllib.recommendation import MatrixFactorizationModel
 
+logger = logging.getLogger(__name__)
+
 
 class RecommendationParams:
 
