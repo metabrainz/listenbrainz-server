@@ -1,0 +1,22 @@
+FROM metabrainz/python:3.8-20210115
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    wget \
+    git \
+    net-tools \
+    dnsutils \
+    bsdmainutils \
+    xz-utils \
+    pxz \
+    zip \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install pip==21.0.1
+
+RUN mkdir /rec
+WORKDIR /rec
+COPY requirements_spark.txt /rec/requirements_spark.txt
+RUN pip3 install -r requirements_spark.txt
+
+COPY . /rec

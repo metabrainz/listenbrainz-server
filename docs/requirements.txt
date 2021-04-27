@@ -1,5 +1,5 @@
 Sphinx==3.4.1
-Pygments==2.7.2
+Pygments==2.7.4
 sphinxcontrib-httpdomain==1.7.0
-sphinx_rtd_theme==0.5.0
+sphinx_rtd_theme==0.5.1
 -r ../requirements.txt

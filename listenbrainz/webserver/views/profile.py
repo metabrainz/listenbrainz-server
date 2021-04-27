@@ -113,6 +113,7 @@ def import_data():
         "api_url":  current_app.config["API_URL"],
         "lastfm_api_url": current_app.config["LASTFM_API_URL"],
         "lastfm_api_key": current_app.config["LASTFM_API_KEY"],
+        "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn")
     }
 
     return render_template(
@@ -311,11 +312,14 @@ def refresh_spotify_token():
     spotify_user = spotify.get_user(current_user.id)
     if not spotify_user:
         raise APINotFound("User has not authenticated to Spotify")
+
     if spotify_user.token_expired:
         try:
             spotify_user = spotify.refresh_user_token(spotify_user)
         except spotify.SpotifyAPIError:
             raise APIServiceUnavailable("Cannot refresh Spotify token right now")
+        except spotify.SpotifyInvalidGrantError:
+            raise APINotFound("User has revoked authorization to Spotify")
 
     return jsonify({
         'id': current_user.id,
