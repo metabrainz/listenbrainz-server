@@ -79,7 +79,7 @@ class SpotifyService(ImporterService):
         scopes = token['scope'].split()
         active = SPOTIFY_IMPORT_PERMISSIONS[0] in scopes and SPOTIFY_IMPORT_PERMISSIONS[1] in scopes
 
-        db_oauth.save_token(user_id=user_id, service=ExternalServiceType.SPOTIFY, access_token=access_token,
+        db_oauth.save_token(user_id=user_id, service=self.service, access_token=access_token,
                             refresh_token=refresh_token, token_expires_ts=expires_at,
                             record_listens=active, scopes=scopes)
 
@@ -151,7 +151,7 @@ class SpotifyService(ImporterService):
         else:
             refresh_token = refresh_token
         expires_at = int(time.time()) + response['expires_in']
-        db_oauth.update_token(user_id=user_id, service=ExternalServiceType.SPOTIFY,
+        db_oauth.update_token(user_id=user_id, service=self.service,
                               access_token=access_token, refresh_token=refresh_token,
                               expires_at=expires_at)
         return self.get_user(user_id)
