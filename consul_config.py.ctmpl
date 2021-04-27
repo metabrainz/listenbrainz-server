@@ -155,6 +155,12 @@ SPOTIFY_CLIENT_ID = '''{{template "KEY" "spotify/client_id"}}'''
 SPOTIFY_CLIENT_SECRET = '''{{template "KEY" "spotify/client_secret"}}'''
 SPOTIFY_CALLBACK_URL = '''{{template "KEY" "spotify/callback"}}'''
 
+# YOUTUBE
+YOUTUBE_CONFIG = '''{{template "KEY" "youtube/credentials"}}'''
+YOUTUBE_API_KEY = '''{{template "KEY" "youtube/api_key"}}'''
+YOUTUBE_REDIRECT_URI = '''{{template "KEY" "youtube/redirect_uri"}}'''
+
+
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 TESTING = False

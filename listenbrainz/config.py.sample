@@ -124,6 +124,11 @@ SPOTIFY_CLIENT_ID = 'needs a non empty default value for tests, change this'
 SPOTIFY_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
 SPOTIFY_CALLBACK_URL = 'http://localhost/profile/connect-spotify/callback'
 
+# YOUTUBE
+YOUTUBE_CONFIG = 'change me'
+YOUTUBE_API_KEY = 'change me'
+YOUTUBE_REDIRECT_URI = 'http://localhost/profile/music-services/youtube/callback/'
+
 # This is set to False to stop a warning from flask_sqlalchemy.
 # We do not use this feature at all, so it is safe to set to False.
 # See https://stackoverflow.com/a/33790196 for more details.
