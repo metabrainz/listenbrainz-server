@@ -10,9 +10,6 @@ from py4j.protocol import Py4JJavaError
 from pyspark.sql.utils import AnalysisException, QueryExecutionException
 
 
-logger = logging.getLogger(__name__)
-
-
 def main():
     listenbrainz_spark.init_spark_session('artist_popularity')
     mlhd_df_path = config.HDFS_CLUSTER_URI + os.path.join(MLHD_DATA_PATH, '*.avro')
@@ -21,14 +18,14 @@ def main():
         mlhd_df = listenbrainz_spark.sql_context.read.format('avro').load(mlhd_df_path)
         print("Loaded!")
     except AnalysisException as e:
-        logger.critical("Error while reading MLHD avro files: %s", str(e))
+        logging.critical("Error while reading MLHD avro files: %s", str(e))
         raise
 
     print("Number of rows: %d" % mlhd_df.count())
     try:
         mlhd_df.registerTempTable('mlhd')
     except AnalysisException as e:
-        logger.critical("Error while registering dataframe mlhd: %s", str(e))
+        logging.critical("Error while registering dataframe mlhd: %s", str(e))
         raise
 
     for _ in range(5):
@@ -42,9 +39,9 @@ def main():
             """)
             break
         except Py4JJavaError as e:
-            logger.error("error while running the query: %s", str(e))
+            logging.error("error while running the query: %s", str(e))
     else:
-        logger.critical("Could not run query. Exiting...")
+        logging.critical("Could not run query. Exiting...")
         sys.exit(-1)
 
     print("number of rows: ", artist_popularity_df.count())
@@ -57,9 +54,9 @@ def main():
             artist_popularity_df.write.csv(csv_path)
             break
         except Exception as e:
-            logger.error("Couldn't write result to CSV, trying again, error: %s", str(e))
+            logging.error("Couldn't write result to CSV, trying again, error: %s", str(e))
     else:
-        logger.critical("Could not write results to HDFS, exiting...")
+        logging.critical("Could not write results to HDFS, exiting...")
         sys.exit(-1)
 
     print("Saved to %s!" % csv_path)

@@ -19,8 +19,6 @@ class CandidateSetsTestClass(SparkTestCase):
     mapping_path = path.MBID_MSID_MAPPING
     mapped_listens_path = path.RECOMMENDATION_RECORDING_MAPPED_LISTENS
     mapped_listens_subset_path = '/mapped/subset.parquet'
-    users_path = path.RECOMMENDATION_RECORDING_USERS_DATAFRAME
-    recordings_path = path.RECOMMENDATION_RECORDINGS_DATAFRAME
 
     @classmethod
     def setUpClass(cls):
@@ -174,8 +172,8 @@ class CandidateSetsTestClass(SparkTestCase):
 
     def test_get_top_artist_candidate_set(self):
         mapped_listens_df = utils.read_files_from_HDFS(self.mapped_listens_path)
-        recordings_df = create_dataframes.get_recordings_df(mapped_listens_df, {}, self.recordings_path)
-        users = create_dataframes.get_users_dataframe(mapped_listens_df, {}, self.users_path)
+        recordings_df = create_dataframes.get_recordings_df(mapped_listens_df, {})
+        users = create_dataframes.get_users_dataframe(mapped_listens_df, {})
         mapped_listens_subset = utils.read_files_from_HDFS(self.mapped_listens_subset_path)
 
         top_artist_limit = 1
@@ -207,8 +205,8 @@ class CandidateSetsTestClass(SparkTestCase):
 
     def test_get_similar_artist_candidate_set_df(self):
         mapped_listens_df = utils.read_files_from_HDFS(self.mapped_listens_path)
-        recordings_df = create_dataframes.get_recordings_df(mapped_listens_df, {}, self.recordings_path)
-        users = create_dataframes.get_users_dataframe(mapped_listens_df, {}, self.users_path)
+        recordings_df = create_dataframes.get_recordings_df(mapped_listens_df, {})
+        users = create_dataframes.get_users_dataframe(mapped_listens_df, {})
         mapped_listens_subset = utils.read_files_from_HDFS(self.mapped_listens_subset_path)
 
         df = utils.create_dataframe(
@@ -257,8 +255,8 @@ class CandidateSetsTestClass(SparkTestCase):
     def test_filter_last_x_days_recordings(self):
         mapped_listens_df = utils.read_files_from_HDFS(self.mapped_listens_path)
         mapped_listens_subset = utils.read_files_from_HDFS(self.mapped_listens_subset_path)
-        recordings_df = create_dataframes.get_recordings_df(mapped_listens_df, {}, self.recordings_path)
-        users = create_dataframes.get_users_dataframe(mapped_listens_df, {}, self.users_path)
+        recordings_df = create_dataframes.get_recordings_df(mapped_listens_df, {})
+        users = create_dataframes.get_users_dataframe(mapped_listens_df, {})
         mapped_listens_subset = utils.read_files_from_HDFS(self.mapped_listens_subset_path)
 
         top_artist_limit = 1

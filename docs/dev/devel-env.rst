@@ -154,20 +154,6 @@ environment by running ``develop.sh up``.
 .. code-block:: bash
 
     ./develop.sh up
-    
-.. note::
-
-    By default, the web service listens on port 80. If you already have a service listening
-    on this port, then you can change it by updating the ports section of ``docker/docker-compose.yml``.
-    
-    
-    .. code-block:: bash
-    
-        ports:
-        - "80:80"
-    
-    To change the listening port, change only the value before the ":" to the port of your choice
-    and point your browser to ``http://localhost:<Port>``
 
 You will see the output of ``docker-compose``. You can shut down listenbrainz
 by pressing CTRL^C. Once everything is running, visit your new site in a browser!
@@ -195,7 +181,7 @@ different services. We provide a small description of each container here:
 * ``rabbitmq``: Used for passing listens between different services
 * ``web``: This is the main ListenBrainz server
 * ``api_compat``: A Last.fm-compatible API server
-* ``websockets``: A websocket server used for the user-following and playlist updates on the front-end
+* ``follow_server``: A helper server used for the user-following component of ListenBrainz
 * ``static_builder``: A helper service to build Javascript/Typescript and CSS assets if they are changed
 
 .. note::
@@ -269,20 +255,15 @@ are a helpful way to validate new changes without a lot of work.
 Lint your code
 --------------
 
-ListenBrainz uses ESLint to lint the frontend codebase as part of the development process, in Webpack.
-
-ESLint will automatically fix trivial issues and list all other issues in your terminal.
-Make sure to fix any error with the code you've modified.
-
-There can be quite a lot of logs in the terminal, so if you want to look only at front-end build output, you can use this command to inspect only the static_builder logs:
+ListenBrainz uses ESLint to lint the frontend codebase, please make sure you lint
+all new frontend code using
 
 .. code-block:: bash
 
-   ./develop.sh logs -f static_builder
+    ./lint.sh
 
-FAQ
---------------
+This command should list all issues with the code you've modified. Make sure to fix
+all errors.
+
 We have a :doc:`FAQ page <faqs>` for questions that come up often. Please take a look
 if you have any issues.
-
-.. include:: develop-sh.rst

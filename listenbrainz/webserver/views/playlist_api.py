@@ -12,8 +12,7 @@ import listenbrainz.db.user as db_user
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden
 from listenbrainz.webserver.rate_limiter import ratelimit
-from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, validate_auth_header, \
-    _filter_description_html
+from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, validate_auth_header
 from listenbrainz.db.model.playlist import Playlist, WritablePlaylist, WritablePlaylistRecording
 
 playlist_api_bp = Blueprint('playlist_api_v1', __name__)
@@ -38,6 +37,27 @@ def _parse_boolean_arg(name, default=None):
         raise APIBadRequest("Invalid %s argument: %s. Must be 'true' or 'false'" % (name, value))
 
     return True if value == "true" else False
+
+
+def _allow_metabrainz_domains(tag, name, value):
+    """A bleach attribute cleaner for <a> tags that only allows hrefs to point
+    to metabrainz-controlled domains"""
+
+    metabrainz_domains = ["acousticbrainz.org", "critiquebrainz.org", "listenbrainz.org",
+                          "metabrainz.org", "musicbrainz.org"]
+
+    if name == "rel":
+        return True
+    elif name == "href":
+        p = urlparse(value)
+        return (not p.netloc) or p.netloc in metabrainz_domains
+    else:
+        return False
+
+
+def _filter_description_html(description):
+    ok_tags = [u"a", u"strong", u"b", u"em", u"i", u"u", u"ul", u"li", u"p", u"br"]
+    return bleach.clean(description, tags=ok_tags, attributes={"a": _allow_metabrainz_domains}, strip=True)
 
 
 def validate_create_playlist_required_items(jspf):
@@ -265,13 +285,6 @@ def create_playlist():
     collaborators = data.get("playlist", {}).\
         get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}).\
         get("collaborators", [])
-    
-    # Uniquify collaborators list
-    collaborators = list(set(collaborators))
-
-    # Don't allow creator to also be a collaborator
-    if user["musicbrainz_id"] in collaborators:
-        collaborators.remove(user["musicbrainz_id"])
 
     username_lookup = collaborators
     created_for = data["playlist"].get("created_for", None)
@@ -351,7 +364,7 @@ def edit_playlist(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
     playlist = db_playlist.get_by_mbid(playlist_mbid, False)
-    if playlist is None or not playlist.is_visible_by(user["id"]):
+    if playlist is None or (not playlist.public and playlist.creator_id != user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
     if playlist.creator_id != user["id"]:
@@ -379,14 +392,6 @@ def edit_playlist(playlist_mbid):
         get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}).\
         get("collaborators", [])
     users = {}
-
-    # Uniquify collaborators list
-    collaborators = list(set(collaborators))
-
-    # Don't allow creator to also be a collaborator
-    if user["musicbrainz_id"] in collaborators:
-        collaborators.remove(user["musicbrainz_id"])
-
     if collaborators:
         users = db_user.get_many_users_by_mb_id(collaborators)
 
@@ -411,8 +416,7 @@ def get_playlist(playlist_mbid):
     """
     Fetch the given playlist.
 
-    :param playlist_mbid: The playlist mbid to fetch.
-    :param fetch_metadata: Optional, pass value 'false' to skip lookup up recording metadata
+    :param playlist_mbid: Optional, The playlist mbid to fetch.
     :statuscode 200: Yay, you have data!
     :statuscode 404: Playlist not found
     :statuscode 401: Invalid authorization. See error message for details.
@@ -422,21 +426,16 @@ def get_playlist(playlist_mbid):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    fetch_metadata = _parse_boolean_arg("fetch_metadata", True)
-
     playlist = db_playlist.get_by_mbid(playlist_mbid, True)
     if playlist is None:
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
-    user = validate_auth_header(True)
-    user_id = None
-    if user:
-        user_id = user["id"]
-    if not playlist.is_visible_by(user_id):
-        raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+    if not playlist.public:
+        user = validate_auth_header()
+        if playlist.creator_id != user["id"]:
+            raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
-    if fetch_metadata:
-        fetch_playlist_recording_metadata(playlist)
+    fetch_playlist_recording_metadata(playlist)
 
     return jsonify(serialize_jspf(playlist))
 
@@ -473,10 +472,11 @@ def add_playlist_item(playlist_mbid, offset):
         log_raise_400("Provided playlist ID is invalid.")
 
     playlist = db_playlist.get_by_mbid(playlist_mbid)
-    if playlist is None or not playlist.is_visible_by(user["id"]):
+    if playlist is None or \
+       (playlist.creator_id != user["id"] and not playlist.public):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
-    if not playlist.is_modifiable_by(user["id"]):
+    if playlist.creator_id != user["id"]:
         raise APIForbidden("You are not allowed to add recordings to this playlist.")
 
     data = request.json
@@ -514,13 +514,7 @@ def move_playlist_item(playlist_mbid):
     be moved (count). The format of the post data should look as follows:
 
     .. code-block:: json
-
-        {
-            "mbid": "<mbid>",
-            "from": 3,
-            "to": 4,
-            "count": 2
-        }
+       {"mbid" : "<mbid>", “from” : 3, “to” : 4, “count”: 2}
 
     :reqheader Authorization: Token <user token>
     :statuscode 200: move operation succeeded
@@ -536,10 +530,11 @@ def move_playlist_item(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
     playlist = db_playlist.get_by_mbid(playlist_mbid)
-    if playlist is None or not playlist.is_visible_by(user["id"]):
+    if playlist is None or \
+       (playlist.creator_id != user["id"] and not playlist.public):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
-    if not playlist.is_modifiable_by(user["id"]):
+    if playlist.creator_id != user["id"]:
         raise APIForbidden("You are not allowed to move recordings in this playlist.")
 
     data = request.json
@@ -565,11 +560,7 @@ def delete_playlist_item(playlist_mbid):
     post data should look as follows:
 
     .. code-block:: json
-
-        {
-            "index": 3,
-            "count": 2
-        }
+      {“index” : 3, “count”: 2}
 
     :reqheader Authorization: Token <user token>
     :statuscode 200: playlist accepted.
@@ -585,10 +576,11 @@ def delete_playlist_item(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
     playlist = db_playlist.get_by_mbid(playlist_mbid)
-    if playlist is None or not playlist.is_visible_by(user["id"]):
+    if playlist is None or \
+       (playlist.creator_id != user["id"] and not playlist.public):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
-    if not playlist.is_modifiable_by(user["id"]):
+    if playlist.creator_id != user["id"]:
         raise APIForbidden("You are not allowed to remove recordings from this playlist.")
 
     data = request.json
@@ -625,7 +617,8 @@ def delete_playlist(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
     playlist = db_playlist.get_by_mbid(playlist_mbid)
-    if playlist is None or not playlist.is_visible_by(user["id"]):
+    if playlist is None or \
+       (playlist.creator_id != user["id"] and not playlist.public):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
     if playlist.creator_id != user["id"]:
@@ -662,13 +655,14 @@ def copy_playlist(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
     playlist = db_playlist.get_by_mbid(playlist_mbid)
-    if playlist is None or not playlist.is_visible_by(user["id"]):
+    if playlist is None or \
+       (playlist.creator_id != user["id"] and not playlist.public):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
     try:
         new_playlist = db_playlist.copy_playlist(playlist, user["id"])
     except Exception as e:
-        current_app.logger.error("Error copying playlist: {}".format(e))
-        raise APIInternalServerError("Failed to copy the playlist. Please try again.")
+        current_app.logger.error("Error deleting playlist: {}".format(e))
+        raise APIInternalServerError("Failed to delete the playlist. Please try again.")
 
     return jsonify({'status': 'ok', 'playlist_mbid': new_playlist.mbid})

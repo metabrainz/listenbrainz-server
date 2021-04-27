@@ -17,14 +17,10 @@ CREATE UNIQUE INDEX msid_ndx_recording_stats ON statistics.recording (msid);
 
 CREATE INDEX latest_listened_at_spotify_auth ON spotify_auth (latest_listened_at DESC NULLS LAST);
 
-CREATE INDEX user_id_ndx_external_service_oauth ON external_service_oauth (user_id);
-CREATE INDEX service_ndx_external_service_oauth ON external_service_oauth (service);
-CREATE UNIQUE INDEX user_id_service_ndx_external_service_oauth ON external_service_oauth (user_id, service);
+CREATE INDEX creator_ndx_follow_list ON follow_list (creator);
+CREATE INDEX last_saved_ndx_follow_list ON follow_list (last_saved DESC);
 
 CREATE UNIQUE INDEX user_id_rec_msid_ndx_feedback ON recording_feedback (user_id, recording_msid);
-
--- NOTE: If the indexes for the similar_user table changes, update the code in listenbrainz/db/similar_users.py !
-CREATE UNIQUE INDEX user_id_ndx_similar_user ON recommendation.similar_user (user_id);
 
 CREATE INDEX user_0_user_relationship_ndx ON user_relationship (user_0);
 CREATE INDEX user_1_user_relationship_ndx ON user_relationship (user_1);
@@ -32,9 +28,5 @@ CREATE INDEX user_1_user_relationship_ndx ON user_relationship (user_1);
 CREATE UNIQUE INDEX user_id_rec_mbid_ndx_feedback ON recommendation_feedback (user_id, recording_mbid);
 
 CREATE INDEX rating_recommendation_feedback ON recommendation_feedback (rating);
-
-CREATE INDEX user_id_ndx_user_timeline_event ON user_timeline_event (user_id);
-CREATE INDEX event_type_ndx_user_timeline_event ON user_timeline_event (event_type);
-CREATE INDEX user_id_event_type_ndx_user_timeline_event ON user_timeline_event (user_id, event_type);
 
 COMMIT;

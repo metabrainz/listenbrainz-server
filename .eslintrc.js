@@ -30,7 +30,7 @@ module.exports = {
     "react/no-did-update-set-state": "off",
     "import/extensions": "off",
     "no-unused-vars": "off",
-    camelcase: "off",
+    camelcase: "warn",
     "prettier/prettier": "warn",
     "lines-between-class-members": [
       "error",

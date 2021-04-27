@@ -1,5 +1,4 @@
 from flask import render_template, make_response, jsonify, request, has_request_context, _request_ctx_stack, current_app
-from werkzeug.exceptions import InternalServerError
 from yattag import Doc
 import yattag
 import ujson
@@ -108,6 +107,7 @@ class CompatError(object):
 
 
 def init_error_handlers(app):
+
     def error_wrapper(template, error, code):
         hide_navbar_user_menu = False
         if code == 500:
@@ -136,7 +136,7 @@ def init_error_handlers(app):
                 A Response which will be a json error if request was made to the LB api and an html page
                 otherwise
         """
-        if current_app.config.get('IS_API_COMPAT_APP') or request.path.startswith(API_PREFIX):
+        if current_app.config.get('IS_API_COMPAT_APP'):
             return jsonify({'code': code, 'error': error.description}), code
         return error_wrapper('errors/{code}.html'.format(code=code), error, code)
 
@@ -162,22 +162,17 @@ def init_error_handlers(app):
 
     @app.errorhandler(500)
     def internal_server_error(error):
-        # This error handler gets triggered on any uncaught exception.
-        # `error` is always InternalServerError, and error.original_exception
-        # is the exception that was thrown
-        # https://flask.palletsprojects.com/en/1.1.x/errorhandling/#unhandled-exceptions
-        # We specifically return json in the case that the request was within our API path
-        original = getattr(error, "original_exception", None)
-
         if request.path.startswith(API_PREFIX):
             error = APIError("An unknown error occured.", 500)
             return jsonify(error.to_dict()), error.status_code
         else:
-            return handle_error(original or error, 500)
+            return handle_error(error, 500)
 
+    
     @app.errorhandler(502)
     def bad_gateway(error):
         return handle_error(error, 502)
+
 
     @app.errorhandler(503)
     def service_unavailable(error):
@@ -186,6 +181,7 @@ def init_error_handlers(app):
     @app.errorhandler(504)
     def gateway_timeout(error):
         return handle_error(error, 504)
+
 
     @app.errorhandler(APIError)
     @crossdomain()

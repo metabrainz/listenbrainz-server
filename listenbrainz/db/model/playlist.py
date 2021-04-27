@@ -80,36 +80,6 @@ class Playlist(BaseModel):
     # mbid of the playlist referred to in copied_from_id
     copied_from_mbid: Optional[uuid.UUID]
 
-    def is_visible_by(self, user_id: Optional[int]):
-        """Check if user is allowed to access a playlist
-
-        user_id may be None, for example if the user is not logged in.
-
-        Args:
-            user_id : (Optional) row id of the user.
-        """
-        if self.public:
-            return True
-        if user_id:
-            if user_id == self.creator_id:
-                return True
-            elif user_id in self.collaborator_ids:
-                return True
-        return False
-
-    def is_modifiable_by(self, user_id: int):
-        """Check if user can modify a playlist
-
-        Check if a user is allowed to add/move/delete items in a playlist.
-        user_id is required, since playlist modifications require a logged in user
-
-        Args:
-            user_id : row id of the user.
-        """
-        if user_id == self.creator_id or user_id in self.collaborator_ids:
-            return True
-        return False
-
 
 class WritablePlaylist(Playlist):
     id: int = None

@@ -17,7 +17,7 @@ def get_dump_info():
 
     **Example response**:
 
-    .. code-block:: json
+    .. sourcecode:: json
 
         {
             "id": 1,

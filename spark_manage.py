@@ -13,6 +13,8 @@ from listenbrainz_spark import hdfs_connection
 from hdfs.util import HdfsError
 from py4j.protocol import Py4JJavaError
 
+app = utils.create_app(debug=True)
+
 
 @click.group()
 def cli():
@@ -81,10 +83,11 @@ def upload_mapping():
     """
     from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
     from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
-    downloader_obj = ListenbrainzDataDownloader()
-    src, _ = downloader_obj.download_msid_mbid_mapping(path.FTP_FILES_PATH)
-    uploader_obj = ListenbrainzDataUploader()
-    uploader_obj.upload_mapping(src)
+    with app.app_context():
+        downloader_obj = ListenbrainzDataDownloader()
+        src, _ = downloader_obj.download_msid_mbid_mapping(path.FTP_FILES_PATH)
+        uploader_obj = ListenbrainzDataUploader()
+        uploader_obj.upload_mapping(src)
 
 
 @cli.command(name='upload_listens')
@@ -96,11 +99,12 @@ def upload_listens(overwrite, incremental, id):
     """
     from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
     from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
-    downloader_obj = ListenbrainzDataDownloader()
-    dump_type = 'incremental' if incremental else 'full'
-    src, _, _ = downloader_obj.download_listens(directory=path.FTP_FILES_PATH, listens_dump_id=id, dump_type=dump_type)
-    uploader_obj = ListenbrainzDataUploader()
-    uploader_obj.upload_listens(src, overwrite=overwrite)
+    with app.app_context():
+        downloader_obj = ListenbrainzDataDownloader()
+        dump_type = 'incremental' if incremental else 'full'
+        src, _, _ = downloader_obj.download_listens(directory=path.FTP_FILES_PATH, listens_dump_id=id, dump_type=dump_type)
+        uploader_obj = ListenbrainzDataUploader()
+        uploader_obj.upload_listens(src, overwrite=overwrite)
 
 
 @cli.command(name='upload_artist_relation')
@@ -109,10 +113,11 @@ def upload_artist_relation():
     """
     from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
     from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
-    downloader_obj = ListenbrainzDataDownloader()
-    src, _ = downloader_obj.download_artist_relation(path.FTP_FILES_PATH)
-    uploader_obj = ListenbrainzDataUploader()
-    uploader_obj.upload_artist_relation(src)
+    with app.app_context():
+        downloader_obj = ListenbrainzDataDownloader()
+        src, _ = downloader_obj.download_artist_relation(path.FTP_FILES_PATH)
+        uploader_obj = ListenbrainzDataUploader()
+        uploader_obj.upload_artist_relation(src)
 
 
 @cli.command(name='dataframe')
@@ -121,7 +126,8 @@ def dataframes(days):
     """ Invoke script responsible for pre-processing data.
     """
     from listenbrainz_spark.recommendations.recording import create_dataframes
-    _ = create_dataframes.main(train_model_window=days, job_type="recommendations")
+    with app.app_context():
+        _ = create_dataframes.main(train_model_window=days)
 
 
 def parse_list(ctx, args):
@@ -138,7 +144,8 @@ def model(rank, itr, lmbda, alpha):
         For more details refer to 'https://spark.apache.org/docs/2.1.0/mllib-collaborative-filtering.html'
     """
     from listenbrainz_spark.recommendations.recording import train_models
-    _ = train_models.main(ranks=rank, lambdas=lmbda, iterations=itr, alpha=alpha)
+    with app.app_context():
+        _ = train_models.main(ranks=rank, lambdas=lmbda, iterations=itr, alpha=alpha)
 
 
 @cli.command(name='candidate')
@@ -152,8 +159,9 @@ def candidate(days, top, similar, users, html):
     """ Invoke script responsible for generating candidate sets.
     """
     from listenbrainz_spark.recommendations.recording import candidate_sets
-    _ = candidate_sets.main(recommendation_generation_window=days, top_artist_limit=top,
-                            similar_artist_limit=similar, users=users, html_flag=html)
+    with app.app_context():
+        _ = candidate_sets.main(recommendation_generation_window=days, top_artist_limit=top,
+                                similar_artist_limit=similar, users=users, html_flag=html)
 
 
 @cli.command(name='recommend')
@@ -165,7 +173,8 @@ def recommend(top, similar, users):
     """ Invoke script responsible for generating recommendations.
     """
     from listenbrainz_spark.recommendations.recording import recommend
-    _ = recommend.main(recommendation_top_artist_limit=top, recommendation_similar_artist_limit=similar, users=users)
+    with app.app_context():
+        _ = recommend.main(recommendation_top_artist_limit=top, recommendation_similar_artist_limit=similar, users=users)
 
 
 @cli.command(name='user')
@@ -173,7 +182,8 @@ def user():
     """ Invoke script responsible for calculating user statistics.
     """
     from listenbrainz_spark.stats import user
-    user.main()
+    with app.app_context():
+        user.main()
 
 
 @cli.command(name='request_consumer')
@@ -181,7 +191,8 @@ def request_consumer():
     """ Invoke script responsible for the request consumer
     """
     from listenbrainz_spark.request_consumer.request_consumer import main
-    main('request-consumer-%s' % str(int(time.time())))
+    with app.app_context():
+        main('request-consumer-%s' % str(int(time.time())))
 
 
 @cli.resultcallback()

@@ -2,13 +2,12 @@ import os
 import time
 import tarfile
 import tempfile
-import logging
 
-from listenbrainz_spark import schema, path, utils
+import listenbrainz_spark
+from listenbrainz_spark import schema, path, config, utils
 from listenbrainz_spark.hdfs import ListenbrainzHDFSUploader
 
-
-logger = logging.getLogger(__name__)
+from flask import current_app
 
 
 class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
@@ -23,11 +22,11 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
         """
         start_time = time.monotonic()
         df = utils.read_json(tmp_hdfs_path, schema=schema)
-        logger.info("Processing {} rows...".format(df.count()))
+        current_app.logger.info("Processing {} rows...".format(df.count()))
 
-        logger.info("Uploading to {}...".format(dest_path))
+        current_app.logger.info("Uploading to {}...".format(dest_path))
         utils.save_parquet(df, dest_path)
-        logger.info("File processed in {:.2f} seconds!".format(time.monotonic() - start_time))
+        current_app.logger.info("File processed in {:.2f} seconds!".format(time.monotonic() - start_time))
 
     def process_json_listens(self, filename, data_dir, tmp_hdfs_path, append, schema):
         """ Process a file containing listens from the ListenBrainz dump and add listens to
@@ -55,8 +54,8 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
         else:
             utils.save_parquet(df, dest_path, mode="overwrite")
 
-        logger.info("Uploading to {}...".format(dest_path))
-        logger.info("File processed in {:.2f} seconds!".format(time.monotonic() - start_time))
+        current_app.logger.info("Uploading to {}...".format(dest_path))
+        current_app.logger.info("File processed in {:.2f} seconds!".format(time.monotonic() - start_time))
 
     def upload_mapping(self, archive: str):
         """ Decompress archive and upload mapping to HDFS.

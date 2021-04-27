@@ -87,7 +87,9 @@ export default class UserTopEntity extends React.Component<
           errorMessage: "Statistics for the user have not been calculated",
         });
       } else {
-        throw error;
+        this.setState(() => {
+          throw error;
+        });
       }
     }
     return {} as UserEntityResponse;

@@ -28,13 +28,12 @@ Core API Endpoints
   Get the timestamp of the newest listen submitted by a user in previous imports to ListenBrainz.
 
   In order to get the timestamp for a user, make a GET request to this endpoint. The data returned will
-  be JSON of the following format:
-
-  .. code-block:: json
+  be JSON of the following format::
 
       {
-          "musicbrainz_id": "the MusicBrainz ID of the user",
-          "latest_import": "the timestamp of the newest listen submitted in previous imports. Defaults to 0"
+          'musicbrainz_id': the MusicBrainz ID of the user,
+          'latest_import': the timestamp of the newest listen submitted in previous imports.
+                           Defaults to 0
       }
 
   :param user_name: the MusicBrainz ID of the user whose data is needed
@@ -47,13 +46,11 @@ Core API Endpoints
 
   In order to update the timestamp of a user, you'll have to provide a user token in the Authorization Header. User tokens can be found on https://listenbrainz.org/profile/.
 
-  The JSON that needs to be posted must contain a field named `ts` in the root with a valid unix timestamp. Example:
+  The JSON that needs to be posted must contain a field named `ts` in the root with a valid unix timestamp. Example::
 
-  .. code-block:: json
-
-     {
-        "ts": 0
-     }
+    {
+      'ts': 0
+    }
 
   :reqheader Authorization: Token <user token>
   :statuscode 200: latest import timestamp updated
@@ -69,36 +66,6 @@ The playlists API allows for the creation and editing of lists of recordings
    :include-empty-docstring:
    :undoc-static:
 
-Feedback API Endpoints
-^^^^^^^^^^^^^^^^^^^^^^
-These API endpoints allow to submit and retrieve feedback for a user's recordings
-
-.. autoflask:: listenbrainz.webserver:create_app_rtfd()
-   :blueprints: feedback_api_v1
-   :include-empty-docstring:
-   :undoc-static:
-
-Recording Recommendation API Endpoints
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-ListenBrainz uses collaborative filtering to generate recording recommendations,
-which may be further processed to generate playlists for users. These api endpoints
-allow to fetch the raw collaborative filtered recording IDs.
-
-.. autoflask:: listenbrainz.webserver:create_app_rtfd()
-   :blueprints: recommendations_cf_recording_v1
-   :include-empty-docstring:
-   :undoc-static:
-
-Recording Recommendation Feedback API Endpoints
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-ListenBrainz uses collaborative filtering to generate recording recommendations,
-which may be further processed to generate playlists for users. These api endpoints
-allow to submit and retrieve feedback for raw collaborative filtered recordings.
-
-.. autoflask:: listenbrainz.webserver:create_app_rtfd()
-   :blueprints: recommendation_feedback_api_v1
-   :include-empty-docstring:
-   :undoc-static:
 
 Statistics API Endpoints
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -119,22 +86,6 @@ Status API Endpoints
    :include-empty-docstring:
    :undoc-static:
 
-User Timeline API Endpoints
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-These api endpoints allow to create and fetch timeline events for a user.
-
-.. autoflask:: listenbrainz.webserver:create_app_rtfd()
-   :blueprints: user_timeline_event_api_bp
-
-Social API Endpoints
-^^^^^^^^^^^^^^^^^^^^
-These apis allow to interact with social features of ListenBrainz.
-
-.. autoflask:: listenbrainz.webserver:create_app_rtfd()
-   :blueprints: social_api_v1
-   :include-empty-docstring:
-   :undoc-static:
-
 Rate limiting
 ^^^^^^^^^^^^^
 
@@ -152,7 +103,7 @@ following headers:
   clocks)
 
 - **X-RateLimit-Reset**: UNIX epoch number of seconds (without timezone) when
-  current time window expires [#]
+  current time window expires [#]_
 
 Rate limiting is automatic and the client must use these headers to determine
 the rate to make API calls. If the client exceeds the number of requests

@@ -26,42 +26,43 @@ class RecommendationArtistType(Enum):
 def get_recommendations(user_name):
     """ Get recommendations sorted on rating and ratings for user ``user_name``.
 
-        A sample response from the endpoint may look like:
+        A sample response from the endpoint may look like::
 
-        .. code-block:: json
+        {
+          "payload": {
 
-            {
-                "payload": {
-                    "last_updated": 1588494361,
-                    "type": "<artist_type>",
-                    "entity": "recording",
-                    "mbids": [
-                        {
-                            "recording_mbid": "526bd613-fddd-4bd6-9137-ab709ac74cab",
-                            "score": 9.345
-                        },
-                        {
-                            "recording_mbid": "a6081bc1-2a76-4984-b21f-38bc3dcca3a5",
-                            "score": 6.998
-                        }
-                    ],
-                    "user_name": "unclejohn69",
-                    "count": 10,
-                    "total_mbid_count": 30,
-                    "offset": 10
+            "last_updated": 1588494361,
+            "type": <artist_type>,
+            "entity": "recording",
+
+            "mbids": [
+                {
+                    'recording_mbid': "526bd613-fddd-4bd6-9137-ab709ac74cab",
+                    'score': 9.345
                 }
-            }
+                {
+                    'recording_mbid': "a6081bc1-2a76-4984-b21f-38bc3dcca3a5",
+                    'score': 6.998
+                }
+            ],
 
+            "user_name": "unclejohn69"
+            'count': 10,
+            'total_mbid_count': 30
+            'offset': 10
+          }
+        }
+
+        <artist_type>: 'top' or 'similar'
 
         .. note::
             - This endpoint is experimental and probably will change in the future.
-            - <artist_type>: 'top' or 'similar'
 
         :param artist_type: Mandatory, artist type in ['top', 'similar']
-
-            Ex. artist_type = top will fetch recommended recording mbids that belong to top artists listened to by the user.
-
-            artist_type = similar will fetch recommended recording mbids that belong to artists similar to top artists listened to by the user.
+            Ex. artist_type = top will fetch recommended recording mbids that belong to top artists
+                       listened to by the user.
+                artist_type = similar will fetch recommended recording mbids that belong to artists
+                       similar to top artists listened to by the user.
         :type artist_type: ``str``
 
         :param count: Optional, number of recording mbids to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
