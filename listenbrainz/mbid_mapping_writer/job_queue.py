@@ -55,7 +55,7 @@ class MappingJobQueue(threading.Thread):
 
                             if job[0] > 0:
                                 self.app.logger.info("submit job")
-                                futures[executor.submit(lookup_new_listens, self.app, job[1], job[2])] = job[0]
+                                futures[executor.submit(lookup_new_listens, self.app, job[1])] = job[0]
                             else:
                                 self.app.logger.info("Unsupported job type in MappingJobQueue (MBID Mapping Writer).")
         except Exception as err:

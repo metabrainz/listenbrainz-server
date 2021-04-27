@@ -3,7 +3,6 @@ from operator import itemgetter
 import sqlalchemy
 import psycopg2
 from psycopg2.extras import execute_values
-from flask import current_app
 from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery, MATCH_TYPE_NO_MATCH, MATCH_TYPE_EXACT_MATCH
 from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery
 from listenbrainz.db import timescale
@@ -15,7 +14,7 @@ MAX_QUEUED_JOBS = MAX_THREADS * 2
 MATCH_TYPES = ('no_match', 'low_quality', 'med_quality', 'high_quality', 'exact_match')
 
 def log(msg):
-    with open("/tmp/matcher.log") as f:
+    with open("/tmp/matcher.log", "a") as f:
         f.write(msg + "\n")
 
 

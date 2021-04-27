@@ -23,18 +23,15 @@ class MBIDMappingWriter(threading.Thread):
         channel.basic_ack(method.delivery_tag)
 
     def create_and_bind_exchange_and_queue(self, channel, exchange, queue):
-        current_app.logger.info("create and bind called")
         channel.exchange_declare(exchange=exchange, exchange_type='fanout')
         channel.queue_declare(callback=lambda x: None, queue=queue, durable=True)
         channel.queue_bind(callback=lambda x: None, exchange=exchange, queue=queue)
 
     def on_open_callback(self, channel):
-        current_app.logger.info("on open callback called")
         self.create_and_bind_exchange_and_queue(channel, current_app.config['UNIQUE_EXCHANGE'], current_app.config['UNIQUE_QUEUE'])
         channel.basic_consume(self.callback, queue=current_app.config['UNIQUE_QUEUE'])
 
     def on_open(self, connection):
-        current_app.logger.info("on open called")
         connection.channel(self.on_open_callback)
 
     def init_rabbitmq_connection(self):
@@ -66,7 +63,6 @@ class MBIDMappingWriter(threading.Thread):
                 current_app.logger.info("Starting MBID mapping writer...")
                 self.init_rabbitmq_connection()
                 try:
-                    current_app.logger.info("Starting main loop...")
                     self.connection.ioloop.start()
                 except KeyboardInterrupt:
                     self.submit_delivery_tags()
