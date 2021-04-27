@@ -53,7 +53,9 @@ def get_user_artist(user_name):
     Get top artists for user ``user_name``.
 
 
-    A sample response from the endpoint may look like::
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
 
         {
             "payload": {
@@ -146,8 +148,9 @@ def get_release(user_name):
     """
     Get top releases for user ``user_name``.
 
+    A sample response from the endpoint may look like:
 
-    A sample response from the endpoint may look like::
+    .. code-block:: json
 
         {
             "payload": {
@@ -250,8 +253,9 @@ def get_recording(user_name):
     """
     Get top recordings for user ``user_name``.
 
+    A sample response from the endpoint may look like:
 
-    A sample response from the endpoint may look like::
+    .. code-block:: json
 
         {
             "payload": {
@@ -266,7 +270,7 @@ def get_recording(user_name):
                         "release_mbid": "",
                         "release_msid": "de97ca87-36c4-4995-a5c9-540e35944352",
                         "release_name": "Delirium (Deluxe)",
-                        "track_name": "Love Me Like You Do - From \"Fifty Shades of Grey\""
+                        "track_name": "Love Me Like You Do - From \\"Fifty Shades of Grey\\""
                     },
                     {
                         "artist_mbids": [],
@@ -279,7 +283,7 @@ def get_recording(user_name):
                         "release_msid": "2b2a93c3-a0bd-4f46-8507-baf5ad291966",
                         "release_name": "How to Save a Life",
                         "track_name": "How to Save a Life"
-                    },
+                    }
                 ],
                 "count": 2,
                 "total_recording_count": 175,
@@ -353,7 +357,9 @@ def get_listening_activity(user_name: str):
     Get the listening activity for user ``user_name``. The listening activity shows the number of listens
     the user has submitted over a period of time.
 
-    A sample response from the endpoint may look like::
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
 
         {
             "payload": {
@@ -382,6 +388,7 @@ def get_listening_activity(user_name: str):
                 "user_id": "ishaanshah"
             }
         }
+
     .. note::
         - This endpoint is currently in beta
         - The example above shows the data for three days only, however we calculate the statistics for
@@ -431,7 +438,9 @@ def get_daily_activity(user_name: str):
     Get the daily activity for user ``user_name``. The daily activity shows the number of listens
     submitted by the user for each hour of the day over a period of time. We assume that all listens are in UTC.
 
-    A sample response from the endpoint may look like::
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
 
         {
             "payload": {
@@ -450,16 +459,18 @@ def get_daily_activity(user_name: str):
                         {
                             "hour": 2
                             "listen_count": 4,
-                        }...
+                        },
+                        "..."
                     ],
-                    "Tuesday": [...],
-                    ...
+                    "Tuesday": ["..."],
+                    "..."
                 },
                 "stats_range": "all_time",
                 "to_ts": 1589155200,
                 "user_id": "ishaanshah"
             }
         }
+
     .. note::
         - This endpoint is currently in beta
 
@@ -517,7 +528,9 @@ def get_artist_map(user_name: str):
     Get the artist map for user ``user_name``. The artist map shows the number of artists the user has listened to
     from different countries of the world.
 
-    A sample response from the endpoint may look like::
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
 
         {
             "payload": {
@@ -542,6 +555,7 @@ def get_artist_map(user_name: str):
                 "user_id": "ishaanshah"
             }
         }
+
     .. note::
         - This endpoint is currently in beta
         - We cache the results for this query for a week to improve page load times, if you want to request fresh data you
@@ -642,7 +656,9 @@ def get_sitewide_artist():
     Get sitewide top artists.
 
 
-    A sample response from the endpoint may look like::
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
 
         {
             "payload": {

@@ -1,7 +1,5 @@
 import json
-import unittest
 from datetime import datetime
-from unittest.mock import MagicMock, patch
 
 import listenbrainz_spark.request_consumer.jobs.utils as import_utils
 from listenbrainz_spark.path import IMPORT_METADATA

@@ -12,9 +12,14 @@ import {
   faCog,
 } from "@fortawesome/free-solid-svg-icons";
 
-import { AlertList } from "react-bs-notifier";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { sanitize } from "dompurify";
+import * as Sentry from "@sentry/react";
+import {
+  withAlertNotifications,
+  WithAlertNotificationsInjectedProps,
+} from "../AlertNotificationsHOC";
 import APIService from "../APIService";
 import Card from "../components/Card";
 import Loader from "../components/Loader";
@@ -36,7 +41,7 @@ export type UserPlaylistsProps = {
   playlistsPerPage: string;
   playlistCount: number;
   activeSection: "playlists" | "recommendations" | "collaborations";
-};
+} & WithAlertNotificationsInjectedProps;
 
 export type UserPlaylistsState = {
   playlists: JSPFPlaylist[];
@@ -100,12 +105,11 @@ export default class UserPlaylists extends React.Component<
     }
     if (offset === paginationOffset && count === playlistsPerPage) {
       // Nothing changed
-      console.debug("handleURLChange does nothing");
       return;
     }
 
     this.setState({ loading: true });
-    const { user, activeSection, currentUser } = this.props;
+    const { user, activeSection, currentUser, newAlert } = this.props;
 
     try {
       const newPlaylists = await this.APIService.getUserPlaylists(
@@ -119,11 +123,7 @@ export default class UserPlaylists extends React.Component<
 
       this.handleAPIResponse(newPlaylists, false);
     } catch (error) {
-      this.newAlert(
-        "danger",
-        "Error loading playlists",
-        error?.message ?? error
-      );
+      newAlert("danger", "Error loading playlists", error?.message ?? error);
       this.setState({ loading: false });
     }
   };
@@ -134,7 +134,8 @@ export default class UserPlaylists extends React.Component<
   };
 
   alertNotAuthorized = () => {
-    this.newAlert(
+    const { newAlert } = this.props;
+    newAlert(
       "danger",
       "Not allowed",
       "You are not authorized to modify this playlist"
@@ -142,17 +143,13 @@ export default class UserPlaylists extends React.Component<
   };
 
   copyPlaylist = async (playlistId: string): Promise<void> => {
-    const { currentUser } = this.props;
+    const { currentUser, newAlert } = this.props;
     if (!currentUser?.auth_token) {
       this.alertMustBeLoggedIn();
       return;
     }
     if (!playlistId?.length) {
-      this.newAlert(
-        "danger",
-        "Error",
-        "No playlist to copy; missing a playlist ID"
-      );
+      newAlert("danger", "Error", "No playlist to copy; missing a playlist ID");
       return;
     }
     try {
@@ -160,7 +157,7 @@ export default class UserPlaylists extends React.Component<
         currentUser.auth_token,
         playlistId
       );
-      this.newAlert(
+      newAlert(
         "success",
         "Duplicated playlist",
         <>
@@ -179,19 +176,19 @@ export default class UserPlaylists extends React.Component<
         }));
       }
     } catch (error) {
-      this.newAlert("danger", "Error", error.message);
+      newAlert("danger", "Error", error.message);
     }
   };
 
   deletePlaylist = async (): Promise<void> => {
-    const { currentUser } = this.props;
+    const { currentUser, newAlert } = this.props;
     const { playlistSelectedForOperation: playlist, playlists } = this.state;
     if (!currentUser?.auth_token) {
       this.alertMustBeLoggedIn();
       return;
     }
     if (!playlist) {
-      this.newAlert("danger", "Error", "No playlist to delete");
+      newAlert("danger", "Error", "No playlist to delete");
       return;
     }
     if (!this.isOwner(playlist)) {
@@ -211,7 +208,7 @@ export default class UserPlaylists extends React.Component<
             (pl) => getPlaylistId(pl) !== getPlaylistId(playlist)
           ),
         },
-        this.newAlert.bind(
+        newAlert.bind(
           this,
           "success",
           "Deleted playlist",
@@ -219,7 +216,7 @@ export default class UserPlaylists extends React.Component<
         )
       );
     } catch (error) {
-      this.newAlert("danger", "Error", error.message);
+      newAlert("danger", "Error", error.message);
     }
   };
 
@@ -235,9 +232,9 @@ export default class UserPlaylists extends React.Component<
     collaborators: string[],
     id?: string
   ): Promise<void> => {
-    const { currentUser } = this.props;
+    const { currentUser, newAlert } = this.props;
     if (id) {
-      this.newAlert(
+      newAlert(
         "danger",
         "Error",
         "Called createPlaylist method with an ID; should call editPlaylist instead"
@@ -250,7 +247,7 @@ export default class UserPlaylists extends React.Component<
     }
     if (!this.isCurrentUserPage()) {
       // Just in case the user find a way to access this method, let's nudge them to their own page
-      this.newAlert(
+      newAlert(
         "warning",
         "",
         <span>
@@ -284,7 +281,7 @@ export default class UserPlaylists extends React.Component<
         currentUser.auth_token,
         newPlaylist
       );
-      this.newAlert(
+      newAlert(
         "success",
         "Created playlist",
         <>
@@ -301,7 +298,7 @@ export default class UserPlaylists extends React.Component<
         playlists: [JSPFObject.playlist, ...prevState.playlists],
       }));
     } catch (error) {
-      this.newAlert("danger", "Error", error.message);
+      newAlert("danger", "Error", error.message);
     }
   };
 
@@ -312,15 +309,15 @@ export default class UserPlaylists extends React.Component<
     collaborators: string[],
     id?: string
   ): Promise<void> => {
+    const { currentUser, newAlert } = this.props;
     if (!id) {
-      this.newAlert(
+      newAlert(
         "danger",
         "Error",
         "Trying to edit a playlist without an id. This shouldn't have happened, please contact us with the error message."
       );
       return;
     }
-    const { currentUser } = this.props;
     if (!currentUser?.auth_token) {
       this.alertMustBeLoggedIn();
       return;
@@ -351,55 +348,19 @@ export default class UserPlaylists extends React.Component<
         playlist: editedPlaylist,
       });
 
-      this.newAlert("success", "Saved playlist", "");
+      newAlert("success", "Saved playlist", "");
 
       // Once API call succeeds, update playlist in state
       playlistsCopy[playlistIndex] = editedPlaylist;
       this.setState({ playlists: playlistsCopy });
     } catch (error) {
-      this.newAlert("danger", "Error", error.message);
+      newAlert("danger", "Error", error.message);
     }
-  };
-
-  newAlert = (
-    type: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ): void => {
-    const newAlert: Alert = {
-      id: new Date().getTime(),
-      type,
-      headline: title,
-      message,
-    };
-
-    this.setState((prevState) => {
-      return {
-        alerts: [...prevState.alerts, newAlert],
-      };
-    });
   };
 
   alertMustBeLoggedIn = () => {
-    this.newAlert(
-      "danger",
-      "Error",
-      "You must be logged in for this operation"
-    );
-  };
-
-  onAlertDismissed = (alert: Alert): void => {
-    const { alerts } = this.state;
-
-    // find the index of the alert that was dismissed
-    const idx = alerts.indexOf(alert);
-
-    if (idx >= 0) {
-      this.setState({
-        // remove the alert from the array
-        alerts: [...alerts.slice(0, idx), ...alerts.slice(idx + 1)],
-      });
-    }
+    const { newAlert } = this.props;
+    newAlert("danger", "Error", "You must be logged in for this operation");
   };
 
   isCurrentUserPage = () => {
@@ -411,7 +372,7 @@ export default class UserPlaylists extends React.Component<
   };
 
   handleClickNext = async () => {
-    const { user, activeSection, currentUser } = this.props;
+    const { user, activeSection, currentUser, newAlert } = this.props;
     const { paginationOffset, playlistsPerPage, playlistCount } = this.state;
     const newOffset = paginationOffset + playlistsPerPage;
     // No more playlists to fetch
@@ -431,17 +392,13 @@ export default class UserPlaylists extends React.Component<
 
       this.handleAPIResponse(newPlaylists);
     } catch (error) {
-      this.newAlert(
-        "danger",
-        "Error loading playlists",
-        error?.message ?? error
-      );
+      newAlert("danger", "Error loading playlists", error?.message ?? error);
       this.setState({ loading: false });
     }
   };
 
   handleClickPrevious = async () => {
-    const { user, activeSection, currentUser } = this.props;
+    const { user, activeSection, currentUser, newAlert } = this.props;
     const { paginationOffset, playlistsPerPage } = this.state;
     // No more playlists to fetch
     if (paginationOffset === 0) {
@@ -461,11 +418,7 @@ export default class UserPlaylists extends React.Component<
 
       this.handleAPIResponse(newPlaylists);
     } catch (error) {
-      this.newAlert(
-        "danger",
-        "Error loading playlists",
-        error?.message ?? error
-      );
+      newAlert("danger", "Error loading playlists", error?.message ?? error);
       this.setState({ loading: false });
     }
   };
@@ -617,7 +570,11 @@ export default class UserPlaylists extends React.Component<
                   {playlist.annotation && (
                     <div
                       className="description"
-                      dangerouslySetInnerHTML={{ __html: playlist.annotation }}
+                      // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
+                      // eslint-disable-next-line react/no-danger
+                      dangerouslySetInnerHTML={{
+                        __html: sanitize(playlist.annotation),
+                      }}
                     />
                   )}
                   <div>
@@ -702,13 +659,6 @@ export default class UserPlaylists extends React.Component<
             </a>
           </li>
         </ul>
-        <AlertList
-          position="bottom-right"
-          alerts={alerts}
-          timeout={15000}
-          dismissTitle="Dismiss"
-          onDismiss={this.onAlertDismissed}
-        />
       </div>
     );
   }
@@ -732,10 +682,20 @@ document.addEventListener("DOMContentLoaded", () => {
     active_section: activeSection,
     pagination_offset: paginationOffset,
     playlists_per_page: playlistsPerPage,
+    sentry_dsn,
   } = reactProps;
+
+  if (sentry_dsn) {
+    Sentry.init({ dsn: sentry_dsn });
+  }
+
+  const UserPlaylistsWithAlertNotifications = withAlertNotifications(
+    UserPlaylists
+  );
+
   ReactDOM.render(
     <ErrorBoundary>
-      <UserPlaylists
+      <UserPlaylistsWithAlertNotifications
         activeSection={activeSection}
         playlistCount={playlistCount}
         apiUrl={apiUrl}

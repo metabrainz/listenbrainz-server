@@ -1,0 +1,40 @@
+name: ListenBrainz Frontend Tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ '*' ]
+
+jobs:
+
+  test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Login to Docker Hub
+      run: echo ${{ secrets.DOCKER_HUB_PASSWORD }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+      continue-on-error: true
+
+    - name: Pull docker images
+      run: docker-compose -f docker/docker-compose.test.yml pull
+
+    - uses: satackey/action-docker-layer-caching@v0.0.11
+      continue-on-error: true
+
+    - name: Build frontend tests
+      run: ./test.sh fe -b
+
+    - name: Run frontend tests
+      run: ./test.sh fe
+
+    - name: Run linter
+      run: ./test.sh fe -f
+      if: ${{ always() }}
+
+    - name: Run type checker
+      run: ./test.sh fe -t
+      if: ${{ always() }}

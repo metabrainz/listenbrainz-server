@@ -8,12 +8,9 @@ import listenbrainz_spark
 import listenbrainz_spark.utils.mapping as mapping_utils
 from listenbrainz_spark.recommendations import dataframe_utils
 from listenbrainz_spark import hdfs_connection, utils, config, schema
-from listenbrainz_spark.stats.utils import get_latest_listen_ts
-from listenbrainz_spark.recommendations.recording import create_dataframes
 from listenbrainz_spark.recommendations.recording import train_models
 
 from pyspark.sql import Row
-import pyspark.sql.functions as f
 from pyspark.sql.types import StructType, StructField, IntegerType
 
 TEST_PLAYCOUNTS_PATH = '/tests/playcounts.parquet'
@@ -27,14 +24,10 @@ class SparkTestCase(unittest.TestCase):
     def setUpClass(cls):
         listenbrainz_spark.init_test_session('spark-test-run-{}'.format(str(uuid.uuid4())))
         hdfs_connection.init_hdfs(config.HDFS_HTTP_URI)
-        cls.app = utils.create_app()
-        cls.app_context = cls.app.app_context()
         cls.date = datetime(2019, 1, 21)
-        cls.app_context.push()
 
     @classmethod
     def tearDownClass(cls):
-        cls.app_context.pop()
         listenbrainz_spark.context.stop()
 
     @classmethod

@@ -4,6 +4,7 @@ from jinja2 import Environment, FileSystemLoader
 
 HTML_FILES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'html_files')
 
+
 def save_html(filename, context, template):
     path = os.path.dirname(os.path.abspath(__file__))
     template_environment = Environment(

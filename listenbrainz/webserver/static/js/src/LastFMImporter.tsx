@@ -3,10 +3,12 @@ import * as React from "react";
 import { faSpinner, faCheck, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import * as Sentry from "@sentry/react";
 import APIService from "./APIService";
 import Scrobble from "./Scrobble";
-
 import LastFMImporterModal from "./LastFMImporterModal";
+
+export const LASTFM_RETRIES = 3;
 
 export type ImporterProps = {
   user: {
@@ -155,6 +157,7 @@ export default class LastFmImporter extends React.Component<
     }
   }
 
+<<<<<<< .merge_file_a10708
   async getUserPrivacy() {
     // fetch page from Last.fm
     const { lastfmUsername } = this.state;
@@ -173,12 +176,21 @@ export default class LastFmImporter extends React.Component<
     /*
      * Fetch page from Last.fm
      */
+=======
+  /*
+   * @param {number} page - the page to fetch from Last.fm
+   * @param {number} retries - number times to retry in case of errors other than 40x
+   * Fetch page from Last.fm
+   * @returns Returns an array of Listens if successful, null if it exceeds the max number of retries (consider that an error)
+   * and undefined if we receive a 40X error for the page
+   */
+  async getPage(
+    page: number,
+    retries: number
+  ): Promise<Array<Listen> | undefined> {
+>>>>>>> .merge_file_a10120
     const { lastfmUsername } = this.state;
-
-    const retry = (reason: string) => {
-      // console.warn(`${reason} while fetching last.fm page=${page}, retrying in 3s`);
-      setTimeout(() => this.getPage(page), 3000);
-    };
+    const timeout = 3000;
 
     const url = `${
       this.lastfmURL
@@ -204,22 +216,37 @@ export default class LastFmImporter extends React.Component<
         this.countReceived += payload.length;
         return payload;
       }
+      // Retry if we receive a 5xx server error
       if (/^5/.test(response.status.toString())) {
-        retry(`Got ${response.status}`);
-      } else {
-        // ignore 40x
-        // console.warn(`Got ${response.status} while fetching page last.fm page=${page}, skipping`);
+        throw new Error(`Status ${response.status}`);
       }
-    } catch {
+    } catch (err) {
       // Retry if there is a network error
-      retry("Error");
+      // eslint-disable-next-line no-console
+      console.warn(`Error while fetching last.fm page ${page}:`, err);
+      if (retries <= 0) {
+        throw new Error(
+          `Failed to fetch page ${page} from last.fm after ${LASTFM_RETRIES} retries.`
+        );
+      }
+      // eslint-disable-next-line no-console
+      console.warn(`Retrying in ${timeout / 1000}s, ${retries} retries left`);
+      await new Promise((resolve) => setTimeout(resolve, timeout));
+      // eslint-disable-next-line no-return-await
+      return await this.getPage(page, retries - 1);
     }
-    return null;
+    return undefined;
   }
 
+<<<<<<< .merge_file_a10708
   static getlastImportedString(listenedAt: number) {
     // Retrieve first track's timestamp from payload and convert it into string for display
     const lastImportedDate = new Date(listenedAt * 1000);
+=======
+  static getlastImportedString(listen: Listen) {
+    // Retrieve first track's timestamp from payload and convert it into string for display
+    const lastImportedDate = new Date(listen.listened_at * 1000);
+>>>>>>> .merge_file_a10120
     return lastImportedDate.toLocaleString("en-US", {
       month: "short",
       day: "2-digit",
@@ -287,6 +314,7 @@ export default class LastFmImporter extends React.Component<
     this.updateRateLimitParameters(response);
   }
 
+<<<<<<< .merge_file_a10708
   async startImport() {
     this.updateModalAction(<p>Your import from Last.fm is starting!</p>, false);
     this.latestImportTime = await this.APIService.getLatestImport(
@@ -298,19 +326,30 @@ export default class LastFmImporter extends React.Component<
     this.userIsPrivate = await this.getUserPrivacy();
     this.page = this.totalPages; // Start from the last page so that oldest scrobbles are imported first
 
+=======
+  async importLoop() {
+>>>>>>> .merge_file_a10120
     while (this.page > 0) {
       // Fixing no-await-in-loop will require significant changes to the code, ignoring for now
-      const payload = await this.getPage(this.page); // eslint-disable-line
+      this.lastImportedString = "...";
+      const payload = await this.getPage(this.page, LASTFM_RETRIES); // eslint-disable-line
+
       if (payload) {
         // Submit only if response is valid
         this.submitPage(payload);
+        this.lastImportedString = LastFmImporter.getlastImportedString(
+          payload[0]
+        );
       }
 
       this.page -= 1;
       this.numCompleted += 1;
+<<<<<<< .merge_file_a10708
       this.lastImportedString = LastFmImporter.getlastImportedString(
         payload[0].listened_at
       );
+=======
+>>>>>>> .merge_file_a10120
 
       // Update message
       const msg = (
@@ -336,8 +375,48 @@ export default class LastFmImporter extends React.Component<
       );
       this.setState({ msg });
     }
+  }
 
-    // Update latest import time on LB server
+  async startImport() {
+    this.updateModalAction(<p>Your import from Last.fm is starting!</p>, false);
+    this.latestImportTime = await this.APIService.getLatestImport(
+      this.userName
+    );
+    this.incrementalImport = this.latestImportTime > 0;
+    this.playCount = await this.getTotalNumberOfScrobbles();
+    this.totalPages = await this.getNumberOfPages();
+    this.page = this.totalPages; // Start from the last page so that oldest scrobbles are imported first
+
+    let finalMsg: JSX.Element;
+    const { profileUrl } = this.props;
+
+    try {
+      await this.importLoop(); // import pages
+    } catch (err) {
+      // import failed, show final message on unhandled exception / unrecoverable network error
+      finalMsg = (
+        <p>
+          <FontAwesomeIcon icon={faTimes as IconProp} /> We were unable to
+          import from LastFM, please try again.
+          <br />
+          If the problem persists please contact us.
+          <br />
+          {err.toString()}
+          <br />
+          <span style={{ fontSize: `${10}pt` }}>
+            <a href={`${profileUrl}`}>
+              Close and go to your ListenBrainz profile
+            </a>
+          </span>
+        </p>
+      );
+      // eslint-disable-next-line no-console
+      console.error(err);
+      this.setState({ canClose: true, msg: finalMsg });
+      return Promise.resolve(null);
+    }
+
+    // import was successful
     try {
       this.maxTimestampForImport = Math.max(
         Number(this.maxTimestampForImport),
@@ -358,11 +437,16 @@ export default class LastFmImporter extends React.Component<
         3000
       );
     }
+<<<<<<< .merge_file_a10708
     const { profileUrl } = this.props;
 
     let finalMsg = (
+=======
+    finalMsg = (
+>>>>>>> .merge_file_a10120
       <p>
-        <FontAwesomeIcon icon={faCheck as IconProp} /> Import finished
+        <FontAwesomeIcon icon={faCheck as IconProp} />
+        Import finished
         <br />
         <span style={{ fontSize: `${8}pt` }}>
           Successfully submitted {this.countReceived} listens to ListenBrainz
@@ -426,6 +510,7 @@ export default class LastFmImporter extends React.Component<
       );
     }
     this.setState({ canClose: true, msg: finalMsg });
+    return Promise.resolve(null);
   }
 
   updateRateLimitParameters(response: Response) {
@@ -437,7 +522,6 @@ export default class LastFmImporter extends React.Component<
 
   render() {
     const { show, canClose, lastfmUsername, msg } = this.state;
-
     return (
       <div className="Importer">
         <form onSubmit={this.handleSubmit}>
@@ -485,7 +569,13 @@ document.addEventListener("DOMContentLoaded", () => {
     api_url,
     lastfm_api_url,
     lastfm_api_key,
+    sentry_dsn,
   } = reactProps;
+
+  if (sentry_dsn) {
+    Sentry.init({ dsn: sentry_dsn });
+  }
+
   ReactDOM.render(
     <LastFmImporter
       user={user}

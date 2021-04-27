@@ -1,21 +1,17 @@
 
 @primary: #08949b;
 @secondary: #0d696e;
-@white: #FFFFFF;
-@light: #C0CFB2;
-@dark: #053b47;
 @controlsHeight: 60px;
 @love: #C62828;
-@hate: #353070;
-
+@hate: @blue;
+@player-min-height: 320px;
 
 #music-player {
-  background: @primary;
   position: relative;
   margin: auto;
   width: 100%;
   max-width: 500px;
-  min-height: 250px;
+  min-height: @player-min-height;
   border-radius: 5px;
   overflow: hidden;
   box-shadow: 5px 5px 15px fadeout(@dark, 60%);
@@ -126,16 +122,16 @@
       }
     }
     .no-album-art{
-      margin: 0;
-      color: white;
-      text-align: center;
-      padding-top: 30px;
-      width:100%;
-      height:100%;
       position: absolute;
-      left: 0;
       top: 0;
-      z-index: 0;
+      min-height: @player-min-height;
+      min-width: 100%;
+      background-image: url(../img/logo_big.svg);
+      background-repeat: no-repeat;
+      background-position: center top;
+      background-color: aliceblue;
+      opacity: 0.3;
+      text-align: center;
     }
 }
   
@@ -184,31 +180,31 @@
       background-color: rgba(217, 237, 247, 0.3) !important ;
     }
 
-     > div {
-       padding: 0px;
-     }
+    > div {
+      padding: 0px;
+    }
 
+    .track-details {
+      width: 100%;
+
+      p {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space:nowrap;
+        margin-bottom: 0px;
+      }
+    }
+    .listen-time {
+      font-style: italic;
+    }
+    
     > .col-xs-9, .col-xs-12 {
 
-      > .col-xs-9, .col-xs-12 {
+      > .col-xs-8, .col-xs-12 {
         display: flex;
-
-        .track-details {
-          width: 100%;
-
-          p {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space:nowrap;
-            margin-bottom: 0px;
-          }
-        }
-      }
-      .listen-time {
-        font-style: italic;
       }
 
-      > .col-xs-3 {
+      > .col-xs-4 {
         display: table;
         height: 40px;
 
@@ -246,6 +242,7 @@
         stroke-width: 40px;
         font-size: 18px;
         margin: 0% 7%;
+        width: 1em;
       }
 
       .fa-heart, .fa-heart-broken {
@@ -290,6 +287,7 @@
         min-width: 140px;
         border-radius: 4px;
         padding: 10px 0px;
+        width: 250px;
 
         button {
           width: 100%;

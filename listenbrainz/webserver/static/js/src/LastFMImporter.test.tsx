@@ -1,6 +1,6 @@
 import * as React from "react";
 import { mount, shallow } from "enzyme";
-import LastFmImporter from "./LastFMImporter";
+import LastFmImporter, { LASTFM_RETRIES } from "./LastFMImporter";
 // Mock data to test functions
 import * as page from "./__mocks__/page.json";
 import * as getInfo from "./__mocks__/getInfo.json";
@@ -134,6 +134,22 @@ describe("getTotalNumberOfScrobbles", () => {
 });
 
 describe("getPage", () => {
+  const originalTimeout = window.setTimeout;
+  beforeAll(() => {
+    // Ugly hack: Jest fake timers don't play well with promises and setTimeout
+    // so we replace the setTimeout function.
+    // see https://github.com/facebook/jest/issues/7151
+    // @ts-ignore
+    window.setTimeout = (fn: () => void, _timeout: number): number => {
+      fn();
+      return _timeout;
+    };
+  });
+
+  afterAll(() => {
+    window.setTimeout = originalTimeout;
+  });
+
   beforeEach(() => {
     const wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
     instance = wrapper.instance();
@@ -148,20 +164,11 @@ describe("getPage", () => {
   });
 
   it("should call with the correct url", () => {
-    instance.getPage(1);
+    instance.getPage(1, LASTFM_RETRIES);
 
     expect(window.fetch).toHaveBeenCalledWith(
       `${props.lastfmApiUrl}?method=user.getrecenttracks&user=${instance.state.lastfmUsername}&api_key=${props.lastfmApiKey}&from=1&page=1&format=json`
     );
-  });
-
-  it("should call encodeScrobbles", async () => {
-    // Mock function for encodeScrobbles
-    LastFmImporter.encodeScrobbles = jest.fn(() => ["foo", "bar"]);
-
-    const data = await instance.getPage(1);
-    expect(LastFmImporter.encodeScrobbles).toHaveBeenCalledTimes(1);
-    expect(data).toEqual(["foo", "bar"]);
   });
 
   it("should retry if 50x error is recieved", async () => {
@@ -173,11 +180,51 @@ describe("getPage", () => {
       });
     });
 
-    await instance.getPage(1);
-    // There is no direct way to check if retry has been called
-    expect(setTimeout).toHaveBeenCalledTimes(1);
+    const getPageSpy = jest.spyOn(instance, "getPage");
+    let finalValue;
+    try {
+      finalValue = await instance.getPage(1, LASTFM_RETRIES);
+    } catch (err) {
+      expect(getPageSpy).toHaveBeenCalledTimes(1 + LASTFM_RETRIES);
+      expect(finalValue).toBeUndefined();
 
-    jest.runAllTimers();
+      // This error message is also displayed to the user
+      expect(err).toEqual(
+        new Error(
+          `Failed to fetch page 1 from last.fm after ${LASTFM_RETRIES} retries.`
+        )
+      );
+    }
+  });
+
+  it("should return the expected value if retry is successful", async () => {
+    // Mock function for fetch
+    window.fetch = jest
+      .fn()
+      .mockImplementationOnce(() => {
+        return Promise.resolve({
+          ok: false,
+          status: 503,
+        });
+      })
+      .mockImplementationOnce(() => {
+        return Promise.resolve({
+          ok: false,
+          status: 503,
+        });
+      })
+      .mockImplementationOnce(() => {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(page),
+        });
+      });
+
+    const getPageSpy = jest.spyOn(instance, "getPage");
+    const finalValue = await instance.getPage(1, LASTFM_RETRIES);
+
+    expect(getPageSpy).toHaveBeenCalledTimes(3);
+    expect(finalValue).toEqual(encodeScrobbleOutput);
   });
 
   it("should skip the page if 40x is recieved", async () => {
@@ -188,24 +235,59 @@ describe("getPage", () => {
         status: 404,
       });
     });
+    const getPageSpy = jest.spyOn(instance, "getPage");
+    const finalValue = await instance.getPage(1, LASTFM_RETRIES);
 
-    await instance.getPage(1);
-    expect(setTimeout).not.toHaveBeenCalled();
+    expect(getPageSpy).toHaveBeenCalledTimes(1);
+    expect(finalValue).toEqual(undefined);
+  });
+
+  it("should skip the page if 30x is recieved", async () => {
+    // Mock function for failed fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: false,
+        status: 301,
+      });
+    });
+    const getPageSpy = jest.spyOn(instance, "getPage");
+    const finalValue = await instance.getPage(1, LASTFM_RETRIES);
+
+    expect(getPageSpy).toHaveBeenCalledTimes(1);
+    expect(finalValue).toEqual(undefined);
   });
 
   it("should retry if there is any other error", async () => {
     // Mock function for fetch
-    window.fetch = jest.fn().mockImplementation(() => {
-      return Promise.resolve({
-        ok: true,
-        json: () => Promise.reject(),
+    window.fetch = jest
+      .fn()
+      .mockImplementationOnce(() => {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.reject(new Error("Error")),
+        });
+      })
+      .mockImplementationOnce(() => {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(page),
+        });
       });
-    });
 
-    await instance.getPage(1);
-    // There is no direct way to check if retry has been called
-    expect(setTimeout).toHaveBeenCalledTimes(1);
-    jest.runAllTimers();
+    const getPageSpy = jest.spyOn(instance, "getPage");
+    const finalValue = await instance.getPage(1, LASTFM_RETRIES);
+
+    expect(getPageSpy).toHaveBeenCalledTimes(2);
+    expect(finalValue).toEqual(encodeScrobbleOutput);
+  });
+
+  it("should call encodeScrobbles", async () => {
+    // Mock function for encodeScrobbles
+    LastFmImporter.encodeScrobbles = jest.fn(() => ["foo", "bar"]);
+
+    const data = await instance.getPage(1, LASTFM_RETRIES);
+    expect(LastFmImporter.encodeScrobbles).toHaveBeenCalledTimes(1);
+    expect(data).toEqual(["foo", "bar"]);
   });
 });
 
@@ -354,8 +436,13 @@ describe("LastFmImporter Page", () => {
 
   it("should properly convert latest imported timestamp to string", () => {
     // Check getlastImportedString() and formatting
+<<<<<<< .merge_file_a11132
     const testDate = Number(page.recenttracks.track[0].date.uts);
     const lastImportedDate = new Date(testDate * 1000);
+=======
+    const data = LastFmImporter.encodeScrobbles(page);
+    const lastImportedDate = new Date(data[0].listened_at * 1000);
+>>>>>>> .merge_file_a02996
     const msg = lastImportedDate.toLocaleString("en-US", {
       month: "short",
       day: "2-digit",
@@ -363,6 +450,7 @@ describe("LastFmImporter Page", () => {
       hour: "numeric",
       minute: "numeric",
       hour12: true,
+<<<<<<< .merge_file_a11132
     });
 
     expect(LastFmImporter.getlastImportedString(testDate)).toMatch(msg);
@@ -370,4 +458,89 @@ describe("LastFmImporter Page", () => {
       0
     );
   });
+=======
+    });
+
+    expect(LastFmImporter.getlastImportedString(data[0])).toMatch(msg);
+    expect(LastFmImporter.getlastImportedString(data[0])).not.toHaveLength(0);
+  });
+});
+
+describe("importLoop", () => {
+  let wrapper: any;
+  beforeEach(() => {
+    wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
+    instance = wrapper.instance();
+    instance.setState({ lastfmUsername: "dummyUser" });
+    // needed for startImport
+    instance.APIService.getLatestImport = jest.fn().mockImplementation(() => {
+      return Promise.resolve(0);
+    });
+
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(getInfo),
+      });
+    });
+  });
+
+  it("should not contain any uncaught exceptions", async () => {
+    instance.getPage = jest.fn().mockImplementation(() => {
+      return null;
+    });
+
+    let error = null;
+    try {
+      await instance.importLoop();
+    } catch (e) {
+      error = e;
+    }
+    expect(error).toBeNull();
+  });
+
+  it("should show success message on import completion", async () => {
+    // Mock function for successful importLoop
+    instance.importLoop = jest.fn().mockImplementation(async () => {
+      return Promise.resolve({
+        ok: true,
+      });
+    });
+
+    await expect(instance.startImport()).resolves.toBe(null);
+    // verify message is success message
+    expect(instance.state.msg?.props.children).toContain("Import finished");
+    // verify message isn't failure message
+    expect(instance.state.msg?.props.children).not.toContain(
+      "Something went wrong"
+    );
+  });
+
+  it("should show error message on unhandled exception / network error", async () => {
+    const errorMsg = `Some error`;
+    // Mock function for failed importLoop
+    instance.importLoop = jest.fn().mockImplementation(async () => {
+      const error = new Error();
+      // Changing the error message to make sure it gets reflected in the modal.
+      error.message = errorMsg;
+      throw error;
+    });
+
+    const consoleErrorSpy = jest.spyOn(console, "error");
+
+    // startImport shouldn't throw error
+    await expect(instance.startImport()).resolves.toBe(null);
+    // verify message is failure message
+    expect(instance.state.msg?.props.children).toContain(
+      " We were unable to import from LastFM, please try again."
+    );
+    expect(instance.state.msg?.props.children).toContain(
+      "If the problem persists please contact us."
+    );
+    expect(instance.state.msg?.props.children).toContain("Error: Some error");
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(new Error("Some error"));
+  });
+>>>>>>> .merge_file_a02996
 });

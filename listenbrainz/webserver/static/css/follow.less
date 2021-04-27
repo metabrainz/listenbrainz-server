@@ -1,12 +1,10 @@
-@purple: #353070;
-@white: #ffffff;
 
 .follow-button {
   margin-left: 10px;
   font-family: "Sintony";
   color: @white;
-  background: @purple;
-  border: 2px solid @purple;
+  background: @blue;
+  border: 2px solid @blue;
   font-weight: bold;
   padding: 5px 8px;
   border-radius: 4px;
@@ -26,7 +24,7 @@
 
     &:hover, &:focus {
       background: white;
-      color:@purple;
+      color:@blue;
 
       > .text {
         width: 4.75em;
@@ -40,7 +38,7 @@
 
     &.following, &:hover, &:focus {
       background: white;
-      color: @purple;
+      color: @blue;
     }
 
     svg {
@@ -53,12 +51,13 @@
   padding-bottom: 10px;
 }
 
-.follower-following-list {
-  height: 250px;
+.follower-following-list, .similar-users-list {
+  max-height: 250px;
   padding: 10px;
   overflow-y: scroll;
   border-radius: 2px;
   box-shadow: inset 0px 11px 8px -10px #ccc;
+  margin-bottom: 20px;
 
   > * {
     display: flex;

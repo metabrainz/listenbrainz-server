@@ -24,8 +24,8 @@ listen_schema = [
 # schema to contain model parameters.
 model_param_schema = [
     StructField('alpha', FloatType(), nullable=True),  # Baseline level of confidence weighting applied.
-    StructField('lmbda', FloatType(), nullable=True),  # Controls over fitting.
     StructField('iteration', IntegerType(), nullable=True),  # Number of iterations to run.
+    StructField('lmbda', FloatType(), nullable=True),  # Controls over fitting.
     StructField('rank', IntegerType(), nullable=True),  # Number of hidden features in our low-rank approximation matrices.
 ]
 model_param_schema = StructType(sorted(model_param_schema, key=lambda field: field.name))
@@ -144,8 +144,8 @@ def convert_model_metadata_to_row(meta):
         model_id=meta.get('model_id'),
         model_param=Row(
             alpha=meta.get('alpha'),
-            lmbda=meta.get('lmbda'),
             iteration=meta.get('iteration'),
+            lmbda=meta.get('lmbda'),
             rank=meta.get('rank'),
         ),
         test_data_count=meta.get('test_data_count'),

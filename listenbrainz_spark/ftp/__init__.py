@@ -1,11 +1,13 @@
 import os
 import ftplib
 import hashlib
+import logging
 
 from listenbrainz_spark import config
 from listenbrainz_spark.exceptions import DumpInvalidException
 
-from flask import current_app
+
+logger = logging.getLogger(__name__)
 
 
 class ListenBrainzFTPDownloader:
@@ -20,7 +22,7 @@ class ListenBrainzFTPDownloader:
             self.connection = ftplib.FTP(config.FTP_SERVER_URI)
             self.connection.login()
         except ftplib.error_perm:
-            current_app.logger.critical("Couldn't connect to FTP Server, try again...")
+            logger.critical("Couldn't connect to FTP Server, try again...")
             raise SystemExit
 
     def list_dir(self, path=None, verbose=False):
@@ -52,7 +54,7 @@ class ListenBrainzFTPDownloader:
             try:
                 self.connection.retrbinary('RETR {}'.format(src), f.write)
             except ftplib.error_perm as e:
-                current_app.logger.critical("Could not download file: {}".format(str(e)))
+                logger.critical("Could not download file: {}".format(str(e)))
 
     def download_dump(self, filename, directory):
         """ Download file with `filename` from FTP.
@@ -75,7 +77,7 @@ class ListenBrainzFTPDownloader:
         dest_path = os.path.join(directory, filename)
         self.download_file_binary(filename, dest_path)
 
-        current_app.logger.info("Verifying dump integrity...")
+        logger.info("Verifying dump integrity...")
         calculated_sha = self._calc_sha256(dest_path)
         received_sha = self._read_sha_file(sha_dest_path)
 
