@@ -80,18 +80,6 @@ REDIS_PORT = "SERVICEDOESNOTEXIST_listenbrainz-redis"
 REDIS_NAMESPACE = "SERVICEDOESNOTEXIST_listenbrainz-redis"
 {{end}}
 
-{{if service "listenbrainz-influxdb"}}
-{{with index (service "listenbrainz-influxdb") 0}}
-INFLUX_HOST    = "{{.Address}}"
-INFLUX_PORT    = {{.Port}}
-INFLUX_DB_NAME  = "listenbrainz"
-{{end}}
-{{else}}
-INFLUX_HOST    = "SERVICEDOESNOTEXIST_listenbrainz-influxdb"
-INFLUX_PORT    = "SERVICEDOESNOTEXIST_listenbrainz-influxdb"
-INFLUX_DB_NAME  = "SERVICEDOESNOTEXIST_listenbrainz-influxdb"
-{{end}}
-
 {{ $rabbitmq_key := (printf "docker-server-configs/LB/config.%s.json/rabbitmq_service" (env "DEPLOY_ENV")) }}
 {{- with $rabbitmq_service_name := keyOrDefault $rabbitmq_key "rabbitmq"}}
 {{- if service $rabbitmq_service_name}}
