@@ -113,24 +113,43 @@ export default class YoutubePlayer
     const artistName =
       _get(listen, "track_metadata.artist_name") || _get(listen, "creator");
     const releaseName = _get(listen, "track_metadata.release_name");
-    const { handleWarning, onTrackNotFound } = this.props;
+
+    const {
+      handleWarning,
+      onTrackNotFound,
+      youtubeUser,
+      refreshYoutubeToken,
+    } = this.props;
+
     if (!trackName) {
       handleWarning("Not enough info to search on Youtube");
       onTrackNotFound();
-    } else if (this.youtubePlayer) {
-      const { youtubeUser, refreshYoutubeToken } = this.props;
+      return;
+    }
+    if (!this.youtubePlayer) {
+      handleWarning("Youtube player error");
+      onTrackNotFound();
+      return;
+    }
+
+    try {
       const { api_key, access_token } = youtubeUser;
-      searchForYoutubeTrack(
+      const videoIds = await searchForYoutubeTrack(
         api_key,
         access_token,
         trackName,
         artistName,
         releaseName,
         refreshYoutubeToken
-      ).then((videoIds) => {
-        if (!videoIds || !this.youtubePlayer) return;
+      );
+      if (videoIds) {
         this.youtubePlayer.loadPlaylist(videoIds);
-      });
+      } else {
+        onTrackNotFound();
+      }
+    } catch (error) {
+      handleWarning(error, "Youtube player error");
+      onTrackNotFound();
     }
   };
 
@@ -163,26 +182,6 @@ export default class YoutubePlayer
       this.playTrackById(youtubeId);
     } else {
       this.searchAndPlayTrack(listen);
-    }
-    this.checkVideoLoadedTimerId = setTimeout(
-      this.checkVideoLoaded.bind(this),
-      1500
-    );
-  };
-
-  checkVideoLoaded = () => {
-    if (!this.youtubePlayer) {
-      return;
-    }
-    const { onTrackNotFound } = this.props;
-    // We use cueVideoById("") as a means to clear any playlist.
-    // If there was an undetected error loading a video, the getVideoData method won't exist
-    // or getVideoData.video_id will be null and we should go to the next track
-    if (this.youtubePlayer?.getVideoData) {
-      const videoData = this.youtubePlayer.getVideoData();
-      if (videoData?.video_id === null) {
-        onTrackNotFound();
-      }
     }
   };
 
@@ -257,6 +256,7 @@ export default class YoutubePlayer
       <div className={`youtube ${!show ? "hidden" : ""}`}>
         <YouTube
           opts={options}
+          onError={this.onError}
           onStateChange={this.handlePlayerStateChanged}
           onError={this.onError}
           onReady={this.onReady}
