@@ -9,7 +9,7 @@ from listenbrainz.webserver.views.user import _get_user
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
 from werkzeug.exceptions import BadRequest, InternalServerError
 
-from listenbrainz.webserver.views.views_utils import get_current_spotify_user
+from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user
 
 recommendations_cf_recording_bp = Blueprint('recommendations_cf_recording', __name__)
 
@@ -95,6 +95,8 @@ def _get_template(active_section, user):
         )
 
     spotify_data = get_current_spotify_user()
+    youtube_data = get_current_youtube_user()
+
     current_user_data = {}
 
     if current_user.is_authenticated:
@@ -111,6 +113,7 @@ def _get_template(active_section, user):
         },
         "current_user": current_user_data,
         "spotify": spotify_data,
+        "youtube": youtube_data,
         "api_url": current_app.config["API_URL"],
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
         "recommendations": recommendations
