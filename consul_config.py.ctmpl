@@ -156,9 +156,12 @@ SPOTIFY_CLIENT_SECRET = '''{{template "KEY" "spotify/client_secret"}}'''
 SPOTIFY_CALLBACK_URL = '''{{template "KEY" "spotify/redirect_uri"}}'''
 
 # YOUTUBE
-YOUTUBE_CONFIG = '''{{template "KEY" "youtube/credentials"}}'''
+YOUTUBE_CONFIG_STR = '''{{template "KEY" "youtube/credentials"}}'''
 YOUTUBE_API_KEY = '''{{template "KEY" "youtube/api_key"}}'''
 YOUTUBE_REDIRECT_URI = '''{{template "KEY" "youtube/redirect_uri"}}'''
+
+import json
+YOUTUBE_CONFIG = json.loads(YOUTUBE_CONFIG_STR)
 
 
 SQLALCHEMY_TRACK_MODIFICATIONS = False
