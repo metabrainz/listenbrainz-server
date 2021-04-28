@@ -11,6 +11,10 @@ const props = {
     access_token: "heyo",
     permission: ["user-read-currently-playing"] as Array<SpotifyPermission>,
   },
+  youtubeUser: {
+    access_token: "frontend-test",
+    api_key: "fake-api-key",
+  } as YoutubeUser,
   direction: "up" as BrainzPlayDirection,
   onCurrentListenChange: (listen: Listen | JSPFTrack) => {},
   listens: [],

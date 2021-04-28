@@ -33,6 +33,7 @@ const {
   oldestListenTs,
   profileUrl,
   spotify,
+  youtube,
   user,
   webSocketsServerUrl,
 } = recentListensProps;
@@ -49,6 +50,7 @@ const props = {
   oldestListenTs,
   profileUrl,
   spotify: spotify as SpotifyUser,
+  youtube: youtube as YoutubeUser,
   user,
   webSocketsServerUrl,
   newAlert: () => {},
