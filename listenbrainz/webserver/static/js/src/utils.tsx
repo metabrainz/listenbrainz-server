@@ -68,9 +68,11 @@ const searchForYoutubeTrack = async (
   if (artistName) {
     query += ` ${artistName}`;
   }
-  if (releaseName) {
-    query += ` ${releaseName}`;
-  }
+  // Considering we cannot tell the Youtube API that this should match only an album title,
+  // results are paradoxically sometimes worse if we add it to the query (YT will find random matches for album title words)
+  // if (releaseName) {
+  //   query += ` ${releaseName}`;
+  // }
   const response = await fetch(
     `https://youtube.googleapis.com/youtube/v3/search?part=snippet&q=${query}&videoEmbeddable=true&type=video&key=${apiKey}`,
     {
