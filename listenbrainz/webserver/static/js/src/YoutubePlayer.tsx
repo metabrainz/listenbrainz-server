@@ -14,7 +14,7 @@ type YoutubePlayerState = {
   currentListen?: Listen;
 };
 
-type SpotifyPlayerProps = DataSourceProps & {
+type YoutubePlayerProps = DataSourceProps & {
   youtubeUser: YoutubeUser;
   refreshYoutubeToken: () => Promise<string>;
 };
@@ -26,7 +26,7 @@ type ExtendedYoutubePlayer = {
 } & YT.Player;
 
 export default class YoutubePlayer
-  extends React.Component<SpotifyPlayerProps, YoutubePlayerState>
+  extends React.Component<YoutubePlayerProps, YoutubePlayerState>
   implements DataSourceType {
   youtubePlayer?: ExtendedYoutubePlayer;
   youtubePlayerStateTimerID = null;

@@ -72,7 +72,7 @@ const searchForYoutubeTrack = async (
     query += ` ${releaseName}`;
   }
   const response = await fetch(
-    `https://youtube.googleapis.com/youtube/v3/search?part=snippet&q=${query}&key=${apiKey}`,
+    `https://youtube.googleapis.com/youtube/v3/search?part=snippet&q=${query}&videoEmbeddable=true&type=video&key=${apiKey}`,
     {
       method: "GET",
       headers: {
