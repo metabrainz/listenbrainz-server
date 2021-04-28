@@ -31,6 +31,16 @@ export default class YoutubePlayer
   youtubePlayer?: ExtendedYoutubePlayer;
   checkVideoLoadedTimerId?: NodeJS.Timeout;
 
+  constructor(props: YoutubePlayerProps) {
+    super(props);
+
+    // Invalidate this source (with helpful error message with link)
+    // if the user is not authed for Youtube API
+    if (!props.youtubeUser) {
+      this.handleAccountError();
+    }
+  }
+
   componentDidUpdate(prevProps: DataSourceProps) {
     const { show } = this.props;
     if (prevProps.show === true && show === false && this.youtubePlayer) {
@@ -80,7 +90,24 @@ export default class YoutubePlayer
     onProgressChange(player.getCurrentTime() * 1000);
   };
 
-  searchAndPlayTrack = (listen: Listen | JSPFTrack): void => {
+  handleAccountError = (): void => {
+    const errorMessage = (
+      <p>
+        In order to play music with Youtube, you will need a Youtube / Google
+        account linked to your ListenBrainz account.
+        <br />
+        Please try to{" "}
+        <a href="/profile/music-services/details/" target="_blank">
+          link for &quot;playing music&quot; feature
+        </a>{" "}
+        and refresh this page
+      </p>
+    );
+    const { onInvalidateDataSource } = this.props;
+    onInvalidateDataSource(this, errorMessage);
+  };
+
+  searchAndPlayTrack = async (listen: Listen | JSPFTrack) => {
     const trackName =
       _get(listen, "track_metadata.track_name") || _get(listen, "title");
     const artistName =
