@@ -8,7 +8,7 @@ import {
 } from "lodash";
 import * as _ from "lodash";
 import PlaybackControls from "./PlaybackControls";
-import { APIContext } from "./APIService";
+import GlobalAppContext from "./GlobalAppContext";
 import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
 import SoundcloudPlayer from "./SoundcloudPlayer";
@@ -67,6 +67,9 @@ export default class BrainzPlayer extends React.Component<
   BrainzPlayerProps,
   BrainzPlayerState
 > {
+  static contextType = GlobalAppContext;
+  declare context: React.ContextType<typeof GlobalAppContext>;
+
   spotifyPlayer?: React.RefObject<SpotifyPlayer>;
   youtubePlayer?: React.RefObject<YoutubePlayer>;
   soundcloudPlayer?: React.RefObject<SoundcloudPlayer>;
@@ -406,7 +409,7 @@ export default class BrainzPlayer extends React.Component<
       durationMs,
     } = this.state;
     const { spotifyUser } = this.props;
-    const { refreshSpotifyToken } = this.context;
+    const { APIService } = this.context;
     return (
       <div>
         <PlaybackControls
@@ -427,7 +430,7 @@ export default class BrainzPlayer extends React.Component<
               this.dataSources[currentDataSourceIndex]?.current instanceof
               SpotifyPlayer
             }
-            refreshSpotifyToken={refreshSpotifyToken}
+            refreshSpotifyToken={APIService.refreshSpotifyToken}
             onInvalidateDataSource={this.invalidateDataSource}
             ref={this.spotifyPlayer}
             spotifyUser={spotifyUser}
@@ -483,4 +486,3 @@ export default class BrainzPlayer extends React.Component<
     );
   }
 }
-BrainzPlayer.contextType = APIContext;

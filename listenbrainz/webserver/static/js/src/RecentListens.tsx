@@ -4,7 +4,8 @@ import * as ReactDOM from "react-dom";
 import * as _ from "lodash";
 import * as io from "socket.io-client";
 import * as Sentry from "@sentry/react";
-import { APIService, APIContext } from "./APIService";
+import APIServiceClass from "./APIService";
+import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import BrainzPlayer from "./BrainzPlayer";
 import ErrorBoundary from "./ErrorBoundary";
 import Loader from "./components/Loader";
@@ -49,7 +50,10 @@ export default class RecentListens extends React.Component<
   RecentListensProps,
   RecentListensState
 > {
-  private APIService!: APIService;
+  static contextType = GlobalAppContext;
+  declare context: React.ContextType<typeof GlobalAppContext>;
+
+  private APIService!: APIServiceClass;
   private brainzPlayer = React.createRef<BrainzPlayer>();
   private listensTable = React.createRef<HTMLTableElement>();
 
@@ -78,7 +82,8 @@ export default class RecentListens extends React.Component<
   componentDidMount(): void {
     const { mode } = this.state;
     // Get API instance from React context provided for in top-level component
-    this.APIService = this.context;
+    const { APIService } = this.context;
+    this.APIService = APIService;
 
     if (mode === "listens") {
       this.connectWebsockets();
@@ -726,7 +731,7 @@ export default class RecentListens extends React.Component<
   }
 }
 
-RecentListens.contextType = APIContext;
+// RecentListens.contextType = GlobalAppContext;
 
 document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#react-container");
@@ -753,7 +758,7 @@ document.addEventListener("DOMContentLoaded", () => {
     sentry_dsn,
   } = reactProps;
 
-  const apiService: APIService = new APIService(
+  const apiService = new APIServiceClass(
     api_url || `${window.location.origin}/1`
   );
 
@@ -765,9 +770,15 @@ document.addEventListener("DOMContentLoaded", () => {
     RecentListens
   );
 
+  const globalProps: GlobalAppContextT = {
+    APIService: apiService,
+    currentUser: current_user,
+    spotifyAuth: spotify,
+  };
+
   ReactDOM.render(
     <ErrorBoundary>
-      <APIContext.Provider value={apiService}>
+      <GlobalAppContext.Provider value={globalProps}>
         <RecentListensWithAlertNotifications
           latestListenTs={latest_listen_ts}
           latestSpotifyUri={latest_spotify_uri}
@@ -781,7 +792,7 @@ document.addEventListener("DOMContentLoaded", () => {
           webSocketsServerUrl={web_sockets_server_url}
           currentUser={current_user}
         />
-      </APIContext.Provider>
+      </GlobalAppContext.Provider>
     </ErrorBoundary>,
     domContainer
   );

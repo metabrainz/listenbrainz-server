@@ -25,7 +25,8 @@ import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
 } from "../AlertNotificationsHOC";
-import { APIService, APIContext } from "../APIService";
+import APIServiceClass from "../APIService";
+import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import SpotifyAPIService from "../SpotifyAPIService";
 import BrainzPlayer from "../BrainzPlayer";
 import Card from "../components/Card";
@@ -46,7 +47,6 @@ import {
 } from "./utils";
 
 export type PlaylistPageProps = {
-  apiUrl: string;
   labsApiUrl: string;
   playlist: JSPFObject;
   spotify: SpotifyUser;
@@ -70,6 +70,8 @@ export default class PlaylistPage extends React.Component<
   PlaylistPageProps,
   PlaylistPageState
 > {
+  static contextType = GlobalAppContext;
+
   static makeJSPFTrack(track: ACRMSearchResult): JSPFTrack {
     return {
       identifier: `${PLAYLIST_TRACK_URI_PREFIX}${track.recording_mbid}`,
@@ -78,7 +80,9 @@ export default class PlaylistPage extends React.Component<
     };
   }
 
-  private APIService!: APIService;
+  declare context: React.ContextType<typeof GlobalAppContext>;
+  private APIService!: APIServiceClass;
+
   private SpotifyAPIService?: SpotifyAPIService;
   private spotifyPlaylist?: SpotifyPlaylistObject;
   private searchForTrackDebounced: any;
@@ -117,7 +121,8 @@ export default class PlaylistPage extends React.Component<
   }
 
   componentDidMount(): void {
-    this.APIService = this.context;
+    const { APIService } = this.context;
+    this.APIService = APIService;
     this.connectWebsockets();
     /* Deactivating feedback until the feedback system works with MBIDs instead of MSIDs */
     /* const recordingFeedbackMap = await this.loadFeedback();
@@ -681,7 +686,7 @@ export default class PlaylistPage extends React.Component<
       searchInputValue,
       cachedSearchResults,
     } = this.state;
-    const { spotify, currentUser, apiUrl, newAlert } = this.props;
+    const { spotify, currentUser, newAlert } = this.props;
     const { track: tracks } = playlist;
     const hasRightToEdit = this.hasRightToEdit();
     const isOwner = this.isOwner();
@@ -854,7 +859,6 @@ export default class PlaylistPage extends React.Component<
                         key={`${track.id}-${index.toString()}`}
                         currentUser={currentUser}
                         canEdit={hasRightToEdit}
-                        apiUrl={apiUrl}
                         track={track}
                         isBeingPlayed={this.isCurrentTrack(track)}
                         currentFeedback={this.getFeedbackForRecordingMbid(
@@ -931,7 +935,6 @@ export default class PlaylistPage extends React.Component<
     );
   }
 }
-PlaylistPage.contextType = APIContext;
 
 document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#react-container");
@@ -960,22 +963,27 @@ document.addEventListener("DOMContentLoaded", () => {
     PlaylistPage
   );
 
-  const apiService: APIService = new APIService(
+  const apiService = new APIServiceClass(
     api_url || `${window.location.origin}/1`
   );
 
+  const globalProps: GlobalAppContextT = {
+    APIService: apiService,
+    currentUser: current_user,
+    spotifyAuth: spotify,
+  };
+
   ReactDOM.render(
     <ErrorBoundary>
-      <APIContext.Provider value={apiService}>
+      <GlobalAppContext.Provider value={globalProps}>
         <PlaylistPageWithAlertNotifications
-          apiUrl={api_url}
           labsApiUrl={labs_api_url}
           playlist={playlist}
           spotify={spotify}
           currentUser={current_user}
           webSocketsServerUrl={web_sockets_server_url}
         />
-      </APIContext.Provider>
+      </GlobalAppContext.Provider>
     </ErrorBoundary>,
     domContainer
   );
