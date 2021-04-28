@@ -1,4 +1,14 @@
-FROM node:10.15-alpine AS webpack-base
+ARG NODE_VERSION=10.15-alpine
+FROM node:$NODE_VERSION AS webpack-base
+
+ARG GIT_COMMIT_SHA
+
+LABEL org.label-schema.vcs-url="https://github.com/metabrainz/listenbrainz-server.git" \
+      org.label-schema.vcs-ref=$GIT_COMMIT_SHA \
+      org.label-schema.schema-version="1.0.0-rc1" \
+      org.label-schema.vendor="MetaBrainz Foundation" \
+      org.label-schema.name="ListenBrainz" \
+      org.metabrainz.based-on-image="node:$NODE_VERSION"
 
 RUN mkdir /code
 WORKDIR /code

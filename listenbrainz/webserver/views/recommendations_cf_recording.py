@@ -116,7 +116,8 @@ def _get_template(active_section, user):
         "youtube": youtube_data,
         "api_url": current_app.config["API_URL"],
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
-        "recommendations": recommendations
+        "recommendations": recommendations,
+        "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn")
     }
 
     return render_template(

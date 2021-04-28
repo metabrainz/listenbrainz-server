@@ -1,5 +1,5 @@
 from listenbrainz_spark.tests import SparkTestCase
-from listenbrainz_spark import utils, path, config
+from listenbrainz_spark import utils, path
 import listenbrainz_spark.utils.mapping as mapping_utils
 
 from pyspark.sql import Row

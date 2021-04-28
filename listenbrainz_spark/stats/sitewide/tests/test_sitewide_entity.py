@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import listenbrainz_spark.stats.sitewide.entity as entity_stats
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
-from listenbrainz_spark.stats import (offset_days, offset_months, replace_days,
+from listenbrainz_spark.stats import (offset_days, offset_months,
                                       run_query, get_day_end, get_year_end, get_month_end)
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
 from listenbrainz_spark.tests import SparkTestCase
