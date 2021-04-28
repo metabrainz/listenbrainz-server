@@ -70,6 +70,7 @@ RUN mkdir /logs && chown lbdumps:lbdumps /logs
 
 
 COPY ./docker/run-lb-command /usr/local/bin
+COPY ./docker/lb-startup-common.sh /etc
 
 # runit service files
 # All services are created with a `down` file, preventing them from starting
