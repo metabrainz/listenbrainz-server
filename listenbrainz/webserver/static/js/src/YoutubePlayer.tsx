@@ -253,7 +253,6 @@ export default class YoutubePlayer
           opts={options}
           onError={this.onError}
           onStateChange={this.handlePlayerStateChanged}
-          onError={this.onError}
           onReady={this.onReady}
         />
       </div>
