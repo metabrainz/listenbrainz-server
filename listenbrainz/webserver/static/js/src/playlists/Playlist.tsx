@@ -652,7 +652,7 @@ export default class PlaylistPage extends React.Component<
           "Spotify permissions missing",
           <>
             Please try to{" "}
-            <a href="/profile/connect-spotify" target="_blank">
+            <a href="/profile/music-services/details/" target="_blank">
               disconnect and reconnect
             </a>{" "}
             your Spotify account and refresh this page
