@@ -31,16 +31,6 @@ export default class YoutubePlayer
   youtubePlayer?: ExtendedYoutubePlayer;
   checkVideoLoadedTimerId?: NodeJS.Timeout;
 
-  constructor(props: YoutubePlayerProps) {
-    super(props);
-
-    // Invalidate this source (with helpful error message with link)
-    // if the user is not authed for Youtube API
-    if (!props.youtubeUser) {
-      this.handleAccountError();
-    }
-  }
-
   componentDidUpdate(prevProps: DataSourceProps) {
     const { show } = this.props;
     if (prevProps.show === true && show === false && this.youtubePlayer) {
@@ -103,8 +93,9 @@ export default class YoutubePlayer
         and refresh this page
       </p>
     );
-    const { onInvalidateDataSource } = this.props;
-    onInvalidateDataSource(this, errorMessage);
+    const { onTrackNotFound, handleWarning } = this.props;
+    handleWarning(errorMessage);
+    onTrackNotFound();
   };
 
   searchAndPlayTrack = async (listen: Listen | JSPFTrack) => {
@@ -121,13 +112,17 @@ export default class YoutubePlayer
       refreshYoutubeToken,
     } = this.props;
 
-    if (!trackName) {
-      handleWarning("Not enough info to search on Youtube");
+    if (!this.youtubePlayer) {
       onTrackNotFound();
       return;
     }
-    if (!this.youtubePlayer) {
-      handleWarning("Youtube player error");
+    // If the user is not authed for Youtube API, show a helpful error message with link to connect
+    if (!youtubeUser) {
+      this.handleAccountError();
+      return;
+    }
+    if (!trackName) {
+      handleWarning("Not enough info to search on Youtube");
       onTrackNotFound();
       return;
     }
