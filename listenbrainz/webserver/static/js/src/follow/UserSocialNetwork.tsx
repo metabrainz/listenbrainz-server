@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { APIContext } from "../APIService";
+import GlobalAppContext from "../GlobalAppContext";
 import FollowerFollowingModal from "./FollowerFollowingModal";
 import SimilarUsersModal from "./SimilarUsersModal";
 
@@ -19,8 +19,8 @@ export default class UserSocialNetwork extends React.Component<
   UserSocialNetworkProps,
   UserSocialNetworkState
 > {
-  // eslint-disable-next-line react/static-property-placement
-  context!: React.ContextType<typeof APIContext>;
+  static contextType = GlobalAppContext;
+  declare context: React.ContextType<typeof GlobalAppContext>;
 
   constructor(props: UserSocialNetworkProps) {
     super(props);
@@ -39,7 +39,8 @@ export default class UserSocialNetwork extends React.Component<
 
   getSimilarUsers = async () => {
     const { user } = this.props;
-    const { getSimilarUsersForUser } = this.context;
+    const { APIService } = this.context;
+    const { getSimilarUsersForUser } = APIService;
     try {
       const response = await getSimilarUsersForUser(user.name);
       const { payload } = response;
@@ -60,7 +61,8 @@ export default class UserSocialNetwork extends React.Component<
 
   getFollowers = async () => {
     const { loggedInUser } = this.props;
-    const { getFollowersOfUser } = this.context;
+    const { APIService } = this.context;
+    const { getFollowersOfUser } = APIService;
     if (!loggedInUser) {
       return;
     }
@@ -77,7 +79,8 @@ export default class UserSocialNetwork extends React.Component<
 
   getFollowing = async () => {
     const { user } = this.props;
-    const { getFollowingForUser } = this.context;
+    const { APIService } = this.context;
+    const { getFollowingForUser } = APIService;
     try {
       const response = await getFollowingForUser(user.name);
       const { following } = response;
@@ -142,5 +145,3 @@ export default class UserSocialNetwork extends React.Component<
     );
   }
 }
-
-UserSocialNetwork.contextType = APIContext;

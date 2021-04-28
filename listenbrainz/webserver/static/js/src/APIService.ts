@@ -1,8 +1,7 @@
 import { isNil } from "lodash";
-import { createContext } from "react";
 import APIError from "./APIError";
 
-export class APIService {
+export default class APIService {
   APIBaseURI: string;
 
   MAX_LISTEN_SIZE: number = 10000; // Maximum size of listens that can be sent
@@ -778,10 +777,3 @@ export class APIService {
     return data;
   };
 }
-
-// Use this React context in your top-level component
-// to avoid having to pass APIService as props all the way down
-// search for APIContext.Provider for usage examples
-export const APIContext = createContext(
-  new APIService(`${window.location.origin}/1`)
-);

@@ -22,7 +22,8 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as Sentry from "@sentry/react";
 import FollowButton from "./FollowButton";
-import { APIService, APIContext } from "./APIService";
+import APIService from "./APIService";
+import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 
 const UserPageHeading = ({
   user,
@@ -70,15 +71,19 @@ document.addEventListener("DOMContentLoaded", () => {
   if (sentry_dsn) {
     Sentry.init({ dsn: sentry_dsn });
   }
+  const globalProps: GlobalAppContextT = {
+    APIService: apiService,
+    currentUser: current_user,
+  };
 
   ReactDOM.render(
-    <APIContext.Provider value={apiService}>
+    <GlobalAppContext.Provider value={globalProps}>
       <UserPageHeading
         user={user}
         loggedInUser={current_user || null}
         loggedInUserFollowsUser={logged_in_user_follows_user}
       />
-    </APIContext.Provider>,
+    </GlobalAppContext.Provider>,
     domContainer
   );
 });

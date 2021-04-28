@@ -23,7 +23,7 @@ import RecommendationControl from "./RecommendationControl";
 
 import { getArtistLink, getTrackLink } from "../utils";
 import Card from "../components/Card";
-import { APIContext } from "../APIService";
+import GlobalAppContext from "../GlobalAppContext";
 
 export type RecommendationCardProps = {
   recommendation: Recommendation;
@@ -46,8 +46,8 @@ export type RecommendationCardProps = {
 export default class RecommendationCard extends React.Component<
   RecommendationCardProps
 > {
-  // eslint-disable-next-line react/static-property-placement
-  context!: React.ContextType<typeof APIContext>;
+  static contextType = GlobalAppContext;
+  declare context: React.ContextType<typeof GlobalAppContext>;
 
   playRecommendation: (recommendation: Recommendation) => void;
 
@@ -72,9 +72,9 @@ export default class RecommendationCard extends React.Component<
         recommendation,
         "track_metadata.additional_info.recording_mbid"
       );
-      const { submitRecommendationFeedback } = this.context;
+      const { APIService } = this.context;
       try {
-        const status = await submitRecommendationFeedback(
+        const status = await APIService.submitRecommendationFeedback(
           currentUser.auth_token,
           recordingMBID,
           rating
@@ -102,9 +102,9 @@ export default class RecommendationCard extends React.Component<
         recommendation,
         "track_metadata.additional_info.recording_mbid"
       );
-      const { deleteRecommendationFeedback } = this.context;
+      const { APIService } = this.context;
       try {
-        const status = await deleteRecommendationFeedback(
+        const status = await APIService.deleteRecommendationFeedback(
           currentUser.auth_token,
           recordingMBID
         );
@@ -255,5 +255,3 @@ export default class RecommendationCard extends React.Component<
     );
   }
 }
-
-RecommendationCard.contextType = APIContext;

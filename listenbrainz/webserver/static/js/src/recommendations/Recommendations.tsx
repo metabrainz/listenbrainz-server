@@ -10,7 +10,8 @@ import {
   withAlertNotifications,
 } from "../AlertNotificationsHOC";
 
-import { APIService, APIContext } from "../APIService";
+import APIServiceClass from "../APIService";
+import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import BrainzPlayer from "../BrainzPlayer";
 import ErrorBoundary from "../ErrorBoundary";
 import Loader from "../components/Loader";
@@ -40,10 +41,13 @@ export default class Recommendations extends React.Component<
   RecommendationsProps,
   RecommendationsState
 > {
+  static contextType = GlobalAppContext;
+  declare context: React.ContextType<typeof GlobalAppContext>;
+
   private brainzPlayer = React.createRef<BrainzPlayer>();
   private recommendationsTable = React.createRef<HTMLTableElement>();
 
-  private APIService!: APIService;
+  private APIService!: APIServiceClass;
 
   private expectedRecommendationsPerPage = 25;
 
@@ -71,7 +75,8 @@ export default class Recommendations extends React.Component<
   componentDidMount(): void {
     const { user, currentUser } = this.props;
     const { currRecPage } = this.state;
-    this.APIService = this.context;
+    const { APIService } = this.context;
+    this.APIService = APIService;
     if (currentUser?.name === user?.name) {
       this.loadFeedback();
     }
@@ -331,7 +336,6 @@ export default class Recommendations extends React.Component<
     );
   }
 }
-Recommendations.contextType = APIContext;
 
 document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#react-container");
@@ -352,18 +356,26 @@ document.addEventListener("DOMContentLoaded", () => {
     sentry_dsn,
   } = reactProps;
 
-  const apiService = new APIService(api_url || `${window.location.origin}/1`);
-
   if (sentry_dsn) {
     Sentry.init({ dsn: sentry_dsn });
   }
+
+  const apiService = new APIServiceClass(
+    api_url || `${window.location.origin}/1`
+  );
+
+  const globalProps: GlobalAppContextT = {
+    APIService: apiService,
+    currentUser: current_user,
+    spotifyAuth: spotify,
+  };
 
   const RecommendationsWithAlertNotifications = withAlertNotifications(
     Recommendations
   );
   ReactDOM.render(
     <ErrorBoundary>
-      <APIContext.Provider value={apiService}>
+      <GlobalAppContext.Provider value={globalProps}>
         <RecommendationsWithAlertNotifications
           recommendations={recommendations}
           spotify={spotify}
@@ -371,7 +383,7 @@ document.addEventListener("DOMContentLoaded", () => {
           webSocketsServerUrl={web_sockets_server_url}
           currentUser={current_user}
         />
-      </APIContext.Provider>
+      </GlobalAppContext.Provider>
     </ErrorBoundary>,
     domContainer
   );

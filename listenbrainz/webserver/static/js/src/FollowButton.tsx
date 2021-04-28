@@ -27,7 +27,7 @@ import {
   faUserTimes,
   faExclamationTriangle,
 } from "@fortawesome/free-solid-svg-icons";
-import { APIContext } from "./APIService";
+import GlobalAppContext from "./GlobalAppContext";
 
 type FollowButtonProps = {
   type: "icon-only" | "block";
@@ -51,8 +51,8 @@ class FollowButton extends React.Component<
   FollowButtonProps,
   FollowButtonState
 > {
-  // eslint-disable-next-line react/static-property-placement
-  context!: React.ContextType<typeof APIContext>;
+  static contextType = GlobalAppContext;
+  declare context: React.ContextType<typeof GlobalAppContext>;
 
   constructor(props: FollowButtonProps) {
     super(props);
@@ -87,7 +87,8 @@ class FollowButton extends React.Component<
 
   followUser = () => {
     const { user, loggedInUser, updateFollowingList } = this.props;
-    const { followUser } = this.context;
+    const { APIService } = this.context;
+    const { followUser } = APIService;
 
     followUser(user.name, loggedInUser?.auth_token!).then(({ status }) => {
       if (status === 200) {
@@ -103,7 +104,8 @@ class FollowButton extends React.Component<
 
   unfollowUser = () => {
     const { user, loggedInUser, updateFollowingList } = this.props;
-    const { unfollowUser } = this.context;
+    const { APIService } = this.context;
+    const { unfollowUser } = APIService;
 
     unfollowUser(user.name, loggedInUser?.auth_token!).then(({ status }) => {
       if (status === 200) {
@@ -181,6 +183,5 @@ class FollowButton extends React.Component<
     );
   }
 }
-FollowButton.contextType = APIContext;
 
 export default FollowButton;

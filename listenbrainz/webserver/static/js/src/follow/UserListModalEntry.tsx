@@ -1,8 +1,6 @@
 import * as React from "react";
 import FollowButton from "../FollowButton";
 import SimilarityScore from "../SimilarityScore";
-import { SimilarUsersModalProps } from "./SimilarUsersModal";
-import { APIContext, APIService } from "../APIService";
 
 export type UserListModalEntryProps = {
   mode: "follow-following" | "similar-users";
