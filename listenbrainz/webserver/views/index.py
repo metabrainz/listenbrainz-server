@@ -21,7 +21,7 @@ from listenbrainz.webserver import flash
 from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.views.user import delete_user
-from listenbrainz.webserver.views.views_utils import get_current_spotify_user
+from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user
 
 index_bp = Blueprint('index', __name__)
 locale.setlocale(locale.LC_ALL, '')
@@ -145,14 +145,14 @@ def recent_listens():
                 "listened_at_iso": listen.timestamp.isoformat() + "Z",
             })
 
-    spotify_user = {}
-    if current_user.is_authenticated:
-        spotify_user = SpotifyService().get_user_for_views(current_user.id)
+    spotify_user = get_current_spotify_user()
+    youtuber_user = get_current_youtube_user()
 
     props = {
         "listens": recent,
         "mode": "recent",
         "spotify": spotify_user,
+        "youtube": youtuber_user,
         "api_url": current_app.config["API_URL"],
         "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn")
     }
