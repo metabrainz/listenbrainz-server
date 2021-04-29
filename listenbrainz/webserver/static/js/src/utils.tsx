@@ -205,6 +205,16 @@ const preciseTimestamp = (listened_at: number | string): string => {
   return `${timeago.ago(listened_at)}`;
 };
 
+/** Loads a script asynchronouhsly into the HTML page */
+export function loadScriptAsync(document: any, scriptSrc: string): void {
+  const el = document.createElement("script");
+  const container = document.head || document.body;
+  el.type = "text/javascript";
+  el.async = true;
+  el.src = scriptSrc;
+  container.appendChild(el);
+}
+
 export {
   searchForSpotifyTrack,
   getArtistLink,

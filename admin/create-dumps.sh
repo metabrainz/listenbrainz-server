@@ -20,7 +20,17 @@
 
 set -e
 
-if [[ "${CONTAINER_NAME}" == "listenbrainz-cron-prod" && "${PROD}" == "prod" ]]
+LB_SERVER_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)
+cd "$LB_SERVER_ROOT" || exit 1
+
+source "admin/config.sh"
+source "admin/functions.sh"
+
+# This variable contains the name of a directory that is deleted when the script
+# exits, so we sanitise it here in case it was included in the environment.
+TMPDIR=""
+
+if [ "$CONTAINER_NAME" == "listenbrainz-cron-prod" ] && [ "$PROD" == "prod" ]
 then
     echo "Running in listenbrainz-cron-prod container, good!"
 else
@@ -45,7 +55,7 @@ function add_rsync_include_rule {
 function on_exit {
     echo "Disk space when create-dumps ends:"; df -m
 
-    if [ -n "$TMPDIR" ] && [ "$TMPDIR" != "/" ]; then
+    if [ -n "$TMPDIR" ]; then
         rm -rf "$TMPDIR"
     fi
 
@@ -55,18 +65,12 @@ function on_exit {
     fi
 }
 
-
 trap on_exit EXIT
 
 START_TIME=$(date +%s)
 echo "This script is being run by the following user: "; whoami
 echo "Disk space when create-dumps starts:" ; df -m
 
-LB_SERVER_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)
-cd "$LB_SERVER_ROOT" || exit 1
-
-source "admin/config.sh"
-source "admin/functions.sh"
 
 DUMP_TYPE="${1:-full}"
 
@@ -94,9 +98,9 @@ elif [ "$DUMP_TYPE" == "incremental" ]; then
         exit 1
     fi
 elif [ "$DUMP_TYPE" == "feedback" ]; then
-    if ! /usr/local/bin/python manage.py dump create_feedback -l "$TMPDIR" -t $DUMP_THREADS; then
-	echo "Feedback dump failed, exiting!"
-	exit 1
+    if ! /usr/local/bin/python manage.py dump create_feedback -l "$TMPDIR" -t "$DUMP_THREADS"; then
+        echo "Feedback dump failed, exiting!"
+        exit 1
     fi
 else
     echo "Not sure what type of dump to create, exiting!"

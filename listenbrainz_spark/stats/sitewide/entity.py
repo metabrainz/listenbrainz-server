@@ -1,12 +1,11 @@
 import json
-import calendar
+import logging
 from datetime import datetime
 from typing import List, Optional
 
 import listenbrainz_spark
 from data.model.sitewide_artist_stat import SitewideArtistRecord
 from data.model.sitewide_entity import SitewideEntityStatMessage
-from flask import current_app
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
 from listenbrainz_spark.stats import (offset_days, offset_months, replace_days,
@@ -16,6 +15,10 @@ from listenbrainz_spark.stats.utils import (filter_listens, get_last_monday,
                                             get_latest_listen_ts)
 from listenbrainz_spark.utils import get_listens
 from pydantic import ValidationError
+
+
+logger = logging.getLogger(__name__)
+
 
 entity_handler_map = {
     'artists': get_artists,
@@ -30,7 +33,7 @@ time_range_schema = ["time_range", "from_ts", "to_ts"]
 
 def get_entity_week(entity: str, use_mapping: bool = False) -> Optional[List[SitewideEntityStatMessage]]:
     """ Get the weekly sitewide top entity """
-    current_app.logger.debug("Calculating sitewide_{}_week...".format(entity))
+    logger.debug("Calculating sitewide_{}_week...".format(entity))
 
     date = get_latest_listen_ts()
 
@@ -59,14 +62,14 @@ def get_entity_week(entity: str, use_mapping: bool = False) -> Optional[List[Sit
     message = create_message(data=data, entity=entity, stats_range='week',
                              from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
-    current_app.logger.debug("Done!")
+    logger.debug("Done!")
 
     return message
 
 
 def get_entity_month(entity: str, use_mapping: bool = False) -> Optional[List[SitewideEntityStatMessage]]:
     """ Get the montly sitewide top entity """
-    current_app.logger.debug("Calculating sitewide_{}_month...".format(entity))
+    logger.debug("Calculating sitewide_{}_month...".format(entity))
 
     to_date = get_latest_listen_ts()
     # Set time to 00:00
@@ -93,14 +96,14 @@ def get_entity_month(entity: str, use_mapping: bool = False) -> Optional[List[Si
     message = create_message(data=data, entity=entity, stats_range='month',
                              from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
-    current_app.logger.debug("Done!")
+    logger.debug("Done!")
 
     return message
 
 
 def get_entity_year(entity: str, use_mapping: bool = False) -> Optional[List[SitewideEntityStatMessage]]:
     """ Get the yearly sitewide top entity """
-    current_app.logger.debug("Calculating sitewide_{}_year...".format(entity))
+    logger.debug("Calculating sitewide_{}_year...".format(entity))
 
     to_date = get_latest_listen_ts()
     from_date = datetime(to_date.year-1, 1, 1)
@@ -124,14 +127,14 @@ def get_entity_year(entity: str, use_mapping: bool = False) -> Optional[List[Sit
     message = create_message(data=data, entity=entity, stats_range='year',
                              from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
-    current_app.logger.debug("Done!")
+    logger.debug("Done!")
 
     return message
 
 
 def get_entity_all_time(entity: str, use_mapping: bool = False) -> Optional[List[SitewideEntityStatMessage]]:
     """ Get the all_time sitewide top entity """
-    current_app.logger.debug("Calculating sitewide_{}_all_time...".format(entity))
+    logger.debug("Calculating sitewide_{}_all_time...".format(entity))
 
     to_date = get_latest_listen_ts()
     from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
@@ -153,7 +156,7 @@ def get_entity_all_time(entity: str, use_mapping: bool = False) -> Optional[List
     message = create_message(data=data, entity=entity, stats_range='all_time',
                              from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
-    current_app.logger.debug("Done!")
+    logger.debug("Done!")
 
     return message
 
@@ -191,7 +194,7 @@ def create_message(data, entity: str, stats_range: str, from_ts: int, to_ts: int
                 model = entity_model_map[entity](**item)
                 entity_list.append(model.dict())
             except ValidationError:
-                current_app.logger.warning("""Invalid entry present in sitewide {stats_range} top {entity} for
+                logger.warning("""Invalid entry present in sitewide {stats_range} top {entity} for
                                         time_range: {time_range}, skipping""".format(stats_range=stats_range, entity=entity,
                                                                                      time_range=_dict['time_range']))
 
@@ -207,7 +210,7 @@ def create_message(data, entity: str, stats_range: str, from_ts: int, to_ts: int
         result = model.dict(exclude_none=True)
         return [result]
     except ValidationError:
-        current_app.logger.error("""ValidationError while calculating {stats_range} sitewide top {entity}.
+        logger.error("""ValidationError while calculating {stats_range} sitewide top {entity}.
                                  Data: {data}""".format(stats_range=stats_range, entity=entity,
                                                         data=json.dumps(message, indent=4)),
                                  exc_info=True)

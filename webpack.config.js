@@ -42,7 +42,7 @@ module.exports = function (env) {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",
       path: "/static/js/dist",
     },
-    devtool: isProd ? false : "inline-source-map",
+    devtool: isProd ? "source-map" : "eval-source-map",
     module: {
       rules: [
         {
