@@ -4,6 +4,7 @@ from data.model.external_service import ExternalServiceType
 from listenbrainz.db.testing import DatabaseTestCase
 
 import listenbrainz.db.user as db_user
+import listenbrainz.db.spotify as db_spotify
 import listenbrainz.db.external_service_oauth as db_oauth
 
 
@@ -59,3 +60,12 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
         self.assertIn('token_expires', user)
         self.assertIn('token_expired', user)
 
+    def test_delete_token_unlink(self):
+        db_oauth.delete_token(self.user['id'], ExternalServiceType.SPOTIFY, stop_import=True)
+        self.assertIsNone(db_oauth.get_token(self.user['id'], ExternalServiceType.SPOTIFY))
+        self.assertIsNone(db_spotify.get_user_import_details(self.user['id']))
+
+    def test_delete_token_retain_error(self):
+        db_oauth.delete_token(self.user['id'], ExternalServiceType.SPOTIFY, stop_import=False)
+        self.assertIsNone(db_oauth.get_token(self.user['id'], ExternalServiceType.SPOTIFY))
+        self.assertIsNotNone(db_spotify.get_user_import_details(self.user['id']))

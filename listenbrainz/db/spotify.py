@@ -40,16 +40,16 @@ def get_user_import_details(user_id: int):
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT external_service_oauth.user_id
+            SELECT listens_importer.user_id
                  , listens_importer.id
                  , listens_importer.last_updated
                  , latest_listened_at
                  , error_message
-              FROM external_service_oauth
-   LEFT OUTER JOIN listens_importer
+              FROM listens_importer
+         LEFT JOIN external_service_oauth
                 ON listens_importer.external_service_oauth_id = external_service_oauth.id
-             WHERE external_service_oauth.user_id = :user_id
-               AND external_service_oauth.service = 'spotify'
+             WHERE listens_importer.user_id = :user_id
+               AND listens_importer.service = 'spotify'
             """), {
                 'user_id': user_id,
             })

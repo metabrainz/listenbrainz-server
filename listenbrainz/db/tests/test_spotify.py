@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import listenbrainz.db.user as db_user
 import listenbrainz.db.spotify as db_spotify
 import listenbrainz.db.listens_importer as db_import
@@ -26,26 +24,6 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
             record_listens=True,
             scopes=['user-read-recently-played']
         )
-
-    def test_add_update_error(self):
-        db_import.add_update_error(self.user['id'], ExternalServiceType.SPOTIFY, 'test error message')
-        spotify_user = db_spotify.get_user_import_details(self.user['id'])
-        self.assertEqual(spotify_user['error_message'], 'test error message')
-        self.assertIsNotNone(spotify_user['last_updated'])
-
-    def test_update_last_updated(self):
-        db_import.update_last_updated(self.user['id'], ExternalServiceType.SPOTIFY)
-        spotify_user = db_spotify.get_user_import_details(self.user['id'])
-        self.assertIsNone(spotify_user['error_message'])
-        self.assertIsNotNone(spotify_user['last_updated'])
-
-    def test_update_latest_listened_at(self):
-        old_spotify_user = db_spotify.get_user_import_details(self.user['id'])
-        self.assertIsNone(old_spotify_user['latest_listened_at'])
-        t = int(time.time())
-        db_import.update_latest_listened_at(self.user['id'], ExternalServiceType.SPOTIFY, t)
-        spotify_user = db_spotify.get_user_import_details(self.user['id'])
-        self.assertEqual(t, int(spotify_user['latest_listened_at'].strftime('%s')))
 
     def test_get_active_users_to_process(self):
         db_user.create(2, 'newspotifyuser')
