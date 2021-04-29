@@ -496,6 +496,7 @@ export default class LastFmImporter extends React.Component<
             type="text"
             onChange={this.handleChange}
             value={lastfmUsername}
+            name="lastfmUsername"
             placeholder="Last.fm Username"
             size={30}
           />
