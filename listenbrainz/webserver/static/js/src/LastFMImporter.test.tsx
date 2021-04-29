@@ -7,6 +7,7 @@ import * as getInfo from "./__mocks__/getInfo.json";
 import * as getInfoNoPlayCount from "./__mocks__/getInfoNoPlayCount.json";
 // Output for the mock data
 import * as encodeScrobbleOutput from "./__mocks__/encodeScrobbleOutput.json";
+import * as getUserPrivacy from "./__mocks__/getUserPrivacy.json";
 
 jest.useFakeTimers();
 const props = {
@@ -365,6 +366,75 @@ describe("submitPage", () => {
       },
     ]);
     expect(instance.getRateLimitDelay).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("getUserPrivacy", () => {
+  beforeEach(() => {
+    const wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
+    instance = wrapper.instance();
+    instance.setState({ lastfmUsername: "dummyUser" });
+
+    // Needed for startImport
+    instance.APIService.getLatestImport = jest.fn().mockImplementation(() => {
+      return Promise.resolve(0);
+    });
+    window.fetch = jest.fn().mockImplementationOnce(() => {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(getInfo),
+      });
+    });
+  });
+
+  it("should call with the correct url", () => {
+    instance.getUserPrivacy();
+
+    expect(window.fetch).toHaveBeenCalledWith(
+      `${props.lastfmApiUrl}?method=user.getrecenttracks&user=${instance.state.lastfmUsername}&api_key=${props.lastfmApiKey}&format=json`
+    );
+  });
+
+  it("should return user privacy status", async () => {
+    // mock function for fetch (no data.error)
+    window.fetch = jest.fn().mockImplementationOnce(() => {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(page),
+      });
+    });
+    expect(await instance.getUserPrivacy()).toEqual(false);
+
+    // mock function for fetch (data.error = 17)
+    window.fetch = jest.fn().mockImplementationOnce(() => {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(getUserPrivacy),
+      });
+    });
+    expect(await instance.getUserPrivacy()).toEqual(true);
+  });
+
+  it("should show privacy error message if user is private", async () => {
+    instance.getUserPrivacy = jest.fn().mockImplementation(() => true);
+    // startImport shouldn't throw error
+    await expect(instance.startImport()).resolves.toBe(null);
+    // verify message is last.fm privacy error message
+    expect(instance.state.msg?.props.children).toContain(" Import failed");
+    expect(instance.state.msg?.props.children).not.toContain(
+      "Something went wrong"
+    );
+  });
+
+  it("should throw error and display message if fetch fails", async () => {
+    // Mock function for failed fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.reject(Error);
+    });
+    await expect(instance.getUserPrivacy()).rejects.toThrowError();
+    expect(instance.state.msg?.props.children).toMatch(
+      "An error occurred, please try again. :("
+    );
   });
 });
 
