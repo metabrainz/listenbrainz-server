@@ -1,7 +1,11 @@
+import sentry_sdk
+from sentry_sdk.integrations.spark import SparkIntegration
+
 from py4j.protocol import Py4JJavaError
 from pyspark.sql import SparkSession, SQLContext
 
 from listenbrainz_spark.exceptions import SparkSessionNotInitializedException
+from listenbrainz_spark import config
 
 session = None
 context = None
@@ -14,6 +18,8 @@ def init_spark_session(app_name):
         Args:
             app_name (str): Name of the Spark application. This will also occur in the Spark UI.
     """
+    if hasattr(config, 'LOG_SENTRY'):  # attempt to initialize sentry_sdk only if configuration available
+        sentry_sdk.init(**config.LOG_SENTRY, integrations=[SparkIntegration()])
     global session, context, sql_context
     try:
         session = SparkSession \

@@ -2,7 +2,6 @@ from unittest.mock import patch, MagicMock
 
 from listenbrainz_spark.request_consumer.request_consumer import RequestConsumer
 from listenbrainz_spark.tests import SparkTestCase
-from listenbrainz_spark.utils import create_app
 
 
 class RequestConsumerTestCase(SparkTestCase):
@@ -13,23 +12,20 @@ class RequestConsumerTestCase(SparkTestCase):
         self.consumer.request_channel = MagicMock()
         self.consumer.result_channel = MagicMock()
 
-    @patch('listenbrainz_spark.request_consumer.request_consumer.current_app')
     @patch('listenbrainz_spark.request_consumer.request_consumer.init_rabbitmq')
-    def test_connect_to_rabbitmq(self, mock_init_rabbitmq, mock_current_app):
-            self.consumer.connect_to_rabbitmq()
-            mock_init_rabbitmq.assert_called_once()
+    def test_connect_to_rabbitmq(self, mock_init_rabbitmq):
+        self.consumer.connect_to_rabbitmq()
+        mock_init_rabbitmq.assert_called_once()
 
-    @patch('listenbrainz_spark.request_consumer.request_consumer.current_app')
-    def test_get_result_if_bad_query(self, mock_current_app):
+    def test_get_result_if_bad_query(self):
         # should return none if no query
         self.assertIsNone(self.consumer.get_result({}))
 
         # should return none if unrecognized query
         self.assertIsNone(self.consumer.get_result({'query': 'idk_what_this_means'}))
 
-    @patch('listenbrainz_spark.request_consumer.request_consumer.current_app')
     @patch('listenbrainz_spark.query_map.get_query_handler')
-    def test_get_result_if_query_recognized(self, mock_get_query_handler, mock_current_app):
+    def test_get_result_if_query_recognized(self, mock_get_query_handler):
         # should call the returned function if query is recognized
         # create the mock query handler
         mock_query_handler = MagicMock()

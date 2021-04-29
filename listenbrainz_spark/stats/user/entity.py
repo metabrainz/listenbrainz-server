@@ -1,8 +1,8 @@
 import json
+import logging
 from datetime import datetime
 from typing import Iterator, Optional
 
-from flask import current_app
 from pydantic import ValidationError
 
 from data.model.user_entity import UserEntityStatMessage
@@ -21,6 +21,9 @@ from listenbrainz_spark.stats.utils import (filter_listens,
                                             get_latest_listen_ts)
 from listenbrainz_spark.utils import get_listens
 
+
+logger = logging.getLogger(__name__)
+
 entity_handler_map = {
     'artists': get_artists,
     'releases': get_releases,
@@ -36,7 +39,7 @@ entity_model_map = {
 
 def get_entity_week(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     """ Get the weekly top entity for all users """
-    current_app.logger.debug("Calculating {}_week...".format(entity))
+    logger.debug("Calculating {}_week...".format(entity))
 
     date = get_latest_listen_ts()
 
@@ -53,14 +56,14 @@ def get_entity_week(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     messages = create_messages(data=data, entity=entity, stats_range='week',
                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
-    current_app.logger.debug("Done!")
+    logger.debug("Done!")
 
     return messages
 
 
 def get_entity_month(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     """ Get the month top entity for all users """
-    current_app.logger.debug("Calculating {}_month...".format(entity))
+    logger.debug("Calculating {}_month...".format(entity))
 
     to_date = get_latest_listen_ts()
     from_date = replace_days(to_date, 1)
@@ -75,14 +78,14 @@ def get_entity_month(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     messages = create_messages(data=data, entity=entity, stats_range='month',
                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
-    current_app.logger.debug("Done!")
+    logger.debug("Done!")
 
     return messages
 
 
 def get_entity_year(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     """ Get the year top entity for all users """
-    current_app.logger.debug("Calculating {}_year...".format(entity))
+    logger.debug("Calculating {}_year...".format(entity))
 
     to_date = get_latest_listen_ts()
     from_date = replace_days(replace_months(to_date, 1), 1)
@@ -96,14 +99,14 @@ def get_entity_year(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     messages = create_messages(data=data, entity=entity, stats_range='year',
                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
-    current_app.logger.debug("Done!")
+    logger.debug("Done!")
 
     return messages
 
 
 def get_entity_all_time(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     """ Get the all_time top entity for all users """
-    current_app.logger.debug("Calculating {}_all_time...".format(entity))
+    logger.debug("Calculating {}_all_time...".format(entity))
 
     to_date = get_latest_listen_ts()
     from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
@@ -117,7 +120,7 @@ def get_entity_all_time(entity: str) -> Iterator[Optional[UserEntityStatMessage]
     messages = create_messages(data=data, entity=entity, stats_range='all_time',
                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
-    current_app.logger.debug("Done!")
+    logger.debug("Done!")
 
     return messages
 
@@ -150,7 +153,7 @@ def create_messages(data, entity: str, stats_range: str, from_ts: int, to_ts: in
             try:
                 entity_list.append(entity_model_map[entity](**item))
             except ValidationError:
-                current_app.logger.warning("""Invalid entry present in {stats_range} top {entity} for
+                logger.warning("""Invalid entry present in {stats_range} top {entity} for
                                         user: {user_name}, skipping""".format(stats_range=stats_range, entity=entity,
                                                                               user_name=_dict['user_name']))
         try:
@@ -167,7 +170,7 @@ def create_messages(data, entity: str, stats_range: str, from_ts: int, to_ts: in
             result = model.dict(exclude_none=True)
             yield result
         except ValidationError:
-            current_app.logger.error("""ValidationError while calculating {stats_range} top {entity} for user: {user_name}.
+            logger.error("""ValidationError while calculating {stats_range} top {entity} for user: {user_name}.
                                      Data: {data}""".format(stats_range=stats_range, entity=entity, user_name=_dict['user_name'],
                                                             data=json.dumps(_dict, indent=3)),
                                      exc_info=True)
