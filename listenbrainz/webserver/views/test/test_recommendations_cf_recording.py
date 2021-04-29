@@ -235,6 +235,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
                 "auth_token": 'yyyy',
             },
             "spotify": {},
+            "youtube": {},
             "api_url": current_app.config["API_URL"],
             "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
             "recommendations": recommendations,

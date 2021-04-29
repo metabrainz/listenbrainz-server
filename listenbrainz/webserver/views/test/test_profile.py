@@ -128,7 +128,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         r = self.client.get(url_for('profile.music_services_details'))
         self.assert200(r)
 
-        r = self.client.post(url_for('music_services_disconnect'), data={'delete': 'yes'})
+        r = self.client.post(url_for('profile.music_services_disconnect', service_name='spotify'), data={'delete': 'yes'})
         self.assert200(r)
 
         self.assertIsNone(self.service.get_user(self.user['id']))
@@ -182,10 +182,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
 
         self.assert200(r)
         mock_refresh_access_token.assert_not_called()
-        self.assertDictEqual(r.json, {
-            'access_token': 'old-token',
-            'permission': ['user-read-recently-played', 'some-other-permission'],
-        })
+        self.assertDictEqual(r.json, {'access_token': 'old-token'})
 
     @requests_mock.Mocker()
     def test_spotify_refresh_token_which_has_expired(self, mock_requests):
@@ -201,10 +198,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         r = self.client.post(url_for('profile.refresh_service_token', service_name='spotify'))
 
         self.assert200(r)
-        self.assertDictEqual(r.json, {
-            'access_token': 'new-token',
-            'permission': ['user-read-recently-played', 'some-other-permission'],
-        })
+        self.assertDictEqual(r.json, {'access_token': 'new-token'})
 
     @patch('listenbrainz.domain.spotify.SpotifyService.refresh_access_token')
     def test_spotify_refresh_token_which_has_been_revoked(self, mock_refresh_user_token):
