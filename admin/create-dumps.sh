@@ -20,6 +20,9 @@
 
 set -e
 
+LB_SERVER_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)
+cd "$LB_SERVER_ROOT" || exit 1
+
 source "admin/config.sh"
 source "admin/functions.sh"
 
@@ -68,8 +71,6 @@ START_TIME=$(date +%s)
 echo "This script is being run by the following user: "; whoami
 echo "Disk space when create-dumps starts:" ; df -m
 
-LB_SERVER_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)
-cd "$LB_SERVER_ROOT" || exit 1
 
 DUMP_TYPE="${1:-full}"
 
