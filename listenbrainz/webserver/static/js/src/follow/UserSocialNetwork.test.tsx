@@ -75,9 +75,7 @@ describe("<UserSocialNetwork />", () => {
   it("initializes by calling the API to get data", async () => {
     const consoleErrorSpy = jest.spyOn(console, "error");
 
-    const wrapper = shallow<UserSocialNetwork>(
-      <UserSocialNetwork {...props} />
-    );
+    const wrapper = mount<UserSocialNetwork>(<UserSocialNetwork {...props} />);
     const instance = wrapper.instance();
 
     await instance.componentDidMount();
@@ -107,7 +105,7 @@ describe("<UserSocialNetwork />", () => {
 
   describe("updateFollowingList", () => {
     it("updates the state when called with action follow", async () => {
-      const wrapper = shallow<UserSocialNetwork>(
+      const wrapper = mount<UserSocialNetwork>(
         <UserSocialNetwork {...props} />
       );
       const instance = wrapper.instance();
@@ -121,7 +119,7 @@ describe("<UserSocialNetwork />", () => {
     });
 
     it("updates the state when called with action unfollow", async () => {
-      const wrapper = shallow<UserSocialNetwork>(
+      const wrapper = mount<UserSocialNetwork>(
         <UserSocialNetwork {...props} />
       );
       const instance = wrapper.instance();
@@ -135,7 +133,7 @@ describe("<UserSocialNetwork />", () => {
     });
 
     it("only allows adding a user once", async () => {
-      const wrapper = shallow<UserSocialNetwork>(
+      const wrapper = mount<UserSocialNetwork>(
         <UserSocialNetwork {...props} />
       );
       const instance = wrapper.instance();
@@ -150,7 +148,7 @@ describe("<UserSocialNetwork />", () => {
     });
 
     it("does nothing when trying to unfollow a user that is not followed", async () => {
-      const wrapper = shallow<UserSocialNetwork>(
+      const wrapper = mount<UserSocialNetwork>(
         <UserSocialNetwork {...props} />
       );
       const instance = wrapper.instance();
@@ -165,7 +163,7 @@ describe("<UserSocialNetwork />", () => {
 
   describe("loggedInUserFollowsUser", () => {
     it("returns false if there is no logged in user", () => {
-      const wrapper = shallow<UserSocialNetwork>(
+      const wrapper = mount<UserSocialNetwork>(
         <UserSocialNetwork {...props} loggedInUser={null} />
       );
       const instance = wrapper.instance();
@@ -174,7 +172,7 @@ describe("<UserSocialNetwork />", () => {
     });
 
     it("returns false if user is not in followingList", async () => {
-      const wrapper = shallow<UserSocialNetwork>(
+      const wrapper = mount<UserSocialNetwork>(
         <UserSocialNetwork {...props} />
       );
       const instance = wrapper.instance();
@@ -186,7 +184,7 @@ describe("<UserSocialNetwork />", () => {
     });
 
     it("returns true if user is in followingList", async () => {
-      const wrapper = shallow<UserSocialNetwork>(
+      const wrapper = mount<UserSocialNetwork>(
         <UserSocialNetwork {...props} />
       );
       const instance = wrapper.instance();

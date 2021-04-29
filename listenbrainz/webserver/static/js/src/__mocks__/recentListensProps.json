@@ -2202,6 +2202,5 @@
         "permission": "streaming user-read-email user-read-private"
     },
     "webSocketsServerUrl": "http://localhost:8082",
-    "apiUrl": "http://0.0.0.0",
     "searchLargerTimeRange": 0
 }
