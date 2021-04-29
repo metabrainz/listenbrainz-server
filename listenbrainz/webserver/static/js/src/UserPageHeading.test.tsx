@@ -79,7 +79,6 @@ describe("<UserPageHeading />", () => {
     expect(followButton.props()).toEqual({
       type: "icon-only",
       user: { id: 1, name: "followed_user" },
-      apiUrl: "http://0.0.0.0",
       loggedInUser: { id: 2, name: "iliekcomputers" },
       loggedInUserFollowsUser: false,
     });

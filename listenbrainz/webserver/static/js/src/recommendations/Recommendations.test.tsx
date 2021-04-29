@@ -1,6 +1,6 @@
 import { enableFetchMocks } from "jest-fetch-mock";
 import * as React from "react";
-import { shallow } from "enzyme";
+import { shallow, mount } from "enzyme";
 
 import * as recommendationProps from "../__mocks__/recommendations.json";
 
@@ -95,7 +95,7 @@ describe("componentDidMount", () => {
 
 describe("getFeedback", () => {
   it("calls the API correctly", async () => {
-    const wrapper = shallow<Recommendations>(
+    const wrapper = mount<Recommendations>(
       <Recommendations {...(propsOne as RecommendationsProps)} />
     );
 

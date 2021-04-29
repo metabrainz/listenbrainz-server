@@ -19,7 +19,7 @@
  */
 
 import * as React from "react";
-import { shallow, mount, ShallowWrapper } from "enzyme";
+import { shallow, mount, ReactWrapper } from "enzyme";
 import FollowButton from "./FollowButton";
 
 const user = {
@@ -88,24 +88,24 @@ describe("<FollowButton />", () => {
   });
 
   describe("handleButtonClick", () => {
-    const clickButton = (wrapper: ShallowWrapper) => {
+    const clickButton = (wrapper: ReactWrapper) => {
       wrapper.find(".follow-button").at(0).simulate("click");
     };
 
     const mockFollowAPICall = (instance: any, status: number) => {
-      const spy = jest.spyOn(instance.APIService, "followUser");
+      const spy = jest.spyOn(instance.context.APIService, "followUser");
       spy.mockImplementation(() => Promise.resolve({ status }));
       return spy;
     };
 
     const mockUnfollowAPICall = (instance: any, status: number) => {
-      const spy = jest.spyOn(instance.APIService, "unfollowUser");
+      const spy = jest.spyOn(instance.context.APIService, "unfollowUser");
       spy.mockImplementation(() => Promise.resolve({ status }));
       return spy;
     };
 
     it("follows the user if logged in user isn't following the user", () => {
-      const wrapper = shallow(
+      const wrapper = mount(
         <FollowButton
           type="icon-only"
           user={user}
@@ -121,7 +121,7 @@ describe("<FollowButton />", () => {
     });
 
     it("unfollows the user if logged in user is already following the user", () => {
-      const wrapper = shallow(
+      const wrapper = mount(
         <FollowButton
           type="icon-only"
           user={user}

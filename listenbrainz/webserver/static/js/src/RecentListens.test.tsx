@@ -1,6 +1,6 @@
 import { enableFetchMocks } from "jest-fetch-mock";
 import * as React from "react";
-import { shallow } from "enzyme";
+import { mount } from "enzyme";
 import * as timeago from "time-ago";
 import * as io from "socket.io-client";
 
@@ -22,7 +22,6 @@ enableFetchMocks();
 jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
 const {
-  apiUrl,
   artistCount,
   haveListenCount,
   latestListenTs,
@@ -38,7 +37,6 @@ const {
 } = recentListensProps;
 
 const props = {
-  apiUrl,
   artistCount,
   haveListenCount,
   latestListenTs,
@@ -66,14 +64,14 @@ fetchMock.mockIf(
 describe("Recentlistens", () => {
   it("renders correctly on the profile page", () => {
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
-    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const wrapper = mount<RecentListens>(<RecentListens {...props} />);
     expect(wrapper.html()).toMatchSnapshot();
   });
 });
 
 describe("componentDidMount", () => {
   it('calls connectWebsockets if mode is "listens"', () => {
-    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const wrapper = mount<RecentListens>(<RecentListens {...props} />);
     const instance = wrapper.instance();
     instance.connectWebsockets = jest.fn();
 
@@ -85,14 +83,13 @@ describe("componentDidMount", () => {
 
   it('calls getUserListenCount if mode "listens"', async () => {
     const extraProps = { ...props, mode: "listens" as ListensListMode };
-    const wrapper = shallow<RecentListens>(<RecentListens {...extraProps} />);
+    const wrapper = mount<RecentListens>(<RecentListens {...extraProps} />);
     const instance = wrapper.instance();
 
     const spy = jest.fn().mockImplementation(() => {
       return Promise.resolve(42);
     });
-    // eslint-disable-next-line dot-notation
-    instance["APIService"].getUserListenCount = spy;
+    instance.context.APIService.getUserListenCount = spy;
     expect(wrapper.state("listenCount")).toBeUndefined();
     await instance.componentDidMount();
 
@@ -104,7 +101,7 @@ describe("componentDidMount", () => {
     /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
      * so that it doesn't get passed as a reference.
      */
-    const wrapper = shallow<RecentListens>(
+    const wrapper = mount<RecentListens>(
       <RecentListens
         {...(JSON.parse(
           JSON.stringify(recentListensPropsOneListen)
@@ -123,7 +120,7 @@ describe("componentDidMount", () => {
     /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
      * so that it doesn't get passed as a reference.
      */
-    const wrapper = shallow<RecentListens>(
+    const wrapper = mount<RecentListens>(
       <RecentListens
         {...{
           ...(JSON.parse(
@@ -144,7 +141,7 @@ describe("componentDidMount", () => {
 
 describe("createWebsocketsConnection", () => {
   it("calls io.connect with correct parameters", () => {
-    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const wrapper = mount<RecentListens>(<RecentListens {...props} />);
     const instance = wrapper.instance();
 
     const spy = jest.spyOn(io, "connect");
@@ -157,7 +154,7 @@ describe("createWebsocketsConnection", () => {
 
 describe("addWebsocketsHandlers", () => {
   it('calls correct handler for "listen" event', () => {
-    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const wrapper = mount<RecentListens>(<RecentListens {...props} />);
     const instance = wrapper.instance();
 
     // eslint-disable-next-line dot-notation
@@ -176,7 +173,7 @@ describe("addWebsocketsHandlers", () => {
   });
 
   it('calls correct event for "playing_now" event', () => {
-    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const wrapper = mount<RecentListens>(<RecentListens {...props} />);
     const instance = wrapper.instance();
 
     // eslint-disable-next-line dot-notation
@@ -211,7 +208,7 @@ describe("receiveNewListen", () => {
     /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
      * so that it doesn't get passed as a reference.
      */
-    const wrapper = shallow<RecentListens>(
+    const wrapper = mount<RecentListens>(
       <RecentListens
         {...(JSON.parse(
           JSON.stringify(recentListensPropsTooManyListens)
@@ -242,7 +239,7 @@ describe("receiveNewListen", () => {
     /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
      * so that it doesn't get passed as a reference.
      */
-    const wrapper = shallow<RecentListens>(
+    const wrapper = mount<RecentListens>(
       <RecentListens
         {...(JSON.parse(
           JSON.stringify(recentListensPropsOneListen)
@@ -280,7 +277,7 @@ describe("receiveNewPlayingNow", () => {
     /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
      * so that it doesn't get passed as a reference.
      */
-    const wrapper = shallow<RecentListens>(
+    const wrapper = mount<RecentListens>(
       <RecentListens
         {...(JSON.parse(
           JSON.stringify(recentListensPropsPlayingNow)
@@ -306,7 +303,7 @@ describe("receiveNewPlayingNow", () => {
 
 describe("handleCurrentListenChange", () => {
   it("sets the state correctly", () => {
-    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const wrapper = mount<RecentListens>(<RecentListens {...props} />);
     const instance = wrapper.instance();
 
     const listen: Listen = {
@@ -324,7 +321,7 @@ describe("handleCurrentListenChange", () => {
 
 describe("isCurrentListen", () => {
   it("returns true if currentListen and passed listen is same", () => {
-    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const wrapper = mount<RecentListens>(<RecentListens {...props} />);
     const instance = wrapper.instance();
 
     const listen: Listen = {
@@ -340,7 +337,7 @@ describe("isCurrentListen", () => {
   });
 
   it("returns false if currentListen is not set", () => {
-    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const wrapper = mount<RecentListens>(<RecentListens {...props} />);
     const instance = wrapper.instance();
 
     wrapper.setState({ currentListen: undefined });
@@ -358,14 +355,13 @@ describe("Pagination", () => {
 
   describe("handleClickOlder", () => {
     it("does nothing if there is no older listens timestamp", async () => {
-      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
       const instance = wrapper.instance();
 
       wrapper.setState({ nextListenTs: undefined });
 
       const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
-      // eslint-disable-next-line dot-notation
-      instance["APIService"].getListensForUser = spy;
+      instance.context.APIService.getListensForUser = spy;
 
       await instance.handleClickOlder();
       expect(wrapper.state("loading")).toBeFalsy();
@@ -373,7 +369,7 @@ describe("Pagination", () => {
     });
 
     it("calls the API to get older listens", async () => {
-      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
       const instance = wrapper.instance();
 
       wrapper.setState({ nextListenTs: 1586450000 });
@@ -390,8 +386,7 @@ describe("Pagination", () => {
       const spy = jest
         .fn()
         .mockImplementation(() => Promise.resolve(expectedListensArray));
-      // eslint-disable-next-line dot-notation
-      instance["APIService"].getListensForUser = spy;
+      instance.context.APIService.getListensForUser = spy;
 
       await instance.handleClickOlder();
       expect(spy).toHaveBeenCalledWith(user.name, undefined, 1586450000);
@@ -400,14 +395,13 @@ describe("Pagination", () => {
     });
 
     it("sets nextListenTs to undefined if it receives no listens from API", async () => {
-      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
       const instance = wrapper.instance();
 
       wrapper.setState({ nextListenTs: 1586450000 });
 
       const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
-      // eslint-disable-next-line dot-notation
-      instance["APIService"].getListensForUser = spy;
+      instance.context.APIService.getListensForUser = spy;
 
       await instance.handleClickOlder();
       expect(spy).toHaveBeenCalledWith(user.name, undefined, 1586450000);
@@ -417,7 +411,7 @@ describe("Pagination", () => {
     });
 
     it("sets the listens, nextListenTs and  previousListenTs on the state and updates browser history", async () => {
-      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
       const instance = wrapper.instance();
 
       // Random nextListenTs to ensure that is the value set in browser history
@@ -430,8 +424,7 @@ describe("Pagination", () => {
       const spy = jest.fn().mockImplementation((username, minTs, maxTs) => {
         return Promise.resolve(sortedListens);
       });
-      // eslint-disable-next-line dot-notation
-      instance["APIService"].getListensForUser = spy;
+      instance.context.APIService.getListensForUser = spy;
       const scrollSpy = jest.spyOn(instance, "afterListensFetch");
 
       await instance.handleClickOlder();
@@ -447,14 +440,13 @@ describe("Pagination", () => {
 
   describe("handleClickNewer", () => {
     it("does nothing if there is no newer listens timestamp", async () => {
-      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
       const instance = wrapper.instance();
 
       wrapper.setState({ previousListenTs: undefined });
 
       const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
-      // eslint-disable-next-line dot-notation
-      instance["APIService"].getListensForUser = spy;
+      instance.context.APIService.getListensForUser = spy;
 
       await instance.handleClickNewer();
       expect(wrapper.state("loading")).toBeFalsy();
@@ -462,7 +454,7 @@ describe("Pagination", () => {
     });
 
     it("calls the API to get older listens", async () => {
-      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
       const instance = wrapper.instance();
       wrapper.setState({ previousListenTs: 123456 });
 
@@ -479,8 +471,7 @@ describe("Pagination", () => {
       const spy = jest
         .fn()
         .mockImplementation(() => Promise.resolve(expectedListensArray));
-      // eslint-disable-next-line dot-notation
-      instance["APIService"].getListensForUser = spy;
+      instance.context.APIService.getListensForUser = spy;
 
       await instance.handleClickNewer();
 
@@ -490,14 +481,13 @@ describe("Pagination", () => {
     });
 
     it("sets nextListenTs to undefined if it receives no listens from API", async () => {
-      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
       const instance = wrapper.instance();
 
       wrapper.setState({ previousListenTs: 123456 });
 
       const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
-      // eslint-disable-next-line dot-notation
-      instance["APIService"].getListensForUser = spy;
+      instance.context.APIService.getListensForUser = spy;
 
       await instance.handleClickNewer();
       expect(wrapper.state("loading")).toBeFalsy();
@@ -506,7 +496,7 @@ describe("Pagination", () => {
     });
 
     it("sets the listens, nextListenTs and  previousListenTs on the state and updates browser history", async () => {
-      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
       const instance = wrapper.instance();
 
       wrapper.setState({ previousListenTs: 123456 });
@@ -518,8 +508,7 @@ describe("Pagination", () => {
       const spy = jest.fn().mockImplementation((username, minTs, maxTs) => {
         return Promise.resolve(sortedListens);
       });
-      // eslint-disable-next-line dot-notation
-      instance["APIService"].getListensForUser = spy;
+      instance.context.APIService.getListensForUser = spy;
       const scrollSpy = jest.spyOn(instance, "afterListensFetch");
 
       await instance.handleClickNewer();
@@ -535,7 +524,7 @@ describe("Pagination", () => {
 
   describe("handleClickOldest", () => {
     it("does nothing if last listens is the oldest", async () => {
-      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
       const instance = wrapper.instance();
 
       wrapper.setState({
@@ -553,8 +542,7 @@ describe("Pagination", () => {
       wrapper.setProps({ oldestListenTs: 123456 });
 
       const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
-      // eslint-disable-next-line dot-notation
-      instance["APIService"].getListensForUser = spy;
+      instance.context.APIService.getListensForUser = spy;
 
       await instance.handleClickOldest();
       expect(wrapper.state("loading")).toBeFalsy();
@@ -571,7 +559,7 @@ describe("Pagination", () => {
         listened_at: 1586440600,
       };
       const extraProps = { ...props, listens: [listen] };
-      const wrapper = shallow<RecentListens>(<RecentListens {...extraProps} />);
+      const wrapper = mount<RecentListens>(<RecentListens {...extraProps} />);
 
       const instance = wrapper.instance();
 
@@ -588,8 +576,7 @@ describe("Pagination", () => {
       const spy = jest
         .fn()
         .mockImplementation(() => Promise.resolve(oldestlisten));
-      // eslint-disable-next-line dot-notation
-      instance["APIService"].getListensForUser = spy;
+      instance.context.APIService.getListensForUser = spy;
       const scrollSpy = jest.spyOn(instance, "afterListensFetch");
 
       await instance.handleClickOldest();
@@ -605,7 +592,7 @@ describe("Pagination", () => {
 
   describe("handleClickNewest", () => {
     it("does nothing if first listens is the newest", async () => {
-      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
       const instance = wrapper.instance();
 
       wrapper.setState({
@@ -623,8 +610,7 @@ describe("Pagination", () => {
       wrapper.setProps({ latestListenTs: 123456 });
 
       const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
-      // eslint-disable-next-line dot-notation
-      instance["APIService"].getListensForUser = spy;
+      instance.context.APIService.getListensForUser = spy;
 
       await instance.handleClickNewest();
       expect(wrapper.state("loading")).toBeFalsy();
@@ -641,7 +627,7 @@ describe("Pagination", () => {
         listened_at: 123450,
       };
       const extraProps = { ...props, listens: [listen] };
-      const wrapper = shallow<RecentListens>(<RecentListens {...extraProps} />);
+      const wrapper = mount<RecentListens>(<RecentListens {...extraProps} />);
       wrapper.setProps({ latestListenTs: 123456 });
       const instance = wrapper.instance();
 
@@ -658,8 +644,7 @@ describe("Pagination", () => {
       const spy = jest
         .fn()
         .mockImplementation(() => Promise.resolve(newestListen));
-      // eslint-disable-next-line dot-notation
-      instance["APIService"].getListensForUser = spy;
+      instance.context.APIService.getListensForUser = spy;
       const scrollSpy = jest.spyOn(instance, "afterListensFetch");
 
       await instance.handleClickNewest();
@@ -674,14 +659,13 @@ describe("Pagination", () => {
   });
   describe("checkListensRange", () => {
     it("sets endOfTheLine to false and returns if there are enough listens", async () => {
-      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
       const instance = wrapper.instance();
 
       wrapper.setState({ endOfTheLine: true });
 
       const getListensForUserSpy = jest.spyOn(
-        // eslint-disable-next-line dot-notation
-        instance["APIService"],
+        instance.context.APIService,
         "getListensForUser"
       );
       const checkListensRangeSpy = jest.spyOn(instance, "checkListensRange");
@@ -694,14 +678,13 @@ describe("Pagination", () => {
     });
 
     it("sets endOfTheLine to true if max API time range is reached", async () => {
-      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
       const instance = wrapper.instance();
 
       wrapper.setState({ endOfTheLine: false, listens: [] });
 
       const getListensForUserSpy = jest.spyOn(
-        // eslint-disable-next-line dot-notation
-        instance["APIService"],
+        instance.context.APIService,
         "getListensForUser"
       );
       const checkListensRangeSpy = jest.spyOn(instance, "checkListensRange");
@@ -714,7 +697,7 @@ describe("Pagination", () => {
       expect(checkListensRangeSpy).toHaveBeenCalledTimes(1);
     });
     it("detects if we were loading older or more recent listens", async () => {
-      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
       const instance = wrapper.instance();
 
       wrapper.setState({
@@ -728,8 +711,7 @@ describe("Pagination", () => {
       const getListensForUserSpy = jest
         .fn()
         .mockImplementation(() => Promise.resolve(sortedListens.slice(0, 25)));
-      // eslint-disable-next-line dot-notation
-      instance["APIService"].getListensForUser = getListensForUserSpy;
+      instance.context.APIService.getListensForUser = getListensForUserSpy;
       const checkListensRangeSpy = jest.spyOn(instance, "checkListensRange");
 
       await instance.checkListensRange();
@@ -757,7 +739,7 @@ describe("Pagination", () => {
       expect(checkListensRangeSpy).toHaveBeenCalledTimes(4);
     });
     it("retries loading more listens with increasing time range", async () => {
-      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
       const instance = wrapper.instance();
 
       wrapper.setState({
@@ -769,8 +751,7 @@ describe("Pagination", () => {
       const getListensForUserSpy = jest
         .fn()
         .mockImplementation(() => Promise.resolve([]));
-      // eslint-disable-next-line dot-notation
-      instance["APIService"].getListensForUser = getListensForUserSpy;
+      instance.context.APIService.getListensForUser = getListensForUserSpy;
       const checkListensRangeSpy = jest.spyOn(instance, "checkListensRange");
 
       await instance.checkListensRange();
@@ -822,7 +803,7 @@ describe("Pagination", () => {
       expect(instance.state.endOfTheLine).toBeTruthy();
     });
     it("stops retrying once it has enough listens", async () => {
-      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
       const instance = wrapper.instance();
 
       wrapper.setState({
@@ -835,8 +816,7 @@ describe("Pagination", () => {
         .fn()
         .mockImplementationOnce(() => Promise.resolve([]))
         .mockImplementationOnce(() => Promise.resolve(listens));
-      // eslint-disable-next-line dot-notation
-      instance["APIService"].getListensForUser = getListensForUserSpy;
+      instance.context.APIService.getListensForUser = getListensForUserSpy;
       const checkListensRangeSpy = jest.spyOn(instance, "checkListensRange");
 
       await instance.checkListensRange();

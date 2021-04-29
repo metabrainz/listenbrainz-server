@@ -1,4 +1,4 @@
-import { APIService } from "./APIService";
+import APIService from "./APIService";
 
 const feedProps = require("./__mocks__/feedProps.json");
 

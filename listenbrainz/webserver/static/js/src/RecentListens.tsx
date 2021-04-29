@@ -500,7 +500,7 @@ export default class RecentListens extends React.Component<
 
   afterListensFetch() {
     this.checkListensRange();
-    if (this.listensTable?.current) {
+    if (typeof this.listensTable?.current?.scrollIntoView === "function") {
       this.listensTable.current.scrollIntoView({ behavior: "smooth" });
     }
     this.setState({ loading: false });
