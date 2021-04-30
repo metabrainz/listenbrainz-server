@@ -1,3 +1,4 @@
+import datetime
 import time
 import base64
 
@@ -167,18 +168,11 @@ class SpotifyService(ImporterService):
 
     def get_user_connection_details(self, user_id: int):
         user = db_spotify.get_user_import_details(user_id)
-
         if user:
-            if user['latest_listened_at']:
-                user['latest_listened_at_iso'] = user['latest_listened_at'].isoformat() + "Z"
-            else:
-                user['latest_listened_at_iso'] = None
-
-            if user['last_updated']:
-                user['last_updated_iso'] = user['last_updated'].isoformat() + "Z"
-            else:
-                user['last_updated_iso'] = None
-
+            def date_to_iso(date):
+                return date.isoformat() + "Z" if date else None
+            user['latest_listened_at_iso'] = date_to_iso(user['latest_listened_at'])
+            user['last_updated_iso'] = date_to_iso(user['last_updated'])
         return user
 
     def get_active_users_to_process(self):

@@ -1,5 +1,7 @@
 from datetime import timezone
 
+import requests
+
 from data.model.external_service import ExternalServiceType
 from listenbrainz.db import external_service_oauth as db_oauth
 
@@ -7,10 +9,15 @@ from flask import current_app
 from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
+from google.auth.exceptions import RefreshError
 
-from listenbrainz.domain.external_service import ExternalService
+from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError, \
+    ExternalServiceAPIError
 
 YOUTUBE_SCOPES = ["https://www.googleapis.com/auth/youtube.readonly"]
+
+OAUTH_TOKEN_URL = "https://oauth2.googleapis.com/token"
+OAUTH_REVOKE_URL = "https://oauth2.googleapis.com/revoke"
 
 
 class YoutubeService(ExternalService):
@@ -53,13 +60,28 @@ class YoutubeService(ExternalService):
                                   token_uri=client["token_uri"],
                                   scopes=YOUTUBE_SCOPES,
                                   expiry=user["token_expires"])
-        credentials.refresh(Request())
+        try:
+            credentials.refresh(Request())
+        except RefreshError as error:
+            # refresh error has error message as first arg and the actual error response from the api in the second arg
+            error_body = error.args[1]
+            if "error" in error_body and error_body["error"] == "invalid_grant":
+                raise ExternalServiceInvalidGrantError(error_body)
+
+            raise ExternalServiceAPIError("Could not refresh API Token for Youtube user")
         db_oauth.update_token(user_id=user_id,
                               service=self.service,
                               access_token=credentials.token,
                               refresh_token=credentials.refresh_token,
                               expires_at=int(credentials.expiry.replace(tzinfo=timezone.utc).timestamp()))
         return self.get_user(user_id)
+
+    def remove_user(self, user_id: int):
+        user = self.get_user(user_id)
+        requests.post(OAUTH_REVOKE_URL,
+                      params={'token': user["access_token"]},
+                      headers={'content-type': 'application/x-www-form-urlencoded'})
+        super(YoutubeService, self).remove_user(user_id)
 
     def get_user_connection_details(self, user_id: int):
         pass

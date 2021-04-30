@@ -11,10 +11,10 @@ from listenbrainz.domain.spotify import SpotifyService, OAUTH_TOKEN_URL
 from listenbrainz.tests.integration import IntegrationTestCase
 
 
-class SpotifyServiceDomainTestCase(IntegrationTestCase):
+class SpotifyServiceTestCase(IntegrationTestCase):
 
     def setUp(self):
-        super(SpotifyServiceDomainTestCase, self).setUp()
+        super(SpotifyServiceTestCase, self).setUp()
         self.user_id = db_user.create(312, 'spotify_user')
         self.service = SpotifyService()
         self.service.add_new_user(self.user_id, {

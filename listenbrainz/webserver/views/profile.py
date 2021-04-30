@@ -327,7 +327,7 @@ def refresh_service_token(service_name: str):
         try:
             user = service.refresh_access_token(current_user.id, user["refresh_token"])
         except ExternalServiceInvalidGrantError:
-            raise APINotFound("User has revoked authorization to Spotify")
+            raise APINotFound("User has revoked authorization to %s" % service_name.capitalize())
         except Exception:
             raise APIServiceUnavailable("Cannot refresh %s token right now" % service_name.capitalize())
 
@@ -341,5 +341,5 @@ def music_services_disconnect(service_name: str):
     service = _get_service_or_raise_404(service_name)
     if request.form.get('delete') == 'yes':
         service.remove_user(current_user.id)
-        flash.success('Your Spotify account has been unlinked')
+        flash.success('Your %s account has been unlinked' % service_name.capitalize())
     return redirect(url_for('profile.music_services_details'))
