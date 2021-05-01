@@ -128,9 +128,8 @@ class ProfileViewsTestCase(IntegrationTestCase):
         r = self.client.get(url_for('profile.music_services_details'))
         self.assert200(r)
 
-        r = self.client.post(url_for('profile.music_services_disconnect', service_name='spotify'),
-                             data={'delete': 'yes'})
-        self.assertStatus(r, 302)
+        r = self.client.post(url_for('profile.music_services_disconnect', service_name='spotify'))
+        self.assert200(r)
 
         self.assertIsNone(self.service.get_user(self.user['id']))
 
