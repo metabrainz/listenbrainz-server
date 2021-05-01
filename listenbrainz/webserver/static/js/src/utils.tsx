@@ -60,7 +60,8 @@ const searchForYoutubeTrack = async (
   trackName?: string,
   artistName?: string,
   releaseName?: string,
-  refreshToken?: () => Promise<string>
+  refreshToken?: () => Promise<string>,
+  onAccountError?: () => void
 ): Promise<Array<string> | null> => {
   if (!apiKey) return null;
   if (!accessToken) return null;
@@ -86,15 +87,26 @@ const searchForYoutubeTrack = async (
 
   if (response.status === 401) {
     if (refreshToken) {
-      const newAccessToken = await refreshToken();
-      return searchForYoutubeTrack(
-        apiKey,
-        newAccessToken,
-        trackName,
-        artistName,
-        releaseName,
-        undefined
-      );
+      try {
+        const newAccessToken = await refreshToken();
+        return searchForYoutubeTrack(
+          apiKey,
+          newAccessToken,
+          trackName,
+          artistName,
+          releaseName,
+          undefined
+        );
+      } catch (error) {
+        // Run onAccountError if we can't refresh the token
+        if (_.isFunction(onAccountError)) {
+          onAccountError();
+        }
+      }
+    }
+    // Run onAccountError if we already tried refreshing the token but still getting 401
+    if (_.isFunction(onAccountError)) {
+      onAccountError();
     }
   }
 

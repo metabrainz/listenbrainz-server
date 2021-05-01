@@ -135,7 +135,8 @@ export default class YoutubePlayer
         trackName,
         artistName,
         releaseName,
-        refreshYoutubeToken
+        refreshYoutubeToken,
+        this.handleAccountError
       );
       if (videoIds) {
         this.youtubePlayer.loadPlaylist(videoIds);
