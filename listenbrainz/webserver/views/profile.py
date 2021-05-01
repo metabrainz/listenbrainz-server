@@ -286,6 +286,15 @@ def music_services_details():
     spotify_only_import_oauth = spotify_service.get_authorize_url(SPOTIFY_IMPORT_PERMISSIONS)
     spotify_both_oauth = spotify_service.get_authorize_url(SPOTIFY_LISTEN_PERMISSIONS + SPOTIFY_IMPORT_PERMISSIONS)
 
+    if spotify_user:
+        permissions = set(spotify_user["scopes"])
+        if permissions == set(SPOTIFY_IMPORT_PERMISSIONS):
+            spotify_user["current_permission"] = "import"
+        elif permissions == set(SPOTIFY_LISTEN_PERMISSIONS):
+            spotify_user["current_permission"] = "listen"
+        else:
+            spotify_user["current_permission"] = "both"
+
     youtube_service = YoutubeService()
     youtube_user = youtube_service.get_user(current_user.id)
     youtube_listen_oauth = youtube_service.get_authorize_url(YOUTUBE_SCOPES)
@@ -339,7 +348,6 @@ def refresh_service_token(service_name: str):
 @api_login_required
 def music_services_disconnect(service_name: str):
     service = _get_service_or_raise_404(service_name)
-    if request.form.get('delete') == 'yes':
-        service.remove_user(current_user.id)
-        flash.success('Your %s account has been unlinked' % service_name.capitalize())
-    return redirect(url_for('profile.music_services_details'))
+    service.remove_user(current_user.id)
+    flash.success('Your %s account has been unlinked.' % service_name.capitalize())
+    return jsonify({'status': 'ok'})

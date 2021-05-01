@@ -1,102 +1,140 @@
 {% extends 'base.html' %}
-
+{% from 'macros.html' import service_permission_button %}
 {% block title %}External Music Services - ListenBrainz{% endblock %}
 
 {% block content %}
-  <div id="user-profile">
-    <h2 class="page-title">Connect with third-party music services</h2>
+    <div id="user-profile">
+        <h2 class="page-title">Connect with third-party music services</h2>
 
-    <h3>Youtube features</h3>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Spotify</h3>
+            </div>
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        Connect to your spotify account to read your listening history, play music on ListenBrainz (requires
+                        Spotify Premium) or both. We encourage users to choose both options for the best experience but you
+                        may also choose only one option:
+                    </div>
+                </div>
+                <br>
+                <div class="row">
+                    {% set spotify_disconnect_url = url_for('profile.music_services_disconnect', service_name='spotify') %}
+                    <div class="col-md-4 col-centered">
+                        {{ service_permission_button(spotify_user, spotify_both_oauth, spotify_disconnect_url, "Activate both features", "both") }}
+                        <p class="text-center">
+                            We will record your listening history permanently and make it available for others to view and
+                            explore. ListenBrainz has a number of music discovery features that require full length track
+                            playback and playlist modification permissions.
+                        </p>
+                    </div>
+                    <div class="col-md-4 col-centered">
+                        {{ service_permission_button(spotify_user, spotify_only_listen_oauth, spotify_disconnect_url, "Play music on ListenBrainz", "listen") }}
+                        <p class="text-center">
+                            We will record your listening history permanently and make it available for others to view and
+                            explore.
+                        </p>
+                    </div>
+                    <div class="col-md-4 col-centered">
+                        {{ service_permission_button(spotify_user, spotify_only_import_oauth, spotify_disconnect_url, "Import listens history", "import") }}
+                        <p class="text-center">
+                            ListenBrainz has a number of music discovery features that require full length track playback
+                            and playlist modification permissions.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    <p>
-       ListenBrainz integrates with Youtube to let you play music tracks from ListenBrainz pages. ListenBrainz has a
-        number of music discovery features that require authentication to search and play tracks from Youtube.
-    </p>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Youtube</h3>
+            </div>
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <p>
+                            ListenBrainz integrates with Youtube to let you play music tracks from ListenBrainz pages.
+                            ListenBrainz has a number of music discovery features that require authentication to search and
+                            play tracks from Youtube.
+                        </p>
+                        <p>
+                            You can revoke these permissions whenever you want by unlinking your Youtube account.
+                        </p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 col-centered">
+                        <p class="text-center">
+                            {% if not youtube_user %}
+                                <button type="button" onclick="connect('{{ youtube_listen_oauth }}')" class="btn btn-lg btn-block btn-info">
+                            {% else %}
+                                {% set youtube_disconnect_url = url_for('profile.music_services_disconnect', service_name='youtube') %}
+                                <button type="button" onclick="disconnect('{{ youtube_disconnect_url }}')" class="btn btn-lg btn-block btn-success">
+                            {% endif %}
+                                    Play music on ListenBrainz
+                                </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <p>
-      You can revoke these permissions whenever you want by unlinking your Youtube account.
-    </p>
 
-    <h3>Account Linking Status</h3>
-    {% if youtube_user %}
-      <p>Your account is linked. Click the button below to unlink it</p>
-      <form method="POST" action="{{ url_for('profile.music_services_disconnect', service_name='youtube') }}">
-        <input type="hidden" name="delete" value="yes" />
-        <input class="btn btn-primary btn-lg" type="submit" value="Unlink" />
-      </form>
+        <h3>A note about permissions</h3>
 
-    {% else %}
-      <p>
-      Your account is currently not linked. To link your account, please choose one of the following:
-      </p>
-      <p><a href="{{ youtube_listen_oauth }}" class="btn btn-primary btn-lg">Link my account to play music</a></p>
-    {% endif %}
+        <p>
+            In order to enable the feature to record your listens you will need to grant the permission to view your
+            recent listens and your current listen.
+        </p>
 
-    <h3>Spotify features</h3>
+        <p>
+            In order to play tracks on the ListenBrainz pages you will need to grant the permission to play streams from
+            your account and create playlists.
+            Oddly enough, Spotify also requires the permission to read your email address, your private information and
+            your birthdate
+            in order to play tracks. These permissions are required to determine if you are a premium user and can play
+            full
+            length tracks or will be limited to 30 second previews. However, <b>ListenBrainz will never read these
+            pieces of data</b>.
+            We promise! Please feel free to
+            <a href="https://github.com/metabrainz/listenbrainz-server/blob/master/listenbrainz/spotify_updater/spotify_read_listens.py">inspect
+                our source</a> code yourself!
+        </p>
 
-    <p>
-       ListenBrainz integrates with Spotify to bring you two features:
-    </p>
+        <p>
+            You can revoke these permissions whenever you want by unlinking your Spotify account.
+        </p>
 
-    <ol>
-       <li>
-         <p>
-           <b>Record your listening history into ListenBrainz.</b>
-         </p>
-         <p>
-           We will record your listening history permanently and make it available for others to view and explore.
-         </p>
-       </li>
-       <li>
-         <p>
-           <b>Play music tracks from ListenBrainz pages.</b>
-         </p>
-         <p>
-           ListenBrainz has a number of music discovery features that require full length track playback and playlist modification permissions.
-         </p>
-       </li>
-    </ol>
+        <h3>Account Linking Status</h3>
+        {% if spotify_user %}
+            <p>Your account is linked. Click the button below to unlink it</p>
+            <form method="POST" action="{{ url_for('profile.music_services_disconnect', service_name='spotify') }}">
+                <input type="hidden" name="delete" value="yes"/>
+                <input class="btn btn-primary btn-lg" type="submit" value="Unlink"/>
+            </form>
 
-    <p>
-    We encourage users to choose both options for the best experience, but you may also choose only one option.
-    </p>
-
-    <h3>A note about permissions</h3>
-
-    <p>
-      In order to enable the feature to record your listens you will need to grant the permission to view your
-      recent listens and your current listen.
-    </p>
-
-    <p>
-      In order to play tracks on the ListenBrainz pages you will need to grant the permission to play streams from your account and create playlists.
-      Oddly enough, Spotify also requires the permission to read your email address, your private information and your birthdate
-      in order to play tracks. These permissions are required to determine if you are a premium user and can play full
-      length tracks or will be limited to 30 second previews. However, <b>ListenBrainz will never read these pieces of data</b>.
-      We promise! Please feel free to
-      <a href="https://github.com/metabrainz/listenbrainz-server/blob/master/listenbrainz/spotify_updater/spotify_read_listens.py">inspect
-      our source</a> code yourself!
-    </p>
-
-    <p>
-      You can revoke these permissions whenever you want by unlinking your Spotify account.
-    </p>
-
-    <h3>Account Linking Status</h3>
-    {% if spotify_user %}
-      <p>Your account is linked. Click the button below to unlink it</p>
-      <form method="POST" action="{{ url_for('profile.music_services_disconnect', service_name='spotify') }}">
-        <input type="hidden" name="delete" value="yes" />
-        <input class="btn btn-primary btn-lg" type="submit" value="Unlink" />
-      </form>
-
-    {% else %}
-      <p>
-      Your account is currently not linked. To link your account, please choose one of the following:
-      </p>
-      <p><a href="{{ spotify_both_oauth }}" class="btn btn-primary btn-lg">Link my account to record listens and play music</a></p>
-      <p><a href="{{ spotify_only_listen_oauth }}" class="btn btn-primary btn-lg">Link my account to play music only</a></p>
-      <p><a href="{{ spotify_only_import_oauth }}" class="btn btn-primary btn-lg">Link my account to record listens only</a></p>
-    {% endif %}
-  </div>
+        {% else %}
+            <p>
+                Your account is currently not linked. To link your account, please choose one of the following:
+            </p>
+        {% endif %}
+    </div>
+{% endblock %}
+{% block scripts %}
+    {{ super() }}
+    <script>
+        function connect(link) {
+            window.location.href = link;
+        }
+        async function disconnect(link) {
+            await fetch(link, {method: "POST"});
+            window.location.reload();
+        }
+        async function reconnect(disconnect_link, connect_link) {
+            await fetch(disconnect_link, {method: "POST"});
+            window.location.href = connect_link;
+        }
+    </script>
 {% endblock %}

@@ -33,7 +33,7 @@ def get_active_users_to_process() -> List[dict]:
 
 
 def get_user_import_details(user_id: int):
-    """ Return user's spotify linking details to display on connect spotify page
+    """ Return user's spotify linking details to display on connect services page
 
     Args:
         user_id (int): the ListenBrainz row ID of the user
