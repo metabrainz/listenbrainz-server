@@ -1,3 +1,4 @@
+import logging
 from datetime import timezone
 
 import requests
@@ -78,9 +79,14 @@ class YoutubeService(ExternalService):
 
     def remove_user(self, user_id: int):
         user = self.get_user(user_id)
-        requests.post(OAUTH_REVOKE_URL,
-                      params={'token': user["access_token"]},
-                      headers={'content-type': 'application/x-www-form-urlencoded'})
+        # try to revoke token with Google Auth API on a best effort basis, even if it doesn't succeed proceed normally
+        # and delete from our database
+        try:
+            requests.post(OAUTH_REVOKE_URL,
+                          params={'token': user["access_token"]},
+                          headers={'content-type': 'application/x-www-form-urlencoded'})
+        except Exception as e:
+            logging.debug(str(e))
         super(YoutubeService, self).remove_user(user_id)
 
     def get_user_connection_details(self, user_id: int):
