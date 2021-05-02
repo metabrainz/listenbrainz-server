@@ -28,16 +28,16 @@ class RecordingTestCase(SparkTestCase):
             data = json.load(f)
 
         schema = StructType([
-            StructField('user_name', StringType()),
-            StructField('artist_name', StringType()),
-            StructField('artist_msid', StringType()),
             StructField('artist_mbids', ArrayType(StringType())),
-            StructField('release_name', StringType()),
-            StructField('release_msid', StringType()),
-            StructField('release_mbid', StringType()),
-            StructField('track_name', StringType()),
+            StructField('artist_msid', StringType()),
+            StructField('artist_name', StringType()),
             StructField('recording_mbid', StringType()),
-            StructField('recording_msid', StringType())
+            StructField('recording_msid', StringType()),
+            StructField('release_mbid', StringType()),
+            StructField('release_msid', StringType()),
+            StructField('release_name', StringType()),
+            StructField('track_name', StringType()),
+            StructField('user_name', StringType()),
         ])
         df = None
         for entry in data:
