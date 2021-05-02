@@ -24,6 +24,7 @@ import * as Sentry from "@sentry/react";
 import FollowButton from "./FollowButton";
 import APIService from "./APIService";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
+import { parsePageProps } from "./utils";
 
 const UserPageHeading = ({
   user,
@@ -52,12 +53,7 @@ const UserPageHeading = ({
 export default UserPageHeading;
 
 document.addEventListener("DOMContentLoaded", () => {
-  const domContainer = document.querySelector("#user-page-heading-container");
-
-  const propsElement = document.getElementById("react-props");
-  const globalPropsElement = document.getElementById("global-react-props");
-  const reactProps = JSON.parse(propsElement!.innerHTML);
-  const globalReactProps = JSON.parse(globalPropsElement!.innerHTML);
+  const { domContainer, reactProps, globalReactProps } = parsePageProps();
   const { api_url, sentry_dsn, current_user } = globalReactProps;
   const { user, logged_in_user_follows_user } = reactProps;
 

@@ -30,7 +30,7 @@ import BrainzPlayer from "../BrainzPlayer";
 import ErrorBoundary from "../ErrorBoundary";
 import Loader from "../components/Loader";
 import TimelineEventCard from "./TimelineEventCard";
-import { preciseTimestamp } from "../utils";
+import {parsePageProps, preciseTimestamp} from "../utils";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 
 export enum EventType {
@@ -522,11 +522,7 @@ export default class UserFeedPage extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const domContainer = document.querySelector("#react-container");
-  const propsElement = document.getElementById("react-props");
-  const globalPropsElement = document.getElementById("global-react-props");
-  const reactProps = JSON.parse(propsElement!.innerHTML);
-  const globalReactProps = JSON.parse(globalPropsElement!.innerHTML);
+  const { domContainer, reactProps, globalReactProps } = parsePageProps();
   const { api_url, sentry_dsn, current_user, spotify } = globalReactProps;
   const { events } = reactProps;
 
