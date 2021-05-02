@@ -115,10 +115,8 @@ def profile(user_name):
     except (AttributeError, ValidationError):
         artist_count = None
 
-    spotify_data = {}
     logged_in_user_follows_user = None
     if current_user.is_authenticated:
-        spotify_data = spotify.get_user_dict(current_user.id)
         logged_in_user_follows_user = db_user_relationship.is_following_user(current_user.id, user.id)
 
     props = {
@@ -133,7 +131,6 @@ def profile(user_name):
         "artist_count": format(artist_count, ",d") if artist_count else None,
         "profile_url": url_for('user.profile', user_name=user_name),
         "mode": "listens",
-        "spotify": spotify_data,
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
         "logged_in_user_follows_user": logged_in_user_follows_user,
     }

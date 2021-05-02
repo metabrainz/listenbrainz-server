@@ -948,13 +948,8 @@ document.addEventListener("DOMContentLoaded", () => {
   } catch (err) {
     // TODO: Show error to the user and ask to reload page
   }
-  const { api_url, sentry_dsn, current_user } = globalReactProps;
-  const {
-    labs_api_url,
-    playlist,
-    spotify,
-    web_sockets_server_url,
-  } = reactProps;
+  const { api_url, sentry_dsn, current_user, spotify } = globalReactProps;
+  const { labs_api_url, playlist, web_sockets_server_url } = reactProps;
 
   if (sentry_dsn) {
     Sentry.init({ dsn: sentry_dsn });

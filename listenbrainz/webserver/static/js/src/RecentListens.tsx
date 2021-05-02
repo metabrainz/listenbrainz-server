@@ -745,7 +745,7 @@ document.addEventListener("DOMContentLoaded", () => {
   } catch (err) {
     // TODO: Show error to the user and ask to reload page
   }
-  const { api_url, sentry_dsn, current_user } = globalReactProps;
+  const { api_url, sentry_dsn, current_user, spotify } = globalReactProps;
   const {
     latest_listen_ts,
     latest_spotify_uri,
@@ -754,7 +754,6 @@ document.addEventListener("DOMContentLoaded", () => {
     mode,
     profile_url,
     save_url,
-    spotify,
     user,
     web_sockets_server_url,
   } = reactProps;
