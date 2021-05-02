@@ -8,5 +8,3 @@ numpy==1.19.5
 pydantic == 1.8.1
 sentry-sdk == 0.20.3
 unidecode == 1.2.0
-pyspark == 2.4.5
-py4j == 0.10.7
