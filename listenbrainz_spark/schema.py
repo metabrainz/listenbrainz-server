@@ -114,18 +114,18 @@ def convert_listen_to_row(listen):
     """
     meta = listen['track_metadata']
     return Row(
-        listened_at=datetime.fromtimestamp(listen['listened_at']),
-        user_name=listen['user_name'],
+        artist_mbids=meta['additional_info'].get('artist_mbids', []),
         artist_msid=meta['additional_info']['artist_msid'],
         artist_name=meta['artist_name'],
-        artist_mbids=meta['additional_info'].get('artist_mbids', []),
+        listened_at=datetime.fromtimestamp(listen['listened_at']),
+        recording_mbid=meta['additional_info'].get('recording_mbid', ''),
+        recording_msid=listen['recording_msid'],
+        release_mbid=meta['additional_info'].get('release_mbid', ''),
         release_msid=meta['additional_info'].get('release_msid', ''),
         release_name=meta.get('release_name', ''),
-        release_mbid=meta['additional_info'].get('release_mbid', ''),
-        track_name=meta['track_name'],
-        recording_msid=listen['recording_msid'],
-        recording_mbid=meta['additional_info'].get('recording_mbid', ''),
         tags=meta['additional_info'].get('tags', []),
+        track_name=meta['track_name'],
+        user_name=listen['user_name'],
     )
 
 
@@ -159,18 +159,18 @@ def convert_model_metadata_to_row(meta):
 def convert_to_spark_json(listen):
     meta = listen
     return Row(
-        listened_at=meta['listened_at'],
-        user_name=meta['user_name'],
+        artist_mbids=meta.get('artist_mbids', []),
         artist_msid=meta['artist_msid'],
         artist_name=meta['artist_name'],
-        artist_mbids=meta.get('artist_mbids', []),
+        listened_at=meta['listened_at'],
+        recording_mbid=meta.get('recording_mbid', ''),
+        recording_msid=meta['recording_msid'],
+        release_mbid=meta.get('release_mbid', ''),
         release_msid=meta.get('release_msid', ''),
         release_name=meta.get('release_name', ''),
-        release_mbid=meta.get('release_mbid', ''),
-        track_name=meta['track_name'],
-        recording_msid=meta['recording_msid'],
-        recording_mbid=meta.get('recording_mbid', ''),
         tags=meta.get('tags', []),
+        track_name=meta['track_name'],
+        user_name=meta['user_name'],
     )
 
 
