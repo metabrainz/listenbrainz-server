@@ -33,7 +33,7 @@ ENV JAVA_VERSION 11.0.11
 ENV JAVA_BUILD_VERSION 9
 RUN wget https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-${JAVA_VERSION}%2B${JAVA_BUILD_VERSION}/OpenJDK11U-jdk_x64_linux_hotspot_${JAVA_VERSION}_${JAVA_BUILD_VERSION}.tar.gz \
     && tar xzf OpenJDK11U-jdk_x64_linux_hotspot_${JAVA_VERSION}_${JAVA_BUILD_VERSION}.tar.gz
-ENV JAVA_HOME $PWD/jdk-11.0.11+9
+ENV JAVA_HOME /usr/local/$PWD/jdk-11.0.11+9
 ENV PATH $JAVA_HOME/bin:$PATH
 
 COPY docker/apache-download.sh /apache-download.sh
@@ -41,7 +41,7 @@ ENV SPARK_VERSION 3.1.1
 ENV HADOOP_VERSION 3.2
 RUN /apache-download.sh spark/spark-$SPARK_VERSION/spark-$SPARK_VERSION-bin-hadoop$HADOOP_VERSION.tgz \
     && tar xzf spark-$SPARK_VERSION-bin-hadoop$HADOOP_VERSION.tgz
-ENV SPARK_HOME $PWD/spark-$SPARK_VERSION-bin-hadoop$HADOOP_VERSION
+ENV SPARK_HOME /usr/local/spark-$SPARK_VERSION-bin-hadoop$HADOOP_VERSION
 ENV PATH $SPARK_HOME/bin:$PATH
 ENV PYTHONPATH $SPARK_HOME/python/lib/py4j-0.10.9-src.zip:$SPARK_HOME/python:$PYTHONPATH
 
