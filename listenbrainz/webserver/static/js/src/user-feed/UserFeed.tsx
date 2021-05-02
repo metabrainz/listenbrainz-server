@@ -524,8 +524,11 @@ export default class UserFeedPage extends React.Component<
 document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#react-container");
   const propsElement = document.getElementById("react-props");
+  const globalPropsElement = document.getElementById("global-react-props");
   const reactProps = JSON.parse(propsElement!.innerHTML);
-  const { api_url, current_user, spotify, events, sentry_dsn } = reactProps;
+  const globalReactProps = JSON.parse(globalPropsElement!.innerHTML);
+  const { api_url } = globalReactProps;
+  const { current_user, spotify, events, sentry_dsn } = reactProps;
 
   if (sentry_dsn) {
     Sentry.init({ dsn: sentry_dsn });

@@ -586,13 +586,17 @@ export default class UserEntityChart extends React.Component<
 document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#react-container");
   const propsElement = document.getElementById("react-props");
+  const globalPropsElement = document.getElementById("global-react-props");
   let reactProps;
+  let globalReactProps;
   try {
     reactProps = JSON.parse(propsElement!.innerHTML);
+    globalReactProps = JSON.parse(globalPropsElement!.innerHTML);
   } catch (err) {
-    // Show error to the user and ask to reload page
+    // TODO: Show error to the user and ask to reload page
   }
-  const { user, api_url: apiUrl, sentry_dsn } = reactProps;
+  const { api_url } = globalReactProps;
+  const { user, sentry_dsn } = reactProps;
 
   if (sentry_dsn) {
     Sentry.init({ dsn: sentry_dsn });
@@ -600,7 +604,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   ReactDOM.render(
     <ErrorBoundary>
-      <UserEntityChart apiUrl={apiUrl} user={user} />
+      <UserEntityChart apiUrl={api_url} user={user} />
     </ErrorBoundary>,
     domContainer
   );

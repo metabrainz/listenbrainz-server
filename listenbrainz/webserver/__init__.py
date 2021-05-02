@@ -145,18 +145,15 @@ def gen_app(debug=None):
 def create_app(debug=None):
     app = gen_app(debug=debug)
 
-    global_props = {
-        "api_url": app.config["API_URL"],
-    }
-
     # Static files
     import listenbrainz.webserver.static_manager
     static_manager.read_manifest()
     app.static_folder = '/static'
 
+    from listenbrainz.webserver.utils import inject_global_props
     app.context_processor(lambda: dict(
         get_static_path=static_manager.get_static_path,
-        global_props=json.dumps(global_props)
+        inject_global_props=inject_global_props
     ))
 
     _register_blueprints(app)

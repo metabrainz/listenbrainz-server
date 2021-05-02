@@ -55,13 +55,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#user-page-heading-container");
 
   const propsElement = document.getElementById("react-props");
+  const globalPropsElement = document.getElementById("global-react-props");
   const reactProps = JSON.parse(propsElement!.innerHTML);
+  const globalReactProps = JSON.parse(globalPropsElement!.innerHTML);
+  const { api_url } = globalReactProps;
   const {
     user,
     current_user,
     logged_in_user_follows_user,
     sentry_dsn,
-    api_url,
   } = reactProps;
 
   const apiService: APIService = new APIService(

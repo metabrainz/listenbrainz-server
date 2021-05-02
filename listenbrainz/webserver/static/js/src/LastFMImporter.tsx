@@ -469,16 +469,19 @@ export default class LastFmImporter extends React.Component<
 document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#react-container");
   const propsElement = document.getElementById("react-props");
+  const globalPropsElement = document.getElementById("global-react-props");
   let reactProps;
+  let globalReactProps;
   try {
     reactProps = JSON.parse(propsElement!.innerHTML);
+    globalReactProps = JSON.parse(globalPropsElement!.innerHTML);
   } catch (err) {
     // Show error to the user and ask to reload page
   }
+  const { api_url } = globalReactProps;
   const {
     user,
     profile_url,
-    api_url,
     lastfm_api_url,
     lastfm_api_key,
     sentry_dsn,

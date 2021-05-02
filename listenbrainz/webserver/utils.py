@@ -1,6 +1,9 @@
 import string
 import random
 
+import ujson
+from flask import current_app
+
 
 def generate_string(length):
     """Generates random string with a specified length."""
@@ -25,3 +28,10 @@ def reformat_date(value, fmt="%b %d, %Y"):
 
 def reformat_datetime(value, fmt="%b %d, %Y, %H:%M %Z"):
     return value.strftime(fmt)
+
+
+def inject_global_props():
+    props = {
+        "api_url": current_app.config["API_URL"]
+    }
+    return ujson.dumps(props)

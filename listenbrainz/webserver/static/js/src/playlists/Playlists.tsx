@@ -669,15 +669,18 @@ export default class UserPlaylists extends React.Component<
 document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#react-container");
   const propsElement = document.getElementById("react-props");
+  const globalPropsElement = document.getElementById("global-react-props");
   let reactProps;
+  let globalReactProps;
   try {
     reactProps = JSON.parse(propsElement!.innerHTML);
+    globalReactProps = JSON.parse(globalPropsElement!.innerHTML);
   } catch (err) {
-    // Show error to the user and ask to reload page
+    // TODO: Show error to the user and ask to reload page
   }
+  const { api_url } = globalReactProps;
   const {
     current_user,
-    api_url,
     playlists,
     spotify,
     user,
