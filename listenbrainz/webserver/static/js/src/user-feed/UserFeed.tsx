@@ -527,8 +527,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const globalPropsElement = document.getElementById("global-react-props");
   const reactProps = JSON.parse(propsElement!.innerHTML);
   const globalReactProps = JSON.parse(globalPropsElement!.innerHTML);
-  const { api_url, sentry_dsn, current_user } = globalReactProps;
-  const { spotify, events } = reactProps;
+  const { api_url, sentry_dsn, current_user, spotify } = globalReactProps;
+  const { events } = reactProps;
 
   if (sentry_dsn) {
     Sentry.init({ dsn: sentry_dsn });

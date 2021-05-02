@@ -678,10 +678,9 @@ document.addEventListener("DOMContentLoaded", () => {
   } catch (err) {
     // TODO: Show error to the user and ask to reload page
   }
-  const { api_url, sentry_dsn, current_user } = globalReactProps;
+  const { api_url, sentry_dsn, current_user, spotify } = globalReactProps;
   const {
     playlists,
-    spotify,
     user,
     playlist_count: playlistCount,
     active_section: activeSection,

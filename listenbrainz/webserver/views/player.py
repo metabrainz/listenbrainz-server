@@ -43,7 +43,6 @@ def load():
             error_msg="'Listens' array must have one or more items."
         )
 
-    spotify_data = spotify.get_user_dict(current_user.id)
     # `user` == `curent_user` since player isn't for a user but the recommendation component
     # it uses expects `user` and `current_user` as keys.
     props = {
@@ -51,7 +50,6 @@ def load():
             "id": current_user.id,
             "name": current_user.musicbrainz_id,
         },
-        "spotify": spotify_data,
         "recommendations": listens,
     }
 
