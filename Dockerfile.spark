@@ -43,7 +43,7 @@ RUN /apache-download.sh spark/spark-$SPARK_VERSION/spark-$SPARK_VERSION-bin-hado
     && tar xzf spark-$SPARK_VERSION-bin-hadoop$HADOOP_VERSION.tgz
 ENV SPARK_HOME spark-$SPARK_VERSION-bin-hadoop$HADOOP_VERSION
 ENV PATH $SPARK_HOME/bin:$PATH
-ENV PYTHONPATH $SPARK_HOME/python:$PYTHONPATH
+ENV PYTHONPATH $SPARK_HOME/python/lib/py4j-0.10.9-src.zip:$SPARK_HOME/python:$PYTHONPATH
 
 COPY requirements_development.txt /requirements_development.txt
 RUN pip3 install -r /requirements_development.txt
