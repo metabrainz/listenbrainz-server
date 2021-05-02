@@ -42,5 +42,8 @@ RUN cd /usr/local && \
     tar xzf spark-$SPARK_VERSION-bin-hadoop$HADOOP_VERSION.tgz && \
     ln -s spark-$SPARK_VERSION-bin-hadoop$HADOOP_VERSION spark
 
+COPY requirements_development.txt requirements_development.txt
+RUN pip3 install -r requirements_development.txt
+
 WORKDIR /rec
 COPY . /rec
