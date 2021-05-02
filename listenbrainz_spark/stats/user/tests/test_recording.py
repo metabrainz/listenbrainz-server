@@ -27,21 +27,34 @@ class RecordingTestCase(SparkTestCase):
         with open(self.path_to_data_file(filename)) as f:
             data = json.load(f)
 
-        schema = StructType((StructField('user_name', StringType()), StructField('artist_name', StringType()),
-                             StructField('artist_msid', StringType()), StructField('artist_mbids', ArrayType(StringType())),
-                             StructField('release_name', StringType()), StructField('release_msid', StringType()),
-                             StructField('release_mbid', StringType()), StructField('track_name', StringType()),
-                             StructField('recording_mbid', StringType()), StructField('recording_msid', StringType())))
+        schema = StructType([
+            StructField('user_name', StringType()),
+            StructField('artist_name', StringType()),
+            StructField('artist_msid', StringType()),
+            StructField('artist_mbids', ArrayType(StringType())),
+            StructField('release_name', StringType()),
+            StructField('release_msid', StringType()),
+            StructField('release_mbid', StringType()),
+            StructField('track_name', StringType()),
+            StructField('recording_mbid', StringType()),
+            StructField('recording_msid', StringType())
+        ])
         df = None
         for entry in data:
             for idx in range(0, entry['count']):
                 # Assign listened_at to each listen
-                row = utils.create_dataframe(Row(user_name=entry['user_name'], track_name=entry['track_name'],
-                                                 recording_msid=entry['recording_msid'], recording_mbid=entry['recording_mbid'],
-                                                 release_name=entry['release_name'], release_msid=entry['release_msid'],
-                                                 release_mbid=entry['release_mbid'], artist_name=entry['artist_name'],
-                                                 artist_msid=entry['artist_msid'], artist_mbids=entry['artist_mbids']),
-                                             schema=schema)
+                row = utils.create_dataframe(Row(
+                    artist_mbids=entry['artist_mbids'],
+                    artist_msid=entry['artist_msid'],
+                    artist_name=entry['artist_name'],
+                    recording_mbid=entry['recording_mbid'],
+                    recording_msid=entry['recording_msid'],
+                    release_mbid=entry['release_mbid'],
+                    release_msid=entry['release_msid'],
+                    release_name=entry['release_name'],
+                    track_name=entry['track_name'],
+                    user_name=entry['user_name'],
+                ), schema=schema)
                 df = df.union(row) if df else row
 
         utils.save_parquet(df, os.path.join(self.path_, '{}/{}.parquet'.format(now.year, now.month)))
