@@ -175,8 +175,8 @@ document.addEventListener("DOMContentLoaded", () => {
   } catch (err) {
     // Show error to the user and ask to reload page
   }
-  const { api_url } = globalReactProps;
-  const { user, sentry_dsn } = reactProps;
+  const { api_url, sentry_dsn } = globalReactProps;
+  const { user } = reactProps;
 
   if (sentry_dsn) {
     Sentry.init({ dsn: sentry_dsn });

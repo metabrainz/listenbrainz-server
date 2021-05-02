@@ -745,7 +745,7 @@ document.addEventListener("DOMContentLoaded", () => {
   } catch (err) {
     // TODO: Show error to the user and ask to reload page
   }
-  const { api_url } = globalReactProps;
+  const { api_url, sentry_dsn } = globalReactProps;
   const {
     latest_listen_ts,
     latest_spotify_uri,
@@ -758,7 +758,6 @@ document.addEventListener("DOMContentLoaded", () => {
     user,
     web_sockets_server_url,
     current_user,
-    sentry_dsn,
   } = reactProps;
 
   const apiService = new APIServiceClass(

@@ -678,7 +678,7 @@ document.addEventListener("DOMContentLoaded", () => {
   } catch (err) {
     // TODO: Show error to the user and ask to reload page
   }
-  const { api_url } = globalReactProps;
+  const { api_url, sentry_dsn } = globalReactProps;
   const {
     current_user,
     playlists,
@@ -688,7 +688,6 @@ document.addEventListener("DOMContentLoaded", () => {
     active_section: activeSection,
     pagination_offset: paginationOffset,
     playlists_per_page: playlistsPerPage,
-    sentry_dsn,
   } = reactProps;
 
   if (sentry_dsn) {

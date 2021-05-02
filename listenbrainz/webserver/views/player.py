@@ -59,7 +59,6 @@ def load():
         "current_user": current_user_data,
         "spotify": spotify_data,
         "recommendations": listens,
-        "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn")
     }
 
     return render_template(

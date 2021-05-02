@@ -252,7 +252,6 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
             "spotify": spotify_dict,
             "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
             "recommendations": recommendations,
-            "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn")
         }
         received_props = ujson.loads(self.get_context_variable('props'))
         self.assertEqual(expected_props, received_props)

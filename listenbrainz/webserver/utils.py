@@ -32,6 +32,7 @@ def reformat_datetime(value, fmt="%b %d, %Y, %H:%M %Z"):
 
 def inject_global_props():
     props = {
-        "api_url": current_app.config["API_URL"]
+        "api_url": current_app.config["API_URL"],
+        "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn")
     }
     return ujson.dumps(props)
