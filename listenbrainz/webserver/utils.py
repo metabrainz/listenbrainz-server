@@ -3,6 +3,7 @@ import random
 
 import ujson
 from flask import current_app
+from flask_login import current_user
 
 
 def generate_string(length):
@@ -31,8 +32,16 @@ def reformat_datetime(value, fmt="%b %d, %Y, %H:%M %Z"):
 
 
 def inject_global_props():
+    current_user_data = {}
+    if current_user.is_authenticated:
+        current_user_data = {
+            "id": current_user.id,
+            "name": current_user.musicbrainz_id,
+            "auth_token": current_user.auth_token,
+        }
     props = {
         "api_url": current_app.config["API_URL"],
-        "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn")
+        "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn"),
+        "current_user": current_user_data,
     }
     return ujson.dumps(props)

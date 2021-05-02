@@ -116,15 +116,9 @@ def profile(user_name):
         artist_count = None
 
     spotify_data = {}
-    current_user_data = {}
     logged_in_user_follows_user = None
     if current_user.is_authenticated:
         spotify_data = spotify.get_user_dict(current_user.id)
-        current_user_data = {
-            "id": current_user.id,
-            "name": current_user.musicbrainz_id,
-            "auth_token": current_user.auth_token,
-        }
         logged_in_user_follows_user = db_user_relationship.is_following_user(current_user.id, user.id)
 
     props = {
@@ -132,7 +126,6 @@ def profile(user_name):
             "id": user.id,
             "name": user.musicbrainz_id,
         },
-        "current_user": current_user_data,
         "listens": listens,
         "latest_listen_ts": max_ts_per_user,
         "oldest_listen_ts": min_ts_per_user,
@@ -234,14 +227,6 @@ def playlists(user_name: str):
         "id": user.id,
     }
     
-    current_user_data = {}
-    if current_user.is_authenticated:
-        current_user_data = {
-            "id": current_user.id,
-            "name": current_user.musicbrainz_id,
-            "auth_token": current_user.auth_token,
-        }
-    
     include_private = current_user.is_authenticated and current_user.id == user.id
 
     playlists = []
@@ -254,7 +239,6 @@ def playlists(user_name: str):
         playlists.append(serialize_jspf(playlist))
 
     props = {
-        "current_user": current_user_data,
         "playlists": playlists,
         "user": user_data,
         "active_section": "playlists",
@@ -294,16 +278,6 @@ def recommendation_playlists(user_name: str):
         "id": user.id,
     }
     
-    spotify_data = {}
-    current_user_data = {}
-    if current_user.is_authenticated:
-        spotify_data = spotify.get_user_dict(current_user.id)
-        current_user_data = {
-            "id": current_user.id,
-            "name": current_user.musicbrainz_id,
-            "auth_token": current_user.auth_token,
-        }
-    
     playlists = []
     user_playlists, playlist_count = get_playlists_created_for_user(user.id, False, count, offset)
     for playlist in user_playlists:
@@ -311,7 +285,6 @@ def recommendation_playlists(user_name: str):
 
 
     props = {
-        "current_user": current_user_data,
         "playlists": playlists,
         "user": user_data,
         "active_section": "recommendations",
@@ -346,14 +319,6 @@ def collaborations(user_name: str):
         "name": user.musicbrainz_id,
         "id": user.id,
     }
-    
-    current_user_data = {}
-    if current_user.is_authenticated:
-        current_user_data = {
-            "id": current_user.id,
-            "name": current_user.musicbrainz_id,
-            "auth_token": current_user.auth_token,
-        }
 
     include_private = current_user.is_authenticated and current_user.id == user.id
 
@@ -367,7 +332,6 @@ def collaborations(user_name: str):
         playlists.append(serialize_jspf(playlist))
 
     props = {
-        "current_user": current_user_data,
         "playlists": playlists,
         "user": user_data,
         "active_section": "collaborations",

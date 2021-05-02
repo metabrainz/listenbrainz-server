@@ -170,14 +170,7 @@ def feed():
     if current_user.is_authenticated:
         spotify_user = spotify.get_user_dict(current_user.id)
 
-    current_user_data = {
-        "id": current_user.id,
-        "name": current_user.musicbrainz_id,
-        "auth_token": current_user.auth_token,
-    }
-
     props = {
-        "current_user": current_user_data,
         "spotify": spotify_user,
     }
     return render_template('index/feed.html', props=ujson.dumps(props))
