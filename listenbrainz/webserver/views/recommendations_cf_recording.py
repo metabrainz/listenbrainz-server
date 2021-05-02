@@ -95,23 +95,14 @@ def _get_template(active_section, user):
         )
 
     spotify_data = {}
-    current_user_data = {}
-
     if current_user.is_authenticated:
         spotify_data = spotify.get_user_dict(current_user.id)
-
-        current_user_data = {
-                "id": current_user.id,
-                "name": current_user.musicbrainz_id,
-                "auth_token": current_user.auth_token,
-        }
 
     props = {
         "user": {
             "id": user.id,
             "name": user.musicbrainz_id,
         },
-        "current_user": current_user_data,
         "spotify": spotify_data,
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
         "recommendations": recommendations,
