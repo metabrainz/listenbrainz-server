@@ -215,6 +215,21 @@ export function loadScriptAsync(document: any, scriptSrc: string): void {
   container.appendChild(el);
 }
 
+const parsePageProps = () => {
+  const domContainer = document.querySelector("#react-container");
+  const propsElement = document.getElementById("react-props");
+  const globalPropsElement = document.getElementById("global-react-props");
+  let reactProps;
+  let globalReactProps;
+  try {
+    reactProps = JSON.parse(propsElement!.innerHTML);
+    globalReactProps = JSON.parse(globalPropsElement!.innerHTML);
+  } catch (err) {
+    // Show error to the user and ask to reload page
+  }
+  return { domContainer, reactProps, globalReactProps };
+};
+
 export {
   searchForSpotifyTrack,
   getArtistLink,
@@ -222,4 +237,5 @@ export {
   getPlayButton,
   formatWSMessageToListen,
   preciseTimestamp,
+  parsePageProps,
 };

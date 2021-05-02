@@ -8,6 +8,7 @@ import UserListeningActivity from "./UserListeningActivity";
 import UserTopEntity from "./UserTopEntity";
 import UserDailyActivity from "./UserDailyActivity";
 import UserArtistMap from "./UserArtistMap";
+import {parsePageProps} from "../utils";
 
 export type UserReportsProps = {
   user: ListenBrainzUser;
@@ -164,17 +165,7 @@ export default class UserReports extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const domContainer = document.querySelector("#react-container");
-  const propsElement = document.getElementById("react-props");
-  const globalPropsElement = document.getElementById("global-react-props");
-  let reactProps;
-  let globalReactProps;
-  try {
-    reactProps = JSON.parse(propsElement!.innerHTML);
-    globalReactProps = JSON.parse(globalPropsElement!.innerHTML);
-  } catch (err) {
-    // Show error to the user and ask to reload page
-  }
+  const { domContainer, reactProps, globalReactProps } = parsePageProps();
   const { api_url, sentry_dsn } = globalReactProps;
   const { user } = reactProps;
 
