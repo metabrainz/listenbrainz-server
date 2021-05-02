@@ -58,13 +58,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const globalPropsElement = document.getElementById("global-react-props");
   const reactProps = JSON.parse(propsElement!.innerHTML);
   const globalReactProps = JSON.parse(globalPropsElement!.innerHTML);
-  const { api_url } = globalReactProps;
-  const {
-    user,
-    current_user,
-    logged_in_user_follows_user,
-    sentry_dsn,
-  } = reactProps;
+  const { api_url, sentry_dsn } = globalReactProps;
+  const { user, current_user, logged_in_user_follows_user } = reactProps;
 
   const apiService: APIService = new APIService(
     api_url || `${window.location.origin}/1`
