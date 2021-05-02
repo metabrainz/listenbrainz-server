@@ -33,7 +33,7 @@ ENV JAVA_VERSION 11.0.11
 ENV JAVA_BUILD_VERSION 9
 RUN wget https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-${JAVA_VERSION}%2B${JAVA_BUILD_VERSION}/OpenJDK11U-jdk_x64_linux_hotspot_${JAVA_VERSION}_${JAVA_BUILD_VERSION}.tar.gz \
     && tar xzf OpenJDK11U-jdk_x64_linux_hotspot_${JAVA_VERSION}_${JAVA_BUILD_VERSION}.tar.gz
-ENV JAVA_HOME /usr/local/$PWD/jdk-11.0.11+9
+ENV JAVA_HOME /usr/local/jdk-${JAVA_VERSION}+${JAVA_BUILD_VERSION}
 ENV PATH $JAVA_HOME/bin:$PATH
 
 COPY docker/apache-download.sh /apache-download.sh
