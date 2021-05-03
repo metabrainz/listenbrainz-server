@@ -47,6 +47,7 @@ def crossdomain(origin='*', methods=None, headers=None,
         return update_wrapper(wrapped_function, f)
     return decorator
 
+
 def api_listenstore_needed(func):
     """
         This API decorator checks to see if timescale is online (by having
@@ -61,6 +62,7 @@ def api_listenstore_needed(func):
         return func(*args, **kwargs)
 
     return decorator
+
 
 def web_listenstore_needed(func):
     """

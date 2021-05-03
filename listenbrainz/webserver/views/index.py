@@ -293,7 +293,7 @@ def similar_users():
 
 @index_bp.route("/listens-offline")
 def listens_offline():
-    """ 
+    """
         Show the "listenstore offline" message.
     """
 
