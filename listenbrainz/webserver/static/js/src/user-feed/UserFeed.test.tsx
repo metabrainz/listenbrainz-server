@@ -138,6 +138,9 @@ describe("<UserFeed />", () => {
         wrapper.setState({ nextEventTs: undefined });
 
         await instance.handleClickOlder();
+        // Flush promises
+        await new Promise((resolve) => setImmediate(resolve));
+
         expect(wrapper.state("loading")).toBeFalsy();
         expect(spy).not.toHaveBeenCalled();
       });
