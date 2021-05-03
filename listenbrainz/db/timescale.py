@@ -21,6 +21,9 @@ def init_db_connection(connect_str):
     for more info.
     """
     global engine
+    if not connect_str:
+        return
+
     while True:
         try:
             engine = create_engine(connect_str, poolclass=NullPool)
