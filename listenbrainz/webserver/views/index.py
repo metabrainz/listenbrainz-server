@@ -17,6 +17,7 @@ import listenbrainz.db.user as db_user
 from listenbrainz.db.similar_users import get_top_similar_users
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain import spotify
+from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz import webserver
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.timescale_connection import _ts
@@ -34,13 +35,15 @@ NUMBER_OF_RECENT_LISTENS = 50
 @index_bp.route("/")
 def index():
 
-    # get total listen count
-    try:
-        listen_count = _ts.get_total_listen_count()
-    except Exception as e:
-        current_app.logger.error('Error while trying to get total listen count: %s', str(e))
+    if _ts:
+        # get total listen count
+        try:
+            listen_count = _ts.get_total_listen_count()
+        except Exception as e:
+            current_app.logger.error('Error while trying to get total listen count: %s', str(e))
+            listen_count = None
+    else:
         listen_count = None
-
 
     return render_template(
         "index/index.html",
@@ -102,6 +105,7 @@ def roadmap():
 
 
 @index_bp.route("/current-status")
+@web_listenstore_needed
 def current_status():
 
     load = "%.2f %.2f %.2f" % os.getloadavg()
