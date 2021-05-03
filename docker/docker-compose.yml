@@ -24,6 +24,8 @@ services:
       - timescaledb:/var/lib/postgresql/data:z
     environment:
       POSTGRES_PASSWORD: 'postgres'
+    ports:
+      - 3037:5432
 
   rabbitmq:
     image: rabbitmq:3.6.5

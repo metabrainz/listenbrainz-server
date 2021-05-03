@@ -1,10 +1,8 @@
-
-from flask import Blueprint, request, redirect, render_template, url_for, session, current_app
+from flask import Blueprint, request, redirect, render_template, url_for, session, current_app, Markup
 from flask_login import login_user, logout_user, login_required
 from listenbrainz.webserver.login import login_forbidden, provider
 from listenbrainz.webserver import flash
 import listenbrainz.db.user as db_user
-import time
 import datetime
 
 login_bp = Blueprint('login', __name__)
@@ -29,11 +27,21 @@ def musicbrainz_post():
     """Callback endpoint."""
     if provider.validate_post_login():
         user = provider.get_user()
-        db_user.update_last_login(user.musicbrainz_id)
-        login_user(user, remember=True, duration=datetime.timedelta(current_app.config['SESSION_REMEMBER_ME_DURATION']))
-        next = session.get('next')
-        if next:
-            return redirect(next)
+        if user:
+            if not user.email:
+                flash.warning(Markup('You have not provided an email address. Please provide a '
+                                     '<a href="https://musicbrainz.org/account/edit">email address</a> before '
+                                     '1 November 2021, or we will stop recording your submitted listens.'))
+            db_user.update_last_login(user.musicbrainz_id)
+            login_user(user, remember=True,
+                       duration=datetime.timedelta(current_app.config['SESSION_REMEMBER_ME_DURATION']))
+            next = session.get('next')
+            if next:
+                return redirect(next)
+        else:
+            flash.error(Markup('You have not provided an email address. Please provide a '
+                               '<a href="https://musicbrainz.org/account/edit">email address</a> before '
+                               'creating a ListenBrainz account.'))
     else:
         flash.error("Login failed.")
     return redirect(url_for('index.index'))

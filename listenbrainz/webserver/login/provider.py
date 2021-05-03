@@ -1,5 +1,6 @@
 from rauth import OAuth2Service
-from flask import request, session, url_for
+from flask import request, session, url_for, current_app
+from brainzutils.musicbrainz_db import editor as mb_editor
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver.utils import generate_string
 import listenbrainz.db.user as db_user
@@ -32,13 +33,27 @@ def get_user():
     data = s.get('oauth2/userinfo').json()
     musicbrainz_id = data.get('sub')
     musicbrainz_row_id = data.get('metabrainz_user_id')
-    user = db_user.get_or_create(musicbrainz_row_id, musicbrainz_id)
-    if user:
-        if not user['musicbrainz_row_id']:
-            db_user.update_musicbrainz_row_id(musicbrainz_id, data['metabrainz_user_id'])
-        return User.from_dbrow(user)
+
+    if not current_app.config["DEBUG"]:
+        user_email = mb_editor.get_editor_by_id(musicbrainz_row_id)['email']
     else:
+        user_email = None
+
+    user = db_user.get_by_mb_row_id(musicbrainz_row_id, musicbrainz_id)
+
+    if user is None and user_email is None:  # new user without email in MB
         return None
+    elif user is None and user_email is not None:  # new user with email in MB
+        db_user.create(musicbrainz_row_id, musicbrainz_id, email=user_email)
+        user = db_user.get_by_mb_row_id(musicbrainz_row_id, musicbrainz_id)
+    else:  # old user, always update email from MB on login
+        user = dict(user)
+        user["email"] = user_email
+        db_user.update_user_email(musicbrainz_id, user_email)
+
+    if not user['musicbrainz_row_id']:
+        db_user.update_musicbrainz_row_id(musicbrainz_id, data['metabrainz_user_id'])
+    return User.from_dbrow(user)
 
 
 def get_authentication_uri():
