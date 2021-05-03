@@ -7,6 +7,7 @@ from flask import Blueprint, request, jsonify, current_app
 
 from listenbrainz.listenstore import TimescaleListenStore
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable
+from listenbrainz.webserver.decorators import api_listenstore_needed
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz import webserver
@@ -97,6 +98,7 @@ def submit_listen():
 @api_bp.route("/user/<user_name>/listens")
 @crossdomain()
 @ratelimit()
+@api_listenstore_needed()
 def get_listens(user_name):
     """
     Get listens for user ``user_name``. The format for the JSON returned is defined in our :ref:`json-doc`.

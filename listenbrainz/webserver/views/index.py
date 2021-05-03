@@ -285,3 +285,12 @@ def similar_users():
         "index/similar-users.html",
         similar_users=similar_users
     )
+
+
+@index_bp.route("/listens-offline")
+def listens_offline():
+    """ 
+        Show the "listenstore offline" message.
+    """
+
+    return render_template("index/listens_offline.html")
