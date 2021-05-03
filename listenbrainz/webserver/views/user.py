@@ -51,7 +51,7 @@ redirect_bp.add_url_rule("/recommendations",
                          redirect_user_page("user.recommendation_playlists"))
 
 @user_bp.route("/<user_name>")
-@web_listenstore_needed()
+@web_listenstore_needed
 def profile(user_name):
     # Which database to use to showing user listens.
     db_conn = webserver.timescale_connection._ts

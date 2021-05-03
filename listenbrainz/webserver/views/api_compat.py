@@ -11,6 +11,7 @@ from flask_login import login_required, current_user
 from listenbrainz.webserver.external import messybrainz
 from listenbrainz.webserver.rate_limiter import ratelimit
 from listenbrainz.webserver.errors import InvalidAPIUsage, CompatError
+from listenbrainz.webserver.decorators import api_listenstore_needed
 import xmltodict
 from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen
 from listenbrainz.db.lastfm_user import User
@@ -79,6 +80,7 @@ def api_auth_approve():
 
 @api_bp.route('/2.0/', methods=['POST', 'GET'])
 @ratelimit()
+@api_listenstore_needed
 def api_methods():
     """ Receives both (GET & POST)-API calls and redirects them to appropriate methods.
     """

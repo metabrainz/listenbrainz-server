@@ -1,4 +1,4 @@
-from functools import update_wrapper
+from functools import update_wrapper, wraps
 from datetime import timedelta
 from flask import request, current_app, make_response, redirect, url_for
 from six import string_types
@@ -47,35 +47,31 @@ def crossdomain(origin='*', methods=None, headers=None,
         return update_wrapper(wrapped_function, f)
     return decorator
 
-def api_listenstore_needed():
+def api_listenstore_needed(func):
     """
         This API decorator checks to see if timescale is online (by having
         a DB URI) and if not, it raises APIServiceUnavailable.
     """
-    def decorator(f):
-        def wrapped_function(*args, **kwargs):
-            from listenbrainz.webserver.errors import APIServiceUnavailable
-            if not current_app.config["SQLALCHEMY_TIMESCALE_URI"]:
-                raise APIServiceUnavailable("The listen database is momentarily offline. " +
-                                            "Please wait a few minutes and try again.")
-            return f(*args, **kwargs)
-
-        return update_wrapper(wrapped_function, f)
+    @wraps(func)
+    def decorator(*args, **kwargs):
+        from listenbrainz.webserver.errors import APIServiceUnavailable
+        if not current_app.config["SQLALCHEMY_TIMESCALE_URI"]:
+            raise APIServiceUnavailable("The listen database is momentarily offline. " +
+                                        "Please wait a few minutes and try again.")
+        return func(*args, **kwargs)
 
     return decorator
 
-def web_listenstore_needed():
+def web_listenstore_needed(func):
     """
         This web decorator checks to see if timescale is online (by having
         a DB URI) and if not, it redirects to an error page telling the user
         that the listenstore is offline.
     """
-    def decorator(f):
-        def wrapped_function(*args, **kwargs):
-            if not current_app.config["SQLALCHEMY_TIMESCALE_URI"]:
-                return redirect(url_for("index.listens_offline"))
-            return f(*args, **kwargs)
-
-        return update_wrapper(wrapped_function, f)
+    @wraps(func)
+    def decorator(*args, **kwargs):
+        if not current_app.config["SQLALCHEMY_TIMESCALE_URI"]:
+            return redirect(url_for("index.listens_offline"))
+        return func(*args, **kwargs)
 
     return decorator
