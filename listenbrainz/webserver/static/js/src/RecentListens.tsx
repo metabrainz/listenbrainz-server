@@ -731,8 +731,6 @@ export default class RecentListens extends React.Component<
   }
 }
 
-// RecentListens.contextType = GlobalAppContext;
-
 document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#react-container");
   const propsElement = document.getElementById("react-props");

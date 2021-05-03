@@ -2,7 +2,6 @@ import { enableFetchMocks } from "jest-fetch-mock";
 import * as React from "react";
 import { shallow, mount } from "enzyme";
 
-
 import * as recentListensProps from "./__mocks__/recentListensProps.json";
 import * as recentListensPropsTooManyListens from "./__mocks__/recentListensPropsTooManyListens.json";
 import * as recentListensPropsOneListen from "./__mocks__/recentListensPropsOneListen.json";
