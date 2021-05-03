@@ -3,8 +3,9 @@ import * as React from "react";
 import { mount } from "enzyme";
 import * as timeago from "time-ago";
 import * as io from "socket.io-client";
-
 import { sortBy } from "lodash";
+import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
+import APIService from "./APIService";
 
 import * as recentListensProps from "./__mocks__/recentListensProps.json";
 import * as recentListensPropsTooManyListens from "./__mocks__/recentListensPropsTooManyListens.json";
@@ -20,6 +21,13 @@ enableFetchMocks();
 // Mocking Math.random() fixes this
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
 jest.spyOn(global.Math, "random").mockImplementation(() => 0);
+
+// Create a new instance of GlobalAppContext
+const mountOptions: { context: GlobalAppContextT } = {
+  context: {
+    APIService: new APIService("foo"),
+  },
+};
 
 const {
   artistCount,
@@ -64,14 +72,20 @@ fetchMock.mockIf(
 describe("Recentlistens", () => {
   it("renders correctly on the profile page", () => {
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
-    const wrapper = mount<RecentListens>(<RecentListens {...props} />);
+    const wrapper = mount<RecentListens>(
+      <RecentListens {...props} />,
+      mountOptions
+    );
     expect(wrapper.html()).toMatchSnapshot();
   });
 });
 
 describe("componentDidMount", () => {
   it('calls connectWebsockets if mode is "listens"', () => {
-    const wrapper = mount<RecentListens>(<RecentListens {...props} />);
+    const wrapper = mount<RecentListens>(
+      <RecentListens {...props} />,
+      mountOptions
+    );
     const instance = wrapper.instance();
     instance.connectWebsockets = jest.fn();
 
@@ -83,7 +97,10 @@ describe("componentDidMount", () => {
 
   it('calls getUserListenCount if mode "listens"', async () => {
     const extraProps = { ...props, mode: "listens" as ListensListMode };
-    const wrapper = mount<RecentListens>(<RecentListens {...extraProps} />);
+    const wrapper = mount<RecentListens>(
+      <RecentListens {...extraProps} />,
+      mountOptions
+    );
     const instance = wrapper.instance();
 
     const spy = jest.fn().mockImplementation(() => {
@@ -106,7 +123,8 @@ describe("componentDidMount", () => {
         {...(JSON.parse(
           JSON.stringify(recentListensPropsOneListen)
         ) as RecentListensProps)}
-      />
+      />,
+      mountOptions
     );
     const instance = wrapper.instance();
     instance.loadFeedback = jest.fn();
@@ -128,7 +146,8 @@ describe("componentDidMount", () => {
           ) as RecentListensProps),
           currentUser: { name: "foobar" },
         }}
-      />
+      />,
+      mountOptions
     );
     const instance = wrapper.instance();
     instance.loadFeedback = jest.fn();
@@ -141,7 +160,10 @@ describe("componentDidMount", () => {
 
 describe("createWebsocketsConnection", () => {
   it("calls io.connect with correct parameters", () => {
-    const wrapper = mount<RecentListens>(<RecentListens {...props} />);
+    const wrapper = mount<RecentListens>(
+      <RecentListens {...props} />,
+      mountOptions
+    );
     const instance = wrapper.instance();
 
     const spy = jest.spyOn(io, "connect");
@@ -154,7 +176,10 @@ describe("createWebsocketsConnection", () => {
 
 describe("addWebsocketsHandlers", () => {
   it('calls correct handler for "listen" event', () => {
-    const wrapper = mount<RecentListens>(<RecentListens {...props} />);
+    const wrapper = mount<RecentListens>(
+      <RecentListens {...props} />,
+      mountOptions
+    );
     const instance = wrapper.instance();
 
     // eslint-disable-next-line dot-notation
@@ -173,7 +198,10 @@ describe("addWebsocketsHandlers", () => {
   });
 
   it('calls correct event for "playing_now" event', () => {
-    const wrapper = mount<RecentListens>(<RecentListens {...props} />);
+    const wrapper = mount<RecentListens>(
+      <RecentListens {...props} />,
+      mountOptions
+    );
     const instance = wrapper.instance();
 
     // eslint-disable-next-line dot-notation
@@ -213,7 +241,8 @@ describe("receiveNewListen", () => {
         {...(JSON.parse(
           JSON.stringify(recentListensPropsTooManyListens)
         ) as RecentListensProps)}
-      />
+      />,
+      mountOptions
     );
     const instance = wrapper.instance();
 
@@ -244,7 +273,8 @@ describe("receiveNewListen", () => {
         {...(JSON.parse(
           JSON.stringify(recentListensPropsOneListen)
         ) as RecentListensProps)}
-      />
+      />,
+      mountOptions
     );
     const instance = wrapper.instance();
     wrapper.setState({ mode: "recent" });
@@ -303,7 +333,10 @@ describe("receiveNewPlayingNow", () => {
 
 describe("handleCurrentListenChange", () => {
   it("sets the state correctly", () => {
-    const wrapper = mount<RecentListens>(<RecentListens {...props} />);
+    const wrapper = mount<RecentListens>(
+      <RecentListens {...props} />,
+      mountOptions
+    );
     const instance = wrapper.instance();
 
     const listen: Listen = {
@@ -321,7 +354,10 @@ describe("handleCurrentListenChange", () => {
 
 describe("isCurrentListen", () => {
   it("returns true if currentListen and passed listen is same", () => {
-    const wrapper = mount<RecentListens>(<RecentListens {...props} />);
+    const wrapper = mount<RecentListens>(
+      <RecentListens {...props} />,
+      mountOptions
+    );
     const instance = wrapper.instance();
 
     const listen: Listen = {
@@ -337,7 +373,10 @@ describe("isCurrentListen", () => {
   });
 
   it("returns false if currentListen is not set", () => {
-    const wrapper = mount<RecentListens>(<RecentListens {...props} />);
+    const wrapper = mount<RecentListens>(
+      <RecentListens {...props} />,
+      mountOptions
+    );
     const instance = wrapper.instance();
 
     wrapper.setState({ currentListen: undefined });
@@ -355,7 +394,10 @@ describe("Pagination", () => {
 
   describe("handleClickOlder", () => {
     it("does nothing if there is no older listens timestamp", async () => {
-      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(
+        <RecentListens {...props} />,
+        mountOptions
+      );
       const instance = wrapper.instance();
 
       wrapper.setState({ nextListenTs: undefined });
@@ -369,7 +411,10 @@ describe("Pagination", () => {
     });
 
     it("calls the API to get older listens", async () => {
-      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(
+        <RecentListens {...props} />,
+        mountOptions
+      );
       const instance = wrapper.instance();
 
       wrapper.setState({ nextListenTs: 1586450000 });
@@ -395,7 +440,10 @@ describe("Pagination", () => {
     });
 
     it("sets nextListenTs to undefined if it receives no listens from API", async () => {
-      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(
+        <RecentListens {...props} />,
+        mountOptions
+      );
       const instance = wrapper.instance();
 
       wrapper.setState({ nextListenTs: 1586450000 });
@@ -411,7 +459,10 @@ describe("Pagination", () => {
     });
 
     it("sets the listens, nextListenTs and  previousListenTs on the state and updates browser history", async () => {
-      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(
+        <RecentListens {...props} />,
+        mountOptions
+      );
       const instance = wrapper.instance();
 
       // Random nextListenTs to ensure that is the value set in browser history
@@ -440,7 +491,10 @@ describe("Pagination", () => {
 
   describe("handleClickNewer", () => {
     it("does nothing if there is no newer listens timestamp", async () => {
-      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(
+        <RecentListens {...props} />,
+        mountOptions
+      );
       const instance = wrapper.instance();
 
       wrapper.setState({ previousListenTs: undefined });
@@ -454,7 +508,10 @@ describe("Pagination", () => {
     });
 
     it("calls the API to get older listens", async () => {
-      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(
+        <RecentListens {...props} />,
+        mountOptions
+      );
       const instance = wrapper.instance();
       wrapper.setState({ previousListenTs: 123456 });
 
@@ -481,7 +538,10 @@ describe("Pagination", () => {
     });
 
     it("sets nextListenTs to undefined if it receives no listens from API", async () => {
-      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(
+        <RecentListens {...props} />,
+        mountOptions
+      );
       const instance = wrapper.instance();
 
       wrapper.setState({ previousListenTs: 123456 });
@@ -496,7 +556,10 @@ describe("Pagination", () => {
     });
 
     it("sets the listens, nextListenTs and  previousListenTs on the state and updates browser history", async () => {
-      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(
+        <RecentListens {...props} />,
+        mountOptions
+      );
       const instance = wrapper.instance();
 
       wrapper.setState({ previousListenTs: 123456 });
@@ -524,7 +587,10 @@ describe("Pagination", () => {
 
   describe("handleClickOldest", () => {
     it("does nothing if last listens is the oldest", async () => {
-      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(
+        <RecentListens {...props} />,
+        mountOptions
+      );
       const instance = wrapper.instance();
 
       wrapper.setState({
@@ -559,7 +625,10 @@ describe("Pagination", () => {
         listened_at: 1586440600,
       };
       const extraProps = { ...props, listens: [listen] };
-      const wrapper = mount<RecentListens>(<RecentListens {...extraProps} />);
+      const wrapper = mount<RecentListens>(
+        <RecentListens {...extraProps} />,
+        mountOptions
+      );
 
       const instance = wrapper.instance();
 
@@ -592,7 +661,10 @@ describe("Pagination", () => {
 
   describe("handleClickNewest", () => {
     it("does nothing if first listens is the newest", async () => {
-      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(
+        <RecentListens {...props} />,
+        mountOptions
+      );
       const instance = wrapper.instance();
 
       wrapper.setState({
@@ -627,7 +699,10 @@ describe("Pagination", () => {
         listened_at: 123450,
       };
       const extraProps = { ...props, listens: [listen] };
-      const wrapper = mount<RecentListens>(<RecentListens {...extraProps} />);
+      const wrapper = mount<RecentListens>(
+        <RecentListens {...extraProps} />,
+        mountOptions
+      );
       wrapper.setProps({ latestListenTs: 123456 });
       const instance = wrapper.instance();
 
@@ -658,8 +733,15 @@ describe("Pagination", () => {
     });
   });
   describe("checkListensRange", () => {
+    afterAll(async () => {
+      // Flush all pending promises
+      await new Promise((resolve) => setImmediate(resolve));
+    });
     it("sets endOfTheLine to false and returns if there are enough listens", async () => {
-      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(
+        <RecentListens {...props} />,
+        mountOptions
+      );
       const instance = wrapper.instance();
 
       wrapper.setState({ endOfTheLine: true });
@@ -678,7 +760,10 @@ describe("Pagination", () => {
     });
 
     it("sets endOfTheLine to true if max API time range is reached", async () => {
-      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(
+        <RecentListens {...props} />,
+        mountOptions
+      );
       const instance = wrapper.instance();
 
       wrapper.setState({ endOfTheLine: false, listens: [] });
@@ -697,7 +782,10 @@ describe("Pagination", () => {
       expect(checkListensRangeSpy).toHaveBeenCalledTimes(1);
     });
     it("detects if we were loading older or more recent listens", async () => {
-      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(
+        <RecentListens {...props} />,
+        mountOptions
+      );
       const instance = wrapper.instance();
 
       wrapper.setState({
@@ -739,7 +827,10 @@ describe("Pagination", () => {
       expect(checkListensRangeSpy).toHaveBeenCalledTimes(4);
     });
     it("retries loading more listens with increasing time range", async () => {
-      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(
+        <RecentListens {...props} />,
+        mountOptions
+      );
       const instance = wrapper.instance();
 
       wrapper.setState({
@@ -803,7 +894,10 @@ describe("Pagination", () => {
       expect(instance.state.endOfTheLine).toBeTruthy();
     });
     it("stops retrying once it has enough listens", async () => {
-      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(
+        <RecentListens {...props} />,
+        mountOptions
+      );
       const instance = wrapper.instance();
 
       wrapper.setState({
