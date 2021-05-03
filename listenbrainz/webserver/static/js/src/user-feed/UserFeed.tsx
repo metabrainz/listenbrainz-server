@@ -30,7 +30,7 @@ import BrainzPlayer from "../BrainzPlayer";
 import ErrorBoundary from "../ErrorBoundary";
 import Loader from "../components/Loader";
 import TimelineEventCard from "./TimelineEventCard";
-import {parsePageProps, preciseTimestamp} from "../utils";
+import { parsePageProps, preciseTimestamp } from "../utils";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 
 export enum EventType {

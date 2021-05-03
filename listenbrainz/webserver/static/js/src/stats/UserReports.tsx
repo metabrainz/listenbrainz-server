@@ -8,7 +8,7 @@ import UserListeningActivity from "./UserListeningActivity";
 import UserTopEntity from "./UserTopEntity";
 import UserDailyActivity from "./UserDailyActivity";
 import UserArtistMap from "./UserArtistMap";
-import {parsePageProps} from "../utils";
+import { parsePageProps } from "../utils";
 
 export type UserReportsProps = {
   user: ListenBrainzUser;
