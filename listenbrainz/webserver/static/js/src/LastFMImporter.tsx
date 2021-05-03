@@ -7,7 +7,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import APIService from "./APIService";
 import Scrobble from "./Scrobble";
 import LastFMImporterModal from "./LastFMImporterModal";
-import {parsePageProps} from "./utils";
+import { parsePageProps } from "./utils";
 
 export const LASTFM_RETRIES = 3;
 

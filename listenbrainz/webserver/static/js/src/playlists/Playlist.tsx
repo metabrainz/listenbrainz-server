@@ -45,7 +45,7 @@ import {
   JSPFTrackToListen,
   listenToJSPFTrack,
 } from "./utils";
-import {parsePageProps} from "../utils";
+import { parsePageProps } from "../utils";
 
 export type PlaylistPageProps = {
   labsApiUrl: string;

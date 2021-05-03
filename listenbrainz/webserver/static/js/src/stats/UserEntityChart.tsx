@@ -11,7 +11,7 @@ import Bar from "./Bar";
 import Loader from "../components/Loader";
 import ErrorBoundary from "../ErrorBoundary";
 import Pill from "../components/Pill";
-import {parsePageProps} from "../utils";
+import { parsePageProps } from "../utils";
 
 export type UserEntityChartProps = {
   user: ListenBrainzUser;

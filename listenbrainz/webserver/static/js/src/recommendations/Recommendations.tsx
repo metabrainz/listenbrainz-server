@@ -16,7 +16,7 @@ import BrainzPlayer from "../BrainzPlayer";
 import ErrorBoundary from "../ErrorBoundary";
 import Loader from "../components/Loader";
 import RecommendationCard from "./RecommendationCard";
-import {parsePageProps} from "../utils";
+import { parsePageProps } from "../utils";
 
 export type RecommendationsProps = {
   recommendations?: Array<Recommendation>;

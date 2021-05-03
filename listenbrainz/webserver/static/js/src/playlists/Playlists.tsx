@@ -32,7 +32,7 @@ import {
   getPlaylistId,
   MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
 } from "./utils";
-import {parsePageProps} from "../utils";
+import { parsePageProps } from "../utils";
 
 export type UserPlaylistsProps = {
   currentUser?: ListenBrainzUser;

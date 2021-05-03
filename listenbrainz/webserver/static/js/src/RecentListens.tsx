@@ -14,7 +14,7 @@ import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
 } from "./AlertNotificationsHOC";
-import {formatWSMessageToListen, parsePageProps} from "./utils";
+import { formatWSMessageToListen, parsePageProps } from "./utils";
 
 export type RecentListensProps = {
   latestListenTs: number;
