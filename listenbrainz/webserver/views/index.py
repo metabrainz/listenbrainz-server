@@ -170,6 +170,7 @@ def recent_listens():
 
 @index_bp.route('/feed', methods=['GET', 'OPTIONS'])
 @login_required
+@web_listenstore_needed
 def feed():
 
     spotify_user = {}
