@@ -29,7 +29,7 @@ def musicbrainz_post():
         user = provider.get_user()
         if user:
             if not user.email:
-                flash.warning(Markup('You have not provided an email address. Please provide a '
+                flash.warning(Markup('You have not provided an email address. Please provide an '
                                      '<a href="https://musicbrainz.org/account/edit">email address</a> before '
                                      '1 November 2021, or we will stop recording your submitted listens.'))
             db_user.update_last_login(user.musicbrainz_id)
@@ -39,7 +39,7 @@ def musicbrainz_post():
             if next:
                 return redirect(next)
         else:
-            flash.error(Markup('You have not provided an email address. Please provide a '
+            flash.error(Markup('You have not provided an email address. Please provide an '
                                '<a href="https://musicbrainz.org/account/edit">email address</a> before '
                                'creating a ListenBrainz account.'))
     else:

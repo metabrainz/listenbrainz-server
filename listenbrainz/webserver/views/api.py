@@ -52,6 +52,11 @@ def submit_listen():
     :resheader Content-Type: *application/json*
     """
     user = validate_auth_header()
+    if not current_app.config["DEBUG"] and \
+            current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
+        log_raise_400('The listens were rejected because the user does not has not provided an email.'
+                      'Please provide an <a href="https://musicbrainz.org/account/edit">email address</a> to submit'
+                      'listens.')
 
     raw_data = request.get_data()
     try:
