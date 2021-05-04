@@ -9,6 +9,7 @@ from flask_login import current_user, login_required
 from listenbrainz import webserver
 from listenbrainz.db.playlist import get_playlists_for_user, get_playlists_created_for_user, get_playlists_collaborated_on
 from listenbrainz.domain import spotify
+from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver import timescale_connection
@@ -49,8 +50,8 @@ redirect_bp.add_url_rule("/recommendations",
                          "redirect_recommendations",
                          redirect_user_page("user.recommendation_playlists"))
 
-
 @user_bp.route("/<user_name>")
+@web_listenstore_needed
 def profile(user_name):
     # Which database to use to showing user listens.
     db_conn = webserver.timescale_connection._ts
