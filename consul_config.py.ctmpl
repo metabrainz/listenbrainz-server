@@ -39,6 +39,7 @@ TIMESCALE_ADMIN_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/postg
 TIMESCALE_ADMIN_LB_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/listenbrainz_ts"
 {{end}}
 {{end}}
+SQLALCHEMY_TIMESCALE_URI = ""
 
 {{if service "pgbouncer-williams"}}
 {{with index (service "pgbouncer-williams") 0}}
