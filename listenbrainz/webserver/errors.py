@@ -208,10 +208,11 @@ class InvalidAPIUsage(Exception):
         self.output_format = output_format
 
     def render_error(self):
-        return {
-            "json": self.to_json,
-            "xml": self.to_xml
-        }.get(self.output_format, self.to_xml)()
+        if self.output_format == "json":
+            return self.to_json()
+        else:
+            # default to xml if the output format isn't known or is missing
+            return self.to_xml()
 
     def to_json(self):
         return ujson.dumps({
