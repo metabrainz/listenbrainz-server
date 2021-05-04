@@ -18,6 +18,25 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+set -e
+
+LB_SERVER_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)
+cd "$LB_SERVER_ROOT" || exit 1
+
+source "admin/config.sh"
+source "admin/functions.sh"
+
+# This variable contains the name of a directory that is deleted when the script
+# exits, so we sanitise it here in case it was included in the environment.
+TMPDIR=""
+
+if [ "$CONTAINER_NAME" == "listenbrainz-cron-prod" ] && [ "$PROD" == "prod" ]
+then
+    echo "Running in listenbrainz-cron-prod container, good!"
+else
+    echo "This container is not the production cron container, exiting..."
+    exit
+fi
 
 function add_rsync_include_rule {
     RULE_FILE=$1/.rsync-filter
@@ -32,26 +51,26 @@ function add_rsync_include_rule {
     echo "$SHA256_FILE_RULE" >> "$RULE_FILE"
 }
 
+# all cleanup code should be placed within this function
+function on_exit {
+    echo "Disk space when create-dumps ends:"; df -m
+
+    if [ -n "$TMPDIR" ]; then
+        rm -rf "$TMPDIR"
+    fi
+
+    if [ -n "$START_TIME" ]; then
+        local duration=$(( $(date +%s) - START_TIME ))
+        echo "create-dumps took ${duration}s to run"
+    fi
+}
+
+trap on_exit EXIT
+
+START_TIME=$(date +%s)
 echo "This script is being run by the following user: "; whoami
-
-# This is to help with disk space monitoring - run "df" before and after
 echo "Disk space when create-dumps starts:" ; df -m
-trap 'echo "Disk space when create-dumps ends:" ; df -m' 0
 
-
-LB_SERVER_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)
-cd "$LB_SERVER_ROOT" || exit 1
-
-source "admin/config.sh"
-source "admin/functions.sh"
-
-if [[ "${CONTAINER_NAME}" = "listenbrainz-cron-prod" && "${PROD}" = "prod" ]]
-then
-    echo "Running in listenbrainz-cron-prod container, good!"
-else
-    echo "This container is not the production cron container, exiting..."
-    exit
-fi
 
 DUMP_TYPE="${1:-full}"
 
@@ -67,25 +86,21 @@ else
 fi
 
 TMPDIR=$(mktemp --tmpdir="$TEMP_DIR" -d -t "$SUB_DIR.XXXXXXXXXX")
-function finish {
-  rm -rf "$TMPDIR"
-}
-trap finish EXIT
 
 if [ "$DUMP_TYPE" == "full" ]; then
-    if ! /usr/local/bin/python manage.py dump create_full -l "$TMPDIR" -t $DUMP_THREADS --last-dump-id; then
-	echo "Full dump failed, exiting!"
-	exit 1
+    if ! /usr/local/bin/python manage.py dump create_full -l "$TMPDIR" -t "$DUMP_THREADS" --last-dump-id; then
+        echo "Full dump failed, exiting!"
+        exit 1
     fi
 elif [ "$DUMP_TYPE" == "incremental" ]; then
-    if ! /usr/local/bin/python manage.py dump create_incremental -l "$TMPDIR" -t $DUMP_THREADS; then
-	echo "Incremental dump failed, exiting!"
-	exit 1
+    if ! /usr/local/bin/python manage.py dump create_incremental -l "$TMPDIR" -t "$DUMP_THREADS"; then
+        echo "Incremental dump failed, exiting!"
+        exit 1
     fi
 elif [ "$DUMP_TYPE" == "feedback" ]; then
-    if ! /usr/local/bin/python manage.py dump create_feedback -l "$TMPDIR" -t $DUMP_THREADS; then
-	echo "Feedback dump failed, exiting!"
-	exit 1
+    if ! /usr/local/bin/python manage.py dump create_feedback -l "$TMPDIR" -t "$DUMP_THREADS"; then
+        echo "Feedback dump failed, exiting!"
+        exit 1
     fi
 else
     echo "Not sure what type of dump to create, exiting!"
@@ -99,8 +114,8 @@ if [ -z "$DUMP_ID_FILE" ]; then
 fi
 
 HAS_EMPTY_DIRS_OR_FILES=$(find "$TMPDIR" -empty)
-if [ ! -z "$HAS_EMPTY_DIRS_OR_FILES" ]; then
-    echo "Empty files or dirs, exiting."
+if [ -n "$HAS_EMPTY_DIRS_OR_FILES" ]; then
+    echo "Empty files or dirs found, exiting."
     echo "$HAS_EMPTY_DIRS_OR_FILES"
     exit 1
 fi
@@ -115,8 +130,8 @@ DUMP_NAME=$(basename "$DUMP_DIR")
 # Create backup directories owned by user "listenbrainz"
 echo "Creating Backup directories..."
 mkdir -m "$BACKUP_DIR_MODE" -p \
-         "$BACKUP_DIR"/$SUB_DIR/ \
-         "$BACKUP_DIR"/$SUB_DIR/"$DUMP_NAME"
+         "$BACKUP_DIR/$SUB_DIR/" \
+         "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME"
 chown "$BACKUP_USER:$BACKUP_GROUP" \
       "$BACKUP_DIR/$SUB_DIR/" \
       "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME"
@@ -124,8 +139,8 @@ echo "Backup directories created!"
 
 # Copy the files into the backup directory
 echo "Begin copying dumps to backup directory..."
-retry cp -a "$DUMP_DIR"/* "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME"/
-chmod "$BACKUP_FILE_MODE" "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME"/*
+retry rsync -a "$DUMP_DIR/" "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME/"
+chmod "$BACKUP_FILE_MODE" "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME/"*
 echo "Dumps copied to backup directory!"
 
 
@@ -146,14 +161,16 @@ chown "$FTP_USER:$FTP_GROUP" \
 # make sure all dump files are owned by the correct user
 # and set appropriate mode for files to be uploaded to
 # the FTP server
-retry cp -a "$DUMP_DIR"/* "$FTP_CURRENT_DUMP_DIR"
-chmod "$FTP_FILE_MODE" "$FTP_CURRENT_DUMP_DIR"/*
+retry rsync -a "$DUMP_DIR/" "$FTP_CURRENT_DUMP_DIR/"
+chmod "$FTP_FILE_MODE" "$FTP_CURRENT_DUMP_DIR/"*
 
 # create an explicit rsync filter for the new private dump in the
 # ftp folder
 touch "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
 
-add_rsync_include_rule "$FTP_CURRENT_DUMP_DIR" "listenbrainz-public-dump-$DUMP_TIMESTAMP.tar.xz"
+add_rsync_include_rule \
+    "$FTP_CURRENT_DUMP_DIR" \
+    "listenbrainz-public-dump-$DUMP_TIMESTAMP.tar.xz"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
     "listenbrainz-listens-dump-$DUMP_ID-$DUMP_TIMESTAMP-$DUMP_TYPE.tar.xz"

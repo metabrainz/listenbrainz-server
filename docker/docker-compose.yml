@@ -14,7 +14,7 @@ volumes:
 services:
 
   redis:
-    image: redis:5.0.3
+    image: redis:6.2.2
     volumes:
       - redis:/data:z
 
@@ -35,6 +35,8 @@ services:
       context: ..
       dockerfile: Dockerfile
       target: listenbrainz-dev
+      args:
+        GIT_COMMIT_SHA: HEAD
     environment:
       FLASK_APP: listenbrainz.webserver
       FLASK_ENV: development

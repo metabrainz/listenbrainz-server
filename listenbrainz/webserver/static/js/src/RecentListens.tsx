@@ -3,6 +3,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as _ from "lodash";
 import * as io from "socket.io-client";
+import * as Sentry from "@sentry/react";
 import APIService from "./APIService";
 import BrainzPlayer from "./BrainzPlayer";
 import ErrorBoundary from "./ErrorBoundary";
@@ -688,7 +689,12 @@ document.addEventListener("DOMContentLoaded", () => {
     user,
     web_sockets_server_url,
     current_user,
+    sentry_dsn,
   } = reactProps;
+
+  if (sentry_dsn) {
+    Sentry.init({ dsn: sentry_dsn });
+  }
 
   const RecentListensWithAlertNotifications = withAlertNotifications(
     RecentListens

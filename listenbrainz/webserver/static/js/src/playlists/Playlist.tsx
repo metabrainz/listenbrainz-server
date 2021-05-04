@@ -20,6 +20,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { ReactSortable } from "react-sortablejs";
 import debounceAsync from "debounce-async";
 import { sanitize } from "dompurify";
+import * as Sentry from "@sentry/react";
 import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
@@ -951,7 +952,12 @@ document.addEventListener("DOMContentLoaded", () => {
     spotify,
     web_sockets_server_url,
     current_user,
+    sentry_dsn,
   } = reactProps;
+
+  if (sentry_dsn) {
+    Sentry.init({ dsn: sentry_dsn });
+  }
 
   const PlaylistPageWithAlertNotifications = withAlertNotifications(
     PlaylistPage

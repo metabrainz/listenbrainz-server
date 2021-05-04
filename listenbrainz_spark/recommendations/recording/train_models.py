@@ -15,7 +15,6 @@ Since the model is always trained on recently created dataframes, the model_meta
 saved corresponding to recently created dataframe_id. The model metadata also contains the unique identification string for the best model.
 """
 
-import os
 import uuid
 import logging
 import itertools
@@ -41,9 +40,9 @@ from listenbrainz_spark.exceptions import (SparkSessionNotInitializedException,
 import pyspark.sql.functions as func
 from pyspark import RDD
 from pyspark.sql import Row
-from flask import current_app
 from pyspark.mllib.recommendation import ALS, Rating
 
+logger = logging.getLogger(__name__)
 Model = namedtuple('Model', 'model validation_rmse rank lmbda iteration model_id training_time rmse_time, alpha')
 
 # training HTML is generated if set to true
@@ -75,7 +74,7 @@ def compute_rmse(model, data, n, model_id):
                                            .values()
         return sqrt(predictionsAndRatings.map(lambda x: (x[0] - x[1]) ** 2).reduce(add) / float(n))
     except Py4JJavaError as err:
-        current_app.logger.error('Root Mean Squared Error for model "{}" not computed\n{}'.format(
+        logger.error('Root Mean Squared Error for model "{}" not computed\n{}'.format(
                                  model_id, str(err.java_exception)), exc_info=True)
         raise
 
@@ -91,7 +90,7 @@ def preprocess_data(playcounts_df):
             validation_data (rdd): Used for validation.
             test_data (rdd): Used for testing.
     """
-    current_app.logger.info('Splitting dataframe...')
+    logger.info('Splitting dataframe...')
     training_data, validation_data, test_data = playcounts_df.rdd.map(parse_dataset).randomSplit([4, 1, 1], 45)
     return training_data, validation_data, test_data
 
@@ -174,7 +173,7 @@ def train(training_data, rank, iteration, lmbda, alpha, model_id):
         model = ALS.trainImplicit(training_data, rank, iterations=iteration, lambda_=lmbda, alpha=alpha)
         return model
     except Py4JJavaError as err:
-        current_app.logger.error('Unable to train model "{}"\n{}'.format(model_id, str(err.java_exception)), exc_info=True)
+        logger.error('Unable to train model "{}"\n{}'.format(model_id, str(err.java_exception)), exc_info=True)
         raise
 
 
@@ -202,15 +201,15 @@ def get_best_model(training_data, validation_data, num_validation, ranks, lambda
         model_id = generate_model_id()
 
         t0 = time.monotonic()
-        current_app.logger.info("Training model with model id: {}".format(model_id))
+        logger.info("Training model with model id: {}".format(model_id))
         model = train(training_data, rank, iteration, lmbda, alpha, model_id)
-        current_app.logger.info("Model trained!")
+        logger.info("Model trained!")
         mt = '{:.2f}'.format((time.monotonic() - t0) / 60)
 
         t0 = time.monotonic()
-        current_app.logger.info("Calculating validation RMSE for model with model id : {}".format(model_id))
+        logger.info("Calculating validation RMSE for model with model id : {}".format(model_id))
         validation_rmse = compute_rmse(model, validation_data, num_validation, model_id)
-        current_app.logger.info("Validation RMSE calculated!")
+        logger.info("Validation RMSE calculated!")
         vt = '{:.2f}'.format((time.monotonic() - t0) / 60)
 
         model_metadata.append((model_id, mt, rank, '{:.1f}'.format(lmbda), iteration, round(validation_rmse, 2), vt))
@@ -252,11 +251,11 @@ def save_model(model_id, model):
 
     dest_path = get_model_path(model_id)
     try:
-        current_app.logger.info('Saving model...')
+        logger.info('Saving model...')
         model.save(listenbrainz_spark.context, dest_path)
-        current_app.logger.info('Model saved!')
+        logger.info('Model saved!')
     except Py4JJavaError as err:
-        current_app.logger.error('Unable to save model "{}"\n{}. Aborting...'.format(model_id,
+        logger.error('Unable to save model "{}"\n{}. Aborting...'.format(model_id,
                                  str(err.java_exception)), exc_info=True)
         raise
 
@@ -272,16 +271,16 @@ def save_model_metadata_to_hdfs(metadata):
         # Create dataframe from the row object.
         model_metadata_df = utils.create_dataframe(metadata_row, schema.model_metadata_schema)
     except DataFrameNotCreatedException as err:
-        current_app.logger.error(str(err), exc_info=True)
+        logger.error(str(err), exc_info=True)
         raise
 
     try:
-        current_app.logger.info('Saving model metadata...')
+        logger.info('Saving model metadata...')
         # Append the dataframe to existing dataframe if already exist or create a new one.
         utils.append(model_metadata_df, path.RECOMMENDATION_RECORDING_MODEL_METADATA)
-        current_app.logger.info('Model metadata saved...')
+        logger.info('Model metadata saved...')
     except DataFrameNotAppendedException as err:
-        current_app.logger.error(str(err), exc_info=True)
+        logger.error(str(err), exc_info=True)
         raise
 
 
@@ -318,19 +317,19 @@ def save_training_html(time_, num_training, num_validation, num_test, model_meta
 def main(ranks=None, lambdas=None, iterations=None, alpha=None):
 
     if ranks is None:
-        current_app.logger.critical('model param "ranks" missing')
+        logger.critical('model param "ranks" missing')
 
 
     if lambdas is None:
-        current_app.logger.critical('model param "lambdas" missing')
+        logger.critical('model param "lambdas" missing')
         raise
 
     if iterations is None:
-        current_app.logger.critical('model param "iterations" missing')
+        logger.critical('model param "iterations" missing')
         raise
 
     if alpha is None:
-        current_app.logger.critical('model param "alpha" missing')
+        logger.critical('model param "alpha" missing')
         raise
 
     ti = time.monotonic()
@@ -338,7 +337,7 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
     try:
         listenbrainz_spark.init_spark_session('Train Models')
     except SparkSessionNotInitializedException as err:
-        current_app.logger.error(str(err), exc_info=True)
+        logger.error(str(err), exc_info=True)
         raise
 
     # Add checkpoint dir to break and save RDD lineage.
@@ -348,10 +347,10 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
         playcounts_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_PLAYCOUNTS_DATAFRAME)
         dataframe_metadata_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_DATAFRAME_METADATA)
     except PathNotFoundException as err:
-        current_app.logger.error('{}\nConsider running create_dataframes.py'.format(str(err)), exc_info=True)
+        logger.error('{}\nConsider running create_dataframes.py'.format(str(err)), exc_info=True)
         raise
     except FileNotFetchedException as err:
-        current_app.logger.error(str(err), exc_info=True)
+        logger.error(str(err), exc_info=True)
         raise
 
     time_['load_playcounts'] = '{:.2f}'.format((time.monotonic() - ti) / 60)
@@ -371,9 +370,9 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
     models_training_time = '{:.2f}'.format((time.monotonic() - t0) / 3600)
 
     best_model_metadata = get_best_model_metadata(best_model)
-    current_app.logger.info("Calculating test RMSE for best model with model id: {}".format(best_model.model_id))
+    logger.info("Calculating test RMSE for best model with model id: {}".format(best_model.model_id))
     best_model_metadata['test_rmse'] = compute_rmse(best_model.model, test_data, num_test, best_model.model_id)
-    current_app.logger.info("Test RMSE calculated!")
+    logger.info("Test RMSE calculated!")
 
     best_model_metadata['training_data_count'] = num_training
     best_model_metadata['validation_data_count'] = num_validation
@@ -390,14 +389,14 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
     try:
         utils.delete_dir(path.CHECKPOINT_DIR, recursive=True)
     except HDFSDirectoryNotDeletedException as err:
-        current_app.logger.error(str(err), exc_info=True)
+        logger.error(str(err), exc_info=True)
         raise
 
     if SAVE_TRAINING_HTML:
-        current_app.logger.info('Saving HTML...')
+        logger.info('Saving HTML...')
         save_training_html(time_, num_training, num_validation, num_test, model_metadata, best_model_metadata, ti,
                            models_training_time)
-        current_app.logger.info('Done!')
+        logger.info('Done!')
 
     message = [{
         'type': 'cf_recommendations_recording_model',

@@ -1,18 +1,19 @@
 import os
 import pathlib
 import sys
-import shutil
 import subprocess
 import time
+import logging
 from tarfile import TarError
 
 import listenbrainz_spark
 from listenbrainz_spark import utils, config, hdfs_connection
 from listenbrainz_spark.exceptions import SparkSessionNotInitializedException, DumpInvalidException
 
-from flask import current_app
 
 TEMP_DIR_PATH = "/temp"
+
+logger = logging.getLogger(__name__)
 
 
 class ListenbrainzHDFSUploader:
@@ -22,7 +23,7 @@ class ListenbrainzHDFSUploader:
         try:
             listenbrainz_spark.init_spark_session('uploader')
         except SparkSessionNotInitializedException as err:
-            current_app.logger.error(str(err), exc_info=True)
+            logger.error(str(err), exc_info=True)
             sys.exit(-1)
 
     def _is_json_file(self, filename):
@@ -71,16 +72,16 @@ class ListenbrainzHDFSUploader:
         # Copy data from dest_path to TEMP_DIR_PATH to be merged with new data
         if not overwrite and utils.path_exists(dest_path):
             t0 = time.monotonic()
-            current_app.logger.info("Copying old listens into '{}'".format(TEMP_DIR_PATH))
+            logger.info("Copying old listens into '{}'".format(TEMP_DIR_PATH))
             utils.copy(dest_path, TEMP_DIR_PATH, overwrite=True)
-            current_app.logger.info("Done! Time taken: {:.2f}".format(time.monotonic() - t0))
+            logger.info("Done! Time taken: {:.2f}".format(time.monotonic() - t0))
 
-        current_app.logger.info("Uploading listens to temporary directory in HDFS...")
+        logger.info("Uploading listens to temporary directory in HDFS...")
         total_files = 0
         total_time = 0.0
         for member in tar:
             if member.isfile() and self._is_json_file(member.name):
-                current_app.logger.info("Uploading {}...".format(member.name))
+                logger.info("Uploading {}...".format(member.name))
                 t0 = time.monotonic()
 
                 try:
@@ -101,18 +102,18 @@ class ListenbrainzHDFSUploader:
                 time_taken = time.monotonic() - t0
                 total_files += 1
                 total_time += time_taken
-                current_app.logger.info("Done! Current file processed in {:.2f} sec".format(time_taken))
-        current_app.logger.info("Done! Total files processed {}. Average time taken: {:.2f}".format(
+                logger.info("Done! Current file processed in {:.2f} sec".format(time_taken))
+        logger.info("Done! Total files processed {}. Average time taken: {:.2f}".format(
             total_files, total_time / total_files
         ))
 
         # Delete dest_path if present
         if utils.path_exists(dest_path):
-            current_app.logger.info('Removing {} from HDFS...'.format(dest_path))
+            logger.info('Removing {} from HDFS...'.format(dest_path))
             utils.delete_dir(dest_path, recursive=True)
-            current_app.logger.info('Done!')
+            logger.info('Done!')
 
-        current_app.logger.info("Moving the processed files to {}".format(dest_path))
+        logger.info("Moving the processed files to {}".format(dest_path))
         t0 = time.monotonic()
 
         # Check if parent directory exists, if not create a directory
@@ -121,7 +122,7 @@ class ListenbrainzHDFSUploader:
             utils.create_dir(dest_path_parent)
 
         utils.rename(TEMP_DIR_PATH, dest_path)
-        utils.current_app.logger.info("Done! Time taken: {:.2f}".format(time.monotonic() - t0))
+        utils.logger.info("Done! Time taken: {:.2f}".format(time.monotonic() - t0))
 
         # Cleanup
         utils.delete_dir(tmp_dump_dir, recursive=True)

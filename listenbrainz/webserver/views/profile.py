@@ -113,6 +113,7 @@ def import_data():
         "api_url":  current_app.config["API_URL"],
         "lastfm_api_url": current_app.config["LASTFM_API_URL"],
         "lastfm_api_key": current_app.config["LASTFM_API_KEY"],
+        "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn")
     }
 
     return render_template(
