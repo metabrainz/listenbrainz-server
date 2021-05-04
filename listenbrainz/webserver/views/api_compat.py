@@ -19,7 +19,7 @@ from listenbrainz.db.lastfm_session import Session
 from listenbrainz.db.lastfm_token import Token
 import calendar
 from datetime import datetime
-from listenbrainz.webserver.timescale_connection import _ts
+from listenbrainz.webserver import timescale_connection
 
 api_bp = Blueprint('api_compat', __name__)
 
@@ -86,6 +86,10 @@ def api_methods():
     """
     data = request.args if request.method == 'GET' else request.form
     method = data['method'].lower()
+
+    listenstore_required_methods = ['user.getinfo']
+    if method in listenstore_required_methods and timescale_connection._ts is None:
+        raise InvalidAPIUsage(CompatError.SERVICE_UNAVAILABLE, output_format=data.get('format', "xml"))
 
     if method in ('track.updatenowplaying', 'track.scrobble'):
         return record_listens(request, data)
@@ -396,8 +400,8 @@ def user_info(request, data):
     """ Gives information about the user specified in the parameters.
     """
     try:
-        api_key = data['api_key']
         output_format = data.get('format', 'xml')
+        api_key = data['api_key']
         sk = data.get('sk')
         username = data.get('user')
         if not (sk or username):
@@ -427,7 +431,7 @@ def user_info(request, data):
             with tag('url'):
                 text('http://listenbrainz.org/user/' + query_user.name)
             with tag('playcount'):
-                text(User.get_play_count(query_user.id, _ts))
+                text(User.get_play_count(query_user.id, timescale_connection._ts))
             with tag('registered', unixtime=str(query_user.created.strftime("%s"))):
                 text(str(query_user.created))
 
