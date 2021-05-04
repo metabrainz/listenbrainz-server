@@ -161,10 +161,13 @@ def create_app(debug=None):
     admin = Admin(app, index_view=HomeView(name='Home'), template_mode='bootstrap3')
     from listenbrainz.model import Spotify as SpotifyModel
     from listenbrainz.model import User as UserModel
+    from listenbrainz.model import ReportedUsers as ReportedUsersModel
     from listenbrainz.model.spotify import SpotifyAdminView
     from listenbrainz.model.user import UserAdminView
+    from listenbrainz.model.reported_users import ReportedUserAdminView
     admin.add_view(UserAdminView(UserModel, model.db.session, endpoint='user_model'))
     admin.add_view(SpotifyAdminView(SpotifyModel, model.db.session, endpoint='spotify_model'))
+    admin.add_view(ReportedUserAdminView(ReportedUsersModel, model.db.session, endpoint='reported_users_model'))
 
     @app.before_request
     def before_request_gdpr_check():

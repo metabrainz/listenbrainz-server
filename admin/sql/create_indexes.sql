@@ -4,6 +4,10 @@ CREATE UNIQUE INDEX auth_token_ndx_user ON "user" (auth_token);
 CREATE UNIQUE INDEX lower_musicbrainz_id_ndx_user ON "user" (lower(musicbrainz_id));
 CREATE UNIQUE INDEX login_id_ndx_user ON "user" (login_id);
 
+CREATE INDEX reporter_user_id_ndx_reported_users ON reported_users (reporter_user_id);
+CREATE INDEX reported_user_id_ndx_reported_users ON reported_users (reported_user_id);
+CREATE UNIQUE INDEX user_id_reports_ndx_reported_users ON reported_users (reporter_user_id, reported_user_id);
+
 CREATE UNIQUE INDEX token_ndx_token ON api_compat.token (token);
 CREATE UNIQUE INDEX token_api_key_ndx_token ON api_compat.token (token, api_key);
 

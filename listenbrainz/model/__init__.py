@@ -7,3 +7,4 @@ db = SQLAlchemy()
 # import all models here please
 from listenbrainz.model.spotify import Spotify
 from listenbrainz.model.user import User
+from listenbrainz.model.reported_users import ReportedUsers

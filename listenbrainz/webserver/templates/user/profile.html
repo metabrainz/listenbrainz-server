@@ -2,9 +2,15 @@
 
 {% block profile_content %}
 
-    <div style="margin-top:20px">
+    <div style="margin-top: 20px; margin-bottom: 20px">
     	<img src="{{ url_for('static', filename='img/musicbrainz-16.svg') }}" />
     	<b><a href="https://musicbrainz.org/user/{{ user.musicbrainz_id }}">See profile on MusicBrainz</a></b>
+        {% if current_user.is_authenticated and current_user.musicbrainz_id != user.musicbrainz_id %}
+            <form method="POST" action="{{ url_for("user.report_abuse", user_name=user.musicbrainz_id) }}" style="float: right">
+                <input type="hidden" name="report" value="yes" />
+                <input class="btn btn-danger" type="submit" value="Report User" />
+            </form>
+        {% endif %}
     </div>
 
 {% endblock %}

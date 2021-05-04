@@ -1,3 +1,6 @@
+import psycopg2
+import sqlalchemy
+
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
@@ -10,8 +13,8 @@ from listenbrainz import webserver
 from listenbrainz.db.playlist import get_playlists_for_user, get_playlists_created_for_user, get_playlists_collaborated_on
 from listenbrainz.domain import spotify
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
-from listenbrainz.webserver.login import User
-from listenbrainz.webserver import timescale_connection
+from listenbrainz.webserver.login import User, api_login_required
+from listenbrainz.webserver import timescale_connection, flash
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
 from werkzeug.exceptions import NotFound, BadRequest
 from listenbrainz.webserver.views.playlist_api import serialize_jspf
@@ -392,6 +395,22 @@ def collaborations(user_name: str):
         props=ujson.dumps(props),
         user=user
     )
+
+
+@user_bp.route("/<user_name>/report-user/", methods=['POST'])
+@login_required
+def report_abuse(user_name):
+    if request.method == 'POST' and request.form.get('report') == 'yes':
+        user_to_report = db_user.get_by_mb_id(user_name)
+        if current_user.id != user_to_report["id"]:
+            try:
+                db_user.report_user(current_user.id, user_to_report["id"])
+                flash.success('The user has been successfully reported.')
+            except sqlalchemy.exc.IntegrityError:
+                flash.error("You have already reported this user.")
+        else:
+            flash.error("You cannot report yourself.")
+    return redirect(url_for('user.profile', user_name=user_name))
 
 
 def _get_user(user_name):
