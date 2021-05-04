@@ -3,6 +3,7 @@ from datetime import timedelta
 from flask import request, current_app, make_response, redirect, url_for
 from six import string_types
 
+from listenbrainz.webserver import timescale_connection
 
 
 def crossdomain(origin='*', methods=None, headers=None,
@@ -56,7 +57,7 @@ def api_listenstore_needed(func):
     @wraps(func)
     def decorator(*args, **kwargs):
         from listenbrainz.webserver.errors import APIServiceUnavailable
-        if not current_app.config["SQLALCHEMY_TIMESCALE_URI"]:
+        if timescale_connection._ts is None:
             raise APIServiceUnavailable("The listen database is momentarily offline. " +
                                         "Please wait a few minutes and try again.")
         return func(*args, **kwargs)
@@ -72,7 +73,7 @@ def web_listenstore_needed(func):
     """
     @wraps(func)
     def decorator(*args, **kwargs):
-        if not current_app.config["SQLALCHEMY_TIMESCALE_URI"]:
+        if timescale_connection._ts is None:
             return redirect(url_for("index.listens_offline"))
         return func(*args, **kwargs)
 
