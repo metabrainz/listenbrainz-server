@@ -502,3 +502,15 @@ def get_users_by_id(user_ids: List[int]):
         for row in result.fetchall():
             row_id_username_map[row['id']] = row['musicbrainz_id']
         return row_id_username_map
+
+
+def report_user(reporter_id: int, reported_id: int):
+    with db.engine.connect() as connection:
+        connection.execute(sqlalchemy.text("""
+            INSERT INTO reported_users (reporter_user_id, reported_user_id)
+                 VALUES (:reporter_id, :reported_id);
+                """), {
+            "reporter_id": reporter_id,
+            "reported_id": reported_id
+        })
+
