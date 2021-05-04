@@ -80,7 +80,6 @@ def api_auth_approve():
 
 @api_bp.route('/2.0/', methods=['POST', 'GET'])
 @ratelimit()
-@api_listenstore_needed
 def api_methods():
     """ Receives both (GET & POST)-API calls and redirects them to appropriate methods.
     """
