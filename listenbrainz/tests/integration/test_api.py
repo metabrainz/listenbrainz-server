@@ -8,6 +8,7 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 from listenbrainz import db
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
+from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 
 
@@ -33,6 +34,15 @@ class APITestCase(ListenAPIIntegrationTestCase):
         response = self.client.get(
             url, query_string={'max_ts': '1400000000', 'min_ts': '1500000000'})
         self.assert400(response)
+
+    def test_get_listens_ts_unavailable(self):
+        """Check that an error message is returned if the listenstore is unavailable"""
+        timescale_connection._ts = None
+
+        url = url_for('api_v1.get_listens',
+                      user_name=self.user['musicbrainz_id'])
+        response = self.client.get(url)
+        self.assertStatus(response, 503)
 
     def test_get_listens(self):
         """ Test to make sure that the api sends valid listens on get requests.
