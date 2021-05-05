@@ -42,7 +42,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_schemas.sql'))
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_tables.sql'))
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_functions.sql'))
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))
+        ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))
         ts.create_view_indexes()
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_primary_keys.sql'))
