@@ -23,10 +23,9 @@ import RecommendationControl from "./RecommendationControl";
 
 import { getArtistLink, getTrackLink } from "../utils";
 import Card from "../components/Card";
-import APIService from "../APIService";
+import GlobalAppContext from "../GlobalAppContext";
 
 export type RecommendationCardProps = {
-  apiUrl: string;
   recommendation: Recommendation;
   playRecommendation: (recommendation: Recommendation) => void;
   currentFeedback: RecommendationFeedBack | null;
@@ -47,15 +46,13 @@ export type RecommendationCardProps = {
 export default class RecommendationCard extends React.Component<
   RecommendationCardProps
 > {
-  APIService: APIService;
+  static contextType = GlobalAppContext;
+  declare context: React.ContextType<typeof GlobalAppContext>;
+
   playRecommendation: (recommendation: Recommendation) => void;
 
   constructor(props: RecommendationCardProps) {
     super(props);
-
-    this.APIService = new APIService(
-      props.apiUrl || `${window.location.origin}/1`
-    );
 
     this.playRecommendation = props.playRecommendation.bind(
       this,
@@ -75,8 +72,9 @@ export default class RecommendationCard extends React.Component<
         recommendation,
         "track_metadata.additional_info.recording_mbid"
       );
+      const { APIService } = this.context;
       try {
-        const status = await this.APIService.submitRecommendationFeedback(
+        const status = await APIService.submitRecommendationFeedback(
           currentUser.auth_token,
           recordingMBID,
           rating
@@ -104,8 +102,9 @@ export default class RecommendationCard extends React.Component<
         recommendation,
         "track_metadata.additional_info.recording_mbid"
       );
+      const { APIService } = this.context;
       try {
-        const status = await this.APIService.deleteRecommendationFeedback(
+        const status = await APIService.deleteRecommendationFeedback(
           currentUser.auth_token,
           recordingMBID
         );

@@ -4,7 +4,8 @@ import * as ReactDOM from "react-dom";
 import * as _ from "lodash";
 import * as io from "socket.io-client";
 import * as Sentry from "@sentry/react";
-import APIService from "./APIService";
+import APIServiceClass from "./APIService";
+import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import BrainzPlayer from "./BrainzPlayer";
 import ErrorBoundary from "./ErrorBoundary";
 import Loader from "./components/Loader";
@@ -16,7 +17,6 @@ import {
 import { formatWSMessageToListen } from "./utils";
 
 export type RecentListensProps = {
-  apiUrl: string;
   latestListenTs: number;
   latestSpotifyUri?: string;
   listens?: Array<Listen>;
@@ -49,8 +49,10 @@ export default class RecentListens extends React.Component<
   RecentListensProps,
   RecentListensState
 > {
-  private APIService: APIService;
+  static contextType = GlobalAppContext;
+  declare context: React.ContextType<typeof GlobalAppContext>;
 
+  private APIService!: APIServiceClass;
   private brainzPlayer = React.createRef<BrainzPlayer>();
   private listensTable = React.createRef<HTMLTableElement>();
 
@@ -73,15 +75,15 @@ export default class RecentListens extends React.Component<
       recordingFeedbackMap: {},
     };
 
-    this.APIService = new APIService(
-      props.apiUrl || `${window.location.origin}/1`
-    );
-
     this.listensTable = React.createRef();
   }
 
   componentDidMount(): void {
     const { mode } = this.state;
+    // Get API instance from React context provided for in top-level component
+    const { APIService } = this.context;
+    this.APIService = APIService;
+
     if (mode === "listens") {
       this.connectWebsockets();
       // Listen to browser previous/next events and load page accordingly
@@ -440,7 +442,7 @@ export default class RecentListens extends React.Component<
 
   afterListensFetch() {
     this.updatePaginationVariables();
-    if (this.listensTable?.current) {
+    if (typeof this.listensTable?.current?.scrollIntoView === "function") {
       this.listensTable.current.scrollIntoView({ behavior: "smooth" });
     }
     this.setState({ loading: false });
@@ -465,7 +467,6 @@ export default class RecentListens extends React.Component<
       oldestListenTs,
       spotify,
       user,
-      apiUrl,
       currentUser,
       newAlert,
     } = this.props;
@@ -527,7 +528,6 @@ export default class RecentListens extends React.Component<
                           key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
                           currentUser={currentUser}
                           isCurrentUser={currentUser?.name === user?.name}
-                          apiUrl={apiUrl}
                           listen={listen}
                           mode={mode}
                           currentFeedback={this.getFeedbackForRecordingMsid(
@@ -651,7 +651,6 @@ export default class RecentListens extends React.Component<
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
             <BrainzPlayer
-              apiService={this.APIService}
               currentListen={currentListen}
               direction={direction}
               listens={listens}
@@ -692,6 +691,10 @@ document.addEventListener("DOMContentLoaded", () => {
     sentry_dsn,
   } = reactProps;
 
+  const apiService = new APIServiceClass(
+    api_url || `${window.location.origin}/1`
+  );
+
   if (sentry_dsn) {
     Sentry.init({ dsn: sentry_dsn });
   }
@@ -700,22 +703,29 @@ document.addEventListener("DOMContentLoaded", () => {
     RecentListens
   );
 
+  const globalProps: GlobalAppContextT = {
+    APIService: apiService,
+    currentUser: current_user,
+    spotifyAuth: spotify,
+  };
+
   ReactDOM.render(
     <ErrorBoundary>
-      <RecentListensWithAlertNotifications
-        apiUrl={api_url}
-        latestListenTs={latest_listen_ts}
-        latestSpotifyUri={latest_spotify_uri}
-        listens={listens}
-        mode={mode}
-        oldestListenTs={oldest_listen_ts}
-        profileUrl={profile_url}
-        saveUrl={save_url}
-        spotify={spotify}
-        user={user}
-        webSocketsServerUrl={web_sockets_server_url}
-        currentUser={current_user}
-      />
+      <GlobalAppContext.Provider value={globalProps}>
+        <RecentListensWithAlertNotifications
+          latestListenTs={latest_listen_ts}
+          latestSpotifyUri={latest_spotify_uri}
+          listens={listens}
+          mode={mode}
+          oldestListenTs={oldest_listen_ts}
+          profileUrl={profile_url}
+          saveUrl={save_url}
+          spotify={spotify}
+          user={user}
+          webSocketsServerUrl={web_sockets_server_url}
+          currentUser={current_user}
+        />
+      </GlobalAppContext.Provider>
     </ErrorBoundary>,
     domContainer
   );

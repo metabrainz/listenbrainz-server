@@ -9,6 +9,7 @@ from flask_login import current_user, login_required
 from listenbrainz import webserver
 from listenbrainz.db.playlist import get_playlists_for_user, get_playlists_created_for_user, get_playlists_collaborated_on
 from listenbrainz.domain import spotify
+from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver import timescale_connection
@@ -49,8 +50,8 @@ redirect_bp.add_url_rule("/recommendations",
                          "redirect_recommendations",
                          redirect_user_page("user.recommendation_playlists"))
 
-
 @user_bp.route("/<user_name>")
+@web_listenstore_needed
 def profile(user_name):
     # Which database to use to showing user listens.
     db_conn = webserver.timescale_connection._ts
@@ -211,27 +212,28 @@ def reports(user_name: str):
     )
 
 @user_bp.route("/<user_name>/playlists")
+@web_listenstore_needed
 def playlists(user_name: str):
     """ Show user playlists """
-    
+
     offset = request.args.get('offset', 0)
     try:
         offset = int(offset)
     except ValueError:
         raise BadRequest("Incorrect int argument offset: %s" % request.args.get("offset"))
-    
+
     count = request.args.get("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     try:
         count = int(count)
     except ValueError:
         raise BadRequest("Incorrect int argument count: %s" % request.args.get("count"))
-    
+
     user = _get_user(user_name)
     user_data = {
         "name": user.musicbrainz_id,
         "id": user.id,
     }
-    
+
     current_user_data = {}
     if current_user.is_authenticated:
         current_user_data = {
@@ -239,7 +241,7 @@ def playlists(user_name: str):
             "name": current_user.musicbrainz_id,
             "auth_token": current_user.auth_token,
         }
-    
+
     include_private = current_user.is_authenticated and current_user.id == user.id
 
     playlists = []
@@ -272,28 +274,29 @@ def playlists(user_name: str):
 
 
 @user_bp.route("/<user_name>/recommendations")
+@web_listenstore_needed
 def recommendation_playlists(user_name: str):
     """ Show playlists created for user """
-    
+
     offset = request.args.get('offset', 0)
     try:
         offset = int(offset)
     except ValueError:
         raise BadRequest("Incorrect int argument offset: %s" % request.args.get("offset"))
-    
+
     count = request.args.get("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     try:
         count = int(count)
     except ValueError:
         raise BadRequest("Incorrect int argument count: %s" % request.args.get("count"))
-    
-    
+
+
     user = _get_user(user_name)
     user_data = {
         "name": user.musicbrainz_id,
         "id": user.id,
     }
-    
+
     spotify_data = {}
     current_user_data = {}
     if current_user.is_authenticated:
@@ -303,7 +306,7 @@ def recommendation_playlists(user_name: str):
             "name": current_user.musicbrainz_id,
             "auth_token": current_user.auth_token,
         }
-    
+
     playlists = []
     user_playlists, playlist_count = get_playlists_created_for_user(user.id, False, count, offset)
     for playlist in user_playlists:
@@ -328,27 +331,28 @@ def recommendation_playlists(user_name: str):
     )
 
 @user_bp.route("/<user_name>/collaborations")
+@web_listenstore_needed
 def collaborations(user_name: str):
     """ Show playlists a user collaborates on """
-    
+
     offset = request.args.get('offset', 0)
     try:
         offset = int(offset)
     except ValueError:
         raise BadRequest("Incorrect int argument offset: %s" % request.args.get("offset"))
-    
+
     count = request.args.get("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     try:
         count = int(count)
     except ValueError:
         raise BadRequest("Incorrect int argument count: %s" % request.args.get("count"))
-    
+
     user = _get_user(user_name)
     user_data = {
         "name": user.musicbrainz_id,
         "id": user.id,
     }
-    
+
     current_user_data = {}
     if current_user.is_authenticated:
         current_user_data = {

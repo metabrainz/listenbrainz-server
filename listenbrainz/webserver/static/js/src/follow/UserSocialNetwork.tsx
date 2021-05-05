@@ -1,11 +1,10 @@
 import * as React from "react";
 
-import APIService from "../APIService";
+import GlobalAppContext from "../GlobalAppContext";
 import FollowerFollowingModal from "./FollowerFollowingModal";
 import SimilarUsersModal from "./SimilarUsersModal";
 
 export type UserSocialNetworkProps = {
-  apiUrl: string;
   user: ListenBrainzUser;
   loggedInUser: ListenBrainzUser | null;
 };
@@ -20,13 +19,11 @@ export default class UserSocialNetwork extends React.Component<
   UserSocialNetworkProps,
   UserSocialNetworkState
 > {
-  APIService: APIService;
+  static contextType = GlobalAppContext;
+  declare context: React.ContextType<typeof GlobalAppContext>;
 
   constructor(props: UserSocialNetworkProps) {
     super(props);
-    this.APIService = new APIService(
-      props.apiUrl || `${window.location.origin}/1`
-    );
     this.state = {
       followerList: [],
       followingList: [],
@@ -42,8 +39,10 @@ export default class UserSocialNetwork extends React.Component<
 
   getSimilarUsers = async () => {
     const { user } = this.props;
+    const { APIService } = this.context;
+    const { getSimilarUsersForUser } = APIService;
     try {
-      const response = await this.APIService.getSimilarUsersForUser(user.name);
+      const response = await getSimilarUsersForUser(user.name);
       const { payload } = response;
       const similarUsersList = payload.map((similarUser) => {
         return {
@@ -62,13 +61,13 @@ export default class UserSocialNetwork extends React.Component<
 
   getFollowers = async () => {
     const { loggedInUser } = this.props;
+    const { APIService } = this.context;
+    const { getFollowersOfUser } = APIService;
     if (!loggedInUser) {
       return;
     }
     try {
-      const response = await this.APIService.getFollowersOfUser(
-        loggedInUser.name
-      );
+      const response = await getFollowersOfUser(loggedInUser.name);
       const { followers } = response;
 
       this.setState({ followerList: followers });
@@ -80,8 +79,10 @@ export default class UserSocialNetwork extends React.Component<
 
   getFollowing = async () => {
     const { user } = this.props;
+    const { APIService } = this.context;
+    const { getFollowingForUser } = APIService;
     try {
-      const response = await this.APIService.getFollowingForUser(user.name);
+      const response = await getFollowingForUser(user.name);
       const { following } = response;
 
       this.setState({ followingList: following });
@@ -121,7 +122,7 @@ export default class UserSocialNetwork extends React.Component<
   };
 
   render() {
-    const { user, loggedInUser, apiUrl } = this.props;
+    const { user, loggedInUser } = this.props;
     const { followerList, followingList, similarUsersList } = this.state;
     return (
       <>
@@ -130,7 +131,6 @@ export default class UserSocialNetwork extends React.Component<
           loggedInUser={loggedInUser}
           followerList={followerList}
           followingList={followingList}
-          apiUrl={apiUrl}
           loggedInUserFollowsUser={this.loggedInUserFollowsUser}
           updateFollowingList={this.updateFollowingList}
         />
@@ -138,7 +138,6 @@ export default class UserSocialNetwork extends React.Component<
           user={user}
           loggedInUser={loggedInUser}
           similarUsersList={similarUsersList}
-          apiUrl={apiUrl}
           loggedInUserFollowsUser={this.loggedInUserFollowsUser}
           updateFollowingList={this.updateFollowingList}
         />

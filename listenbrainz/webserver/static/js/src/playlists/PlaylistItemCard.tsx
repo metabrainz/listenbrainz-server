@@ -15,13 +15,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { getTrackExtension, millisecondsToStr } from "./utils";
 import Card from "../components/Card";
-import APIService from "../APIService";
 import ListenControl from "../listens/ListenControl";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
 export type PlaylistItemCardProps = {
-  apiUrl: string;
   track: JSPFTrack;
   currentFeedback: ListenFeedBack;
   canEdit: Boolean;
@@ -45,7 +43,6 @@ export default class PlaylistItemCard extends React.Component<
   PlaylistItemCardProps,
   PlaylistItemCardState
 > {
-  APIService: APIService;
   playTrack: (track: JSPFTrack) => void;
 
   constructor(props: PlaylistItemCardProps) {
@@ -54,10 +51,6 @@ export default class PlaylistItemCard extends React.Component<
     this.state = {
       isDeleted: false,
     };
-
-    this.APIService = new APIService(
-      props.apiUrl || `${window.location.origin}/1`
-    );
 
     this.playTrack = props.playTrack.bind(this, props.track);
   }
