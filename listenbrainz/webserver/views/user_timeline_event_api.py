@@ -35,7 +35,7 @@ from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.listenstore import TimescaleListenStore
 from listenbrainz.webserver.views.api import _validate_get_endpoint_params
-from listenbrainz.webserver.decorators import crossdomain
+from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, \
     APIForbidden
 from listenbrainz.webserver.views.api_tools import validate_auth_header, _filter_description_html
@@ -157,6 +157,7 @@ def create_user_notification_event(user_name):
 @user_timeline_event_api_bp.route('/user/<user_name>/feed/events', methods=['OPTIONS', 'GET'])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
+@api_listenstore_needed
 def user_feed(user_name: str):
     """ Get feed events for a user's timeline.
 
