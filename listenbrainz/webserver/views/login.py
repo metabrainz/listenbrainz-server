@@ -27,11 +27,11 @@ def musicbrainz_post():
     """Callback endpoint."""
     if provider.validate_post_login():
         user = provider.get_user()
+        no_email_warning = Markup('You have not provided an email address. Please provide an '
+                                  '<a href="https://musicbrainz.org/account/edit">email address</a>')
         if user:
             if not user.email:
-                flash.warning(Markup('You have not provided an email address. Please provide an '
-                                     '<a href="https://musicbrainz.org/account/edit">email address</a> before '
-                                     '1 November 2021, or we will stop recording your submitted listens.'))
+                flash.warning(no_email_warning + ' before 1 November 2021, , or you will be unable to submit listens.')
             db_user.update_last_login(user.musicbrainz_id)
             login_user(user, remember=True,
                        duration=datetime.timedelta(current_app.config['SESSION_REMEMBER_ME_DURATION']))
@@ -39,9 +39,7 @@ def musicbrainz_post():
             if next:
                 return redirect(next)
         else:
-            flash.error(Markup('You have not provided an email address. Please provide an '
-                               '<a href="https://musicbrainz.org/account/edit">email address</a> before '
-                               'creating a ListenBrainz account.'))
+            flash.error(no_email_warning + 'before creating a ListenBrainz account.')
     else:
         flash.error("Login failed.")
     return redirect(url_for('index.index'))
