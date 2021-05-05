@@ -4,6 +4,7 @@ from typing import Tuple
 import ujson
 import psycopg2
 from flask import Blueprint, request, jsonify, current_app
+from brainzutils.musicbrainz_db import engine as mb_engine
 
 from listenbrainz.listenstore import TimescaleListenStore
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable
@@ -52,11 +53,9 @@ def submit_listen():
     :resheader Content-Type: *application/json*
     """
     user = validate_auth_header()
-    if not current_app.config["DEBUG"] and \
-            current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
+    if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
         log_raise_400('The listens were rejected because the user does not has not provided an email.'
-                      'Please provide an <a href="https://musicbrainz.org/account/edit">email address</a> to submit'
-                      'listens.')
+                      'Please visit https://musicbrainz.org/account/edit to add an email address.')
 
     raw_data = request.get_data()
     try:
