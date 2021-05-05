@@ -1,4 +1,11 @@
-FROM metabrainz/python:3.8-20210115 as metabrainz-spark-base
+ARG PYTHON_BASE_IMAGE_VERSION=3.8-20210115
+FROM metabrainz/python:$PYTHON_BASE_IMAGE_VERSION as metabrainz-spark-base
+
+LABEL org.label-schema.vcs-url="https://github.com/metabrainz/listenbrainz-server.git" \
+      org.label-schema.schema-version="1.0.0-rc1" \
+      org.label-schema.vendor="MetaBrainz Foundation" \
+      org.label-schema.name="ListenBrainz" \
+      org.metabrainz.based-on-image="metabrainz/python:$PYTHON_BASE_IMAGE_VERSION"
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -17,6 +24,10 @@ COPY requirements_spark.txt /requirements_spark.txt
 RUN pip3 install -r /requirements_spark.txt
 
 FROM metabrainz-spark-base as metabrainz-spark-prod
+
+ARG GIT_COMMIT_SHA
+LABEL org.label-schema.vcs-ref=$GIT_COMMIT_SHA
+
 WORKDIR /rec
 COPY . /rec
 
