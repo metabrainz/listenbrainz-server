@@ -8,7 +8,6 @@
         "access_token": "access token",
         "permission": "streaming user-read-email user-read-private"
     },
-    "apiUrl": "http://0.0.0.0",
 	"events": [
 		{
 			"event_type": "recording_recommendation",
