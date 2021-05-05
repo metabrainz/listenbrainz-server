@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-cd "$(dirname "${BASH_SOURCE[0]}")/../../"
+cd "$(dirname "${BASH_SOURCE[0]}")/../"
 
 source spark_config.sh
 
@@ -27,7 +27,7 @@ docker run \
     -v /spark:/spark \
     -v /hadoop:/hadoop \
     -v /usr/lib/jvm/adoptopenjdk-11-hotspot-amd64:/usr/lib/jvm/adoptopenjdk-11-hotspot-amd64 \
-    -v `pwd`:/rec \
+    -v "$(pwd)":/rec \
     --network host \
     --name $CONTAINER_NAME \
     metabrainz/listenbrainz-spark-new-cluster:latest \

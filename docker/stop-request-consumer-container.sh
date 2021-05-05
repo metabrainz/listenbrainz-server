@@ -1,4 +1,7 @@
 #!/bin/bash
+set -e
+
+cd "$(dirname "${BASH_SOURCE[0]}")/../"
 
 docker stop spark-request-consumer
 docker rm spark-request-consumer
