@@ -229,11 +229,10 @@ def init_ts_db(force, create_db):
             TIMESCALE_SQL_DIR, 'create_functions.sql'))
 
         print('TS: Creating views...')
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))
+        ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))
 
         print('TS: Creating indexes...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))
-        ts.create_view_indexes()
 
         print('TS: Creating Primary and Foreign Keys...')
         ts.run_sql_script(os.path.join(
