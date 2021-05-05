@@ -2,7 +2,6 @@
 
 exports[`RecommendationCard renders correctly if CurrentUser.authtoken is not set 1`] = `
 <RecommendationCard
-  apiUrl="foobar"
   currentFeedback="love"
   currentUser={
     Object {
@@ -82,7 +81,6 @@ exports[`RecommendationCard renders correctly if CurrentUser.authtoken is not se
 
 exports[`RecommendationCard renders correctly if isCurrentUser is False 1`] = `
 <RecommendationCard
-  apiUrl="foobar"
   currentFeedback="love"
   currentUser={
     Object {
@@ -162,7 +160,6 @@ exports[`RecommendationCard renders correctly if isCurrentUser is False 1`] = `
 
 exports[`RecommendationCard renders correctly if isCurrentUser is true and CurrentUser.authtoken is set 1`] = `
 <RecommendationCard
-  apiUrl="foobar"
   currentFeedback="love"
   currentUser={
     Object {
