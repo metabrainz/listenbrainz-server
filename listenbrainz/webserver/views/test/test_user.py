@@ -1,3 +1,5 @@
+import json
+
 import listenbrainz.db.stats as db_stats
 import ujson
 from unittest import mock
@@ -13,6 +15,8 @@ from listenbrainz.webserver.testing import ServerTestCase
 
 import listenbrainz.db.user as db_user
 import logging
+
+from listenbrainz.webserver.utils import inject_global_props
 
 
 class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
@@ -83,21 +87,22 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertTemplateUsed('user/profile.html')
         props = ujson.loads(self.get_context_variable('props'))
         self.assertEqual(props['artist_count'], '2')
-        self.assertDictEqual(props['spotify'], {})
+        global_props = json.loads(inject_global_props())
+        self.assertDictEqual(global_props['spotify'], {})
 
     @mock.patch('listenbrainz.webserver.views.user.spotify')
     def test_spotify_token_access(self, mock_domain_spotify):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertTemplateUsed('user/profile.html')
-        props = ujson.loads(self.get_context_variable('props'))
+        props = ujson.loads(inject_global_props())
         self.assertDictEqual(props['spotify'], {})
 
         self.temporary_login(self.user.login_id)
         mock_domain_spotify.get_user_dict.return_value = {}
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
-        props = ujson.loads(self.get_context_variable('props'))
+        props = ujson.loads(inject_global_props())
         self.assertDictEqual(props['spotify'], {})
 
         mock_domain_spotify.get_user_dict.return_value = {
@@ -106,7 +111,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         }
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
-        props = ujson.loads(self.get_context_variable('props'))
+        props = ujson.loads(inject_global_props())
         mock_domain_spotify.get_user_dict.assert_called_with(self.user.id)
         self.assertDictEqual(props['spotify'], {
             'access_token': 'token',
@@ -115,7 +120,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
 
         response = self.client.get(url_for('user.profile', user_name=self.weirduser.musicbrainz_id))
         self.assert200(response)
-        props = ujson.loads(self.get_context_variable('props'))
+        props = ujson.loads(inject_global_props())
         mock_domain_spotify.get_user_dict.assert_called_with(self.user.id)
         self.assertDictEqual(props['spotify'], {
             'access_token': 'token',
