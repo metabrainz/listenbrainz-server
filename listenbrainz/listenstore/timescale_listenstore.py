@@ -92,8 +92,8 @@ class TimescaleListenStore(ListenStore):
             Args:
                 user_name: the musicbrainz id of user whose listen count needs to be reset
         """
-        self.log.info("Recalculate listen counts for %s" % user_name)  # intended for production monitoring
         query = "SELECT SUM(count) FROM listen_count_30day WHERE user_name = :user_name"
+        t0 = time.time()
         try:
             with timescale.engine.connect() as connection:
                 result = connection.execute(sqlalchemy.text(query), {
@@ -106,6 +106,8 @@ class TimescaleListenStore(ListenStore):
                            str(e), exc_info=True)
             raise
 
+        # intended for production monitoring
+        self.log.info("listen counts %s %.2fs" % (user_name, time.time() - t0))
         # put this value into brainzutils cache without an expiry time
         cache.set(REDIS_USER_LISTEN_COUNT + user_name,
                   count, time=0, encode=False)
@@ -142,8 +144,8 @@ class TimescaleListenStore(ListenStore):
             t0 = time.time()
             min_ts = self._select_single_timestamp(True, user_name)
             max_ts = self._select_single_timestamp(False, user_name)
-            self.log.info("ts fetch: %.2f" % (time.time() - t0))  # intended for production monitoring
-
+            # intended for production monitoring
+            self.log.info("timestamps %s %.2fs" % (user_name, time.time() - t0))
             if min_ts and max_ts:
                 cache.set(REDIS_USER_TIMESTAMPS + user_name,
                           "%d,%d" % (min_ts, max_ts), time=0)
@@ -392,8 +394,8 @@ class TimescaleListenStore(ListenStore):
         if order == ORDER_ASC:
             listens.reverse()
 
-        self.log.info("fetch listens %.2fs in %d passes" %
-                      (fetch_listens_time, passes))
+        self.log.info("fetch listens %s %.2fs (%d passes)" %
+                      (fetch_listens_time, str(user_names), passes))
 
         return (listens, min_user_ts, max_user_ts)
 
