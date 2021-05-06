@@ -97,7 +97,7 @@ export default class RecentListens extends React.Component<
           this.setState({ listenCount });
         });
       }
-      if (currentUser?.name === user?.name) {
+      if (currentUser?.name && currentUser?.name === user?.name) {
         this.loadFeedback();
       }
     }
