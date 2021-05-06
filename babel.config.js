@@ -1,6 +1,13 @@
 module.exports = {
   presets: [
     [
+      "@babel/preset-typescript",
+      {
+        allowDeclareFields: true,
+      },
+    ],
+    "@babel/preset-react",
+    [
       "@babel/preset-env",
       {
         useBuiltIns: "usage",
@@ -11,15 +18,14 @@ module.exports = {
         },
       },
     ],
+  ],
+  plugins: [
     [
-      "@babel/preset-typescript",
+      "@babel/plugin-transform-typescript",
       {
         allowDeclareFields: true,
       },
     ],
-    "@babel/preset-react",
-  ],
-  plugins: [
     "@babel/plugin-proposal-class-properties",
     "@babel/plugin-transform-runtime",
   ],
