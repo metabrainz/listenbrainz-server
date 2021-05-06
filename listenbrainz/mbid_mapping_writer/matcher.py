@@ -14,7 +14,7 @@ MAX_QUEUED_JOBS = MAX_THREADS * 2
 
 def lookup_new_listens(app, listens):
 
-    stats = { "processed": 0, "total": len(listens), "errors": 0 }
+    stats = { "processed": 0, "total": len(listens), "errors": 0, "existing": 0 }
     for typ in MATCH_TYPES:
         stats[typ] = 0
 
@@ -30,6 +30,8 @@ def lookup_new_listens(app, listens):
                 if not result:
                     break
                 del msids[str(result[0])]
+                stats["existing"] += 1
+                stats["processed"] += 1
 
         conn = timescale.engine.raw_connection() 
         with conn.cursor() as curs:

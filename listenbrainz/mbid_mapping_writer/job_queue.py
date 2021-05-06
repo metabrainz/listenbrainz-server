@@ -34,7 +34,7 @@ class MappingJobQueue(threading.Thread):
     def run(self):
         self.app.logger.info("start job queue thread")
 
-        stats = { "processed": 0, "total": 0, "errors": 0 }
+        stats = { "processed": 0, "total": 0, "errors": 0, "existing": 0 }
         for typ in MATCH_TYPES:
             stats[typ] = 0
 
@@ -69,9 +69,12 @@ class MappingJobQueue(threading.Thread):
                                 self.app.logger.info("Unsupported job type in MappingJobQueue (MBID Mapping Writer).")
                         if time() > update_time: 
                             update_time = time() + UPDATE_INTERVAL
-                            self.app.logger.info("%d (%d) listens: exact %d high %d med %d low %d no %d err %d" %
+                            percent = (stats["exact_match"] + stats["high_quality"] + stats["med_quality"] +
+                                      stats["low_quality"] + stats["existing"]) / stats["total"] * 100.00
+                            self.app.logger.info("%d (%d) listens: exact %d high %d med %d low %d no %d prev %d err %d %.1f%%" %
                                     (stats["total"], stats["processed"], stats["exact_match"], stats["high_quality"],
-                                     stats["med_quality"], stats["low_quality"], stats["no_match"], stats["errors"]))
+                                     stats["med_quality"], stats["low_quality"], stats["no_match"], stats["existing"], 
+                                     stats["errors"], percent))
                             
 
         except Exception as err:
