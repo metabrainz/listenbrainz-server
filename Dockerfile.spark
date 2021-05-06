@@ -1,6 +1,7 @@
 ARG PYTHON_BASE_IMAGE_VERSION=3.8-20210115
 FROM metabrainz/python:$PYTHON_BASE_IMAGE_VERSION as metabrainz-spark-base
 
+ARG PYTHON_BASE_IMAGE_VERSION
 LABEL org.label-schema.vcs-url="https://github.com/metabrainz/listenbrainz-server.git" \
       org.label-schema.vcs-ref="" \
       org.label-schema.schema-version="1.0.0-rc1" \
