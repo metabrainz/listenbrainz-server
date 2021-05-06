@@ -90,8 +90,8 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         global_props = json.loads(inject_global_props())
         self.assertDictEqual(global_props['spotify'], {})
 
-    @mock.patch('listenbrainz.webserver.views.user.spotify')
-    def test_spotify_token_access(self, mock_domain_spotify):
+    @mock.patch('listenbrainz.domain.spotify.get_user_dict')
+    def test_spotify_token_access(self, mock_spotify):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertTemplateUsed('user/profile.html')
@@ -99,20 +99,20 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertDictEqual(props['spotify'], {})
 
         self.temporary_login(self.user.login_id)
-        mock_domain_spotify.get_user_dict.return_value = {}
+        mock_spotify.return_value = {}
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         props = ujson.loads(inject_global_props())
         self.assertDictEqual(props['spotify'], {})
 
-        mock_domain_spotify.get_user_dict.return_value = {
+        mock_spotify.return_value = {
             'access_token': 'token',
             'permission': 'permission',
         }
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         props = ujson.loads(inject_global_props())
-        mock_domain_spotify.get_user_dict.assert_called_with(self.user.id)
+        mock_spotify.assert_called_with(self.user.id)
         self.assertDictEqual(props['spotify'], {
             'access_token': 'token',
             'permission': 'permission',
@@ -121,7 +121,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         response = self.client.get(url_for('user.profile', user_name=self.weirduser.musicbrainz_id))
         self.assert200(response)
         props = ujson.loads(inject_global_props())
-        mock_domain_spotify.get_user_dict.assert_called_with(self.user.id)
+        mock_spotify.assert_called_with(self.user.id)
         self.assertDictEqual(props['spotify'], {
             'access_token': 'token',
             'permission': 'permission',

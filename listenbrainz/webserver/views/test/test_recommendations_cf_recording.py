@@ -190,10 +190,9 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assert_context('error_msg', error_msg)
 
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.spotify.get_user_dict')
-    @patch('listenbrainz.webserver.views.recommendations_cf_recording.current_user')
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.db_recommendations_cf_recording.get_user_recommendation')
     @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_playable_recommendations_list')
-    def test_get_template(self, mock_get_recommendations, mock_get_rec, mock_curr_user, mock_spotify_dict):
+    def test_get_template(self, mock_get_recommendations, mock_get_rec, mock_spotify_dict):
         # active_section = 'top_artist'
         user = _get_user('vansika_1')
         created = datetime.utcnow()
@@ -225,10 +224,6 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
 
         spotify_dict = {'user': 10}
         mock_spotify_dict.return_value = spotify_dict
-
-        mock_curr_user.id = 10
-        mock_curr_user.musicbrainz_id = 'vansika'
-        mock_curr_user.auth_token = 'yyyy'
 
         recommendations_cf_recording._get_template(active_section='top_artist', user=user)
         mock_get_rec.assert_called_with(user.id)
