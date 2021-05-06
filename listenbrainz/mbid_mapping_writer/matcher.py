@@ -37,16 +37,14 @@ def lookup_new_listens(app, listens):
         with conn.cursor() as curs:
             try:
                 matches, remaining_listens, stats = lookup_listens(app, list(msids.values()), stats, True)
-                stats["processed"] += len(matches)
                 if remaining_listens:
-                    new_matches, remaining_listens, stats = lookup_listens(app, listens, stats, False)
+                    new_matches, remaining_listens, stats = lookup_listens(app, remaining_listens, stats, False)
                     matches.extend(new_matches)
-                    stats["processed"] += len(new_matches)
                     for listen in remaining_listens:
                         matches.append((listen['recording_msid'], None, None, None, None, None, MATCH_TYPES[0]))
                         stats['no_match'] += 1
-                        stats["processed"] += 1
 
+                stats["processed"] += len(matches)
                 query = """INSERT INTO listen_mbid_mapping (recording_msid, recording_mbid, release_mbid, artist_credit_id,
                                                             artist_credit_name, recording_name, match_type)
                                 VALUES %s
