@@ -1,6 +1,6 @@
 import { enableFetchMocks } from "jest-fetch-mock";
 import * as React from "react";
-import { shallow, mount } from "enzyme";
+import { mount } from "enzyme";
 import * as timeago from "time-ago";
 import * as io from "socket.io-client";
 import { GlobalAppContextT } from "./GlobalAppContext";
@@ -487,7 +487,7 @@ describe("Pagination", () => {
     });
 
     it("disables 'next' pagination if returned less listens than expected", async () => {
-      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
       wrapper.setState({ nextListenTs: 1586440539 });
       const instance = wrapper.instance();
 
@@ -609,12 +609,13 @@ describe("Pagination", () => {
       expect(wrapper.state("nextListenTs")).toEqual(
         listens[listens.length - 1].listened_at
       );
-      expect(wrapper.state("previousListenTs")).toEqual(listens[0].listened_at);
+      // latestListenTs === listens[0].listened_at, so no previous timestamp
+      expect(wrapper.state("previousListenTs")).toBeUndefined();
       expect(pushStateSpy).toHaveBeenCalledWith(null, "", `?min_ts=123456`);
       expect(scrollSpy).toHaveBeenCalled();
     });
     it("disables pagination if returned less listens than expected", async () => {
-      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const wrapper = mount<RecentListens>(<RecentListens {...props} />);
       const instance = wrapper.instance();
       wrapper.setState({ previousListenTs: 123456 });
 
