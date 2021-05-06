@@ -48,4 +48,4 @@ jobs:
         continue-on-error: true
         
       - name: Build production image
-        run: docker build --target listenbrainz-prod --build-arg deploy_env=test --build-arg GIT_COMMIT_SHA=test .
+        run: docker build --target listenbrainz-prod --build-arg GIT_COMMIT_SHA=HEAD .
