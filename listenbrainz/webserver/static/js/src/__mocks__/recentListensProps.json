@@ -1057,7 +1057,7 @@
         }
       ],
     "oldestListenTs": 1586440536,
-    "latestListenTs": 1586513524,
+    "latestListenTs": 1586513529,
     "latestSpotifyUri": "spotify:track:5svEhroDfeTt0ePvASUtZ6",
     "haveListenCount": true,
     "listenCount": "72,662",
@@ -1068,6 +1068,6 @@
         "access_token": "access token",
         "permission": "streaming user-read-email user-read-private"
     },
-    "webSocketsServerUrl": "http://localhost:8082",
+    "webSocketsServerUrl": "",
     "searchLargerTimeRange": 0
 }

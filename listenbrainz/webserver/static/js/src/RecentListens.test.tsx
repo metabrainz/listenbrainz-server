@@ -158,7 +158,7 @@ describe("componentDidMount", () => {
 describe("createWebsocketsConnection", () => {
   it("calls io.connect with correct parameters", () => {
     const wrapper = mount<RecentListens>(
-      <RecentListens {...props} />,
+      <RecentListens {...props} webSocketsServerUrl="http://localhost:8082" />,
       mountOptions
     );
     const instance = wrapper.instance();
@@ -174,7 +174,7 @@ describe("createWebsocketsConnection", () => {
 describe("addWebsocketsHandlers", () => {
   it('calls correct handler for "listen" event', () => {
     const wrapper = mount<RecentListens>(
-      <RecentListens {...props} />,
+      <RecentListens {...props} webSocketsServerUrl="http://localhost:8082" />,
       mountOptions
     );
     const instance = wrapper.instance();
@@ -196,7 +196,7 @@ describe("addWebsocketsHandlers", () => {
 
   it('calls correct event for "playing_now" event', () => {
     const wrapper = mount<RecentListens>(
-      <RecentListens {...props} />,
+      <RecentListens {...props} webSocketsServerUrl="http://localhost:8082" />,
       mountOptions
     );
     const instance = wrapper.instance();
@@ -609,8 +609,8 @@ describe("Pagination", () => {
       expect(wrapper.state("nextListenTs")).toEqual(
         listens[listens.length - 1].listened_at
       );
-      // latestListenTs === listens[0].listened_at, so no previous timestamp
-      expect(wrapper.state("previousListenTs")).toBeUndefined();
+
+      expect(wrapper.state("previousListenTs")).toEqual(listens[0].listened_at);
       expect(pushStateSpy).toHaveBeenCalledWith(null, "", `?min_ts=123456`);
       expect(scrollSpy).toHaveBeenCalled();
     });
