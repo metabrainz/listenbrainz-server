@@ -1,11 +1,10 @@
 ARG PYTHON_BASE_IMAGE_VERSION=3.7-20210115
 FROM metabrainz/python:$PYTHON_BASE_IMAGE_VERSION as listenbrainz-base
 
-ARG deploy_env
-ARG GIT_COMMIT_SHA
+ARG PYTHON_BASE_IMAGE_VERSION
 
 LABEL org.label-schema.vcs-url="https://github.com/metabrainz/listenbrainz-server.git" \
-      org.label-schema.vcs-ref=$GIT_COMMIT_SHA \
+      org.label-schema.vcs-ref= \
       org.label-schema.schema-version="1.0.0-rc1" \
       org.label-schema.vendor="MetaBrainz Foundation" \
       org.label-schema.name="ListenBrainz" \
@@ -31,7 +30,7 @@ RUN apt-get update \
 # PostgreSQL client
 RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
 ENV PG_MAJOR 12
-RUN echo 'deb http://apt.postgresql.org/pub/repos/apt/ jessie-pgdg main' $PG_MAJOR > /etc/apt/sources.list.d/pgdg.list
+RUN echo 'deb http://apt.postgresql.org/pub/repos/apt/ xenial-pgdg main' $PG_MAJOR > /etc/apt/sources.list.d/pgdg.list
 RUN apt-get update \
     && apt-get install -y --no-install-recommends postgresql-client-$PG_MAJOR \
     && rm -rf /var/lib/apt/lists/*
@@ -148,7 +147,7 @@ COPY ./docker/services/cron/dump-crontab /etc/cron.d/dump-crontab
 RUN chmod 0644 /etc/cron.d/dump-crontab
 
 # Compile front-end (static) files
-COPY webpack.config.js .eslintrc.js tsconfig.json ./listenbrainz/webserver/static /static/
+COPY webpack.config.js babel.config.js .eslintrc.js tsconfig.json ./listenbrainz/webserver/static /static/
 RUN npm run build:prod
 
 # Now install our code, which may change frequently
@@ -160,4 +159,5 @@ RUN rm -rf ./listenbrainz/webserver/static/
 RUN rm -f /code/listenbrainz/listenbrainz/config.py /code/listenbrainz/listenbrainz/config.pyc
 
 ARG GIT_COMMIT_SHA
+LABEL org.label-schema.vcs-ref=$GIT_COMMIT_SHA
 ENV GIT_SHA ${GIT_COMMIT_SHA}
