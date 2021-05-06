@@ -49,30 +49,9 @@ module.exports = function (env) {
           test: /\.(js|ts)x?$/,
           // some nivo/D3 dependencies need to be transpiled, we include them with the following regex
           exclude: /node_modules\/(?!(d3-array|d3-scale|internmap)\/).*/,
-          use: {
-            loader: "babel-loader",
-            options: {
-              presets: [
-                [
-                  "@babel/preset-env",
-                  {
-                    useBuiltIns: "usage",
-                    corejs: { version: "3.9", proposals: true },
-                    targets: {
-                      node: "10",
-                      browsers: ["> 0.2% and not dead", "firefox >= 44"],
-                    },
-                  },
-                ],
-                "@babel/preset-typescript",
-                "@babel/preset-react",
-              ],
-              plugins: [
-                "@babel/plugin-proposal-class-properties",
-                "@babel/plugin-transform-runtime",
-              ],
-            },
-          },
+          // Don't specify the babel configuration here
+          // Configuration can be found in ./babel.config.js
+          use: "babel-loader",
         },
       ],
     },
