@@ -1,8 +1,9 @@
 from datetime import datetime
 from time import time
 
-import ujson
+import redis
 from typing import Optional
+import ujson
 
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import ListenStore
@@ -16,7 +17,7 @@ class RedisListenStore(ListenStore):
     RECENT_LISTENS_MAX = 100
     PLAYING_NOW_KEY = "pn."
     LISTEN_COUNT_PER_DAY_EXPIRY_TIME = 3 * 24 * 60 * 60  # 3 days in seconds
-    LISTEN_COUNT_PER_DAY_KEY_FORMAT = "lc-day-"
+    LISTEN_COUNT_PER_DAY_KEY = "lc-day-"
 
 
     def __init__(self, log, conf):
@@ -25,6 +26,7 @@ class RedisListenStore(ListenStore):
         # Initialize brainzutils cache
         init_cache(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'],
                    namespace=conf['REDIS_NAMESPACE'])
+        # This is used in tests. Leave for cleanup in LB-879
         self.redis = cache._r
 
     def get_playing_now(self, user_id):
@@ -97,14 +99,14 @@ class RedisListenStore(ListenStore):
         """ Increment the number of listens submitted on the day `day`
         by `count`.
         """
-        key = cache._prep_key(self.LISTEN_COUNT_PER_DAY_KEY_FORMAT + day.strftime('%Y%m%d'))
+        key = cache._prep_key(self.LISTEN_COUNT_PER_DAY_KEY + day.strftime('%Y%m%d'))
         cache._r.incrby(key, count)
         cache._r.expire(key, self.LISTEN_COUNT_PER_DAY_EXPIRY_TIME)
 
     def get_listen_count_for_day(self, day: datetime) -> Optional[int]:
         """ Get the number of listens submitted for day `day`, return None if not available.
         """
-        key = self.LISTEN_COUNT_PER_DAY_KEY_FORMAT + day.strftime('%Y%m%d')
+        key = self.LISTEN_COUNT_PER_DAY_KEY + day.strftime('%Y%m%d')
         listen_count = cache.get(key, decode=False)
         if listen_count:
             return int(listen_count)

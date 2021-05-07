@@ -83,10 +83,14 @@ def create_view_indexes():
         query = """SELECT materialization_hypertable_schema, materialization_hypertable_name
                      FROM timescaledb_information.continuous_aggregates
                     WHERE view_name = 'listen_count_30day'"""
-        curs = connection.execute(sqlalchemy.text(query))
+        curs = connection.execute(query)
         row = curs.fetchone()
-        view_name = row[1]
+        if row is None:
+            raise RuntimeError(
+                "Cannot find materialized view name for listen_count view.")
+
         view_schema = row[0]
+        view_name = row[1]
         if not view_name:
             raise RuntimeError(
                 "Cannot find materialized view name for listen_count view.")
@@ -94,15 +98,15 @@ def create_view_indexes():
         query = """CREATE INDEX listened_at_bucket_user_name_ndx_listen_count_30day
                              ON %s.%s (listened_at_bucket, user_name)""" % (view_schema, view_name)
         try:
-            connection.execute(sqlalchemy.text(query))
+            connection.execute(query)
         except Exception as err:
             raise RuntimeError(
-                "Cannot create index on materilized view of listen_count_30day")
+                "Cannot create index on materialized view of listen_count_30day")
 
         query = """CREATE INDEX user_name_ndx_listen_count_30day
                              ON %s.%s (user_name)""" % (view_schema, view_name)
         try:
-            connection.execute(sqlalchemy.text(query))
+            connection.execute(query)
         except Exception as err:
             raise RuntimeError(
-                "Cannot create index on materilized view of listen_count_30day")
+                "Cannot create index on materialized view of listen_count_30day")
