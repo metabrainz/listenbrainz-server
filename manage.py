@@ -1,5 +1,6 @@
 import listenbrainz.db.dump_manager as dump_manager
 import listenbrainz.spark.request_manage as spark_request_manage
+from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data
 from listenbrainz import db
 from listenbrainz.db import timescale as ts
 from listenbrainz import webserver
@@ -250,6 +251,9 @@ def calculate_user_similarity():
     with application.app_context():
         user_similarity.calculate_similar_users()
 
+@cli.command(name="recalculate_all_user_data")
+def recalculate_all_user_data():
+    ts_recalculate_all_user_data()
 
 # Add other commands here
 cli.add_command(spark_request_manage.cli, name="spark")
