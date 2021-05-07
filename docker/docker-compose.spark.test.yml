@@ -1,21 +1,6 @@
 version: "3.4"
 
-volumes:
-  namenode:
-
 services:
-  hadoop-master:
-    image: metabrainz/hadoop-yarn:beta
-    command: hdfs namenode
-    ports:
-      - "9000:9000"
-      - "9870:9870"
-    volumes:
-      - namenode:/home/hadoop/hdfs:z
-
-  datanode:
-    image: metabrainz/hadoop-yarn:beta
-    command: hdfs datanode
 
   test:
     build:
@@ -23,6 +8,9 @@ services:
       dockerfile: Dockerfile.spark
       args:
          GIT_COMMIT_SHA: HEAD
-    command: dockerize -wait tcp://hadoop-master:9000 -timeout 60s bash -c "cp listenbrainz_spark/config.py.sample listenbrainz_spark/config.py; PYTHONDONTWRITEBYTECODE=1 python -m pytest -c pytest.spark.ini"
+    command: >-
+      hdfs namenode && hdfs datanode;
+      cp listenbrainz_spark/config.py.sample listenbrainz_spark/config.py;
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest -c pytest.spark.ini
     volumes:
-      - ..:/rec:z
+      - ..:/rec
