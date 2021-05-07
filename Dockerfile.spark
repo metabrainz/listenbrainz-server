@@ -55,7 +55,7 @@ ENV SPARK_HOME /usr/local/spark
 ENV PATH $SPARK_HOME/bin:$PATH
 ENV PYTHONPATH $SPARK_HOME/python/lib/py4j-0.10.9-src.zip:$SPARK_HOME/python:$PYTHONPATH
 
-COPY docker/spark-cluster-config/test/core-site.xml $HADOOP_HOME/etc/hadoop/conf/core-site.xml
+COPY docker/spark-cluster-config/test/core-site.xml $HADOOP_HOME/etc/hadoop/core-site.xml
 COPY docker/spark-cluster-config/test/spark-env.sh $SPARK_HOME/conf/spark-env.sh
 
 COPY requirements_development.txt /requirements_development.txt
