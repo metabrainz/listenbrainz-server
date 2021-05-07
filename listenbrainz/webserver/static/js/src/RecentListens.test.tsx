@@ -2,6 +2,7 @@ import * as React from "react";
 import { mount } from "enzyme";
 import * as timeago from "time-ago";
 import * as io from "socket.io-client";
+import fetchMock from "jest-fetch-mock";
 import { GlobalAppContextT } from "./GlobalAppContext";
 import APIService from "./APIService";
 
@@ -55,8 +56,6 @@ const props = {
   newAlert: () => {},
 };
 
-// fetchMock will be exported in globals
-// eslint-disable-next-line no-undef
 fetchMock.mockIf(
   (input) => input.url.endsWith("/listen-count"),
   () => {

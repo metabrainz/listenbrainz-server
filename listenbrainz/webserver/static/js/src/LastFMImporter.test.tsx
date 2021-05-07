@@ -1,5 +1,6 @@
 import * as React from "react";
 import { mount, shallow } from "enzyme";
+import fetchMock from "jest-fetch-mock";
 import LastFmImporter, { LASTFM_RETRIES } from "./LastFMImporter";
 // Mock data to test functions
 import * as page from "./__mocks__/page.json";

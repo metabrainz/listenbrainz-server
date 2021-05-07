@@ -1,5 +1,6 @@
 import * as React from "react";
-import { shallow, mount } from "enzyme";
+import { mount } from "enzyme";
+import fetchMock from "jest-fetch-mock";
 
 import * as recentListensProps from "./__mocks__/recentListensProps.json";
 import * as recentListensPropsTooManyListens from "./__mocks__/recentListensPropsTooManyListens.json";
@@ -44,8 +45,6 @@ const props = {
   webSocketsServerUrl,
 };
 
-// fetchMock will be exported in globals
-// eslint-disable-next-line no-undef
 fetchMock.mockIf(
   (input) => input.url.endsWith("/listen-count"),
   () => {
