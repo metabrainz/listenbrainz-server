@@ -153,7 +153,13 @@ function spark_setup {
     echo "Running spark test setup"
     docker-compose -f $SPARK_COMPOSE_FILE_LOC \
                    -p $SPARK_COMPOSE_PROJECT_NAME \
-                run --rm hadoop hdfs namenode -format -nonInteractive -force
+                run --rm hadoop
+}
+
+function build_spark_containers {
+    docker-compose -f $SPARK_COMPOSE_FILE_LOC \
+                   -p $SPARK_COMPOSE_PROJECT_NAME \
+                build spark
 }
 
 function spark_dcdown {
