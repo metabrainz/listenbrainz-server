@@ -4,7 +4,7 @@ FROM metabrainz/python:$PYTHON_BASE_IMAGE_VERSION as listenbrainz-base
 ARG PYTHON_BASE_IMAGE_VERSION
 
 LABEL org.label-schema.vcs-url="https://github.com/metabrainz/listenbrainz-server.git" \
-      org.label-schema.vcs-ref= \
+      org.label-schema.vcs-ref="" \
       org.label-schema.schema-version="1.0.0-rc1" \
       org.label-schema.vendor="MetaBrainz Foundation" \
       org.label-schema.name="ListenBrainz" \
@@ -35,10 +35,6 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends postgresql-client-$PG_MAJOR \
     && rm -rf /var/lib/apt/lists/*
 
-RUN mkdir /code
-WORKDIR /code
-
-RUN mkdir /code/listenbrainz
 WORKDIR /code/listenbrainz
 RUN pip3 install pip==21.0.1
 COPY requirements.txt /code/listenbrainz/
@@ -80,11 +76,10 @@ RUN mkdir /home/lbdumps/backup /home/lbdumps/ftp
 RUN chown -R lbdumps:lbdumps /home/lbdumps/backup /home/lbdumps/ftp
 
 # Install NodeJS and front-end dependencies
-RUN mkdir /static
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
     apt-get install -y nodejs && rm -rf /var/lib/apt/lists/*
-COPY package.json package-lock.json /static/
 WORKDIR /static
+COPY package.json package-lock.json /static/
 RUN npm install
 
 # runit service files

@@ -1,24 +1,20 @@
 ARG NODE_VERSION=10.15-alpine
-FROM node:$NODE_VERSION AS webpack-base
+FROM node:$NODE_VERSION
 
-ARG GIT_COMMIT_SHA
+ARG NODE_VERSION
 
 LABEL org.label-schema.vcs-url="https://github.com/metabrainz/listenbrainz-server.git" \
-      org.label-schema.vcs-ref=$GIT_COMMIT_SHA \
+      org.label-schema.vcs-ref="" \
       org.label-schema.schema-version="1.0.0-rc1" \
       org.label-schema.vendor="MetaBrainz Foundation" \
       org.label-schema.name="ListenBrainz" \
       org.metabrainz.based-on-image="node:$NODE_VERSION"
 
-RUN mkdir /code
 WORKDIR /code
 
 COPY package.json package-lock.json /code/
 RUN npm install
 COPY webpack.config.js babel.config.js enzyme.config.ts jest.config.js tsconfig.json .eslintrc.js /code/
 
-# When running in metabrainz CI, we can't mount source into a container at runtime,
-# so we have a target here to add source to the image at build-time
-FROM webpack-base AS webpack-with-source
-
-COPY ./listenbrainz/webserver/static /code/static/
+ARG GIT_COMMIT_SHA
+LABEL org.label-schema.vcs-ref=$GIT_COMMIT_SHA
