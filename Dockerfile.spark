@@ -47,7 +47,7 @@ ENV HADOOP_HOME /usr/local/hadoop
 ENV PATH $HADOOP_HOME/bin:$PATH
 
 ENV SPARK_VERSION 3.1.1
-RUN /apache-download.sh spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-without-hadoop.tgz \
+RUN /apache-download.sh spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-without-hadoop.tgz \
     && tar -xzf spark-${SPARK_VERSION}-without-hadoop.tgz \
     && mv spark-${SPARK_VERSION}-without-hadoop /usr/local/spark \
     && rm spark-${SPARK_VERSION}-without-hadoop.tgz
