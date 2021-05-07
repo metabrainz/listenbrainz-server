@@ -1,10 +1,9 @@
-import { enableFetchMocks } from "jest-fetch-mock";
 import * as React from "react";
 import { mount } from "enzyme";
 import * as timeago from "time-ago";
 import * as io from "socket.io-client";
 import { sortBy } from "lodash";
-import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
+import { GlobalAppContextT } from "./GlobalAppContext";
 import APIService from "./APIService";
 
 import * as recentListensProps from "./__mocks__/recentListensProps.json";
@@ -14,8 +13,6 @@ import * as recentListensPropsPlayingNow from "./__mocks__/recentListensPropsPla
 import * as getFeedbackByMsidResponse from "./__mocks__/getFeedbackByMsidResponse.json";
 
 import RecentListens, { RecentListensProps } from "./RecentListens";
-
-enableFetchMocks();
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this

@@ -1,4 +1,3 @@
-import { enableFetchMocks } from "jest-fetch-mock";
 import * as React from "react";
 import { shallow, mount } from "enzyme";
 
@@ -9,8 +8,6 @@ import * as recentListensPropsPlayingNow from "./__mocks__/recentListensPropsPla
 import * as getFeedbackByMsidResponse from "./__mocks__/getFeedbackByMsidResponse.json";
 
 import RecentListens, { RecentListensProps } from "./RecentListens";
-
-enableFetchMocks();
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
