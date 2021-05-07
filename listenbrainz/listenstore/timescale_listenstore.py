@@ -160,25 +160,21 @@ class TimescaleListenStore(ListenStore):
                 user_name: the user for whom to fetch the timestamp.
         """
 
-        sort_clause = "DESC"
         function = "max"
         if select_min_timestamp:
-            sort_clause = ""
             function = "min"
 
         query = """SELECT %s(listened_at) AS ts
                      FROM listen
-                     WHERE user_name = :user_name
-                  GROUP BY listened_at
-                  ORDER BY listened_at %s
-                     LIMIT 1""" % (function, sort_clause)
+                     WHERE user_name = :user_name""" % function
         try:
             with timescale.engine.connect() as connection:
                 result = connection.execute(sqlalchemy.text(query), {
                     "user_name": user_name
                 })
                 row = result.fetchone()
-                if not row:
+                if row is None or row['ts'] is None:
+                    self.log.warning("select single timestamp no rows!")
                     return 0
 
                 return row['ts']
