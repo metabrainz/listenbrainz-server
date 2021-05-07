@@ -159,6 +159,12 @@ function spark_setup {
                 up -d hadoop-master datanode
 }
 
+function build_spark_containers {
+    docker-compose -f $SPARK_COMPOSE_FILE_LOC \
+                   -p $SPARK_COMPOSE_PROJECT_NAME \
+                build test
+}
+
 function spark_dcdown {
     # Shutting down all spark test containers associated with this project
     docker-compose -f $SPARK_COMPOSE_FILE_LOC \
@@ -207,11 +213,17 @@ if [ "$1" == "spark" ]; then
     SPARK_TEST_CONTAINER_NAME=test
     TEST_CONTAINER_REF="${SPARK_COMPOSE_PROJECT_NAME}_${SPARK_TEST_CONTAINER_NAME}_1"
 
+    if [ "$2" == "-b" ]; then
+        echo "Building containers"
+        build_spark_containers
+        exit 0
+    fi
+
     spark_setup
     echo "Running tests"
     docker-compose -f $SPARK_COMPOSE_FILE_LOC \
                    -p $SPARK_COMPOSE_PROJECT_NAME \
-                up test
+                run --rm test
     RET=$?
     spark_dcdown
     exit $RET
