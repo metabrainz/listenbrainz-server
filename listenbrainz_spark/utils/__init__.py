@@ -19,7 +19,6 @@ from listenbrainz_spark.exceptions import (DataFrameNotAppendedException,
                                            PathNotFoundException,
                                            ViewNotRegisteredException)
 
-
 logger = logging.getLogger(__name__)
 
 # A typical listen is of the form:

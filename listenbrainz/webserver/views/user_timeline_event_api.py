@@ -178,7 +178,7 @@ def user_feed(user_name: str):
         raise APIUnauthorized("You don't have permissions to view this user's timeline.")
 
     db_conn = webserver.create_timescale(current_app)
-    min_ts, max_ts, count, time_range = _validate_get_endpoint_params(db_conn, user_name)
+    min_ts, max_ts, count = _validate_get_endpoint_params(db_conn, user_name)
     if min_ts is None and max_ts is None:
         max_ts = int(time.time())
 
@@ -189,7 +189,7 @@ def user_feed(user_name: str):
     if len(users_following) == 0:
         listen_events = []
     else:
-        listen_events = get_listen_events(db_conn, musicbrainz_ids, min_ts, max_ts, count, time_range)
+        listen_events = get_listen_events(db_conn, musicbrainz_ids, min_ts, max_ts, count)
 
     # for events like "follow" and "recording recommendations", we want to show the user
     # their own events as well
@@ -233,7 +233,6 @@ def get_listen_events(
     min_ts: int,
     max_ts: int,
     count: int,
-    time_range: int,
 ) -> List[APITimelineEvent]:
     """ Gets all listen events in the feed.
     """
@@ -243,12 +242,11 @@ def get_listen_events(
     # could be done better by writing a complex query to get exactly 2 listens for each user,
     # but I'm happy with this heuristic for now and we can change later.
     db_conn = webserver.create_timescale(current_app)
-    listens = db_conn.fetch_listens_for_multiple_users_from_storage(
+    listens, _, _ = db_conn.fetch_listens_for_multiple_users_from_storage(
         musicbrainz_ids,
         limit=count,
         from_ts=min_ts,
         to_ts=max_ts,
-        time_range=time_range,
         order=0,  # descending
     )
 
