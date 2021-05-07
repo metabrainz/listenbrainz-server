@@ -35,12 +35,19 @@ describe("getNumberOfPages", () => {
     instance = wrapper.instance();
     instance.setState({ lastfmUsername: "dummyUser" });
     // Mock function for fetch
-    window.fetch = jest.fn().mockImplementation(() => {
-      return Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(page),
-      });
-    });
+    fetchMock.mockResponse(JSON.stringify(page));
+    // fetchMock.mockResponse(() =>
+    //   Promise.resolve({
+    //     ok: true,
+    //     json: () => Promise.resolve(page),
+    //   })
+    // );
+    // window.fetch = jest.fn().mockImplementation(() => {
+    //   return Promise.resolve({
+    //     ok: true,
+    //     json: () => Promise.resolve(page),
+    //   });
+    // });
   });
 
   it("should call with the correct url", () => {
@@ -296,19 +303,17 @@ describe("submitPage", () => {
     instance = wrapper.instance();
     instance.setState({ lastfmUsername: "dummyUser" });
     instance.getRateLimitDelay = jest.fn().mockImplementation(() => 0);
+    instance.APIService.submitListens = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        status: 200,
+        ok: true,
+        json: () => Promise.resolve({ status: 200 }),
+      });
+    });
     instance.updateRateLimitParameters = jest.fn();
   });
 
   it("calls submitListens once", async () => {
-    // window.fetch = jest.fn().mockImplementation(() => {
-    //   return Promise.resolve({
-    //     ok: true,
-    //     json: () => Promise.resolve({ status: 200 }),
-    //   });
-    // });
-    instance.APIService.submitListens = jest.fn().mockImplementation(() => {
-      return Promise.resolve({ status: 200 });
-    });
     instance.submitPage([
       {
         listened_at: 1000,
