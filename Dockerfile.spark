@@ -25,11 +25,6 @@ RUN pip3 install pip==21.0.1
 COPY requirements_spark.txt /requirements_spark.txt
 RUN pip3 install -r /requirements_spark.txt
 
-ENV DOCKERIZE_VERSION v0.6.1
-RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
-    && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
-    && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
-
 WORKDIR /usr/local
 
 ENV JAVA_VERSION 11.0.11
