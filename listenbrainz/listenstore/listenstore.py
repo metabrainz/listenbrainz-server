@@ -26,13 +26,11 @@ class ListenStore(object):
         """ Return the total number of listens stored in the ListenStore """
         raise NotImplementedError()
 
-    def get_listen_count_for_user(self, user_name, need_exact):
+    def get_listen_count_for_user(self, user_name):
         """ Override this method in ListenStore implementation class
 
         Args:
             user_name: the user to get listens for
-            need_exact: if True, get an exact number of listens directly from the ListenStore
-                        otherwise, can get from a cache also
         """
         raise NotImplementedError()
 
@@ -58,23 +56,15 @@ class ListenStore(object):
         """
         raise NotImplementedError()
 
-    def fetch_listens(self, user_name, from_ts=None, to_ts=None, limit=DEFAULT_LISTENS_PER_FETCH, time_range=None):
+    def fetch_listens(self, user_name, from_ts=None, to_ts=None, limit=DEFAULT_LISTENS_PER_FETCH):
         """ Check from_ts, to_ts, and limit for fetching listens
             and set them to default values if not given.
         """
         if from_ts and to_ts and from_ts >= to_ts:
             raise ValueError("from_ts should be less than to_ts")
-        if from_ts is None and to_ts is None:
-            raise ValueError("You must specify either from_ts or to_ts.")
         if from_ts:
             order = ORDER_ASC
         else:
             order = ORDER_DESC
 
-        if time_range:
-            try:
-                time_range = int(time_range)
-            except ValueError:
-                raise ValueError("time_range must be an int value")
-
-        return self.fetch_listens_from_storage(user_name, from_ts, to_ts, limit, order, time_range)
+        return self.fetch_listens_from_storage(user_name, from_ts, to_ts, limit, order)
