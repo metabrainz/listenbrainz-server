@@ -1,11 +1,10 @@
 ARG PYTHON_BASE_IMAGE_VERSION=3.7-20210115
 FROM metabrainz/python:$PYTHON_BASE_IMAGE_VERSION as listenbrainz-base
 
-ARG deploy_env
-ARG GIT_COMMIT_SHA
+ARG PYTHON_BASE_IMAGE_VERSION
 
 LABEL org.label-schema.vcs-url="https://github.com/metabrainz/listenbrainz-server.git" \
-      org.label-schema.vcs-ref=$GIT_COMMIT_SHA \
+      org.label-schema.vcs-ref= \
       org.label-schema.schema-version="1.0.0-rc1" \
       org.label-schema.vendor="MetaBrainz Foundation" \
       org.label-schema.name="ListenBrainz" \
@@ -160,4 +159,5 @@ RUN rm -rf ./listenbrainz/webserver/static/
 RUN rm -f /code/listenbrainz/listenbrainz/config.py /code/listenbrainz/listenbrainz/config.pyc
 
 ARG GIT_COMMIT_SHA
+LABEL org.label-schema.vcs-ref=$GIT_COMMIT_SHA
 ENV GIT_SHA ${GIT_COMMIT_SHA}
