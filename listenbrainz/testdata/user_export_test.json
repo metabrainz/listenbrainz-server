@@ -7,7 +7,7 @@
                 "artist_name": "Kanye West",
                 "release_name": "The Life of Pablo"
             },
-            "listened_at": 2
+            "listened_at": 1618500200
         },
         {
             "track_metadata": {
@@ -15,7 +15,7 @@
                 "artist_name": "The Black Keys",
                 "release_name": "El Camino"
             },
-            "listened_at": 1
+            "listened_at": 1618500100
         },
         {
             "track_metadata": {
@@ -23,7 +23,7 @@
                 "artist_name": "The Black Keys",
                 "release_name": "El Camino"
             },
-            "listened_at": 0
+            "listened_at": 1618500000
         }
     ]
 }

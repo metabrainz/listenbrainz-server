@@ -77,28 +77,20 @@ def profile(user_name):
         except ValueError:
             raise BadRequest("Incorrect timestamp argument min_ts: %s" % request.args.get("min_ts"))
 
-    # Send min and max listen times to allow React component to hide prev/next buttons accordingly
-    (min_ts_per_user, max_ts_per_user) = db_conn.get_timestamps_for_user(user_name)
-
-    if max_ts is None and min_ts is None:
-        if max_ts_per_user:
-            max_ts = max_ts_per_user + 1
-        else:
-            max_ts = int(time.time())
+    args = {}
+    if max_ts:
+        args['to_ts'] = max_ts
+    else:
+        args['from_ts'] = min_ts
+    data, min_ts_per_user, max_ts_per_user = db_conn.fetch_listens(user_name, limit=LISTENS_PER_PAGE, **args)
 
     listens = []
-    if min_ts_per_user != max_ts_per_user:
-        args = {}
-        if max_ts:
-            args['to_ts'] = max_ts
-        else:
-            args['from_ts'] = min_ts
-        for listen in db_conn.fetch_listens(user_name, limit=LISTENS_PER_PAGE, **args):
-            listens.append({
-                "track_metadata": listen.data,
-                "listened_at": listen.ts_since_epoch,
-                "listened_at_iso": listen.timestamp.isoformat() + "Z",
-            })
+    for listen in data:
+        listens.append({
+            "track_metadata": listen.data,
+            "listened_at": listen.ts_since_epoch,
+            "listened_at_iso": listen.timestamp.isoformat() + "Z",
+        })
 
     # If there are no previous listens then display now_playing
     if not listens or listens[0]['listened_at'] >= max_ts_per_user:

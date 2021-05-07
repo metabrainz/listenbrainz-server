@@ -5,6 +5,8 @@ from sqlalchemy.pool import NullPool
 import time
 import psycopg2
 
+from listenbrainz import config
+
 # This value must be incremented after schema changes on replicated tables!
 SCHEMA_VERSION = 5
 
@@ -68,3 +70,43 @@ def run_sql_script_without_transaction(sql_file_path):
                 connection.connection.set_isolation_level(1)
                 connection.close()
         return True
+
+
+def create_view_indexes():
+    """ This function is needed since we need to create an index on a materialized view, whose
+        name we need to query - its not a constant, thus it cannot be done in pure SQL.
+    """
+
+    admin_engine = create_engine(
+        config.TIMESCALE_ADMIN_LB_URI, poolclass=NullPool)
+    with admin_engine.connect() as connection:
+        query = """SELECT materialization_hypertable_schema, materialization_hypertable_name
+                     FROM timescaledb_information.continuous_aggregates
+                    WHERE view_name = 'listen_count_30day'"""
+        curs = connection.execute(query)
+        row = curs.fetchone()
+        if row is None:
+            raise RuntimeError(
+                "Cannot find materialized view name for listen_count view.")
+
+        view_schema = row[0]
+        view_name = row[1]
+        if not view_name:
+            raise RuntimeError(
+                "Cannot find materialized view name for listen_count view.")
+
+        query = """CREATE INDEX listened_at_bucket_user_name_ndx_listen_count_30day
+                             ON %s.%s (listened_at_bucket, user_name)""" % (view_schema, view_name)
+        try:
+            connection.execute(query)
+        except Exception as err:
+            raise RuntimeError(
+                "Cannot create index on materialized view of listen_count_30day")
+
+        query = """CREATE INDEX user_name_ndx_listen_count_30day
+                             ON %s.%s (user_name)""" % (view_schema, view_name)
+        try:
+            connection.execute(query)
+        except Exception as err:
+            raise RuntimeError(
+                "Cannot create index on materialized view of listen_count_30day")
