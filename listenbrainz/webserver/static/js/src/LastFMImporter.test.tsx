@@ -36,18 +36,6 @@ describe("getNumberOfPages", () => {
     instance.setState({ lastfmUsername: "dummyUser" });
     // Mock function for fetch
     fetchMock.mockResponse(JSON.stringify(page));
-    // fetchMock.mockResponse(() =>
-    //   Promise.resolve({
-    //     ok: true,
-    //     json: () => Promise.resolve(page),
-    //   })
-    // );
-    // window.fetch = jest.fn().mockImplementation(() => {
-    //   return Promise.resolve({
-    //     ok: true,
-    //     json: () => Promise.resolve(page),
-    //   });
-    // });
   });
 
   it("should call with the correct url", () => {
