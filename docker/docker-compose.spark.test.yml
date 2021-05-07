@@ -2,12 +2,20 @@ version: "3.4"
 
 services:
 
-  test:
+  hadoop:
+    build:
+      context: ..
+      dockerfile: Dockerfile.spark
+      args:
+        GIT_COMMIT_SHA: HEAD
+    command: bash -c "hdfs namenode -format && hdfs namenode & hdfs datanode &"
+
+  spark:
     build:
       context: ..
       dockerfile: Dockerfile.spark
       args:
          GIT_COMMIT_SHA: HEAD
-    command: bash -c "hdfs namenode; hdfs datanode; cp listenbrainz_spark/config.py.sample listenbrainz_spark/config.py; PYTHONDONTWRITEBYTECODE=1 python -m pytest -c pytest.spark.ini"
+    command: bash -c "cp listenbrainz_spark/config.py.sample listenbrainz_spark/config.py; PYTHONDONTWRITEBYTECODE=1 python -m pytest -c pytest.spark.ini"
     volumes:
       - ..:/rec

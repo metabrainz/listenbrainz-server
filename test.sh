@@ -149,10 +149,11 @@ function run_type_check {
                 run --rm frontend_tester npm run type-check
 }
 
-function build_spark_containers {
+function spark_setup {
+    echo "Running spark test setup"
     docker-compose -f $SPARK_COMPOSE_FILE_LOC \
                    -p $SPARK_COMPOSE_PROJECT_NAME \
-                build test
+                run --rm hadoop hdfs namenode -format -nonInteractive -force
 }
 
 function spark_dcdown {
@@ -209,10 +210,11 @@ if [ "$1" == "spark" ]; then
         exit 0
     fi
 
+    spark_setup
     echo "Running tests"
     docker-compose -f $SPARK_COMPOSE_FILE_LOC \
                    -p $SPARK_COMPOSE_PROJECT_NAME \
-                run --rm test
+                run --rm spark
     RET=$?
     spark_dcdown
     exit $RET
