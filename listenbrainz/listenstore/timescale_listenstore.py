@@ -93,7 +93,7 @@ class TimescaleListenStore(ListenStore):
                 user_name: the musicbrainz id of user whose listen count needs to be reset
         """
         query = "SELECT SUM(count) FROM listen_count_30day WHERE user_name = :user_name"
-        t0 = time.time()
+        t0 = time.monotonic()
         try:
             with timescale.engine.connect() as connection:
                 result = connection.execute(sqlalchemy.text(query), {
@@ -107,7 +107,7 @@ class TimescaleListenStore(ListenStore):
             raise
 
         # intended for production monitoring
-        self.log.info("listen counts %s %.2fs" % (user_name, time.time() - t0))
+        self.log.info("listen counts %s %.2fs" % (user_name, time.monotonic() - t0))
         # put this value into brainzutils cache without an expiry time
         cache.set(REDIS_USER_LISTEN_COUNT + user_name,
                   count, time=0, encode=False)
@@ -141,11 +141,11 @@ class TimescaleListenStore(ListenStore):
             min_ts = int(min_ts)
             max_ts = int(max_ts)
         else:
-            t0 = time.time()
+            t0 = time.monotonic()
             min_ts = self._select_single_timestamp(True, user_name)
             max_ts = self._select_single_timestamp(False, user_name)
             # intended for production monitoring
-            self.log.info("timestamps %s %.2fs" % (user_name, time.time() - t0))
+            self.log.info("timestamps %s %.2fs" % (user_name, time.monotonic() - t0))
             if min_ts and max_ts:
                 cache.set(REDIS_USER_TIMESTAMPS + user_name,
                           "%d,%d" % (min_ts, max_ts), time=0)
@@ -300,25 +300,20 @@ class TimescaleListenStore(ListenStore):
             order: 0 for DESCending order, 1 for ASCending order
         """
 
-        min_user_ts = max_user_ts = -1
+        min_user_ts = max_user_ts = None
         for user_name in user_names:
             min_ts, max_ts = self.get_timestamps_for_user(user_name)
-            if min_user_ts < 0:
-                min_user_ts = min_ts
-                max_user_ts = max_ts
-            if min_ts and min_ts < min_user_ts:
-                min_user_ts = min_ts
-            if max_ts and max_ts > max_user_ts:
-                max_user_ts = min_ts
+            min_user_ts = min(min_ts, min_user_ts or min_ts)
+            max_user_ts = max(max_ts, max_user_ts or max_ts)
 
-        if to_ts == None and from_ts == None:
+        if to_ts is None and from_ts is None:
             to_ts = max_user_ts + 1
 
         if min_user_ts == 0 and max_user_ts == 0:
             return ([], min_user_ts, max_user_ts)
 
         window_size = DEFAULT_FETCH_WINDOW
-        query = """SELECT listened_at, track_name, created, data, user_name
+        query = """SELECT listened_at, track_name, user_name, created, data
                      FROM listen
                     WHERE user_name IN :user_names
                       AND listened_at > :from_ts
@@ -340,7 +335,7 @@ class TimescaleListenStore(ListenStore):
         listens = []
         done = False
         with timescale.engine.connect() as connection:
-            t0 = time.time()
+            t0 = time.monotonic()
 
             passes = 0
             while True:
@@ -380,8 +375,7 @@ class TimescaleListenStore(ListenStore):
 
                         break
 
-                    listens.append(Listen.from_timescale(
-                        result[0], result[1], result[4], result[2], result[3]))
+                    listens.append(Listen.from_timescale(*result))
                     if len(listens) == limit:
                         done = True
                         break
@@ -389,7 +383,7 @@ class TimescaleListenStore(ListenStore):
                 if done:
                     break
 
-            fetch_listens_time = time.time() - t0
+            fetch_listens_time = time.monotonic() - t0
 
         if order == ORDER_ASC:
             listens.reverse()
