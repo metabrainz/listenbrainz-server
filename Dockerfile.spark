@@ -48,6 +48,9 @@ ENV SPARK_HOME /usr/local/spark-$SPARK_VERSION-bin-hadoop$HADOOP_VERSION
 ENV PATH $SPARK_HOME/bin:$PATH
 ENV PYTHONPATH $SPARK_HOME/python/lib/py4j-0.10.9-src.zip:$SPARK_HOME/python:$PYTHONPATH
 
+COPY docker/spark-cluster-config/test/core-site.xml $SPARK_HOME/conf/core-site.xml
+COPY docker/spark-cluster-config/test/hdfs-site.xml $SPARK_HOME/conf/hdfs-site.xml
+
 COPY requirements_development.txt /requirements_development.txt
 RUN pip3 install -r /requirements_development.txt
 
