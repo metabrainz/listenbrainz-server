@@ -10,9 +10,9 @@ services:
         GIT_COMMIT_SHA: HEAD
     image: metabrainz-spark-test
     command: bash -c "hdfs namenode -format && hdfs namenode"
-    ports:
-      - 9000:9000
-      - 9870:9870
+    expose:
+      - "9000"
+      - "9870"
 
   datanode:
     image: metabrainz-spark-test
