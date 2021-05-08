@@ -20,7 +20,7 @@ services:
     depends_on:
       - namenode
 
-  spark:
+  request_consumer:
     image: metabrainz-spark-dev
     depends_on:
       - namenode
