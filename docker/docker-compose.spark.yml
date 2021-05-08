@@ -9,28 +9,20 @@ volumes:
   datanode:
 
 services:
-  hadoop-master:
-    image: metabrainz/hadoop-yarn:beta
-    command: bash -c "rm -f /tmp/hadoop-root-namenode.pid && hdfs namenode"
+
+  namenode:
+    command: bash -c "hdfs namenode"
     volumes:
-      - namenode:/home/hadoop/hdfs:z
+      - namenode:/hdfs:z
 
   datanode:
-    image: metabrainz/hadoop-yarn:beta
-    command: bash -c "rm -f /tmp/hadoop-root-datanode.pid && hdfs datanode"
     volumes:
-      - datanode:/home/hadoop/hdfs:z
+      - datanode:/hdfs:z
     depends_on:
-      - hadoop-master
+      - namenode
 
   request_consumer:
-    build:
-      context: ..
-      dockerfile: Dockerfile.spark
-      target: metabrainz-spark-dev
     command: bash -c "zip -r /rec/listenbrainz_spark.zip listenbrainz_spark/ ; python spark_manage.py request_consumer"
-    volumes:
-      - ..:/rec:z
 
 networks:
   default:

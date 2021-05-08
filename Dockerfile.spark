@@ -46,6 +46,8 @@ RUN /apache-download.sh hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_V
 ENV HADOOP_HOME /usr/local/hadoop
 ENV PATH $HADOOP_HOME/bin:$PATH
 
+RUN mkdir /hdfs
+
 ENV SPARK_VERSION 3.1.1
 RUN /apache-download.sh spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-without-hadoop.tgz \
     && tar -xzf spark-${SPARK_VERSION}-bin-without-hadoop.tgz \
@@ -56,6 +58,7 @@ ENV PATH $SPARK_HOME/bin:$PATH
 ENV PYTHONPATH $SPARK_HOME/python/lib/py4j-0.10.9-src.zip:$SPARK_HOME/python:$PYTHONPATH
 
 COPY docker/spark-cluster-config/test/core-site.xml $HADOOP_HOME/etc/hadoop/core-site.xml
+COPY docker/spark-cluster-config/test/hdfs-site.xml $HADOOP_HOME/etc/hadoop/hdfs-site.xml
 COPY docker/spark-cluster-config/test/spark-env.sh $SPARK_HOME/conf/spark-env.sh
 
 RUN pip3 install pip==21.0.1
