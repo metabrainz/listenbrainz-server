@@ -49,7 +49,7 @@ class MappingJobQueue(threading.Thread):
                         for complete in completed:
                             exc = complete.exception()
                             if exc:
-                                self.app.logger.error("\n".join(traceback.format_exception(None, exc, exc.__traceback__)))
+                                self.app.logger.error(exc)
                                 stats["errors"] += 1
                             else:
                                 job_stats = complete.result()
