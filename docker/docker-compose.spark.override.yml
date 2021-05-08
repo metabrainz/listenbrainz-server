@@ -1,8 +1,7 @@
 version: "3.4"
 
-# IMPORTANT NOTE: Volume paths mounted on containers are relative to the
-# directory that this file is in (`docker/`) and so probably need to start with
-# `../` to refer to a directory in the main code checkout
+# This file is not complete in itself as it overrides the configuration specified in docker-compose.spark.yml.
+# This overridden configuration is suitable for local development.
 
 volumes:
   namenode:

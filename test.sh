@@ -23,6 +23,7 @@ fi
 
 # SPARK TESTS
 # ./test.sh spark          run spark tests
+# ./test.sh spark -b       build spark test containers
 
 # INTEGRATION TESTS
 # ./test.sh int            run integration tests
