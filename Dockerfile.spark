@@ -65,4 +65,3 @@ ARG GIT_COMMIT_SHA
 LABEL org.label-schema.vcs-ref=$GIT_COMMIT_SHA
 
 WORKDIR /rec
-COPY . /rec

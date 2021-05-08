@@ -2,20 +2,29 @@ version: "3.4"
 
 services:
 
-  hadoop:
+  namenode:
     build:
       context: ..
       dockerfile: Dockerfile.spark
       args:
         GIT_COMMIT_SHA: HEAD
-    command: bash -c "hdfs namenode -format && hdfs namenode & hdfs datanode &"
+    image: metabrainz-spark-test
+    command: hdfs namenode -format && hdfs namenode
+    ports:
+      - 9000:9000
+      - 9870:9870
+
+  datanode:
+    image: metabrainz-spark-test
+    command: hdfs datanode
+    depends_on:
+      - namenode
 
   spark:
-    build:
-      context: ..
-      dockerfile: Dockerfile.spark
-      args:
-         GIT_COMMIT_SHA: HEAD
-    command: bash -c "cp listenbrainz_spark/config.py.sample listenbrainz_spark/config.py; PYTHONDONTWRITEBYTECODE=1 python -m pytest -c pytest.spark.ini"
+    image: metabrainz-spark-test
+    depends_on:
+      - namenode
+      - datanode
+    command: cp listenbrainz_spark/config.py.sample listenbrainz_spark/config.py; PYTHONDONTWRITEBYTECODE=1 python -m pytest -c pytest.spark.ini
     volumes:
       - ..:/rec
