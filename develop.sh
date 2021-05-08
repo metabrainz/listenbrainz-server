@@ -31,7 +31,7 @@ function open_timescale_shell {
 }
 
 function invoke_docker_compose_spark {
-    exec docker-compose -f docker/docker-compose.spark.test.yml -f docker/docker-compose.spark.yml \
+    exec docker-compose -f docker/docker-compose.spark.yml -f docker/docker-compose.spark.override.yml \
                 -p listenbrainzspark \
                 "$@"
 }
