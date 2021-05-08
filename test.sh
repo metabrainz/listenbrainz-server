@@ -30,7 +30,7 @@ fi
 COMPOSE_FILE_LOC=docker/docker-compose.test.yml
 COMPOSE_PROJECT_NAME_ORIGINAL=listenbrainz_test
 
-SPARK_COMPOSE_FILE_LOC=docker/docker-compose.spark.test.yml
+SPARK_COMPOSE_FILE_LOC=docker/docker-compose.spark.yml
 SPARK_COMPOSE_PROJECT_NAME_ORIGINAL=listenbrainz_spark_test
 
 INT_COMPOSE_FILE_LOC=docker/docker-compose.integration.yml

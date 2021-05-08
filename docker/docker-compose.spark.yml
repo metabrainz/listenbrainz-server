@@ -1,30 +1,30 @@
 version: "3.4"
 
-# IMPORTANT NOTE: Volume paths mounted on containers are relative to the
-# directory that this file is in (`docker/`) and so probably need to start with
-# `../` to refer to a directory in the main code checkout
-
-volumes:
-  namenode:
-  datanode:
-
 services:
 
   namenode:
-    command: bash -c "hdfs namenode"
-    volumes:
-      - namenode:/hdfs:z
+    build:
+      context: ..
+      dockerfile: Dockerfile.spark
+      args:
+        GIT_COMMIT_SHA: HEAD
+    image: metabrainz-spark-dev
+    command: bash -c "hdfs namenode -format && hdfs namenode"
+    expose:
+      - "9000"
+      - "9870"
 
   datanode:
-    volumes:
-      - datanode:/hdfs:z
+    image: metabrainz-spark-dev
+    command: bash -c "hdfs datanode"
     depends_on:
       - namenode
 
   request_consumer:
-    command: bash -c "zip -r /rec/listenbrainz_spark.zip listenbrainz_spark/ ; python spark_manage.py request_consumer"
-
-networks:
-  default:
-    external:
-      name: listenbrainz_default
+    image: metabrainz-spark-dev
+    depends_on:
+      - namenode
+      - datanode
+    command: dockerize -wait tcp://namenode:9000 -timeout 60s bash -c "cp listenbrainz_spark/config.py.sample listenbrainz_spark/config.py; PYTHONDONTWRITEBYTECODE=1 python -m pytest -c pytest.spark.ini"
+    volumes:
+      - ..:/rec
