@@ -16,7 +16,7 @@ services:
 
   datanode:
     image: metabrainz-spark-test
-    command: hdfs datanode
+    command: bash -c "hdfs datanode"
     depends_on:
       - namenode
 
