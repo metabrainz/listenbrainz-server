@@ -530,5 +530,12 @@ def _check_ftp_dump_ages():
     except Exception as err:
         msg = "Cannot fetch full dump age: %s" % str(err)
 
-    if msg:
-        print(msg)
+    if not current_app.config['TESTING'] and msg:
+        send_mail(
+            subject="ListenBrainz outdated dumps!".format(
+                dump_type, dump_name),
+            text=render_template('emails/data_dump_outdated.txt', msg=msg)
+            recipients=['listenbrainz-observability@metabrainz.org'],
+            from_name='ListenBrainz',
+            from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN']
+        )
