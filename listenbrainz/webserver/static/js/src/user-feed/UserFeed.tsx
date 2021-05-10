@@ -527,7 +527,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#react-container");
   const propsElement = document.getElementById("react-props");
   const reactProps = JSON.parse(propsElement!.innerHTML);
-  const { api_url, current_user, spotify, youtube, events, sentry_dsn } = reactProps;
+  const {
+    api_url,
+    current_user,
+    spotify,
+    youtube,
+    events,
+    sentry_dsn,
+  } = reactProps;
 
   if (sentry_dsn) {
     Sentry.init({ dsn: sentry_dsn });
@@ -552,10 +559,10 @@ document.addEventListener("DOMContentLoaded", () => {
         <UserFeedPageWithAlertNotifications
           currentUser={current_user}
           events={events}
-
-        spotify={spotify}
-        youtube={youtube}
-      /></GlobalAppContext.Provider>
+          spotify={spotify}
+          youtube={youtube}
+        />
+      </GlobalAppContext.Provider>
     </ErrorBoundary>,
     domContainer
   );

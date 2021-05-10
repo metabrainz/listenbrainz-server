@@ -12,20 +12,19 @@
   <div class="alert {{ alert_class }}">{{ message }}</div>
 {% endmacro %}
 
-{% macro service_permission_button(user, connect_link, disconnect_link, text, current) %}
-    <p class="text-center">
-        {% if not user %}
-            <button type="button" onclick="connect('{{ connect_link }}')" class="btn btn-lg btn-block btn-info">
-                {{ text }}
-            </button>
-        {% elif user["current_permission"] == current %}
-            <button type="button" onclick="disconnect('{{ disconnect_link }}')" class="btn btn-lg btn-block btn-success">
-                {{ text }}
-            </button>
-        {% else %}
-            <button type="button" onclick="reconnect('{{ disconnect_link }}', '{{ connect_link }}')" class="btn btn-lg btn-block btn-info">
-                {{ text }}
-            </button>
-        {% endif %}
-    </p>
+{% macro service_permission_button(service, link, value, title, details) %}
+
+    {% if value == "disable" %}
+        {% set class = "music-service-option disable" %}
+    {% else %}
+        {% set class = "music-service-option" %}
+    {% endif %}
+
+    <div class="{{ class }}">
+        <input type="radio" id="{{ service }}_{{ value }}" name="{{ service }}" value="{{ value }}" onchange="handle_change('{{ service }}', '{{ value }}')" />
+        <label for="{{ service }}_{{ value }}">
+            <div class="title">{{ title }}</div>
+            <div class="details">{{ details }}</div>
+        </label>
+    </div>
 {% endmacro %}

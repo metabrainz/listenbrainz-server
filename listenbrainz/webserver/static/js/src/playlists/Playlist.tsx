@@ -984,9 +984,10 @@ document.addEventListener("DOMContentLoaded", () => {
           playlist={playlist}
           spotify={spotify}
           youtube={youtube}
-        currentUser={current_user}
-        webSocketsServerUrl={web_sockets_server_url}
-      /></GlobalAppContext.Provider>
+          currentUser={current_user}
+          webSocketsServerUrl={web_sockets_server_url}
+        />
+      </GlobalAppContext.Provider>
     </ErrorBoundary>,
     domContainer
   );

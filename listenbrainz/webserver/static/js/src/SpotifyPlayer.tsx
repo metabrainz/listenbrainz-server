@@ -189,6 +189,7 @@ export default class SpotifyPlayer
       try {
         errorMessage = await response.json();
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.error(err);
       }
       if (response.status === 401) {

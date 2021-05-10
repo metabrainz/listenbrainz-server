@@ -291,24 +291,29 @@ def music_services_details():
     if spotify_user:
         permissions = set(spotify_user["scopes"])
         if permissions == set(SPOTIFY_IMPORT_PERMISSIONS):
-            spotify_user["current_permission"] = "import"
+            current_spotify_permissions = "import"
         elif permissions == set(SPOTIFY_LISTEN_PERMISSIONS):
-            spotify_user["current_permission"] = "listen"
+            current_spotify_permissions = "listen"
         else:
-            spotify_user["current_permission"] = "both"
+            current_spotify_permissions = "both"
+    else:
+        current_spotify_permissions = "disable"
 
     youtube_service = YoutubeService()
     youtube_user = youtube_service.get_user(current_user.id)
     youtube_listen_oauth = youtube_service.get_authorize_url(YOUTUBE_SCOPES)
+    current_youtube_permissions = "listen" if youtube_user else "disable"
 
     return render_template(
         'user/music_services.html',
         spotify_user=spotify_user,
+        current_spotify_permissions=current_spotify_permissions,
         spotify_only_listen_oauth=spotify_only_listen_oauth,
         spotify_only_import_oauth=spotify_only_import_oauth,
         spotify_both_oauth=spotify_both_oauth,
         youtube_user=youtube_user,
-        youtube_listen_oauth=youtube_listen_oauth
+        youtube_listen_oauth=youtube_listen_oauth,
+        current_youtube_permissions=current_youtube_permissions
     )
 
 
@@ -350,6 +355,10 @@ def refresh_service_token(service_name: str):
 @api_login_required
 def music_services_disconnect(service_name: str):
     service = _get_service_or_raise_404(service_name)
-    service.remove_user(current_user.id)
-    flash.success('Your %s account has been unlinked.' % service_name.capitalize())
+    user = service.get_user(current_user.id)
+    # we do not need to check whether the user exists for deletion here. the reason for this check is that if the user
+    # tries to connect to a service, we always call disconnect first to in case
+    if user:
+        service.remove_user(current_user.id)
+        flash.success('Your %s account has been unlinked.' % service_name.capitalize())
     return jsonify({'status': 'ok'})

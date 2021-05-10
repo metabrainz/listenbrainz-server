@@ -390,13 +390,14 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
         <RecommendationsWithAlertNotifications
-        recommendations={recommendations}
-        spotify={spotify}
-        user={user}
-        webSocketsServerUrl={web_sockets_server_url}
-        currentUser={current_user}
-        youtube={youtube}
-      /></GlobalAppContext.Provider>
+          recommendations={recommendations}
+          spotify={spotify}
+          user={user}
+          webSocketsServerUrl={web_sockets_server_url}
+          currentUser={current_user}
+          youtube={youtube}
+        />
+      </GlobalAppContext.Provider>
     </ErrorBoundary>,
     domContainer
   );
