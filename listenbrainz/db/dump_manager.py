@@ -552,7 +552,7 @@ def _check_ftp_dump_ages():
             send_mail(
                 subject="ListenBrainz outdated dumps!",
                 text=render_template('emails/data_dump_outdated.txt', msg=msg),
-                recipients=['listenbrainz-observability@metabrainz.org'],
+                recipients=['listenbrainz-exceptions@metabrainz.org'],
                 from_name='ListenBrainz',
                 from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN']
             )
