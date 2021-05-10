@@ -1,4 +1,3 @@
-import { enableFetchMocks } from "jest-fetch-mock";
 import * as React from "react";
 import { shallow, mount } from "enzyme";
 
@@ -6,8 +5,6 @@ import * as recommendationProps from "../__mocks__/recommendations.json";
 
 import Recommendations, { RecommendationsProps } from "./Recommendations";
 import * as recommendationPropsOne from "../__mocks__/recommendationPropsOne.json";
-
-enableFetchMocks();
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this

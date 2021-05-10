@@ -1,11 +1,8 @@
-import { enableFetchMocks } from "jest-fetch-mock";
 import * as React from "react";
 import { shallow } from "enzyme";
 import * as timeago from "time-ago";
 import PlaylistPage from "./Playlist";
 import * as playlistPageProps from "../__mocks__/playlistPageProps.json";
-
-enableFetchMocks();
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
