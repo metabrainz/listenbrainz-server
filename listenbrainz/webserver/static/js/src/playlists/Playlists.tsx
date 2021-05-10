@@ -15,11 +15,13 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { sanitize } from "dompurify";
+import * as Sentry from "@sentry/react";
 import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
 } from "../AlertNotificationsHOC";
-import APIService from "../APIService";
+import APIServiceClass from "../APIService";
+import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import Card from "../components/Card";
 import Loader from "../components/Loader";
 import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
@@ -33,7 +35,6 @@ import {
 
 export type UserPlaylistsProps = {
   currentUser?: ListenBrainzUser;
-  apiUrl: string;
   playlists?: JSPFObject[];
   user: ListenBrainzUser;
   paginationOffset: string;
@@ -56,7 +57,10 @@ export default class UserPlaylists extends React.Component<
   UserPlaylistsProps,
   UserPlaylistsState
 > {
-  private APIService: APIService;
+  static contextType = GlobalAppContext;
+  declare context: React.ContextType<typeof GlobalAppContext>;
+
+  private APIService!: APIServiceClass;
   private DEFAULT_PLAYLISTS_PER_PAGE = 25;
 
   constructor(props: UserPlaylistsProps) {
@@ -72,13 +76,12 @@ export default class UserPlaylists extends React.Component<
       playlistsPerPage:
         parseInt(props.playlistsPerPage, 10) || this.DEFAULT_PLAYLISTS_PER_PAGE,
     };
-
-    this.APIService = new APIService(
-      props.apiUrl || `${window.location.origin}/1`
-    );
   }
 
   componentDidMount(): void {
+    const { APIService } = this.context;
+    this.APIService = APIService;
+
     // Listen to browser previous/next events and load page accordingly
     window.addEventListener("popstate", this.handleURLChange);
     // Call it once to allow navigating straight to a certain page
@@ -674,31 +677,48 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   const {
     current_user,
-    api_url: apiUrl,
+    api_url,
     playlists,
+    spotify,
     user,
     playlist_count: playlistCount,
     active_section: activeSection,
     pagination_offset: paginationOffset,
     playlists_per_page: playlistsPerPage,
+    sentry_dsn,
   } = reactProps;
+
+  if (sentry_dsn) {
+    Sentry.init({ dsn: sentry_dsn });
+  }
 
   const UserPlaylistsWithAlertNotifications = withAlertNotifications(
     UserPlaylists
   );
 
+  const apiService = new APIServiceClass(
+    api_url || `${window.location.origin}/1`
+  );
+
+  const globalProps: GlobalAppContextT = {
+    APIService: apiService,
+    currentUser: current_user,
+    spotifyAuth: spotify,
+  };
+
   ReactDOM.render(
     <ErrorBoundary>
-      <UserPlaylistsWithAlertNotifications
-        activeSection={activeSection}
-        playlistCount={playlistCount}
-        apiUrl={apiUrl}
-        currentUser={current_user}
-        playlists={playlists}
-        paginationOffset={paginationOffset}
-        playlistsPerPage={playlistsPerPage}
-        user={user}
-      />
+      <GlobalAppContext.Provider value={globalProps}>
+        <UserPlaylistsWithAlertNotifications
+          activeSection={activeSection}
+          playlistCount={playlistCount}
+          currentUser={current_user}
+          playlists={playlists}
+          paginationOffset={paginationOffset}
+          playlistsPerPage={playlistsPerPage}
+          user={user}
+        />
+      </GlobalAppContext.Provider>
     </ErrorBoundary>,
     domContainer
   );

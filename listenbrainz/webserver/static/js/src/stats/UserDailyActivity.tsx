@@ -86,9 +86,7 @@ export default class UserDailyActivity extends React.Component<
           errorMessage: "Statistics for the user have not been calculated",
         });
       } else {
-        this.setState(() => {
-          throw error;
-        });
+        throw error;
       }
     }
     return {} as UserDailyActivityResponse;
@@ -118,6 +116,9 @@ export default class UserDailyActivity extends React.Component<
     ];
 
     const result: UserDailyActivityData = [];
+    if (!data?.payload) {
+      return result;
+    }
 
     const tzOffset = -Math.floor(new Date().getTimezoneOffset() / 60);
 

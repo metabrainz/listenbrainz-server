@@ -9,7 +9,7 @@ import requests
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
 
-from listenbrainz.webserver.decorators import crossdomain
+from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden
 from listenbrainz.webserver.rate_limiter import ratelimit
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, validate_auth_header, \
@@ -234,6 +234,7 @@ def fetch_playlist_recording_metadata(playlist: Playlist):
 @playlist_api_bp.route("/create", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
+@api_listenstore_needed
 def create_playlist():
     """
     Create a playlist. The playlist must be in JSPF format with MusicBrainz extensions, which is defined
@@ -265,7 +266,7 @@ def create_playlist():
     collaborators = data.get("playlist", {}).\
         get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}).\
         get("collaborators", [])
-    
+
     # Uniquify collaborators list
     collaborators = list(set(collaborators))
 
@@ -328,6 +329,7 @@ def create_playlist():
 @playlist_api_bp.route("/edit/<playlist_mbid>", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
+@api_listenstore_needed
 def edit_playlist(playlist_mbid):
     """
     Edit the private/public status, name, description or list of collaborators for an exising playlist.
@@ -407,6 +409,7 @@ def edit_playlist(playlist_mbid):
 @playlist_api_bp.route("/<playlist_mbid>", methods=["GET", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
+@api_listenstore_needed
 def get_playlist(playlist_mbid):
     """
     Fetch the given playlist.
@@ -445,6 +448,7 @@ def get_playlist(playlist_mbid):
 @playlist_api_bp.route("/<playlist_mbid>/item/add", methods=["POST", "OPTIONS"], defaults={'offset': None})
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
+@api_listenstore_needed
 def add_playlist_item(playlist_mbid, offset):
     """
     Append recordings to an existing playlist by posting a playlist with one of more recordings in it.
@@ -506,6 +510,7 @@ def add_playlist_item(playlist_mbid, offset):
 @playlist_api_bp.route("/<playlist_mbid>/item/move", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
+@api_listenstore_needed
 def move_playlist_item(playlist_mbid):
     """
 
@@ -557,6 +562,7 @@ def move_playlist_item(playlist_mbid):
 @playlist_api_bp.route("/<playlist_mbid>/item/delete", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
+@api_listenstore_needed
 def delete_playlist_item(playlist_mbid):
     """
 
@@ -606,6 +612,7 @@ def delete_playlist_item(playlist_mbid):
 @playlist_api_bp.route("/<playlist_mbid>/delete", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
+@api_listenstore_needed
 def delete_playlist(playlist_mbid):
     """
 
@@ -643,6 +650,7 @@ def delete_playlist(playlist_mbid):
 @playlist_api_bp.route("/<playlist_mbid>/copy", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
+@api_listenstore_needed
 def copy_playlist(playlist_mbid):
     """
 

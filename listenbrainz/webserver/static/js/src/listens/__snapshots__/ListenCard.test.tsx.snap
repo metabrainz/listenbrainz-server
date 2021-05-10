@@ -2,7 +2,6 @@
 
 exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
 <ListenCard
-  apiUrl="foobar"
   currentFeedback={1}
   currentUser={
     Object {
@@ -316,7 +315,6 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
 
 exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
 <ListenCard
-  apiUrl="foobar"
   currentFeedback={1}
   currentUser={
     Object {
@@ -390,7 +388,6 @@ exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
 
 exports[`ListenCard renders correctly for playing_now listen 1`] = `
 <ListenCard
-  apiUrl="foobar"
   currentFeedback={1}
   currentUser={
     Object {
@@ -704,7 +701,6 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
 
 exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
 <ListenCard
-  apiUrl="foobar"
   currentFeedback={1}
   currentUser={
     Object {

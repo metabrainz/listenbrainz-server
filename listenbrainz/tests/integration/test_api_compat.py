@@ -19,20 +19,20 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 
-import json
 import time
 import logging
 import xmltodict
 
 import listenbrainz.db.user as db_user
-from flask import url_for, current_app
+from flask import url_for
 from listenbrainz.db.lastfm_session import Session
 from listenbrainz.db.lastfm_token import Token
 from listenbrainz.db.lastfm_user import User
 from listenbrainz import config
-from listenbrainz.listenstore import TimescaleListenStore
+from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.timescale_connection import init_timescale_connection
 from listenbrainz.tests.integration import APICompatIntegrationTestCase
+
 
 
 class APICompatTestCase(APICompatIntegrationTestCase):
@@ -136,6 +136,31 @@ class APICompatTestCase(APICompatIntegrationTestCase):
         self.assertEqual(response['lfm']['@status'], 'failed')
         self.assertEqual(response['lfm']['error']['@code'], '4')
 
+    def test_user_getinfo_no_listenstore(self):
+        """If this listenstore is unavailable, performing a query that gets user information
+           (touches the listenstore for user count) should return an error message in the
+           requested format"""
+        timescale_connection._ts = None
+
+        token = Token.generate(self.lfm_user.api_key)
+        token.approve(self.lfm_user.name)
+        session = Session.create(token)
+
+        data = {
+            'method': 'user.getInfo',
+            'api_key': self.lfm_user.api_key,
+            'sk': session.sid
+        }
+
+        r = self.client.post(url_for('api_compat.api_methods'), data=data)
+        self.assert200(r)
+
+        expected_message = b"""<?xml version="1.0" encoding="utf-8"?>
+<lfm status="failed">
+  <error code="16">The service is temporarily unavailable, please try again.</error>
+</lfm>"""
+        assert r.data == expected_message
+
     def test_record_listen(self):
         """ Tests if listen is recorded correctly if valid information is provided. """
 
@@ -164,7 +189,7 @@ class APICompatTestCase(APICompatIntegrationTestCase):
 
         # Check if listen reached the timescale listenstore
         time.sleep(2)
-        listens = self.ls.fetch_listens(self.lb_user['musicbrainz_id'], from_ts=timestamp-1)
+        listens, _, _ = self.ls.fetch_listens(self.lb_user['musicbrainz_id'], from_ts=timestamp-1)
         self.assertEqual(len(listens), 1)
 
     def test_record_listen_multiple_listens(self):
@@ -201,7 +226,7 @@ class APICompatTestCase(APICompatIntegrationTestCase):
 
         # Check if listens reached the timescale listenstore
         time.sleep(1)
-        listens = self.ls.fetch_listens(self.lb_user['musicbrainz_id'], from_ts=timestamp-1)
+        listens, _, _ = self.ls.fetch_listens(self.lb_user['musicbrainz_id'], from_ts=timestamp-1)
         self.assertEqual(len(listens), 2)
 
     def test_create_response_for_single_listen(self):

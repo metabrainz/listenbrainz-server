@@ -4,15 +4,14 @@
 @controlsHeight: 60px;
 @love: #C62828;
 @hate: @blue;
-
+@player-min-height: 320px;
 
 #music-player {
-  background: @primary;
   position: relative;
   margin: auto;
   width: 100%;
   max-width: 500px;
-  min-height: 250px;
+  min-height: @player-min-height;
   border-radius: 5px;
   overflow: hidden;
   box-shadow: 5px 5px 15px fadeout(@dark, 60%);
@@ -123,16 +122,16 @@
       }
     }
     .no-album-art{
-      margin: 0;
-      color: white;
-      text-align: center;
-      padding-top: 30px;
-      width:100%;
-      height:100%;
       position: absolute;
-      left: 0;
       top: 0;
-      z-index: 0;
+      min-height: @player-min-height;
+      min-width: 100%;
+      background-image: url(../img/logo_big.svg);
+      background-repeat: no-repeat;
+      background-position: center top;
+      background-color: aliceblue;
+      opacity: 0.3;
+      text-align: center;
     }
 }
   

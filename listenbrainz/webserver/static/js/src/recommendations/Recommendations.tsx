@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+import * as Sentry from "@sentry/react";
 
 import { get, isEqual } from "lodash";
 import {
@@ -9,14 +10,14 @@ import {
   withAlertNotifications,
 } from "../AlertNotificationsHOC";
 
-import APIService from "../APIService";
+import APIServiceClass from "../APIService";
+import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import BrainzPlayer from "../BrainzPlayer";
 import ErrorBoundary from "../ErrorBoundary";
 import Loader from "../components/Loader";
 import RecommendationCard from "./RecommendationCard";
 
 export type RecommendationsProps = {
-  apiUrl: string;
   recommendations?: Array<Recommendation>;
   profileUrl?: string;
   spotify: SpotifyUser;
@@ -40,9 +41,13 @@ export default class Recommendations extends React.Component<
   RecommendationsProps,
   RecommendationsState
 > {
+  static contextType = GlobalAppContext;
+  declare context: React.ContextType<typeof GlobalAppContext>;
+
   private brainzPlayer = React.createRef<BrainzPlayer>();
   private recommendationsTable = React.createRef<HTMLTableElement>();
-  private APIService: APIService;
+
+  private APIService!: APIServiceClass;
 
   private expectedRecommendationsPerPage = 25;
 
@@ -65,14 +70,13 @@ export default class Recommendations extends React.Component<
     };
 
     this.recommendationsTable = React.createRef();
-    this.APIService = new APIService(
-      props.apiUrl || `${window.location.origin}/1`
-    );
   }
 
   componentDidMount(): void {
     const { user, currentUser } = this.props;
     const { currRecPage } = this.state;
+    const { APIService } = this.context;
+    this.APIService = APIService;
     if (currentUser?.name === user?.name) {
       this.loadFeedback();
     }
@@ -227,7 +231,7 @@ export default class Recommendations extends React.Component<
       currRecPage,
       totalRecPages,
     } = this.state;
-    const { spotify, user, currentUser, apiUrl, newAlert } = this.props;
+    const { spotify, user, currentUser, newAlert } = this.props;
 
     return (
       <div role="main">
@@ -267,7 +271,6 @@ export default class Recommendations extends React.Component<
                           ?.recording_mbid
                       )}
                       updateFeedback={this.updateFeedback}
-                      apiUrl={apiUrl}
                       newAlert={newAlert}
                     />
                   );
@@ -319,7 +322,6 @@ export default class Recommendations extends React.Component<
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
             <BrainzPlayer
-              apiService={this.APIService}
               currentListen={currentRecommendation}
               direction={direction}
               listens={recommendations}
@@ -351,20 +353,37 @@ document.addEventListener("DOMContentLoaded", () => {
     user,
     web_sockets_server_url,
     current_user,
+    sentry_dsn,
   } = reactProps;
+
+  if (sentry_dsn) {
+    Sentry.init({ dsn: sentry_dsn });
+  }
+
+  const apiService = new APIServiceClass(
+    api_url || `${window.location.origin}/1`
+  );
+
+  const globalProps: GlobalAppContextT = {
+    APIService: apiService,
+    currentUser: current_user,
+    spotifyAuth: spotify,
+  };
+
   const RecommendationsWithAlertNotifications = withAlertNotifications(
     Recommendations
   );
   ReactDOM.render(
     <ErrorBoundary>
-      <RecommendationsWithAlertNotifications
-        apiUrl={api_url}
-        recommendations={recommendations}
-        spotify={spotify}
-        user={user}
-        webSocketsServerUrl={web_sockets_server_url}
-        currentUser={current_user}
-      />
+      <GlobalAppContext.Provider value={globalProps}>
+        <RecommendationsWithAlertNotifications
+          recommendations={recommendations}
+          spotify={spotify}
+          user={user}
+          webSocketsServerUrl={web_sockets_server_url}
+          currentUser={current_user}
+        />
+      </GlobalAppContext.Provider>
     </ErrorBoundary>,
     domContainer
   );

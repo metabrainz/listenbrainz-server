@@ -183,6 +183,17 @@ describe("processData", () => {
 
     expect(result).toEqual(userArtistMapProcessedDataListen);
   });
+  it("returns an empty array if no payload", () => {
+    const wrapper = shallow<UserArtistMap>(
+      <UserArtistMap {...{ ...props, range: "all_time" }} />
+    );
+    const instance = wrapper.instance();
+
+    // When stats haven't been calculated, processData is called with an empty object
+    const result = instance.processData({} as UserArtistMapResponse, "listen");
+
+    expect(result).toEqual([]);
+  });
 });
 
 describe("changeSelectedMetric", () => {

@@ -1,5 +1,6 @@
 import * as ReactDOM from "react-dom";
 import * as React from "react";
+import * as Sentry from "@sentry/react";
 import { faSpinner, faCheck, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -480,7 +481,13 @@ document.addEventListener("DOMContentLoaded", () => {
     api_url,
     lastfm_api_url,
     lastfm_api_key,
+    sentry_dsn,
   } = reactProps;
+
+  if (sentry_dsn) {
+    Sentry.init({ dsn: sentry_dsn });
+  }
+
   ReactDOM.render(
     <LastFmImporter
       user={user}
