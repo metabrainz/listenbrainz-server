@@ -32,6 +32,10 @@ MB_DATABASE_URI = 'postgresql://musicbrainz_ro@{{.Address}}:{{.Port}}/musicbrain
 {{end}}
 {{end}}
 
+SQLALCHEMY_TIMESCALE_URI = ""
+TIMESCALE_ADMIN_URI=""
+TIMESCALE_ADMIN_LB_URI=""
+
 {{if service "timescale-listenbrainz"}}
 {{with index (service "timescale-listenbrainz") 0}}
 SQLALCHEMY_TIMESCALE_URI = "postgresql://listenbrainz_ts:listenbrainz_ts@{{.Address}}:{{.Port}}/listenbrainz_ts"

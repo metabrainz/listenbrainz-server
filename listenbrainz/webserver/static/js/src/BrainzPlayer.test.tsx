@@ -1,5 +1,5 @@
 import * as React from "react";
-import { shallow, mount } from "enzyme";
+import { mount } from "enzyme";
 import BrainzPlayer, { DataSourceType } from "./BrainzPlayer";
 import SoundcloudPlayer from "./SoundcloudPlayer";
 import YoutubePlayer from "./YoutubePlayer";
@@ -26,6 +26,12 @@ const props = {
   apiService: new APIService("base-uri"),
 };
 
+const GlobalContextMock = {
+  context: {
+    APIService: { refreshSpotifyToken: jest.fn() },
+  },
+};
+
 // Give yourself a two minute break and go listen to this gem
 // https://musicbrainz.org/recording/7fcaf5b3-e682-4ce6-be61-d3bce775a43f
 const listen: Listen = {
@@ -38,7 +44,10 @@ const listen: Listen = {
 
 describe("BrainzPlayer", () => {
   it("renders correctly", () => {
-    const wrapper = shallow<BrainzPlayer>(<BrainzPlayer {...props} />);
+    const wrapper = mount<BrainzPlayer>(
+      <BrainzPlayer {...props} />,
+      GlobalContextMock
+    );
     expect(wrapper.html()).toMatchSnapshot();
   });
 
@@ -47,7 +56,10 @@ describe("BrainzPlayer", () => {
       ...props,
       spotifyUser: {},
     };
-    const wrapper = mount<BrainzPlayer>(<BrainzPlayer {...mockProps} />);
+    const wrapper = mount<BrainzPlayer>(
+      <BrainzPlayer {...mockProps} />,
+      GlobalContextMock
+    );
     const instance = wrapper.instance();
     expect(instance.dataSources).toHaveLength(2);
     expect(instance.dataSources[0].current).toBeInstanceOf(YoutubePlayer);
@@ -66,7 +78,10 @@ describe("BrainzPlayer", () => {
         ] as Array<SpotifyPermission>,
       },
     };
-    const wrapper = mount<BrainzPlayer>(<BrainzPlayer {...mockProps} />);
+    const wrapper = mount<BrainzPlayer>(
+      <BrainzPlayer {...mockProps} />,
+      GlobalContextMock
+    );
     const instance = wrapper.instance();
     expect(instance.dataSources[0].current).toBeInstanceOf(SpotifyPlayer);
   });
@@ -83,7 +98,10 @@ describe("BrainzPlayer", () => {
         ] as Array<SpotifyPermission>,
       },
     };
-    const wrapper = mount<BrainzPlayer>(<BrainzPlayer {...mockProps} />);
+    const wrapper = mount<BrainzPlayer>(
+      <BrainzPlayer {...mockProps} />,
+      GlobalContextMock
+    );
     const instance = wrapper.instance();
     instance.handleWarning = jest.fn();
 
@@ -114,7 +132,10 @@ describe("BrainzPlayer", () => {
         ] as Array<SpotifyPermission>,
       },
     };
-    const wrapper = mount<BrainzPlayer>(<BrainzPlayer {...mockProps} />);
+    const wrapper = mount<BrainzPlayer>(
+      <BrainzPlayer {...mockProps} />,
+      GlobalContextMock
+    );
     const instance = wrapper.instance();
     expect(instance.dataSources[1].current).toBeInstanceOf(YoutubePlayer);
     const youtubeListen: Listen = {
@@ -144,7 +165,10 @@ describe("BrainzPlayer", () => {
         ] as Array<SpotifyPermission>,
       },
     };
-    const wrapper = mount<BrainzPlayer>(<BrainzPlayer {...mockProps} />);
+    const wrapper = mount<BrainzPlayer>(
+      <BrainzPlayer {...mockProps} />,
+      GlobalContextMock
+    );
     const instance = wrapper.instance();
     const spotifyListen: Listen = {
       listened_at: 0,
@@ -173,7 +197,10 @@ describe("BrainzPlayer", () => {
         ] as Array<SpotifyPermission>,
       },
     };
-    const wrapper = mount<BrainzPlayer>(<BrainzPlayer {...mockProps} />);
+    const wrapper = mount<BrainzPlayer>(
+      <BrainzPlayer {...mockProps} />,
+      GlobalContextMock
+    );
     const instance = wrapper.instance();
     const spotifyListen: Listen = {
       listened_at: 0,
@@ -202,7 +229,10 @@ describe("BrainzPlayer", () => {
         ] as Array<SpotifyPermission>,
       },
     };
-    const wrapper = mount<BrainzPlayer>(<BrainzPlayer {...mockProps} />);
+    const wrapper = mount<BrainzPlayer>(
+      <BrainzPlayer {...mockProps} />,
+      GlobalContextMock
+    );
     const instance = wrapper.instance();
     expect(instance.dataSources[2].current).toBeInstanceOf(SoundcloudPlayer);
     const soundcloudListen: Listen = {
@@ -223,7 +253,10 @@ describe("BrainzPlayer", () => {
 
   describe("isCurrentListen", () => {
     it("returns true if currentListen and passed listen is same", () => {
-      const wrapper = shallow<BrainzPlayer>(<BrainzPlayer {...props} />);
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...props} />,
+        GlobalContextMock
+      );
       const instance = wrapper.instance();
 
       wrapper.setProps({ currentListen: listen });
@@ -232,7 +265,10 @@ describe("BrainzPlayer", () => {
     });
 
     it("returns false if currentListen is not set", () => {
-      const wrapper = shallow<BrainzPlayer>(<BrainzPlayer {...props} />);
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...props} />,
+        GlobalContextMock
+      );
       const instance = wrapper.instance();
 
       wrapper.setProps({ currentListen: undefined });
@@ -243,7 +279,10 @@ describe("BrainzPlayer", () => {
 
   describe("getCurrentTrackName", () => {
     it("returns the track name when it exists on a listen", () => {
-      const wrapper = shallow<BrainzPlayer>(<BrainzPlayer {...props} />);
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...props} />,
+        GlobalContextMock
+      );
       const instance = wrapper.instance();
 
       wrapper.setProps({ currentListen: listen });
@@ -252,7 +291,10 @@ describe("BrainzPlayer", () => {
     });
 
     it("returns an empty string if currentListen is not set", () => {
-      const wrapper = shallow<BrainzPlayer>(<BrainzPlayer {...props} />);
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...props} />,
+        GlobalContextMock
+      );
       const instance = wrapper.instance();
 
       wrapper.setProps({ currentListen: undefined });
@@ -263,7 +305,10 @@ describe("BrainzPlayer", () => {
 
   describe("getCurrentTrackArtists", () => {
     it("returns the track artists string when it exists on a listen", () => {
-      const wrapper = shallow<BrainzPlayer>(<BrainzPlayer {...props} />);
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...props} />,
+        GlobalContextMock
+      );
       const instance = wrapper.instance();
 
       wrapper.setProps({ currentListen: listen });
@@ -272,7 +317,10 @@ describe("BrainzPlayer", () => {
     });
 
     it("returns an empty string if currentListen is not set", () => {
-      const wrapper = shallow<BrainzPlayer>(<BrainzPlayer {...props} />);
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...props} />,
+        GlobalContextMock
+      );
       const instance = wrapper.instance();
 
       wrapper.setProps({ currentListen: undefined });
@@ -286,7 +334,10 @@ describe("BrainzPlayer", () => {
         ...props,
         spotifyUser: {},
       };
-      const wrapper = mount<BrainzPlayer>(<BrainzPlayer {...mockProps} />);
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...mockProps} />,
+        GlobalContextMock
+      );
       const instance = wrapper.instance();
 
       const fakeDatasource = {
@@ -316,7 +367,10 @@ describe("BrainzPlayer", () => {
     });
 
     it("calls seekToPositionMs on the datasource", () => {
-      const wrapper = shallow<BrainzPlayer>(<BrainzPlayer {...props} />);
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...props} />,
+        GlobalContextMock
+      );
       const instance = wrapper.instance();
       instance.invalidateDataSource = jest.fn();
       const fakeDatasource = {
@@ -339,7 +393,10 @@ describe("BrainzPlayer", () => {
         ...props,
         direction: "" as BrainzPlayDirection,
       };
-      const wrapper = shallow<BrainzPlayer>(<BrainzPlayer {...mockProps} />);
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...mockProps} />,
+        GlobalContextMock
+      );
       const instance = wrapper.instance();
       expect(instance.state.direction).toEqual("down");
       instance.setState({ direction: "fnord" as BrainzPlayDirection });
@@ -349,7 +406,10 @@ describe("BrainzPlayer", () => {
     });
 
     it("alternates direction between 'up' and 'down'", () => {
-      const wrapper = shallow<BrainzPlayer>(<BrainzPlayer {...props} />);
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...props} />,
+        GlobalContextMock
+      );
       const instance = wrapper.instance();
       expect(instance.state.direction).toEqual("up");
       instance.toggleDirection();
@@ -361,7 +421,10 @@ describe("BrainzPlayer", () => {
 
   describe("failedToFindTrack", () => {
     it("calls playNextTrack if currentListen is not set", () => {
-      const wrapper = shallow<BrainzPlayer>(<BrainzPlayer {...props} />);
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...props} />,
+        GlobalContextMock
+      );
       const instance = wrapper.instance();
       instance.playNextTrack = jest.fn();
       instance.failedToFindTrack();
@@ -373,7 +436,10 @@ describe("BrainzPlayer", () => {
         ...props,
         currentListen: listen,
       };
-      const wrapper = shallow<BrainzPlayer>(<BrainzPlayer {...mockProps} />);
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...mockProps} />,
+        GlobalContextMock
+      );
       const instance = wrapper.instance();
       instance.playListen = jest.fn();
       instance.failedToFindTrack();
@@ -386,7 +452,10 @@ describe("BrainzPlayer", () => {
         ...props,
         currentListen: listen,
       };
-      const wrapper = shallow<BrainzPlayer>(<BrainzPlayer {...mockProps} />);
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...mockProps} />,
+        GlobalContextMock
+      );
       const instance = wrapper.instance();
       instance.playNextTrack = jest.fn();
       instance.handleWarning = jest.fn();

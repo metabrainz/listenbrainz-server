@@ -1,5 +1,6 @@
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
+from listenbrainz.webserver.decorators import web_listenstore_needed
 from data.model.external_service import ExternalServiceType
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIONS, SPOTIFY_IMPORT_PERMISSIONS
@@ -12,13 +13,11 @@ from datetime import datetime
 from flask import Blueprint, Response, render_template, request, url_for, \
     redirect, current_app, jsonify, stream_with_context
 from flask_login import current_user, login_required
-import spotipy.oauth2
 from werkzeug.exceptions import NotFound, BadRequest, Unauthorized
 from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound
 
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz.domain import spotify, youtube
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.login import api_login_required
 from listenbrainz.webserver.views.feedback_api import _feedback_to_api
@@ -117,7 +116,7 @@ def import_data():
     )
 
 
-def fetch_listens(musicbrainz_id, to_ts, time_range=None):
+def fetch_listens(musicbrainz_id, to_ts):
     """
     Fetch all listens for the user from listenstore by making repeated queries
     to listenstore until we get all the data. Returns a generator that streams
@@ -125,7 +124,7 @@ def fetch_listens(musicbrainz_id, to_ts, time_range=None):
     """
     db_conn = webserver.create_timescale(current_app)
     while True:
-        batch = db_conn.fetch_listens(current_user.musicbrainz_id, to_ts=to_ts, limit=EXPORT_FETCH_COUNT, time_range=time_range)
+        batch, _, _ = db_conn.fetch_listens(current_user.musicbrainz_id, to_ts=to_ts, limit=EXPORT_FETCH_COUNT)
         if not batch:
             break
         yield from batch
@@ -157,6 +156,7 @@ def stream_json_array(elements):
 
 @profile_bp.route("/export", methods=["GET", "POST"])
 @login_required
+@web_listenstore_needed
 def export_data():
     """ Exporting the data to json """
     if request.method == "POST":
@@ -167,7 +167,7 @@ def export_data():
         # listens into memory at once, and we can start serving the response
         # immediately.
         to_ts = int(time())
-        listens = fetch_listens(current_user.musicbrainz_id, to_ts, time_range=-1)
+        listens = fetch_listens(current_user.musicbrainz_id, to_ts)
         output = stream_json_array(listen.to_api() for listen in listens)
 
         response = Response(stream_with_context(output))
@@ -200,6 +200,7 @@ def export_feedback():
 
 @profile_bp.route('/delete', methods=['GET', 'POST'])
 @login_required
+@web_listenstore_needed
 def delete():
     """ Delete currently logged-in user from ListenBrainz.
 
@@ -231,6 +232,7 @@ def delete():
 
 @profile_bp.route('/delete-listens', methods=['GET', 'POST'])
 @login_required
+@web_listenstore_needed
 def delete_listens():
     """ Delete all the listens for the currently logged-in user from ListenBrainz.
 

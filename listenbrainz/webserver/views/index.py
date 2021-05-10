@@ -16,7 +16,7 @@ from werkzeug.exceptions import Unauthorized, NotFound
 import listenbrainz.db.user as db_user
 from listenbrainz.db.similar_users import get_top_similar_users
 from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz.domain.spotify import SpotifyService
+from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.redis_connection import _redis
@@ -33,11 +33,14 @@ NUMBER_OF_RECENT_LISTENS = 50
 @index_bp.route("/")
 def index():
 
-    # get total listen count
-    try:
-        listen_count = _ts.get_total_listen_count()
-    except Exception as e:
-        current_app.logger.error('Error while trying to get total listen count: %s', str(e))
+    if _ts:
+        # get total listen count
+        try:
+            listen_count = _ts.get_total_listen_count()
+        except Exception as e:
+            current_app.logger.error('Error while trying to get total listen count: %s', str(e))
+            listen_count = None
+    else:
         listen_count = None
 
     return render_template(
@@ -100,6 +103,7 @@ def roadmap():
 
 
 @index_bp.route("/current-status")
+@web_listenstore_needed
 def current_status():
 
     load = "%.2f %.2f %.2f" % os.getloadavg()
@@ -164,6 +168,7 @@ def recent_listens():
 
 @index_bp.route('/feed', methods=['GET', 'OPTIONS'])
 @login_required
+@web_listenstore_needed
 def feed():
 
     spotify_user = get_current_spotify_user()
@@ -281,3 +286,12 @@ def similar_users():
         "index/similar-users.html",
         similar_users=similar_users
     )
+
+
+@index_bp.route("/listens-offline")
+def listens_offline():
+    """
+        Show the "listenstore offline" message.
+    """
+
+    return render_template("index/listens_offline.html")

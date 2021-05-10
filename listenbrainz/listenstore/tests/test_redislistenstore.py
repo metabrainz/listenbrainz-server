@@ -8,6 +8,7 @@ import uuid
 from dateutil.relativedelta import relativedelta
 from redis.connection import Connection
 
+from brainzutils import cache
 import listenbrainz.db.user as db_user
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz import config

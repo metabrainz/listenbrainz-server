@@ -12,7 +12,6 @@
         "access_token": "frontend-test",
         "api_key": "fake-api-key"
     },
-    "apiUrl": "http://0.0.0.0",
 	"events": [
 		{
 			"event_type": "recording_recommendation",

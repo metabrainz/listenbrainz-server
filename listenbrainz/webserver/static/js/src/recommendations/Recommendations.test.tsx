@@ -1,6 +1,6 @@
 import { enableFetchMocks } from "jest-fetch-mock";
 import * as React from "react";
-import { shallow } from "enzyme";
+import { shallow, mount } from "enzyme";
 
 import * as recommendationProps from "../__mocks__/recommendations.json";
 
@@ -15,7 +15,6 @@ enableFetchMocks();
 jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
 const {
-  apiUrl,
   recommendations,
   profileUrl,
   spotify,
@@ -25,13 +24,17 @@ const {
 } = recommendationProps;
 
 const props = {
-  apiUrl,
   recommendations,
   profileUrl,
   spotify: spotify as SpotifyUser,
   youtube: youtube as YoutubeUser,
   user,
   webSocketsServerUrl,
+  newAlert: () => {},
+};
+
+const propsOne = {
+  ...recommendationPropsOne,
   newAlert: () => {},
 };
 
@@ -60,7 +63,7 @@ describe("Recommendations", () => {
 describe("componentDidMount", () => {
   it('calls loadFeedback if user is the currentUser"', () => {
     const updatedProps = {
-      ...recommendationProps,
+      ...props,
       currentUser: { name: "vansika" },
     };
     const wrapper = shallow<Recommendations>(
@@ -77,7 +80,7 @@ describe("componentDidMount", () => {
 
   it("does not call loadFeedback if user is not the currentUser", () => {
     const updatedProps = {
-      ...recommendationProps,
+      ...props,
       currentUser: { name: "foobar" },
     };
     const wrapper = shallow<Recommendations>(
@@ -94,8 +97,8 @@ describe("componentDidMount", () => {
 
 describe("getFeedback", () => {
   it("calls the API correctly", async () => {
-    const wrapper = shallow<Recommendations>(
-      <Recommendations {...(recommendationPropsOne as RecommendationsProps)} />
+    const wrapper = mount<Recommendations>(
+      <Recommendations {...(propsOne as RecommendationsProps)} />
     );
 
     const instance = wrapper.instance();
@@ -119,7 +122,7 @@ describe("getFeedback", () => {
 describe("loadFeedback", () => {
   it("updates the recommendationFeedbackMap state", async () => {
     const wrapper = shallow<Recommendations>(
-      <Recommendations {...(recommendationPropsOne as RecommendationsProps)} />
+      <Recommendations {...(propsOne as RecommendationsProps)} />
     );
 
     const instance = wrapper.instance();
@@ -139,7 +142,7 @@ describe("loadFeedback", () => {
 describe("getFeedbackForRecordingMbid", () => {
   it("returns the feedback after fetching from recommendationFeedbackMap state", async () => {
     const wrapper = shallow<Recommendations>(
-      <Recommendations {...(recommendationPropsOne as RecommendationsProps)} />
+      <Recommendations {...(propsOne as RecommendationsProps)} />
     );
 
     const instance = wrapper.instance();
@@ -158,7 +161,7 @@ describe("getFeedbackForRecordingMbid", () => {
 
   it("returns null if the recording is not in recommendationFeedbackMap state", async () => {
     const wrapper = shallow<Recommendations>(
-      <Recommendations {...(recommendationPropsOne as RecommendationsProps)} />
+      <Recommendations {...(propsOne as RecommendationsProps)} />
     );
 
     const instance = wrapper.instance();
@@ -174,7 +177,7 @@ describe("getFeedbackForRecordingMbid", () => {
 describe("updateFeedback", () => {
   it("updates the recommendationFeedbackMap state for particular recording", async () => {
     const wrapper = shallow<Recommendations>(
-      <Recommendations {...(recommendationPropsOne as RecommendationsProps)} />
+      <Recommendations {...(propsOne as RecommendationsProps)} />
     );
     const instance = wrapper.instance();
 
@@ -251,7 +254,7 @@ describe("handleClickPrevious", () => {
     expect(wrapper.state("currRecPage")).toEqual(1);
     expect(wrapper.state("totalRecPages")).toEqual(3);
     expect(wrapper.state("recommendations")).toEqual(
-      recommendationProps.recommendations.slice(0, 25)
+      props.recommendations.slice(0, 25)
     );
     expect(instance.afterRecommendationsDisplay).toHaveBeenCalledTimes(0);
   });
@@ -266,7 +269,7 @@ describe("handleClickPrevious", () => {
 
     wrapper.setState({
       currRecPage: 3,
-      recommendations: recommendationProps.recommendations.slice(50, 73),
+      recommendations: props.recommendations.slice(50, 73),
     });
 
     await instance.handleClickPrevious();
@@ -275,7 +278,7 @@ describe("handleClickPrevious", () => {
     expect(wrapper.state("currRecPage")).toEqual(2);
     expect(wrapper.state("totalRecPages")).toEqual(3);
     expect(wrapper.state("recommendations")).toEqual(
-      recommendationProps.recommendations.slice(25, 50)
+      props.recommendations.slice(25, 50)
     );
     expect(afterRecommendationsDisplaySpy).toHaveBeenCalledTimes(1);
   });
@@ -292,7 +295,7 @@ describe("handleClickNext", () => {
 
     wrapper.setState({
       currRecPage: 3,
-      recommendations: recommendationProps.recommendations.slice(50, 74),
+      recommendations: props.recommendations.slice(50, 74),
     });
 
     await instance.handleClickNext();
@@ -301,7 +304,7 @@ describe("handleClickNext", () => {
     expect(wrapper.state("currRecPage")).toEqual(3);
     expect(wrapper.state("totalRecPages")).toEqual(3);
     expect(wrapper.state("recommendations")).toEqual(
-      recommendationProps.recommendations.slice(50, 73)
+      props.recommendations.slice(50, 73)
     );
     expect(afterRecommendationsDisplaySpy).toHaveBeenCalledTimes(0);
   });
@@ -316,7 +319,7 @@ describe("handleClickNext", () => {
 
     wrapper.setState({
       currRecPage: 2,
-      recommendations: recommendationProps.recommendations.slice(25, 50),
+      recommendations: props.recommendations.slice(25, 50),
     });
 
     await instance.handleClickNext();
@@ -324,7 +327,7 @@ describe("handleClickNext", () => {
     expect(wrapper.state("loading")).toBeFalsy();
     expect(wrapper.state("currRecPage")).toEqual(3);
     expect(wrapper.state("recommendations")).toEqual(
-      recommendationProps.recommendations.slice(50, 73)
+      props.recommendations.slice(50, 73)
     );
     expect(afterRecommendationsDisplaySpy).toHaveBeenCalledTimes(1);
   });

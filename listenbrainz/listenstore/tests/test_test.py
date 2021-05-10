@@ -20,7 +20,6 @@ from listenbrainz.listenstore.tests.util import create_test_data_for_timescaleli
 from listenbrainz.webserver.timescale_connection import init_timescale_connection
 from listenbrainz.db.dump import SchemaMismatchException
 from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION
-from listenbrainz.listenstore.timescale_listenstore import REDIS_TIMESCALE_USER_LISTEN_COUNT
 from brainzutils import cache
 
 TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', '..', 'admin', 'timescale')
@@ -43,8 +42,9 @@ class TestTimescaleListenStore(DatabaseTestCase):
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_schemas.sql'))
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_tables.sql'))
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_functions.sql'))
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))
+        ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))
+        ts.create_view_indexes()
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_primary_keys.sql'))
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_foreign_keys.sql'))
         ts.engine.dispose()

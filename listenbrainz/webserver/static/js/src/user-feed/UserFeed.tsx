@@ -24,7 +24,8 @@ import {
   withAlertNotifications,
 } from "../AlertNotificationsHOC";
 
-import APIService from "../APIService";
+import APIServiceClass from "../APIService";
+import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import BrainzPlayer from "../BrainzPlayer";
 import ErrorBoundary from "../ErrorBoundary";
 import Loader from "../components/Loader";
@@ -43,7 +44,6 @@ export enum EventType {
 }
 
 type UserFeedPageProps = {
-  apiUrl: string;
   currentUser: ListenBrainzUser;
   events: TimelineEvent[];
   spotify: SpotifyUser;
@@ -64,6 +64,8 @@ export default class UserFeedPage extends React.Component<
   UserFeedPageProps,
   UserFeedPageState
 > {
+  static contextType = GlobalAppContext;
+
   static isEventListenable(event: TimelineEvent): boolean {
     const { event_type } = event;
     return (
@@ -72,6 +74,8 @@ export default class UserFeedPage extends React.Component<
       event_type === EventType.LISTEN
     );
   }
+
+  declare context: React.ContextType<typeof GlobalAppContext>;
 
   static getEventTypeIcon(eventType: EventTypeT) {
     switch (eventType) {
@@ -107,8 +111,6 @@ export default class UserFeedPage extends React.Component<
     }
   }
 
-  private APIService: APIService;
-
   private brainzPlayer = React.createRef<BrainzPlayer>();
 
   constructor(props: UserFeedPageProps) {
@@ -120,10 +122,6 @@ export default class UserFeedPage extends React.Component<
       events: props.events || [],
       loading: false,
     };
-
-    this.APIService = new APIService(
-      props.apiUrl || `${window.location.origin}/1`
-    );
   }
 
   async componentDidMount(): Promise<void> {
@@ -189,10 +187,11 @@ export default class UserFeedPage extends React.Component<
   ) => {
     const { currentUser, newAlert } = this.props;
     const { earliestEventTs } = this.state;
+    const { APIService } = this.context;
     this.setState({ loading: true });
     let newEvents: TimelineEvent[] = [];
     try {
-      newEvents = await this.APIService.getFeedForUser(
+      newEvents = await APIService.getFeedForUser(
         currentUser.name,
         currentUser.auth_token as string,
         minTs,
@@ -355,7 +354,7 @@ export default class UserFeedPage extends React.Component<
   }
 
   render() {
-    const { currentUser, spotify, apiUrl, youtube, newAlert } = this.props;
+    const { currentUser, spotify, youtube, newAlert } = this.props;
     const {
       alerts,
       currentListen,
@@ -501,13 +500,11 @@ export default class UserFeedPage extends React.Component<
             </div>
             <div className="col-md-offset-1 col-md-4">
               <UserSocialNetwork
-                apiUrl={apiUrl}
                 user={currentUser}
                 loggedInUser={currentUser}
               />
               <div className="sticky-top mt-15">
                 <BrainzPlayer
-                  apiService={this.APIService}
                   currentListen={currentListen}
                   direction="down"
                   listens={listens}
@@ -536,18 +533,29 @@ document.addEventListener("DOMContentLoaded", () => {
     Sentry.init({ dsn: sentry_dsn });
   }
 
+  const apiService = new APIServiceClass(
+    api_url || `${window.location.origin}/1`
+  );
+
+  const globalProps: GlobalAppContextT = {
+    APIService: apiService,
+    currentUser: current_user,
+    spotifyAuth: spotify,
+  };
+
   const UserFeedPageWithAlertNotifications = withAlertNotifications(
     UserFeedPage
   );
   ReactDOM.render(
     <ErrorBoundary>
-      <UserFeedPageWithAlertNotifications
-        currentUser={current_user}
-        events={events}
-        apiUrl={api_url}
+      <GlobalAppContext.Provider value={globalProps}>
+        <UserFeedPageWithAlertNotifications
+          currentUser={current_user}
+          events={events}
+
         spotify={spotify}
         youtube={youtube}
-      />
+      /></GlobalAppContext.Provider>
     </ErrorBoundary>,
     domContainer
   );

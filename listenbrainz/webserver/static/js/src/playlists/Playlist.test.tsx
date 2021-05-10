@@ -13,7 +13,6 @@ enableFetchMocks();
 jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
 const {
-  apiUrl,
   labsApiUrl,
   currentUser,
   playlist,
@@ -21,7 +20,6 @@ const {
 } = playlistPageProps;
 
 const props = {
-  apiUrl,
   labsApiUrl,
   playlist: playlist as JSPFObject,
   spotify: {
