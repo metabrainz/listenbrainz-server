@@ -18,24 +18,26 @@
                 </p>
                 <br/>
                 <div class="music-service-selection">
-                    {{ service_permission_button("spotify", spotify_both_oauth, "both",
-                    "Activate both features (Recommended)",
-                    "We will record your listening history permanently and make it available for others to view and explore. "
-                    "Discover and play songs directly on ListenBrainz, and import/export your playlist to and from Spotify.") }}
+                    <form action="{{ url_for('profile.music_services_disconnect', service_name='spotify') }}" method="post">
+                        {{ service_permission_button("spotify", current_spotify_permissions, "both",
+                        "Activate both features (Recommended)",
+                        "We will record your listening history permanently and make it available for others to view and explore. "
+                        "Discover and play songs directly on ListenBrainz, and import/export your playlist to and from Spotify.") }}
 
-                    {{ service_permission_button("spotify", spotify_only_listen_oauth, "listen",
-                    "Play music on ListenBrainz",
-                    "Discover and play songs directly on ListenBrainz, and import/export your playlist to and from Spotify. "
-                    "Note: Full length track playback requires Spotify Premium") }}
+                        {{ service_permission_button("spotify", current_spotify_permissions, "listen",
+                        "Play music on ListenBrainz",
+                        "Discover and play songs directly on ListenBrainz, and import/export your playlist to and from Spotify. "
+                        "Note: Full length track playback requires Spotify Premium") }}
 
-                    {{ service_permission_button("spotify", spotify_only_import_oauth, "import",
-                    "Record listening history",
-                    "We will record your listening history permanently and make it available for others to view and explore.") }}
+                        {{ service_permission_button("spotify", current_spotify_permissions, "import",
+                        "Record listening history",
+                        "We will record your listening history permanently and make it available for others to view and explore.") }}
 
-                    {{ service_permission_button("spotify", url_for('profile.music_services_disconnect', service_name='spotify'), "disable",
-                    "Disable",
-                    "Spotify integration will be disabled. You won't be able to import your listens or listen to music on "
-                    "ListenBrainz using Spotify.") }}
+                        {{ service_permission_button("spotify", current_spotify_permissions, "disable",
+                        "Disable",
+                        "Spotify integration will be disabled. You won't be able to import your listens or listen to music on "
+                        "ListenBrainz using Spotify.") }}
+                    </form>
                 </div>
             </div>
         </div>
@@ -54,14 +56,16 @@
                     You can revoke these permissions whenever you want by unlinking your Youtube account.
                 </p>
                 <div class="music-service-selection">
-                    {{ service_permission_button("youtube", youtube_listen_oauth, "listen",
+                    <form action="{{ url_for('profile.music_services_disconnect', service_name='youtube') }}" method="post">
+                    {{ service_permission_button("youtube", current_youtube_permissions, "listen",
                     "Play music on ListenBrainz",
                     "Discover and play songs directly on ListenBrainz") }}
 
-                    {{ service_permission_button("youtube", url_for('profile.music_services_disconnect', service_name='youtube'), "disable",
+                    {{ service_permission_button("youtube", current_youtube_permissions, "disable",
                     "Disable",
                     "Youtube integration will be disabled. You won't be able to listen to music on "
                     "ListenBrainz using Youtube.") }}
+                    </form>
                 </div>
             </div>
         </div>
@@ -93,45 +97,4 @@
         You can revoke these permissions whenever you want by unlinking your Spotify account.
     </p>
 
-{% endblock %}
-{% block scripts %}
-    {{ super() }}
-    <script>
-        document.getElementById('spotify_{{ current_spotify_permissions }}').checked = true;
-        document.getElementById('youtube_{{ current_youtube_permissions }}').checked = true;
-
-        async function disconnect(link) {
-            await fetch(link, {method: "POST"});
-        }
-
-        function connect(connect_link) {
-            window.location.href = connect_link;
-        }
-
-        async function handle_change(service, value) {
-            if (service === 'spotify') {
-                {% if current_spotify_permissions != "disable" %}
-                    // if the user is already connected with different permissions, disconnect first
-                   await disconnect('{{ url_for('profile.music_services_disconnect', service_name='spotify') }}');
-                {% endif %}
-                if (value === 'listen') {
-                    connect('{{ spotify_only_listen_oauth | safe }}');
-                } else if (value === 'import') {
-                    connect('{{ spotify_only_import_oauth | safe }}');
-                } else if (value === 'both') {
-                    connect('{{ spotify_both_oauth | safe }}');
-                } else if (value === 'disable') {
-                    window.location.reload();
-                }
-            } else if (service === 'youtube') {
-                if (value === 'listen') {
-                    connect('{{ youtube_listen_oauth | safe }}');
-                } else if (value === 'disable') {
-                    await disconnect('{{ url_for('profile.music_services_disconnect', service_name='youtube') }}');
-                    window.location.reload();
-                }
-            }
-        }
-
-    </script>
 {% endblock %}

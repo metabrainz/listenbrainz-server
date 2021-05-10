@@ -284,9 +284,6 @@ def _get_service_or_raise_404(name: str) -> ExternalService:
 def music_services_details():
     spotify_service = SpotifyService()
     spotify_user = spotify_service.get_user(current_user.id)
-    spotify_only_listen_oauth = spotify_service.get_authorize_url(SPOTIFY_LISTEN_PERMISSIONS)
-    spotify_only_import_oauth = spotify_service.get_authorize_url(SPOTIFY_IMPORT_PERMISSIONS)
-    spotify_both_oauth = spotify_service.get_authorize_url(SPOTIFY_LISTEN_PERMISSIONS + SPOTIFY_IMPORT_PERMISSIONS)
 
     if spotify_user:
         permissions = set(spotify_user["scopes"])
@@ -301,18 +298,13 @@ def music_services_details():
 
     youtube_service = YoutubeService()
     youtube_user = youtube_service.get_user(current_user.id)
-    youtube_listen_oauth = youtube_service.get_authorize_url(YOUTUBE_SCOPES)
     current_youtube_permissions = "listen" if youtube_user else "disable"
 
     return render_template(
         'user/music_services.html',
         spotify_user=spotify_user,
         current_spotify_permissions=current_spotify_permissions,
-        spotify_only_listen_oauth=spotify_only_listen_oauth,
-        spotify_only_import_oauth=spotify_only_import_oauth,
-        spotify_both_oauth=spotify_both_oauth,
         youtube_user=youtube_user,
-        youtube_listen_oauth=youtube_listen_oauth,
         current_youtube_permissions=current_youtube_permissions
     )
 
@@ -355,10 +347,26 @@ def refresh_service_token(service_name: str):
 @api_login_required
 def music_services_disconnect(service_name: str):
     service = _get_service_or_raise_404(service_name)
-    user = service.get_user(current_user.id)
-    # we do not need to check whether the user exists for deletion here. the reason for this check is that if the user
-    # tries to connect to a service, we always call disconnect first to in case
-    if user:
-        service.remove_user(current_user.id)
+    service.remove_user(current_user.id)
+
+    action = request.form.get(service_name)
+    if not action or action == 'disable':
         flash.success('Your %s account has been unlinked.' % service_name.capitalize())
-    return jsonify({'status': 'ok'})
+        return redirect(url_for('profile.music_services_details'))
+    else:
+        if service_name == 'spotify':
+            permissions = None
+            if action == 'both':
+                permissions = SPOTIFY_LISTEN_PERMISSIONS + SPOTIFY_IMPORT_PERMISSIONS
+            elif action == 'import':
+                permissions = SPOTIFY_IMPORT_PERMISSIONS
+            elif action == 'listen':
+                permissions = SPOTIFY_LISTEN_PERMISSIONS
+            if permissions:
+                return redirect(service.get_authorize_url(permissions))
+        elif service_name == 'youtube':
+            action = request.form.get('youtube')
+            if action:
+                return redirect(service.get_authorize_url(YOUTUBE_SCOPES))
+
+    return redirect(url_for('profile.music_services_details'))
