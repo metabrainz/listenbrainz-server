@@ -19,7 +19,7 @@
  */
 
 import * as React from "react";
-import { mount, shallow } from "enzyme";
+import { mount } from "enzyme";
 
 import UserSocialNetwork from "./UserSocialNetwork";
 import FollowerFollowingModal from "./FollowerFollowingModal";
@@ -61,12 +61,12 @@ describe("<UserSocialNetwork />", () => {
   });
 
   it("renders correctly", () => {
-    const wrapper = shallow(<UserSocialNetwork {...props} />);
+    const wrapper = mount(<UserSocialNetwork {...props} />);
     expect(wrapper.html()).toMatchSnapshot();
   });
 
   it("contains a FollowerFollowingModal and a SimilarUsersModal components", () => {
-    const wrapper = shallow(<UserSocialNetwork {...props} />);
+    const wrapper = mount(<UserSocialNetwork {...props} />);
     expect(wrapper).toBeTruthy();
     expect(wrapper.find(FollowerFollowingModal)).toHaveLength(1);
     expect(wrapper.find(SimilarUsersModal)).toHaveLength(1);

@@ -118,6 +118,9 @@ export default class Recommendations extends React.Component<
 
   loadFeedback = async () => {
     const feedback = await this.getFeedback();
+    if (!feedback) {
+      return;
+    }
     const recommendationFeedbackMap: RecommendationFeedbackMap = {};
     feedback.forEach((fb: RecommendationFeedbackResponse) => {
       recommendationFeedbackMap[fb.recording_mbid] = fb.rating;
