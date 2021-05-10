@@ -129,7 +129,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.assert200(r)
 
         r = self.client.post(url_for('profile.music_services_disconnect', service_name='spotify'))
-        self.assert200(r)
+        self.assertStatus(r, 302)
 
         self.assertIsNone(self.service.get_user(self.user['id']))
 
