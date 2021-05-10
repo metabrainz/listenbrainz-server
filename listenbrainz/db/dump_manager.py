@@ -490,29 +490,43 @@ def transmogrify_dump_file_to_spark_import_format(in_file, out_file, threads):
         raise
 
 
-def fetch_latest_file_info_from_ftp_dir(dir):
+def fetch_latest_file_info_from_ftp_dir(server, dir):
+    """
+        Given a FTP server and dir, fetch the latst dump file info, parse it and
+        return a tuple containing (dump_id, datetime_of_dump_file).
+    """
+
     line = ""
+
     def add_line(l):
         nonlocal line
         l = l.strip()
         if l:
             line = l
 
-    ftp = FTP(MAIN_FTP_SERVER_URL)
+    ftp = FTP(server)
     ftp.login()
     ftp.cwd(dir)
     ftp.retrlines('LIST', add_line)
     _, _, id, d, t, _ = line[56:].strip().split("-")
-    return int(id), datetime.strptime(d + t, "%Y%m%d%H%M%S") 
+
+    return int(id), datetime.strptime(d + t, "%Y%m%d%H%M%S")
 
 
 def _check_ftp_dump_ages():
+    """
+        Fetch the FTP dir listing of the full and incremental dumps and check their ages. Send mail
+        to the observability list in case the dumps are too old.
+    """
+
     msg = ""
     try:
-        id, dt = fetch_latest_file_info_from_ftp_dir('/pub/musicbrainz/listenbrainz/fullexport')
+        id, dt = fetch_latest_file_info_from_ftp_dir(
+            MAIN_FTP_SERVER_URL, '/pub/musicbrainz/listenbrainz/fullexport')
         age = datetime.now() - dt
         if age > timedelta(days=FULLEXPORT_MAX_AGE):
-            msg = "Full dump %d is more than %d days old: %s\n" % (id, FULLEXPORT_MAX_AGE, str(age))
+            msg = "Full dump %d is more than %d days old: %s\n" % (
+                id, FULLEXPORT_MAX_AGE, str(age))
             print(msg, end="")
         else:
             print("Full dump %s is %s old, good!" % (id, str(age)))
@@ -520,10 +534,12 @@ def _check_ftp_dump_ages():
         msg = "Cannot fetch full dump age: %s" % str(err)
 
     try:
-        id, dt = fetch_latest_file_info_from_ftp_dir('/pub/musicbrainz/listenbrainz/incremental')
+        id, dt = fetch_latest_file_info_from_ftp_dir(
+            MAIN_FTP_SERVER_URL, '/pub/musicbrainz/listenbrainz/incremental')
         age = datetime.now() - dt
         if age > timedelta(hours=INCREMENTAL_MAX_AGE):
-            msg = "Incremental dump %s is more than %s hours old: %s\n" % (id, INCREMENTAL_MAX_AGE, str(age))
+            msg = "Incremental dump %s is more than %s hours old: %s\n" % (
+                id, INCREMENTAL_MAX_AGE, str(age))
             print(msg, end="")
         else:
             print("Incremental dump %s is %s old, good!" % (id, str(age)))
