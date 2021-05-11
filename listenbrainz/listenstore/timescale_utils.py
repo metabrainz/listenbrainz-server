@@ -57,9 +57,9 @@ def recalculate_all_user_data():
 
     # Reset the timestamps and listen counts to 0 for all users
     for user_name in user_list:
-        cache.set(REDIS_USER_LISTEN_COUNT + user_name, 0, time=0, encode=False)
-        cache.set(REDIS_USER_LISTEN_COUNT + user_name, 0, time=0, encode=False)
-        cache.set(REDIS_USER_TIMESTAMPS + user_name, "0,0", time=0)
+        cache.set(REDIS_USER_LISTEN_COUNT + user_name, 0, expirein=0, encode=False)
+        cache.set(REDIS_USER_LISTEN_COUNT + user_name, 0, expirein=0, encode=False)
+        cache.set(REDIS_USER_TIMESTAMPS + user_name, "0,0", expirein=0)
 
     # Tabulate all of the listen counts/timestamps for all users
     logger.info("Scan the whole listen table...")
@@ -92,8 +92,7 @@ def recalculate_all_user_data():
     # Set the timestamps and listen counts for all users
     for user_name in user_list:
         try:
-            cache._r.incrby(cache._prep_key(
-                REDIS_USER_LISTEN_COUNT + user_name), listen_counts[user_name])
+            cache.increment(REDIS_USER_LISTEN_COUNT + user_name, amount=listen_counts[user_name])
         except KeyError:
             pass
 
@@ -107,6 +106,6 @@ def recalculate_all_user_data():
             if max_ts and max_ts > user_timestamps[user_name][1]:
                 user_timestamps[user_name][1] = max_ts
             cache.set(REDIS_USER_TIMESTAMPS + user_name, "%d,%d" %
-                      (user_timestamps[user_name][0], user_timestamps[user_name][1]), time=0)
+                      (user_timestamps[user_name][0], user_timestamps[user_name][1]), expirein=0)
         except KeyError:
             pass
