@@ -1,4 +1,3 @@
-import logging
 from datetime import timezone
 
 import requests
@@ -16,7 +15,7 @@ from google.auth.exceptions import RefreshError
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError, \
     ExternalServiceAPIError
 
-YOUTUBE_SCOPES = ("https://www.googleapis.com/auth/youtube.readonly",)
+YOUTUBE_SCOPES = ["https://www.googleapis.com/auth/youtube.readonly"]
 
 OAUTH_TOKEN_URL = "https://oauth2.googleapis.com/token"
 OAUTH_REVOKE_URL = "https://oauth2.googleapis.com/revoke"
