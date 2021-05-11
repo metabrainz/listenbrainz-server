@@ -144,7 +144,6 @@ class TimescaleListenStore(ListenStore):
             t0 = time.monotonic()
             min_ts = self._select_single_timestamp(True, user_name)
             max_ts = self._select_single_timestamp(False, user_name)
-            self.log.warning("get timestamps: %d %d" % (min_ts, max_ts))
             cache.set(REDIS_USER_TIMESTAMPS + user_name, "%d,%d" % (min_ts, max_ts), time=0)
             # intended for production monitoring
             self.log.info("timestamps %s %.2fs" % (user_name, time.monotonic() - t0))
