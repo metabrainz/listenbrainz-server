@@ -3,10 +3,9 @@ FROM metabrainz/python:$PYTHON_BASE_IMAGE_VERSION
 
 ARG PYTHON_BASE_IMAGE_VERSION
 LABEL org.label-schema.vcs-url="https://github.com/metabrainz/listenbrainz-server.git" \
-      org.label-schema.vcs-ref="" \
       org.label-schema.schema-version="1.0.0-rc1" \
       org.label-schema.vendor="MetaBrainz Foundation" \
-      org.label-schema.name="ListenBrainz" \
+      org.label-schema.name="ListenBrainz Spark" \
       org.metabrainz.based-on-image="metabrainz/python:$PYTHON_BASE_IMAGE_VERSION"
 
 RUN apt-get update \
@@ -30,7 +29,7 @@ WORKDIR /usr/local
 ENV JAVA_VERSION 11.0.11
 ENV JAVA_BUILD_VERSION 9
 RUN wget https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-${JAVA_VERSION}%2B${JAVA_BUILD_VERSION}/OpenJDK11U-jdk_x64_linux_hotspot_${JAVA_VERSION}_${JAVA_BUILD_VERSION}.tar.gz \
-    && tar -xzf OpenJDK11U-jdk_x64_linux_hotspot_${JAVA_VERSION}_${JAVA_BUILD_VERSION}.tar.gz \
+    && tar xzf OpenJDK11U-jdk_x64_linux_hotspot_${JAVA_VERSION}_${JAVA_BUILD_VERSION}.tar.gz \
     && mv jdk-${JAVA_VERSION}+${JAVA_BUILD_VERSION} /usr/local/jdk \
     && rm OpenJDK11U-jdk_x64_linux_hotspot_${JAVA_VERSION}_${JAVA_BUILD_VERSION}.tar.gz
 ENV JAVA_HOME /usr/local/jdk
@@ -40,7 +39,7 @@ COPY docker/apache-download.sh /apache-download.sh
 
 ENV HADOOP_VERSION 3.2.2
 RUN /apache-download.sh hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz \
-    && tar -xzf hadoop-${HADOOP_VERSION}.tar.gz \
+    && tar xzf hadoop-${HADOOP_VERSION}.tar.gz \
     && mv hadoop-${HADOOP_VERSION} /usr/local/hadoop \
     && rm hadoop-${HADOOP_VERSION}.tar.gz
 ENV HADOOP_HOME /usr/local/hadoop
@@ -50,7 +49,7 @@ RUN mkdir /hdfs
 
 ENV SPARK_VERSION 3.1.1
 RUN /apache-download.sh spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-without-hadoop.tgz \
-    && tar -xzf spark-${SPARK_VERSION}-bin-without-hadoop.tgz \
+    && tar xzf spark-${SPARK_VERSION}-bin-without-hadoop.tgz \
     && mv spark-${SPARK_VERSION}-bin-without-hadoop /usr/local/spark \
     && rm spark-${SPARK_VERSION}-bin-without-hadoop.tgz
 ENV SPARK_HOME /usr/local/spark
@@ -70,6 +69,3 @@ RUN pip3 install -r requirements_spark.txt
 
 COPY requirements_development.txt /rec/requirements_development.txt
 RUN pip3 install -r requirements_development.txt
-
-ARG GIT_COMMIT_SHA
-LABEL org.label-schema.vcs-ref=$GIT_COMMIT_SHA
