@@ -244,6 +244,14 @@ def init_ts_db(force, create_db):
         print("Done!")
 
 
+@cli.command(name="update_user_emails")
+def update_user_emails():
+    from listenbrainz.webserver.login import copy_files_from_mb_to_lb
+    application = webserver.create_app()
+    with application.app_context():
+        copy_files_from_mb_to_lb.copy_emails()
+
+
 @cli.command(name="calculate_user_similarity")
 def calculate_user_similarity():
     application = webserver.create_app()
