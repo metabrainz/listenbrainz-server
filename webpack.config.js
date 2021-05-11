@@ -3,6 +3,9 @@ const ManifestPlugin = require("webpack-manifest-plugin");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 
+const baseDir = "/static";
+const jsDir = path.join(baseDir, "js");
+
 module.exports = function (env) {
   const isProd = env === "production";
   const plugins = [
@@ -28,19 +31,22 @@ module.exports = function (env) {
   return {
     mode: isProd ? "production" : "development",
     entry: {
-      main: "/static/js/src/RecentListens.tsx",
-      import: "/static/js/src/LastFMImporter.tsx",
-      userEntityChart: "/static/js/src/stats/UserEntityChart.tsx",
-      userReports: "/static/js/src/stats/UserReports.tsx",
-      userPageHeading: "/static/js/src/UserPageHeading.tsx",
-      userFeed: "/static/js/src/user-feed/UserFeed.tsx",
-      playlist: "/static/js/src/playlists/Playlist.tsx",
-      playlists: "/static/js/src/playlists/Playlists.tsx",
-      recommendations: "/static/js/src/recommendations/Recommendations.tsx",
+      main: path.resolve(jsDir, "src/RecentListens.tsx"),
+      import: path.resolve(jsDir, "src/LastFMImporter.tsx"),
+      userEntityChart: path.resolve(jsDir, "src/stats/UserEntityChart.tsx"),
+      userReports: path.resolve(jsDir, "src/stats/UserReports.tsx"),
+      userPageHeading: path.resolve(jsDir, "src/UserPageHeading.tsx"),
+      userFeed: path.resolve(jsDir, "src/user-feed/UserFeed.tsx"),
+      playlist: path.resolve(jsDir, "src/playlists/Playlist.tsx"),
+      playlists: path.resolve(jsDir, "src/playlists/Playlists.tsx"),
+      recommendations: path.resolve(
+        jsDir,
+        "src/recommendations/Recommendations.tsx"
+      ),
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",
-      path: "/static/js/dist",
+      path: path.resolve(jsDir, "dist"),
     },
     devtool: isProd ? "source-map" : "eval-source-map",
     module: {
@@ -56,7 +62,7 @@ module.exports = function (env) {
       ],
     },
     resolve: {
-      modules: ["/code/node_modules", "/static/node_modules"],
+      modules: ["/code/node_modules", path.resolve(baseDir, "node_modules")],
       extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
     },
     plugins,
