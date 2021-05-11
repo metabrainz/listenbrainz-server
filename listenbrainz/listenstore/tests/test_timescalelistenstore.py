@@ -462,3 +462,9 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
         self.assertEqual(listens[2].ts_since_epoch, 1400000100)
         self.assertEqual(listens[3].ts_since_epoch, 1400000000)
+
+        self.assertEqual(self.logstore.get_listen_count_for_user(testuser_name), 4)
+        min_ts, max_ts = self.logstore.get_timestamps_for_user(testuser_name)
+        self.assertEqual(min_ts, 1400000000)
+        self.assertEqual(max_ts, 1400000200)
+       
