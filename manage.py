@@ -1,3 +1,5 @@
+import datetime
+
 import listenbrainz.db.dump_manager as dump_manager
 import listenbrainz.spark.request_manage as spark_request_manage
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data
@@ -9,6 +11,8 @@ import os
 import click
 import sqlalchemy
 from time import sleep
+
+from croniter import croniter
 
 from listenbrainz.utils import safely_import_config
 safely_import_config()
@@ -251,9 +255,40 @@ def calculate_user_similarity():
     with application.app_context():
         user_similarity.calculate_similar_users()
 
+
 @cli.command(name="recalculate_all_user_data")
 def recalculate_all_user_data():
     ts_recalculate_all_user_data()
+
+
+@cli.command(name="check_cron_jobs")
+def check_cron_jobs():
+    """Check the installed crontabs to see if any job has recently started or is due to start soon"""
+
+    now = datetime.datetime.now(datetime.timezone.utc)
+
+    # list of (timedelta, job)
+    upcoming_jobs = []
+
+    with open('docker/services/cron/stats-crontab') as fp:
+        cron = fp.read().splitlines()
+        for line in cron:
+            print(line)
+            if not line.strip() or line.startswith("#") or line.startswith("MAILTO"):
+                continue
+            cron_format = " ".join(line.split()[:5])
+            command = " ".join(line.split()[6:])
+            it = croniter(cron_format, now)
+            upcoming_jobs.append((it.get_next(datetime.datetime) - now, command))
+
+    upcoming_jobs = sorted(upcoming_jobs, key=lambda x: x[0])
+    if upcoming_jobs:
+        next_job = upcoming_jobs[0]
+        print("next job is")
+        print(next_job[1])
+        td = next_job[0]
+        print(" starting in {} days, {} hours, {} minutes".format(td.days, td.seconds//3600, (td.seconds//60)%60))
+
 
 # Add other commands here
 cli.add_command(spark_request_manage.cli, name="spark")
