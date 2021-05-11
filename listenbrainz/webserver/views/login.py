@@ -1,7 +1,7 @@
 from flask import Blueprint, request, redirect, render_template, url_for, session, current_app, Markup
 from flask_login import login_user, logout_user, login_required
 from brainzutils.musicbrainz_db import engine as mb_engine
-from listenbrainz.webserver.login import login_forbidden, provider
+from listenbrainz.webserver.login import login_forbidden, provider, User
 from listenbrainz.webserver import flash
 import listenbrainz.db.user as db_user
 import datetime
@@ -30,16 +30,18 @@ def musicbrainz_post():
         user = provider.get_user()
         no_email_warning = Markup('You have not provided an email address. Please provide an '
                                   '<a href="https://musicbrainz.org/account/edit">email address</a> ')
-        if mb_engine:
-            if not user:  # new users without email
-                flash.error(no_email_warning + 'before creating a ListenBrainz account.')
-                return redirect(url_for('index.index'))
-            else:
-                if not user.email:  # let existing users without login but give a warning
-                    flash.warning(no_email_warning + 'before 1 November 2021, or you will be unable to submit listens.')
 
-        db_user.update_last_login(user.musicbrainz_id)
-        login_user(user, remember=True, duration=datetime.timedelta(current_app.config['SESSION_REMEMBER_ME_DURATION']))
+        if not user:
+            flash.error(no_email_warning + 'before creating a ListenBrainz account.')
+            return redirect(url_for('index.index'))
+
+        if current_app.config["REJECT_USERS_WITHOUT_EMAIL"] and not user["email"]:
+            flash.warning(no_email_warning + 'before 1 November 2021, or you will be unable to submit listens.')
+
+        db_user.update_last_login(user["musicbrainz_id"])
+        login_user(User.from_dbrow(user),
+                   remember=True,
+                   duration=datetime.timedelta(current_app.config['SESSION_REMEMBER_ME_DURATION']))
         next = session.get('next')
         if next:
             return redirect(next)

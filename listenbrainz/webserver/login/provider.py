@@ -1,3 +1,4 @@
+from markupsafe import Markup
 from rauth import OAuth2Service
 from flask import request, session, url_for, current_app
 from brainzutils.musicbrainz_db import engine as mb_engine
@@ -36,29 +37,24 @@ def get_user():
     musicbrainz_id = data.get('sub')
     musicbrainz_row_id = data.get('metabrainz_user_id')
 
+    user = db_user.get_by_mb_row_id(musicbrainz_row_id, musicbrainz_id)
+    user_email = None
     if mb_engine:
         user_email = mb_editor.get_editor_by_id(musicbrainz_row_id)['email']
-        user = db_user.get_by_mb_row_id(musicbrainz_row_id, musicbrainz_id)
 
-        if user is None and user_email is None:  # new user without email in MB
+    if user is None:
+        if current_app.config["REJECT_USERS_WITHOUT_EMAIL"] and user_email is None:
             return None
-        elif user is None and user_email is not None:  # new user with email in MB
-            db_user.create(musicbrainz_row_id, musicbrainz_id, email=user_email)
-            user = db_user.get_by_mb_row_id(musicbrainz_row_id, musicbrainz_id)
-            ts.set_empty_cache_values_for_user(musicbrainz_id)
-        else:  # old user, always update email from MB on login
-            user = dict(user)
-            user["email"] = user_email
-            db_user.update_user_email(musicbrainz_id, user_email)
+        db_user.create(musicbrainz_row_id, musicbrainz_id, email=user_email)
+        user = db_user.get_by_mb_row_id(musicbrainz_row_id, musicbrainz_id)
+        ts.set_empty_cache_values_for_user(musicbrainz_id)
     else:
-        user_exists_check = db_user.get_by_mb_id(musicbrainz_id)
-        user = db_user.get_or_create(musicbrainz_row_id, musicbrainz_id)
-        if user_exists_check is None:
-            ts.set_empty_cache_values_for_user(musicbrainz_id)
+        user["email"] = user_email
+        db_user.update_user_email(musicbrainz_id, user_email)
 
     if not user['musicbrainz_row_id']:
         db_user.update_musicbrainz_row_id(musicbrainz_id, data['metabrainz_user_id'])
-    return User.from_dbrow(user)
+    return user
 
 
 def get_authentication_uri():

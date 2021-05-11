@@ -143,3 +143,4 @@ SESSION_REMEMBER_ME_DURATION = 365
 LISTEN_DUMP_TEMP_DIR_ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'tmp')
 
 REJECT_LISTENS_WITHOUT_USER_EMAIL = False
+REJECT_USERS_WITHOUT_EMAIL = False
