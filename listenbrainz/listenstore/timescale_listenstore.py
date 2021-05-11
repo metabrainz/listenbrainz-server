@@ -144,11 +144,10 @@ class TimescaleListenStore(ListenStore):
             t0 = time.monotonic()
             min_ts = self._select_single_timestamp(True, user_name)
             max_ts = self._select_single_timestamp(False, user_name)
+            self.log.warning("get timestamps: %d %d" % (min_ts, max_ts))
+            cache.set(REDIS_USER_TIMESTAMPS + user_name, "%d,%d" % (min_ts, max_ts), time=0)
             # intended for production monitoring
             self.log.info("timestamps %s %.2fs" % (user_name, time.monotonic() - t0))
-            if min_ts and max_ts:
-                cache.set(REDIS_USER_TIMESTAMPS + user_name,
-                          "%d,%d" % (min_ts, max_ts), time=0)
 
         return min_ts, max_ts
 
@@ -174,7 +173,6 @@ class TimescaleListenStore(ListenStore):
                 })
                 row = result.fetchone()
                 if row is None or row['ts'] is None:
-                    self.log.warning("select single timestamp no rows!")
                     return 0
 
                 return row['ts']
