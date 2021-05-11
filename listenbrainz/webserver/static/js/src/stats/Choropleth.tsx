@@ -8,7 +8,7 @@ import { format } from "d3-format";
 import { maxBy } from "lodash";
 import * as React from "react";
 import { useMediaQuery } from "react-responsive";
-import * as features from "./world_countries.json";
+import features from "./world_countries.json";
 
 export type ChoroplethProps = {
   data: UserArtistMapData;

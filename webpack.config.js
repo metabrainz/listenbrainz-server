@@ -1,5 +1,5 @@
 const path = require("path");
-const ManifestPlugin = require("webpack-manifest-plugin");
+const { WebpackManifestPlugin } = require("webpack-manifest-plugin");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 
@@ -10,7 +10,7 @@ module.exports = function (env) {
   const isProd = env === "production";
   const plugins = [
     new CleanWebpackPlugin(),
-    new ManifestPlugin(),
+    new WebpackManifestPlugin(),
     new ForkTsCheckerWebpackPlugin({
       typescript: {
         diagnosticOptions: {
@@ -66,6 +66,5 @@ module.exports = function (env) {
       extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
     },
     plugins,
-    watch: !isProd,
   };
 };
