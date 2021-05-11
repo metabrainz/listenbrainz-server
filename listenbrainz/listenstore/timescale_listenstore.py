@@ -766,7 +766,7 @@ class TimescaleListenStore(ListenStore):
             with timescale.engine.connect() as connection:
                 connection.execute(sqlalchemy.text(query), args)
 
-            cache._r.decby(cache._prep_key(REDIS_USER_LISTEN_COUNT + user_name))
+            cache._r.decrby(cache._prep_key(REDIS_USER_LISTEN_COUNT + user_name))
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listen for user: %s" % str(e))
             raise TimescaleListenStoreException
