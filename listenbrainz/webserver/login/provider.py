@@ -52,8 +52,6 @@ def get_user():
         user["email"] = user_email
         db_user.update_user_email(musicbrainz_id, user_email)
 
-    if not user['musicbrainz_row_id']:
-        db_user.update_musicbrainz_row_id(musicbrainz_id, data['metabrainz_user_id'])
     return user
 
 
