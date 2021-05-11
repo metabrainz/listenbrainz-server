@@ -426,8 +426,11 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(count + 1, int(cache.get(user_key, decode=False) or 0))
 
     def test_delete_listens(self):
-        self._create_test_data(self.testuser_name)
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
+        uid = random.randint(2000, 1 << 31)
+        testuser = db_user.get_or_create(uid, "user_%d" % uid)
+        testuser_name = testuser['musicbrainz_id']
+        self._create_test_data(testuser_name)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=testuser_name, to_ts=1400000300)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
@@ -435,21 +438,6 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[3].ts_since_epoch, 1400000050)
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
 
-        self.logstore.delete(self.testuser_name)
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
-        self.assertEqual(len(listens), 0)
-
-    def test_delete_listens_escaped(self):
-        user = db_user.get_or_create(213, 'i have a\\weird\\user, na/me"\n')
-        self._create_test_data(user['musicbrainz_id'])
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=user['musicbrainz_id'], to_ts=1400000300)
-        self.assertEqual(len(listens), 5)
-        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
-        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
-        self.assertEqual(listens[2].ts_since_epoch, 1400000100)
-        self.assertEqual(listens[3].ts_since_epoch, 1400000050)
-        self.assertEqual(listens[4].ts_since_epoch, 1400000000)
-
-        self.logstore.delete(user['musicbrainz_id'])
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=user['musicbrainz_id'], to_ts=1400000300)
+        self.logstore.delete(testuser_name)
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=testuser_name, to_ts=1400000300)
         self.assertEqual(len(listens), 0)
