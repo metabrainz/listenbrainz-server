@@ -68,8 +68,8 @@ class TimescaleListenStore(ListenStore):
         """When a user is created, set the listen_count and timestamp keys so that we
            can avoid the expensive lookup for a brand new user."""
 
-        cache.set(REDIS_USER_LISTEN_COUNT + user_name, 0, time=0, encode=False)
-        cache.set(REDIS_USER_TIMESTAMPS + user_name, "0,0", time=0)
+        cache.set(REDIS_USER_LISTEN_COUNT + user_name, 0, expirein=0, encode=False)
+        cache.set(REDIS_USER_TIMESTAMPS + user_name, "0,0", expirein=0)
 
     def get_listen_count_for_user(self, user_name):
         """Get the total number of listens for a user. The number of listens comes from
@@ -110,7 +110,7 @@ class TimescaleListenStore(ListenStore):
         self.log.info("listen counts %s %.2fs" % (user_name, time.monotonic() - t0))
         # put this value into brainzutils cache without an expiry time
         cache.set(REDIS_USER_LISTEN_COUNT + user_name,
-                  count, time=0, encode=False)
+                  count, expirein=0, encode=False)
         return count
 
     def update_timestamps_for_user(self, user_name, min_ts, max_ts):
@@ -129,7 +129,7 @@ class TimescaleListenStore(ListenStore):
             if max_ts > cached_max_ts:
                 cached_max_ts = max_ts
             cache.set(REDIS_USER_TIMESTAMPS + user_name, "%d,%d" %
-                      (cached_min_ts, cached_max_ts), time=0)
+                      (cached_min_ts, cached_max_ts), expirein=0)
 
     def get_timestamps_for_user(self, user_name):
         """ Return the max_ts and min_ts for a given user and cache the result in brainzutils cache
@@ -148,7 +148,7 @@ class TimescaleListenStore(ListenStore):
             self.log.info("timestamps %s %.2fs" % (user_name, time.monotonic() - t0))
             if min_ts and max_ts:
                 cache.set(REDIS_USER_TIMESTAMPS + user_name,
-                          "%d,%d" % (min_ts, max_ts), time=0)
+                          "%d,%d" % (min_ts, max_ts), expirein=0)
 
         return min_ts, max_ts
 
@@ -207,7 +207,7 @@ class TimescaleListenStore(ListenStore):
             raise
 
         if cache_value:
-            cache.set(REDIS_TOTAL_LISTEN_COUNT, count, time=0)
+            cache.set(REDIS_TOTAL_LISTEN_COUNT, count, expirein=0)
         return count
 
     def insert(self, listens):
@@ -257,8 +257,7 @@ class TimescaleListenStore(ListenStore):
             user_counts[user_name] += 1
 
         for user_name in user_counts:
-            cache._r.incrby(cache._prep_key(
-                REDIS_USER_LISTEN_COUNT + user_name), user_counts[user_name])
+            cache.increment(REDIS_USER_LISTEN_COUNT + user_name, amount=user_counts[user_name])
 
         for user in user_timestamps:
             self.update_timestamps_for_user(
