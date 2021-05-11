@@ -1,9 +1,9 @@
 from abc import ABC
-from typing import Union
+from typing import Union, Sequence
 
 from data.model.external_service import ExternalServiceType
 
-from listenbrainz.db import external_service_oauth as db_oauth
+from listenbrainz.db import external_service_oauth
 
 
 class ExternalService(ABC):
@@ -26,12 +26,12 @@ class ExternalService(ABC):
         Args:
             user_id (int): the ListenBrainz row ID of the user
         """
-        db_oauth.delete_token(user_id=user_id, service=self.service, stop_import=True)
+        external_service_oauth.delete_token(user_id=user_id, service=self.service, remove_import_log=True)
 
     def get_user(self, user_id: int) -> Union[dict, None]:
-        return db_oauth.get_token(user_id=user_id, service=self.service)
+        return external_service_oauth.get_token(user_id=user_id, service=self.service)
 
-    def get_authorize_url(self, scopes: list):
+    def get_authorize_url(self, scopes: Sequence[str]):
         raise NotImplementedError()
 
     def fetch_access_token(self, code: str):
@@ -58,4 +58,3 @@ class ExternalServiceListenBrainzError(Exception):
 
 class ExternalServiceAPIError(Exception):
     pass
-

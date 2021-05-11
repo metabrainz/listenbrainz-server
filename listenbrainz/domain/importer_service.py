@@ -2,7 +2,7 @@ from abc import ABC
 from typing import List
 
 from listenbrainz.domain.external_service import ExternalService
-from listenbrainz.db import listens_importer as db_import
+from listenbrainz.db import listens_importer
 
 
 class ImporterService(ExternalService, ABC):
@@ -22,10 +22,7 @@ class ImporterService(ExternalService, ABC):
             user_id (int): the ListenBrainz row ID of the user
             error (str): the user-friendly error message to be displayed.
         """
-        if error:
-            db_import.add_update_error(user_id, self.service, error)
-        else:
-            db_import.update_last_updated(user_id, self.service)
+        listens_importer.update_import_status(user_id, self.service, error)
 
     def update_latest_listen_ts(self, user_id: int, timestamp: int):
         """ Update the latest_listened_at field for user with specified ListenBrainz user ID.
@@ -34,7 +31,7 @@ class ImporterService(ExternalService, ABC):
             user_id (int): the ListenBrainz row ID of the user
             timestamp (int): the unix timestamp of the latest listen imported for the user
         """
-        db_import.update_latest_listened_at(user_id, self.service, timestamp)
+        listens_importer.update_latest_listened_at(user_id, self.service, timestamp)
 
 
 class ExternalServiceImporterError(Exception):

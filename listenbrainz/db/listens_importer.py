@@ -3,7 +3,7 @@ from listenbrainz import db, utils
 import sqlalchemy
 
 
-def add_update_error(user_id: int, service: ExternalServiceType, error_message: str):
+def update_import_status(user_id: int, service: ExternalServiceType, error_message: str = None):
     """ Add an error message to be shown to the user, thereby setting the user as inactive.
 
     Args:
@@ -21,26 +21,6 @@ def add_update_error(user_id: int, service: ExternalServiceType, error_message: 
         """), {
             "user_id": user_id,
             "error_message": error_message,
-            "service": service.value
-        })
-
-
-def update_last_updated(user_id: int, service: ExternalServiceType):
-    """ Update the last_updated field for the user with specified LB user_id.
-
-    Args:
-        user_id (int): the ListenBrainz row ID of the user
-        service (data.model.ExternalServiceType): service to declare import was successful
-    """
-    with db.engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
-            UPDATE listens_importer
-               SET last_updated = now()
-                 , error_message = NULL
-             WHERE user_id = :user_id
-               AND service = :service
-        """), {
-            "user_id": user_id,
             "service": service.value
         })
 

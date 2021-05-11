@@ -14,7 +14,7 @@ from listenbrainz.domain.spotify import SpotifyService
 from listenbrainz.webserver.errors import APIBadRequest
 
 from dateutil import parser
-from flask import current_app, render_template
+from flask import current_app, render_template, url_for
 from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen, LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
 from listenbrainz.db import user as db_user
 from listenbrainz.db.exceptions import DatabaseException
@@ -35,7 +35,7 @@ def notify_error(musicbrainz_row_id, error):
     if not user_email:
         return
 
-    spotify_url = current_app.config['SERVER_ROOT_URL'] + '/profile/music-services/details/'
+    spotify_url = url_for("profile.music_services_details")
     text = render_template('emails/spotify_import_error.txt', error=error, link=spotify_url)
     send_mail(
         subject='ListenBrainz Spotify Importer Error',

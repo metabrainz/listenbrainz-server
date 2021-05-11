@@ -1,5 +1,6 @@
 import time
 import base64
+from typing import Sequence
 
 import requests
 
@@ -7,8 +8,8 @@ from flask import current_app
 from spotipy import SpotifyOAuth
 
 from data.model.external_service import ExternalServiceType
-from listenbrainz.db import external_service_oauth as db_oauth
-from listenbrainz.db import spotify as db_spotify
+from listenbrainz.db import external_service_oauth
+from listenbrainz.db import spotify
 
 from listenbrainz.domain.external_service import ExternalServiceListenBrainzError, \
     ExternalServiceAPIError, ExternalServiceInvalidGrantError
@@ -79,13 +80,14 @@ class SpotifyService(ImporterService):
         scopes = token['scope'].split()
         active = SPOTIFY_IMPORT_PERMISSIONS[0] in scopes and SPOTIFY_IMPORT_PERMISSIONS[1] in scopes
 
-        db_oauth.save_token(user_id=user_id, service=self.service, access_token=access_token,
-                            refresh_token=refresh_token, token_expires_ts=expires_at,
-                            record_listens=active, scopes=scopes)
+        external_service_oauth.save_token(user_id=user_id, service=self.service, access_token=access_token,
+                                          refresh_token=refresh_token, token_expires_ts=expires_at,
+                                          record_listens=active, scopes=scopes)
 
-    def get_authorize_url(self, permissions: list):
+    def get_authorize_url(self, permissions: Sequence[str]):
         """ Returns a spotipy OAuth instance that can be used to authenticate with spotify.
-        Args: permissions ([str]): List of permissions needed by the OAuth instance
+        Args:
+            permissions: List of permissions needed by the OAuth instance
         """
         scope = ' '.join(permissions)
         return SpotifyOAuth(self.client_id, self.client_secret,
@@ -151,9 +153,9 @@ class SpotifyService(ImporterService):
         else:
             refresh_token = refresh_token
         expires_at = int(time.time()) + response['expires_in']
-        db_oauth.update_token(user_id=user_id, service=self.service,
-                              access_token=access_token, refresh_token=refresh_token,
-                              expires_at=expires_at)
+        external_service_oauth.update_token(user_id=user_id, service=self.service,
+                                            access_token=access_token, refresh_token=refresh_token,
+                                            expires_at=expires_at)
         return self.get_user(user_id)
 
     def revoke_user(self, user_id: int):
@@ -163,13 +165,14 @@ class SpotifyService(ImporterService):
         Args:
             user_id (int): the ListenBrainz row ID of the user
         """
-        db_oauth.delete_token(user_id, self.service, stop_import=False)
+        external_service_oauth.delete_token(user_id, self.service, remove_import_log=False)
 
     def get_user_connection_details(self, user_id: int):
-        user = db_spotify.get_user_import_details(user_id)
+        user = spotify.get_user_import_details(user_id)
         if user:
             def date_to_iso(date):
                 return date.isoformat() + "Z" if date else None
+
             user['latest_listened_at_iso'] = date_to_iso(user['latest_listened_at'])
             user['last_updated_iso'] = date_to_iso(user['last_updated'])
         return user
@@ -177,5 +180,4 @@ class SpotifyService(ImporterService):
     def get_active_users_to_process(self):
         """ Returns a list of Spotify user instances that need their Spotify listens imported.
         """
-        return db_spotify.get_active_users_to_process()
-
+        return spotify.get_active_users_to_process()

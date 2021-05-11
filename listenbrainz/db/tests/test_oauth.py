@@ -61,11 +61,11 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
         self.assertIn('token_expired', user)
 
     def test_delete_token_unlink(self):
-        db_oauth.delete_token(self.user['id'], ExternalServiceType.SPOTIFY, stop_import=True)
+        db_oauth.delete_token(self.user['id'], ExternalServiceType.SPOTIFY, remove_import_log=True)
         self.assertIsNone(db_oauth.get_token(self.user['id'], ExternalServiceType.SPOTIFY))
         self.assertIsNone(db_spotify.get_user_import_details(self.user['id']))
 
     def test_delete_token_retain_error(self):
-        db_oauth.delete_token(self.user['id'], ExternalServiceType.SPOTIFY, stop_import=False)
+        db_oauth.delete_token(self.user['id'], ExternalServiceType.SPOTIFY, remove_import_log=False)
         self.assertIsNone(db_oauth.get_token(self.user['id'], ExternalServiceType.SPOTIFY))
         self.assertIsNotNone(db_spotify.get_user_import_details(self.user['id']))

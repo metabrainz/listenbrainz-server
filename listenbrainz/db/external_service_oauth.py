@@ -10,13 +10,13 @@ def save_token(user_id: int, service: ExternalServiceType, access_token: str, re
     """ Add a row to the external_service_oauth table for specified user with corresponding tokens and information.
 
     Args:
-        user_id (int): the ListenBrainz row ID of the user
-        service (data.model.external_service.ExternalServiceType): the service for which the token can be used
-        access_token (str): the access token used to access the user's listens
-        refresh_token (str): the token used to refresh access tokens once they expire
-        token_expires_ts (int): the unix timestamp at which the user_token will expire
-        record_listens (bool): True if user wishes to import listens, False otherwise
-        scopes (list): the oauth scopes
+        user_id: the ListenBrainz row ID of the user
+        service: the service for which the token can be used
+        access_token: the access token used to access the user's listens
+        refresh_token: the token used to refresh access tokens once they expire
+        token_expires_ts: the unix timestamp at which the user_token will expire
+        record_listens: True if user wishes to import listens, False otherwise
+        scopes: the oauth scopes
     """
     token_expires = utils.unix_timestamp_to_datetime(token_expires_ts)
     with db.engine.connect() as connection:
@@ -49,13 +49,13 @@ def save_token(user_id: int, service: ExternalServiceType, access_token: str, re
             })
 
 
-def delete_token(user_id: int, service: ExternalServiceType, stop_import: bool):
+def delete_token(user_id: int, service: ExternalServiceType, remove_import_log: bool):
     """ Delete a user from the external service table.
 
     Args:
-        user_id (int): the ListenBrainz row ID of the user
-        service (data.model.external_service.ExternalServiceType): the service for which the token should be deleted
-        stop_import (bool): whether the (user, service) combination should be removed from the listens_importer table also
+        user_id: the ListenBrainz row ID of the user
+        service: the service for which the token should be deleted
+        remove_import_log: whether the (user, service) combination should be removed from the listens_importer table also
     """
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
@@ -65,7 +65,7 @@ def delete_token(user_id: int, service: ExternalServiceType, stop_import: bool):
             "user_id": user_id,
             "service": service.value
         })
-        if stop_import:
+        if remove_import_log:
             connection.execute(sqlalchemy.text("""
                 DELETE FROM listens_importer
                     WHERE user_id = :user_id AND service = :service
@@ -80,11 +80,11 @@ def update_token(user_id: int, service: ExternalServiceType, access_token: str,
     """ Update the token for user with specified LB user ID and external service.
 
     Args:
-        user_id (int): the ListenBrainz row ID of the user
-        service (data.model.external_service.ExternalServiceType): the service for which the token should be updated
-        access_token (str): the new access token
-        refresh_token (str): the new token used to refresh access tokens
-        expires_at (int): the unix timestamp at which the access token expires
+        user_id: the ListenBrainz row ID of the user
+        service: the service for which the token should be updated
+        access_token: the new access token
+        refresh_token: the new token used to refresh access tokens
+        expires_at: the unix timestamp at which the access token expires
     """
     token_expires = utils.unix_timestamp_to_datetime(expires_at)
     with db.engine.connect() as connection:
@@ -108,8 +108,8 @@ def get_token(user_id: int, service: ExternalServiceType) -> Union[dict, None]:
     """ Get details for user with specified user ID and service.
 
     Args:
-        user_id (int): the ListenBrainz row ID of the user
-        service (data.model.external_service.ExternalServiceType): the service for which the token should be fetched
+        user_id: the ListenBrainz row ID of the user
+        service: the service for which the token should be fetched
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""

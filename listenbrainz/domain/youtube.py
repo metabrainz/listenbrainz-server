@@ -2,9 +2,10 @@ import logging
 from datetime import timezone
 
 import requests
+from requests import RequestException
 
 from data.model.external_service import ExternalServiceType
-from listenbrainz.db import external_service_oauth as db_oauth
+from listenbrainz.db import external_service_oauth
 
 from flask import current_app
 from google_auth_oauthlib.flow import Flow
@@ -15,7 +16,7 @@ from google.auth.exceptions import RefreshError
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError, \
     ExternalServiceAPIError
 
-YOUTUBE_SCOPES = ["https://www.googleapis.com/auth/youtube.readonly"]
+YOUTUBE_SCOPES = ("https://www.googleapis.com/auth/youtube.readonly",)
 
 OAUTH_TOKEN_URL = "https://oauth2.googleapis.com/token"
 OAUTH_REVOKE_URL = "https://oauth2.googleapis.com/revoke"
@@ -29,13 +30,13 @@ class YoutubeService(ExternalService):
         self.redirect_uri = current_app.config["YOUTUBE_REDIRECT_URI"]
 
     def add_new_user(self, user_id: int, token: dict):
-        db_oauth.save_token(user_id=user_id,
-                            service=self.service,
-                            access_token=token["access_token"],
-                            refresh_token=token["refresh_token"],
-                            token_expires_ts=int(token["expires_at"]),
-                            record_listens=False,
-                            scopes=token["scope"])
+        external_service_oauth.save_token(user_id=user_id,
+                                          service=self.service,
+                                          access_token=token["access_token"],
+                                          refresh_token=token["refresh_token"],
+                                          token_expires_ts=int(token["expires_at"]),
+                                          record_listens=False,
+                                          scopes=token["scope"])
 
     def get_authorize_url(self, scopes: list):
         flow = Flow.from_client_config(self.client_config,
@@ -70,11 +71,11 @@ class YoutubeService(ExternalService):
                 raise ExternalServiceInvalidGrantError(error_body)
 
             raise ExternalServiceAPIError("Could not refresh API Token for Youtube user")
-        db_oauth.update_token(user_id=user_id,
-                              service=self.service,
-                              access_token=credentials.token,
-                              refresh_token=credentials.refresh_token,
-                              expires_at=int(credentials.expiry.replace(tzinfo=timezone.utc).timestamp()))
+        external_service_oauth.update_token(user_id=user_id,
+                                            service=self.service,
+                                            access_token=credentials.token,
+                                            refresh_token=credentials.refresh_token,
+                                            expires_at=int(credentials.expiry.replace(tzinfo=timezone.utc).timestamp()))
         return self.get_user(user_id)
 
     def remove_user(self, user_id: int):
@@ -85,8 +86,8 @@ class YoutubeService(ExternalService):
             requests.post(OAUTH_REVOKE_URL,
                           params={'token': user["access_token"]},
                           headers={'content-type': 'application/x-www-form-urlencoded'})
-        except Exception as e:
-            logging.debug(str(e))
+        except RequestException as e:
+            current_app.logger.error(e, exc_info=True)
         super(YoutubeService, self).remove_user(user_id)
 
     def get_user_connection_details(self, user_id: int):
