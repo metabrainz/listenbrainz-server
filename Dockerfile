@@ -35,6 +35,10 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends postgresql-client-$PG_MAJOR \
     && rm -rf /var/lib/apt/lists/*
 
+# While WORKDIR will create a directory if it doesn't already exist, we do it explicitly here
+# so that we know what user it is created as: https://github.com/moby/moby/issues/36677
+RUN mkdir -p /code/listenbrainz /static
+
 WORKDIR /code/listenbrainz
 RUN pip3 install pip==21.0.1
 COPY requirements.txt /code/listenbrainz/
