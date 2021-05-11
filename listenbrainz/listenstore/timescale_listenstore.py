@@ -735,9 +735,7 @@ class TimescaleListenStore(ListenStore):
         Raises: Exception if unable to delete the user in 5 retries
         """
 
-        cache.delete(REDIS_USER_LISTEN_COUNT + musicbrainz_id)
-        cache.delete(REDIS_USER_TIMESTAMPS + musicbrainz_id)
-
+        self.set_empty_cache_values_for_user(musicbrainz_id)
         args = {'user_name': musicbrainz_id}
         query = "DELETE FROM listen WHERE user_name = :user_name"
 
@@ -768,7 +766,7 @@ class TimescaleListenStore(ListenStore):
             with timescale.engine.connect() as connection:
                 connection.execute(sqlalchemy.text(query), args)
 
-            cache.delete(REDIS_USER_LISTEN_COUNT + user_name)
+            cache._r.decby(cache._prep_key(REDIS_USER_LISTEN_COUNT + user_name))
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listen for user: %s" % str(e))
             raise TimescaleListenStoreException
