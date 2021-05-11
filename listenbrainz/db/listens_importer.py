@@ -37,7 +37,8 @@ def update_latest_listened_at(user_id: int, service: ExternalServiceType, timest
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
             UPDATE listens_importer
-               SET latest_listened_at = :timestamp
+               SET last_updated = now()
+                 , latest_listened_at = :timestamp
              WHERE user_id = :user_id
                AND service = :service
             """), {

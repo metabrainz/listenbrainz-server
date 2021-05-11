@@ -39,9 +39,11 @@ class ListensImporterDatabaseTestCase(DatabaseTestCase):
         self.assertIsNotNone(spotify_user['last_updated'])
 
     def test_update_latest_listened_at(self):
-        old_spotify_user = db_spotify.get_user_import_details(self.user_id)
-        self.assertIsNone(old_spotify_user['latest_listened_at'])
+        spotify_user = db_spotify.get_user_import_details(self.user_id)
+        self.assertIsNone(spotify_user['latest_listened_at'])
+        self.assertIsNone(spotify_user['last_updated'])
         t = int(time.time())
         db_import.update_latest_listened_at(self.user_id, ExternalServiceType.SPOTIFY, t)
         spotify_user = db_spotify.get_user_import_details(self.user_id)
         self.assertEqual(t, int(spotify_user['latest_listened_at'].strftime('%s')))
+        self.assertIsNotNone(spotify_user['last_updated'])

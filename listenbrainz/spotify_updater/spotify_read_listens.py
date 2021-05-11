@@ -300,14 +300,14 @@ def process_one_user(user: dict, service: SpotifyService):
 
         # if we don't have any new listens, return
         if len(listens) == 0:
+            service.update_user_import_status(user['user_id'])
             return
 
         latest_listened_at = max(listen['listened_at'] for listen in listens)
         submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTEN_TYPE_IMPORT)
 
-        # we've succeeded so update the last_updated field for this user
+        # we've succeeded so update the last_updated and latest_listened_at field for this user
         service.update_latest_listen_ts(user['user_id'], latest_listened_at)
-        service.update_user_import_status(user['user_id'])
 
         current_app.logger.info('imported %d listens for %s' % (len(listens), str(user['musicbrainz_id'])))
 
