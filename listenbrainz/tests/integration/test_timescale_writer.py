@@ -62,7 +62,7 @@ class TimescaleWriterTestCase(IntegrationTestCase):
         self.assertEqual(len(recent), 1)
         self.assertIsInstance(recent[0], Listen)
 
-    def test_update_listen_count_per_day(self):
+    def test_update_listen_count_per_day_and_test_timestamps(self):
         """ Tests that timescale writer updates the listen count for the
         day in redis for each successful batch written
         """
@@ -72,6 +72,11 @@ class TimescaleWriterTestCase(IntegrationTestCase):
         time.sleep(2)
 
         self.assertEqual(1, self.rs.get_listen_count_for_day(datetime.utcnow()))
+
+        (min_ts, max_ts) = self.ls.get_timestamps_for_user(user_name=user.musicbrainz_id)
+        self.assertEqual(min_ts, 1486449409)
+        self.assertEqual(max_ts, 1486449409)
+
 
     def test_dedup_user_special_characters(self):
 
