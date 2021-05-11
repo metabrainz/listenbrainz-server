@@ -10,6 +10,7 @@ LABEL org.label-schema.vcs-url="https://github.com/metabrainz/listenbrainz-serve
       org.label-schema.name="ListenBrainz" \
       org.metabrainz.based-on-image="node:$NODE_VERSION"
 
+RUN mkdir /code
 WORKDIR /code
 
 COPY package.json package-lock.json /code/
