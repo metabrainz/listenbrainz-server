@@ -1,8 +1,8 @@
-import { enableFetchMocks } from "jest-fetch-mock";
 import * as React from "react";
 import { mount } from "enzyme";
 import * as timeago from "time-ago";
 import * as io from "socket.io-client";
+import fetchMock from "jest-fetch-mock";
 import { GlobalAppContextT } from "./GlobalAppContext";
 import APIService from "./APIService";
 
@@ -13,7 +13,6 @@ import * as recentListensPropsPlayingNow from "./__mocks__/recentListensPropsPla
 
 import RecentListens, { RecentListensProps } from "./RecentListens";
 
-enableFetchMocks();
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
@@ -57,8 +56,6 @@ const props = {
   newAlert: () => {},
 };
 
-// fetchMock will be exported in globals
-// eslint-disable-next-line no-undef
 fetchMock.mockIf(
   (input) => input.url.endsWith("/listen-count"),
   () => {

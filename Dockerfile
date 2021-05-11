@@ -80,7 +80,7 @@ RUN mkdir /home/lbdumps/backup /home/lbdumps/ftp
 RUN chown -R lbdumps:lbdumps /home/lbdumps/backup /home/lbdumps/ftp
 
 # Install NodeJS and front-end dependencies
-RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
+RUN curl -sL https://deb.nodesource.com/setup_16.x | bash - && \
     apt-get install -y nodejs && rm -rf /var/lib/apt/lists/*
 WORKDIR /static
 COPY package.json package-lock.json /static/

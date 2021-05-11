@@ -149,8 +149,11 @@ export default class RecentListens extends React.Component<
   };
 
   connectWebsockets = (): void => {
-    this.createWebsocketsConnection();
-    this.addWebsocketsHandlers();
+    const { webSocketsServerUrl } = this.props;
+    if (webSocketsServerUrl) {
+      this.createWebsocketsConnection();
+      this.addWebsocketsHandlers();
+    }
   };
 
   createWebsocketsConnection = (): void => {
@@ -387,6 +390,9 @@ export default class RecentListens extends React.Component<
 
   loadFeedback = async () => {
     const feedback = await this.getFeedback();
+    if (!feedback) {
+      return;
+    }
     const recordingFeedbackMap: RecordingFeedbackMap = {};
     feedback.forEach((fb: FeedbackResponse) => {
       recordingFeedbackMap[fb.recording_msid] = fb.score;
