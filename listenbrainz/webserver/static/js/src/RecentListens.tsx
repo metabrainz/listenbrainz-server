@@ -34,7 +34,6 @@ export interface RecentListensState {
   alerts: Array<Alert>;
   currentListen?: Listen;
   direction: BrainzPlayDirection;
-  endOfTheLine?: boolean; // To indicate we can't fetch listens older than 12 months
   lastFetchedDirection?: "older" | "newer";
   listens: Array<Listen>;
   listenCount?: number;
@@ -98,7 +97,7 @@ export default class RecentListens extends React.Component<
           this.setState({ listenCount });
         });
       }
-      if (currentUser?.name === user?.name) {
+      if (currentUser?.name && currentUser?.name === user?.name) {
         this.loadFeedback();
       }
     }
@@ -143,8 +142,6 @@ export default class RecentListens extends React.Component<
     this.setState(
       {
         listens: newListens,
-        nextListenTs: newListens[newListens.length - 1].listened_at,
-        previousListenTs: newListens[0].listened_at,
         lastFetchedDirection: !_.isUndefined(minTs) ? "newer" : "older",
       },
       this.afterListensFetch
@@ -152,8 +149,11 @@ export default class RecentListens extends React.Component<
   };
 
   connectWebsockets = (): void => {
-    this.createWebsocketsConnection();
-    this.addWebsocketsHandlers();
+    const { webSocketsServerUrl } = this.props;
+    if (webSocketsServerUrl) {
+      this.createWebsocketsConnection();
+      this.addWebsocketsHandlers();
+    }
   };
 
   createWebsocketsConnection = (): void => {
@@ -255,8 +255,6 @@ export default class RecentListens extends React.Component<
     this.setState(
       {
         listens: newListens,
-        nextListenTs: newListens[newListens.length - 1].listened_at,
-        previousListenTs: newListens[0].listened_at,
         lastFetchedDirection: "older",
       },
       this.afterListensFetch
@@ -291,8 +289,6 @@ export default class RecentListens extends React.Component<
     this.setState(
       {
         listens: newListens,
-        nextListenTs: newListens[newListens.length - 1].listened_at,
-        previousListenTs: newListens[0].listened_at,
         lastFetchedDirection: "newer",
       },
       this.afterListensFetch
@@ -314,8 +310,6 @@ export default class RecentListens extends React.Component<
     this.setState(
       {
         listens: newListens,
-        nextListenTs: newListens[newListens.length - 1].listened_at,
-        previousListenTs: undefined,
         lastFetchedDirection: "newer",
       },
       this.afterListensFetch
@@ -341,8 +335,6 @@ export default class RecentListens extends React.Component<
     this.setState(
       {
         listens: newListens,
-        nextListenTs: undefined,
-        previousListenTs: newListens[0].listened_at,
         lastFetchedDirection: "older",
       },
       this.afterListensFetch
@@ -384,11 +376,13 @@ export default class RecentListens extends React.Component<
         );
         return data.feedback;
       } catch (error) {
-        newAlert(
-          "danger",
-          "Playback error",
-          typeof error === "object" ? error.message : error
-        );
+        if (newAlert) {
+          newAlert(
+            "danger",
+            "Playback error",
+            typeof error === "object" ? error.message : error
+          );
+        }
       }
     }
     return [];
@@ -396,6 +390,9 @@ export default class RecentListens extends React.Component<
 
   loadFeedback = async () => {
     const feedback = await this.getFeedback();
+    if (!feedback) {
+      return;
+    }
     const recordingFeedbackMap: RecordingFeedbackMap = {};
     feedback.forEach((fb: FeedbackResponse) => {
       recordingFeedbackMap[fb.recording_msid] = fb.score;
@@ -424,82 +421,33 @@ export default class RecentListens extends React.Component<
     this.setState({ listens });
   };
 
-  /** This method checks that we have enough listens to fill the page (listens are fetched in a 15 days period)
-   * If we don't have enough, we fetch again with an increased time range and do the check agin, ending when time range is maxed.
-   * The time range (each increment = 5 days) defaults to 6 (the default for the API is 3) or 6*5 = 30 days
-   * and is increased exponentially each retry.
-   */
-  checkListensRange = async (timeRange: number = 6) => {
-    const { latestListenTs, oldestListenTs, user } = this.props;
-    const {
-      listens,
-      lastFetchedDirection,
-      nextListenTs,
-      previousListenTs,
-    } = this.state;
-    if (
-      // If we have enough listens or if we're on the first/last page,
-      // consider our job done and return.
-      listens.length >= this.expectedListensPerPage ||
-      listens[listens.length - 1]?.listened_at <= oldestListenTs ||
-      listens[0]?.listened_at >= latestListenTs
-    ) {
-      this.setState({ endOfTheLine: false });
-      return;
-    }
-    if (timeRange > this.APIService.MAX_TIME_RANGE) {
-      // We reached the maximum time_range allowed by the API.
-      // Show a nice message requesting a user action to load listens from next/previous year.
-      const newState = { endOfTheLine: true, nextListenTs, previousListenTs };
-      if (lastFetchedDirection === "older") {
-        newState.nextListenTs = undefined;
-      } else {
-        newState.previousListenTs = undefined;
-      }
-      this.setState(newState);
+  updatePaginationVariables = () => {
+    const { listens, lastFetchedDirection } = this.state;
+    // This latestListenTs should be saved to state and updated when we receive new listens via websockets?
+    const { latestListenTs } = this.props;
+    if (listens?.length >= this.expectedListensPerPage) {
+      this.setState({
+        nextListenTs: listens[listens.length - 1].listened_at,
+        previousListenTs:
+          listens[0].listened_at >= latestListenTs
+            ? undefined
+            : listens[0].listened_at,
+      });
+    } else if (lastFetchedDirection === "newer") {
+      this.setState({
+        nextListenTs: undefined,
+        previousListenTs: undefined,
+      });
     } else {
-      // Otherwise…
-      let newListens;
-      // Fetch with a time range bigger than
-      if (lastFetchedDirection === "older") {
-        newListens = await this.APIService.getListensForUser(
-          user.name,
-          undefined,
-          nextListenTs,
-          this.expectedListensPerPage,
-          timeRange
-        );
-      } else {
-        newListens = await this.APIService.getListensForUser(
-          user.name,
-          previousListenTs,
-          undefined,
-          this.expectedListensPerPage,
-          timeRange
-        );
-      }
-      // Check again after fetch, doubling the time range each retry up to max
-      let newIncrement;
-      if (timeRange === this.APIService.MAX_TIME_RANGE) {
-        // Set new increment above the limit, to be detected at next checkListensRange call
-        newIncrement = this.APIService.MAX_TIME_RANGE + 1;
-      } else {
-        newIncrement = Math.min(timeRange * 2, this.APIService.MAX_TIME_RANGE);
-      }
-      this.setState(
-        {
-          listens: newListens,
-          nextListenTs:
-            newListens?.[newListens.length - 1]?.listened_at ?? nextListenTs,
-          previousListenTs: newListens?.[0]?.listened_at ?? previousListenTs,
-        },
-        this.checkListensRange.bind(this, newIncrement)
-      );
+      this.setState({
+        nextListenTs: undefined,
+        previousListenTs: listens[0].listened_at,
+      });
     }
   };
 
   afterListensFetch() {
-    this.checkListensRange();
+    this.updatePaginationVariables();
     if (typeof this.listensTable?.current?.scrollIntoView === "function") {
       this.listensTable.current.scrollIntoView({ behavior: "smooth" });
     }
@@ -511,7 +459,6 @@ export default class RecentListens extends React.Component<
       alerts,
       currentListen,
       direction,
-      endOfTheLine,
       lastFetchedDirection,
       listens,
       listenCount,
@@ -608,15 +555,9 @@ export default class RecentListens extends React.Component<
                       );
                     })}
                 </div>
-                {endOfTheLine && (
-                  <div>
-                    No more listens to show in a 12 months period. <br />
-                    Navigate to the
-                    {lastFetchedDirection === "older" ? " next " : " previous "}
-                    page to see {lastFetchedDirection} listens.
-                  </div>
+                {listens.length < this.expectedListensPerPage && (
+                  <h5 className="text-center">No more listens to show</h5>
                 )}
-
                 {mode === "listens" && (
                   <ul className="pager" style={{ display: "flex" }}>
                     <li

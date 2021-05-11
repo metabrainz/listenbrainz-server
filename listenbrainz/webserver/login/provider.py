@@ -4,6 +4,7 @@ from brainzutils.musicbrainz_db import engine as mb_engine
 from brainzutils.musicbrainz_db import editor as mb_editor
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver.utils import generate_string
+from listenbrainz.webserver.timescale_connection import _ts as ts
 import listenbrainz.db.user as db_user
 import ujson
 
@@ -44,12 +45,16 @@ def get_user():
         elif user is None and user_email is not None:  # new user with email in MB
             db_user.create(musicbrainz_row_id, musicbrainz_id, email=user_email)
             user = db_user.get_by_mb_row_id(musicbrainz_row_id, musicbrainz_id)
+            ts.set_empty_cache_values_for_user(musicbrainz_id)
         else:  # old user, always update email from MB on login
             user = dict(user)
             user["email"] = user_email
             db_user.update_user_email(musicbrainz_id, user_email)
     else:
+        user_exists_check = db_user.get_by_mb_id(musicbrainz_id)
         user = db_user.get_or_create(musicbrainz_row_id, musicbrainz_id)
+        if user_exists_check is None:
+            ts.set_empty_cache_values_for_user(musicbrainz_id)
 
     if not user['musicbrainz_row_id']:
         db_user.update_musicbrainz_row_id(musicbrainz_id, data['metabrainz_user_id'])

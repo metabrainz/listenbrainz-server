@@ -38,6 +38,7 @@ def create(musicbrainz_row_id: int, musicbrainz_id: str, email: str = None) -> i
             "mb_row_id": musicbrainz_row_id,
             "email": email,
         })
+
         return result.fetchone()["id"]
 
 

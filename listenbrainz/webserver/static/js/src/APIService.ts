@@ -6,8 +6,6 @@ export default class APIService {
 
   MAX_LISTEN_SIZE: number = 10000; // Maximum size of listens that can be sent
 
-  MAX_TIME_RANGE: number = 73;
-
   constructor(APIBaseURI: string) {
     let finalUri = APIBaseURI;
     if (finalUri.endsWith("/")) {
@@ -44,8 +42,7 @@ export default class APIService {
     userName: string,
     minTs?: number,
     maxTs?: number,
-    count?: number,
-    timeRange?: number
+    count?: number
   ): Promise<Array<Listen>> => {
     if (maxTs && minTs) {
       throw new SyntaxError(
@@ -64,9 +61,6 @@ export default class APIService {
     }
     if (count) {
       queryParams.push(`count=${count}`);
-    }
-    if (timeRange) {
-      queryParams.push(`time_range=${timeRange}`);
     }
     if (queryParams.length) {
       query += `?${queryParams.join("&")}`;
@@ -395,17 +389,17 @@ export default class APIService {
     if (response.status >= 200 && response.status < 300) {
       return;
     }
-    let message;
+    let message = `HTTP Error ${response.statusText}`;
     try {
-      const contentType = response.headers.get("content-type");
+      const contentType = response.headers?.get("content-type");
       if (contentType && contentType.indexOf("application/json") !== -1) {
         const jsonError = await response.json();
         message = jsonError.error;
-      } else {
+      } else if (typeof response.text === "function") {
         message = await response.text();
       }
-    } catch (error) {
-      message = `HTTP Error ${response.statusText}`;
+    } catch (err) {
+      console.log("Error in parsing response in APIService checkStatus:", err);
     }
 
     const error = new APIError(`HTTP Error ${response.statusText}`);
