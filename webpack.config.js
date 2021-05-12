@@ -5,6 +5,7 @@ const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 
 const baseDir = "/static";
 const jsDir = path.join(baseDir, "js");
+const distDir = path.join(baseDir, "dist");
 
 module.exports = function (env) {
   const isProd = env === "production";
@@ -32,6 +33,9 @@ module.exports = function (env) {
     mode: isProd ? "production" : "development",
     entry: {
       main: path.resolve(jsDir, "src/RecentListens.tsx"),
+      recentListens: [
+        path.resolve(jsDir, "src/RecentListens.tsx"),
+      ],
       import: path.resolve(jsDir, "src/LastFMImporter.tsx"),
       userEntityChart: path.resolve(jsDir, "src/stats/UserEntityChart.tsx"),
       userReports: path.resolve(jsDir, "src/stats/UserReports.tsx"),
@@ -46,7 +50,8 @@ module.exports = function (env) {
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",
-      path: path.resolve(jsDir, "dist"),
+      path: distDir,
+      publicPath: `${distDir}/`,
     },
     devtool: isProd ? "source-map" : "eval-source-map",
     module: {
