@@ -49,14 +49,14 @@ class ExternalServiceError(Exception):
     pass
 
 
-class ExternalServiceInvalidGrantError(ExternalServiceError):
+class ExternalServiceAPIError(ExternalServiceError):
+    """ Raised in case of api errors from external services. """
+    pass
+
+
+class ExternalServiceInvalidGrantError(ExternalServiceAPIError):
     """ Raised if the external music services' API returns invalid_grant during authorization.
     This usually means that the user has revoked authorization to the ListenBrainz application
     through external means without unlinking the account from ListenBrainz.
     """
-    pass
-
-
-class ExternalServiceAPIError(ExternalServiceError):
-    """ Raised in case of api errors from external services. """
     pass
