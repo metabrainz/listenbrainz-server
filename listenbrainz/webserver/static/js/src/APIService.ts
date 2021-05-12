@@ -133,13 +133,24 @@ export default class APIService {
     return parseInt(result.payload.count, 10);
   };
 
+  refreshYoutubeToken = async (): Promise<string> => {
+    return this.refreshAccessToken("youtube");
+  };
+
   refreshSpotifyToken = async (): Promise<string> => {
-    const response = await fetch("/profile/refresh-spotify-token", {
-      method: "POST",
-    });
+    return this.refreshAccessToken("spotify");
+  };
+
+  refreshAccessToken = async (service: string): Promise<string> => {
+    const response = await fetch(
+      `/profile/music-services/${service}/refresh/`,
+      {
+        method: "POST",
+      }
+    );
     await this.checkStatus(response);
     const result = await response.json();
-    return result.user_token;
+    return result.access_token;
   };
 
   followUser = async (
