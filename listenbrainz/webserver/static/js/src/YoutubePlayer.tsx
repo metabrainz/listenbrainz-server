@@ -8,9 +8,15 @@ import {
 } from "lodash";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
 import { getTrackExtension } from "./playlists/utils";
+import { searchForYoutubeTrack } from "./utils";
 
 type YoutubePlayerState = {
   currentListen?: Listen;
+};
+
+type YoutubePlayerProps = DataSourceProps & {
+  youtubeUser: YoutubeUser;
+  refreshYoutubeToken: () => Promise<string>;
 };
 
 // For some reason Youtube types do not document getVideoData,
@@ -20,7 +26,7 @@ type ExtendedYoutubePlayer = {
 } & YT.Player;
 
 export default class YoutubePlayer
-  extends React.Component<DataSourceProps, YoutubePlayerState>
+  extends React.Component<YoutubePlayerProps, YoutubePlayerState>
   implements DataSourceType {
   youtubePlayer?: ExtendedYoutubePlayer;
   checkVideoLoadedTimerId?: NodeJS.Timeout;
@@ -74,28 +80,72 @@ export default class YoutubePlayer
     onProgressChange(player.getCurrentTime() * 1000);
   };
 
-  searchAndPlayTrack = (listen: Listen | JSPFTrack): void => {
+  handleAccountError = (): void => {
+    const errorMessage = (
+      <p>
+        In order to play music with Youtube, you will need a Youtube / Google
+        account linked to your ListenBrainz account.
+        <br />
+        Please try to{" "}
+        <a href="/profile/music-services/details/" target="_blank">
+          link for &quot;playing music&quot; feature
+        </a>{" "}
+        and refresh this page
+      </p>
+    );
+    const { onTrackNotFound, handleWarning } = this.props;
+    handleWarning(errorMessage);
+    onTrackNotFound();
+  };
+
+  searchAndPlayTrack = async (listen: Listen | JSPFTrack) => {
     const trackName =
       _get(listen, "track_metadata.track_name") || _get(listen, "title");
     const artistName =
       _get(listen, "track_metadata.artist_name") || _get(listen, "creator");
     const releaseName = _get(listen, "track_metadata.release_name");
-    const { handleWarning, onTrackNotFound } = this.props;
+
+    const {
+      handleWarning,
+      onTrackNotFound,
+      youtubeUser,
+      refreshYoutubeToken,
+    } = this.props;
+
+    if (!this.youtubePlayer) {
+      onTrackNotFound();
+      return;
+    }
+    // If the user is not authed for Youtube API, show a helpful error message with link to connect
+    if (!youtubeUser) {
+      this.handleAccountError();
+      return;
+    }
     if (!trackName) {
       handleWarning("Not enough info to search on Youtube");
       onTrackNotFound();
-    } else if (this.youtubePlayer) {
-      let query = trackName;
-      if (artistName) {
-        query += ` ${artistName}`;
+      return;
+    }
+
+    try {
+      const { api_key, access_token } = youtubeUser;
+      const videoIds = await searchForYoutubeTrack(
+        api_key,
+        access_token,
+        trackName,
+        artistName,
+        releaseName,
+        refreshYoutubeToken,
+        this.handleAccountError
+      );
+      if (videoIds) {
+        this.youtubePlayer.loadPlaylist(videoIds);
+      } else {
+        onTrackNotFound();
       }
-      if (releaseName) {
-        query += ` ${releaseName}`;
-      }
-      this.youtubePlayer.loadPlaylist({
-        list: query,
-        listType: "search",
-      });
+    } catch (error) {
+      handleWarning(error, "Youtube player error");
+      onTrackNotFound();
     }
   };
 
@@ -128,26 +178,6 @@ export default class YoutubePlayer
       this.playTrackById(youtubeId);
     } else {
       this.searchAndPlayTrack(listen);
-    }
-    this.checkVideoLoadedTimerId = setTimeout(
-      this.checkVideoLoaded.bind(this),
-      1500
-    );
-  };
-
-  checkVideoLoaded = () => {
-    if (!this.youtubePlayer) {
-      return;
-    }
-    const { onTrackNotFound } = this.props;
-    // We use cueVideoById("") as a means to clear any playlist.
-    // If there was an undetected error loading a video, the getVideoData method won't exist
-    // or getVideoData.video_id will be null and we should go to the next track
-    if (this.youtubePlayer?.getVideoData) {
-      const videoData = this.youtubePlayer.getVideoData();
-      if (videoData?.video_id === null) {
-        onTrackNotFound();
-      }
     }
   };
 
@@ -222,8 +252,8 @@ export default class YoutubePlayer
       <div className={`youtube ${!show ? "hidden" : ""}`}>
         <YouTube
           opts={options}
-          onStateChange={this.handlePlayerStateChanged}
           onError={this.onError}
+          onStateChange={this.handlePlayerStateChanged}
           onReady={this.onReady}
         />
       </div>
