@@ -1,5 +1,6 @@
 MAILTO=""
 
+
 ## Trigger a full dump on 1st and 15th of every month, in the middle of the night, do not block to wait for lock.
 0 0 1,15 * * lbdumps flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh full >> /logs/dumps.log 2>&1
 ## Around 24 hours later, trigger a full import into the spark cluster, and this time wait for the lock, in case the dump hasn't finished.
@@ -12,3 +13,6 @@ MAILTO=""
 
 # Dump user feedback every monday before we generate recommendations
 0 4 * * 1 lbdumps flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh feeedback >> /logs/dumps.log 2>&1
+
+# Update our continuous aggregates for listens older than 1 year
+0 5 * * * /usr/local/bin/python /code/listenbrainz/manage.py refresh_continuous_aggregates
