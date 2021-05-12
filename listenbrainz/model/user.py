@@ -1,6 +1,7 @@
 from datetime import datetime
 from listenbrainz.model import db
 from listenbrainz.webserver.admin import AdminModelView
+from listenbrainz.webserver.views.user import delete_user
 
 
 class User(db.Model):
@@ -15,6 +16,7 @@ class User(db.Model):
     gdpr_agreed = db.Column(db.DateTime(timezone=True))
     musicbrainz_row_id = db.Column(db.Integer, nullable=False)
     login_id = db.Column(db.String)
+
 
 class UserAdminView(AdminModelView):
     form_columns = [
@@ -47,3 +49,6 @@ class UserAdminView(AdminModelView):
         'musicbrainz_id',
         'musicbrainz_row_id',
     ]
+
+    def delete_model(self, model):
+        delete_user(model.musicbrainz_id)
