@@ -286,6 +286,9 @@ def update_latest_import(musicbrainz_id, ts):
             logger.error(e)
             raise DatabaseException
 
+    from listenbrainz.listenstore.timescale_listenstore import set_listen_count_expiry_for_user
+    set_listen_count_expiry_for_user(musicbrainz_id)
+
 
 def increase_latest_import(musicbrainz_id, ts):
     """Increases the latest_import field for user with specified MusicBrainz ID"""

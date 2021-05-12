@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from brainzutils import cache
+
 import listenbrainz.db.user as db_user
 import listenbrainz.db.spotify as db_spotify
 import listenbrainz.db.stats as db_stats
@@ -94,6 +96,8 @@ class UserTestCase(DatabaseTestCase):
         db_user.reset_latest_import(user['musicbrainz_id'])
         user = db_user.get_by_mb_id(user['musicbrainz_id'])
         self.assertEqual(int(user['latest_import'].strftime('%s')), 0)
+
+#        self.assertEqual(cache._r.get
 
     def test_get_all_users(self):
         """ Tests that get_all_users returns ALL users in the db """
