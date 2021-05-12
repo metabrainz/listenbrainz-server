@@ -114,6 +114,17 @@ class TimescaleListenStore(ListenStore):
                   count, time=0, encode=False)
         return count
 
+    def set_listen_count_expiry_for_user(self, user_name):
+        """ Set an expire time for the listen count cache item. This is called after
+            a bulk import which allows for timescale continuous aggregates to catch up
+            to listen counts. Once the key expires, the correct value can be calculated
+            from the aggregate.
+
+            Args:
+                user_name: the musicbrainz id of user whose listen count needs an expiry time
+        """
+        cache._r.expire(cache._prep_key(REDIS_USER_LISTEN_COUNT + user_name), REDIS_POST_IMPORT_LISTEN_COUNT_EXPIRY)
+
     def update_timestamps_for_user(self, user_name, min_ts, max_ts):
         """
             If any code adds/removes listens it should update the timestamps for the user

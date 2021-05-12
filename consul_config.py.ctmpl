@@ -1,3 +1,6 @@
+import os
+import json
+
 {{- define "KEY" -}}
     {{ key (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .) }}
 {{- end -}}
@@ -7,7 +10,6 @@
         "{{.}}",
     {{- end -}}
 {{- end -}}
-import os
 
 DEBUG = False
 
@@ -157,7 +159,15 @@ APPROVED_PLAYLIST_BOTS = [
 # SPOTIFY
 SPOTIFY_CLIENT_ID = '''{{template "KEY" "spotify/client_id"}}'''
 SPOTIFY_CLIENT_SECRET = '''{{template "KEY" "spotify/client_secret"}}'''
-SPOTIFY_CALLBACK_URL = '''{{template "KEY" "spotify/callback"}}'''
+SPOTIFY_CALLBACK_URL = '''{{template "KEY" "spotify/redirect_uri"}}'''
+
+# YOUTUBE
+YOUTUBE_CONFIG_JSON = '''{{template "KEY" "youtube/credentials"}}'''
+YOUTUBE_API_KEY = '''{{template "KEY" "youtube/api_key"}}'''
+YOUTUBE_REDIRECT_URI = '''{{template "KEY" "youtube/redirect_uri"}}'''
+
+YOUTUBE_CONFIG = json.loads(YOUTUBE_CONFIG_JSON)
+
 
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 

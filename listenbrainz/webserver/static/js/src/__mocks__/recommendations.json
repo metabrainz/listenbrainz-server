@@ -728,7 +728,11 @@
   "webSocketsServerUrl": "http://localhost:8082",
   "spotify": {
     "access_token": "access token",
-    "permission": "streaming user-read-email user-read-private"
+    "permission": ["streaming", "user-read-email", "user-read-private"]
+  },
+  "youtube": {
+    "access_token": "frontend-test",
+    "api_key": "fake-api-key"
   },
   "profileUrl": "/user/vansika"
 }
