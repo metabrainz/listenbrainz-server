@@ -15,7 +15,9 @@ git describe --tags --dirty --always > .git-version
 
 TAG=${1:-beta}
 echo "building for tag $TAG"
-docker build --tag kartik1712/listenbrainz:"$TAG" \
+docker build \
+        --cache-from kartik1712/listenbrainz:latest \
+        --tag kartik1712/listenbrainz:"$TAG" \
         --tag kartik1712/listenbrainz:latest \
         --target listenbrainz-prod \
         --build-arg GIT_COMMIT_SHA="$(git describe --tags --dirty --always)" . && \
