@@ -8,6 +8,7 @@
     {{- end -}}
 {{- end -}}
 
+# Put everything after the defines otherwise the rendered config might eat up some newlines
 import os
 import json
 
