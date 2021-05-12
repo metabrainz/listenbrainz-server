@@ -1,4 +1,7 @@
 from datetime import datetime
+
+from flask import current_app
+from psycopg2 import OperationalError, DatabaseError
 from listenbrainz.model import db
 from listenbrainz.webserver.admin import AdminModelView
 from listenbrainz.webserver.views.user import delete_user
@@ -51,4 +54,9 @@ class UserAdminView(AdminModelView):
     ]
 
     def delete_model(self, model):
-        delete_user(model.musicbrainz_id)
+        try:
+            delete_user(model.musicbrainz_id)
+            return True
+        except OperationalError or DatabaseError as err:
+            current_app.logger.error(err, exc_info=True)
+            return False
