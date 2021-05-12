@@ -367,6 +367,8 @@ def latest_import():
             raise APIInternalServerError(
                 'Could not update latest_import, try again')
 
+        _ts.set_listen_count_expiry_for_user(user['musicbrainz_id'])
+
         return jsonify({'status': 'ok'})
 
 
