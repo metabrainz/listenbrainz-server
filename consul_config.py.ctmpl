@@ -1,6 +1,3 @@
-import os
-import json
-
 {{- define "KEY" -}}
     {{ key (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .) }}
 {{- end -}}
@@ -10,6 +7,10 @@ import json
         "{{.}}",
     {{- end -}}
 {{- end -}}
+
+import os
+import json
+
 
 DEBUG = False
 
