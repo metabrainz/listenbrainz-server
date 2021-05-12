@@ -7,7 +7,7 @@ import listenbrainz.webserver
 from listenbrainz.utils import safely_import_config
 safely_import_config()
 
-from listenbrainz.domain.external_service import ExternalServiceListenBrainzError, ExternalServiceAPIError, \
+from listenbrainz.domain.external_service import ExternalServiceError, ExternalServiceAPIError, \
     ExternalServiceInvalidGrantError
 from listenbrainz.domain.spotify import SpotifyService
 
@@ -161,7 +161,7 @@ def make_api_request(user, spotipy_call: callable, **kwargs):
                 time.sleep(time_to_sleep)
                 delay += 1
                 if retries == 0:
-                    raise ExternalServiceListenBrainzError('Encountered a rate limit.')
+                    raise ExternalServiceError('Encountered a rate limit.')
 
             elif e.http_status in (400, 403):
                 current_app.logger.critical('Error from the Spotify API for user %s: %s', user['musicbrainz_id'], str(e), exc_info=True)
@@ -187,12 +187,12 @@ def make_api_request(user, spotipy_call: callable, **kwargs):
             elif e.http_status == 404:
                 current_app.logger.error("404 while trying to get listens for user %s", str(user), exc_info=True)
                 if retries == 0:
-                    raise ExternalServiceListenBrainzError("404 while trying to get listens for user %s" % str(user))
+                    raise ExternalServiceError("404 while trying to get listens for user %s" % str(user))
         except Exception as e:
             retries -= 1
             current_app.logger.error('Unexpected error while getting listens: %s', str(e), exc_info=True)
             if retries == 0:
-                raise ExternalServiceListenBrainzError('Unexpected error while getting listens: %s' % str(e))
+                raise ExternalServiceError('Unexpected error while getting listens: %s' % str(e))
 
     return recently_played
 
@@ -233,7 +233,7 @@ def submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTE
             retries -= 1
             current_app.logger.error('ISE while trying to import listens for %s: %s', username, str(e))
             if retries == 0:
-                raise ExternalServiceListenBrainzError('ISE while trying to import listens: %s', str(e))
+                raise ExternalServiceError('ISE while trying to import listens: %s', str(e))
 
 
 def parse_and_validate_spotify_plays(plays, listen_type):
@@ -316,7 +316,7 @@ def process_one_user(user: dict, service: SpotifyService):
         service.update_user_import_status(user_id=user['user_id'], error=str(e))
         if not current_app.config['TESTING']:
             notify_error(user['musicbrainz_row_id'], str(e))
-        raise ExternalServiceListenBrainzError("Could not refresh user token from spotify")
+        raise ExternalServiceError("Could not refresh user token from spotify")
 
     except ExternalServiceInvalidGrantError:
         error_message = "It seems like you've revoked permission for us to read your spotify account"
@@ -326,7 +326,7 @@ def process_one_user(user: dict, service: SpotifyService):
         # user has revoked authorization through spotify ui or deleted their spotify account etc.
         # in any of these cases, we should delete the user's token from.
         service.revoke_user(user['user_id'])
-        raise ExternalServiceListenBrainzError("User has revoked spotify authorization")
+        raise ExternalServiceError("User has revoked spotify authorization")
 
 
 def process_all_spotify_users():
@@ -355,7 +355,7 @@ def process_all_spotify_users():
         try:
             process_one_user(u, service)
             success += 1
-        except ExternalServiceListenBrainzError as e:
+        except ExternalServiceError as e:
             current_app.logger.critical('spotify_reader could not import listens: %s', str(e), exc_info=True)
             failure += 1
         except Exception as e:

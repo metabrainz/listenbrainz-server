@@ -11,7 +11,7 @@ from data.model.external_service import ExternalServiceType
 from listenbrainz.db import external_service_oauth
 from listenbrainz.db import spotify
 
-from listenbrainz.domain.external_service import ExternalServiceListenBrainzError, \
+from listenbrainz.domain.external_service import ExternalServiceError, \
     ExternalServiceAPIError, ExternalServiceInvalidGrantError
 from listenbrainz.domain.importer_service import ImporterService
 
@@ -111,7 +111,7 @@ class SpotifyService(ImporterService):
         """
         r = _get_spotify_token("authorization_code", code)
         if r.status_code != 200:
-            raise ExternalServiceListenBrainzError(r.reason)
+            raise ExternalServiceError(r.reason)
         return r.json()
 
     def refresh_access_token(self, user_id: int, refresh_token: str):

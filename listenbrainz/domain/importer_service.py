@@ -1,7 +1,7 @@
 from abc import ABC
 from typing import List
 
-from listenbrainz.domain.external_service import ExternalService
+from listenbrainz.domain.external_service import ExternalService, ExternalServiceError
 from listenbrainz.db import listens_importer
 
 
@@ -34,5 +34,6 @@ class ImporterService(ExternalService, ABC):
         listens_importer.update_latest_listened_at(user_id, self.service, timestamp)
 
 
-class ExternalServiceImporterError(Exception):
+class ExternalServiceImporterError(ExternalServiceError):
+    """ Base exception for all errors raised in the listens importer service."""
     pass
