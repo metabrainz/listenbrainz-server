@@ -1,6 +1,6 @@
 import time
 import base64
-from typing import Sequence
+from typing import Sequence, Optional
 
 import requests
 
@@ -66,6 +66,9 @@ class SpotifyService(ImporterService):
         self.client_id = current_app.config['SPOTIFY_CLIENT_ID']
         self.client_secret = current_app.config['SPOTIFY_CLIENT_SECRET']
         self.redirect_url = current_app.config['SPOTIFY_CALLBACK_URL']
+
+    def get_user(self, user_id: int) -> Optional[dict]:
+        return spotify.get_user(user_id)
 
     def add_new_user(self, user_id: int, token: dict):
         """Create a spotify row for a user based on OAuth access tokens

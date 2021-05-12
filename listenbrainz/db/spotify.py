@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from listenbrainz import db
 import sqlalchemy
@@ -32,7 +32,7 @@ def get_active_users_to_process() -> List[dict]:
         return [dict(row) for row in result.fetchall()]
 
 
-def get_user_import_details(user_id: int):
+def get_user_import_details(user_id: int) -> Optional[dict]:
     """ Return user's spotify linking details to display on connect services page
 
     Args:
@@ -53,6 +53,36 @@ def get_user_import_details(user_id: int):
             """), {
                 'user_id': user_id,
             })
+        if result.rowcount > 0:
+            return dict(result.fetchone())
+    return None
+
+
+def get_user(user_id: int) -> Optional[dict]:
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT external_service_oauth.user_id
+                 , "user".musicbrainz_id
+                 , "user".musicbrainz_row_id
+                 , external_service_oauth.service
+                 , access_token
+                 , refresh_token
+                 , external_service_oauth.last_updated
+                 , token_expires
+                 , token_expires < now() as token_expired
+                 , scopes
+                 , latest_listened_at
+                 , error_message
+              FROM external_service_oauth
+              JOIN "user"
+                ON "user".id = external_service_oauth.user_id
+              JOIN listens_importer
+                ON listens_importer.external_service_oauth_id = external_service_oauth.id
+              WHERE external_service_oauth.service = 'spotify'
+                AND "user".id = :user_id
+        """), {
+            'user_id': user_id
+        })
         if result.rowcount > 0:
             return dict(result.fetchone())
     return None
