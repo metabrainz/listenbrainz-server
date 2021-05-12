@@ -2,10 +2,12 @@ const path = require("path");
 const { WebpackManifestPlugin } = require("webpack-manifest-plugin");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
+const LessPluginCleanCSS = require("less-plugin-clean-css");
 
 const baseDir = "/static";
 const jsDir = path.join(baseDir, "js");
 const distDir = path.join(baseDir, "dist");
+const cssDir = path.join(baseDir, "css");
 
 module.exports = function (env) {
   const isProd = env === "production";
@@ -32,9 +34,11 @@ module.exports = function (env) {
   return {
     mode: isProd ? "production" : "development",
     entry: {
-      main: path.resolve(jsDir, "src/RecentListens.tsx"),
+      // Importing main.less file here so that it gets compiled.
+      // All the Less/CSS will be exported separately to a main.css file
       recentListens: [
         path.resolve(jsDir, "src/RecentListens.tsx"),
+        path.resolve(cssDir, "main.less"),
       ],
       import: path.resolve(jsDir, "src/LastFMImporter.tsx"),
       userEntityChart: path.resolve(jsDir, "src/stats/UserEntityChart.tsx"),
@@ -63,6 +67,20 @@ module.exports = function (env) {
           // Don't specify the babel configuration here
           // Configuration can be found in ./babel.config.js
           use: "babel-loader",
+        },
+        {
+          test: /\.less$/i,
+          type: "asset/resource",
+          loader: "less-loader",
+          generator: {
+            filename: isProd ? "[name].[contenthash].css" : "[name].css",
+          },
+          options: {
+            lessOptions: {
+              math: "always",
+              plugins: [new LessPluginCleanCSS({ advanced: true })],
+            },
+          },
         },
       ],
     },

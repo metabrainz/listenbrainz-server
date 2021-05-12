@@ -9,7 +9,7 @@
   "scripts": {
     "build:dev": "webpack --mode=development --progress --color",
     "build:prod": "webpack --mode=production --env production --no-watch --progress --color",
-    "build:prod:less": "lessc /static/css/main.less > /static/css/main.css",
+    "build:less": "lessc /static/css/main.less > /static/css/main.css",
     "build:types": "tsc --emitDeclarationOnly",
     "build": "npm run build:dev",
     "format": "eslint ./static/js/src --ext .js,jsx,ts,tsx --fix --quiet",
