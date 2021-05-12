@@ -17,7 +17,7 @@ jobs:
       run: echo ${{ secrets.DOCKER_HUB_PASSWORD }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
 
     - name: Pull latest docker image
-      uses: docker pull kartik1712/listenbrainz:latest
+      run: docker pull kartik1712/listenbrainz:latest
       continue-on-error: true
 
     - name: Build and push image
