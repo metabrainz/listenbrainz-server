@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 NUM_YEARS_TO_PROCESS_FOR_CONTINUOUS_AGGREGATE_REFRESH = 3
 
+
 def recalculate_all_user_data():
 
     timescale.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
@@ -132,7 +133,8 @@ def refresh_listen_count_aggregate():
     timescale.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
 
     end_ts = int(datetime.now().timestamp()) - 31536000
-    start_ts = end_ts - (NUM_YEARS_TO_PROCESS_FOR_CONTINUOUS_AGGREGATE_REFRESH * 31536000) + 1
+    start_ts = end_ts - \
+        (NUM_YEARS_TO_PROCESS_FOR_CONTINUOUS_AGGREGATE_REFRESH * 31536000) + 1
 
     while True:
         query = "call refresh_continuous_aggregate('listen_count_30day', :start_ts, :end_ts)"
@@ -141,7 +143,7 @@ def refresh_listen_count_aggregate():
             with timescale.engine.connect() as connection:
                 connection.connection.set_isolation_level(0)
                 connection.execute(sqlalchemy.text(query), {
-                    "start_ts" : start_ts,
+                    "start_ts": start_ts,
                     "end_ts": end_ts
                 })
         except psycopg2.OperationalError as e:
@@ -150,12 +152,14 @@ def refresh_listen_count_aggregate():
             raise
 
         t1 = time.monotonic()
-        logger.info("Refreshed continuous aggregate for: %s to %s in %.2fs" % (str(datetime.fromtimestamp(start_ts)), str(datetime.fromtimestamp(end_ts)), t1-t0))
+        logger.info("Refreshed continuous aggregate for: %s to %s in %.2fs" % (str(
+            datetime.fromtimestamp(start_ts)), str(datetime.fromtimestamp(end_ts)), t1-t0))
 
         end_ts -= (NUM_YEARS_TO_PROCESS_FOR_CONTINUOUS_AGGREGATE_REFRESH * 31536000)
         start_ts -= (NUM_YEARS_TO_PROCESS_FOR_CONTINUOUS_AGGREGATE_REFRESH * 31536000)
         if end_ts < DATA_START_YEAR_IN_SECONDS:
             break
+
 
 class TimescaleListenStoreException(Exception):
     pass
