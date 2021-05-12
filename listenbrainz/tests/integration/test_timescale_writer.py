@@ -64,7 +64,8 @@ class TimescaleWriterTestCase(IntegrationTestCase):
 
     def test_update_listen_count_per_day_and_test_timestamps(self):
         """ Tests that timescale writer updates the listen count for the
-        day in redis for each successful batch written
+        day in redis for each successful batch written and to see if the user
+        timestamps via the timescale listen store are updated in redis.
         """
         user = db_user.get_or_create(1, 'testtimescaleuser %d' % randint(1, 50000))
         r = self.send_listen(user, 'valid_single.json')
