@@ -47,6 +47,7 @@ type UserFeedPageProps = {
   currentUser: ListenBrainzUser;
   events: TimelineEvent[];
   spotify: SpotifyUser;
+  youtube: YoutubeUser;
 } & WithAlertNotificationsInjectedProps;
 
 type UserFeedPageState = {
@@ -353,7 +354,7 @@ export default class UserFeedPage extends React.Component<
   }
 
   render() {
-    const { currentUser, spotify, newAlert } = this.props;
+    const { currentUser, spotify, youtube, newAlert } = this.props;
     const {
       alerts,
       currentListen,
@@ -511,6 +512,7 @@ export default class UserFeedPage extends React.Component<
                   onCurrentListenChange={this.handleCurrentListenChange}
                   ref={this.brainzPlayer}
                   spotifyUser={spotify}
+                  youtubeUser={youtube}
                 />
               </div>
             </div>
@@ -525,7 +527,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#react-container");
   const propsElement = document.getElementById("react-props");
   const reactProps = JSON.parse(propsElement!.innerHTML);
-  const { api_url, current_user, spotify, events, sentry_dsn } = reactProps;
+  const {
+    api_url,
+    current_user,
+    spotify,
+    youtube,
+    events,
+    sentry_dsn,
+  } = reactProps;
 
   if (sentry_dsn) {
     Sentry.init({ dsn: sentry_dsn });
@@ -544,7 +553,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const UserFeedPageWithAlertNotifications = withAlertNotifications(
     UserFeedPage
   );
-
   ReactDOM.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
@@ -552,6 +560,7 @@ document.addEventListener("DOMContentLoaded", () => {
           currentUser={current_user}
           events={events}
           spotify={spotify}
+          youtube={youtube}
         />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,

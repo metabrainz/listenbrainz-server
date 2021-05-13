@@ -7,9 +7,9 @@
     "url": "git+https://github.com/metabrainz/listenbrainz-server.git"
   },
   "scripts": {
-    "build:dev": "webpack --progress --colors",
-    "build:prod": "webpack -p --env production --progress --colors && npm run build:prod:less",
-    "build:prod:less": "lessc /static/css/main.less > /static/css/main.css",
+    "build:dev": "webpack --mode=development --watch --progress --color",
+    "build:prod": "webpack --mode=production --no-watch --progress --color",
+    "build:less": "lessc /static/css/main.less > /static/css/main.css",
     "build:types": "tsc --emitDeclarationOnly",
     "build": "npm run build:dev",
     "format": "eslint ./static/js/src --ext .js,jsx,ts,tsx --fix --quiet",
@@ -51,9 +51,9 @@
     "debounce-async": "0.0.2",
     "dompurify": "^2.2.6",
     "eslint-plugin-jest": "^23.8.2",
-    "less": "^2.7.2",
+    "less": "^4.1.1",
     "less-plugin-clean-css": "^1.5.1",
-    "lodash": "^4.17.19",
+    "lodash": "^4.17.21",
     "react": "^16.13.1",
     "react-bs-notifier": "^5.0.0",
     "react-date-picker": "^8.1.1",
@@ -99,7 +99,6 @@
     "@typescript-eslint/parser": "^2.26.0",
     "babel-jest": "^25.1.0",
     "babel-loader": "^8.0.6",
-    "clean-webpack-plugin": "^3.0.0",
     "enzyme": "^3.11.0",
     "enzyme-adapter-react-16": "^1.15.2",
     "enzyme-to-json": "^3.4.4",
@@ -111,15 +110,16 @@
     "eslint-plugin-prettier": "^3.1.2",
     "eslint-plugin-react": "^7.19.0",
     "eslint-plugin-react-hooks": "^2.5.1",
-    "fork-ts-checker-webpack-plugin": "^6.0.5",
+    "fork-ts-checker-webpack-plugin": "^6.2.6",
     "jest": "^25.1.0",
     "jest-fetch-mock": "^3.0.3",
     "jest-junit": "^12.0.0",
+    "less-loader": "^8.1.1",
     "prettier": "^2.0.2",
     "ts-jest": "^25.3.1",
     "typescript": "^3.8.3",
-    "webpack": "^4.44.1",
-    "webpack-cli": "^3.3.10",
-    "webpack-manifest-plugin": "^2.2.0"
+    "webpack": "^5.37.0",
+    "webpack-cli": "^4.7.0",
+    "webpack-manifest-plugin": "^3.1.1"
   }
 }

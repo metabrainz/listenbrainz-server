@@ -41,6 +41,7 @@ export type DataSourceProps = {
 
 type BrainzPlayerProps = {
   spotifyUser: SpotifyUser;
+  youtubeUser: YoutubeUser;
   direction: BrainzPlayDirection;
   onCurrentListenChange: (listen: Listen | JSPFTrack) => void;
   currentListen?: Listen | JSPFTrack;
@@ -408,7 +409,7 @@ export default class BrainzPlayer extends React.Component<
       progressMs,
       durationMs,
     } = this.state;
-    const { spotifyUser } = this.props;
+    const { spotifyUser, youtubeUser } = this.props;
     const { APIService } = this.context;
     return (
       <div>
@@ -452,6 +453,8 @@ export default class BrainzPlayer extends React.Component<
             }
             onInvalidateDataSource={this.invalidateDataSource}
             ref={this.youtubePlayer}
+            youtubeUser={youtubeUser}
+            refreshYoutubeToken={APIService.refreshYoutubeToken}
             playerPaused={playerPaused}
             onPlayerPausedChange={this.playerPauseChange}
             onProgressChange={this.progressChange}

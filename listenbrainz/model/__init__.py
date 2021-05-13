@@ -5,5 +5,6 @@ db = SQLAlchemy()
 
 
 # import all models here please
-from listenbrainz.model.spotify import Spotify
+from listenbrainz.model.external_service_oauth import ExternalService
 from listenbrainz.model.user import User
+from listenbrainz.model.listens_import import ListensImporter
