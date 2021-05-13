@@ -9,6 +9,8 @@ on:
       - '**.jsx?'
       - '**.tsx?'
       - '**.json'
+      - 'docker/Dockerfile.webpack'
+      - 'test.sh'
 
 jobs:
 

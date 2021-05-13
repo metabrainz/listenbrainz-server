@@ -11,6 +11,7 @@ on:
       - 'requirements_development.txt'
       - 'Dockerfile.spark'
       - 'docker/docker-compose.spark*.yml'
+      - 'test.sh'
 
 jobs:
 
