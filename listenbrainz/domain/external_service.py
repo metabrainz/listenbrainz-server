@@ -46,8 +46,7 @@ class ExternalService(ABC):
         if within_minutes < 0:
             raise ValueError("within_minutes must be 0 or greater")
         now = datetime.datetime.now(datetime.timezone.utc)
-        return user['token_expires'] < (now - datetime.timedelta(minutes=within_minutes))
-
+        return user['token_expires'] < (now + datetime.timedelta(minutes=within_minutes))
 
     def get_authorize_url(self, scopes: Sequence[str]):
         raise NotImplementedError()

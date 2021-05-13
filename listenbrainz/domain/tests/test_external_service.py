@@ -17,8 +17,8 @@ class ExternalServiceTestCase(ServerTestCase):
         assert service.user_oauth_token_has_expired(user) is True
 
         # expires within the 5 minute threshold
-        user = {'token_expires': datetime.datetime(2021, 5, 12, 3, 18, 40, tzinfo=datetime.timezone.utc)}
-        assert service.user_oauth_token_has_expired(user) is False
+        user = {'token_expires': datetime.datetime(2021, 5, 12, 3, 24, 40, tzinfo=datetime.timezone.utc)}
+        assert service.user_oauth_token_has_expired(user) is True
 
         # hasn't expired
         user = {'token_expires': datetime.datetime(2021, 5, 12, 4, 1, 40, tzinfo=datetime.timezone.utc)}
