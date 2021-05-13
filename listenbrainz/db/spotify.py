@@ -79,10 +79,10 @@ def get_user(user_id: int) -> Optional[dict]:
               FROM external_service_oauth
               JOIN "user"
                 ON "user".id = external_service_oauth.user_id
-              JOIN listens_importer
+         LEFT JOIN listens_importer
                 ON listens_importer.external_service_oauth_id = external_service_oauth.id
-              WHERE external_service_oauth.service = 'spotify'
-                AND "user".id = :user_id
+             WHERE external_service_oauth.service = 'spotify'
+               AND "user".id = :user_id
         """), {
             'user_id': user_id
         })
