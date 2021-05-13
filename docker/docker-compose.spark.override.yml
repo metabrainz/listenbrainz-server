@@ -21,6 +21,12 @@ services:
   request_consumer:
     command: bash -c "zip -r /rec/listenbrainz_spark.zip listenbrainz_spark/ ; python spark_manage.py request_consumer"
 
+  spark_reader:
+    image: web
+    command: python3 -m "listenbrainz.spark.spark_reader"
+    volumes:
+      - ..:/code/listenbrainz:z
+
 networks:
   default:
     external:
