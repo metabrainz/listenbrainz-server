@@ -9,8 +9,8 @@ const jsDir = path.join(baseDir, "js");
 const distDir = path.join(baseDir, "dist");
 const cssDir = path.join(baseDir, "css");
 
-module.exports = function (env) {
-  const isProd = env === "production";
+module.exports = function (env, argv) {
+  const isProd = argv.mode === "production";
   const plugins = [
     new CleanWebpackPlugin(),
     new WebpackManifestPlugin(),
@@ -32,7 +32,6 @@ module.exports = function (env) {
     }),
   ];
   return {
-    mode: isProd ? "production" : "development",
     entry: {
       // Importing main.less file here so that it gets compiled.
       // All the Less/CSS will be exported separately to a main.css file
