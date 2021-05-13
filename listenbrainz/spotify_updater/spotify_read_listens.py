@@ -311,13 +311,6 @@ def process_one_user(user: dict, service: SpotifyService):
 
         current_app.logger.info('imported %d listens for %s' % (len(listens), str(user['musicbrainz_id'])))
 
-    except ExternalServiceAPIError as e:
-        # if it is an error from the Spotify API, show the error message to the user
-        service.update_user_import_status(user_id=user['user_id'], error=str(e))
-        if not current_app.config['TESTING']:
-            notify_error(user['musicbrainz_row_id'], str(e))
-        raise ExternalServiceError("Could not refresh user token from spotify")
-
     except ExternalServiceInvalidGrantError:
         error_message = "It seems like you've revoked permission for us to read your spotify account"
         service.update_user_import_status(user_id=user['user_id'], error=error_message)
@@ -327,6 +320,13 @@ def process_one_user(user: dict, service: SpotifyService):
         # in any of these cases, we should delete the user's token from.
         service.revoke_user(user['user_id'])
         raise ExternalServiceError("User has revoked spotify authorization")
+
+    except ExternalServiceAPIError as e:
+        # if it is an error from the Spotify API, show the error message to the user
+        service.update_user_import_status(user_id=user['user_id'], error=str(e))
+        if not current_app.config['TESTING']:
+            notify_error(user['musicbrainz_row_id'], str(e))
+        raise ExternalServiceError("Could not refresh user token from spotify")
 
 
 def process_all_spotify_users():
