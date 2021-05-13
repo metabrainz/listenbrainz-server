@@ -17,6 +17,7 @@
       <link href="{{ url_for('static', filename='css/main.less') }}" rel="stylesheet/less" type="text/css" />
       <script src="{{ url_for('static', filename='js/lib/less.min.js') }}"></script>
     {% else %}
+      <!-- The css file has a .less extension in the manifest file entry (due to its original name in wbepack entry) -->
       <link href="{{ get_static_path('main.less') }}" rel="stylesheet" media="screen" />
     {% endif %}
   {%- endblock -%}

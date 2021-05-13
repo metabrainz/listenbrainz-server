@@ -17,7 +17,7 @@
       <link href="{{ url_for('static', filename='css/main.less') }}" rel="stylesheet/less" type="text/css" />
       <script src="{{ url_for('static', filename='js/lib/less.min.js') }}"></script>
     {% else %}
-      <link href="{{ get_static_path('main.less') }}" rel="stylesheet" media="screen" />
+      <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet" media="screen" />
     {% endif %}
   {%- endblock -%}
 </head>
