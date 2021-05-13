@@ -153,8 +153,6 @@ class SpotifyService(ImporterService):
         access_token = response['access_token']
         if "refresh_token" in response:
             refresh_token = response['refresh_token']
-        else:
-            refresh_token = refresh_token
         expires_at = int(time.time()) + response['expires_in']
         external_service_oauth.update_token(user_id=user_id, service=self.service,
                                             access_token=access_token, refresh_token=refresh_token,

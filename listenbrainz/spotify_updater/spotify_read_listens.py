@@ -14,7 +14,7 @@ from listenbrainz.domain.spotify import SpotifyService
 from listenbrainz.webserver.errors import APIBadRequest
 
 from dateutil import parser
-from flask import current_app, render_template, url_for
+from flask import current_app, render_template
 from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen, LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
 from listenbrainz.db import user as db_user
 from listenbrainz.db.exceptions import DatabaseException
