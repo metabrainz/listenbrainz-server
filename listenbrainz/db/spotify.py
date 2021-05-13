@@ -59,6 +59,9 @@ def get_user_import_details(user_id: int) -> Optional[dict]:
 
 
 def get_user(user_id: int) -> Optional[dict]:
+    """ This get_user method is different from the one in external_service_oauth.py because
+     here we join against the listens_importer table to fetch the latest_listened_at column.
+     We need latest_listened_at column for using in the spotify_reader."""
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             SELECT external_service_oauth.user_id
