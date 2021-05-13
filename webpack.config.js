@@ -32,7 +32,8 @@ module.exports = function (env, argv) {
   return {
     entry: {
       // Importing main.less file here so that it gets compiled.
-      // All the Less/CSS will be exported separately to a main.css file
+      // Otherwise with a standalone entrypoint Webpack would generate a superfluous js file.
+      // All the Less/CSS will be exported separately to a main.css file and not appear in the recentListens module
       recentListens: [
         path.resolve(jsDir, "src/RecentListens.tsx"),
         path.resolve(cssDir, "main.less"),
