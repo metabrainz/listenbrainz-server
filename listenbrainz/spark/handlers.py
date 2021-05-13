@@ -197,10 +197,20 @@ def handle_dump_imported(data):
 
     dump_name = data['imported_dump']
     import_completion_time = data['time']
+
+    if dump_name:
+        template = 'emails/dump_import_notification.txt'
+        subject = 'A {} has been imported into the Spark cluster'.format(' '.join(data['type'].split('_')[1:]))
+        recipients = ['listenbrainz-observability@metabrainz.org']
+    else:
+        template = 'emails/dump_import_failure.txt'
+        subject = 'No dump imported into Spark cluster!'
+        recipients = ['listenbrainz-exceptions@metabrainz.org']
+
     send_mail(
-        subject='A {} has been imported into the Spark cluster'.format(' '.join(data['type'].split('_')[1:])),
-        text=render_template('emails/dump_import_notification.txt', dump_name=", ".join(dump_name), time=import_completion_time),
-        recipients=['listenbrainz-observability@metabrainz.org'],
+        subject=subject,
+        text=render_template(template, dump_name=", ".join(dump_name), time=import_completion_time),
+        recipients=recipients,
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
     )
