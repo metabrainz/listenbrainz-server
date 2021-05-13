@@ -98,7 +98,6 @@
     "@typescript-eslint/parser": "^2.26.0",
     "babel-jest": "^25.1.0",
     "babel-loader": "^8.0.6",
-    "clean-webpack-plugin": "^4.0.0-alpha.0",
     "enzyme": "^3.11.0",
     "enzyme-adapter-react-16": "^1.15.2",
     "enzyme-to-json": "^3.4.4",

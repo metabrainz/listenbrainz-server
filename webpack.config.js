@@ -1,6 +1,5 @@
 const path = require("path");
 const { WebpackManifestPlugin } = require("webpack-manifest-plugin");
-const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 const LessPluginCleanCSS = require("less-plugin-clean-css");
 
@@ -12,7 +11,6 @@ const cssDir = path.join(baseDir, "css");
 module.exports = function (env, argv) {
   const isProd = argv.mode === "production";
   const plugins = [
-    new CleanWebpackPlugin(),
     new WebpackManifestPlugin(),
     new ForkTsCheckerWebpackPlugin({
       typescript: {
@@ -55,6 +53,7 @@ module.exports = function (env, argv) {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",
       path: distDir,
       publicPath: `${distDir}/`,
+      clean: true, // Clean the output directory before emit.
     },
     devtool: isProd ? "source-map" : "eval-source-map",
     module: {
