@@ -273,7 +273,7 @@ def process_one_user(user: dict, service: SpotifyService):
 
     """
     try:
-        if user['token_expired']:
+        if service.user_oauth_token_has_expired(user):
             user = service.refresh_access_token(user['user_id'], user['refresh_token'])
 
         listenbrainz_user = db_user.get(user['user_id'])

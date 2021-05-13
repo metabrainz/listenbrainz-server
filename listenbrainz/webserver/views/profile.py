@@ -331,7 +331,7 @@ def refresh_service_token(service_name: str):
     if not user:
         raise APINotFound("User has not authenticated to %s" % service_name.capitalize())
 
-    if user["token_expired"]:
+    if service.user_oauth_token_has_expired(user):
         try:
             user = service.refresh_access_token(current_user.id, user["refresh_token"])
         except ExternalServiceInvalidGrantError:

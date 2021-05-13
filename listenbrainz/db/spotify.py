@@ -16,7 +16,6 @@ def get_active_users_to_process() -> List[dict]:
                  , refresh_token
                  , listens_importer.last_updated
                  , token_expires
-                 , token_expires < now() as token_expired
                  , scopes
                  , latest_listened_at
                  , error_message
@@ -72,7 +71,6 @@ def get_user(user_id: int) -> Optional[dict]:
                  , refresh_token
                  , external_service_oauth.last_updated
                  , token_expires
-                 , token_expires < now() as token_expired
                  , scopes
                  , latest_listened_at
                  , error_message
