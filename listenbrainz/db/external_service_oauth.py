@@ -121,7 +121,6 @@ def get_token(user_id: int, service: ExternalServiceType) -> Union[dict, None]:
                  , refresh_token
                  , last_updated
                  , token_expires
-                 , token_expires < now() as token_expired
                  , scopes
               FROM external_service_oauth
               JOIN "user"
