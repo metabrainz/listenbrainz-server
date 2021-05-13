@@ -149,8 +149,8 @@ def make_api_request(user: dict, endpoint: str, **kwargs):
             spotipy_call = getattr(spotipy_client, endpoint)
             recently_played = spotipy_call(**kwargs)
             break
-        except (AttributeError, TypeError) as err:
-            current_app.logger.critical("Invalid spotipy endpoint or arguments:", err, exc_info=True)
+        except (AttributeError, TypeError):
+            current_app.logger.critical("Invalid spotipy endpoint or arguments:", exc_info=True)
             return None
         except SpotifyException as e:
             retries -= 1
