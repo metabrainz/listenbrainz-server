@@ -17,9 +17,11 @@ services:
   datanode:
     volumes:
       - datanode:/hdfs:z
+    depends_on:
+      - namenode
 
   request_consumer:
-    command: bash -c "zip -r /rec/listenbrainz_spark.zip listenbrainz_spark/ ; python manage.py run_request_consumer"
+    command: bash -c "zip -r /rec/listenbrainz_spark.zip listenbrainz_spark/ ; python spark_manage.py request_consumer"
 
 networks:
   default:
