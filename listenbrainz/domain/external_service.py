@@ -1,3 +1,4 @@
+import datetime
 from abc import ABC
 from typing import Union, Sequence
 
@@ -30,6 +31,22 @@ class ExternalService(ABC):
 
     def get_user(self, user_id: int) -> Union[dict, None]:
         return external_service_oauth.get_token(user_id=user_id, service=self.service)
+
+    def user_oauth_token_has_expired(self, user: dict, within_minutes: int = 5) -> bool:
+        """Check if a user's oauth token has expired (within a threshold)
+
+        Args:
+            user: the result of :py:meth:`~ExternalService.get_user`
+            within_minutes: say that the token has expired if it will expire within this
+               many minutes
+
+        Returns:
+            True if ``user['token_expires']`` is after the current time
+        """
+        if within_minutes < 0:
+            raise ValueError("within_minutes must be 0 or greater")
+        now = datetime.datetime.now(datetime.timezone.utc)
+        return user['token_expires'] < (now + datetime.timedelta(minutes=within_minutes))
 
     def get_authorize_url(self, scopes: Sequence[str]):
         raise NotImplementedError()

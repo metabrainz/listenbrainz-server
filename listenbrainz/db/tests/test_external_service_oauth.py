@@ -58,7 +58,6 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(user['access_token'], 'token')
         self.assertEqual(user['refresh_token'], 'refresh_token')
         self.assertIn('token_expires', user)
-        self.assertIn('token_expired', user)
 
     def test_delete_token_unlink(self):
         db_oauth.delete_token(self.user['id'], ExternalServiceType.SPOTIFY, remove_import_log=True)

@@ -150,13 +150,13 @@ def recent_listens():
             })
 
     spotify_user = get_current_spotify_user()
-    youtuber_user = get_current_youtube_user()
+    youtube_user = get_current_youtube_user()
 
     props = {
         "listens": recent,
         "mode": "recent",
         "spotify": spotify_user,
-        "youtube": youtuber_user,
+        "youtube": youtube_user,
         "api_url": current_app.config["API_URL"],
         "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn")
     }
@@ -172,6 +172,7 @@ def recent_listens():
 def feed():
 
     spotify_user = get_current_spotify_user()
+    youtube_user = get_current_youtube_user()
 
     current_user_data = {
         "id": current_user.id,
@@ -182,6 +183,7 @@ def feed():
     props = {
         "current_user": current_user_data,
         "spotify": spotify_user,
+        "youtube": youtube_user,
         "api_url": current_app.config["API_URL"],
     }
     return render_template('index/feed.html', props=ujson.dumps(props))
