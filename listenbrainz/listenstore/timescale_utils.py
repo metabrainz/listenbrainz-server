@@ -17,6 +17,7 @@ from listenbrainz import config
 logger = logging.getLogger(__name__)
 
 NUM_YEARS_TO_PROCESS_FOR_CONTINUOUS_AGGREGATE_REFRESH = 3
+SECONDS_IN_A_YEAR = 31536000
 
 
 def recalculate_all_user_data():
@@ -132,9 +133,9 @@ def refresh_listen_count_aggregate():
 
     timescale.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
 
-    end_ts = int(datetime.now().timestamp()) - 31536000
+    end_ts = int(datetime.now().timestamp()) - SECONDS_IN_A_YEAR
     start_ts = end_ts - \
-        (NUM_YEARS_TO_PROCESS_FOR_CONTINUOUS_AGGREGATE_REFRESH * 31536000) + 1
+        (NUM_YEARS_TO_PROCESS_FOR_CONTINUOUS_AGGREGATE_REFRESH * SECONDS_IN_A_YEAR) + 1
 
     while True:
         query = "call refresh_continuous_aggregate('listen_count_30day', :start_ts, :end_ts)"
@@ -155,8 +156,8 @@ def refresh_listen_count_aggregate():
         logger.info("Refreshed continuous aggregate for: %s to %s in %.2fs" % (str(
             datetime.fromtimestamp(start_ts)), str(datetime.fromtimestamp(end_ts)), t1-t0))
 
-        end_ts -= (NUM_YEARS_TO_PROCESS_FOR_CONTINUOUS_AGGREGATE_REFRESH * 31536000)
-        start_ts -= (NUM_YEARS_TO_PROCESS_FOR_CONTINUOUS_AGGREGATE_REFRESH * 31536000)
+        end_ts -= (NUM_YEARS_TO_PROCESS_FOR_CONTINUOUS_AGGREGATE_REFRESH * SECONDS_IN_A_YEAR)
+        start_ts -= (NUM_YEARS_TO_PROCESS_FOR_CONTINUOUS_AGGREGATE_REFRESH * SECONDS_IN_A_YEAR)
         if end_ts < DATA_START_YEAR_IN_SECONDS:
             break
 
