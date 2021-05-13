@@ -125,19 +125,19 @@ def _convert_spotify_play_to_listen(play, listen_type):
     return listen
 
 
-def make_api_request(user, spotipy_call: callable, **kwargs):
+def make_api_request(user: dict, endpoint: str, **kwargs):
     """ Make an request to the Spotify API for particular user at specified endpoint with args.
 
     Args:
-        user (spotify.Spotify): the user whose plays are to be imported.
-        spotipy_call (callable): the Spotipy function which makes request to the required API endpoint
+        user: the user whose plays are to be imported.
+        endpoint: the name of Spotipy function which makes request to the required API endpoint
 
     Returns:
         the response from the spotify API
 
     Raises:
-        spotify.SpotifyAPIError: if we encounter errors from the Spotify API.
-        spotify.SpotifyListenBrainzError: if we encounter a rate limit, even after retrying.
+        ExternalServiceAPIError: if we encounter errors from the Spotify API.
+        ExternalServiceError: if we encounter a rate limit, even after retrying.
     """
     retries = 10
     delay = 1
@@ -145,6 +145,8 @@ def make_api_request(user, spotipy_call: callable, **kwargs):
 
     while retries > 0:
         try:
+            spotipy_client = spotipy.Spotify(auth=user['access_token'])
+            spotipy_call = getattr(spotipy_client, endpoint)
             recently_played = spotipy_call(**kwargs)
             break
         except SpotifyException as e:
@@ -204,13 +206,13 @@ def get_user_recently_played(user):
     if user['latest_listened_at']:
         latest_listened_at_ts = int(user['latest_listened_at'].timestamp() * 1000)  # latest listen UNIX ts in ms
 
-    return make_api_request(user, spotipy.Spotify(auth=user['access_token']).current_user_recently_played, limit=50, after=latest_listened_at_ts)
+    return make_api_request(user, 'current_user_recently_played', limit=50, after=latest_listened_at_ts)
 
 
 def get_user_currently_playing(user):
     """ Get the user's currently playing track.
     """
-    return make_api_request(user, spotipy.Spotify(auth=user['access_token']).current_user_playing_track)
+    return make_api_request(user, 'current_user_playing_track')
 
 
 def submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTEN_TYPE_IMPORT):
