@@ -156,6 +156,10 @@ class TimescaleListenStore(ListenStore):
             Args:
                 select_min_timestamp: boolean. Select the min timestamp if true, max if false.
                 user_name: the user for whom to fetch the timestamp.
+
+            Returns:
+
+                The selected timestamp for the user or 0 if no timestamp was found.
         """
 
         function = "max"

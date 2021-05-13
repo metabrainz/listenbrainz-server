@@ -453,6 +453,10 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(max_ts, 1400000200)
 
     def test_for_empty_timestamps(self):
+        """
+            Even if a user has no listens they should have the sentinel timestamps of 0,0 stored in the
+            cache to avoid continually recomputing them
+        """
         uid = random.randint(2000, 1 << 31)
         testuser = db_user.get_or_create(uid, "user_%d" % uid)
         testuser_name = testuser['musicbrainz_id']
