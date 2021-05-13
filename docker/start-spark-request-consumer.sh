@@ -27,4 +27,4 @@ spark-submit \
         --conf "spark.executor.memory"=$EXECUTOR_MEMORY \
         --conf "spark.driver.memory"=$DRIVER_MEMORY \
        --py-files listenbrainz_spark_request_consumer.zip \
-    manage.py run_request_consumer
+    spark_manage.py request_consumer

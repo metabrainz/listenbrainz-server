@@ -8,7 +8,7 @@ from werkzeug.serving import run_simple
 import os
 import click
 import sqlalchemy
-import time
+from time import sleep
 
 from listenbrainz.utils import safely_import_config
 safely_import_config()
@@ -54,14 +54,6 @@ def run_api_compat_server(host, port, debug=False):
 def run_websockets(host, port, debug=True):
     from listenbrainz.websockets.websockets import run_websockets
     run_websockets(host=host, port=port, debug=debug)
-
-
-@cli.command(name='run_request_consumer')
-def request_consumer():
-    """ Invoke script responsible for the request consumer
-    """
-    from listenbrainz_spark.request_consumer.request_consumer import main
-    main('request-consumer-%s' % str(int(time.time())))
 
 
 @cli.command(name="init_db")
@@ -210,7 +202,7 @@ def init_ts_db(force, create_db):
                 retries += 1
                 if retries == 5:
                     raise
-                time.sleep(1)
+                sleep(1)
                 continue
 
         if not res:
@@ -253,10 +245,15 @@ def init_ts_db(force, create_db):
         print("Done!")
 
 
+@cli.command(name="calculate_user_similarity")
+def calculate_user_similarity():
+    application = webserver.create_app()
+    with application.app_context():
+        user_similarity.calculate_similar_users()
+
 @cli.command(name="recalculate_all_user_data")
 def recalculate_all_user_data():
     ts_recalculate_all_user_data()
-
 
 # Add other commands here
 cli.add_command(spark_request_manage.cli, name="spark")
