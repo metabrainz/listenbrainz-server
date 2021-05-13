@@ -61,12 +61,12 @@ export default class SpotifyPlayer
     if (!accessToken || !permission) {
       return false;
     }
-    const scopes = permission.split(" ");
+    const scopes = permission;
     const requiredScopes = [
       "streaming",
       "user-read-email",
       "user-read-private",
-    ];
+    ] as Array<SpotifyPermission>;
     for (let i = 0; i < requiredScopes.length; i += 1) {
       if (!scopes.includes(requiredScopes[i])) {
         return false;
@@ -189,6 +189,7 @@ export default class SpotifyPlayer
       try {
         errorMessage = await response.json();
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.error(err);
       }
       if (response.status === 401) {
@@ -216,7 +217,7 @@ export default class SpotifyPlayer
         handleError(errorMessage || response);
       }
     } catch (error) {
-      handleError(error);
+      handleError(error.message);
     }
   };
 
@@ -274,7 +275,7 @@ export default class SpotifyPlayer
         account linked to your ListenBrainz account.
         <br />
         Please try to{" "}
-        <a href="/profile/connect-spotify" target="_blank">
+        <a href="/profile/music-services/details/" target="_blank">
           link for &quot;playing music&quot; feature
         </a>{" "}
         and refresh this page

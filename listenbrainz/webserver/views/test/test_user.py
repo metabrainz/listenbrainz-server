@@ -1,24 +1,27 @@
+import time
+
 import listenbrainz.db.stats as db_stats
 import ujson
 from unittest import mock
 
 from flask import url_for, current_app
+
+from data.model.external_service import ExternalServiceType
 from data.model.user_artist_stat import UserArtistStatJson
 
-from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.db import external_service_oauth as db_oauth
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
+from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.webserver.timescale_connection import init_timescale_connection
 from listenbrainz.webserver.login import User
-from listenbrainz.webserver.testing import ServerTestCase
 
 import listenbrainz.db.user as db_user
 import logging
 
 
-class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
+class UserViewsTestCase(IntegrationTestCase):
     def setUp(self):
-        ServerTestCase.setUp(self)
-        DatabaseTestCase.setUp(self)
+        super(UserViewsTestCase, self).setUp()
 
         self.log = logging.getLogger(__name__)
         self.logstore = init_timescale_connection(self.log, {
@@ -37,8 +40,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
 
     def tearDown(self):
         self.logstore = None
-        ServerTestCase.tearDown(self)
-        DatabaseTestCase.tearDown(self)
 
     def test_redirects(self):
         # Not logged in
@@ -85,41 +86,47 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertEqual(props['artist_count'], '2')
         self.assertDictEqual(props['spotify'], {})
 
-    @mock.patch('listenbrainz.webserver.views.user.spotify')
-    def test_spotify_token_access(self, mock_domain_spotify):
+    def test_spotify_token_access_no_login(self):
+        db_oauth.save_token(user_id=self.user.id, service=ExternalServiceType.SPOTIFY,
+                            access_token='token', refresh_token='refresh',
+                            token_expires_ts=int(time.time()) + 1000, record_listens=True,
+                            scopes=['user-read-recently-played', 'streaming'])
+
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertTemplateUsed('user/profile.html')
         props = ujson.loads(self.get_context_variable('props'))
         self.assertDictEqual(props['spotify'], {})
 
+    def test_spotify_token_access_unlinked(self):
         self.temporary_login(self.user.login_id)
-        mock_domain_spotify.get_user_dict.return_value = {}
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         props = ujson.loads(self.get_context_variable('props'))
         self.assertDictEqual(props['spotify'], {})
 
-        mock_domain_spotify.get_user_dict.return_value = {
-            'access_token': 'token',
-            'permission': 'permission',
-        }
+    def test_spotify_token_access(self):
+        db_oauth.save_token(user_id=self.user.id, service=ExternalServiceType.SPOTIFY,
+                            access_token='token', refresh_token='refresh',
+                            token_expires_ts=int(time.time()) + 1000, record_listens=True,
+                            scopes=['user-read-recently-played', 'streaming'])
+
+        self.temporary_login(self.user.login_id)
+
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         props = ujson.loads(self.get_context_variable('props'))
-        mock_domain_spotify.get_user_dict.assert_called_with(self.user.id)
         self.assertDictEqual(props['spotify'], {
             'access_token': 'token',
-            'permission': 'permission',
+            'permission': ['user-read-recently-played', 'streaming'],
         })
 
         response = self.client.get(url_for('user.profile', user_name=self.weirduser.musicbrainz_id))
         self.assert200(response)
         props = ujson.loads(self.get_context_variable('props'))
-        mock_domain_spotify.get_user_dict.assert_called_with(self.user.id)
         self.assertDictEqual(props['spotify'], {
             'access_token': 'token',
-            'permission': 'permission',
+            'permission': ['user-read-recently-played', 'streaming'],
         })
 
     @mock.patch('listenbrainz.webserver.views.user.db_user_relationship.is_following_user')

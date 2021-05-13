@@ -9,8 +9,12 @@ import APIService from "./APIService";
 const props = {
   spotifyUser: {
     access_token: "heyo",
-    permission: "read" as SpotifyPermission,
+    permission: ["user-read-currently-playing"] as Array<SpotifyPermission>,
   },
+  youtubeUser: {
+    access_token: "frontend-test",
+    api_key: "fake-api-key",
+  } as YoutubeUser,
   direction: "up" as BrainzPlayDirection,
   onCurrentListenChange: (listen: Listen | JSPFTrack) => {},
   listens: [],
@@ -67,7 +71,11 @@ describe("BrainzPlayer", () => {
       ...props,
       spotifyUser: {
         access_token: "haveyouseenthefnords",
-        permission: "streaming user-read-email user-read-private" as SpotifyPermission,
+        permission: [
+          "streaming",
+          "user-read-email",
+          "user-read-private",
+        ] as Array<SpotifyPermission>,
       },
     };
     const wrapper = mount<BrainzPlayer>(
@@ -83,7 +91,11 @@ describe("BrainzPlayer", () => {
       ...props,
       spotifyUser: {
         access_token: "haveyouseenthefnords",
-        permission: "streaming user-read-email user-read-private" as SpotifyPermission,
+        permission: [
+          "streaming",
+          "user-read-email",
+          "user-read-private",
+        ] as Array<SpotifyPermission>,
       },
     };
     const wrapper = mount<BrainzPlayer>(
@@ -113,7 +125,11 @@ describe("BrainzPlayer", () => {
       ...props,
       spotifyUser: {
         access_token: "haveyouseenthefnords",
-        permission: "streaming user-read-email user-read-private" as SpotifyPermission,
+        permission: [
+          "streaming",
+          "user-read-email",
+          "user-read-private",
+        ] as Array<SpotifyPermission>,
       },
     };
     const wrapper = mount<BrainzPlayer>(
@@ -142,7 +158,11 @@ describe("BrainzPlayer", () => {
       ...props,
       spotifyUser: {
         access_token: "haveyouseenthefnords",
-        permission: "streaming user-read-email user-read-private" as SpotifyPermission,
+        permission: [
+          "streaming",
+          "user-read-email",
+          "user-read-private",
+        ] as Array<SpotifyPermission>,
       },
     };
     const wrapper = mount<BrainzPlayer>(
@@ -170,7 +190,11 @@ describe("BrainzPlayer", () => {
       ...props,
       spotifyUser: {
         access_token: "haveyouseenthefnords",
-        permission: "streaming user-read-email user-read-private" as SpotifyPermission,
+        permission: [
+          "streaming",
+          "user-read-email",
+          "user-read-private",
+        ] as Array<SpotifyPermission>,
       },
     };
     const wrapper = mount<BrainzPlayer>(
@@ -198,7 +222,11 @@ describe("BrainzPlayer", () => {
       ...props,
       spotifyUser: {
         access_token: "haveyouseenthefnords",
-        permission: "streaming user-read-email user-read-private" as SpotifyPermission,
+        permission: [
+          "streaming",
+          "user-read-email",
+          "user-read-private",
+        ] as Array<SpotifyPermission>,
       },
     };
     const wrapper = mount<BrainzPlayer>(
