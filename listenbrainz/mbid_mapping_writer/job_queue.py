@@ -81,13 +81,23 @@ class MappingJobQueue(threading.Thread):
                                         (stats["total"], stats["processed"], stats["exact_match"], stats["high_quality"],
                                          stats["med_quality"], stats["low_quality"], stats["no_match"], stats["existing"], 
                                          stats["errors"], percent))
-                                metrics.set("listenbrainz-mbid-mapping-writer", processed=stats["total"],
-                                            exact_match=stats["exact_match"], 
+                                metrics.set("listenbrainz-mbid-mapping-writer", 
+                                            total_match_p=percent,
+                                            exact_match_p=stats["exact_match"] / stats["total"] * 100.00, 
+                                            high_quality_p=stats["high_quality"] / stats["total"] * 100.00,
+                                            med_quality_p=stats["med_quality"] / stats["total"] * 100.00,
+                                            low_quality_p=stats["low_quality"] / stats["total"] * 100.00,
+                                            no_match_p=stats["no_match"] / stats["total"] * 100.00,
+                                            existing_p=stats["existing"] / stats["total"] * 100.00,
+                                            errors_p=stats["errors"] / stats["total"] * 100.00,
+                                            total_listens=stats["total"],
+                                            total_processed=stats["processed"],
+                                            exact_match=stats["exact_match"],
                                             high_quality=stats["high_quality"],
                                             med_quality=stats["med_quality"],
                                             low_quality=stats["low_quality"],
                                             no_match=stats["no_match"],
-                                            existing=stats["existing"],
+                                            existing=stats["existing"], 
                                             errors=stats["errors"])
                             
 
