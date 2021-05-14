@@ -22,8 +22,8 @@ docker buildx build \
     --cache-from metabrainz/listenbrainz:latest \
     --tag metabrainz/listenbrainz:"$TAG" \
     --target listenbrainz-prod \
-    --build-arg GIT_COMMIT_SHA="$GIT_COMMIT_SHA" . && \
-docker push metabrainz/listenbrainz:"$TAG"
+    --push \
+    --build-arg GIT_COMMIT_SHA="$GIT_COMMIT_SHA" .
 
 
 # Only tag the built image as latest if the TAG matches the
