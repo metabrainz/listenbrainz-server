@@ -106,15 +106,24 @@ CREATE TABLE spotify_auth (
 );
 
 CREATE TABLE external_service_oauth (
-    id                      SERIAL,
-    user_id                 INTEGER NOT NULL,
+    id                      SERIAL,  -- PK
+    user_id                 INTEGER NOT NULL,  -- FK to "user".id
     service                 external_service_oauth_type NOT NULL,
     access_token            TEXT NOT NULL,
     refresh_token           TEXT,
     token_expires           TIMESTAMP WITH TIME ZONE,
     last_updated            TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    record_listens          BOOLEAN NOT NULL,
-    service_details         JSONB
+    scopes                  TEXT[]
+);
+
+CREATE TABLE listens_importer (
+    id                          SERIAL,  -- PK
+    external_service_oauth_id   INTEGER, -- FK to external_service_oauth.id
+    user_id                     INTEGER NOT NULL,  -- FK to "user".id
+    service                     external_service_oauth_type NOT NULL,
+    last_updated                TIMESTAMP WITH TIME ZONE,
+    latest_listened_at          TIMESTAMP WITH TIME ZONE,
+    error_message               TEXT
 );
 
 CREATE TABLE statistics.artist (

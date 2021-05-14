@@ -1,17 +1,13 @@
-import json
 import uuid
 import ujson
-from unittest import mock
-from requests.models import Response
 import listenbrainz.db.user as db_user
 from datetime import datetime
 
 from flask import url_for
 from unittest.mock import patch
 from flask import render_template, current_app
-from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.webserver.views.user import _get_user
-from listenbrainz.webserver.testing import ServerTestCase
 from werkzeug.exceptions import BadRequest, InternalServerError
 from listenbrainz.webserver.views import recommendations_cf_recording
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
@@ -19,11 +15,10 @@ from data.model.user_cf_recommendations_recording_message import (UserRecommenda
                                                                   UserRecommendationsData)
 
 
-class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
+class CFRecommendationsViewsTestCase(IntegrationTestCase):
     def setUp(self):
         self.server_url = "https://labs.api.listenbrainz.org/recording-mbid-lookup/json"
-        ServerTestCase.setUp(self)
-        DatabaseTestCase.setUp(self)
+        super(CFRecommendationsViewsTestCase, self).setUp()
         self.user = db_user.get_or_create(1, 'vansika')
         db_user.agree_to_gdpr(self.user['musicbrainz_id'])
         self.user2 = db_user.get_or_create(2, 'vansika_1')
@@ -55,11 +50,6 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
                 'similar_artist': data['recording_mbid']
             })
         )
-
-
-    def tearDown(self):
-        ServerTestCase.tearDown(self)
-        DatabaseTestCase.tearDown(self)
 
     def test_info_invalid_user(self):
         response = self.client.get(url_for('recommendations_cf_recording.info', user_name="invalid"))
@@ -189,11 +179,10 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
         error_msg = "An error occurred while processing your request. Check back later!"
         self.assert_context('error_msg', error_msg)
 
-    @patch('listenbrainz.webserver.views.recommendations_cf_recording.spotify.get_user_dict')
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.current_user')
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.db_recommendations_cf_recording.get_user_recommendation')
     @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_playable_recommendations_list')
-    def test_get_template(self, mock_get_recommendations, mock_get_rec, mock_curr_user, mock_spotify_dict):
+    def test_get_template(self, mock_get_recommendations, mock_get_rec, mock_curr_user):
         # active_section = 'top_artist'
         user = _get_user('vansika_1')
         created = datetime.utcnow()
@@ -223,9 +212,6 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
         }]
         mock_get_recommendations.return_value = recommendations
 
-        spotify_dict = {'user': 10}
-        mock_spotify_dict.return_value = spotify_dict
-
         mock_curr_user.id = 10
         mock_curr_user.musicbrainz_id = 'vansika'
         mock_curr_user.auth_token = 'yyyy'
@@ -233,7 +219,6 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
         recommendations_cf_recording._get_template(active_section='top_artist', user=user)
         mock_get_rec.assert_called_with(user.id)
         mock_get_recommendations.assert_called_once()
-        mock_spotify_dict.assert_called_with(10)
         self.assertTemplateUsed('recommendations_cf_recording/top_artist.html')
         self.assert_context('active_section', 'top_artist')
         self.assert_context('user', user)
@@ -249,7 +234,8 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
                 "name": 'vansika',
                 "auth_token": 'yyyy',
             },
-            "spotify": spotify_dict,
+            "spotify": {},
+            "youtube": {},
             "api_url": current_app.config["API_URL"],
             "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
             "recommendations": recommendations,

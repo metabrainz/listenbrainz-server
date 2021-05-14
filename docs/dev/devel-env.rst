@@ -92,7 +92,7 @@ Update the ``LASTFM_API_KEY`` field with your Last.fm API key.
 You also need to update the ``API_URL`` field value to ``http://localhost``.
 
 To use the Spotify importer you need to register an application on the
-`Spotify Developer Dashboard`_. Use ``http://localhost/profile/connect-spotify/callback``
+`Spotify Developer Dashboard`_. Use ``http://localhost/profile/music-services/spotify/callback/``
 as the callback URL.
 
 After that, fill out the Spotify client ID and client secret in the following

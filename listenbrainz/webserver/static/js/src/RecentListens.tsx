@@ -25,6 +25,7 @@ export type RecentListensProps = {
   profileUrl?: string;
   saveUrl?: string;
   spotify: SpotifyUser;
+  youtube: YoutubeUser;
   user: ListenBrainzUser;
   webSocketsServerUrl: string;
   currentUser?: ListenBrainzUser;
@@ -472,6 +473,7 @@ export default class RecentListens extends React.Component<
       latestListenTs,
       oldestListenTs,
       spotify,
+      youtube,
       user,
       currentUser,
       newAlert,
@@ -664,6 +666,7 @@ export default class RecentListens extends React.Component<
               onCurrentListenChange={this.handleCurrentListenChange}
               ref={this.brainzPlayer}
               spotifyUser={spotify}
+              youtubeUser={youtube}
             />
           </div>
         </div>
@@ -691,6 +694,7 @@ document.addEventListener("DOMContentLoaded", () => {
     profile_url,
     save_url,
     spotify,
+    youtube,
     user,
     web_sockets_server_url,
     current_user,
@@ -727,6 +731,7 @@ document.addEventListener("DOMContentLoaded", () => {
           profileUrl={profile_url}
           saveUrl={save_url}
           spotify={spotify}
+          youtube={youtube}
           user={user}
           webSocketsServerUrl={web_sockets_server_url}
           currentUser={current_user}
