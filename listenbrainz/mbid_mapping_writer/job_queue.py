@@ -26,7 +26,7 @@ class MappingJobQueue(threading.Thread):
         self.priority = 1
 
         init_cache(host=app.config['REDIS_HOST'], port=app.config['REDIS_PORT'], namespace=app.config['REDIS_NAMESPACE'])
-        metrics.init("listenbrainz-mbid-mapping-writer")
+        metrics.init("listenbrainz")
 
     def add_new_listens(self, listens):
         self.queue.put((self.priority, listens))
@@ -81,7 +81,7 @@ class MappingJobQueue(threading.Thread):
                                         (stats["total"], stats["processed"], stats["exact_match"], stats["high_quality"],
                                          stats["med_quality"], stats["low_quality"], stats["no_match"], stats["existing"], 
                                          stats["errors"], percent))
-                                metrics.set("stats", processed=stats["total"],
+                                metrics.set("listenbrainz-mbid-mapping-writer", processed=stats["total"],
                                             exact_match=stats["exact_match"], 
                                             high_quality=stats["high_quality"],
                                             med_quality=stats["med_quality"],
