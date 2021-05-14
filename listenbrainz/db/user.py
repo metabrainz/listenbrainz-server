@@ -80,6 +80,7 @@ def get(id):
             "created": <account creation time>,
             "musicbrainz_id": <MusicBrainz username>,
             "auth_token": <authentication token>,
+            "email": <email of the user>,
             "last_login": <date that this user last logged in>,
             "latest_import": <date that this user last performed a data import>
             "gdpr_agreed": <boolean, if the user has agreed to terms and conditions>,

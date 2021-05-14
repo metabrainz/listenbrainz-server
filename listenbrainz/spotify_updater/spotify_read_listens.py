@@ -24,15 +24,14 @@ from brainzutils.mail import send_mail
 from brainzutils.musicbrainz_db import editor as mb_editor
 
 
-def notify_error(musicbrainz_row_id, error):
+def notify_error(user, error):
     """ Notifies specified user via email about error during Spotify import.
 
     Args:
-        musicbrainz_row_id (int): the MusicBrainz row ID of the user
+        user (dict): the user whom the email is to be sent
         error (str): a description of the error encountered.
     """
-    user_email = mb_editor.get_editor_by_id(musicbrainz_row_id)['email']
-    if not user_email:
+    if not user['email']:
         return
 
     spotify_url = current_app.config['SERVER_ROOT_URL'] + '/profile/music-services/details/'
@@ -40,7 +39,7 @@ def notify_error(musicbrainz_row_id, error):
     send_mail(
         subject='ListenBrainz Spotify Importer Error',
         text=text,
-        recipients=[user_email],
+        recipients=[user['email']],
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
     )
@@ -320,7 +319,7 @@ def process_one_user(user: dict, service: SpotifyService):
         error_message = "It seems like you've revoked permission for us to read your spotify account"
         service.update_user_import_status(user_id=user['user_id'], error=error_message)
         if not current_app.config['TESTING']:
-            notify_error(user['musicbrainz_row_id'], error_message)
+            notify_error(listenbrainz_user, error_message)
         # user has revoked authorization through spotify ui or deleted their spotify account etc.
         # in any of these cases, we should delete the user's token from.
         service.revoke_user(user['user_id'])
@@ -330,7 +329,7 @@ def process_one_user(user: dict, service: SpotifyService):
         # if it is an error from the Spotify API, show the error message to the user
         service.update_user_import_status(user_id=user['user_id'], error=str(e))
         if not current_app.config['TESTING']:
-            notify_error(user['musicbrainz_row_id'], str(e))
+            notify_error(listenbrainz_user, str(e))
         raise ExternalServiceError("Could not refresh user token from spotify")
 
 

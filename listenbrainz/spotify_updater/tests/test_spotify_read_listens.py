@@ -94,14 +94,12 @@ class ConvertListensTestCase(DatabaseTestCase):
         self.assertDictEqual(listen, expected_listen)
 
     @patch('listenbrainz.spotify_updater.spotify_read_listens.send_mail')
-    @patch('listenbrainz.spotify_updater.spotify_read_listens.mb_editor.get_editor_by_id')
-    def test_notify_user(self, mock_get_editor, mock_send_mail):
-        mock_get_editor.return_value = {'email': 'example@listenbrainz.org'}
+    def test_notify_user(self, mock_send_mail):
+        test_user = {'email': 'example@listenbrainz.org'}
         app = listenbrainz.webserver.create_app()
         app.config['SERVER_NAME'] = "test"
         with app.app_context():
-            spotify_read_listens.notify_error(musicbrainz_row_id=1, error='some random error')
-        mock_get_editor.assert_called_once_with(1)
+            spotify_read_listens.notify_error(test_user, error='some random error')
         mock_send_mail.assert_called_once()
         self.assertListEqual(mock_send_mail.call_args[1]['recipients'], ['example@listenbrainz.org'])
 
@@ -114,7 +112,7 @@ class ConvertListensTestCase(DatabaseTestCase):
         app.config['TESTING'] = False
         with app.app_context():
             spotify_read_listens.process_all_spotify_users()
-            mock_notify_error.assert_called_once_with(self.user['id'], 'api borked')
+            mock_notify_error.assert_called_once_with(self.user, 'api borked')
             mock_update.assert_called_once()
 
     @patch('spotipy.Spotify')
