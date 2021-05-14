@@ -18,7 +18,7 @@ TAG=${1:-beta}
 
 echo "building for tag $TAG"
 
-docker build \
+docker buildx build \
     --cache-from metabrainz/listenbrainz:latest \
     --tag metabrainz/listenbrainz:"$TAG" \
     --target listenbrainz-prod \
