@@ -62,7 +62,7 @@ module.exports = function (env, argv) {
         {
           test: /\.(js|ts)x?$/,
           // some nivo/D3 dependencies need to be transpiled, we include them with the following regex
-          exclude: /node_modules\/(?!(d3-array|d3-scale|internmap)\/).*/,
+          exclude: /node_modules\/(?!(d3-array|d3-scale|internmap|react-date-picker|react-calendar)\/).*/,
           // Don't specify the babel configuration here
           // Configuration can be found in ./babel.config.js
           use: "babel-loader",
