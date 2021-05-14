@@ -7,11 +7,13 @@ import traceback
 from flask import current_app
 from listenbrainz.mbid_mapping_writer.matcher import lookup_new_listens
 from listenbrainz.labs_api.labs.api.mbid_mapping import MATCH_TYPES
+from listenbrainz.utils import init_cache
+from brainzutils import metrics, cache
 
 MAX_THREADS = 1
 MAX_QUEUED_JOBS = MAX_THREADS * 2
 
-UPDATE_INTERVAL = 3
+UPDATE_INTERVAL = 5 
 
 
 class MappingJobQueue(threading.Thread):
@@ -22,6 +24,9 @@ class MappingJobQueue(threading.Thread):
         self.app = app
         self.queue = PriorityQueue()
         self.priority = 1
+
+        init_cache(host=app.config['REDIS_HOST'], port=app.config['REDIS_PORT'])
+        metrics.init("listenbrainz-mbid-mapping-writer")
 
     def add_new_listens(self, listens):
         self.queue.put((self.priority, listens))
@@ -69,12 +74,21 @@ class MappingJobQueue(threading.Thread):
                                 self.app.logger.info("Unsupported job type in MappingJobQueue (MBID Mapping Writer).")
                         if time() > update_time: 
                             update_time = time() + UPDATE_INTERVAL
-                            percent = (stats["exact_match"] + stats["high_quality"] + stats["med_quality"] +
-                                      stats["low_quality"] + stats["existing"]) / stats["total"] * 100.00
-                            self.app.logger.info("%d (%d) listens: exact %d high %d med %d low %d no %d prev %d err %d %.1f%%" %
-                                    (stats["total"], stats["processed"], stats["exact_match"], stats["high_quality"],
-                                     stats["med_quality"], stats["low_quality"], stats["no_match"], stats["existing"], 
-                                     stats["errors"], percent))
+                            if stats["total"] != 0:
+                                percent = (stats["exact_match"] + stats["high_quality"] + stats["med_quality"] +
+                                          stats["low_quality"] + stats["existing"]) / stats["total"] * 100.00
+                                self.app.logger.info("%d (%d) listens: exact %d high %d med %d low %d no %d prev %d err %d %.1f%%" %
+                                        (stats["total"], stats["processed"], stats["exact_match"], stats["high_quality"],
+                                         stats["med_quality"], stats["low_quality"], stats["no_match"], stats["existing"], 
+                                         stats["errors"], percent))
+                                metrics.set("stats", processed=stats["total"],
+                                            exact_match=stats["exact_match"], 
+                                            high_quality=stats["high_quality"],
+                                            med_quality=stats["med_quality"],
+                                            low_quality=stats["low_quality"],
+                                            no_match=stats["no_match"],
+                                            existing=stats["existing"],
+                                            errors=stats["errors"])
                             
 
         except Exception as err:

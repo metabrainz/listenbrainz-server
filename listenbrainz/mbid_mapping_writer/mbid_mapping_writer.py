@@ -16,6 +16,7 @@ class MBIDMappingWriter(threading.Thread):
         self.app = app
         self.queue = None
 
+
     def callback(self, channel, method, properties, body):
         listens = json.loads(body)
         self.queue.add_new_listens(listens)
