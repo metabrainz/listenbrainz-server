@@ -40,6 +40,7 @@ module.exports = {
     "jsx-a11y/label-has-associated-control": ['error', {
       "assert":"either"
     }],
+    "react/static-property-placement": ["error", "static public field"]
   },
   settings: {
     "import/resolver": {

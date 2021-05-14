@@ -26,12 +26,16 @@ import UserFeedPage from "./UserFeed";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import BrainzPlayer from "../BrainzPlayer";
 import * as timelineProps from "./__mocks__/timelineProps.json";
+import GlobalAppContext from "../GlobalAppContext";
+import APIService from "../APIService";
 
 // typescript doesn't recognise string literal values
 const props = {
   ...timelineProps,
   events: timelineProps.events as TimelineEvent[],
   spotify: timelineProps.spotify as SpotifyUser,
+  youtube: timelineProps.youtube as YoutubeUser,
+  newAlert: () => {},
 };
 
 describe("<UserFeed />", () => {
@@ -124,22 +128,26 @@ describe("<UserFeed />", () => {
 
     describe("handleClickOlder", () => {
       it("does nothing if there is no older events timestamp", async () => {
-        const wrapper = shallow<UserFeedPage>(<UserFeedPage {...props} />);
+        const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
+        const wrapper = mount<UserFeedPage>(<UserFeedPage {...props} />, {
+          context: {
+            APIService: { getFeedForUser: spy },
+          },
+        });
         const instance = wrapper.instance();
 
         wrapper.setState({ nextEventTs: undefined });
 
-        const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
-        // eslint-disable-next-line dot-notation
-        instance["APIService"].getFeedForUser = spy;
-
         await instance.handleClickOlder();
+        // Flush promises
+        await new Promise((resolve) => setImmediate(resolve));
+
         expect(wrapper.state("loading")).toBeFalsy();
         expect(spy).not.toHaveBeenCalled();
       });
 
       it("calls the API to get older events", async () => {
-        const wrapper = shallow<UserFeedPage>(<UserFeedPage {...props} />);
+        const wrapper = mount<UserFeedPage>(<UserFeedPage {...props} />);
         const instance = wrapper.instance();
 
         wrapper.setState({ nextEventTs: 1586450000 });
@@ -158,8 +166,8 @@ describe("<UserFeed />", () => {
         const spy = jest
           .fn()
           .mockImplementation(() => Promise.resolve(expectedEventsArray));
-        // eslint-disable-next-line dot-notation
-        instance["APIService"].getFeedForUser = spy;
+
+        instance.context.APIService.getFeedForUser = spy;
 
         await instance.handleClickOlder();
         expect(spy).toHaveBeenCalledWith(
@@ -173,14 +181,13 @@ describe("<UserFeed />", () => {
       });
 
       it("sets nextEventTs to undefined if it receives no events from API", async () => {
-        const wrapper = shallow<UserFeedPage>(<UserFeedPage {...props} />);
+        const wrapper = mount<UserFeedPage>(<UserFeedPage {...props} />);
         const instance = wrapper.instance();
 
         wrapper.setState({ nextEventTs: 1586450000 });
 
         const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
-        // eslint-disable-next-line dot-notation
-        instance["APIService"].getFeedForUser = spy;
+        instance.context.APIService.getFeedForUser = spy;
 
         await instance.handleClickOlder();
         expect(spy).toHaveBeenCalledWith(
@@ -195,7 +202,7 @@ describe("<UserFeed />", () => {
       });
 
       it("sets the events, nextEventTs and  previousEventTs on the state and updates browser history", async () => {
-        const wrapper = shallow<UserFeedPage>(<UserFeedPage {...props} />);
+        const wrapper = mount<UserFeedPage>(<UserFeedPage {...props} />);
         const instance = wrapper.instance();
 
         // Random nextEventTs to ensure that is the value set in browser history
@@ -208,8 +215,7 @@ describe("<UserFeed />", () => {
         const spy = jest.fn().mockImplementation((username, minTs, maxTs) => {
           return Promise.resolve(sortedEvents);
         });
-        // eslint-disable-next-line dot-notation
-        instance["APIService"].getFeedForUser = spy;
+        instance.context.APIService.getFeedForUser = spy;
 
         await instance.handleClickOlder();
 
@@ -227,22 +233,23 @@ describe("<UserFeed />", () => {
 
     describe("handleClickNewer", () => {
       it("does nothing if there is no newer events timestamp", async () => {
-        const wrapper = shallow<UserFeedPage>(<UserFeedPage {...props} />);
+        const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
+        const wrapper = shallow<UserFeedPage>(<UserFeedPage {...props} />, {
+          context: {
+            APIService: { getFeedForUser: spy },
+          },
+        });
         const instance = wrapper.instance();
 
         wrapper.setState({ previousEventTs: undefined });
-
-        const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
-        // eslint-disable-next-line dot-notation
-        instance["APIService"].getFeedForUser = spy;
 
         await instance.handleClickNewer();
         expect(wrapper.state("loading")).toBeFalsy();
         expect(spy).not.toHaveBeenCalled();
       });
 
-      it("calls the API to get older events", async () => {
-        const wrapper = shallow<UserFeedPage>(<UserFeedPage {...props} />);
+      it("calls the API to get newer events", async () => {
+        const wrapper = mount<UserFeedPage>(<UserFeedPage {...props} />);
         const instance = wrapper.instance();
         wrapper.setState({ previousEventTs: 123456 });
 
@@ -261,8 +268,7 @@ describe("<UserFeed />", () => {
         const spy = jest
           .fn()
           .mockImplementation(() => Promise.resolve(expectedEventsArray));
-        // eslint-disable-next-line dot-notation
-        instance["APIService"].getFeedForUser = spy;
+        instance.context.APIService.getFeedForUser = spy;
 
         await instance.handleClickNewer();
 
@@ -276,15 +282,15 @@ describe("<UserFeed />", () => {
         );
       });
 
-      it("sets nextEventTs to undefined if it receives no events from API", async () => {
-        const wrapper = shallow<UserFeedPage>(<UserFeedPage {...props} />);
+      it("sets previousEventTs to undefined if it receives no events from API", async () => {
+        const wrapper = mount<UserFeedPage>(<UserFeedPage {...props} />);
         const instance = wrapper.instance();
 
         wrapper.setState({ previousEventTs: 123456 });
 
         const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
-        // eslint-disable-next-line dot-notation
-        instance["APIService"].getFeedForUser = spy;
+
+        instance.context.APIService.getFeedForUser = spy;
 
         await instance.handleClickNewer();
         expect(wrapper.state("loading")).toBeFalsy();
@@ -293,20 +299,19 @@ describe("<UserFeed />", () => {
       });
 
       it("sets the events, nextEventTs and  previousEventTs on the state and updates browser history", async () => {
-        const wrapper = shallow<UserFeedPage>(<UserFeedPage {...props} />);
+        const wrapper = mount<UserFeedPage>(<UserFeedPage {...props} />);
         const instance = wrapper.instance();
-
         wrapper.setState({ previousEventTs: 123456 });
 
         const sortedEvents = sortBy(props.events, "created");
+        instance.context.APIService.getFeedForUser = jest.fn(
+          (username, minTs, maxTs) => {
+            return Promise.resolve(sortedEvents);
+          }
+        );
+
         const nextEventTs = sortedEvents[props.events.length - 1].created;
         const previousEventTs = sortedEvents[0].created;
-
-        const spy = jest.fn().mockImplementation((username, minTs, maxTs) => {
-          return Promise.resolve(sortedEvents);
-        });
-        // eslint-disable-next-line dot-notation
-        instance["APIService"].getFeedForUser = spy;
 
         await instance.handleClickNewer();
 

@@ -1,24 +1,31 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
-import { AlertList } from "react-bs-notifier";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { isEqual, get } from "lodash";
+import * as Sentry from "@sentry/react";
 
+import { get, isEqual } from "lodash";
+import {
+  WithAlertNotificationsInjectedProps,
+  withAlertNotifications,
+} from "../AlertNotificationsHOC";
+
+import APIServiceClass from "../APIService";
+import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import BrainzPlayer from "../BrainzPlayer";
-import APIService from "../APIService";
+import ErrorBoundary from "../ErrorBoundary";
 import Loader from "../components/Loader";
 import RecommendationCard from "./RecommendationCard";
 
-export interface RecommendationsProps {
-  apiUrl: string;
+export type RecommendationsProps = {
   recommendations?: Array<Recommendation>;
   profileUrl?: string;
   spotify: SpotifyUser;
+  youtube: YoutubeUser;
   user: ListenBrainzUser;
   webSocketsServerUrl: string;
   currentUser?: ListenBrainzUser;
-}
+} & WithAlertNotificationsInjectedProps;
 
 export interface RecommendationsState {
   alerts: Array<Alert>;
@@ -35,9 +42,13 @@ export default class Recommendations extends React.Component<
   RecommendationsProps,
   RecommendationsState
 > {
+  static contextType = GlobalAppContext;
+  declare context: React.ContextType<typeof GlobalAppContext>;
+
   private brainzPlayer = React.createRef<BrainzPlayer>();
   private recommendationsTable = React.createRef<HTMLTableElement>();
-  private APIService: APIService;
+
+  private APIService!: APIServiceClass;
 
   private expectedRecommendationsPerPage = 25;
 
@@ -60,14 +71,13 @@ export default class Recommendations extends React.Component<
     };
 
     this.recommendationsTable = React.createRef();
-    this.APIService = new APIService(
-      props.apiUrl || `${window.location.origin}/1`
-    );
   }
 
   componentDidMount(): void {
     const { user, currentUser } = this.props;
     const { currRecPage } = this.state;
+    const { APIService } = this.context;
+    this.APIService = APIService;
     if (currentUser?.name === user?.name) {
       this.loadFeedback();
     }
@@ -75,7 +85,7 @@ export default class Recommendations extends React.Component<
   }
 
   getFeedback = async () => {
-    const { user } = this.props;
+    const { user, newAlert } = this.props;
     const { recommendations } = this.state;
     const recordings: string[] = [];
 
@@ -96,7 +106,7 @@ export default class Recommendations extends React.Component<
         );
         return data.feedback;
       } catch (error) {
-        this.newAlert(
+        newAlert(
           "danger",
           "Playback error",
           typeof error === "object" ? error.message : error
@@ -108,6 +118,9 @@ export default class Recommendations extends React.Component<
 
   loadFeedback = async () => {
     const feedback = await this.getFeedback();
+    if (!feedback) {
+      return;
+    }
     const recommendationFeedbackMap: RecommendationFeedbackMap = {};
     feedback.forEach((fb: RecommendationFeedbackResponse) => {
       recommendationFeedbackMap[fb.recording_mbid] = fb.rating;
@@ -146,60 +159,6 @@ export default class Recommendations extends React.Component<
     recommendation: Recommendation | JSPFTrack
   ): void => {
     this.setState({ currentRecommendation: recommendation as Recommendation });
-  };
-
-  newAlert = (
-    type: AlertType,
-    headline: string,
-    message?: string | JSX.Element,
-    count?: number
-  ): void => {
-    const newAlert = {
-      id: new Date().getTime(),
-      type,
-      headline,
-      message,
-      count,
-    } as Alert;
-
-    this.setState((prevState) => {
-      const alertsList = prevState.alerts;
-      for (let i = 0; i < alertsList.length; i += 1) {
-        const item = alertsList[i];
-        if (
-          item.type === newAlert.type &&
-          item.headline.startsWith(newAlert.headline) &&
-          item.message === newAlert.message
-        ) {
-          if (!alertsList[i].count) {
-            // If the count attribute is undefined, then Initializing it as 2
-            alertsList[i].count = 2;
-          } else {
-            alertsList[i].count! += 1;
-          }
-          alertsList[i].headline = `${newAlert.headline} (${alertsList[i]
-            .count!})`;
-          return { alerts: alertsList };
-        }
-      }
-      return {
-        alerts: [...prevState.alerts, newAlert],
-      };
-    });
-  };
-
-  onAlertDismissed = (alert: Alert): void => {
-    const { alerts } = this.state;
-
-    // find the index of the alert that was dismissed
-    const idx = alerts.indexOf(alert);
-
-    if (idx >= 0) {
-      this.setState({
-        // remove the alert from the array
-        alerts: [...alerts.slice(0, idx), ...alerts.slice(idx + 1)],
-      });
-    }
   };
 
   handleClickPrevious = () => {
@@ -276,17 +235,17 @@ export default class Recommendations extends React.Component<
       currRecPage,
       totalRecPages,
     } = this.state;
-    const { spotify, user, currentUser, apiUrl } = this.props;
+    const {
+      spotify,
+      youtube,
+      user,
+      currentUser,
+
+      newAlert,
+    } = this.props;
 
     return (
       <div role="main">
-        <AlertList
-          position="bottom-right"
-          alerts={alerts}
-          timeout={15000}
-          dismissTitle="Dismiss"
-          onDismiss={this.onAlertDismissed}
-        />
         <div className="row">
           <div className="col-md-8">
             <div>
@@ -323,8 +282,7 @@ export default class Recommendations extends React.Component<
                           ?.recording_mbid
                       )}
                       updateFeedback={this.updateFeedback}
-                      apiUrl={apiUrl}
-                      newAlert={this.newAlert}
+                      newAlert={newAlert}
                     />
                   );
                 })}
@@ -375,14 +333,14 @@ export default class Recommendations extends React.Component<
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
             <BrainzPlayer
-              apiService={this.APIService}
               currentListen={currentRecommendation}
               direction={direction}
               listens={recommendations}
-              newAlert={this.newAlert}
+              newAlert={newAlert}
               onCurrentListenChange={this.handleCurrentRecommendationChange}
               ref={this.brainzPlayer}
               spotifyUser={spotify}
+              youtubeUser={youtube}
             />
           </div>
         </div>
@@ -404,20 +362,43 @@ document.addEventListener("DOMContentLoaded", () => {
     api_url,
     recommendations,
     spotify,
+    youtube,
     user,
     web_sockets_server_url,
     current_user,
+    sentry_dsn,
   } = reactProps;
 
+  if (sentry_dsn) {
+    Sentry.init({ dsn: sentry_dsn });
+  }
+
+  const apiService = new APIServiceClass(
+    api_url || `${window.location.origin}/1`
+  );
+
+  const globalProps: GlobalAppContextT = {
+    APIService: apiService,
+    currentUser: current_user,
+    spotifyAuth: spotify,
+  };
+
+  const RecommendationsWithAlertNotifications = withAlertNotifications(
+    Recommendations
+  );
   ReactDOM.render(
-    <Recommendations
-      apiUrl={api_url}
-      recommendations={recommendations}
-      spotify={spotify}
-      user={user}
-      webSocketsServerUrl={web_sockets_server_url}
-      currentUser={current_user}
-    />,
+    <ErrorBoundary>
+      <GlobalAppContext.Provider value={globalProps}>
+        <RecommendationsWithAlertNotifications
+          recommendations={recommendations}
+          spotify={spotify}
+          user={user}
+          webSocketsServerUrl={web_sockets_server_url}
+          currentUser={current_user}
+          youtube={youtube}
+        />
+      </GlobalAppContext.Provider>
+    </ErrorBoundary>,
     domContainer
   );
 });

@@ -1,6 +1,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+import * as Sentry from "@sentry/react";
 
 import {
   faBell,
@@ -14,14 +15,19 @@ import {
   faUserSecret,
   faUserSlash,
 } from "@fortawesome/free-solid-svg-icons";
-
-import { AlertList } from "react-bs-notifier";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { isEqual } from "lodash";
 import { sanitize } from "dompurify";
-import APIService from "../APIService";
+import {
+  WithAlertNotificationsInjectedProps,
+  withAlertNotifications,
+} from "../AlertNotificationsHOC";
+
+import APIServiceClass from "../APIService";
+import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import BrainzPlayer from "../BrainzPlayer";
+import ErrorBoundary from "../ErrorBoundary";
 import Loader from "../components/Loader";
 import TimelineEventCard from "./TimelineEventCard";
 import { preciseTimestamp } from "../utils";
@@ -38,11 +44,12 @@ export enum EventType {
 }
 
 type UserFeedPageProps = {
-  apiUrl: string;
   currentUser: ListenBrainzUser;
   events: TimelineEvent[];
   spotify: SpotifyUser;
-};
+  youtube: YoutubeUser;
+} & WithAlertNotificationsInjectedProps;
+
 type UserFeedPageState = {
   currentListen?: Listen;
   alerts: Alert[];
@@ -57,6 +64,8 @@ export default class UserFeedPage extends React.Component<
   UserFeedPageProps,
   UserFeedPageState
 > {
+  static contextType = GlobalAppContext;
+
   static isEventListenable(event: TimelineEvent): boolean {
     const { event_type } = event;
     return (
@@ -65,6 +74,8 @@ export default class UserFeedPage extends React.Component<
       event_type === EventType.LISTEN
     );
   }
+
+  declare context: React.ContextType<typeof GlobalAppContext>;
 
   static getEventTypeIcon(eventType: EventTypeT) {
     switch (eventType) {
@@ -100,8 +111,6 @@ export default class UserFeedPage extends React.Component<
     }
   }
 
-  private APIService: APIService;
-
   private brainzPlayer = React.createRef<BrainzPlayer>();
 
   constructor(props: UserFeedPageProps) {
@@ -113,10 +122,6 @@ export default class UserFeedPage extends React.Component<
       events: props.events || [],
       loading: false,
     };
-
-    this.APIService = new APIService(
-      props.apiUrl || `${window.location.origin}/1`
-    );
   }
 
   async componentDidMount(): Promise<void> {
@@ -144,7 +149,10 @@ export default class UserFeedPage extends React.Component<
     await this.getFeedFromAPI(minTs, maxTs);
   };
 
-  handleClickOlder = async () => {
+  handleClickOlder = async (event?: React.MouseEvent) => {
+    if (event) {
+      event.preventDefault();
+    }
     const { nextEventTs } = this.state;
     // No more events to fetch
     if (!nextEventTs) {
@@ -155,7 +163,10 @@ export default class UserFeedPage extends React.Component<
     });
   };
 
-  handleClickNewer = async () => {
+  handleClickNewer = async (event?: React.MouseEvent) => {
+    if (event) {
+      event.preventDefault();
+    }
     const { previousEventTs, earliestEventTs } = this.state;
     // No more events to fetch
     if (
@@ -174,19 +185,20 @@ export default class UserFeedPage extends React.Component<
     maxTs?: number,
     successCallback?: () => void
   ) => {
-    const { currentUser } = this.props;
+    const { currentUser, newAlert } = this.props;
     const { earliestEventTs } = this.state;
+    const { APIService } = this.context;
     this.setState({ loading: true });
     let newEvents: TimelineEvent[] = [];
     try {
-      newEvents = await this.APIService.getFeedForUser(
+      newEvents = await APIService.getFeedForUser(
         currentUser.name,
         currentUser.auth_token as string,
         minTs,
         maxTs
       );
     } catch (error) {
-      this.newAlert(
+      newAlert(
         "warning",
         "Could not load timeline events",
         <>
@@ -240,60 +252,6 @@ export default class UserFeedPage extends React.Component<
     }
   };
 
-  newAlert = (
-    type: AlertType,
-    title: string,
-    message: string | JSX.Element,
-    count?: number
-  ): void => {
-    const newAlert: Alert = {
-      id: new Date().getTime(),
-      type,
-      headline: title,
-      message,
-      count,
-    };
-
-    this.setState((prevState) => {
-      const alertsList = prevState.alerts;
-      for (let i = 0; i < alertsList.length; i += 1) {
-        const item = alertsList[i];
-        if (
-          item.type === newAlert.type &&
-          item.headline.startsWith(newAlert.headline) &&
-          item.message === newAlert.message
-        ) {
-          if (!alertsList[i].count) {
-            // If the count attribute is undefined, then Initializing it as 2
-            alertsList[i].count = 2;
-          } else {
-            alertsList[i].count! += 1;
-          }
-          alertsList[i].headline = `${newAlert.headline} (${alertsList[i]
-            .count!})`;
-          return { alerts: alertsList };
-        }
-      }
-      return {
-        alerts: [...prevState.alerts, newAlert],
-      };
-    });
-  };
-
-  onAlertDismissed = (alert: Alert): void => {
-    const { alerts } = this.state;
-
-    // find the index of the alert that was dismissed
-    const idx = alerts.indexOf(alert);
-
-    if (idx >= 0) {
-      this.setState({
-        // remove the alert from the array
-        alerts: [...alerts.slice(0, idx), ...alerts.slice(idx + 1)],
-      });
-    }
-  };
-
   handleCurrentListenChange = (listen: Listen | JSPFTrack): void => {
     this.setState({ currentListen: listen as Listen });
   };
@@ -312,6 +270,7 @@ export default class UserFeedPage extends React.Component<
   renderEventContent(event: TimelineEvent) {
     if (UserFeedPage.isEventListenable(event)) {
       const { metadata } = event;
+      const { newAlert } = this.props;
       return (
         <div className="event-content">
           <TimelineEventCard
@@ -319,7 +278,7 @@ export default class UserFeedPage extends React.Component<
               this.isCurrentListen(metadata as Listen) ? " current-listen" : ""
             }
             listen={metadata as Listen}
-            newAlert={this.newAlert}
+            newAlert={newAlert}
             playListen={this.playListen}
           />
         </div>
@@ -395,7 +354,7 @@ export default class UserFeedPage extends React.Component<
   }
 
   render() {
-    const { currentUser, spotify, apiUrl } = this.props;
+    const { currentUser, spotify, youtube, newAlert } = this.props;
     const {
       alerts,
       currentListen,
@@ -410,6 +369,9 @@ export default class UserFeedPage extends React.Component<
       .filter(UserFeedPage.isEventListenable)
       .map((event) => event.metadata) as Listen[];
 
+    const isNewerButtonDisabled =
+      !previousEventTs ||
+      (earliestEventTs && events?.[0]?.created >= earliestEventTs);
     return (
       <>
         <div
@@ -440,13 +402,6 @@ export default class UserFeedPage extends React.Component<
           </a>
         </div>
         <div role="main">
-          <AlertList
-            position="bottom-right"
-            alerts={alerts}
-            timeout={15000}
-            dismissTitle="Dismiss"
-            onDismiss={this.onAlertDismissed}
-          />
           {/* display:flex to allow right-column to take all available height, for sticky player */}
           <div className="row" style={{ display: "flex", flexWrap: "wrap" }}>
             <div className="col-md-7">
@@ -506,10 +461,7 @@ export default class UserFeedPage extends React.Component<
               >
                 <li
                   className={`previous ${
-                    !previousEventTs ||
-                    (earliestEventTs && events[0].created >= earliestEventTs)
-                      ? "disabled"
-                      : ""
+                    isNewerButtonDisabled ? "disabled" : ""
                   }`}
                 >
                   <a
@@ -519,6 +471,11 @@ export default class UserFeedPage extends React.Component<
                       if (e.key === "Enter") this.handleClickNewer();
                     }}
                     tabIndex={0}
+                    href={
+                      isNewerButtonDisabled
+                        ? undefined
+                        : `?min_ts=${previousEventTs}`
+                    }
                   >
                     &larr; Newer
                   </a>
@@ -534,6 +491,7 @@ export default class UserFeedPage extends React.Component<
                       if (e.key === "Enter") this.handleClickOlder();
                     }}
                     tabIndex={0}
+                    href={!nextEventTs ? undefined : `?max_ts=${nextEventTs}`}
                   >
                     Older &rarr;
                   </a>
@@ -542,20 +500,19 @@ export default class UserFeedPage extends React.Component<
             </div>
             <div className="col-md-offset-1 col-md-4">
               <UserSocialNetwork
-                apiUrl={apiUrl}
                 user={currentUser}
                 loggedInUser={currentUser}
               />
               <div className="sticky-top mt-15">
                 <BrainzPlayer
-                  apiService={this.APIService}
                   currentListen={currentListen}
                   direction="down"
                   listens={listens}
-                  newAlert={this.newAlert}
+                  newAlert={newAlert}
                   onCurrentListenChange={this.handleCurrentListenChange}
                   ref={this.brainzPlayer}
                   spotifyUser={spotify}
+                  youtubeUser={youtube}
                 />
               </div>
             </div>
@@ -570,14 +527,43 @@ document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#react-container");
   const propsElement = document.getElementById("react-props");
   const reactProps = JSON.parse(propsElement!.innerHTML);
-  const { api_url, current_user, spotify, events } = reactProps;
+  const {
+    api_url,
+    current_user,
+    spotify,
+    youtube,
+    events,
+    sentry_dsn,
+  } = reactProps;
+
+  if (sentry_dsn) {
+    Sentry.init({ dsn: sentry_dsn });
+  }
+
+  const apiService = new APIServiceClass(
+    api_url || `${window.location.origin}/1`
+  );
+
+  const globalProps: GlobalAppContextT = {
+    APIService: apiService,
+    currentUser: current_user,
+    spotifyAuth: spotify,
+  };
+
+  const UserFeedPageWithAlertNotifications = withAlertNotifications(
+    UserFeedPage
+  );
   ReactDOM.render(
-    <UserFeedPage
-      currentUser={current_user}
-      events={events}
-      apiUrl={api_url}
-      spotify={spotify}
-    />,
+    <ErrorBoundary>
+      <GlobalAppContext.Provider value={globalProps}>
+        <UserFeedPageWithAlertNotifications
+          currentUser={current_user}
+          events={events}
+          spotify={spotify}
+          youtube={youtube}
+        />
+      </GlobalAppContext.Provider>
+    </ErrorBoundary>,
     domContainer
   );
 });

@@ -24,7 +24,6 @@ import FollowerFollowingModal from "./FollowerFollowingModal";
 
 const props = {
   user: { name: "foobar" },
-  apiUrl: "http://0.0.0.0",
   loggedInUser: null,
   followerList: ["foo"],
   followingList: ["bar"],
