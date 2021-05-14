@@ -16,20 +16,19 @@ echo "$GIT_COMMIT_SHA" > .git-version
 
 TAG=${1:-beta}
 
-function build_and_push_image {
-    echo "building for tag $1"
-    docker build \
-        --cache-from metabrainz/listenbrainz:latest \
-        --tag metabrainz/listenbrainz:"$1" \
-        --target listenbrainz-prod \
-        --build-arg GIT_COMMIT_SHA="$GIT_COMMIT_SHA" . && \
-    docker push metabrainz/listenbrainz:"$1"
-}
+echo "building for tag $TAG"
 
-build_and_push_image "$TAG"
+docker build \
+    --cache-from metabrainz/listenbrainz:latest \
+    --tag metabrainz/listenbrainz:"$TAG" \
+    --target listenbrainz-prod \
+    --build-arg GIT_COMMIT_SHA="$GIT_COMMIT_SHA" . && \
+docker push metabrainz/listenbrainz:"$TAG"
 
-# Only build and push the latest image if the TAG matches the date
-# pattern (v-YYYY-MM-DD.N) we use for production releases.
+
+# Only tag the built image as latest if the TAG matches the
+# date pattern (v-YYYY-MM-DD.N) we use for production releases.
 if [[ $TAG =~ ^v-[0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]+$  ]]; then
-    build_and_push_image "latest"
+    docker tag metabrainz/listenbrainz:"$TAG" metabrainz/listenbrainz:latest && \
+    docker push metabrainz/listenbrainz:latest
 fi
