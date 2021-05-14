@@ -13,7 +13,7 @@ from brainzutils import metrics, cache
 MAX_THREADS = 1
 MAX_QUEUED_JOBS = MAX_THREADS * 2
 
-UPDATE_INTERVAL = 5 
+UPDATE_INTERVAL = 60 
 
 
 class MappingJobQueue(threading.Thread):
@@ -25,7 +25,7 @@ class MappingJobQueue(threading.Thread):
         self.queue = PriorityQueue()
         self.priority = 1
 
-        init_cache(host=app.config['REDIS_HOST'], port=app.config['REDIS_PORT'])
+        init_cache(host=app.config['REDIS_HOST'], port=app.config['REDIS_PORT'], namespace=app.config['REDIS_NAMESPACE'])
         metrics.init("listenbrainz-mbid-mapping-writer")
 
     def add_new_listens(self, listens):
