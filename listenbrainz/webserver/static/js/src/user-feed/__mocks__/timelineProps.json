@@ -6,9 +6,12 @@
     },
     "spotify": {
         "access_token": "access token",
-        "permission": "streaming user-read-email user-read-private"
+        "permission": ["streaming", "user-read-email", "user-read-private"]
     },
-    "apiUrl": "http://0.0.0.0",
+	"youtube": {
+        "access_token": "frontend-test",
+        "api_key": "fake-api-key"
+    },
 	"events": [
 		{
 			"event_type": "recording_recommendation",

@@ -25,6 +25,11 @@ CREATE INDEX user_id_ndx_external_service_oauth ON external_service_oauth (user_
 CREATE INDEX service_ndx_external_service_oauth ON external_service_oauth (service);
 CREATE UNIQUE INDEX user_id_service_ndx_external_service_oauth ON external_service_oauth (user_id, service);
 
+CREATE INDEX user_id_ndx_listens_importer ON listens_importer (user_id);
+CREATE INDEX service_ndx_listens_importer ON listens_importer (service);
+CREATE UNIQUE INDEX user_id_service_ndx_listens_importer ON listens_importer (user_id, service);
+CREATE INDEX latest_listened_at_ndx_listens_importer ON listens_importer (latest_listened_at DESC NULLS LAST);
+
 CREATE UNIQUE INDEX user_id_rec_msid_ndx_feedback ON recording_feedback (user_id, recording_msid);
 
 -- NOTE: If the indexes for the similar_user table changes, update the code in listenbrainz/db/similar_users.py !

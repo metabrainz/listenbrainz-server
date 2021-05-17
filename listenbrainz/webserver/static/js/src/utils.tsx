@@ -54,6 +54,72 @@ const searchForSpotifyTrack = async (
   return null;
 };
 
+const searchForYoutubeTrack = async (
+  apiKey?: string,
+  accessToken?: string,
+  trackName?: string,
+  artistName?: string,
+  releaseName?: string,
+  refreshToken?: () => Promise<string>,
+  onAccountError?: () => void
+): Promise<Array<string> | null> => {
+  if (!apiKey) return null;
+  if (!accessToken) return null;
+  let query = trackName;
+  if (artistName) {
+    query += ` ${artistName}`;
+  }
+  // Considering we cannot tell the Youtube API that this should match only an album title,
+  // results are paradoxically sometimes worse if we add it to the query (YT will find random matches for album title words)
+  // if (releaseName) {
+  //   query += ` ${releaseName}`;
+  // }
+  const response = await fetch(
+    `https://youtube.googleapis.com/youtube/v3/search?part=snippet&q=${query}&videoEmbeddable=true&type=video&key=${apiKey}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  if (response.status === 401) {
+    if (refreshToken) {
+      try {
+        const newAccessToken = await refreshToken();
+        return searchForYoutubeTrack(
+          apiKey,
+          newAccessToken,
+          trackName,
+          artistName,
+          releaseName,
+          undefined
+        );
+      } catch (error) {
+        // Run onAccountError if we can't refresh the token
+        if (_.isFunction(onAccountError)) {
+          onAccountError();
+        }
+      }
+    }
+    // Run onAccountError if we already tried refreshing the token but still getting 401
+    if (_.isFunction(onAccountError)) {
+      onAccountError();
+    }
+  }
+
+  const responseBody = await response.json();
+  if (!response.ok) {
+    throw responseBody.error;
+  }
+  const tracks: Array<any> = _.get(responseBody, "items");
+  const videoIds = tracks.map((track) => track.id.videoId);
+  if (videoIds.length) return videoIds;
+  return null;
+};
+
 const getArtistLink = (listen: Listen) => {
   const artistName = _.get(listen, "track_metadata.artist_name");
   const firstArtist = _.first(
@@ -222,4 +288,5 @@ export {
   getPlayButton,
   formatWSMessageToListen,
   preciseTimestamp,
+  searchForYoutubeTrack,
 };

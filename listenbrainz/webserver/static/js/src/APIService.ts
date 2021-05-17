@@ -6,8 +6,6 @@ export default class APIService {
 
   MAX_LISTEN_SIZE: number = 10000; // Maximum size of listens that can be sent
 
-  MAX_TIME_RANGE: number = 73;
-
   constructor(APIBaseURI: string) {
     let finalUri = APIBaseURI;
     if (finalUri.endsWith("/")) {
@@ -44,8 +42,7 @@ export default class APIService {
     userName: string,
     minTs?: number,
     maxTs?: number,
-    count?: number,
-    timeRange?: number
+    count?: number
   ): Promise<Array<Listen>> => {
     if (maxTs && minTs) {
       throw new SyntaxError(
@@ -64,9 +61,6 @@ export default class APIService {
     }
     if (count) {
       queryParams.push(`count=${count}`);
-    }
-    if (timeRange) {
-      queryParams.push(`time_range=${timeRange}`);
     }
     if (queryParams.length) {
       query += `?${queryParams.join("&")}`;
@@ -139,13 +133,24 @@ export default class APIService {
     return parseInt(result.payload.count, 10);
   };
 
+  refreshYoutubeToken = async (): Promise<string> => {
+    return this.refreshAccessToken("youtube");
+  };
+
   refreshSpotifyToken = async (): Promise<string> => {
-    const response = await fetch("/profile/refresh-spotify-token", {
-      method: "POST",
-    });
+    return this.refreshAccessToken("spotify");
+  };
+
+  refreshAccessToken = async (service: string): Promise<string> => {
+    const response = await fetch(
+      `/profile/music-services/${service}/refresh/`,
+      {
+        method: "POST",
+      }
+    );
     await this.checkStatus(response);
     const result = await response.json();
-    return result.user_token;
+    return result.access_token;
   };
 
   followUser = async (
@@ -395,17 +400,18 @@ export default class APIService {
     if (response.status >= 200 && response.status < 300) {
       return;
     }
-    let message;
+    let message = `HTTP Error ${response.statusText}`;
     try {
-      const contentType = response.headers.get("content-type");
+      const contentType = response.headers?.get("content-type");
       if (contentType && contentType.indexOf("application/json") !== -1) {
         const jsonError = await response.json();
         message = jsonError.error;
-      } else {
+      } else if (typeof response.text === "function") {
         message = await response.text();
       }
-    } catch (error) {
-      message = `HTTP Error ${response.statusText}`;
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.log("Error in parsing response in APIService checkStatus:", err);
     }
 
     const error = new APIError(`HTTP Error ${response.statusText}`);

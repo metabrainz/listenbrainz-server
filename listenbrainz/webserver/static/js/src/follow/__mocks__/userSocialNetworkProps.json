@@ -7,6 +7,5 @@
         "id": 2,
         "name": "bob"
     },
-    "webSocketsServerUrl": "http://localhost:8082",
-    "apiUrl": "http://0.0.0.0"
+    "webSocketsServerUrl": "http://localhost:8082"
 }

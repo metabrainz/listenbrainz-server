@@ -1,7 +1,7 @@
 from datetime import datetime
 from pyspark.sql import Row
 from pyspark.sql.types import StructField, StructType, ArrayType, StringType, TimestampType, FloatType, \
-    IntegerType, BooleanType
+    IntegerType
 
 
 # NOTE: please keep this schema definition alphabetized
@@ -47,16 +47,16 @@ model_metadata_schema = [
 msid_mbid_mapping_schema = [
     StructField('mb_artist_credit_id', IntegerType(), nullable=False),
     StructField('mb_artist_credit_mbids', ArrayType(StringType()), nullable=False),
-    StructField('mb_recording_mbid', StringType(), nullable=False),
-    StructField('mb_release_mbid', StringType(), nullable=False),
     StructField('mb_artist_credit_name', StringType(), nullable=False),
+    StructField('mb_recording_mbid', StringType(), nullable=False),
+    StructField('mb_recording_name', StringType(), nullable=False),
+    StructField('mb_release_mbid', StringType(), nullable=False),
+    StructField('mb_release_name', StringType(), nullable=False),
     StructField('msb_artist_credit_name_matchable', StringType(), nullable=False),
     StructField('msb_artist_msid', StringType(), nullable=False),
     StructField('msb_recording_msid', StringType(), nullable=False),
-    StructField('msb_release_msid', StringType(), nullable=False),
-    StructField('mb_recording_name', StringType(), nullable=False),
     StructField('msb_recording_name_matchable', StringType(), nullable=False),
-    StructField('mb_release_name', StringType(), nullable=False),
+    StructField('msb_release_msid', StringType(), nullable=False),
     StructField('msb_release_name_matchable', StringType(), nullable=False),
 ]
 
@@ -114,18 +114,18 @@ def convert_listen_to_row(listen):
     """
     meta = listen['track_metadata']
     return Row(
-        listened_at=datetime.fromtimestamp(listen['listened_at']),
-        user_name=listen['user_name'],
+        artist_mbids=meta['additional_info'].get('artist_mbids', []),
         artist_msid=meta['additional_info']['artist_msid'],
         artist_name=meta['artist_name'],
-        artist_mbids=meta['additional_info'].get('artist_mbids', []),
+        listened_at=datetime.fromtimestamp(listen['listened_at']),
+        recording_mbid=meta['additional_info'].get('recording_mbid', ''),
+        recording_msid=listen['recording_msid'],
+        release_mbid=meta['additional_info'].get('release_mbid', ''),
         release_msid=meta['additional_info'].get('release_msid', ''),
         release_name=meta.get('release_name', ''),
-        release_mbid=meta['additional_info'].get('release_mbid', ''),
-        track_name=meta['track_name'],
-        recording_msid=listen['recording_msid'],
-        recording_mbid=meta['additional_info'].get('recording_mbid', ''),
         tags=meta['additional_info'].get('tags', []),
+        track_name=meta['track_name'],
+        user_name=listen['user_name'],
     )
 
 
@@ -159,18 +159,18 @@ def convert_model_metadata_to_row(meta):
 def convert_to_spark_json(listen):
     meta = listen
     return Row(
-        listened_at=meta['listened_at'],
-        user_name=meta['user_name'],
+        artist_mbids=meta.get('artist_mbids', []),
         artist_msid=meta['artist_msid'],
         artist_name=meta['artist_name'],
-        artist_mbids=meta.get('artist_mbids', []),
+        listened_at=meta['listened_at'],
+        recording_mbid=meta.get('recording_mbid', ''),
+        recording_msid=meta['recording_msid'],
+        release_mbid=meta.get('release_mbid', ''),
         release_msid=meta.get('release_msid', ''),
         release_name=meta.get('release_name', ''),
-        release_mbid=meta.get('release_mbid', ''),
-        track_name=meta['track_name'],
-        recording_msid=meta['recording_msid'],
-        recording_mbid=meta.get('recording_mbid', ''),
         tags=meta.get('tags', []),
+        track_name=meta['track_name'],
+        user_name=meta['user_name'],
     )
 
 
@@ -186,16 +186,16 @@ def convert_mapping_to_row(mapping):
     return Row(
         mb_artist_credit_id=mapping.get('mb_artist_credit_id'),
         mb_artist_credit_mbids=mapping.get('mb_artist_credit_mbids'),
-        mb_recording_mbid=mapping.get('mb_recording_mbid'),
-        mb_release_mbid=mapping.get('mb_release_mbid'),
         mb_artist_credit_name=mapping.get('mb_artist_credit_name'),
+        mb_recording_mbid=mapping.get('mb_recording_mbid'),
+        mb_recording_name=mapping.get('mb_recording_name'),
+        mb_release_mbid=mapping.get('mb_release_mbid'),
+        mb_release_name=mapping.get('mb_release_name'),
         msb_artist_credit_name_matchable=mapping.get('msb_artist_credit_name_matchable'),
         msb_artist_msid=mapping.get('msb_artist_msid'),
         msb_recording_msid=mapping.get('msb_recording_msid'),
-        msb_release_msid=mapping.get('msb_release_msid'),
-        mb_recording_name=mapping.get('mb_recording_name'),
         msb_recording_name_matchable=mapping.get('msb_recording_name_matchable'),
-        mb_release_name=mapping.get('mb_release_name'),
+        msb_release_msid=mapping.get('msb_release_msid'),
         msb_release_name_matchable=mapping.get('msb_release_name_matchable'),
     )
 

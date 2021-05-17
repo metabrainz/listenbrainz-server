@@ -7,13 +7,13 @@ version: "3.4"
 services:
 
   db:
-    image: timescale/timescaledb:1.7.4-pg12
+    image: timescale/timescaledb:2.2.0-pg11
     command: postgres -F
     environment:
       POSTGRES_PASSWORD: 'postgres'
 
   redis:
-    image: redis:5.0.3
+    image: redis:6.2.2
 
   listenbrainz:
     build:

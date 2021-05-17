@@ -384,3 +384,18 @@
     letter-spacing: 1px;
   }
 }
+
+#navigation.pager{
+  display: flex;
+  flex-wrap: wrap;
+  & > .date-time-picker {
+   flex: 1;
+   order: 0;
+   
+   @media (max-width: @screen-phone) {
+     // on phones, put the datepicker below the arrow nav
+     order: 1;
+	 margin-top:10px;
+    }
+ }
+}

@@ -2,21 +2,34 @@
 #
 # Build production image from the currently checked out version
 # of ListenBrainz and push it to Docker Hub, with an optional
-# tag (which defaults to "latest")
+# tag (which defaults to "beta")
 #
 # Usage:
 #   $ ./push.sh [tag]
 
+set -e
 
 cd "$(dirname "${BASH_SOURCE[0]}")/../"
 
-git describe --tags --dirty --always > .git-version
+GIT_COMMIT_SHA="$(git describe --tags --dirty --always)"
+echo "$GIT_COMMIT_SHA" > .git-version
 
-ENV=${1:-beta}
-TAG=${2:-beta}
-echo "building for env $ENV tag $TAG"
-docker build -t metabrainz/listenbrainz:$TAG \
+TAG=${1:-beta}
+
+function build_and_push_image {
+    echo "building for tag $1"
+    docker build \
+        --cache-from metabrainz/listenbrainz:latest \
+        --tag metabrainz/listenbrainz:"$1" \
         --target listenbrainz-prod \
-        --build-arg deploy_env=$ENV \
-        --build-arg GIT_COMMIT_SHA=$(git describe --tags --dirty --always) . && \
-    docker push metabrainz/listenbrainz:$TAG
+        --build-arg GIT_COMMIT_SHA="$GIT_COMMIT_SHA" . && \
+    docker push metabrainz/listenbrainz:"$1"
+}
+
+build_and_push_image "$TAG"
+
+# Only build and push the latest image if the TAG matches the date
+# pattern (v-YYYY-MM-DD.N) we use for production releases.
+if [[ $TAG =~ ^v-[0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]+$  ]]; then
+    build_and_push_image "latest"
+fi
