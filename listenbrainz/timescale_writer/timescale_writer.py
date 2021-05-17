@@ -2,7 +2,7 @@
 
 import sys
 import traceback
-from time import sleep
+from time import sleep, monotonic
 from datetime import datetime
 
 import pika
@@ -16,7 +16,10 @@ from listenbrainz.listenstore import RedisListenStore
 from listenbrainz.listen_writer import ListenWriter
 from listenbrainz.listenstore import TimescaleListenStore
 from listenbrainz.webserver import create_app
+from listenbrainz.utils import init_cache
+from brainzutils import metrics, cache
 
+METRIC_UPDATE_INTERVAL = 60  # seconds
 
 class TimescaleWriterSubscriber(ListenWriter):
 
@@ -27,6 +30,11 @@ class TimescaleWriterSubscriber(ListenWriter):
         self.incoming_ch = None
         self.unique_ch = None
         self.redis_listenstore = None
+
+        self.incoming_listens = 0
+        self.unique_listens = 0
+        self.metric_submission_time = monotonic() + METRIC_UPDATE_INTERVAL
+
 
     def callback(self, ch, method, properties, body):
 
@@ -68,6 +76,7 @@ class TimescaleWriterSubscriber(ListenWriter):
         if not data:
             return 0
 
+        self.incoming_listens += len(data)
         try:
             rows_inserted = self.ls.insert(data)
         except psycopg2.OperationalError as err:
@@ -110,7 +119,11 @@ class TimescaleWriterSubscriber(ListenWriter):
                 self.connect_to_rabbitmq()
 
         self.redis_listenstore.update_recent_listens(unique)
-        self._collect_and_log_stats(len(unique))
+        self.unique_listens += len(unique)
+
+        if monotonic() > self.metric_submission_time:
+            self.metric_submission_time += METRIC_UPDATE_INTERVAL
+            metric.set("timescale_writer", incoming_listens=self.incoming_listens, unique_listens=self.unique_listens)
 
         return len(data)
 
@@ -125,6 +138,9 @@ class TimescaleWriterSubscriber(ListenWriter):
                                             .format(self.ERROR_RETRY_DELAY))
                 sleep(self.ERROR_RETRY_DELAY)
                 sys.exit(-1)
+
+            init_cache(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'], namespace=current_app.config['REDIS_NAMESPACE'])
+            metrics.init("listenbrainz")
 
             try:
                 while True:
