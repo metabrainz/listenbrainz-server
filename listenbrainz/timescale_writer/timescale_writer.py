@@ -123,7 +123,7 @@ class TimescaleWriterSubscriber(ListenWriter):
 
         if monotonic() > self.metric_submission_time:
             self.metric_submission_time += METRIC_UPDATE_INTERVAL
-            metric.set("timescale_writer", incoming_listens=self.incoming_listens, unique_listens=self.unique_listens)
+            metrics.set("timescale_writer", incoming_listens=self.incoming_listens, unique_listens=self.unique_listens)
 
         return len(data)
 
