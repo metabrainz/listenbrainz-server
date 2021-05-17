@@ -36,6 +36,7 @@ def create(musicbrainz_row_id: int, musicbrainz_id: str) -> int:
             "token": str(uuid.uuid4()),
             "mb_row_id": musicbrainz_row_id,
         })
+
         return result.fetchone()["id"]
 
 

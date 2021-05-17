@@ -1,15 +1,15 @@
 import ujson
 import requests
-from datetime import datetime
 
 from flask import Blueprint, render_template, current_app
-from flask_login import current_user, login_required
-from listenbrainz.domain import spotify
+from flask_login import current_user
+from listenbrainz.domain.spotify import SpotifyService
 
 from listenbrainz.webserver.views.user import _get_user
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
 from werkzeug.exceptions import BadRequest, InternalServerError
 
+from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user
 
 recommendations_cf_recording_bp = Blueprint('recommendations_cf_recording', __name__)
 
@@ -94,12 +94,12 @@ def _get_template(active_section, user):
             error_msg="An error occurred while processing your request. Check back later!"
         )
 
-    spotify_data = {}
+    spotify_data = get_current_spotify_user()
+    youtube_data = get_current_youtube_user()
+
     current_user_data = {}
 
     if current_user.is_authenticated:
-        spotify_data = spotify.get_user_dict(current_user.id)
-
         current_user_data = {
                 "id": current_user.id,
                 "name": current_user.musicbrainz_id,
@@ -113,6 +113,7 @@ def _get_template(active_section, user):
         },
         "current_user": current_user_data,
         "spotify": spotify_data,
+        "youtube": youtube_data,
         "api_url": current_app.config["API_URL"],
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
         "recommendations": recommendations,

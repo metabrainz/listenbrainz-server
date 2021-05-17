@@ -4,7 +4,6 @@ import SimilarUsersModal from "./SimilarUsersModal";
 
 const props = {
   user: { name: "shivam-kapila" },
-  apiUrl: "http://0.0.0.0",
   loggedInUser: null,
   List: [{ name: "mr_monkey" }],
   similarUsersList: [{ name: "mr_monkey", similarityScore: 0.567 }],

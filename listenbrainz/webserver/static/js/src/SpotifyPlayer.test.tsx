@@ -8,7 +8,7 @@ import { DataSourceTypes } from "./BrainzPlayer";
 const props = {
   spotifyUser: {
     access_token: "heyo",
-    permission: "read" as SpotifyPermission,
+    permission: ["user-read-currently-playing"] as SpotifyPermission[],
   },
   refreshSpotifyToken: new APIService("base-uri").refreshSpotifyToken,
   show: true,
@@ -35,7 +35,7 @@ describe("SpotifyPlayer", () => {
       account linked to your ListenBrainz account.
       <br />
       Please try to{" "}
-      <a href="/profile/connect-spotify" target="_blank">
+      <a href="/profile/music-services/details/" target="_blank">
         link for &quot;playing music&quot; feature
       </a>{" "}
       and refresh this page
@@ -112,7 +112,11 @@ describe("SpotifyPlayer", () => {
       const onInvalidateDataSource = jest.fn();
       const spotifyUser = {
         access_token: "FNORD",
-        permission: "streaming user-read-email user-read-private" as SpotifyPermission,
+        permission: [
+          "streaming",
+          "user-read-email",
+          "user-read-private",
+        ] as SpotifyPermission[],
       };
       expect(SpotifyPlayer.hasPermissions(spotifyUser)).toEqual(true);
       const mockProps = {
@@ -134,7 +138,11 @@ describe("SpotifyPlayer", () => {
       const checkSpotifyToken = jest.fn();
       const spotifyUser = {
         access_token: "FNORD",
-        permission: "streaming user-read-email user-read-private" as SpotifyPermission,
+        permission: [
+          "streaming",
+          "user-read-email",
+          "user-read-private",
+        ] as SpotifyPermission[],
       };
       const mockProps = {
         ...props,

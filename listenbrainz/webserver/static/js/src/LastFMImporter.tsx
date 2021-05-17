@@ -1,9 +1,9 @@
 import * as ReactDOM from "react-dom";
 import * as React from "react";
+import * as Sentry from "@sentry/react";
 import { faSpinner, faCheck, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import * as Sentry from "@sentry/react";
 import APIService from "./APIService";
 import Scrobble from "./Scrobble";
 import LastFMImporterModal from "./LastFMImporterModal";
@@ -144,7 +144,7 @@ export default class LastFmImporter extends React.Component<
         return Number(data.recenttracks["@attr"].totalPages);
       }
       return 0;
-    } catch (error) {
+    } catch (err) {
       this.updateModalAction(
         <p>An error occurred, please try again. :(</p>,
         true
@@ -326,19 +326,19 @@ export default class LastFmImporter extends React.Component<
   }
 
   async startImport() {
-    this.updateModalAction(<p>Your import from Last.fm is starting!</p>, false);
-    this.latestImportTime = await this.APIService.getLatestImport(
-      this.userName
-    );
-    this.incrementalImport = this.latestImportTime > 0;
-    this.playCount = await this.getTotalNumberOfScrobbles();
-    this.totalPages = await this.getNumberOfPages();
-    this.page = this.totalPages; // Start from the last page so that oldest scrobbles are imported first
-
     let finalMsg: JSX.Element;
     const { profileUrl } = this.props;
+    this.updateModalAction(<p>Your import from Last.fm is starting!</p>, false);
 
     try {
+      this.latestImportTime = await this.APIService.getLatestImport(
+        this.userName
+      );
+      this.incrementalImport = this.latestImportTime > 0;
+      this.playCount = await this.getTotalNumberOfScrobbles();
+      this.totalPages = await this.getNumberOfPages();
+      this.page = this.totalPages; // Start from the last page so that oldest scrobbles are imported first
+
       await this.importLoop(); // import pages
     } catch (err) {
       // import failed, show final message on unhandled exception / unrecoverable network error

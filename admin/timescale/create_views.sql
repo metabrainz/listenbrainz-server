@@ -1,18 +1,8 @@
-BEGIN;
+-- 2592000 is number of seconds in 30 days
+CREATE MATERIALIZED VIEW listen_count_30day WITH (timescaledb.continuous) AS SELECT time_bucket(bigint '2592000', listened_at) AS listened_at_bucket, user_name, count(listen) FROM listen GROUP BY listened_at_bucket, user_name;
 
-CREATE VIEW listen_count
-       WITH (timescaledb.continuous, timescaledb.refresh_lag=43200, timescaledb.refresh_interval=3600)
-         AS SELECT time_bucket(bigint '86400', listened_at) AS listened_at_bucket, user_name, count(listen)
-            FROM listen group by time_bucket(bigint '86400', listened_at), user_name;
-
-CREATE VIEW listened_at_max
-       WITH (timescaledb.continuous, timescaledb.refresh_lag=43200, timescaledb.refresh_interval=3600)
-         AS SELECT time_bucket(bigint '86400', listened_at) AS listened_at_bucket, user_name, max(listened_at) AS max_value
-            FROM listen group by time_bucket(bigint '86400', listened_at), user_name;
-
-CREATE VIEW listened_at_min
-       WITH (timescaledb.continuous, timescaledb.refresh_lag=43200, timescaledb.refresh_interval=3600)
-         AS SELECT time_bucket(bigint '86400', listened_at) AS listened_at_bucket, user_name, min(listened_at) AS min_value
-            FROM listen group by time_bucket(bigint '86400', listened_at), user_name;
-
-COMMIT;
+-- Add a policy to keep the listen_count_30day up to date for the last year, but the last bucket
+SELECT add_continuous_aggregate_policy('listen_count_30day',
+    start_offset => 31536000,
+    end_offset => 432000,
+    schedule_interval => INTERVAL '1 hour');

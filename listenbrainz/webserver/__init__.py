@@ -159,14 +159,17 @@ def create_app(debug=None):
     from flask_admin import Admin
     from listenbrainz.webserver.admin.views import HomeView
     admin = Admin(app, index_view=HomeView(name='Home'), template_mode='bootstrap3')
-    from listenbrainz.model import Spotify as SpotifyModel
+    from listenbrainz.model import ExternalService as ExternalServiceModel
     from listenbrainz.model import User as UserModel
+    from listenbrainz.model import ListensImporter as ListensImporterModel
     from listenbrainz.model import ReportedUsers as ReportedUsersModel
-    from listenbrainz.model.spotify import SpotifyAdminView
+    from listenbrainz.model.external_service_oauth import ExternalServiceAdminView
     from listenbrainz.model.user import UserAdminView
+    from listenbrainz.model.listens_import import ListensImporterAdminView
     from listenbrainz.model.reported_users import ReportedUserAdminView
     admin.add_view(UserAdminView(UserModel, model.db.session, endpoint='user_model'))
-    admin.add_view(SpotifyAdminView(SpotifyModel, model.db.session, endpoint='spotify_model'))
+    admin.add_view(ExternalServiceAdminView(ExternalServiceModel, model.db.session, endpoint='external_service_model'))
+    admin.add_view(ListensImporterAdminView(ListensImporterModel, model.db.session, endpoint='listens_importer_model'))
     admin.add_view(ReportedUserAdminView(ReportedUsersModel, model.db.session, endpoint='reported_users_model'))
 
     @app.before_request

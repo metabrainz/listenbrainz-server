@@ -3,10 +3,16 @@ import { mount, shallow } from "enzyme";
 
 import YoutubePlayer from "./YoutubePlayer";
 import { DataSourceTypes } from "./BrainzPlayer";
+import APIService from "./APIService";
 
 const props = {
   show: true,
   playerPaused: false,
+  youtubeUser: {
+    access_token: "frontend-test",
+    api_key: "fake-api-key",
+  } as YoutubeUser,
+  refreshYoutubeToken: new APIService("base-uri").refreshYoutubeToken,
   onPlayerPausedChange: (paused: boolean) => {},
   onProgressChange: (progressMs: number) => {},
   onDurationChange: (durationMs: number) => {},

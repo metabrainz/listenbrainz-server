@@ -7,7 +7,11 @@
         "{{.}}",
     {{- end -}}
 {{- end -}}
+
+# Put everything after the defines otherwise the rendered config might eat up some newlines
 import os
+import json
+
 
 DEBUG = False
 
@@ -31,6 +35,10 @@ MB_DATABASE_URI = 'postgresql://musicbrainz_ro@{{.Address}}:{{.Port}}/musicbrain
 MB_DATABASE_URI = 'postgresql://musicbrainz_ro@{{.Address}}:{{.Port}}/musicbrainz_db'
 {{end}}
 {{end}}
+
+SQLALCHEMY_TIMESCALE_URI = ""
+TIMESCALE_ADMIN_URI=""
+TIMESCALE_ADMIN_LB_URI=""
 
 {{if service "timescale-listenbrainz"}}
 {{with index (service "timescale-listenbrainz") 0}}
@@ -153,7 +161,15 @@ APPROVED_PLAYLIST_BOTS = [
 # SPOTIFY
 SPOTIFY_CLIENT_ID = '''{{template "KEY" "spotify/client_id"}}'''
 SPOTIFY_CLIENT_SECRET = '''{{template "KEY" "spotify/client_secret"}}'''
-SPOTIFY_CALLBACK_URL = '''{{template "KEY" "spotify/callback"}}'''
+SPOTIFY_CALLBACK_URL = '''{{template "KEY" "spotify/redirect_uri"}}'''
+
+# YOUTUBE
+YOUTUBE_CONFIG_JSON = '''{{template "KEY" "youtube/credentials"}}'''
+YOUTUBE_API_KEY = '''{{template "KEY" "youtube/api_key"}}'''
+YOUTUBE_REDIRECT_URI = '''{{template "KEY" "youtube/redirect_uri"}}'''
+
+YOUTUBE_CONFIG = json.loads(YOUTUBE_CONFIG_JSON)
+
 
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
