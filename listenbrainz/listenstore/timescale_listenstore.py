@@ -32,7 +32,7 @@ from listenbrainz.utils import create_path, init_cache
 REDIS_USER_LISTEN_COUNT = "lc."
 REDIS_USER_TIMESTAMPS = "ts."
 REDIS_TOTAL_LISTEN_COUNT = "lc-total"
-REDIS_POST_IMPORT_LISTEN_COUNT_EXPIRY = 14400
+REDIS_POST_IMPORT_LISTEN_COUNT_EXPIRY = 86400  # 24 hours
 
 DUMP_CHUNK_SIZE = 100000
 NUMBER_OF_USERS_PER_DIRECTORY = 1000
@@ -156,11 +156,9 @@ class TimescaleListenStore(ListenStore):
             t0 = time.monotonic()
             min_ts = self._select_single_timestamp(True, user_name)
             max_ts = self._select_single_timestamp(False, user_name)
+            cache.set(REDIS_USER_TIMESTAMPS + user_name, "%d,%d" % (min_ts, max_ts), time=0)
             # intended for production monitoring
             self.log.info("timestamps %s %.2fs" % (user_name, time.monotonic() - t0))
-            if min_ts and max_ts:
-                cache.set(REDIS_USER_TIMESTAMPS + user_name,
-                          "%d,%d" % (min_ts, max_ts), time=0)
 
         return min_ts, max_ts
 
@@ -170,6 +168,10 @@ class TimescaleListenStore(ListenStore):
             Args:
                 select_min_timestamp: boolean. Select the min timestamp if true, max if false.
                 user_name: the user for whom to fetch the timestamp.
+
+            Returns:
+
+                The selected timestamp for the user or 0 if no timestamp was found.
         """
 
         function = "max"
@@ -186,7 +188,6 @@ class TimescaleListenStore(ListenStore):
                 })
                 row = result.fetchone()
                 if row is None or row['ts'] is None:
-                    self.log.warning("select single timestamp no rows!")
                     return 0
 
                 return row['ts']

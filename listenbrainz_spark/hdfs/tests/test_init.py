@@ -59,7 +59,7 @@ class HDFSTestCase(unittest.TestCase):
         temp_archive = os.path.join(tempfile.mkdtemp(), 'temp_tar.tar.xz')
         temp_dir = tempfile.mkdtemp()
         with open(temp_archive, 'w') as archive:
-            pxz_command = ['pxz', '--compress']
+            pxz_command = ['xz', '--compress']
             pxz = subprocess.Popen(pxz_command, stdin=subprocess.PIPE, stdout=archive)
 
             with tarfile.open(fileobj=pxz.stdin, mode='w|') as tar:

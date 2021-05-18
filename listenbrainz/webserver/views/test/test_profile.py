@@ -166,7 +166,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.assert404(r)
 
     def _create_spotify_user(self, expired):
-        offset = -100 if expired else 100
+        offset = -1000 if expired else 1000
         expires = int(time.time()) + offset
         db_oauth.save_token(user_id=self.user['id'], service=ExternalServiceType.SPOTIFY,
                             access_token='old-token', refresh_token='old-refresh-token',

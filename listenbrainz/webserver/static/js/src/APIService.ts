@@ -410,6 +410,7 @@ export default class APIService {
         message = await response.text();
       }
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.log("Error in parsing response in APIService checkStatus:", err);
     }
 
