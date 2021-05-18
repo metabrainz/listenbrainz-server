@@ -1,6 +1,5 @@
 #!/bin/bash
 
-SPARK_URI="spark://spark-master.spark-network:7077"
 LISTENERBUS_CAPACITY="100000"
 MAX_CORES="20"
 EXECUTOR_CORES="5"
