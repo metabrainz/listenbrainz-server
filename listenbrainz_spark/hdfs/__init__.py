@@ -47,7 +47,7 @@ class ListenbrainzHDFSUploader:
             Returns:
                 pxz: Return pipe to pxz command.
         """
-        pxz_command = ['pxz', '--decompress', '--stdout', archive, '-T{}'.format(threads)]
+        pxz_command = ['xz', '--decompress', '--stdout', archive, '-T{}'.format(threads)]
         pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
         return pxz
 

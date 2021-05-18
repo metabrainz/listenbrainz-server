@@ -30,6 +30,18 @@ ALTER TABLE external_service_oauth
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
+ALTER TABLE listens_importer
+    ADD CONSTRAINT listens_importer_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE listens_importer
+    ADD CONSTRAINT listens_importer_external_service_oauth_id_foreign_key
+    FOREIGN KEY (external_service_oauth_id)
+    REFERENCES external_service_oauth (id)
+    ON DELETE SET NULL;
+
 ALTER TABLE recommendation.cf_recording
     ADD CONSTRAINT cf_recording_user_id_foreign_key
     FOREIGN KEY (user_id)

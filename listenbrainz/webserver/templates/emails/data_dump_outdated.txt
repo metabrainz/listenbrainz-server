@@ -1,0 +1,11 @@
+Bon dia! 👋
+
+Sorry, but I come bearing bad news -- your shit is broken again. Surprise!
+
+Some data dumps are outdated:
+
+{{msg}}
+
+Go fix your shit!
+
+Your Grouchy Neighbourhood Brainzbot 🤖

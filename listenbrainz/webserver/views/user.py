@@ -2,21 +2,20 @@ import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 import ujson
-import time
 
-from flask import Blueprint, render_template, request, url_for, redirect, current_app, jsonify
-from flask_login import current_user, login_required
+from flask import Blueprint, render_template, request, url_for, redirect, current_app
+from flask_login import current_user
 from listenbrainz import webserver
 from listenbrainz.db.playlist import get_playlists_for_user, get_playlists_created_for_user, get_playlists_collaborated_on
-from listenbrainz.domain import spotify
-from listenbrainz.webserver.decorators import web_listenstore_needed
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.login import User
+from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
 from werkzeug.exceptions import NotFound, BadRequest
 from listenbrainz.webserver.views.playlist_api import serialize_jspf
 from pydantic import ValidationError
+
+from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user
 
 LISTENS_PER_PAGE = 25
 
@@ -108,11 +107,11 @@ def profile(user_name):
     except (AttributeError, ValidationError):
         artist_count = None
 
-    spotify_data = {}
+    spotify_data = get_current_spotify_user()
+    youtube_data = get_current_youtube_user()
     current_user_data = {}
     logged_in_user_follows_user = None
     if current_user.is_authenticated:
-        spotify_data = spotify.get_user_dict(current_user.id)
         current_user_data = {
             "id": current_user.id,
             "name": current_user.musicbrainz_id,
@@ -134,6 +133,7 @@ def profile(user_name):
         "profile_url": url_for('user.profile', user_name=user_name),
         "mode": "listens",
         "spotify": spotify_data,
+        "youtube": youtube_data,
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
         "api_url": current_app.config['API_URL'],
         "logged_in_user_follows_user": logged_in_user_follows_user,
@@ -289,18 +289,13 @@ def recommendation_playlists(user_name: str):
         count = int(count)
     except ValueError:
         raise BadRequest("Incorrect int argument count: %s" % request.args.get("count"))
-
-
     user = _get_user(user_name)
     user_data = {
         "name": user.musicbrainz_id,
         "id": user.id,
     }
-
-    spotify_data = {}
     current_user_data = {}
     if current_user.is_authenticated:
-        spotify_data = spotify.get_user_dict(current_user.id)
         current_user_data = {
             "id": current_user.id,
             "name": current_user.musicbrainz_id,

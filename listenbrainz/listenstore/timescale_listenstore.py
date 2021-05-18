@@ -32,6 +32,7 @@ from listenbrainz.utils import create_path, init_cache
 REDIS_USER_LISTEN_COUNT = "lc."
 REDIS_USER_TIMESTAMPS = "ts."
 REDIS_TOTAL_LISTEN_COUNT = "lc-total"
+REDIS_POST_IMPORT_LISTEN_COUNT_EXPIRY = 86400  # 24 hours
 
 DUMP_CHUNK_SIZE = 100000
 NUMBER_OF_USERS_PER_DIRECTORY = 1000
@@ -113,6 +114,17 @@ class TimescaleListenStore(ListenStore):
                   count, expirein=0, encode=False)
         return count
 
+    def set_listen_count_expiry_for_user(self, user_name):
+        """ Set an expire time for the listen count cache item. This is called after
+            a bulk import which allows for timescale continuous aggregates to catch up
+            to listen counts. Once the key expires, the correct value can be calculated
+            from the aggregate.
+
+            Args:
+                user_name: the musicbrainz id of user whose listen count needs an expiry time
+        """
+        cache._r.expire(cache._prep_key(REDIS_USER_LISTEN_COUNT + user_name), REDIS_POST_IMPORT_LISTEN_COUNT_EXPIRY)
+
     def update_timestamps_for_user(self, user_name, min_ts, max_ts):
         """
             If any code adds/removes listens it should update the timestamps for the user
@@ -144,11 +156,9 @@ class TimescaleListenStore(ListenStore):
             t0 = time.monotonic()
             min_ts = self._select_single_timestamp(True, user_name)
             max_ts = self._select_single_timestamp(False, user_name)
+            cache.set(REDIS_USER_TIMESTAMPS + user_name, "%d,%d" % (min_ts, max_ts), expirein=0)
             # intended for production monitoring
             self.log.info("timestamps %s %.2fs" % (user_name, time.monotonic() - t0))
-            if min_ts and max_ts:
-                cache.set(REDIS_USER_TIMESTAMPS + user_name,
-                          "%d,%d" % (min_ts, max_ts), expirein=0)
 
         return min_ts, max_ts
 
@@ -158,6 +168,10 @@ class TimescaleListenStore(ListenStore):
             Args:
                 select_min_timestamp: boolean. Select the min timestamp if true, max if false.
                 user_name: the user for whom to fetch the timestamp.
+
+            Returns:
+
+                The selected timestamp for the user or 0 if no timestamp was found.
         """
 
         function = "max"
@@ -174,7 +188,6 @@ class TimescaleListenStore(ListenStore):
                 })
                 row = result.fetchone()
                 if row is None or row['ts'] is None:
-                    self.log.warning("select single timestamp no rows!")
                     return 0
 
                 return row['ts']
@@ -734,9 +747,7 @@ class TimescaleListenStore(ListenStore):
         Raises: Exception if unable to delete the user in 5 retries
         """
 
-        cache.delete(REDIS_USER_LISTEN_COUNT + musicbrainz_id)
-        cache.delete(REDIS_USER_TIMESTAMPS + musicbrainz_id)
-
+        self.set_empty_cache_values_for_user(musicbrainz_id)
         args = {'user_name': musicbrainz_id}
         query = "DELETE FROM listen WHERE user_name = :user_name"
 
@@ -767,7 +778,7 @@ class TimescaleListenStore(ListenStore):
             with timescale.engine.connect() as connection:
                 connection.execute(sqlalchemy.text(query), args)
 
-            cache.delete(REDIS_USER_LISTEN_COUNT + user_name)
+            cache._r.decrby(cache._prep_key(REDIS_USER_LISTEN_COUNT + user_name))
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listen for user: %s" % str(e))
             raise TimescaleListenStoreException
