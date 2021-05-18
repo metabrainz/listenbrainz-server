@@ -22,8 +22,9 @@ docker buildx build \
     --cache-from kartik1712/listenbrainz:latest \
     --tag kartik1712/listenbrainz:"$TAG" \
     --target listenbrainz-prod \
-    --push \
-    --build-arg GIT_COMMIT_SHA="$GIT_COMMIT_SHA" .
+    --load \
+    --build-arg GIT_COMMIT_SHA="$GIT_COMMIT_SHA" . \
+    && docker push kartik1712/listenbrainz:"$TAG"
 
 
 # Only tag the built image as latest if the TAG matches the
