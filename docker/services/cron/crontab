@@ -18,11 +18,14 @@ MAILTO=""
 # Update our continuous aggregates for listens older than 1 year
 0 5 * * * lbdumps /usr/local/bin/python /code/listenbrainz/manage.py refresh_continuous_aggregates >> /logs/continuous_aggregates.log 2>&1
 
-# Calculate user similarity
-30 5 * * * listenbrainz_stats_cron /usr/local/bin/python /code/listenbrainz/manage.py spark request_similar_users
-
 # Dump user feedback every monday before we generate recommendations
 00 6 * * 1 lbdumps flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh feeedback >> /logs/dumps.log 2>&1
 
 # Request recommendations every Monday after dump and mapping has been imported into the spark cluster
-30 6 * * 1 listenbrainz_stats_cron /code/listenbrainz/docker/cf_recommendation.sh cf
+30 6 * * 1 lbdumps /code/listenbrainz/docker/cf_recommendation.sh cf >> /logs/stats.log 2>&1
+
+# Request all statistics
+00 2 * * * lbdumps /usr/local/bin/python /code/listenbrainz/manage.py spark request_all_stats >> /logs/stats.log 2>&1
+
+# Calculate user similarity
+30 5 * * * lbdumps /code/listenbrainz/docker/similar_users.sh >> /logs/stats.log 2>&1
