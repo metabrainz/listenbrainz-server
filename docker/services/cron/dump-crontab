@@ -16,7 +16,7 @@ MAILTO=""
 0 4 2,16 * * lbdumps flock -x /var/lock/lb-dumps.lock /usr/local/bin/python /code/listenbrainz/manage.py spark request_import_full >> /logs/dumps.log 2>&1
 
 # Update our continuous aggregates for listens older than 1 year
-0 5 * * * /usr/local/bin/python /code/listenbrainz/manage.py refresh_continuous_aggregates
+0 5 * * * lbdumps /usr/local/bin/python /code/listenbrainz/manage.py refresh_continuous_aggregates >> /logs/continuous_aggregates.log 2>&1
 
 # Calculate user similarity
 30 5 * * * listenbrainz_stats_cron /usr/local/bin/python /code/listenbrainz/manage.py spark request_similar_users
