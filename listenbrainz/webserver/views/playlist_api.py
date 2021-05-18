@@ -415,7 +415,9 @@ def get_playlist(playlist_mbid):
     Fetch the given playlist.
 
     :param playlist_mbid: The playlist mbid to fetch.
+    :type playlist_mbid: ``str``
     :param fetch_metadata: Optional, pass value 'false' to skip lookup up recording metadata
+    :type fetch_metadata: ``bool``
     :statuscode 200: Yay, you have data!
     :statuscode 404: Playlist not found
     :statuscode 401: Invalid authorization. See error message for details.
