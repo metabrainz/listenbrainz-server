@@ -130,7 +130,7 @@ def refresh_listen_count_aggregate():
            Assuming today is 2022-01-01 and this function is called for year_offset 1 and
            year_count 1 then all of 2021 will be refreshed.
     """
-
+    logger.info("Starting to refresh continuous aggregates:")
     timescale.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
 
     end_ts = int(datetime.now().timestamp()) - SECONDS_IN_A_YEAR
