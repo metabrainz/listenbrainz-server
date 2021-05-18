@@ -148,8 +148,7 @@ def refresh_listen_count_aggregate():
                     "end_ts": end_ts
                 })
         except psycopg2.OperationalError as e:
-            self.log.error("Cannot refresh listen_count_30day cont agg: %s" %
-                           str(e), exc_info=True)
+            logger.error("Cannot refresh listen_count_30day cont agg: %s" % str(e), exc_info=True)
             raise
 
         t1 = time.monotonic()
