@@ -19,8 +19,8 @@ TAG=${1:-beta}
 echo "building for tag $TAG"
 
 docker buildx build \
-    --cache-from metabrainz/listenbrainz:latest \
-    --tag metabrainz/listenbrainz:"$TAG" \
+    --cache-from kartik1712/listenbrainz:latest \
+    --tag kartik1712/listenbrainz:"$TAG" \
     --target listenbrainz-prod \
     --push \
     --build-arg GIT_COMMIT_SHA="$GIT_COMMIT_SHA" .
@@ -29,6 +29,6 @@ docker buildx build \
 # Only tag the built image as latest if the TAG matches the
 # date pattern (v-YYYY-MM-DD.N) we use for production releases.
 if [[ $TAG =~ ^v-[0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]+$  ]]; then
-    docker tag metabrainz/listenbrainz:"$TAG" metabrainz/listenbrainz:latest && \
-    docker push metabrainz/listenbrainz:latest
+    docker tag kartik1712/listenbrainz:"$TAG" kartik1712/listenbrainz:latest && \
+    docker push kartik1712/listenbrainz:latest
 fi
