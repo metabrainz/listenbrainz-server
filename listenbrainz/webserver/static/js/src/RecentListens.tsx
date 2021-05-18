@@ -1,19 +1,26 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
+
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+import * as Sentry from "@sentry/react";
 import * as _ from "lodash";
 import * as io from "socket.io-client";
-import * as Sentry from "@sentry/react";
-import APIServiceClass from "./APIService";
+
+import DatePicker from "react-date-picker/dist/entry.nostyle";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
+import {
+  WithAlertNotificationsInjectedProps,
+  withAlertNotifications,
+} from "./AlertNotificationsHOC";
+
+import APIServiceClass from "./APIService";
 import BrainzPlayer from "./BrainzPlayer";
 import ErrorBoundary from "./ErrorBoundary";
-import Loader from "./components/Loader";
 import ListenCard from "./listens/ListenCard";
-import {
-  withAlertNotifications,
-  WithAlertNotificationsInjectedProps,
-} from "./AlertNotificationsHOC";
+import Loader from "./components/Loader";
 import { formatWSMessageToListen } from "./utils";
 
 export type RecentListensProps = {
@@ -44,6 +51,7 @@ export interface RecentListensState {
   previousListenTs?: number;
   saveUrl: string;
   recordingFeedbackMap: RecordingFeedbackMap;
+  dateTimePickerValue: Date | Date[];
 }
 
 export default class RecentListens extends React.Component<
@@ -63,6 +71,7 @@ export default class RecentListens extends React.Component<
 
   constructor(props: RecentListensProps) {
     super(props);
+    const nextListenTs = props.listens?.[props.listens.length - 1]?.listened_at;
     this.state = {
       alerts: [],
       listens: props.listens || [],
@@ -70,10 +79,13 @@ export default class RecentListens extends React.Component<
       saveUrl: props.saveUrl || "",
       lastFetchedDirection: "older",
       loading: false,
-      nextListenTs: props.listens?.[props.listens.length - 1]?.listened_at,
+      nextListenTs,
       previousListenTs: props.listens?.[0]?.listened_at,
       direction: "down",
       recordingFeedbackMap: {},
+      dateTimePickerValue: nextListenTs
+        ? new Date(nextListenTs * 1000)
+        : new Date(),
     };
 
     this.listensTable = React.createRef();
@@ -344,6 +356,10 @@ export default class RecentListens extends React.Component<
   };
 
   handleKeyDown = (event: KeyboardEvent) => {
+    if (document.activeElement?.localName === "input") {
+      // Don't allow keyboard navigation if an input is currently in focus
+      return;
+    }
     switch (event.key) {
       case "ArrowLeft":
         this.handleClickNewer();
@@ -447,12 +463,61 @@ export default class RecentListens extends React.Component<
     }
   };
 
+  onChangeDateTimePicker = async (newDateTimePickerValue: Date | Date[]) => {
+    if (!newDateTimePickerValue) {
+      return;
+    }
+    this.setState({
+      dateTimePickerValue: newDateTimePickerValue,
+      loading: true,
+      lastFetchedDirection: "newer",
+    });
+    const { oldestListenTs, user } = this.props;
+    let minJSTimestamp;
+    if (Array.isArray(newDateTimePickerValue)) {
+      // Range of dates
+      minJSTimestamp = newDateTimePickerValue[0].getTime();
+    } else {
+      minJSTimestamp = newDateTimePickerValue.getTime();
+    }
+
+    // Constrain to oldest listen TS for that user
+    const minTimestampInSeconds = Math.max(
+      // convert JS time (milliseconds) to seconds
+      Math.round(minJSTimestamp / 1000),
+      oldestListenTs
+    );
+
+    const newListens = await this.APIService.getListensForUser(
+      user.name,
+      minTimestampInSeconds
+    );
+    if (!newListens.length) {
+      // No more listens to fetch
+      this.setState({
+        loading: false,
+      });
+      return;
+    }
+    this.setState(
+      {
+        listens: newListens,
+        nextListenTs: newListens[newListens.length - 1].listened_at,
+        previousListenTs: newListens[0].listened_at,
+        lastFetchedDirection: "newer",
+      },
+      this.afterListensFetch
+    );
+    window.history.pushState(null, "", `?min_ts=${minTimestampInSeconds}`);
+  };
+
   afterListensFetch() {
+    this.setState({ loading: false });
+    // Scroll to the top of the listens list
     this.updatePaginationVariables();
     if (typeof this.listensTable?.current?.scrollIntoView === "function") {
       this.listensTable.current.scrollIntoView({ behavior: "smooth" });
     }
-    this.setState({ loading: false });
   }
 
   render() {
@@ -468,6 +533,7 @@ export default class RecentListens extends React.Component<
       nextListenTs,
       previousListenTs,
       saveUrl,
+      dateTimePickerValue,
     } = this.state;
     const {
       latestListenTs,
@@ -561,7 +627,7 @@ export default class RecentListens extends React.Component<
                   <h5 className="text-center">No more listens to show</h5>
                 )}
                 {mode === "listens" && (
-                  <ul className="pager" style={{ display: "flex" }}>
+                  <ul className="pager" id="navigation">
                     <li
                       className={`previous ${
                         isNewestButtonDisabled ? "disabled" : ""
@@ -603,6 +669,22 @@ export default class RecentListens extends React.Component<
                       >
                         &larr; Newer
                       </a>
+                    </li>
+                    <li className="date-time-picker">
+                      <DatePicker
+                        onChange={this.onChangeDateTimePicker}
+                        value={dateTimePickerValue}
+                        clearIcon={null}
+                        maxDate={new Date()}
+                        minDate={
+                          oldestListenTs
+                            ? new Date(oldestListenTs * 1000)
+                            : undefined
+                        }
+                        calendarIcon={
+                          <FontAwesomeIcon icon={faCalendar as IconProp} />
+                        }
+                      />
                     </li>
                     <li
                       className={`next ${
