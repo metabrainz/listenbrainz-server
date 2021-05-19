@@ -28,7 +28,7 @@ source "admin/functions.sh"
 
 # This variable contains the name of a directory that is deleted when the script
 # exits, so we sanitise it here in case it was included in the environment.
-TMPDIR=""
+DUMP_TEMP_DIR=""
 
 if [ "$CONTAINER_NAME" == "listenbrainz-cron-prod" ] && [ "$PROD" == "prod" ]
 then
@@ -55,8 +55,8 @@ function add_rsync_include_rule {
 function on_exit {
     echo "Disk space when create-dumps ends:"; df -m
 
-    if [ -n "$TMPDIR" ]; then
-        rm -rf "$TMPDIR"
+    if [ -n "$DUMP_TEMP_DIR" ]; then
+        rm -rf "$DUMP_TEMP_DIR"
     fi
 
     if [ -n "$START_TIME" ]; then
@@ -85,20 +85,23 @@ else
     exit
 fi
 
-TMPDIR=$(mktemp --tmpdir="$TEMP_DIR" -d -t "$SUB_DIR.XXXXXXXXXX")
+DUMP_TEMP_DIR="$TEMP_DIR/$SUB_DIR.$$"
+echo "TEMP_DIR is $TEMP_DIR"
+echo "creating DUMP_TEMP_DIR $DUMP_TEMP_DIR"
+mkdir -p "$DUMP_TEMP_DIR"
 
 if [ "$DUMP_TYPE" == "full" ]; then
-    if ! /usr/local/bin/python manage.py dump create_full -l "$TMPDIR" -t "$DUMP_THREADS" --last-dump-id; then
+    if ! /usr/local/bin/python manage.py dump create_full -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS" --last-dump-id; then
         echo "Full dump failed, exiting!"
         exit 1
     fi
 elif [ "$DUMP_TYPE" == "incremental" ]; then
-    if ! /usr/local/bin/python manage.py dump create_incremental -l "$TMPDIR" -t "$DUMP_THREADS"; then
+    if ! /usr/local/bin/python manage.py dump create_incremental -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS"; then
         echo "Incremental dump failed, exiting!"
         exit 1
     fi
 elif [ "$DUMP_TYPE" == "feedback" ]; then
-    if ! /usr/local/bin/python manage.py dump create_feedback -l "$TMPDIR" -t "$DUMP_THREADS"; then
+    if ! /usr/local/bin/python manage.py dump create_feedback -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS"; then
         echo "Feedback dump failed, exiting!"
         exit 1
     fi
@@ -107,13 +110,13 @@ else
     exit 1
 fi
 
-DUMP_ID_FILE=$(find "$TMPDIR" -type f -name 'DUMP_ID.txt')
+DUMP_ID_FILE=$(find "$DUMP_TEMP_DIR" -type f -name 'DUMP_ID.txt')
 if [ -z "$DUMP_ID_FILE" ]; then
     echo "DUMP_ID.txt not found, exiting."
     exit 1
 fi
 
-HAS_EMPTY_DIRS_OR_FILES=$(find "$TMPDIR" -empty)
+HAS_EMPTY_DIRS_OR_FILES=$(find "$DUMP_TEMP_DIR" -empty)
 if [ -n "$HAS_EMPTY_DIRS_OR_FILES" ]; then
     echo "Empty files or dirs found, exiting."
     echo "$HAS_EMPTY_DIRS_OR_FILES"
