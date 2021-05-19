@@ -782,4 +782,11 @@ export default class APIService {
     const data = response.json();
     return data;
   };
+
+  reportUser = async (userName: string) => {
+    const response = await fetch(`/user/${userName}/report-user/`, {
+      method: "POST",
+    });
+    await this.checkStatus(response);
+  };
 }
