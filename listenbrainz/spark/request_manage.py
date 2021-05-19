@@ -270,7 +270,7 @@ def request_similar_users(max_num_users):
         'similarity.similar_users', params=params))
 
 
-@cli.command(name='request_similar_users')
+@cli.command(name='request_all_stats')
 @click.pass_context
 def request_all_stats(ctx):
     ctx.invoke(request_user_stats, type_="entity", range_="week", entity="artists")
