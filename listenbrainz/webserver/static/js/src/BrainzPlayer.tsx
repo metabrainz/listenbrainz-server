@@ -119,7 +119,8 @@ export default class BrainzPlayer extends React.Component<
   };
 
   /** We use LocalStorage events as a form of communication between BrainzPlayers
-   * that works across browser windows/tabs, to ensure only one BP is playing at a given time
+   * that works across browser windows/tabs, to ensure only one BP is playing at a given time.
+   * The event is not fired in the tab/window where the localStorage.setItem call initiated.
    */
   onLocalStorageEvent = async (event: StorageEvent) => {
     const { currentDataSourceIndex, playerPaused } = this.state;
