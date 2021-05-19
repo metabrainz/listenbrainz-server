@@ -29,7 +29,7 @@ uWSGI == 2.0.19.1
 nose == 1.3.7
 sentry-sdk[flask] == 0.20.3
 six == 1.15.0
-pydantic == 1.8.1
+pydantic == 1.8.2
 pycountry == 20.7.3
 Flask==1.1.2
 Jinja2==2.11.3
