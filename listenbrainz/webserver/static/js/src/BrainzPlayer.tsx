@@ -113,6 +113,11 @@ export default class BrainzPlayer extends React.Component<
     window.addEventListener("storage", this.onLocalStorageEvent);
   };
 
+  componentWillUnMount = () => {
+    window.removeEventListener("storage", this.onLocalStorageEvent);
+    this.stopPlayerStateTimer();
+  };
+
   /** We use LocalStorage events as a form of communication between BrainzPlayers
    * that works across browser windows/tabs, to ensure only one BP is playing at a given time
    */
