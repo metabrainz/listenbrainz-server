@@ -40,6 +40,7 @@ describe("<UserPageHeading />", () => {
         user={user}
         loggedInUser={loggedInUser}
         loggedInUserFollowsUser
+        alreadyReportedUser={false}
       />
     );
     expect(wrapper.contains("followed_user")).toBeTruthy();
@@ -51,6 +52,7 @@ describe("<UserPageHeading />", () => {
         user={user}
         loggedInUser={null}
         loggedInUserFollowsUser={false}
+        alreadyReportedUser={false}
       />
     );
     expect(wrapper.find(FollowButton)).toHaveLength(0);
@@ -62,6 +64,7 @@ describe("<UserPageHeading />", () => {
         user={user}
         loggedInUser={user}
         loggedInUserFollowsUser={false}
+        alreadyReportedUser={false}
       />
     );
     expect(wrapper.find(FollowButton)).toHaveLength(0);
@@ -73,6 +76,7 @@ describe("<UserPageHeading />", () => {
         user={user}
         loggedInUser={loggedInUser}
         loggedInUserFollowsUser={false}
+        alreadyReportedUser={false}
       />
     );
     const followButton = wrapper.find(FollowButton).at(0);
