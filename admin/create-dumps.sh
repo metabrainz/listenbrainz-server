@@ -26,7 +26,7 @@ cd "$LB_SERVER_ROOT" || exit 1
 source "admin/config.sh"
 source "admin/functions.sh"
 
-# This variable contains the name of a directory that is deleted when the script
+# This variable contains the name of a directory that is deleted when the script
 # exits, so we sanitise it here in case it was included in the environment.
 DUMP_TEMP_DIR=""
 
@@ -71,6 +71,15 @@ START_TIME=$(date +%s)
 echo "This script is being run by the following user: "; whoami
 echo "Disk space when create-dumps starts:" ; df -m
 
+if [ -z $DUMP_BASE_DIR ]; then
+    echo "DUMP_BASE_DIR isn't set"
+    exit 1
+fi
+
+if ! findmnt -n --type cifs --target $DUMP_BASE_DIR; then
+    echo "DUMP_BASE_DIR ($DUMP_BASE_DIR) isn't mounted using CIFS as expected"
+    exit 1
+fi
 
 DUMP_TYPE="${1:-full}"
 
@@ -85,8 +94,8 @@ else
     exit
 fi
 
-DUMP_TEMP_DIR="$TEMP_DIR/$SUB_DIR.$$"
-echo "TEMP_DIR is $TEMP_DIR"
+DUMP_TEMP_DIR="$DUMP_BASE_DIR/$SUB_DIR.$$"
+echo "DUMP_BASE_DIR is $DUMP_BASE_DIR"
 echo "creating DUMP_TEMP_DIR $DUMP_TEMP_DIR"
 mkdir -p "$DUMP_TEMP_DIR"
 
@@ -191,7 +200,7 @@ cat "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
 
 /usr/local/bin/python manage.py dump delete_old_dumps "$FTP_DIR/$SUB_DIR"
 /usr/local/bin/python manage.py dump delete_old_dumps "$BACKUP_DIR/$SUB_DIR"
-/usr/local/bin/python manage.py dump delete_old_dumps "$TEMP_DIR/$SUB_DIR"
+/usr/local/bin/python manage.py dump delete_old_dumps "$DUMP_BASE_DIR/$SUB_DIR"
 
 # rsync to ftp folder taking care of the rules
 ./admin/rsync-dump-files.sh "$DUMP_TYPE"
