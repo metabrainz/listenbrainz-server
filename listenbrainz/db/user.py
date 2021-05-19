@@ -505,11 +505,30 @@ def get_users_by_id(user_ids: List[int]):
         return row_id_username_map
 
 
+def is_user_reported(reporter_id: int, reported_id: int):
+    """ Check whether the user identified by reporter_id has reported the
+    user identified by reported_id"""
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT *
+              FROM reported_users
+             WHERE reporter_user_id = :reporter_id
+               AND reported_user_id = :reported_id
+        """), {
+            "reporter_id": reporter_id,
+            "reported_id": reported_id
+        })
+        return True if result.fetchone() else False
+
+
 def report_user(reporter_id: int, reported_id: int):
+    """ Create a report from user with reporter_id against user with
+     reported_id"""
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
             INSERT INTO reported_users (reporter_user_id, reported_user_id)
-                 VALUES (:reporter_id, :reported_id);
+                 VALUES (:reporter_id, :reported_id)
+                 ON CONFLICT DO NOTHING
                 """), {
             "reporter_id": reporter_id,
             "reported_id": reported_id

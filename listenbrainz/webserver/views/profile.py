@@ -1,3 +1,5 @@
+import sqlalchemy
+
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
 from listenbrainz.webserver.decorators import web_listenstore_needed
@@ -14,7 +16,7 @@ from flask import Blueprint, Response, render_template, request, url_for, \
     redirect, current_app, jsonify, stream_with_context
 from flask_login import current_user, login_required
 from werkzeug.exceptions import NotFound, BadRequest, Unauthorized
-from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound
+from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIBadRequest
 
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException

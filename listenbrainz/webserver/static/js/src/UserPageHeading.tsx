@@ -24,26 +24,32 @@ import * as Sentry from "@sentry/react";
 import FollowButton from "./FollowButton";
 import APIService from "./APIService";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
+import ReportUserButton from "./ReportUser";
 
 const UserPageHeading = ({
   user,
   loggedInUser,
   loggedInUserFollowsUser = false,
+  alreadyReportedUser = false,
 }: {
   user: ListenBrainzUser;
   loggedInUser: ListenBrainzUser | null;
   loggedInUserFollowsUser: boolean;
+  alreadyReportedUser: boolean;
 }) => {
   return (
     <h2 className="page-title">
       {user.name}
       {loggedInUser && user.name !== loggedInUser.name && (
-        <FollowButton
-          type="icon-only"
-          user={user}
-          loggedInUser={loggedInUser}
-          loggedInUserFollowsUser={loggedInUserFollowsUser}
-        />
+        <>
+          <FollowButton
+            type="icon-only"
+            user={user}
+            loggedInUser={loggedInUser}
+            loggedInUserFollowsUser={loggedInUserFollowsUser}
+          />
+          <ReportUserButton user={user} alreadyReported={alreadyReportedUser} />
+        </>
       )}
     </h2>
   );
@@ -58,6 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const reactProps = JSON.parse(propsElement!.innerHTML);
   const {
     user,
+    already_reported_user,
     current_user,
     logged_in_user_follows_user,
     sentry_dsn,
@@ -82,6 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
         user={user}
         loggedInUser={current_user || null}
         loggedInUserFollowsUser={logged_in_user_follows_user}
+        alreadyReportedUser={already_reported_user}
       />
     </GlobalAppContext.Provider>,
     domContainer
