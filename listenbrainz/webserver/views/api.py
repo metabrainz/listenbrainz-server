@@ -327,6 +327,7 @@ def latest_import():
         }
 
     :param user_name: the MusicBrainz ID of the user whose data is needed
+    :type user_name: ``str``
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
 
@@ -524,9 +525,11 @@ def get_playlists_for_user(playlist_user_name):
     If a user token is provided in the Authorization header, return private playlists as well
     as public playlists for that user.
 
-    :params count: The number of playlists to return (for pagination). Default
+    :param count: The number of playlists to return (for pagination). Default
         :data:`~webserver.views.api.DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL`
-    :params offset: The offset of into the list of playlists to return (for pagination)
+    :type count: ``int``
+    :param offset: The offset of into the list of playlists to return (for pagination)
+    :type offset: ``int``
     :statuscode 200: Yay, you have data!
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
@@ -556,9 +559,11 @@ def get_playlists_created_for_user(playlist_user_name):
     Fetch playlist metadata in JSPF format without recordings that have been created for the user.
     Createdfor playlists are all public, so no Authorization is needed for this call.
 
-    :params count: The number of playlists to return (for pagination). Default
+    :param count: The number of playlists to return (for pagination). Default
         :data:`~webserver.views.api.DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL`
-    :params offset: The offset of into the list of playlists to return (for pagination)
+    :type count: ``int``
+    :param offset: The offset of into the list of playlists to return (for pagination)
+    :type offset: ``int``
     :statuscode 200: Yay, you have data!
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
@@ -585,9 +590,11 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
     Fetch playlist metadata in JSPF format without recordings for which a user is a collaborator.
     If a playlist is private, it will only be returned if the caller is authorized to edit that playlist.
 
-    :params count: The number of playlists to return (for pagination). Default
+    :param count: The number of playlists to return (for pagination). Default
         :data:`~webserver.views.api.DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL`
-    :params offset: The offset of into the list of playlists to return (for pagination)
+    :type count: ``int``
+    :param offset: The offset of into the list of playlists to return (for pagination)
+    :type offset: ``int``
     :statuscode 200: Yay, you have data!
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
