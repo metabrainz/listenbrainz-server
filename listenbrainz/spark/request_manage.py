@@ -307,3 +307,12 @@ def cron_request_all_stats(ctx):
 def cron_request_similar_users(ctx):
     ctx.invoke(request_dataframes, job_type="similar_users", days=365, listens_threshold=50)
     ctx.invoke(request_similar_users)
+
+
+@cli.command(name='cron_request_recommendations')
+@click.pass_context
+def cron_request_similar_users(ctx):
+    ctx.invoke(request_dataframes)
+    ctx.invoke(request_model)
+    ctx.invoke(request_candidate_sets)
+    ctx.invoke(request_recommendations, top=1000, similar=1000)
