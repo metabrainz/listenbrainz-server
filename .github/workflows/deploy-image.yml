@@ -10,9 +10,7 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    steps:
-    - uses: actions/checkout@v2
-    
+    steps:    
       # Github stores the current tag in an enviroment variable (GITHUB_REF) in the format /refs/tags/TAG_NAME.
       # Using shell parameter expansion, we extract the TAG_NAME. Also, it seems we cannot use shell tricks
       # directly in the with block, so doing it in a separate step and then fetching its output when needed.
