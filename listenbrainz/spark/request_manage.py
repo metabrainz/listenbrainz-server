@@ -270,9 +270,12 @@ def request_similar_users(max_num_users):
         'similarity.similar_users', params=params))
 
 
-@cli.command(name='request_all_stats')
+# Some useful commands to keep our crontabs manageable. These commands do not add new functionality
+# rather combine multiple commands related to a task so that they are always invoked in the correct order.
+
+@cli.command(name='cron_request_all_stats')
 @click.pass_context
-def request_all_stats(ctx):
+def cron_request_all_stats(ctx):
     ctx.invoke(request_user_stats, type_="entity", range_="week", entity="artists")
     ctx.invoke(request_user_stats, type_="entity", range_="month", entity="artists")
     ctx.invoke(request_user_stats, type_="entity", range_="year", entity="artists")
@@ -297,3 +300,10 @@ def request_all_stats(ctx):
     ctx.invoke(request_user_stats, type_="daily_activity", range_="month")
     ctx.invoke(request_user_stats, type_="daily_activity", range_="year")
     ctx.invoke(request_user_stats, type_="daily_activity", range_="all_time")
+
+
+@cli.command(name='cron_request_similar_users')
+@click.pass_context
+def cron_request_similar_users(ctx):
+    ctx.invoke(request_dataframes, job_type="similar_users", days=365, listens_threshold=50)
+    ctx.invoke(request_similar_users)
