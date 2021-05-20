@@ -31,8 +31,8 @@ jobs:
       uses: docker/build-push-action@v2.4.0
       with:
         build-args: GIT_COMMIT_SHA=${{ github.sha }}
-        cache-from: kartik1712/listenbrainz:cache
-        cache-to: kartik1712/listenbrainz:cache
+        cache-from: metabrainz/listenbrainz:cache
+        cache-to: metabrainz/listenbrainz:cache
         push: true
-        tags: kartik1712/listenbrainz:${{ steps.get_tag.outputs.TAG }}
+        tags: metabrainz/listenbrainz:${{ steps.get_tag.outputs.TAG }}
         target: listenbrainz-prod
