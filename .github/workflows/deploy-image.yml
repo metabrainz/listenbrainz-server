@@ -31,5 +31,5 @@ jobs:
         push: true
         # Github stores the current tag in an enviroment variable (GITHUB_REF) in the format /refs/tags/TAG_NAME.
         # Using shell parameter expansion, we extract the TAG_NAME.
-        tags: kartik1712/listenbrainz:${GITHUB_REF/refs\/tags\//}
+        tags: kartik1712/listenbrainz:"${GITHUB_REF/refs\/tags\//}"
         target: listenbrainz-prod
