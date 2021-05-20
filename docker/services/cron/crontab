@@ -28,4 +28,4 @@ MAILTO=""
 00 6 * * 1 lbdumps flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh feeedback >> /logs/dumps.log 2>&1
 
 # Request recommendations every Monday after dump and mapping has been imported into the spark cluster
-30 6 * * 1 lbdumps /code/listenbrainz/docker/cf_recommendation.sh cf >> /logs/stats.log 2>&1
+30 6 * * 1 lbdumps /usr/local/bin/python /code/listenbrainz/manage.py spark cron_request_recommendations >> /logs/stats.log 2>&1
