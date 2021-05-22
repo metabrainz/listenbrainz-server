@@ -225,13 +225,11 @@ export default class LastFmImporter extends React.Component<
       const response = await fetch(encodeURI(url));
       const data = await response.json();
       return data.error === 17;
-    } catch {
+    } catch (error) {
       this.updateModalAction(
         <p>An error occurred, please try again. :(</p>,
         true
       );
-      const error = new Error();
-      error.message = "Something went wrong";
       throw error;
     }
   }
@@ -455,14 +453,12 @@ export default class LastFmImporter extends React.Component<
           <FontAwesomeIcon icon={faTimes as IconProp} /> Import failed
           <br />
           <br />
-          <b>
-            <span style={{ fontSize: `${10}pt` }} className="text-danger">
-              Please make sure your Last.fm recent listening information is
-              public by updating your privacy settings
-              <a href="https://www.last.fm/settings/privacy"> here. </a>
-              <br />
-            </span>
+          <b style={{ fontSize: `${10}pt` }} className="text-danger">
+            Please make sure your Last.fm recent listening information is public
+            by updating your privacy settings
+            <a href="https://www.last.fm/settings/privacy"> here. </a>
           </b>
+          <br />
           <span style={{ fontSize: `${8}pt` }}>
             Thank you for using ListenBrainz!
           </span>

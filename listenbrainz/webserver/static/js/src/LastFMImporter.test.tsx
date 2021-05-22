@@ -7,7 +7,7 @@ import * as getInfo from "./__mocks__/getInfo.json";
 import * as getInfoNoPlayCount from "./__mocks__/getInfoNoPlayCount.json";
 // Output for the mock data
 import * as encodeScrobbleOutput from "./__mocks__/encodeScrobbleOutput.json";
-import * as getUserPrivacy from "./__mocks__/getUserPrivacy.json";
+import * as lastFMPrivateUser from "./__mocks__/lastFMPrivateUser.json";
 
 jest.useFakeTimers();
 const props = {
@@ -403,24 +403,31 @@ describe("getUserPrivacy", () => {
         json: () => Promise.resolve(page),
       });
     });
-    expect(await instance.getUserPrivacy()).toEqual(false);
+    await expect(instance.getUserPrivacy()).resolves.toEqual(false);
 
     // mock function for fetch (data.error = 17)
     window.fetch = jest.fn().mockImplementationOnce(() => {
       return Promise.resolve({
         ok: true,
-        json: () => Promise.resolve(getUserPrivacy),
+        json: () => Promise.resolve(lastFMPrivateUser),
       });
     });
-    expect(await instance.getUserPrivacy()).toEqual(true);
+    await expect(instance.getUserPrivacy()).resolves.toEqual(true);
   });
 
   it("should show privacy error message if user is private", async () => {
     instance.getUserPrivacy = jest.fn().mockImplementation(() => true);
     // startImport shouldn't throw error
     await expect(instance.startImport()).resolves.toBe(null);
-    // verify message is last.fm privacy error message
-    expect(instance.state.msg?.props.children).toContain(" Import failed");
+    // verify message is specifally last.fm privacy error message
+    const errorMsgElement = (
+      <b style={{ fontSize: `${10}pt` }} className="text-danger">
+        Please make sure your Last.fm recent listening information is public by
+        updating your privacy settings
+        <a href="https://www.last.fm/settings/privacy"> here. </a>
+      </b>
+    );
+    expect(instance.state.msg?.props.children).toContainEqual(errorMsgElement);
     expect(instance.state.msg?.props.children).not.toContain(
       "Something went wrong"
     );
@@ -429,9 +436,9 @@ describe("getUserPrivacy", () => {
   it("should throw error and display message if fetch fails", async () => {
     // Mock function for failed fetch
     window.fetch = jest.fn().mockImplementation(() => {
-      return Promise.reject(Error);
+      return Promise.reject(new Error("Fetch error"));
     });
-    await expect(instance.getUserPrivacy()).rejects.toThrowError();
+    await expect(instance.getUserPrivacy()).rejects.toThrowError("Fetch error");
     expect(instance.state.msg?.props.children).toMatch(
       "An error occurred, please try again. :("
     );
