@@ -326,7 +326,7 @@ export default class LastFmImporter extends React.Component<
             <div
               className="progress"
               style={{
-                height: `${7}px`,
+                height: "7px",
               }}
             >
               <div
