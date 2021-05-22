@@ -269,7 +269,7 @@ export default class LastFmImporter extends React.Component<
   };
 
   progressBarPercentage() {
-    if (this.totalPages > this.numCompleted)
+    if (this.totalPages >= this.numCompleted)
       return (this.numCompleted / this.totalPages) * 100;
     return 50;
   }
