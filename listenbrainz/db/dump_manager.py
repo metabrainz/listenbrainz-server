@@ -266,10 +266,9 @@ def import_dump(private_archive, private_timescale_archive,
     """ Import a ListenBrainz dump into the database.
 
         Note: This method tries to import the private db dump first, followed by the public db
-            dump. However, in absence of a private dump, it imports sanitized versions of the
-            user table in the public dump in order to satisfy foreign key constraints.
-
-        Then it imports the listen dump.
+        dump. However, in absence of a private dump, it imports sanitized versions of the user
+        table in the public dump in order to satisfy foreign key constraints. Then it imports
+        the listen dump.
 
         Args:
             private_archive (str): the path to the ListenBrainz private dump to be imported
