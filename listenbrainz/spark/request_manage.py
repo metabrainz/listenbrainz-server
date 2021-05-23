@@ -247,7 +247,8 @@ def parse_list(ctx, args):
 @click.option("--alpha", default=3.0, type=float, help="Baseline level of confidence weighting applied.")
 def request_model(rank, itr, lmbda, alpha):
     """ Send the cluster a request to train the model.
-        For more details refer to 'https://spark.apache.org/docs/2.1.0/mllib-collaborative-filtering.html'
+
+    For more details refer to https://spark.apache.org/docs/2.1.0/mllib-collaborative-filtering.html
     """
     params = {
         'ranks': rank,
