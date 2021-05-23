@@ -26,6 +26,7 @@ Contents
    dev/devel-env
    dev/spark-devel-env
    dev/spark-architecture
+   dev/commands
    dev/api-compat
 
 Indices and tables

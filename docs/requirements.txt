@@ -3,4 +3,5 @@ Pygments==2.7.4
 sphinxcontrib-httpdomain==1.7.0
 sphinx_rtd_theme==0.5.1
 docutils==0.12.0
+sphinx-click==3.0.0
 -r ../requirements.txt
