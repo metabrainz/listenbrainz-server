@@ -9,7 +9,8 @@ site [#]_.
 
 - **Web Root URL**: ``https://listenbrainz.org``
 
-*Note*: All ListenBrainz services are only available on **HTTPS**!
+.. note::
+    All ListenBrainz services are only available on **HTTPS**!
 
 Reference
 ---------
