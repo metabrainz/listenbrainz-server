@@ -271,17 +271,15 @@ def set_rate_limits(per_token_limit, per_ip_limit, window_size):
 
 @cli.command(name="recalculate_all_user_data")
 def recalculate_all_user_data():
-    """
-        Recalculate all user timestamps and listen counts. ONLY USE THIS WHEN YOU KNOW
-        WHAT YOU ARE DOING!
+    """ Recalculate all user timestamps and listen counts. ONLY USE THIS WHEN YOU
+     KNOW WHAT YOU ARE DOING!
     """
     ts_recalculate_all_user_data()
 
 
 @cli.command(name="refresh_continuous_aggregates")
 def refresh_continuous_aggregates():
-    """
-        Update the continuous aggregates in timescale.
+    """ Update the continuous aggregates in timescale.
     """
     ts_refresh_listen_count_aggregate()
 
