@@ -63,10 +63,11 @@ def run_websockets(host, port, debug=True):
 @click.option("--create-db", is_flag=True, help="Create the database and user.")
 def init_db(force, create_db):
     """Initializes database.
+
     This process involves several steps:
-    1. Table structure is created.
-    2. Primary keys and foreign keys are created.
-    3. Indexes are created.
+        1. Table structure is created.
+        2. Primary keys and foreign keys are created.
+        3. Indexes are created.
     """
     from listenbrainz import config
     db.init_db_connection(config.POSTGRES_ADMIN_URI)
@@ -119,10 +120,11 @@ def init_db(force, create_db):
 @click.option("--create-db", is_flag=True, help="Skip creating database and user. Tables/indexes only.")
 def init_msb_db(force, create_db):
     """Initializes database.
+
     This process involves several steps:
-    1. Table structure is created.
-    2. Primary keys and foreign keys are created.
-    3. Indexes are created.
+        1. Table structure is created.
+        2. Primary keys and foreign keys are created.
+        3. Indexes are created.
     """
     from listenbrainz import config
     db.init_db_connection(config.POSTGRES_ADMIN_URI)
@@ -177,10 +179,11 @@ def init_msb_db(force, create_db):
 @click.option("--create-db", is_flag=True, help="Create the database and user.")
 def init_ts_db(force, create_db):
     """Initializes database.
+
     This process involves several steps:
-    1. Table structure is created.
-    2. Indexes are created.
-    3. Views are created
+        1. Table structure is created.
+        2. Indexes are created.
+        3. Views are created
     """
     from listenbrainz import config
     ts.init_db_connection(config.TIMESCALE_ADMIN_URI)
@@ -271,8 +274,8 @@ def set_rate_limits(per_token_limit, per_ip_limit, window_size):
 
 @cli.command(name="recalculate_all_user_data")
 def recalculate_all_user_data():
-    """ Recalculate all user timestamps and listen counts. ONLY USE THIS WHEN YOU
-     KNOW WHAT YOU ARE DOING!
+    """ Recalculate all user timestamps and listen counts. **ONLY USE THIS WHEN YOU
+     KNOW WHAT YOU ARE DOING!**
     """
     ts_recalculate_all_user_data()
 
