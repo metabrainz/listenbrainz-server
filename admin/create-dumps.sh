@@ -161,8 +161,8 @@ FTP_CURRENT_DUMP_DIR="$FTP_DIR/$SUB_DIR/$DUMP_NAME"
 
 # create the dir in which to copy the dumps before
 # changing their permissions to the FTP_FILE_MODE
-echo "Creating FTP directories and setting permissions..."
-mkdir -m "$FTP_DIR_MODE" -p "$FTP_CURRENT_DUMP_DIR"
+echo "Creating FTP directories..."
+mkdir -p "$FTP_CURRENT_DUMP_DIR"
 
 # make sure these dirs are owned by the correct user
 chown "$FTP_USER:$FTP_GROUP" \
@@ -174,6 +174,8 @@ chown "$FTP_USER:$FTP_GROUP" \
 # and set appropriate mode for files to be uploaded to
 # the FTP server
 retry rsync -a "$DUMP_DIR/" "$FTP_CURRENT_DUMP_DIR/"
+echo "Fixing FTP permissions"
+chmod "$FTP_DIR_MODE" "$FTP_CURRENT_DUMP_DIR"
 chmod "$FTP_FILE_MODE" "$FTP_CURRENT_DUMP_DIR/"*
 
 # create an explicit rsync filter for the new private dump in the
