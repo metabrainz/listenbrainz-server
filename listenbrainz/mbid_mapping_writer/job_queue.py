@@ -5,6 +5,8 @@ import threading
 import traceback
 
 from flask import current_app
+import sqlalchemy
+from listenbrainz.db import timescale
 from listenbrainz.mbid_mapping_writer.matcher import lookup_new_listens
 from listenbrainz.labs_api.labs.api.mbid_mapping import MATCH_TYPES
 from listenbrainz.utils import init_cache
@@ -42,6 +44,19 @@ class MappingJobQueue(threading.Thread):
         stats = { "processed": 0, "total": 0, "errors": 0, "existing": 0 }
         for typ in MATCH_TYPES:
             stats[typ] = 0
+
+        with timescale.engine.connect() as connection:
+            query = """SELECT COUNT(*), match_type
+                         FROM listen_mbid_mapping
+                     GROUP BY match_type"""
+            curs = connection.execute(query)
+            while True:
+                result = curs.fetchone()
+                if not result:
+                    break
+
+                stats[row[1]] = row[0]
+
 
         update_time = time() + UPDATE_INTERVAL
         try:
