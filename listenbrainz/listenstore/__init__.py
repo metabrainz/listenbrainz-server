@@ -7,9 +7,6 @@ DEFAULT_LISTENS_PER_FETCH = 25
 
 LISTENS_DUMP_SCHEMA_VERSION = 1
 
-REDIS_USER_TIMESTAMPS = "user.%s.timestamps" # substitute user_name
-USER_CACHE_TIME = 3600 # in seconds. 1 hour
-
 from listenbrainz.listenstore import listenstore
 import listenbrainz.listen as listen
 ListenStore = listenstore.ListenStore

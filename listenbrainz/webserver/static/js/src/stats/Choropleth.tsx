@@ -8,7 +8,7 @@ import { format } from "d3-format";
 import { maxBy } from "lodash";
 import * as React from "react";
 import { useMediaQuery } from "react-responsive";
-import * as features from "./world_countries.json";
+import * as worldCountries from "./world_countries.json";
 
 export type ChoroplethProps = {
   data: UserArtistMapData;
@@ -147,7 +147,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
       data={data}
       width={width}
       height={height}
-      features={features.features}
+      features={worldCountries.features}
       margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
       colors={colorScale}
       domain={domain}

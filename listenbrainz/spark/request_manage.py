@@ -259,12 +259,12 @@ def request_import_artist_relation():
 
 
 @cli.command(name='request_similar_users')
-@click.option("--threshold", type=float, default=.075, help="Threshold for minimum relationship strenth between two users.")
-def request_similar_users(threshold):
+@click.option("--max-num-users", type=int, default=25, help="The maxiumum number of similar users to return for any given user.")
+def request_similar_users(max_num_users):
     """ Send the cluster a request to generate similar users.
     """
     params = {
-        'threshold': threshold
+        'max_num_users': max_num_users
     }
     send_request_to_spark_cluster(_prepare_query_message(
         'similarity.similar_users', params=params))

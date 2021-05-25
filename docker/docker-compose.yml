@@ -14,12 +14,12 @@ volumes:
 services:
 
   redis:
-    image: redis:5.0.3
+    image: redis:6.2.2
     volumes:
       - redis:/data:z
 
   db:
-    image: timescale/timescaledb:1.7.4-pg12
+    image: timescale/timescaledb:2.2.0-pg11
     volumes:
       - timescaledb:/var/lib/postgresql/data:z
     environment:
@@ -35,6 +35,8 @@ services:
       context: ..
       dockerfile: Dockerfile
       target: listenbrainz-dev
+      args:
+        GIT_COMMIT_SHA: HEAD
     environment:
       FLASK_APP: listenbrainz.webserver
       FLASK_ENV: development
@@ -96,9 +98,6 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.webpack
-      # We target webpack-base and mount the JS code folder as a volume
-      # as opposed to using webpack-with-source target and having to rebuild the image each time
-      target: webpack-base
     command: npm run build:dev
     volumes:
       # Mount source front-end files

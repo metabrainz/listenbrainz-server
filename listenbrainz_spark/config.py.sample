@@ -1,6 +1,6 @@
-HDFS_HTTP_URI = 'http://hadoop-master:9870' # the URI of the http webclient for HDFS
+HDFS_HTTP_URI = 'http://namenode:9870' # the URI of the http webclient for HDFS
 
-HDFS_CLUSTER_URI = 'hdfs://hadoop-master:9000' # the URI to be used with Spark
+HDFS_CLUSTER_URI = 'hdfs://namenode:9000' # the URI to be used with Spark
 
 # rabbitmq
 RABBITMQ_HOST = "rabbitmq"
@@ -19,10 +19,10 @@ SPARK_RESULT_QUEUE = "spark_result"
 # calculate stats on X months data
 STATS_CALCULATION_WINDOW = 1
 
-LOG_SENTRY = {
-    'dsn':'',
-    'environment': 'development',
-}
+# LOG_SENTRY = {
+#    'dsn':'',
+#    'environment': 'development',
+# }
 
 # Model id is made up of two parts.
 # String + UUID

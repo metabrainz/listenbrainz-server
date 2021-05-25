@@ -11,7 +11,9 @@ Submission JSON
 To submit recording feedback via our API (see: :doc:`api`), ``POST`` a JSON document to
 the ``recording-feedback`` endpoint.
 
-A sample feedback may look like::
+A sample feedback may look like:
+
+.. code-block:: json
 
     {
         "recording_msid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
@@ -36,20 +38,22 @@ Score can have one of these three values:
 Fetching feedback JSON
 ----------------------
 
-The JSON documents returned from our API for recording feedback look like the following::
+The JSON documents returned from our API for recording feedback look like the following:
+
+.. code-block:: json
 
     {
-      count: 1,
-      feedback: [
-        {
-            "user_id": "-- the MusicBrainz ID of the user --",
-            "recording_msid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
-            "score": 1
-        },
-        "-- more feedback data here ---"
-      ],
-      offset: 0,
-      total_count: 1
+        "count": 1,
+        "feedback": [
+            {
+                "user_id": "-- the MusicBrainz ID of the user --",
+                "recording_msid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
+                "score": 1
+            },
+            "-- more feedback data here ---"
+        ],
+        "offset": 0,
+        "total_count": 1
     }
 
 The number of feedback items in the document are returned by the top-level ``count`` element. The total number of

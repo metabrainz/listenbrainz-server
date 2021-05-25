@@ -8,6 +8,7 @@ import uuid
 from dateutil.relativedelta import relativedelta
 from redis.connection import Connection
 
+from brainzutils import cache
 import listenbrainz.db.user as db_user
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz import config
@@ -86,7 +87,7 @@ class RedisListenStoreTestCase(DatabaseTestCase):
         # get without setting any value, should return None
         self.assertIsNone(self._redis.get_listen_count_for_day(today))
 
-        # set a value to a key that doesn't exists
+        # set a value to a key that doesn't exist
         self._redis.increment_listen_count_for_day(today, 2)
         self.assertEqual(2, self._redis.get_listen_count_for_day(today))
 

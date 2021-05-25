@@ -3,8 +3,8 @@
 
 BEGIN;
 
-UPDATE spotify_auth
-   SET record_listens = 't',
-       error_message = NULL;
+UPDATE listens_importer
+   SET error_message = NULL
+ WHERE service = 'spotify';
 
 COMMIT;

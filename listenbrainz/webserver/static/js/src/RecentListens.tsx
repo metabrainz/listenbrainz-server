@@ -1,18 +1,29 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
-import { AlertList } from "react-bs-notifier";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+import * as Sentry from "@sentry/react";
 import * as _ from "lodash";
 import * as io from "socket.io-client";
+
+import DatePicker from "react-date-picker/dist/entry.nostyle";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { faCalendar } from "@fortawesome/free-regular-svg-icons";
+import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
+import {
+  WithAlertNotificationsInjectedProps,
+  withAlertNotifications,
+} from "./AlertNotificationsHOC";
+
+import APIServiceClass from "./APIService";
 import BrainzPlayer from "./BrainzPlayer";
-import APIService from "./APIService";
-import Loader from "./components/Loader";
+import ErrorBoundary from "./ErrorBoundary";
 import ListenCard from "./listens/ListenCard";
+import Loader from "./components/Loader";
 import { formatWSMessageToListen } from "./utils";
 
-export interface RecentListensProps {
-  apiUrl: string;
+export type RecentListensProps = {
   latestListenTs: number;
   latestSpotifyUri?: string;
   listens?: Array<Listen>;
@@ -21,16 +32,16 @@ export interface RecentListensProps {
   profileUrl?: string;
   saveUrl?: string;
   spotify: SpotifyUser;
+  youtube: YoutubeUser;
   user: ListenBrainzUser;
   webSocketsServerUrl: string;
   currentUser?: ListenBrainzUser;
-}
+} & WithAlertNotificationsInjectedProps;
 
 export interface RecentListensState {
   alerts: Array<Alert>;
   currentListen?: Listen;
   direction: BrainzPlayDirection;
-  endOfTheLine?: boolean; // To indicate we can't fetch listens older than 12 months
   lastFetchedDirection?: "older" | "newer";
   listens: Array<Listen>;
   listenCount?: number;
@@ -40,14 +51,17 @@ export interface RecentListensState {
   previousListenTs?: number;
   saveUrl: string;
   recordingFeedbackMap: RecordingFeedbackMap;
+  dateTimePickerValue: Date | Date[];
 }
 
 export default class RecentListens extends React.Component<
   RecentListensProps,
   RecentListensState
 > {
-  private APIService: APIService;
+  static contextType = GlobalAppContext;
+  declare context: React.ContextType<typeof GlobalAppContext>;
 
+  private APIService!: APIServiceClass;
   private brainzPlayer = React.createRef<BrainzPlayer>();
   private listensTable = React.createRef<HTMLTableElement>();
 
@@ -57,6 +71,7 @@ export default class RecentListens extends React.Component<
 
   constructor(props: RecentListensProps) {
     super(props);
+    const nextListenTs = props.listens?.[props.listens.length - 1]?.listened_at;
     this.state = {
       alerts: [],
       listens: props.listens || [],
@@ -64,21 +79,24 @@ export default class RecentListens extends React.Component<
       saveUrl: props.saveUrl || "",
       lastFetchedDirection: "older",
       loading: false,
-      nextListenTs: props.listens?.[props.listens.length - 1]?.listened_at,
+      nextListenTs,
       previousListenTs: props.listens?.[0]?.listened_at,
       direction: "down",
       recordingFeedbackMap: {},
+      dateTimePickerValue: nextListenTs
+        ? new Date(nextListenTs * 1000)
+        : new Date(Date.now()),
     };
-
-    this.APIService = new APIService(
-      props.apiUrl || `${window.location.origin}/1`
-    );
 
     this.listensTable = React.createRef();
   }
 
   componentDidMount(): void {
     const { mode } = this.state;
+    // Get API instance from React context provided for in top-level component
+    const { APIService } = this.context;
+    this.APIService = APIService;
+
     if (mode === "listens") {
       this.connectWebsockets();
       // Listen to browser previous/next events and load page accordingly
@@ -92,7 +110,7 @@ export default class RecentListens extends React.Component<
           this.setState({ listenCount });
         });
       }
-      if (currentUser?.name === user?.name) {
+      if (currentUser?.name && currentUser?.name === user?.name) {
         this.loadFeedback();
       }
     }
@@ -137,8 +155,6 @@ export default class RecentListens extends React.Component<
     this.setState(
       {
         listens: newListens,
-        nextListenTs: newListens[newListens.length - 1].listened_at,
-        previousListenTs: newListens[0].listened_at,
         lastFetchedDirection: !_.isUndefined(minTs) ? "newer" : "older",
       },
       this.afterListensFetch
@@ -146,8 +162,11 @@ export default class RecentListens extends React.Component<
   };
 
   connectWebsockets = (): void => {
-    this.createWebsocketsConnection();
-    this.addWebsocketsHandlers();
+    const { webSocketsServerUrl } = this.props;
+    if (webSocketsServerUrl) {
+      this.createWebsocketsConnection();
+      this.addWebsocketsHandlers();
+    }
   };
 
   createWebsocketsConnection = (): void => {
@@ -222,61 +241,10 @@ export default class RecentListens extends React.Component<
     return Boolean(currentListen && _.isEqual(listen, currentListen));
   };
 
-  newAlert = (
-    type: AlertType,
-    title: string,
-    message: string | JSX.Element,
-    count?: number
-  ): void => {
-    const newAlert: Alert = {
-      id: new Date().getTime(),
-      type,
-      headline: title,
-      message,
-      count,
-    };
-
-    this.setState((prevState) => {
-      const alertsList = prevState.alerts;
-      for (let i = 0; i < alertsList.length; i += 1) {
-        const item = alertsList[i];
-        if (
-          item.type === newAlert.type &&
-          item.headline.startsWith(newAlert.headline) &&
-          item.message === newAlert.message
-        ) {
-          if (!alertsList[i].count) {
-            // If the count attribute is undefined, then Initializing it as 2
-            alertsList[i].count = 2;
-          } else {
-            alertsList[i].count! += 1;
-          }
-          alertsList[i].headline = `${newAlert.headline} (${alertsList[i]
-            .count!})`;
-          return { alerts: alertsList };
-        }
-      }
-      return {
-        alerts: [...prevState.alerts, newAlert],
-      };
-    });
-  };
-
-  onAlertDismissed = (alert: Alert): void => {
-    const { alerts } = this.state;
-
-    // find the index of the alert that was dismissed
-    const idx = alerts.indexOf(alert);
-
-    if (idx >= 0) {
-      this.setState({
-        // remove the alert from the array
-        alerts: [...alerts.slice(0, idx), ...alerts.slice(idx + 1)],
-      });
+  handleClickOlder = async (event?: React.MouseEvent) => {
+    if (event) {
+      event.preventDefault();
     }
-  };
-
-  handleClickOlder = async () => {
     const { oldestListenTs, user } = this.props;
     const { nextListenTs } = this.state;
     // No more listens to fetch
@@ -300,8 +268,6 @@ export default class RecentListens extends React.Component<
     this.setState(
       {
         listens: newListens,
-        nextListenTs: newListens[newListens.length - 1].listened_at,
-        previousListenTs: newListens[0].listened_at,
         lastFetchedDirection: "older",
       },
       this.afterListensFetch
@@ -309,7 +275,10 @@ export default class RecentListens extends React.Component<
     window.history.pushState(null, "", `?max_ts=${nextListenTs}`);
   };
 
-  handleClickNewer = async () => {
+  handleClickNewer = async (event?: React.MouseEvent) => {
+    if (event) {
+      event.preventDefault();
+    }
     const { latestListenTs, user } = this.props;
     const { previousListenTs } = this.state;
     // No more listens to fetch
@@ -333,8 +302,6 @@ export default class RecentListens extends React.Component<
     this.setState(
       {
         listens: newListens,
-        nextListenTs: newListens[newListens.length - 1].listened_at,
-        previousListenTs: newListens[0].listened_at,
         lastFetchedDirection: "newer",
       },
       this.afterListensFetch
@@ -342,7 +309,10 @@ export default class RecentListens extends React.Component<
     window.history.pushState(null, "", `?min_ts=${previousListenTs}`);
   };
 
-  handleClickNewest = async () => {
+  handleClickNewest = async (event?: React.MouseEvent) => {
+    if (event) {
+      event.preventDefault();
+    }
     const { user, latestListenTs } = this.props;
     const { listens } = this.state;
     if (listens?.[0]?.listened_at >= latestListenTs) {
@@ -353,8 +323,6 @@ export default class RecentListens extends React.Component<
     this.setState(
       {
         listens: newListens,
-        nextListenTs: newListens[newListens.length - 1].listened_at,
-        previousListenTs: undefined,
         lastFetchedDirection: "newer",
       },
       this.afterListensFetch
@@ -362,7 +330,10 @@ export default class RecentListens extends React.Component<
     window.history.pushState(null, "", "");
   };
 
-  handleClickOldest = async () => {
+  handleClickOldest = async (event?: React.MouseEvent) => {
+    if (event) {
+      event.preventDefault();
+    }
     const { user, oldestListenTs } = this.props;
     const { listens } = this.state;
     // No more listens to fetch
@@ -377,8 +348,6 @@ export default class RecentListens extends React.Component<
     this.setState(
       {
         listens: newListens,
-        nextListenTs: undefined,
-        previousListenTs: newListens[0].listened_at,
         lastFetchedDirection: "older",
       },
       this.afterListensFetch
@@ -387,6 +356,10 @@ export default class RecentListens extends React.Component<
   };
 
   handleKeyDown = (event: KeyboardEvent) => {
+    if (document.activeElement?.localName === "input") {
+      // Don't allow keyboard navigation if an input is currently in focus
+      return;
+    }
     switch (event.key) {
       case "ArrowLeft":
         this.handleClickNewer();
@@ -400,7 +373,7 @@ export default class RecentListens extends React.Component<
   };
 
   getFeedback = async () => {
-    const { user, listens } = this.props;
+    const { user, listens, newAlert } = this.props;
     let recordings = "";
 
     if (listens) {
@@ -420,11 +393,13 @@ export default class RecentListens extends React.Component<
         );
         return data.feedback;
       } catch (error) {
-        this.newAlert(
-          "danger",
-          "Playback error",
-          typeof error === "object" ? error.message : error
-        );
+        if (newAlert) {
+          newAlert(
+            "danger",
+            "Playback error",
+            typeof error === "object" ? error.message : error
+          );
+        }
       }
     }
     return [];
@@ -432,6 +407,9 @@ export default class RecentListens extends React.Component<
 
   loadFeedback = async () => {
     const feedback = await this.getFeedback();
+    if (!feedback) {
+      return;
+    }
     const recordingFeedbackMap: RecordingFeedbackMap = {};
     feedback.forEach((fb: FeedbackResponse) => {
       recordingFeedbackMap[fb.recording_msid] = fb.score;
@@ -460,86 +438,86 @@ export default class RecentListens extends React.Component<
     this.setState({ listens });
   };
 
-  /** This method checks that we have enough listens to fill the page (listens are fetched in a 15 days period)
-   * If we don't have enough, we fetch again with an increased time range and do the check agin, ending when time range is maxed.
-   * The time range (each increment = 5 days) defaults to 6 (the default for the API is 3) or 6*5 = 30 days
-   * and is increased exponentially each retry.
-   */
-  checkListensRange = async (timeRange: number = 6) => {
-    const { latestListenTs, oldestListenTs, user } = this.props;
-    const {
-      listens,
-      lastFetchedDirection,
-      nextListenTs,
-      previousListenTs,
-    } = this.state;
-    if (
-      // If we have enough listens or if we're on the first/last page,
-      // consider our job done and return.
-      listens.length >= this.expectedListensPerPage ||
-      listens[listens.length - 1]?.listened_at <= oldestListenTs ||
-      listens[0]?.listened_at >= latestListenTs
-    ) {
-      this.setState({ endOfTheLine: false });
-      return;
-    }
-    if (timeRange > this.APIService.MAX_TIME_RANGE) {
-      // We reached the maximum time_range allowed by the API.
-      // Show a nice message requesting a user action to load listens from next/previous year.
-      const newState = { endOfTheLine: true, nextListenTs, previousListenTs };
-      if (lastFetchedDirection === "older") {
-        newState.nextListenTs = undefined;
-      } else {
-        newState.previousListenTs = undefined;
-      }
-      this.setState(newState);
+  updatePaginationVariables = () => {
+    const { listens, lastFetchedDirection } = this.state;
+    // This latestListenTs should be saved to state and updated when we receive new listens via websockets?
+    const { latestListenTs } = this.props;
+    if (listens?.length >= this.expectedListensPerPage) {
+      this.setState({
+        nextListenTs: listens[listens.length - 1].listened_at,
+        previousListenTs:
+          listens[0].listened_at >= latestListenTs
+            ? undefined
+            : listens[0].listened_at,
+      });
+    } else if (lastFetchedDirection === "newer") {
+      this.setState({
+        nextListenTs: undefined,
+        previousListenTs: undefined,
+      });
     } else {
-      // Otherwise…
-      let newListens;
-      // Fetch with a time range bigger than
-      if (lastFetchedDirection === "older") {
-        newListens = await this.APIService.getListensForUser(
-          user.name,
-          undefined,
-          nextListenTs,
-          this.expectedListensPerPage,
-          timeRange
-        );
-      } else {
-        newListens = await this.APIService.getListensForUser(
-          user.name,
-          previousListenTs,
-          undefined,
-          this.expectedListensPerPage,
-          timeRange
-        );
-      }
-      // Check again after fetch, doubling the time range each retry up to max
-      let newIncrement;
-      if (timeRange === this.APIService.MAX_TIME_RANGE) {
-        // Set new increment above the limit, to be detected at next checkListensRange call
-        newIncrement = this.APIService.MAX_TIME_RANGE + 1;
-      } else {
-        newIncrement = Math.min(timeRange * 2, this.APIService.MAX_TIME_RANGE);
-      }
-      this.setState(
-        {
-          listens: newListens,
-          nextListenTs:
-            newListens?.[newListens.length - 1]?.listened_at ?? nextListenTs,
-          previousListenTs: newListens?.[0]?.listened_at ?? previousListenTs,
-        },
-        this.checkListensRange.bind(this, newIncrement)
-      );
+      this.setState({
+        nextListenTs: undefined,
+        previousListenTs: listens[0].listened_at,
+      });
     }
   };
 
+  onChangeDateTimePicker = async (newDateTimePickerValue: Date | Date[]) => {
+    if (!newDateTimePickerValue) {
+      return;
+    }
+    this.setState({
+      dateTimePickerValue: newDateTimePickerValue,
+      loading: true,
+      lastFetchedDirection: "newer",
+    });
+    const { oldestListenTs, user } = this.props;
+    let minJSTimestamp;
+    if (Array.isArray(newDateTimePickerValue)) {
+      // Range of dates
+      minJSTimestamp = newDateTimePickerValue[0].getTime();
+    } else {
+      minJSTimestamp = newDateTimePickerValue.getTime();
+    }
+
+    // Constrain to oldest listen TS for that user
+    const minTimestampInSeconds = Math.max(
+      // convert JS time (milliseconds) to seconds
+      Math.round(minJSTimestamp / 1000),
+      oldestListenTs
+    );
+
+    const newListens = await this.APIService.getListensForUser(
+      user.name,
+      minTimestampInSeconds
+    );
+    if (!newListens.length) {
+      // No more listens to fetch
+      this.setState({
+        loading: false,
+      });
+      return;
+    }
+    this.setState(
+      {
+        listens: newListens,
+        nextListenTs: newListens[newListens.length - 1].listened_at,
+        previousListenTs: newListens[0].listened_at,
+        lastFetchedDirection: "newer",
+      },
+      this.afterListensFetch
+    );
+    window.history.pushState(null, "", `?min_ts=${minTimestampInSeconds}`);
+  };
+
   afterListensFetch() {
-    this.checkListensRange();
-    if (this.listensTable?.current) {
+    this.setState({ loading: false });
+    // Scroll to the top of the listens list
+    this.updatePaginationVariables();
+    if (typeof this.listensTable?.current?.scrollIntoView === "function") {
       this.listensTable.current.scrollIntoView({ behavior: "smooth" });
     }
-    this.setState({ loading: false });
   }
 
   render() {
@@ -547,7 +525,6 @@ export default class RecentListens extends React.Component<
       alerts,
       currentListen,
       direction,
-      endOfTheLine,
       lastFetchedDirection,
       listens,
       listenCount,
@@ -556,25 +533,27 @@ export default class RecentListens extends React.Component<
       nextListenTs,
       previousListenTs,
       saveUrl,
+      dateTimePickerValue,
     } = this.state;
     const {
       latestListenTs,
       oldestListenTs,
       spotify,
+      youtube,
       user,
-      apiUrl,
       currentUser,
+      newAlert,
     } = this.props;
 
+    const isNewestButtonDisabled = listens?.[0]?.listened_at >= latestListenTs;
+    const isNewerButtonDisabled =
+      !previousListenTs || previousListenTs >= latestListenTs;
+    const isOlderButtonDisabled =
+      !nextListenTs || nextListenTs <= oldestListenTs;
+    const isOldestButtonDisabled =
+      listens?.[listens?.length - 1]?.listened_at <= oldestListenTs;
     return (
       <div role="main">
-        <AlertList
-          position="bottom-right"
-          alerts={alerts}
-          timeout={15000}
-          dismissTitle="Dismiss"
-          onDismiss={this.onAlertDismissed}
-        />
         <div className="row">
           <div className="col-md-8">
             <h3>
@@ -623,7 +602,6 @@ export default class RecentListens extends React.Component<
                           key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
                           currentUser={currentUser}
                           isCurrentUser={currentUser?.name === user?.name}
-                          apiUrl={apiUrl}
                           listen={listen}
                           mode={mode}
                           currentFeedback={this.getFeedbackForRecordingMsid(
@@ -635,7 +613,7 @@ export default class RecentListens extends React.Component<
                             this.removeListenFromListenList
                           }
                           updateFeedback={this.updateFeedback}
-                          newAlert={this.newAlert}
+                          newAlert={newAlert}
                           className={`${
                             this.isCurrentListen(listen)
                               ? " current-listen"
@@ -645,22 +623,14 @@ export default class RecentListens extends React.Component<
                       );
                     })}
                 </div>
-                {endOfTheLine && (
-                  <div>
-                    No more listens to show in a 12 months period. <br />
-                    Navigate to the
-                    {lastFetchedDirection === "older" ? " next " : " previous "}
-                    page to see {lastFetchedDirection} listens.
-                  </div>
+                {listens.length < this.expectedListensPerPage && (
+                  <h5 className="text-center">No more listens to show</h5>
                 )}
-
                 {mode === "listens" && (
-                  <ul className="pager" style={{ display: "flex" }}>
+                  <ul className="pager" id="navigation">
                     <li
                       className={`previous ${
-                        listens[0].listened_at >= latestListenTs
-                          ? "disabled"
-                          : ""
+                        isNewestButtonDisabled ? "disabled" : ""
                       }`}
                     >
                       <a
@@ -670,15 +640,18 @@ export default class RecentListens extends React.Component<
                           if (e.key === "Enter") this.handleClickNewest();
                         }}
                         tabIndex={0}
+                        href={
+                          isNewestButtonDisabled
+                            ? undefined
+                            : window.location.pathname
+                        }
                       >
                         &#x21E4;
                       </a>
                     </li>
                     <li
                       className={`previous ${
-                        !previousListenTs || previousListenTs >= latestListenTs
-                          ? "disabled"
-                          : ""
+                        isNewerButtonDisabled ? "disabled" : ""
                       }`}
                     >
                       <a
@@ -688,15 +661,34 @@ export default class RecentListens extends React.Component<
                           if (e.key === "Enter") this.handleClickNewer();
                         }}
                         tabIndex={0}
+                        href={
+                          isNewerButtonDisabled
+                            ? undefined
+                            : `?min_ts=${previousListenTs}`
+                        }
                       >
                         &larr; Newer
                       </a>
                     </li>
+                    <li className="date-time-picker">
+                      <DatePicker
+                        onChange={this.onChangeDateTimePicker}
+                        value={dateTimePickerValue}
+                        clearIcon={null}
+                        maxDate={new Date(Date.now())}
+                        minDate={
+                          oldestListenTs
+                            ? new Date(oldestListenTs * 1000)
+                            : undefined
+                        }
+                        calendarIcon={
+                          <FontAwesomeIcon icon={faCalendar as IconProp} />
+                        }
+                      />
+                    </li>
                     <li
                       className={`next ${
-                        !nextListenTs || nextListenTs <= oldestListenTs
-                          ? "disabled"
-                          : ""
+                        isOlderButtonDisabled ? "disabled" : ""
                       }`}
                       style={{ marginLeft: "auto" }}
                     >
@@ -707,16 +699,18 @@ export default class RecentListens extends React.Component<
                           if (e.key === "Enter") this.handleClickOlder();
                         }}
                         tabIndex={0}
+                        href={
+                          isOlderButtonDisabled
+                            ? undefined
+                            : `?max_ts=${nextListenTs}`
+                        }
                       >
                         Older &rarr;
                       </a>
                     </li>
                     <li
                       className={`next ${
-                        listens[listens.length - 1].listened_at <=
-                        oldestListenTs
-                          ? "disabled"
-                          : ""
+                        isOldestButtonDisabled ? "disabled" : ""
                       }`}
                     >
                       <a
@@ -726,6 +720,11 @@ export default class RecentListens extends React.Component<
                           if (e.key === "Enter") this.handleClickOldest();
                         }}
                         tabIndex={0}
+                        href={
+                          isOldestButtonDisabled
+                            ? undefined
+                            : `?min_ts=${oldestListenTs - 1}`
+                        }
                       >
                         &#x21E5;
                       </a>
@@ -742,14 +741,14 @@ export default class RecentListens extends React.Component<
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
             <BrainzPlayer
-              apiService={this.APIService}
               currentListen={currentListen}
               direction={direction}
               listens={listens}
-              newAlert={this.newAlert}
+              newAlert={newAlert}
               onCurrentListenChange={this.handleCurrentListenChange}
               ref={this.brainzPlayer}
               spotifyUser={spotify}
+              youtubeUser={youtube}
             />
           </div>
         </div>
@@ -777,26 +776,50 @@ document.addEventListener("DOMContentLoaded", () => {
     profile_url,
     save_url,
     spotify,
+    youtube,
     user,
     web_sockets_server_url,
     current_user,
+    sentry_dsn,
   } = reactProps;
 
+  const apiService = new APIServiceClass(
+    api_url || `${window.location.origin}/1`
+  );
+
+  if (sentry_dsn) {
+    Sentry.init({ dsn: sentry_dsn });
+  }
+
+  const RecentListensWithAlertNotifications = withAlertNotifications(
+    RecentListens
+  );
+
+  const globalProps: GlobalAppContextT = {
+    APIService: apiService,
+    currentUser: current_user,
+    spotifyAuth: spotify,
+  };
+
   ReactDOM.render(
-    <RecentListens
-      apiUrl={api_url}
-      latestListenTs={latest_listen_ts}
-      latestSpotifyUri={latest_spotify_uri}
-      listens={listens}
-      mode={mode}
-      oldestListenTs={oldest_listen_ts}
-      profileUrl={profile_url}
-      saveUrl={save_url}
-      spotify={spotify}
-      user={user}
-      webSocketsServerUrl={web_sockets_server_url}
-      currentUser={current_user}
-    />,
+    <ErrorBoundary>
+      <GlobalAppContext.Provider value={globalProps}>
+        <RecentListensWithAlertNotifications
+          latestListenTs={latest_listen_ts}
+          latestSpotifyUri={latest_spotify_uri}
+          listens={listens}
+          mode={mode}
+          oldestListenTs={oldest_listen_ts}
+          profileUrl={profile_url}
+          saveUrl={save_url}
+          spotify={spotify}
+          youtube={youtube}
+          user={user}
+          webSocketsServerUrl={web_sockets_server_url}
+          currentUser={current_user}
+        />
+      </GlobalAppContext.Provider>
+    </ErrorBoundary>,
     domContainer
   );
 });

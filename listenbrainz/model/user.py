@@ -1,6 +1,10 @@
 from datetime import datetime
+
+from flask import current_app
+from psycopg2 import OperationalError, DatabaseError
 from listenbrainz.model import db
 from listenbrainz.webserver.admin import AdminModelView
+from listenbrainz.webserver.views.user import delete_user
 
 
 class User(db.Model):
@@ -15,6 +19,7 @@ class User(db.Model):
     gdpr_agreed = db.Column(db.DateTime(timezone=True))
     musicbrainz_row_id = db.Column(db.Integer, nullable=False)
     login_id = db.Column(db.String)
+
 
 class UserAdminView(AdminModelView):
     form_columns = [
@@ -47,3 +52,11 @@ class UserAdminView(AdminModelView):
         'musicbrainz_id',
         'musicbrainz_row_id',
     ]
+
+    def delete_model(self, model):
+        try:
+            delete_user(model.musicbrainz_id)
+            return True
+        except OperationalError or DatabaseError as err:
+            current_app.logger.error(err, exc_info=True)
+            return False

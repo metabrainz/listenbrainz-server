@@ -120,9 +120,7 @@ export default class UserListeningActivity extends React.Component<
           errorMessage: "Statistics for the user have not been calculated",
         });
       } else {
-        this.setState(() => {
-          throw error;
-        });
+        throw error;
       }
     }
     return {} as UserListeningActivityResponse;
@@ -140,19 +138,20 @@ export default class UserListeningActivity extends React.Component<
     data: UserListeningActivityResponse
   ): UserListeningActivityData => {
     const { range } = this.props;
+    let result = [] as UserListeningActivityData;
+    if (!data?.payload) {
+      return result;
+    }
     if (range === "week") {
-      return this.processWeek(data);
+      result = this.processWeek(data);
+    } else if (range === "month") {
+      result = this.processMonth(data);
+    } else if (range === "year") {
+      result = this.processYear(data);
+    } else if (range === "all_time") {
+      result = this.processAllTime(data);
     }
-    if (range === "month") {
-      return this.processMonth(data);
-    }
-    if (range === "year") {
-      return this.processYear(data);
-    }
-    if (range === "all_time") {
-      return this.processAllTime(data);
-    }
-    return {} as UserListeningActivityData;
+    return result;
   };
 
   processWeek = (
@@ -189,14 +188,14 @@ export default class UserListeningActivity extends React.Component<
     });
 
     this.setState({
-      avgListens: Math.ceil(totalListens / totalDays),
+      avgListens: totalListens > 0 ? Math.ceil(totalListens / totalDays) : 0,
       lastRangePeriod: {
-        start: lastWeek[0].from_ts,
-        end: lastWeek[6].from_ts,
+        start: lastWeek?.[0]?.from_ts,
+        end: lastWeek?.[6]?.from_ts,
       },
       thisRangePeriod: {
-        start: thisWeek[0].from_ts,
-        end: thisWeek[totalDays - 1].from_ts,
+        start: thisWeek?.[0]?.from_ts,
+        end: thisWeek?.[totalDays - 1]?.from_ts,
       },
       totalListens,
     });
@@ -249,12 +248,12 @@ export default class UserListeningActivity extends React.Component<
     });
 
     this.setState({
-      avgListens: Math.ceil(totalListens / totalDays),
+      avgListens: totalListens > 0 ? Math.ceil(totalListens / totalDays) : 0,
       lastRangePeriod: {
-        start: lastMonth[0].from_ts,
+        start: lastMonth?.[0]?.from_ts,
       },
       thisRangePeriod: {
-        start: thisMonth[0].from_ts,
+        start: thisMonth?.[0]?.from_ts,
       },
       totalListens,
     });
@@ -296,12 +295,12 @@ export default class UserListeningActivity extends React.Component<
     });
 
     this.setState({
-      avgListens: Math.ceil(totalListens / totalMonths),
+      avgListens: totalListens > 0 ? Math.ceil(totalListens / totalMonths) : 0,
       lastRangePeriod: {
-        start: lastYear[0].from_ts,
+        start: lastYear?.[0]?.from_ts,
       },
       thisRangePeriod: {
-        start: thisYear[0].from_ts,
+        start: thisYear?.[0]?.from_ts,
       },
       totalListens,
     });
@@ -346,7 +345,7 @@ export default class UserListeningActivity extends React.Component<
     }
 
     this.setState({
-      avgListens: Math.ceil(totalListens / totalYears),
+      avgListens: totalListens > 0 ? Math.ceil(totalListens / totalYears) : 0,
       totalListens,
     });
 

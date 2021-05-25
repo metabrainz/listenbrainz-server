@@ -26,7 +26,6 @@ const listen: Listen = {
 };
 
 const props: ListenCardProps = {
-  apiUrl: "foobar",
   listen,
   mode: "listens",
   currentFeedback: 1,
@@ -72,7 +71,7 @@ describe("ListenCard", () => {
 
 describe("componentDidUpdate", () => {
   it("updates the feedbackState", () => {
-    const wrapper = shallow<ListenCard>(<ListenCard {...props} />);
+    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
 
     expect(wrapper.state("feedback")).toEqual(1);
 
@@ -83,12 +82,13 @@ describe("componentDidUpdate", () => {
 
 describe("submitFeedback", () => {
   it("calls API, updates feedback state and calls updateFeedback correctly", async () => {
-    const wrapper = shallow<ListenCard>(
+    const wrapper = mount<ListenCard>(
       <ListenCard {...{ ...props, updateFeedback: jest.fn() }} />
     );
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "submitFeedback");
+    const { APIService } = instance.context;
+    const spy = jest.spyOn(APIService, "submitFeedback");
     spy.mockImplementation(() => Promise.resolve(200));
 
     expect(wrapper.state("feedback")).toEqual(1);
@@ -104,12 +104,13 @@ describe("submitFeedback", () => {
   });
 
   it("does nothing if isCurrentUser is false", async () => {
-    const wrapper = shallow<ListenCard>(
+    const wrapper = mount<ListenCard>(
       <ListenCard {...{ ...props, isCurrentUser: false }} />
     );
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "submitFeedback");
+    const { APIService } = instance.context;
+    const spy = jest.spyOn(APIService, "submitFeedback");
     spy.mockImplementation(() => Promise.resolve(200));
 
     expect(wrapper.state("feedback")).toEqual(1);
@@ -120,14 +121,15 @@ describe("submitFeedback", () => {
   });
 
   it("does nothing if CurrentUser.authtoken is not set", async () => {
-    const wrapper = shallow<ListenCard>(
+    const wrapper = mount<ListenCard>(
       <ListenCard
         {...{ ...props, currentUser: { auth_token: undefined, name: "test" } }}
       />
     );
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "submitFeedback");
+    const { APIService } = instance.context;
+    const spy = jest.spyOn(APIService, "submitFeedback");
     spy.mockImplementation(() => Promise.resolve(200));
 
     expect(wrapper.state("feedback")).toEqual(1);
@@ -138,11 +140,12 @@ describe("submitFeedback", () => {
   });
 
   it("doesn't update feedback state or call updateFeedback if status code is not 200", async () => {
-    const wrapper = shallow<ListenCard>(<ListenCard {...props} />);
+    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
     const instance = wrapper.instance();
     props.updateFeedback = jest.fn();
 
-    const spy = jest.spyOn(instance.APIService, "submitFeedback");
+    const { APIService } = instance.context;
+    const spy = jest.spyOn(APIService, "submitFeedback");
     spy.mockImplementation(() => Promise.resolve(201));
 
     expect(wrapper.state("feedback")).toEqual(1);
@@ -157,12 +160,13 @@ describe("submitFeedback", () => {
   });
 
   it("calls handleError if error is returned", async () => {
-    const wrapper = shallow<ListenCard>(<ListenCard {...props} />);
+    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
     const instance = wrapper.instance();
     instance.handleError = jest.fn();
 
     const error = new Error("error");
-    const spy = jest.spyOn(instance.APIService, "submitFeedback");
+    const { APIService } = instance.context;
+    const spy = jest.spyOn(APIService, "submitFeedback");
     spy.mockImplementation(() => {
       throw error;
     });
@@ -178,7 +182,7 @@ describe("submitFeedback", () => {
 
 describe("handleError", () => {
   it("calls newAlert", async () => {
-    const wrapper = shallow<ListenCard>(
+    const wrapper = mount<ListenCard>(
       <ListenCard {...{ ...props, newAlert: jest.fn() }} />
     );
     const instance = wrapper.instance();
@@ -196,12 +200,13 @@ describe("handleError", () => {
 
 describe("deleteListen", () => {
   it("calls API, sets isDeleted state and removeListenFromListenList correctly", async () => {
-    const wrapper = shallow<ListenCard>(
+    const wrapper = mount<ListenCard>(
       <ListenCard {...{ ...props, removeListenFromListenList: jest.fn() }} />
     );
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "deleteListen");
+    const { APIService } = instance.context;
+    const spy = jest.spyOn(APIService, "deleteListen");
     spy.mockImplementation(() => Promise.resolve(200));
 
     expect(wrapper.state("isDeleted")).toEqual(false);
@@ -224,12 +229,13 @@ describe("deleteListen", () => {
   });
 
   it("does nothing if isCurrentUser is false", async () => {
-    const wrapper = shallow<ListenCard>(
+    const wrapper = mount<ListenCard>(
       <ListenCard {...{ ...props, isCurrentUser: false }} />
     );
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "deleteListen");
+    const { APIService } = instance.context;
+    const spy = jest.spyOn(APIService, "deleteListen");
     spy.mockImplementation(() => Promise.resolve(200));
 
     instance.deleteListen();
@@ -238,14 +244,15 @@ describe("deleteListen", () => {
   });
 
   it("does nothing if CurrentUser.authtoken is not set", async () => {
-    const wrapper = shallow<ListenCard>(
+    const wrapper = mount<ListenCard>(
       <ListenCard
         {...{ ...props, currentUser: { auth_token: undefined, name: "test" } }}
       />
     );
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "deleteListen");
+    const { APIService } = instance.context;
+    const spy = jest.spyOn(APIService, "deleteListen");
     spy.mockImplementation(() => Promise.resolve(200));
 
     instance.deleteListen();
@@ -254,11 +261,12 @@ describe("deleteListen", () => {
   });
 
   it("doesn't update isDeleted state call removeListenFromListenList if status code is not 200", async () => {
-    const wrapper = shallow<ListenCard>(<ListenCard {...props} />);
+    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
     const instance = wrapper.instance();
     props.removeListenFromListenList = jest.fn();
 
-    const spy = jest.spyOn(instance.APIService, "deleteListen");
+    const { APIService } = instance.context;
+    const spy = jest.spyOn(APIService, "deleteListen");
     spy.mockImplementation(() => Promise.resolve(201));
 
     instance.deleteListen();
@@ -271,12 +279,13 @@ describe("deleteListen", () => {
   });
 
   it("calls handleError if error is returned", async () => {
-    const wrapper = shallow<ListenCard>(<ListenCard {...props} />);
+    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
     const instance = wrapper.instance();
     instance.handleError = jest.fn();
 
     const error = new Error("error");
-    const spy = jest.spyOn(instance.APIService, "deleteListen");
+    const { APIService } = instance.context;
+    const spy = jest.spyOn(APIService, "deleteListen");
     spy.mockImplementation(() => {
       throw error;
     });
@@ -292,12 +301,15 @@ describe("deleteListen", () => {
 
 describe("recommendTrackToFollowers", () => {
   it("calls API, and creates a new alert on success", async () => {
-    const wrapper = shallow<ListenCard>(
+    const wrapper = mount<ListenCard>(
       <ListenCard {...{ ...props, newAlert: jest.fn() }} />
     );
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "recommendTrackToFollowers");
+    const spy = jest.spyOn(
+      instance.context.APIService,
+      "recommendTrackToFollowers"
+    );
     spy.mockImplementation(() => Promise.resolve(200));
 
     await instance.recommendListenToFollowers();
@@ -316,12 +328,15 @@ describe("recommendTrackToFollowers", () => {
   });
 
   it("does nothing if isCurrentUser is false", async () => {
-    const wrapper = shallow<ListenCard>(
+    const wrapper = mount<ListenCard>(
       <ListenCard {...{ ...props, isCurrentUser: false }} />
     );
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "recommendTrackToFollowers");
+    const spy = jest.spyOn(
+      instance.context.APIService,
+      "recommendTrackToFollowers"
+    );
     spy.mockImplementation(() => Promise.resolve(200));
 
     instance.recommendListenToFollowers();
@@ -329,14 +344,17 @@ describe("recommendTrackToFollowers", () => {
   });
 
   it("does nothing if CurrentUser.authtoken is not set", async () => {
-    const wrapper = shallow<ListenCard>(
+    const wrapper = mount<ListenCard>(
       <ListenCard
         {...{ ...props, currentUser: { auth_token: undefined, name: "test" } }}
       />
     );
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "recommendTrackToFollowers");
+    const spy = jest.spyOn(
+      instance.context.APIService,
+      "recommendTrackToFollowers"
+    );
     spy.mockImplementation(() => Promise.resolve(200));
 
     instance.recommendListenToFollowers();
@@ -344,12 +362,15 @@ describe("recommendTrackToFollowers", () => {
   });
 
   it("calls handleError if error is returned", async () => {
-    const wrapper = shallow<ListenCard>(<ListenCard {...props} />);
+    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
     const instance = wrapper.instance();
     instance.handleError = jest.fn();
 
     const error = new Error("error");
-    const spy = jest.spyOn(instance.APIService, "recommendTrackToFollowers");
+    const spy = jest.spyOn(
+      instance.context.APIService,
+      "recommendTrackToFollowers"
+    );
     spy.mockImplementation(() => {
       throw error;
     });
