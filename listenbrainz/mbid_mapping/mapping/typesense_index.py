@@ -86,7 +86,7 @@ def build(client, collection_name):
 
     client.collections.create(schema)
 
-    with psycopg2.connect(config.DB_CONNECT_MB) as conn:
+    with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
 
             curs.execute("SELECT max(score) FROM mapping.mbid_mapping")

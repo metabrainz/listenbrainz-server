@@ -9,6 +9,7 @@ from unidecode import unidecode
 from listenbrainz import config
 from listenbrainz.labs_api.labs.api.mbid_mapping import prepare_query, COLLECTION_NAME
 
+
 NUM_TYPOS = 5
 
 

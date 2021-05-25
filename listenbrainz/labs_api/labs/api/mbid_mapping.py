@@ -10,6 +10,7 @@ from Levenshtein import distance
 
 from listenbrainz import config
 
+DEFAULT_TIMEOUT=2
 COLLECTION_NAME = "mbid_mapping_latest"
 MATCH_TYPES = ('no_match', 'low_quality', 'med_quality', 'high_quality', 'exact_match')
 MATCH_TYPE_NO_MATCH = 0
@@ -50,7 +51,7 @@ class MBIDMappingQuery(Query):
     MATCH_TYPE_HIGH_QUALITY_MAX_EDIT_DISTANCE = 2
     MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE = 5
 
-    def __init__(self):
+    def __init__(self, timeout=DEFAULT_TIMEOUT):
         self.debug = False
 
         self.client = typesense.Client({
@@ -60,7 +61,7 @@ class MBIDMappingQuery(Query):
                 'protocol': 'http',
             }],
             'api_key': config.TYPESENSE_API_KEY,
-            'connection_timeout_seconds': 2
+            'connection_timeout_seconds': timeout
         })
 
     def names(self):

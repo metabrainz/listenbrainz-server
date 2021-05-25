@@ -57,7 +57,7 @@ class MainTestCase(flask_testing.TestCase):
 
     def create_app(self):
         app = create_app()
-        app.config['DB_CONNECT_MAPPING'] = 'yermom'
+        app.config['MBID_MAPPING_DATABASE_URI'] = 'yermom'
         return app
 
     def setUp(self):
