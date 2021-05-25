@@ -174,7 +174,7 @@ def get_feedback_for_recordings_for_user(user_name):
     If the feedback for given recording MSID doesn't exist then a score 0 is returned for that recording.
 
     :param recordings: comma separated list of recording_msids for which feedback records are to be fetched.
-    :type score: ``str``
+    :type recordings: ``str``
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
     """
