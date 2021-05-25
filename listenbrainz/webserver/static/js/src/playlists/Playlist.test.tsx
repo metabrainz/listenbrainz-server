@@ -1,11 +1,8 @@
-import { enableFetchMocks } from "jest-fetch-mock";
 import * as React from "react";
 import { shallow } from "enzyme";
 import * as timeago from "time-ago";
 import PlaylistPage from "./Playlist";
 import * as playlistPageProps from "../__mocks__/playlistPageProps.json";
-
-enableFetchMocks();
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -13,7 +10,6 @@ enableFetchMocks();
 jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
 const {
-  apiUrl,
   labsApiUrl,
   currentUser,
   playlist,
@@ -21,13 +17,16 @@ const {
 } = playlistPageProps;
 
 const props = {
-  apiUrl,
   labsApiUrl,
   playlist: playlist as JSPFObject,
   spotify: {
     access_token: "heyo",
-    permission: "streaming" as SpotifyPermission,
+    permission: ["streaming"] as Array<SpotifyPermission>,
   },
+  youtube: {
+    access_token: "frontend-test",
+    api_key: "fake-api-key",
+  } as YoutubeUser,
   currentUser,
   webSocketsServerUrl,
   newAlert: () => {},

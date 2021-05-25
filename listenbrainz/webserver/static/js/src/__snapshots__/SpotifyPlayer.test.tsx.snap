@@ -18,7 +18,9 @@ exports[`SpotifyPlayer renders 1`] = `
   spotifyUser={
     Object {
       "access_token": "heyo",
-      "permission": "read",
+      "permission": Array [
+        "user-read-currently-playing",
+      ],
     }
   }
 >

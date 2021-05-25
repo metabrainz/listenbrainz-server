@@ -5,6 +5,16 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ '*' ]
+    paths-ignore:
+      - 'listenbrainz_spark/**'
+      - 'requirements_spark.txt'
+      - 'Dockerfile.spark'
+      - '**.jsx?'
+      - '**.tsx?'
+      - 'docker/Dockerfile.webpack'
+      - 'docker/docker-compose.spark*.yml'
+      - 'docs/**'
+      - '**.md'
 
 jobs:
 
