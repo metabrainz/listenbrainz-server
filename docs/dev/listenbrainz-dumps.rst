@@ -9,6 +9,9 @@ and the incremental data dumps twice a week.
 Each dump contains a number of different files. Depending on your use cases,
 you may or may not require all of them.
 
+Dump mirrors
+============
+See the `ListenBrainz data page <https://listenbrainz.org/data>`_ for information about where to download the data dumps from.
 
 File Descriptions
 =================

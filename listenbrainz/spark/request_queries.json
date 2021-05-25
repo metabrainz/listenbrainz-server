@@ -104,7 +104,8 @@
     "description": "Create dataframes to prepare trainable data.",
     "params": [
       "train_model_window",
-      "job_type"
+      "job_type",
+      "minimum_listens_threshold"
     ]
   },
   "cf.recommendations.recording.train_model": {
@@ -146,7 +147,7 @@
     "name": "similarity.similar_users",
     "description": "Generate similar user correlation",
     "params": [
-      "threshold"
+      "max_num_users"
     ]
   }
 }

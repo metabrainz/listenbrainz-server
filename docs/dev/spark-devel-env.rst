@@ -57,22 +57,30 @@ in action!
 Bring containers up
 --------------------
 
-Start the ListenBrainz Spark containers by executing ``develop.sh spark up``.
+First, ensure that you are running the main ListenBrainz development environment:
+
+.. code-block:: bash
+
+    ./develop.sh up
+
+Start the ListenBrainz Spark environment:
 
 .. code-block:: bash
 
     ./develop.sh spark up
+
+This will also bring up the spark reader container which is described in detail :doc:`here <spark-architecture>`.
 
 Import data into the spark environment
 --------------------------------------
 
 We provide small data dumps that are helpful for working with real ListenBrainz data.
 Download and import a data dump into your spark environment using the following
-commands.
+commands in a separate terminal.
 
 .. code-block:: bash
 
-    ./develop.sh spark run request_consumer python spark_manage.py upload_listens -i
+    ./develop.sh spark run spark_reader python manage.py spark request_import_incremental
 
 
 Now, you are all set to begin making changes and seeing them in real-time inside

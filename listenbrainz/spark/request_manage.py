@@ -161,7 +161,8 @@ def request_import_new_incremental_dump(id_: int):
 @cli.command(name="request_dataframes")
 @click.option("--days", type=int, default=180, help="Request model to be trained on data of given number of days")
 @click.option("--job-type", default="recommendation_recording", help="The type of dataframes to request. 'recommendation_recording' or 'similar_users' are allowed.")
-def request_dataframes(days, job_type):
+@click.option("--listens-threshold", type=int, default=0, help="The minimum number of listens a user should have to be included in the dataframes.")
+def request_dataframes(days, job_type, listens_threshold):
     """ Send the cluster a request to create dataframes.
     """
 
@@ -171,7 +172,8 @@ def request_dataframes(days, job_type):
 
     params = {
         'train_model_window': days,
-        'job_type': job_type
+        'job_type': job_type,
+        'minimum_listens_threshold': listens_threshold
     }
     send_request_to_spark_cluster(_prepare_query_message(
         'cf.recommendations.recording.create_dataframes', params=params))
@@ -257,12 +259,12 @@ def request_import_artist_relation():
 
 
 @cli.command(name='request_similar_users')
-@click.option("--threshold", type=float, default=.075, help="Threshold for minimum relationship strenth between two users.")
-def request_similar_users(threshold):
+@click.option("--max-num-users", type=int, default=25, help="The maxiumum number of similar users to return for any given user.")
+def request_similar_users(max_num_users):
     """ Send the cluster a request to generate similar users.
     """
     params = {
-        'threshold': threshold
+        'max_num_users': max_num_users
     }
     send_request_to_spark_cluster(_prepare_query_message(
         'similarity.similar_users', params=params))

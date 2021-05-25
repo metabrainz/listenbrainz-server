@@ -42,7 +42,7 @@ class RecordingRecommendationMetadata(pydantic.BaseModel):
 
 
 class NotificationMetadata(pydantic.BaseModel):
-    creator_id: int
+    creator: str
     message: str
 
 
@@ -57,6 +57,10 @@ class UserTimelineEvent(pydantic.BaseModel):
     created: Optional[datetime]
 
 
+class APINotificationEvent(pydantic.BaseModel):
+    message: str
+
+
 class APIFollowEvent(pydantic.BaseModel):
     user_name_0: str
     user_name_1: str
@@ -64,7 +68,7 @@ class APIFollowEvent(pydantic.BaseModel):
     created: int
 
 
-APIEventMetadata = Union[APIListen, APIFollowEvent]
+APIEventMetadata = Union[APIListen, APIFollowEvent, APINotificationEvent]
 
 
 class APITimelineEvent(pydantic.BaseModel):

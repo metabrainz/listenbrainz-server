@@ -8,6 +8,7 @@ from copy import deepcopy
 from datetime import datetime
 from listenbrainz.utils import escape
 
+
 def flatten_dict(d, seperator='', parent_key=''):
     """
     Flattens a nested dictionary structure into a single dict.
@@ -29,12 +30,21 @@ def flatten_dict(d, seperator='', parent_key=''):
             result.append((new_key, value))
     return dict(result)
 
+
 def convert_comma_seperated_string_to_list(string):
     if not string:
         return []
     if isinstance(string, list):
         return string
     return [val for val in string.split(',')]
+
+
+def check_listen_data_for_nulls(**kwargs):
+    """Given a set of kwargs, check if any values have a null string in them.
+    Raises ValueError if any of the args has a null value in it"""
+    for k, v in kwargs.items():
+        if v and '\x00' in v:
+            raise ValueError("field {} contains a null".format(k))
 
 
 class Listen(object):
@@ -75,6 +85,9 @@ class Listen(object):
         self.user_id = user_id
         self.user_name = user_name
 
+        check_listen_data_for_nulls(user_name=user_name, artist_msid=artist_msid, release_msid=release_msid,
+                                    recording_msid=recording_msid)
+
         # determine the type of timestamp and do the right thing
         if isinstance(timestamp, int) or isinstance(timestamp, float):
             self.ts_since_epoch = int(timestamp)
@@ -96,7 +109,9 @@ class Listen(object):
             self.data = {'additional_info': {}}
         else:
             try:
-                data['additional_info'] = flatten_dict(data['additional_info'])
+                flattened_data = flatten_dict(data['additional_info'])
+                data['additional_info'] = flattened_data
+                check_listen_data_for_nulls(**flattened_data)
             except TypeError:
                 # TypeError may occur here because PostgresListenStore passes strings
                 # to data sometimes. If that occurs, we don't need to do anything.

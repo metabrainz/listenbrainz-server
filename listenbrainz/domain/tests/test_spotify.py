@@ -1,207 +1,144 @@
 import time
+from datetime import datetime, timezone
+from unittest import mock
 
 import requests_mock
 
-from flask import current_app
+import listenbrainz.db.user as db_user
+from listenbrainz.domain.external_service import ExternalServiceAPIError, ExternalServiceInvalidGrantError
+from listenbrainz.domain.spotify import SpotifyService, OAUTH_TOKEN_URL
 
-from listenbrainz.domain import spotify
-from listenbrainz.webserver.testing import ServerTestCase
-from unittest import mock
+from listenbrainz.tests.integration import IntegrationTestCase
 
 
-class SpotifyDomainTestCase(ServerTestCase):
+class SpotifyServiceTestCase(IntegrationTestCase):
 
     def setUp(self):
-        super(SpotifyDomainTestCase, self).setUp()
-        self.spotify_user = spotify.Spotify(
-                user_id=1,
-                musicbrainz_id='spotify_user',
-                musicbrainz_row_id=312,
-                user_token='old-token',
-                token_expires=int(time.time()),
-                refresh_token='old-refresh-token',
-                last_updated=None,
-                record_listens=True,
-                error_message=None,
-                latest_listened_at=None,
-                permission='user-read-recently-played',
-            )
+        super(SpotifyServiceTestCase, self).setUp()
+        self.user_id = db_user.create(312, 'spotify_user')
+        self.service = SpotifyService()
+        self.service.add_new_user(self.user_id, {
+            'access_token': 'old-token',
+            'refresh_token': 'old-refresh-token',
+            'expires_in': 3600,
+            'scope': 'user-read-currently-playing user-read-recently-played'
+        })
+        self.spotify_user = self.service.get_user(self.user_id)
 
-    def test_none_values_for_last_updated_and_latest_listened_at(self):
-        self.assertIsNone(self.spotify_user.last_updated_iso)
-        self.assertIsNone(self.spotify_user.latest_listened_at_iso)
+    def test_get_active_users(self):
+        user_id_1 = db_user.create(333, 'user-1')
+        user_id_2 = db_user.create(666, 'user-2')
+        user_id_3 = db_user.create(999, 'user-3')
+
+        self.service.add_new_user(user_id_2, {
+            'access_token': 'access-token',
+            'refresh_token': 'refresh-token',
+            'expires_in': 3600,
+            'scope': 'streaming',
+        })
+
+        self.service.add_new_user(user_id_3, {
+            'access_token': 'access-token999',
+            'refresh_token': 'refresh-token999',
+            'expires_in': 3600,
+            'scope': 'user-read-currently-playing user-read-recently-played',
+        })
+        self.service.update_user_import_status(user_id_3, error="add an error and check this user doesn't get selected")
+
+        self.service.add_new_user(user_id_1, {
+            'access_token': 'access-token333',
+            'refresh_token': 'refresh-token333',
+            'expires_in': 3600,
+            'scope': 'user-read-currently-playing user-read-recently-played',
+        })
+        self.service.update_latest_listen_ts(user_id_1, int(time.time()))
+
+        active_users = self.service.get_active_users_to_process()
+        self.assertEqual(len(active_users), 2)
+        self.assertEqual(active_users[0]['user_id'], user_id_1)
+        self.assertEqual(active_users[1]['user_id'], self.user_id)
+
+    def test_update_latest_listened_at(self):
+        t = int(time.time())
+        self.service.update_latest_listen_ts(self.user_id, t)
+        user = self.service.get_user_connection_details(self.user_id)
+        self.assertEqual(datetime.fromtimestamp(t, tz=timezone.utc), user['latest_listened_at'])
 
     # apparently, requests_mocker does not follow the usual order in which decorators are applied. :-(
     @requests_mock.Mocker()
-    @mock.patch('listenbrainz.domain.spotify.db_spotify.get_user')
-    @mock.patch('listenbrainz.domain.spotify.db_spotify.update_token')
-    def test_refresh_user_token(self, mock_requests, mock_update_token, mock_get_user):
-        expires_at = int(time.time()) + 3600
-        mock_requests.post(spotify.OAUTH_TOKEN_URL, status_code=200, json={
+    @mock.patch('time.time')
+    def test_refresh_user_token(self, mock_requests, mock_time):
+        mock_time.return_value = 0
+        mock_requests.post(OAUTH_TOKEN_URL, status_code=200, json={
             'access_token': 'tokentoken',
             'refresh_token': 'refreshtokentoken',
             'expires_in': 3600,
             'scope': '',
         })
-        spotify.refresh_user_token(self.spotify_user)
-        mock_update_token.assert_called_with(
-            self.spotify_user.user_id,
-            'tokentoken',
-            'refreshtokentoken',
-            expires_at,
-        )
-        mock_get_user.assert_called_with(self.spotify_user.user_id)
+        user = self.service.refresh_access_token(self.user_id, self.spotify_user['refresh_token'])
+        self.assertEqual(self.user_id, user['user_id'])
+        self.assertEqual('tokentoken', user['access_token'])
+        self.assertEqual('refreshtokentoken', user['refresh_token'])
+        self.assertEqual(datetime.fromtimestamp(3600, tz=timezone.utc), user['token_expires'])
 
     @requests_mock.Mocker()
-    @mock.patch('listenbrainz.domain.spotify.db_spotify.get_user')
-    @mock.patch('listenbrainz.domain.spotify.db_spotify.update_token')
-    def test_refresh_user_token_only_access(self, mock_requests, mock_update_token, mock_get_user):
-        expires_at = int(time.time()) + 3600
-        mock_requests.post(spotify.OAUTH_TOKEN_URL, status_code=200, json={
+    @mock.patch('time.time')
+    def test_refresh_user_token_only_access(self, mock_requests, mock_time):
+        mock_time.return_value = 0
+        mock_requests.post(OAUTH_TOKEN_URL, status_code=200, json={
             'access_token': 'tokentoken',
             'expires_in': 3600,
             'scope': '',
         })
-        spotify.refresh_user_token(self.spotify_user)
-        mock_update_token.assert_called_with(
-            self.spotify_user.user_id,
-            'tokentoken',
-            'old-refresh-token',
-            expires_at,
-        )
-        mock_get_user.assert_called_with(self.spotify_user.user_id)
+        user = self.service.refresh_access_token(self.user_id, self.spotify_user['refresh_token'])
+        self.assertEqual(self.user_id, user['user_id'])
+        self.assertEqual('tokentoken', user['access_token'])
+        self.assertEqual('old-refresh-token', user['refresh_token'])
+        self.assertEqual(datetime.fromtimestamp(3600, tz=timezone.utc), user['token_expires'])
 
     @requests_mock.Mocker()
     def test_refresh_user_token_bad(self, mock_requests):
-        mock_requests.post(spotify.OAUTH_TOKEN_URL, status_code=400, json={
+        mock_requests.post(OAUTH_TOKEN_URL, status_code=400, json={
             'error': 'invalid request',
             'error_description': 'invalid refresh token',
         })
-        with self.assertRaises(spotify.SpotifyAPIError):
-            spotify.refresh_user_token(self.spotify_user)
+        with self.assertRaises(ExternalServiceAPIError):
+            self.service.refresh_access_token(self.user_id, self.spotify_user['refresh_token'])
 
     # apparently, requests_mocker does not follow the usual order in which decorators are applied. :-(
     @requests_mock.Mocker()
-    @mock.patch('listenbrainz.db.spotify.delete_spotify')
-    def test_refresh_user_token_revoked(self, mock_requests, mock_delete_spotify):
-        mock_requests.post(spotify.OAUTH_TOKEN_URL, status_code=400, json={
+    def test_refresh_user_token_revoked(self, mock_requests):
+        mock_requests.post(OAUTH_TOKEN_URL, status_code=400, json={
             'error': 'invalid_grant',
             'error_description': 'Refresh token revoked',
         })
-        spotify.refresh_user_token(self.spotify_user)
-        mock_delete_spotify.assert_called_with(self.spotify_user.user_id)
+        with self.assertRaises(ExternalServiceInvalidGrantError):
+            self.service.refresh_access_token(self.user_id, self.spotify_user['refresh_token'])
 
-    def test_get_spotify_oauth(self):
-        func_oauth = spotify.get_spotify_oauth()
-        self.assertEqual(func_oauth.client_id, current_app.config['SPOTIFY_CLIENT_ID'])
-        self.assertEqual(func_oauth.client_secret, current_app.config['SPOTIFY_CLIENT_SECRET'])
-        self.assertEqual(func_oauth.redirect_uri, 'http://localhost/profile/connect-spotify/callback')
-        self.assertIsNone(func_oauth.scope)
+    def test_remove_user(self):
+        self.service.remove_user(self.user_id)
+        self.assertIsNone(self.service.get_user(self.user_id))
 
-        func_oauth = spotify.get_spotify_oauth(spotify.SPOTIFY_LISTEN_PERMISSIONS)
-        self.assertIn('streaming', func_oauth.scope)
-        self.assertIn('user-read-email', func_oauth.scope)
-        self.assertIn('user-read-private', func_oauth.scope)
-        self.assertIn('playlist-modify-public', func_oauth.scope)
-        self.assertIn('playlist-modify-private', func_oauth.scope)
-        self.assertNotIn('user-read-recently-played', func_oauth.scope)
-        self.assertNotIn('user-read-currently-playing', func_oauth.scope)
+    def test_get_user(self):
+        user = self.service.get_user(self.user_id)
+        self.assertIsInstance(user, dict)
+        self.assertEqual(user['user_id'], self.user_id)
+        self.assertEqual(user['musicbrainz_id'], 'spotify_user')
+        self.assertEqual(user['access_token'], 'old-token')
+        self.assertEqual(user['refresh_token'], 'old-refresh-token')
+        self.assertIsNotNone(user['last_updated'])
 
-        func_oauth = spotify.get_spotify_oauth(spotify.SPOTIFY_IMPORT_PERMISSIONS)
-        self.assertIn('user-read-currently-playing', func_oauth.scope)
-        self.assertIn('user-read-recently-played', func_oauth.scope)
-        self.assertNotIn('streaming', func_oauth.scope)
-        self.assertNotIn('user-read-email', func_oauth.scope)
-        self.assertNotIn('user-read-private', func_oauth.scope)
-        self.assertNotIn('playlist-modify-public', func_oauth.scope)
-        self.assertNotIn('playlist-modify-private', func_oauth.scope)
-
-    @mock.patch('listenbrainz.domain.spotify.db_spotify.get_user')
-    def test_get_user(self, mock_db_get_user):
-        t = int(time.time())
-        mock_db_get_user.return_value = {
-            'user_id': 1,
-            'musicbrainz_id': 'spotify_user',
-            'musicbrainz_row_id': 312,
-            'user_token': 'token-token-token',
-            'token_expires': t,
-            'refresh_token': 'refresh-refresh-refresh',
-            'last_updated': None,
-            'record_listens': True,
-            'error_message': 'oops',
-            'latest_listened_at': None,
-            'permission': 'user-read-recently-played',
-        }
-
-        user = spotify.get_user(1)
-        self.assertIsInstance(user, spotify.Spotify)
-        self.assertEqual(user.user_id, 1)
-        self.assertEqual(user.musicbrainz_id, 'spotify_user')
-        self.assertEqual(user.user_token, 'token-token-token')
-        self.assertEqual(user.token_expires, t)
-        self.assertEqual(user.last_updated, None)
-        self.assertEqual(user.record_listens, True)
-        self.assertEqual(user.error_message, 'oops')
-
-    @mock.patch('listenbrainz.domain.spotify.db_spotify.delete_spotify')
-    def test_remove_user(self, mock_delete):
-        spotify.remove_user(1)
-        mock_delete.assert_called_with(1)
-
-    @mock.patch('listenbrainz.domain.spotify.db_spotify.create_spotify')
-    @mock.patch('listenbrainz.domain.spotify.time.time')
-    def test_add_new_user(self, mock_time, mock_create):
+    @mock.patch('time.time')
+    def test_add_new_user(self, mock_time):
         mock_time.return_value = 0
-        spotify.add_new_user(1, {
+        self.service.remove_user(self.user_id)
+        self.service.add_new_user(self.user_id, {
             'access_token': 'access-token',
             'refresh_token': 'refresh-token',
             'expires_in': 3600,
             'scope': '',
         })
-        mock_create.assert_called_with(1, 'access-token', 'refresh-token', 3600, False, '')
-
-    @mock.patch('listenbrainz.domain.spotify.db_spotify.get_active_users_to_process')
-    def test_get_active_users(self, mock_get_active_users):
-        t = int(time.time())
-        mock_get_active_users.return_value = [
-            {
-                'user_id': 1,
-                'musicbrainz_id': 'spotify_user',
-                'musicbrainz_row_id': 312,
-                'user_token': 'token-token-token',
-                'token_expires': t,
-                'refresh_token': 'refresh-refresh-refresh',
-                'last_updated': None,
-                'record_listens': True,
-                'error_message': 'oops',
-                'latest_listened_at': None,
-                'permission': 'user-read-recently-played',
-            },
-            {
-                'user_id': 2,
-                'musicbrainz_id': 'spotify_user_2',
-                'musicbrainz_row_id': 321,
-                'user_token': 'token-token-token321',
-                'token_expires': t + 31,
-                'refresh_token': 'refresh-refresh-refresh321',
-                'last_updated': None,
-                'record_listens': True,
-                'error_message': 'oops2',
-                'latest_listened_at': None,
-                'permission': 'user-read-recently-played',
-            },
-        ]
-
-        lst = spotify.get_active_users_to_process()
-        mock_get_active_users.assert_called_once()
-        self.assertEqual(len(lst), 2)
-        self.assertIsInstance(lst[0], spotify.Spotify)
-        self.assertIsInstance(lst[1], spotify.Spotify)
-        self.assertEqual(lst[0].user_id, 1)
-        self.assertEqual(lst[1].user_id, 2)
-
-    @mock.patch('listenbrainz.domain.spotify.db_spotify.update_latest_listened_at')
-    def test_update_latest_listened_at(self, mock_update_listened_at):
-        t = int(time.time())
-        spotify.update_latest_listened_at(1, t)
-        mock_update_listened_at.assert_called_once_with(1, t)
+        user = self.service.get_user(self.user_id)
+        self.assertEqual(self.user_id, user['user_id'])
+        self.assertEqual('access-token', user['access_token'])
+        self.assertEqual('refresh-token', user['refresh_token'])

@@ -2,18 +2,27 @@
 #
 # Build production image from the currently checked out version
 # of ListenBrainz and push it to Docker Hub, with an optional
-# tag (which defaults to "latest")
+# tag (which defaults to "beta")
 #
 # Usage:
 #   $ ./push.sh [tag]
 
+set -e
 
 cd "$(dirname "${BASH_SOURCE[0]}")/../"
 
-git describe --tags --dirty --always > .git-version
+GIT_COMMIT_SHA="$(git describe --tags --dirty --always)"
+echo "$GIT_COMMIT_SHA" > .git-version
 
-ENV=${1:-beta}
-TAG=${2:-beta}
-echo "building for env $ENV tag $TAG"
-docker build -t metabrainz/listenbrainz:$TAG --target listenbrainz-prod --build-arg deploy_env=$ENV . && \
-    docker push metabrainz/listenbrainz:$TAG
+TAG=${1:-beta}
+
+function build_and_push_image {
+    echo "building for tag $1"
+    docker build \
+        --tag metabrainz/listenbrainz:"$1" \
+        --target listenbrainz-prod \
+        --build-arg GIT_COMMIT_SHA="$GIT_COMMIT_SHA" . && \
+    docker push metabrainz/listenbrainz:"$1"
+}
+
+build_and_push_image "$TAG"

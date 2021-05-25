@@ -1,15 +1,14 @@
 import ujson
-from werkzeug.exceptions import BadRequest
 from flask import Blueprint, render_template, current_app, request
 from flask_login import current_user, login_required
-from listenbrainz.domain import spotify
+from listenbrainz.domain.spotify import SpotifyService
+from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user
 
 player_bp = Blueprint("player", __name__)
 
 
 @player_bp.route("/", methods=["POST"])
 @login_required
-
 def load():
     """This is the start of the BrainzPlayer concept where anyone (logged into LB) can post a playlist
         composed of an array of listens-formatted items and get returned a playable playlist page.
@@ -48,7 +47,8 @@ def load():
         "name": current_user.musicbrainz_id,
         "auth_token": current_user.auth_token,
     }
-    spotify_data = spotify.get_user_dict(current_user.id)
+    spotify_data = get_current_spotify_user()
+    youtube_data = get_current_youtube_user()
     # `user` == `curent_user` since player isn't for a user but the recommendation component
     # it uses expects `user` and `current_user` as keys.
     props = {
@@ -58,8 +58,10 @@ def load():
         },
         "current_user": current_user_data,
         "spotify": spotify_data,
+        "youtube": youtube_data,
         "api_url": current_app.config["API_URL"],
-        "recommendations": listens
+        "recommendations": listens,
+        "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn")
     }
 
     return render_template(

@@ -1,0 +1,11 @@
+{
+    "loggedInUser": {
+        "id": 1,
+        "name": "iliekcomputers"
+    },
+    "user": {
+        "id": 2,
+        "name": "bob"
+    },
+    "webSocketsServerUrl": "http://localhost:8082"
+}

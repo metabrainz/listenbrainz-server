@@ -13,7 +13,14 @@ exports[`YoutubePlayer renders 1`] = `
   onTrackInfoChange={[Function]}
   onTrackNotFound={[Function]}
   playerPaused={false}
+  refreshYoutubeToken={[Function]}
   show={true}
+  youtubeUser={
+    Object {
+      "access_token": "frontend-test",
+      "api_key": "fake-api-key",
+    }
+  }
 >
   <div
     className="youtube "

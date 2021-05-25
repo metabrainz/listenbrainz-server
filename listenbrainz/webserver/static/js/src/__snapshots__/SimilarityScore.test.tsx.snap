@@ -2,7 +2,7 @@
 
 exports[`SimilarityScore renders correctly for type = 'compact' 1`] = `
 <SimilarityScore
-  similarityScore={0.2}
+  similarityScore={0.239745792}
   type="compact"
   user={
     Object {
@@ -13,12 +13,13 @@ exports[`SimilarityScore renders correctly for type = 'compact' 1`] = `
 >
   <div
     className="similarity-score compact"
+    title="Your similarity score with that user"
   >
     <div
-      aria-label="Similarity Score"
+      aria-label="Similarity score"
       aria-valuemax={100}
       aria-valuemin={0}
-      aria-valuenow={20}
+      aria-valuenow={24}
       className="progress"
       role="progressbar"
       tabIndex={0}
@@ -27,7 +28,7 @@ exports[`SimilarityScore renders correctly for type = 'compact' 1`] = `
         className="progress-bar red"
         style={
           Object {
-            "width": "20%",
+            "width": "24%",
           }
         }
       />
@@ -35,7 +36,7 @@ exports[`SimilarityScore renders correctly for type = 'compact' 1`] = `
     <p
       className="small text-muted"
     >
-      2
+      2.4
       /10
     </p>
   </div>
@@ -44,7 +45,7 @@ exports[`SimilarityScore renders correctly for type = 'compact' 1`] = `
 
 exports[`SimilarityScore renders correctly for type = 'regular' 1`] = `
 <SimilarityScore
-  similarityScore={0.2}
+  similarityScore={0.239745792}
   type="regular"
   user={
     Object {
@@ -55,12 +56,13 @@ exports[`SimilarityScore renders correctly for type = 'regular' 1`] = `
 >
   <div
     className="similarity-score regular"
+    title="Your similarity score with that user"
   >
     <div
-      aria-label="Similarity Score"
+      aria-label="Similarity score"
       aria-valuemax={100}
       aria-valuemin={0}
-      aria-valuenow={20}
+      aria-valuenow={24}
       className="progress"
       role="progressbar"
       tabIndex={0}
@@ -69,7 +71,7 @@ exports[`SimilarityScore renders correctly for type = 'regular' 1`] = `
         className="progress-bar red"
         style={
           Object {
-            "width": "20%",
+            "width": "24%",
           }
         }
       />
@@ -80,7 +82,7 @@ exports[`SimilarityScore renders correctly for type = 'regular' 1`] = `
       Your compatibility with 
       test
        is 
-      2
+      2.4
       /10
     </p>
   </div>

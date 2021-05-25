@@ -27,13 +27,17 @@ import {
   faUserTimes,
   faExclamationTriangle,
 } from "@fortawesome/free-solid-svg-icons";
-import APIService from "./APIService";
+import GlobalAppContext from "./GlobalAppContext";
 
 type FollowButtonProps = {
   type: "icon-only" | "block";
   user: ListenBrainzUser;
   loggedInUser?: ListenBrainzUser;
   loggedInUserFollowsUser: boolean;
+  updateFollowingList?: (
+    user: ListenBrainzUser,
+    action: "follow" | "unfollow"
+  ) => void;
 };
 
 type FollowButtonState = {
@@ -47,7 +51,8 @@ class FollowButton extends React.Component<
   FollowButtonProps,
   FollowButtonState
 > {
-  APIService: APIService;
+  static contextType = GlobalAppContext;
+  declare context: React.ContextType<typeof GlobalAppContext>;
 
   constructor(props: FollowButtonProps) {
     super(props);
@@ -57,8 +62,6 @@ class FollowButton extends React.Component<
       justFollowed: false,
       error: false,
     };
-
-    this.APIService = new APIService(`${window.location.origin}/1`);
   }
 
   componentDidUpdate(prevProps: FollowButtonProps) {
@@ -83,10 +86,16 @@ class FollowButton extends React.Component<
   };
 
   followUser = () => {
-    const { user } = this.props;
-    this.APIService.followUser(user.name).then(({ status }) => {
+    const { user, loggedInUser, updateFollowingList } = this.props;
+    const { APIService } = this.context;
+    const { followUser } = APIService;
+
+    followUser(user.name, loggedInUser?.auth_token!).then(({ status }) => {
       if (status === 200) {
         this.setState({ loggedInUserFollowsUser: true, justFollowed: true });
+        if (updateFollowingList) {
+          updateFollowingList(user, "follow");
+        }
       } else {
         this.setState({ error: true });
       }
@@ -94,10 +103,19 @@ class FollowButton extends React.Component<
   };
 
   unfollowUser = () => {
-    const { user } = this.props;
-    this.APIService.unfollowUser(user.name).then(({ status }) => {
+    const { user, loggedInUser, updateFollowingList } = this.props;
+    const { APIService } = this.context;
+    const { unfollowUser } = APIService;
+
+    unfollowUser(user.name, loggedInUser?.auth_token!).then(({ status }) => {
       if (status === 200) {
-        this.setState({ loggedInUserFollowsUser: false, justFollowed: false });
+        this.setState({
+          loggedInUserFollowsUser: false,
+          justFollowed: false,
+        });
+        if (updateFollowingList) {
+          updateFollowingList(user, "unfollow");
+        }
       } else {
         this.setState({ error: true });
       }

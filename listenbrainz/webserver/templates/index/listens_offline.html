@@ -1,0 +1,26 @@
+{%- extends 'base.html' -%}
+{%- block title -%}Listens currently unavailable - ListenBrainz{%- endblock -%}
+{%- block content -%}
+  <h2 class="page-title">Listens currently unavailable</h2>
+
+  <p>
+     The database that contains listens for our users is currently offline
+     for maintenance. Please try again in a few minutes.
+  </p>
+
+  <p>
+     Please note: You may continue to submit listens during this time. We'll
+     save them once our database is available again.
+  </p>
+
+  <p>
+     You may find out more about the current status of our services by
+     checking our <a href="https://twitter.com/ListenBrainz">Twitter
+     feed</a>.
+  </p>
+  <div id="twitter-block">
+    <a class="twitter-timeline" data-dnt="true" data-lang="en" href="https://twitter.com/ListenBrainz" data-widget-id="640261552604643328" data-height="450px">Tweets by @ListenBrainz</a>
+    <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+  </div>
+
+{%- endblock -%}
