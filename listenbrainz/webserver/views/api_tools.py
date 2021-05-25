@@ -13,6 +13,8 @@ import ujson
 import uuid
 
 from flask import current_app, request
+from sqlalchemy.exc import DataError
+
 from listenbrainz.listen import Listen
 from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
 from listenbrainz.webserver.external import messybrainz
@@ -40,6 +42,7 @@ LISTEN_TYPE_SINGLE = 1
 LISTEN_TYPE_IMPORT = 2
 LISTEN_TYPE_PLAYING_NOW = 3
 
+
 def insert_payload(payload, user, listen_type=LISTEN_TYPE_IMPORT):
     """ Convert the payload into augmented listens then submit them.
         Returns: augmented_listens
@@ -49,6 +52,8 @@ def insert_payload(payload, user, listen_type=LISTEN_TYPE_IMPORT):
         _send_listens_to_queue(listen_type, augmented_listens)
     except (APIInternalServerError, APIServiceUnavailable) as e:
         raise
+    except DataError:
+        raise APIBadRequest("Listen submission contains invalid characters.")
     except Exception as e:
         current_app.logger.error("Error while inserting payload: %s", str(e), exc_info=True)
         raise APIInternalServerError("Something went wrong. Please try again.")
@@ -148,18 +153,27 @@ def validate_listen(listen, listen_type):
                                 "key when submitting playing_now.", listen)
 
     # Basic metadata
-    try:
-        if not listen['track_metadata']['track_name']:
-            raise APIBadRequest("JSON document does not contain required "
-                                "track_metadata.track_name.", listen)
-        if not listen['track_metadata']['artist_name']:
-            raise APIBadRequest("JSON document does not contain required "
-                                "track_metadata.artist_name.", listen)
+    if 'track_name' in listen['track_metadata']:
+        if not isinstance(listen['track_metadata']['track_name'], str):
+            raise APIBadRequest("track_metadata.track_name must be a single string.", listen)
+
+        listen['track_metadata']['track_name'] = listen['track_metadata']['track_name'].strip()
+        if len(listen['track_metadata']['track_name']) == 0:
+            raise APIBadRequest("required field track_metadata.track_name is empty.", listen)
+    else:
+        raise APIBadRequest("JSON document does not contain required track_metadata.track_name.", listen)
+
+
+    if 'artist_name' in listen['track_metadata']:
         if not isinstance(listen['track_metadata']['artist_name'], str):
-            raise APIBadRequest("artist_name must be a single string.", listen)
-    except KeyError:
-        raise APIBadRequest("JSON document does not contain a valid metadata.track_name "
-                       "and/or track_metadata.artist_name.", listen)
+            raise APIBadRequest("track_metadata.artist_name must be a single string.", listen)
+
+        listen['track_metadata']['artist_name'] = listen['track_metadata']['artist_name'].strip()
+        if len(listen['track_metadata']['artist_name']) == 0:
+            raise APIBadRequest("required field track_metadata.artist_name is empty.", listen)
+    else:
+        raise APIBadRequest("JSON document does not contain required track_metadata.artist_name.", listen)
+
 
     if 'additional_info' in listen['track_metadata']:
         # Tags

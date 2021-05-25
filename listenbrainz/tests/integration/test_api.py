@@ -1,17 +1,24 @@
 import json
 import time
-from unittest.mock import patch
 
 import pytest
 from flask import url_for
 
 import listenbrainz.db.user as db_user
+import listenbrainz.db.user_relationship as db_user_relationship
 from listenbrainz import db
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
+from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 
 
 class APITestCase(ListenAPIIntegrationTestCase):
+
+    def setUp(self):
+        super(APITestCase, self).setUp()
+        self.followed_user = db_user.get_or_create(3, 'followed_user')
+        self.follow_user_url = url_for("social_api_v1.follow_user", user_name=self.followed_user["musicbrainz_id"])
+        self.follow_user_headers = {'Authorization': 'Token {}'.format(self.user['auth_token'])}
 
     def test_get_listens_invalid_count(self):
         """If the count argument is negative, the API should raise HTTP 400"""
@@ -27,6 +34,15 @@ class APITestCase(ListenAPIIntegrationTestCase):
         response = self.client.get(
             url, query_string={'max_ts': '1400000000', 'min_ts': '1500000000'})
         self.assert400(response)
+
+    def test_get_listens_ts_unavailable(self):
+        """Check that an error message is returned if the listenstore is unavailable"""
+        timescale_connection._ts = None
+
+        url = url_for('api_v1.get_listens',
+                      user_name=self.user['musicbrainz_id'])
+        response = self.client.get(url)
+        self.assertStatus(response, 503)
 
     def test_get_listens(self):
         """ Test to make sure that the api sends valid listens on get requests.
@@ -134,56 +150,6 @@ class APITestCase(ListenAPIIntegrationTestCase):
         data = json.loads(response.data)['payload']
         self.assertEqual(data['count'], 0)
 
-    def test_get_listens_with_time_range(self):
-        """ Test to make sure that the api sends valid listens on get requests.
-        """
-        with open(self.path_to_data_file('valid_single.json'), 'r') as f:
-            payload = json.load(f)
-
-        # send three listens
-        user = db_user.get_or_create(1, 'test_time_range')
-        ts = 1400000000
-        for i in range(3):
-            payload['payload'][0]['listened_at'] = ts + (100 * i)
-            response = self.send_data(payload, user)
-            self.assert200(response)
-            self.assertEqual(response.json['status'], 'ok')
-
-        old_ts = ts - 2592000  # 30 days
-        payload['payload'][0]['listened_at'] = old_ts
-        response = self.send_data(payload, user)
-        self.assert200(response)
-        self.assertEqual(response.json['status'], 'ok')
-
-        expected_count = 3
-        url = url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
-        response = self.wait_for_query_to_have_items(url, expected_count)
-        data = json.loads(response.data)['payload']
-
-        self.assert200(response)
-        self.assertEqual(data['count'], expected_count)
-        self.assertEqual(data['listens'][0]['listened_at'], 1400000200)
-        self.assertEqual(data['listens'][1]['listened_at'], 1400000100)
-        self.assertEqual(data['listens'][2]['listened_at'], 1400000000)
-
-        url = url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
-        response = self.client.get(url, query_string={'time_range': 10})
-        self.assert200(response)
-        data = json.loads(response.data)['payload']
-        self.assertEqual(data['count'], 4)
-        self.assertEqual(data['listens'][0]['listened_at'], 1400000200)
-        self.assertEqual(data['listens'][1]['listened_at'], 1400000100)
-        self.assertEqual(data['listens'][2]['listened_at'], 1400000000)
-        self.assertEqual(data['listens'][3]['listened_at'], old_ts)
-
-        # Check time_range ranges
-        url = url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
-        response = self.client.get(url, query_string={'time_range': 0})
-        self.assert400(response)
-
-        url = url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
-        response = self.client.get(url, query_string={'time_range': 74})
-        self.assert400(response)
 
     def test_get_listens_order(self):
         """ Test to make sure that the api sends listens in valid order.
@@ -373,6 +339,64 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """
         with open(self.path_to_data_file('too_large_listen.json'), 'r') as f:
             payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+
+    def test_empty_track_name(self):
+        """ Test for invalid submission in which a listen contains an empty track name
+        """
+        with open(self.path_to_data_file('empty_track_name.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+
+        del payload["payload"][0]["track_metadata"]["track_name"]
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+
+    def test_bad_track_name_format(self):
+        """Test for invalid submission in which a listen has a track_name field but it's not a string"""
+        with open(self.path_to_data_file('empty_track_name.json'), 'r') as f:
+            payload = json.load(f)
+            payload["payload"][0]["track_metadata"]["track_name"] = []
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+
+        payload["payload"][0]["track_metadata"]["track_name"] = 1
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+
+    def test_empty_artist_name(self):
+        """ Test for invalid submission in which a listen contains an empty artist name
+        """
+        with open(self.path_to_data_file('empty_artist_name.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+
+        del payload["payload"][0]["track_metadata"]["artist_name"]
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+
+    def test_bad_artist_name_format(self):
+        """ Test for invalid submission in which a listen has a artist_name field but it's not a string
+        """
+        with open(self.path_to_data_file('empty_artist_name.json'), 'r') as f:
+            payload = json.load(f)
+            payload["payload"][0]["track_metadata"]["artist_name"] = None
+
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+
+        payload["payload"][0]["track_metadata"]["artist_name"] = None
         response = self.send_data(payload)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
@@ -568,7 +592,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         response = self.send_data(payload)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
-        self.assertEqual('artist_name must be a single string.',
+        self.assertEqual('track_metadata.artist_name must be a single string.',
                          response.json['error'])
 
     def test_too_high_timestamps(self):
@@ -604,6 +628,19 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertTrue(response.json['valid'])
         self.assertEqual(response.json['user_name'],
                          self.user['musicbrainz_id'])
+
+    def test_token_validation_auth_header(self):
+        """Sends a valid token to api.validate_token in the Authorization header"""
+        url = url_for('api_v1.validate_token')
+        response = self.client.get(url, headers={
+            "Authorization": "Token {}".format(self.user['auth_token'])
+        })
+        self.assert200(response)
+        self.assertEqual(response.json['code'], 200)
+        self.assertEqual('Token valid.', response.json['message'])
+        self.assertTrue(response.json['valid'])
+        self.assertEqual(response.json['user_name'], self.user['musicbrainz_id'])
+
 
     def test_get_playing_now(self):
         """ Test for valid submission and retrieval of listen_type 'playing_now'
@@ -765,3 +802,69 @@ class APITestCase(ListenAPIIntegrationTestCase):
         )
         self.assertEqual(
             response.json["error"], "invalid recording_msid: Recording MSID format invalid.")
+
+    def test_followers_returns_the_followers_of_a_user(self):
+        r = self.client.post(self.follow_user_url, headers=self.follow_user_headers)
+        self.assert200(r)
+
+        r = self.client.get(url_for("social_api_v1.get_followers", user_name=self.followed_user["musicbrainz_id"]))
+        self.assert200(r)
+        self.assertListEqual([self.user.musicbrainz_id], r.json['followers'])
+
+    def test_following_returns_the_people_who_follow_the_user(self):
+        r = self.client.post(self.follow_user_url, headers=self.follow_user_headers)
+        self.assert200(r)
+
+        r = self.client.get(url_for("social_api_v1.get_following", user_name=self.user["musicbrainz_id"]))
+        self.assert200(r)
+        self.assertListEqual(['followed_user'], r.json['following'])
+
+    def test_follow_user(self):
+        r = self.client.post(self.follow_user_url, headers=self.follow_user_headers)
+        self.assert200(r)
+        self.assertTrue(db_user_relationship.is_following_user(self.user.id, self.followed_user['id']))
+
+    def test_follow_user_requires_login(self):
+        r = self.client.post(self.follow_user_url)
+        self.assert401(r)
+
+    def test_following_a_nonexistent_user_errors_out(self):
+        r = self.client.post(url_for("social_api_v1.follow_user", user_name="user_doesnt_exist_lol"),
+                             headers=self.follow_user_headers)
+        self.assert404(r)
+
+    def test_following_yourself_errors_out(self):
+        r = self.client.post(url_for("social_api_v1.follow_user", user_name=self.user.musicbrainz_id),
+                             headers=self.follow_user_headers)
+        self.assert400(r)
+
+    def test_follow_user_twice_leads_to_error(self):
+        r = self.client.post(self.follow_user_url, headers=self.follow_user_headers)
+        self.assert200(r)
+        self.assertTrue(db_user_relationship.is_following_user(self.user.id, self.followed_user['id']))
+
+        # now, try to follow again, this time expecting a 400
+        r = self.client.post(self.follow_user_url, headers=self.follow_user_headers)
+        self.assert400(r)
+
+    def test_unfollow_user(self):
+        # first, follow the user
+        r = self.client.post(self.follow_user_url, headers=self.follow_user_headers)
+        self.assert200(r)
+        self.assertTrue(db_user_relationship.is_following_user(self.user.id, self.followed_user['id']))
+
+        # now, unfollow and check the db
+        r = self.client.post(url_for("social_api_v1.unfollow_user", user_name=self.followed_user["musicbrainz_id"]),
+                             headers=self.follow_user_headers)
+        self.assert200(r)
+        self.assertFalse(db_user_relationship.is_following_user(self.user.id, self.followed_user['id']))
+
+    def test_unfollow_not_following_user(self):
+        r = self.client.post(url_for("social_api_v1.unfollow_user", user_name=self.followed_user["musicbrainz_id"]),
+                             headers=self.follow_user_headers)
+        self.assert200(r)
+        self.assertFalse(db_user_relationship.is_following_user(self.user.id, self.followed_user['id']))
+
+    def test_unfollow_user_requires_login(self):
+        r = self.client.post(url_for("social_api_v1.unfollow_user", user_name=self.followed_user["musicbrainz_id"]))
+        self.assert401(r)

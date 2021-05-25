@@ -40,7 +40,7 @@ the MetaBrainz site.
 If you are interested in helping out, consider
 [donating](https://metabrainz.org/donate) to the MetaBrainz Foundation.
 
-If you are interesting in contributing code or documentation,
+If you are interested in contributing code or documentation,
 please have a look at the [issue tracker](https://tickets.metabrainz.org/browse/LB)
 or come visit us in the #metabrainz IRC channel on irc.freenode.net.
 

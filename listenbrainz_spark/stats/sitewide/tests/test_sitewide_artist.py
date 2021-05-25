@@ -7,7 +7,6 @@ import listenbrainz_spark
 import listenbrainz_spark.stats.sitewide.artist as artist_stats
 from listenbrainz_spark import utils
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
-from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.tests import SparkTestCase
 
 

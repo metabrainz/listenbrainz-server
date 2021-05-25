@@ -1,10 +1,6 @@
-import { enableFetchMocks } from "jest-fetch-mock";
 import * as React from "react";
-import { shallow } from "enzyme";
-import * as timeago from "time-ago";
-import * as io from "socket.io-client";
-
-import { sortBy } from "lodash";
+import { mount } from "enzyme";
+import fetchMock from "jest-fetch-mock";
 
 import * as recentListensProps from "./__mocks__/recentListensProps.json";
 import * as recentListensPropsTooManyListens from "./__mocks__/recentListensPropsTooManyListens.json";
@@ -14,15 +10,12 @@ import * as getFeedbackByMsidResponse from "./__mocks__/getFeedbackByMsidRespons
 
 import RecentListens, { RecentListensProps } from "./RecentListens";
 
-enableFetchMocks();
-
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
 jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
 const {
-  apiUrl,
   artistCount,
   haveListenCount,
   latestListenTs,
@@ -38,7 +31,6 @@ const {
 } = recentListensProps;
 
 const props = {
-  apiUrl,
   artistCount,
   haveListenCount,
   latestListenTs,
@@ -53,8 +45,6 @@ const props = {
   webSocketsServerUrl,
 };
 
-// fetchMock will be exported in globals
-// eslint-disable-next-line no-undef
 fetchMock.mockIf(
   (input) => input.url.endsWith("/listen-count"),
   () => {
@@ -67,7 +57,7 @@ describe("getFeedback", () => {
     /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
      * so that it doesn't get passed as a reference.
      */
-    const wrapper = shallow<RecentListens>(
+    const wrapper = mount<RecentListens>(
       <RecentListens
         {...(JSON.parse(
           JSON.stringify(recentListensPropsOneListen)
@@ -96,7 +86,7 @@ describe("getFeedback", () => {
     /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
      * so that it doesn't get passed as a reference.
      */
-    const wrapper = shallow<RecentListens>(
+    const wrapper = mount<RecentListens>(
       <RecentListens
         {...{
           ...(JSON.parse(
@@ -127,7 +117,7 @@ describe("loadFeedback", () => {
     /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
      * so that it doesn't get passed as a reference.
      */
-    const wrapper = shallow<RecentListens>(
+    const wrapper = mount<RecentListens>(
       <RecentListens
         {...(JSON.parse(
           JSON.stringify(recentListensPropsOneListen)
@@ -155,7 +145,7 @@ describe("getFeedbackForRecordingMsid", () => {
     /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
      * so that it doesn't get passed as a reference.
      */
-    const wrapper = shallow<RecentListens>(
+    const wrapper = mount<RecentListens>(
       <RecentListens
         {...(JSON.parse(
           JSON.stringify(recentListensPropsOneListen)
@@ -181,7 +171,7 @@ describe("getFeedbackForRecordingMsid", () => {
     /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
      * so that it doesn't get passed as a reference.
      */
-    const wrapper = shallow<RecentListens>(
+    const wrapper = mount<RecentListens>(
       <RecentListens
         {...(JSON.parse(
           JSON.stringify(recentListensPropsOneListen)
@@ -204,7 +194,7 @@ describe("updateFeedback", () => {
     /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
      * so that it doesn't get passed as a reference.
      */
-    const wrapper = shallow<RecentListens>(
+    const wrapper = mount<RecentListens>(
       <RecentListens
         {...(JSON.parse(
           JSON.stringify(recentListensPropsOneListen)
@@ -235,7 +225,7 @@ describe("removeListenFromListenList", () => {
     const oneListenProps = JSON.parse(
       JSON.stringify(recentListensPropsOneListen)
     );
-    const wrapper = shallow<RecentListens>(
+    const wrapper = mount<RecentListens>(
       <RecentListens {...(oneListenProps as RecentListensProps)} />
     );
 

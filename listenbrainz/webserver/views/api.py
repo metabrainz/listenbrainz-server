@@ -1,6 +1,4 @@
-import datetime
 from operator import itemgetter
-import time
 from typing import Tuple
 
 import ujson
@@ -8,27 +6,24 @@ import psycopg2
 from flask import Blueprint, request, jsonify, current_app
 
 from listenbrainz.listenstore import TimescaleListenStore
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, APIServiceUnavailable
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable
+from listenbrainz.webserver.decorators import api_listenstore_needed
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz import webserver
-from listenbrainz.db.model.playlist import Playlist
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
-import listenbrainz.db.user_relationship as db_user_relationship
 from listenbrainz.webserver.rate_limiter import ratelimit
 import listenbrainz.webserver.redis_connection as redis_connection
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list,\
     is_valid_uuid, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT,\
     LISTEN_TYPE_PLAYING_NOW, validate_auth_header, get_non_negative_param
 from listenbrainz.webserver.views.playlist_api import serialize_jspf
-from listenbrainz.listenstore.timescale_listenstore import SECONDS_IN_TIME_RANGE, TimescaleListenStoreException
+from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStoreException
 from listenbrainz.webserver.timescale_connection import _ts
 
 api_bp = Blueprint('api_v1', __name__)
 
-DEFAULT_TIME_RANGE = 3
-MAX_TIME_RANGE = 73
 DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL = 25
 
 
@@ -101,6 +96,7 @@ def submit_listen():
 @api_bp.route("/user/<user_name>/listens")
 @crossdomain()
 @ratelimit()
+@api_listenstore_needed
 def get_listens(user_name):
     """
     Get listens for user ``user_name``. The format for the JSON returned is defined in our :ref:`json-doc`.
@@ -112,27 +108,20 @@ def get_listens(user_name):
     :param max_ts: If you specify a ``max_ts`` timestamp, listens with listened_at less than (but not including) this value will be returned.
     :param min_ts: If you specify a ``min_ts`` timestamp, listens with listened_at greater than (but not including) this value will be returned.
     :param count: Optional, number of listens to return. Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` . Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
-    :param time_range: This parameter determines the time range for the listen search. Each increment of the time_range corresponds to a range of 5 days and the default
-                       time_range of 3 means that 15 days will be searched.
-                       Default: :data:`~webserver.views.api.DEFAULT_TIME_RANGE` . Max: :data:`~webserver.views.api.MAX_TIME_RANGE`
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
     """
     db_conn = webserver.create_timescale(current_app)
-    min_ts, max_ts, count, time_range = _validate_get_endpoint_params(
-        db_conn, user_name)
-    _, max_ts_per_user = db_conn.get_timestamps_for_user(user_name)
 
-    # If none are given, start with now and go down
-    if max_ts == None and min_ts == None:
-        max_ts = max_ts_per_user + 1
+    min_ts, max_ts, count = _validate_get_endpoint_params(db_conn, user_name)
+    if min_ts and max_ts and min_ts >= max_ts:
+        raise APIBadRequest("min_ts should be less than max_ts")
 
-    listens = db_conn.fetch_listens(
+    listens, _, max_ts_per_user = db_conn.fetch_listens(
         user_name,
         limit=count,
         from_ts=min_ts,
-        to_ts=max_ts,
-        time_range=time_range
+        to_ts=max_ts
     )
     listen_data = []
     for listen in listens:
@@ -149,6 +138,7 @@ def get_listens(user_name):
 @api_bp.route("/user/<user_name>/listen-count")
 @crossdomain()
 @ratelimit()
+@api_listenstore_needed
 def get_listen_count(user_name):
     """
         Get the number of listens for a user ``user_name``.
@@ -217,6 +207,7 @@ def get_playing_now(user_name):
 @api_bp.route("/users/<user_list>/recent-listens")
 @crossdomain(headers='Authorization, Content-Type')
 @ratelimit()
+@api_listenstore_needed
 def get_recent_listens_for_user_list(user_list):
     """
     Fetch the most recent listens for a comma separated list of users. Take care to properly HTTP escape
@@ -272,7 +263,10 @@ def get_similar_users(user_name):
     user = db_user.get_by_mb_id(user_name)
     if not user:
         raise APINotFound("User %s not found" % user_name)
+
     similar_users = db_user.get_similar_users(user['id'])
+    if not similar_users:
+        return jsonify({'payload': []})
 
     response = []
     for user_name in similar_users.similar_users:
@@ -325,12 +319,15 @@ def latest_import():
     In order to get the timestamp for a user, make a GET request to this endpoint. The data returned will
     be JSON of the following format:
 
-    {
-        'musicbrainz_id': the MusicBrainz ID of the user,
-        'latest_import': the timestamp of the newest listen submitted in previous imports. Defaults to 0
-    }
+    .. code-block:: json
+
+        {
+            "musicbrainz_id": "the MusicBrainz ID of the user",
+            "latest_import": "the timestamp of the newest listen submitted in previous imports. Defaults to 0"
+        }
 
     :param user_name: the MusicBrainz ID of the user whose data is needed
+    :type user_name: ``str``
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
 
@@ -371,41 +368,62 @@ def latest_import():
             raise APIInternalServerError(
                 'Could not update latest_import, try again')
 
+        # During unrelated tests _ts may be None -- improving this would be a great headache. 
+        # However, during the test of this code and while serving requests _ts is set.
+        if _ts:
+            _ts.set_listen_count_expiry_for_user(user['musicbrainz_id'])
+
         return jsonify({'status': 'ok'})
 
 
 @api_bp.route('/validate-token', methods=['GET'])
+@crossdomain(headers='Authorization')
 @ratelimit()
 def validate_token():
     """
     Check whether a User Token is a valid entry in the database.
 
-    In order to query this endpoint, send a GET request with the token to check
-    as the `token` argument (example: /validate-token?token=token-to-check)
+    In order to query this endpoint, send a GET request with the token in
+    the Authorization header.
+
+    .. note::
+        - This endpoint also checks for `token` argument in query
+        params (example: /validate-token?token=token-to-check) if the
+        Authorization header is missing for backward compatibility.
 
     A JSON response, with the following format, will be returned.
 
-    - If the given token is valid::
+    - If the given token is valid:
+
+    .. code-block:: json
 
         {
             "code": 200,
             "message": "Token valid.",
-            "valid": True,
+            "valid": true,
             "user": "MusicBrainz ID of the user with the passed token"
         }
 
-    - If the given token is invalid::
+    - If the given token is invalid:
+
+    .. code-block:: json
 
         {
             "code": 200,
             "message": "Token invalid.",
-            "valid": False,
+            "valid": false,
         }
 
     :statuscode 200: The user token is valid/invalid.
     :statuscode 400: No token was sent to the endpoint.
     """
-    auth_token = request.args.get('token', '')
+    header = request.headers.get('Authorization')
+    if header:
+        auth_token = header.split(" ")[1]
+    else:
+        # for backwards compatibility, check for auth token in query parameters as well
+        auth_token = request.args.get('token', '')
+
     if not auth_token:
         raise APIBadRequest("You need to provide an Authorization token.")
     user = db_user.get_by_token(auth_token)
@@ -427,6 +445,7 @@ def validate_token():
 @api_bp.route('/delete-listen', methods=['POST', 'OPTIONS'])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
+@api_listenstore_needed
 def delete_listen():
     """
     Delete a particular listen from a user's listen history.
@@ -506,9 +525,11 @@ def get_playlists_for_user(playlist_user_name):
     If a user token is provided in the Authorization header, return private playlists as well
     as public playlists for that user.
 
-    :params count: The number of playlists to return (for pagination). Default
+    :param count: The number of playlists to return (for pagination). Default
         :data:`~webserver.views.api.DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL`
-    :params offset: The offset of into the list of playlists to return (for pagination)
+    :type count: ``int``
+    :param offset: The offset of into the list of playlists to return (for pagination)
+    :type offset: ``int``
     :statuscode 200: Yay, you have data!
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
@@ -538,9 +559,11 @@ def get_playlists_created_for_user(playlist_user_name):
     Fetch playlist metadata in JSPF format without recordings that have been created for the user.
     Createdfor playlists are all public, so no Authorization is needed for this call.
 
-    :params count: The number of playlists to return (for pagination). Default
+    :param count: The number of playlists to return (for pagination). Default
         :data:`~webserver.views.api.DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL`
-    :params offset: The offset of into the list of playlists to return (for pagination)
+    :type count: ``int``
+    :param offset: The offset of into the list of playlists to return (for pagination)
+    :type offset: ``int``
     :statuscode 200: Yay, you have data!
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
@@ -567,9 +590,11 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
     Fetch playlist metadata in JSPF format without recordings for which a user is a collaborator.
     If a playlist is private, it will only be returned if the caller is authorized to edit that playlist.
 
-    :params count: The number of playlists to return (for pagination). Default
+    :param count: The number of playlists to return (for pagination). Default
         :data:`~webserver.views.api.DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL`
-    :params offset: The offset of into the list of playlists to return (for pagination)
+    :type count: ``int``
+    :param offset: The offset of into the list of playlists to return (for pagination)
+    :type offset: ``int``
     :statuscode 200: Yay, you have data!
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
@@ -617,22 +642,14 @@ def _get_listen_type(listen_type):
 def _validate_get_endpoint_params(db_conn: TimescaleListenStore, user_name: str) -> Tuple[int, int, int, int]:
     """ Validates parameters for listen GET endpoints like /username/listens and /username/feed/events
 
-    Returns a tuple of integers: (min_ts, max_ts, count, time_range)
+    Returns a tuple of integers: (min_ts, max_ts, count)
     """
     max_ts = _parse_int_arg("max_ts")
     min_ts = _parse_int_arg("min_ts")
-    time_range = _parse_int_arg("time_range", DEFAULT_TIME_RANGE)
-
-    if time_range < 1 or time_range > MAX_TIME_RANGE:
-        log_raise_400("time_range must be between 1 and %d." % MAX_TIME_RANGE)
 
     if max_ts and min_ts:
         if max_ts < min_ts:
             log_raise_400("max_ts should be greater than min_ts")
-
-        if (max_ts - min_ts) > MAX_TIME_RANGE * SECONDS_IN_TIME_RANGE:
-            log_raise_400(
-                "time_range specified by min_ts and max_ts should be less than %d days." % MAX_TIME_RANGE * 5)
 
     # Validate requetsed listen count is positive
     count = min(_parse_int_arg(
@@ -640,4 +657,4 @@ def _validate_get_endpoint_params(db_conn: TimescaleListenStore, user_name: str)
     if count < 0:
         log_raise_400("Number of items requested should be positive")
 
-    return min_ts, max_ts, count, time_range
+    return min_ts, max_ts, count

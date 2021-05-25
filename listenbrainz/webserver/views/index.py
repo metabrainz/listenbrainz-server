@@ -14,14 +14,14 @@ import ujson
 from werkzeug.exceptions import Unauthorized, NotFound
 
 import listenbrainz.db.user as db_user
+from listenbrainz.db.similar_users import get_top_similar_users
 from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz.domain import spotify
-from listenbrainz import webserver
+from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.views.user import delete_user
-
+from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user
 
 index_bp = Blueprint('index', __name__)
 locale.setlocale(locale.LC_ALL, '')
@@ -33,13 +33,15 @@ NUMBER_OF_RECENT_LISTENS = 50
 @index_bp.route("/")
 def index():
 
-    # get total listen count
-    try:
-        listen_count = _ts.get_total_listen_count()
-    except Exception as e:
-        current_app.logger.error('Error while trying to get total listen count: %s', str(e))
+    if _ts:
+        # get total listen count
+        try:
+            listen_count = _ts.get_total_listen_count()
+        except Exception as e:
+            current_app.logger.error('Error while trying to get total listen count: %s', str(e))
+            listen_count = None
+    else:
         listen_count = None
-
 
     return render_template(
         "index/index.html",
@@ -101,6 +103,7 @@ def roadmap():
 
 
 @index_bp.route("/current-status")
+@web_listenstore_needed
 def current_status():
 
     load = "%.2f %.2f %.2f" % os.getloadavg()
@@ -146,15 +149,16 @@ def recent_listens():
                 "listened_at_iso": listen.timestamp.isoformat() + "Z",
             })
 
-    spotify_user = {}
-    if current_user.is_authenticated:
-        spotify_user = spotify.get_user_dict(current_user.id)
+    spotify_user = get_current_spotify_user()
+    youtube_user = get_current_youtube_user()
 
     props = {
         "listens": recent,
         "mode": "recent",
         "spotify": spotify_user,
+        "youtube": youtube_user,
         "api_url": current_app.config["API_URL"],
+        "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn")
     }
 
     return render_template("index/recent.html",
@@ -164,11 +168,11 @@ def recent_listens():
 
 @index_bp.route('/feed', methods=['GET', 'OPTIONS'])
 @login_required
+@web_listenstore_needed
 def feed():
 
-    spotify_user = {}
-    if current_user.is_authenticated:
-        spotify_user = spotify.get_user_dict(current_user.id)
+    spotify_user = get_current_spotify_user()
+    youtube_user = get_current_youtube_user()
 
     current_user_data = {
         "id": current_user.id,
@@ -179,6 +183,7 @@ def feed():
     props = {
         "current_user": current_user_data,
         "spotify": spotify_user,
+        "youtube": youtube_user,
         "api_url": current_app.config["API_URL"],
     }
     return render_template('index/feed.html', props=ujson.dumps(props))
@@ -269,3 +274,26 @@ def _get_user_count():
             raise
         cache.set(user_count_key, int(user_count), CACHE_TIME, encode=False)
         return user_count
+
+
+@index_bp.route("/similar-users")
+def similar_users():
+    """ Show all of the users with the highest similarity in order to make
+        them visible to all of our users. This view can show bugs in the algorithm
+        and spammers as well.
+    """
+
+    similar_users = get_top_similar_users()
+    return render_template(
+        "index/similar-users.html",
+        similar_users=similar_users
+    )
+
+
+@index_bp.route("/listens-offline")
+def listens_offline():
+    """
+        Show the "listenstore offline" message.
+    """
+
+    return render_template("index/listens_offline.html")

@@ -432,7 +432,7 @@ class HandlersTestCase(unittest.TestCase):
             # testing, should not send a mail
             self.app.config['TESTING'] = True
             notify_artist_relation_import({
-                'import_artist_relation': artist_relation_name,
+                'imported_artist_relation': artist_relation_name,
                 'import_time': str(import_time),
                 'time_taken_to_import': str(time_taken_to_import),
             })
@@ -441,7 +441,7 @@ class HandlersTestCase(unittest.TestCase):
             # in prod now, should send it
             self.app.config['TESTING'] = False
             notify_artist_relation_import({
-                'import_artist_relation': artist_relation_name,
+                'imported_artist_relation': artist_relation_name,
                 'import_time': str(import_time),
                 'time_taken_to_import': str(time_taken_to_import),
             })

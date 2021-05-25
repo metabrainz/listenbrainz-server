@@ -6,8 +6,6 @@ export default class APIService {
 
   MAX_LISTEN_SIZE: number = 10000; // Maximum size of listens that can be sent
 
-  MAX_TIME_RANGE: number = 73;
-
   constructor(APIBaseURI: string) {
     let finalUri = APIBaseURI;
     if (finalUri.endsWith("/")) {
@@ -44,8 +42,7 @@ export default class APIService {
     userName: string,
     minTs?: number,
     maxTs?: number,
-    count?: number,
-    timeRange?: number
+    count?: number
   ): Promise<Array<Listen>> => {
     if (maxTs && minTs) {
       throw new SyntaxError(
@@ -64,9 +61,6 @@ export default class APIService {
     }
     if (count) {
       queryParams.push(`count=${count}`);
-    }
-    if (timeRange) {
-      queryParams.push(`time_range=${timeRange}`);
     }
     if (queryParams.length) {
       query += `?${queryParams.join("&")}`;
@@ -139,47 +133,89 @@ export default class APIService {
     return parseInt(result.payload.count, 10);
   };
 
+  refreshYoutubeToken = async (): Promise<string> => {
+    return this.refreshAccessToken("youtube");
+  };
+
   refreshSpotifyToken = async (): Promise<string> => {
-    const response = await fetch("/profile/refresh-spotify-token", {
-      method: "POST",
-    });
+    return this.refreshAccessToken("spotify");
+  };
+
+  refreshAccessToken = async (service: string): Promise<string> => {
+    const response = await fetch(
+      `/profile/music-services/${service}/refresh/`,
+      {
+        method: "POST",
+      }
+    );
     await this.checkStatus(response);
     const result = await response.json();
-    return result.user_token;
+    return result.access_token;
   };
 
-  followUser = async (username: string): Promise<{ status: number }> => {
-    const response = await fetch(`/user/${username}/follow`, {
+  followUser = async (
+    userName: string,
+    userToken: string
+  ): Promise<{ status: number }> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+    const response = await fetch(`${this.APIBaseURI}/user/${userName}/follow`, {
       method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
     });
     return { status: response.status };
   };
 
-  unfollowUser = async (username: string): Promise<{ status: number }> => {
-    const response = await fetch(`/user/${username}/unfollow`, {
-      method: "POST",
-    });
+  unfollowUser = async (
+    userName: string,
+    userToken: string
+  ): Promise<{ status: number }> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+    const response = await fetch(
+      `${this.APIBaseURI}/user/${userName}/unfollow`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Token ${userToken}`,
+        },
+      }
+    );
     return { status: response.status };
   };
 
-  getFollowersOfUser = async (username: string) => {
+  getFollowersOfUser = async (
+    username: string
+  ): Promise<{ followers: Array<string> }> => {
     if (!username) {
       throw new SyntaxError("Username missing");
     }
 
-    const url = `/user/${username}/followers`;
+    const url = `${this.APIBaseURI}/user/${username}/followers`;
     const response = await fetch(url);
     await this.checkStatus(response);
     const data = response.json();
     return data;
   };
 
-  getFollowingForUser = async (username: string) => {
+  getFollowingForUser = async (
+    username: string
+  ): Promise<{ following: Array<string> }> => {
     if (!username) {
       throw new SyntaxError("Username missing");
     }
 
-    const url = `/user/${username}/following`;
+    const url = `${this.APIBaseURI}/user/${username}/following`;
     const response = await fetch(url);
     await this.checkStatus(response);
     const data = response.json();
@@ -364,17 +400,18 @@ export default class APIService {
     if (response.status >= 200 && response.status < 300) {
       return;
     }
-    let message;
+    let message = `HTTP Error ${response.statusText}`;
     try {
-      const contentType = response.headers.get("content-type");
+      const contentType = response.headers?.get("content-type");
       if (contentType && contentType.indexOf("application/json") !== -1) {
         const jsonError = await response.json();
         message = jsonError.error;
-      } else {
+      } else if (typeof response.text === "function") {
         message = await response.text();
       }
-    } catch (error) {
-      message = `HTTP Error ${response.statusText}`;
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.log("Error in parsing response in APIService checkStatus:", err);
     }
 
     const error = new APIError(`HTTP Error ${response.statusText}`);
@@ -728,5 +765,21 @@ export default class APIService {
     });
     await this.checkStatus(response);
     return response.status;
+  };
+
+  getSimilarUsersForUser = async (
+    username: string
+  ): Promise<{
+    payload: Array<{ user_name: string; similarity: number }>;
+  }> => {
+    if (!username) {
+      throw new SyntaxError("Username missing");
+    }
+
+    const url = `${this.APIBaseURI}/user/${username}/similar-users`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    const data = response.json();
+    return data;
   };
 }

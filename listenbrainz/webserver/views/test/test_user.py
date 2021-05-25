@@ -1,28 +1,27 @@
+import time
+
 import listenbrainz.db.stats as db_stats
-import listenbrainz.db.user as db_user
-import listenbrainz.db.user_relationship as db_user_relationship
-from time import sleep
-import json
 import ujson
 from unittest import mock
 
 from flask import url_for, current_app
+
+from data.model.external_service import ExternalServiceType
 from data.model.user_artist_stat import UserArtistStatJson
 
-from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.db import external_service_oauth as db_oauth
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
+from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.webserver.timescale_connection import init_timescale_connection
 from listenbrainz.webserver.login import User
-from listenbrainz.webserver.testing import ServerTestCase
 
 import listenbrainz.db.user as db_user
 import logging
 
 
-class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
+class UserViewsTestCase(IntegrationTestCase):
     def setUp(self):
-        ServerTestCase.setUp(self)
-        DatabaseTestCase.setUp(self)
+        super(UserViewsTestCase, self).setUp()
 
         self.log = logging.getLogger(__name__)
         self.logstore = init_timescale_connection(self.log, {
@@ -41,8 +40,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
 
     def tearDown(self):
         self.logstore = None
-        ServerTestCase.tearDown(self)
-        DatabaseTestCase.tearDown(self)
 
     def test_redirects(self):
         # Not logged in
@@ -89,41 +86,47 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertEqual(props['artist_count'], '2')
         self.assertDictEqual(props['spotify'], {})
 
-    @mock.patch('listenbrainz.webserver.views.user.spotify')
-    def test_spotify_token_access(self, mock_domain_spotify):
+    def test_spotify_token_access_no_login(self):
+        db_oauth.save_token(user_id=self.user.id, service=ExternalServiceType.SPOTIFY,
+                            access_token='token', refresh_token='refresh',
+                            token_expires_ts=int(time.time()) + 1000, record_listens=True,
+                            scopes=['user-read-recently-played', 'streaming'])
+
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertTemplateUsed('user/profile.html')
         props = ujson.loads(self.get_context_variable('props'))
         self.assertDictEqual(props['spotify'], {})
 
+    def test_spotify_token_access_unlinked(self):
         self.temporary_login(self.user.login_id)
-        mock_domain_spotify.get_user_dict.return_value = {}
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         props = ujson.loads(self.get_context_variable('props'))
         self.assertDictEqual(props['spotify'], {})
 
-        mock_domain_spotify.get_user_dict.return_value = {
-            'access_token': 'token',
-            'permission': 'permission',
-        }
+    def test_spotify_token_access(self):
+        db_oauth.save_token(user_id=self.user.id, service=ExternalServiceType.SPOTIFY,
+                            access_token='token', refresh_token='refresh',
+                            token_expires_ts=int(time.time()) + 1000, record_listens=True,
+                            scopes=['user-read-recently-played', 'streaming'])
+
+        self.temporary_login(self.user.login_id)
+
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         props = ujson.loads(self.get_context_variable('props'))
-        mock_domain_spotify.get_user_dict.assert_called_with(self.user.id)
         self.assertDictEqual(props['spotify'], {
             'access_token': 'token',
-            'permission': 'permission',
+            'permission': ['user-read-recently-played', 'streaming'],
         })
 
         response = self.client.get(url_for('user.profile', user_name=self.weirduser.musicbrainz_id))
         self.assert200(response)
         props = ujson.loads(self.get_context_variable('props'))
-        mock_domain_spotify.get_user_dict.assert_called_with(self.user.id)
         self.assertDictEqual(props['spotify'], {
             'access_token': 'token',
-            'permission': 'permission',
+            'permission': ['user-read-recently-played', 'streaming'],
         })
 
     @mock.patch('listenbrainz.webserver.views.user.db_user_relationship.is_following_user')
@@ -140,82 +143,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assert200(response)
         props = ujson.loads(self.get_context_variable('props'))
         self.assertFalse(props['logged_in_user_follows_user'])
-
-    def test_follow_user(self):
-        followed_user = db_user.get_or_create(3, 'followed_user')
-
-        self.temporary_login(self.user.login_id)
-        r = self.client.post('/user/followed_user/follow')
-        self.assert200(r)
-        self.assertTrue(db_user_relationship.is_following_user(self.user.id, followed_user['id']))
-
-    def test_follow_user_requires_login(self):
-        r = self.client.post('/user/followed_user/follow')
-        self.assertNotEqual(r.status_code, 200)
-
-    def test_following_a_nonexistent_user_errors_out(self):
-        self.temporary_login(self.user.login_id)
-        r = self.client.post('/user/user_doesnt_exist_lol/follow')
-        self.assertEqual(r.status_code, 404)
-
-    def test_following_yourself_errors_out(self):
-        self.temporary_login(self.user.login_id)
-        r = self.client.post(f'/user/{self.user.musicbrainz_id}/follow')
-        self.assert400(r)
-
-    def test_follow_user_twice_leads_to_error(self):
-        followed_user = db_user.get_or_create(3, 'followed_user')
-
-        self.temporary_login(self.user.login_id)
-        r = self.client.post('/user/followed_user/follow')
-        self.assert200(r)
-        self.assertTrue(db_user_relationship.is_following_user(self.user.id, followed_user['id']))
-
-        # now, try to follow again, this time expecting a 400
-        r = self.client.post('/user/followed_user/follow')
-        self.assert400(r)
-
-    def test_unfollow_user(self):
-        followed_user = db_user.get_or_create(3, 'followed_user')
-
-        self.temporary_login(self.user.login_id)
-
-        # first, follow the user
-        r = self.client.post('/user/followed_user/follow')
-        self.assert200(r)
-        self.assertTrue(db_user_relationship.is_following_user(self.user.id, followed_user['id']))
-
-        # now, unfollow and check the db
-        r = self.client.post('/user/followed_user/unfollow')
-        self.assert200(r)
-        self.assertFalse(db_user_relationship.is_following_user(self.user.id, followed_user['id']))
-
-    def test_unfollow_user_requires_login(self):
-        r = self.client.post('/user/followed_user/unfollow')
-        self.assertNotEqual(r.status_code, 200)
-
-    def test_followers_returns_the_followers_of_a_user(self):
-        # create a new user, and follow them
-        followed_user = db_user.get_or_create(3, 'followed_user')
-        self.temporary_login(self.user.login_id)
-        r = self.client.post('/user/followed_user/follow')
-        self.assert200(r)
-
-        r = self.client.get(f'/user/followed_user/followers')
-        self.assert200(r)
-        self.assertListEqual([{'musicbrainz_id': self.user.musicbrainz_id}], r.json['followers'])
-
-
-    def test_following_returns_the_people_who_follow_the_user(self):
-        # create a new user, and follow them
-        followed_user = db_user.get_or_create(3, 'followed_user')
-        self.temporary_login(self.user.login_id)
-        r = self.client.post('/user/followed_user/follow')
-        self.assert200(r)
-
-        r = self.client.get(f'/user/{self.user.musicbrainz_id}/following')
-        self.assert200(r)
-        self.assertListEqual([{'musicbrainz_id': 'followed_user', 'id': followed_user['id']}], r.json['following'])
 
     def _create_test_data(self, user_name):
         min_ts = -1
@@ -241,16 +168,15 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assert200(response1)
         self.assert200(response2)
 
-    @mock.patch('listenbrainz.webserver.timescale_connection._ts.get_timestamps_for_user')
     @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
-    def test_ts_filters(self, timescale, timestamps):
+    def test_ts_filters(self, timescale):
         """Check that max_ts and min_ts are passed to timescale """
-        (min_ts, max_ts) = self._create_test_data('iliekcomputers')
-        timestamps.return_value = (min_ts, max_ts)
+
+        timescale.return_value = ([], 0, 0)
 
         # If no parameter is given, use current time as the to_ts
         self.client.get(url_for('user.profile', user_name='iliekcomputers'))
-        req_call = mock.call('iliekcomputers', limit=25, to_ts=1400000201)
+        req_call = mock.call('iliekcomputers', limit=25, from_ts=None)
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
@@ -272,12 +198,10 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         req_call = mock.call('iliekcomputers', limit=25, to_ts=1520946000)
         timescale.assert_has_calls([req_call])
 
-    @mock.patch('listenbrainz.webserver.timescale_connection._ts.get_timestamps_for_user')
     @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
-    def test_ts_filters_errors(self, timescale, timestamps):
+    def test_ts_filters_errors(self, timescale):
         """If max_ts and min_ts are not integers, show an error page"""
         (min_ts, max_ts) = self._create_test_data('iliekcomputers')
-        timestamps.return_value = (min_ts, max_ts)
 
         response = self.client.get(url_for('user.profile', user_name='iliekcomputers'),
                                    query_string={'max_ts': 'a'})

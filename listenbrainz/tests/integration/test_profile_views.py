@@ -3,9 +3,12 @@ import time
 
 from flask import url_for, current_app
 from redis import Redis
+from brainzutils import cache
 
 import listenbrainz.db.user as db_user
 from listenbrainz.tests.integration import IntegrationTestCase
+from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT
+from listenbrainz.utils import init_cache
 
 
 class ProfileViewsTestCase(IntegrationTestCase):
@@ -14,9 +17,14 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.user = db_user.get_or_create(1, 'iliekcomputers')
         db_user.agree_to_gdpr(self.user['musicbrainz_id'])
 
+        # Initialize brainzutils cache
+        init_cache(host=current_app.config['REDIS_HOST'],
+                   port=current_app.config['REDIS_PORT'],
+                   namespace=current_app.config['REDIS_NAMESPACE'])
+        self.redis = cache._r
+
     def tearDown(self):
-        r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
-        r.flushall()
+        self.redis.flushall()
         super(ProfileViewsTestCase, self).tearDown()
 
     def send_listens(self):
@@ -59,7 +67,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         r = self.client.get(url_for('user.profile', user_name=self.user['musicbrainz_id']))
         self.assert200(r)
         props = json.loads(self.get_context_variable('props'))
-        self.assertEqual(props['latest_listen_ts'], 2)
+        self.assertEqual(props['latest_listen_ts'], 1618500200)
 
     def test_delete_listens(self):
         """
@@ -89,6 +97,8 @@ class ProfileViewsTestCase(IntegrationTestCase):
         resp = self.client.get(url_for('api_v1.latest_import', user_name=self.user['musicbrainz_id']))
         self.assert200(resp)
         self.assertEqual(resp.json['latest_import'], val)
+
+        self.assertNotEqual(self.redis.ttl(cache._prep_key(REDIS_USER_LISTEN_COUNT + self.user['musicbrainz_id'])), 0)
 
         # check that listens have been successfully submitted
         resp = self.client.get(url_for('api_v1.get_listen_count', user_name=self.user['musicbrainz_id']))

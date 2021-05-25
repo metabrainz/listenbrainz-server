@@ -286,6 +286,17 @@ describe("processData", () => {
 
     expect(result).toEqual(userListeningActivityProcessedDataAllTime);
   });
+  it("returns an empty array if no payload", () => {
+    const wrapper = shallow<UserListeningActivity>(
+      <UserListeningActivity {...{ ...props, range: "year" }} />
+    );
+    const instance = wrapper.instance();
+
+    // When stats haven't been calculated, processData is called with an empty object
+    const result = instance.processData({} as UserListeningActivityResponse);
+
+    expect(result).toEqual([]);
+  });
 });
 
 describe("loadData", () => {

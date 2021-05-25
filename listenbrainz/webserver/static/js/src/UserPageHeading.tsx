@@ -20,7 +20,10 @@
 
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+import * as Sentry from "@sentry/react";
 import FollowButton from "./FollowButton";
+import APIService from "./APIService";
+import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 
 const UserPageHeading = ({
   user,
@@ -53,13 +56,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const propsElement = document.getElementById("react-props");
   const reactProps = JSON.parse(propsElement!.innerHTML);
-  const { user, current_user, logged_in_user_follows_user } = reactProps;
+  const {
+    user,
+    current_user,
+    logged_in_user_follows_user,
+    sentry_dsn,
+    api_url,
+  } = reactProps;
+
+  const apiService: APIService = new APIService(
+    api_url || `${window.location.origin}/1`
+  );
+
+  if (sentry_dsn) {
+    Sentry.init({ dsn: sentry_dsn });
+  }
+  const globalProps: GlobalAppContextT = {
+    APIService: apiService,
+    currentUser: current_user,
+  };
+
   ReactDOM.render(
-    <UserPageHeading
-      user={user}
-      loggedInUser={current_user || null}
-      loggedInUserFollowsUser={logged_in_user_follows_user}
-    />,
+    <GlobalAppContext.Provider value={globalProps}>
+      <UserPageHeading
+        user={user}
+        loggedInUser={current_user || null}
+        loggedInUserFollowsUser={logged_in_user_follows_user}
+      />
+    </GlobalAppContext.Provider>,
     domContainer
   );
 });

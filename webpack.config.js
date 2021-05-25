@@ -1,13 +1,17 @@
 const path = require("path");
-const ManifestPlugin = require("webpack-manifest-plugin");
-const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const { WebpackManifestPlugin } = require("webpack-manifest-plugin");
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
+const LessPluginCleanCSS = require("less-plugin-clean-css");
 
-module.exports = function (env) {
-  const isProd = env === "production";
+const baseDir = "/static";
+const jsDir = path.join(baseDir, "js");
+const distDir = path.join(baseDir, "dist");
+const cssDir = path.join(baseDir, "css");
+
+module.exports = function (env, argv) {
+  const isProd = argv.mode === "production";
   const plugins = [
-    new CleanWebpackPlugin(),
-    new ManifestPlugin(),
+    new WebpackManifestPlugin(),
     new ForkTsCheckerWebpackPlugin({
       typescript: {
         diagnosticOptions: {
@@ -26,61 +30,63 @@ module.exports = function (env) {
     }),
   ];
   return {
-    mode: isProd ? "production" : "development",
     entry: {
-      main: "/static/js/src/RecentListens.tsx",
-      import: "/static/js/src/LastFMImporter.tsx",
-      userEntityChart: "/static/js/src/stats/UserEntityChart.tsx",
-      userReports: "/static/js/src/stats/UserReports.tsx",
-      userPageHeading: "/static/js/src/UserPageHeading.tsx",
-      userFeed: "/static/js/src/user-feed/UserFeed.tsx",
-      playlist: "/static/js/src/playlists/Playlist.tsx",
-      playlists: "/static/js/src/playlists/Playlists.tsx",
-      recommendations: "/static/js/src/recommendations/Recommendations.tsx",
+      // Importing main.less file here so that it gets compiled.
+      // Otherwise with a standalone entrypoint Webpack would generate a superfluous js file.
+      // All the Less/CSS will be exported separately to a main.css file and not appear in the recentListens module
+      recentListens: [
+        path.resolve(jsDir, "src/RecentListens.tsx"),
+        path.resolve(cssDir, "main.less"),
+      ],
+      import: path.resolve(jsDir, "src/LastFMImporter.tsx"),
+      userEntityChart: path.resolve(jsDir, "src/stats/UserEntityChart.tsx"),
+      userReports: path.resolve(jsDir, "src/stats/UserReports.tsx"),
+      userPageHeading: path.resolve(jsDir, "src/UserPageHeading.tsx"),
+      userFeed: path.resolve(jsDir, "src/user-feed/UserFeed.tsx"),
+      playlist: path.resolve(jsDir, "src/playlists/Playlist.tsx"),
+      playlists: path.resolve(jsDir, "src/playlists/Playlists.tsx"),
+      recommendations: path.resolve(
+        jsDir,
+        "src/recommendations/Recommendations.tsx"
+      ),
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",
-      path: "/static/js/dist",
+      path: distDir,
+      publicPath: `${distDir}/`,
+      clean: true, // Clean the output directory before emit.
     },
-    devtool: isProd ? false : "inline-source-map",
+    devtool: isProd ? "source-map" : "eval-source-map",
     module: {
       rules: [
         {
           test: /\.(js|ts)x?$/,
           // some nivo/D3 dependencies need to be transpiled, we include them with the following regex
-          exclude: /node_modules\/(?!(d3-array|d3-scale|internmap)\/).*/,
-          use: {
-            loader: "babel-loader",
-            options: {
-              presets: [
-                [
-                  "@babel/preset-env",
-                  {
-                    useBuiltIns: "usage",
-                    corejs: { version: "3.9", proposals: true },
-                    targets: {
-                      node: "10",
-                      browsers: ["> 0.2% and not dead", "firefox >= 44"],
-                    },
-                  },
-                ],
-                "@babel/preset-typescript",
-                "@babel/preset-react",
-              ],
-              plugins: [
-                "@babel/plugin-proposal-class-properties",
-                "@babel/plugin-transform-runtime",
-              ],
+          exclude: /node_modules\/(?!(d3-array|d3-scale|internmap|react-date-picker|react-calendar)\/).*/,
+          // Don't specify the babel configuration here
+          // Configuration can be found in ./babel.config.js
+          use: "babel-loader",
+        },
+        {
+          test: /\.less$/i,
+          type: "asset/resource",
+          loader: "less-loader",
+          generator: {
+            filename: isProd ? "[name].[contenthash].css" : "[name].css",
+          },
+          options: {
+            lessOptions: {
+              math: "always",
+              plugins: [new LessPluginCleanCSS({ advanced: true })],
             },
           },
         },
       ],
     },
     resolve: {
-      modules: ["/code/node_modules", "/static/node_modules"],
+      modules: ["/code/node_modules", path.resolve(baseDir, "node_modules")],
       extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
     },
     plugins,
-    watch: !isProd,
   };
 };

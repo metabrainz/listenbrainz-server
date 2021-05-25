@@ -1,24 +1,12 @@
-import os
 import unittest
 from unittest.mock import patch, call
 
-import listenbrainz_spark
-from listenbrainz_spark import config, utils
+from listenbrainz_spark import config
 from listenbrainz_spark.exceptions import DumpNotFoundException
-from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader, ARTIST_RELATION_DUMP_ID_POS
+from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
 
 
 class FTPDownloaderTestCase(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        cls.app = utils.create_app()
-        cls.app_context = cls.app.app_context()
-        cls.app_context.push()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.app_context.pop()
 
     @patch('ftplib.FTP')
     def test_get_dump_name_to_download(self, mock_ftp_cons):

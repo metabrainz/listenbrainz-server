@@ -22,6 +22,21 @@ class IntegrationTestCase(ServerTestCase, DatabaseTestCase):
         ServerTestCase.tearDown(self)
         DatabaseTestCase.tearDown(self)
 
+
+class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
+    def setUp(self):
+        IntegrationTestCase.setUp(self)
+        TimescaleTestCase.setUp(self)
+        self.user = db_user.get_or_create(1, 'testuserpleaseignore')
+        db_user.agree_to_gdpr(self.user['musicbrainz_id'])
+        self.user2 = db_user.get_or_create(2, 'all_muppets_all_of_them')
+
+    def tearDown(self):
+        r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
+        r.flushall()
+        IntegrationTestCase.tearDown(self)
+        TimescaleTestCase.tearDown(self)
+
     def wait_for_query_to_have_items(self, url, num_items, **kwargs):
         """Try the provided query in a loop until the required number of returned listens is available.
         In integration tests, we send data through a number of services before it hits the database,
@@ -45,20 +60,6 @@ class IntegrationTestCase(ServerTestCase, DatabaseTestCase):
             if data['count'] == num_items:
                 break
         return response
-
-
-class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
-    def setUp(self):
-        IntegrationTestCase.setUp(self)
-        TimescaleTestCase.setUp(self)
-        self.user = db_user.get_or_create(1, 'testuserpleaseignore')
-        self.user2 = db_user.get_or_create(2, 'all_muppets_all_of_them')
-
-    def tearDown(self):
-        r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
-        r.flushall()
-        IntegrationTestCase.tearDown(self)
-        TimescaleTestCase.tearDown(self)
 
     def send_data(self, payload, user=None):
         """ Sends payload to api.submit_listen and return the response
