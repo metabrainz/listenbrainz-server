@@ -47,31 +47,9 @@ def import_full_dump_by_id_handler(id: int):
 
 
 def import_newest_incremental_dump_handler():
-    imported_dumps = []
-    latest_full_dump = utils.get_latest_full_dump()
-    if latest_full_dump is None:
-        # If no prior full dump is present, just import the lates incremental dump
-        imported_dumps.append(import_dump_to_hdfs('incremental', overwrite=False))
-        logger.warning("No previous full dump found, importing latest incremental dump", exc_info=True)
-    else:
-        # Import all missing dumps from last full dump import
-        dump_id = latest_full_dump["dump_id"] + 1
-        imported_at = latest_full_dump["imported_at"]
-        while True:
-            if not utils.search_dump(dump_id, 'incremental', imported_at):
-                try:
-                    imported_dumps.append(import_dump_to_hdfs('incremental', False, dump_id))
-                except DumpNotFoundException:
-                    break
-                except Exception as e:
-                    # Exit if any other error occurs during import
-                    logger.error(f"Error while importing incremental dump with ID {dump_id}: {e}", exc_info=True)
-                    break
-            dump_id += 1
-            request_consumer.rc.ping()
     return [{
         'type': 'import_incremental_dump',
-        'imported_dump': imported_dumps,
+        'imported_dump': [import_dump_to_hdfs('incremental', overwrite=False)],
         'time': str(datetime.utcnow()),
     }]
 
