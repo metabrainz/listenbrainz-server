@@ -85,7 +85,7 @@ export default class RecentListens extends React.Component<
       recordingFeedbackMap: {},
       dateTimePickerValue: nextListenTs
         ? new Date(nextListenTs * 1000)
-        : new Date(),
+        : new Date(Date.now()),
     };
 
     this.listensTable = React.createRef();
@@ -675,7 +675,7 @@ export default class RecentListens extends React.Component<
                         onChange={this.onChangeDateTimePicker}
                         value={dateTimePickerValue}
                         clearIcon={null}
-                        maxDate={new Date()}
+                        maxDate={new Date(Date.now())}
                         minDate={
                           oldestListenTs
                             ? new Date(oldestListenTs * 1000)
