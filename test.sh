@@ -216,9 +216,6 @@ if [ "$1" == "spark" ]; then
 fi
 
 if [ "$1" == "int" ]; then
-    INT_TEST_CONTAINER_NAME=listenbrainz
-    TEST_CONTAINER_REF="${INT_COMPOSE_PROJECT_NAME}_${INT_TEST_CONTAINER_NAME}_1"
-
     echo "Taking down old containers"
     int_dcdown
     echo "Building current setup"
@@ -247,9 +244,6 @@ if [ "$1" == "int" ]; then
     int_dcdown
     exit $RET
 fi
-
-TEST_CONTAINER_NAME=listenbrainz
-TEST_CONTAINER_REF="${COMPOSE_PROJECT_NAME}_${TEST_CONTAINER_NAME}_1"
 
 if [ "$1" == "fe" ]; then
     if [ "$2" == "-u" ]; then
