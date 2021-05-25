@@ -5,11 +5,11 @@ export service="timescale-writer"
 . /etc/lb-startup-common.sh
 
 
-generate_message "$@"
+generate_message "$service" "$@"
 
 log "$message"
 
-send_sentry_message
+send_sentry_message "$message"
 
 if [ "$1" != "0" ]; then
   log "Exited with non-0 status, sleeping 10 seconds"
