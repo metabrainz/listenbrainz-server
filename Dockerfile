@@ -19,6 +19,8 @@ ENV SENTRY_CLI_VERSION 1.63.1
 RUN wget -O /usr/local/bin/sentry-cli https://downloads.sentry-cdn.com/sentry-cli/$SENTRY_CLI_VERSION/sentry-cli-Linux-x86_64 \
     && chmod +x /usr/local/bin/sentry-cli
 
+ENV SENTRY_SERVICE_ERROR_ENVIRONMENT listenbrainz
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
                        build-essential \
