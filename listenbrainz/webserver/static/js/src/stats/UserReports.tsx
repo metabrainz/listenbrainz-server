@@ -8,7 +8,7 @@ import UserListeningActivity from "./UserListeningActivity";
 import UserTopEntity from "./UserTopEntity";
 import UserDailyActivity from "./UserDailyActivity";
 import UserArtistMap from "./UserArtistMap";
-import { parsePageProps } from "../utils";
+import { getPageProps } from "../utils";
 
 export type UserReportsProps = {
   user: ListenBrainzUser;
@@ -165,7 +165,7 @@ export default class UserReports extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, reactProps, globalReactProps } = parsePageProps();
+  const { domContainer, reactProps, globalReactProps } = getPageProps();
   const { api_url, sentry_dsn } = globalReactProps;
   const { user } = reactProps;
 

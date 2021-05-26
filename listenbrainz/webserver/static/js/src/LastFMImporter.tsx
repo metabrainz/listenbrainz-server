@@ -7,7 +7,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import APIService from "./APIService";
 import Scrobble from "./Scrobble";
 import LastFMImporterModal from "./LastFMImporterModal";
-import { parsePageProps } from "./utils";
+import { getPageProps } from "./utils";
 
 export const LASTFM_RETRIES = 3;
 
@@ -468,7 +468,7 @@ export default class LastFmImporter extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, reactProps, globalReactProps } = parsePageProps();
+  const { domContainer, reactProps, globalReactProps } = getPageProps();
   const { api_url, sentry_dsn } = globalReactProps;
   const { user, profile_url, lastfm_api_url, lastfm_api_key } = reactProps;
 

@@ -14,7 +14,7 @@ import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
 } from "./AlertNotificationsHOC";
-import { formatWSMessageToListen, parsePageProps } from "./utils";
+import { formatWSMessageToListen, getPageProps } from "./utils";
 
 export type RecentListensProps = {
   latestListenTs: number;
@@ -731,10 +731,8 @@ export default class RecentListens extends React.Component<
   }
 }
 
-// RecentListens.contextType = GlobalAppContext;
-
 document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, reactProps, globalReactProps } = parsePageProps();
+  const { domContainer, reactProps, globalReactProps } = getPageProps();
   const { api_url, sentry_dsn, current_user, spotify } = globalReactProps;
   const {
     latest_listen_ts,

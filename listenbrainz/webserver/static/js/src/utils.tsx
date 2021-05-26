@@ -215,9 +215,9 @@ export function loadScriptAsync(document: any, scriptSrc: string): void {
   container.appendChild(el);
 }
 
-const parsePageProps = () => {
-  const domContainer = document.querySelector("#react-container");
-  const propsElement = document.getElementById("react-props");
+const getPageProps = () => {
+  const domContainer = document.getElementById("react-container");
+  const propsElement = document.getElementById("page-react-props");
   const globalPropsElement = document.getElementById("global-react-props");
   let reactProps;
   let globalReactProps;
@@ -237,5 +237,5 @@ export {
   getPlayButton,
   formatWSMessageToListen,
   preciseTimestamp,
-  parsePageProps,
+  getPageProps,
 };

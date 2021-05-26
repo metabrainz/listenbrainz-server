@@ -32,7 +32,7 @@ import {
   getPlaylistId,
   MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
 } from "./utils";
-import { parsePageProps } from "../utils";
+import { getPageProps } from "../utils";
 
 export type UserPlaylistsProps = {
   currentUser?: ListenBrainzUser;
@@ -668,7 +668,7 @@ export default class UserPlaylists extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, reactProps, globalReactProps } = parsePageProps();
+  const { domContainer, reactProps, globalReactProps } = getPageProps();
   const { api_url, sentry_dsn, current_user, spotify } = globalReactProps;
   const {
     playlists,
