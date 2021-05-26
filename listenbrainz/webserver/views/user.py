@@ -15,8 +15,6 @@ from werkzeug.exceptions import NotFound, BadRequest
 from listenbrainz.webserver.views.playlist_api import serialize_jspf
 from pydantic import ValidationError
 
-from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user
-
 LISTENS_PER_PAGE = 25
 
 user_bp = Blueprint("user", __name__)

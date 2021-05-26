@@ -21,7 +21,6 @@ from listenbrainz.webserver import flash
 from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.views.user import delete_user
-from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user
 
 index_bp = Blueprint('index', __name__)
 locale.setlocale(locale.LC_ALL, '')
@@ -149,14 +148,9 @@ def recent_listens():
                 "listened_at_iso": listen.timestamp.isoformat() + "Z",
             })
 
-    spotify_user = get_current_spotify_user()
-    youtube_user = get_current_youtube_user()
-
     props = {
         "listens": recent,
         "mode": "recent",
-        "spotify": spotify_user,
-        "youtube": youtube_user,
     }
 
     return render_template("index/recent.html",
@@ -169,14 +163,7 @@ def recent_listens():
 @web_listenstore_needed
 def feed():
 
-    spotify_user = get_current_spotify_user()
-    youtube_user = get_current_youtube_user()
-
-    props = {
-        "spotify": spotify_user,
-        "youtube": youtube_user,
-    }
-    return render_template('index/feed.html', props=ujson.dumps(props))
+    return render_template('index/feed.html')
 
 
 
