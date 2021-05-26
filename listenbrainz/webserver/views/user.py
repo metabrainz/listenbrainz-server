@@ -2,21 +2,20 @@ import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 import ujson
-import time
 
-from flask import Blueprint, render_template, request, url_for, redirect, current_app, jsonify
-from flask_login import current_user, login_required
+from flask import Blueprint, render_template, request, url_for, redirect, current_app
+from flask_login import current_user
 from listenbrainz import webserver
 from listenbrainz.db.playlist import get_playlists_for_user, get_playlists_created_for_user, get_playlists_collaborated_on
-from listenbrainz.domain import spotify
-from listenbrainz.webserver.decorators import web_listenstore_needed
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.login import User
+from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
 from werkzeug.exceptions import NotFound, BadRequest
 from listenbrainz.webserver.views.playlist_api import serialize_jspf
 from pydantic import ValidationError
+
+from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user
 
 LISTENS_PER_PAGE = 25
 
@@ -77,28 +76,20 @@ def profile(user_name):
         except ValueError:
             raise BadRequest("Incorrect timestamp argument min_ts: %s" % request.args.get("min_ts"))
 
-    # Send min and max listen times to allow React component to hide prev/next buttons accordingly
-    (min_ts_per_user, max_ts_per_user) = db_conn.get_timestamps_for_user(user_name)
-
-    if max_ts is None and min_ts is None:
-        if max_ts_per_user:
-            max_ts = max_ts_per_user + 1
-        else:
-            max_ts = int(time.time())
+    args = {}
+    if max_ts:
+        args['to_ts'] = max_ts
+    else:
+        args['from_ts'] = min_ts
+    data, min_ts_per_user, max_ts_per_user = db_conn.fetch_listens(user_name, limit=LISTENS_PER_PAGE, **args)
 
     listens = []
-    if min_ts_per_user != max_ts_per_user:
-        args = {}
-        if max_ts:
-            args['to_ts'] = max_ts
-        else:
-            args['from_ts'] = min_ts
-        for listen in db_conn.fetch_listens(user_name, limit=LISTENS_PER_PAGE, **args):
-            listens.append({
-                "track_metadata": listen.data,
-                "listened_at": listen.ts_since_epoch,
-                "listened_at_iso": listen.timestamp.isoformat() + "Z",
-            })
+    for listen in data:
+        listens.append({
+            "track_metadata": listen.data,
+            "listened_at": listen.ts_since_epoch,
+            "listened_at_iso": listen.timestamp.isoformat() + "Z",
+        })
 
     # If there are no previous listens then display now_playing
     if not listens or listens[0]['listened_at'] >= max_ts_per_user:
@@ -270,8 +261,6 @@ def recommendation_playlists(user_name: str):
         count = int(count)
     except ValueError:
         raise BadRequest("Incorrect int argument count: %s" % request.args.get("count"))
-
-
     user = _get_user(user_name)
     user_data = {
         "name": user.musicbrainz_id,

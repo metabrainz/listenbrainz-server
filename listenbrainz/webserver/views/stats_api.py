@@ -565,7 +565,7 @@ def get_artist_map(user_name: str):
         ``month``, ``year``, ``all_time``, defaults to ``all_time``
     :type range: ``str``
     :param force_recalculate: Optional, recalculate the data instead of returning the cached result.
-    :type range: ``bool``
+    :type force_recalculate: ``bool``
     :statuscode 200: Successful query, you have data!
     :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
     :statuscode 400: Bad request, check ``response['error']`` for more details

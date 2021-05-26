@@ -22,6 +22,7 @@ export type RecommendationsProps = {
   recommendations?: Array<Recommendation>;
   profileUrl?: string;
   spotify: SpotifyUser;
+  youtube: YoutubeUser;
   user: ListenBrainzUser;
   webSocketsServerUrl: string;
   currentUser?: ListenBrainzUser;
@@ -118,6 +119,9 @@ export default class Recommendations extends React.Component<
 
   loadFeedback = async () => {
     const feedback = await this.getFeedback();
+    if (!feedback) {
+      return;
+    }
     const recommendationFeedbackMap: RecommendationFeedbackMap = {};
     feedback.forEach((fb: RecommendationFeedbackResponse) => {
       recommendationFeedbackMap[fb.recording_mbid] = fb.rating;
@@ -232,7 +236,14 @@ export default class Recommendations extends React.Component<
       currRecPage,
       totalRecPages,
     } = this.state;
-    const { spotify, user, currentUser, newAlert } = this.props;
+    const {
+      spotify,
+      youtube,
+      user,
+      currentUser,
+
+      newAlert,
+    } = this.props;
 
     return (
       <div role="main">
@@ -330,6 +341,7 @@ export default class Recommendations extends React.Component<
               onCurrentListenChange={this.handleCurrentRecommendationChange}
               ref={this.brainzPlayer}
               spotifyUser={spotify}
+              youtubeUser={youtube}
             />
           </div>
         </div>
@@ -340,7 +352,13 @@ export default class Recommendations extends React.Component<
 
 document.addEventListener("DOMContentLoaded", () => {
   const { domContainer, reactProps, globalReactProps } = getPageProps();
-  const { api_url, sentry_dsn, current_user, spotify } = globalReactProps;
+  const {
+    api_url,
+    sentry_dsn,
+    current_user,
+    spotify,
+    youtube,
+  } = globalReactProps;
   const { recommendations, user, web_sockets_server_url } = reactProps;
 
   if (sentry_dsn) {
@@ -369,6 +387,7 @@ document.addEventListener("DOMContentLoaded", () => {
           user={user}
           webSocketsServerUrl={web_sockets_server_url}
           currentUser={current_user}
+          youtube={youtube}
         />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,

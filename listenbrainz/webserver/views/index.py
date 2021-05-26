@@ -16,14 +16,12 @@ from werkzeug.exceptions import Unauthorized, NotFound
 import listenbrainz.db.user as db_user
 from listenbrainz.db.similar_users import get_top_similar_users
 from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz.domain import spotify
 from listenbrainz.webserver.decorators import web_listenstore_needed
-from listenbrainz import webserver
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.views.user import delete_user
-
+from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user
 
 index_bp = Blueprint('index', __name__)
 locale.setlocale(locale.LC_ALL, '')
@@ -151,14 +149,14 @@ def recent_listens():
                 "listened_at_iso": listen.timestamp.isoformat() + "Z",
             })
 
-    spotify_user = {}
-    if current_user.is_authenticated:
-        spotify_user = spotify.get_user_dict(current_user.id)
+    spotify_user = get_current_spotify_user()
+    youtube_user = get_current_youtube_user()
 
     props = {
         "listens": recent,
         "mode": "recent",
         "spotify": spotify_user,
+        "youtube": youtube_user,
     }
 
     return render_template("index/recent.html",
@@ -171,12 +169,12 @@ def recent_listens():
 @web_listenstore_needed
 def feed():
 
-    spotify_user = {}
-    if current_user.is_authenticated:
-        spotify_user = spotify.get_user_dict(current_user.id)
+    spotify_user = get_current_spotify_user()
+    youtube_user = get_current_youtube_user()
 
     props = {
         "spotify": spotify_user,
+        "youtube": youtube_user,
     }
     return render_template('index/feed.html', props=ujson.dumps(props))
 

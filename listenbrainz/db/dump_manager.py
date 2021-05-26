@@ -21,7 +21,8 @@ create and import postgres data dumps.
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import click
-from datetime import datetime
+from datetime import datetime, timedelta
+from ftplib import FTP
 import listenbrainz.db.dump as db_dump
 import logging
 import os
@@ -42,6 +43,7 @@ from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app
 from listenbrainz.webserver.timescale_connection import init_timescale_connection
+from listenbrainz.db.dump import check_ftp_dump_ages
 
 
 NUMBER_OF_FULL_DUMPS_TO_KEEP = 2
@@ -305,6 +307,13 @@ def import_dump(private_archive, public_archive, listen_archive, threads):
 @click.argument('location', type=str)
 def delete_old_dumps(location):
     _cleanup_dumps(location)
+    sys.exit(0)
+
+
+@cli.command(name="check_dump_ages")
+def check_dump_ages():
+    """Check to make sure that data dumps are sufficiently fresh. Send mail if they are not."""
+    check_ftp_dump_ages()
     sys.exit(0)
 
 

@@ -9,8 +9,12 @@ import APIService from "./APIService";
 const props = {
   spotifyUser: {
     access_token: "heyo",
-    permission: "read" as SpotifyPermission,
+    permission: ["user-read-currently-playing"] as Array<SpotifyPermission>,
   },
+  youtubeUser: {
+    access_token: "frontend-test",
+    api_key: "fake-api-key",
+  } as YoutubeUser,
   direction: "up" as BrainzPlayDirection,
   onCurrentListenChange: (listen: Listen | JSPFTrack) => {},
   listens: [],
@@ -67,7 +71,11 @@ describe("BrainzPlayer", () => {
       ...props,
       spotifyUser: {
         access_token: "haveyouseenthefnords",
-        permission: "streaming user-read-email user-read-private" as SpotifyPermission,
+        permission: [
+          "streaming",
+          "user-read-email",
+          "user-read-private",
+        ] as Array<SpotifyPermission>,
       },
     };
     const wrapper = mount<BrainzPlayer>(
@@ -83,7 +91,11 @@ describe("BrainzPlayer", () => {
       ...props,
       spotifyUser: {
         access_token: "haveyouseenthefnords",
-        permission: "streaming user-read-email user-read-private" as SpotifyPermission,
+        permission: [
+          "streaming",
+          "user-read-email",
+          "user-read-private",
+        ] as Array<SpotifyPermission>,
       },
     };
     const wrapper = mount<BrainzPlayer>(
@@ -113,7 +125,11 @@ describe("BrainzPlayer", () => {
       ...props,
       spotifyUser: {
         access_token: "haveyouseenthefnords",
-        permission: "streaming user-read-email user-read-private" as SpotifyPermission,
+        permission: [
+          "streaming",
+          "user-read-email",
+          "user-read-private",
+        ] as Array<SpotifyPermission>,
       },
     };
     const wrapper = mount<BrainzPlayer>(
@@ -142,7 +158,11 @@ describe("BrainzPlayer", () => {
       ...props,
       spotifyUser: {
         access_token: "haveyouseenthefnords",
-        permission: "streaming user-read-email user-read-private" as SpotifyPermission,
+        permission: [
+          "streaming",
+          "user-read-email",
+          "user-read-private",
+        ] as Array<SpotifyPermission>,
       },
     };
     const wrapper = mount<BrainzPlayer>(
@@ -170,7 +190,11 @@ describe("BrainzPlayer", () => {
       ...props,
       spotifyUser: {
         access_token: "haveyouseenthefnords",
-        permission: "streaming user-read-email user-read-private" as SpotifyPermission,
+        permission: [
+          "streaming",
+          "user-read-email",
+          "user-read-private",
+        ] as Array<SpotifyPermission>,
       },
     };
     const wrapper = mount<BrainzPlayer>(
@@ -198,7 +222,11 @@ describe("BrainzPlayer", () => {
       ...props,
       spotifyUser: {
         access_token: "haveyouseenthefnords",
-        permission: "streaming user-read-email user-read-private" as SpotifyPermission,
+        permission: [
+          "streaming",
+          "user-read-email",
+          "user-read-private",
+        ] as Array<SpotifyPermission>,
       },
     };
     const wrapper = mount<BrainzPlayer>(
@@ -221,6 +249,123 @@ describe("BrainzPlayer", () => {
     // if origin_url is a soundcloud link, it should play it with SoundcloudPlayer instead of Spotify
     instance.playListen(soundcloudListen);
     expect(instance.state.currentDataSourceIndex).toEqual(2);
+  });
+
+  describe("stopOtherBrainzPlayers", () => {
+    it("gets called when playing a track or unpausing", async () => {
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...props} />,
+        GlobalContextMock
+      );
+      const instance = wrapper.instance();
+      // Hello! If you are reading these tests, please take a small break
+      // and go listen to this beautiful short song below:
+      const youtubeListen: Listen = {
+        listened_at: 0,
+        track_metadata: {
+          artist_name: "Moondog",
+          track_name: "Bird's Lament",
+          additional_info: {
+            origin_url: "https://www.youtube.com/watch?v=RW8SBwGNcF8",
+          },
+        },
+      };
+
+      const spy = jest.spyOn(instance, "stopOtherBrainzPlayers");
+
+      // Initial play
+      instance.playListen(youtubeListen);
+      expect(spy).toHaveBeenCalled();
+
+      // Emulate the player playing
+      await instance.setState({ playerPaused: false });
+
+      spy.mockReset();
+
+      // Pause
+      await instance.togglePlay();
+      expect(spy).not.toHaveBeenCalled();
+
+      // Emulate the player paused
+      await instance.setState({ playerPaused: true });
+
+      // Play again
+      await instance.togglePlay();
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it("calls LocalStorage.setItem to fire event", () => {
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...props} />,
+        GlobalContextMock
+      );
+      const instance = wrapper.instance();
+
+      const localStorageSpy = jest.spyOn(Storage.prototype, "setItem");
+      const dateNowMock = jest.fn().mockReturnValue(1234567);
+      Date.now = dateNowMock;
+
+      instance.stopOtherBrainzPlayers();
+
+      expect(localStorageSpy).toHaveBeenCalledWith(
+        "BrainzPlayer_stop",
+        "1234567"
+      );
+    });
+
+    it("reacts to a LocalStorage event and pauses the player if currently playing", () => {
+      const addEventListenerSpy = jest.spyOn(window, "addEventListener");
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...props} />,
+        GlobalContextMock
+      );
+      const instance = wrapper.instance();
+      instance.setState({ playerPaused: false });
+
+      expect(addEventListenerSpy).toHaveBeenCalledWith(
+        "storage",
+        instance.onLocalStorageEvent
+      );
+
+      const togglePlaySpy = jest.fn();
+      instance.dataSources[0].current!.togglePlay = togglePlaySpy;
+
+      // Emulate "storage" event firing
+      const event = new StorageEvent("storage", {
+        key: "BrainzPlayer_stop",
+        newValue: "1234567",
+        storageArea: window.localStorage,
+      });
+      window.dispatchEvent(event);
+
+      expect(togglePlaySpy).toHaveBeenCalled();
+    });
+    it("reacts to a LocalStorage event and does nothing if currently paused", () => {
+      const addEventListenerSpy = jest.spyOn(window, "addEventListener");
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...props} />,
+        GlobalContextMock
+      );
+      const instance = wrapper.instance();
+      instance.setState({ playerPaused: false });
+
+      expect(addEventListenerSpy).toHaveBeenCalledWith(
+        "storage",
+        instance.onLocalStorageEvent
+      );
+
+      const togglePlaySpy = jest.fn();
+      instance.dataSources[0].current!.togglePlay = togglePlaySpy;
+
+      // Emulate "storage" event firing
+      const event = new StorageEvent("storage", {
+        key: "BrainzPlayer_stop",
+        newValue: "1234567",
+      });
+      window.dispatchEvent(event);
+
+      expect(togglePlaySpy).not.toHaveBeenCalled();
+    });
   });
 
   describe("isCurrentListen", () => {

@@ -1,17 +1,19 @@
-import json
+import time
 
 import listenbrainz.db.stats as db_stats
 import ujson
 from unittest import mock
 
 from flask import url_for, current_app
+
+from data.model.external_service import ExternalServiceType
 from data.model.user_artist_stat import UserArtistStatJson
 
-from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.db import external_service_oauth as db_oauth
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
+from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.webserver.timescale_connection import init_timescale_connection
 from listenbrainz.webserver.login import User
-from listenbrainz.webserver.testing import ServerTestCase
 
 import listenbrainz.db.user as db_user
 import logging
@@ -19,10 +21,9 @@ import logging
 from listenbrainz.webserver.utils import inject_global_props
 
 
-class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
+class UserViewsTestCase(IntegrationTestCase):
     def setUp(self):
-        ServerTestCase.setUp(self)
-        DatabaseTestCase.setUp(self)
+        super(UserViewsTestCase, self).setUp()
 
         self.log = logging.getLogger(__name__)
         self.logstore = init_timescale_connection(self.log, {
@@ -41,8 +42,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
 
     def tearDown(self):
         self.logstore = None
-        ServerTestCase.tearDown(self)
-        DatabaseTestCase.tearDown(self)
 
     def test_redirects(self):
         # Not logged in
@@ -87,44 +86,50 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertTemplateUsed('user/profile.html')
         props = ujson.loads(self.get_context_variable('props'))
         self.assertEqual(props['artist_count'], '2')
-        global_props = json.loads(inject_global_props())
+        global_props = ujson.loads(inject_global_props())
         self.assertDictEqual(global_props['spotify'], {})
 
-    @mock.patch('listenbrainz.domain.spotify.get_user_dict')
-    def test_spotify_token_access(self, mock_spotify):
+    def test_spotify_token_access_no_login(self):
+        db_oauth.save_token(user_id=self.user.id, service=ExternalServiceType.SPOTIFY,
+                            access_token='token', refresh_token='refresh',
+                            token_expires_ts=int(time.time()) + 1000, record_listens=True,
+                            scopes=['user-read-recently-played', 'streaming'])
+
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertTemplateUsed('user/profile.html')
         props = ujson.loads(inject_global_props())
         self.assertDictEqual(props['spotify'], {})
 
+    def test_spotify_token_access_unlinked(self):
         self.temporary_login(self.user.login_id)
-        mock_spotify.return_value = {}
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         props = ujson.loads(inject_global_props())
         self.assertDictEqual(props['spotify'], {})
 
-        mock_spotify.return_value = {
-            'access_token': 'token',
-            'permission': 'permission',
-        }
+    def test_spotify_token_access(self):
+        db_oauth.save_token(user_id=self.user.id, service=ExternalServiceType.SPOTIFY,
+                            access_token='token', refresh_token='refresh',
+                            token_expires_ts=int(time.time()) + 1000, record_listens=True,
+                            scopes=['user-read-recently-played', 'streaming'])
+
+        self.temporary_login(self.user.login_id)
+
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         props = ujson.loads(inject_global_props())
-        mock_spotify.assert_called_with(self.user.id)
         self.assertDictEqual(props['spotify'], {
             'access_token': 'token',
-            'permission': 'permission',
+            'permission': ['user-read-recently-played', 'streaming'],
         })
 
         response = self.client.get(url_for('user.profile', user_name=self.weirduser.musicbrainz_id))
         self.assert200(response)
         props = ujson.loads(inject_global_props())
-        mock_spotify.assert_called_with(self.user.id)
         self.assertDictEqual(props['spotify'], {
             'access_token': 'token',
-            'permission': 'permission',
+            'permission': ['user-read-recently-played', 'streaming'],
         })
 
     @mock.patch('listenbrainz.webserver.views.user.db_user_relationship.is_following_user')
@@ -166,16 +171,15 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assert200(response1)
         self.assert200(response2)
 
-    @mock.patch('listenbrainz.webserver.timescale_connection._ts.get_timestamps_for_user')
     @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
-    def test_ts_filters(self, timescale, timestamps):
+    def test_ts_filters(self, timescale):
         """Check that max_ts and min_ts are passed to timescale """
-        (min_ts, max_ts) = self._create_test_data('iliekcomputers')
-        timestamps.return_value = (min_ts, max_ts)
+
+        timescale.return_value = ([], 0, 0)
 
         # If no parameter is given, use current time as the to_ts
         self.client.get(url_for('user.profile', user_name='iliekcomputers'))
-        req_call = mock.call('iliekcomputers', limit=25, to_ts=1400000201)
+        req_call = mock.call('iliekcomputers', limit=25, from_ts=None)
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
@@ -197,12 +201,10 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         req_call = mock.call('iliekcomputers', limit=25, to_ts=1520946000)
         timescale.assert_has_calls([req_call])
 
-    @mock.patch('listenbrainz.webserver.timescale_connection._ts.get_timestamps_for_user')
     @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
-    def test_ts_filters_errors(self, timescale, timestamps):
+    def test_ts_filters_errors(self, timescale):
         """If max_ts and min_ts are not integers, show an error page"""
         (min_ts, max_ts) = self._create_test_data('iliekcomputers')
-        timestamps.return_value = (min_ts, max_ts)
 
         response = self.client.get(url_for('user.profile', user_name='iliekcomputers'),
                                    query_string={'max_ts': 'a'})
