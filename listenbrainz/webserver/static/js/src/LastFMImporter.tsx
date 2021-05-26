@@ -61,6 +61,7 @@ export default class LastFmImporter extends React.Component<
 
   private userName: string;
   private userToken: string;
+  private userIsPrivate: boolean;
 
   private page = 1;
   private totalPages = 0;
@@ -100,6 +101,7 @@ export default class LastFmImporter extends React.Component<
 
     this.userName = props.user.name;
     this.userToken = props.user.auth_token || "";
+    this.userIsPrivate = false;
   }
 
   async getTotalNumberOfScrobbles() {
@@ -213,6 +215,25 @@ export default class LastFmImporter extends React.Component<
     return undefined;
   }
 
+  async getUserPrivacy() {
+    /*
+     * Determine if user's last.fm scrobbles are private
+     */
+    const { lastfmUsername } = this.state;
+    const url = `${this.lastfmURL}?method=user.getrecenttracks&user=${lastfmUsername}&api_key=${this.lastfmKey}&format=json`;
+    try {
+      const response = await fetch(encodeURI(url));
+      const data = await response.json();
+      return data.error === 17;
+    } catch (error) {
+      this.updateModalAction(
+        <p>An error occurred, please try again. :(</p>,
+        true
+      );
+      throw error;
+    }
+  }
+
   static getlastImportedString(listen: Listen) {
     // Retrieve first track's timestamp from payload and convert it into string for display
     const lastImportedDate = new Date(listen.listened_at * 1000);
@@ -314,7 +335,8 @@ export default class LastFmImporter extends React.Component<
               </span>
             )}
             <span>
-              Please don&apos;t close this page while this is running.
+              Closing this page during import may require a full restart of the
+              importer from the beginning.
             </span>{" "}
             <br /> <br />
             <span> Latest import timestamp: {this.lastImportedString} </span>
@@ -337,6 +359,7 @@ export default class LastFmImporter extends React.Component<
       this.incrementalImport = this.latestImportTime > 0;
       this.playCount = await this.getTotalNumberOfScrobbles();
       this.totalPages = await this.getNumberOfPages();
+      this.userIsPrivate = await this.getUserPrivacy();
       this.page = this.totalPages; // Start from the last page so that oldest scrobbles are imported first
 
       await this.importLoop(); // import pages
@@ -422,6 +445,33 @@ export default class LastFmImporter extends React.Component<
         </span>
       </p>
     );
+
+    // If the user's last.fm scrobbles are private, prompt user to check their settings
+    if (this.userIsPrivate) {
+      finalMsg = (
+        <p>
+          <FontAwesomeIcon icon={faTimes as IconProp} /> Import failed
+          <br />
+          <br />
+          <b style={{ fontSize: `${10}pt` }} className="text-danger">
+            Please make sure your Last.fm recent listening information is public
+            by updating your privacy settings
+            <a href="https://www.last.fm/settings/privacy"> here. </a>
+          </b>
+          <br />
+          <span style={{ fontSize: `${8}pt` }}>
+            Thank you for using ListenBrainz!
+          </span>
+          <br />
+          <br />
+          <span style={{ fontSize: `${10}pt` }}>
+            <a href={`${profileUrl}`}>
+              Close and go to your ListenBrainz profile
+            </a>
+          </span>
+        </p>
+      );
+    }
     this.setState({ canClose: true, msg: finalMsg });
     return Promise.resolve(null);
   }
@@ -442,6 +492,7 @@ export default class LastFmImporter extends React.Component<
             type="text"
             onChange={this.handleChange}
             value={lastfmUsername}
+            name="lastfmUsername"
             placeholder="Last.fm Username"
             size={30}
           />
