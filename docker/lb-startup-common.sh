@@ -31,20 +31,17 @@ function send_sentry_message() {
   # Send a message to sentry
   # required globals:
   #   $SENTRY_SERVICE_ERROR_DSN: the DSN to report errors to
-  #   $PROJECT: the name of the project that is running (e.g. 'listenbrainz')
+  #   $SENTRY_SERVICE_ERROR_ENVIRONMENT: the name of this project, used to set a sentry environment
+  #   $DEPLOY_ENV: the deploy environment, used to set a sentry environment
   # arguments:
   #   $1: the message to report
-  if [ -z "${PROJECT}" ]; then
-    log "PROJECT environment variable isn't set, using default"
-    PROJECT=unknown
-  fi
 
   if [ -z "${SENTRY_SERVICE_ERROR_DSN}" ]; then
     log "SENTRY_SERVICE_ERROR_DSN environment variable isn't set, not logging"
-  elif ! command -v sentry-cli ; then
+  elif ! type -p sentry-cli &>/dev/null; then
     log "Cannot find sentry-cli, not logging"
   else
-    SENTRY_DSN="${SENTRY_SERVICE_ERROR_DSN}" sentry-cli send-event -f $(uuidgen) \
+    SENTRY_DSN="${SENTRY_SERVICE_ERROR_DSN}" sentry-cli send-event -f $(uuid) \
       -E "${SENTRY_SERVICE_ERROR_ENVIRONMENT}-${DEPLOY_ENV}" -m "$@"
   fi
 }

@@ -31,6 +31,7 @@ RUN apt-get update \
                        pxz \
                        redis-tools \
                        rsync \
+                       uuid \
     && rm -rf /var/lib/apt/lists/*
 
 # PostgreSQL client
