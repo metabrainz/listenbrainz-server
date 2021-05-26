@@ -5,8 +5,7 @@ import ujson
 from flask import current_app
 from flask_login import current_user
 
-from listenbrainz.domain import spotify
-
+from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user
 
 def generate_string(length):
     """Generates random string with a specified length."""
@@ -35,18 +34,19 @@ def reformat_datetime(value, fmt="%b %d, %Y, %H:%M %Z"):
 
 def inject_global_props():
     current_user_data = {}
-    spotify_data = {}
     if current_user.is_authenticated:
         current_user_data = {
             "id": current_user.id,
             "name": current_user.musicbrainz_id,
             "auth_token": current_user.auth_token,
         }
-        spotify_data = spotify.get_user_dict(current_user.id)
+    spotify_user = get_current_spotify_user()
+    youtuber_user = get_current_youtube_user()
     props = {
         "api_url": current_app.config["API_URL"],
         "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn"),
         "current_user": current_user_data,
-        "spotify": spotify_data,
+        "spotify": spotify_user,
+        "youtube": youtuber_user,
     }
     return ujson.dumps(props)
