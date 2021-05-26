@@ -1,9 +1,8 @@
 from datetime import datetime
-import sys
 from listenbrainz_spark.tests import SparkTestCase
 from listenbrainz_spark.recommendations.recording import candidate_sets
 from listenbrainz_spark.recommendations.recording import create_dataframes
-from listenbrainz_spark import schema, utils, config, path, stats
+from listenbrainz_spark import utils, path, stats
 from listenbrainz_spark.exceptions import (TopArtistNotFetchedException,
                                            SimilarArtistNotFetchedException)
 
@@ -11,6 +10,7 @@ from pyspark.sql import Row
 from unittest.mock import patch
 import pyspark.sql.functions as f
 from pyspark.sql.types import StructField, StructType, StringType
+
 
 class CandidateSetsTestClass(SparkTestCase):
 
@@ -568,10 +568,10 @@ class CandidateSetsTestClass(SparkTestCase):
     def test_append_artists_from_collaborations(self, mock_explode, mock_read_hdfs):
         top_artist_df = utils.create_dataframe(
             Row(
+                mb_artist_credit_mbids=["6a70b322-9aa9-41b3-9dce-824733633a1c"],
                 top_artist_credit_id=2,
                 top_artist_name='kishorekumar',
                 user_name='vansika',
-                mb_artist_credit_mbids=["6a70b322-9aa9-41b3-9dce-824733633a1c"]
                 ),
             schema=None
         )

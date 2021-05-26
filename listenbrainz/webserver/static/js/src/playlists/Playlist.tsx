@@ -51,6 +51,7 @@ export type PlaylistPageProps = {
   labsApiUrl: string;
   playlist: JSPFObject;
   spotify: SpotifyUser;
+  youtube: YoutubeUser;
   currentUser?: ListenBrainzUser;
   webSocketsServerUrl: string;
 } & WithAlertNotificationsInjectedProps;
@@ -655,7 +656,7 @@ export default class PlaylistPage extends React.Component<
           "Spotify permissions missing",
           <>
             Please try to{" "}
-            <a href="/profile/connect-spotify" target="_blank">
+            <a href="/profile/music-services/details/" target="_blank">
               disconnect and reconnect
             </a>{" "}
             your Spotify account and refresh this page
@@ -687,7 +688,7 @@ export default class PlaylistPage extends React.Component<
       searchInputValue,
       cachedSearchResults,
     } = this.state;
-    const { spotify, currentUser, newAlert } = this.props;
+    const { spotify, youtube, currentUser, newAlert } = this.props;
     const { track: tracks } = playlist;
     const hasRightToEdit = this.hasRightToEdit();
     const isOwner = this.isOwner();
@@ -929,6 +930,7 @@ export default class PlaylistPage extends React.Component<
               onCurrentListenChange={this.handleCurrentTrackChange}
               ref={this.brainzPlayer}
               spotifyUser={spotify}
+              youtubeUser={youtube}
             />
           </div>
         </div>
@@ -939,7 +941,13 @@ export default class PlaylistPage extends React.Component<
 
 document.addEventListener("DOMContentLoaded", () => {
   const { domContainer, reactProps, globalReactProps } = getPageProps();
-  const { api_url, sentry_dsn, current_user, spotify } = globalReactProps;
+  const {
+    api_url,
+    sentry_dsn,
+    current_user,
+    spotify,
+    youtube,
+  } = globalReactProps;
   const { labs_api_url, playlist, web_sockets_server_url } = reactProps;
 
   if (sentry_dsn) {
@@ -967,6 +975,7 @@ document.addEventListener("DOMContentLoaded", () => {
           labsApiUrl={labs_api_url}
           playlist={playlist}
           spotify={spotify}
+          youtube={youtube}
           currentUser={current_user}
           webSocketsServerUrl={web_sockets_server_url}
         />

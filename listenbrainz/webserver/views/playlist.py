@@ -3,11 +3,11 @@ from werkzeug.exceptions import NotFound, BadRequest
 
 from flask import Blueprint, render_template, current_app
 from flask_login import current_user
-from listenbrainz.domain import spotify
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 from listenbrainz.webserver.views.playlist_api import serialize_jspf, fetch_playlist_recording_metadata
 import listenbrainz.db.playlist as db_playlist
+from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user
 
 playlist_bp = Blueprint("playlist", __name__)
 
@@ -30,7 +30,12 @@ def load_playlist(playlist_mbid: str):
 
     fetch_playlist_recording_metadata(playlist)
 
+    spotify_data = get_current_spotify_user()
+    youtube_data = get_current_youtube_user()
+
     props = {
+        "spotify": spotify_data,
+        "youtube": youtube_data,
         "labs_api_url": current_app.config["LISTENBRAINZ_LABS_API_URL"],
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
         "playlist": serialize_jspf(playlist),

@@ -5,6 +5,13 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ '*' ]
+    paths:
+      - '**.jsx?'
+      - '**.tsx?'
+      - '**.json'
+      - 'docker/Dockerfile.webpack'
+      - 'docker/docker-compose.test.yml'
+      - 'test.sh'
 
 jobs:
 
@@ -25,7 +32,7 @@ jobs:
     - uses: satackey/action-docker-layer-caching@v0.0.11
       continue-on-error: true
 
-    - name: Build frontend tests
+    - name: Build frontend containers
       run: ./test.sh fe -b
 
     - name: Run frontend tests

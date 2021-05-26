@@ -1,4 +1,5 @@
 module.exports = {
+  sourceType: "unambiguous",
   presets: [
     [
       "@babel/preset-typescript",
@@ -13,7 +14,7 @@ module.exports = {
         useBuiltIns: "usage",
         corejs: { version: "3.9", proposals: true },
         targets: {
-          node: "10",
+          node: "12",
           browsers: ["> 0.2% and not dead", "firefox >= 44"],
         },
       },

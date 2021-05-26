@@ -11,11 +11,18 @@ set -e
 
 cd "$(dirname "${BASH_SOURCE[0]}")/../"
 
-git describe --tags --dirty --always > .git-version
+GIT_COMMIT_SHA="$(git describe --tags --dirty --always)"
+echo "$GIT_COMMIT_SHA" > .git-version
 
 TAG=${1:-beta}
-echo "building for env $ENV tag $TAG"
-docker build -t metabrainz/listenbrainz:"$TAG" \
+
+function build_and_push_image {
+    echo "building for tag $1"
+    docker build \
+        --tag metabrainz/listenbrainz:"$1" \
         --target listenbrainz-prod \
-        --build-arg GIT_COMMIT_SHA="$(git describe --tags --dirty --always)" . && \
-    docker push metabrainz/listenbrainz:"$TAG"
+        --build-arg GIT_COMMIT_SHA="$GIT_COMMIT_SHA" . && \
+    docker push metabrainz/listenbrainz:"$1"
+}
+
+build_and_push_image "$TAG"
