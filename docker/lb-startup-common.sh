@@ -44,6 +44,7 @@ function send_sentry_message() {
   elif ! command -v sentry-cli ; then
     log "Cannot find sentry-cli, not logging"
   else
-    SENTRY_DSN="${SENTRY_SERVICE_ERROR_DSN}" sentry-cli send-event -f $(uuidgen) -E "$PROJECT" -m "$@"
+    SENTRY_DSN="${SENTRY_SERVICE_ERROR_DSN}" sentry-cli send-event -f $(uuidgen) \
+      -E "${SENTRY_SERVICE_ERROR_ENVIRONMENT}-${DEPLOY_ENV}" -m "$@"
   fi
 }
