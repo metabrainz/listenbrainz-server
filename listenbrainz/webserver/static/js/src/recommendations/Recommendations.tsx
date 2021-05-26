@@ -16,7 +16,7 @@ import BrainzPlayer from "../BrainzPlayer";
 import ErrorBoundary from "../ErrorBoundary";
 import Loader from "../components/Loader";
 import RecommendationCard from "./RecommendationCard";
-import { parsePageProps } from "../utils";
+import { getPageProps } from "../utils";
 
 export type RecommendationsProps = {
   recommendations?: Array<Recommendation>;
@@ -339,7 +339,7 @@ export default class Recommendations extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, reactProps, globalReactProps } = parsePageProps();
+  const { domContainer, reactProps, globalReactProps } = getPageProps();
   const { api_url, sentry_dsn, current_user, spotify } = globalReactProps;
   const { recommendations, user, web_sockets_server_url } = reactProps;
 

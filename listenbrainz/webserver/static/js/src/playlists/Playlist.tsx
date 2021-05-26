@@ -45,7 +45,7 @@ import {
   JSPFTrackToListen,
   listenToJSPFTrack,
 } from "./utils";
-import { parsePageProps } from "../utils";
+import { getPageProps } from "../utils";
 
 export type PlaylistPageProps = {
   labsApiUrl: string;
@@ -938,7 +938,7 @@ export default class PlaylistPage extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, reactProps, globalReactProps } = parsePageProps();
+  const { domContainer, reactProps, globalReactProps } = getPageProps();
   const { api_url, sentry_dsn, current_user, spotify } = globalReactProps;
   const { labs_api_url, playlist, web_sockets_server_url } = reactProps;
 

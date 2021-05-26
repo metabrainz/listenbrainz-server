@@ -11,7 +11,7 @@ import Bar from "./Bar";
 import Loader from "../components/Loader";
 import ErrorBoundary from "../ErrorBoundary";
 import Pill from "../components/Pill";
-import { parsePageProps } from "../utils";
+import { getPageProps } from "../utils";
 
 export type UserEntityChartProps = {
   user: ListenBrainzUser;
@@ -585,7 +585,7 @@ export default class UserEntityChart extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, reactProps, globalReactProps } = parsePageProps();
+  const { domContainer, reactProps, globalReactProps } = getPageProps();
   const { api_url, sentry_dsn } = globalReactProps;
   const { user } = reactProps;
 
