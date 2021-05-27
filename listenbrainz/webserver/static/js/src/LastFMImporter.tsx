@@ -289,6 +289,12 @@ export default class LastFmImporter extends React.Component<
     this.startImport();
   };
 
+  progressBarPercentage() {
+    if (this.totalPages >= this.numCompleted)
+      return Math.ceil((this.numCompleted / this.totalPages) * 100);
+    return 50;
+  }
+
   async submitPage(payload: Array<Listen>) {
     const delay = this.getRateLimitDelay();
     // Halt execution for some time
@@ -320,6 +326,7 @@ export default class LastFmImporter extends React.Component<
 
       this.page -= 1;
       this.numCompleted += 1;
+      const progressBarPercentage = this.progressBarPercentage();
 
       // Update message
       const msg = (
@@ -339,6 +346,17 @@ export default class LastFmImporter extends React.Component<
               importer from the beginning.
             </span>{" "}
             <br /> <br />
+            <div className="progress" style={{ height: "7px" }}>
+              <div
+                className="progress-bar progress-bar-striped progress-bar-animated"
+                role="progressbar"
+                style={{ width: `${progressBarPercentage}%` }}
+                aria-label="Importer Progress"
+                aria-valuenow={progressBarPercentage}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              />
+            </div>
             <span> Latest import timestamp: {this.lastImportedString} </span>
           </span>
         </p>
