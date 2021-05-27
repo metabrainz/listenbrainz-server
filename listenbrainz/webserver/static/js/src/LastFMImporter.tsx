@@ -326,6 +326,7 @@ export default class LastFmImporter extends React.Component<
 
       this.page -= 1;
       this.numCompleted += 1;
+      const progressBarPercentage = this.progressBarPercentage();
 
       // Update message
       const msg = (
@@ -349,9 +350,9 @@ export default class LastFmImporter extends React.Component<
               <div
                 className="progress-bar progress-bar-striped progress-bar-animated"
                 role="progressbar"
-                style={{ width: `${this.progressBarPercentage()}%` }}
+                style={{ width: `${progressBarPercentage}%` }}
                 aria-label="Importer Progress"
-                aria-valuenow={this.progressBarPercentage()}
+                aria-valuenow={progressBarPercentage}
                 aria-valuemin={0}
                 aria-valuemax={100}
               />
