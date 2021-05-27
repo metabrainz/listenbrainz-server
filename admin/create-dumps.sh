@@ -76,11 +76,6 @@ if [ -z $DUMP_BASE_DIR ]; then
     exit 1
 fi
 
-if ! findmnt -n --type cifs --target $DUMP_BASE_DIR; then
-    echo "DUMP_BASE_DIR ($DUMP_BASE_DIR) isn't mounted using CIFS as expected"
-    exit 1
-fi
-
 DUMP_TYPE="${1:-full}"
 
 if [ "$DUMP_TYPE" == "full" ]; then
