@@ -6,6 +6,10 @@ _ts = None
 
 def init_timescale_connection(logger, conf):
     global _ts
+
+    if not conf["SQLALCHEMY_TIMESCALE_URI"]:
+        return
+
     while True:
         try:
             _ts = TimescaleListenStore(conf, logger)

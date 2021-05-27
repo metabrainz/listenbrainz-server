@@ -159,12 +159,15 @@ def create_app(debug=None):
     from flask_admin import Admin
     from listenbrainz.webserver.admin.views import HomeView
     admin = Admin(app, index_view=HomeView(name='Home'), template_mode='bootstrap3')
-    from listenbrainz.model import Spotify as SpotifyModel
+    from listenbrainz.model import ExternalService as ExternalServiceModel
     from listenbrainz.model import User as UserModel
-    from listenbrainz.model.spotify import SpotifyAdminView
+    from listenbrainz.model import ListensImporter as ListensImporterModel
+    from listenbrainz.model.external_service_oauth import ExternalServiceAdminView
     from listenbrainz.model.user import UserAdminView
+    from listenbrainz.model.listens_import import ListensImporterAdminView
     admin.add_view(UserAdminView(UserModel, model.db.session, endpoint='user_model'))
-    admin.add_view(SpotifyAdminView(SpotifyModel, model.db.session, endpoint='spotify_model'))
+    admin.add_view(ExternalServiceAdminView(ExternalServiceModel, model.db.session, endpoint='external_service_model'))
+    admin.add_view(ListensImporterAdminView(ListensImporterModel, model.db.session, endpoint='listens_importer_model'))
 
     @app.before_request
     def before_request_gdpr_check():
@@ -180,7 +183,7 @@ def create_app(debug=None):
         # redirect them to agree to terms page.
         elif current_user.is_authenticated and current_user.gdpr_agreed is None:
             return redirect(url_for('index.gdpr_notice', next=request.full_path))
-
+    app.logger.info("Flask application created!")
     return app
 
 
@@ -201,7 +204,7 @@ def create_api_compat_app(debug=None):
     # add a value into the config dict of the app to note that this is the
     # app for api_compat. This is later used in error handling.
     app.config['IS_API_COMPAT_APP'] = True
-
+    app.logger.info("Flask api compat application created!")
     return app
 
 

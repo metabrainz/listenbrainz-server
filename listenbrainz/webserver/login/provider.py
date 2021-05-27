@@ -2,6 +2,7 @@ from rauth import OAuth2Service
 from flask import request, session, url_for
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver.utils import generate_string
+from listenbrainz.webserver.timescale_connection import _ts as ts
 import listenbrainz.db.user as db_user
 import ujson
 
@@ -32,8 +33,11 @@ def get_user():
     data = s.get('oauth2/userinfo').json()
     musicbrainz_id = data.get('sub')
     musicbrainz_row_id = data.get('metabrainz_user_id')
+    user_exists_check = db_user.get_by_mb_id(musicbrainz_id)
     user = db_user.get_or_create(musicbrainz_row_id, musicbrainz_id)
     if user:
+        if user_exists_check is None:
+            ts.set_empty_cache_values_for_user(musicbrainz_id)
         if not user['musicbrainz_row_id']:
             db_user.update_musicbrainz_row_id(musicbrainz_id, data['metabrainz_user_id'])
         return User.from_dbrow(user)

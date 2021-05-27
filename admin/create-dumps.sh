@@ -20,12 +20,15 @@
 
 set -e
 
+LB_SERVER_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)
+cd "$LB_SERVER_ROOT" || exit 1
+
 source "admin/config.sh"
 source "admin/functions.sh"
 
-# This variable contains the name of a directory that is deleted when the script
+# This variable contains the name of a directory that is deleted when the script
 # exits, so we sanitise it here in case it was included in the environment.
-TMPDIR=""
+DUMP_TEMP_DIR=""
 
 if [ "$CONTAINER_NAME" == "listenbrainz-cron-prod" ] && [ "$PROD" == "prod" ]
 then
@@ -52,8 +55,8 @@ function add_rsync_include_rule {
 function on_exit {
     echo "Disk space when create-dumps ends:"; df -m
 
-    if [ -n "$TMPDIR" ]; then
-        rm -rf "$TMPDIR"
+    if [ -n "$DUMP_TEMP_DIR" ]; then
+        rm -rf "$DUMP_TEMP_DIR"
     fi
 
     if [ -n "$START_TIME" ]; then
@@ -68,8 +71,15 @@ START_TIME=$(date +%s)
 echo "This script is being run by the following user: "; whoami
 echo "Disk space when create-dumps starts:" ; df -m
 
-LB_SERVER_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)
-cd "$LB_SERVER_ROOT" || exit 1
+if [ -z $DUMP_BASE_DIR ]; then
+    echo "DUMP_BASE_DIR isn't set"
+    exit 1
+fi
+
+if ! findmnt -n --type cifs --target $DUMP_BASE_DIR; then
+    echo "DUMP_BASE_DIR ($DUMP_BASE_DIR) isn't mounted using CIFS as expected"
+    exit 1
+fi
 
 DUMP_TYPE="${1:-full}"
 
@@ -84,20 +94,23 @@ else
     exit
 fi
 
-TMPDIR=$(mktemp --tmpdir="$TEMP_DIR" -d -t "$SUB_DIR.XXXXXXXXXX")
+DUMP_TEMP_DIR="$DUMP_BASE_DIR/$SUB_DIR.$$"
+echo "DUMP_BASE_DIR is $DUMP_BASE_DIR"
+echo "creating DUMP_TEMP_DIR $DUMP_TEMP_DIR"
+mkdir -p "$DUMP_TEMP_DIR"
 
 if [ "$DUMP_TYPE" == "full" ]; then
-    if ! /usr/local/bin/python manage.py dump create_full -l "$TMPDIR" -t "$DUMP_THREADS" --last-dump-id; then
+    if ! /usr/local/bin/python manage.py dump create_full -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS" --last-dump-id; then
         echo "Full dump failed, exiting!"
         exit 1
     fi
 elif [ "$DUMP_TYPE" == "incremental" ]; then
-    if ! /usr/local/bin/python manage.py dump create_incremental -l "$TMPDIR" -t "$DUMP_THREADS"; then
+    if ! /usr/local/bin/python manage.py dump create_incremental -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS"; then
         echo "Incremental dump failed, exiting!"
         exit 1
     fi
 elif [ "$DUMP_TYPE" == "feedback" ]; then
-    if ! /usr/local/bin/python manage.py dump create_feedback -l "$TMPDIR" -t "$DUMP_THREADS"; then
+    if ! /usr/local/bin/python manage.py dump create_feedback -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS"; then
         echo "Feedback dump failed, exiting!"
         exit 1
     fi
@@ -106,13 +119,13 @@ else
     exit 1
 fi
 
-DUMP_ID_FILE=$(find "$TMPDIR" -type f -name 'DUMP_ID.txt')
+DUMP_ID_FILE=$(find "$DUMP_TEMP_DIR" -type f -name 'DUMP_ID.txt')
 if [ -z "$DUMP_ID_FILE" ]; then
     echo "DUMP_ID.txt not found, exiting."
     exit 1
 fi
 
-HAS_EMPTY_DIRS_OR_FILES=$(find "$TMPDIR" -empty)
+HAS_EMPTY_DIRS_OR_FILES=$(find "$DUMP_TEMP_DIR" -empty)
 if [ -n "$HAS_EMPTY_DIRS_OR_FILES" ]; then
     echo "Empty files or dirs found, exiting."
     echo "$HAS_EMPTY_DIRS_OR_FILES"
@@ -148,8 +161,8 @@ FTP_CURRENT_DUMP_DIR="$FTP_DIR/$SUB_DIR/$DUMP_NAME"
 
 # create the dir in which to copy the dumps before
 # changing their permissions to the FTP_FILE_MODE
-echo "Creating FTP directories and setting permissions..."
-mkdir -m "$FTP_DIR_MODE" -p "$FTP_CURRENT_DUMP_DIR"
+echo "Creating FTP directories..."
+mkdir -p "$FTP_CURRENT_DUMP_DIR"
 
 # make sure these dirs are owned by the correct user
 chown "$FTP_USER:$FTP_GROUP" \
@@ -161,6 +174,8 @@ chown "$FTP_USER:$FTP_GROUP" \
 # and set appropriate mode for files to be uploaded to
 # the FTP server
 retry rsync -a "$DUMP_DIR/" "$FTP_CURRENT_DUMP_DIR/"
+echo "Fixing FTP permissions"
+chmod "$FTP_DIR_MODE" "$FTP_CURRENT_DUMP_DIR"
 chmod "$FTP_FILE_MODE" "$FTP_CURRENT_DUMP_DIR/"*
 
 # create an explicit rsync filter for the new private dump in the
@@ -187,7 +202,7 @@ cat "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
 
 /usr/local/bin/python manage.py dump delete_old_dumps "$FTP_DIR/$SUB_DIR"
 /usr/local/bin/python manage.py dump delete_old_dumps "$BACKUP_DIR/$SUB_DIR"
-/usr/local/bin/python manage.py dump delete_old_dumps "$TEMP_DIR/$SUB_DIR"
+/usr/local/bin/python manage.py dump delete_old_dumps "$DUMP_BASE_DIR/$SUB_DIR"
 
 # rsync to ftp folder taking care of the rules
 ./admin/rsync-dump-files.sh "$DUMP_TYPE"

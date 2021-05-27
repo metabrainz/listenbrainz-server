@@ -8,6 +8,7 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 from listenbrainz import db
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
+from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 
 
@@ -33,6 +34,15 @@ class APITestCase(ListenAPIIntegrationTestCase):
         response = self.client.get(
             url, query_string={'max_ts': '1400000000', 'min_ts': '1500000000'})
         self.assert400(response)
+
+    def test_get_listens_ts_unavailable(self):
+        """Check that an error message is returned if the listenstore is unavailable"""
+        timescale_connection._ts = None
+
+        url = url_for('api_v1.get_listens',
+                      user_name=self.user['musicbrainz_id'])
+        response = self.client.get(url)
+        self.assertStatus(response, 503)
 
     def test_get_listens(self):
         """ Test to make sure that the api sends valid listens on get requests.
@@ -140,56 +150,6 @@ class APITestCase(ListenAPIIntegrationTestCase):
         data = json.loads(response.data)['payload']
         self.assertEqual(data['count'], 0)
 
-    def test_get_listens_with_time_range(self):
-        """ Test to make sure that the api sends valid listens on get requests.
-        """
-        with open(self.path_to_data_file('valid_single.json'), 'r') as f:
-            payload = json.load(f)
-
-        # send three listens
-        user = db_user.get_or_create(1, 'test_time_range')
-        ts = 1400000000
-        for i in range(3):
-            payload['payload'][0]['listened_at'] = ts + (100 * i)
-            response = self.send_data(payload, user)
-            self.assert200(response)
-            self.assertEqual(response.json['status'], 'ok')
-
-        old_ts = ts - 2592000  # 30 days
-        payload['payload'][0]['listened_at'] = old_ts
-        response = self.send_data(payload, user)
-        self.assert200(response)
-        self.assertEqual(response.json['status'], 'ok')
-
-        expected_count = 3
-        url = url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
-        response = self.wait_for_query_to_have_items(url, expected_count)
-        data = json.loads(response.data)['payload']
-
-        self.assert200(response)
-        self.assertEqual(data['count'], expected_count)
-        self.assertEqual(data['listens'][0]['listened_at'], 1400000200)
-        self.assertEqual(data['listens'][1]['listened_at'], 1400000100)
-        self.assertEqual(data['listens'][2]['listened_at'], 1400000000)
-
-        url = url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
-        response = self.client.get(url, query_string={'time_range': 10})
-        self.assert200(response)
-        data = json.loads(response.data)['payload']
-        self.assertEqual(data['count'], 4)
-        self.assertEqual(data['listens'][0]['listened_at'], 1400000200)
-        self.assertEqual(data['listens'][1]['listened_at'], 1400000100)
-        self.assertEqual(data['listens'][2]['listened_at'], 1400000000)
-        self.assertEqual(data['listens'][3]['listened_at'], old_ts)
-
-        # Check time_range ranges
-        url = url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
-        response = self.client.get(url, query_string={'time_range': 0})
-        self.assert400(response)
-
-        url = url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
-        response = self.client.get(url, query_string={'time_range': 74})
-        self.assert400(response)
 
     def test_get_listens_order(self):
         """ Test to make sure that the api sends listens in valid order.
