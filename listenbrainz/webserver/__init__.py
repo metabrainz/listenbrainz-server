@@ -1,4 +1,3 @@
-import json
 import os
 import pprint
 import sys
@@ -7,6 +6,8 @@ from time import sleep
 from brainzutils.flask import CustomFlask
 from flask import request, url_for, redirect
 from flask_login import current_user
+
+from listenbrainz.webserver.utils import get_global_props
 
 API_PREFIX = '/1'
 
@@ -150,10 +151,8 @@ def create_app(debug=None):
     static_manager.read_manifest()
     app.static_folder = '/static'
 
-    from listenbrainz.webserver.utils import inject_global_props
     app.context_processor(lambda: dict(
         get_static_path=static_manager.get_static_path,
-        inject_global_props=inject_global_props
     ))
 
     _register_blueprints(app)
@@ -235,12 +234,22 @@ def create_app_rtfd():
     return app
 
 
+def _register_blueprint_with_context(app, blueprint, **kwargs):
+    """Add some global props to a blueprint context and then register it with the app.
+    This should only be used for blueprints which render html."""
+    @blueprint.context_processor
+    def inject_context_processor():
+        return {"global_props": get_global_props()}
+
+    app.register_blueprint(blueprint, **kwargs)
+
+
 def _register_blueprints(app):
     from listenbrainz.webserver.views.index import index_bp
-    app.register_blueprint(index_bp)
+    _register_blueprint_with_context(app, index_bp)
 
     from listenbrainz.webserver.views.login import login_bp
-    app.register_blueprint(login_bp, url_prefix='/login')
+    _register_blueprint_with_context(app, login_bp, url_prefix='/login')
 
     from listenbrainz.webserver.views.api import api_bp
     app.register_blueprint(api_bp, url_prefix=API_PREFIX)
@@ -249,13 +258,13 @@ def _register_blueprints(app):
     app.register_blueprint(api_bp_compat)
 
     from listenbrainz.webserver.views.user import user_bp
-    app.register_blueprint(user_bp, url_prefix='/user')
+    _register_blueprint_with_context(app, user_bp, url_prefix='/user')
 
     from listenbrainz.webserver.views.user import redirect_bp
     app.register_blueprint(redirect_bp, url_prefix='/my')
 
     from listenbrainz.webserver.views.profile import profile_bp
-    app.register_blueprint(profile_bp, url_prefix='/profile')
+    _register_blueprint_with_context(app, profile_bp, url_prefix='/profile')
 
     from listenbrainz.webserver.views.stats_api import stats_api_bp
     app.register_blueprint(stats_api_bp, url_prefix=API_PREFIX+'/stats')
@@ -264,7 +273,7 @@ def _register_blueprints(app):
     app.register_blueprint(status_api_bp, url_prefix=API_PREFIX+'/status')
 
     from listenbrainz.webserver.views.player import player_bp
-    app.register_blueprint(player_bp, url_prefix='/player')
+    _register_blueprint_with_context(app, player_bp, url_prefix='/player')
 
     from listenbrainz.webserver.views.feedback_api import feedback_api_bp
     app.register_blueprint(feedback_api_bp, url_prefix=API_PREFIX+'/feedback')
@@ -282,7 +291,7 @@ def _register_blueprints(app):
     app.register_blueprint(recommendations_cf_recording_bp, url_prefix='/recommended/tracks')
 
     from listenbrainz.webserver.views.playlist import playlist_bp
-    app.register_blueprint(playlist_bp, url_prefix='/playlist')
+    _register_blueprint_with_context(app, playlist_bp, url_prefix='/playlist')
 
     from listenbrainz.webserver.views.playlist_api import playlist_api_bp
     app.register_blueprint(playlist_api_bp, url_prefix=API_PREFIX+'/playlist')

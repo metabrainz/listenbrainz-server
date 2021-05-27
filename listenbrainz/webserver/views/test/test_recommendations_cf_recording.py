@@ -179,10 +179,9 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         error_msg = "An error occurred while processing your request. Check back later!"
         self.assert_context('error_msg', error_msg)
 
-    @patch('listenbrainz.webserver.views.recommendations_cf_recording.current_user')
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.db_recommendations_cf_recording.get_user_recommendation')
     @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_playable_recommendations_list')
-    def test_get_template(self, mock_get_recommendations, mock_get_rec, mock_curr_user):
+    def test_get_template(self, mock_get_recommendations, mock_get_rec):
         # active_section = 'top_artist'
         user = _get_user('vansika_1')
         created = datetime.utcnow()
@@ -212,10 +211,6 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         }]
         mock_get_recommendations.return_value = recommendations
 
-        mock_curr_user.id = 10
-        mock_curr_user.musicbrainz_id = 'vansika'
-        mock_curr_user.auth_token = 'yyyy'
-
         recommendations_cf_recording._get_template(active_section='top_artist', user=user)
         mock_get_rec.assert_called_with(user.id)
         mock_get_recommendations.assert_called_once()
@@ -229,13 +224,6 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
                 "id": 2,
                 "name": 'vansika_1',
             },
-            "current_user": {
-                "id": 10,
-                "name": 'vansika',
-                "auth_token": 'yyyy',
-            },
-            "spotify": {},
-            "youtube": {},
             "api_url": current_app.config["API_URL"],
             "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
             "recommendations": recommendations,

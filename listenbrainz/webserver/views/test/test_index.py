@@ -290,18 +290,15 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertStatus(r, 401)
         mock_delete_user.assert_not_called()
 
-
     def test_recent_listens_page(self):
-
         response = self.client.get(url_for('index.recent_listens'))
         self.assert200(response)
         self.assertTemplateUsed('index/recent.html')
         props = ujson.loads(self.get_context_variable('props'))
         self.assertEqual(props['mode'], 'recent')
-        self.assertDictEqual(props['spotify'], {})
 
     def test_feed_page(self):
-        user = db_user.get_or_create(1, 'iliekcomputers') # dev
+        user = db_user.get_or_create(1, 'iliekcomputers')
         db_user.agree_to_gdpr(user['musicbrainz_id'])
         self.temporary_login(user['login_id'])
         r = self.client.get('/feed')

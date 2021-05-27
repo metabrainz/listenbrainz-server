@@ -32,7 +32,7 @@ def reformat_datetime(value, fmt="%b %d, %Y, %H:%M %Z"):
     return value.strftime(fmt)
 
 
-def inject_global_props():
+def get_global_props():
     current_user_data = {}
     if current_user.is_authenticated:
         current_user_data = {
