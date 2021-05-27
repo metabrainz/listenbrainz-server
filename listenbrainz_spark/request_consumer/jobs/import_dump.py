@@ -74,7 +74,7 @@ def import_newest_incremental_dump_handler():
             request_consumer.rc.ping()
     return [{
         'type': 'import_incremental_dump',
-        'imported_dump': [import_dump_to_hdfs('incremental', overwrite=False)],
+        'imported_dump': imported_dumps,
         'time': str(datetime.utcnow()),
     }]
 
