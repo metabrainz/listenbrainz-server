@@ -55,6 +55,9 @@ elif [[ "$1" == "bash" ]]; then
 elif [[ "$1" == "shell" ]]; then
     echo "Running flask shell..."
     invoke_docker_compose run --rm web flask shell
+elif [[ "$1" == "redis" ]]; then
+    echo "Running flask shell..."
+    invoke_docker_compose exec redis redis-cli
 elif [[ "$1" == "psql" ]]; then
     echo "Connecting to postgresql..."
     open_psql_shell
