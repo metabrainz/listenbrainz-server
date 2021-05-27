@@ -299,8 +299,7 @@ def handle_recommendations(data):
     musicbrainz_id = data['musicbrainz_id']
     user = db_user.get_by_mb_id(musicbrainz_id)
     if not user:
-        current_app.logger.debug("Generated recommendations for a user that doesn't exist in the "
-                                 "Postgres database: {}".format(musicbrainz_id))
+        current_app.logger.info("Generated recommendations for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
         return
 
     current_app.logger.debug("inserting recommendation for {}".format(musicbrainz_id))
