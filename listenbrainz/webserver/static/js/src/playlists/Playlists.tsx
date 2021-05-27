@@ -47,7 +47,6 @@ export type UserPlaylistsProps = {
 export type UserPlaylistsState = {
   playlists: JSPFPlaylist[];
   playlistSelectedForOperation?: JSPFPlaylist;
-  alerts: Alert[];
   loading: boolean;
   paginationOffset: number;
   playlistsPerPage: number;
@@ -69,7 +68,6 @@ export default class UserPlaylists extends React.Component<
 
     const concatenatedPlaylists = props.playlists?.map((pl) => pl.playlist);
     this.state = {
-      alerts: [],
       playlists: concatenatedPlaylists ?? [],
       loading: false,
       paginationOffset: parseInt(props.paginationOffset, 10) || 0,
@@ -456,7 +454,6 @@ export default class UserPlaylists extends React.Component<
   render() {
     const { user, activeSection } = this.props;
     const {
-      alerts,
       playlists,
       playlistSelectedForOperation,
       paginationOffset,
@@ -669,7 +666,13 @@ export default class UserPlaylists extends React.Component<
 
 document.addEventListener("DOMContentLoaded", () => {
   const { domContainer, reactProps, globalReactProps } = getPageProps();
-  const { api_url, sentry_dsn, current_user, spotify } = globalReactProps;
+  const {
+    api_url,
+    sentry_dsn,
+    current_user,
+    spotify,
+    youtube,
+  } = globalReactProps;
   const {
     playlists,
     user,
@@ -695,6 +698,7 @@ document.addEventListener("DOMContentLoaded", () => {
     APIService: apiService,
     currentUser: current_user,
     spotifyAuth: spotify,
+    youtubeAuth: youtube,
   };
 
   ReactDOM.render(
@@ -703,7 +707,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <UserPlaylistsWithAlertNotifications
           activeSection={activeSection}
           playlistCount={playlistCount}
-          currentUser={current_user}
           playlists={playlists}
           paginationOffset={paginationOffset}
           playlistsPerPage={playlistsPerPage}

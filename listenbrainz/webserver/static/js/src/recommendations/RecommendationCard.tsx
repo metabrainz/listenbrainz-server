@@ -35,7 +35,6 @@ export type RecommendationCardProps = {
   ) => void;
   className?: string;
   isCurrentUser: Boolean;
-  currentUser?: ListenBrainzUser;
   newAlert: (
     alertType: AlertType,
     title: string,
@@ -61,18 +60,13 @@ export default class RecommendationCard extends React.Component<
   }
 
   submitFeedback = async (rating: RecommendationFeedBack) => {
-    const {
-      recommendation,
-      currentUser,
-      isCurrentUser,
-      updateFeedback,
-    } = this.props;
+    const { APIService, currentUser } = this.context;
+    const { recommendation, isCurrentUser, updateFeedback } = this.props;
     if (isCurrentUser && currentUser?.auth_token) {
       const recordingMBID = _get(
         recommendation,
         "track_metadata.additional_info.recording_mbid"
       );
-      const { APIService } = this.context;
       try {
         const status = await APIService.submitRecommendationFeedback(
           currentUser.auth_token,
@@ -91,18 +85,13 @@ export default class RecommendationCard extends React.Component<
   };
 
   deleteFeedback = async () => {
-    const {
-      recommendation,
-      currentUser,
-      isCurrentUser,
-      updateFeedback,
-    } = this.props;
+    const { APIService, currentUser } = this.context;
+    const { recommendation, isCurrentUser, updateFeedback } = this.props;
     if (isCurrentUser && currentUser?.auth_token) {
       const recordingMBID = _get(
         recommendation,
         "track_metadata.additional_info.recording_mbid"
       );
-      const { APIService } = this.context;
       try {
         const status = await APIService.deleteRecommendationFeedback(
           currentUser.auth_token,
@@ -137,7 +126,6 @@ export default class RecommendationCard extends React.Component<
       recommendation,
       className,
       isCurrentUser,
-      currentUser,
     } = this.props;
     let icon: IconDefinition;
     let text: string;
@@ -180,7 +168,7 @@ export default class RecommendationCard extends React.Component<
             {getArtistLink(recommendation)}
           </small>
         </div>
-        {isCurrentUser && currentUser?.auth_token && (
+        {isCurrentUser && (
           <div className="recommendation-controls">
             <button
               className={`btn ${currentFeedback}`}
