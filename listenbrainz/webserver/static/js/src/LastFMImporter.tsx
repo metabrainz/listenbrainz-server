@@ -270,7 +270,7 @@ export default class LastFmImporter extends React.Component<
 
   progressBarPercentage() {
     if (this.totalPages >= this.numCompleted)
-      return (this.numCompleted / this.totalPages) * 100;
+      return Math.ceil((this.numCompleted / this.totalPages) * 100);
     return 50;
   }
 
@@ -323,19 +323,15 @@ export default class LastFmImporter extends React.Component<
               Please don&apos;t close this page while this is running.
             </span>{" "}
             <br /> <br />
-            <div
-              className="progress"
-              style={{
-                height: "7px",
-              }}
-            >
+            <div className="progress" style={{ height: "7px" }}>
               <div
                 className="progress-bar progress-bar-striped progress-bar-animated"
-                aria-label="Importer Progress"
                 role="progressbar"
+                style={{ width: `${this.progressBarPercentage()}%` }}
+                aria-label="Importer Progress"
+                aria-valuenow={this.progressBarPercentage()}
                 aria-valuemin={0}
                 aria-valuemax={100}
-                aria-valuenow={this.progressBarPercentage()}
               />
             </div>
             <span> Latest import timestamp: {this.lastImportedString} </span>
