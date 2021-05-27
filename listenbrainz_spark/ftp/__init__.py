@@ -2,12 +2,36 @@ import os
 import ftplib
 import hashlib
 import logging
+from collections import namedtuple
+from dataclasses import dataclass
+from enum import Enum
 
 from listenbrainz_spark import config
 from listenbrainz_spark.exceptions import DumpInvalidException
 
 
 logger = logging.getLogger(__name__)
+
+
+class DumpType(Enum):
+    INCREMENTAL = 'incremental'
+    FULL = 'full'
+
+
+@dataclass
+class ListensDump:
+    dump_id: int
+    dump_date: str
+    dump_tod: str
+    dump_type: DumpType
+
+    @staticmethod
+    def from_ftp_dir(dir_name: str) -> 'ListensDump':
+        parts = dir_name.split('-')
+        return ListensDump(dump_id=int(parts[2]),
+                           dump_date=parts[3],
+                           dump_tod=parts[4],
+                           dump_type=DumpType.INCREMENTAL if parts[5] == 'incremental' else DumpType.FULL)
 
 
 class ListenBrainzFTPDownloader:
@@ -34,12 +58,13 @@ class ListenBrainzFTPDownloader:
             [str]: a list of contents of the directory
         """
         files = []
+
         def callback(x):
             files.append(x)
 
         cmd = 'LIST' if verbose else 'NLST'
         if path:
-            cmd+= ' ' + path
+            cmd += ' ' + path
         self.connection.retrlines(cmd, callback=callback)
         return files
 

@@ -9,6 +9,7 @@ from datetime import datetime
 
 import listenbrainz_spark.request_consumer.jobs.utils as utils
 from listenbrainz_spark.exceptions import DumpNotFoundException
+from listenbrainz_spark.ftp import DumpType
 from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
 from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
 from listenbrainz_spark.request_consumer import request_consumer
@@ -47,6 +48,30 @@ def import_full_dump_by_id_handler(id: int):
 
 
 def import_newest_incremental_dump_handler():
+    imported_dumps = []
+    latest_full_dump = utils.get_latest_full_dump()
+    if latest_full_dump is None:
+        # If no prior full dump is present, just import the latest incremental dump
+        imported_dumps.append(import_dump_to_hdfs('incremental', overwrite=False))
+        logger.warning("No previous full dump found, importing latest incremental dump", exc_info=True)
+    else:
+        # Import all missing dumps from last full dump import
+        start_id = latest_full_dump["dump_id"] + 1
+        imported_at = latest_full_dump["imported_at"]
+        end_id = ListenbrainzDataDownloader().get_latest_dump_id(DumpType.INCREMENTAL) + 1
+
+        for dump_id in range(start_id, end_id, 1):
+            if not utils.search_dump(dump_id, 'incremental', imported_at):
+                try:
+                    imported_dumps.append(import_dump_to_hdfs('incremental', False, dump_id))
+                except DumpNotFoundException:
+                    continue
+                except Exception as e:
+                    # Exit if any other error occurs during import
+                    logger.error(f"Error while importing incremental dump with ID {dump_id}: {e}", exc_info=True)
+                    continue
+            dump_id += 1
+            request_consumer.rc.ping()
     return [{
         'type': 'import_incremental_dump',
         'imported_dump': [import_dump_to_hdfs('incremental', overwrite=False)],

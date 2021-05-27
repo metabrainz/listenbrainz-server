@@ -2,9 +2,10 @@ import os
 import re
 import time
 import logging
+from typing import List
 
 from listenbrainz_spark import config
-from listenbrainz_spark.ftp import ListenBrainzFTPDownloader
+from listenbrainz_spark.ftp import ListenBrainzFTPDownloader, DumpType, ListensDump
 from listenbrainz_spark.exceptions import DumpNotFoundException
 
 # mbid_msid_mapping_with_matchable is used.
@@ -190,3 +191,14 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
         logger.info('Done. Total time: {:.2f} sec'.format(time.monotonic() - t0))
 
         return dest_path, artist_relation_file_name
+
+    def get_latest_dump_id(self, dump_type: DumpType):
+        if dump_type == DumpType.INCREMENTAL:
+            ftp_cwd = os.path.join(config.FTP_LISTENS_DIR, 'incremental/')
+        else:
+            ftp_cwd = os.path.join(config.FTP_LISTENS_DIR, 'fullexport/')
+        self.connection.cwd(ftp_cwd)
+
+        listens_dumps = [ListensDump.from_ftp_dir(name) for name in self.list_dir()]
+        listens_dumps.sort(key=lambda x: x.dump_id)
+        return listens_dumps[-1].dump_id
