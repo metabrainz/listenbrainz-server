@@ -61,16 +61,7 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
             Returns:
                 str : Spark listens dump archive name.
         """
-        dump_id = dump_name.split('-')[2]
-        dump_date = dump_name.split('-')[3]
-        dump_time_of_day = dump_name.split('-')[4]
-        dump_type = 'full' if 'full' in dump_name.split('-')[5] else 'incremental'
-        return 'listenbrainz-listens-dump-{dump_id}-{date}-{tod}-spark-{dump_type}.tar.xz'.format(
-            dump_id=dump_id,
-            date=dump_date,
-            tod=dump_time_of_day,
-            dump_type=dump_type,
-        )
+        return ListensDump.from_ftp_dir(dump_name).get_dump_file()
 
     def get_available_dumps(self, dump, mapping_name_prefix):
         """ Get list of available mapping dumps.

@@ -2,9 +2,8 @@ import os
 import ftplib
 import hashlib
 import logging
-from collections import namedtuple
-from dataclasses import dataclass
 from enum import Enum
+from typing import NamedTuple
 
 from listenbrainz_spark import config
 from listenbrainz_spark.exceptions import DumpInvalidException
@@ -18,8 +17,7 @@ class DumpType(Enum):
     FULL = 'full'
 
 
-@dataclass
-class ListensDump:
+class ListensDump(NamedTuple):
     dump_id: int
     dump_date: str
     dump_tod: str
@@ -32,6 +30,10 @@ class ListensDump:
                            dump_date=parts[3],
                            dump_tod=parts[4],
                            dump_type=DumpType.INCREMENTAL if parts[5] == 'incremental' else DumpType.FULL)
+
+    def get_dump_file(self):
+        return f'listenbrainz-listens-dump-{self.dump_id}-{self.dump_date}' \
+               f'-{self.dump_tod}-spark-{self.dump_type.value}.tar.xz'
 
 
 class ListenBrainzFTPDownloader:
