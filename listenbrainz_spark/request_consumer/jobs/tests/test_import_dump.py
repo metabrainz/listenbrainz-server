@@ -23,9 +23,9 @@ def mock_import_dump_to_hdfs_error(dump_type: str, overwrite: bool, dump_id: int
     if (dump_id < 210) or (dump_id > 210 and dump_id < 213):
         return f"listenbrainz-listens-dump-{dump_id}-spark-incremental.tar.xz"
     elif dump_id == 210:
-        raise DumpInvalidException
+        raise DumpInvalidException("Invalid Dump")
     else:
-        raise DumpNotFoundException
+        raise DumpNotFoundException("Dump not found")
 
 
 def mock_search_dump(dump_id: int, dump_type: str, imported_at: datetime):
