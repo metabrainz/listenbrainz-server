@@ -18,8 +18,6 @@ from listenbrainz.webserver.login import User
 import listenbrainz.db.user as db_user
 import logging
 
-from listenbrainz.webserver.utils import inject_global_props
-
 
 class UserViewsTestCase(IntegrationTestCase):
     def setUp(self):
@@ -86,7 +84,7 @@ class UserViewsTestCase(IntegrationTestCase):
         self.assertTemplateUsed('user/profile.html')
         props = ujson.loads(self.get_context_variable('props'))
         self.assertEqual(props['artist_count'], '2')
-        global_props = ujson.loads(inject_global_props())
+        global_props = ujson.loads(self.get_context_variable("global_props"))
         self.assertDictEqual(global_props['spotify'], {})
 
     def test_spotify_token_access_no_login(self):
@@ -98,14 +96,14 @@ class UserViewsTestCase(IntegrationTestCase):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertTemplateUsed('user/profile.html')
-        props = ujson.loads(inject_global_props())
+        props = ujson.loads(self.get_context_variable("global_props"))
         self.assertDictEqual(props['spotify'], {})
 
     def test_spotify_token_access_unlinked(self):
         self.temporary_login(self.user.login_id)
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
-        props = ujson.loads(inject_global_props())
+        props = ujson.loads(self.get_context_variable("global_props"))
         self.assertDictEqual(props['spotify'], {})
 
     def test_spotify_token_access(self):
@@ -118,7 +116,8 @@ class UserViewsTestCase(IntegrationTestCase):
 
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
-        props = ujson.loads(inject_global_props())
+
+        props = ujson.loads(self.get_context_variable("global_props"))
         self.assertDictEqual(props['spotify'], {
             'access_token': 'token',
             'permission': ['user-read-recently-played', 'streaming'],
@@ -126,7 +125,7 @@ class UserViewsTestCase(IntegrationTestCase):
 
         response = self.client.get(url_for('user.profile', user_name=self.weirduser.musicbrainz_id))
         self.assert200(response)
-        props = ujson.loads(inject_global_props())
+        props = ujson.loads(self.get_context_variable("global_props"))
         self.assertDictEqual(props['spotify'], {
             'access_token': 'token',
             'permission': ['user-read-recently-played', 'streaming'],
