@@ -77,9 +77,6 @@ FROM listenbrainz-base as listenbrainz-prod
 # [0]: https://github.com/metabrainz/syswiki/blob/master/ListenBrainzStorageBox.md
 RUN groupadd --gid 900 lbdumps
 RUN useradd --create-home --shell /bin/bash --uid 900 --gid 900 lbdumps
-
-RUN groupadd --gid 901 listenbrainz_stats_cron
-RUN useradd --create-home --shell /bin/bash --uid 901 --gid 901 listenbrainz_stats_cron
 RUN mkdir /logs && chown lbdumps:lbdumps /logs
 
 # Create directories for backups and FTP syncs
@@ -155,11 +152,9 @@ RUN touch /etc/service/uwsgi/down
 
 COPY ./docker/rc.local /etc/rc.local
 
-# crontabs
-COPY ./docker/services/cron/stats-crontab /etc/cron.d/stats-crontab
-RUN chmod 0644 /etc/cron.d/stats-crontab
-COPY ./docker/services/cron/dump-crontab /etc/cron.d/dump-crontab
-RUN chmod 0644 /etc/cron.d/dump-crontab
+# crontab
+COPY ./docker/services/cron/crontab /etc/cron.d/crontab
+RUN chmod 0644 /etc/cron.d/crontab
 
 # Compile front-end (static) files
 COPY webpack.config.js babel.config.js .eslintrc.js tsconfig.json ./listenbrainz/webserver/static /static/
