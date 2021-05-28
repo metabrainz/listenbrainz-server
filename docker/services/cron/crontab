@@ -3,29 +3,29 @@ MAILTO=""
 # NOTE: This file is organized in chronological order of the start hour of each job, keeping jobs spread over the night and not overlapping.
 
 ## Trigger an incremental dump everyday, near noon, far away from whole dump times, again do not block for the lock.
-0 0 * * * lbdumps flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh incremental >> /logs/dumps.log 2>&1
+0 0 * * * root flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh incremental >> /logs/dumps.log 2>&1
 ## Around 1 hour later, trigger an incremental import into the spark cluster, blocking for the lock in case the dump was not complete
-0 1 * * * lbdumps flock -x /var/lock/lb-dumps.lock /usr/local/bin/python /code/listenbrainz/manage.py spark request_import_incremental >> /logs/dumps.log 2>&1
+0 1 * * * root flock -x /var/lock/lb-dumps.lock /usr/local/bin/python /code/listenbrainz/manage.py spark request_import_incremental >> /logs/dumps.log 2>&1
 
 # After the daily dumping is done, make sure everything turned out ok, otherwise mail the observability list.
-0 2 * * * lbdumps flock -x /var/lock/lb-dumps.lock /usr/local/bin/python /code/listenbrainz/manage.py dump check_dump_ages >> /logs/dumps.log 2>&1
+0 2 * * * root flock -x /var/lock/lb-dumps.lock /usr/local/bin/python /code/listenbrainz/manage.py dump check_dump_ages >> /logs/dumps.log 2>&1
 
 # Request all statistics
-00 2 * * * lbdumps /usr/local/bin/python /code/listenbrainz/manage.py spark cron_request_all_stats >> /logs/stats.log 2>&1
+00 2 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark cron_request_all_stats >> /logs/stats.log 2>&1
 
 ## Trigger a full dump on 1st and 15th of every month, in the middle of the night, do not block to wait for lock.
-0 4 1,15 * * lbdumps flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh full >> /logs/dumps.log 2>&1
+0 4 1,15 * * root flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh full >> /logs/dumps.log 2>&1
 ## Around 24 hours later, trigger a full import into the spark cluster, and this time wait for the lock, in case the dump hasn't finished.
-0 4 2,16 * * lbdumps flock -x /var/lock/lb-dumps.lock /usr/local/bin/python /code/listenbrainz/manage.py spark request_import_full >> /logs/dumps.log 2>&1
+0 4 2,16 * * root flock -x /var/lock/lb-dumps.lock /usr/local/bin/python /code/listenbrainz/manage.py spark request_import_full >> /logs/dumps.log 2>&1
 
 # Update our continuous aggregates for listens older than 1 year
-0 5 * * * lbdumps /usr/local/bin/python /code/listenbrainz/manage.py refresh_continuous_aggregates >> /logs/continuous_aggregates.log 2>&1
+0 5 * * * root /usr/local/bin/python /code/listenbrainz/manage.py refresh_continuous_aggregates >> /logs/continuous_aggregates.log 2>&1
 
 # Calculate user similarity
-30 5 * * * lbdumps /usr/local/bin/python /code/listenbrainz/manage.py spark cron_request_similar_users >> /logs/stats.log 2>&1
+30 5 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark cron_request_similar_users >> /logs/stats.log 2>&1
 
 # Dump user feedback every monday before we generate recommendations
-00 6 * * 1 lbdumps flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh feeedback >> /logs/dumps.log 2>&1
+00 6 * * 1 root flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh feeedback >> /logs/dumps.log 2>&1
 
 # Request recommendations every Monday after dump and mapping has been imported into the spark cluster
-30 6 * * 1 lbdumps /usr/local/bin/python /code/listenbrainz/manage.py spark cron_request_recommendations >> /logs/stats.log 2>&1
+30 6 * * 1 root /usr/local/bin/python /code/listenbrainz/manage.py spark cron_request_recommendations >> /logs/stats.log 2>&1
