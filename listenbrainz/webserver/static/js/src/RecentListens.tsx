@@ -90,8 +90,6 @@ export default class RecentListens extends React.Component<
     this.APIService = APIService;
 
     if (mode === "listens") {
-      console.log("mode is listens");
-      console.log("currentUser", currentUser);
       this.connectWebsockets();
       // Listen to browser previous/next events and load page accordingly
       window.addEventListener("popstate", this.handleURLChange);
@@ -99,15 +97,12 @@ export default class RecentListens extends React.Component<
 
       const { user } = this.props;
       // Get the user listen count
-      console.log("user", user);
       if (user?.name) {
-        console.log("calling getUserListenCount");
         this.APIService.getUserListenCount(user.name).then((listenCount) => {
           this.setState({ listenCount });
         });
       }
       if (currentUser?.name && currentUser?.name === user?.name) {
-        console.log("calling loadFeedback");
         this.loadFeedback();
       }
     }
