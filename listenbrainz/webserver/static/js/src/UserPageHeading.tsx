@@ -54,7 +54,13 @@ export default UserPageHeading;
 
 document.addEventListener("DOMContentLoaded", () => {
   const { domContainer, reactProps, globalReactProps } = getPageProps();
-  const { api_url, sentry_dsn, current_user } = globalReactProps;
+  const {
+    api_url,
+    sentry_dsn,
+    current_user,
+    spotify,
+    youtube,
+  } = globalReactProps;
   const { user, logged_in_user_follows_user } = reactProps;
 
   const apiService: APIService = new APIService(
@@ -67,6 +73,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const globalProps: GlobalAppContextT = {
     APIService: apiService,
     currentUser: current_user,
+    spotifyAuth: spotify,
+    youtubeAuth: youtube,
   };
 
   ReactDOM.render(

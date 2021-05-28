@@ -127,6 +127,7 @@ export default class RecommendationCard extends React.Component<
       className,
       isCurrentUser,
     } = this.props;
+    const { currentUser } = this.context;
     let icon: IconDefinition;
     let text: string;
     switch (currentFeedback) {
@@ -168,7 +169,7 @@ export default class RecommendationCard extends React.Component<
             {getArtistLink(recommendation)}
           </small>
         </div>
-        {isCurrentUser && (
+        {isCurrentUser && currentUser?.auth_token && (
           <div className="recommendation-controls">
             <button
               className={`btn ${currentFeedback}`}
