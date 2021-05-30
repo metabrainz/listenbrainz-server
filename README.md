@@ -42,7 +42,7 @@ If you are interested in helping out, consider
 
 If you are interested in contributing code or documentation,
 please have a look at the [issue tracker](https://tickets.metabrainz.org/browse/LB)
-or come visit us in the #metabrainz IRC channel on irc.libera.net.
+or come visit us in the #metabrainz IRC channel on irc.libera.chat.
 
 ## Development environment
 
