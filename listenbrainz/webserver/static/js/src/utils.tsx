@@ -287,6 +287,13 @@ const getPageProps = () => {
   const globalPropsElement = document.getElementById("global-react-props");
   let reactProps = {};
   let globalReactProps = {};
+  if (!domContainer) {
+    // Ensure there is a container for React rendering
+    // We should always have on on the page already, but displaying errors to the user relies on there being one
+    domContainer = document.createElement("div");
+    domContainer.id = "react-container";
+    document.body.appendChild(domContainer);
+  }
   try {
     // Page props can be empty
     if (propsElement?.innerHTML) {
