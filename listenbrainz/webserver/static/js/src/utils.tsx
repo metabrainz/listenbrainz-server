@@ -319,24 +319,25 @@ const getPageProps = (): {
     // We should always have on on the page already, but displaying errors to the user relies on there being one
     domContainer = document.createElement("div");
     domContainer.id = "react-container";
-    document.body.appendChild(domContainer);
+    const container = document.getElementsByClassName("wrapper");
+    container[0].appendChild(domContainer);
   }
   try {
-    // Page props can be empty
-    if (propsElement?.innerHTML) {
-      reactProps = JSON.parse(propsElement.innerHTML);
-    }
     // Global props *cannot* be empty
     if (globalPropsElement?.innerHTML) {
       globalReactProps = JSON.parse(globalPropsElement.innerHTML);
     } else {
       throw new Error("No global props element found on the page");
     }
+    // Page props can be empty
+    if (propsElement?.innerHTML) {
+      reactProps = JSON.parse(propsElement!.innerHTML);
+    }
   } catch (err) {
     // Show error to the user and ask to reload page
     // eslint-disable-next-line no-console
     console.error(err);
-    const errorMessage = `We could not load this page properly; please refresh the page.
+    const errorMessage = `Please refresh the page.
 	If the problem persists, please contact us.
 	Reason: ${err}`;
     const newAlert = createAlert(
