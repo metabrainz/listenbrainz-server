@@ -337,7 +337,12 @@ export default class Recommendations extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, reactProps, globalReactProps } = getPageProps();
+  const {
+    domContainer,
+    reactProps,
+    globalReactProps,
+    optionalAlerts,
+  } = getPageProps();
   const {
     api_url,
     sentry_dsn,
@@ -369,6 +374,7 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
         <RecommendationsWithAlertNotifications
+          initialAlerts={optionalAlerts}
           recommendations={recommendations}
           user={user}
           webSocketsServerUrl={web_sockets_server_url}
