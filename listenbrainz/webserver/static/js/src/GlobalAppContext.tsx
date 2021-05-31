@@ -4,8 +4,8 @@ import APIService from "./APIService";
 export type GlobalAppContextT = {
   APIService: APIService;
   currentUser: ListenBrainzUser;
-  spotifyAuth: SpotifyUser;
-  youtubeAuth: YoutubeUser;
+  spotifyAuth?: SpotifyUser;
+  youtubeAuth?: YoutubeUser;
 };
 
 const GlobalAppContext = createContext<GlobalAppContextT>({
