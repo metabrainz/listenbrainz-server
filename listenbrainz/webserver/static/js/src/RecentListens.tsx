@@ -737,7 +737,12 @@ export default class RecentListens extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, reactProps, globalReactProps } = getPageProps();
+  const {
+    domContainer,
+    reactProps,
+    globalReactProps,
+    optionalAlerts,
+  } = getPageProps();
   const {
     api_url,
     sentry_dsn,
@@ -780,6 +785,7 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
         <RecentListensWithAlertNotifications
+          initialAlerts={optionalAlerts}
           latestListenTs={latest_listen_ts}
           latestSpotifyUri={latest_spotify_uri}
           listens={listens}

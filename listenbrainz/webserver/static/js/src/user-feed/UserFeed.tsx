@@ -517,7 +517,12 @@ export default class UserFeedPage extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, reactProps, globalReactProps } = getPageProps();
+  const {
+    domContainer,
+    reactProps,
+    globalReactProps,
+    optionalAlerts,
+  } = getPageProps();
   const {
     api_url,
     sentry_dsn,
@@ -548,7 +553,10 @@ document.addEventListener("DOMContentLoaded", () => {
   ReactDOM.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
-        <UserFeedPageWithAlertNotifications events={events} />
+        <UserFeedPageWithAlertNotifications
+          initialAlerts={optionalAlerts}
+          events={events}
+        />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,
     domContainer
