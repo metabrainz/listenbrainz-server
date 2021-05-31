@@ -70,18 +70,11 @@ COPY . /code/listenbrainz
 ###########################################
 FROM listenbrainz-base as listenbrainz-prod
 
-
-# production sidenote: We create a `lbdumps` user to create data dumps because
-# the ListenBrainz servers on prod (etc. lemmy) use storage boxes [0] which
-# are owned by lbdumps on the host too.
-# [0]: https://github.com/metabrainz/syswiki/blob/master/ListenBrainzStorageBox.md
-RUN groupadd --gid 900 lbdumps
-RUN useradd --create-home --shell /bin/bash --uid 900 --gid 900 lbdumps
-RUN mkdir /logs && chown lbdumps:lbdumps /logs
-
-# Create directories for backups and FTP syncs
-RUN mkdir /home/lbdumps/backup /home/lbdumps/ftp
-RUN chown -R lbdumps:lbdumps /home/lbdumps/backup /home/lbdumps/ftp
+# Create directories for cron logs and dumps
+# /mnt/dumps: Temporary working space for dumps
+# /mnt/backup: All dumps
+# /mnt/ftp: Subset of all dumps that are uploaded to
+RUN mkdir /logs /mnt/dumps /mnt/backup /mnt/ftp
 
 # Install NodeJS and front-end dependencies
 RUN curl -sL https://deb.nodesource.com/setup_16.x | bash - && \
