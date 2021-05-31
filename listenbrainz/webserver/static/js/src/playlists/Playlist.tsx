@@ -50,14 +50,10 @@ import { getPageProps } from "../utils";
 export type PlaylistPageProps = {
   labsApiUrl: string;
   playlist: JSPFObject;
-  spotify: SpotifyUser;
-  youtube: YoutubeUser;
-  currentUser?: ListenBrainzUser;
   webSocketsServerUrl: string;
 } & WithAlertNotificationsInjectedProps;
 
 export interface PlaylistPageState {
-  alerts: Array<Alert>;
   currentTrack?: JSPFTrack;
   playlist: JSPFPlaylist;
   recordingFeedbackMap: RecordingFeedbackMap;
@@ -104,7 +100,6 @@ export default class PlaylistPage extends React.Component<
       }
     );
     this.state = {
-      alerts: [],
       playlist: props.playlist?.playlist || {},
       recordingFeedbackMap: {},
       loading: false,
@@ -112,23 +107,21 @@ export default class PlaylistPage extends React.Component<
       cachedSearchResults: [],
     };
 
-    if (props.spotify) {
-      // Do we want to check current permissions?
-      this.SpotifyAPIService = new SpotifyAPIService(props.spotify);
-    }
-
     this.searchForTrackDebounced = debounceAsync(this.searchForTrack, 500, {
       leading: false,
     });
   }
 
   componentDidMount(): void {
-    const { APIService } = this.context;
+    const { APIService, spotifyAuth } = this.context;
     this.APIService = APIService;
     this.connectWebsockets();
     /* Deactivating feedback until the feedback system works with MBIDs instead of MSIDs */
     /* const recordingFeedbackMap = await this.loadFeedback();
     this.setState({ recordingFeedbackMap }); */
+    if (spotifyAuth) {
+      this.SpotifyAPIService = new SpotifyAPIService(spotifyAuth);
+    }
   }
 
   componentWillUnmount(): void {
@@ -195,8 +188,9 @@ export default class PlaylistPage extends React.Component<
         return;
       }
       const { label, value: selectedRecording } = track as OptionType;
-      const { currentUser, newAlert } = this.props;
+      const { newAlert } = this.props;
       const { playlist } = this.state;
+      const { currentUser } = this.context;
       if (!currentUser?.auth_token) {
         this.alertMustBeLoggedIn();
         return;
@@ -264,7 +258,8 @@ export default class PlaylistPage extends React.Component<
   };
 
   copyPlaylist = async (): Promise<void> => {
-    const { currentUser, newAlert } = this.props;
+    const { newAlert } = this.props;
+    const { currentUser } = this.context;
     const { playlist } = this.state;
     if (!currentUser?.auth_token) {
       this.alertMustBeLoggedIn();
@@ -293,7 +288,8 @@ export default class PlaylistPage extends React.Component<
   };
 
   deletePlaylist = async (): Promise<void> => {
-    const { currentUser, newAlert } = this.props;
+    const { newAlert } = this.props;
+    const { currentUser } = this.context;
     const { playlist } = this.state;
     if (!currentUser?.auth_token) {
       this.alertMustBeLoggedIn();
@@ -346,7 +342,8 @@ export default class PlaylistPage extends React.Component<
   };
 
   getFeedback = async (mbids?: string[]): Promise<FeedbackResponse[]> => {
-    const { currentUser, newAlert } = this.props;
+    const { newAlert } = this.props;
+    const { currentUser } = this.context;
     const { playlist } = this.state;
     const { track: tracks } = playlist;
     if (currentUser && tracks) {
@@ -382,7 +379,8 @@ export default class PlaylistPage extends React.Component<
 
   updateFeedback = async (recordingMbid: string, score: ListenFeedBack) => {
     const { recordingFeedbackMap } = this.state;
-    const { currentUser, newAlert } = this.props;
+    const { currentUser } = this.context;
+    const { newAlert } = this.props;
     if (currentUser?.auth_token) {
       try {
         const status = await this.APIService.submitFeedback(
@@ -410,7 +408,7 @@ export default class PlaylistPage extends React.Component<
 
   isOwner = (): boolean => {
     const { playlist } = this.state;
-    const { currentUser } = this.props;
+    const { currentUser } = this.context;
     return Boolean(currentUser) && currentUser?.name === playlist.creator;
   };
 
@@ -418,7 +416,7 @@ export default class PlaylistPage extends React.Component<
     if (this.isOwner()) {
       return true;
     }
-    const { currentUser } = this.props;
+    const { currentUser } = this.context;
     const { playlist } = this.state;
     const collaborators = getPlaylistExtension(playlist)?.collaborators ?? [];
     if (
@@ -432,7 +430,7 @@ export default class PlaylistPage extends React.Component<
   };
 
   deletePlaylistItem = async (trackToDelete: JSPFTrack) => {
-    const { currentUser } = this.props;
+    const { currentUser } = this.context;
     const { playlist } = this.state;
     const { track: tracks } = playlist;
     if (!currentUser?.auth_token) {
@@ -470,7 +468,7 @@ export default class PlaylistPage extends React.Component<
   };
 
   movePlaylistItem = async (evt: any) => {
-    const { currentUser } = this.props;
+    const { currentUser } = this.context;
     const { playlist } = this.state;
     if (!currentUser?.auth_token) {
       this.alertMustBeLoggedIn();
@@ -523,7 +521,7 @@ export default class PlaylistPage extends React.Component<
       this.alertNotAuthorized();
       return;
     }
-    const { currentUser } = this.props;
+    const { currentUser } = this.context;
     if (!currentUser?.auth_token) {
       this.alertMustBeLoggedIn();
       return;
@@ -681,14 +679,13 @@ export default class PlaylistPage extends React.Component<
 
   render() {
     const {
-      alerts,
       currentTrack,
       playlist,
       loading,
       searchInputValue,
       cachedSearchResults,
     } = this.state;
-    const { spotify, youtube, currentUser, newAlert } = this.props;
+    const { newAlert } = this.props;
     const { track: tracks } = playlist;
     const hasRightToEdit = this.hasRightToEdit();
     const isOwner = this.isOwner();
@@ -859,7 +856,6 @@ export default class PlaylistPage extends React.Component<
                     return (
                       <PlaylistItemCard
                         key={`${track.id}-${index.toString()}`}
-                        currentUser={currentUser}
                         canEdit={hasRightToEdit}
                         track={track}
                         isBeingPlayed={this.isCurrentTrack(track)}
@@ -929,8 +925,6 @@ export default class PlaylistPage extends React.Component<
               newAlert={newAlert}
               onCurrentListenChange={this.handleCurrentTrackChange}
               ref={this.brainzPlayer}
-              spotifyUser={spotify}
-              youtubeUser={youtube}
             />
           </div>
         </div>
@@ -966,6 +960,7 @@ document.addEventListener("DOMContentLoaded", () => {
     APIService: apiService,
     currentUser: current_user,
     spotifyAuth: spotify,
+    youtubeAuth: youtube,
   };
 
   ReactDOM.render(
@@ -974,9 +969,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <PlaylistPageWithAlertNotifications
           labsApiUrl={labs_api_url}
           playlist={playlist}
-          spotify={spotify}
-          youtube={youtube}
-          currentUser={current_user}
           webSocketsServerUrl={web_sockets_server_url}
         />
       </GlobalAppContext.Provider>

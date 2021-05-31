@@ -3,12 +3,6 @@
 exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
 <ListenCard
   currentFeedback={1}
-  currentUser={
-    Object {
-      "auth_token": "baz",
-      "name": "test",
-    }
-  }
   isCurrentUser={true}
   listen={
     Object {
@@ -316,12 +310,6 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
 exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
 <ListenCard
   currentFeedback={1}
-  currentUser={
-    Object {
-      "auth_token": "baz",
-      "name": "test",
-    }
-  }
   isCurrentUser={true}
   listen={
     Object {
@@ -389,12 +377,6 @@ exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
 exports[`ListenCard renders correctly for playing_now listen 1`] = `
 <ListenCard
   currentFeedback={1}
-  currentUser={
-    Object {
-      "auth_token": "baz",
-      "name": "test",
-    }
-  }
   isCurrentUser={true}
   listen={
     Object {
@@ -702,12 +684,6 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
 exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
 <ListenCard
   currentFeedback={1}
-  currentUser={
-    Object {
-      "auth_token": "baz",
-      "name": "test",
-    }
-  }
   isCurrentUser={true}
   listen={
     Object {
