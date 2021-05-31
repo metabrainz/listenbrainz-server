@@ -24,7 +24,6 @@ export type ListenCardProps = {
   className?: string;
   currentFeedback: ListenFeedBack;
   isCurrentUser: Boolean;
-  currentUser?: ListenBrainzUser;
   playListen: (listen: Listen) => void;
   removeListenFromListenList: (listen: Listen) => void;
   updateFeedback: (recordingMsid: string, score: ListenFeedBack) => void;
@@ -67,8 +66,8 @@ export default class ListenCard extends React.Component<
   }
 
   submitFeedback = async (score: ListenFeedBack) => {
-    const { listen, currentUser, isCurrentUser, updateFeedback } = this.props;
-    const { APIService } = this.context;
+    const { listen, isCurrentUser, updateFeedback } = this.props;
+    const { APIService, currentUser } = this.context;
     // const { submitFeedback } = APIService;
     if (isCurrentUser && currentUser?.auth_token) {
       const recordingMSID = _get(
@@ -93,12 +92,8 @@ export default class ListenCard extends React.Component<
   };
 
   deleteListen = async () => {
-    const {
-      listen,
-      currentUser,
-      isCurrentUser,
-      removeListenFromListenList,
-    } = this.props;
+    const { listen, isCurrentUser, removeListenFromListenList } = this.props;
+    const { APIService, currentUser } = this.context;
 
     if (isCurrentUser && currentUser?.auth_token) {
       const listenedAt = _get(listen, "listened_at");
@@ -106,7 +101,6 @@ export default class ListenCard extends React.Component<
         listen,
         "track_metadata.additional_info.recording_msid"
       );
-      const { APIService } = this.context;
 
       try {
         const status = await APIService.deleteListen(
@@ -129,7 +123,8 @@ export default class ListenCard extends React.Component<
   };
 
   recommendListenToFollowers = async () => {
-    const { listen, currentUser, isCurrentUser, newAlert } = this.props;
+    const { listen, isCurrentUser, newAlert } = this.props;
+    const { APIService, currentUser } = this.context;
 
     if (isCurrentUser && currentUser?.auth_token) {
       const metadata: UserTrackRecommendationMetadata = {
@@ -146,7 +141,6 @@ export default class ListenCard extends React.Component<
         ),
         artist_msid: _get(listen, "track_metadata.additional_info.artist_msid"),
       };
-      const { APIService } = this.context;
       try {
         const status = await APIService.recommendTrackToFollowers(
           currentUser.name,
