@@ -70,8 +70,11 @@ COPY . /code/listenbrainz
 ###########################################
 FROM listenbrainz-base as listenbrainz-prod
 
-# Create directories for cron logs, dump backups and FTP syncs
-RUN mkdir /logs /mnt/backup /mnt/ftp
+# Create directories for cron logs and dumps
+# /mnt/dumps: Temporary working space for dumps
+# /mnt/backup: All dumps
+# /mnt/ftp: Subset of all dumps that are uploaded to
+RUN mkdir /logs /mnt/dumps /mnt/backup /mnt/ftp
 
 # Install NodeJS and front-end dependencies
 RUN curl -sL https://deb.nodesource.com/setup_16.x | bash - && \
