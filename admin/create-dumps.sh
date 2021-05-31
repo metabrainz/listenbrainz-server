@@ -134,7 +134,6 @@ DUMP_DIR=$(dirname "$DUMP_ID_FILE")
 DUMP_NAME=$(basename "$DUMP_DIR")
 
 # Backup dumps to the backup volume
-# Create backup directories owned by user "listenbrainz"
 echo "Creating Backup directories..."
 mkdir -m "$BACKUP_DIR_MODE" -p \
     "$BACKUP_DIR/$SUB_DIR" \
