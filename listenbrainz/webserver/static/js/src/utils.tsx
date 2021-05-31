@@ -285,13 +285,23 @@ const getPageProps = () => {
   const domContainer = document.getElementById("react-container");
   const propsElement = document.getElementById("page-react-props");
   const globalPropsElement = document.getElementById("global-react-props");
-  let reactProps;
-  let globalReactProps;
+  let reactProps = {};
+  let globalReactProps = {};
   try {
-    reactProps = JSON.parse(propsElement!.innerHTML);
-    globalReactProps = JSON.parse(globalPropsElement!.innerHTML);
+    // Page props can be empty
+    if (propsElement?.innerHTML) {
+      reactProps = JSON.parse(propsElement.innerHTML);
+    }
+    // Global props *cannot* be empty
+    if (globalPropsElement?.innerHTML) {
+      globalReactProps = JSON.parse(globalPropsElement.innerHTML);
+    } else {
+      throw new Error("No global props element on the page");
+    }
   } catch (err) {
     // Show error to the user and ask to reload page
+    // eslint-disable-next-line no-console
+    console.error(err);
   }
   return { domContainer, reactProps, globalReactProps };
 };
