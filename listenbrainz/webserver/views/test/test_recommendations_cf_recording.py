@@ -224,7 +224,6 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
                 "id": 2,
                 "name": 'vansika_1',
             },
-            "api_url": current_app.config["API_URL"],
             "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
             "recommendations": recommendations,
         }
