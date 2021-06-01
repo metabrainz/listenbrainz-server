@@ -190,31 +190,22 @@ def handle_sitewide_entity(data):
 def handle_dump_imported(data):
     """ Process the response that the cluster sends after importing a new dump
 
-    We don't really need to _do_ anything, just send an email over for observability.
+    We don't really need to _do_ anything, just send an email over if there was an error.
     """
     if current_app.config['TESTING']:
         return
 
     errors = data['errors']
-    dumps = data['imported_dump']
     import_completion_time = data['time']
 
     if errors:
-        subject = 'No dump imported into Spark cluster!'
-        recipients = ['listenbrainz-exceptions@metabrainz.org']
-        text = render_template('emails/dump_import_failure.txt', errors=errors, time=import_completion_time)
-    else:
-        subject = 'A {} has been imported into the Spark cluster'.format(' '.join(data['type'].split('_')[1:]))
-        recipients = ['listenbrainz-observability@metabrainz.org']
-        text = render_template('emails/dump_import_notification.txt', dump_name=", ".join(dumps), time=import_completion_time)
-
-    send_mail(
-        subject=subject,
-        text=text,
-        recipients=recipients,
-        from_name='ListenBrainz',
-        from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
-    )
+        send_mail(
+            subject='Spark Cluster Dump import failures!',
+            text=render_template('emails/dump_import_failure.txt', errors=errors, time=import_completion_time),
+            recipients=['listenbrainz-exceptions@metabrainz.org'],
+            from_name='ListenBrainz',
+            from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
+        )
 
 
 def handle_dataframes(data):
