@@ -127,22 +127,24 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
         logger.info('Done. Total time: {:.2f} sec'.format(time.monotonic() - t0))
         return dest_path, mapping_file_name
 
-    def download_listens(self, directory, listens_dump_id=None, dump_type=FULL):
+    def download_listens(self, directory, listens_dump_id=None, dump_type: DumpType = DumpType.FULL):
         """ Download listens to dir passed as an argument.
 
             Args:
                 directory (str): Dir to save listens locally.
                 listens_dump_id (int): Unique identifier of listens to be downloaded.
                     If not provided, most recent listens will be downloaded.
+                dump_type: type of dump, full or incremental
 
             Returns:
                 dest_path (str): Local path where listens have been downloaded.
                 listens_file_name (str): name of downloaded listens dump.
                 dump_id (int): Unique indentifier of downloaded listens dump.
         """
-        ftp_cwd = os.path.join(config.FTP_LISTENS_DIR, 'fullexport/')
-        if dump_type == INCREMENTAL:
+        if dump_type == DumpType.INCREMENTAL:
             ftp_cwd = os.path.join(config.FTP_LISTENS_DIR, 'incremental/')
+        else:
+            ftp_cwd = os.path.join(config.FTP_LISTENS_DIR, 'fullexport/')
         self.connection.cwd(ftp_cwd)
         listens_dump_list = sorted(self.list_dir(), key=lambda x: int(x.split('-')[2]))
         req_listens_dump = self.get_dump_name_to_download(listens_dump_list, listens_dump_id, 2)

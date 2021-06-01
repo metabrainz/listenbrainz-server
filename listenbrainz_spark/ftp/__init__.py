@@ -25,7 +25,8 @@ class ListensDump(NamedTuple):
 
     @staticmethod
     def from_ftp_dir(dir_name: str) -> 'ListensDump':
-        parts = dir_name.split('-')
+        # Remove / if any from the end of dir name before splitting so the dump_type is correct
+        parts = dir_name.replace('/', '').split('-')
         return ListensDump(dump_id=int(parts[2]),
                            dump_date=parts[3],
                            dump_tod=parts[4],

@@ -20,7 +20,6 @@ logger = logging.getLogger(__name__)
 
 def import_dump_to_hdfs(dump_type, overwrite, dump_id=None):
     temp_dir = tempfile.mkdtemp()
-    dump_type = 'incremental' if dump_type == 'incremental' else 'full'
     src, dump_name, dump_id = ListenbrainzDataDownloader().download_listens(directory=temp_dir, dump_type=dump_type,
                                                                             listens_dump_id=dump_id)
     ListenbrainzDataUploader().upload_listens(src, overwrite=overwrite)
@@ -30,7 +29,7 @@ def import_dump_to_hdfs(dump_type, overwrite, dump_id=None):
 
 
 def import_newest_full_dump_handler():
-    dump_name = import_dump_to_hdfs('full', overwrite=True)
+    dump_name = import_dump_to_hdfs(DumpType.FULL, overwrite=True)
     return [{
         'type': 'import_full_dump',
         'imported_dump': [dump_name],
@@ -39,7 +38,7 @@ def import_newest_full_dump_handler():
 
 
 def import_full_dump_by_id_handler(id: int):
-    dump_name = import_dump_to_hdfs('full', overwrite=True, dump_id=id)
+    dump_name = import_dump_to_hdfs(DumpType.FULL, overwrite=True, dump_id=id)
     return [{
         'type': 'import_full_dump',
         'imported_dump': [dump_name],
@@ -52,7 +51,7 @@ def import_newest_incremental_dump_handler():
     latest_full_dump = utils.get_latest_full_dump()
     if latest_full_dump is None:
         # If no prior full dump is present, just import the latest incremental dump
-        imported_dumps.append(import_dump_to_hdfs('incremental', overwrite=False))
+        imported_dumps.append(import_dump_to_hdfs(DumpType.INCREMENTAL, overwrite=False))
         logger.warning("No previous full dump found, importing latest incremental dump", exc_info=True)
     else:
         # Import all missing dumps from last full dump import
@@ -61,9 +60,9 @@ def import_newest_incremental_dump_handler():
         end_id = ListenbrainzDataDownloader().get_latest_dump_id(DumpType.INCREMENTAL) + 1
 
         for dump_id in range(start_id, end_id, 1):
-            if not utils.search_dump(dump_id, 'incremental', imported_at):
+            if not utils.search_dump(dump_id, DumpType.INCREMENTAL, imported_at):
                 try:
-                    imported_dumps.append(import_dump_to_hdfs('incremental', False, dump_id))
+                    imported_dumps.append(import_dump_to_hdfs(DumpType.INCREMENTAL, False, dump_id))
                 except DumpNotFoundException:
                     continue
                 except Exception as e:
@@ -80,7 +79,7 @@ def import_newest_incremental_dump_handler():
 
 
 def import_incremental_dump_by_id_handler(id: int):
-    dump_name = import_dump_to_hdfs('incremental', overwrite=False, dump_id=id)
+    dump_name = import_dump_to_hdfs(DumpType.INCREMENTAL, overwrite=False, dump_id=id)
     return [{
         'type': 'import_incremental_dump',
         'imported_dump': [dump_name],
