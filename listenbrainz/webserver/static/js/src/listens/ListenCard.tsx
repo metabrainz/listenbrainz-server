@@ -1,4 +1,3 @@
-/* eslint-disable react/static-property-placement */
 import * as React from "react";
 import { get as _get } from "lodash";
 import MediaQuery from "react-responsive";
