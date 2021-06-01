@@ -307,11 +307,13 @@ class HandlersTestCase(unittest.TestCase):
         with self.app.app_context():
             time = datetime.now()
             dump_name = 'listenbrainz-listens-dump-20200223-000000-spark-full.tar.xz'
+            errors = ["Could not download dump!"]
 
             # testing, should not send a mail
             self.app.config['TESTING'] = True
             handle_dump_imported({
                 'imported_dump': dump_name,
+                'errors': errors,
                 'type': 'import_full_dump',
                 'time': str(time),
             })
@@ -321,6 +323,7 @@ class HandlersTestCase(unittest.TestCase):
             self.app.config['TESTING'] = False
             handle_dump_imported({
                 'imported_dump': dump_name,
+                'errors': errors,
                 'type': 'import_full_dump',
                 'time': str(time),
             })
