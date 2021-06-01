@@ -42,4 +42,6 @@ CREATE INDEX user_id_ndx_user_timeline_event ON user_timeline_event (user_id);
 CREATE INDEX event_type_ndx_user_timeline_event ON user_timeline_event (event_type);
 CREATE INDEX user_id_event_type_ndx_user_timeline_event ON user_timeline_event (user_id, event_type);
 
+CREATE UNIQUE INDEX user_id_rec_mbid_ndx_pinned_track ON pinned_track (user_id, recording_mbid);
+
 COMMIT;
