@@ -261,7 +261,7 @@ def _register_blueprints(app):
     _register_blueprint_with_context(app, profile_bp, url_prefix='/profile')
 
     from listenbrainz.webserver.views.recommendations_cf_recording import recommendations_cf_recording_bp
-    app.register_blueprint(recommendations_cf_recording_bp, url_prefix='/recommended/tracks')
+    _register_blueprint_with_context(app, recommendations_cf_recording_bp, url_prefix='/recommended/tracks')
 
     from listenbrainz.webserver.views.user import redirect_bp
     app.register_blueprint(redirect_bp, url_prefix='/my')
