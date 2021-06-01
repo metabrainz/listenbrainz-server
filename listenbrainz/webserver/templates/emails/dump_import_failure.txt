@@ -6,6 +6,12 @@ No new data dump has been imported into the spark cluster.
 
 Import time: {{ time }}
 
+These are some of the errors that occurred:
+
+{% for error in errors %}
+    {{ error }}
+{% endfor %}
+
 Go fix your shit!
 
 Your Friendly Neighbourhood Brainzbot 🤖
