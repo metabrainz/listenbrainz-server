@@ -14,7 +14,6 @@ import sqlalchemy
 from time import sleep
 
 from listenbrainz.utils import safely_import_config
-from listenbrainz_spark.user_similarity import user_similarity
 
 safely_import_config()
 
