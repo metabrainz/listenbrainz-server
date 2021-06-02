@@ -109,8 +109,8 @@ ALTER TABLE recommendation_feedback
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
-ALTER TABLE pinned_track
-    ADD CONSTRAINT pinned_track_user_id_foreign_key
+ALTER TABLE pinned_recording
+    ADD CONSTRAINT pinned_recording_user_id_foreign_key
     FOREIGN KEY (user_id)
     REFERENCES "user" (id)
     ON DELETE CASCADE;

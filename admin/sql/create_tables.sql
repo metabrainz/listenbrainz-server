@@ -207,12 +207,12 @@ CREATE TABLE user_relationship (
     created             TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE pinned_track (
+CREATE TABLE pinned_recording(
     id                      SERIAL, -- PK
     user_id                 INTEGER NOT NULL, -- FK to "user".id
     recording_mbid          UUID NOT NULL,
-    blurb_content           VARCHAR,
-    currently_pinned        BOOLEAN NOT NULL DEFAULT TRUE,
+    blurb_content           TEXT,
+    pinned_until            TIMESTAMP WITH TIME ZONE NOT NULL,
     created                 TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
