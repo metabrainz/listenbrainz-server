@@ -18,7 +18,14 @@ class ExternalService(ABC):
         """
         self.service = service
 
-    def add_new_user(self, user_id: int, token: dict):
+    def add_new_user(self, user_id: int, token: dict) -> bool:
+        """ Inserts a user for the specific service in the database
+        Args:
+            user_id: the ListenBrainz row ID of the user
+            token: the response from the OAuth API of the services
+        Returns:
+            whether the user was inserted in the database
+        """
         raise NotImplementedError()
 
     def remove_user(self, user_id: int):

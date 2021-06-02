@@ -317,8 +317,10 @@ def music_services_callback(service_name: str):
     if not code:
         raise BadRequest('missing code')
     token = service.fetch_access_token(code)
-    service.add_new_user(current_user.id, token)
-    flash.success('Successfully authenticated with %s!' % service_name.capitalize())
+    if service.add_new_user(current_user.id, token):
+        flash.success('Successfully authenticated with %s!' % service_name.capitalize())
+    else:
+        flash.error('Unable to connect to %s! Please try again.' % service_name.capitalize())
     return redirect(url_for('profile.music_services_details'))
 
 
