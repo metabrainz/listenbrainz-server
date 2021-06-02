@@ -349,8 +349,8 @@ def report_abuse(user_name):
     reason = None
     if data:
         reason = data.get("reason")
-    if not isinstance(reason, str):
-        raise APIBadRequest("Reason must be a string.")
+        if not isinstance(reason, str):
+            raise APIBadRequest("Reason must be a string.")
     user_to_report = db_user.get_by_mb_id(user_name)
     if current_user.id != user_to_report["id"]:
         db_user.report_user(current_user.id, user_to_report["id"], reason)
