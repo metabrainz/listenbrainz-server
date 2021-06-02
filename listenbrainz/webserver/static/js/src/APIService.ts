@@ -783,9 +783,10 @@ export default class APIService {
     return data;
   };
 
-  reportUser = async (userName: string) => {
+  reportUser = async (userName: string, optionalContext?: string) => {
     const response = await fetch(`/user/${userName}/report-user/`, {
       method: "POST",
+      body: JSON.stringify({ reason: optionalContext }),
     });
     await this.checkStatus(response);
   };
