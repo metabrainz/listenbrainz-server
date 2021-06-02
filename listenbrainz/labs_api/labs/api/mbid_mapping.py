@@ -9,6 +9,7 @@ from unidecode import unidecode
 from Levenshtein import distance
 
 from listenbrainz import config
+from listenbrainz.labs_api.labs.api.stop_words import ENGLISH_STOP_WORDS
 
 DEFAULT_TIMEOUT=2
 COLLECTION_NAME = "mbid_mapping_latest"
@@ -22,9 +23,10 @@ MATCH_TYPE_EXACT_MATCH = 4
 MATCH_TYPE_HIGH_QUALITY_MAX_EDIT_DISTANCE = 2
 MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE = 5
 
+ENGLISH_STOP_WORD_INDEX = { k:1 for k in ENGLISH_STOP_WORDS }
 
 def prepare_query(text):
-    return unidecode(re.sub(" +", " ", re.sub(r'[^\w ]+', '', text)).lower())
+    return unidecode(re.sub(" +", " ", re.sub(r'[^\w ]+', '', text)).strip().lower())
 
 
 class MBIDMappingQuery(Query):
@@ -51,7 +53,7 @@ class MBIDMappingQuery(Query):
     MATCH_TYPE_HIGH_QUALITY_MAX_EDIT_DISTANCE = 2
     MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE = 5
 
-    def __init__(self, timeout=DEFAULT_TIMEOUT):
+    def __init__(self, timeout=DEFAULT_TIMEOUT, remove_stop_words=False):
         self.debug = False
 
         self.client = typesense.Client({
@@ -63,6 +65,7 @@ class MBIDMappingQuery(Query):
             'api_key': config.TYPESENSE_API_KEY,
             'connection_timeout_seconds': timeout
         })
+        self.remove_stop_words = remove_stop_words
 
     def names(self):
         return ("mbid-mapping", "MusicBrainz ID Mapping lookup")
@@ -176,8 +179,18 @@ class MBIDMappingQuery(Query):
 
     def lookup(self, artist_credit_name_p, recording_name_p):
 
+        query = artist_credit_name_p + " " + recording_name_p
+        if self.remove_stop_words:
+            cleaned_query = []
+            for word in query.split(" "):
+                if word not in ENGLISH_STOP_WORD_INDEX:
+                    cleaned_query.append(word)
+
+            print("before: '%s'\n after: '%s'\n" % (query, " ".join(cleaned_query)))
+            query = " ".join(cleaned_query)
+
         search_parameters = {
-            'q': artist_credit_name_p + " " + recording_name_p,
+            'q': query,
             'query_by': "combined",
             'prefix': 'no',
             'num_typos': self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE
@@ -192,6 +205,7 @@ class MBIDMappingQuery(Query):
                 print("Got socket timeout, sleeping 5 seconds, trying again.")
                 sleep(5)
 
+        print("hits %d" % len(hits["hits"]))
         if len(hits["hits"]) == 0:
             return None
 
