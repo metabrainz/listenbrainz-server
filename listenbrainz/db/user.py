@@ -521,16 +521,17 @@ def is_user_reported(reporter_id: int, reported_id: int):
         return True if result.fetchone() else False
 
 
-def report_user(reporter_id: int, reported_id: int):
+def report_user(reporter_id: int, reported_id: int, reason: str = None):
     """ Create a report from user with reporter_id against user with
      reported_id"""
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
-            INSERT INTO reported_users (reporter_user_id, reported_user_id)
-                 VALUES (:reporter_id, :reported_id)
+            INSERT INTO reported_users (reporter_user_id, reported_user_id, reason)
+                 VALUES (:reporter_id, :reported_id, :reason)
                  ON CONFLICT DO NOTHING
                 """), {
             "reporter_id": reporter_id,
-            "reported_id": reported_id
+            "reported_id": reported_id,
+			"reason": reason,
         })
 

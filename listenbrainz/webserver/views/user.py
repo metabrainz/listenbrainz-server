@@ -345,9 +345,15 @@ def collaborations(user_name: str):
 @user_bp.route("/<user_name>/report-user/", methods=['POST'])
 @api_login_required
 def report_abuse(user_name):
+    data = request.json
+    reason = None
+    if data:
+        reason = data.get("reason")
+    if not isinstance(reason, str):
+        raise APIBadRequest("Reason must be a string.")
     user_to_report = db_user.get_by_mb_id(user_name)
     if current_user.id != user_to_report["id"]:
-        db_user.report_user(current_user.id, user_to_report["id"])
+        db_user.report_user(current_user.id, user_to_report["id"], reason)
         return jsonify({"status": "%s has been reported successfully." % user_name})
     else:
         raise APIBadRequest("You cannot report yourself.")
