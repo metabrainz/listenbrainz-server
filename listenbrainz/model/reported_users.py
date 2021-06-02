@@ -9,7 +9,7 @@ class ReportedUsers(db.Model):
     reporter_user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
     reported_user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
     reported_at = db.Column(db.DateTime(timezone=True))
-
+    reason = db.Column(db.String)
     reporter = db.relationship('User', foreign_keys=[reporter_user_id])
     reported = db.relationship('User', foreign_keys=[reported_user_id])
 
@@ -19,6 +19,7 @@ class ReportedUserAdminView(AdminModelView):
         'id',
         'reporter',
         'reported',
+        'reason',
         'reported_at'
     ]
 
