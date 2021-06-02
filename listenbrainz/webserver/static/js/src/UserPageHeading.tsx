@@ -39,20 +39,20 @@ const UserPageHeading = ({
   alreadyReportedUser: boolean;
 }) => {
   return (
-    <h2 className="page-title">
-      {user.name}
-      {loggedInUser && user.name !== loggedInUser.name && (
-        <>
+    <>
+      <h2 className="page-title">
+        {user.name}
+        {loggedInUser && user.name !== loggedInUser.name && (
           <FollowButton
             type="icon-only"
             user={user}
             loggedInUser={loggedInUser}
             loggedInUserFollowsUser={loggedInUserFollowsUser}
           />
-          <ReportUserButton user={user} alreadyReported={alreadyReportedUser} />
-        </>
-      )}
-    </h2>
+        )}
+      </h2>
+      <ReportUserButton user={user} alreadyReported={alreadyReportedUser} />
+    </>
   );
 };
 
