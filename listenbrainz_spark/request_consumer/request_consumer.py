@@ -44,6 +44,9 @@ class RequestConsumer:
             logger.error('Bad query sent to spark request consumer: %s', json.dumps(request), exc_info=True)
             return None
 
+        logger.info('Query: %s', query)
+        logger.info('Params: %s', str(params))
+
         try:
             query_handler = listenbrainz_spark.query_map.get_query_handler(query)
         except KeyError:

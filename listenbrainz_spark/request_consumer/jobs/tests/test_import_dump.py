@@ -1,6 +1,7 @@
 from datetime import datetime
 from unittest.mock import MagicMock, call, patch
 
+from listenbrainz_spark.ftp import DumpType
 from listenbrainz_spark.request_consumer.jobs import import_dump
 from listenbrainz_spark.exceptions import (DumpInvalidException,
                                            DumpNotFoundException)
@@ -15,7 +16,7 @@ def mock_import_dump_to_hdfs(dump_type: str, overwrite: bool, dump_id: int):
     if (dump_id < 210):
         return f"listenbrainz-listens-dump-{dump_id}-spark-incremental.tar.xz"
     else:
-        raise DumpNotFoundException
+        raise DumpNotFoundException("Dump Not Found")
 
 
 def mock_import_dump_to_hdfs_error(dump_type: str, overwrite: bool, dump_id: int):
@@ -23,9 +24,9 @@ def mock_import_dump_to_hdfs_error(dump_type: str, overwrite: bool, dump_id: int
     if (dump_id < 210) or (dump_id > 210 and dump_id < 213):
         return f"listenbrainz-listens-dump-{dump_id}-spark-incremental.tar.xz"
     elif dump_id == 210:
-        raise DumpInvalidException
+        raise DumpInvalidException("Invalid Dump")
     else:
-        raise DumpNotFoundException
+        raise DumpNotFoundException("Dump not found")
 
 
 def mock_search_dump(dump_id: int, dump_type: str, imported_at: datetime):
@@ -56,7 +57,7 @@ class DumpImporterJobTestCase(SparkTestCase):
         mock_datetime.utcnow.return_value = datetime(2020, 8, 18)
 
         messages = import_dump.import_newest_full_dump_handler()
-        mock_download.assert_called_once_with(directory='best_dir_ever', dump_type='full',  listens_dump_id=None)
+        mock_download.assert_called_once_with(directory='best_dir_ever', dump_type=DumpType.FULL, listens_dump_id=None)
         mock_upload.assert_called_once_with(mock_src, overwrite=True)
         mock_rmtree.assert_called_once_with('best_dir_ever')
 
@@ -85,7 +86,7 @@ class DumpImporterJobTestCase(SparkTestCase):
         mock_datetime.utcnow.return_value = datetime(2020, 8, 18)
 
         messages = import_dump.import_full_dump_by_id_handler(202)
-        mock_download.assert_called_once_with(directory='best_dir_ever', dump_type='full',  listens_dump_id=202)
+        mock_download.assert_called_once_with(directory='best_dir_ever', dump_type=DumpType.FULL,  listens_dump_id=202)
         mock_upload.assert_called_once_with(mock_src, overwrite=True)
         mock_rmtree.assert_called_once_with('best_dir_ever')
 
@@ -114,7 +115,7 @@ class DumpImporterJobTestCase(SparkTestCase):
         mock_import_calls = []
         expected_import_list = []
         for dump_id in range(204, 210, 3):
-            mock_import_calls.append(call('incremental', False, dump_id))
+            mock_import_calls.append(call(DumpType.INCREMENTAL, False, dump_id))
             expected_import_list.append(f"listenbrainz-listens-dump-{dump_id}-spark-incremental.tar.xz")
 
         messages = import_dump.import_newest_incremental_dump_handler()
@@ -122,12 +123,15 @@ class DumpImporterJobTestCase(SparkTestCase):
         mock_import_dump.assert_has_calls(mock_import_calls)
         self.assertListEqual(expected_import_list, messages[0]['imported_dump'])
 
+    @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.get_latest_dump_id')
     @patch('listenbrainz_spark.request_consumer.jobs.import_dump.import_dump_to_hdfs', side_effect=mock_import_dump_to_hdfs_error)
     @patch('listenbrainz_spark.request_consumer.jobs.utils.search_dump', side_effect=mock_search_dump)
     @patch('listenbrainz_spark.request_consumer.jobs.utils.get_latest_full_dump')
     @patch('listenbrainz_spark.request_consumer.jobs.import_dump.request_consumer')
-    def test_import_newest_incremental_dump_handler_error(self, mock_rc, mock_latest_full_dump, mock_search, mock_import_dump):
-        """ Test to make sure import is aborted if there is a fatal error. """
+    def test_import_newest_incremental_dump_handler_error(self, mock_rc, mock_latest_full_dump, mock_search,
+                                                          mock_import_dump, mock_latest_dump_id):
+        """ Test to make sure import continues if there is a fatal error. """
+        mock_latest_dump_id.return_value = 210
         mock_latest_full_dump.return_value = {
             "dump_id": 202,
             "imported_at": datetime(2020, 9, 29),
@@ -136,7 +140,7 @@ class DumpImporterJobTestCase(SparkTestCase):
         mock_import_calls = []
         expected_import_list = []
         for dump_id in range(204, 210, 3):
-            mock_import_calls.append(call('incremental', False, dump_id))
+            mock_import_calls.append(call(DumpType.INCREMENTAL, False, dump_id))
             expected_import_list.append(f"listenbrainz-listens-dump-{dump_id}-spark-incremental.tar.xz")
 
         messages = import_dump.import_newest_incremental_dump_handler()
@@ -154,7 +158,7 @@ class DumpImporterJobTestCase(SparkTestCase):
 
         messages = import_dump.import_newest_incremental_dump_handler()
 
-        mock_import_dump.assert_called_once_with('incremental', overwrite=False)
+        mock_import_dump.assert_called_once_with(DumpType.INCREMENTAL, overwrite=False)
         self.assertEqual(len(messages), 1)
         self.assertListEqual(['listenbrainz-listens-dump-202-20200915-180002-spark-incremental.tar.xz'],
                              messages[0]['imported_dump'])
@@ -173,7 +177,7 @@ class DumpImporterJobTestCase(SparkTestCase):
         mock_datetime.utcnow.return_value = datetime(2020, 8, 18)
 
         messages = import_dump.import_incremental_dump_by_id_handler(202)
-        mock_download.assert_called_once_with(directory='best_dir_ever', dump_type='incremental',  listens_dump_id=202)
+        mock_download.assert_called_once_with(directory='best_dir_ever', dump_type=DumpType.INCREMENTAL,  listens_dump_id=202)
         mock_upload.assert_called_once_with(mock_src, overwrite=False)
         mock_rmtree.assert_called_once_with('best_dir_ever')
 

@@ -37,7 +37,7 @@ Core API Endpoints
           "latest_import": "the timestamp of the newest listen submitted in previous imports. Defaults to 0"
       }
 
-  :param user_name: the MusicBrainz ID of the user whose data is needed
+  :query str user_name: the MusicBrainz ID of the user whose data is needed
   :statuscode 200: Yay, you have data!
   :resheader Content-Type: *application/json*
 

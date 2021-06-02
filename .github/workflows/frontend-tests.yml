@@ -5,6 +5,13 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ '*' ]
+    paths:
+      - '**.jsx?'
+      - '**.tsx?'
+      - '**.json'
+      - 'docker/Dockerfile.webpack'
+      - 'docker/docker-compose.test.yml'
+      - 'test.sh'
 
 jobs:
 

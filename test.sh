@@ -23,24 +23,19 @@ fi
 
 # SPARK TESTS
 # ./test.sh spark          run spark tests
+# ./test.sh spark -b       build spark test containers
 
 # INTEGRATION TESTS
 # ./test.sh int            run integration tests
 
 COMPOSE_FILE_LOC=docker/docker-compose.test.yml
-COMPOSE_PROJECT_NAME_ORIGINAL=listenbrainz_test
+COMPOSE_PROJECT_NAME=listenbrainz_test
 
-SPARK_COMPOSE_FILE_LOC=docker/docker-compose.spark.test.yml
-SPARK_COMPOSE_PROJECT_NAME_ORIGINAL=listenbrainz_spark_test
+SPARK_COMPOSE_FILE_LOC=docker/docker-compose.spark.yml
+SPARK_COMPOSE_PROJECT_NAME=listenbrainz_spark_test
 
 INT_COMPOSE_FILE_LOC=docker/docker-compose.integration.yml
-INT_COMPOSE_PROJECT_NAME_ORIGINAL=listenbrainz_int
-
-#docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME build
-#    docker ps -a --no-trunc  | grep $COMPOSE_PROJECT_NAME \
-#        | awk '{print $1}' | xargs -r --no-run-if-empty docker stop
-#    docker ps -a --no-trunc  | grep $COMPOSE_PROJECT_NAME \
-#        | awk '{print $1}' | xargs -r --no-run-if-empty docker rm
+INT_COMPOSE_PROJECT_NAME=listenbrainz_int
 
 
 if [[ ! -d "docker" ]]; then
@@ -153,16 +148,13 @@ function spark_setup {
     echo "Running spark test setup"
     docker-compose -f $SPARK_COMPOSE_FILE_LOC \
                    -p $SPARK_COMPOSE_PROJECT_NAME \
-                run --rm hadoop-master hdfs namenode -format -nonInteractive -force
-    docker-compose -f $SPARK_COMPOSE_FILE_LOC \
-                   -p $SPARK_COMPOSE_PROJECT_NAME \
-                up -d hadoop-master datanode
+                  up -d namenode datanode
 }
 
 function build_spark_containers {
     docker-compose -f $SPARK_COMPOSE_FILE_LOC \
                    -p $SPARK_COMPOSE_PROJECT_NAME \
-                build test
+                build namenode
 }
 
 function spark_dcdown {
@@ -207,12 +199,6 @@ function bring_up_int_containers {
 # trap cleanup EXIT  # Cleanup after tests finish running
 
 if [ "$1" == "spark" ]; then
-    # Project name is sanitized by Compose, so we need to do the same thing.
-    # See https://github.com/docker/compose/issues/2119.
-    SPARK_COMPOSE_PROJECT_NAME=$(echo $SPARK_COMPOSE_PROJECT_NAME_ORIGINAL | awk '{print tolower($0)}' | sed 's/[^a-z0-9]*//g')
-    SPARK_TEST_CONTAINER_NAME=test
-    TEST_CONTAINER_REF="${SPARK_COMPOSE_PROJECT_NAME}_${SPARK_TEST_CONTAINER_NAME}_1"
-
     if [ "$2" == "-b" ]; then
         echo "Building containers"
         build_spark_containers
@@ -223,19 +209,13 @@ if [ "$1" == "spark" ]; then
     echo "Running tests"
     docker-compose -f $SPARK_COMPOSE_FILE_LOC \
                    -p $SPARK_COMPOSE_PROJECT_NAME \
-                run --rm test
+                run --rm request_consumer
     RET=$?
     spark_dcdown
     exit $RET
 fi
 
 if [ "$1" == "int" ]; then
-    # Project name is sanitized by Compose, so we need to do the same thing.
-    # See https://github.com/docker/compose/issues/2119.
-    INT_COMPOSE_PROJECT_NAME=$(echo $INT_COMPOSE_PROJECT_NAME_ORIGINAL | awk '{print tolower($0)}' | sed 's/[^a-z0-9]*//g')
-    INT_TEST_CONTAINER_NAME=listenbrainz
-    TEST_CONTAINER_REF="${INT_COMPOSE_PROJECT_NAME}_${INT_TEST_CONTAINER_NAME}_1"
-
     echo "Taking down old containers"
     int_dcdown
     echo "Building current setup"
@@ -264,12 +244,6 @@ if [ "$1" == "int" ]; then
     int_dcdown
     exit $RET
 fi
-
-# Project name is sanitized by Compose, so we need to do the same thing.
-# See https://github.com/docker/compose/issues/2119.
-COMPOSE_PROJECT_NAME=$(echo $COMPOSE_PROJECT_NAME_ORIGINAL | awk '{print tolower($0)}' | sed 's/[^a-z0-9]*//g')
-TEST_CONTAINER_NAME=listenbrainz
-TEST_CONTAINER_REF="${COMPOSE_PROJECT_NAME}_${TEST_CONTAINER_NAME}_1"
 
 if [ "$1" == "fe" ]; then
     if [ "$2" == "-u" ]; then

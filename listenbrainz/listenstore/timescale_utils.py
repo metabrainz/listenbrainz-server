@@ -60,9 +60,9 @@ def recalculate_all_user_data():
 
     # Reset the timestamps and listen counts to 0 for all users
     for user_name in user_list:
-        cache.set(REDIS_USER_LISTEN_COUNT + user_name, 0, time=0, encode=False)
-        cache.set(REDIS_USER_LISTEN_COUNT + user_name, 0, time=0, encode=False)
-        cache.set(REDIS_USER_TIMESTAMPS + user_name, "0,0", time=0)
+        cache.set(REDIS_USER_LISTEN_COUNT + user_name, 0, expirein=0, encode=False)
+        cache.set(REDIS_USER_LISTEN_COUNT + user_name, 0, expirein=0, encode=False)
+        cache.set(REDIS_USER_TIMESTAMPS + user_name, "0,0", expirein=0)
 
     # Tabulate all of the listen counts/timestamps for all users
     logger.info("Scan the whole listen table...")
@@ -95,8 +95,7 @@ def recalculate_all_user_data():
     # Set the timestamps and listen counts for all users
     for user_name in user_list:
         try:
-            cache._r.incrby(cache._prep_key(
-                REDIS_USER_LISTEN_COUNT + user_name), listen_counts[user_name])
+            cache.increment(REDIS_USER_LISTEN_COUNT + user_name, amount=listen_counts[user_name])
         except KeyError:
             pass
 
@@ -110,7 +109,7 @@ def recalculate_all_user_data():
             if max_ts and max_ts > user_timestamps[user_name][1]:
                 user_timestamps[user_name][1] = max_ts
             cache.set(REDIS_USER_TIMESTAMPS + user_name, "%d,%d" %
-                      (user_timestamps[user_name][0], user_timestamps[user_name][1]), time=0)
+                      (user_timestamps[user_name][0], user_timestamps[user_name][1]), expirein=0)
         except KeyError:
             pass
 
@@ -130,7 +129,7 @@ def refresh_listen_count_aggregate():
            Assuming today is 2022-01-01 and this function is called for year_offset 1 and
            year_count 1 then all of 2021 will be refreshed.
     """
-
+    logger.info("Starting to refresh continuous aggregates:")
     timescale.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
 
     end_ts = int(datetime.now().timestamp()) - SECONDS_IN_A_YEAR
@@ -148,8 +147,7 @@ def refresh_listen_count_aggregate():
                     "end_ts": end_ts
                 })
         except psycopg2.OperationalError as e:
-            self.log.error("Cannot refresh listen_count_30day cont agg: %s" %
-                           str(e), exc_info=True)
+            logger.error("Cannot refresh listen_count_30day cont agg: %s" % str(e), exc_info=True)
             raise
 
         t1 = time.monotonic()
