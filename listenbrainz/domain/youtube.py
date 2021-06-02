@@ -30,14 +30,23 @@ class YoutubeService(ExternalService):
         self.client_config = current_app.config["YOUTUBE_CONFIG"]
         self.redirect_uri = current_app.config["YOUTUBE_REDIRECT_URI"]
 
-    def add_new_user(self, user_id: int, token: dict):
-        external_service_oauth.save_token(user_id=user_id,
-                                          service=self.service,
-                                          access_token=token["access_token"],
-                                          refresh_token=token["refresh_token"],
-                                          token_expires_ts=int(token["expires_at"]),
-                                          record_listens=False,
-                                          scopes=token["scope"])
+    def add_new_user(self, user_id: int, token: dict) -> bool:
+        # A missing refresh token implies that the user's access token was not revoked
+        # using Google OAuth revoke endpoint when the user had disconnected from LB the
+        # previous time. We try to revoke the new issued token and ask the user to
+        # authenticate again so that we receive the refresh token as well.
+        if "refresh_token" not in token:
+            self._revoke_token(token["access_token"])
+            return False
+        else:
+            external_service_oauth.save_token(user_id=user_id,
+                                              service=self.service,
+                                              access_token=token["access_token"],
+                                              refresh_token=token["refresh_token"],
+                                              token_expires_ts=int(token["expires_at"]),
+                                              record_listens=False,
+                                              scopes=token["scope"])
+            return True
 
     def get_authorize_url(self, scopes: list):
         flow = Flow.from_client_config(self.client_config,
