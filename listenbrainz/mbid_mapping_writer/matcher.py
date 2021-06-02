@@ -76,7 +76,8 @@ def lookup_listens(app, listens, stats, exact):
     if exact:
         q = ArtistCreditRecordingLookupQuery()
     else:
-        q = MBIDMappingQuery(timeout=10)
+        # Remove stop words from typesense queries in order to reduce the possible number of hits
+        q = MBIDMappingQuery(timeout=10, remove_stop_words=True)
 
     params = []
     for listen in listens:
