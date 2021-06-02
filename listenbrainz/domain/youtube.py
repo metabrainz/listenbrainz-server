@@ -2,6 +2,8 @@ from datetime import timezone
 
 import requests
 from requests import RequestException
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from data.model.external_service import ExternalServiceType
 from listenbrainz.db import external_service_oauth
@@ -79,15 +81,29 @@ class YoutubeService(ExternalService):
 
     def remove_user(self, user_id: int):
         user = self.get_user(user_id)
-        # try to revoke token with Google Auth API on a best effort basis, even if it doesn't succeed proceed normally
-        # and delete from our database
-        try:
-            requests.post(OAUTH_REVOKE_URL,
-                          params={'token': user["access_token"]},
-                          headers={'content-type': 'application/x-www-form-urlencoded'})
-        except RequestException as e:
-            current_app.logger.error(e, exc_info=True)
+        # try to revoke token with Google Auth API otherwise Google will consider the account
+        # be still connected and will not send a refresh_token next time the user tries to
+        # connect again. if it doesn't succeed proceed normally and just delete from our database
+        self._revoke_token(user["access_token"])
         super(YoutubeService, self).remove_user(user_id)
+
+    def _revoke_token(self, access_token):
+        """ Revoke the given access_token using Google OAuth Revoke endpoint.
+        Args:
+            access_token: the token to be revoked
+        """
+        response = None
+        try:
+            session = requests.Session()
+            session.mount("https://",
+                          HTTPAdapter(max_retries=Retry(total=3, backoff_factor=1, method_whitelist=["POST"])))
+            response = session.post(OAUTH_REVOKE_URL,
+                                    params={'token': access_token},
+                                    headers={'content-type': 'application/x-www-form-urlencoded'})
+            response.raise_for_status()
+        except RequestException:
+            error_msg = response.text if response else None
+            current_app.logger.error("Error while trying to revoke token: %s", error_msg, exc_info=True)
 
     def get_user_connection_details(self, user_id: int):
         pass
