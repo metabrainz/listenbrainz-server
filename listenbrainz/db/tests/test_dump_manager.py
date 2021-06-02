@@ -67,6 +67,7 @@ class DumpManagerTestCase(DatabaseTestCase):
     @patch('listenbrainz.db.dump_manager.send_mail')
     def test_send_dump_creation_notification_full(self, mock_send_mail):
         with self.app.app_context():
+            old_testing_value = current_app.config['TESTING']
 
             # should not call send mail when testing
             current_app.config['TESTING'] = True
@@ -92,6 +93,7 @@ class DumpManagerTestCase(DatabaseTestCase):
             )
             self.assertEqual(
                 mock_send_mail.call_args[1]['text'], expected_text)
+            current_app.config['TESTING'] = old_testing_value
 
     @patch('listenbrainz.db.dump_manager.send_mail')
     def test_send_dump_creation_notification_incremental(self, mock_send_mail):

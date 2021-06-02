@@ -25,6 +25,7 @@ import FollowButton from "./FollowButton";
 import APIService from "./APIService";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import ReportUserButton from "./ReportUser";
+import { getPageProps } from "./utils";
 
 const UserPageHeading = ({
   user,
@@ -58,17 +59,18 @@ const UserPageHeading = ({
 export default UserPageHeading;
 
 document.addEventListener("DOMContentLoaded", () => {
-  const domContainer = document.querySelector("#user-page-heading-container");
-
-  const propsElement = document.getElementById("react-props");
-  const reactProps = JSON.parse(propsElement!.innerHTML);
+  const { domContainer, reactProps, globalReactProps } = getPageProps();
+  const {
+    api_url,
+    sentry_dsn,
+    current_user,
+    spotify,
+    youtube,
+  } = globalReactProps;
   const {
     user,
     already_reported_user,
-    current_user,
     logged_in_user_follows_user,
-    sentry_dsn,
-    api_url,
   } = reactProps;
 
   const apiService: APIService = new APIService(
@@ -81,6 +83,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const globalProps: GlobalAppContextT = {
     APIService: apiService,
     currentUser: current_user,
+    spotifyAuth: spotify,
+    youtubeAuth: youtube,
   };
 
   ReactDOM.render(
