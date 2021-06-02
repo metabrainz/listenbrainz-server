@@ -10,9 +10,6 @@ class ListenWriter:
     def __init__(self):
         self.redis = None
         self.connection = None
-        self.total_inserts = 0
-        self.inserts = 0
-        self.time = 0
 
         self.REPORT_FREQUENCY = 5000
         self.DUMP_JSON_WITH_ERRORS = False
@@ -35,17 +32,6 @@ class ListenWriter:
         self.connection = utils.connect_to_rabbitmq(**connection_config,
                                                     error_logger=current_app.logger.error,
                                                     error_retry_delay=self.ERROR_RETRY_DELAY)
-
-    def _collect_and_log_stats(self, count):
-        self.inserts += count
-        if self.inserts >= self.REPORT_FREQUENCY:
-            self.total_inserts += self.inserts
-            if self.time > 0:
-                current_app.logger.info("Inserted %d rows in %.1fs (%.2f listens/sec). Total %d rows." % \
-                    (self.inserts, self.time, count / self.time, self.total_inserts))
-            self.inserts = 0
-            self.time = 0
-
 
     def _verify_hosts_in_config(self):
         if "REDIS_HOST" not in current_app.config:
