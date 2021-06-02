@@ -19,7 +19,8 @@ CREATE TABLE reported_users (
     id                  SERIAL,
     reporter_user_id    INTEGER NOT NULL, -- FK to "user".id of the user who reported
     reported_user_id    INTEGER NOT NULL, -- FK to "user".id of the user who was reported
-    reported_at         TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    reported_at         TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    reason              TEXT
 );
 
 CREATE TABLE api_compat.session (
