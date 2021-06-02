@@ -11,6 +11,7 @@ import Bar from "./Bar";
 import Loader from "../components/Loader";
 import ErrorBoundary from "../ErrorBoundary";
 import Pill from "../components/Pill";
+import { getPageProps } from "../utils";
 
 export type UserEntityChartProps = {
   user: ListenBrainzUser;
@@ -584,15 +585,9 @@ export default class UserEntityChart extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const domContainer = document.querySelector("#react-container");
-  const propsElement = document.getElementById("react-props");
-  let reactProps;
-  try {
-    reactProps = JSON.parse(propsElement!.innerHTML);
-  } catch (err) {
-    // Show error to the user and ask to reload page
-  }
-  const { user, api_url: apiUrl, sentry_dsn } = reactProps;
+  const { domContainer, reactProps, globalReactProps } = getPageProps();
+  const { api_url, sentry_dsn } = globalReactProps;
+  const { user } = reactProps;
 
   if (sentry_dsn) {
     Sentry.init({ dsn: sentry_dsn });
@@ -600,7 +595,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   ReactDOM.render(
     <ErrorBoundary>
-      <UserEntityChart apiUrl={apiUrl} user={user} />
+      <UserEntityChart apiUrl={api_url} user={user} />
     </ErrorBoundary>,
     domContainer
   );

@@ -15,7 +15,7 @@ type YoutubePlayerState = {
 };
 
 type YoutubePlayerProps = DataSourceProps & {
-  youtubeUser: YoutubeUser;
+  youtubeUser?: YoutubeUser;
   refreshYoutubeToken: () => Promise<string>;
 };
 

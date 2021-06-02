@@ -7,6 +7,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import APIService from "./APIService";
 import Scrobble from "./Scrobble";
 import LastFMImporterModal from "./LastFMImporterModal";
+import { getPageProps } from "./utils";
 
 export const LASTFM_RETRIES = 3;
 
@@ -536,22 +537,9 @@ export default class LastFmImporter extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const domContainer = document.querySelector("#react-container");
-  const propsElement = document.getElementById("react-props");
-  let reactProps;
-  try {
-    reactProps = JSON.parse(propsElement!.innerHTML);
-  } catch (err) {
-    // Show error to the user and ask to reload page
-  }
-  const {
-    user,
-    profile_url,
-    api_url,
-    lastfm_api_url,
-    lastfm_api_key,
-    sentry_dsn,
-  } = reactProps;
+  const { domContainer, reactProps, globalReactProps } = getPageProps();
+  const { api_url, sentry_dsn } = globalReactProps;
+  const { user, profile_url, lastfm_api_url, lastfm_api_key } = reactProps;
 
   if (sentry_dsn) {
     Sentry.init({ dsn: sentry_dsn });

@@ -6,6 +6,9 @@ import * as recommendationProps from "../__mocks__/recommendations.json";
 import Recommendations, { RecommendationsProps } from "./Recommendations";
 import * as recommendationPropsOne from "../__mocks__/recommendationPropsOne.json";
 
+import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
+import APIService from "../APIService";
+
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
@@ -28,6 +31,16 @@ const props = {
   user,
   webSocketsServerUrl,
   newAlert: () => {},
+};
+
+// Create a new instance of GlobalAppContext
+const mountOptions: { context: GlobalAppContextT } = {
+  context: {
+    APIService: new APIService("foo"),
+    youtubeAuth: youtube as YoutubeUser,
+    spotifyAuth: spotify as SpotifyUser,
+    currentUser: user,
+  },
 };
 
 const propsOne = {
@@ -59,12 +72,12 @@ describe("Recommendations", () => {
 
 describe("componentDidMount", () => {
   it('calls loadFeedback if user is the currentUser"', () => {
-    const updatedProps = {
-      ...props,
-      currentUser: { name: "vansika" },
-    };
-    const wrapper = shallow<Recommendations>(
-      <Recommendations {...(updatedProps as RecommendationsProps)} />
+    const wrapper = mount<Recommendations>(
+      <GlobalAppContext.Provider
+        value={{ ...mountOptions.context, currentUser: props.user }}
+      >
+        <Recommendations {...props} />
+      </GlobalAppContext.Provider>
     );
 
     const instance = wrapper.instance();
@@ -76,12 +89,12 @@ describe("componentDidMount", () => {
   });
 
   it("does not call loadFeedback if user is not the currentUser", () => {
-    const updatedProps = {
-      ...props,
-      currentUser: { name: "foobar" },
-    };
-    const wrapper = shallow<Recommendations>(
-      <Recommendations {...(updatedProps as RecommendationsProps)} />
+    const wrapper = mount<Recommendations>(
+      <GlobalAppContext.Provider
+        value={{ ...mountOptions.context, currentUser: { name: "foobar" } }}
+      >
+        <Recommendations {...props} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
     instance.loadFeedback = jest.fn();

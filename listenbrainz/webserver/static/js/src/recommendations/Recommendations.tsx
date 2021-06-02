@@ -16,19 +16,16 @@ import BrainzPlayer from "../BrainzPlayer";
 import ErrorBoundary from "../ErrorBoundary";
 import Loader from "../components/Loader";
 import RecommendationCard from "./RecommendationCard";
+import { getPageProps } from "../utils";
 
 export type RecommendationsProps = {
   recommendations?: Array<Recommendation>;
   profileUrl?: string;
-  spotify: SpotifyUser;
-  youtube: YoutubeUser;
   user: ListenBrainzUser;
   webSocketsServerUrl: string;
-  currentUser?: ListenBrainzUser;
 } & WithAlertNotificationsInjectedProps;
 
 export interface RecommendationsState {
-  alerts: Array<Alert>;
   currentRecommendation?: Recommendation;
   direction: BrainzPlayDirection;
   recommendations: Array<Recommendation>;
@@ -55,7 +52,6 @@ export default class Recommendations extends React.Component<
   constructor(props: RecommendationsProps) {
     super(props);
     this.state = {
-      alerts: [],
       recommendations:
         props.recommendations?.slice(0, this.expectedRecommendationsPerPage) ||
         [],
@@ -74,9 +70,9 @@ export default class Recommendations extends React.Component<
   }
 
   componentDidMount(): void {
-    const { user, currentUser } = this.props;
+    const { user } = this.props;
     const { currRecPage } = this.state;
-    const { APIService } = this.context;
+    const { APIService, currentUser } = this.context;
     this.APIService = APIService;
     if (currentUser?.name === user?.name) {
       this.loadFeedback();
@@ -215,7 +211,8 @@ export default class Recommendations extends React.Component<
   };
 
   afterRecommendationsDisplay() {
-    const { user, currentUser } = this.props;
+    const { currentUser } = this.context;
+    const { user } = this.props;
     if (currentUser?.name === user?.name) {
       this.loadFeedback();
     }
@@ -227,7 +224,6 @@ export default class Recommendations extends React.Component<
 
   render() {
     const {
-      alerts,
       currentRecommendation,
       recommendations,
       loading,
@@ -235,14 +231,8 @@ export default class Recommendations extends React.Component<
       currRecPage,
       totalRecPages,
     } = this.state;
-    const {
-      spotify,
-      youtube,
-      user,
-      currentUser,
-
-      newAlert,
-    } = this.props;
+    const { user, newAlert } = this.props;
+    const { currentUser } = this.context;
 
     return (
       <div role="main">
@@ -268,7 +258,6 @@ export default class Recommendations extends React.Component<
                   return (
                     <RecommendationCard
                       key={`${recommendation.track_metadata?.track_name}-${recommendation.track_metadata?.additional_info?.recording_msid}-${recommendation.user_name}`}
-                      currentUser={currentUser}
                       isCurrentUser={currentUser?.name === user?.name}
                       recommendation={recommendation}
                       playRecommendation={this.playRecommendation}
@@ -339,8 +328,6 @@ export default class Recommendations extends React.Component<
               newAlert={newAlert}
               onCurrentListenChange={this.handleCurrentRecommendationChange}
               ref={this.brainzPlayer}
-              spotifyUser={spotify}
-              youtubeUser={youtube}
             />
           </div>
         </div>
@@ -350,24 +337,20 @@ export default class Recommendations extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const domContainer = document.querySelector("#react-container");
-  const propsElement = document.getElementById("react-props");
-  let reactProps;
-  try {
-    reactProps = JSON.parse(propsElement!.innerHTML);
-  } catch (err) {
-    // TODO: Show error to the user and ask to reload page
-  }
+  const {
+    domContainer,
+    reactProps,
+    globalReactProps,
+    optionalAlerts,
+  } = getPageProps();
   const {
     api_url,
-    recommendations,
+    sentry_dsn,
+    current_user,
     spotify,
     youtube,
-    user,
-    web_sockets_server_url,
-    current_user,
-    sentry_dsn,
-  } = reactProps;
+  } = globalReactProps;
+  const { recommendations, user, web_sockets_server_url } = reactProps;
 
   if (sentry_dsn) {
     Sentry.init({ dsn: sentry_dsn });
@@ -381,6 +364,7 @@ document.addEventListener("DOMContentLoaded", () => {
     APIService: apiService,
     currentUser: current_user,
     spotifyAuth: spotify,
+    youtubeAuth: youtube,
   };
 
   const RecommendationsWithAlertNotifications = withAlertNotifications(
@@ -390,12 +374,10 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
         <RecommendationsWithAlertNotifications
+          initialAlerts={optionalAlerts}
           recommendations={recommendations}
-          spotify={spotify}
           user={user}
           webSocketsServerUrl={web_sockets_server_url}
-          currentUser={current_user}
-          youtube={youtube}
         />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,
