@@ -1,0 +1,33 @@
+version: "3.4"
+
+# This file is not complete in itself as it overrides the configuration specified in docker-compose.spark.yml.
+# This overridden configuration is suitable for local development.
+
+volumes:
+  namenode:
+  datanode:
+
+services:
+
+  namenode:
+    command: bash -c "hdfs namenode"
+    volumes:
+      - namenode:/hdfs:z
+
+  datanode:
+    volumes:
+      - datanode:/hdfs:z
+
+  request_consumer:
+    command: bash -c "zip -r /rec/listenbrainz_spark.zip listenbrainz_spark/ ; python spark_manage.py request_consumer"
+
+  spark_reader:
+    image: web
+    command: python3 -m "listenbrainz.spark.spark_reader"
+    volumes:
+      - ..:/code/listenbrainz:z
+
+networks:
+  default:
+    external:
+      name: listenbrainz_default

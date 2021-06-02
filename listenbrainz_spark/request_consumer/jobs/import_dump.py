@@ -9,6 +9,7 @@ from datetime import datetime
 
 import listenbrainz_spark.request_consumer.jobs.utils as utils
 from listenbrainz_spark.exceptions import DumpNotFoundException
+from listenbrainz_spark.ftp import DumpType
 from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
 from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
 from listenbrainz_spark.request_consumer import request_consumer
@@ -19,7 +20,6 @@ logger = logging.getLogger(__name__)
 
 def import_dump_to_hdfs(dump_type, overwrite, dump_id=None):
     temp_dir = tempfile.mkdtemp()
-    dump_type = 'incremental' if dump_type == 'incremental' else 'full'
     src, dump_name, dump_id = ListenbrainzDataDownloader().download_listens(directory=temp_dir, dump_type=dump_type,
                                                                             listens_dump_id=dump_id)
     ListenbrainzDataUploader().upload_listens(src, overwrite=overwrite)
@@ -29,58 +29,86 @@ def import_dump_to_hdfs(dump_type, overwrite, dump_id=None):
 
 
 def import_newest_full_dump_handler():
-    dump_name = import_dump_to_hdfs('full', overwrite=True)
+    errors = []
+    dumps = []
+    try:
+        dumps.append(import_dump_to_hdfs(DumpType.FULL, overwrite=True))
+    except Exception as e:
+        logger.error("Error while importing full dump: ", exc_info=True)
+        errors.append(str(e))
     return [{
         'type': 'import_full_dump',
-        'imported_dump': [dump_name],
+        'imported_dump': dumps,
+        'errors': errors,
         'time': str(datetime.utcnow()),
     }]
 
 
 def import_full_dump_by_id_handler(id: int):
-    dump_name = import_dump_to_hdfs('full', overwrite=True, dump_id=id)
+    errors = []
+    dumps = []
+    try:
+        dumps.append(import_dump_to_hdfs(DumpType.FULL, overwrite=True, dump_id=id))
+    except Exception as e:
+        logger.error("Error while importing full dump: ", exc_info=True)
+        errors.append(str(e))
     return [{
         'type': 'import_full_dump',
-        'imported_dump': [dump_name],
+        'imported_dump': dumps,
+        'errors': errors,
         'time': str(datetime.utcnow()),
     }]
 
 
 def import_newest_incremental_dump_handler():
+    errors = []
     imported_dumps = []
     latest_full_dump = utils.get_latest_full_dump()
     if latest_full_dump is None:
-        # If no prior full dump is present, just import the lates incremental dump
-        imported_dumps.append(import_dump_to_hdfs('incremental', overwrite=False))
-        logger.warning("No previous full dump found, importing latest incremental dump", exc_info=True)
+        # If no prior full dump is present, just import the latest incremental dump
+        imported_dumps.append(import_dump_to_hdfs(DumpType.INCREMENTAL, overwrite=False))
+
+        error_msg = "No previous full dump found, importing latest incremental dump"
+        errors.append(error_msg)
+        logger.warning(error_msg, exc_info=True)
     else:
         # Import all missing dumps from last full dump import
-        dump_id = latest_full_dump["dump_id"] + 1
+        start_id = latest_full_dump["dump_id"] + 1
         imported_at = latest_full_dump["imported_at"]
-        while True:
-            if not utils.search_dump(dump_id, 'incremental', imported_at):
+        end_id = ListenbrainzDataDownloader().get_latest_dump_id(DumpType.INCREMENTAL) + 1
+
+        for dump_id in range(start_id, end_id, 1):
+            if not utils.search_dump(dump_id, DumpType.INCREMENTAL, imported_at):
                 try:
-                    imported_dumps.append(import_dump_to_hdfs('incremental', False, dump_id))
-                except DumpNotFoundException:
-                    break
+                    imported_dumps.append(import_dump_to_hdfs(DumpType.INCREMENTAL, False, dump_id))
                 except Exception as e:
-                    # Exit if any other error occurs during import
-                    logger.error(f"Error while importing incremental dump with ID {dump_id}: {e}", exc_info=True)
-                    break
+                    # Skip current dump if any error occurs during import
+                    error_msg = f"Error while importing incremental dump with ID {dump_id}: {e}"
+                    errors.append(error_msg)
+                    logger.error(error_msg, exc_info=True)
+                    continue
             dump_id += 1
             request_consumer.rc.ping()
     return [{
         'type': 'import_incremental_dump',
         'imported_dump': imported_dumps,
+        'errors': errors,
         'time': str(datetime.utcnow()),
     }]
 
 
 def import_incremental_dump_by_id_handler(id: int):
-    dump_name = import_dump_to_hdfs('incremental', overwrite=False, dump_id=id)
+    errors = []
+    dumps = []
+    try:
+        dumps.append(import_dump_to_hdfs(DumpType.INCREMENTAL, overwrite=False, dump_id=id))
+    except Exception as e:
+        logger.error("Error while importing incremental dump: ", exc_info=True)
+        errors.append(str(e))
     return [{
         'type': 'import_incremental_dump',
-        'imported_dump': [dump_name],
+        'imported_dump': dumps,
+        'errors': errors,
         'time': str(datetime.utcnow()),
     }]
 

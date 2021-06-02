@@ -42,16 +42,9 @@ and import a small incremental dump so that you have some data.
 Start the spark reader
 ^^^^^^^^^^^^^^^^^^^^^^
 
-We do not start the spark reader by default with develop.sh right now,
-because it isn’t much use to non-spark developers. However, you can start it yourself.
-
-
-.. code-block:: bash
-
-    ./develop.sh run web python -m listenbrainz.spark.spark_reader
-
-Now, you have everything needed to work with Spark. You can trigger a request like this
+The spark reader is brought up when you run ``./develop.sh spark up`` . Now, you have everything needed to work with
+Spark. You can trigger a request like this
 
 .. code-block:: bash
 
-    ./develop.sh manage spark request_user_stats
+    ./develop.sh manage spark request_user_stats --type=entity --range=week --entity=artists
