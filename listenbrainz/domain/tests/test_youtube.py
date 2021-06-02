@@ -79,6 +79,18 @@ class YoutubeServiceTestCase(IntegrationTestCase):
         self.assertEqual(YOUTUBE_SCOPES, token["scope"])
 
     @requests_mock.Mocker()
+    def test_add_user_without_refresh_token(self, mock_requests):
+        mock_requests.post(OAUTH_REVOKE_URL, status_code=200, json={'status': 'ok'})
+        token = {
+            "access_token": "new-access-token",
+            "expires_in": 3920,
+            "scope": YOUTUBE_SCOPES[0],
+            "token_type": "Bearer"
+        }
+        self.assertFalse(self.service.add_new_user(self.user_id, token))
+        self.assertTrue(mock_requests.called)
+
+    @requests_mock.Mocker()
     def test_remove_user(self, mock_requests):
         mock_requests.post(OAUTH_REVOKE_URL, status_code=200, json={})
         self.service.remove_user(self.user_id)
