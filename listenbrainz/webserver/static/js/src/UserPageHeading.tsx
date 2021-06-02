@@ -53,7 +53,8 @@ const UserPageHeading = ({
 export default UserPageHeading;
 
 document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, reactProps, globalReactProps } = getPageProps();
+  const domContainer = document.querySelector("#user-page-heading-container");
+  const { reactProps, globalReactProps } = getPageProps();
   const {
     api_url,
     sentry_dsn,
