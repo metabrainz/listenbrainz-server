@@ -18,6 +18,7 @@
 
 import * as React from "react";
 import GlobalAppContext from "./GlobalAppContext";
+import ReportUserModal from "./ReportUserModal";
 
 type ReportUserButtonProps = {
   user: ListenBrainzUser;
@@ -41,16 +42,18 @@ class ReportUserButton extends React.Component<
     this.state = { reported, error: false };
   }
 
-  handleOnClick = () => {
+  handleSubmit = (optionalReason?: string) => {
     const { APIService } = this.context;
     const { user } = this.props;
-    APIService.reportUser(user.name)
+    APIService.reportUser(user.name, optionalReason)
       .then(() => {
         this.setState({
           reported: true,
         });
       })
-      .catch(() => {
+      .catch((error: Error) => {
+        // eslint-disable-next-line no-console
+        console.error(error);
         this.setState({
           error: true,
         });
@@ -59,6 +62,7 @@ class ReportUserButton extends React.Component<
 
   render() {
     const { reported, error } = this.state;
+    const { user } = this.props;
     let buttonText: string;
     if (error) {
       buttonText = "Error! Try Again";
@@ -68,15 +72,21 @@ class ReportUserButton extends React.Component<
       buttonText = "Report User";
     }
     return (
-      <button
-        onClick={this.handleOnClick}
-        className="btn btn-danger"
-        style={{ float: "right" }}
-        type="button"
-        disabled={reported}
-      >
-        {buttonText}
-      </button>
+      <>
+        <button
+          className="btn btn-danger"
+          style={{ float: "right" }}
+          data-toggle="modal"
+          data-target="#reportUserModal"
+          type="button"
+        >
+          {buttonText}
+        </button>
+        <ReportUserModal
+          onSubmit={this.handleSubmit}
+          reportedUserName={user.name}
+        />
+      </>
     );
   }
 }
