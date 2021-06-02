@@ -4,7 +4,8 @@ CREATE TABLE reported_users (
     id                  SERIAL,
     reporter_user_id    INTEGER NOT NULL, -- FK to "user".id of the user who reported
     reported_user_id    INTEGER NOT NULL, -- FK to "user".id of the user who was reported
-    reported_at         TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    reported_at         TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    reason              TEXT
 );
 
 CREATE INDEX reporter_user_id_ndx_reported_users ON reported_users (reporter_user_id);
