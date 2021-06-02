@@ -41,7 +41,7 @@ class MappingJobQueue(threading.Thread):
     def run(self):
         self.app.logger.info("start job queue thread")
 
-        stats = { "processed": 0, "total": 0, "errors": 0, "existing": 0 }
+        stats = { "processed": 0, "total": 0, "errors": 0 }
         for typ in MATCH_TYPES:
             stats[typ] = 0
 
@@ -55,7 +55,18 @@ class MappingJobQueue(threading.Thread):
                 if not result:
                     break
 
-                stats[row[1]] = row[0]
+                stats[result[1]] = result[0]
+
+            query = """SELECT COUNT(*)
+                         FROM listen_mbid_mapping"""
+            curs = connection.execute(query)
+            while True:
+                result = curs.fetchone()
+                if not result:
+                    break
+
+                stats["processed"] = result[0]
+                stats["total"] = result[0]
 
 
         update_time = time() + UPDATE_INTERVAL
@@ -91,10 +102,10 @@ class MappingJobQueue(threading.Thread):
                             update_time = time() + UPDATE_INTERVAL
                             if stats["total"] != 0:
                                 percent = (stats["exact_match"] + stats["high_quality"] + stats["med_quality"] +
-                                          stats["low_quality"] + stats["existing"]) / stats["total"] * 100.00
-                                self.app.logger.info("%d (%d) listens: exact %d high %d med %d low %d no %d prev %d err %d %.1f%%" %
+                                          stats["low_quality"]) / stats["total"] * 100.00
+                                self.app.logger.info("%d (%d) listens: exact %d high %d med %d low %d no %d err %d %.1f%%" %
                                         (stats["total"], stats["processed"], stats["exact_match"], stats["high_quality"],
-                                         stats["med_quality"], stats["low_quality"], stats["no_match"], stats["existing"], 
+                                         stats["med_quality"], stats["low_quality"], stats["no_match"], 
                                          stats["errors"], percent))
                                 metrics.set("listenbrainz-mbid-mapping-writer", 
                                             total_match_p=percent,
@@ -103,7 +114,6 @@ class MappingJobQueue(threading.Thread):
                                             med_quality_p=stats["med_quality"] / stats["total"] * 100.00,
                                             low_quality_p=stats["low_quality"] / stats["total"] * 100.00,
                                             no_match_p=stats["no_match"] / stats["total"] * 100.00,
-                                            existing_p=stats["existing"] / stats["total"] * 100.00,
                                             errors_p=stats["errors"] / stats["total"] * 100.00,
                                             total_listens=stats["total"],
                                             total_processed=stats["processed"],
@@ -112,7 +122,6 @@ class MappingJobQueue(threading.Thread):
                                             med_quality=stats["med_quality"],
                                             low_quality=stats["low_quality"],
                                             no_match=stats["no_match"],
-                                            existing=stats["existing"], 
                                             errors=stats["errors"])
                             
 
