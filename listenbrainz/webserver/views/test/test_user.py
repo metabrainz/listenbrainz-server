@@ -37,7 +37,7 @@ class UserViewsTestCase(IntegrationTestCase):
 
         weirduser = db_user.get_or_create(2, 'weird\\user name')
         self.weirduser = User.from_dbrow(weirduser)
-        
+
         abuser = db_user.get_or_create(3, 'abuser')
         self.abuser = User.from_dbrow(abuser)
 
@@ -237,18 +237,18 @@ class UserViewsTestCase(IntegrationTestCase):
         self.assert200(response, "%s has been reported successfully." % self.abuser.musicbrainz_id)
         already_reported_user = db_user.is_user_reported(self.user.id, self.abuser.id)
         self.assertTrue(already_reported_user)
-        
+
         # Assert a user cannot report themselves
         response = self.client.post(
             url_for('user.report_abuse', user_name=self.user.musicbrainz_id),
             json=data,
         )
-        self.assert400(response,"You cannot report yourself.")
+        self.assert400(response, "You cannot report yourself.")
         already_reported_user = db_user.is_user_reported(self.user.id, self.user.id)
         self.assertFalse(already_reported_user)
-        
+
         # Assert reason must be of type string
-        data= {
+        data = {
             'reason': {'youDoneGoofed': 1234}
         }
         response = self.client.post(

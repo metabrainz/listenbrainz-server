@@ -472,7 +472,7 @@ def get_users_in_order(user_ids):
 
 
 def get_similar_users(user_id: int) -> SimilarUsers:
-    """ Given a user_id, fetch the similar users for that given user. 
+    """ Given a user_id, fetch the similar users for that given user.
         Returns a dict { "user_x" : .453, "user_y": .123 } """
 
     with db.engine.connect() as connection:
@@ -532,6 +532,5 @@ def report_user(reporter_id: int, reported_id: int, reason: str = None):
                 """), {
             "reporter_id": reporter_id,
             "reported_id": reported_id,
-			"reason": reason,
+            "reason": reason,
         })
-
