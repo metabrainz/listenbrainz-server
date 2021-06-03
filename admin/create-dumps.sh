@@ -134,14 +134,10 @@ DUMP_DIR=$(dirname "$DUMP_ID_FILE")
 DUMP_NAME=$(basename "$DUMP_DIR")
 
 # Backup dumps to the backup volume
-# Create backup directories owned by user "listenbrainz"
 echo "Creating Backup directories..."
 mkdir -m "$BACKUP_DIR_MODE" -p \
-         "$BACKUP_DIR/$SUB_DIR/" \
-         "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME"
-chown "$BACKUP_USER:$BACKUP_GROUP" \
-      "$BACKUP_DIR/$SUB_DIR/" \
-      "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME"
+    "$BACKUP_DIR/$SUB_DIR" \
+    "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME"
 echo "Backup directories created!"
 
 # Copy the files into the backup directory
@@ -157,13 +153,9 @@ FTP_CURRENT_DUMP_DIR="$FTP_DIR/$SUB_DIR/$DUMP_NAME"
 # create the dir in which to copy the dumps before
 # changing their permissions to the FTP_FILE_MODE
 echo "Creating FTP directories..."
-mkdir -p "$FTP_CURRENT_DUMP_DIR"
-
-# make sure these dirs are owned by the correct user
-chown "$FTP_USER:$FTP_GROUP" \
-      "$FTP_DIR" \
-      "$FTP_DIR/$SUB_DIR" \
-      "$FTP_CURRENT_DUMP_DIR"
+mkdir  -m "$FTP_DIR_MODE" -p \
+    "$FTP_DIR/$SUB_DIR" \
+    "$FTP_CURRENT_DUMP_DIR"
 
 # make sure all dump files are owned by the correct user
 # and set appropriate mode for files to be uploaded to
@@ -197,7 +189,6 @@ cat "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
 
 /usr/local/bin/python manage.py dump delete_old_dumps "$FTP_DIR/$SUB_DIR"
 /usr/local/bin/python manage.py dump delete_old_dumps "$BACKUP_DIR/$SUB_DIR"
-/usr/local/bin/python manage.py dump delete_old_dumps "$DUMP_BASE_DIR/$SUB_DIR"
 
 # rsync to ftp folder taking care of the rules
 ./admin/rsync-dump-files.sh "$DUMP_TYPE"

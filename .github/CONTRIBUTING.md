@@ -24,7 +24,7 @@ hang out with the development community or get help with contributing, use
 either IRC or Discourse to join the MetaBrainz and other \*Brainz project
 communities.
 
-- **IRC**: `#metabrainz` ([webchat](https://webchat.freenode.net/?channels=metabrainz))
+- **IRC**: `#metabrainz` ([webchat](https://kiwiirc.com/nextclient/irc.libera.chat/#metabrainz))
 - **Discourse**: [community.metabrainz.org](https://community.metabrainz.org/ "MetaBrainz Community Discourse")
 
 ## Coding style

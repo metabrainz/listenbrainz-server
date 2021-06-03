@@ -3,7 +3,7 @@ import { mount } from "enzyme";
 import * as timeago from "time-ago";
 import * as io from "socket.io-client";
 import fetchMock from "jest-fetch-mock";
-import { GlobalAppContextT } from "./GlobalAppContext";
+import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import APIService from "./APIService";
 
 import * as recentListensProps from "./__mocks__/recentListensProps.json";
@@ -11,19 +11,15 @@ import * as recentListensPropsTooManyListens from "./__mocks__/recentListensProp
 import * as recentListensPropsOneListen from "./__mocks__/recentListensPropsOneListen.json";
 import * as recentListensPropsPlayingNow from "./__mocks__/recentListensPropsPlayingNow.json";
 
-import RecentListens, { RecentListensProps } from "./RecentListens";
+import RecentListens, {
+  RecentListensProps,
+  RecentListensState,
+} from "./RecentListens";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
 jest.spyOn(global.Math, "random").mockImplementation(() => 0);
-
-// Create a new instance of GlobalAppContext
-const mountOptions: { context: GlobalAppContextT } = {
-  context: {
-    APIService: new APIService("foo"),
-  },
-};
 
 const {
   artistCount,
@@ -51,10 +47,24 @@ const props = {
   mode: mode as ListensListMode,
   oldestListenTs,
   profileUrl,
-  spotify: spotify as SpotifyUser,
-  youtube: youtube as YoutubeUser,
   user,
   webSocketsServerUrl,
+  newAlert: () => {},
+};
+
+// Create a new instance of GlobalAppContext
+const mountOptions: { context: GlobalAppContextT } = {
+  context: {
+    APIService: new APIService("foo"),
+    youtubeAuth: youtube as YoutubeUser,
+    spotifyAuth: spotify as SpotifyUser,
+    currentUser: user,
+  },
+};
+
+const propsOneListen = {
+  ...recentListensPropsOneListen,
+  mode: recentListensPropsOneListen.mode as ListensListMode,
   newAlert: () => {},
 };
 
@@ -119,16 +129,10 @@ describe("componentDidMount", () => {
   });
 
   it('calls loadFeedback if user is the currentUser and mode "listens"', () => {
-    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
-     * so that it doesn't get passed as a reference.
-     */
     const wrapper = mount<RecentListens>(
-      <RecentListens
-        {...(JSON.parse(
-          JSON.stringify(recentListensPropsOneListen)
-        ) as RecentListensProps)}
-      />,
-      mountOptions
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <RecentListens {...propsOneListen} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
     instance.loadFeedback = jest.fn();
@@ -139,19 +143,12 @@ describe("componentDidMount", () => {
   });
 
   it('does not call loadFeedback if user is not the currentUser even if mode "listens"', () => {
-    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
-     * so that it doesn't get passed as a reference.
-     */
     const wrapper = mount<RecentListens>(
-      <RecentListens
-        {...{
-          ...(JSON.parse(
-            JSON.stringify(recentListensPropsOneListen)
-          ) as RecentListensProps),
-          currentUser: { name: "foobar" },
-        }}
-      />,
-      mountOptions
+      <GlobalAppContext.Provider
+        value={{ ...mountOptions.context, currentUser: { name: "foobar" } }}
+      >
+        <RecentListens {...propsOneListen} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
     instance.loadFeedback = jest.fn();

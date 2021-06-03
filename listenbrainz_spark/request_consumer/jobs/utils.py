@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Optional
 
 from listenbrainz_spark.exceptions import PathNotFoundException
+from listenbrainz_spark.ftp import DumpType
 from listenbrainz_spark.path import IMPORT_METADATA
 from listenbrainz_spark.schema import import_metadata_schema
 from listenbrainz_spark.utils import (create_dataframe, read_files_from_HDFS,
@@ -35,7 +36,7 @@ def get_latest_full_dump() -> Optional[dict]:
         return None
 
 
-def search_dump(dump_id: int, dump_type: str, imported_at: datetime) -> bool:
+def search_dump(dump_id: int, dump_type: DumpType, imported_at: datetime) -> bool:
     """ Search if a particular dump has been imported after a particular timestamp.
 
         Returns:
@@ -48,13 +49,13 @@ def search_dump(dump_id: int, dump_type: str, imported_at: datetime) -> bool:
 
     result = import_meta_df \
         .filter(import_meta_df.imported_at >= imported_at) \
-        .filter(f"dump_id == '{dump_id}' AND dump_type == '{dump_type}'") \
+        .filter(f"dump_id == '{dump_id}' AND dump_type == '{dump_type.value}'") \
         .count()
 
     return result > 0
 
 
-def insert_dump_data(dump_id: int, dump_type: str, imported_at: datetime):
+def insert_dump_data(dump_id: int, dump_type: DumpType, imported_at: datetime):
     """ Insert information about dump imported """
     import_meta_df = None
     try:
@@ -62,10 +63,10 @@ def insert_dump_data(dump_id: int, dump_type: str, imported_at: datetime):
     except PathNotFoundException:
         logger.info("Import metadata file not found, creating...")
 
-    data = create_dataframe(Row(dump_id, dump_type, imported_at), schema=import_metadata_schema)
+    data = create_dataframe(Row(dump_id, dump_type.value, imported_at), schema=import_metadata_schema)
     if import_meta_df:
         result = import_meta_df \
-            .filter(f"dump_id != '{dump_id}' OR dump_type != '{dump_type}'") \
+            .filter(f"dump_id != '{dump_id}' OR dump_type != '{dump_type.value}'") \
             .union(data)
     else:
         result = data
