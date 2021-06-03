@@ -1,13 +1,13 @@
-import React, { useCallback, useState } from "react";
+import * as React from "react";
+import { useCallback, useState } from "react";
 
 type ReportUserModalProps = {
   onSubmit: (optionalReason?: string) => void;
-  htmlId?: string;
   reportedUserName: string;
 };
 
 const ReportUserModal = (props: ReportUserModalProps) => {
-  const { htmlId, reportedUserName, onSubmit } = props;
+  const { reportedUserName, onSubmit } = props;
   const [optionalReason, setOptionalReason] = useState("");
   const submit = useCallback(
     (event: React.SyntheticEvent) => {
@@ -20,7 +20,7 @@ const ReportUserModal = (props: ReportUserModalProps) => {
   return (
     <div
       className="modal fade"
-      id={htmlId ?? "reportUserModal"}
+      id="reportUserModal"
       tabIndex={-1}
       role="dialog"
       aria-labelledby="reportUserModalLabel"
