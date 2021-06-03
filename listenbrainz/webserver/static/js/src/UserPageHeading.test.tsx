@@ -19,9 +19,13 @@
  */
 
 import * as React from "react";
-import { shallow } from "enzyme";
+import { mount, shallow } from "enzyme";
 import UserPageHeading from "./UserPageHeading";
 import FollowButton from "./FollowButton";
+import ReportUserButton from "./ReportUser";
+import ReportUserModal from "./ReportUserModal";
+import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
+import APIService from "./APIService";
 
 const user = {
   id: 1,
@@ -31,6 +35,14 @@ const user = {
 const loggedInUser = {
   id: 2,
   name: "iliekcomputers",
+};
+
+// Create a new instance of GlobalAppContext
+const globalContext: GlobalAppContextT = {
+  APIService: new APIService("foo"),
+  youtubeAuth: {},
+  spotifyAuth: {},
+  currentUser: loggedInUser,
 };
 
 describe("<UserPageHeading />", () => {
@@ -85,6 +97,112 @@ describe("<UserPageHeading />", () => {
       user: { id: 1, name: "followed_user" },
       loggedInUser: { id: 2, name: "iliekcomputers" },
       loggedInUserFollowsUser: false,
+    });
+  });
+
+  describe("ReportUser", () => {
+    it("renders the ReportUserButton and ReportUserModal components with the correct props inside the UserPageHeading", () => {
+      const wrapper = mount(
+        <UserPageHeading
+          user={user}
+          loggedInUser={loggedInUser}
+          loggedInUserFollowsUser={false}
+          alreadyReportedUser={false}
+        />
+      );
+
+      const reportUserButton = wrapper.find(ReportUserButton).first();
+      expect(reportUserButton.props()).toEqual({
+        user: { id: 1, name: "followed_user" },
+        alreadyReported: false,
+      });
+      const reportUserModal = wrapper.find(ReportUserModal).first();
+
+      expect(reportUserModal).toBeDefined();
+      const reportUserModalProps = reportUserModal.props();
+      expect(reportUserModalProps.reportedUserName).toEqual("followed_user");
+    });
+
+    it("allows to report a user using the ReportUserModal", async () => {
+      const wrapper = mount(
+        <GlobalAppContext.Provider value={globalContext}>
+          <ReportUserButton user={user} alreadyReported={false} />
+        </GlobalAppContext.Provider>
+      );
+      const reportUserButton = wrapper.instance();
+      const reportUserModal = wrapper.find(ReportUserModal).first();
+
+      //  Check initial state
+      expect(wrapper.state("reported")).toBeFalsy();
+      const reportUserButtonHTMLElement = wrapper.find("button").first();
+      expect(reportUserButtonHTMLElement.text()).toEqual("Report User");
+
+      const apiCallSpy = jest.fn().mockImplementation(() =>
+        Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              status: "followed_user has been reported successfully.",
+            }),
+        })
+      );
+      reportUserButton.context.APIService.reportUser = apiCallSpy;
+
+      // Let's pretend we're writing in the textarea
+      const reasonInput = reportUserModal.find("#reason").first();
+      expect(reasonInput).toBeDefined();
+      reasonInput.simulate("change", {
+        target: { value: "Can you see the Fnords?" },
+      });
+      // And then we click on the submit button
+      const submitButton = reportUserModal
+        .find("button[type='submit']")
+        .first();
+      submitButton.simulate("click");
+
+      // Clear async queue
+      await new Promise((resolve) => setImmediate(resolve));
+
+      expect(apiCallSpy).toHaveBeenCalledWith(
+        "followed_user",
+        "Can you see the Fnords?"
+      );
+
+      expect(wrapper.state("reported")).toBeTruthy();
+      expect(reportUserButtonHTMLElement.text()).toEqual("Report Submitted");
+    });
+
+    it("displays a user firendly message in the button text in case of error", async () => {
+      const wrapper = mount(
+        <GlobalAppContext.Provider value={globalContext}>
+          <ReportUserButton user={user} alreadyReported={false} />
+        </GlobalAppContext.Provider>
+      );
+      const reportUserButton = wrapper.instance();
+      const reportUserModal = wrapper.find(ReportUserModal).first();
+
+      expect(wrapper.state("reported")).toBeFalsy();
+      const reportUserButtonHTMLElement = wrapper.find("button").first();
+      expect(reportUserButtonHTMLElement.text()).toEqual("Report User");
+
+      const apiCallSpy = jest
+        .fn()
+        .mockImplementation(() =>
+          Promise.reject(new Error("You cannot report yourself"))
+        );
+      reportUserButton.context.APIService.reportUser = apiCallSpy;
+
+      const submitButton = reportUserModal
+        .find("button[type='submit']")
+        .first();
+      submitButton.simulate("click");
+
+      // Clear async queue
+      await new Promise((resolve) => setImmediate(resolve));
+
+      expect(apiCallSpy).toHaveBeenCalledWith("followed_user", "");
+      expect(wrapper.state("reported")).toBeFalsy();
+      expect(reportUserButtonHTMLElement.text()).toEqual("Error! Try Again");
     });
   });
 });
