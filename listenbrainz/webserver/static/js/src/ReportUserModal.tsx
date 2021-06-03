@@ -52,8 +52,9 @@ const ReportUserModal = (props: ReportUserModalProps) => {
               </a>{" "}
               policies, please let us know the reason below.
               <br />
-              Any information or evidence of abuse you can provide us with will
-              be useful in reviewing your report.
+              Any information or evidence of abuse you can provide us with (such
+              as links to where this is happening) will be useful in reviewing
+              your report.
               <br />
             </p>
             <div className="form-group">
