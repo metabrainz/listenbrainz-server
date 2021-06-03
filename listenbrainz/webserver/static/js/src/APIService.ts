@@ -787,6 +787,9 @@ export default class APIService {
     const response = await fetch(`/user/${userName}/report-user/`, {
       method: "POST",
       body: JSON.stringify({ reason: optionalContext }),
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
     await this.checkStatus(response);
   };
