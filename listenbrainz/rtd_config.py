@@ -62,9 +62,6 @@ PLAYING_NOW_MAX_DURATION = 10 * 60
 
 # MISCELLANEOUS
 
-# Set to True if Less should be compiled in browser. Set to False if styling is pre-compiled.
-COMPILE_LESS = True
-
 # MAX file size to be allowed for the lastfm-backup import, default is infinite
 # Size is in bytes
 MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
