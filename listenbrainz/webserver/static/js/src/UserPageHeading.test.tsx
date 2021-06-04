@@ -101,6 +101,20 @@ describe("<UserPageHeading />", () => {
   });
 
   describe("ReportUser", () => {
+    it("does not render a ReportUserButton nor ReportUserModal components if user is not logged in", () => {
+      const wrapper = shallow(
+        <UserPageHeading
+          user={user}
+          loggedInUser={null}
+          loggedInUserFollowsUser={false}
+          alreadyReportedUser={false}
+        />
+      );
+
+      expect(wrapper.find(ReportUserButton)).toHaveLength(0);
+      expect(wrapper.find(ReportUserModal)).toHaveLength(0);
+    });
+
     it("renders the ReportUserButton and ReportUserModal components with the correct props inside the UserPageHeading", () => {
       const wrapper = mount(
         <UserPageHeading

@@ -51,7 +51,9 @@ const UserPageHeading = ({
           />
         )}
       </h2>
-      <ReportUserButton user={user} alreadyReported={alreadyReportedUser} />
+      {loggedInUser && (
+        <ReportUserButton user={user} alreadyReported={alreadyReportedUser} />
+      )}
     </>
   );
 };
