@@ -30,7 +30,7 @@ jobs:
     - name: Build and push Docker images
       uses: docker/build-push-action@v2.4.0
       with:
-        build-args: GIT_COMMIT_SHA=${{ github.sha }}
+        build-args: GIT_COMMIT_SHA=${{ steps.get_tag.outputs.TAG }}
         cache-from: metabrainz/listenbrainz:cache
         cache-to: metabrainz/listenbrainz:cache
         push: true
