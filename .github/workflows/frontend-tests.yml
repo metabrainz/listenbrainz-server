@@ -32,8 +32,10 @@ jobs:
     - uses: satackey/action-docker-layer-caching@v0.0.11
       continue-on-error: true
 
-    - name: Register Problem Mathcers
-      run: echo "::add-matcher::.github/eslint.json"
+    # We do not use this to install node but only to register problem matchers
+    # so that eslint annotations work.
+    - name: Setup Node.js environment to enable annotations
+      uses: actions/setup-node@v2
 
     - name: Build frontend containers
       run: ./test.sh fe -b
