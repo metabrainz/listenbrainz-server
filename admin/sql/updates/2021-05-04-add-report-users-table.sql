@@ -2,7 +2,7 @@ BEGIN;
 
 -- We added a column 'reason' after initially running this update script on the prod database,
 -- so we first drop the table before recreating it.
-DROP TABLE IF EXISTS reported_users
+DROP TABLE IF EXISTS reported_users;
 
 CREATE TABLE reported_users (
     id                  SERIAL,
