@@ -32,6 +32,9 @@ jobs:
     - uses: satackey/action-docker-layer-caching@v0.0.11
       continue-on-error: true
 
+    - name: Register Problem Mathcers
+      run: echo "::add-matcher::.github/eslint.json"
+
     - name: Build frontend containers
       run: ./test.sh fe -b
 
