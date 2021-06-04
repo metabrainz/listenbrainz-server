@@ -139,9 +139,6 @@ class TimescaleWriterSubscriber(ListenWriter):
                 sleep(self.ERROR_RETRY_DELAY)
                 sys.exit(-1)
 
-            init_cache(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'], namespace=current_app.config['REDIS_NAMESPACE'])
-            metrics.init("listenbrainz")
-
             try:
                 while True:
                     try:
