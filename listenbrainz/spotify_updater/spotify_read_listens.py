@@ -2,6 +2,8 @@
 import time
 
 import spotipy
+from brainzutils import metrics
+
 import listenbrainz.webserver
 
 from listenbrainz.utils import safely_import_config
@@ -23,6 +25,9 @@ from werkzeug.exceptions import InternalServerError, ServiceUnavailable
 from brainzutils.mail import send_mail
 from brainzutils.musicbrainz_db import editor as mb_editor
 
+METRIC_UPDATE_INTERVAL = 60  # seconds
+_listens_imported_since_start = 0
+_metric_submission_time = time.monotonic() + METRIC_UPDATE_INTERVAL
 
 def notify_error(musicbrainz_row_id, error):
     """ Notifies specified user via email about error during Spotify import.
@@ -262,7 +267,7 @@ def parse_and_validate_spotify_plays(plays, listen_type):
     return listens
 
 
-def process_one_user(user: dict, service: SpotifyService):
+def process_one_user(user: dict, service: SpotifyService) -> int:
     """ Get recently played songs for this user and submit them to ListenBrainz.
 
     Args:
@@ -273,7 +278,8 @@ def process_one_user(user: dict, service: SpotifyService):
         spotify.SpotifyAPIError: if we encounter errors from the Spotify API.
         spotify.SpotifyListenBrainzError: if we encounter a rate limit, even after retrying.
                                           or if we get errors while submitting the data to ListenBrainz
-
+    Returns:
+        the number of recently played listens imported for the user
     """
     try:
         if service.user_oauth_token_has_expired(user):
@@ -306,7 +312,7 @@ def process_one_user(user: dict, service: SpotifyService):
         # if we don't have any new listens, return
         if len(listens) == 0:
             service.update_user_import_status(user['user_id'])
-            return
+            return 0
 
         latest_listened_at = max(listen['listened_at'] for listen in listens)
         submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTEN_TYPE_IMPORT)
@@ -315,6 +321,7 @@ def process_one_user(user: dict, service: SpotifyService):
         service.update_latest_listen_ts(user['user_id'], latest_listened_at)
 
         current_app.logger.info('imported %d listens for %s' % (len(listens), str(user['musicbrainz_id'])))
+        return len(listens)
 
     except ExternalServiceInvalidGrantError:
         error_message = "It seems like you've revoked permission for us to read your spotify account"
@@ -343,6 +350,8 @@ def process_all_spotify_users():
             failure: the number of users for whom we faced errors while importing.
     """
 
+    global _listens_imported_since_start, _metric_submission_time
+
     service = SpotifyService()
     try:
         users = service.get_active_users_to_process()
@@ -358,7 +367,7 @@ def process_all_spotify_users():
     failure = 0
     for u in users:
         try:
-            process_one_user(u, service)
+            _listens_imported_since_start += process_one_user(u, service)
             success += 1
         except ExternalServiceError as e:
             current_app.logger.critical('spotify_reader could not import listens: %s', str(e), exc_info=True)
@@ -366,6 +375,10 @@ def process_all_spotify_users():
         except Exception as e:
             current_app.logger.critical('spotify_reader could not import listens: %s', str(e), exc_info=True)
             failure += 1
+
+    if time.monotonic() > _metric_submission_time:
+        _metric_submission_time += METRIC_UPDATE_INTERVAL
+        metrics.set("spotify_reader", imported_listens=_listens_imported_since_start)
 
     current_app.logger.info('Processed %d users successfully!', success)
     current_app.logger.info('Encountered errors while processing %d users.', failure)
@@ -379,9 +392,16 @@ def main():
         while True:
             t = time.monotonic()
             success, failure = process_all_spotify_users()
-            if success + failure > 0:
-                current_app.logger.info('All %d users in batch have been processed.', success + failure)
-                current_app.logger.info('Total time taken: %.2f s, average time per user: %.2f s.', time.monotonic() - t, (time.monotonic() - t) / (success + failure))
+            total_users = success + failure
+            if total_users > 0:
+                total_time = time.monotonic() - t
+                avg_time = total_time / total_users
+                metrics.set("spotify_reader",
+                            users_processed=total_users,
+                            time_to_process_all_users=total_time,
+                            time_to_process_one_user=avg_time)
+                current_app.logger.info('All %d users in batch have been processed.', total_users)
+                current_app.logger.info('Total time taken: %.2f s, average time per user: %.2f s.', total_time, avg_time)
             time.sleep(10)
 
 
