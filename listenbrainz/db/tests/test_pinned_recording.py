@@ -44,13 +44,9 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
     def pin_single_sample(self, user_id: int, index: int = 0) -> PinnedRecording:
         """Inserts one recording from pinned_rec_samples into the database.
 
-            Args:
-                user_id: the row ID of the user in the DB
-                index: the index of the element to be inserted (0 - 3)
-
         Args:
             user_id: the row ID of the user in the DB
-            index: the index in pinned_rec_samples to insert
+            index: the index of the element in pinned_rec_samples to insert
 
         Returns:
             The PinnedRecording object that was pinned
@@ -63,6 +59,69 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
 
         db_pinned_rec.pin(recording_to_pin)
         return recording_to_pin
+
+    def test_Pinned_Recording_model(self):
+        # test missing required arguments error
+        with self.assertRaises(ValueError):
+            PinnedRecording(
+                user_id=self.user["id"],
+            )
+
+        # test created = datetime with missing tzinfo error
+        with self.assertRaises(ValueError):
+            PinnedRecording(
+                user_id=self.user["id"],
+                recording_mbid=self.pinned_rec_samples[0]["recording_mbid"],
+                blurb_content=self.pinned_rec_samples[0]["blurb_content"],
+                created=datetime.now(),
+            )
+
+        # test created = invalid datetime error
+        with self.assertRaises(ValueError):
+            PinnedRecording(
+                user_id=self.user["id"],
+                recording_mbid=self.pinned_rec_samples[0]["recording_mbid"],
+                blurb_content=self.pinned_rec_samples[0]["blurb_content"],
+                created="foobar",
+            )
+
+        # test pinned_until = datetime with missing tzinfo error
+        with self.assertRaises(ValueError):
+            PinnedRecording(
+                user_id=self.user["id"],
+                recording_mbid=self.pinned_rec_samples[0]["recording_mbid"],
+                blurb_content=self.pinned_rec_samples[0]["blurb_content"],
+                pinned_until=datetime.now(),
+            )
+
+        # test pinned_until = invalid datetime error
+        with self.assertRaises(ValueError):
+            PinnedRecording(
+                user_id=self.user["id"],
+                recording_mbid=self.pinned_rec_samples[0]["recording_mbid"],
+                blurb_content=self.pinned_rec_samples[0]["blurb_content"],
+                pinned_until="foobar",
+            )
+
+        # test pinned_until < created error
+        with self.assertRaises(ValueError):
+            PinnedRecording(
+                user_id=self.user["id"],
+                recording_mbid=self.pinned_rec_samples[0]["recording_mbid"],
+                blurb_content=self.pinned_rec_samples[0]["blurb_content"],
+                created="2021-06-08 23:23:23.23232+00:00",
+                pinned_until="1980-06-08 23:23:23.23232+00:00",
+            )
+
+        # test default pinned_until value
+        now = datetime.now(timezone.utc)
+        pin_until_test_rec = PinnedRecording(
+            user_id=self.user["id"],
+            recording_mbid=self.pinned_rec_samples[0]["recording_mbid"],
+            blurb_content=self.pinned_rec_samples[0]["blurb_content"],
+            created=now,
+        )
+        self.assertEqual(pin_until_test_rec.pinned_until, now + timedelta(days=7))
 
     def test_pin(self):
         count = self.insert_test_data(self.user["id"])
