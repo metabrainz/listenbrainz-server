@@ -4,12 +4,12 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as Sentry from "@sentry/react";
 import * as _ from "lodash";
-import * as io from "socket.io-client";
 
 import DatePicker from "react-date-picker/dist/entry.nostyle";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
+import { io, Socket } from "socket.io-client";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
@@ -59,7 +59,7 @@ export default class RecentListens extends React.Component<
   private brainzPlayer = React.createRef<BrainzPlayer>();
   private listensTable = React.createRef<HTMLTableElement>();
 
-  private socket!: SocketIOClient.Socket;
+  private socket!: Socket;
 
   private expectedListensPerPage = 25;
 
@@ -163,7 +163,7 @@ export default class RecentListens extends React.Component<
 
   createWebsocketsConnection = (): void => {
     const { webSocketsServerUrl } = this.props;
-    this.socket = io.connect(webSocketsServerUrl);
+    this.socket = io(webSocketsServerUrl);
   };
 
   addWebsocketsHandlers = (): void => {

@@ -1,8 +1,8 @@
 import * as React from "react";
 import { mount } from "enzyme";
 import * as timeago from "time-ago";
-import * as io from "socket.io-client";
 import fetchMock from "jest-fetch-mock";
+import { Socket } from "socket.io-client";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import APIService from "./APIService";
 
@@ -160,17 +160,16 @@ describe("componentDidMount", () => {
 });
 
 describe("createWebsocketsConnection", () => {
-  it("calls io.connect with correct parameters", () => {
+  it("calls io with correct parameters", () => {
     const wrapper = mount<RecentListens>(
       <RecentListens {...props} webSocketsServerUrl="http://localhost:8082" />,
       mountOptions
     );
+    jest.mock("socket.io-client", () => jest.fn().mockImplementation(() => {}));
     const instance = wrapper.instance();
-
-    const spy = jest.spyOn(io, "connect");
     instance.createWebsocketsConnection();
 
-    expect(spy).toHaveBeenCalledWith("http://localhost:8082");
+    expect(Socket).toHaveBeenCalledWith("http://localhost:8082");
     jest.clearAllMocks();
   });
 });
