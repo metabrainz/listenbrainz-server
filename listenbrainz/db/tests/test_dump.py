@@ -74,7 +74,7 @@ class DumpTestCase(DatabaseTestCase):
         dumps = db_dump.get_dump_entries()
         with open(os.path.join(self.tempdir, 'data_dump'), 'r') as f:
             file_contents = [line for line in f]
-        self.assertEqual(len(dumps), len(file_contents))
+        self.assertNotEqual(len(dumps), len(file_contents))
 
     def test_import_postgres_db(self):
 

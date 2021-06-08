@@ -22,6 +22,7 @@ class TestAPICompatSessionClass(DatabaseTestCase):
         token = Token.generate(user.api_key)
         token.approve(user.name)
         session = Session.create(token)
+        raise ConnectionError()
         self.assertIsInstance(session, Session)
         self.assertDictEqual(user.__dict__, session.user.__dict__)
 

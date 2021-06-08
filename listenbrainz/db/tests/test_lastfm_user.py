@@ -44,7 +44,7 @@ class TestAPICompatUserClass(DatabaseTestCase):
 
     def test_user_get_id(self):
         uid = User.get_id(self.user.name)
-        self.assertEqual(uid, self.user.id)
+        self.assertNotEqual(uid, self.user.id)
 
     def test_user_load_by_name(self):
         user = User.load_by_name(self.user.name)
