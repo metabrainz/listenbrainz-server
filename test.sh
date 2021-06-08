@@ -103,6 +103,16 @@ function unit_dcdown {
                 down
 }
 
+function run_unit_tests {
+    echo "Running tests"
+    docker-compose \
+        -f $COMPOSE_FILE_LOC \
+        -p $COMPOSE_PROJECT_NAME \
+        run --rm \
+            --environment GITHUB_ACTIONS="$CI" \
+            listenbrainz pytest "$@"
+}
+
 function build_frontend_containers {
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
@@ -314,18 +324,11 @@ if [ $DB_EXISTS -eq 1 -a $DB_RUNNING -eq 1 ]; then
     build_unit_containers
     bring_up_unit_db
     unit_setup
-    echo "Running tests"
-    docker-compose -f $COMPOSE_FILE_LOC \
-                   -p $COMPOSE_PROJECT_NAME \
-                run --rm listenbrainz pytest "$@"
+    run_unit_tests "$@"
     RET=$?
     unit_dcdown
     exit $RET
 else
     # Else, we have containers, just run tests
-    echo "Running tests"
-    docker-compose -f $COMPOSE_FILE_LOC \
-                   -p $COMPOSE_PROJECT_NAME \
-                run --rm listenbrainz pytest "$@"
-    exit $?
+    run_unit_tests "$@"
 fi
