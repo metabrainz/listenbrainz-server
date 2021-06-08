@@ -1,5 +1,4 @@
-from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
-from dataclasses import dataclass, field
+from  concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 from queue import PriorityQueue, Queue, Empty
 from time import time
 import threading
@@ -15,14 +14,8 @@ from brainzutils import metrics, cache
 
 MAX_THREADS = 1
 MAX_QUEUED_JOBS = MAX_THREADS * 2
-MSID_FETCH_BATCH_SIZE = 1000
+
 UPDATE_INTERVAL = 60 
-
-
-@dataclass(order=True)
-class JobItem:
-    priority: int
-    item: object = field()
 
 
 class MappingJobQueue(threading.Thread):
@@ -32,40 +25,18 @@ class MappingJobQueue(threading.Thread):
         self.done = False
         self.app = app
         self.queue = PriorityQueue()
+        self.priority = 1
 
         init_cache(host=app.config['REDIS_HOST'], port=app.config['REDIS_PORT'], namespace=app.config['REDIS_NAMESPACE'])
         metrics.init("listenbrainz")
 
     def add_new_listens(self, listens):
-        self.queue.put(JobItem(1, listens))
+        self.queue.put((self.priority, listens))
+        self.priority += 1
 
     def terminate(self):
         self.done = True
         self.join()
-
-    def add_unmatched_listen_msids_to_queue(self):
-
-        msids = []
-        query = """SELECT data->'track_metadata'->'additional_info'->>'recording_msid' as recording_msid
-                     FROM listen
-                LEFT JOIN listen_mbid_mapping mbid
-                       ON data->'track_metadata'->'additional_info'->>'recording_msid' = mbid.recording_mbid::text
-                    WHERE mbid.recording_mbid is null
-                 ORDER BY listened_at desc
-                    LIMIT :limit"""
-
-        with timescale.engine.connect() as connection:
-            curs = connection.execute(sqlalchemy.text(query), limit=MSID_FETCH_BATCH_SIZE)
-            while True:
-                result = curs.fetchone()
-                if not result:
-                    break
-
-                self.queue.put(JobItem(0, result[0]))
-                msids.append(result[0])
-
-        return msids
-
 
     def run(self):
         self.app.logger.info("start job queue thread")
