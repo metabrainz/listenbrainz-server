@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 
 import listenbrainz_spark.request_consumer.jobs.utils as import_utils
+from listenbrainz_spark.ftp import DumpType
 from listenbrainz_spark.path import IMPORT_METADATA
 from listenbrainz_spark.schema import import_metadata_schema
 from listenbrainz_spark.tests import SparkTestCase
@@ -70,12 +71,12 @@ class ImporterUtilsTestCase(SparkTestCase):
 
     def test_search_dump(self):
         """ Test to ensure 'True' is returned if appropriate dump is found and 'False' if it isn't found. """
-        self.assertTrue(import_utils.search_dump(4, "full", datetime.fromtimestamp(3)))
-        self.assertFalse(import_utils.search_dump(4, "full", datetime.fromtimestamp(5)))
-        self.assertFalse(import_utils.search_dump(5, "full", datetime.fromtimestamp(5)))
+        self.assertTrue(import_utils.search_dump(4, DumpType.FULL, datetime.fromtimestamp(3)))
+        self.assertFalse(import_utils.search_dump(4, DumpType.FULL, datetime.fromtimestamp(5)))
+        self.assertFalse(import_utils.search_dump(5, DumpType.FULL, datetime.fromtimestamp(5)))
 
-        self.assertTrue(import_utils.search_dump(4, "incremental", datetime.fromtimestamp(4)))
-        self.assertFalse(import_utils.search_dump(4, "incremental", datetime.fromtimestamp(5)))
+        self.assertTrue(import_utils.search_dump(4, DumpType.INCREMENTAL, datetime.fromtimestamp(4)))
+        self.assertFalse(import_utils.search_dump(4, DumpType.INCREMENTAL, datetime.fromtimestamp(5)))
 
     def test_search_dump_file_missing(self):
         """ Test to ensure 'False' is returned if metadata file is missing. """
@@ -83,19 +84,19 @@ class ImporterUtilsTestCase(SparkTestCase):
         if path_found:
             delete_dir(self.path_, recursive=True)
 
-        self.assertFalse(import_utils.search_dump(1, "full", datetime.fromtimestamp(1)))
+        self.assertFalse(import_utils.search_dump(1, DumpType.FULL, datetime.fromtimestamp(1)))
 
     def test_insert_dump_data(self):
         """ Test to ensure that data is inserted correctly. """
-        import_utils.insert_dump_data(9, "full", datetime.fromtimestamp(9))
-        self.assertTrue(import_utils.search_dump(9, "full", datetime.fromtimestamp(9)))
+        import_utils.insert_dump_data(9, DumpType.FULL, datetime.fromtimestamp(9))
+        self.assertTrue(import_utils.search_dump(9, DumpType.FULL, datetime.fromtimestamp(9)))
 
     def test_insert_dump_data_update_date(self):
         """ Test to ensure date is updated if entry already exists. """
-        self.assertFalse(import_utils.search_dump(7, "incremental", datetime.fromtimestamp(9)))
-        import_utils.insert_dump_data(7, "incremental", datetime.fromtimestamp(9))
-        self.assertTrue(import_utils.search_dump(7, "incremental", datetime.fromtimestamp(9)))
-        self.assertTrue(import_utils.search_dump(2, "incremental", datetime.fromtimestamp(2)))
+        self.assertFalse(import_utils.search_dump(7, DumpType.INCREMENTAL, datetime.fromtimestamp(9)))
+        import_utils.insert_dump_data(7, DumpType.INCREMENTAL, datetime.fromtimestamp(9))
+        self.assertTrue(import_utils.search_dump(7, DumpType.INCREMENTAL, datetime.fromtimestamp(9)))
+        self.assertTrue(import_utils.search_dump(2, DumpType.INCREMENTAL, datetime.fromtimestamp(2)))
 
     def test_insert_dump_data_file_missing(self):
         """ Test to ensure a file is created if it is missing. """
@@ -103,6 +104,6 @@ class ImporterUtilsTestCase(SparkTestCase):
         if path_found:
             delete_dir(self.path_, recursive=True)
 
-        self.assertFalse(import_utils.search_dump(1, "full", datetime.fromtimestamp(1)))
-        import_utils.insert_dump_data(1, "full", datetime.fromtimestamp(1))
-        self.assertTrue(import_utils.search_dump(1, "full", datetime.fromtimestamp(1)))
+        self.assertFalse(import_utils.search_dump(1, DumpType.FULL, datetime.fromtimestamp(1)))
+        import_utils.insert_dump_data(1, DumpType.FULL, datetime.fromtimestamp(1))
+        self.assertTrue(import_utils.search_dump(1, DumpType.FULL, datetime.fromtimestamp(1)))

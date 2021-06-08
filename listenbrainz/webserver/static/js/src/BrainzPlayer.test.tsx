@@ -5,16 +5,9 @@ import SoundcloudPlayer from "./SoundcloudPlayer";
 import YoutubePlayer from "./YoutubePlayer";
 import SpotifyPlayer from "./SpotifyPlayer";
 import APIService from "./APIService";
+import GlobalAppContext from "./GlobalAppContext";
 
 const props = {
-  spotifyUser: {
-    access_token: "heyo",
-    permission: ["user-read-currently-playing"] as Array<SpotifyPermission>,
-  },
-  youtubeUser: {
-    access_token: "frontend-test",
-    api_key: "fake-api-key",
-  } as YoutubeUser,
   direction: "up" as BrainzPlayDirection,
   onCurrentListenChange: (listen: Listen | JSPFTrack) => {},
   listens: [],
@@ -23,12 +16,26 @@ const props = {
     title: string,
     message: string | JSX.Element
   ) => {},
-  apiService: new APIService("base-uri"),
+};
+const spotifyAccountWithPermissions = {
+  access_token: "haveyouseenthefnords",
+  permission: ["streaming", "user-read-email", "user-read-private"] as Array<
+    SpotifyPermission
+  >,
 };
 
 const GlobalContextMock = {
   context: {
-    APIService: { refreshSpotifyToken: jest.fn() },
+    APIService: new APIService("base-uri"),
+    spotifyAuth: {
+      access_token: "heyo",
+      permission: ["user-read-currently-playing"] as Array<SpotifyPermission>,
+    },
+    youtubeAuth: {
+      access_token: "frontend-test",
+      api_key: "fake-api-key",
+    },
+    currentUser: { name: "" },
   },
 };
 
@@ -54,12 +61,10 @@ describe("BrainzPlayer", () => {
   it("creates Youtube and SoundCloud datasources by default", () => {
     const mockProps = {
       ...props,
-      spotifyUser: {},
     };
-    const wrapper = mount<BrainzPlayer>(
-      <BrainzPlayer {...mockProps} />,
-      GlobalContextMock
-    );
+    const wrapper = mount<BrainzPlayer>(<BrainzPlayer {...mockProps} />, {
+      context: { ...GlobalContextMock.context, spotifyUser: {} },
+    });
     const instance = wrapper.instance();
     expect(instance.dataSources).toHaveLength(2);
     expect(instance.dataSources[0].current).toBeInstanceOf(YoutubePlayer);
@@ -67,40 +72,25 @@ describe("BrainzPlayer", () => {
   });
 
   it("creates a Spotify datasource when passed a spotify user with right permissions", () => {
-    const mockProps = {
-      ...props,
-      spotifyUser: {
-        access_token: "haveyouseenthefnords",
-        permission: [
-          "streaming",
-          "user-read-email",
-          "user-read-private",
-        ] as Array<SpotifyPermission>,
-      },
-    };
     const wrapper = mount<BrainzPlayer>(
-      <BrainzPlayer {...mockProps} />,
-      GlobalContextMock
+      <GlobalAppContext.Provider
+        value={{
+          ...GlobalContextMock.context,
+          spotifyAuth: spotifyAccountWithPermissions,
+        }}
+      >
+        <BrainzPlayer {...props} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
     expect(instance.dataSources[0].current).toBeInstanceOf(SpotifyPlayer);
   });
 
   it("removes a datasource when calling invalidateDataSource", () => {
-    const mockProps = {
-      ...props,
-      spotifyUser: {
-        access_token: "haveyouseenthefnords",
-        permission: [
-          "streaming",
-          "user-read-email",
-          "user-read-private",
-        ] as Array<SpotifyPermission>,
-      },
-    };
     const wrapper = mount<BrainzPlayer>(
-      <BrainzPlayer {...mockProps} />,
-      GlobalContextMock
+      <GlobalAppContext.Provider value={GlobalContextMock.context}>
+        <BrainzPlayer {...props} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
     instance.handleWarning = jest.fn();
@@ -121,20 +111,15 @@ describe("BrainzPlayer", () => {
   });
 
   it("selects Youtube as source when listen has a youtube URL", () => {
-    const mockProps = {
-      ...props,
-      spotifyUser: {
-        access_token: "haveyouseenthefnords",
-        permission: [
-          "streaming",
-          "user-read-email",
-          "user-read-private",
-        ] as Array<SpotifyPermission>,
-      },
-    };
     const wrapper = mount<BrainzPlayer>(
-      <BrainzPlayer {...mockProps} />,
-      GlobalContextMock
+      <GlobalAppContext.Provider
+        value={{
+          ...GlobalContextMock.context,
+          spotifyAuth: spotifyAccountWithPermissions,
+        }}
+      >
+        <BrainzPlayer {...props} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
     expect(instance.dataSources[1].current).toBeInstanceOf(YoutubePlayer);
@@ -154,20 +139,15 @@ describe("BrainzPlayer", () => {
   });
 
   it("selects Spotify as source when listen has listening_from = spotify", () => {
-    const mockProps = {
-      ...props,
-      spotifyUser: {
-        access_token: "haveyouseenthefnords",
-        permission: [
-          "streaming",
-          "user-read-email",
-          "user-read-private",
-        ] as Array<SpotifyPermission>,
-      },
-    };
     const wrapper = mount<BrainzPlayer>(
-      <BrainzPlayer {...mockProps} />,
-      GlobalContextMock
+      <GlobalAppContext.Provider
+        value={{
+          ...GlobalContextMock.context,
+          spotifyAuth: spotifyAccountWithPermissions,
+        }}
+      >
+        <BrainzPlayer {...props} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
     const spotifyListen: Listen = {
@@ -186,20 +166,15 @@ describe("BrainzPlayer", () => {
   });
 
   it("selects Spotify as source when listen has a spotify_id", () => {
-    const mockProps = {
-      ...props,
-      spotifyUser: {
-        access_token: "haveyouseenthefnords",
-        permission: [
-          "streaming",
-          "user-read-email",
-          "user-read-private",
-        ] as Array<SpotifyPermission>,
-      },
-    };
     const wrapper = mount<BrainzPlayer>(
-      <BrainzPlayer {...mockProps} />,
-      GlobalContextMock
+      <GlobalAppContext.Provider
+        value={{
+          ...GlobalContextMock.context,
+          spotifyAuth: spotifyAccountWithPermissions,
+        }}
+      >
+        <BrainzPlayer {...props} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
     const spotifyListen: Listen = {
@@ -218,20 +193,15 @@ describe("BrainzPlayer", () => {
   });
 
   it("selects Soundcloud as source when listen has a soundcloud URL", () => {
-    const mockProps = {
-      ...props,
-      spotifyUser: {
-        access_token: "haveyouseenthefnords",
-        permission: [
-          "streaming",
-          "user-read-email",
-          "user-read-private",
-        ] as Array<SpotifyPermission>,
-      },
-    };
     const wrapper = mount<BrainzPlayer>(
-      <BrainzPlayer {...mockProps} />,
-      GlobalContextMock
+      <GlobalAppContext.Provider
+        value={{
+          ...GlobalContextMock.context,
+          spotifyAuth: spotifyAccountWithPermissions,
+        }}
+      >
+        <BrainzPlayer {...props} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
     expect(instance.dataSources[2].current).toBeInstanceOf(SoundcloudPlayer);

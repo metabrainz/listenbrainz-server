@@ -32,6 +32,7 @@ import {
   getPlaylistId,
   MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
 } from "./utils";
+import { getPageProps } from "../utils";
 
 export type UserPlaylistsProps = {
   currentUser?: ListenBrainzUser;
@@ -46,7 +47,6 @@ export type UserPlaylistsProps = {
 export type UserPlaylistsState = {
   playlists: JSPFPlaylist[];
   playlistSelectedForOperation?: JSPFPlaylist;
-  alerts: Alert[];
   loading: boolean;
   paginationOffset: number;
   playlistsPerPage: number;
@@ -68,7 +68,6 @@ export default class UserPlaylists extends React.Component<
 
     const concatenatedPlaylists = props.playlists?.map((pl) => pl.playlist);
     this.state = {
-      alerts: [],
       playlists: concatenatedPlaylists ?? [],
       loading: false,
       paginationOffset: parseInt(props.paginationOffset, 10) || 0,
@@ -455,7 +454,6 @@ export default class UserPlaylists extends React.Component<
   render() {
     const { user, activeSection } = this.props;
     const {
-      alerts,
       playlists,
       playlistSelectedForOperation,
       paginationOffset,
@@ -667,25 +665,26 @@ export default class UserPlaylists extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const domContainer = document.querySelector("#react-container");
-  const propsElement = document.getElementById("react-props");
-  let reactProps;
-  try {
-    reactProps = JSON.parse(propsElement!.innerHTML);
-  } catch (err) {
-    // Show error to the user and ask to reload page
-  }
   const {
-    current_user,
+    domContainer,
+    reactProps,
+    globalReactProps,
+    optionalAlerts,
+  } = getPageProps();
+  const {
     api_url,
-    playlists,
+    sentry_dsn,
+    current_user,
     spotify,
+    youtube,
+  } = globalReactProps;
+  const {
+    playlists,
     user,
     playlist_count: playlistCount,
     active_section: activeSection,
     pagination_offset: paginationOffset,
     playlists_per_page: playlistsPerPage,
-    sentry_dsn,
   } = reactProps;
 
   if (sentry_dsn) {
@@ -704,15 +703,16 @@ document.addEventListener("DOMContentLoaded", () => {
     APIService: apiService,
     currentUser: current_user,
     spotifyAuth: spotify,
+    youtubeAuth: youtube,
   };
 
   ReactDOM.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
         <UserPlaylistsWithAlertNotifications
+          initialAlerts={optionalAlerts}
           activeSection={activeSection}
           playlistCount={playlistCount}
-          currentUser={current_user}
           playlists={playlists}
           paginationOffset={paginationOffset}
           playlistsPerPage={playlistsPerPage}

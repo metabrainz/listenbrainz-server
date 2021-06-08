@@ -8,6 +8,7 @@ import UserListeningActivity from "./UserListeningActivity";
 import UserTopEntity from "./UserTopEntity";
 import UserDailyActivity from "./UserDailyActivity";
 import UserArtistMap from "./UserArtistMap";
+import { getPageProps } from "../utils";
 
 export type UserReportsProps = {
   user: ListenBrainzUser;
@@ -164,15 +165,9 @@ export default class UserReports extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const domContainer = document.querySelector("#react-container");
-  const propsElement = document.getElementById("react-props");
-  let reactProps;
-  try {
-    reactProps = JSON.parse(propsElement!.innerHTML);
-  } catch (err) {
-    // Show error to the user and ask to reload page
-  }
-  const { user, api_url: apiUrl, sentry_dsn } = reactProps;
+  const { domContainer, reactProps, globalReactProps } = getPageProps();
+  const { api_url, sentry_dsn } = globalReactProps;
+  const { user } = reactProps;
 
   if (sentry_dsn) {
     Sentry.init({ dsn: sentry_dsn });
@@ -180,7 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   ReactDOM.render(
     <ErrorBoundary>
-      <UserReports apiUrl={apiUrl} user={user} />
+      <UserReports apiUrl={api_url} user={user} />
     </ErrorBoundary>,
     domContainer
   );

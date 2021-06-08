@@ -3,6 +3,7 @@ from unittest.mock import patch, call
 
 from listenbrainz_spark import config
 from listenbrainz_spark.exceptions import DumpNotFoundException
+from listenbrainz_spark.ftp import DumpType
 from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
 
 
@@ -115,7 +116,7 @@ class FTPDownloaderTestCase(unittest.TestCase):
     def test_download_listens_full_dump(self, mock_ftp, mock_list_dir, mock_get_f_name, mock_download_dump):
         mock_list_dir.return_value = ['listenbrainz-dump-123-20190101-000000/', 'listenbrainz-dump-45-20190201-000000']
         mock_get_f_name.return_value = 'listenbrainz-listens-dump-123-20190101-000000-spark-full.tar.xz'
-        dest_path, filename, dump_id = ListenbrainzDataDownloader().download_listens('fakedir', None, dump_type='full')
+        dest_path, filename, dump_id = ListenbrainzDataDownloader().download_listens('fakedir', None, dump_type=DumpType.FULL)
         mock_list_dir.assert_called_once()
         mock_ftp.return_value.cwd.assert_has_calls(
             [call(config.FTP_LISTENS_DIR + 'fullexport/'), call('listenbrainz-dump-123-20190101-000000/')])
@@ -134,7 +135,8 @@ class FTPDownloaderTestCase(unittest.TestCase):
         mock_list_dir.return_value = ['listenbrainz-dump-123-20190101-000000/', 'listenbrainz-dump-45-20190201-000000']
         mock_get_f_name.return_value = 'listenbrainz-listens-dump-45-20190201-000000-spark-full.tar.xz'
         dest_path, filename, dump_id = ListenbrainzDataDownloader().download_listens('fakedir',
-                                                                                     listens_dump_id=45, dump_type='full')
+                                                                                     listens_dump_id=45,
+                                                                                     dump_type=DumpType.FULL)
         mock_list_dir.assert_called_once()
         mock_ftp.return_value.cwd.assert_has_calls([
             call(config.FTP_LISTENS_DIR + 'fullexport/'),
@@ -154,7 +156,7 @@ class FTPDownloaderTestCase(unittest.TestCase):
     def test_download_listens_incremental_dump(self, mock_ftp, mock_list_dir, mock_get_f_name, mock_download_dump):
         mock_list_dir.return_value = ['listenbrainz-dump-123-20190101-000000/', 'listenbrainz-dump-45-20190201-000000']
         mock_get_f_name.return_value = 'listenbrainz-listens-dump-123-20190101-000000-spark-incremental.tar.xz'
-        dest_path, filename, dump_id = ListenbrainzDataDownloader().download_listens('fakedir', None, dump_type='incremental')
+        dest_path, filename, dump_id = ListenbrainzDataDownloader().download_listens('fakedir', None, dump_type=DumpType.INCREMENTAL)
         mock_list_dir.assert_called_once()
         mock_ftp.return_value.cwd.assert_has_calls(
             [call(config.FTP_LISTENS_DIR + 'incremental/'), call('listenbrainz-dump-123-20190101-000000/')])
@@ -173,7 +175,7 @@ class FTPDownloaderTestCase(unittest.TestCase):
         mock_list_dir.return_value = ['listenbrainz-dump-123-20190101-000000/', 'listenbrainz-dump-45-20190201-000000']
         mock_get_f_name.return_value = 'listenbrainz-listens-dump-45-20190201-000000-spark-incremental.tar.xz'
         dest_path, filename, dump_id = ListenbrainzDataDownloader().download_listens('fakedir', listens_dump_id=45,
-                                                                                     dump_type='incremental')
+                                                                                     dump_type=DumpType.INCREMENTAL)
         mock_list_dir.assert_called_once()
         mock_ftp.return_value.cwd.assert_has_calls([
             call(config.FTP_LISTENS_DIR + 'incremental/'),

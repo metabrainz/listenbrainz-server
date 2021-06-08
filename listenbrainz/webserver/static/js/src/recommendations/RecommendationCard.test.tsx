@@ -18,6 +18,9 @@ import {
 
 import RecommendationControl from "./RecommendationControl";
 
+import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
+import APIService from "../APIService";
+
 import RecommendationCard, {
   RecommendationCardProps,
 } from "./RecommendationCard";
@@ -41,33 +44,49 @@ const recommendation: Recommendation = {
 const props: RecommendationCardProps = {
   recommendation,
   isCurrentUser: true,
-  currentUser: { auth_token: "lalala", name: "test" },
   playRecommendation: () => {},
   currentFeedback: "love",
   updateFeedback: () => {},
   newAlert: () => {},
 };
 
+// Create a new instance of GlobalAppContext
+const GlobalContextMock: GlobalAppContextT = {
+  APIService: new APIService("foo"),
+  youtubeAuth: {},
+  spotifyAuth: {},
+  currentUser: { auth_token: "lalala", name: "test" },
+};
+
 describe("RecommendationCard", () => {
   it("renders correctly if isCurrentUser is true and CurrentUser.authtoken is set", () => {
     const wrapper = mount<RecommendationCard>(
-      <RecommendationCard {...props} />
+      <GlobalAppContext.Provider value={GlobalContextMock}>
+        <RecommendationCard {...props} />
+      </GlobalAppContext.Provider>
     );
 
     expect(wrapper).toMatchSnapshot();
   });
   it("renders correctly if isCurrentUser is False", () => {
     const wrapper = mount<RecommendationCard>(
-      <RecommendationCard {...{ ...props, isCurrentUser: false }} />
+      <GlobalAppContext.Provider value={GlobalContextMock}>
+        <RecommendationCard {...{ ...props, isCurrentUser: false }} />
+      </GlobalAppContext.Provider>
     );
 
     expect(wrapper).toMatchSnapshot();
   });
   it("renders correctly if CurrentUser.authtoken is not set", () => {
     const wrapper = mount<RecommendationCard>(
-      <RecommendationCard
-        {...{ ...props, currentUser: { auth_token: undefined, name: "test" } }}
-      />
+      <GlobalAppContext.Provider
+        value={{
+          ...GlobalContextMock,
+          currentUser: { auth_token: undefined, name: "test" },
+        }}
+      >
+        <RecommendationCard {...props} />
+      </GlobalAppContext.Provider>
     );
 
     expect(wrapper).toMatchSnapshot();
@@ -76,12 +95,19 @@ describe("RecommendationCard", () => {
 
 describe("submitFeedback", () => {
   it("calls API, calls updateFeedback correctly", async () => {
+    const updateFeedbackSpy = jest.fn();
     const wrapper = mount<RecommendationCard>(
-      <RecommendationCard {...{ ...props, updateFeedback: jest.fn() }} />
+      <RecommendationCard
+        {...{ ...props, updateFeedback: updateFeedbackSpy }}
+      />,
+      {
+        // Using this method to provide the context as it allows us to call instance.setProps below
+        // where instance must be the RecommendationCard component
+        wrappingComponent: GlobalAppContext.Provider,
+        wrappingComponentProps: { value: GlobalContextMock },
+      }
     );
     const instance = wrapper.instance();
-    const updateFeedbackSpy = jest.spyOn(instance.props, "updateFeedback");
-
     const spy = jest.spyOn(
       instance.context.APIService,
       "submitRecommendationFeedback"
@@ -133,8 +159,15 @@ describe("submitFeedback", () => {
     const wrapper = mount<RecommendationCard>(
       <RecommendationCard
         {...{ ...props, isCurrentUser: false, updateFeedback: jest.fn() }}
-      />
+      />,
+      {
+        wrappingComponent: GlobalAppContext.Provider,
+        wrappingComponentProps: {
+          value: GlobalContextMock,
+        },
+      }
     );
+
     const instance = wrapper.instance();
     const updateFeedbackSpy = jest.spyOn(instance.props, "updateFeedback");
 
@@ -152,13 +185,16 @@ describe("submitFeedback", () => {
 
   it("does nothing if CurrentUser.authtoken is not set", async () => {
     const wrapper = mount<RecommendationCard>(
-      <RecommendationCard
-        {...{
-          ...props,
-          currentUser: { auth_token: undefined, name: "test" },
-          updateFeedback: jest.fn(),
-        }}
-      />
+      <RecommendationCard {...{ ...props, updateFeedback: jest.fn() }} />,
+      {
+        wrappingComponent: GlobalAppContext.Provider,
+        wrappingComponentProps: {
+          value: {
+            ...GlobalContextMock,
+            currentUser: { auth_token: undefined, name: "test" },
+          },
+        },
+      }
     );
     const instance = wrapper.instance();
     const updateFeedbackSpy = jest.spyOn(instance.props, "updateFeedback");
@@ -177,7 +213,9 @@ describe("submitFeedback", () => {
 
   it("doesn't call updateFeedback if status code is not 200", async () => {
     const wrapper = mount<RecommendationCard>(
-      <RecommendationCard {...{ ...props, updateFeedback: jest.fn() }} />
+      <GlobalAppContext.Provider value={GlobalContextMock}>
+        <RecommendationCard {...{ ...props, updateFeedback: jest.fn() }} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
     const updateFeedbackSpy = jest.spyOn(instance.props, "updateFeedback");
@@ -199,7 +237,9 @@ describe("submitFeedback", () => {
 
   it("calls handleError if error is returned", async () => {
     const wrapper = mount<RecommendationCard>(
-      <RecommendationCard {...{ ...props, updateFeedback: jest.fn() }} />
+      <GlobalAppContext.Provider value={GlobalContextMock}>
+        <RecommendationCard {...{ ...props, updateFeedback: jest.fn() }} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
     const updateFeedbackSpy = jest.spyOn(instance.props, "updateFeedback");
@@ -256,7 +296,13 @@ describe("handleError", () => {
 describe("deleteFeedback", () => {
   it("calls API, calls updateFeedback correctly", async () => {
     const wrapper = mount<RecommendationCard>(
-      <RecommendationCard {...{ ...props, updateFeedback: jest.fn() }} />
+      <RecommendationCard {...{ ...props, updateFeedback: jest.fn() }} />,
+      {
+        // Using this method to provide the context as it allows us to call instance.setProps below
+        // where instance must be the RecommendationCard component
+        wrappingComponent: GlobalAppContext.Provider,
+        wrappingComponentProps: { value: GlobalContextMock },
+      }
     );
     const instance = wrapper.instance();
     const updateFeedbackSpy = jest.spyOn(instance.props, "updateFeedback");
@@ -314,7 +360,13 @@ describe("deleteFeedback", () => {
     const wrapper = mount<RecommendationCard>(
       <RecommendationCard
         {...{ ...props, isCurrentUser: false, updateFeedback: jest.fn() }}
-      />
+      />,
+      {
+        wrappingComponent: GlobalAppContext.Provider,
+        wrappingComponentProps: {
+          value: GlobalContextMock,
+        },
+      }
     );
     const instance = wrapper.instance();
     const updateFeedbackSpy = jest.spyOn(instance.props, "updateFeedback");
@@ -333,13 +385,16 @@ describe("deleteFeedback", () => {
 
   it("does nothing if CurrentUser.authtoken is not set", async () => {
     const wrapper = mount<RecommendationCard>(
-      <RecommendationCard
-        {...{
-          ...props,
-          currentUser: { auth_token: undefined, name: "test" },
-          updateFeedback: jest.fn(),
-        }}
-      />
+      <RecommendationCard {...{ ...props, updateFeedback: jest.fn() }} />,
+      {
+        wrappingComponent: GlobalAppContext.Provider,
+        wrappingComponentProps: {
+          value: {
+            ...GlobalContextMock,
+            currentUser: { auth_token: undefined, name: "test" },
+          },
+        },
+      }
     );
     const instance = wrapper.instance();
     const updateFeedbackSpy = jest.spyOn(instance.props, "updateFeedback");
@@ -358,7 +413,9 @@ describe("deleteFeedback", () => {
 
   it("doesn't call updateFeedback if status code is not 200", async () => {
     const wrapper = mount<RecommendationCard>(
-      <RecommendationCard {...{ ...props, updateFeedback: jest.fn() }} />
+      <GlobalAppContext.Provider value={GlobalContextMock}>
+        <RecommendationCard {...{ ...props, updateFeedback: jest.fn() }} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
     const updateFeedbackSpy = jest.spyOn(instance.props, "updateFeedback");
@@ -379,7 +436,9 @@ describe("deleteFeedback", () => {
 
   it("calls handleError if error is returned", async () => {
     const wrapper = mount<RecommendationCard>(
-      <RecommendationCard {...{ ...props, updateFeedback: jest.fn() }} />
+      <GlobalAppContext.Provider value={GlobalContextMock}>
+        <RecommendationCard {...{ ...props, updateFeedback: jest.fn() }} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
     const updateFeedbackSpy = jest.spyOn(instance.props, "updateFeedback");
@@ -404,8 +463,10 @@ describe("deleteFeedback", () => {
 
 describe("Check if button and dropdown values ae synced.", () => {
   it("check button and dropdown values when currentFeedback == 'Hate' ", async () => {
-    const wrapper = shallow<RecommendationCard>(
-      <RecommendationCard {...{ ...props, currentFeedback: "hate" }} />
+    const wrapper = mount<RecommendationCard>(
+      <GlobalAppContext.Provider value={GlobalContextMock}>
+        <RecommendationCard {...{ ...props, currentFeedback: "hate" }} />
+      </GlobalAppContext.Provider>
     );
     const myComponents = wrapper.find(RecommendationControl);
 
@@ -443,8 +504,10 @@ describe("Check if button and dropdown values ae synced.", () => {
   });
 
   it("check button and dropdown values when currentFeedback == 'dislike' ", async () => {
-    const wrapper = shallow<RecommendationCard>(
-      <RecommendationCard {...{ ...props, currentFeedback: "dislike" }} />
+    const wrapper = mount<RecommendationCard>(
+      <GlobalAppContext.Provider value={GlobalContextMock}>
+        <RecommendationCard {...{ ...props, currentFeedback: "dislike" }} />
+      </GlobalAppContext.Provider>
     );
     const myComponents = wrapper.find(RecommendationControl);
 
@@ -480,8 +543,10 @@ describe("Check if button and dropdown values ae synced.", () => {
   });
 
   it("check button and dropdown values when currentFeedback == 'like' ", async () => {
-    const wrapper = shallow<RecommendationCard>(
-      <RecommendationCard {...{ ...props, currentFeedback: "like" }} />
+    const wrapper = mount<RecommendationCard>(
+      <GlobalAppContext.Provider value={GlobalContextMock}>
+        <RecommendationCard {...{ ...props, currentFeedback: "like" }} />
+      </GlobalAppContext.Provider>
     );
     const myComponents = wrapper.find(RecommendationControl);
 
@@ -517,8 +582,10 @@ describe("Check if button and dropdown values ae synced.", () => {
   });
 
   it("check button and dropdown values when currentFeedback == 'Love' ", async () => {
-    const wrapper = shallow<RecommendationCard>(
-      <RecommendationCard {...{ ...props, currentFeedback: "love" }} />
+    const wrapper = mount<RecommendationCard>(
+      <GlobalAppContext.Provider value={GlobalContextMock}>
+        <RecommendationCard {...{ ...props, currentFeedback: "love" }} />
+      </GlobalAppContext.Provider>
     );
     const myComponents = wrapper.find(RecommendationControl);
 
