@@ -129,7 +129,7 @@ def refresh_listen_count_aggregate():
            Assuming today is 2022-01-01 and this function is called for year_offset 1 and
            year_count 1 then all of 2021 will be refreshed.
     """
-
+    logger.info("Starting to refresh continuous aggregates:")
     timescale.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
 
     end_ts = int(datetime.now().timestamp()) - SECONDS_IN_A_YEAR
@@ -147,8 +147,7 @@ def refresh_listen_count_aggregate():
                     "end_ts": end_ts
                 })
         except psycopg2.OperationalError as e:
-            self.log.error("Cannot refresh listen_count_30day cont agg: %s" %
-                           str(e), exc_info=True)
+            logger.error("Cannot refresh listen_count_30day cont agg: %s" % str(e), exc_info=True)
             raise
 
         t1 = time.monotonic()

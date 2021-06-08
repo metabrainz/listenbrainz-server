@@ -40,8 +40,6 @@ export type DataSourceProps = {
 };
 
 type BrainzPlayerProps = {
-  spotifyUser: SpotifyUser;
-  youtubeUser: YoutubeUser;
   direction: BrainzPlayDirection;
   onCurrentListenChange: (listen: Listen | JSPFTrack) => void;
   currentListen?: Listen | JSPFTrack;
@@ -87,9 +85,7 @@ export default class BrainzPlayer extends React.Component<
     super(props);
 
     this.spotifyPlayer = React.createRef<SpotifyPlayer>();
-    if (SpotifyPlayer.hasPermissions(props.spotifyUser)) {
-      this.dataSources.push(this.spotifyPlayer);
-    }
+    this.dataSources.push(this.spotifyPlayer);
 
     this.youtubePlayer = React.createRef<YoutubePlayer>();
     this.dataSources.push(this.youtubePlayer);
@@ -111,6 +107,14 @@ export default class BrainzPlayer extends React.Component<
 
   componentDidMount = () => {
     window.addEventListener("storage", this.onLocalStorageEvent);
+    // Remove SpotifyPlayer if the user doesn't have the relevant permissions to use it
+    const { spotifyAuth } = this.context;
+    if (
+      !SpotifyPlayer.hasPermissions(spotifyAuth) &&
+      this.spotifyPlayer?.current
+    ) {
+      this.invalidateDataSource(this.spotifyPlayer.current);
+    }
   };
 
   componentWillUnMount = () => {
@@ -445,8 +449,7 @@ export default class BrainzPlayer extends React.Component<
       progressMs,
       durationMs,
     } = this.state;
-    const { spotifyUser, youtubeUser } = this.props;
-    const { APIService } = this.context;
+    const { APIService, youtubeAuth, spotifyAuth } = this.context;
     return (
       <div>
         <PlaybackControls
@@ -470,7 +473,7 @@ export default class BrainzPlayer extends React.Component<
             refreshSpotifyToken={APIService.refreshSpotifyToken}
             onInvalidateDataSource={this.invalidateDataSource}
             ref={this.spotifyPlayer}
-            spotifyUser={spotifyUser}
+            spotifyUser={spotifyAuth}
             playerPaused={playerPaused}
             onPlayerPausedChange={this.playerPauseChange}
             onProgressChange={this.progressChange}
@@ -489,7 +492,7 @@ export default class BrainzPlayer extends React.Component<
             }
             onInvalidateDataSource={this.invalidateDataSource}
             ref={this.youtubePlayer}
-            youtubeUser={youtubeUser}
+            youtubeUser={youtubeAuth}
             refreshYoutubeToken={APIService.refreshYoutubeToken}
             playerPaused={playerPaused}
             onPlayerPausedChange={this.playerPauseChange}

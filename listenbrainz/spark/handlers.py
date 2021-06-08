@@ -190,20 +190,22 @@ def handle_sitewide_entity(data):
 def handle_dump_imported(data):
     """ Process the response that the cluster sends after importing a new dump
 
-    We don't really need to _do_ anything, just send an email over for observability.
+    We don't really need to _do_ anything, just send an email over if there was an error.
     """
     if current_app.config['TESTING']:
         return
 
-    dump_name = data['imported_dump']
+    errors = data['errors']
     import_completion_time = data['time']
-    send_mail(
-        subject='A {} has been imported into the Spark cluster'.format(' '.join(data['type'].split('_')[1:])),
-        text=render_template('emails/dump_import_notification.txt', dump_name=", ".join(dump_name), time=import_completion_time),
-        recipients=['listenbrainz-observability@metabrainz.org'],
-        from_name='ListenBrainz',
-        from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
-    )
+
+    if errors:
+        send_mail(
+            subject='Spark Cluster Dump import failures!',
+            text=render_template('emails/dump_import_failure.txt', errors=errors, time=import_completion_time),
+            recipients=['listenbrainz-exceptions@metabrainz.org'],
+            from_name='ListenBrainz',
+            from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
+        )
 
 
 def handle_dataframes(data):
@@ -299,8 +301,7 @@ def handle_recommendations(data):
     musicbrainz_id = data['musicbrainz_id']
     user = db_user.get_by_mb_id(musicbrainz_id)
     if not user:
-        current_app.logger.critical("Generated recommendations for a user that doesn't exist in the Postgres database: {}"
-                                    .format(musicbrainz_id))
+        current_app.logger.info("Generated recommendations for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
         return
 
     current_app.logger.debug("inserting recommendation for {}".format(musicbrainz_id))

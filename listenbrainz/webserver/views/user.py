@@ -15,8 +15,6 @@ from werkzeug.exceptions import NotFound, BadRequest
 from listenbrainz.webserver.views.playlist_api import serialize_jspf
 from pydantic import ValidationError
 
-from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user
-
 LISTENS_PER_PAGE = 25
 
 user_bp = Blueprint("user", __name__)
@@ -107,16 +105,8 @@ def profile(user_name):
     except (AttributeError, ValidationError):
         artist_count = None
 
-    spotify_data = get_current_spotify_user()
-    youtube_data = get_current_youtube_user()
-    current_user_data = {}
     logged_in_user_follows_user = None
     if current_user.is_authenticated:
-        current_user_data = {
-            "id": current_user.id,
-            "name": current_user.musicbrainz_id,
-            "auth_token": current_user.auth_token,
-        }
         logged_in_user_follows_user = db_user_relationship.is_following_user(current_user.id, user.id)
 
     props = {
@@ -124,7 +114,6 @@ def profile(user_name):
             "id": user.id,
             "name": user.musicbrainz_id,
         },
-        "current_user": current_user_data,
         "listens": listens,
         "latest_listen_ts": max_ts_per_user,
         "oldest_listen_ts": min_ts_per_user,
@@ -132,12 +121,8 @@ def profile(user_name):
         "artist_count": format(artist_count, ",d") if artist_count else None,
         "profile_url": url_for('user.profile', user_name=user_name),
         "mode": "listens",
-        "spotify": spotify_data,
-        "youtube": youtube_data,
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
-        "api_url": current_app.config['API_URL'],
         "logged_in_user_follows_user": logged_in_user_follows_user,
-        "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn")
     }
 
     return render_template("user/profile.html",
@@ -176,8 +161,6 @@ def charts(user_name):
 
     props = {
         "user": user_data,
-        "api_url": current_app.config["API_URL"],
-        "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn")
     }
 
     return render_template(
@@ -200,8 +183,6 @@ def reports(user_name: str):
 
     props = {
         "user": user_data,
-        "api_url": current_app.config["API_URL"],
-        "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn")
     }
 
     return render_template(
@@ -234,14 +215,6 @@ def playlists(user_name: str):
         "id": user.id,
     }
 
-    current_user_data = {}
-    if current_user.is_authenticated:
-        current_user_data = {
-            "id": current_user.id,
-            "name": current_user.musicbrainz_id,
-            "auth_token": current_user.auth_token,
-        }
-
     include_private = current_user.is_authenticated and current_user.id == user.id
 
     playlists = []
@@ -254,15 +227,12 @@ def playlists(user_name: str):
         playlists.append(serialize_jspf(playlist))
 
     props = {
-        "current_user": current_user_data,
-        "api_url": current_app.config["API_URL"],
         "playlists": playlists,
         "user": user_data,
         "active_section": "playlists",
         "playlist_count": playlist_count,
         "pagination_offset": offset,
         "playlists_per_page": count,
-        "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn")
     }
 
     return render_template(
@@ -294,13 +264,6 @@ def recommendation_playlists(user_name: str):
         "name": user.musicbrainz_id,
         "id": user.id,
     }
-    current_user_data = {}
-    if current_user.is_authenticated:
-        current_user_data = {
-            "id": current_user.id,
-            "name": current_user.musicbrainz_id,
-            "auth_token": current_user.auth_token,
-        }
 
     playlists = []
     user_playlists, playlist_count = get_playlists_created_for_user(user.id, False, count, offset)
@@ -309,13 +272,10 @@ def recommendation_playlists(user_name: str):
 
 
     props = {
-        "current_user": current_user_data,
-        "api_url": current_app.config["API_URL"],
         "playlists": playlists,
         "user": user_data,
         "active_section": "recommendations",
         "playlist_count": playlist_count,
-        "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn")
     }
 
     return render_template(
@@ -348,14 +308,6 @@ def collaborations(user_name: str):
         "id": user.id,
     }
 
-    current_user_data = {}
-    if current_user.is_authenticated:
-        current_user_data = {
-            "id": current_user.id,
-            "name": current_user.musicbrainz_id,
-            "auth_token": current_user.auth_token,
-        }
-
     include_private = current_user.is_authenticated and current_user.id == user.id
 
     playlists = []
@@ -368,13 +320,10 @@ def collaborations(user_name: str):
         playlists.append(serialize_jspf(playlist))
 
     props = {
-        "current_user": current_user_data,
-        "api_url": current_app.config["API_URL"],
         "playlists": playlists,
         "user": user_data,
         "active_section": "collaborations",
         "playlist_count": playlist_count,
-        "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn")
     }
 
     return render_template(
