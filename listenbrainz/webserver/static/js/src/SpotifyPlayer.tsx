@@ -41,7 +41,7 @@ const fixSpotifyPlayerStyleIssue = () => {
 };
 
 type SpotifyPlayerProps = DataSourceProps & {
-  spotifyUser: SpotifyUser;
+  spotifyUser?: SpotifyUser;
   refreshSpotifyToken: () => Promise<string>;
 };
 
@@ -56,7 +56,10 @@ type SpotifyPlayerState = {
 export default class SpotifyPlayer
   extends React.Component<SpotifyPlayerProps, SpotifyPlayerState>
   implements DataSourceType {
-  static hasPermissions = (spotifyUser: SpotifyUser) => {
+  static hasPermissions = (spotifyUser?: SpotifyUser) => {
+    if (!spotifyUser) {
+      return false;
+    }
     const { access_token: accessToken, permission } = spotifyUser;
     if (!accessToken || !permission) {
       return false;
@@ -81,7 +84,7 @@ export default class SpotifyPlayer
   constructor(props: SpotifyPlayerProps) {
     super(props);
     this.state = {
-      accessToken: props.spotifyUser.access_token || "",
+      accessToken: props.spotifyUser?.access_token || "",
       durationMs: 0,
     };
 

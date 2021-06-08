@@ -33,9 +33,14 @@ import APIService from "../APIService";
 const props = {
   ...timelineProps,
   events: timelineProps.events as TimelineEvent[],
-  spotify: timelineProps.spotify as SpotifyUser,
-  youtube: timelineProps.youtube as YoutubeUser,
   newAlert: () => {},
+};
+
+const GlobalContextMock = {
+  APIService: new APIService("base-uri"),
+  spotifyAuth: timelineProps.spotify as SpotifyUser,
+  youtubeAuth: timelineProps.youtube as YoutubeUser,
+  currentUser: timelineProps.currentUser,
 };
 
 describe("<UserFeed />", () => {
@@ -43,18 +48,30 @@ describe("<UserFeed />", () => {
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
   });
   it("renders correctly", () => {
-    const wrapper = shallow(<UserFeedPage {...props} />);
+    const wrapper = mount<UserFeedPage>(
+      <GlobalAppContext.Provider value={GlobalContextMock}>
+        <UserFeedPage {...props} />
+      </GlobalAppContext.Provider>
+    );
     expect(wrapper.html()).toMatchSnapshot();
   });
 
   it("contains a UserSocialNetwork component", () => {
-    const wrapper = shallow(<UserFeedPage {...props} />);
+    const wrapper = mount<UserFeedPage>(
+      <GlobalAppContext.Provider value={GlobalContextMock}>
+        <UserFeedPage {...props} />
+      </GlobalAppContext.Provider>
+    );
     expect(wrapper).toBeTruthy();
     expect(wrapper.find(UserSocialNetwork)).toHaveLength(1);
   });
 
   it("contains a BrainzPlayer instance", () => {
-    const wrapper = mount<UserFeedPage>(<UserFeedPage {...props} />);
+    const wrapper = mount<UserFeedPage>(
+      <GlobalAppContext.Provider value={GlobalContextMock}>
+        <UserFeedPage {...props} />
+      </GlobalAppContext.Provider>
+    );
     const instance = wrapper.instance();
     expect(wrapper.find(BrainzPlayer)).toHaveLength(1);
     // eslint-disable-next-line dot-notation
@@ -62,7 +79,11 @@ describe("<UserFeed />", () => {
   });
 
   it("renders the correct number of timeline events", () => {
-    const wrapper = mount<UserFeedPage>(<UserFeedPage {...props} />);
+    const wrapper = mount<UserFeedPage>(
+      <GlobalAppContext.Provider value={GlobalContextMock}>
+        <UserFeedPage {...props} />
+      </GlobalAppContext.Provider>
+    );
     const ulElement = wrapper.find("#timeline > ul");
     expect(ulElement).toHaveLength(1);
     expect(ulElement.children()).toHaveLength(props.events.length);
@@ -70,7 +91,11 @@ describe("<UserFeed />", () => {
   });
 
   it("renders recording recommendation events", () => {
-    const wrapper = mount<UserFeedPage>(<UserFeedPage {...props} />);
+    const wrapper = mount<UserFeedPage>(
+      <GlobalAppContext.Provider value={GlobalContextMock}>
+        <UserFeedPage {...props} />
+      </GlobalAppContext.Provider>
+    );
     const recEvent = wrapper.find("#timeline > ul >li").at(0);
     const description = recEvent.find(".event-description-text");
     expect(description.text()).toEqual("reosarevok recommended a track");
@@ -82,7 +107,11 @@ describe("<UserFeed />", () => {
   });
 
   it("renders follow relationship events", () => {
-    const wrapper = mount<UserFeedPage>(<UserFeedPage {...props} />);
+    const wrapper = mount<UserFeedPage>(
+      <GlobalAppContext.Provider value={GlobalContextMock}>
+        <UserFeedPage {...props} />
+      </GlobalAppContext.Provider>
+    );
     const followedEvent = wrapper.find("#timeline > ul >li").at(3);
     let description = followedEvent.find(".event-description-text");
     expect(description.text()).toEqual("You are now following reosarevok");
@@ -101,7 +130,11 @@ describe("<UserFeed />", () => {
   });
 
   it("renders notification events", () => {
-    const wrapper = mount<UserFeedPage>(<UserFeedPage {...props} />);
+    const wrapper = mount<UserFeedPage>(
+      <GlobalAppContext.Provider value={GlobalContextMock}>
+        <UserFeedPage {...props} />
+      </GlobalAppContext.Provider>
+    );
     const notificationEvent = wrapper.find("#timeline > ul >li").at(5);
     const description = notificationEvent.find(".event-description-text");
     // Ensure it parsed and reconstituted the html message
@@ -147,7 +180,11 @@ describe("<UserFeed />", () => {
       });
 
       it("calls the API to get older events", async () => {
-        const wrapper = mount<UserFeedPage>(<UserFeedPage {...props} />);
+        const wrapper = mount<UserFeedPage>(
+          <GlobalAppContext.Provider value={GlobalContextMock}>
+            <UserFeedPage {...props} />
+          </GlobalAppContext.Provider>
+        );
         const instance = wrapper.instance();
 
         wrapper.setState({ nextEventTs: 1586450000 });
@@ -181,7 +218,11 @@ describe("<UserFeed />", () => {
       });
 
       it("sets nextEventTs to undefined if it receives no events from API", async () => {
-        const wrapper = mount<UserFeedPage>(<UserFeedPage {...props} />);
+        const wrapper = mount<UserFeedPage>(
+          <GlobalAppContext.Provider value={GlobalContextMock}>
+            <UserFeedPage {...props} />
+          </GlobalAppContext.Provider>
+        );
         const instance = wrapper.instance();
 
         wrapper.setState({ nextEventTs: 1586450000 });
@@ -202,7 +243,11 @@ describe("<UserFeed />", () => {
       });
 
       it("sets the events, nextEventTs and  previousEventTs on the state and updates browser history", async () => {
-        const wrapper = mount<UserFeedPage>(<UserFeedPage {...props} />);
+        const wrapper = mount<UserFeedPage>(
+          <GlobalAppContext.Provider value={GlobalContextMock}>
+            <UserFeedPage {...props} />
+          </GlobalAppContext.Provider>
+        );
         const instance = wrapper.instance();
 
         // Random nextEventTs to ensure that is the value set in browser history
@@ -234,12 +279,13 @@ describe("<UserFeed />", () => {
     describe("handleClickNewer", () => {
       it("does nothing if there is no newer events timestamp", async () => {
         const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
-        const wrapper = shallow<UserFeedPage>(<UserFeedPage {...props} />, {
-          context: {
-            APIService: { getFeedForUser: spy },
-          },
-        });
+        const wrapper = mount<UserFeedPage>(
+          <GlobalAppContext.Provider value={GlobalContextMock}>
+            <UserFeedPage {...props} />
+          </GlobalAppContext.Provider>
+        );
         const instance = wrapper.instance();
+        instance.context.APIService.getFeedForUser = spy;
 
         wrapper.setState({ previousEventTs: undefined });
 
@@ -249,7 +295,11 @@ describe("<UserFeed />", () => {
       });
 
       it("calls the API to get newer events", async () => {
-        const wrapper = mount<UserFeedPage>(<UserFeedPage {...props} />);
+        const wrapper = mount<UserFeedPage>(
+          <GlobalAppContext.Provider value={GlobalContextMock}>
+            <UserFeedPage {...props} />
+          </GlobalAppContext.Provider>
+        );
         const instance = wrapper.instance();
         wrapper.setState({ previousEventTs: 123456 });
 
@@ -283,7 +333,11 @@ describe("<UserFeed />", () => {
       });
 
       it("sets previousEventTs to undefined if it receives no events from API", async () => {
-        const wrapper = mount<UserFeedPage>(<UserFeedPage {...props} />);
+        const wrapper = mount<UserFeedPage>(
+          <GlobalAppContext.Provider value={GlobalContextMock}>
+            <UserFeedPage {...props} />
+          </GlobalAppContext.Provider>
+        );
         const instance = wrapper.instance();
 
         wrapper.setState({ previousEventTs: 123456 });
@@ -299,7 +353,11 @@ describe("<UserFeed />", () => {
       });
 
       it("sets the events, nextEventTs and  previousEventTs on the state and updates browser history", async () => {
-        const wrapper = mount<UserFeedPage>(<UserFeedPage {...props} />);
+        const wrapper = mount<UserFeedPage>(
+          <GlobalAppContext.Provider value={GlobalContextMock}>
+            <UserFeedPage {...props} />
+          </GlobalAppContext.Provider>
+        );
         const instance = wrapper.instance();
         wrapper.setState({ previousEventTs: 123456 });
 

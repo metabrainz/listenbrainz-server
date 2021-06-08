@@ -1,10 +1,10 @@
 import * as React from "react";
 import { mount, shallow } from "enzyme";
 
-import { delay } from "lodash";
-import { WatchIgnorePlugin } from "webpack";
 import ListenCard, { ListenCardProps } from "./ListenCard";
 import * as utils from "../utils";
+import APIServiceClass from "../APIService";
+import GlobalAppContext from "../GlobalAppContext";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -30,11 +30,17 @@ const props: ListenCardProps = {
   mode: "listens",
   currentFeedback: 1,
   isCurrentUser: true,
-  currentUser: { auth_token: "baz", name: "test" },
   playListen: () => {},
   removeListenFromListenList: () => {},
   updateFeedback: () => {},
   newAlert: () => {},
+};
+
+const globalProps = {
+  APIService: new APIServiceClass(""),
+  currentUser: { auth_token: "baz", name: "test" },
+  spotifyAuth: {},
+  youtubeAuth: {},
 };
 
 describe("ListenCard", () => {
@@ -83,7 +89,9 @@ describe("componentDidUpdate", () => {
 describe("submitFeedback", () => {
   it("calls API, updates feedback state and calls updateFeedback correctly", async () => {
     const wrapper = mount<ListenCard>(
-      <ListenCard {...{ ...props, updateFeedback: jest.fn() }} />
+      <GlobalAppContext.Provider value={globalProps}>
+        <ListenCard {...{ ...props, updateFeedback: jest.fn() }} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
 
@@ -105,7 +113,9 @@ describe("submitFeedback", () => {
 
   it("does nothing if isCurrentUser is false", async () => {
     const wrapper = mount<ListenCard>(
-      <ListenCard {...{ ...props, isCurrentUser: false }} />
+      <GlobalAppContext.Provider value={globalProps}>
+        <ListenCard {...{ ...props, isCurrentUser: false }} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
 
@@ -122,9 +132,14 @@ describe("submitFeedback", () => {
 
   it("does nothing if CurrentUser.authtoken is not set", async () => {
     const wrapper = mount<ListenCard>(
-      <ListenCard
-        {...{ ...props, currentUser: { auth_token: undefined, name: "test" } }}
-      />
+      <GlobalAppContext.Provider
+        value={{
+          ...globalProps,
+          currentUser: { auth_token: undefined, name: "test" },
+        }}
+      >
+        <ListenCard {...{ ...props, updateFeedback: jest.fn() }} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
 
@@ -140,7 +155,11 @@ describe("submitFeedback", () => {
   });
 
   it("doesn't update feedback state or call updateFeedback if status code is not 200", async () => {
-    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
+    const wrapper = mount<ListenCard>(
+      <GlobalAppContext.Provider value={globalProps}>
+        <ListenCard {...props} />
+      </GlobalAppContext.Provider>
+    );
     const instance = wrapper.instance();
     props.updateFeedback = jest.fn();
 
@@ -160,7 +179,11 @@ describe("submitFeedback", () => {
   });
 
   it("calls handleError if error is returned", async () => {
-    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
+    const wrapper = mount<ListenCard>(
+      <GlobalAppContext.Provider value={globalProps}>
+        <ListenCard {...props} />
+      </GlobalAppContext.Provider>
+    );
     const instance = wrapper.instance();
     instance.handleError = jest.fn();
 
@@ -201,7 +224,9 @@ describe("handleError", () => {
 describe("deleteListen", () => {
   it("calls API, sets isDeleted state and removeListenFromListenList correctly", async () => {
     const wrapper = mount<ListenCard>(
-      <ListenCard {...{ ...props, removeListenFromListenList: jest.fn() }} />
+      <GlobalAppContext.Provider value={globalProps}>
+        <ListenCard {...{ ...props, removeListenFromListenList: jest.fn() }} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
 
@@ -245,9 +270,14 @@ describe("deleteListen", () => {
 
   it("does nothing if CurrentUser.authtoken is not set", async () => {
     const wrapper = mount<ListenCard>(
-      <ListenCard
-        {...{ ...props, currentUser: { auth_token: undefined, name: "test" } }}
-      />
+      <GlobalAppContext.Provider
+        value={{
+          ...globalProps,
+          currentUser: { auth_token: undefined, name: "test" },
+        }}
+      >
+        <ListenCard {...props} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
 
@@ -261,7 +291,11 @@ describe("deleteListen", () => {
   });
 
   it("doesn't update isDeleted state call removeListenFromListenList if status code is not 200", async () => {
-    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
+    const wrapper = mount<ListenCard>(
+      <GlobalAppContext.Provider value={globalProps}>
+        <ListenCard {...props} />
+      </GlobalAppContext.Provider>
+    );
     const instance = wrapper.instance();
     props.removeListenFromListenList = jest.fn();
 
@@ -279,7 +313,11 @@ describe("deleteListen", () => {
   });
 
   it("calls handleError if error is returned", async () => {
-    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
+    const wrapper = mount<ListenCard>(
+      <GlobalAppContext.Provider value={globalProps}>
+        <ListenCard {...props} />
+      </GlobalAppContext.Provider>
+    );
     const instance = wrapper.instance();
     instance.handleError = jest.fn();
 
@@ -302,7 +340,9 @@ describe("deleteListen", () => {
 describe("recommendTrackToFollowers", () => {
   it("calls API, and creates a new alert on success", async () => {
     const wrapper = mount<ListenCard>(
-      <ListenCard {...{ ...props, newAlert: jest.fn() }} />
+      <GlobalAppContext.Provider value={globalProps}>
+        <ListenCard {...{ ...props, newAlert: jest.fn() }} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
 
@@ -329,8 +369,11 @@ describe("recommendTrackToFollowers", () => {
 
   it("does nothing if isCurrentUser is false", async () => {
     const wrapper = mount<ListenCard>(
-      <ListenCard {...{ ...props, isCurrentUser: false }} />
+      <GlobalAppContext.Provider value={globalProps}>
+        <ListenCard {...{ ...props, isCurrentUser: false }} />
+      </GlobalAppContext.Provider>
     );
+
     const instance = wrapper.instance();
 
     const spy = jest.spyOn(
@@ -345,9 +388,14 @@ describe("recommendTrackToFollowers", () => {
 
   it("does nothing if CurrentUser.authtoken is not set", async () => {
     const wrapper = mount<ListenCard>(
-      <ListenCard
-        {...{ ...props, currentUser: { auth_token: undefined, name: "test" } }}
-      />
+      <GlobalAppContext.Provider
+        value={{
+          ...globalProps,
+          currentUser: { auth_token: undefined, name: "test" },
+        }}
+      >
+        <ListenCard {...props} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
 
@@ -362,7 +410,11 @@ describe("recommendTrackToFollowers", () => {
   });
 
   it("calls handleError if error is returned", async () => {
-    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
+    const wrapper = mount<ListenCard>(
+      <GlobalAppContext.Provider value={globalProps}>
+        <ListenCard {...props} />
+      </GlobalAppContext.Provider>
+    );
     const instance = wrapper.instance();
     instance.handleError = jest.fn();
 
