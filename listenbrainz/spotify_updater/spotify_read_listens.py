@@ -345,10 +345,9 @@ def process_all_spotify_users():
     """ Get a batch of users to be processed and import their Spotify plays.
 
     Returns:
-        (success, failure, count) where
+        (success, failure) where
             success: the number of users whose plays were successfully imported.
             failure: the number of users for whom we faced errors while importing.
-            count: the number of recently played listens imported for all users.
     """
 
     global _listens_imported_since_start, _metric_submission_time
