@@ -294,20 +294,12 @@ describe("receiveNewListen", () => {
      * so that it doesn't get passed as a reference.
      */
     const wrapper = mount<RecentListens>(
-      <RecentListens
-        {...(JSON.parse(
-          JSON.stringify(recentListensPropsOneListen)
-        ) as RecentListensProps)}
-      />,
+      <RecentListens {...propsOneListen} mode="recent" />,
       mountOptions
     );
     const instance = wrapper.instance();
-    wrapper.setState({ mode: "recent" });
-    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
-     * so that it doesn't get passed as a reference.
-     */
-    const result: Array<Listen> = JSON.parse(
-      JSON.stringify(recentListensPropsOneListen.listens)
+    const result: Array<Listen> = Array.from(
+      recentListensPropsOneListen.listens
     );
     result.unshift(mockListen);
     instance.receiveNewListen(JSON.stringify(mockListen));
