@@ -8,8 +8,9 @@ from typing import List
 PINNED_REC_GET_COLUMNS = ['user_id', 'recording_mbid::text', 'blurb_content', 'pinned_until',
                           'created']
 
+
 def pin(pinnedRecording: PinnedRecording):
-    """ Inserts an active pinned recording record into the database for the user. 
+    """ Inserts an active pinned recording record into the database for the user.
         If the user already has an active pinned recording, it will be unpinned first.
 
         Args:
@@ -93,6 +94,7 @@ def get_current_pin_for_user(user_id: int) -> PinnedRecording:
         row = result.fetchone()
         return PinnedRecording(**dict(row)) if row else None
 
+
 def get_pin_history_for_user(user_id: int, count: int, offset: int) -> List[PinnedRecording]:
     """ Get a list of pinned recording records for the user in descending order of their created date
 
@@ -138,3 +140,4 @@ def get_pin_count_for_user(user_id: int) -> int:
         })
         count = int(result.fetchone()["value"])
     return count
+    
