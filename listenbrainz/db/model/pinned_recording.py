@@ -44,7 +44,7 @@ class PinnedRecording(BaseModel):
                 raise AssertionError("Created must contain tzinfo.")
             except (AttributeError, ValueError):
                 raise ValueError(
-                    """Created must be a valid datetime and contain tzinfo. 
+                    """Created must be a valid datetime and contain tzinfo.
                        See https://pydantic-docs.helpmanual.io/usage/types/#datetime-types for acceptable formats."""
                 )
         else:
@@ -62,7 +62,7 @@ class PinnedRecording(BaseModel):
                     raise AssertionError("Pinned until must contain tzinfo.")
                 except (AttributeError, ValueError):  # v.tzinfo throws AttributeError if invalid datetime
                     raise ValueError(
-                        """Pinned until must be a valid datetime and contain tzinfo. 
+                        """Pinned until must be a valid datetime and contain tzinfo.
                         See https://pydantic-docs.helpmanual.io/usage/types/#datetime-types for acceptable formats."""
                     )
             else:
