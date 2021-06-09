@@ -163,8 +163,8 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
 
     def test_delete(self):
         keptIndex = 0
-        self.pin_single_sample(self.user["id"], keptIndex) # this record will stay
-        self.pin_single_sample(self.user["id"], 1) # this record is deleted
+        self.pin_single_sample(self.user["id"], keptIndex)  # this record will stay
+        self.pin_single_sample(self.user["id"], 1)  # this record is deleted
         old_pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
         pinned = old_pin_history[0]
         db_pinned_rec.delete(

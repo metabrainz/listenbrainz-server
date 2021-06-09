@@ -35,12 +35,16 @@ class PinnedRecording(BaseModel):
     def check_valid_created_or_set(cls, v):
         if v:
             try:
-                assert v.tzinfo is not None and v.tzinfo.utcoffset(v) is not None, "Created must contain tzinfo." # datetime, but doesn't contain tzinfo
+                assert (
+                    v.tzinfo is not None and v.tzinfo.utcoffset(v) is not None
+                ), "Created must contain tzinfo."  # datetime, but doesn't contain tzinfo
                 return v
             except (AttributeError, ValueError):
-                raise ValueError("Created must be a valid datetime and contain tzinfo.") # v.tzinfo throws AttributeError if invalid datetime
+                raise ValueError(
+                    "Created must be a valid datetime and contain tzinfo."
+                )  # v.tzinfo throws AttributeError if invalid datetime
         else:
-            return datetime.now(timezone.utc) # default datetime
+            return datetime.now(timezone.utc)  # default datetime
 
     @validator("pinned_until", always=True)
     def check_valid_pinned_until_or_set(cls, v, values):
@@ -51,8 +55,12 @@ class PinnedRecording(BaseModel):
                     assert v > values["created"], "Pinned until must be greater than created."
                     return v
                 except (AttributeError, ValueError):
-                    raise ValueError("Pinned_until must be a valid datetime and contain tzinfo.") # v.tzinfo throws AttributeError if invalid datetime
+                    raise ValueError(
+                        "Pinned_until must be a valid datetime and contain tzinfo."
+                    )  # v.tzinfo throws AttributeError if invalid datetime
             else:
-                return values["created"] + timedelta(days=7) # default datetime
+                return values["created"] + timedelta(days=7)  # default datetime
         except (KeyError):
-            raise ValueError("Cannot set default pinned_until until created is valid.") # values["created"] throws KeyError if created was not valid
+            raise ValueError(
+                "Cannot set default pinned_until until created is valid."
+            )  # values["created"] throws KeyError if created was not valid
