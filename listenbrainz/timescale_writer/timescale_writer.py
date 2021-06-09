@@ -20,6 +20,7 @@ from listenbrainz.utils import init_cache
 from brainzutils import metrics, cache
 
 METRIC_UPDATE_INTERVAL = 60  # seconds
+LISTEN_INSERT_ERROR_SENTINEL = -1  #
 
 class TimescaleWriterSubscriber(ListenWriter):
 
@@ -48,7 +49,9 @@ class TimescaleWriterSubscriber(ListenWriter):
                 pass
 
         ret = self.insert_to_listenstore(submit)
-        if not ret:
+
+        # If there is an error, we do not ack the message so that rabbitmq redelivers it later.
+        if ret == LISTEN_INSERT_ERROR_SENTINEL:
             return ret
 
         while True:
@@ -70,7 +73,8 @@ class TimescaleWriterSubscriber(ListenWriter):
             data: the data to be inserted into the ListenStore
             retries: the number of retries to make before deciding that we've failed
 
-        Returns: number of listens successfully sent
+        Returns: number of listens successfully sent or LISTEN_INSERT_ERROR_SENTINEL
+        if there was an error in inserting listens
         """
 
         if not data:
@@ -82,7 +86,7 @@ class TimescaleWriterSubscriber(ListenWriter):
         except psycopg2.OperationalError as err:
             current_app.logger.error("Cannot write data to listenstore: %s. Sleep." % str(err), exc_info=True)
             sleep(self.ERROR_RETRY_DELAY)
-            return 0
+            return LISTEN_INSERT_ERROR_SENTINEL
 
         if not rows_inserted:
             return len(data)
@@ -138,9 +142,6 @@ class TimescaleWriterSubscriber(ListenWriter):
                                             .format(self.ERROR_RETRY_DELAY))
                 sleep(self.ERROR_RETRY_DELAY)
                 sys.exit(-1)
-
-            init_cache(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'], namespace=current_app.config['REDIS_NAMESPACE'])
-            metrics.init("listenbrainz")
 
             try:
                 while True:

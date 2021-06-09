@@ -11,5 +11,6 @@ DROP TABLE IF EXISTS user_relationship              CASCADE;
 DROP TABLE IF EXISTS recommendation_feedback        CASCADE;
 DROP TABLE IF EXISTS user_timeline_event            CASCADE;
 DROP TABLE IF EXISTS reported_users                 CASCADE;
+DROP TABLE IF EXISTS pinned_recording               CASCADE;
 
 COMMIT;

@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'base-react.html' %}
 
 {% block title %}Import for "{{ user.musicbrainz_id }}" - ListenBrainz{% endblock %}
 
@@ -39,5 +39,4 @@
 {% block scripts %}
   {{ super() }}
   <script src="{{ get_static_path('import.js') }}" type="text/javascript"></script>
-  <script id="page-react-props" type="application/json">{{ props|safe }}</script>
 {% endblock %}
