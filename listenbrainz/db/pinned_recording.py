@@ -5,7 +5,7 @@ from listenbrainz import db
 from listenbrainz.db.model.pinned_recording import PinnedRecording
 from typing import List
 
-PINNED_REC_GET_COLUMNS = ['user_id', 'recording_mbid::text', 'blurb_content', 'pinned_until',
+PINNED_REC_GET_COLUMNS = ['user_id', 'id AS row_id', 'recording_mbid::text', 'blurb_content', 'pinned_until',
                           'created']
 
 
@@ -28,7 +28,7 @@ def pin(pinnedRecording: PinnedRecording):
         connection.execute(sqlalchemy.text("""
             UPDATE pinned_recording
                SET pinned_until = NOW()
-             WHERE (user_id = :user_id AND pinned_until > NOW());
+             WHERE (user_id = :user_id AND pinned_until >= NOW());
 
             INSERT INTO pinned_recording (user_id, recording_mbid, blurb_content, pinned_until, created)
             VALUES (:user_id, :recording_mbid, :blurb_content, :pinned_until, :created)
@@ -46,30 +46,26 @@ def unpin(user_id: int):
         connection.execute(sqlalchemy.text("""
             UPDATE pinned_recording
                SET pinned_until = NOW()
-             WHERE (user_id = :user_id AND pinned_until > NOW())
+             WHERE (user_id = :user_id AND pinned_until >= NOW())
             """), {
             'user_id': user_id,
             }
         )
 
 
-def delete(pinnedRecording: PinnedRecording):
+def delete(row_id: int):
     """ Deletes the pinned recording record for the user from the database.
 
         Args:
-            pinnedRecording: An validated object of class PinnedRecording
+            row_id: The row id of the pinned_recording to delete from the DB's 'pinned_recording' table
     """
 
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
             DELETE FROM pinned_recording
-             WHERE user_id = :user_id
-               AND recording_mbid = :recording_mbid
-               AND created = :created
+             WHERE id = :row_id
             """), {
-            'user_id': pinnedRecording.user_id,
-            'recording_mbid': pinnedRecording.recording_mbid,
-            'created': pinnedRecording.created,
+            'row_id': row_id,
             }
         )
 
@@ -89,7 +85,7 @@ def get_current_pin_for_user(user_id: int) -> PinnedRecording:
             SELECT {columns}
               FROM pinned_recording
              WHERE (user_id = :user_id
-               AND pinned_until > NOW())
+               AND pinned_until >= NOW())
             """.format(columns=','.join(PINNED_REC_GET_COLUMNS))), {'user_id': user_id})
         row = result.fetchone()
         return PinnedRecording(**dict(row)) if row else None
@@ -132,7 +128,10 @@ def get_pin_count_for_user(user_id: int) -> int:
         Returns:
             The total number of the user's pinned_recording records in the database
     """
-    query = "SELECT count(*) AS value FROM pinned_recording WHERE user_id = :user_id"
+    query = """SELECT count(*) 
+                   AS value
+                 FROM pinned_recording
+                WHERE user_id = :user_id"""
 
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text(query), {

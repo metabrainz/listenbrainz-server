@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 from datetime import datetime, timedelta, timezone
+from pydantic import ValidationError
 
 from listenbrainz.db.model.pinned_recording import PinnedRecording
 import listenbrainz.db.pinned_recording as db_pinned_rec
@@ -63,13 +64,13 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
 
     def test_Pinned_Recording_model(self):
         # test missing required arguments error
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValidationError):
             PinnedRecording(
                 user_id=self.user["id"],
             )
 
         # test created = datetime with missing tzinfo error
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValidationError):
             PinnedRecording(
                 user_id=self.user["id"],
                 recording_mbid=self.pinned_rec_samples[0]["recording_mbid"],
@@ -78,7 +79,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
             )
 
         # test created = invalid datetime error
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValidationError):
             PinnedRecording(
                 user_id=self.user["id"],
                 recording_mbid=self.pinned_rec_samples[0]["recording_mbid"],
@@ -87,7 +88,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
             )
 
         # test pinned_until = datetime with missing tzinfo error
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValidationError):
             PinnedRecording(
                 user_id=self.user["id"],
                 recording_mbid=self.pinned_rec_samples[0]["recording_mbid"],
@@ -96,7 +97,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
             )
 
         # test pinned_until = invalid datetime error
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValidationError):
             PinnedRecording(
                 user_id=self.user["id"],
                 recording_mbid=self.pinned_rec_samples[0]["recording_mbid"],
@@ -105,7 +106,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
             )
 
         # test pinned_until < created error
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValidationError):
             PinnedRecording(
                 user_id=self.user["id"],
                 recording_mbid=self.pinned_rec_samples[0]["recording_mbid"],
@@ -122,7 +123,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
             blurb_content=self.pinned_rec_samples[0]["blurb_content"],
             created=now,
         )
-        self.assertEqual(pin_until_test_rec.pinned_until, now + timedelta(days=7))
+        self.assertEqual(pin_until_test_rec.pinned_until, now + timedelta(days=pin_until_test_rec._daysUntilUnpin))
 
     def test_pin(self):
         count = self.insert_test_data(self.user["id"])
@@ -160,14 +161,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
         self.pin_single_sample(self.user["id"], 1)
         old_pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
         pin_to_delete = old_pin_history[0]
-        db_pinned_rec.delete(
-            PinnedRecording(  # delete the newer record
-                user_id=self.user["id"],
-                recording_mbid=pin_to_delete.recording_mbid,
-                pinned_until=pin_to_delete.pinned_until,
-                created=pin_to_delete.created,
-            )
-        )
+        db_pinned_rec.delete(pin_to_delete.row_id)
 
         # test that only the older pin remained in the database
         pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
@@ -175,25 +169,19 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(len(pin_history), len(old_pin_history) - 1)
         self.assertEqual(pin_remaining.blurb_content, self.pinned_rec_samples[keptIndex]["blurb_content"])
 
-        # delete the last pin
-        db_pinned_rec.delete(
-            PinnedRecording(  # delete the newer record
-                user_id=self.user["id"],
-                recording_mbid=pin_remaining.recording_mbid,
-                pinned_until=pin_remaining.pinned_until,
-                created=pin_remaining.created,
-            )
-        )
-
+        # delete the only remaining pin
+        db_pinned_rec.delete(pin_remaining.row_id)
         pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
         self.assertFalse(pin_history)
 
     def test_get_current_pin_for_user(self):
-        expected_pinned = self.pin_single_sample(self.user["id"], 0)
-        recieved_pinned = db_pinned_rec.get_current_pin_for_user(self.user["id"])
+        self.pin_single_sample(self.user["id"], 0)
+        expected_pinned = db_pinned_rec.get_current_pin_for_user(self.user["id"])
+        recieved_pinned = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)[0]
         self.assertEqual(recieved_pinned, expected_pinned)
 
-        expected_pinned = self.pin_single_sample(self.user["id"], 1)
+        self.pin_single_sample(self.user["id"], 1)
+        expected_pinned = db_pinned_rec.get_current_pin_for_user(self.user["id"])
         recieved_pinned = db_pinned_rec.get_current_pin_for_user(self.user["id"])
         self.assertEqual(recieved_pinned, expected_pinned)
 
@@ -241,13 +229,6 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
 
         # test that pin_count excludes deleted recordings
         pin_to_delete = pin_history[1]
-        db_pinned_rec.delete(
-            PinnedRecording(  # delete the newer record
-                user_id=self.user["id"],
-                recording_mbid=pin_to_delete.recording_mbid,
-                pinned_until=pin_to_delete.pinned_until,
-                created=pin_to_delete.created,
-            )
-        )
+        db_pinned_rec.delete(pin_to_delete.row_id)
         pin_count = db_pinned_rec.get_pin_count_for_user(user_id=self.user["id"])
         self.assertEqual(pin_count, len(pin_history) - 1)
