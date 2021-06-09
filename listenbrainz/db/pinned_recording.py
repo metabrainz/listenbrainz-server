@@ -128,7 +128,7 @@ def get_pin_count_for_user(user_id: int) -> int:
         Returns:
             The total number of the user's pinned_recording records in the database
     """
-    query = """SELECT count(*) 
+    query = """SELECT count(*)
                    AS value
                  FROM pinned_recording
                 WHERE user_id = :user_id"""
