@@ -20,8 +20,7 @@ class ListensDispatcher(threading.Thread):
         else:
             event_name = 'listen'
         for listen in listens:
-            self.socketio.emit(event_name, json.dumps(listen), room=listen['user_name'])
-
+            self.socketio.emit(event_name, json.dumps(listen), to=listen['user_name'])
 
     def callback_listen(self, channel, method, properties, body):
         listens = json.loads(body)
@@ -63,7 +62,6 @@ class ListensDispatcher(threading.Thread):
             except Exception as e:
                 current_app.logger.error("Error while connecting to RabbitMQ: %s", str(e), exc_info=True)
                 time.sleep(3)
-
 
     def run(self):
         with self.app.app_context():
