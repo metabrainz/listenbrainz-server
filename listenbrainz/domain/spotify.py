@@ -70,7 +70,7 @@ class SpotifyService(ImporterService):
     def get_user(self, user_id: int) -> Optional[dict]:
         return spotify.get_user(user_id)
 
-    def add_new_user(self, user_id: int, token: dict):
+    def add_new_user(self, user_id: int, token: dict) -> bool:
         """Create a spotify row for a user based on OAuth access tokens
 
         Args:
@@ -86,6 +86,7 @@ class SpotifyService(ImporterService):
         external_service_oauth.save_token(user_id=user_id, service=self.service, access_token=access_token,
                                           refresh_token=refresh_token, token_expires_ts=expires_at,
                                           record_listens=active, scopes=scopes)
+        return True
 
     def get_authorize_url(self, permissions: Sequence[str]):
         """ Returns a spotipy OAuth instance that can be used to authenticate with spotify.
