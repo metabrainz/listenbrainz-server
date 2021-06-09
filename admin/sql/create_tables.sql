@@ -207,6 +207,15 @@ CREATE TABLE user_relationship (
     created             TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE pinned_recording(
+    id                      SERIAL, -- PK
+    user_id                 INTEGER NOT NULL, -- FK to "user".id
+    recording_mbid          UUID NOT NULL,
+    blurb_content           TEXT,
+    pinned_until            TIMESTAMP WITH TIME ZONE NOT NULL,
+    created                 TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listenbrainz;
 
 COMMIT;

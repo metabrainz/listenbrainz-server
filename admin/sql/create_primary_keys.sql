@@ -25,4 +25,6 @@ ALTER TABLE user_relationship ADD CONSTRAINT user_relationship_pkey PRIMARY KEY 
 
 ALTER TABLE recommendation_feedback ADD CONSTRAINT recommendation_feedback_pkey PRIMARY KEY (id);
 
+ALTER TABLE pinned_recording ADD CONSTRAINT pinned_recording_pkey PRIMARY KEY (id);
+
 COMMIT;
