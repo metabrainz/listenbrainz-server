@@ -1,7 +1,6 @@
 import eventlet
 
-from flask import request
-from flask_socketio import SocketIO, join_room, emit, rooms, leave_room
+from flask_socketio import SocketIO, join_room, emit
 from werkzeug.exceptions import BadRequest
 from brainzutils.flask import CustomFlask
 
@@ -36,7 +35,7 @@ def dispatch_playlist_updates(data):
     identifier = data['identifier']
     idx = identifier.rfind('/')
     playlist_id = identifier[idx + 1:]
-    emit('playlist_changed', data, room=playlist_id)
+    emit('playlist_changed', data, to=playlist_id)
 
 
 @socketio.on('joined')
@@ -46,7 +45,7 @@ def joined(data):
 
     room = data['playlist_id']
     join_room(room)
-    emit('joined', {'status': 'success'}, room=room)
+    emit('joined', {'status': 'success'}, to=room)
 
 
 def run_websockets(host='0.0.0.0', port=8082, debug=True):

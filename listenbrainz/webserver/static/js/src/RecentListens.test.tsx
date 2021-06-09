@@ -1,8 +1,8 @@
 import * as React from "react";
 import { mount } from "enzyme";
 import * as timeago from "time-ago";
-import * as io from "socket.io-client";
 import fetchMock from "jest-fetch-mock";
+import { io } from "socket.io-client";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import APIService from "./APIService";
 
@@ -20,6 +20,12 @@ import RecentListens, {
 // Mocking Math.random() fixes this
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
 jest.spyOn(global.Math, "random").mockImplementation(() => 0);
+
+// Mock socketIO library and the Socket object it returns
+const mockSocket = { on: jest.fn(), emit: jest.fn() };
+jest.mock("socket.io-client", () => {
+  return { io: jest.fn(() => mockSocket) };
+});
 
 const {
   artistCount,
@@ -160,18 +166,34 @@ describe("componentDidMount", () => {
 });
 
 describe("createWebsocketsConnection", () => {
-  it("calls io.connect with correct parameters", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("calls io with correct parameters", () => {
     const wrapper = mount<RecentListens>(
       <RecentListens {...props} webSocketsServerUrl="http://localhost:8082" />,
       mountOptions
     );
     const instance = wrapper.instance();
-
-    const spy = jest.spyOn(io, "connect");
     instance.createWebsocketsConnection();
 
-    expect(spy).toHaveBeenCalledWith("http://localhost:8082");
-    jest.clearAllMocks();
+    expect(io).toHaveBeenCalledWith("http://localhost:8082");
+
+    expect(mockSocket.on).toHaveBeenNthCalledWith(
+      1,
+      "connect",
+      expect.any(Function)
+    );
+    expect(mockSocket.on).toHaveBeenNthCalledWith(
+      2,
+      "listen",
+      expect.any(Function)
+    );
+    expect(mockSocket.on).toHaveBeenNthCalledWith(
+      3,
+      "playing_now",
+      expect.any(Function)
+    );
   });
 });
 
@@ -185,11 +207,13 @@ describe("addWebsocketsHandlers", () => {
 
     // eslint-disable-next-line dot-notation
     const spy = jest.spyOn(instance["socket"], "on");
-    spy.mockImplementation((event, fn): any => {
-      if (event === "listen") {
-        fn(JSON.stringify(recentListensPropsOneListen.listens[0]));
+    spy.mockImplementation(
+      (event: string, listener: (...args: any[]) => void): any => {
+        if (event === "listen") {
+          listener(JSON.stringify(recentListensPropsOneListen.listens[0]));
+        }
       }
-    });
+    );
     instance.receiveNewListen = jest.fn();
     instance.addWebsocketsHandlers();
 
@@ -270,20 +294,12 @@ describe("receiveNewListen", () => {
      * so that it doesn't get passed as a reference.
      */
     const wrapper = mount<RecentListens>(
-      <RecentListens
-        {...(JSON.parse(
-          JSON.stringify(recentListensPropsOneListen)
-        ) as RecentListensProps)}
-      />,
+      <RecentListens {...propsOneListen} mode="recent" />,
       mountOptions
     );
     const instance = wrapper.instance();
-    wrapper.setState({ mode: "recent" });
-    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
-     * so that it doesn't get passed as a reference.
-     */
-    const result: Array<Listen> = JSON.parse(
-      JSON.stringify(recentListensPropsOneListen.listens)
+    const result: Array<Listen> = Array.from(
+      recentListensPropsOneListen.listens
     );
     result.unshift(mockListen);
     instance.receiveNewListen(JSON.stringify(mockListen));
