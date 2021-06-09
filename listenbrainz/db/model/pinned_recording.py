@@ -32,35 +32,32 @@ class PinnedRecording(BaseModel):
             raise ValueError("Recording MSID must be a valid UUID.")
 
     @validator("created", always=True)
-    def check_valid_created_or_set(cls, v):
-        if v:
-            try:
+    def check_valid_created_or_set(cls, created):
+        if created:  # validate if argument provided
+            try:  # validate datetime contains tzinfo
                 assert (
-                    v.tzinfo is not None and v.tzinfo.utcoffset(v) is not None
-                ), "Created must contain tzinfo."  # datetime, but doesn't contain tzinfo
-                return v
+                    created.tzinfo is not None
+                    and created.tzinfo.utcoffset(created) is not None  # v.tzinfo throws AttributeError if invalid datetime
+                ), "Created must contain tzinfo."
+                return created
             except (AttributeError, ValueError):
-                raise ValueError(
-                    "Created must be a valid datetime and contain tzinfo."
-                )  # v.tzinfo throws AttributeError if invalid datetime
+                raise ValueError("Created must be a valid datetime and contain tzinfo.")
         else:
-            return datetime.now(timezone.utc)  # default datetime
+            return datetime.now(timezone.utc)  # set default value
 
     @validator("pinned_until", always=True)
-    def check_valid_pinned_until_or_set(cls, v, values):
+    def check_valid_pinned_until_or_set(cls, pin_until, values):
         try:
-            if v:
+            if pin_until:  # validate if argument provided
                 try:
-                    assert v.tzinfo is not None and v.tzinfo.utcoffset(v) is not None, "Pinned_until must contain tzinfo."
-                    assert v > values["created"], "Pinned until must be greater than created."
-                    return v
-                except (AttributeError, ValueError):
-                    raise ValueError(
-                        "Pinned_until must be a valid datetime and contain tzinfo."
-                    )  # v.tzinfo throws AttributeError if invalid datetime
+                    assert (
+                        pin_until.tzinfo is not None and pin_until.tzinfo.utcoffset(pin_until) is not None
+                    ), "Pinned_until must contain tzinfo."
+                    assert pin_until > values["created"], "Pinned until must be greater than created."
+                    return pin_until
+                except (AttributeError, ValueError):  # v.tzinfo throws AttributeError if invalid datetime
+                    raise ValueError("Pinned_until must be a valid datetime and contain tzinfo.")
             else:
-                return values["created"] + timedelta(days=7)  # default datetime
-        except (KeyError):
-            raise ValueError(
-                "Cannot set default pinned_until until created is valid."
-            )  # values["created"] throws KeyError if created was not valid
+                return values["created"] + timedelta(days=7)  # set default value
+        except (KeyError):  # values["created"] throws KeyError if created was not valid
+            raise ValueError("Cannot set default pinned_until until created is valid.")
