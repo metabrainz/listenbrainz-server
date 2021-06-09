@@ -12,7 +12,8 @@ from listenbrainz.db.testing import DatabaseTestCase
 class PinnedRecDatabaseTestCase(DatabaseTestCase):
     def setUp(self):
         DatabaseTestCase.setUp(self)
-        self.user = db_user.get_or_create(1, "pintestuser")
+        self.user = db_user.get_or_create(1, "test_user")
+        self.user2 = db_user.get_or_create(2, "other_test_user")
         self.pinned_rec_samples = [
             {"recording_mbid": "7f3d82ee-3817-4367-9eec-f33a312247a1", "blurb_content": "Amazing first recording"},
             {"recording_mbid": "7f3d82ee-3817-4367-9eec-f33a312247a1", "blurb_content": "Wonderful second recording"},
@@ -129,105 +130,91 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(len(pin_history), count)
 
     def test_unpin_if_active_currently_pinned(self):
-        self.insert_test_data(self.user["id"], 3)  # pin 3 recordings
-        initial_original_pin = db_pinned_rec.get_current_pin_for_user(user_id=self.user["id"])
-
-        self.pin_single_sample(self.user["id"], 3)  # pin 4th recording
-        new_pin = db_pinned_rec.get_current_pin_for_user(user_id=self.user["id"])
-        updated_original_pin = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)[1]
+        original_pinned = self.pin_single_sample(self.user["id"], 0)
+        new_pinned = self.pin_single_sample(self.user["id"], 1)
+        original_unpinned = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)[1]
 
         # only the pinned_until value of the record should be updated
-        self.assertEqual(initial_original_pin.user_id, updated_original_pin.user_id)
-        self.assertEqual(initial_original_pin.recording_mbid, updated_original_pin.recording_mbid)
-        self.assertEqual(initial_original_pin.blurb_content, updated_original_pin.blurb_content)
-        self.assertEqual(initial_original_pin.created, updated_original_pin.created)
-        self.assertGreater(initial_original_pin.pinned_until, updated_original_pin.pinned_until)
+        self.assertEqual(original_unpinned.user_id, original_pinned.user_id)
+        self.assertEqual(original_unpinned.recording_mbid, original_pinned.recording_mbid)
+        self.assertEqual(original_unpinned.blurb_content, original_pinned.blurb_content)
+        self.assertEqual(original_unpinned.created, original_pinned.created)
+        self.assertLess(original_unpinned.pinned_until, original_pinned.pinned_until)
 
-        self.assertNotEqual(new_pin, initial_original_pin)
+        self.assertNotEqual(new_pinned, original_pinned)
 
     def test_unpin(self):
-        recording_pinned = self.pin_single_sample(self.user["id"], 0)
-        recording_in_db = db_pinned_rec.get_current_pin_for_user(self.user["id"])
-        self.assertEqual(recording_pinned, recording_in_db)
-
+        pinned = self.pin_single_sample(self.user["id"], 0)
         db_pinned_rec.unpin(self.user["id"])
         self.assertIsNone(db_pinned_rec.get_current_pin_for_user(self.user["id"]))
 
-        pinned_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
-        self.assertEqual(len(pinned_history), 1)
-
         # test that the pinned_until value was updated
-        initial_pinned_until = recording_pinned.pinned_until
-        updated_pinned_until = pinned_history[0].pinned_until
-        self.assertGreater(initial_pinned_until, updated_pinned_until)
+        unpinned = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)[0]
+        self.assertGreater(pinned.pinned_until, unpinned.pinned_until)
 
     def test_delete(self):
         keptIndex = 0
-        self.pin_single_sample(self.user["id"], keptIndex)  # this record will stay
-        self.pin_single_sample(self.user["id"], 1)  # this record is deleted
+
+        # insert two records and delete the newer one
+        self.pin_single_sample(self.user["id"], keptIndex)
+        self.pin_single_sample(self.user["id"], 1)
         old_pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
-        pinned = old_pin_history[0]
+        pin_to_delete = old_pin_history[0]
         db_pinned_rec.delete(
             PinnedRecording(  # delete the newer record
                 user_id=self.user["id"],
-                recording_mbid=pinned.recording_mbid,
-                pinned_until=pinned.pinned_until,
-                created=pinned.created,
+                recording_mbid=pin_to_delete.recording_mbid,
+                pinned_until=pin_to_delete.pinned_until,
+                created=pin_to_delete.created,
             )
         )
 
-        new_pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
-        self.assertEqual(len(new_pin_history), len(old_pin_history) - 1)
-        self.assertEqual(self.pinned_rec_samples[keptIndex]["blurb_content"], new_pin_history[0].blurb_content)
+        # test that only the older pin remained in the database
+        pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
+        pin_remaining = pin_history[0]
+        self.assertEqual(len(pin_history), len(old_pin_history) - 1)
+        self.assertEqual(pin_remaining.blurb_content, self.pinned_rec_samples[keptIndex]["blurb_content"])
 
-        old_pin_history = new_pin_history
-        pinned = old_pin_history[0]
+        # delete the last pin
         db_pinned_rec.delete(
             PinnedRecording(  # delete the newer record
                 user_id=self.user["id"],
-                recording_mbid=pinned.recording_mbid,
-                pinned_until=pinned.pinned_until,
-                created=pinned.created,
+                recording_mbid=pin_remaining.recording_mbid,
+                pinned_until=pin_remaining.pinned_until,
+                created=pin_remaining.created,
             )
         )
 
-        new_pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
-        self.assertEqual(len(new_pin_history), 0)
-        self.assertFalse(new_pin_history)
+        pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
+        self.assertFalse(pin_history)
 
     def test_get_current_pin_for_user(self):
-        # insert 2 recordings from sample and test that the correct one is the active pin
-        self.pin_single_sample(self.user["id"], 0)
+        expected_pinned = self.pin_single_sample(self.user["id"], 0)
+        recieved_pinned = db_pinned_rec.get_current_pin_for_user(self.user["id"])
+        self.assertEqual(recieved_pinned, expected_pinned)
+
         expected_pinned = self.pin_single_sample(self.user["id"], 1)
         recieved_pinned = db_pinned_rec.get_current_pin_for_user(self.user["id"])
         self.assertEqual(recieved_pinned, expected_pinned)
 
-        # insert 2 more recordings from sample and test that the correct one is the active pin
-        self.pin_single_sample(self.user["id"], 2)
-        expected_pinned = self.pin_single_sample(self.user["id"], 3)
-        recieved_pinned = db_pinned_rec.get_current_pin_for_user(self.user["id"])
-        self.assertEqual(recieved_pinned, expected_pinned)
-
     def test_get_pin_history_for_user(self):
-        # test that function returns correct number of records for user
-        count = 3
+        count = 4
         self.insert_test_data(self.user["id"], count)
-        pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
-        self.assertEqual(len(pin_history), count)
 
         # test that pin history includes unpinned recordings
+        pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
         db_pinned_rec.unpin(user_id=self.user["id"])
         new_pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
         self.assertEqual(len(new_pin_history), len(pin_history))
 
         # test that the list was returned in descending order of creation date
         self.assertGreater(pin_history[0].created, pin_history[1].created)
-        self.assertEqual(pin_history[0].blurb_content, self.pinned_rec_samples[count - 1]["blurb_content"])
 
         # test the limit argument
         limit = 1
         limited_pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=limit, offset=0)
         self.assertEqual(len(limited_pin_history), limit)
+
         limit = 999
         limited_pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=limit, offset=0)
         self.assertEqual(len(limited_pin_history), count)
@@ -236,11 +223,31 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
         offset = 1
         offset_pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=offset)
         self.assertEqual(len(offset_pin_history), count - offset)
+
         offset = 999
         offset_pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=offset)
-        self.assertEqual(len(offset_pin_history), 0)
+        self.assertFalse(offset_pin_history)
 
     def test_get_pin_count_for_user(self):
         self.insert_test_data(self.user["id"])
         pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
-        self.assertEqual(len(pin_history), db_pinned_rec.get_pin_count_for_user(user_id=self.user["id"]))
+        pin_count = db_pinned_rec.get_pin_count_for_user(user_id=self.user["id"])
+        self.assertEqual(pin_count, len(pin_history))
+
+        # test that pin_count includes unpinned recordings
+        db_pinned_rec.unpin(user_id=self.user["id"])
+        pin_count = db_pinned_rec.get_pin_count_for_user(user_id=self.user["id"])
+        self.assertEqual(pin_count, len(pin_history))
+
+        # test that pin_count excludes deleted recordings
+        pin_to_delete = pin_history[1]
+        db_pinned_rec.delete(
+            PinnedRecording(  # delete the newer record
+                user_id=self.user["id"],
+                recording_mbid=pin_to_delete.recording_mbid,
+                pinned_until=pin_to_delete.pinned_until,
+                created=pin_to_delete.created,
+            )
+        )
+        pin_count = db_pinned_rec.get_pin_count_for_user(user_id=self.user["id"])
+        self.assertEqual(pin_count, len(pin_history) - 1)
