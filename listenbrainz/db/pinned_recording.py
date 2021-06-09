@@ -10,8 +10,8 @@ PINNED_REC_GET_COLUMNS = ['user_id', 'recording_mbid::text', 'blurb_content', 'p
 
 
 def pin(pinnedRecording: PinnedRecording):
-    """ Inserts an active pinned recording record into the database for the user.
-        If the user already has an active pinned recording, it will be unpinned first.
+    """ Inserts a pinned recording record into the database for the user.
+        If the user already has an active pinned recording, it will be unpinned before the new one is pinned.
 
         Args:
             pinnedRecording: An object of class PinnedRecording
@@ -36,7 +36,7 @@ def pin(pinnedRecording: PinnedRecording):
 
 
 def unpin(user_id: int):
-    """ Unpins the currently active pinned recording for the user if it exists.
+    """ Unpins the currently active pinned recording for the user if they have one.
 
         Args:
             user_id: the row ID of the user in the DB
@@ -75,7 +75,7 @@ def delete(pinnedRecording: PinnedRecording):
 
 
 def get_current_pin_for_user(user_id: int) -> PinnedRecording:
-    """ Get the currently active pinned recording for the user if it exists.
+    """ Get the currently active pinned recording for the user if they have one.
 
         Args:
             user_id: the row ID of the user in the DB
@@ -104,7 +104,7 @@ def get_pin_history_for_user(user_id: int, count: int, offset: int) -> List[Pinn
             offset: number of pinned recordings to skip from the beginning
 
         Returns:
-            A list of PinnedRecording objects.
+            A list of PinnedRecording objects sorted by newest to oldest creation date.
     """
 
     with db.engine.connect() as connection:
@@ -124,13 +124,13 @@ def get_pin_history_for_user(user_id: int, count: int, offset: int) -> List[Pinn
 
 
 def get_pin_count_for_user(user_id: int) -> int:
-    """ Get total number of recording feedback given by the user
+    """ Get the total number pinned_recordings for the user.
 
         Args:
             user_id: the row ID of the user in the DB
 
         Returns:
-            The total number of recording feedback given by the user
+            The total number of the user's pinned_recording records in the database
     """
     query = "SELECT count(*) AS value FROM pinned_recording WHERE user_id = :user_id"
 
