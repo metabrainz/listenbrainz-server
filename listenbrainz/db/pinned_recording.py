@@ -140,4 +140,3 @@ def get_pin_count_for_user(user_id: int) -> int:
         })
         count = int(result.fetchone()["value"])
     return count
-    
