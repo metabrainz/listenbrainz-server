@@ -4,6 +4,7 @@ import sys
 from time import sleep
 
 from brainzutils.flask import CustomFlask
+from brainzutils import cache, metrics
 from flask import request, url_for, redirect
 from flask_login import current_user
 
@@ -94,6 +95,10 @@ def gen_app(debug=None):
         file_config=app.config.get('LOG_FILE'),
         sentry_config=app.config.get('LOG_SENTRY')
     )
+
+    # Initialize BU cache and metrics
+    cache.init(host=app.config['REDIS_HOST'], port=app.config['REDIS_PORT'], namespace=app.config['REDIS_NAMESPACE'])
+    metrics.init("listenbrainz")
 
     # Redis connection
     create_redis(app)
