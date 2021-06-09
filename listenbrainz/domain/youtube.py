@@ -36,7 +36,7 @@ class YoutubeService(ExternalService):
         # previous time. We try to revoke the new issued token and ask the user to
         # authenticate again so that we receive the refresh token as well.
         if "refresh_token" not in token:
-            self._revoke_token(token["access_token"])
+            self._revoke_token(user_id, token["access_token"])
             return False
         else:
             external_service_oauth.save_token(user_id=user_id,
@@ -93,10 +93,10 @@ class YoutubeService(ExternalService):
         # try to revoke token with Google Auth API otherwise Google will consider the account
         # be still connected and will not send a refresh_token next time the user tries to
         # connect again. if it doesn't succeed proceed normally and just delete from our database
-        self._revoke_token(user["access_token"])
+        self._revoke_token(user_id, user["access_token"])
         super(YoutubeService, self).remove_user(user_id)
 
-    def _revoke_token(self, access_token):
+    def _revoke_token(self, user_id: int, access_token: str):
         """ Revoke the given access_token using Google OAuth Revoke endpoint.
         Args:
             access_token: the token to be revoked
@@ -112,7 +112,8 @@ class YoutubeService(ExternalService):
             response.raise_for_status()
         except RequestException:
             error_msg = response.text if response else None
-            current_app.logger.error("Error while trying to revoke token: %s", error_msg, exc_info=True)
+            current_app.logger.error("Error while trying to revoke token for user_id %d : %s",
+                                     user_id, error_msg, exc_info=True)
 
     def get_user_connection_details(self, user_id: int):
         pass
