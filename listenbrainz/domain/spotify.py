@@ -17,18 +17,18 @@ from listenbrainz.domain.importer_service import ImporterService
 
 OAUTH_TOKEN_URL = 'https://accounts.spotify.com/api/token'
 
-SPOTIFY_IMPORT_PERMISSIONS = (
+SPOTIFY_IMPORT_PERMISSIONS = {
     'user-read-currently-playing',
     'user-read-recently-played',
-)
+}
 
-SPOTIFY_LISTEN_PERMISSIONS = (
+SPOTIFY_LISTEN_PERMISSIONS = {
     'streaming',
     'user-read-email',
     'user-read-private',
     'playlist-modify-public',
     'playlist-modify-private',
-)
+}
 
 SPOTIFY_API_RETRIES = 5
 
@@ -81,7 +81,7 @@ class SpotifyService(ImporterService):
         refresh_token = token['refresh_token']
         expires_at = int(time.time()) + token['expires_in']
         scopes = token['scope'].split()
-        active = SPOTIFY_IMPORT_PERMISSIONS[0] in scopes and SPOTIFY_IMPORT_PERMISSIONS[1] in scopes
+        active = set(scopes).issuperset(SPOTIFY_IMPORT_PERMISSIONS)
 
         external_service_oauth.save_token(user_id=user_id, service=self.service, access_token=access_token,
                                           refresh_token=refresh_token, token_expires_ts=expires_at,

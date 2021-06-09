@@ -285,9 +285,9 @@ def music_services_details():
 
     if spotify_user:
         permissions = set(spotify_user["scopes"])
-        if permissions == set(SPOTIFY_IMPORT_PERMISSIONS):
+        if permissions == SPOTIFY_IMPORT_PERMISSIONS:
             current_spotify_permissions = "import"
-        elif permissions == set(SPOTIFY_LISTEN_PERMISSIONS):
+        elif permissions == SPOTIFY_LISTEN_PERMISSIONS:
             current_spotify_permissions = "listen"
         else:
             current_spotify_permissions = "both"
@@ -360,7 +360,7 @@ def music_services_disconnect(service_name: str):
         if service_name == 'spotify':
             permissions = None
             if action == 'both':
-                permissions = SPOTIFY_LISTEN_PERMISSIONS + SPOTIFY_IMPORT_PERMISSIONS
+                permissions = SPOTIFY_LISTEN_PERMISSIONS | SPOTIFY_IMPORT_PERMISSIONS
             elif action == 'import':
                 permissions = SPOTIFY_IMPORT_PERMISSIONS
             elif action == 'listen':
