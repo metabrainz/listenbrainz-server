@@ -40,9 +40,9 @@ class PinnedRecording(BaseModel):
         if created:  # validate if argument provided
             try:  # validate that datetime contains tzinfo
                 if created.tzinfo is not None and created.tzinfo.utcoffset(created) is not None:
-                    return created  # v.tzinfo throws AttributeError if invalid datetime
+                    return created
                 raise AssertionError("Created must contain tzinfo.")
-            except (AttributeError, ValueError):
+            except (AttributeError, ValueError):  # created.tzinfo throws AttributeError if invalid datetime
                 raise ValueError(
                     """Created must be a valid datetime and contain tzinfo.
                        See https://pydantic-docs.helpmanual.io/usage/types/#datetime-types for acceptable formats."""
