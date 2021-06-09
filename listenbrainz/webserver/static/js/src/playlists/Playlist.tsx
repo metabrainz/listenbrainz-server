@@ -3,7 +3,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { get, findIndex, omit, isNil, has } from "lodash";
-import * as io from "socket.io-client";
 
 import { ActionMeta, InputActionMeta, ValueType } from "react-select";
 import {
@@ -21,6 +20,7 @@ import { ReactSortable } from "react-sortablejs";
 import debounceAsync from "debounce-async";
 import { sanitize } from "dompurify";
 import * as Sentry from "@sentry/react";
+import { io, Socket } from "socket.io-client";
 import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
@@ -86,7 +86,7 @@ export default class PlaylistPage extends React.Component<
   private searchForTrackDebounced: any;
   private brainzPlayer = React.createRef<BrainzPlayer>();
 
-  private socket!: SocketIOClient.Socket;
+  private socket!: Socket;
 
   constructor(props: PlaylistPageProps) {
     super(props);
@@ -138,7 +138,7 @@ export default class PlaylistPage extends React.Component<
 
   createWebsocketsConnection = (): void => {
     const { webSocketsServerUrl } = this.props;
-    this.socket = io.connect(webSocketsServerUrl);
+    this.socket = io(webSocketsServerUrl);
   };
 
   addWebsocketsHandlers = (): void => {
