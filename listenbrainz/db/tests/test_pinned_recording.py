@@ -162,8 +162,9 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
         self.assertGreater(initial_pinned_until, updated_pinned_until)
 
     def test_delete(self):
-        self.pin_single_sample(self.user["id"], 0)
-        self.pin_single_sample(self.user["id"], 1)
+        keptIndex = 0
+        self.pin_single_sample(self.user["id"], keptIndex) # this record will stay
+        self.pin_single_sample(self.user["id"], 1) # this record is deleted
         old_pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
         pinned = old_pin_history[0]
         db_pinned_rec.delete(
@@ -177,7 +178,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
 
         new_pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
         self.assertEqual(len(new_pin_history), len(old_pin_history) - 1)
-        self.assertEqual("Amazing first recording", new_pin_history[0].blurb_content)
+        self.assertEqual(self.pinned_rec_samples[keptIndex]["blurb_content"], new_pin_history[0].blurb_content)
 
         old_pin_history = new_pin_history
         pinned = old_pin_history[0]
@@ -192,7 +193,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
 
         new_pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
         self.assertEqual(len(new_pin_history), 0)
-        self.assertIsNotNone(new_pin_history)
+        self.assertFalse(new_pin_history)
 
     def test_get_current_pin_for_user(self):
         # insert 2 recordings from sample and test that the correct one is the active pin
