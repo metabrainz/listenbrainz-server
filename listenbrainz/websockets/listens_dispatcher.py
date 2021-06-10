@@ -45,7 +45,7 @@ class ListensDispatcher(threading.Thread):
         channel.basic_consume(queue=current_app.config['PLAYING_NOW_QUEUE'], on_message_callback=self.callback_playing_now)
 
     def on_open(self, connection):
-        connection.channel(self.on_open_callback)
+        connection.channel(on_open_callbak=self.on_open_callback)
 
     def init_rabbitmq_connection(self):
         while True:
