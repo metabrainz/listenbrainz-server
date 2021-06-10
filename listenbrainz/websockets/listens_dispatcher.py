@@ -39,10 +39,10 @@ class ListensDispatcher(threading.Thread):
 
     def on_open_callback(self, channel):
         self.create_and_bind_exchange_and_queue(channel, current_app.config['UNIQUE_EXCHANGE'], current_app.config['WEBSOCKETS_QUEUE'])
-        channel.basic_consume(self.callback_listen, queue=current_app.config['WEBSOCKETS_QUEUE'])
+        channel.basic_consume(queue=current_app.config['WEBSOCKETS_QUEUE'], on_message_callback=self.callback_listen)
 
         self.create_and_bind_exchange_and_queue(channel, current_app.config['PLAYING_NOW_EXCHANGE'], current_app.config['PLAYING_NOW_QUEUE'])
-        channel.basic_consume(self.callback_playing_now, queue=current_app.config['PLAYING_NOW_QUEUE'])
+        channel.basic_consume(queue=current_app.config['PLAYING_NOW_QUEUE'], on_message_callback=self.callback_playing_now)
 
     def on_open(self, connection):
         connection.channel(self.on_open_callback)

@@ -178,8 +178,8 @@ class TimescaleWriterSubscriber(ListenWriter):
                     self.incoming_ch.queue_bind(exchange=current_app.config['INCOMING_EXCHANGE'],
                                                 queue=current_app.config['INCOMING_QUEUE'])
                     self.incoming_ch.basic_consume(
-                        lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self),
                         queue=current_app.config['INCOMING_QUEUE'],
+                        on_message_callback=lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self)
                     )
 
                     self.unique_ch = self.connection.channel()
