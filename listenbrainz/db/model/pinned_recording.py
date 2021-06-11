@@ -40,6 +40,8 @@ class PinnedRecording(BaseModel):
         if created:  # validate if argument provided
             try:  # validate that datetime contains tzinfo
                 if created.tzinfo is None or created.tzinfo.utcoffset(created) is None:
+                    raise ValueError
+                return created
             except (AttributeError, ValueError):  # created.tzinfo throws AttributeError if invalid datetime
                 raise ValueError(
                     """Created must be a valid datetime and contain tzinfo.
