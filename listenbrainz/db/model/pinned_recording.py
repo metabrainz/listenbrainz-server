@@ -39,9 +39,7 @@ class PinnedRecording(BaseModel):
     def check_valid_created_or_set(cls, created):
         if created:  # validate if argument provided
             try:  # validate that datetime contains tzinfo
-                if created.tzinfo is not None and created.tzinfo.utcoffset(created) is not None:
-                    return created
-                raise AssertionError("Created must contain tzinfo.")
+                if created.tzinfo is None or created.tzinfo.utcoffset(created) is None:
             except (AttributeError, ValueError):  # created.tzinfo throws AttributeError if invalid datetime
                 raise ValueError(
                     """Created must be a valid datetime and contain tzinfo.
@@ -52,20 +50,18 @@ class PinnedRecording(BaseModel):
 
     @validator("pinned_until", always=True)
     def check_valid_pinned_until_or_set(cls, pin_until, values):
-        try:
-            if pin_until:  # validate if argument provided
-                try:
-                    if pin_until.tzinfo is not None and pin_until.tzinfo.utcoffset(pin_until) is not None:
-                        if pin_until > values["created"]:
-                            return pin_until
-                        raise AssertionError("Pinned until must be greater than created.")
-                    raise AssertionError("Pinned until must contain tzinfo.")
-                except (AttributeError, ValueError):  # v.tzinfo throws AttributeError if invalid datetime
-                    raise ValueError(
-                        """Pinned until must be a valid datetime and contain tzinfo.
-                        See https://pydantic-docs.helpmanual.io/usage/types/#datetime-types for acceptable formats."""
-                    )
-            else:
+        if pin_until:
+            try:
+                if pin_until.tzinfo is None or pin_until.tzinfo.utcoffset(pin_until) is None or pin_until < values["created"]:
+                    raise ValueError
+                return pin_until
+            except (ValueError, AttributeError):
+                raise ValueError(
+                    """Pinned until must be a valid datetime, contain tzinfo, and be greater than created.
+                            See https://pydantic-docs.helpmanual.io/usage/types/#datetime-types for acceptable formats."""
+                )
+        else:
+            if "created" in values:
                 return values["created"] + timedelta(days=cls._daysUntilUnpin)  # set default value
-        except (KeyError):  # values["created"] throws KeyError if created was not valid
-            raise ValueError("Cannot set default pinned_until until created is valid.")
+            else:
+                raise ValueError("Cannot set default pinned_until until created is valid.")
