@@ -103,9 +103,6 @@ class RequestConsumer:
     def callback(self, channel, method, properties, body):
         request = json.loads(body.decode('utf-8'))
         logger.info('Received a request!')
-        messages = self.get_result(request)
-        if messages:
-            self.push_to_result_queue(messages)
         while True:
             try:
                 self.request_channel.basic_ack(delivery_tag=method.delivery_tag)
@@ -119,6 +116,11 @@ class RequestConsumer:
                 self.rabbitmq.close()
                 self.connect_to_rabbitmq()
                 self.init_rabbitmq_channels()
+
+        messages = self.get_result(request)
+        if messages:
+            self.push_to_result_queue(messages)
+
         logger.info('Request done!')
 
     def connect_to_rabbitmq(self):
