@@ -1,11 +1,15 @@
-from  concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
+from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
+from dataclasses import dataclass, field
 from queue import PriorityQueue, Queue, Empty
-from time import time
+from typing import Any
+from time import monotonic
 import threading
 import traceback
+from io import StringIO
 
 from flask import current_app
 import sqlalchemy
+from listenbrainz.listen import Listen
 from listenbrainz.db import timescale
 from listenbrainz.mbid_mapping_writer.matcher import lookup_new_listens
 from listenbrainz.labs_api.labs.api.mbid_mapping import MATCH_TYPES
@@ -14,8 +18,20 @@ from brainzutils import metrics, cache
 
 MAX_THREADS = 1
 MAX_QUEUED_JOBS = MAX_THREADS * 2
-
+MSID_FETCH_BATCH_SIZE = 10000
 UPDATE_INTERVAL = 60 
+
+LEGACY_LISTEN = 1
+NEW_LISTEN = 0
+
+# How long to wait if all unmatched listens have been processed before starting the process anew
+UNMATCHED_LISTENS_COMPLETED_TIMEOUT = 3600  # in s
+
+
+@dataclass(order=True)
+class JobItem:
+    priority: int
+    item: Any=field(compare=False)
 
 
 class MappingJobQueue(threading.Thread):
@@ -25,23 +41,47 @@ class MappingJobQueue(threading.Thread):
         self.done = False
         self.app = app
         self.queue = PriorityQueue()
-        self.priority = 1
+        self.unmatched_listens_complete_time = 0
 
         init_cache(host=app.config['REDIS_HOST'], port=app.config['REDIS_PORT'], namespace=app.config['REDIS_NAMESPACE'])
         metrics.init("listenbrainz")
 
     def add_new_listens(self, listens):
-        self.queue.put((self.priority, listens))
-        self.priority += 1
+        self.queue.put(JobItem(NEW_LISTEN, listens))
 
     def terminate(self):
         self.done = True
         self.join()
 
+    def add_unmatched_listen_to_queue(self):
+
+        count = 0
+        query = """SELECT data->'track_metadata'->'additional_info'->>'recording_msid',
+                          track_name,
+                          data->'track_metadata'->'artist_name'
+                     FROM listen
+                LEFT JOIN listen_mbid_mapping mbid
+                       ON data->'track_metadata'->'additional_info'->>'recording_msid' = mbid.recording_mbid::text
+                    WHERE mbid.recording_mbid is null
+                 ORDER BY listened_at desc
+                    LIMIT :limit"""
+
+        with timescale.engine.connect() as connection:
+            curs = connection.execute(sqlalchemy.text(query), limit=MSID_FETCH_BATCH_SIZE)
+            while True:
+                result = curs.fetchone()
+                if not result:
+                    break
+
+                self.queue.put(JobItem(LEGACY_LISTEN, [{ "data": { "artist_name" : result[2], "track_name": result[1] }, "recording_msid": result[0] }]))
+                count += 1
+
+        return count
+
     def run(self):
         self.app.logger.info("start job queue thread")
 
-        stats = { "processed": 0, "total": 0, "errors": 0 }
+        stats = { "processed": 0, "total": 0, "errors": 0, "legacy": 0 }
         for typ in MATCH_TYPES:
             stats[typ] = 0
 
@@ -69,7 +109,7 @@ class MappingJobQueue(threading.Thread):
                 stats["total"] = result[0]
 
 
-        update_time = time() + UPDATE_INTERVAL
+        update_time = monotonic() + UPDATE_INTERVAL
         try:
             with self.app.app_context():
                 with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
@@ -80,7 +120,10 @@ class MappingJobQueue(threading.Thread):
                         for complete in completed:
                             exc = complete.exception()
                             if exc:
-                                self.app.logger.error(exc)
+                                f = StringIO()
+                                traceback.print_exception(None, exc, exc.__traceback__, limit=None, file=f)
+                                f.seek(0)
+                                self.app.logger.error(f.read())
                                 stats["errors"] += 1
                             else:
                                 job_stats = complete.result()
@@ -92,21 +135,32 @@ class MappingJobQueue(threading.Thread):
                             try:
                                 job = self.queue.get(False)
                             except Empty:
+                                self.app.logger.info("queue is empty")
+                                if self.unmatched_listens_complete_time == 0 or \
+                                    monotonic() > self.unmatched_listens_complete_time:
+                                    added = self.add_unmatched_listen_to_queue()
+                                    if added > 0:
+                                        self.app.logger.info("added %d items to queue" % added)
+                                        self.unmatched_listens_complete_time = 0
+                                    else:
+                                        self.app.logger.info("ALL LISTENS HAVE BEEN PROCESSED! \o/")
+                                        self.unmatched_listens_complete_time = monotonic() + UNMATCHED_LISTENS_COMPLETED_TIMEOUT
+                                    
                                 break
 
-                            if job[0] > 0:
-                                futures[executor.submit(lookup_new_listens, self.app, job[1])] = job[0]
-                            else:
-                                self.app.logger.info("Unsupported job type in MappingJobQueue (MBID Mapping Writer).")
-                        if time() > update_time: 
-                            update_time = time() + UPDATE_INTERVAL
+                            futures[executor.submit(lookup_new_listens, self.app, job.item)] = job.priority
+                            if job.priority == LEGACY_LISTEN:
+                                stats["legacy"] += 1
+
+                        if monotonic() > update_time: 
+                            update_time = monotonic() + UPDATE_INTERVAL
                             if stats["total"] != 0:
                                 percent = (stats["exact_match"] + stats["high_quality"] + stats["med_quality"] +
                                           stats["low_quality"]) / stats["total"] * 100.00
-                                self.app.logger.info("%d (%d) listens: exact %d high %d med %d low %d no %d err %d %.1f%%" %
+                                self.app.logger.info("%d (%d) listens: exact %d high %d med %d low %d no %d err %d legacy: %d %.1f%%" %
                                         (stats["total"], stats["processed"], stats["exact_match"], stats["high_quality"],
                                          stats["med_quality"], stats["low_quality"], stats["no_match"], 
-                                         stats["errors"], percent))
+                                         stats["errors"], stats["legacy"], percent))
                                 metrics.set("listenbrainz-mbid-mapping-writer", 
                                             total_match_p=percent,
                                             exact_match_p=stats["exact_match"] / stats["total"] * 100.00, 
@@ -122,7 +176,8 @@ class MappingJobQueue(threading.Thread):
                                             med_quality=stats["med_quality"],
                                             low_quality=stats["low_quality"],
                                             no_match=stats["no_match"],
-                                            errors=stats["errors"])
+                                            errors=stats["errors"],
+                                            legacy=stats["legacy"])
                             
 
         except Exception as err:

@@ -186,7 +186,6 @@ class MBIDMappingQuery(Query):
                 if word not in ENGLISH_STOP_WORD_INDEX:
                     cleaned_query.append(word)
 
-            print("before: '%s'\n after: '%s'\n" % (query, " ".join(cleaned_query)))
             query = " ".join(cleaned_query)
 
         search_parameters = {
@@ -205,7 +204,6 @@ class MBIDMappingQuery(Query):
                 print("Got socket timeout, sleeping 5 seconds, trying again.")
                 sleep(5)
 
-        print("hits %d" % len(hits["hits"]))
         if len(hits["hits"]) == 0:
             return None
 
