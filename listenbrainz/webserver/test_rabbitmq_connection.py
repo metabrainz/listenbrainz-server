@@ -17,7 +17,7 @@ class RabbitMQConnectionPoolTestCase(TestCase):
     @patch('listenbrainz.webserver.rabbitmq_connection.pika.BlockingConnection')
     @patch('listenbrainz.webserver.rabbitmq_connection.sleep')
     def test_connection_closed_while_creating(self, mock_sleep, mock_blocking_connection):
-        mock_blocking_connection.side_effect = ConnectionClosed
+        mock_blocking_connection.side_effect = ConnectionClosed(reply_code=200, reply_text='Normal Shutdown')
         with self.assertRaises(ConnectionClosed):
             connection = self.pool.create()
             self.pool.log.critical.assert_called_once()
