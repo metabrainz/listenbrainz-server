@@ -142,7 +142,7 @@ class RequestConsumer:
             exchange=config.SPARK_REQUEST_EXCHANGE,
             queue=config.SPARK_REQUEST_QUEUE
         )
-        self.request_channel.basic_consume(self.callback, queue=config.SPARK_REQUEST_QUEUE)
+        self.request_channel.basic_consume(queue=config.SPARK_REQUEST_QUEUE, on_message_callback=self.callback)
 
         self.result_channel = self.rabbitmq.channel()
         self.result_channel.exchange_declare(exchange=config.SPARK_RESULT_EXCHANGE, exchange_type='fanout')

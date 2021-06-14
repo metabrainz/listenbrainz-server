@@ -1,7 +1,7 @@
 click==7.1.2
 hdfs == 2.5.8
 Jinja2 == 2.11.3
-pika==0.13.0
+pika==1.2.0
 python-dateutil==2.8.0
 # Numpy has dropped support for Python 3.6.x from version 1.20.0. So we use version 1.19.5 till we upgrade Python version in Spark images.
 numpy==1.19.5
