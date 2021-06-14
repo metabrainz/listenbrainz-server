@@ -17,18 +17,18 @@ from listenbrainz.domain.importer_service import ImporterService
 
 OAUTH_TOKEN_URL = 'https://accounts.spotify.com/api/token'
 
-SPOTIFY_IMPORT_PERMISSIONS = (
+SPOTIFY_IMPORT_PERMISSIONS = {
     'user-read-currently-playing',
     'user-read-recently-played',
-)
+}
 
-SPOTIFY_LISTEN_PERMISSIONS = (
+SPOTIFY_LISTEN_PERMISSIONS = {
     'streaming',
     'user-read-email',
     'user-read-private',
     'playlist-modify-public',
     'playlist-modify-private',
-)
+}
 
 SPOTIFY_API_RETRIES = 5
 
@@ -70,7 +70,7 @@ class SpotifyService(ImporterService):
     def get_user(self, user_id: int) -> Optional[dict]:
         return spotify.get_user(user_id)
 
-    def add_new_user(self, user_id: int, token: dict):
+    def add_new_user(self, user_id: int, token: dict) -> bool:
         """Create a spotify row for a user based on OAuth access tokens
 
         Args:
@@ -81,11 +81,12 @@ class SpotifyService(ImporterService):
         refresh_token = token['refresh_token']
         expires_at = int(time.time()) + token['expires_in']
         scopes = token['scope'].split()
-        active = SPOTIFY_IMPORT_PERMISSIONS[0] in scopes and SPOTIFY_IMPORT_PERMISSIONS[1] in scopes
+        active = set(scopes).issuperset(SPOTIFY_IMPORT_PERMISSIONS)
 
         external_service_oauth.save_token(user_id=user_id, service=self.service, access_token=access_token,
                                           refresh_token=refresh_token, token_expires_ts=expires_at,
                                           record_listens=active, scopes=scopes)
+        return True
 
     def get_authorize_url(self, permissions: Sequence[str]):
         """ Returns a spotipy OAuth instance that can be used to authenticate with spotify.

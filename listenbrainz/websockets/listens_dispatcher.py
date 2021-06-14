@@ -20,8 +20,7 @@ class ListensDispatcher(threading.Thread):
         else:
             event_name = 'listen'
         for listen in listens:
-            self.socketio.emit(event_name, json.dumps(listen), room=listen['user_name'])
-
+            self.socketio.emit(event_name, json.dumps(listen), to=listen['user_name'])
 
     def callback_listen(self, channel, method, properties, body):
         listens = json.loads(body)
@@ -40,13 +39,13 @@ class ListensDispatcher(threading.Thread):
 
     def on_open_callback(self, channel):
         self.create_and_bind_exchange_and_queue(channel, current_app.config['UNIQUE_EXCHANGE'], current_app.config['WEBSOCKETS_QUEUE'])
-        channel.basic_consume(self.callback_listen, queue=current_app.config['WEBSOCKETS_QUEUE'])
+        channel.basic_consume(queue=current_app.config['WEBSOCKETS_QUEUE'], on_message_callback=self.callback_listen)
 
         self.create_and_bind_exchange_and_queue(channel, current_app.config['PLAYING_NOW_EXCHANGE'], current_app.config['PLAYING_NOW_QUEUE'])
-        channel.basic_consume(self.callback_playing_now, queue=current_app.config['PLAYING_NOW_QUEUE'])
+        channel.basic_consume(queue=current_app.config['PLAYING_NOW_QUEUE'], on_message_callback=self.callback_playing_now)
 
     def on_open(self, connection):
-        connection.channel(self.on_open_callback)
+        connection.channel(on_open_callback=self.on_open_callback)
 
     def init_rabbitmq_connection(self):
         while True:
@@ -63,7 +62,6 @@ class ListensDispatcher(threading.Thread):
             except Exception as e:
                 current_app.logger.error("Error while connecting to RabbitMQ: %s", str(e), exc_info=True)
                 time.sleep(3)
-
 
     def run(self):
         with self.app.app_context():

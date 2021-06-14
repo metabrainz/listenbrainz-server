@@ -72,14 +72,15 @@ def init_cache(host, port, namespace):
     cache.init(host=host, port=port, namespace=namespace)
 
 
-def create_channel_to_consume(connection, exchange, queue, callback_function, no_ack=False):
+def create_channel_to_consume(connection, exchange: str, queue: str, callback_function, auto_ack: bool = False):
     """ Returns a newly created channel that can consume from the specified queue.
 
     Args:
         connection: a RabbitMQ connection
-        exchange (str): the name of the exchange
-        queue (str): the name of the queue
+        exchange: the name of the exchange
+        queue: the name of the queue
         callback_function: the callback function to be called on message reception
+        auto_ack: should messages be automatically ack'ed when received
 
     Returns:
         a RabbitMQ channel
@@ -88,7 +89,7 @@ def create_channel_to_consume(connection, exchange, queue, callback_function, no
     ch.exchange_declare(exchange=exchange, exchange_type='fanout')
     ch.queue_declare(queue, durable=True)
     ch.queue_bind(exchange=exchange, queue=queue)
-    ch.basic_consume(callback_function, queue=queue, no_ack=no_ack)
+    ch.basic_consume(queue=queue, on_message_callback=callback_function, auto_ack=auto_ack)
     return ch
 
 
