@@ -12,9 +12,9 @@ MAX_THREADS = 2
 MAX_QUEUED_JOBS = MAX_THREADS * 2
 
 
-def lookup_new_listens(app, listens):
+def lookup_new_listens(app, listens, is_legacy_listen=False):
 
-    stats = { "processed": 0, "total": 0, "errors": 0 }
+    stats = { "processed": 0, "total": 0, "errors": 0, "legacy_match": 0 }
     for typ in MATCH_TYPES:
         stats[typ] = 0
 
@@ -23,18 +23,21 @@ def lookup_new_listens(app, listens):
     msids = { str(listen['recording_msid']):listen for listen in listens }
     stats["total"] = len(msids)
     if len(msids):
-        with timescale.engine.connect() as connection:
-            query = """SELECT recording_msid 
-                         FROM listen_mbid_mapping
-                        WHERE recording_msid IN :msids"""
-            curs = connection.execute(sqlalchemy.text(query), msids=tuple(msids.keys()))
-            while True:
-                result = curs.fetchone()
-                if not result:
-                    break
-                del msids[str(result[0])]
-                stats["processed"] += 1
-                skipped += 1
+        if not is_legacy_listen:
+            with timescale.engine.connect() as connection:
+                query = """SELECT recording_msid 
+                             FROM listen_mbid_mapping
+                            WHERE recording_msid IN :msids"""
+                curs = connection.execute(sqlalchemy.text(query), msids=tuple(msids.keys()))
+                while True:
+                    result = curs.fetchone()
+                    if not result:
+                        break
+                    del msids[str(result[0])]
+                    stats["processed"] += 1
+                    skipped += 1
+        else:
+            stats["processed"] += len(msids)
 
         conn = timescale.engine.raw_connection() 
         with conn.cursor() as curs:
@@ -48,6 +51,8 @@ def lookup_new_listens(app, listens):
                         stats['no_match'] += 1
 
                 stats["processed"] += len(matches)
+                if is_legacy_listen:
+                    stats["legacy_match"] += len(matches)
                 query = """INSERT INTO listen_mbid_mapping (recording_msid, recording_mbid, release_mbid, artist_credit_id,
                                                             artist_credit_name, recording_name, match_type)
                                 VALUES %s

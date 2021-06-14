@@ -2,7 +2,7 @@ from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 from dataclasses import dataclass, field
 from queue import PriorityQueue, Queue, Empty
 from typing import Any
-from time import monotonic
+from time import monotonic, sleep
 import threading
 import traceback
 from io import StringIO
@@ -18,7 +18,8 @@ from brainzutils import metrics, cache
 
 MAX_THREADS = 1
 MAX_QUEUED_JOBS = MAX_THREADS * 2
-MSID_FETCH_BATCH_SIZE = 10000
+MSID_FETCH_BATCH_SIZE = 1500
+QUEUE_RELOAD_THRESHOLD = 500
 UPDATE_INTERVAL = 60 
 
 LEGACY_LISTEN = 1
@@ -34,6 +35,29 @@ class JobItem:
     item: Any=field(compare=False)
 
 
+def add_unmatched_listen_to_queue(queue):
+    query = """SELECT data->'track_metadata'->'additional_info'->>'recording_msid',
+                      track_name,
+                      data->'track_metadata'->'artist_name'
+                 FROM listen
+            LEFT JOIN listen_mbid_mapping mbid
+                   ON data->'track_metadata'->'additional_info'->>'recording_msid' = mbid.recording_mbid::text
+                WHERE mbid.recording_mbid is null
+             ORDER BY listened_at desc
+                LIMIT :limit"""
+
+    with timescale.engine.connect() as connection:
+        curs = connection.execute(sqlalchemy.text(query), limit=MSID_FETCH_BATCH_SIZE)
+        while True:
+            result = curs.fetchone()
+            if not result:
+                break
+
+            queue.put(JobItem(LEGACY_LISTEN, [{ "data": { "artist_name" : result[2],
+                                                          "track_name": result[1] },
+                                                "recording_msid": result[0],
+                                                "legacy": True }]))
+
 class MappingJobQueue(threading.Thread):
 
     def __init__(self, app):
@@ -42,9 +66,11 @@ class MappingJobQueue(threading.Thread):
         self.app = app
         self.queue = PriorityQueue()
         self.unmatched_listens_complete_time = 0
+        self.legacy_load_thread = None
 
         init_cache(host=app.config['REDIS_HOST'], port=app.config['REDIS_PORT'], namespace=app.config['REDIS_NAMESPACE'])
         metrics.init("listenbrainz")
+        self.load_legacy_listens()
 
     def add_new_listens(self, listens):
         self.queue.put(JobItem(NEW_LISTEN, listens))
@@ -53,35 +79,36 @@ class MappingJobQueue(threading.Thread):
         self.done = True
         self.join()
 
-    def add_unmatched_listen_to_queue(self):
+    def load_legacy_listens(self):
+        """ This function should kick off a thread to load more legacy listens if called.
+            It may be called multiple times, so it must guard against firing off multiple
+            threads. """
 
-        count = 0
-        query = """SELECT data->'track_metadata'->'additional_info'->>'recording_msid',
-                          track_name,
-                          data->'track_metadata'->'artist_name'
-                     FROM listen
-                LEFT JOIN listen_mbid_mapping mbid
-                       ON data->'track_metadata'->'additional_info'->>'recording_msid' = mbid.recording_mbid::text
-                    WHERE mbid.recording_mbid is null
-                 ORDER BY listened_at desc
-                    LIMIT :limit"""
 
-        with timescale.engine.connect() as connection:
-            curs = connection.execute(sqlalchemy.text(query), limit=MSID_FETCH_BATCH_SIZE)
-            while True:
-                result = curs.fetchone()
-                if not result:
-                    break
+        if self.legacy_load_thread:
+            if self.legacy_load_thread.is_alive():
+                return
+            self.legacy_load_thread = None
+           
+        self.app.logger.info("Load more legacy listens")
+        self.legacy_load_thread = threading.Thread(target=add_unmatched_listen_to_queue, args=(self.queue,))
 
-                self.queue.put(JobItem(LEGACY_LISTEN, [{ "data": { "artist_name" : result[2], "track_name": result[1] }, "recording_msid": result[0] }]))
-                count += 1
+#        if self.unmatched_listens_complete_time == 0 or \
+#            monotonic() > self.unmatched_listens_complete_time:
+#            added = self.add_unmatched_listen_to_queue()
+#            if added > 0:
+#                self.app.logger.info("added %d items to queue" % added)
+#                self.unmatched_listens_complete_time = 0
+#            else:
+#                self.app.logger.info("ALL LISTENS HAVE BEEN PROCESSED! \o/")
+#                self.unmatched_listens_complete_time = monotonic() + UNMATCHED_LISTENS_COMPLETED_TIMEOUT
+            
 
-        return count
 
     def run(self):
         self.app.logger.info("start job queue thread")
 
-        stats = { "processed": 0, "total": 0, "errors": 0, "legacy": 0 }
+        stats = { "processed": 0, "total": 0, "errors": 0, "legacy": 0, "legacy_match": 0 }
         for typ in MATCH_TYPES:
             stats[typ] = 0
 
@@ -134,21 +161,13 @@ class MappingJobQueue(threading.Thread):
                         for i in range(MAX_QUEUED_JOBS - len(uncompleted)):
                             try:
                                 job = self.queue.get(False)
+                                if self.queue.qsize() < QUEUE_RELOAD_THRESHOLD:
+                                    self.load_legacy_listens()
                             except Empty:
-                                self.app.logger.info("queue is empty")
-                                if self.unmatched_listens_complete_time == 0 or \
-                                    monotonic() > self.unmatched_listens_complete_time:
-                                    added = self.add_unmatched_listen_to_queue()
-                                    if added > 0:
-                                        self.app.logger.info("added %d items to queue" % added)
-                                        self.unmatched_listens_complete_time = 0
-                                    else:
-                                        self.app.logger.info("ALL LISTENS HAVE BEEN PROCESSED! \o/")
-                                        self.unmatched_listens_complete_time = monotonic() + UNMATCHED_LISTENS_COMPLETED_TIMEOUT
-                                    
-                                break
+                                sleep(.1)
+                                continue
 
-                            futures[executor.submit(lookup_new_listens, self.app, job.item)] = job.priority
+                            futures[executor.submit(lookup_new_listens, self.app, job.item, job.priority == LEGACY_LISTEN)] = job.priority
                             if job.priority == LEGACY_LISTEN:
                                 stats["legacy"] += 1
 
@@ -177,7 +196,8 @@ class MappingJobQueue(threading.Thread):
                                             low_quality=stats["low_quality"],
                                             no_match=stats["no_match"],
                                             errors=stats["errors"],
-                                            legacy=stats["legacy"])
+                                            legacy=stats["legacy"],
+                                            legacy_match=stats["legacy_match"])
                             
 
         except Exception as err:
