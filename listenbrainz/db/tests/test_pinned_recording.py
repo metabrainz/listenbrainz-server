@@ -161,7 +161,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
         self.pin_single_sample(self.user["id"], 1)
         old_pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
         pin_to_delete = old_pin_history[0]
-        db_pinned_rec.delete(pin_to_delete.row_id)
+        db_pinned_rec.delete(pin_to_delete.row_id, self.user["id"])
 
         # test that only the older pin remained in the database
         pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
@@ -170,7 +170,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(pin_remaining.blurb_content, self.pinned_rec_samples[keptIndex]["blurb_content"])
 
         # delete the only remaining pin
-        db_pinned_rec.delete(pin_remaining.row_id)
+        db_pinned_rec.delete(pin_remaining.row_id, self.user["id"])
         pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
         self.assertFalse(pin_history)
 
@@ -229,6 +229,6 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
 
         # test that pin_count excludes deleted recordings
         pin_to_delete = pin_history[1]
-        db_pinned_rec.delete(pin_to_delete.row_id)
+        db_pinned_rec.delete(pin_to_delete.row_id, self.user["id"])
         pin_count = db_pinned_rec.get_pin_count_for_user(user_id=self.user["id"])
         self.assertEqual(pin_count, len(pin_history) - 1)
