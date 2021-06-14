@@ -29,10 +29,10 @@ class MBIDMappingWriter(threading.Thread):
 
     def on_open_callback(self, channel):
         self.create_and_bind_exchange_and_queue(channel, current_app.config['UNIQUE_EXCHANGE'], current_app.config['UNIQUE_QUEUE'])
-        channel.basic_consume(self.callback, queue=current_app.config['UNIQUE_QUEUE'])
+        channel.basic_consume(queue=current_app.config['UNIQUE_QUEUE'], on_message_callback=self.callback)
 
     def on_open(self, connection):
-        connection.channel(self.on_open_callback)
+        connection.channel(on_open_callback=self.on_open_callback)
 
     def init_rabbitmq_connection(self):
         while True:
