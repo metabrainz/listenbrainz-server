@@ -18,9 +18,9 @@ from brainzutils import metrics, cache
 
 MAX_THREADS = 1
 MAX_QUEUED_JOBS = MAX_THREADS * 2
-MSID_FETCH_BATCH_SIZE = 1500
-QUEUE_RELOAD_THRESHOLD = 500
-UPDATE_INTERVAL = 60 
+MSID_FETCH_BATCH_SIZE = 10000
+QUEUE_RELOAD_THRESHOLD = 1500
+UPDATE_INTERVAL = 30 
 
 LEGACY_LISTEN = 1
 NEW_LISTEN = 0
@@ -89,9 +89,12 @@ class MappingJobQueue(threading.Thread):
             if self.legacy_load_thread.is_alive():
                 return
             self.legacy_load_thread = None
+            self.app.logger.info("legacy listens thread cleaned up")
            
         self.app.logger.info("Load more legacy listens")
         self.legacy_load_thread = threading.Thread(target=add_unmatched_listen_to_queue, args=(self.queue,))
+        self.legacy_load_thread.start()
+
 
 #        if self.unmatched_listens_complete_time == 0 or \
 #            monotonic() > self.unmatched_listens_complete_time:
