@@ -14,6 +14,9 @@ venv-pack -o pyspark_venv.tar.gz
 export PYSPARK_DRIVER_PYTHON=python
 export PYSPARK_PYTHON=./environment/bin/python
 
+GIT_COMMIT_SHA="$(git describe --tags --dirty --always)"
+echo "$GIT_COMMIT_SHA" > .git-version
+
 zip -rq listenbrainz_spark_request_consumer.zip listenbrainz_spark/
 
 source spark_config.sh
@@ -26,5 +29,6 @@ spark-submit \
         --conf "spark.executor.cores"=$EXECUTOR_CORES \
         --conf "spark.executor.memory"=$EXECUTOR_MEMORY \
         --conf "spark.driver.memory"=$DRIVER_MEMORY \
+        --conf "spark.yarn.appMasterEnv.GIT_SHA"=$GIT_COMMIT_SHA \
        --py-files listenbrainz_spark_request_consumer.zip \
     spark_manage.py request_consumer
