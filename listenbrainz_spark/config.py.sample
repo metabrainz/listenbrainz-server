@@ -22,6 +22,7 @@ STATS_CALCULATION_WINDOW = 1
 # LOG_SENTRY = {
 #    'dsn':'',
 #    'environment': 'development',
+#    'release': ''
 # }
 
 # Model id is made up of two parts.
