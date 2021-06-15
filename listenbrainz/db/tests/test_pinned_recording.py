@@ -19,7 +19,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
             {"recording_mbid": "7f3d82ee-3817-4367-9eec-f33a312247a1", "blurb_content": "Amazing first recording"},
             {"recording_mbid": "7f3d82ee-3817-4367-9eec-f33a312247a1", "blurb_content": "Wonderful second recording"},
             {"recording_mbid": "7f3d82ee-3817-4367-9eec-f33a312247a1", "blurb_content": "Incredible third recording"},
-            {"recording_mbid": "67c4697d-d956-4257-8cc9-198e5cb67479", "blurb_content": "Spectacular fourth recording"},
+            {"recording_mbid": "67c4697d-d956-4257-8cc9-198e5cb67479", "blurb_content": "Great fourth recording"},
         ]
 
     def insert_test_data(self, user_id: int, limit: int = 4):
