@@ -33,7 +33,7 @@ def check_datetime_has_tzinfo_or_set_now(date_time: datetime = None):
             if date_time.tzinfo is None or date_time.tzinfo.utcoffset(date_time) is None:
                 raise ValueError
             return date_time
-        except (AttributeError, ValueError):  # timestamp.tzinfo throws AttributeError if invalid datetime
+        except (AttributeError, ValueError):
             raise ValueError(
                 """Datetime provided must be a valid datetime and contain tzinfo.
                        See https://pydantic-docs.helpmanual.io/usage/types/#datetime-types for acceptable formats."""
