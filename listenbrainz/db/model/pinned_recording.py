@@ -1,7 +1,8 @@
-import uuid
+from datetime import datetime, timedelta
+from pydantic import BaseModel, validator
+from listenbrainz.db.model.utils import check_rec_mbid_msid_is_valid_uuid, check_datetime_has_tzinfo_or_set_now
 
-from datetime import date, datetime, timezone, timedelta
-from pydantic import BaseModel, validator, Field
+DAYS_UNTIL_UNPIN = 7  # default = unpin after one week
 
 
 class PinnedRecording(BaseModel):
@@ -25,30 +26,9 @@ class PinnedRecording(BaseModel):
     created: datetime = None
     pinned_until: datetime = None
 
-    _daysUntilUnpin = 7  # default = unpin after one week
+    _is_recording_mbid_valid: classmethod = validator("recording_mbid", allow_reuse=True)(check_rec_mbid_msid_is_valid_uuid)
 
-    @validator("recording_mbid")
-    def check_recording_msid_is_valid_uuid(cls, rec_mbid):
-        try:
-            rec_mbid = uuid.UUID(rec_mbid)
-            return str(rec_mbid)
-        except (AttributeError, ValueError):
-            raise ValueError("Recording MSID must be a valid UUID.")
-
-    @validator("created", always=True)
-    def check_valid_created_or_set(cls, created):
-        if created:  # validate if argument provided
-            try:  # validate that datetime contains tzinfo
-                if created.tzinfo is None or created.tzinfo.utcoffset(created) is None:
-                    raise ValueError
-                return created
-            except (AttributeError, ValueError):  # created.tzinfo throws AttributeError if invalid datetime
-                raise ValueError(
-                    """Created must be a valid datetime and contain tzinfo.
-                       See https://pydantic-docs.helpmanual.io/usage/types/#datetime-types for acceptable formats."""
-                )
-        else:
-            return datetime.now(timezone.utc)  # set default value
+    _is_created_valid: classmethod = validator("created", always=True, allow_reuse=True)(check_datetime_has_tzinfo_or_set_now)
 
     @validator("pinned_until", always=True)
     def check_valid_pinned_until_or_set(cls, pin_until, values):
@@ -64,6 +44,6 @@ class PinnedRecording(BaseModel):
                 )
         else:
             if "created" in values:
-                return values["created"] + timedelta(days=cls._daysUntilUnpin)  # set default value
+                return values["created"] + timedelta(days=DAYS_UNTIL_UNPIN)  # set default value
             else:
                 raise ValueError("Cannot set default pinned_until until created is valid.")

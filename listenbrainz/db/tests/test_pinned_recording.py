@@ -3,7 +3,7 @@ import json
 from datetime import datetime, timedelta, timezone
 from pydantic import ValidationError
 
-from listenbrainz.db.model.pinned_recording import PinnedRecording
+from listenbrainz.db.model.pinned_recording import PinnedRecording, DAYS_UNTIL_UNPIN
 import listenbrainz.db.pinned_recording as db_pinned_rec
 import listenbrainz.db.user as db_user
 
@@ -19,7 +19,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
             {"recording_mbid": "7f3d82ee-3817-4367-9eec-f33a312247a1", "blurb_content": "Amazing first recording"},
             {"recording_mbid": "7f3d82ee-3817-4367-9eec-f33a312247a1", "blurb_content": "Wonderful second recording"},
             {"recording_mbid": "7f3d82ee-3817-4367-9eec-f33a312247a1", "blurb_content": "Incredible third recording"},
-            {"recording_mbid": "67c4697d-d956-4257-8cc9-198e5cb67479", "blurb_content": "Spectacular fourth recording"},
+            {"recording_mbid": "67c4697d-d956-4257-8cc9-198e5cb67479", "blurb_content": "Great fourth recording"},
         ]
 
     def insert_test_data(self, user_id: int, limit: int = 4):
@@ -67,6 +67,14 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
         with self.assertRaises(ValidationError):
             PinnedRecording(
                 user_id=self.user["id"],
+            )
+
+        # test recording_mbid = invalid uuid format
+        with self.assertRaises(ValidationError):
+            PinnedRecording(
+                user_id=self.user["id"],
+                recording_mbid="7f3-38-43-9e-f3",
+                blurb_content=self.pinned_rec_samples[0]["blurb_content"],
             )
 
         # test created = datetime with missing tzinfo error
@@ -123,7 +131,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
             blurb_content=self.pinned_rec_samples[0]["blurb_content"],
             created=now,
         )
-        self.assertEqual(pin_until_test_rec.pinned_until, now + timedelta(days=pin_until_test_rec._daysUntilUnpin))
+        self.assertEqual(pin_until_test_rec.pinned_until, now + timedelta(days=DAYS_UNTIL_UNPIN))
 
     def test_pin(self):
         count = self.insert_test_data(self.user["id"])
@@ -161,7 +169,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
         self.pin_single_sample(self.user["id"], 1)
         old_pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
         pin_to_delete = old_pin_history[0]
-        db_pinned_rec.delete(pin_to_delete.row_id)
+        db_pinned_rec.delete(pin_to_delete.row_id, self.user["id"])
 
         # test that only the older pin remained in the database
         pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
@@ -170,7 +178,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(pin_remaining.blurb_content, self.pinned_rec_samples[keptIndex]["blurb_content"])
 
         # delete the only remaining pin
-        db_pinned_rec.delete(pin_remaining.row_id)
+        db_pinned_rec.delete(pin_remaining.row_id, self.user["id"])
         pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
         self.assertFalse(pin_history)
 
@@ -229,6 +237,6 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
 
         # test that pin_count excludes deleted recordings
         pin_to_delete = pin_history[1]
-        db_pinned_rec.delete(pin_to_delete.row_id)
+        db_pinned_rec.delete(pin_to_delete.row_id, self.user["id"])
         pin_count = db_pinned_rec.get_pin_count_for_user(user_id=self.user["id"])
         self.assertEqual(pin_count, len(pin_history) - 1)

@@ -53,7 +53,7 @@ def unpin(user_id: int):
         )
 
 
-def delete(row_id: int):
+def delete(row_id: int, user_id: int):
     """ Deletes the pinned recording record for the user from the database.
 
         Args:
@@ -64,8 +64,10 @@ def delete(row_id: int):
         connection.execute(sqlalchemy.text("""
             DELETE FROM pinned_recording
              WHERE id = :row_id
+               AND user_id = :user_id
             """), {
             'row_id': row_id,
+            'user_id': user_id
             }
         )
 
