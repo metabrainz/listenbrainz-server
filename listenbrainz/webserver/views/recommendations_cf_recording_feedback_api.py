@@ -8,7 +8,7 @@ from listenbrainz.webserver.errors import (APIInternalServerError,
                                            APINotFound,
                                            APIBadRequest)
 
-from listenbrainz.webserver.rate_limiter import ratelimit
+from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import (log_raise_400,
                                                     DEFAULT_ITEMS_PER_GET,
                                                     MAX_ITEMS_PER_GET,

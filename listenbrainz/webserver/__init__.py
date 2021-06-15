@@ -134,10 +134,10 @@ def gen_app(debug=None):
     from listenbrainz.webserver.errors import init_error_handlers
     init_error_handlers(app)
 
-    from listenbrainz.webserver import rate_limiter
+    from brainzutils.ratelimit import inject_x_rate_headers
     @app.after_request
     def after_request_callbacks(response):
-        return rate_limiter.inject_x_rate_headers(response)
+        return inject_x_rate_headers(response)
 
     # Template utilities
     app.jinja_env.add_extension('jinja2.ext.do')
