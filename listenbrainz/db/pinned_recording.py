@@ -67,7 +67,7 @@ def delete(row_id: int, user_id: int):
                AND user_id = :user_id
             """), {
             'row_id': row_id,
-            'user_id' : user_id
+            'user_id': user_id
             }
         )
 
