@@ -3,7 +3,7 @@ import json
 from datetime import datetime, timedelta, timezone
 from pydantic import ValidationError
 
-from listenbrainz.db.model.pinned_recording import PinnedRecording
+from listenbrainz.db.model.pinned_recording import PinnedRecording, DAYS_UNTIL_UNPIN
 import listenbrainz.db.pinned_recording as db_pinned_rec
 import listenbrainz.db.user as db_user
 
@@ -69,6 +69,14 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
                 user_id=self.user["id"],
             )
 
+        # test recording_mbid = invalid uuid format
+        with self.assertRaises(ValidationError):
+            PinnedRecording(
+                user_id=self.user["id"],
+                recording_mbid="7f3-38-43-9e-f3",
+                blurb_content=self.pinned_rec_samples[0]["blurb_content"],
+            )
+
         # test created = datetime with missing tzinfo error
         with self.assertRaises(ValidationError):
             PinnedRecording(
@@ -123,7 +131,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
             blurb_content=self.pinned_rec_samples[0]["blurb_content"],
             created=now,
         )
-        self.assertEqual(pin_until_test_rec.pinned_until, now + timedelta(days=pin_until_test_rec._daysUntilUnpin))
+        self.assertEqual(pin_until_test_rec.pinned_until, now + timedelta(days=DAYS_UNTIL_UNPIN))
 
     def test_pin(self):
         count = self.insert_test_data(self.user["id"])
