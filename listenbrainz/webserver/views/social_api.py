@@ -5,7 +5,7 @@ import listenbrainz.db.user_relationship as db_user_relationship
 
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APINotFound, APIInternalServerError, APIBadRequest
-from brainzutils.ratelimit import ratelimit
+from listenbrainz.webserver.rate_limiter import ratelimit
 from listenbrainz.webserver.views.api_tools import validate_auth_header
 
 social_api_bp = Blueprint('social_api_v1', __name__)

@@ -9,7 +9,7 @@ import yattag
 from flask import Blueprint, request, render_template
 from flask_login import login_required, current_user
 from listenbrainz.webserver.external import messybrainz
-from brainzutils.ratelimit import ratelimit
+from listenbrainz.webserver.rate_limiter import ratelimit
 from listenbrainz.webserver.errors import InvalidAPIUsage, CompatError
 from listenbrainz.webserver.decorators import api_listenstore_needed
 import xmltodict

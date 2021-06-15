@@ -3,8 +3,6 @@ import pika
 import time
 import threading
 
-from listenbrainz.utils import get_fallback_connection_name
-
 from flask import current_app
 from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_PLAYING_NOW, LISTEN_TYPE_IMPORT
 
@@ -58,7 +56,6 @@ class ListensDispatcher(threading.Thread):
                     port=current_app.config['RABBITMQ_PORT'],
                     virtual_host=current_app.config['RABBITMQ_VHOST'],
                     credentials=credentials,
-                    client_properties={"connection_name": get_fallback_connection_name()}
                 )
                 self.connection = pika.SelectConnection(parameters=connection_parameters, on_open_callback=self.on_open)
                 break

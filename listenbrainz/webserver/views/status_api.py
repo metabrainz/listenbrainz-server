@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from listenbrainz.webserver.errors import APIBadRequest, APINotFound
-from brainzutils.ratelimit import ratelimit
+from listenbrainz.webserver.rate_limiter import ratelimit
 
 import listenbrainz.db.dump as db_dump
 
