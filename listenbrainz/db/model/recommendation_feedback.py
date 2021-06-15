@@ -2,20 +2,13 @@ import uuid
 
 from datetime import datetime
 from pydantic import BaseModel, ValidationError, validator
+from listenbrainz.db.model.utils import check_rec_mbid_msid_is_valid_uuid
 
 
 def get_allowed_ratings():
     """ Get rating values that can be submitted corresponding to a recommendation.
     """
     return ['like', 'love', 'dislike', 'hate', 'bad_recommendation']
-
-
-def check_recording_mbid_is_valid_uuid(rec_mbid):
-    try:
-        rec_mbid = uuid.UUID(rec_mbid)
-        return str(rec_mbid)
-    except (AttributeError, ValueError):
-        raise ValueError('Recording MBID must be a valid UUID.')
 
 
 class RecommendationFeedbackSubmit(BaseModel):
@@ -41,7 +34,7 @@ class RecommendationFeedbackSubmit(BaseModel):
             raise ValueError('Feedback can only have a value in {}'.format(expected_rating))
         return rating
 
-    _is_recording_mbid_valid: classmethod = validator("recording_mbid", allow_reuse=True)(check_recording_mbid_is_valid_uuid)
+    _is_recording_mbid_valid: classmethod = validator("recording_mbid", allow_reuse=True)(check_rec_mbid_msid_is_valid_uuid)
 
 
 class RecommendationFeedbackDelete(BaseModel):
@@ -54,4 +47,4 @@ class RecommendationFeedbackDelete(BaseModel):
     user_id: int
     recording_mbid: str
 
-    _is_recording_mbid_valid: classmethod = validator("recording_mbid", allow_reuse=True)(check_recording_mbid_is_valid_uuid)
+    _is_recording_mbid_valid: classmethod = validator("recording_mbid", allow_reuse=True)(check_rec_mbid_msid_is_valid_uuid)
