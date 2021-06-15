@@ -18,7 +18,7 @@ def check_rec_mbid_msid_is_valid_uuid(rec_id: str):
         raise ValueError("Recording MBID/MSID must be a valid UUID.")
 
 
-def check_datetime_has_tzinfo_or_set_now(date_time: datetime):
+def check_datetime_has_tzinfo_or_set_now(date_time: datetime = None):
     """Validates that the provided datetime object contains tzinfo. Otherwise, raises a ValueError.
 
     Args:
