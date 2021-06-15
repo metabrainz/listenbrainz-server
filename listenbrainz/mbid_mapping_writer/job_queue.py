@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 from dataclasses import dataclass, field
+import datetime
 from queue import PriorityQueue, Queue, Empty
 from typing import Any
 from time import monotonic, sleep
@@ -28,6 +29,11 @@ NEW_LISTEN = 0
 # How long to wait if all unmatched listens have been processed before starting the process anew
 UNMATCHED_LISTENS_COMPLETED_TIMEOUT = 3600  # in s
 
+# This is the point where the legacy listens should be processed from
+LEGACY_LISTENS_LOAD_WINDOW = 604800  # 7 days in seconds
+legacy_listens_index_date = int(datetime.datetime.now().timestamp())
+num_legacy_listens_loaded = 0
+
 
 @dataclass(order=True)
 class JobItem:
@@ -36,18 +42,24 @@ class JobItem:
 
 
 def add_unmatched_listen_to_queue(queue):
+
+    global legacy_listens_index_date, num_legacy_listens_loaded
+
     query = """SELECT data->'track_metadata'->'additional_info'->>'recording_msid',
                       track_name,
                       data->'track_metadata'->'artist_name'
                  FROM listen
             LEFT JOIN listen_mbid_mapping mbid
-                   ON data->'track_metadata'->'additional_info'->>'recording_msid' = mbid.recording_mbid::text
-                WHERE mbid.recording_mbid is null
-             ORDER BY listened_at desc
-                LIMIT :limit"""
+                   ON data->'track_metadata'->'additional_info'->>'recording_msid' = mbid.recording_msid::text
+                WHERE mbid.match_type is null
+                  AND listened_at <= :max_ts
+                  AND listened_at > :min_ts"""
 
+    count = 0
     with timescale.engine.connect() as connection:
-        curs = connection.execute(sqlalchemy.text(query), limit=MSID_FETCH_BATCH_SIZE)
+        curs = connection.execute(sqlalchemy.text(query),
+                                  max_ts=legacy_listens_index_date,
+                                  min_ts=legacy_listens_index_date - LEGACY_LISTENS_LOAD_WINDOW)
         while True:
             result = curs.fetchone()
             if not result:
@@ -57,6 +69,11 @@ def add_unmatched_listen_to_queue(queue):
                                                           "track_name": result[1] },
                                                 "recording_msid": result[0],
                                                 "legacy": True }]))
+            count += 1
+
+    legacy_listens_index_date -= LEGACY_LISTENS_LOAD_WINDOW
+    num_legacy_listens_loaded = count
+
 
 class MappingJobQueue(threading.Thread):
 
@@ -84,17 +101,12 @@ class MappingJobQueue(threading.Thread):
             It may be called multiple times, so it must guard against firing off multiple
             threads. """
 
-
         if self.legacy_load_thread:
-            if self.legacy_load_thread.is_alive():
-                return
-            self.legacy_load_thread = None
-            self.app.logger.info("legacy listens thread cleaned up")
-           
+            return
+
         self.app.logger.info("Load more legacy listens")
         self.legacy_load_thread = threading.Thread(target=add_unmatched_listen_to_queue, args=(self.queue,))
         self.legacy_load_thread.start()
-
 
 #        if self.unmatched_listens_complete_time == 0 or \
 #            monotonic() > self.unmatched_listens_complete_time:
@@ -109,7 +121,7 @@ class MappingJobQueue(threading.Thread):
 
 
     def run(self):
-        self.app.logger.info("start job queue thread")
+        global num_legacy_listens_loaded
 
         stats = { "processed": 0, "total": 0, "errors": 0, "legacy": 0, "legacy_match": 0 }
         for typ in MATCH_TYPES:
@@ -174,15 +186,19 @@ class MappingJobQueue(threading.Thread):
                             if job.priority == LEGACY_LISTEN:
                                 stats["legacy"] += 1
 
+                        if self.legacy_load_thread and not self.legacy_load_thread.is_alive():
+                            self.legacy_load_thread = None
+                            self.app.logger.info("%d legacy listens loaded" % num_legacy_listens_loaded)
+
                         if monotonic() > update_time: 
                             update_time = monotonic() + UPDATE_INTERVAL
                             if stats["total"] != 0:
                                 percent = (stats["exact_match"] + stats["high_quality"] + stats["med_quality"] +
                                           stats["low_quality"]) / stats["total"] * 100.00
-                                self.app.logger.info("%d (%d) listens: exact %d high %d med %d low %d no %d err %d legacy: %d %.1f%%" %
-                                        (stats["total"], stats["processed"], stats["exact_match"], stats["high_quality"],
-                                         stats["med_quality"], stats["low_quality"], stats["no_match"], 
-                                         stats["errors"], stats["legacy"], percent))
+                                self.app.logger.info("loaded %d processed %d matched %d not %d legacy: %d queue: %d" %
+                                        (stats["total"], stats["processed"], stats["exact_match"] + stats["high_quality"] +
+                                         stats["med_quality"] + stats["low_quality"], stats["no_match"], 
+                                         stats["legacy"], self.queue.qsize()))
                                 metrics.set("listenbrainz-mbid-mapping-writer", 
                                             total_match_p=percent,
                                             exact_match_p=stats["exact_match"] / stats["total"] * 100.00, 
@@ -200,7 +216,9 @@ class MappingJobQueue(threading.Thread):
                                             no_match=stats["no_match"],
                                             errors=stats["errors"],
                                             legacy=stats["legacy"],
-                                            legacy_match=stats["legacy_match"])
+                                            legacy_match=stats["legacy_match"],
+                                            qsize=self.queue.qsize(),
+                                            legacy_index_date=datetime.date.fromtimestamp(legacy_listens_index_date).strftime("%Y-%m-%d"))
                             
 
         except Exception as err:
