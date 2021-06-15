@@ -27,7 +27,7 @@ from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
 
 from flask import Blueprint, jsonify, request
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.rate_limiter import ratelimit
+from brainzutils.ratelimit import ratelimit
 
 missing_musicbrainz_data_api_bp = Blueprint('missing_musicbrainz_data_v1', __name__)
 
