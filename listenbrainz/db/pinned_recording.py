@@ -43,7 +43,7 @@ def unpin(user_id: int):
             user_id: the row ID of the user in the DB
 
         Returns:
-            True if an active pinned recording was unpinned, 
+            True if an active pinned recording was unpinned,
             False if no pinned recording belonging to the given user_id was currently pinned.
     """
 
@@ -64,10 +64,10 @@ def delete(row_id: int, user_id: int):
 
         Args:
             row_id: The row id of the pinned_recording to delete from the DB's 'pinned_recording' table
-    
+
         Returns:
-            True if a pinned recording for the given row_id and user_id was deleted. 
-            False if the pinned recording for the given row_id and user_id did not exist. 
+            True if a pinned recording for the given row_id and user_id was deleted.
+            False if the pinned recording for the given row_id and user_id did not exist.
     """
 
     with db.engine.connect() as connection:
@@ -131,8 +131,10 @@ def get_pin_history_for_user(user_id: int, count: int, offset: int) -> List[Pinn
         })
         return [PinnedRecording(**dict(row)) for row in result.fetchall()]
 
+
 def get_pins_for_user_following(user_id: int, count: int, offset: int) -> List[PinnedRecording]:
-    """ Get a list of currently active pinned recordings for users in the user's following list in descending order of their created date.
+    """ Get a list of currently active pinned recordings for users 
+        in the user's following list in descending order of their created date.
 
         Args:
             user_id: the row ID of the main user in the DB
