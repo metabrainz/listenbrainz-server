@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from pydantic import ValidationError
 
-from listenbrainz.db.model.pinned_recording import PinnedRecording, DAYS_UNTIL_UNPIN
+from listenbrainz.db.model.pinned_recording import PinnedRecording, PinnedRecordingSubmit, DAYS_UNTIL_UNPIN
 import listenbrainz.db.pinned_recording as db_pinned_rec
 import listenbrainz.db.user as db_user
+import listenbrainz.db.user_relationship as db_user_relationship
 
 from listenbrainz.db.testing import DatabaseTestCase
 
@@ -14,7 +15,9 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
     def setUp(self):
         DatabaseTestCase.setUp(self)
         self.user = db_user.get_or_create(1, "test_user")
-        self.user2 = db_user.get_or_create(2, "other_test_user")
+        self.followed_user_1 = db_user.get_or_create(2, "followed_user_1")
+        self.followed_user_2 = db_user.get_or_create(3, "followed_user_2")
+
         self.pinned_rec_samples = [
             {"recording_mbid": "7f3d82ee-3817-4367-9eec-f33a312247a1", "blurb_content": "Amazing first recording"},
             {"recording_mbid": "7f3d82ee-3817-4367-9eec-f33a312247a1", "blurb_content": "Wonderful second recording"},
@@ -35,7 +38,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
 
         for data in self.pinned_rec_samples[:limit]:
             db_pinned_rec.pin(
-                PinnedRecording(
+                PinnedRecordingSubmit(
                     user_id=user_id,
                     recording_mbid=data["recording_mbid"],
                     blurb_content=data["blurb_content"],
@@ -43,7 +46,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
             )
         return min(limit, len(self.pinned_rec_samples))
 
-    def pin_single_sample(self, user_id: int, index: int = 0) -> PinnedRecording:
+    def pin_single_sample(self, user_id: int, index: int = 0) -> PinnedRecordingSubmit:
         """Inserts one recording from pinned_rec_samples into the database.
 
         Args:
@@ -53,7 +56,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
         Returns:
             The PinnedRecording object that was pinned
         """
-        recording_to_pin = PinnedRecording(
+        recording_to_pin = PinnedRecordingSubmit(
             user_id=user_id,
             recording_mbid=self.pinned_rec_samples[index]["recording_mbid"],
             blurb_content=self.pinned_rec_samples[index]["blurb_content"],
@@ -65,39 +68,29 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
     def test_Pinned_Recording_model(self):
         # test missing required arguments error
         with self.assertRaises(ValidationError):
-            PinnedRecording(
+            PinnedRecordingSubmit(
                 user_id=self.user["id"],
             )
 
         # test recording_mbid = invalid uuid format
         with self.assertRaises(ValidationError):
-            PinnedRecording(
+            PinnedRecordingSubmit(
                 user_id=self.user["id"],
                 recording_mbid="7f3-38-43-9e-f3",
                 blurb_content=self.pinned_rec_samples[0]["blurb_content"],
             )
 
-        # test created = datetime with missing tzinfo error
-        with self.assertRaises(ValidationError):
-            PinnedRecording(
-                user_id=self.user["id"],
-                recording_mbid=self.pinned_rec_samples[0]["recording_mbid"],
-                blurb_content=self.pinned_rec_samples[0]["blurb_content"],
-                created=datetime.now(),
-            )
-
-        # test created = invalid datetime error
-        with self.assertRaises(ValidationError):
-            PinnedRecording(
-                user_id=self.user["id"],
-                recording_mbid=self.pinned_rec_samples[0]["recording_mbid"],
-                blurb_content=self.pinned_rec_samples[0]["blurb_content"],
-                created="foobar",
-            )
+        # test created = invalid datetime error doesn't raise error
+        PinnedRecordingSubmit(
+            user_id=self.user["id"],
+            recording_mbid=self.pinned_rec_samples[0]["recording_mbid"],
+            blurb_content=self.pinned_rec_samples[0]["blurb_content"],
+            created="foobar",
+        )
 
         # test pinned_until = datetime with missing tzinfo error
         with self.assertRaises(ValidationError):
-            PinnedRecording(
+            PinnedRecordingSubmit(
                 user_id=self.user["id"],
                 recording_mbid=self.pinned_rec_samples[0]["recording_mbid"],
                 blurb_content=self.pinned_rec_samples[0]["blurb_content"],
@@ -106,7 +99,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
 
         # test pinned_until = invalid datetime error
         with self.assertRaises(ValidationError):
-            PinnedRecording(
+            PinnedRecordingSubmit(
                 user_id=self.user["id"],
                 recording_mbid=self.pinned_rec_samples[0]["recording_mbid"],
                 blurb_content=self.pinned_rec_samples[0]["blurb_content"],
@@ -115,23 +108,13 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
 
         # test pinned_until < created error
         with self.assertRaises(ValidationError):
-            PinnedRecording(
+            PinnedRecordingSubmit(
                 user_id=self.user["id"],
                 recording_mbid=self.pinned_rec_samples[0]["recording_mbid"],
                 blurb_content=self.pinned_rec_samples[0]["blurb_content"],
                 created="2021-06-08 23:23:23.23232+00:00",
                 pinned_until="1980-06-08 23:23:23.23232+00:00",
             )
-
-        # test default pinned_until value
-        now = datetime.now(timezone.utc)
-        pin_until_test_rec = PinnedRecording(
-            user_id=self.user["id"],
-            recording_mbid=self.pinned_rec_samples[0]["recording_mbid"],
-            blurb_content=self.pinned_rec_samples[0]["blurb_content"],
-            created=now,
-        )
-        self.assertEqual(pin_until_test_rec.pinned_until, now + timedelta(days=DAYS_UNTIL_UNPIN))
 
     def test_pin(self):
         count = self.insert_test_data(self.user["id"])
@@ -240,3 +223,46 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
         db_pinned_rec.delete(pin_to_delete.row_id, self.user["id"])
         pin_count = db_pinned_rec.get_pin_count_for_user(user_id=self.user["id"])
         self.assertEqual(pin_count, len(pin_history) - 1)
+
+    def test_get_pins_for_user_following(self):
+        # user follows followed_user_1
+        db_user_relationship.insert(self.user["id"], self.followed_user_1["id"], "follow")
+        self.assertTrue(db_user_relationship.is_following_user(self.user["id"], self.followed_user_1["id"]))
+
+        # test that followed_pins contains followed_user_1's pinned recording
+        self.pin_single_sample(self.followed_user_1["id"], 0)
+        followed_pins = db_pinned_rec.get_pins_for_user_following(user_id=1, count=50, offset=0)
+        self.assertEqual(len(followed_pins), 1)
+        self.assertEqual(followed_pins[0].user_name, "followed_user_1")
+
+        # test that pins from users that the user is not following are not included
+        self.pin_single_sample(self.followed_user_2["id"], 0)
+        self.assertEqual(len(followed_pins), 1)
+
+        # test that followed_user_2's pin is included after user follows
+        db_user_relationship.insert(self.user["id"], self.followed_user_2["id"], "follow")
+        followed_pins = db_pinned_rec.get_pins_for_user_following(user_id=1, count=50, offset=0)
+        self.assertEqual(len(followed_pins), 2)
+        self.assertEqual(followed_pins[0].user_name, "followed_user_2")
+
+        # test that list is returned in descending order of creation date
+        self.assertGreater(followed_pins[0].created, followed_pins[1].created)
+        self.assertEqual(followed_pins[1].user_name, "followed_user_1")
+
+        # test the limit argument
+        limit = 1
+        limited_following_pins = db_pinned_rec.get_pins_for_user_following(user_id=self.user["id"], count=limit, offset=0)
+        self.assertEqual(len(limited_following_pins), limit)
+
+        limit = 999
+        limited_following_pins = db_pinned_rec.get_pins_for_user_following(user_id=self.user["id"], count=limit, offset=0)
+        self.assertEqual(len(limited_following_pins), 2)
+
+        # test the offset argument
+        offset = 1
+        offset_following_pins = db_pinned_rec.get_pins_for_user_following(user_id=self.user["id"], count=50, offset=offset)
+        self.assertEqual(len(offset_following_pins), 2 - offset)
+
+        offset = 999
+        offset_following_pins = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=offset)
+        self.assertFalse(offset_following_pins)
