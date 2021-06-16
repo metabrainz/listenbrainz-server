@@ -17,10 +17,9 @@ from listenbrainz.labs_api.labs.api.mbid_mapping import MATCH_TYPES
 from listenbrainz.utils import init_cache
 from brainzutils import metrics, cache
 
-MAX_THREADS = 1
+MAX_THREADS = 3
 MAX_QUEUED_JOBS = MAX_THREADS * 2
-MSID_FETCH_BATCH_SIZE = 10000
-QUEUE_RELOAD_THRESHOLD = 1500
+QUEUE_RELOAD_THRESHOLD = 1000
 UPDATE_INTERVAL = 30 
 
 LEGACY_LISTEN = 1
@@ -31,7 +30,8 @@ UNMATCHED_LISTENS_COMPLETED_TIMEOUT = 3600  # in s
 
 # This is the point where the legacy listens should be processed from
 LEGACY_LISTENS_LOAD_WINDOW = 604800  # 7 days in seconds
-legacy_listens_index_date = int(datetime.datetime.now().timestamp())
+LEGACY_LISTENS_INDEX_DATE_CACHE_KEY = "mbid.legacy_index_date"
+legacy_listens_index_date = 0
 num_legacy_listens_loaded = 0
 
 
@@ -41,10 +41,21 @@ class JobItem:
     item: Any=field(compare=False)
 
 
-def add_unmatched_listen_to_queue(queue):
+def add_unmatched_listen_to_queue(queue, app):
 
     global legacy_listens_index_date, num_legacy_listens_loaded
 
+    if not legacy_listens_index_date:
+        dt = cache.get(LEGACY_LISTENS_INDEX_DATE_CACHE_KEY, decode=False) or ""
+        try:
+            legacy_listens_index_date = int(datetime.datetime.strptime(str(dt, "utf-8"), "%Y-%m-%d").timestamp())
+            app.logger.info("Loaded date index from cache: %d %s" % (legacy_listens_index_date, str(dt)))
+        except ValueError:
+            legacy_listens_index_date = int(datetime.datetime.now().timestamp())
+            app.logger.info("Use date index now()")
+
+
+    app.logger.info("Load more legacy listens for %s" % datetime.datetime.fromtimestamp(legacy_listens_index_date).strftime("%Y-%m-%d"))
     query = """SELECT data->'track_metadata'->'additional_info'->>'recording_msid',
                       track_name,
                       data->'track_metadata'->'artist_name'
@@ -72,6 +83,8 @@ def add_unmatched_listen_to_queue(queue):
             count += 1
 
     legacy_listens_index_date -= LEGACY_LISTENS_LOAD_WINDOW
+    dt = datetime.datetime.fromtimestamp(legacy_listens_index_date)
+    cache.set(LEGACY_LISTENS_INDEX_DATE_CACHE_KEY, dt.strftime("%Y-%m-%d"), expirein=0, encode=False)
     num_legacy_listens_loaded = count
 
 
@@ -104,8 +117,7 @@ class MappingJobQueue(threading.Thread):
         if self.legacy_load_thread:
             return
 
-        self.app.logger.info("Load more legacy listens")
-        self.legacy_load_thread = threading.Thread(target=add_unmatched_listen_to_queue, args=(self.queue,))
+        self.legacy_load_thread = threading.Thread(target=add_unmatched_listen_to_queue, args=(self.queue,self.app))
         self.legacy_load_thread.start()
 
 #        if self.unmatched_listens_complete_time == 0 or \
@@ -152,6 +164,7 @@ class MappingJobQueue(threading.Thread):
 
 
         update_time = monotonic() + UPDATE_INTERVAL
+        last_processed = 0
         try:
             with self.app.app_context():
                 with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
@@ -193,12 +206,19 @@ class MappingJobQueue(threading.Thread):
                         if monotonic() > update_time: 
                             update_time = monotonic() + UPDATE_INTERVAL
                             if stats["total"] != 0:
+                                if last_processed:
+                                    listens_per_sec = int((stats["processed"] - last_processed) / UPDATE_INTERVAL)
+                                else:
+                                    listens_per_sec = 0
+                                last_processed = stats["processed"]
+
                                 percent = (stats["exact_match"] + stats["high_quality"] + stats["med_quality"] +
                                           stats["low_quality"]) / stats["total"] * 100.00
-                                self.app.logger.info("loaded %d processed %d matched %d not %d legacy: %d queue: %d" %
+                                self.app.logger.info("loaded %d processed %d matched %d not %d legacy: %d queue: %d %d l/s" %
                                         (stats["total"], stats["processed"], stats["exact_match"] + stats["high_quality"] +
                                          stats["med_quality"] + stats["low_quality"], stats["no_match"], 
-                                         stats["legacy"], self.queue.qsize()))
+                                         stats["legacy"], self.queue.qsize(), listens_per_sec))
+
                                 metrics.set("listenbrainz-mbid-mapping-writer", 
                                             total_match_p=percent,
                                             exact_match_p=stats["exact_match"] / stats["total"] * 100.00, 
@@ -218,6 +238,7 @@ class MappingJobQueue(threading.Thread):
                                             legacy=stats["legacy"],
                                             legacy_match=stats["legacy_match"],
                                             qsize=self.queue.qsize(),
+                                            listens_per_sec=listens_per_sec,
                                             legacy_index_date=datetime.date.fromtimestamp(legacy_listens_index_date).strftime("%Y-%m-%d"))
                             
 
