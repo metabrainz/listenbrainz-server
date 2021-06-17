@@ -8,3 +8,4 @@ db = SQLAlchemy()
 from listenbrainz.model.external_service_oauth import ExternalService
 from listenbrainz.model.user import User
 from listenbrainz.model.listens_import import ListensImporter
+from listenbrainz.model.reported_users import ReportedUsers
