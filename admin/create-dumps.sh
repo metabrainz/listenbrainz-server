@@ -95,7 +95,7 @@ echo "creating DUMP_TEMP_DIR $DUMP_TEMP_DIR"
 mkdir -p "$DUMP_TEMP_DIR"
 
 if [ "$DUMP_TYPE" == "full" ]; then
-    if ! /usr/local/bin/python manage.py dump create_full -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS" --last-dump-id; then
+    if ! /usr/local/bin/python manage.py dump create_full -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS"; then
         echo "Full dump failed, exiting!"
         exit 1
     fi
