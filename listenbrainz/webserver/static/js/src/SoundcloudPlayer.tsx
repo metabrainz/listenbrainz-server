@@ -237,7 +237,7 @@ export default class SoundcloudPlayer
           scrolling="no"
           frameBorder="no"
           allow="autoplay"
-          src="https://w.soundcloud.com/player/?url="
+          src="https://w.soundcloud.com/player/?auto_play=false"
         />
       </div>
     );
