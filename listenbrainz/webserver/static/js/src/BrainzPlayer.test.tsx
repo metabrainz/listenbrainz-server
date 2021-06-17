@@ -5,16 +5,9 @@ import SoundcloudPlayer from "./SoundcloudPlayer";
 import YoutubePlayer from "./YoutubePlayer";
 import SpotifyPlayer from "./SpotifyPlayer";
 import APIService from "./APIService";
+import GlobalAppContext from "./GlobalAppContext";
 
 const props = {
-  spotifyUser: {
-    access_token: "heyo",
-    permission: ["user-read-currently-playing"] as Array<SpotifyPermission>,
-  },
-  youtubeUser: {
-    access_token: "frontend-test",
-    api_key: "fake-api-key",
-  } as YoutubeUser,
   direction: "up" as BrainzPlayDirection,
   onCurrentListenChange: (listen: Listen | JSPFTrack) => {},
   listens: [],
@@ -23,12 +16,26 @@ const props = {
     title: string,
     message: string | JSX.Element
   ) => {},
-  apiService: new APIService("base-uri"),
+};
+const spotifyAccountWithPermissions = {
+  access_token: "haveyouseenthefnords",
+  permission: ["streaming", "user-read-email", "user-read-private"] as Array<
+    SpotifyPermission
+  >,
 };
 
 const GlobalContextMock = {
   context: {
-    APIService: { refreshSpotifyToken: jest.fn() },
+    APIService: new APIService("base-uri"),
+    spotifyAuth: {
+      access_token: "heyo",
+      permission: ["user-read-currently-playing"] as Array<SpotifyPermission>,
+    },
+    youtubeAuth: {
+      access_token: "frontend-test",
+      api_key: "fake-api-key",
+    },
+    currentUser: { name: "" },
   },
 };
 
@@ -54,12 +61,10 @@ describe("BrainzPlayer", () => {
   it("creates Youtube and SoundCloud datasources by default", () => {
     const mockProps = {
       ...props,
-      spotifyUser: {},
     };
-    const wrapper = mount<BrainzPlayer>(
-      <BrainzPlayer {...mockProps} />,
-      GlobalContextMock
-    );
+    const wrapper = mount<BrainzPlayer>(<BrainzPlayer {...mockProps} />, {
+      context: { ...GlobalContextMock.context, spotifyUser: {} },
+    });
     const instance = wrapper.instance();
     expect(instance.dataSources).toHaveLength(2);
     expect(instance.dataSources[0].current).toBeInstanceOf(YoutubePlayer);
@@ -67,40 +72,25 @@ describe("BrainzPlayer", () => {
   });
 
   it("creates a Spotify datasource when passed a spotify user with right permissions", () => {
-    const mockProps = {
-      ...props,
-      spotifyUser: {
-        access_token: "haveyouseenthefnords",
-        permission: [
-          "streaming",
-          "user-read-email",
-          "user-read-private",
-        ] as Array<SpotifyPermission>,
-      },
-    };
     const wrapper = mount<BrainzPlayer>(
-      <BrainzPlayer {...mockProps} />,
-      GlobalContextMock
+      <GlobalAppContext.Provider
+        value={{
+          ...GlobalContextMock.context,
+          spotifyAuth: spotifyAccountWithPermissions,
+        }}
+      >
+        <BrainzPlayer {...props} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
     expect(instance.dataSources[0].current).toBeInstanceOf(SpotifyPlayer);
   });
 
   it("removes a datasource when calling invalidateDataSource", () => {
-    const mockProps = {
-      ...props,
-      spotifyUser: {
-        access_token: "haveyouseenthefnords",
-        permission: [
-          "streaming",
-          "user-read-email",
-          "user-read-private",
-        ] as Array<SpotifyPermission>,
-      },
-    };
     const wrapper = mount<BrainzPlayer>(
-      <BrainzPlayer {...mockProps} />,
-      GlobalContextMock
+      <GlobalAppContext.Provider value={GlobalContextMock.context}>
+        <BrainzPlayer {...props} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
     instance.handleWarning = jest.fn();
@@ -121,20 +111,15 @@ describe("BrainzPlayer", () => {
   });
 
   it("selects Youtube as source when listen has a youtube URL", () => {
-    const mockProps = {
-      ...props,
-      spotifyUser: {
-        access_token: "haveyouseenthefnords",
-        permission: [
-          "streaming",
-          "user-read-email",
-          "user-read-private",
-        ] as Array<SpotifyPermission>,
-      },
-    };
     const wrapper = mount<BrainzPlayer>(
-      <BrainzPlayer {...mockProps} />,
-      GlobalContextMock
+      <GlobalAppContext.Provider
+        value={{
+          ...GlobalContextMock.context,
+          spotifyAuth: spotifyAccountWithPermissions,
+        }}
+      >
+        <BrainzPlayer {...props} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
     expect(instance.dataSources[1].current).toBeInstanceOf(YoutubePlayer);
@@ -154,20 +139,15 @@ describe("BrainzPlayer", () => {
   });
 
   it("selects Spotify as source when listen has listening_from = spotify", () => {
-    const mockProps = {
-      ...props,
-      spotifyUser: {
-        access_token: "haveyouseenthefnords",
-        permission: [
-          "streaming",
-          "user-read-email",
-          "user-read-private",
-        ] as Array<SpotifyPermission>,
-      },
-    };
     const wrapper = mount<BrainzPlayer>(
-      <BrainzPlayer {...mockProps} />,
-      GlobalContextMock
+      <GlobalAppContext.Provider
+        value={{
+          ...GlobalContextMock.context,
+          spotifyAuth: spotifyAccountWithPermissions,
+        }}
+      >
+        <BrainzPlayer {...props} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
     const spotifyListen: Listen = {
@@ -186,20 +166,15 @@ describe("BrainzPlayer", () => {
   });
 
   it("selects Spotify as source when listen has a spotify_id", () => {
-    const mockProps = {
-      ...props,
-      spotifyUser: {
-        access_token: "haveyouseenthefnords",
-        permission: [
-          "streaming",
-          "user-read-email",
-          "user-read-private",
-        ] as Array<SpotifyPermission>,
-      },
-    };
     const wrapper = mount<BrainzPlayer>(
-      <BrainzPlayer {...mockProps} />,
-      GlobalContextMock
+      <GlobalAppContext.Provider
+        value={{
+          ...GlobalContextMock.context,
+          spotifyAuth: spotifyAccountWithPermissions,
+        }}
+      >
+        <BrainzPlayer {...props} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
     const spotifyListen: Listen = {
@@ -218,20 +193,15 @@ describe("BrainzPlayer", () => {
   });
 
   it("selects Soundcloud as source when listen has a soundcloud URL", () => {
-    const mockProps = {
-      ...props,
-      spotifyUser: {
-        access_token: "haveyouseenthefnords",
-        permission: [
-          "streaming",
-          "user-read-email",
-          "user-read-private",
-        ] as Array<SpotifyPermission>,
-      },
-    };
     const wrapper = mount<BrainzPlayer>(
-      <BrainzPlayer {...mockProps} />,
-      GlobalContextMock
+      <GlobalAppContext.Provider
+        value={{
+          ...GlobalContextMock.context,
+          spotifyAuth: spotifyAccountWithPermissions,
+        }}
+      >
+        <BrainzPlayer {...props} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
     expect(instance.dataSources[2].current).toBeInstanceOf(SoundcloudPlayer);
@@ -249,6 +219,123 @@ describe("BrainzPlayer", () => {
     // if origin_url is a soundcloud link, it should play it with SoundcloudPlayer instead of Spotify
     instance.playListen(soundcloudListen);
     expect(instance.state.currentDataSourceIndex).toEqual(2);
+  });
+
+  describe("stopOtherBrainzPlayers", () => {
+    it("gets called when playing a track or unpausing", async () => {
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...props} />,
+        GlobalContextMock
+      );
+      const instance = wrapper.instance();
+      // Hello! If you are reading these tests, please take a small break
+      // and go listen to this beautiful short song below:
+      const youtubeListen: Listen = {
+        listened_at: 0,
+        track_metadata: {
+          artist_name: "Moondog",
+          track_name: "Bird's Lament",
+          additional_info: {
+            origin_url: "https://www.youtube.com/watch?v=RW8SBwGNcF8",
+          },
+        },
+      };
+
+      const spy = jest.spyOn(instance, "stopOtherBrainzPlayers");
+
+      // Initial play
+      instance.playListen(youtubeListen);
+      expect(spy).toHaveBeenCalled();
+
+      // Emulate the player playing
+      await instance.setState({ playerPaused: false });
+
+      spy.mockReset();
+
+      // Pause
+      await instance.togglePlay();
+      expect(spy).not.toHaveBeenCalled();
+
+      // Emulate the player paused
+      await instance.setState({ playerPaused: true });
+
+      // Play again
+      await instance.togglePlay();
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it("calls LocalStorage.setItem to fire event", () => {
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...props} />,
+        GlobalContextMock
+      );
+      const instance = wrapper.instance();
+
+      const localStorageSpy = jest.spyOn(Storage.prototype, "setItem");
+      const dateNowMock = jest.fn().mockReturnValue(1234567);
+      Date.now = dateNowMock;
+
+      instance.stopOtherBrainzPlayers();
+
+      expect(localStorageSpy).toHaveBeenCalledWith(
+        "BrainzPlayer_stop",
+        "1234567"
+      );
+    });
+
+    it("reacts to a LocalStorage event and pauses the player if currently playing", () => {
+      const addEventListenerSpy = jest.spyOn(window, "addEventListener");
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...props} />,
+        GlobalContextMock
+      );
+      const instance = wrapper.instance();
+      instance.setState({ playerPaused: false });
+
+      expect(addEventListenerSpy).toHaveBeenCalledWith(
+        "storage",
+        instance.onLocalStorageEvent
+      );
+
+      const togglePlaySpy = jest.fn();
+      instance.dataSources[0].current!.togglePlay = togglePlaySpy;
+
+      // Emulate "storage" event firing
+      const event = new StorageEvent("storage", {
+        key: "BrainzPlayer_stop",
+        newValue: "1234567",
+        storageArea: window.localStorage,
+      });
+      window.dispatchEvent(event);
+
+      expect(togglePlaySpy).toHaveBeenCalled();
+    });
+    it("reacts to a LocalStorage event and does nothing if currently paused", () => {
+      const addEventListenerSpy = jest.spyOn(window, "addEventListener");
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...props} />,
+        GlobalContextMock
+      );
+      const instance = wrapper.instance();
+      instance.setState({ playerPaused: false });
+
+      expect(addEventListenerSpy).toHaveBeenCalledWith(
+        "storage",
+        instance.onLocalStorageEvent
+      );
+
+      const togglePlaySpy = jest.fn();
+      instance.dataSources[0].current!.togglePlay = togglePlaySpy;
+
+      // Emulate "storage" event firing
+      const event = new StorageEvent("storage", {
+        key: "BrainzPlayer_stop",
+        newValue: "1234567",
+      });
+      window.dispatchEvent(event);
+
+      expect(togglePlaySpy).not.toHaveBeenCalled();
+    });
   });
 
   describe("isCurrentListen", () => {

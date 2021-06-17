@@ -105,6 +105,7 @@ class SparkReader:
         """
 
         with self.app.app_context():
+            current_app.logger.info('Spark consumer has started!')
             while True:
                 self.init_rabbitmq_connection()
                 self.incoming_ch = utils.create_channel_to_consume(
@@ -112,13 +113,14 @@ class SparkReader:
                     exchange=current_app.config['SPARK_RESULT_EXCHANGE'],
                     queue=current_app.config['SPARK_RESULT_QUEUE'],
                     callback_function=self.callback,
-                    no_ack=True,
+                    auto_ack=True,
                 )
                 self.incoming_ch.basic_qos(prefetch_count=1)
-                current_app.logger.info('Spark consumer started!')
+                current_app.logger.info('Spark consumer attempt to start consuming!')
                 try:
                     self.incoming_ch.start_consuming()
                 except pika.exceptions.ConnectionClosed:
+                    current_app.logger.warning('Spark consumer pika connection closed!')
                     self.connection = None
                     continue
 

@@ -22,6 +22,7 @@ import ujson
 
 from collections import defaultdict
 from typing import Optional, List, Tuple
+
 from flask import Blueprint, jsonify, request, current_app
 
 import listenbrainz.db.user as db_user
@@ -39,8 +40,7 @@ from listenbrainz.webserver.decorators import crossdomain, api_listenstore_neede
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, \
     APIForbidden
 from listenbrainz.webserver.views.api_tools import validate_auth_header, _filter_description_html
-from listenbrainz.webserver.rate_limiter import ratelimit
-
+from brainzutils.ratelimit import ratelimit
 
 MAX_LISTEN_EVENTS_PER_USER = 2 # the maximum number of listens we want to return in the feed per user
 
@@ -166,6 +166,7 @@ def user_feed(user_name: str):
     :param max_ts: If you specify a ``max_ts`` timestamp, events with timestamps less than the value will be returned
     :param min_ts: If you specify a ``min_ts`` timestamp, events with timestamps greater than the value will be returned
     :param count: Optional, number of events to return. Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` . Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
+    :type count: ``int``
     :statuscode 200: Successful query, you have feed events!
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized, you do not have permission to view this user's feed.

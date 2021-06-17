@@ -31,7 +31,7 @@ function open_timescale_shell {
 }
 
 function invoke_docker_compose_spark {
-    exec docker-compose -f docker/docker-compose.spark.yml \
+    exec docker-compose -f docker/docker-compose.spark.yml -f docker/docker-compose.spark.override.yml \
                 -p listenbrainzspark \
                 "$@"
 }
@@ -41,7 +41,7 @@ function format_namenode {
     (invoke_docker_compose_spark down)
     docker volume rm -f listenbrainzspark_datanode
     docker volume rm -f listenbrainzspark_namenode
-    invoke_docker_compose_spark run --rm hadoop-master \
+    invoke_docker_compose_spark run --rm namenode \
             hdfs namenode -format -nonInteractive -force
 }
 
@@ -55,6 +55,9 @@ elif [[ "$1" == "bash" ]]; then
 elif [[ "$1" == "shell" ]]; then
     echo "Running flask shell..."
     invoke_docker_compose run --rm web flask shell
+elif [[ "$1" == "redis" ]]; then
+    echo "Running redis shell..."
+    invoke_docker_compose exec redis redis-cli
 elif [[ "$1" == "psql" ]]; then
     echo "Connecting to postgresql..."
     open_psql_shell

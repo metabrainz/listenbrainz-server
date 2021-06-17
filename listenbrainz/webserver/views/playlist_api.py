@@ -11,7 +11,7 @@ import listenbrainz.db.user as db_user
 
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden
-from listenbrainz.webserver.rate_limiter import ratelimit
+from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, validate_auth_header, \
     _filter_description_html
 from listenbrainz.db.model.playlist import Playlist, WritablePlaylist, WritablePlaylistRecording
@@ -415,7 +415,9 @@ def get_playlist(playlist_mbid):
     Fetch the given playlist.
 
     :param playlist_mbid: The playlist mbid to fetch.
+    :type playlist_mbid: ``str``
     :param fetch_metadata: Optional, pass value 'false' to skip lookup up recording metadata
+    :type fetch_metadata: ``bool``
     :statuscode 200: Yay, you have data!
     :statuscode 404: Playlist not found
     :statuscode 401: Invalid authorization. See error message for details.

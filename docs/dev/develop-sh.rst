@@ -27,6 +27,12 @@ To open flask shell in the webserver container using ipython with the listenbrai
 
     ./develop.sh shell
 
+To open a redis shell:
+
+.. code-block:: bash
+
+    ./develop.sh redis
+
 ``develop.sh`` provides a direct interface to invoke manage.py inside a docker container.
 manage.py is a click script containing a number of listenbrainz management commands.
 To invoke manage.py, run:

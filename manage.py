@@ -255,14 +255,14 @@ def update_user_emails():
         copy_files_from_mb_to_lb.copy_emails()
 
 
-@cli.command(name="calculate_user_similarity")
-def calculate_user_similarity():
-    """
-        Calculate the user similarity data.
-    """
-    application = webserver.create_app()
-    with application.app_context():
-        user_similarity.calculate_similar_users()
+@cli.command(name="set_rate_limits")
+@click.argument("per_token_limit", type=click.IntRange(1, None))
+@click.argument("per_ip_limit", type=click.IntRange(1, None))
+@click.argument("window_size", type=click.IntRange(1, None))
+def set_rate_limits(per_token_limit, per_ip_limit, window_size):
+    from brainzutils.ratelimit import set_rate_limits
+    set_rate_limits(per_token_limit, per_ip_limit, window_size)
+
 
 @cli.command(name="recalculate_all_user_data")
 def recalculate_all_user_data():
@@ -272,12 +272,14 @@ def recalculate_all_user_data():
     """
     ts_recalculate_all_user_data()
 
+
 @cli.command(name="refresh_continuous_aggregates")
 def refresh_continuous_aggregates():
     """
         Update the continuous aggregates in timescale.
     """
     ts_refresh_listen_count_aggregate()
+
 
 # Add other commands here
 cli.add_command(spark_request_manage.cli, name="spark")

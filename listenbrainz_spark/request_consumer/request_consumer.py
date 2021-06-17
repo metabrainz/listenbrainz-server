@@ -44,6 +44,9 @@ class RequestConsumer:
             logger.error('Bad query sent to spark request consumer: %s', json.dumps(request), exc_info=True)
             return None
 
+        logger.info('Query: %s', query)
+        logger.info('Params: %s', str(params))
+
         try:
             query_handler = listenbrainz_spark.query_map.get_query_handler(query)
         except KeyError:
@@ -100,9 +103,6 @@ class RequestConsumer:
     def callback(self, channel, method, properties, body):
         request = json.loads(body.decode('utf-8'))
         logger.info('Received a request!')
-        messages = self.get_result(request)
-        if messages:
-            self.push_to_result_queue(messages)
         while True:
             try:
                 self.request_channel.basic_ack(delivery_tag=method.delivery_tag)
@@ -116,6 +116,11 @@ class RequestConsumer:
                 self.rabbitmq.close()
                 self.connect_to_rabbitmq()
                 self.init_rabbitmq_channels()
+
+        messages = self.get_result(request)
+        if messages:
+            self.push_to_result_queue(messages)
+
         logger.info('Request done!')
 
     def connect_to_rabbitmq(self):
@@ -137,7 +142,7 @@ class RequestConsumer:
             exchange=config.SPARK_REQUEST_EXCHANGE,
             queue=config.SPARK_REQUEST_QUEUE
         )
-        self.request_channel.basic_consume(self.callback, queue=config.SPARK_REQUEST_QUEUE)
+        self.request_channel.basic_consume(queue=config.SPARK_REQUEST_QUEUE, on_message_callback=self.callback)
 
         self.result_channel = self.rabbitmq.channel()
         self.result_channel.exchange_declare(exchange=config.SPARK_RESULT_EXCHANGE, exchange_type='fanout')

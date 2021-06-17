@@ -8,7 +8,7 @@ from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError, APINotFound,
                                            APIServiceUnavailable,
                                            APIUnauthorized)
-from listenbrainz.webserver.rate_limiter import ratelimit
+from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api import _parse_int_arg
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid,\
     DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET, get_non_negative_param, parse_param_list,\
@@ -174,7 +174,7 @@ def get_feedback_for_recordings_for_user(user_name):
     If the feedback for given recording MSID doesn't exist then a score 0 is returned for that recording.
 
     :param recordings: comma separated list of recording_msids for which feedback records are to be fetched.
-    :type score: ``str``
+    :type recordings: ``str``
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
     """

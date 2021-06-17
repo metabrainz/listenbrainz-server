@@ -281,6 +281,75 @@ export function loadScriptAsync(document: any, scriptSrc: string): void {
   container.appendChild(el);
 }
 
+const createAlert = (
+  type: AlertType,
+  title: string,
+  message: string | JSX.Element
+): Alert => {
+  return {
+    id: new Date().getTime(),
+    type,
+    headline: title,
+    message,
+  };
+};
+
+interface GlobalProps {
+  api_url: string;
+  sentry_dsn: string;
+  current_user: ListenBrainzUser;
+  spotify?: SpotifyUser;
+  youtube?: YoutubeUser;
+}
+
+const getPageProps = (): {
+  domContainer: HTMLElement;
+  reactProps: Record<string, any>;
+  globalReactProps: GlobalProps;
+  optionalAlerts: Alert[];
+} => {
+  let domContainer = document.getElementById("react-container");
+  const propsElement = document.getElementById("page-react-props");
+  const globalPropsElement = document.getElementById("global-react-props");
+  let reactProps = {};
+  let globalReactProps = {} as GlobalProps;
+  const optionalAlerts = [];
+  if (!domContainer) {
+    // Ensure there is a container for React rendering
+    // We should always have on on the page already, but displaying errors to the user relies on there being one
+    domContainer = document.createElement("div");
+    domContainer.id = "react-container";
+    const container = document.getElementsByClassName("wrapper");
+    container[0].appendChild(domContainer);
+  }
+  try {
+    // Global props *cannot* be empty
+    if (globalPropsElement?.innerHTML) {
+      globalReactProps = JSON.parse(globalPropsElement.innerHTML);
+    } else {
+      throw new Error("No global props element found on the page");
+    }
+    // Page props can be empty
+    if (propsElement?.innerHTML) {
+      reactProps = JSON.parse(propsElement!.innerHTML);
+    }
+  } catch (err) {
+    // Show error to the user and ask to reload page
+    // eslint-disable-next-line no-console
+    console.error(err);
+    const errorMessage = `Please refresh the page.
+	If the problem persists, please contact us.
+	Reason: ${err}`;
+    const newAlert = createAlert(
+      "danger",
+      "Error loading the page",
+      errorMessage
+    );
+    optionalAlerts.push(newAlert);
+  }
+  return { domContainer, reactProps, globalReactProps, optionalAlerts };
+};
+
 export {
   searchForSpotifyTrack,
   getArtistLink,
@@ -288,5 +357,7 @@ export {
   getPlayButton,
   formatWSMessageToListen,
   preciseTimestamp,
+  getPageProps,
   searchForYoutubeTrack,
+  createAlert,
 };

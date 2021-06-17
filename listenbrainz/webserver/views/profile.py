@@ -103,10 +103,8 @@ def import_data():
     props = {
         "user": user_data,
         "profile_url": url_for('user.profile', user_name=user_data["name"]),
-        "api_url":  current_app.config["API_URL"],
         "lastfm_api_url": current_app.config["LASTFM_API_URL"],
         "lastfm_api_key": current_app.config["LASTFM_API_KEY"],
-        "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn")
     }
 
     return render_template(
@@ -287,9 +285,9 @@ def music_services_details():
 
     if spotify_user:
         permissions = set(spotify_user["scopes"])
-        if permissions == set(SPOTIFY_IMPORT_PERMISSIONS):
+        if permissions == SPOTIFY_IMPORT_PERMISSIONS:
             current_spotify_permissions = "import"
-        elif permissions == set(SPOTIFY_LISTEN_PERMISSIONS):
+        elif permissions == SPOTIFY_LISTEN_PERMISSIONS:
             current_spotify_permissions = "listen"
         else:
             current_spotify_permissions = "both"
@@ -317,8 +315,10 @@ def music_services_callback(service_name: str):
     if not code:
         raise BadRequest('missing code')
     token = service.fetch_access_token(code)
-    service.add_new_user(current_user.id, token)
-    flash.success('Successfully authenticated with %s!' % service_name.capitalize())
+    if service.add_new_user(current_user.id, token):
+        flash.success('Successfully authenticated with %s!' % service_name.capitalize())
+    else:
+        flash.error('Unable to connect to %s! Please try again.' % service_name.capitalize())
     return redirect(url_for('profile.music_services_details'))
 
 
@@ -362,7 +362,7 @@ def music_services_disconnect(service_name: str):
         if service_name == 'spotify':
             permissions = None
             if action == 'both':
-                permissions = SPOTIFY_LISTEN_PERMISSIONS + SPOTIFY_IMPORT_PERMISSIONS
+                permissions = SPOTIFY_LISTEN_PERMISSIONS | SPOTIFY_IMPORT_PERMISSIONS
             elif action == 'import':
                 permissions = SPOTIFY_IMPORT_PERMISSIONS
             elif action == 'listen':

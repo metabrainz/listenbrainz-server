@@ -30,7 +30,7 @@ import BrainzPlayer from "../BrainzPlayer";
 import ErrorBoundary from "../ErrorBoundary";
 import Loader from "../components/Loader";
 import TimelineEventCard from "./TimelineEventCard";
-import { preciseTimestamp } from "../utils";
+import { getPageProps, preciseTimestamp } from "../utils";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 
 export enum EventType {
@@ -44,15 +44,11 @@ export enum EventType {
 }
 
 type UserFeedPageProps = {
-  currentUser: ListenBrainzUser;
   events: TimelineEvent[];
-  spotify: SpotifyUser;
-  youtube: YoutubeUser;
 } & WithAlertNotificationsInjectedProps;
 
 type UserFeedPageState = {
   currentListen?: Listen;
-  alerts: Alert[];
   nextEventTs?: number;
   previousEventTs?: number;
   earliestEventTs?: number;
@@ -116,7 +112,6 @@ export default class UserFeedPage extends React.Component<
   constructor(props: UserFeedPageProps) {
     super(props);
     this.state = {
-      alerts: [],
       nextEventTs: props.events?.[props.events.length - 1]?.created,
       previousEventTs: props.events?.[0]?.created,
       events: props.events || [],
@@ -185,9 +180,9 @@ export default class UserFeedPage extends React.Component<
     maxTs?: number,
     successCallback?: () => void
   ) => {
-    const { currentUser, newAlert } = this.props;
+    const { newAlert } = this.props;
     const { earliestEventTs } = this.state;
-    const { APIService } = this.context;
+    const { APIService, currentUser } = this.context;
     this.setState({ loading: true });
     let newEvents: TimelineEvent[] = [];
     try {
@@ -288,7 +283,7 @@ export default class UserFeedPage extends React.Component<
   }
 
   renderEventText(event: TimelineEvent) {
-    const { currentUser } = this.props;
+    const { currentUser } = this.context;
     const { event_type, user_name, metadata } = event;
     if (event_type === EventType.FOLLOW) {
       const {
@@ -354,9 +349,9 @@ export default class UserFeedPage extends React.Component<
   }
 
   render() {
-    const { currentUser, spotify, youtube, newAlert } = this.props;
+    const { currentUser } = this.context;
+    const { newAlert } = this.props;
     const {
-      alerts,
       currentListen,
       events,
       previousEventTs,
@@ -511,8 +506,6 @@ export default class UserFeedPage extends React.Component<
                   newAlert={newAlert}
                   onCurrentListenChange={this.handleCurrentListenChange}
                   ref={this.brainzPlayer}
-                  spotifyUser={spotify}
-                  youtubeUser={youtube}
                 />
               </div>
             </div>
@@ -524,17 +517,20 @@ export default class UserFeedPage extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const domContainer = document.querySelector("#react-container");
-  const propsElement = document.getElementById("react-props");
-  const reactProps = JSON.parse(propsElement!.innerHTML);
+  const {
+    domContainer,
+    reactProps,
+    globalReactProps,
+    optionalAlerts,
+  } = getPageProps();
   const {
     api_url,
+    sentry_dsn,
     current_user,
     spotify,
     youtube,
-    events,
-    sentry_dsn,
-  } = reactProps;
+  } = globalReactProps;
+  const { events } = reactProps;
 
   if (sentry_dsn) {
     Sentry.init({ dsn: sentry_dsn });
@@ -548,6 +544,7 @@ document.addEventListener("DOMContentLoaded", () => {
     APIService: apiService,
     currentUser: current_user,
     spotifyAuth: spotify,
+    youtubeAuth: youtube,
   };
 
   const UserFeedPageWithAlertNotifications = withAlertNotifications(
@@ -557,10 +554,8 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
         <UserFeedPageWithAlertNotifications
-          currentUser={current_user}
+          initialAlerts={optionalAlerts}
           events={events}
-          spotify={spotify}
-          youtube={youtube}
         />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,

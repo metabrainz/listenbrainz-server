@@ -1,20 +1,27 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
+
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import * as _ from "lodash";
-import * as io from "socket.io-client";
 import * as Sentry from "@sentry/react";
-import APIServiceClass from "./APIService";
+import * as _ from "lodash";
+
+import DatePicker from "react-date-picker/dist/entry.nostyle";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { faCalendar } from "@fortawesome/free-regular-svg-icons";
+import { io, Socket } from "socket.io-client";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
+import {
+  WithAlertNotificationsInjectedProps,
+  withAlertNotifications,
+} from "./AlertNotificationsHOC";
+
+import APIServiceClass from "./APIService";
 import BrainzPlayer from "./BrainzPlayer";
 import ErrorBoundary from "./ErrorBoundary";
-import Loader from "./components/Loader";
 import ListenCard from "./listens/ListenCard";
-import {
-  withAlertNotifications,
-  WithAlertNotificationsInjectedProps,
-} from "./AlertNotificationsHOC";
-import { formatWSMessageToListen } from "./utils";
+import Loader from "./components/Loader";
+import { formatWSMessageToListen, getPageProps } from "./utils";
 
 export type RecentListensProps = {
   latestListenTs: number;
@@ -23,16 +30,11 @@ export type RecentListensProps = {
   mode: ListensListMode;
   oldestListenTs: number;
   profileUrl?: string;
-  saveUrl?: string;
-  spotify: SpotifyUser;
-  youtube: YoutubeUser;
   user: ListenBrainzUser;
   webSocketsServerUrl: string;
-  currentUser?: ListenBrainzUser;
 } & WithAlertNotificationsInjectedProps;
 
 export interface RecentListensState {
-  alerts: Array<Alert>;
   currentListen?: Listen;
   direction: BrainzPlayDirection;
   lastFetchedDirection?: "older" | "newer";
@@ -42,8 +44,8 @@ export interface RecentListensState {
   mode: ListensListMode;
   nextListenTs?: number;
   previousListenTs?: number;
-  saveUrl: string;
   recordingFeedbackMap: RecordingFeedbackMap;
+  dateTimePickerValue: Date | Date[];
 }
 
 export default class RecentListens extends React.Component<
@@ -57,23 +59,25 @@ export default class RecentListens extends React.Component<
   private brainzPlayer = React.createRef<BrainzPlayer>();
   private listensTable = React.createRef<HTMLTableElement>();
 
-  private socket!: SocketIOClient.Socket;
+  private socket!: Socket;
 
   private expectedListensPerPage = 25;
 
   constructor(props: RecentListensProps) {
     super(props);
+    const nextListenTs = props.listens?.[props.listens.length - 1]?.listened_at;
     this.state = {
-      alerts: [],
       listens: props.listens || [],
       mode: props.mode,
-      saveUrl: props.saveUrl || "",
       lastFetchedDirection: "older",
       loading: false,
-      nextListenTs: props.listens?.[props.listens.length - 1]?.listened_at,
+      nextListenTs,
       previousListenTs: props.listens?.[0]?.listened_at,
       direction: "down",
       recordingFeedbackMap: {},
+      dateTimePickerValue: nextListenTs
+        ? new Date(nextListenTs * 1000)
+        : new Date(Date.now()),
     };
 
     this.listensTable = React.createRef();
@@ -82,7 +86,7 @@ export default class RecentListens extends React.Component<
   componentDidMount(): void {
     const { mode } = this.state;
     // Get API instance from React context provided for in top-level component
-    const { APIService } = this.context;
+    const { APIService, currentUser } = this.context;
     this.APIService = APIService;
 
     if (mode === "listens") {
@@ -91,7 +95,7 @@ export default class RecentListens extends React.Component<
       window.addEventListener("popstate", this.handleURLChange);
       document.addEventListener("keydown", this.handleKeyDown);
 
-      const { user, currentUser } = this.props;
+      const { user } = this.props;
       // Get the user listen count
       if (user?.name) {
         this.APIService.getUserListenCount(user.name).then((listenCount) => {
@@ -159,7 +163,7 @@ export default class RecentListens extends React.Component<
 
   createWebsocketsConnection = (): void => {
     const { webSocketsServerUrl } = this.props;
-    this.socket = io.connect(webSocketsServerUrl);
+    this.socket = io(webSocketsServerUrl);
   };
 
   addWebsocketsHandlers = (): void => {
@@ -344,6 +348,10 @@ export default class RecentListens extends React.Component<
   };
 
   handleKeyDown = (event: KeyboardEvent) => {
+    if (document.activeElement?.localName === "input") {
+      // Don't allow keyboard navigation if an input is currently in focus
+      return;
+    }
     switch (event.key) {
       case "ArrowLeft":
         this.handleClickNewer();
@@ -447,37 +455,77 @@ export default class RecentListens extends React.Component<
     }
   };
 
+  onChangeDateTimePicker = async (newDateTimePickerValue: Date | Date[]) => {
+    if (!newDateTimePickerValue) {
+      return;
+    }
+    this.setState({
+      dateTimePickerValue: newDateTimePickerValue,
+      loading: true,
+      lastFetchedDirection: "newer",
+    });
+    const { oldestListenTs, user } = this.props;
+    let minJSTimestamp;
+    if (Array.isArray(newDateTimePickerValue)) {
+      // Range of dates
+      minJSTimestamp = newDateTimePickerValue[0].getTime();
+    } else {
+      minJSTimestamp = newDateTimePickerValue.getTime();
+    }
+
+    // Constrain to oldest listen TS for that user
+    const minTimestampInSeconds = Math.max(
+      // convert JS time (milliseconds) to seconds
+      Math.round(minJSTimestamp / 1000),
+      oldestListenTs
+    );
+
+    const newListens = await this.APIService.getListensForUser(
+      user.name,
+      minTimestampInSeconds
+    );
+    if (!newListens.length) {
+      // No more listens to fetch
+      this.setState({
+        loading: false,
+      });
+      return;
+    }
+    this.setState(
+      {
+        listens: newListens,
+        nextListenTs: newListens[newListens.length - 1].listened_at,
+        previousListenTs: newListens[0].listened_at,
+        lastFetchedDirection: "newer",
+      },
+      this.afterListensFetch
+    );
+    window.history.pushState(null, "", `?min_ts=${minTimestampInSeconds}`);
+  };
+
   afterListensFetch() {
+    this.setState({ loading: false });
+    // Scroll to the top of the listens list
     this.updatePaginationVariables();
     if (typeof this.listensTable?.current?.scrollIntoView === "function") {
       this.listensTable.current.scrollIntoView({ behavior: "smooth" });
     }
-    this.setState({ loading: false });
   }
 
   render() {
     const {
-      alerts,
       currentListen,
       direction,
-      lastFetchedDirection,
       listens,
       listenCount,
       loading,
       mode,
       nextListenTs,
       previousListenTs,
-      saveUrl,
+      dateTimePickerValue,
     } = this.state;
-    const {
-      latestListenTs,
-      oldestListenTs,
-      spotify,
-      youtube,
-      user,
-      currentUser,
-      newAlert,
-    } = this.props;
+    const { latestListenTs, oldestListenTs, user, newAlert } = this.props;
+    const { currentUser } = this.context;
 
     const isNewestButtonDisabled = listens?.[0]?.listened_at >= latestListenTs;
     const isNewerButtonDisabled =
@@ -534,7 +582,6 @@ export default class RecentListens extends React.Component<
                       return (
                         <ListenCard
                           key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
-                          currentUser={currentUser}
                           isCurrentUser={currentUser?.name === user?.name}
                           listen={listen}
                           mode={mode}
@@ -561,7 +608,7 @@ export default class RecentListens extends React.Component<
                   <h5 className="text-center">No more listens to show</h5>
                 )}
                 {mode === "listens" && (
-                  <ul className="pager" style={{ display: "flex" }}>
+                  <ul className="pager" id="navigation">
                     <li
                       className={`previous ${
                         isNewestButtonDisabled ? "disabled" : ""
@@ -603,6 +650,22 @@ export default class RecentListens extends React.Component<
                       >
                         &larr; Newer
                       </a>
+                    </li>
+                    <li className="date-time-picker">
+                      <DatePicker
+                        onChange={this.onChangeDateTimePicker}
+                        value={dateTimePickerValue}
+                        clearIcon={null}
+                        maxDate={new Date(Date.now())}
+                        minDate={
+                          oldestListenTs
+                            ? new Date(oldestListenTs * 1000)
+                            : undefined
+                        }
+                        calendarIcon={
+                          <FontAwesomeIcon icon={faCalendar as IconProp} />
+                        }
+                      />
                     </li>
                     <li
                       className={`next ${
@@ -665,8 +728,6 @@ export default class RecentListens extends React.Component<
               newAlert={newAlert}
               onCurrentListenChange={this.handleCurrentListenChange}
               ref={this.brainzPlayer}
-              spotifyUser={spotify}
-              youtubeUser={youtube}
             />
           </div>
         </div>
@@ -676,16 +737,20 @@ export default class RecentListens extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const domContainer = document.querySelector("#react-container");
-  const propsElement = document.getElementById("react-props");
-  let reactProps;
-  try {
-    reactProps = JSON.parse(propsElement!.innerHTML);
-  } catch (err) {
-    // TODO: Show error to the user and ask to reload page
-  }
+  const {
+    domContainer,
+    reactProps,
+    globalReactProps,
+    optionalAlerts,
+  } = getPageProps();
   const {
     api_url,
+    sentry_dsn,
+    current_user,
+    spotify,
+    youtube,
+  } = globalReactProps;
+  const {
     latest_listen_ts,
     latest_spotify_uri,
     listens,
@@ -693,12 +758,8 @@ document.addEventListener("DOMContentLoaded", () => {
     mode,
     profile_url,
     save_url,
-    spotify,
-    youtube,
     user,
     web_sockets_server_url,
-    current_user,
-    sentry_dsn,
   } = reactProps;
 
   const apiService = new APIServiceClass(
@@ -717,24 +778,22 @@ document.addEventListener("DOMContentLoaded", () => {
     APIService: apiService,
     currentUser: current_user,
     spotifyAuth: spotify,
+    youtubeAuth: youtube,
   };
 
   ReactDOM.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
         <RecentListensWithAlertNotifications
+          initialAlerts={optionalAlerts}
           latestListenTs={latest_listen_ts}
           latestSpotifyUri={latest_spotify_uri}
           listens={listens}
           mode={mode}
           oldestListenTs={oldest_listen_ts}
           profileUrl={profile_url}
-          saveUrl={save_url}
-          spotify={spotify}
-          youtube={youtube}
           user={user}
           webSocketsServerUrl={web_sockets_server_url}
-          currentUser={current_user}
         />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,

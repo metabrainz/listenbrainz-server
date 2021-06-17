@@ -69,6 +69,8 @@ Start the ListenBrainz Spark environment:
 
     ./develop.sh spark up
 
+This will also bring up the spark reader container which is described in detail :doc:`here <spark-architecture>`.
+
 Import data into the spark environment
 --------------------------------------
 
@@ -78,7 +80,7 @@ commands in a separate terminal.
 
 .. code-block:: bash
 
-    ./develop.sh spark run request_consumer python spark_manage.py upload_listens -i
+    ./develop.sh spark run spark_reader python manage.py spark request_import_incremental
 
 
 Now, you are all set to begin making changes and seeing them in real-time inside

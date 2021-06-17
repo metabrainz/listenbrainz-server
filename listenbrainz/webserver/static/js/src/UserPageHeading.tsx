@@ -24,6 +24,7 @@ import * as Sentry from "@sentry/react";
 import FollowButton from "./FollowButton";
 import APIService from "./APIService";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
+import { getPageProps } from "./utils";
 
 const UserPageHeading = ({
   user,
@@ -53,16 +54,15 @@ export default UserPageHeading;
 
 document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#user-page-heading-container");
-
-  const propsElement = document.getElementById("react-props");
-  const reactProps = JSON.parse(propsElement!.innerHTML);
+  const { reactProps, globalReactProps } = getPageProps();
   const {
-    user,
-    current_user,
-    logged_in_user_follows_user,
-    sentry_dsn,
     api_url,
-  } = reactProps;
+    sentry_dsn,
+    current_user,
+    spotify,
+    youtube,
+  } = globalReactProps;
+  const { user, logged_in_user_follows_user } = reactProps;
 
   const apiService: APIService = new APIService(
     api_url || `${window.location.origin}/1`
@@ -74,6 +74,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const globalProps: GlobalAppContextT = {
     APIService: apiService,
     currentUser: current_user,
+    spotifyAuth: spotify,
+    youtubeAuth: youtube,
   };
 
   ReactDOM.render(

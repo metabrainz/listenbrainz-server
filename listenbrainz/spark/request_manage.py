@@ -268,3 +268,51 @@ def request_similar_users(max_num_users):
     }
     send_request_to_spark_cluster(_prepare_query_message(
         'similarity.similar_users', params=params))
+
+
+# Some useful commands to keep our crontabs manageable. These commands do not add new functionality
+# rather combine multiple commands related to a task so that they are always invoked in the correct order.
+
+@cli.command(name='cron_request_all_stats')
+@click.pass_context
+def cron_request_all_stats(ctx):
+    ctx.invoke(request_user_stats, type_="entity", range_="week", entity="artists")
+    ctx.invoke(request_user_stats, type_="entity", range_="month", entity="artists")
+    ctx.invoke(request_user_stats, type_="entity", range_="year", entity="artists")
+    ctx.invoke(request_user_stats, type_="entity", range_="all_time", entity="artists")
+
+    ctx.invoke(request_user_stats, type_="entity", range_="week", entity="releases")
+    ctx.invoke(request_user_stats, type_="entity", range_="month", entity="releases")
+    ctx.invoke(request_user_stats, type_="entity", range_="year", entity="releases")
+    ctx.invoke(request_user_stats, type_="entity", range_="all_time", entity="releases")
+
+    ctx.invoke(request_user_stats, type_="entity", range_="week", entity="recordings")
+    ctx.invoke(request_user_stats, type_="entity", range_="month", entity="recordings")
+    ctx.invoke(request_user_stats, type_="entity", range_="year", entity="recordings")
+    ctx.invoke(request_user_stats, type_="entity", range_="all_time", entity="recordings")
+
+    ctx.invoke(request_user_stats, type_="listening_activity", range_="week")
+    ctx.invoke(request_user_stats, type_="listening_activity", range_="month")
+    ctx.invoke(request_user_stats, type_="listening_activity", range_="year")
+    ctx.invoke(request_user_stats, type_="listening_activity", range_="all_time")
+
+    ctx.invoke(request_user_stats, type_="daily_activity", range_="week")
+    ctx.invoke(request_user_stats, type_="daily_activity", range_="month")
+    ctx.invoke(request_user_stats, type_="daily_activity", range_="year")
+    ctx.invoke(request_user_stats, type_="daily_activity", range_="all_time")
+
+
+@cli.command(name='cron_request_similar_users')
+@click.pass_context
+def cron_request_similar_users(ctx):
+    ctx.invoke(request_dataframes, job_type="similar_users", days=365, listens_threshold=50)
+    ctx.invoke(request_similar_users)
+
+
+@cli.command(name='cron_request_recommendations')
+@click.pass_context
+def cron_request_similar_users(ctx):
+    ctx.invoke(request_dataframes)
+    ctx.invoke(request_model)
+    ctx.invoke(request_candidate_sets)
+    ctx.invoke(request_recommendations, top=1000, similar=1000)

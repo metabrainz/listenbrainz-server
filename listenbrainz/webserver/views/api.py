@@ -14,7 +14,7 @@ from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz import webserver
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
-from listenbrainz.webserver.rate_limiter import ratelimit
+from brainzutils.ratelimit import ratelimit
 import listenbrainz.webserver.redis_connection as redis_connection
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list,\
     is_valid_uuid, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT,\
@@ -297,7 +297,7 @@ def get_similar_to_user(user_name, other_user_name):
         }
 
     :param user_name: the MusicBrainz ID of the the one user
-    :param other_user_name: the MusicBrainz ID of the other user whose similar users are 
+    :param other_user_name: the MusicBrainz ID of the other user whose similar users are
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
     :statuscode 404: The requested user was not found.
@@ -331,6 +331,7 @@ def latest_import():
         }
 
     :param user_name: the MusicBrainz ID of the user whose data is needed
+    :type user_name: ``str``
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
 
@@ -528,9 +529,11 @@ def get_playlists_for_user(playlist_user_name):
     If a user token is provided in the Authorization header, return private playlists as well
     as public playlists for that user.
 
-    :params count: The number of playlists to return (for pagination). Default
+    :param count: The number of playlists to return (for pagination). Default
         :data:`~webserver.views.api.DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL`
-    :params offset: The offset of into the list of playlists to return (for pagination)
+    :type count: ``int``
+    :param offset: The offset of into the list of playlists to return (for pagination)
+    :type offset: ``int``
     :statuscode 200: Yay, you have data!
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
@@ -560,9 +563,11 @@ def get_playlists_created_for_user(playlist_user_name):
     Fetch playlist metadata in JSPF format without recordings that have been created for the user.
     Createdfor playlists are all public, so no Authorization is needed for this call.
 
-    :params count: The number of playlists to return (for pagination). Default
+    :param count: The number of playlists to return (for pagination). Default
         :data:`~webserver.views.api.DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL`
-    :params offset: The offset of into the list of playlists to return (for pagination)
+    :type count: ``int``
+    :param offset: The offset of into the list of playlists to return (for pagination)
+    :type offset: ``int``
     :statuscode 200: Yay, you have data!
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
@@ -589,9 +594,11 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
     Fetch playlist metadata in JSPF format without recordings for which a user is a collaborator.
     If a playlist is private, it will only be returned if the caller is authorized to edit that playlist.
 
-    :params count: The number of playlists to return (for pagination). Default
+    :param count: The number of playlists to return (for pagination). Default
         :data:`~webserver.views.api.DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL`
-    :params offset: The offset of into the list of playlists to return (for pagination)
+    :type count: ``int``
+    :param offset: The offset of into the list of playlists to return (for pagination)
+    :type offset: ``int``
     :statuscode 200: Yay, you have data!
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
