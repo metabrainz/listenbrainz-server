@@ -63,6 +63,9 @@ function on_exit {
         local duration=$(( $(date +%s) - START_TIME ))
         echo "create-dumps took ${duration}s to run"
     fi
+
+    # Remove the cron lock
+    admin/cron_lock.py unlock-cron
 }
 
 trap on_exit EXIT
@@ -88,6 +91,9 @@ else
     echo "Dump type must be one of 'full', 'incremental' or 'feedback'"
     exit
 fi
+
+# Lock cron, so it cannot be accidentally terminated.
+admin/cron_lock.py lock-cron "Creating $DUMP_TYPE dump."
 
 DUMP_TEMP_DIR="$DUMP_BASE_DIR/$SUB_DIR.$$"
 echo "DUMP_BASE_DIR is $DUMP_BASE_DIR"
