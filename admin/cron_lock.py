@@ -15,7 +15,7 @@ def sanity_check():
         var is set correctly for the cron container."""
 
     if not os.path.exists(CRON_LOGS_DIR):
-        print("cron logs dir exist. Is this code running in the container?")
+        print("cron logs dir does not exist. Is this code running in the container?")
         sys.exit(-1)
 
     if "CONTAINER_NAME" not in os.environ or os.environ["CONTAINER_NAME"] != "listenbrainz-cron-prod":
