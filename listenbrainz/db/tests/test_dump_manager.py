@@ -212,23 +212,6 @@ class DumpManagerTestCase(DatabaseTestCase):
                 archive_count += 1
         self.assertEqual(archive_count, 4)
 
-        # now, remove the old dump and create a new one with the same id
-        shutil.rmtree(os.path.join(self.tempdir, dump_name))
-        self.runner.invoke(dump_manager.create_full, [
-                           '--location', self.tempdir, '--last-dump-id'])
-        self.assertEqual(len(os.listdir(self.tempdir)), 1)
-        recreated_dump_name = os.listdir(self.tempdir)[0]
-
-        # dump names should be the exact same
-        self.assertEqual(dump_name, recreated_dump_name)
-
-        # dump should contain the 4 archives
-        archive_count = 0
-        for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
-            if file_name.endswith('.tar.xz'):
-                archive_count += 1
-        self.assertEqual(archive_count, 4)
-
     def test_create_full_dump_with_id(self):
 
         self.listenstore.insert(generate_data(
