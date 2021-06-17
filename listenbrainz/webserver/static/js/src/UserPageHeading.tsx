@@ -24,29 +24,37 @@ import * as Sentry from "@sentry/react";
 import FollowButton from "./FollowButton";
 import APIService from "./APIService";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
+import ReportUserButton from "./ReportUser";
 import { getPageProps } from "./utils";
 
 const UserPageHeading = ({
   user,
   loggedInUser,
   loggedInUserFollowsUser = false,
+  alreadyReportedUser = false,
 }: {
   user: ListenBrainzUser;
   loggedInUser: ListenBrainzUser | null;
   loggedInUserFollowsUser: boolean;
+  alreadyReportedUser: boolean;
 }) => {
   return (
-    <h2 className="page-title">
-      {user.name}
-      {loggedInUser && user.name !== loggedInUser.name && (
-        <FollowButton
-          type="icon-only"
-          user={user}
-          loggedInUser={loggedInUser}
-          loggedInUserFollowsUser={loggedInUserFollowsUser}
-        />
+    <>
+      <h2 className="page-title">
+        {user.name}
+        {loggedInUser && user.name !== loggedInUser.name && (
+          <FollowButton
+            type="icon-only"
+            user={user}
+            loggedInUser={loggedInUser}
+            loggedInUserFollowsUser={loggedInUserFollowsUser}
+          />
+        )}
+      </h2>
+      {loggedInUser && (
+        <ReportUserButton user={user} alreadyReported={alreadyReportedUser} />
       )}
-    </h2>
+    </>
   );
 };
 
@@ -62,7 +70,11 @@ document.addEventListener("DOMContentLoaded", () => {
     spotify,
     youtube,
   } = globalReactProps;
-  const { user, logged_in_user_follows_user } = reactProps;
+  const {
+    user,
+    already_reported_user,
+    logged_in_user_follows_user,
+  } = reactProps;
 
   const apiService: APIService = new APIService(
     api_url || `${window.location.origin}/1`
@@ -84,6 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
         user={user}
         loggedInUser={current_user || null}
         loggedInUserFollowsUser={logged_in_user_follows_user}
+        alreadyReportedUser={already_reported_user}
       />
     </GlobalAppContext.Provider>,
     domContainer
