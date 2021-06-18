@@ -101,8 +101,8 @@ def unpin_recording_for_user():
 @ratelimit()
 def delete_pin_for_user(pinned_id):
     """
-    Deletes the pinned recording with given ``pinned_id`` from the server. A user token (found on  https://listenbrainz.org/profile/ )
-    must be provided in the Authorization header!
+    Deletes the pinned recording with given ``pinned_id`` from the server. 
+    A user token (found on  https://listenbrainz.org/profile/ ) must be provided in the Authorization header!
 
     :reqheader Authorization: Token <user token>
     :param pinned_id: the pinned_id of the pinned recording that should be deleted.
@@ -129,8 +129,8 @@ def delete_pin_for_user(pinned_id):
 @pinned_recording_api_bp.route("/user/<user_name>/get-pin-history", methods=["GET"])
 def get_pin_history_for_user(user_name):
     """
-    Get a list of all recordings ever pinned by a user with given ``user_name`` in descending order of the time they were originally pinned.
-    The JSON returned by the API will look like the following:
+    Get a list of all recordings ever pinned by a user with given ``user_name`` in descending order of the time 
+    they were originally pinned. The JSON returned by the API will look like the following:
 
     .. code-block:: json
 
@@ -153,7 +153,8 @@ def get_pin_history_for_user(user_name):
 
     :param user_name: the MusicBrainz ID of the user whose pin track history requested.
     :type user_name: ``str``
-    :param count: Optional, number of pinned recording items to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
+    :param count: Optional, number of pinned recording items to return, 
+        Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
         Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
     :type count: ``int``
     :param offset: Optional, number of pinned recording items to skip from the beginning, for pagination.
@@ -195,7 +196,8 @@ def get_pin_history_for_user(user_name):
 @pinned_recording_api_bp.route("/user/<user_name>/get-pins-for-following", methods=["GET"])
 def get_pins_for_following(user_name):
     """
-    Get a list containing the currently active pinned recording for each user that a user with given ``user_name`` is following. The pinned recordings are sorted in descending order of the time they were pinned.
+    Get a list containing the currently active pinned recording for each user that a user with given ``user_name`` 
+    is following. The pinned recordings are sorted in descending order of the time they were pinned.
     The JSON returned by the API will look like the following:
 
     .. code-block:: json
@@ -219,7 +221,8 @@ def get_pins_for_following(user_name):
 
     :param user_name: the MusicBrainz ID of the user whose followed user's pinned recordings are being requested.
     :type user_name: ``str``
-    :param count: Optional, number of pinned recording items to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
+    :param count: Optional, number of pinned recording items to return, 
+        Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
         Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
     :type count: ``int``
     :param offset: Optional, number of pinned recording items to skip from the beginning, for pagination.
