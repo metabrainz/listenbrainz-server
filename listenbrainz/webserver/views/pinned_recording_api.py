@@ -13,7 +13,7 @@ from listenbrainz.webserver.views.api_tools import (
     get_non_negative_param,
     validate_auth_header,
 )
-from listenbrainz.db.model.pinned_recording import PinnedRecording, PinnedRecordingSubmit
+from listenbrainz.db.model.pinned_recording import PinnedRecording, WritablePinnedRecording
 from pydantic import ValidationError
 
 pinned_recording_api_bp = Blueprint("pinned_recording_api_bp_v1", __name__)
@@ -50,7 +50,7 @@ def pin_recording_for_user():
         log_raise_400("JSON document must contain recording_mbid: ", data)
 
     try:
-        recording_to_pin = PinnedRecordingSubmit(
+        recording_to_pin = WritablePinnedRecording(
             user_id=user["id"],
             recording_mbid=data["recording_mbid"],
             blurb_content=data["blurb_content"] if "blurb_content" in data else None,
