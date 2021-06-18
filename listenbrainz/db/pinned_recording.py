@@ -2,7 +2,7 @@ import sqlalchemy
 import json
 
 from listenbrainz import db
-from listenbrainz.db.model.pinned_recording import PinnedRecording, PinnedRecordingSubmit
+from listenbrainz.db.model.pinned_recording import PinnedRecording, WritablePinnedRecording
 from typing import List
 
 
@@ -10,12 +10,12 @@ PINNED_REC_GET_COLUMNS = ['user_id', 'pin.id AS row_id', 'recording_mbid::text',
                           'pin.created as created']
 
 
-def pin(pinnedRecording: PinnedRecordingSubmit):
+def pin(pinnedRecording: WritablePinnedRecording):
     """ Inserts a pinned recording record into the database for the user.
         If the user already has an active pinned recording, it will be unpinned before the new one is pinned.
 
         Args:
-            pinnedRecording: An object of class PinnedRecordingSubmit
+            pinnedRecording: An object of class WritablePinnedRecording
     """
     args = {
         'user_id': pinnedRecording.user_id,
