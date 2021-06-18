@@ -69,13 +69,21 @@ def handle_playing_now(listen):
         listen if new playing now listen, None otherwise
     """
     old_playing_now = redis_connection._redis.get_playing_now(listen['user_id'])
-    if old_playing_now and listen['recording_msid'] == old_playing_now.recording_msid:
+
+    track_metadata = listen['track_metadata']
+    if old_playing_now and \
+            listen['track_metadata']['track_name'] == old_playing_now.data['track_name'] and \
+            listen['track_metadata']['artist_name'] == old_playing_now.data['artist_name']:
         return None
-    if 'duration' in listen['track_metadata']['additional_info']:
-        listen_timeout = listen['track_metadata']['additional_info']['duration']
-    elif 'duration_ms' in listen['track_metadata']['additional_info']:
-        listen_timeout = listen['track_metadata']['additional_info']['duration_ms'] // 1000
-    else:
+
+    listen_timeout = None
+    if 'additional_info' in track_metadata:
+        additional_info = track_metadata['additional_info']
+        if 'duration' in additional_info:
+            listen_timeout = additional_info['duration']
+        elif 'duration_ms' in additional_info:
+            listen_timeout = additional_info['duration_ms'] // 1000
+    if listen_timeout is None:
         listen_timeout = current_app.config['PLAYING_NOW_MAX_DURATION']
     redis_connection._redis.put_playing_now(listen['user_id'], listen, listen_timeout)
     return listen
