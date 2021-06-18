@@ -11,6 +11,7 @@ import sys
 import time
 import ujson
 import uuid
+from more_itertools import chunked
 
 from flask import current_app, request
 from sqlalchemy.exc import DataError
@@ -217,12 +218,10 @@ def _get_augmented_listens(payload, user, listen_type):
         listen['user_name'] = user['musicbrainz_id']
 
         msb_listens.append(listen)
-        if len(msb_listens) >= MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP:
-            augmented_listens.extend(_messybrainz_lookup(msb_listens))
-            msb_listens = []
 
-    if msb_listens:
-        augmented_listens.extend(_messybrainz_lookup(msb_listens))
+    for chunk in chunked(msb_listens, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP):
+        augmented_listens.extend(_messybrainz_lookup(chunk))
+
     return augmented_listens
 
 
