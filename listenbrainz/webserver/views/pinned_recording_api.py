@@ -24,7 +24,7 @@ pinned_recording_api_bp = Blueprint("pinned_recording_api_bp_v1", __name__)
 @ratelimit()
 def pin_recording_for_user():
     """
-    Pin a recording for user. A user token (found on  https://listenbrainz.org/profile/ )
+    Pin a recording for user. A user token (found on  https://listenbrainz.org/profile/)
     must be provided in the Authorization header! Each request should contain only one pinned recording item in the payload.
 
     The format of the JSON to be POSTed to this endpoint should look like the following:
@@ -73,13 +73,13 @@ def pin_recording_for_user():
 @ratelimit()
 def unpin_recording_for_user():
     """
-    Unpins the currently active pinned recording for the user. A user token (found on  https://listenbrainz.org/profile/ )
+    Unpins the currently active pinned recording for the user. A user token (found on  https://listenbrainz.org/profile/)
     must be provided in the Authorization header!
 
     :reqheader Authorization: Token <user token>
     :statuscode 200: recording unpinned.
     :statuscode 401: invalid authorization. See error message for details.
-    :statuscode 404: could not find the user's active recording to unpin. See error message for details.
+    :statuscode 404: could not find the active recording to unpin for the user. See error message for details.
     :resheader Content-Type: *application/json*
     """
     user = validate_auth_header()
@@ -102,7 +102,7 @@ def unpin_recording_for_user():
 def delete_pin_for_user(pinned_id):
     """
     Deletes the pinned recording with given ``pinned_id`` from the server.
-    A user token (found on  https://listenbrainz.org/profile/ ) must be provided in the Authorization header!
+    A user token (found on  https://listenbrainz.org/profile/) must be provided in the Authorization header!
 
     :reqheader Authorization: Token <user token>
     :param pinned_id: the pinned_id of the pinned recording that should be deleted.
@@ -126,7 +126,7 @@ def delete_pin_for_user(pinned_id):
     return jsonify({"status": "ok"})
 
 
-@pinned_recording_api_bp.route("/user/<user_name>/get-pin-history", methods=["GET"])
+@pinned_recording_api_bp.route("/user/<user_name>/history", methods=["GET"])
 def get_pin_history_for_user(user_name):
     """
     Get a list of all recordings ever pinned by a user with given ``user_name`` in descending order of the time
@@ -137,7 +137,7 @@ def get_pin_history_for_user(user_name):
         {
             "count": 10,
             "offset": 0,
-            "pins": [
+            "pinned_recordings": [
                 {
                     "blurb_content": "Awesome recording!",
                     "created": 1623997168,
@@ -184,7 +184,7 @@ def get_pin_history_for_user(user_name):
 
     return jsonify(
         {
-            "pins": pinned_recordings,
+            "pinned_recordings": pinned_recordings,
             "total_count": total_count,
             "count": len(pinned_recordings),
             "offset": offset,
@@ -193,30 +193,30 @@ def get_pin_history_for_user(user_name):
     )
 
 
-@pinned_recording_api_bp.route("/user/<user_name>/get-pins-for-following", methods=["GET"])
+@pinned_recording_api_bp.route("/user/<user_name>/following", methods=["GET"])
 def get_pins_for_following(user_name):
     """
-    Get a list containing the currently active pinned recording for each user that a user with given ``user_name``
-    is following. The pinned recordings are sorted in descending order of the time they were pinned.
+    Get a list containing the currently active pinned recordings for each user in a user's ``user_name``
+    following list. The returned pinned recordings are sorted in descending order of the time they were pinned.
     The JSON returned by the API will look like the following:
 
     .. code-block:: json
 
         {
-        "count": 1,
-        "offset": 0,
-        "pins": [
-            {
-            "blurb_content": "Spectacular recording!",
-            "created": 1624000841,
-            "pinned_id": 1,
-            "pinned_until": 1624605641,
-            "recording_mbid": "40ef0ae1-5626-43eb-838f-1b34187519bf",
-            "user_name": "-- the MusicBrainz ID of the user who pinned this recording --"
-            }
-            "-- more pinned recordings from different users here ---"
-        ],
-        "user_name": "-- the MusicBrainz ID of the original user --"
+            "count": 1,
+            "offset": 0,
+            "pinned_recordings": [
+                {
+                "blurb_content": "Spectacular recording!",
+                "created": 1624000841,
+                "pinned_id": 1,
+                "pinned_until": 1624605641,
+                "recording_mbid": "40ef0ae1-5626-43eb-838f-1b34187519bf",
+                "user_name": "-- the MusicBrainz ID of the user who pinned this recording --"
+                }
+                "-- more pinned recordings from different users here ---"
+            ],
+            "user_name": "-- the MusicBrainz ID of the original user --"
         }
 
     :param user_name: the MusicBrainz ID of the user whose followed user's pinned recordings are being requested.
@@ -247,7 +247,7 @@ def get_pins_for_following(user_name):
 
     return jsonify(
         {
-            "pins": pinned_recordings,
+            "pinned_recordings": pinned_recordings,
             "count": len(pinned_recordings),
             "offset": offset,
             "user_name": user_name,
