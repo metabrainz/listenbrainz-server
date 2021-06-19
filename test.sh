@@ -210,9 +210,10 @@ if [ "$1" == "spark" ]; then
     echo "Running tests"
     docker-compose -f $SPARK_COMPOSE_FILE_LOC \
                    -p $SPARK_COMPOSE_PROJECT_NAME \
+                   -e PYTHONDONTWRITEBYTECODE=1 \
                 run --rm request_consumer \
                 dockerize -wait tcp://namenode:9000 -timeout 60s \
-                PYTHONDONTWRITEBYTECODE=1 python -m pytest -c pytest.spark.ini "$@"
+                python -m pytest -c pytest.spark.ini "$@"
     RET=$?
     spark_dcdown
     exit $RET
