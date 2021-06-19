@@ -22,6 +22,10 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        shard: [ 0, 1 ]
+
     steps:
     - uses: actions/checkout@v2
 
@@ -39,4 +43,4 @@ jobs:
       continue-on-error: true
 
     - name: Run tests
-      run: ./test.sh
+      run: ./test.sh --shard-id=${{ matrix.shard }} --num-shards=2
