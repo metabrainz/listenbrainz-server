@@ -9,6 +9,8 @@ services:
   db:
     image: timescale/timescaledb:2.2.0-pg11
     command: postgres -F
+    tmpfs:
+      - /var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: 'postgres'
 
@@ -20,7 +22,7 @@ services:
       context: ..
       dockerfile: Dockerfile
       target: listenbrainz-dev
-    command: py.test listenbrainz/tests/integration
+    command: pytest listenbrainz/tests/integration
     image: listenbrainz
     volumes:
       - ..:/code/listenbrainz:z
