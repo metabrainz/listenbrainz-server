@@ -50,6 +50,14 @@ def init_test_session(app_name):
                 .builder \
                 .master('local') \
                 .appName(app_name) \
+                .config("spark.sql.shuffle.partitions", "1") \
+                .config("spark.default.parallelism", "1") \
+                .config("spark.executor.cores", "1") \
+                .config("spark.executor.instances", "1") \
+                .config("spark.shuffle.compress", "false") \
+                .config("spark.rdd.compress", "false") \
+                .config("spark.dynamicAllocation.enabled", "false") \
+                .config("spark.io.compression.codec", "lz4") \
                 .getOrCreate()
         context = session.sparkContext
         context.setLogLevel("ERROR")
