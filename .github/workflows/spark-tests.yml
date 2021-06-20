@@ -9,7 +9,7 @@ on:
       - 'listenbrainz_spark/**'
       - 'requirements_spark.txt'
       - 'requirements_development.txt'
-      - 'Dockerfile.spark'
+      - '**/Dockerfile.spark*'
       - 'docker/docker-compose.spark*.yml'
       - 'test.sh'
 
