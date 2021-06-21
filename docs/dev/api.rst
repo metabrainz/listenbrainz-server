@@ -140,7 +140,7 @@ Pinned Recording API Endpoints
 These API endpoints allow submitting, deleting, and retrieving ListenBrainz pinned recordings for users.
 
 .. autoflask:: listenbrainz.webserver:create_app_rtfd()
-   :blueprints: pinned_recording_api_bp_v1
+   :blueprints: pinned_rec_api_bp_v1
    :include-empty-docstring:
    :undoc-static:
 

@@ -309,4 +309,4 @@ def _register_blueprints(app):
 
     if app.config.get("FEATURE_PINNED_REC", False):
         from listenbrainz.webserver.views.pinned_recording_api import pinned_recording_api_bp
-        app.register_blueprint(pinned_recording_api_bp, url_prefix=API_PREFIX+'/pin')
+        app.register_blueprint(pinned_recording_api_bp, url_prefix=API_PREFIX)

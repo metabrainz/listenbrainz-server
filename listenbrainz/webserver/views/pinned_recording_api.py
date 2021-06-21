@@ -16,10 +16,10 @@ from listenbrainz.webserver.views.api_tools import (
 from listenbrainz.db.model.pinned_recording import PinnedRecording, WritablePinnedRecording
 from pydantic import ValidationError
 
-pinned_recording_api_bp = Blueprint("pinned_recording_api_bp_v1", __name__)
+pinned_recording_api_bp = Blueprint("pinned_rec_api_bp_v1", __name__)
 
 
-@pinned_recording_api_bp.route("/", methods=["POST"])
+@pinned_recording_api_bp.route("/pin", methods=["POST"])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def pin_recording_for_user():
@@ -68,7 +68,7 @@ def pin_recording_for_user():
     return jsonify({"status": "ok"})
 
 
-@pinned_recording_api_bp.route("/unpin", methods=["POST"])
+@pinned_recording_api_bp.route("/pin/unpin", methods=["POST"])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def unpin_recording_for_user():
@@ -96,7 +96,7 @@ def unpin_recording_for_user():
     return jsonify({"status": "ok"})
 
 
-@pinned_recording_api_bp.route("/delete/<pinned_id>", methods=["POST"])
+@pinned_recording_api_bp.route("/pin/delete/<pinned_id>", methods=["POST"])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def delete_pin_for_user(pinned_id):
@@ -126,8 +126,8 @@ def delete_pin_for_user(pinned_id):
     return jsonify({"status": "ok"})
 
 
-@pinned_recording_api_bp.route("/user/<user_name>/history", methods=["GET"])
-def get_pin_history_for_user(user_name):
+@pinned_recording_api_bp.route("/<user_name>/pins", methods=["GET"])
+def get_pins_for_user(user_name):
     """
     Get a list of all recordings ever pinned by a user with given ``user_name`` in descending order of the time
     they were originally pinned. The JSON returned by the API will look like the following:
@@ -161,6 +161,7 @@ def get_pin_history_for_user(user_name):
         Ex. An offset of 5 means the most recent 5 pinned recordings from the user will be skipped, defaults to 0
     :type offset: ``int``
     :statuscode 200: Yay, you have data!
+    :statuscode 400: Invalid query parameters. See error message for details.
     :statuscode 404: The requested user was not found.
     :resheader Content-Type: *application/json*
     """
@@ -176,7 +177,7 @@ def get_pin_history_for_user(user_name):
     try:
         pinned_recordings = db_pinned_rec.get_pin_history_for_user(user_id=user["id"], count=count, offset=offset)
     except Exception as e:
-        current_app.logger.error("Error while retrieving pin history for user: {}".format(e))
+        current_app.logger.error("Error while retrieving pins for user: {}".format(e))
         raise APIInternalServerError("Something went wrong. Please try again.")
 
     pinned_recordings = [_pinned_recording_to_api(pin) for pin in pinned_recordings]
@@ -193,10 +194,10 @@ def get_pin_history_for_user(user_name):
     )
 
 
-@pinned_recording_api_bp.route("/user/<user_name>/following", methods=["GET"])
-def get_pins_for_following(user_name):
+@pinned_recording_api_bp.route("/<user_name>/pins/following", methods=["GET"])
+def get_pins_for_user_following(user_name):
     """
-    Get a list containing the currently active pinned recordings for each user in a user's ``user_name``
+    Get a list containing the active pinned recordings for all users in a user's ``user_name``
     following list. The returned pinned recordings are sorted in descending order of the time they were pinned.
     The JSON returned by the API will look like the following:
 
@@ -229,6 +230,7 @@ def get_pins_for_following(user_name):
         Ex. An offset of 5 means the most recent pinned recordings from the first 5 users will be skipped, defaults to 0
     :type offset: ``int``
     :statuscode 200: Yay, you have data!
+    :statuscode 400: Invalid query parameters. See error message for details.
     :statuscode 404: The requested user was not found.
     :resheader Content-Type: *application/json*
     """
