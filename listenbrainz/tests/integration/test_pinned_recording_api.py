@@ -443,7 +443,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         self.assertEqual(data["offset"], offset)
         self.assertEqual(data["count"], 2 - offset)
 
-        # check that only the older pin was included in returned json
+        # check that only the older pin was included in returned JSON
         self.assertEqual(pins[0]["recording_mbid"], included_pin.recording_mbid)  # included_pin was pinned most recently
         self.assertEqual(pins[0]["blurb_content"], included_pin.blurb_content)
         self.assertEqual(pins[0]["user_name"], self.followed_user_1["musicbrainz_id"])
