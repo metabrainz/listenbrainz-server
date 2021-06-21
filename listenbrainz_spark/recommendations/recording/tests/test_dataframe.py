@@ -71,8 +71,7 @@ class CreateDataframeTestCase(SparkTestCase):
         recordings_df = create_dataframes.get_recordings_df(mapped_listens, {}, self.recordings_path)
         listens_df = create_dataframes.get_listens_df(mapped_listens, {})
 
-        threshold = 0
-        create_dataframes.save_playcounts_df(listens_df, recordings_df, users_df, threshold, metadata, self.playcounts_path)
+        create_dataframes.save_playcounts_df(listens_df, recordings_df, users_df, metadata, self.playcounts_path)
         playcounts_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_PLAYCOUNTS_DATAFRAME)
         self.assertEqual(playcounts_df.count(), 5)
 

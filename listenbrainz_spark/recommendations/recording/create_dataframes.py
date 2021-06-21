@@ -196,7 +196,7 @@ def get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df):
     return missing_musicbrainz_data_itr
 
 
-def save_playcounts_df(listens_df, recordings_df, users_df, threshold, metadata, save_path):
+def save_playcounts_df(listens_df, recordings_df, users_df, metadata, save_path):
     """ Prepare and save playcounts dataframe.
 
         Args:
@@ -204,7 +204,6 @@ def save_playcounts_df(listens_df, recordings_df, users_df, threshold, metadata,
             recordings_df (dataframe): Dataframe containing distinct recordings and corresponding
                                        mbids and names.
             users_df (dataframe): Dataframe containing user names and user ids.
-            threshold (int): minimum number of listens a user should have to be saved in the dataframe.
             metadata (dict): metadata dataframe to append.
             save_path (str): path where playcounts_df should be saved.
     """
@@ -215,12 +214,27 @@ def save_playcounts_df(listens_df, recordings_df, users_df, threshold, metadata,
     playcounts_df = listens_df.join(users_df, 'user_name', 'inner') \
                               .join(recordings_df, 'mb_recording_mbid', 'inner') \
                               .groupBy('user_id', 'recording_id') \
-                              .agg(func.count('recording_id').alias('count')) \
-                              .where('count > {}'.format(threshold))
+                              .agg(func.count('recording_id').alias('count'))
 
     metadata['playcounts_count'] = playcounts_df.count()
     save_dataframe(playcounts_df, save_path)
 
+def get_threshold_listens_df(mapped_listens_df, threshold: int):
+    """ Threshold mapped listens dataframe
+
+        Args:
+            mapped_listens_df (dataframe): listens mapped with msid_mbid_mapping.
+            threshold: minimum number of listens a user should have to be saved in the dataframe.
+        Returns:
+             threshold_listens_df: mapped listens dataframe after dropping data below threshold
+    """
+    threshold_users_df = mapped_listens_df \
+        .groupBy('user_name') \
+        .agg(func.count('user_name').alias('listen_count')) \
+        .where('listen_count > {}'.format(threshold)) \
+        .collect()
+    threshold_users = list(map(lambda x: x.user_name, threshold_users_df))
+    return mapped_listens_df.where(col('user_name').isin(threshold_users))
 
 def get_listens_df(mapped_listens_df, metadata):
     """ Prepare listens dataframe.
@@ -399,16 +413,20 @@ def main(train_model_window, job_type, minimum_listens_threshold=0):
                                                               paths["mapped_listens"])
     logger.info('Listen count after mapping: {}'.format(mapped_listens_df.count()))
 
+    logger.info('Thresholding listens...')
+    threshold_listens_df = get_threshold_listens_df(mapped_listens_df, minimum_listens_threshold)
+    logger.info('Listen count after thresholding: {}'.format(threshold_listens_df.count()))
+
     logger.info('Preparing users data and saving to HDFS...')
-    users_df = get_users_dataframe(mapped_listens_df, metadata, paths["users"])
+    users_df = get_users_dataframe(threshold_listens_df, metadata, paths["users"])
 
     logger.info('Preparing recordings data and saving to HDFS...')
-    recordings_df = get_recordings_df(mapped_listens_df, metadata, paths["recordings"])
+    recordings_df = get_recordings_df(threshold_listens_df, metadata, paths["recordings"])
 
     logger.info('Preparing listen data dump and playcounts, saving playcounts to HDFS...')
-    listens_df = get_listens_df(mapped_listens_df, metadata)
+    listens_df = get_listens_df(threshold_listens_df, metadata)
 
-    save_playcounts_df(listens_df, recordings_df, users_df, minimum_listens_threshold, metadata, paths["playcounts"])
+    save_playcounts_df(listens_df, recordings_df, users_df, metadata, paths["playcounts"])
 
     metadata['dataframe_id'] = get_dataframe_id(paths["prefix"])
     save_dataframe_metadata_to_hdfs(metadata, paths["metadata"])
