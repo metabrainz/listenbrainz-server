@@ -51,7 +51,7 @@ def insert_payload(payload, user, listen_type=LISTEN_TYPE_IMPORT):
     try:
         augmented_listens = _get_augmented_listens(payload, user, listen_type)
         _send_listens_to_queue(listen_type, augmented_listens)
-    except (APIInternalServerError, APIServiceUnavailable) as e:
+    except (APIInternalServerError, APIServiceUnavailable):
         raise
     except DataError:
         raise APIBadRequest("Listen submission contains invalid characters.")
@@ -97,8 +97,8 @@ def _send_listens_to_queue(listen_type, listens):
                 listen = handle_playing_now(listen)
                 if listen:
                     submit.append(listen)
-            except Exception as e:
-                current_app.logger.error("Redis rpush playing_now write error: " + str(e))
+            except Exception:
+                current_app.logger.error("Redis rpush playing_now write error: ", exc_info=True)
                 raise APIServiceUnavailable("Cannot record playing_now at this time.")
         else:
             submit.append(listen)
