@@ -128,11 +128,6 @@ class ListenTestCase(unittest.TestCase):
 
         self.assertEqual(listen.timestamp, json_row['listened_at'])
 
-        del json_row['listened_at']
-        json_row.update({'playing_now': True})
-        listen = Listen.from_json(json_row)
-
-        self.assertEqual(listen.timestamp, None)
 
     def test_from_json_null_values(self):
         data = {
