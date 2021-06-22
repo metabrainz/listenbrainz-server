@@ -50,8 +50,11 @@ def get_user():
         user = db_user.get_by_mb_row_id(musicbrainz_row_id, musicbrainz_id)
         ts.set_empty_cache_values_for_user(musicbrainz_id)
     else:  # an existing user is trying to log in
-        # every time a user logs in, update the email in LB.
+        # Other option is to change the return type of get_by_mb_row_id to a dict
+        # but its used so widely that we would modifying huge number of tests
+        user = dict(user)
         user["email"] = user_email
+        # every time a user logs in, update the email in LB.
         db_user.update_user_email(musicbrainz_id, user_email)
 
     return user
