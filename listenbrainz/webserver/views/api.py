@@ -7,7 +7,8 @@ from flask import Blueprint, request, jsonify, current_app
 from brainzutils.musicbrainz_db import engine as mb_engine
 
 from listenbrainz.listenstore import TimescaleListenStore
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
+    APIUnauthorized
 from listenbrainz.webserver.decorators import api_listenstore_needed
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import crossdomain
@@ -16,6 +17,7 @@ import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
 from brainzutils.ratelimit import ratelimit
 import listenbrainz.webserver.redis_connection as redis_connection
+from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list,\
     is_valid_uuid, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT,\
     LISTEN_TYPE_PLAYING_NOW, validate_auth_header, get_non_negative_param
@@ -52,8 +54,7 @@ def submit_listen():
     """
     user = validate_auth_header()
     if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
-        log_raise_400('The listens were rejected because the user does not has not provided an email.'
-                      'Please visit https://musicbrainz.org/account/edit to add an email address.')
+        raise APIUnauthorized(REJECT_LISTENS_WITHOUT_EMAIL_ERROR)
 
     raw_data = request.get_data()
     try:
