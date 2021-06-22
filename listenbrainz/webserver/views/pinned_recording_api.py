@@ -259,8 +259,8 @@ def get_pins_for_user_following(user_name):
 
 def _pinned_recording_to_api(pinnedRecording: PinnedRecording) -> dict:
     pin = pinnedRecording.dict()
-    pin["created"] = math.floor(pin["created"].timestamp())
-    pin["pinned_until"] = math.floor(pin["pinned_until"].timestamp())
+    pin["created"] = int(pin["created"].timestamp())
+    pin["pinned_until"] = int(pin["pinned_until"].timestamp())
     pin["pinned_id"] = pin["row_id"]
     del pin["row_id"]
     del pin["user_id"]

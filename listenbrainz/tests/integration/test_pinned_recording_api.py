@@ -223,7 +223,6 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         self.assert200(response)
         data = json.loads(response.data)
 
-        # print(json.dumps(data, indent=2))
         self.assertEqual(data["total_count"], count)
         self.assertEqual(data["offset"], 0)
 
@@ -353,7 +352,6 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         self.assert200(response)
         data = json.loads(response.data)
 
-        print(json.dumps(data, indent=2))
         pins = data["pinned_recordings"]
 
         self.assertEqual(data["offset"], 0)
@@ -392,7 +390,6 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         )
         data = json.loads(response.data)
         pins = data["pinned_recordings"]
-        print(json.dumps(data, indent=2))
 
         self.assertEqual(data["offset"], 0)
         self.assertEqual(data["count"], 2 - limit)
@@ -438,7 +435,6 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         )
         data = json.loads(response.data)
         pins = data["pinned_recordings"]
-        print(json.dumps(data, indent=2))
 
         self.assertEqual(data["offset"], offset)
         self.assertEqual(data["count"], 2 - offset)
