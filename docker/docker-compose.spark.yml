@@ -10,22 +10,20 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile.spark
-      args:
-        GIT_COMMIT_SHA: HEAD
-    image: metabrainz-spark-dev
+    image: listenbrainz-spark-dev
     command: bash -c "hdfs namenode -format && hdfs namenode"
     expose:
       - "9000"
       - "9870"
 
   datanode:
-    image: metabrainz-spark-dev
+    image: listenbrainz-spark-dev
     command: bash -c "hdfs datanode"
     depends_on:
       - namenode
 
   request_consumer:
-    image: metabrainz-spark-dev
+    image: listenbrainz-spark-dev
     depends_on:
       - namenode
       - datanode

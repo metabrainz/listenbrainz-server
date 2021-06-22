@@ -18,6 +18,18 @@ ALTER TABLE statistics.user
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
+ALTER TABLE reported_users
+    ADD CONSTRAINT  reporter_user_id_foreign_key
+    FOREIGN KEY (reporter_user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE reported_users
+    ADD CONSTRAINT  reported_user_id_foreign_key
+    FOREIGN KEY (reported_user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
 ALTER TABLE spotify_auth
     ADD CONSTRAINT spotify_auth_user_id_foreign_key
     FOREIGN KEY (user_id)

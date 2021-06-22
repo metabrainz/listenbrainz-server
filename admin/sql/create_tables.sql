@@ -16,6 +16,14 @@ ALTER TABLE "user" ADD CONSTRAINT user_musicbrainz_id_key UNIQUE (musicbrainz_id
 ALTER TABLE "user" ADD CONSTRAINT user_musicbrainz_row_id_key UNIQUE (musicbrainz_row_id);
 ALTER TABLE "user" ADD CONSTRAINT user_login_id_key UNIQUE (login_id);
 
+CREATE TABLE reported_users (
+    id                  SERIAL,
+    reporter_user_id    INTEGER NOT NULL, -- FK to "user".id of the user who reported
+    reported_user_id    INTEGER NOT NULL, -- FK to "user".id of the user who was reported
+    reported_at         TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    reason              TEXT
+);
+
 CREATE TABLE api_compat.session (
     id        SERIAL,
     user_id   INTEGER NOT NULL, -- FK to "user".id

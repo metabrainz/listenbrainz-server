@@ -1,15 +1,20 @@
+import psycopg2
+import sqlalchemy
+
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 import ujson
 
-from flask import Blueprint, render_template, request, url_for, redirect, current_app
-from flask_login import current_user
+from flask import Blueprint, render_template, request, url_for, redirect, current_app, jsonify
+from flask_login import current_user, login_required
 from listenbrainz import webserver
 from listenbrainz.db.playlist import get_playlists_for_user, get_playlists_created_for_user, get_playlists_collaborated_on
-from listenbrainz.webserver.login import User
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver import timescale_connection
+from listenbrainz.webserver.errors import APIBadRequest
+from listenbrainz.webserver.login import User, api_login_required
+from listenbrainz.webserver import timescale_connection, flash
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
 from werkzeug.exceptions import NotFound, BadRequest
 from listenbrainz.webserver.views.playlist_api import serialize_jspf
@@ -106,8 +111,10 @@ def profile(user_name):
         artist_count = None
 
     logged_in_user_follows_user = None
+    already_reported_user = False
     if current_user.is_authenticated:
         logged_in_user_follows_user = db_user_relationship.is_following_user(current_user.id, user.id)
+        already_reported_user = db_user.is_user_reported(current_user.id, user.id)
 
     props = {
         "user": {
@@ -123,6 +130,7 @@ def profile(user_name):
         "mode": "listens",
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
         "logged_in_user_follows_user": logged_in_user_follows_user,
+        "already_reported_user": already_reported_user,
     }
 
     return render_template("user/profile.html",
@@ -332,6 +340,23 @@ def collaborations(user_name: str):
         props=ujson.dumps(props),
         user=user
     )
+
+
+@user_bp.route("/<user_name>/report-user/", methods=['POST'])
+@api_login_required
+def report_abuse(user_name):
+    data = request.json
+    reason = None
+    if data:
+        reason = data.get("reason")
+        if not isinstance(reason, str):
+            raise APIBadRequest("Reason must be a string.")
+    user_to_report = db_user.get_by_mb_id(user_name)
+    if current_user.id != user_to_report["id"]:
+        db_user.report_user(current_user.id, user_to_report["id"], reason)
+        return jsonify({"status": "%s has been reported successfully." % user_name})
+    else:
+        raise APIBadRequest("You cannot report yourself.")
 
 
 def _get_user(user_name):
