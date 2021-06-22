@@ -29,14 +29,15 @@ METRIC_UPDATE_INTERVAL = 60  # seconds
 _listens_imported_since_start = 0
 _metric_submission_time = time.monotonic() + METRIC_UPDATE_INTERVAL
 
-def notify_error(user, error):
+def notify_error(musicbrainz_row_id, error):
     """ Notifies specified user via email about error during Spotify import.
 
     Args:
-        user (dict): the user whom the email is to be sent
+        musicbrainz_row_id (int): the MusicBrainz row ID of the user
         error (str): a description of the error encountered.
     """
-    if not user['email']:
+    user_email = mb_editor.get_editor_by_id(musicbrainz_row_id)['email']
+    if not user_email:
         return
 
     spotify_url = current_app.config['SERVER_ROOT_URL'] + '/profile/music-services/details/'
@@ -44,7 +45,7 @@ def notify_error(user, error):
     send_mail(
         subject='ListenBrainz Spotify Importer Error',
         text=text,
-        recipients=[user['email']],
+        recipients=[user_email],
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
     )
@@ -326,7 +327,7 @@ def process_one_user(user: dict, service: SpotifyService) -> int:
         error_message = "It seems like you've revoked permission for us to read your spotify account"
         service.update_user_import_status(user_id=user['user_id'], error=error_message)
         if not current_app.config['TESTING']:
-            notify_error(listenbrainz_user, error_message)
+            notify_error(user['musicbrainz_row_id'], error_message)
         # user has revoked authorization through spotify ui or deleted their spotify account etc.
         # in any of these cases, we should delete the user's token from.
         service.revoke_user(user['user_id'])
@@ -336,7 +337,7 @@ def process_one_user(user: dict, service: SpotifyService) -> int:
         # if it is an error from the Spotify API, show the error message to the user
         service.update_user_import_status(user_id=user['user_id'], error=str(e))
         if not current_app.config['TESTING']:
-            notify_error(listenbrainz_user, str(e))
+            notify_error(user['musicbrainz_row_id'], str(e))
         raise ExternalServiceError("Could not refresh user token from spotify")
 
 
