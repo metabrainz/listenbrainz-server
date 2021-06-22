@@ -202,3 +202,5 @@ WEBSOCKETS_SERVER_URL = '''{{template "KEY" "websockets_server_url"}}'''
 SESSION_REMEMBER_ME_DURATION = 365
 
 LISTEN_DUMP_TEMP_DIR_ROOT = '''{{template "KEY" "listen_dump_temp_dir"}}'''
+
+FEATURE_PINNED_REC = '''{{template "KEY" "feature_pinned_rec"}}'''
