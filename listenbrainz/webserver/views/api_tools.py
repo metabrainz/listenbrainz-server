@@ -7,18 +7,13 @@ import listenbrainz.webserver.redis_connection as redis_connection
 import listenbrainz.db.user as db_user
 import pika
 import pika.exceptions
-import sys
 import time
 import ujson
 import uuid
-from more_itertools import chunked
 
 from flask import current_app, request
-from sqlalchemy.exc import DataError
 
-from listenbrainz.listen import Listen
 from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
-from listenbrainz.webserver.external import messybrainz
 from listenbrainz.webserver.errors import APIInternalServerError, APIServiceUnavailable, APIBadRequest, APIUnauthorized
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
 MAX_LISTEN_SIZE = 10240
@@ -53,8 +48,6 @@ def insert_payload(payload, user, listen_type=LISTEN_TYPE_IMPORT):
         _send_listens_to_queue(listen_type, augmented_listens)
     except (APIInternalServerError, APIServiceUnavailable):
         raise
-    except DataError:
-        raise APIBadRequest("Listen submission contains invalid characters.")
     except Exception as e:
         current_app.logger.error("Error while inserting payload: %s", str(e), exc_info=True)
         raise APIInternalServerError("Something went wrong. Please try again.")
