@@ -203,5 +203,8 @@ SESSION_REMEMBER_ME_DURATION = 365
 
 LISTEN_DUMP_TEMP_DIR_ROOT = '''{{template "KEY" "listen_dump_temp_dir"}}'''
 
+# If set to True, reject listens from users who do not have an email
 REJECT_LISTENS_WITHOUT_USER_EMAIL = False
-REJECT_USERS_WITHOUT_EMAIL = True
+
+# If set to True, do not allow new users without email to register
+REJECT_NEW_USERS_WITHOUT_EMAIL = True

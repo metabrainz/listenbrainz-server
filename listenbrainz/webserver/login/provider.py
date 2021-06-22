@@ -42,13 +42,15 @@ def get_user():
     if mb_engine:
         user_email = mb_editor.get_editor_by_id(musicbrainz_row_id)['email']
 
-    if user is None:
-        if current_app.config["REJECT_USERS_WITHOUT_EMAIL"] and user_email is None:
+    if user is None:  # a new user is trying to sign up
+        if current_app.config["REJECT_NEW_USERS_WITHOUT_EMAIL"] and user_email is None:
+            # if flag is set to True and the user does not have an email do not allow to sign up
             return None
         db_user.create(musicbrainz_row_id, musicbrainz_id, email=user_email)
         user = db_user.get_by_mb_row_id(musicbrainz_row_id, musicbrainz_id)
         ts.set_empty_cache_values_for_user(musicbrainz_id)
-    else:
+    else:  # an existing user is trying to log in
+        # every time a user logs in, update the email in LB.
         user["email"] = user_email
         db_user.update_user_email(musicbrainz_id, user_email)
 
