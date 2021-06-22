@@ -120,7 +120,7 @@ def unlock_cron():
 
     # Unlock the cron container
     try:
-        subprocess.run(["admin/cron_lock.py", "unlock-cron"])
+        subprocess.run(["python", "admin/cron_lock.py", "unlock-cron"])
     except subprocess.CalledProcessError as err:
         logger.error("Cannot unlock cron after updating continuous aggregates: %s" % str(err))
 
@@ -143,9 +143,10 @@ def refresh_listen_count_aggregate():
 
     # Lock the cron container
     try:
-        subprocess.run(["admin/cron_lock.py", "lock-cron", "Updating continuous aggregates"])
+        subprocess.run(["python", "admin/cron_lock.py", "lock-cron", "Updating continuous aggregates"])
     except subprocess.CalledProcessError as err:
         logger.error("Cannot lock cron for updating continuous aggregates: %s" % str(err))
+        sys.exit(-1)
 
     logger.info("Starting to refresh continuous aggregates:")
     timescale.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)

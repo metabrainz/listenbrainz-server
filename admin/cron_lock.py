@@ -12,10 +12,10 @@ CRON_LOCK_FILE = os.path.join(CRON_LOGS_DIR, "cron.lock")
 
 def sanity_check():
     """ Check to make sure the logs dir exists and that the CONTAINER_NAME env
-        var is set correctly for the cron container. If the PROD_ENV var is not
+        var is set correctly for the cron container. If the DEPLOY_ENV var is not
         set, assume that we are not running in production and exist with success. """
 
-    if "PROD_ENV" not in os.environ:
+    if "DEPLOY_ENV" not in os.environ:
         print("Not running in a production env, not locking cron.")
         sys.exit(0)
 
