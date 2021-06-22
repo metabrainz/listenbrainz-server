@@ -31,11 +31,12 @@ def musicbrainz_post():
         no_email_warning = Markup('You have not provided an email address. Please provide an '
                                   '<a href="https://musicbrainz.org/account/edit">email address</a> ')
 
-        if not user:
+        if not user:  # new user without email tried to create an account
             flash.error(no_email_warning + 'before creating a ListenBrainz account.')
             return redirect(url_for('index.index'))
 
-        if current_app.config["REJECT_NEW_USERS_WITHOUT_EMAIL"] and not user["email"]:
+        if current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
+            # existing user without email, show a warning
             flash.warning(no_email_warning + 'before 1 November 2021, or you will be unable to submit listens.')
 
         db_user.update_last_login(user["musicbrainz_id"])
