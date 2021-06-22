@@ -30,14 +30,17 @@ def musicbrainz_post():
         user = provider.get_user()
         no_email_warning = Markup('You have not provided an email address. Please provide an '
                                   '<a href="https://musicbrainz.org/account/edit">email address</a> ')
+        blog_link = Markup('Read this <a href="https://blog.metabrainz.org/?p=8915">blog post</a> '
+                           'to understand why we need your email.')
 
         if not user:  # new user without email tried to create an account
-            flash.error(no_email_warning + 'before creating a ListenBrainz account.')
+            flash.error(no_email_warning + 'before creating a ListenBrainz account. ' + blog_link)
             return redirect(url_for('index.index'))
 
         if current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
             # existing user without email, show a warning
-            flash.warning(no_email_warning + 'before 1 November 2021, or you will be unable to submit listens.')
+            flash.warning(no_email_warning + 'before 1 November 2021, or you will be unable to submit '
+                                             'listens. ' + blog_link)
 
         db_user.update_last_login(user["musicbrainz_id"])
         login_user(User.from_dbrow(user),
