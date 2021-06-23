@@ -13,6 +13,7 @@ fi
 # ./test.sh [params]       run unit tests, passing optional params to inner test
 # ./test.sh -s             stop unit test containers without removing
 # ./test.sh -d             clean unit test containers
+# ./test.sh -b             build unit test containers
 
 # FRONTEND TESTS
 # ./test.sh fe             run frontend tests
@@ -27,6 +28,7 @@ fi
 
 # INTEGRATION TESTS
 # ./test.sh int            run integration tests
+# ./test.sh int -b         build integration test containers
 
 COMPOSE_FILE_LOC=docker/docker-compose.test.yml
 COMPOSE_PROJECT_NAME=listenbrainz_test
@@ -44,9 +46,10 @@ if [[ ! -d "docker" ]]; then
 fi
 
 function build_unit_containers {
+    echo "Building containers"
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                build db redis rabbitmq listenbrainz
+                build listenbrainz
 }
 
 function bring_up_unit_db {
@@ -165,9 +168,10 @@ function spark_dcdown {
 }
 
 function int_build {
+    echo "Building current setup"
     docker-compose -f $INT_COMPOSE_FILE_LOC \
                    -p $INT_COMPOSE_PROJECT_NAME \
-                build
+                build listenbrainz
 }
 
 function int_dcdown {
@@ -221,9 +225,12 @@ if [ "$1" == "spark" ]; then
 fi
 
 if [ "$1" == "int" ]; then
+    if [ "$2" == "-b" ]; then
+        int_build
+        exit $?
+    fi
     echo "Taking down old containers"
     int_dcdown
-    echo "Building current setup"
     int_build
     echo "Building containers"
     int_setup
@@ -301,13 +308,15 @@ if [ "$1" == "-u" ]; then
     if [ $DB_EXISTS -eq 0 -o $DB_RUNNING -eq 0 ]; then
         echo "Database is already up, doing nothing"
     else
-        echo "Building containers"
         build_unit_containers
         echo "Bringing up DB"
         bring_up_unit_db
         unit_setup
     fi
     exit 0
+elif [ "$1" == "-b" ]; then
+    build_unit_containers
+    exit $?
 fi
 
 is_unit_db_exists

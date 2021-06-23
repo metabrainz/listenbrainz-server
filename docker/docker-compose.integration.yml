@@ -23,7 +23,6 @@ services:
       dockerfile: Dockerfile
       target: listenbrainz-dev
     command: pytest listenbrainz/tests/integration
-    image: listenbrainz
     volumes:
       - ..:/code/listenbrainz:z
     depends_on:
