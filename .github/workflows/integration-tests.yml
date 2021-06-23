@@ -18,18 +18,12 @@ on:
 
 jobs:
 
-  test:
-    strategy:
-      matrix:
-        shard: [ 0, 1 ]
+  build:
 
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
-
-    - name: Create configuration file
-      run: cp listenbrainz/config.py.sample listenbrainz/config.py
 
     - name: Login to Docker Hub
       run: echo ${{ secrets.DOCKER_HUB_PASSWORD }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
@@ -43,6 +37,44 @@ jobs:
 
     - uses: satackey/action-docker-layer-caching@v0.0.11
       continue-on-error: true
+
+    - name: Build integration test images
+      run: ./test.sh int -b
+
+    - name: Save docker image to compressed tar
+      run: |
+        docker save listenbrainz_int_listenbrainz:latest -o listenbrainz_int_listenbrainz.tar
+        zstd -T0 listenbrainz_int_listenbrainz.tar -o listenbrainz_int_listenbrainz.tzst
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: listenbrainz-integration-${{ github.sha }}
+        path: ./listenbrainz_int_listenbrainz.tzst
+        retention-days: 1
+
+  test:
+
+    needs: build
+
+    strategy:
+      matrix:
+        shard: [ 0, 1 ]
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Create configuration file
+      run: cp listenbrainz/config.py.sample listenbrainz/config.py
+
+    - uses: actions/download-artifact@v2
+      with:
+          name: listenbrainz-integration-${{ github.sha }}
+          path: ~/image
+
+    - name: Restore docker image from compressed tar
+      run: zstd -T0 -d ~/image/listenbrainz_int_listenbrainz.tzst -c | docker load
 
     - name: Run tests
       run: ./test.sh int --shard-id=${{ matrix.shard }} --num-shards=2
