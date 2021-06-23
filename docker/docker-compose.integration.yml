@@ -22,6 +22,7 @@ services:
       context: ..
       dockerfile: Dockerfile
       target: listenbrainz-dev
+    image: listenbrainz
     command: pytest listenbrainz/tests/integration
     volumes:
       - ..:/code/listenbrainz:z

@@ -231,8 +231,6 @@ if [ "$1" == "int" ]; then
     fi
     echo "Taking down old containers"
     int_dcdown
-    int_build
-    echo "Building containers"
     int_setup
     echo "Bringing containers up"
     bring_up_int_containers
