@@ -29,12 +29,6 @@ jobs:
       run: echo ${{ secrets.DOCKER_HUB_PASSWORD }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
       continue-on-error: true
 
-    # by default, docker-compose tries to pull the `listenbrainz` image used by timescale_writer as well.
-    # but this is built locally for the listenbrainz service and reused for timescale writer, hence the pull fails.
-    # to avoid this we specifically mention the services to pull images for here,
-    - name: Pull docker images
-      run: docker-compose -f docker/docker-compose.integration.yml pull db redis rabbitmq
-
     - uses: satackey/action-docker-layer-caching@v0.0.11
       continue-on-error: true
 
