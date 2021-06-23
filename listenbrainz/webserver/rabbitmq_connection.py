@@ -1,7 +1,7 @@
 import queue
 from time import sleep
 import pika
-import listenbrainz.utils as utils
+from listenbrainz.utils import get_fallback_connection_name
 from flask import current_app
 
 _rabbitmq = None
@@ -32,6 +32,7 @@ def init_rabbitmq_connection(app):
         port=app.config['RABBITMQ_PORT'],
         virtual_host=app.config['RABBITMQ_VHOST'],
         credentials=pika.PlainCredentials(app.config['RABBITMQ_USERNAME'], app.config['RABBITMQ_PASSWORD']),
+        client_properties={"connection_name": get_fallback_connection_name()}
     )
 
     _rabbitmq = RabbitMQConnectionPool(
@@ -43,6 +44,8 @@ def init_rabbitmq_connection(app):
 
 
 class RabbitMQConnectionPool:
+    """ The RabbitMQ connection pool used by the api and api_compat to publish messages to
+    the incoming queue."""
     def __init__(self, logger, connection_parameters, max_size, exchange):
         self.log = logger
         self.connection_parameters = connection_parameters

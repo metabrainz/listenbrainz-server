@@ -1,5 +1,7 @@
 import errno
 import os
+import socket
+
 import pika
 import time
 
@@ -36,7 +38,8 @@ def connect_to_rabbitmq(username, password,
                         credentials_type=pika.PlainCredentials,
                         error_logger=print,
                         error_retry_delay=3,
-                        heartbeat=None):
+                        heartbeat=None,
+                        connection_name: str = None):
     """Connects to RabbitMQ
 
     Args:
@@ -51,6 +54,8 @@ def connect_to_rabbitmq(username, password,
     """
     while True:
         try:
+            if connection_name is None:
+                connection_name = get_fallback_connection_name()
             credentials = credentials_type(username, password)
             connection_parameters = pika.ConnectionParameters(
                 host=host,
@@ -58,6 +63,7 @@ def connect_to_rabbitmq(username, password,
                 virtual_host=virtual_host,
                 credentials=credentials,
                 heartbeat=heartbeat,
+                client_properties={"connection_name": connection_name}
             )
             return connection_type(connection_parameters)
         except Exception as err:
@@ -129,7 +135,6 @@ def safely_import_config():
             print("Cannot import config.py. Waiting and retrying...")
             time.sleep(2)
 
-
 def unix_timestamp_to_datetime(timestamp):
     """ Converts expires_at timestamp received from Spotify to a datetime object
 
@@ -141,4 +146,13 @@ def unix_timestamp_to_datetime(timestamp):
     """
     return datetime.utcfromtimestamp(timestamp).replace(tzinfo=timezone.utc)
 
-
+def get_fallback_connection_name():
+    """ Get a connection name friendlier than docker gateway ip during connecting
+    to services like redis, rabbitmq etc."""
+    # We use CONTAINER_NAME environment variable, this is always set in production.
+    # Finally, we fall back to the host name, not as informative as the container name
+    # but something is better than nothing.
+    client_name = os.getenv("CONTAINER_NAME", None)
+    if client_name is None:
+        client_name = socket.gethostname()
+    return client_name

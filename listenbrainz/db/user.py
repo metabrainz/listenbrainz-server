@@ -472,7 +472,7 @@ def get_users_in_order(user_ids):
 
 
 def get_similar_users(user_id: int) -> SimilarUsers:
-    """ Given a user_id, fetch the similar users for that given user. 
+    """ Given a user_id, fetch the similar users for that given user.
         Returns a dict { "user_x" : .453, "user_y": .123 } """
 
     with db.engine.connect() as connection:
@@ -503,3 +503,34 @@ def get_users_by_id(user_ids: List[int]):
         for row in result.fetchall():
             row_id_username_map[row['id']] = row['musicbrainz_id']
         return row_id_username_map
+
+
+def is_user_reported(reporter_id: int, reported_id: int):
+    """ Check whether the user identified by reporter_id has reported the
+    user identified by reported_id"""
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT *
+              FROM reported_users
+             WHERE reporter_user_id = :reporter_id
+               AND reported_user_id = :reported_id
+        """), {
+            "reporter_id": reporter_id,
+            "reported_id": reported_id
+        })
+        return True if result.fetchone() else False
+
+
+def report_user(reporter_id: int, reported_id: int, reason: str = None):
+    """ Create a report from user with reporter_id against user with
+     reported_id"""
+    with db.engine.connect() as connection:
+        connection.execute(sqlalchemy.text("""
+            INSERT INTO reported_users (reporter_user_id, reported_user_id, reason)
+                 VALUES (:reporter_id, :reported_id, :reason)
+                 ON CONFLICT DO NOTHING
+                """), {
+            "reporter_id": reporter_id,
+            "reported_id": reported_id,
+            "reason": reason,
+        })

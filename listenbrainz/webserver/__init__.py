@@ -134,10 +134,10 @@ def gen_app(debug=None):
     from listenbrainz.webserver.errors import init_error_handlers
     init_error_handlers(app)
 
-    from listenbrainz.webserver import rate_limiter
+    from brainzutils.ratelimit import inject_x_rate_headers
     @app.after_request
     def after_request_callbacks(response):
-        return rate_limiter.inject_x_rate_headers(response)
+        return inject_x_rate_headers(response)
 
     # Template utilities
     app.jinja_env.add_extension('jinja2.ext.do')
@@ -172,12 +172,15 @@ def create_app(debug=None):
     from listenbrainz.model import ExternalService as ExternalServiceModel
     from listenbrainz.model import User as UserModel
     from listenbrainz.model import ListensImporter as ListensImporterModel
+    from listenbrainz.model import ReportedUsers as ReportedUsersModel
     from listenbrainz.model.external_service_oauth import ExternalServiceAdminView
     from listenbrainz.model.user import UserAdminView
     from listenbrainz.model.listens_import import ListensImporterAdminView
+    from listenbrainz.model.reported_users import ReportedUserAdminView
     admin.add_view(UserAdminView(UserModel, model.db.session, endpoint='user_model'))
     admin.add_view(ExternalServiceAdminView(ExternalServiceModel, model.db.session, endpoint='external_service_model'))
     admin.add_view(ListensImporterAdminView(ListensImporterModel, model.db.session, endpoint='listens_importer_model'))
+    admin.add_view(ReportedUserAdminView(ReportedUsersModel, model.db.session, endpoint='reported_users_model'))
 
     @app.before_request
     def before_request_gdpr_check():
