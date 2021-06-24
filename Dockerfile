@@ -50,7 +50,6 @@ WORKDIR /code/listenbrainz
 RUN pip3 install pip==21.0.1
 COPY requirements.txt /code/listenbrainz/
 RUN pip3 install --no-cache-dir -r requirements.txt
-RUN useradd --create-home --shell /bin/bash listenbrainz
 
 
 ############################################
