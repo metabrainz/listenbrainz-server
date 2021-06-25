@@ -18,6 +18,12 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+# usage
+# the first argument to this script is the dump type, it can be either
+# full, incremental or feedback. the remaining arguments are forwarded
+# the python dump_manager script. this can be useful in scenarios where
+# we want to pass in the --dump-id manually for recreating a failed dump.
+
 set -e
 
 LB_SERVER_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)
