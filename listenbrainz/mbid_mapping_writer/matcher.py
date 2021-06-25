@@ -10,6 +10,7 @@ from listenbrainz.db import timescale
 
 MAX_THREADS = 2
 MAX_QUEUED_JOBS = MAX_THREADS * 2
+SEARCH_TIMEOUT = 3600  # basically, don't have searches timeout.
 
 
 def process_listens(app, listens, is_legacy_listen=False):
@@ -99,7 +100,7 @@ def lookup_listens(app, listens, stats, exact):
     if exact:
         q = ArtistCreditRecordingLookupQuery()
     else:
-        q = MBIDMappingQuery(timeout=10, remove_stop_words=True)
+        q = MBIDMappingQuery(timeout=SEARCH_TIMEOUT, remove_stop_words=True)
 
     params = []
     for listen in listens:
