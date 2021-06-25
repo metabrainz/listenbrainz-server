@@ -57,6 +57,7 @@ type BrainzPlayerState = {
   currentTrackArtist?: string;
   direction: BrainzPlayDirection;
   playerPaused: boolean;
+  isActivated: boolean;
   durationMs: number;
   progressMs: number;
   updateTime: number;
@@ -73,11 +74,6 @@ export default class BrainzPlayer extends React.Component<
   youtubePlayer?: React.RefObject<YoutubePlayer>;
   soundcloudPlayer?: React.RefObject<SoundcloudPlayer>;
   dataSources: Array<React.RefObject<DataSourceTypes>> = [];
-
-  // Since we don't want autoplay on our pages, we need a way to know
-  // that a user clicked on the play/pause button for the first time
-  // to start the playlist. Subsequent uses should toggle play/pause.
-  firstRun: boolean = true;
 
   playerStateTimerID?: NodeJS.Timeout;
 
@@ -102,6 +98,7 @@ export default class BrainzPlayer extends React.Component<
       progressMs: 0,
       durationMs: 0,
       updateTime: performance.now(),
+      isActivated: false,
     };
   }
 
@@ -163,7 +160,11 @@ export default class BrainzPlayer extends React.Component<
 
   playNextTrack = (invert: boolean = false): void => {
     const { listens } = this.props;
-    const { direction } = this.state;
+    const { direction, isActivated } = this.state;
+    if (!isActivated) {
+      // Player has not been activated by the user, do nothing.
+      return;
+    }
 
     if (listens.length === 0) {
       this.handleWarning(
@@ -244,14 +245,15 @@ export default class BrainzPlayer extends React.Component<
     }
   };
 
+  activatePlayerAndPlay = (): void => {
+    this.setState({ isActivated: true }, this.playNextTrack);
+  };
+
   playListen = (
     listen: Listen | JSPFTrack,
     datasourceIndex: number = 0
   ): void => {
-    if (this.firstRun) {
-      this.firstRun = false;
-    }
-
+    this.setState({ isActivated: true });
     /** If available, retreive the service the listen was listened with */
     let selectedDatasourceIndex = this.getSourceIndexByListenData(listen);
 
@@ -348,7 +350,11 @@ export default class BrainzPlayer extends React.Component<
   };
 
   seekToPositionMs = (msTimecode: number): void => {
-    const { currentDataSourceIndex } = this.state;
+    const { currentDataSourceIndex, isActivated } = this.state;
+    if (!isActivated) {
+      // Player has not been activated by the user, do nothing.
+      return;
+    }
     const dataSource =
       this.dataSources[currentDataSourceIndex] &&
       this.dataSources[currentDataSourceIndex].current;
@@ -370,12 +376,16 @@ export default class BrainzPlayer extends React.Component<
   /* Listeners for datasource events */
 
   failedToFindTrack = (): void => {
+    const { currentDataSourceIndex, isActivated } = this.state;
+    if (!isActivated) {
+      // Player has not been activated by the user, do nothing.
+      return;
+    }
     const { currentListen } = this.props;
     if (!currentListen) {
       this.playNextTrack();
       return;
     }
-    const { currentDataSourceIndex } = this.state;
 
     if (currentDataSourceIndex < this.dataSources.length - 1) {
       // Try playing the listen with the next dataSource
@@ -448,6 +458,7 @@ export default class BrainzPlayer extends React.Component<
       direction,
       progressMs,
       durationMs,
+      isActivated,
     } = this.state;
     const { APIService, youtubeAuth, spotifyAuth } = this.context;
     return (
@@ -455,7 +466,9 @@ export default class BrainzPlayer extends React.Component<
         <PlaybackControls
           playPreviousTrack={this.playPreviousTrack}
           playNextTrack={this.playNextTrack}
-          togglePlay={this.firstRun ? this.playNextTrack : this.togglePlay}
+          togglePlay={
+            isActivated ? this.togglePlay : this.activatePlayerAndPlay
+          }
           playerPaused={playerPaused}
           toggleDirection={this.toggleDirection}
           direction={direction}
