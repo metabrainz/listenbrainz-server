@@ -399,7 +399,7 @@ def parse_param_list(params: str) -> list:
     return param_list
 
 
-def validate_auth_header(optional: bool = False, fetch_email: bool = False):
+def validate_auth_header(*, optional: bool = False, fetch_email: bool = False):
     """ Examine the current request headers for an Authorization: Token <uuid>
         header that identifies a LB user and then load the corresponding user
         object from the database and return it, if succesful. Otherwise raise

@@ -539,7 +539,7 @@ def get_playlists_for_user(playlist_user_name):
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     """
-    user = validate_auth_header(True)
+    user = validate_auth_header(optional=True)
 
     count = get_non_negative_param(
         'count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
@@ -605,7 +605,7 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
     :resheader Content-Type: *application/json*
     """
 
-    user = validate_auth_header(True)
+    user = validate_auth_header(optional=True)
 
     count = get_non_negative_param(
         'count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)

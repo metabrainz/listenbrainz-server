@@ -67,7 +67,7 @@ USER_GET_COLUMNS = ['id', 'created', 'musicbrainz_id', 'auth_token',
                     'last_login', 'latest_import', 'gdpr_agreed', 'musicbrainz_row_id', 'login_id']
 
 
-def get(id: int, fetch_email: bool = False):
+def get(id: int, *, fetch_email: bool = False):
     """Get user with a specified ID.
 
     Args:
@@ -149,7 +149,7 @@ def get_many_users_by_mb_id(musicbrainz_ids: List[str]):
         return {row['musicbrainz_id'].lower(): dict(row) for row in result.fetchall()}
 
 
-def get_by_mb_id(musicbrainz_id, fetch_email: bool = False):
+def get_by_mb_id(musicbrainz_id, *, fetch_email: bool = False):
     """Get user with a specified MusicBrainz ID.
 
     Args:
@@ -181,7 +181,7 @@ def get_by_mb_id(musicbrainz_id, fetch_email: bool = False):
         return dict(row) if row else None
 
 
-def get_by_token(token: str, fetch_email: bool = False):
+def get_by_token(token: str, *, fetch_email: bool = False):
     """Get user with a specified authentication token.
 
     Args:
