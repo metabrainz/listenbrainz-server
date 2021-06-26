@@ -106,7 +106,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
             "recording_msid": "7f3d82ee-3817-4367-9eec-f33a312247a1",
             "recording_msid": "-- invalid recording_msid --",
             "blurb_content": "Amazing first recording",
-        }        
+        }
 
         response = self.client.post(
             url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
