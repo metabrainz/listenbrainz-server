@@ -19,10 +19,10 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
         self.followed_user_2 = db_user.get_or_create(3, "followed_user_2")
 
         self.pinned_rec_samples = [
-            {"recording_mbid": "7f3d82ee-3817-4367-9eec-f33a312247a1", "blurb_content": "Amazing first recording"},
-            {"recording_mbid": "7f3d82ee-3817-4367-9eec-f33a312247a1", "blurb_content": "Wonderful second recording"},
-            {"recording_mbid": "7f3d82ee-3817-4367-9eec-f33a312247a1", "blurb_content": "Incredible third recording"},
-            {"recording_mbid": "67c4697d-d956-4257-8cc9-198e5cb67479", "blurb_content": "Great fourth recording"},
+            {"recording_msid": "7f3d82ee-3817-4367-9eec-f33a312247a1", "blurb_content": "Amazing first recording"},
+            {"recording_msid": "7f3d82ee-3817-4367-9eec-f33a312247a1", "blurb_content": "Wonderful second recording"},
+            {"recording_msid": "7f3d82ee-3817-4367-9eec-f33a312247a1", "blurb_content": "Incredible third recording"},
+            {"recording_msid": "67c4697d-d956-4257-8cc9-198e5cb67479", "blurb_content": "Great fourth recording"},
         ]
 
     def insert_test_data(self, user_id: int, limit: int = 4):
@@ -40,7 +40,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
             db_pinned_rec.pin(
                 WritablePinnedRecording(
                     user_id=user_id,
-                    recording_mbid=data["recording_mbid"],
+                    recording_msid=data["recording_msid"],
                     blurb_content=data["blurb_content"],
                 )
             )
@@ -58,7 +58,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
         """
         recording_to_pin = WritablePinnedRecording(
             user_id=user_id,
-            recording_mbid=self.pinned_rec_samples[index]["recording_mbid"],
+            recording_msid=self.pinned_rec_samples[index]["recording_msid"],
             blurb_content=self.pinned_rec_samples[index]["blurb_content"],
         )
 
@@ -72,10 +72,19 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
                 user_id=self.user["id"],
             )
 
+        # test recording_msid = invalid uuid format
+        with self.assertRaises(ValidationError):
+            WritablePinnedRecording(
+                user_id=self.user["id"],
+                recording_msid="7f3-38-43-9e-f3",
+                blurb_content=self.pinned_rec_samples[0]["blurb_content"],
+            )
+
         # test recording_mbid = invalid uuid format
         with self.assertRaises(ValidationError):
             WritablePinnedRecording(
                 user_id=self.user["id"],
+                recording_msid=self.pinned_rec_samples[0]["recording_msid"],
                 recording_mbid="7f3-38-43-9e-f3",
                 blurb_content=self.pinned_rec_samples[0]["blurb_content"],
             )
@@ -83,7 +92,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
         # test created = invalid datetime error doesn't raise error
         WritablePinnedRecording(
             user_id=self.user["id"],
-            recording_mbid=self.pinned_rec_samples[0]["recording_mbid"],
+            recording_msid=self.pinned_rec_samples[0]["recording_msid"],
             blurb_content=self.pinned_rec_samples[0]["blurb_content"],
             created="foobar",
         )
@@ -92,7 +101,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
         with self.assertRaises(ValidationError):
             WritablePinnedRecording(
                 user_id=self.user["id"],
-                recording_mbid=self.pinned_rec_samples[0]["recording_mbid"],
+                recording_msid=self.pinned_rec_samples[0]["recording_msid"],
                 blurb_content=self.pinned_rec_samples[0]["blurb_content"],
                 pinned_until=datetime.now(),
             )
@@ -101,7 +110,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
         with self.assertRaises(ValidationError):
             WritablePinnedRecording(
                 user_id=self.user["id"],
-                recording_mbid=self.pinned_rec_samples[0]["recording_mbid"],
+                recording_msid=self.pinned_rec_samples[0]["recording_msid"],
                 blurb_content=self.pinned_rec_samples[0]["blurb_content"],
                 pinned_until="foobar",
             )
@@ -110,7 +119,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
         with self.assertRaises(ValidationError):
             WritablePinnedRecording(
                 user_id=self.user["id"],
-                recording_mbid=self.pinned_rec_samples[0]["recording_mbid"],
+                recording_msid=self.pinned_rec_samples[0]["recording_msid"],
                 blurb_content=self.pinned_rec_samples[0]["blurb_content"],
                 created="2021-06-08 23:23:23.23232+00:00",
                 pinned_until="1980-06-08 23:23:23.23232+00:00",
@@ -128,7 +137,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
 
         # only the pinned_until value of the record should be updated
         self.assertEqual(original_unpinned.user_id, original_pinned.user_id)
-        self.assertEqual(original_unpinned.recording_mbid, original_pinned.recording_mbid)
+        self.assertEqual(original_unpinned.recording_msid, original_pinned.recording_msid)
         self.assertEqual(original_unpinned.blurb_content, original_pinned.blurb_content)
         self.assertEqual(original_unpinned.created, original_pinned.created)
         self.assertLess(original_unpinned.pinned_until, original_pinned.pinned_until)

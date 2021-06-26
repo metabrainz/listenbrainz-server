@@ -31,7 +31,8 @@ def pin_recording_for_user():
 
     .. code-block:: json
         {
-            "recording_mbid": "40ef0ae1-5626-43eb-838f-1b34187519bf",
+            "recording_msid": "40ef0ae1-5626-43eb-838f-1b34187519bf",
+            "recording_mbid": "40ef0ae1-5626-43eb-838f-1b34187519bf", // Optional
             "blurb_content": "Wow..",
             "pinned_until": 1824001816 // Optional
         }
@@ -46,13 +47,14 @@ def pin_recording_for_user():
 
     data = request.json
 
-    if "recording_mbid" not in data:
-        log_raise_400("JSON document must contain recording_mbid: ", data)
+    if "recording_msid" not in data:
+        log_raise_400("JSON document must contain recording_msid: ", data)
 
     try:
         recording_to_pin = WritablePinnedRecording(
             user_id=user["id"],
-            recording_mbid=data["recording_mbid"],
+            recording_msid=data["recording_msid"],
+            recording_mbid=data["recording_mbid"] if "recording_mbid" in data else None,
             blurb_content=data["blurb_content"] if "blurb_content" in data else None,
             pinned_until=data["pinned_until"] if "pinned_until" in data else None,
         )
@@ -143,7 +145,8 @@ def get_pins_for_user(user_name):
                     "created": 1623997168,
                     "pinned_id": 10,
                     "pinned_until": 1623997485,
-                    "recording_mbid": "fd7d9162-a284-4a10-906c-faae4f1e166b"
+                    "recording_mbid": null,
+                    "recording_msid": "fd7d9162-a284-4a10-906c-faae4f1e166b"
                 },
                 "-- more pinned recording items here ---"
             ],
@@ -212,7 +215,8 @@ def get_pins_for_user_following(user_name):
                 "created": 1624000841,
                 "pinned_id": 1,
                 "pinned_until": 1624605641,
-                "recording_mbid": "40ef0ae1-5626-43eb-838f-1b34187519bf",
+                "recording_mbid": null,
+                "recording_msid": "40ef0ae1-5626-43eb-838f-1b34187519bf",
                 "user_name": "-- the MusicBrainz ID of the user who pinned this recording --"
                 }
                 "-- more pinned recordings from different users here ---"
