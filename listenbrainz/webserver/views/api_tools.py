@@ -399,15 +399,16 @@ def parse_param_list(params: str) -> list:
     return param_list
 
 
-def validate_auth_header(optional=False):
+def validate_auth_header(optional: bool = False, fetch_email: bool = False):
     """ Examine the current request headers for an Authorization: Token <uuid>
         header that identifies a LB user and then load the corresponding user
         object from the database and return it, if succesful. Otherwise raise
         APIUnauthorized() exception.
 
     Args:
-        optional (bool): If the optional flag is given, do not raise an exception
-                         if the Authorization header is not set.
+        optional: If the optional flag is given, do not raise an exception
+            if the Authorization header is not set.
+        fetch_email: if True, include email in the returned dict
     """
 
     auth_token = request.headers.get('Authorization')
@@ -420,7 +421,7 @@ def validate_auth_header(optional=False):
     except IndexError:
         raise APIUnauthorized("Provided Authorization header is invalid.")
 
-    user = db_user.get_by_token(auth_token)
+    user = db_user.get_by_token(auth_token, fetch_email=fetch_email)
     if user is None:
         raise APIUnauthorized("Invalid authorization token.")
 

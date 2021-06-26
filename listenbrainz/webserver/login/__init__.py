@@ -10,14 +10,13 @@ login_manager.login_view = 'login.index'
 
 
 class User(UserMixin):
-    def __init__(self, id, created, musicbrainz_id, auth_token, gdpr_agreed, login_id, email):
+    def __init__(self, id, created, musicbrainz_id, auth_token, gdpr_agreed, login_id):
         self.id = id
         self.created = created
         self.musicbrainz_id = musicbrainz_id
         self.auth_token = auth_token
         self.gdpr_agreed = gdpr_agreed
         self.login_id = login_id
-        self.email = email
 
     def get_id(self):
         return self.login_id
@@ -31,7 +30,6 @@ class User(UserMixin):
             auth_token=user['auth_token'],
             gdpr_agreed=user['gdpr_agreed'],
             login_id=user['login_id'],
-            email=user["email"]
         )
 
 @login_manager.user_loader
