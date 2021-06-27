@@ -80,7 +80,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
                 blurb_content=self.pinned_rec_samples[0]["blurb_content"],
             )
 
-        # test recording_mbid = invalid uuid format
+        # test optional recording_mbid = invalid uuid format
         with self.assertRaises(ValidationError):
             WritablePinnedRecording(
                 user_id=self.user["id"],
