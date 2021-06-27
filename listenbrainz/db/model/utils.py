@@ -11,6 +11,8 @@ def check_rec_mbid_msid_is_valid_uuid(rec_id: str):
     Returns:
         The validated recording MBID/MSID as a string.
     """
+    if rec_id is None:
+        return None
     try:
         rec_id = uuid.UUID(rec_id)
         return str(rec_id)

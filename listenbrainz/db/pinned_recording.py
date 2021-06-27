@@ -6,8 +6,15 @@ from listenbrainz.db.model.pinned_recording import PinnedRecording, WritablePinn
 from typing import List
 
 
-PINNED_REC_GET_COLUMNS = ['user_id', 'pin.id AS row_id', 'recording_mbid::text', 'blurb_content', 'pinned_until',
-                          'pin.created as created']
+PINNED_REC_GET_COLUMNS = [
+    "user_id",
+    "pin.id AS row_id",
+    "recording_msid::text",
+    "recording_mbid::text",
+    "blurb_content",
+    "pinned_until",
+    "pin.created as created",
+]
 
 
 def pin(pinnedRecording: WritablePinnedRecording):
@@ -19,6 +26,7 @@ def pin(pinnedRecording: WritablePinnedRecording):
     """
     args = {
         'user_id': pinnedRecording.user_id,
+        'recording_msid': pinnedRecording.recording_msid,
         'recording_mbid': pinnedRecording.recording_mbid,
         'blurb_content': pinnedRecording.blurb_content,
         'pinned_until': pinnedRecording.pinned_until,
@@ -31,8 +39,8 @@ def pin(pinnedRecording: WritablePinnedRecording):
                SET pinned_until = NOW()
              WHERE (user_id = :user_id AND pinned_until >= NOW());
 
-            INSERT INTO pinned_recording (user_id, recording_mbid, blurb_content, pinned_until, created)
-            VALUES (:user_id, :recording_mbid, :blurb_content, :pinned_until, :created)
+            INSERT INTO pinned_recording (user_id, recording_msid, recording_mbid, blurb_content, pinned_until, created)
+            VALUES (:user_id, :recording_msid, :recording_mbid, :blurb_content, :pinned_until, :created)
             """), args)
 
 
@@ -133,8 +141,8 @@ def get_pin_history_for_user(user_id: int, count: int, offset: int) -> List[Pinn
 
 
 def get_pins_for_user_following(user_id: int, count: int, offset: int) -> List[PinnedRecording]:
-    """ Get a list of currently active pinned recordings for users
-        in the user's following list in descending order of their created date.
+    """ Get a list of active pinned recordings for all the users that a user follows sorted
+        in descending order of their created date.
 
         Args:
             user_id: the row ID of the main user in the DB

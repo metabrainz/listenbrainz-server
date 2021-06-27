@@ -218,7 +218,8 @@ CREATE TABLE user_relationship (
 CREATE TABLE pinned_recording(
     id                      SERIAL, -- PK
     user_id                 INTEGER NOT NULL, -- FK to "user".id
-    recording_mbid          UUID NOT NULL,
+    recording_msid          UUID NOT NULL,
+    recording_mbid          UUID,
     blurb_content           TEXT,
     pinned_until            TIMESTAMP WITH TIME ZONE NOT NULL,
     created                 TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()

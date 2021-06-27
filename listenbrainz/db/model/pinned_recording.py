@@ -22,10 +22,13 @@ class PinnedRecording(BaseModel):
     user_id: int
     user_name: Optional[str]
     row_id: int
-    recording_mbid: str
+    recording_msid: str
+    recording_mbid: str = None
     blurb_content: str = None
     created: datetime
     pinned_until: datetime
+
+    _validate_recording_msid: classmethod = validator("recording_msid", allow_reuse=True)(check_rec_mbid_msid_is_valid_uuid)
 
     _validate_recording_mbid: classmethod = validator("recording_mbid", allow_reuse=True)(check_rec_mbid_msid_is_valid_uuid)
 

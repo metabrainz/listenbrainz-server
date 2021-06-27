@@ -135,6 +135,15 @@ These apis allow to interact with social features of ListenBrainz.
    :include-empty-docstring:
    :undoc-static:
 
+Pinned Recording API Endpoints
+^^^^^^^^^^^^^^^^^^^^^^
+These API endpoints allow submitting, deleting, and retrieving ListenBrainz pinned recordings for users.
+
+.. autoflask:: listenbrainz.webserver:create_app_rtfd()
+   :blueprints: pinned_rec_api_bp_v1
+   :include-empty-docstring:
+   :undoc-static:
+
 Rate limiting
 ^^^^^^^^^^^^^
 
