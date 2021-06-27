@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 from pydantic import ValidationError
 
-from listenbrainz.db.model.pinned_recording import PinnedRecording, WritablePinnedRecording, DAYS_UNTIL_UNPIN
+from listenbrainz.db.model.pinned_recording import PinnedRecording, WritablePinnedRecording, DAYS_UNTIL_UNPIN, MAX_BLURB_CONTENT_LENGTH
 import listenbrainz.db.pinned_recording as db_pinned_rec
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
@@ -88,6 +88,22 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
                 recording_mbid="7f3-38-43-9e-f3",
                 blurb_content=self.pinned_rec_samples[0]["blurb_content"],
             )
+
+        # test blurb_content = invalid string length raises error
+        invalid_blurb_content = 'a'*(MAX_BLURB_CONTENT_LENGTH+1)
+        with self.assertRaises(ValidationError):
+            WritablePinnedRecording(
+                user_id=self.user["id"],
+                recording_msid=self.pinned_rec_samples[0]["recording_msid"],
+                blurb_content=invalid_blurb_content
+            )
+
+        # test blurb_content = None doesn't raise error
+        WritablePinnedRecording(
+            user_id=self.user["id"],
+            recording_msid=self.pinned_rec_samples[0]["recording_msid"],
+            blurb_content=None
+        )
 
         # test created = invalid datetime error doesn't raise error
         WritablePinnedRecording(

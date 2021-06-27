@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from pydantic import BaseModel, validator
-from listenbrainz.db.model.utils import check_rec_mbid_msid_is_valid_uuid, check_datetime_has_tzinfo
+from listenbrainz.db.model.utils import check_rec_mbid_msid_is_valid_uuid, check_datetime_has_tzinfo, check_string_length
 
 DAYS_UNTIL_UNPIN = 7  # default = unpin after one week
+MAX_BLURB_CONTENT_LENGTH = 280  # maximum length of blurb content
 
 
 class PinnedRecording(BaseModel):
@@ -31,6 +32,10 @@ class PinnedRecording(BaseModel):
     _validate_recording_msid: classmethod = validator("recording_msid", allow_reuse=True)(check_rec_mbid_msid_is_valid_uuid)
 
     _validate_recording_mbid: classmethod = validator("recording_mbid", allow_reuse=True)(check_rec_mbid_msid_is_valid_uuid)
+
+    _validate_blurb_content_length: classmethod = validator("blurb_content", allow_reuse=True)(
+        lambda blurb: check_string_length(string=blurb, limit=MAX_BLURB_CONTENT_LENGTH)
+    )
 
     _validate_created_tzinfo: classmethod = validator("created", always=True, allow_reuse=True)(check_datetime_has_tzinfo)
 
