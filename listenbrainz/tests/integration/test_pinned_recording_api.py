@@ -104,7 +104,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         """Tests that pin endpoint returns 400 on invalid JSON / MBID validation error"""
         invalid_pin_1 = {
             "recording_msid": "7f3d82ee-3817-4367-9eec-f33a312247a1",
-            "recording_msid": "-- invalid recording_msid --",
+            "recording_mbid": "-- invalid MBID --",
             "blurb_content": "Amazing first recording",
         }
 
