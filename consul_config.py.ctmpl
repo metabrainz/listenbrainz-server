@@ -8,6 +8,10 @@
     {{- end -}}
 {{- end -}}
 
+{{- define "KEY_JSON" -}}
+    json.loads('''{{template "KEY" .}}''')
+{{- end -}}
+
 # Put everything after the defines otherwise the rendered config might eat up some newlines
 import os
 import json
@@ -175,11 +179,9 @@ SPOTIFY_CLIENT_SECRET = '''{{template "KEY" "spotify/client_secret"}}'''
 SPOTIFY_CALLBACK_URL = '''{{template "KEY" "spotify/redirect_uri"}}'''
 
 # YOUTUBE
-YOUTUBE_CONFIG_JSON = '''{{template "KEY" "youtube/credentials"}}'''
 YOUTUBE_API_KEY = '''{{template "KEY" "youtube/api_key"}}'''
 YOUTUBE_REDIRECT_URI = '''{{template "KEY" "youtube/redirect_uri"}}'''
-
-YOUTUBE_CONFIG = json.loads(YOUTUBE_CONFIG_JSON)
+YOUTUBE_CONFIG = {{template "KEY_JSON" "youtube/credentials"}}
 
 
 SQLALCHEMY_TRACK_MODIFICATIONS = False
