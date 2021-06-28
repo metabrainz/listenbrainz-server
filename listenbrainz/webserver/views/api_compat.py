@@ -271,9 +271,7 @@ def record_listens(request, data):
 
     # Convert to native payload then submit 'em after validation.
     listen_type, native_payload = _to_native_api(lookup, data['method'], output_format)
-    validated_payload = []
-    for listen in native_payload:
-        validated_payload.append(validate_listen(listen, listen_type))
+    validated_payload = [validate_listen(listen, listen_type) for listen in native_payload]
 
     user = db_user.get(session.user_id)
     augmented_listens = insert_payload(validated_payload, user, listen_type=listen_type)
