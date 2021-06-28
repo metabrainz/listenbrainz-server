@@ -260,8 +260,7 @@ def parse_and_validate_spotify_plays(plays, listen_type):
     for play in plays:
         listen = _convert_spotify_play_to_listen(play, listen_type=listen_type)
         try:
-            validate_listen(listen, listen_type)
-            listens.append(listen)
+            listens.append(validate_listen(listen, listen_type))
         except APIBadRequest:
             pass
     return listens

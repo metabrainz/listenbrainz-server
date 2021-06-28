@@ -276,10 +276,9 @@ def record_listens(request, data):
 
     # Convert to native payload then submit 'em after validation.
     listen_type, native_payload = _to_native_api(lookup, data['method'], output_format)
-    for listen in native_payload:
-        validate_listen(listen, listen_type)
+    validated_payload = [validate_listen(listen, listen_type) for listen in native_payload]
 
-    augmented_listens = insert_payload(native_payload, user, listen_type=listen_type)
+    augmented_listens = insert_payload(validated_payload, user, listen_type=listen_type)
 
     # With corrections than the original submitted listen.
     doc, tag, text = Doc().tagtext()
