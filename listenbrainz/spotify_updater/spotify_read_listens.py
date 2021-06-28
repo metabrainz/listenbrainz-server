@@ -29,14 +29,14 @@ METRIC_UPDATE_INTERVAL = 60  # seconds
 _listens_imported_since_start = 0
 _metric_submission_time = time.monotonic() + METRIC_UPDATE_INTERVAL
 
-def notify_error(musicbrainz_row_id, error):
+def notify_error(musicbrainz_id: str, error: str):
     """ Notifies specified user via email about error during Spotify import.
 
     Args:
-        musicbrainz_row_id (int): the MusicBrainz row ID of the user
-        error (str): a description of the error encountered.
+        musicbrainz_id: the MusicBrainz ID of the user
+        error: a description of the error encountered.
     """
-    user_email = mb_editor.get_editor_by_id(musicbrainz_row_id)['email']
+    user_email = db_user.get_by_mb_id(musicbrainz_id, fetch_email=True)["email"]
     if not user_email:
         return
 
@@ -260,8 +260,7 @@ def parse_and_validate_spotify_plays(plays, listen_type):
     for play in plays:
         listen = _convert_spotify_play_to_listen(play, listen_type=listen_type)
         try:
-            validate_listen(listen, listen_type)
-            listens.append(listen)
+            listens.append(validate_listen(listen, listen_type))
         except APIBadRequest:
             pass
     return listens
@@ -327,7 +326,7 @@ def process_one_user(user: dict, service: SpotifyService) -> int:
         error_message = "It seems like you've revoked permission for us to read your spotify account"
         service.update_user_import_status(user_id=user['user_id'], error=error_message)
         if not current_app.config['TESTING']:
-            notify_error(user['musicbrainz_row_id'], error_message)
+            notify_error(user['musicbrainz_id'], error_message)
         # user has revoked authorization through spotify ui or deleted their spotify account etc.
         # in any of these cases, we should delete the user's token from.
         service.revoke_user(user['user_id'])
@@ -337,7 +336,7 @@ def process_one_user(user: dict, service: SpotifyService) -> int:
         # if it is an error from the Spotify API, show the error message to the user
         service.update_user_import_status(user_id=user['user_id'], error=str(e))
         if not current_app.config['TESTING']:
-            notify_error(user['musicbrainz_row_id'], str(e))
+            notify_error(user['musicbrainz_id'], str(e))
         raise ExternalServiceError("Could not refresh user token from spotify")
 
 

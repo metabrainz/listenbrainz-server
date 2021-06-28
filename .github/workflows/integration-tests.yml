@@ -8,7 +8,7 @@ on:
     paths-ignore:
       - 'listenbrainz_spark/**'
       - 'requirements_spark.txt'
-      - 'Dockerfile.spark'
+      - '**/Dockerfile.spark*'
       - '**.jsx?'
       - '**.tsx?'
       - 'docker/Dockerfile.webpack'
