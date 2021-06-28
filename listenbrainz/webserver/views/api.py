@@ -79,11 +79,12 @@ def submit_listen():
         log_raise_400("Invalid JSON document submitted.", raw_data)
 
     # validate listens to make sure json is okay
-    payload = map(lambda x: validate_listen(x, listen_type), payload)
+    validated_payload = []
+    for listen in payload:
+        validated_payload.append(validate_listen(listen, listen_type))
 
     try:
-        insert_payload(
-            payload, user, listen_type=_get_listen_type(data['listen_type']))
+        insert_payload(validated_payload, user, listen_type)
     except APIServiceUnavailable as e:
         raise
     except Exception as e:
