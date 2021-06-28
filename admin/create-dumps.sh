@@ -65,10 +65,8 @@ function on_exit {
     fi
 
     # Remove the cron lock
-    admin/cron_lock.py unlock-cron
+    admin/cron_lock.py unlock-cron create-dumps
 }
-
-trap on_exit EXIT
 
 START_TIME=$(date +%s)
 echo "This script is being run by the following user: "; whoami
@@ -93,7 +91,12 @@ else
 fi
 
 # Lock cron, so it cannot be accidentally terminated.
-admin/cron_lock.py lock-cron "Creating $DUMP_TYPE dump."
+admin/cron_lock.py lock-cron create-dumps "Creating $DUMP_TYPE dump."
+
+# Trap should not be called before we lock cron to avoid wiping out an existing lock file
+trap on_exit EXIT
+
+sleep 9999
 
 DUMP_TEMP_DIR="$DUMP_BASE_DIR/$SUB_DIR.$$"
 echo "DUMP_BASE_DIR is $DUMP_BASE_DIR"

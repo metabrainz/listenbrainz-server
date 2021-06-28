@@ -7,7 +7,6 @@ import click
 
 
 CRON_LOGS_DIR = "/logs"
-CRON_LOCK_FILE = os.path.join(CRON_LOGS_DIR, "cron.lock")
 
 
 def sanity_check():
@@ -34,16 +33,19 @@ def cli():
 
 
 @cli.command()
+@click.argument('slug')
 @click.argument('msg')
-def lock_cron(msg):
-    """Lock the cron container, writing the given message into the lock file."""
+def lock_cron(slug, msg):
+    """Lock the cron container, writing the given message into the lock file
+       identified by slug."""
     sanity_check()
 
-    if os.path.exists(CRON_LOCK_FILE):
+    cron_lock_file = os.path.join(CRON_LOGS_DIR, "cron-%s.lock" % slug)
+    if os.path.exists(cron_lock_file):
         print("cron lock file exists. refusing to overwrite.")
         sys.exit(-1)
 
-    with open(CRON_LOCK_FILE, "w") as f:
+    with open(cron_lock_file, "w") as f:
         f.write(msg)
         f.write("\n")
 
@@ -51,12 +53,14 @@ def lock_cron(msg):
 
 
 @cli.command()
-def unlock_cron():
-    """Unlock the cron container"""
+@click.argument('slug')
+def unlock_cron(slug):
+    """Unlock the cron container for the given slug"""
     sanity_check()
 
+    cron_lock_file = os.path.join(CRON_LOGS_DIR, "cron-%s.lock" % slug)
     try:
-        os.unlink(CRON_LOCK_FILE)
+        os.unlink(cron_lock_file)
     except FileNotFoundError:
         print("cron lock file does not exist")
         sys.exit(-1)
@@ -66,14 +70,19 @@ def unlock_cron():
 
 @cli.command()
 def check_lock():
-    """Check the state of the lock. The script exists with status 0, if the lock
-       does not exist, 1 if it exists. If cron is locked, the lock message
+    """Check the state of the locks. The script exists with status 0, if no locks
+       exist, 1 if one or more exists. If cron is locked, the lock message(s)
        will be printed to stdout."""
     sanity_check()
 
-    if os.path.exists(CRON_LOCK_FILE):
-        with open(CRON_LOCK_FILE, "r") as f:
-            print(f.read(), end="")
+    found_locks = False
+    for file_name in os.listdir(CRON_LOGS_DIR):
+        if file_name.endswith(".lock"):
+            with open(os.path.join(CRON_LOGS_DIR, file_name), "r") as f:
+                print(f.read(), end="")
+                found_locks = True
+
+    if found_locks:
         sys.exit(1)
 
     sys.exit(0)
