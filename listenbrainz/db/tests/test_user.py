@@ -235,3 +235,17 @@ class UserTestCase(DatabaseTestCase):
         }
 
         self.assertDictEqual(users, db_user.get_users_by_id([user_id_24, user_id_25]))
+
+    def test_fetch_email(self):
+        musicbrainz_id = "one"
+        email = "one@one.one"
+        user_id = db_user.create(1, musicbrainz_id, email)
+        self.assertNotIn("email", db_user.get(user_id))
+        self.assertEqual(email, db_user.get(user_id, fetch_email=True)["email"])
+
+        token = db_user.get(user_id)["auth_token"]
+        self.assertNotIn("email", db_user.get_by_token(token))
+        self.assertEqual(email, db_user.get_by_token(token, fetch_email=True)["email"])
+
+        self.assertNotIn("email", db_user.get_by_mb_id(musicbrainz_id))
+        self.assertEqual(email, db_user.get_by_mb_id(musicbrainz_id, fetch_email=True)["email"])

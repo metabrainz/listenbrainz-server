@@ -433,7 +433,7 @@ def get_playlist(playlist_mbid):
     if playlist is None:
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
-    user = validate_auth_header(True)
+    user = validate_auth_header(optional=True)
     user_id = None
     if user:
         user_id = user["id"]
