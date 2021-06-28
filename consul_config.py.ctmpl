@@ -212,4 +212,4 @@ REJECT_LISTENS_WITHOUT_USER_EMAIL = {{template "KEY_JSON" "reject_listens_withou
 REJECT_NEW_USERS_WITHOUT_EMAIL = {{template "KEY_JSON" "reject_new_users_without_email"}}
 
 # If set to True, enabled pinned recording feature
-FEATURE_PINNED_REC = '''{{template "KEY" "feature_pinned_rec"}}'''
+FEATURE_PINNED_REC = {{template "KEY_JSON" "feature_pinned_rec"}}
