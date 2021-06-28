@@ -79,8 +79,7 @@ def submit_listen():
         log_raise_400("Invalid JSON document submitted.", raw_data)
 
     # validate listens to make sure json is okay
-    for listen in payload:
-        validate_listen(listen, listen_type)
+    payload = map(lambda x: validate_listen(x, listen_type), payload)
 
     try:
         insert_payload(

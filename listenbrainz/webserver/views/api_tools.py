@@ -1,3 +1,4 @@
+from typing import Dict
 from urllib.parse import urlparse
 
 import bleach
@@ -118,8 +119,9 @@ def _send_listens_to_queue(listen_type, listens):
         )
 
 
-def validate_listen(listen, listen_type):
-    """Make sure that required keys are present, filled out and not too large."""
+def validate_listen(listen: Dict, listen_type) -> Dict:
+    """Make sure that required keys are present, filled out and not too large.
+    The function may also mutate listens in place if needed."""
 
     if listen is None:
         raise APIBadRequest("Listen is empty and cannot be validated.")
@@ -193,6 +195,7 @@ def validate_listen(listen, listen_type):
         multiple_mbid_keys = ['artist_mbids', 'work_mbids']
         for key in multiple_mbid_keys:
             validate_multiple_mbids_field(listen, key)
+    return listen
 
 
 # lifted from AcousticBrainz
