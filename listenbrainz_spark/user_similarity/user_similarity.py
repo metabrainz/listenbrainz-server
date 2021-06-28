@@ -74,16 +74,17 @@ def threshold_similar_users(matrix: ndarray, max_num_users: int) -> List[Tuple[i
             max_similarity = max(value, max_similarity)
             min_similarity = min(value, min_similarity)
 
-        # Now apply the scale factor and flatten the results for a user
-        similarity_range = max_similarity - min_similarity
-        for y in range(cols):
-            value = float(matrix[x, y])
-            if x == y or math.isnan(value):
-                continue
+        if max_similarity is not None and min_similarity is not None:
+            # Now apply the scale factor and flatten the results for a user
+            similarity_range = max_similarity - min_similarity
+            for y in range(cols):
+                value = float(matrix[x, y])
+                if x == y or math.isnan(value):
+                    continue
 
-            row.append((x, y, (value - min_similarity) / similarity_range))
+                row.append((x, y, (value - min_similarity) / similarity_range))
 
-        similar_users.extend(sorted(row, key=itemgetter(2), reverse=True)[:max_num_users])
+            similar_users.extend(sorted(row, key=itemgetter(2), reverse=True)[:max_num_users])
 
     return similar_users
 
