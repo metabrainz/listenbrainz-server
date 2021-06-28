@@ -37,7 +37,7 @@ def musicbrainz_post():
             flash.error(no_email_warning + 'before creating a ListenBrainz account. ' + blog_link)
             return redirect(url_for('index.index'))
 
-        if current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
+        if current_app.config["REJECT_NEW_USERS_WITHOUT_EMAIL"] and not user["email"]:
             # existing user without email, show a warning
             flash.warning(no_email_warning + 'before 1 November 2021, or you will be unable to submit '
                                              'listens. ' + blog_link)
