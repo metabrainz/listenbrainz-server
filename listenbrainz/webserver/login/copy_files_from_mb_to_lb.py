@@ -15,7 +15,7 @@ def copy_emails():
             editor_ids = [row['musicbrainz_row_id'] for row in result.fetchall()]
             editors = fetch_multiple_editors(editor_ids)
             current_app.logger.info("Fetched editor emails from MusicBrainz.")
-            emails = [(editor_id, editor['email']) for editor_id, editor in editors]
+            emails = [(editor_id, editor['email']) for editor_id, editor in editors.items()]
             connection.execute(sqlalchemy.text("""
                 UPDATE "user"
                 SET email = editor_email_temp.email
