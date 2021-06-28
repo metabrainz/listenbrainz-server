@@ -44,6 +44,11 @@ def init_spark_session(app_name):
 
 
 def init_test_session(app_name):
+    """Create a spark session suitable for running tests.
+    This sets some config items in order to make tests faster,
+    the list of settings is taken from
+    https://github.com/malexer/pytest-spark#overriding-default-parameters-of-the-spark_session-fixture
+    """
     global session, context, sql_context
     try:
         session = SparkSession \
