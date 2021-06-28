@@ -1,3 +1,4 @@
+from typing import Dict
 from urllib.parse import urlparse
 
 import bleach
@@ -118,8 +119,9 @@ def _send_listens_to_queue(listen_type, listens):
         )
 
 
-def validate_listen(listen, listen_type):
-    """Make sure that required keys are present, filled out and not too large."""
+def validate_listen(listen: Dict, listen_type) -> Dict:
+    """Make sure that required keys are present, filled out and not too large.
+    The function may also mutate listens in place if needed."""
 
     if listen is None:
         raise APIBadRequest("Listen is empty and cannot be validated.")
@@ -186,13 +188,14 @@ def validate_listen(listen, listen_type):
                 if len(tag) > MAX_TAG_SIZE:
                     raise APIBadRequest("JSON document may not contain track_metadata.additional_info.tags "
                                         "longer than %d characters." % MAX_TAG_SIZE, listen)
-        # MBIDs
+        # MBIDs, both of the mbid validation methods mutate the listen payload if needed.
         single_mbid_keys = ['release_mbid', 'recording_mbid', 'release_group_mbid', 'track_mbid']
         for key in single_mbid_keys:
-            verify_mbid_validity(listen, key, multi = False)
+            validate_single_mbid_field(listen, key)
         multiple_mbid_keys = ['artist_mbids', 'work_mbids']
         for key in multiple_mbid_keys:
-            verify_mbid_validity(listen, key, multi = True)
+            validate_multiple_mbids_field(listen, key)
+    return listen
 
 
 # lifted from AcousticBrainz
@@ -309,23 +312,53 @@ def log_raise_400(msg, data=""):
     raise APIBadRequest(msg)
 
 
-def verify_mbid_validity(listen, key, multi):
-    """ Verify that mbid(s) present in listen with key `key` is valid.
+def validate_single_mbid_field(listen, key):
+    """ Verify that mbid if present in the listen with given key is valid.
+    An APIBadRequest error is raised for invalid values of mbids.
 
-        Args:
-            listen: listen data
-            key: the key whose mbids is to be validated
-            multi: boolean value signifying if the key contains multiple mbids
+    NOTE: If the mbid at the key is None or "", the key is dropped without
+     raising an error.
+
+    Args:
+        listen: listen data
+        key: the key whose mbid is to be validated
     """
-    if not multi:
-        items = listen['track_metadata']['additional_info'].get(key)
-        items = [items] if items else []
-    else:
-        items = listen['track_metadata']['additional_info'].get(key, [])
-    for item in items:
-        if not is_valid_uuid(item):
+    if key in listen['track_metadata']['additional_info']:
+        mbid = listen['track_metadata']['additional_info'][key]
+        if not mbid:  # the mbid field is None or "", hence drop the field and return
+            del listen['track_metadata']['additional_info'][key]
+            return
+
+        if not is_valid_uuid(mbid):  # if the mbid is invalid raise an error
             log_raise_400("%s MBID format invalid." % (key, ), listen)
 
+
+def validate_multiple_mbids_field(listen, key):
+    """ Verify that all the mbids in the list if present in the listen with
+    given key are valid. An APIBadRequest error is raised for if any mbid is
+    invalid.
+
+    NOTE: If an mbid in the list is None or "", it is dropped from the list
+    without an error. If the key is an empty list or None, it is dropped
+    without raising an error.
+
+    Args:
+        listen: listen data
+        key: the key whose mbids is to be validated
+    """
+    if key in listen['track_metadata']['additional_info']:
+        mbids = listen['track_metadata']['additional_info'][key]
+        if not mbids:  # empty list or None, drop the field and return
+            del listen['track_metadata']['additional_info'][key]
+            return
+
+        mbids = [x for x in mbids if x]  # drop None and "" from list of mbids if any
+
+        for mbid in mbids:
+            if not is_valid_uuid(mbid):   # if the mbid is invalid raise an error
+                log_raise_400("%s MBID format invalid." % (key,), listen)
+
+        listen['track_metadata']['additional_info'][key] = mbids  # set the filtered in the listen payload
 
 def is_valid_timestamp(ts):
     """ Returns True if the timestamp passed is in the API's
@@ -399,15 +432,16 @@ def parse_param_list(params: str) -> list:
     return param_list
 
 
-def validate_auth_header(optional=False):
+def validate_auth_header(*, optional: bool = False, fetch_email: bool = False):
     """ Examine the current request headers for an Authorization: Token <uuid>
         header that identifies a LB user and then load the corresponding user
         object from the database and return it, if succesful. Otherwise raise
         APIUnauthorized() exception.
 
     Args:
-        optional (bool): If the optional flag is given, do not raise an exception
-                         if the Authorization header is not set.
+        optional: If the optional flag is given, do not raise an exception
+            if the Authorization header is not set.
+        fetch_email: if True, include email in the returned dict
     """
 
     auth_token = request.headers.get('Authorization')
@@ -420,7 +454,7 @@ def validate_auth_header(optional=False):
     except IndexError:
         raise APIUnauthorized("Provided Authorization header is invalid.")
 
-    user = db_user.get_by_token(auth_token)
+    user = db_user.get_by_token(auth_token, fetch_email=fetch_email)
     if user is None:
         raise APIUnauthorized("Invalid authorization token.")
 

@@ -72,8 +72,7 @@ def send_dump_creation_notification(dump_name, dump_type):
 @click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'))
 @click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
 @click.option('--dump-id', type=int, default=None)
-@click.option('--last-dump-id', is_flag=True)
-def create_full(location, threads, dump_id, last_dump_id):
+def create_full(location, threads, dump_id):
     """ Create a ListenBrainz data dump which includes a private dump, a statistics dump
         and a dump of the actual listens from the listenstore
 
@@ -81,19 +80,10 @@ def create_full(location, threads, dump_id, last_dump_id):
             location (str): path to the directory where the dump should be made
             threads (int): the number of threads to be used while compression
             dump_id (int): the ID of the ListenBrainz data dump
-            last_dump_id (bool): flag indicating whether to create a full dump from the last entry in the dump table
     """
     app = create_app()
     with app.app_context():
         from listenbrainz.webserver.timescale_connection import _ts as ls
-        if last_dump_id:
-            all_dumps = db_dump.get_dump_entries()
-            if len(all_dumps) == 0:
-                current_app.logger.error(
-                    "Cannot create full dump with last dump's ID, no dump exists!")
-                sys.exit(-1)
-            dump_id = all_dumps[0]['id']
-
         if dump_id is None:
             end_time = datetime.now()
             dump_id = db_dump.add_dump_entry(int(end_time.strftime('%s')))
@@ -257,9 +247,9 @@ def create_feedback(location, threads):
 
 
 @cli.command(name="import_dump")
-@click.option('--private-archive', '-pr', default=None)
-@click.option('--public-archive', '-pu', default=None)
-@click.option('--listen-archive', '-l', default=None)
+@click.option('--private-archive', '-pr', default=None, required=True)
+@click.option('--public-archive', '-pu', default=None, required=True)
+@click.option('--listen-archive', '-l', default=None, required=True)
 @click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
 def import_dump(private_archive, public_archive, listen_archive, threads):
     """ Import a ListenBrainz dump into the database.
@@ -276,10 +266,6 @@ def import_dump(private_archive, public_archive, listen_archive, threads):
             listen_archive (str): the path to the ListenBrainz listen dump archive to be imported
             threads (int): the number of threads to use during decompression, defaults to 1
     """
-    if not private_archive and not public_archive and not listen_archive:
-        print('You need to enter a path to the archive(s) to import!')
-        sys.exit(1)
-
     app = create_app()
     with app.app_context():
         db_dump.import_postgres_dump(private_archive, public_archive, threads)

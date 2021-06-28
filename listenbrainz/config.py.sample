@@ -156,5 +156,11 @@ SESSION_REMEMBER_ME_DURATION = 365
 # listen dumps creation dir
 LISTEN_DUMP_TEMP_DIR_ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'tmp')
 
+# If set to True, reject listens from users who do not have an email
+REJECT_LISTENS_WITHOUT_USER_EMAIL = False
+
+# If set to True, do not allow new users without email to register
+REJECT_NEW_USERS_WITHOUT_EMAIL = False
+
 # feature flag for pinned recording feature
 FEATURE_PINNED_REC = True
