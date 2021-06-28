@@ -105,13 +105,3 @@ services:
       # We mount this as a sort of shared volume
       # where we put the compiled output to be served by the service "web"
       - ../listenbrainz/webserver/static:/static:z
-
-  mbid_mapping_writer:
-    image: web
-    command: python3 -m "listenbrainz.mbid_mapping_writer.mbid_mapping_writer"
-    volumes:
-      - ..:/code/listenbrainz:z
-    depends_on:
-      - redis
-      - rabbitmq
-      - db
