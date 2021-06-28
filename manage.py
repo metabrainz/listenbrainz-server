@@ -14,7 +14,6 @@ import sqlalchemy
 from time import sleep
 
 from listenbrainz.utils import safely_import_config
-
 safely_import_config()
 
 
@@ -248,6 +247,14 @@ def init_ts_db(force, create_db):
         print("Done!")
 
 
+@cli.command(name="update_user_emails")
+def update_user_emails():
+    from listenbrainz.webserver.login import copy_files_from_mb_to_lb
+    application = webserver.create_app()
+    with application.app_context():
+        copy_files_from_mb_to_lb.copy_emails()
+
+
 @cli.command(name="set_rate_limits")
 @click.argument("per_token_limit", type=click.IntRange(1, None))
 @click.argument("per_ip_limit", type=click.IntRange(1, None))
@@ -272,6 +279,7 @@ def refresh_continuous_aggregates():
         Update the continuous aggregates in timescale.
     """
     ts_refresh_listen_count_aggregate()
+
 
 # Add other commands here
 cli.add_command(spark_request_manage.cli, name="spark")

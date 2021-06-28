@@ -8,7 +8,7 @@ import psycopg2
 from listenbrainz import config
 
 # This value must be incremented after schema changes on replicated tables!
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 
 engine = None
 

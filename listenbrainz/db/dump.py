@@ -121,6 +121,7 @@ PRIVATE_TABLES = {
         'latest_import',
         'musicbrainz_row_id',
         'gdpr_agreed',
+        'email',
     ),
     'api_compat.token': (
         'id',
