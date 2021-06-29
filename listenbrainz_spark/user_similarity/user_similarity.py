@@ -38,7 +38,8 @@ def create_messages(similar_users_df: DataFrame) -> dict:
     itr = similar_users_df.toLocalIterator()
     message = {}
     for row in itr:
-        message[row.user_name] = {user.other_user_name: user.similarity for user in row.similar_users}
+        message[row.user_name] = {
+            user.other_user_name: user.similarity for user in row.similar_users}
     yield {
         'type': 'similar_users',
         'data': message
@@ -52,6 +53,30 @@ def threshold_similar_users(matrix: ndarray, max_num_users: int) -> List[Tuple[i
     """
     rows, cols = matrix.shape
     similar_users = list()
+
+    # Calculate the global similarity scale
+    global_max_similarity = None
+    global_min_similarity = None
+    for x in range(rows):
+        row = []
+
+        # Calculate the minimum and maximum values for a user
+        for y in range(cols):
+
+            # Spark sometimes returns nan values and the way to get rid of them is to
+            # cast to a float and discard values that are non a number
+            value = float(matrix[x, y])
+            if x == y or math.isnan(value):
+                continue
+
+            if global_max_similarity is None:
+                global_max_similarity = value
+                global_min_similarity = value
+
+            global_max_similarity = max(value, global_max_similarity)
+            global_min_similarity = min(value, global_min_similarity)
+
+    global_similarity_range = global_max_similarity - global_min_similarity
 
     for x in range(rows):
         row = []
@@ -82,9 +107,13 @@ def threshold_similar_users(matrix: ndarray, max_num_users: int) -> List[Tuple[i
                 if x == y or math.isnan(value):
                     continue
 
-                row.append((x, y, (value - min_similarity) / similarity_range))
+                row.append((x,
+                            y,
+                            (value - min_similarity) / similarity_range))
+                            (value - global_min_similarity) / global_similarity_range))
 
-            similar_users.extend(sorted(row, key=itemgetter(2), reverse=True)[:max_num_users])
+            similar_users.extend(
+                sorted(row, key = itemgetter(2), reverse = True)[:max_num_users])
 
     return similar_users
 
@@ -103,10 +132,10 @@ def get_vectors_df(playcounts_df):
     form. Spark ML and MLlib have different representations of vectors, hence we need to manually convert between the
     two. Finally, we take the rows and create a dataframe from them.
     """
-    tuple_mapped_rdd = playcounts_df.rdd.map(lambda x: MatrixEntry(x["recording_id"], x["user_id"], x["count"]))
-    coordinate_matrix = CoordinateMatrix(tuple_mapped_rdd)
-    indexed_row_matrix = coordinate_matrix.toIndexedRowMatrix()
-    vectors_mapped_rdd = indexed_row_matrix.rows.map(lambda r: (r.index, r.vector.asML()))
+    tuple_mapped_rdd=playcounts_df.rdd.map(lambda x: MatrixEntry(x["recording_id"], x["user_id"], x["count"]))
+    coordinate_matrix=CoordinateMatrix(tuple_mapped_rdd)
+    indexed_row_matrix=coordinate_matrix.toIndexedRowMatrix()
+    vectors_mapped_rdd=indexed_row_matrix.rows.map(lambda r: (r.index, r.vector.asML()))
     return listenbrainz_spark.session.createDataFrame(vectors_mapped_rdd, ['index', 'vector'])
 
 
@@ -136,11 +165,12 @@ def main(max_num_users: int):
 
     # Due to an unresolved bug in Spark (https://issues.apache.org/jira/browse/SPARK-10925), we cannot join twice on
     # the same dataframe. Hence, we create a modified dataframe with the columns renamed.
-    other_users_df = users_df\
+    other_users_df= users_df\
         .withColumnRenamed('user_id', 'other_user_id')\
         .withColumnRenamed('user_name', 'other_user_name')
 
-    similar_users_df = listenbrainz_spark.session.createDataFrame(similar_users, ['user_id', 'other_user_id', 'similarity'])\
+    similar_users_df= listenbrainz_spark.session.createDataFrame(similar_users, ['user_id', 'other_user_id',
+        'similarity', 'global_similarity'])\
         .join(users_df, 'user_id', 'inner')\
         .join(other_users_df, 'other_user_id', 'inner')\
         .select('user_name', struct('other_user_name', 'similarity').alias('similar_user'))\
