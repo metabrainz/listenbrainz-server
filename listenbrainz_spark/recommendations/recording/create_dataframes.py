@@ -13,7 +13,8 @@ The artist_name and track_name fields of partial_listens_df are converted to art
 respectively by removing accents, removing punctuations and whitespaces, and converting to lowercase.
 
 The partial_listens_df is joined with mapping_df (msid->mbid mapping) on artist_name_matchable and track_name_matchable to
-get the mapped_listens_df. The dataframe created is saved to HDFS.
+get the mapped_listens_df. This dataframe is then filtered and listens from users whose total listen count is below a
+given threshold are removed. The dataframe created is saved to HDFS.
 
 Distinct users are filtered from mapped_listens_df and each user is assigned a unique identification number called user_id.
 The dataframe created is called users_df and is saved to HDFS.
@@ -219,11 +220,12 @@ def save_playcounts_df(listens_df, recordings_df, users_df, metadata, save_path)
     metadata['playcounts_count'] = playcounts_df.count()
     save_dataframe(playcounts_df, save_path)
 
-def get_threshold_listens_df(mapped_listens_df, threshold: int):
+def get_threshold_listens_df(mapped_listens_df, mapped_listens_path: str, threshold: int):
     """ Threshold mapped listens dataframe
 
         Args:
             mapped_listens_df (dataframe): listens mapped with msid_mbid_mapping.
+            mapped_listens_path: Path to store mapped listens.
             threshold: minimum number of listens a user should have to be saved in the dataframe.
         Returns:
              threshold_listens_df: mapped listens dataframe after dropping data below threshold
@@ -233,8 +235,11 @@ def get_threshold_listens_df(mapped_listens_df, threshold: int):
         .agg(func.count('user_name').alias('listen_count')) \
         .where('listen_count > {}'.format(threshold)) \
         .collect()
-    threshold_users = list(map(lambda x: x.user_name, threshold_users_df))
-    return mapped_listens_df.where(col('user_name').isin(threshold_users))
+    threshold_users = [x.user_name for x in threshold_users_df]
+    threshold_listens_df = mapped_listens_df.where(col('user_name').isin(threshold_users))
+    save_dataframe(threshold_listens_df, mapped_listens_path)
+    return threshold_listens_df
+
 
 def get_listens_df(mapped_listens_df, metadata):
     """ Prepare listens dataframe.
@@ -409,12 +414,12 @@ def main(train_model_window, job_type, minimum_listens_threshold=0):
     logger.info('Number of distinct rows in the mapping: {}'.format(msid_mbid_mapping_df.count()))
 
     logger.info('Mapping listens...')
-    mapped_listens_df = get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_df,
-                                                              paths["mapped_listens"])
+    mapped_listens_df = get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_df)
     logger.info('Listen count after mapping: {}'.format(mapped_listens_df.count()))
 
     logger.info('Thresholding listens...')
-    threshold_listens_df = get_threshold_listens_df(mapped_listens_df, minimum_listens_threshold)
+    threshold_listens_df = get_threshold_listens_df(mapped_listens_df, paths["mapped_listens"],
+                                                    minimum_listens_threshold)
     logger.info('Listen count after thresholding: {}'.format(threshold_listens_df.count()))
 
     logger.info('Preparing users data and saving to HDFS...')
