@@ -7,7 +7,6 @@ from listenbrainz.db.model.pinned_recording import (
     PinnedRecording,
     WritablePinnedRecording,
     DAYS_UNTIL_UNPIN,
-    MAX_BLURB_CONTENT_LENGTH,
 )
 import listenbrainz.db.pinned_recording as db_pinned_rec
 import listenbrainz.db.user as db_user
@@ -113,24 +112,6 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
                 blurb_content=self.pinned_rec_samples[0]["blurb_content"],
             )
 
-        # test blurb_content = invalid string length raises error
-        invalid_blurb_content = "a" * (MAX_BLURB_CONTENT_LENGTH + 1)
-        with self.assertRaises(ValidationError):
-            WritablePinnedRecording(
-                user_id=self.user["id"],
-                recording_msid=self.pinned_rec_samples[0]["recording_msid"],
-                recording_mbid=self.pinned_rec_samples[0]["recording_mbid"],
-                blurb_content=invalid_blurb_content,
-            )
-
-        # test blurb_content = None doesn't raise error
-        WritablePinnedRecording(
-            user_id=self.user["id"],
-            recording_msid=self.pinned_rec_samples[0]["recording_msid"],
-            recording_mbid=self.pinned_rec_samples[0]["recording_mbid"],
-            blurb_content=None,
-        )
-
         # test created = invalid datetime error doesn't raise error
         WritablePinnedRecording(
             user_id=self.user["id"],
@@ -216,7 +197,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(len(pin_history), len(old_pin_history) - 1)
         self.assertEqual(pin_remaining.blurb_content, self.pinned_rec_samples[keptIndex]["blurb_content"])
 
-        # delete the only remaining pin
+        # delete the remaining pin
         db_pinned_rec.delete(pin_remaining.row_id, self.user["id"])
         pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
         self.assertFalse(pin_history)
