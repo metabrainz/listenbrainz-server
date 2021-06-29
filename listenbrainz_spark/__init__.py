@@ -44,12 +44,25 @@ def init_spark_session(app_name):
 
 
 def init_test_session(app_name):
+    """Create a spark session suitable for running tests.
+    This sets some config items in order to make tests faster,
+    the list of settings is taken from
+    https://github.com/malexer/pytest-spark#overriding-default-parameters-of-the-spark_session-fixture
+    """
     global session, context, sql_context
     try:
         session = SparkSession \
                 .builder \
                 .master('local') \
                 .appName(app_name) \
+                .config("spark.sql.shuffle.partitions", "1") \
+                .config("spark.default.parallelism", "1") \
+                .config("spark.executor.cores", "1") \
+                .config("spark.executor.instances", "1") \
+                .config("spark.shuffle.compress", "false") \
+                .config("spark.rdd.compress", "false") \
+                .config("spark.dynamicAllocation.enabled", "false") \
+                .config("spark.io.compression.codec", "lz4") \
                 .getOrCreate()
         context = session.sparkContext
         context.setLogLevel("ERROR")
