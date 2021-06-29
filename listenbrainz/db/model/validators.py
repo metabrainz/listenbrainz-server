@@ -20,26 +20,6 @@ def check_rec_mbid_msid_is_valid_uuid(rec_id: str):
         raise ValueError("Recording MBID/MSID must be a valid UUID.")
 
 
-def check_string_length(string: str, limit: int):
-    """Validates that the provided string's length is not greater than the limit. Otherwise, raises a ValueError.
-
-    Args:
-        string: the string to validate.
-        limit: the maximum number of characters that the string is allowed to have.
-
-    Returns:
-        The validated string.
-    """
-    if string is None:
-        return string
-    try:
-        if len(string) > limit:
-            raise ValueError
-        return string
-    except (AttributeError, ValueError):
-        raise ValueError("String must be less than %s characters." % (limit))
-
-
 def check_datetime_has_tzinfo(date_time: datetime):
     """Validates that the provided datetime object contains tzinfo. Otherwise, raises a ValueError.
 
