@@ -161,3 +161,6 @@ REJECT_LISTENS_WITHOUT_USER_EMAIL = False
 
 # If set to True, do not allow new users without email to register
 REJECT_NEW_USERS_WITHOUT_EMAIL = False
+
+# feature flag for pinned recording feature
+FEATURE_PINNED_REC = True
