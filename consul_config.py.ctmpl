@@ -8,6 +8,10 @@
     {{- end -}}
 {{- end -}}
 
+{{- define "KEY_JSON" -}}
+    json.loads('''{{template "KEY" .}}''')
+{{- end -}}
+
 # Put everything after the defines otherwise the rendered config might eat up some newlines
 import os
 import json
@@ -175,11 +179,9 @@ SPOTIFY_CLIENT_SECRET = '''{{template "KEY" "spotify/client_secret"}}'''
 SPOTIFY_CALLBACK_URL = '''{{template "KEY" "spotify/redirect_uri"}}'''
 
 # YOUTUBE
-YOUTUBE_CONFIG_JSON = '''{{template "KEY" "youtube/credentials"}}'''
 YOUTUBE_API_KEY = '''{{template "KEY" "youtube/api_key"}}'''
 YOUTUBE_REDIRECT_URI = '''{{template "KEY" "youtube/redirect_uri"}}'''
-
-YOUTUBE_CONFIG = json.loads(YOUTUBE_CONFIG_JSON)
+YOUTUBE_CONFIG = {{template "KEY_JSON" "youtube/credentials"}}
 
 
 SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -203,4 +205,8 @@ SESSION_REMEMBER_ME_DURATION = 365
 
 LISTEN_DUMP_TEMP_DIR_ROOT = '''{{template "KEY" "listen_dump_temp_dir"}}'''
 
-FEATURE_PINNED_REC = '''{{template "KEY" "feature_pinned_rec"}}'''
+# If set to True, reject listens from users who do not have an email
+REJECT_LISTENS_WITHOUT_USER_EMAIL = {{template "KEY_JSON" "reject_listens_without_email"}}
+
+# If set to True, do not allow new users without email to register
+REJECT_NEW_USERS_WITHOUT_EMAIL = {{template "KEY_JSON" "reject_new_users_without_email"}}

@@ -247,9 +247,9 @@ def create_feedback(location, threads):
 
 
 @cli.command(name="import_dump")
-@click.option('--private-archive', '-pr', default=None)
-@click.option('--public-archive', '-pu', default=None)
-@click.option('--listen-archive', '-l', default=None)
+@click.option('--private-archive', '-pr', default=None, required=True)
+@click.option('--public-archive', '-pu', default=None, required=True)
+@click.option('--listen-archive', '-l', default=None, required=True)
 @click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
 def import_dump(private_archive, public_archive, listen_archive, threads):
     """ Import a ListenBrainz dump into the database.
@@ -266,10 +266,6 @@ def import_dump(private_archive, public_archive, listen_archive, threads):
             listen_archive (str): the path to the ListenBrainz listen dump archive to be imported
             threads (int): the number of threads to use during decompression, defaults to 1
     """
-    if not private_archive and not public_archive and not listen_archive:
-        print('You need to enter a path to the archive(s) to import!')
-        sys.exit(1)
-
     app = create_app()
     with app.app_context():
         db_dump.import_postgres_dump(private_archive, public_archive, threads)
