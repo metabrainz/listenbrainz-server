@@ -50,14 +50,13 @@ def get_dates_to_train_data(train_model_window):
     return to_date, from_date
 
 
-def get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_df, mapped_listens_path):
+def get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_df):
     """ Map recording msid->mbid and artist msid->mbids so that every listen has an mbid.
 
         Args:
             partial_listens_df (dataframe): listens without artist mbid and recording mbid.
             msid_mbid_mapping_df (dataframe): msid->mbid mapping. For columns refer to
                                               msid_mbid_mapping_schema in listenbrainz_spark/schema.py
-            mapped_listens_path (str): Path to store mapped listens.
         Returns:
             mapped_listens_df (dataframe): listens mapped with msid_mbid_mapping.
     """
@@ -78,7 +77,6 @@ def get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_
                                   'msb_recording_name_matchable',
                                   'user_name')
 
-    save_dataframe(mapped_listens_df, mapped_listens_path)
     return mapped_listens_df
 
 

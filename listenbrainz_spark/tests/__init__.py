@@ -8,6 +8,7 @@ import listenbrainz_spark
 import listenbrainz_spark.utils.mapping as mapping_utils
 from listenbrainz_spark.recommendations import dataframe_utils
 from listenbrainz_spark import hdfs_connection, utils, config, schema
+from listenbrainz_spark.recommendations.dataframe_utils import save_dataframe
 from listenbrainz_spark.recommendations.recording import train_models
 
 from pyspark.sql import Row
@@ -198,4 +199,5 @@ class SparkTestCase(unittest.TestCase):
         df = utils.read_files_from_HDFS(mapping_path)
         mapping_df = mapping_utils.get_unique_rows_from_mapping(df)
 
-        _ = dataframe_utils.get_mapped_artist_and_recording_mbids(partial_listen_df, mapping_df, mapped_listens_path)
+        mapped_listens_df = dataframe_utils.get_mapped_artist_and_recording_mbids(partial_listen_df, mapping_df)
+        save_dataframe(mapped_listens_df, mapped_listens_path)
