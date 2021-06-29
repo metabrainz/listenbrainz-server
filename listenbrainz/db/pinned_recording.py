@@ -133,8 +133,8 @@ def get_pin_history_for_user(user_id: int, count: int, offset: int) -> List[Pinn
 
 
 def get_pins_for_user_following(user_id: int, count: int, offset: int) -> List[PinnedRecording]:
-    """ Get a list of currently active pinned recordings for users
-        in the user's following list in descending order of their created date.
+    """ Get a list of active pinned recordings for all the users that a user follows sorted
+        in descending order of their created date.
 
         Args:
             user_id: the row ID of the main user in the DB
