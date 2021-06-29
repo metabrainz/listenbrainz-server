@@ -30,11 +30,12 @@ def pin_recording_for_user():
     The format of the JSON to be POSTed to this endpoint should look like the following:
 
     .. code-block:: json
+
         {
             "recording_msid": "40ef0ae1-5626-43eb-838f-1b34187519bf",
             "recording_mbid": "40ef0ae1-5626-43eb-838f-1b34187519bf", // Optional
             "blurb_content": "Wow..",
-            "pinned_until": 1824001816 // Optional
+            "pinned_until": 1824001816
         }
 
     :reqheader Authorization: Token <user token>
@@ -218,7 +219,7 @@ def get_pins_for_user_following(user_name):
                 "recording_mbid": null,
                 "recording_msid": "40ef0ae1-5626-43eb-838f-1b34187519bf",
                 "user_name": "-- the MusicBrainz ID of the user who pinned this recording --"
-                }
+                },
                 "-- more pinned recordings from different users here ---"
             ],
             "user_name": "-- the MusicBrainz ID of the original user --"

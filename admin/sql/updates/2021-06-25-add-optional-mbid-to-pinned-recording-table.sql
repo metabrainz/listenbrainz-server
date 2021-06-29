@@ -1,6 +1,6 @@
 BEGIN;
 
--- this table is currently empty, we can drop it and recreate it with the new changes.
+-- this table is currently empty, we can drop it and recreate it with the new changes
 
 DROP TABLE IF EXISTS pinned_recording;
 
