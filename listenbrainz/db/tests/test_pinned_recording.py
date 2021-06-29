@@ -197,7 +197,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(len(pin_history), len(old_pin_history) - 1)
         self.assertEqual(pin_remaining.blurb_content, self.pinned_rec_samples[keptIndex]["blurb_content"])
 
-        # delete the only remaining pin
+        # delete the remaining pin
         db_pinned_rec.delete(pin_remaining.row_id, self.user["id"])
         pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
         self.assertFalse(pin_history)
