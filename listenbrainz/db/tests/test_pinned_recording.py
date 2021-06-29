@@ -3,7 +3,10 @@ import json
 from datetime import datetime
 from pydantic import ValidationError
 
-from listenbrainz.db.model.pinned_recording import PinnedRecording, WritablePinnedRecording, DAYS_UNTIL_UNPIN, MAX_BLURB_CONTENT_LENGTH
+from listenbrainz.db.model.pinned_recording import (PinnedRecording,
+                                                    WritablePinnedRecording,
+                                                    DAYS_UNTIL_UNPIN,
+                                                    MAX_BLURB_CONTENT_LENGTH)
 import listenbrainz.db.pinned_recording as db_pinned_rec
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship

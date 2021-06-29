@@ -5,7 +5,10 @@ import listenbrainz.db.pinned_recording as db_pinned_rec
 import listenbrainz.db.user_relationship as db_user_relationship
 
 from listenbrainz.tests.integration import IntegrationTestCase
-from listenbrainz.db.model.pinned_recording import WritablePinnedRecording, PinnedRecording, DAYS_UNTIL_UNPIN, MAX_BLURB_CONTENT_LENGTH
+from listenbrainz.db.model.pinned_recording import (PinnedRecording,
+                                                    WritablePinnedRecording,
+                                                    DAYS_UNTIL_UNPIN,
+                                                    MAX_BLURB_CONTENT_LENGTH)
 import json
 
 
