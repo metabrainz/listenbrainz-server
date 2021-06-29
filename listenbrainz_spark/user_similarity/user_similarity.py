@@ -39,7 +39,7 @@ def create_messages(similar_users_df: DataFrame) -> dict:
     message = {}
     for row in itr:
         message[row.user_name] = {
-            user.other_user_name: user.similarity for user in row.similar_users}
+            user.other_user_name: (user.similarity, user.global_similarity) for user in row.similar_users}
     yield {
         'type': 'similar_users',
         'data': message

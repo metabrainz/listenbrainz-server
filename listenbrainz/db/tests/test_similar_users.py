@@ -19,9 +19,9 @@ class SimilarUserTestCase(DatabaseTestCase):
 
         with db.engine.connect() as connection:
             connection.execute(sqlalchemy.text("""INSERT INTO recommendation.similar_user (user_id, similar_users)
-                                                       VALUES (1, '{ "jerry" : 0.42 }')"""))
+                                                       VALUES (1, '{ "jerry" : [0.42, 0.01] }')"""))
             connection.execute(sqlalchemy.text("""INSERT INTO recommendation.similar_user (user_id, similar_users)
-                                                       VALUES (2, '{ "tom" : 0.42 }')"""))
+                                                       VALUES (2, '{ "tom" : [0.42, 0.02] }')"""))
 
         similar_users = get_top_similar_users()
         assert len(similar_users) == 1

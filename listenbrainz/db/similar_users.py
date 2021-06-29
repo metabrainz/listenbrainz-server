@@ -118,10 +118,16 @@ def import_user_similarities(data):
     return (user_count, target_user_count / user_count, "")
 
 
-def get_top_similar_users(count=200):
+def get_top_similar_users(count=200, global_similarity=False):
     """
         Fetch the count top similar users and return a tuple(user1, user2, score(0.0-1.0))
+        If global_similarity is True, the return the user similarity on a global (not
+        per user) scale.
     """
+
+    col_index = 0
+    if global_similarity:
+        col_index = 1
 
     similar_users = {}
     conn = db.engine.raw_connection()
@@ -136,9 +142,9 @@ def get_top_similar_users(count=200):
                 user_name = row[0]
                 for other_user in row[1]:
                     if user_name < other_user:
-                        similar_users[user_name + other_user] = (user_name, other_user, "%.3f" % row[1][other_user])
+                        similar_users[user_name + other_user] = (user_name, other_user, "%.3f" % row[1][other_user][col_index])
                     else:
-                        similar_users[other_user + user_name] = (other_user, user_name, "%.3f" % row[1][other_user])
+                        similar_users[other_user + user_name] = (other_user, user_name, "%.3f" % row[1][other_user][col_index])
 
     except psycopg2.errors.OperationalError as err:
         current_app.logger.error("Error: Failed to fetch top similar users %s" % str(err))
