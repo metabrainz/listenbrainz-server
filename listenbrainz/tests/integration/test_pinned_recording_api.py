@@ -5,12 +5,10 @@ import listenbrainz.db.pinned_recording as db_pinned_rec
 import listenbrainz.db.user_relationship as db_user_relationship
 
 from listenbrainz.tests.integration import IntegrationTestCase
-from listenbrainz.db.model.pinned_recording import (
-    PinnedRecording,
-    WritablePinnedRecording,
-    DAYS_UNTIL_UNPIN,
-    MAX_BLURB_CONTENT_LENGTH,
-)
+from listenbrainz.db.model.pinned_recording import (PinnedRecording,
+                                                    WritablePinnedRecording,
+                                                    DAYS_UNTIL_UNPIN,
+                                                    MAX_BLURB_CONTENT_LENGTH)
 import json
 
 
@@ -22,26 +20,10 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         self.followed_user_2 = db_user.get_or_create(3, "followed_user_2")
 
         self.pinned_rec_samples = [
-            {
-                "recording_msid": "7f3d82ee-3817-4367-9eec-f33a312247a1",
-                "recording_mbid": "83b57de1-7f69-43cb-a0df-5f77a882e954",
-                "blurb_content": "Amazing first recording",
-            },
-            {
-                "recording_msid": "7f3d82ee-3817-4367-9eec-f33a312247a1",
-                "recording_mbid": "7e4142f4-b01e-4492-ae13-553493bad634",
-                "blurb_content": "Wonderful second recording",
-            },
-            {
-                "recording_msid": "7f3d82ee-3817-4367-9eec-f33a312247a1",
-                "recording_mbid": "a67ef149-3550-4547-b1eb-1b7c0b6879fa",
-                "blurb_content": "Incredible third recording",
-            },
-            {
-                "recording_msid": "67c4697d-d956-4257-8cc9-198e5cb67479",
-                "recording_mbid": "6867f7eb-b0d8-4c08-89e4-aa9d4b58ffb5",
-                "blurb_content": "Great fourth recording",
-            },
+            {"recording_msid": "7f3d82ee-3817-4367-9eec-f33a312247a1", "blurb_content": "Amazing first recording"},
+            {"recording_msid": "7f3d82ee-3817-4367-9eec-f33a312247a1", "blurb_content": "Wonderful second recording"},
+            {"recording_msid": "7f3d82ee-3817-4367-9eec-f33a312247a1", "blurb_content": "Incredible third recording"},
+            {"recording_msid": "67c4697d-d956-4257-8cc9-198e5cb67479", "blurb_content": "Great fourth recording"},
         ]
 
     def insert_test_data(self, user_id: int, limit: int = 4):
@@ -60,7 +42,6 @@ class PinnedRecAPITestCase(IntegrationTestCase):
                 WritablePinnedRecording(
                     user_id=user_id,
                     recording_msid=data["recording_msid"],
-                    recording_mbid=data["recording_mbid"],
                     blurb_content=data["blurb_content"],
                 )
             )
@@ -79,7 +60,6 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         recording_to_pin = WritablePinnedRecording(
             user_id=user_id,
             recording_msid=self.pinned_rec_samples[index]["recording_msid"],
-            recording_mbid=self.pinned_rec_samples[index]["recording_mbid"],
             blurb_content=self.pinned_rec_samples[index]["blurb_content"],
         )
 
@@ -112,11 +92,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
 
     def test_pin_invalid_msid(self):
         """Tests that pin endpoint returns 400 on invalid JSON / MSID validation error"""
-        invalid_pin_1 = {
-            "recording_msid": "-- invalid MSID --",
-            "recording_mbid": "7f3d82ee-3817-4367-9eec-f33a312247a1",
-            "blurb_content": "Amazing first recording",
-        }
+        invalid_pin_1 = {"recording_msid": "-- invalid MSID --", "blurb_content": "Amazing first recording"}
         response = self.client.post(
             url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
             data=json.dumps(invalid_pin_1),
@@ -147,11 +123,10 @@ class PinnedRecAPITestCase(IntegrationTestCase):
 
     def test_pin_invalid_blurb_content(self):
         """Tests that pin endpoint returns 400 on invalid JSON / blurb_content validation error"""
-        invalid_blurb_content = "a" * (MAX_BLURB_CONTENT_LENGTH + 1)
+        invalid_blurb_content = 'a'*(MAX_BLURB_CONTENT_LENGTH+1)
 
         invalid_pin_1 = {
             "recording_msid": "7f3d82ee-3817-4367-9eec-f33a312247a1",
-            "recording_mbid": "7f3d82ee-3817-4367-9eec-f33a312247a1",
             "blurb_content": invalid_blurb_content,
         }
 
@@ -169,7 +144,6 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         """Tests that pin endpoint returns 400 on invalid JSON / validation error"""
         invalid_pin_1 = {
             "recording_msid": "7f3d82ee-3817-4367-9eec-f33a312247a1",
-            "recording_mbid": "7f3d82ee-3817-4367-9eec-f33a312247a1",
             "blurb_content": "Amazing first recording",
             "pinned_until": "-- invalid pinned_until datetime --",
         }
@@ -300,11 +274,9 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         self.assertGreater(pins[0]["pinned_id"], pins[1]["pinned_id"])
 
         self.assertEqual(pins[0]["recording_msid"], self.pinned_rec_samples[1]["recording_msid"])
-        self.assertEqual(pins[0]["recording_mbid"], self.pinned_rec_samples[1]["recording_mbid"])
         self.assertEqual(pins[0]["blurb_content"], self.pinned_rec_samples[1]["blurb_content"])
 
         self.assertEqual(pins[1]["recording_msid"], self.pinned_rec_samples[0]["recording_msid"])
-        self.assertEqual(pins[1]["recording_mbid"], self.pinned_rec_samples[0]["recording_mbid"])
         self.assertEqual(pins[1]["blurb_content"], self.pinned_rec_samples[0]["blurb_content"])
 
     def test_get_pins_for_user_invalid_username(self):
@@ -428,12 +400,10 @@ class PinnedRecAPITestCase(IntegrationTestCase):
 
         # check that data is sorted in descending order of created date
         self.assertEqual(pins[0]["recording_msid"], pin2.recording_msid)  # pin2 was pinned most recently
-        self.assertEqual(pins[0]["recording_mbid"], pin2.recording_mbid)
         self.assertEqual(pins[0]["blurb_content"], pin2.blurb_content)
         self.assertEqual(pins[0]["user_name"], self.followed_user_2["musicbrainz_id"])
 
         self.assertEqual(pins[1]["recording_msid"], pin1.recording_msid)  # pin2 was pinned before pin1
-        self.assertEqual(pins[1]["recording_mbid"], pin1.recording_mbid)
         self.assertEqual(pins[1]["blurb_content"], pin1.blurb_content)
         self.assertEqual(pins[1]["user_name"], self.followed_user_1["musicbrainz_id"])
 
@@ -466,7 +436,6 @@ class PinnedRecAPITestCase(IntegrationTestCase):
 
         # check that only the latest pin was included in returned json
         self.assertEqual(pins[0]["recording_msid"], included_pin.recording_msid)  # included_pin was pinned most recently
-        self.assertEqual(pins[0]["recording_mbid"], included_pin.recording_mbid)
         self.assertEqual(pins[0]["blurb_content"], included_pin.blurb_content)
         self.assertEqual(pins[0]["user_name"], self.followed_user_2["musicbrainz_id"])
 
@@ -512,7 +481,6 @@ class PinnedRecAPITestCase(IntegrationTestCase):
 
         # check that only the older pin was included in returned JSON
         self.assertEqual(pins[0]["recording_msid"], included_pin.recording_msid)  # included_pin was pinned most recently
-        self.assertEqual(pins[0]["recording_mbid"], included_pin.recording_mbid)
         self.assertEqual(pins[0]["blurb_content"], included_pin.blurb_content)
         self.assertEqual(pins[0]["user_name"], self.followed_user_1["musicbrainz_id"])
 
