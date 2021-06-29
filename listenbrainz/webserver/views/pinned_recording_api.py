@@ -30,6 +30,7 @@ def pin_recording_for_user():
     The format of the JSON to be POSTed to this endpoint should look like the following:
 
     .. code-block:: json
+
         {
             "recording_msid": "40ef0ae1-5626-43eb-838f-1b34187519bf",
             "recording_mbid": "40ef0ae1-5626-43eb-838f-1b34187519bf", // Optional
