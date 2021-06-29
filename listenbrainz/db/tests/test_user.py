@@ -224,7 +224,7 @@ class UserTestCase(DatabaseTestCase):
         self.assertDictEqual({"twenty_two": 0.4, "twenty_three": 0.7},
                              db_user.get_similar_users(user_id_21).similar_users)
         self.assertDictEqual({"twenty_one": 0.4 },
-                             similar_users_22, db_user.get_similar_users(user_id_22).similar_users)
+                             db_user.get_similar_users(user_id_22).similar_users)
         self.assertDictEqual({"twenty_one": 0.7},
                              db_user.get_similar_users(user_id_23).similar_users)
 
