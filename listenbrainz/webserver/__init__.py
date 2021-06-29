@@ -309,3 +309,7 @@ def _register_blueprints(app):
 
     from listenbrainz.webserver.views.user_timeline_event_api import user_timeline_event_api_bp
     app.register_blueprint(user_timeline_event_api_bp, url_prefix=API_PREFIX)
+
+    if app.config.get("FEATURE_PINNED_REC", False):
+        from listenbrainz.webserver.views.pinned_recording_api import pinned_recording_api_bp
+        app.register_blueprint(pinned_recording_api_bp, url_prefix=API_PREFIX)
