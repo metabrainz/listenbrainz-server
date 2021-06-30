@@ -265,7 +265,7 @@ def similar_users():
         and spammers as well.
     """
 
-    similar_users = get_top_similar_users()
+    similar_users = get_top_similar_users(True)
     return render_template(
         "index/similar-users.html",
         similar_users=similar_users

@@ -526,7 +526,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertNotIn("work_mbids", additional_info)
         self.assertEqual("2cfad207-3f55-4aec-8120-86cf66e34d59", additional_info["release_group_mbid"])
 
-    def test_000_similar_users(self):
+    def test_similar_users(self):
 
         response = self.client.get(
             url_for('api_v1.get_similar_users', user_name='my_dear_muppet'))
@@ -534,7 +534,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
         conn = db.engine.raw_connection()
         with conn.cursor() as curs:
-            data = {self.user2['musicbrainz_id']: .123}
+            data = {self.user2['musicbrainz_id']: (.123, 0.01)}
             curs.execute("""INSERT INTO recommendation.similar_user VALUES (%s, %s)""",
                          (self.user['id'], json.dumps(data)))
         conn.commit()
