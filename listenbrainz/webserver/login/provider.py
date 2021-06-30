@@ -47,7 +47,7 @@ def get_user():
             # if flag is set to True and the user does not have an email do not allow to sign up
             return None
         db_user.create(musicbrainz_row_id, musicbrainz_id, email=user_email)
-        user = db_user.get_by_mb_row_id(musicbrainz_row_id, musicbrainz_id)
+        user = db_user.get_by_mb_id(musicbrainz_id, fetch_email=True)
         ts.set_empty_cache_values_for_user(musicbrainz_id)
     else:  # an existing user is trying to log in
         # Other option is to change the return type of get_by_mb_row_id to a dict
