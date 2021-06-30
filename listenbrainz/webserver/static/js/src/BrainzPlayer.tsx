@@ -251,23 +251,34 @@ export default class BrainzPlayer extends React.Component<
     this.setState({ isActivated: true }, this.playNextTrack);
   };
 
-  playListen = (
-    listen: Listen | JSPFTrack,
-    datasourceIndex: number = 0
-  ): void => {
+  playListen = (listen: Listen | JSPFTrack): void => {
     this.setState({ isActivated: true });
-    /** If available, retreive the service the listen was listened with */
-    let selectedDatasourceIndex = this.getSourceIndexByListenData(listen);
-
-    /** If no matching datasource was found, revert to the default bahaviour
-     * (play from source 0 or if called from failedToFindTrack, try next source)
-     */
-    if (selectedDatasourceIndex === -1) {
-      selectedDatasourceIndex = datasourceIndex;
-    }
-
     const { onCurrentListenChange } = this.props;
     onCurrentListenChange(listen);
+    /** If available, retrieve the service the listen was listened with */
+    let selectedDatasourceIndex = this.dataSources.findIndex((ds) =>
+      ds.current?.isListenFromThisService(listen)
+    );
+
+    /** If no matching datasource was found, try selecting the first one where
+     *  the user is authenticated to search for and play tracks
+     */
+    if (selectedDatasourceIndex === -1) {
+      // Here, select a service that we can use to search for and play the track, if any
+      selectedDatasourceIndex = this.dataSources.findIndex((ds) =>
+        ds.current?.canSearchAndPlayTracks()
+      );
+    }
+
+    if (selectedDatasourceIndex === -1) {
+      /** If neither of the previous options worked, we can't play the track, bail out.
+       * We use setImmediate to ensure that the call to onCurrentListenChange has propagated
+       * and the new currentListen is updated in the props *before* playNextTrack is called
+       */
+      setImmediate(this.playNextTrack);
+      return;
+    }
+
     this.stopOtherBrainzPlayers();
 
     this.setState({ currentDataSourceIndex: selectedDatasourceIndex }, () => {
@@ -282,44 +293,6 @@ export default class BrainzPlayer extends React.Component<
 
       dataSource.playListen(listen);
     });
-  };
-
-  getSourceIndexByListenData = (listen: Listen | JSPFTrack): number => {
-    let selectedDatasourceIndex = -1;
-    const listeningFrom = _get(
-      listen,
-      "track_metadata.additional_info.listening_from"
-    );
-    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
-
-    /** Spotify */
-    if (
-      listeningFrom === "spotify" ||
-      _get(listen, "track_metadata.additional_info.spotify_id")
-    ) {
-      selectedDatasourceIndex = this.dataSources.findIndex(
-        (ds) => ds.current instanceof SpotifyPlayer
-      );
-    }
-
-    /** Youtube */
-    if (
-      listeningFrom === "youtube" ||
-      /youtube\.com\/watch\?/.test(originURL)
-    ) {
-      selectedDatasourceIndex = this.dataSources.findIndex(
-        (ds) => ds.current instanceof YoutubePlayer
-      );
-    }
-
-    /** SoundCloud */
-    if (listeningFrom === "soundcloud" || /soundcloud\.com/.test(originURL)) {
-      selectedDatasourceIndex = this.dataSources.findIndex(
-        (ds) => ds.current instanceof SoundcloudPlayer
-      );
-    }
-
-    return selectedDatasourceIndex;
   };
 
   togglePlay = async (): Promise<void> => {
@@ -378,27 +351,13 @@ export default class BrainzPlayer extends React.Component<
   /* Listeners for datasource events */
 
   failedToFindTrack = (): void => {
-    const { currentDataSourceIndex, isActivated } = this.state;
+    const { isActivated } = this.state;
     if (!isActivated) {
       // Player has not been activated by the user, do nothing.
       return;
     }
-    const { currentListen } = this.props;
-    if (!currentListen) {
-      this.playNextTrack();
-      return;
-    }
 
-    if (currentDataSourceIndex < this.dataSources.length - 1) {
-      // Try playing the listen with the next dataSource
-      this.playListen(currentListen, currentDataSourceIndex + 1);
-    } else {
-      this.handleWarning(
-        "We couldn't find a matching song on any music service we tried",
-        "Oh no !"
-      );
-      this.playNextTrack();
-    }
+    this.playNextTrack();
   };
 
   playerPauseChange = (paused: boolean): void => {
