@@ -150,6 +150,10 @@ describe("BrainzPlayer", () => {
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
+
+    // Reverse datasources array order, spotify will now be the last item
+    instance.dataSources.reverse();
+
     const spotifyListen: Listen = {
       listened_at: 0,
       track_metadata: {
@@ -160,9 +164,9 @@ describe("BrainzPlayer", () => {
         },
       },
     };
-    // Try to play on youtube directly (index 1), should use spotify instead (index 0)
-    instance.playListen(spotifyListen, 1);
-    expect(instance.state.currentDataSourceIndex).toEqual(0);
+    // Try to play, should use spotify instead (index 2)
+    instance.playListen(spotifyListen);
+    expect(instance.state.currentDataSourceIndex).toEqual(2);
   });
 
   it("selects Spotify as source when listen has a spotify_id", () => {
@@ -177,6 +181,10 @@ describe("BrainzPlayer", () => {
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
+
+    // Reverse datasources array order, spotify will now be the last item
+    instance.dataSources.reverse();
+
     const spotifyListen: Listen = {
       listened_at: 0,
       track_metadata: {
@@ -187,9 +195,9 @@ describe("BrainzPlayer", () => {
         },
       },
     };
-    // Try to play on youtube directly (index 1), should use spotify instead (index 0)
-    instance.playListen(spotifyListen, 1);
-    expect(instance.state.currentDataSourceIndex).toEqual(0);
+    // Try to play, should use spotify instead (index 2)
+    instance.playListen(spotifyListen);
+    expect(instance.state.currentDataSourceIndex).toEqual(2);
   });
 
   it("selects Soundcloud as source when listen has a soundcloud URL", () => {
@@ -434,7 +442,10 @@ describe("BrainzPlayer", () => {
 
       // Setting non-existing datasource index
       const datasourcesBefore = instance.dataSources.length;
-      wrapper.setState({ currentDataSourceIndex: datasourcesBefore - 1 });
+      wrapper.setState({
+        currentDataSourceIndex: datasourcesBefore - 1,
+        isActivated: true,
+      });
       expect(
         instance.dataSources[instance.state.currentDataSourceIndex].current
       ).toEqual(false);
@@ -459,6 +470,7 @@ describe("BrainzPlayer", () => {
         GlobalContextMock
       );
       const instance = wrapper.instance();
+      wrapper.setState({ isActivated: true });
       instance.invalidateDataSource = jest.fn();
       const fakeDatasource = {
         current: {
@@ -507,7 +519,7 @@ describe("BrainzPlayer", () => {
   });
 
   describe("failedToFindTrack", () => {
-    it("calls playNextTrack if currentListen is not set", () => {
+    it("does nothing if isActivated is false", () => {
       const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...props} />,
         GlobalContextMock
@@ -515,47 +527,19 @@ describe("BrainzPlayer", () => {
       const instance = wrapper.instance();
       instance.playNextTrack = jest.fn();
       instance.failedToFindTrack();
-      expect(instance.playNextTrack).toHaveBeenCalledTimes(1);
+      expect(instance.playNextTrack).not.toHaveBeenCalled();
     });
 
-    it("tries playing the current listen with the next datasource", () => {
-      const mockProps = {
-        ...props,
-        currentListen: listen,
-      };
+    it("calls playNextTrack if isActivated is true", () => {
       const wrapper = mount<BrainzPlayer>(
-        <BrainzPlayer {...mockProps} />,
+        <BrainzPlayer {...props} />,
         GlobalContextMock
       );
       const instance = wrapper.instance();
-      instance.playListen = jest.fn();
-      instance.failedToFindTrack();
-      expect(instance.playListen).toHaveBeenCalledTimes(1);
-      expect(instance.playListen).toHaveBeenCalledWith(listen, 1);
-    });
-
-    it("shows a warning if out of datasources and plays next track", () => {
-      const mockProps = {
-        ...props,
-        currentListen: listen,
-      };
-      const wrapper = mount<BrainzPlayer>(
-        <BrainzPlayer {...mockProps} />,
-        GlobalContextMock
-      );
-      const instance = wrapper.instance();
+      wrapper.setState({ isActivated: true });
       instance.playNextTrack = jest.fn();
-      instance.handleWarning = jest.fn();
-      instance.setState({
-        currentDataSourceIndex: instance.dataSources.length - 1,
-      });
       instance.failedToFindTrack();
       expect(instance.playNextTrack).toHaveBeenCalledTimes(1);
-      expect(instance.handleWarning).toHaveBeenCalledTimes(1);
-      expect(instance.handleWarning).toHaveBeenCalledWith(
-        "We couldn't find a matching song on any music service we tried",
-        "Oh no !"
-      );
     });
   });
 });
