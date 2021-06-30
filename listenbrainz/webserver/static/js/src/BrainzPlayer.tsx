@@ -441,8 +441,9 @@ export default class BrainzPlayer extends React.Component<
         >
           <SpotifyPlayer
             show={
+              isActivated &&
               this.dataSources[currentDataSourceIndex]?.current instanceof
-              SpotifyPlayer
+                SpotifyPlayer
             }
             refreshSpotifyToken={APIService.refreshSpotifyToken}
             onInvalidateDataSource={this.invalidateDataSource}
@@ -461,8 +462,9 @@ export default class BrainzPlayer extends React.Component<
           />
           <YoutubePlayer
             show={
+              isActivated &&
               this.dataSources[currentDataSourceIndex]?.current instanceof
-              YoutubePlayer
+                YoutubePlayer
             }
             onInvalidateDataSource={this.invalidateDataSource}
             ref={this.youtubePlayer}
@@ -481,8 +483,9 @@ export default class BrainzPlayer extends React.Component<
           />
           <SoundcloudPlayer
             show={
+              isActivated &&
               this.dataSources[currentDataSourceIndex]?.current instanceof
-              SoundcloudPlayer
+                SoundcloudPlayer
             }
             onInvalidateDataSource={this.invalidateDataSource}
             ref={this.soundcloudPlayer}
