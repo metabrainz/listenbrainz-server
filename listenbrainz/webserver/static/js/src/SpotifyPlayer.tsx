@@ -5,6 +5,7 @@ import {
   get as _get,
   has as _has,
   debounce as _debounce,
+  isString,
 } from "lodash";
 import { searchForSpotifyTrack, loadScriptAsync } from "./utils";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
@@ -231,7 +232,7 @@ export default class SpotifyPlayer
       "track_metadata.additional_info.listening_from"
     );
     return (
-      (listeningFrom && listeningFrom.toLowercase() === "spotify") ||
+      (isString(listeningFrom) && listeningFrom.toLowerCase() === "spotify") ||
       _get(listen, "track_metadata.additional_info.spotify_id")
     );
   };
