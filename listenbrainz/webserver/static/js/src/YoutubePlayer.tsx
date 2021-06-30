@@ -160,6 +160,36 @@ export default class YoutubePlayer
     }
   };
 
+  isListenFromThisService = (listen: Listen | JSPFTrack): boolean => {
+    // Checks if there is a youtube ID in the listen
+    const youtubeId = _get(listen, "track_metadata.additional_info.youtube_id");
+    if (youtubeId) {
+      return true;
+    }
+
+    // or if the origin URL contains youtube.com
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    if (_isString(originURL) && originURL.length) {
+      const parsedURL = new URL(originURL);
+      const { hostname, searchParams } = parsedURL;
+      if (/youtube\.com/.test(hostname)) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  canSearchAndPlayTracks = (): boolean => {
+    const { youtubeUser } = this.props;
+    // check if the user is authed to search with the Youtube API
+    return (
+      Boolean(youtubeUser) &&
+      Boolean(youtubeUser?.access_token) &&
+      Boolean(youtubeUser?.api_key)
+    );
+  };
+
   playListen = (listen: Listen | JSPFTrack) => {
     const { show } = this.props;
     if (!show) {
@@ -248,6 +278,9 @@ export default class YoutubePlayer
       width: "100%",
       height: "100%",
     };
+    if (!show) {
+      return null;
+    }
     return (
       <div className={`youtube ${!show ? "hidden" : ""}`}>
         <YouTube

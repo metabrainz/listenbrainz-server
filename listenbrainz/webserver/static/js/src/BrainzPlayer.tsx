@@ -17,6 +17,8 @@ export type DataSourceType = {
   playListen: (listen: Listen | JSPFTrack) => void;
   togglePlay: () => void;
   seekToPositionMs: (msTimecode: number) => void;
+  isListenFromThisService: (listen: Listen | JSPFTrack) => boolean;
+  canSearchAndPlayTracks: () => boolean;
 };
 
 export type DataSourceTypes = SpotifyPlayer | YoutubePlayer | SoundcloudPlayer;

@@ -99,6 +99,7 @@ export default class SpotifyPlayer
       loadScriptAsync(document, "https://sdk.scdn.co/spotify-player.js");
     } else {
       this.handleAccountError();
+      props.onInvalidateDataSource(this);
     }
   }
 
@@ -224,7 +225,27 @@ export default class SpotifyPlayer
     }
   };
 
+  isListenFromThisService = (listen: Listen | JSPFTrack): boolean => {
+    const listeningFrom = _get(
+      listen,
+      "track_metadata.additional_info.listening_from"
+    );
+    return (
+      (listeningFrom && listeningFrom.toLowercase() === "spotify") ||
+      _get(listen, "track_metadata.additional_info.spotify_id")
+    );
+  };
+
+  canSearchAndPlayTracks = (): boolean => {
+    const { spotifyUser } = this.props;
+    return SpotifyPlayer.hasPermissions(spotifyUser);
+  };
+
   playListen = (listen: Listen | JSPFTrack): void => {
+    const { show } = this.props;
+    if (!show) {
+      return;
+    }
     if (_get(listen, "track_metadata.additional_info.spotify_id")) {
       this.playSpotifyURI(getSpotifyUriFromListen(listen as Listen));
     } else {
