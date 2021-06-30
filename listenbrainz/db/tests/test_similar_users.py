@@ -28,3 +28,9 @@ class SimilarUserTestCase(DatabaseTestCase):
         assert similar_users[0][0] == 'jerry'
         assert similar_users[0][1] == 'tom'
         assert similar_users[0][2] == "0.420"
+
+        similar_users = get_top_similar_users(global_similarity=True)
+        assert len(similar_users) == 1
+        assert similar_users[0][0] == 'jerry'
+        assert similar_users[0][1] == 'tom'
+        assert similar_users[0][2] == "0.020"
