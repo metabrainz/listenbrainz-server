@@ -95,7 +95,7 @@ describe("submitPinRecording", () => {
     await instance.submitPinRecording();
 
     expect(setStateSpy).toHaveBeenCalledTimes(1);
-    expect(wrapper.state("blurbContent")).toEqual(undefined);
+    expect(wrapper.state("blurbContent")).toEqual("");
   });
 
   it("does nothing if isCurrentUser is false", async () => {

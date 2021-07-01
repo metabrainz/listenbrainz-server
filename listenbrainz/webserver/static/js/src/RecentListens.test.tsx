@@ -410,9 +410,9 @@ describe("updateRecordingToPin", () => {
       mountOptions
     );
     const instance = wrapper.instance();
-    const recordingToPin = props.listens[0];
+    const recordingToPin = props.listens[1];
 
-    expect(wrapper.state("recordingToPin")).toEqual(undefined);
+    expect(wrapper.state("recordingToPin")).toEqual(props.listens[0]); // default recordingToPin
 
     instance.updateRecordingToPin(recordingToPin);
     expect(wrapper.state("recordingToPin")).toEqual(recordingToPin);
@@ -842,10 +842,10 @@ describe("pinRecordingModal", () => {
     const recordingToPin = props.listens[0];
     let pinRecordingModal = wrapper.find(PinRecordingModal).first();
 
-    // recordingToPin is initially undefined
+    // recentListens renders pinRecordingModal with listens[0] as recordingToPin by default
     expect(pinRecordingModal.props()).toEqual({
       isCurrentUser: true,
-      recordingToPin: undefined,
+      recordingToPin: props.listens[0],
       newAlert: props.newAlert,
     });
 

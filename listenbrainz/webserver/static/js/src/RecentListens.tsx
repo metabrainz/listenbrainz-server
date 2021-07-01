@@ -75,6 +75,7 @@ export default class RecentListens extends React.Component<
       loading: false,
       nextListenTs,
       previousListenTs: props.listens?.[0]?.listened_at,
+      recordingToPin: props.listens?.[0],
       direction: "down",
       recordingFeedbackMap: {},
       dateTimePickerValue: nextListenTs
@@ -721,7 +722,7 @@ export default class RecentListens extends React.Component<
                   </ul>
                 )}
                 <PinRecordingModal
-                  recordingToPin={recordingToPin}
+                  recordingToPin={recordingToPin || listens[0]}
                   isCurrentUser={currentUser?.name === user?.name}
                   newAlert={newAlert}
                 />
