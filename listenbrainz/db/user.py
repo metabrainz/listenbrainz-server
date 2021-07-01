@@ -461,7 +461,7 @@ def get_similar_users(user_id: int) -> Optional[SimilarUsers]:
             users = {}
             for user in row['similar_users']:
                 # first element of array is similarity, second is global_similarity
-                users[user] = row['similar_users'][user][0]
+                users[user] = row['similar_users'][user][1]
             return SimilarUsers(user_id=row['user_id'], similar_users=users)
         return None
 
