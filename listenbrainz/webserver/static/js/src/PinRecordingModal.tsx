@@ -91,7 +91,7 @@ export default class PinRecordingModal extends React.Component<
     const { blurbContent } = this.state;
     const { track_name } = recordingToPin.track_metadata;
     const { artist_name } = recordingToPin.track_metadata;
-    const unpin_time_ms: number = new Date().getTime() + 1000 * 3600 * 24 * 7;
+    const unpin_time_ms: number = new Date(Date.now()).getTime() + 1000 * 3600 * 24 * 7;
 
     return (
       <div

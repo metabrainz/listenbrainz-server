@@ -34,7 +34,14 @@ const globalProps = {
 
 describe("PinRecordingModal", () => {
   it("renders the prompt, input text area, track_name, and artist_name", () => {
-    const wrapper = mount<PinRecordingModal>(
+    // This component uses current time at load to display,
+    // so we have to mock the Date constructor otherwise snapshots will be different every day
+    const mockDate = new Date("2021-01-01");
+    const fakeDateNow = jest
+      .spyOn(global.Date, "now")
+      .mockImplementation(() => mockDate.getTime());
+
+      const wrapper = mount<PinRecordingModal>(
       <PinRecordingModal
         recordingToPin={recordingToPin}
         isCurrentUser
@@ -42,6 +49,7 @@ describe("PinRecordingModal", () => {
       />
     );
     expect(wrapper.html()).toMatchSnapshot();
+    fakeDateNow.mockRestore();
   });
 });
 

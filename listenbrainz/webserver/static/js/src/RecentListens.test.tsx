@@ -85,6 +85,7 @@ fetchMock.mockIf(
 describe("Recentlistens", () => {
   it("renders correctly on the profile page", () => {
     // Datepicker component uses current time at load as max date,
+    // and PinnedRecordingModal component uses current time at load to display recording unpin date,
     // so we have to mock the Date constructor otherwise snapshots will be different every day
     const mockDate = new Date("2021-05-19");
     const fakeDateNow = jest
