@@ -27,12 +27,12 @@ def main(train_model_window: int, minimum_listens_threshold: int, max_num_users:
 
     logger.info('Mapping listens...')
     mapped_listens_df: DataFrame = get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_df)
-    mapped_listens_df.createOrReplaceTempView('listens_artist_similarity')
+    mapped_listens_df.createOrReplaceTempView('mapped_listens_artist_similarity')
 
     listens_query = """
         WITH listens_intermediate (
             SELECT user_name, explode(mb_artist_credit_mbids) as artist_mbid
-            FROM listens_artist_similarity
+            FROM mapped_listens_artist_similarity
             )
         SELECT artist_mbid, 
                user_name,
@@ -42,14 +42,15 @@ def main(train_model_window: int, minimum_listens_threshold: int, max_num_users:
         FROM listens_intermediate
         WHERE user_name IN (
             SELECT user_name 
-            FROM listens_artist_similarity
+            FROM mapped_listens_artist_similarity
             GROUP BY user_name 
             HAVING count(*) > {threshold}
         ) 
         GROUP BY user_name, artist_mbid
     """.format(threshold=minimum_listens_threshold)
 
-    results_df = listenbrainz_spark.sql_context.sql(listens_query)
+    results_df: DataFrame = listenbrainz_spark.sql_context.sql(listens_query)
+    results_df.createOrReplaceTempView('listens_artist_similarity')
 
     vectors_df = get_vectors_df(results_df, "artist_id", "user_id", "listen_count")
     similarity_matrix = Correlation.corr(vectors_df, 'vector', 'pearson').first()['pearson(vector)'].toArray()
