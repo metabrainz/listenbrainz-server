@@ -103,7 +103,7 @@ describe("submitPinRecording", () => {
       <GlobalAppContext.Provider value={globalProps}>
         <PinRecordingModal
           recordingToPin={recordingToPin}
-          isCurrentUser={false}  // isCurrentUser is false
+          isCurrentUser={false} // isCurrentUser is false
           newAlert={jest.fn()}
         />
       </GlobalAppContext.Provider>
@@ -218,8 +218,10 @@ describe("handleBlurbInputChange", () => {
     });
 
     const invalidInputLength = "a".repeat(instance.maxBlurbContentLength + 1);
-    expect(invalidInputLength.length).toBeGreaterThan(instance.maxBlurbContentLength)
-    
+    expect(invalidInputLength.length).toBeGreaterThan(
+      instance.maxBlurbContentLength
+    );
+
     const setStateSpy = jest.spyOn(instance, "setState");
 
     blurbContentInput.simulate("change", {
