@@ -492,7 +492,10 @@ def get_similar_users(user_id: int) -> SimilarUsers:
             'user_id': user_id,
         })
         row = result.fetchone()
-        return SimilarUsers(**row) if row else None
+        users = {}
+        for user in row[1]:
+            users[user] = row[1][user][0]
+        return SimilarUsers(user_id=row[0], similar_users=users) if row else None
 
 
 def get_users_by_id(user_ids: List[int]):
