@@ -49,7 +49,7 @@ from listenbrainz import config
 from listenbrainz.webserver import create_app
 
 MAIN_FTP_SERVER_URL = "ftp.eu.metabrainz.org"
-FULLEXPORT_MAX_AGE = 16  # days
+FULLEXPORT_MAX_AGE = 17  # days
 INCREMENTAL_MAX_AGE = 26  # hours
 
 # this dict contains the tables dumped in public dump as keys
