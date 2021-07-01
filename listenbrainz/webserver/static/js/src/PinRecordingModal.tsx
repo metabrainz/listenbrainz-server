@@ -130,7 +130,7 @@ export default class PinRecordingModal extends React.Component<
                 <textarea
                   className="form-control"
                   id="blurb-content"
-                  placeholder="Let your followers know why you are showcasing this recording."
+                  placeholder="Let your followers know why you are showcasing this recording..."
                   value={blurbContent}
                   name="blurb-content"
                   onChange={this.handleBlurbInputChange}
