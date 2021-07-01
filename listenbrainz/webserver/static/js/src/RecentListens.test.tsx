@@ -829,34 +829,34 @@ describe("Pagination", () => {
       expect(scrollSpy).toHaveBeenCalled();
     });
   });
+});
 
-  describe("pinRecordingModal", () => {
-    it("renders the PinRecordingModal component with the correct props", async () => {
-      const wrapper = mount<RecentListens>(
-        <GlobalAppContext.Provider value={mountOptions.context}>
-          <RecentListens {...props} />
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper.instance();
-      const recordingToPin = props.listens[0];
-      let pinRecordingModal = wrapper.find(PinRecordingModal).first();
+describe("pinRecordingModal", () => {
+  it("renders the PinRecordingModal component with the correct props", async () => {
+    const wrapper = mount<RecentListens>(
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
+    );
+    const instance = wrapper.instance();
+    const recordingToPin = props.listens[0];
+    let pinRecordingModal = wrapper.find(PinRecordingModal).first();
 
-      // recordingToPin is initially undefined
-      expect(pinRecordingModal.props()).toEqual({
-        isCurrentUser: true,
-        recordingToPin: undefined,
-        newAlert: props.newAlert,
-      });
+    // recordingToPin is initially undefined
+    expect(pinRecordingModal.props()).toEqual({
+      isCurrentUser: true,
+      recordingToPin: undefined,
+      newAlert: props.newAlert,
+    });
 
-      instance.updateRecordingToPin(recordingToPin);
-      wrapper.update();
+    instance.updateRecordingToPin(recordingToPin);
+    wrapper.update();
 
-      pinRecordingModal = wrapper.find(PinRecordingModal).first();
-      expect(pinRecordingModal.props()).toEqual({
-        isCurrentUser: true,
-        recordingToPin,
-        newAlert: props.newAlert,
-      });
+    pinRecordingModal = wrapper.find(PinRecordingModal).first();
+    expect(pinRecordingModal.props()).toEqual({
+      isCurrentUser: true,
+      recordingToPin,
+      newAlert: props.newAlert,
     });
   });
 });
