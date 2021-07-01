@@ -68,9 +68,9 @@ def main(train_model_window: int, minimum_listens_threshold: int, max_num_users:
                 ) AS similar_users 
         FROM artist_similar_users
         JOIN listens_artist_similarity AS users
-          ON users.user_id = similar_users.user_id
+          ON users.user_id = artist_similar_users.user_id
         JOIN listens_artist_similarity AS others
-          ON others.user_id = similar_users.other_user_id
+          ON others.user_id = artist_similar_users.other_user_id
         GROUP BY users.user_name
     """
     similar_users_results = listenbrainz_spark.sql_context.sql(similar_users_query)
