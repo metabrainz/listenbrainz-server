@@ -9,6 +9,7 @@ from listenbrainz.db.model.pinned_recording import (
     PinnedRecording,
     WritablePinnedRecording,
     DAYS_UNTIL_UNPIN,
+    MAX_BLURB_CONTENT_LENGTH,
 )
 import json
 
@@ -132,6 +133,26 @@ class PinnedRecAPITestCase(IntegrationTestCase):
             "recording_msid": "7f3d82ee-3817-4367-9eec-f33a312247a1",
             "recording_mbid": "-- invalid MBID --",
             "blurb_content": "Amazing first recording",
+        }
+
+        response = self.client.post(
+            url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
+            data=json.dumps(invalid_pin_1),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json",
+        )
+
+        self.assert400(response)
+        self.assertEqual(response.json["code"], 400)
+
+    def test_pin_invalid_blurb_content(self):
+        """Tests that pin endpoint returns 400 on invalid JSON / blurb_content validation error"""
+        invalid_blurb_content = "a" * (MAX_BLURB_CONTENT_LENGTH + 1)
+
+        invalid_pin_1 = {
+            "recording_msid": "7f3d82ee-3817-4367-9eec-f33a312247a1",
+            "recording_mbid": "7f3d82ee-3817-4367-9eec-f33a312247a1",
+            "blurb_content": invalid_blurb_content,
         }
 
         response = self.client.post(
