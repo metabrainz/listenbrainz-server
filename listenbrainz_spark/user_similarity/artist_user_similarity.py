@@ -61,16 +61,16 @@ def main(train_model_window: int, minimum_listens_threshold: int, max_num_users:
     )
     similar_users_df.createOrReplaceTempView('artist_similar_users')
     similar_users_query = """
-        SELECT  users_1.user_name AS user_name,
+        SELECT  users.user_name AS user_name,
                 collect_list(
-                    struct(other.user_name AS other_user_name, similarity, global_similarity)
+                    struct(others.user_name AS other_user_name, similarity, global_similarity)
                 ) AS similar_users 
         FROM artist_similar_users
         JOIN listens_artist_similarity AS users
           ON users.user_id = similar_users.user_id
         JOIN listens_artist_similarity AS others
           ON others.user_id = similar_users.other_user_id
-        GROUP BY users_1.user_name
+        GROUP BY users.user_name
     """
     similar_users_results = listenbrainz_spark.sql_context.sql(similar_users_query)
     return create_messages(similar_users_results)
