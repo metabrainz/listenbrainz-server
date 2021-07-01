@@ -14,7 +14,7 @@ from listenbrainz_spark.utils.mapping import get_unique_rows_from_mapping
 logger = logging.getLogger(__name__)
 
 
-def main(train_model_window: int, minimum_listens_threshold: int = 0, max_num_users: int = 0):
+def main(train_model_window: int, minimum_listens_threshold: int, max_num_users: int):
     listenbrainz_spark.init_spark_session('Create artist dataframes')
     to_date, from_date = get_dates_to_train_data(train_model_window)
 
@@ -63,7 +63,7 @@ def main(train_model_window: int, minimum_listens_threshold: int = 0, max_num_us
     similar_users_query = """
         SELECT  users_1.user_name AS user_name,
                 collect_list(
-                    struct(other.user_name AS other_user_name, global_similarity AS similarity)
+                    struct(other.user_name AS other_user_name, similarity, global_similarity)
                 ) AS similar_users 
         FROM artist_similar_users
         JOIN listens_artist_similarity AS users

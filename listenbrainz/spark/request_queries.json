@@ -89,5 +89,14 @@
     "params": [
       "max_num_users"
     ]
+  },
+  "similarity.similar_users_artist": {
+    "name": "similarity.similar_users_artist",
+    "description": "Generate similar user correlation using artists listen counts",
+    "params": [
+      "train_model_window",
+      "minimum_listens_threshold",
+      "max_num_users"
+    ]
   }
 }
