@@ -41,7 +41,7 @@ describe("PinRecordingModal", () => {
       .spyOn(global.Date, "now")
       .mockImplementation(() => mockDate.getTime());
 
-      const wrapper = mount<PinRecordingModal>(
+    const wrapper = mount<PinRecordingModal>(
       <PinRecordingModal
         recordingToPin={recordingToPin}
         isCurrentUser
