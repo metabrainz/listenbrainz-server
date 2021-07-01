@@ -21,6 +21,7 @@ import BrainzPlayer from "./BrainzPlayer";
 import ErrorBoundary from "./ErrorBoundary";
 import ListenCard from "./listens/ListenCard";
 import Loader from "./components/Loader";
+import PinRecordingModal from "./PinRecordingModal";
 import { formatWSMessageToListen, getPageProps } from "./utils";
 
 export type RecentListensProps = {
@@ -45,6 +46,7 @@ export interface RecentListensState {
   nextListenTs?: number;
   previousListenTs?: number;
   recordingFeedbackMap: RecordingFeedbackMap;
+  recordingToPin?: Listen;
   dateTimePickerValue: Date | Date[];
 }
 
@@ -415,6 +417,10 @@ export default class RecentListens extends React.Component<
     this.setState({ recordingFeedbackMap });
   };
 
+  updateRecordingToPin = (recordingToPin: Listen) => {
+    this.setState({ recordingToPin });
+  };
+
   getFeedbackForRecordingMsid = (
     recordingMsid?: string | null
   ): ListenFeedBack => {
@@ -523,6 +529,7 @@ export default class RecentListens extends React.Component<
       nextListenTs,
       previousListenTs,
       dateTimePickerValue,
+      recordingToPin,
     } = this.state;
     const { latestListenTs, oldestListenTs, user, newAlert } = this.props;
     const { currentUser } = this.context;
@@ -594,6 +601,7 @@ export default class RecentListens extends React.Component<
                             this.removeListenFromListenList
                           }
                           updateFeedback={this.updateFeedback}
+                          updateRecordingToPin={this.updateRecordingToPin}
                           newAlert={newAlert}
                           className={`${
                             this.isCurrentListen(listen)
@@ -712,6 +720,11 @@ export default class RecentListens extends React.Component<
                     </li>
                   </ul>
                 )}
+                <PinRecordingModal
+                  recordingToPin={recordingToPin}
+                  isCurrentUser={currentUser?.name === user?.name}
+                  newAlert={newAlert}
+                />
               </div>
             )}
           </div>

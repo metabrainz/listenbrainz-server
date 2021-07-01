@@ -15,6 +15,7 @@ import RecentListens, {
   RecentListensProps,
   RecentListensState,
 } from "./RecentListens";
+import PinRecordingModal from "./PinRecordingModal";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -399,6 +400,22 @@ describe("isCurrentListen", () => {
     wrapper.setState({ currentListen: undefined });
 
     expect(instance.isCurrentListen({} as Listen)).toBeFalsy();
+  });
+});
+
+describe("updateRecordingToPin", () => {
+  it("sets the recordingToPin in the state", async () => {
+    const wrapper = mount<RecentListens>(
+      <RecentListens {...props} />,
+      mountOptions
+    );
+    const instance = wrapper.instance();
+    const recordingToPin = props.listens[0];
+
+    expect(wrapper.state("recordingToPin")).toEqual(undefined);
+
+    instance.updateRecordingToPin(recordingToPin);
+    expect(wrapper.state("recordingToPin")).toEqual(recordingToPin);
   });
 });
 
@@ -810,6 +827,36 @@ describe("Pagination", () => {
       expect(wrapper.state("previousListenTs")).toEqual(undefined);
       expect(pushStateSpy).toHaveBeenCalledWith(null, "", "");
       expect(scrollSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe("pinRecordingModal", () => {
+    it("renders the PinRecordingModal component with the correct props", async () => {
+      const wrapper = mount<RecentListens>(
+        <GlobalAppContext.Provider value={mountOptions.context}>
+          <RecentListens {...props} />
+        </GlobalAppContext.Provider>
+      );
+      const instance = wrapper.instance();
+      const recordingToPin = props.listens[0];
+      let pinRecordingModal = wrapper.find(PinRecordingModal).first();
+
+      // recordingToPin is initially undefined
+      expect(pinRecordingModal.props()).toEqual({
+        isCurrentUser: true,
+        recordingToPin: undefined,
+        newAlert: props.newAlert,
+      });
+
+      instance.updateRecordingToPin(recordingToPin);
+      wrapper.update();
+
+      pinRecordingModal = wrapper.find(PinRecordingModal).first();
+      expect(pinRecordingModal.props()).toEqual({
+        isCurrentUser: true,
+        recordingToPin,
+        newAlert: props.newAlert,
+      });
     });
   });
 });
