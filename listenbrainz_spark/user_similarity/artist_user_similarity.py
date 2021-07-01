@@ -52,6 +52,9 @@ def main(train_model_window: int, minimum_listens_threshold: int, max_num_users:
     results_df: DataFrame = listenbrainz_spark.sql_context.sql(listens_query)
     results_df.createOrReplaceTempView('listens_artist_similarity')
 
+    users_df = results_df.select('user_id', 'user_name').distinct()
+    users_df.createOrReplaceTempView('users')
+
     vectors_df = get_vectors_df(results_df, "artist_id", "user_id", "listen_count")
     similarity_matrix = Correlation.corr(vectors_df, 'vector', 'pearson').first()['pearson(vector)'].toArray()
     similar_users_thresholded = threshold_similar_users(similarity_matrix, max_num_users)
@@ -67,9 +70,9 @@ def main(train_model_window: int, minimum_listens_threshold: int, max_num_users:
                     struct(others.user_name AS other_user_name, similarity, global_similarity)
                 ) AS similar_users 
         FROM artist_similar_users
-        JOIN listens_artist_similarity AS users
+        JOIN users
           ON users.user_id = artist_similar_users.user_id
-        JOIN listens_artist_similarity AS others
+        JOIN users AS others
           ON others.user_id = artist_similar_users.other_user_id
         GROUP BY users.user_name
     """
