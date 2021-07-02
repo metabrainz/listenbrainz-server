@@ -35,7 +35,7 @@ const globalProps = {
 describe("PinRecordingModal", () => {
   it("renders the prompt, input text area, track_name, and artist_name", () => {
     // This component uses current time at load to display,
-    // so we have to mock the Date constructor otherwise snapshots will be different every day
+    // so we have to mock the Date constructor - otherwise, snapshots will be different every day
     const mockDate = new Date("2021-01-01");
     const fakeDateNow = jest
       .spyOn(global.Date, "now")
