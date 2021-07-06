@@ -150,7 +150,7 @@ def create_year_mapping():
     """
 
     log("year mapping: start")
-    with psycopg2.connect(config.DB_CONNECT_MB) as mb_conn:
+    with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
         with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
 
             # Create the dest table (perhaps dropping the old one first)

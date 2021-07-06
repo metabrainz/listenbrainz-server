@@ -64,10 +64,10 @@ TIMESCALE_ADMIN_LB_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
 
 {{if service "pgbouncer-williams"}}
 {{with index (service "pgbouncer-williams") 0}}
-DB_CONNECT_MAPPING = "dbname=musicbrainz_json_dump user=musicbrainz host={{.Address}} port={{.Port}} password=musicbrainz"
+MBID_MAPPING_DATABASE_URI = "dbname=musicbrainz_json_dump user=musicbrainz host={{.Address}} port={{.Port}} password=musicbrainz"
 {{end}}
 {{else}}
-DB_CONNECT_MAPPING = "SERVICEDOESNOTEXIST_pgbouncer-williams"
+MBID_MAPPING_DATABASE_URI = "SERVICEDOESNOTEXIST_pgbouncer-williams"
 {{end}}
 
 {{if service "typesense-listenbrainz"}}
