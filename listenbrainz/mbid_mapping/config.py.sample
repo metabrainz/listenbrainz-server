@@ -2,7 +2,7 @@
 # Database connection.
 
 # If you are connecting to a musicbrainz-docker instance for MusicBrainz data, this string should work:
-DB_CONNECT_MB = "dbname=musicbrainz_db user=musicbrainz host=localhost port=25432 password=musicbrainz"
+MBID_MAPPING_DATABASE_URI = "dbname=musicbrainz_db user=musicbrainz host=localhost port=25432 password=musicbrainz"
 
 # Typesense connection
 TYPESENSE_HOST = "typesense"
