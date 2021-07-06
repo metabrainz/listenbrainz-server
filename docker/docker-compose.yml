@@ -105,4 +105,3 @@ services:
       # We mount this as a sort of shared volume
       # where we put the compiled output to be served by the service "web"
       - ../listenbrainz/webserver/static:/static:z
-
