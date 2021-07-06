@@ -15,6 +15,8 @@ from psycopg2.extras import execute_values
 from psycopg2.errors import UntranslatableCharacter
 from typing import List
 import sqlalchemy
+import pandas as pd
+import pyarrow.parquet as pq
 
 from brainzutils import cache
 
@@ -47,6 +49,8 @@ DEFAULT_FETCH_WINDOW = 30 * 86400  # 30 days
 WINDOW_SIZE_MULTIPLIER = 3
 
 LISTEN_COUNT_BUCKET_WIDTH = 2592000
+
+LISTENS_PER_PARQUET_FILE = 100000
 
 
 class TimescaleListenStore(ListenStore):
@@ -665,6 +669,106 @@ class TimescaleListenStore(ListenStore):
         self.log.info('ListenBrainz listen dump done!')
         self.log.info('Dump present at %s!', archive_path)
         return archive_path
+
+    def write_parquet_files(self, temp_dir, tar_file, start_time_range=None, end_time_range=None, full_dump=True):
+        t0 = time.monotonic()
+        listen_count = 0
+
+        if start_time_range:
+            start_time_range = datetime.utcfromtimestamp(datetime.timestamp(start_time_range))
+        if end_time_range:
+            end_time_range = datetime.utcfromtimestamp(datetime.timestamp(end_time_range))
+
+        parquet_file_id = 0
+        while True:
+
+            filename = os.path.join(temp_dir, "%d.parquet" % parquet_file_id)
+            query = """SELECT listened_at,
+                              user_name,
+                              data->'track_metadata'->>'artist_name' AS artist_name,
+                              artist_credit_id,
+                              data->'track_metadata'->>'release_name' AS release_name,
+                              release_mbid,
+                              data->'track_metadata'->>'track_name' AS recording_name,
+                              recording_mbid,
+                              data->'track_metadata'->'additional_info'->>'tags' AS tags
+                         FROM listen l
+                         JOIN listen_mbid_mapping m
+                           ON data->'track_metadata'->'additional_info'->>'recording_msid' = recording_msid
+                        WHERE created > %s
+                          AND created <= %s 
+                     ORDER BY created ASC"""
+
+            args = (start_time, end_time)
+
+            listen_count = 0
+            conn = timescale.engine.raw_connection()
+            with conn.cursor(cursor_factory = psycopg2.extras.RealDictCursor) as curs:
+                curs.execute(query, args)
+                while True:
+                    data = {
+                        'listened_at': [],
+                        'user_name': [],
+                        'artist_name': [],
+                        'artist_credit_id': [],
+                        'release_name': [],
+                        'release_mbid': [],
+                        'recording_name': [],
+                        'recording_mbid': [],
+                        'tags': []
+                    }
+                    for i in range(LISTENS_PER_PARQUET_FILE):
+                        result = curs.fetchone()
+                        if not result:
+                            break
+
+                        for col in result:
+                            data[cola.append(result[col])]
+                        listen_count += 1
+
+                    if len(data['listened_at']) > 0:
+                        # TODO: Add exception handling
+                        df = pd.DataFrame(data)
+                        table = pa.Table.from_pandas(df) 
+                        pq.write_table(table, filename)
+                        tar_file.add(filename, arcname="%d.parquet" % parquet_file_id)
+                        os.unlink(filename)
+
+                    self.log.info("%d listens dumped for %s at %.2f listens/s", listen_count, start_time.strftime("%Y-%m-%d"),
+                                  listen_count / (time.monotonic() - t0))
+
+            parquet_file_id += 1
+
+
+    def dump_listens_for_spark(self, location, dump_id, start_time=datetime.utcfromtimestamp(0), end_time=None):
+
+        if end_time is None:
+            end_time = datetime.now()
+
+        self.log.info('Beginning spark dump of listens from TimescaleDB...')
+        full_dump = bool(start_time == datetime.utcfromtimestamp(0))
+        archive_name = 'listenbrainz-spark-dump-{dump_id}-{time}'.format(dump_id=dump_id,
+                                                                         time=end_time.strftime('%Y%m%d-%H%M%S'))
+        if full_dump:
+            archive_name = '{}-full'.format(archive_name)
+        else:
+            archive_name = '{}-incremental'.format(archive_name)
+        archive_path = os.path.join(
+            location, '{filename}.tar.xz'.format(filename=archive_name))
+
+        with tarfile.open(archive_path, "w") as tar:
+
+            temp_dir = os.path.join( self.dump_temp_dir_root, str(uuid.uuid4()))
+            create_path(temp_dir)
+            self.write_dump_metadata( archive_name, start_time, end_time, temp_dir, tar, full_dump)
+            self.write_parquet_files(temp_dir, tar, start_time, end_time, full_dump)
+            shutil.rmtree(temp_dir)
+
+
+        self.log.info('ListenBrainz spark listen dump done!')
+        self.log.info('Dump present at %s!', archive_path)
+        return archive_path
+
 
     def import_listens_dump(self, archive_path, threads=DUMP_DEFAULT_THREAD_COUNT):
         """ Imports listens into TimescaleDB from a ListenBrainz listens dump .tar.xz archive.
