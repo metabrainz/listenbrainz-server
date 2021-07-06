@@ -51,7 +51,7 @@ WINDOW_SIZE_MULTIPLIER = 3
 
 LISTEN_COUNT_BUCKET_WIDTH = 2592000
 
-LISTENS_PER_PARQUET_FILE = 100000
+LISTENS_PER_PARQUET_FILE = 2500000
 
 
 class TimescaleListenStore(ListenStore):
@@ -671,8 +671,7 @@ class TimescaleListenStore(ListenStore):
         self.log.info('Dump present at %s!', archive_path)
         return archive_path
 
-    def write_parquet_files(self, temp_dir, tar_file, start_time=None, end_time=None, full_dump=True):
-        t0 = time.monotonic()
+    def write_parquet_files(self, archive_dir, temp_dir, tar_file, start_time=None, end_time=None, full_dump=True):
         listen_count = 0
 
         if start_time:
@@ -683,64 +682,78 @@ class TimescaleListenStore(ListenStore):
             end_time = datetime.now()
 
         parquet_file_id = 0
-        while True:
 
-            filename = os.path.join(temp_dir, "%d.parquet" % parquet_file_id)
-            query = """SELECT listened_at,
-                              user_name,
-                              data->'track_metadata'->>'artist_name' AS artist_name,
-                              artist_credit_id,
-                              data->'track_metadata'->>'release_name' AS release_name,
-                              release_mbid::TEXT,
-                              data->'track_metadata'->>'track_name' AS recording_name,
-                              recording_mbid::TEXT,
-                              data->'track_metadata'->'additional_info'->>'tags' AS tags
-                         FROM listen l
-                         JOIN listen_mbid_mapping m
-                           ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = recording_msid
-                        WHERE created > %s
-                          AND created <= %s 
-                     ORDER BY created ASC"""
+        query = """SELECT listened_at,
+                          user_name,
+                          data->'track_metadata'->>'artist_name' AS artist_name,
+                          artist_credit_id,
+                          data->'track_metadata'->>'release_name' AS release_name,
+                          release_mbid::TEXT,
+                          data->'track_metadata'->>'track_name' AS recording_name,
+                          recording_mbid::TEXT,
+                          data->'track_metadata'->'additional_info'->>'tags' AS tags,
+                          created
+                     FROM listen l
+                     JOIN listen_mbid_mapping m
+                       ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = recording_msid
+                    WHERE created > %s
+                      AND created <= %s 
+                 ORDER BY created ASC"""
 
-            args = (start_time, end_time)
+        args = (start_time, end_time)
 
-            listen_count = 0
-            conn = timescale.engine.raw_connection()
-            with conn.cursor(cursor_factory = psycopg2.extras.RealDictCursor) as curs:
-                curs.execute(query, args)
-                while True:
-                    data = {
-                        'listened_at': [],
-                        'user_name': [],
-                        'artist_name': [],
-                        'artist_credit_id': [],
-                        'release_name': [],
-                        'release_mbid': [],
-                        'recording_name': [],
-                        'recording_mbid': [],
-                        'tags': []
-                    }
-                    for i in range(LISTENS_PER_PARQUET_FILE):
-                        result = curs.fetchone()
-                        if not result:
-                            break
+        listen_count = 0
 
-                        for col in result:
-                            data[col].append(result[col])
-                        listen_count += 1
+        current_created = None
+        conn = timescale.engine.raw_connection()
+        with conn.cursor(cursor_factory = psycopg2.extras.RealDictCursor) as curs:
+            curs.execute(query, args)
+            while True:
+                t0 = time.monotonic()
+                written = 0
+                approx_size = 0
+                data = {
+                    'listened_at': [],
+                    'user_name': [],
+                    'artist_name': [],
+                    'artist_credit_id': [],
+                    'release_name': [],
+                    'release_mbid': [],
+                    'recording_name': [],
+                    'recording_mbid': [],
+                    'tags': []
+                }
+                for i in range(LISTENS_PER_PARQUET_FILE):
+                    result = curs.fetchone()
+                    if not result:
+                        break
 
-                    if len(data['listened_at']) > 0:
-                        # TODO: Add exception handling
-                        df = pd.DataFrame(data)
-                        table = pa.Table.from_pandas(df) 
-                        pq.write_table(table, filename)
-                        tar_file.add(filename, arcname="%d.parquet" % parquet_file_id)
-                        os.unlink(filename)
+                    for col in data:
+                        data[col].append(result[col])
 
-                    self.log.info("%d listens dumped for %s at %.2f listens/s", listen_count, start_time.strftime("%Y-%m-%d"),
-                                  listen_count / (time.monotonic() - t0))
+                        # This is a bit dodgy, but should be ok for an estimate
+                        approx_size += len(str(result[col]))
 
-            parquet_file_id += 1
+                    written += 1
+                    listen_count += 1
+                    current_created = result['created']
+
+                if written == 0:
+                    break
+
+                # TODO: Add exception handling
+                df = pd.DataFrame(data)
+                table = pa.Table.from_pandas(df) 
+                filename = os.path.join(temp_dir, "%d.parquet" % parquet_file_id)
+                pq.write_table(table, filename)
+                print("write '%s'" % filename)
+                tar_file.add(filename, arcname=os.path.join(archive_dir, "%d.parquet" % parquet_file_id))
+#                        os.unlink(filename)
+                parquet_file_id += 1
+
+                self.log.info("%d listens dumped for %s at %.2f listens/s %d approx", listen_count, current_created.strftime("%Y-%m-%d"),
+                              written / (time.monotonic() - t0), approx_size)
+
 
 
     def dump_listens_for_spark(self, location, dump_id, start_time=datetime.utcfromtimestamp(0), end_time=None):
@@ -757,14 +770,14 @@ class TimescaleListenStore(ListenStore):
         else:
             archive_name = '{}-incremental'.format(archive_name)
         archive_path = os.path.join(
-            location, '{filename}.tar.xz'.format(filename=archive_name))
+            location, '{filename}.tar'.format(filename=archive_name))
 
         with tarfile.open(archive_path, "w") as tar:
 
             temp_dir = os.path.join( self.dump_temp_dir_root, str(uuid.uuid4()))
             create_path(temp_dir)
-            self.write_dump_metadata( archive_name, start_time, end_time, temp_dir, tar, full_dump)
-            self.write_parquet_files(temp_dir, tar, start_time, end_time, full_dump)
+            self.write_dump_metadata(archive_name, start_time, end_time, temp_dir, tar, full_dump)
+            self.write_parquet_files(archive_name, temp_dir, tar, start_time, end_time, full_dump)
             shutil.rmtree(temp_dir)
 
 
