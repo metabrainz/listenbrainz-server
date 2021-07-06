@@ -1,7 +1,7 @@
 import psycopg2
 import psycopg2.extras
-from flask import current_app
 from datasethoster import Query
+from listenbrainz import config
 
 psycopg2.extras.register_uuid()
 
@@ -27,7 +27,7 @@ class RecordingFromRecordingMBIDQuery(Query):
     def fetch(self, params, offset=-1, count=-1):
 
         mbids = [p['[recording_mbid]'] for p in params]
-        with psycopg2.connect(current_app.config['MB_DATABASE_URI']) as conn:
+        with psycopg2.connect(config.MB_DATABASE_URI) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
 
                 # First lookup and MBIDs that may have been redirected

@@ -4,7 +4,7 @@
 
 {{if service "pgbouncer-williams"}}
 {{with index (service "pgbouncer-williams") 0}}
-DB_CONNECT_MB = "dbname=musicbrainz_json_dump user=musicbrainz host={{.Address}} port={{.Port}} password=musicbrainz"
+MBID_MAPPING_DATABASE_URI = "dbname=musicbrainz_json_dump user=musicbrainz host={{.Address}} port={{.Port}} password=musicbrainz"
 {{end}}
 {{end}}
 
