@@ -433,7 +433,7 @@ def create_test_parquet_files():
     app = create_app()
     with app.app_context():
         from listenbrainz.webserver.timescale_connection import _ts as ls
-        ls.dump_listens_for_spark("/tmp", 420, start_time=datetime.utcfromtimestamp(1609502400))
+        ls.dump_listens_for_spark("/tmp", 420, start_time=datetime.utcfromtimestamp(1622505600))
         sys.exit(0)
 
 
