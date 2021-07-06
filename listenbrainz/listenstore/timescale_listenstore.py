@@ -16,6 +16,7 @@ from psycopg2.errors import UntranslatableCharacter
 from typing import List
 import sqlalchemy
 import pandas as pd
+import pyarrow as pa
 import pyarrow.parquet as pq
 
 from brainzutils import cache
@@ -670,14 +671,16 @@ class TimescaleListenStore(ListenStore):
         self.log.info('Dump present at %s!', archive_path)
         return archive_path
 
-    def write_parquet_files(self, temp_dir, tar_file, start_time_range=None, end_time_range=None, full_dump=True):
+    def write_parquet_files(self, temp_dir, tar_file, start_time=None, end_time=None, full_dump=True):
         t0 = time.monotonic()
         listen_count = 0
 
-        if start_time_range:
-            start_time_range = datetime.utcfromtimestamp(datetime.timestamp(start_time_range))
-        if end_time_range:
-            end_time_range = datetime.utcfromtimestamp(datetime.timestamp(end_time_range))
+        if start_time:
+            start_time = datetime.utcfromtimestamp(datetime.timestamp(start_time))
+        if end_time:
+            end_time = datetime.utcfromtimestamp(datetime.timestamp(end_time))
+        else:
+            end_time = datetime.now()
 
         parquet_file_id = 0
         while True:
@@ -688,13 +691,13 @@ class TimescaleListenStore(ListenStore):
                               data->'track_metadata'->>'artist_name' AS artist_name,
                               artist_credit_id,
                               data->'track_metadata'->>'release_name' AS release_name,
-                              release_mbid,
+                              release_mbid::TEXT,
                               data->'track_metadata'->>'track_name' AS recording_name,
-                              recording_mbid,
+                              recording_mbid::TEXT,
                               data->'track_metadata'->'additional_info'->>'tags' AS tags
                          FROM listen l
                          JOIN listen_mbid_mapping m
-                           ON data->'track_metadata'->'additional_info'->>'recording_msid' = recording_msid
+                           ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = recording_msid
                         WHERE created > %s
                           AND created <= %s 
                      ORDER BY created ASC"""
@@ -723,7 +726,7 @@ class TimescaleListenStore(ListenStore):
                             break
 
                         for col in result:
-                            data[cola.append(result[col])]
+                            data[col].append(result[col])
                         listen_count += 1
 
                     if len(data['listened_at']) > 0:
