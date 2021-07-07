@@ -18,6 +18,7 @@ import sqlalchemy
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
+import numpy as np
 
 from brainzutils import cache
 
@@ -52,6 +53,8 @@ WINDOW_SIZE_MULTIPLIER = 3
 LISTEN_COUNT_BUCKET_WIDTH = 2592000
 
 LISTENS_PER_PARQUET_FILE = 2500000
+PARQUET_APPROX_COMPRESSION_RATIO = .42
+PARQUET_TARGET_SIZE = 134217728 / PARQUET_APPROX_COMPRESSION_RATIO
 
 
 class TimescaleListenStore(ListenStore):
@@ -689,15 +692,15 @@ class TimescaleListenStore(ListenStore):
                           artist_credit_id,
                           data->'track_metadata'->>'release_name' AS release_name,
                           release_mbid::TEXT,
-                          data->'track_metadata'->>'track_name' AS recording_name,
+                          track_name AS recording_name,
                           recording_mbid::TEXT,
-                          data->'track_metadata'->'additional_info'->>'tags' AS tags,
                           created
                      FROM listen l
                      JOIN listen_mbid_mapping m
                        ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = recording_msid
                     WHERE created > %s
                       AND created <= %s 
+                      AND recording_mbid IS NOT NULL
                  ORDER BY created ASC"""
 
         args = (start_time, end_time)
@@ -721,15 +724,18 @@ class TimescaleListenStore(ListenStore):
                     'release_mbid': [],
                     'recording_name': [],
                     'recording_mbid': [],
-                    'tags': []
+                    'created': []
                 }
-                for i in range(LISTENS_PER_PARQUET_FILE):
+                while True:
                     result = curs.fetchone()
                     if not result:
                         break
 
                     for col in data:
-                        data[col].append(result[col])
+                        if col == 'artist_credit_id':
+                            data[col].append(int(result[col]))
+                        else:
+                            data[col].append(result[col])
 
                         # This is a bit dodgy, but should be ok for an estimate
                         approx_size += len(str(result[col]))
@@ -738,17 +744,20 @@ class TimescaleListenStore(ListenStore):
                     listen_count += 1
                     current_created = result['created']
 
+                    if approx_size > PARQUET_TARGET_SIZE:
+                        break
+
                 if written == 0:
                     break
 
                 # TODO: Add exception handling
-                df = pd.DataFrame(data)
+                df = pd.DataFrame(data, dtype=np.int64)
                 table = pa.Table.from_pandas(df) 
                 filename = os.path.join(temp_dir, "%d.parquet" % parquet_file_id)
                 pq.write_table(table, filename)
                 print("write '%s'" % filename)
                 tar_file.add(filename, arcname=os.path.join(archive_dir, "%d.parquet" % parquet_file_id))
-#                        os.unlink(filename)
+#                os.unlink(filename)
                 parquet_file_id += 1
 
                 self.log.info("%d listens dumped for %s at %.2f listens/s %d approx", listen_count, current_created.strftime("%Y-%m-%d"),
