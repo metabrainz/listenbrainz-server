@@ -247,7 +247,7 @@ def create_feedback(location, threads):
 
 
 @cli.command(name="import_dump")
-@click.option('--private-archive', '-pr', default=None, required=True)
+@click.option('--private-archive', '-pr', default=None, required=False)
 @click.option('--public-archive', '-pu', default=None, required=True)
 @click.option('--listen-archive', '-l', default=None, required=True)
 @click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
