@@ -122,15 +122,15 @@ def create_full(location, threads, dump_id):
         except OSError as e:
             sys.exit(-1)
 
-        # if in production, send an email to interested people for observability
-        send_dump_creation_notification(dump_name, 'fullexport')
-
         current_app.logger.info(
             'Dumps created and hashes written at %s' % dump_path)
 
         # Write the DUMP_ID file so that the FTP sync scripts can be more robust
         with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
             f.write("%s %s full\n" % (ts, dump_id))
+
+        # if in production, send an email to interested people for observability
+        send_dump_creation_notification(dump_name, 'fullexport')
 
         sys.exit(0)
 
