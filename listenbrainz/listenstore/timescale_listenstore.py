@@ -52,9 +52,13 @@ WINDOW_SIZE_MULTIPLIER = 3
 
 LISTEN_COUNT_BUCKET_WIDTH = 2592000
 
-LISTENS_PER_PARQUET_FILE = 2500000
+# These values are defined to create spark parquet files that are at most 128MB in size.
+# Given our listens data, we get about about 38% compression, so rounding to 45% should ensure
+# that we don't go over the 128MB file limit. If we do, its not a real problem.
 PARQUET_APPROX_COMPRESSION_RATIO = .45
-PARQUET_TARGET_SIZE = 134217728 / PARQUET_APPROX_COMPRESSION_RATIO
+
+# This is the approximate amount of data to write to a parquet file in order to meet the max size
+PARQUET_TARGET_SIZE = 134217728 / PARQUET_APPROX_COMPRESSION_RATIO  # 128MB / compression ratio
 
 
 class TimescaleListenStore(ListenStore):
@@ -626,7 +630,6 @@ class TimescaleListenStore(ListenStore):
             start_time and end_time (datetime): the time range for which listens should be dumped
                 start_time defaults to utc 0 (meaning a full dump) and end_time defaults to the current time
             threads (int): the number of threads to use for compression
-            spark_format (bool): dump files in Apache Spark friendly format if True, else full dumps
 
         Returns:
             the path to the dump archive
@@ -675,6 +678,19 @@ class TimescaleListenStore(ListenStore):
         return archive_path
 
     def write_parquet_files(self, archive_dir, temp_dir, tar_file, start_time=None, end_time=None, full_dump=True):
+        """ 
+            Carry out fetching listens from the DB, joining them to the MBID mapping table and
+            then writing them to parquet files.
+
+        Args:
+            archive_dir: the directory where the listens dump archive should be created
+            tmp_dir: the directory where tmp files should be written
+            dump_id (int): the ID of the dump in the dump sequence
+            start_time and end_time (datetime): the time range for which listens should be dumped
+                start_time defaults to utc 0 (meaning a full dump) and end_time defaults to the current time
+            full_dump (bool): Is this a full or incremental dump?
+        """
+
         listen_count = 0
 
         if start_time:
@@ -750,10 +766,11 @@ class TimescaleListenStore(ListenStore):
                 if written == 0:
                     break
 
-                # TODO: Add exception handling
+                filename = os.path.join(temp_dir, "%d.parquet" % parquet_file_id)
+
+                # Create a pandas dataframe, then write that to a parquet files
                 df = pd.DataFrame(data)
                 table = pa.Table.from_pandas(df) 
-                filename = os.path.join(temp_dir, "%d.parquet" % parquet_file_id)
                 pq.write_table(table, filename)
                 tar_file.add(filename, arcname=os.path.join(archive_dir, "%d.parquet" % parquet_file_id))
                 os.unlink(filename)
@@ -765,6 +782,23 @@ class TimescaleListenStore(ListenStore):
 
 
     def dump_listens_for_spark(self, location, dump_id, start_time=datetime.utcfromtimestamp(0), end_time=None):
+        """ Dumps all listens in the ListenStore into spark parquet files in a .tar archive.
+
+        Listens are dumped into files ideally no larger than 128MB, sorted from oldest to newest. Files
+        are named #####.parguet with monotonically increasing integers starting with 0.
+
+        This creates an incremental dump if start_time is specified (with range start_time to end_time),
+        otherwise it creates a full dump with all listens.
+
+        Args:
+            location: the directory where the listens dump archive should be created
+            dump_id (int): the ID of the dump in the dump sequence
+            start_time and end_time (datetime): the time range for which listens should be dumped
+                start_time defaults to utc 0 (meaning a full dump) and end_time defaults to the current time
+
+        Returns:
+            the path to the dump archive
+        """
 
         if end_time is None:
             end_time = datetime.now()
