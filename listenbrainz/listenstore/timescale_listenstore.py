@@ -751,13 +751,12 @@ class TimescaleListenStore(ListenStore):
                     break
 
                 # TODO: Add exception handling
-                df = pd.DataFrame(data, dtype=np.int64)
+                df = pd.DataFrame(data)
                 table = pa.Table.from_pandas(df) 
                 filename = os.path.join(temp_dir, "%d.parquet" % parquet_file_id)
                 pq.write_table(table, filename)
-                print("write '%s'" % filename)
                 tar_file.add(filename, arcname=os.path.join(archive_dir, "%d.parquet" % parquet_file_id))
-#                os.unlink(filename)
+                os.unlink(filename)
                 parquet_file_id += 1
 
                 self.log.info("%d listens dumped for %s at %.2f listens/s %d approx", listen_count, current_created.strftime("%Y-%m-%d"),
