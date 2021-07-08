@@ -24,6 +24,7 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
   playListen={[Function]}
   removeListenFromListenList={[Function]}
   updateFeedback={[Function]}
+  updateRecordingToPin={[Function]}
 >
   <ForwardRef
     className="listen-card row undefined "
@@ -299,6 +300,22 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
                 Delete Listen
               </button>
             </ListenControl>
+            <ListenControl
+              action={[Function]}
+              dataTarget="#PinRecordingModal"
+              dataToggle="modal"
+              title="Pin this Recording"
+            >
+              <button
+                data-target="#PinRecordingModal"
+                data-toggle="modal"
+                onClick={[Function]}
+                title="Pin this Recording"
+                type="button"
+              >
+                Pin this Recording
+              </button>
+            </ListenControl>
           </ul>
         </div>
       </div>
@@ -331,6 +348,7 @@ exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
   playListen={[Function]}
   removeListenFromListenList={[Function]}
   updateFeedback={[Function]}
+  updateRecordingToPin={[Function]}
 >
   <ForwardRef
     className="listen-card row undefined "
@@ -398,6 +416,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
   playListen={[Function]}
   removeListenFromListenList={[Function]}
   updateFeedback={[Function]}
+  updateRecordingToPin={[Function]}
 >
   <ForwardRef
     className="listen-card row undefined "
@@ -671,6 +690,22 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                 type="button"
               >
                 Delete Listen
+              </button>
+            </ListenControl>
+            <ListenControl
+              action={[Function]}
+              dataTarget="#PinRecordingModal"
+              dataToggle="modal"
+              title="Pin this Recording"
+            >
+              <button
+                data-target="#PinRecordingModal"
+                data-toggle="modal"
+                onClick={[Function]}
+                title="Pin this Recording"
+                type="button"
+              >
+                Pin this Recording
               </button>
             </ListenControl>
           </ul>
@@ -705,6 +740,7 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
   playListen={[Function]}
   removeListenFromListenList={[Function]}
   updateFeedback={[Function]}
+  updateRecordingToPin={[Function]}
 >
   <ForwardRef
     className="listen-card row undefined "
@@ -978,6 +1014,22 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
                 type="button"
               >
                 Delete Listen
+              </button>
+            </ListenControl>
+            <ListenControl
+              action={[Function]}
+              dataTarget="#PinRecordingModal"
+              dataToggle="modal"
+              title="Pin this Recording"
+            >
+              <button
+                data-target="#PinRecordingModal"
+                data-toggle="modal"
+                onClick={[Function]}
+                title="Pin this Recording"
+                type="button"
+              >
+                Pin this Recording
               </button>
             </ListenControl>
           </ul>

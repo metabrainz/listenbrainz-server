@@ -738,4 +738,58 @@ describe("recommendTrackToFollowers", () => {
       apiService.recommendTrackToFollowers("clark_kent", "auth_token", metadata)
     ).resolves.toEqual(200);
   });
+
+  describe("submitPinRecording", () => {
+    beforeEach(() => {
+      // Mock function for fetch
+      window.fetch = jest.fn().mockImplementation(() => {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+        });
+      });
+
+      // Mock function for checkStatus
+      apiService.checkStatus = jest.fn();
+    });
+
+    it("calls fetch with correct parameters", async () => {
+      await apiService.submitPinRecording("foobar", "MSID", "MBID", "BLURB");
+      expect(window.fetch).toHaveBeenCalledWith("foobar/1/pin", {
+        method: "POST",
+        headers: {
+          Authorization: "Token foobar",
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({
+          recording_msid: "MSID",
+          recording_mbid: "MBID",
+          blurb_content: "BLURB",
+        }),
+      });
+    });
+
+    it("calls fetch with correct parameters when parameters are missing", async () => {
+      await apiService.submitPinRecording("foobar", "MSID");
+      expect(window.fetch).toHaveBeenCalledWith("foobar/1/pin", {
+        method: "POST",
+        headers: {
+          Authorization: "Token foobar",
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({ recording_msid: "MSID" }),
+      });
+    });
+
+    it("calls checkStatus once", async () => {
+      await apiService.submitPinRecording("foobar", "foo");
+      expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
+    });
+
+    it("returns the response code if successful", async () => {
+      await expect(
+        apiService.submitPinRecording("foobar", "foo")
+      ).resolves.toEqual(200);
+    });
+  });
 });

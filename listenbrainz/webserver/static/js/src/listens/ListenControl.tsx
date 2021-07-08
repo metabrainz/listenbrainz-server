@@ -9,10 +9,12 @@ export type ListenControlProps = {
   action?: () => void;
   icon?: IconDefinition;
   title: string;
+  dataToggle?: string;
+  dataTarget?: string;
 };
 
 const ListenControl = (props: ListenControlProps) => {
-  const { className, action, icon, title } = props;
+  const { className, action, icon, title, dataToggle, dataTarget } = props;
   return icon ? (
     <FontAwesomeIcon
       icon={icon as IconProp}
@@ -21,7 +23,14 @@ const ListenControl = (props: ListenControlProps) => {
       onClick={action}
     />
   ) : (
-    <button className={className} title={title} onClick={action} type="button">
+    <button
+      className={className}
+      title={title}
+      onClick={action}
+      type="button"
+      data-toggle={dataToggle}
+      data-target={dataTarget}
+    >
       {title}
     </button>
   );
