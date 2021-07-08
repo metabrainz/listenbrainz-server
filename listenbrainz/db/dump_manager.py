@@ -99,8 +99,8 @@ def create_full(location, threads, dump_id):
             dump_id=dump_id, time=ts)
         dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
-        db_dump.dump_postgres_db(dump_path, end_time, threads)
 
+        db_dump.dump_postgres_db(dump_path, end_time, threads)
         ls.dump_listens(dump_path, dump_id=dump_id, end_time=end_time, threads=threads)
         ls.dump_listens_for_spark(dump_path, dump_id=dump_id, end_time=end_time)
 
