@@ -678,7 +678,7 @@ class TimescaleListenStore(ListenStore):
         return archive_path
 
     def write_parquet_files(self, archive_dir, temp_dir, tar_file, start_time=None, end_time=None, full_dump=True):
-        """ 
+        """
             Carry out fetching listens from the DB, joining them to the MBID mapping table and
             then writing them to parquet files.
 
@@ -715,7 +715,7 @@ class TimescaleListenStore(ListenStore):
                      JOIN listen_mbid_mapping m
                        ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = recording_msid
                     WHERE created > %s
-                      AND created <= %s 
+                      AND created <= %s
                       AND recording_mbid IS NOT NULL
                  ORDER BY created ASC"""
 
@@ -725,7 +725,7 @@ class TimescaleListenStore(ListenStore):
 
         current_created = None
         conn = timescale.engine.raw_connection()
-        with conn.cursor(cursor_factory = psycopg2.extras.RealDictCursor) as curs:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as curs:
             curs.execute(query, args)
             while True:
                 t0 = time.monotonic()
@@ -776,10 +776,9 @@ class TimescaleListenStore(ListenStore):
                 os.unlink(filename)
                 parquet_file_id += 1
 
-                self.log.info("%d listens dumped for %s at %.2f listens/s %d approx", listen_count, current_created.strftime("%Y-%m-%d"),
+                self.log.info("%d listens dumped for %s at %.2f listens/s %d approx",
+                              listen_count, current_created.strftime("%Y-%m-%d"),
                               written / (time.monotonic() - t0), approx_size)
-
-
 
     def dump_listens_for_spark(self, location, dump_id, start_time=datetime.utcfromtimestamp(0), end_time=None):
         """ Dumps all listens in the ListenStore into spark parquet files in a .tar archive.
@@ -816,7 +815,7 @@ class TimescaleListenStore(ListenStore):
 
         with tarfile.open(archive_path, "w") as tar:
 
-            temp_dir = os.path.join( self.dump_temp_dir_root, str(uuid.uuid4()))
+            temp_dir = os.path.join(self.dump_temp_dir_root, str(uuid.uuid4()))
             create_path(temp_dir)
             self.write_dump_metadata(archive_name, start_time, end_time, temp_dir, tar, full_dump)
             self.write_parquet_files(archive_name, temp_dir, tar, start_time, end_time, full_dump)
@@ -826,7 +825,6 @@ class TimescaleListenStore(ListenStore):
         self.log.info('ListenBrainz spark listen dump done!')
         self.log.info('Dump present at %s!', archive_path)
         return archive_path
-
 
     def import_listens_dump(self, archive_path, threads=DUMP_DEFAULT_THREAD_COUNT):
         """ Imports listens into TimescaleDB from a ListenBrainz listens dump .tar.xz archive.
