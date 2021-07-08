@@ -56,7 +56,6 @@ const searchForSpotifyTrack = async (
 
 const searchForYoutubeTrack = async (
   apiKey?: string,
-  accessToken?: string,
   trackName?: string,
   artistName?: string,
   releaseName?: string,
@@ -64,7 +63,6 @@ const searchForYoutubeTrack = async (
   onAccountError?: () => void
 ): Promise<Array<string> | null> => {
   if (!apiKey) return null;
-  if (!accessToken) return null;
   let query = trackName;
   if (artistName) {
     query += ` ${artistName}`;
@@ -80,7 +78,6 @@ const searchForYoutubeTrack = async (
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
       },
     }
   );
@@ -88,10 +85,8 @@ const searchForYoutubeTrack = async (
   if (response.status === 401) {
     if (refreshToken) {
       try {
-        const newAccessToken = await refreshToken();
         return searchForYoutubeTrack(
           apiKey,
-          newAccessToken,
           trackName,
           artistName,
           releaseName,
