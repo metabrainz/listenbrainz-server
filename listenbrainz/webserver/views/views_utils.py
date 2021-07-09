@@ -24,13 +24,6 @@ def get_current_youtube_user():
     """Returns the youtube access token for the current authenticated
     user and the youtube api key. If the user is not authenticated or
     has not linked to a Youtube account, returns empty dict."""
-    if not current_user.is_authenticated:
-        return {}
-    user = YoutubeService().get_user(current_user.id)
-    if user is None:
-        return {}
     return {
-        "access_token": user["access_token"],
         "api_key": current_app.config["YOUTUBE_API_KEY"]
     }
-
