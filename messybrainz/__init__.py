@@ -28,16 +28,21 @@ def submit_listens_and_sing_me_a_sweet_song(recordings):
     else:
         raise exceptions.ErrorAddingException("Failed to add data")
 
-def load_recording(mbid):
-    with db.engine.begin() as connection:
-        return data.load_recording(connection, mbid)
 
+def load_recording_from_msid(msid):
+    with db.engine.begin() as connection:
+        return data.load_recording_from_msid(connection, msid)
+
+
+def load_recording_from_mbid(mbid):
+    with db.engine.begin() as connection:
+        return data.load_recording_from_mbid(connection, mbid)
 
 def insert_single(connection, recording):
     gid = data.get_id_from_recording(connection, recording)
     if not gid:
         gid = data.submit_recording(connection, recording)
-    loaded = data.load_recording(connection, gid)
+    loaded = data.load_recording_from_msid(connection, gid)
     return loaded
 
 def insert_all_in_transaction(recordings):
