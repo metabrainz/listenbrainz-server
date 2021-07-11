@@ -170,7 +170,7 @@ describe("unpinRecording", () => {
     expect(wrapper.state("currentlyPinned")).toBeTruthy();
   });
 
-  it("doesn't update currentlyPinned state if status code is not 200", async () => {
+  it("doesn't update currentlyPinned in state if status code is not 200", async () => {
     const wrapper = mount<PinnedRecordingCard>(
       <GlobalAppContext.Provider value={globalProps}>
         <PinnedRecordingCard {...{ ...props }} />
@@ -282,7 +282,7 @@ describe("deletePin", () => {
     expect(wrapper.state("isDeleted")).toBeFalsy();
   });
 
-  it("doesn't update xxxxxxxxxx state if status code is not 200", async () => {
+  it("doesn't update currentlyPinned in state if status code is not 200", async () => {
     const wrapper = mount<PinnedRecordingCard>(
       <GlobalAppContext.Provider value={globalProps}>
         <PinnedRecordingCard {...{ ...props }} />
