@@ -23,6 +23,7 @@ import ListenCard from "./listens/ListenCard";
 import Loader from "./components/Loader";
 import PinRecordingModal from "./PinRecordingModal";
 import { formatWSMessageToListen, getPageProps } from "./utils";
+import PinnedRecordingCard from "./PinnedRecordingCard";
 
 export type RecentListensProps = {
   latestListenTs: number;
@@ -32,6 +33,7 @@ export type RecentListensProps = {
   oldestListenTs: number;
   profileUrl?: string;
   user: ListenBrainzUser;
+  userPinnedRecording?: PinnedRecording;
   webSocketsServerUrl: string;
 } & WithAlertNotificationsInjectedProps;
 
@@ -532,7 +534,13 @@ export default class RecentListens extends React.Component<
       dateTimePickerValue,
       recordingToPin,
     } = this.state;
-    const { latestListenTs, oldestListenTs, user, newAlert } = this.props;
+    const {
+      latestListenTs,
+      oldestListenTs,
+      user,
+      newAlert,
+      userPinnedRecording,
+    } = this.props;
     const { currentUser } = this.context;
 
     const isNewestButtonDisabled = listens?.[0]?.listened_at >= latestListenTs;
@@ -546,6 +554,17 @@ export default class RecentListens extends React.Component<
       <div role="main">
         <div className="row">
           <div className="col-md-8">
+            {userPinnedRecording && (
+              <div id="pinned-recordings">
+                <PinnedRecordingCard
+                  userName={user.name}
+                  PinnedRecording={userPinnedRecording}
+                  isCurrentUser={currentUser?.name === user?.name}
+                  newAlert={newAlert}
+                />
+              </div>
+            )}
+
             <h3>
               {mode === "listens" || mode === "recent"
                 ? `Recent listens${
@@ -770,6 +789,7 @@ document.addEventListener("DOMContentLoaded", () => {
     listens,
     oldest_listen_ts,
     mode,
+    userPinnedRecording,
     profile_url,
     save_url,
     user,
@@ -804,6 +824,7 @@ document.addEventListener("DOMContentLoaded", () => {
           latestSpotifyUri={latest_spotify_uri}
           listens={listens}
           mode={mode}
+          userPinnedRecording={userPinnedRecording}
           oldestListenTs={oldest_listen_ts}
           profileUrl={profile_url}
           user={user}
