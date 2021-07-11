@@ -81,8 +81,7 @@ class WritablePinnedRecording(PinnedRecording):
     def set_pinned_until_to_default(cls, pin_until, values):
         return pin_until or values["created"] + timedelta(days=DAYS_UNTIL_UNPIN)
 
-
-def fetch_track_metadata_for_pin(pin: PinnedRecording):
+def fetch_track_metadata_for_pin(pin: PinnedRecording) -> PinnedRecording:
     """ Fetches track_metadata (track_name, artist_name, release_name...) for a given PinnedRecording.
 
         Args:
@@ -96,3 +95,4 @@ def fetch_track_metadata_for_pin(pin: PinnedRecording):
         metadata = load_recording_from_msid(pin.recording_msid)['payload']
 
     pin.track_metadata = {"track_name": metadata["title"], "artist_name": metadata["artist"]}
+    return pin
