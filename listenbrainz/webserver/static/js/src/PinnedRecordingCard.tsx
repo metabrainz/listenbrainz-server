@@ -46,7 +46,6 @@ export default class PinnedRecordingCard extends React.Component<
 
   determineIfCurrentlyPinned = (): Boolean => {
     const { PinnedRecording } = this.props;
-
     const pinnedUntilTime: Date = new Date(PinnedRecording.pinned_until * 1000);
 
     // invalid date
