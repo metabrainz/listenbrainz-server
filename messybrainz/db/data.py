@@ -181,6 +181,7 @@ def submit_recording(connection, data):
 
     return gid
 
+
 def load_recording_from_msid(connection, messybrainz_id):
     """ Return data for a recording with specified MessyBrainz ID.
 
@@ -217,6 +218,7 @@ def load_recording_from_msid(connection, messybrainz_id):
     result["ids"]["release_msid"] = str(row["release"]) if row["release"] else None
     result["ids"]["recording_msid"] = str(row["gid"])
     return result
+
 
 def load_recording_from_mbid(connection, musicbrainz_id):
     """ Return data for a recording with specified MusicBrainz ID.

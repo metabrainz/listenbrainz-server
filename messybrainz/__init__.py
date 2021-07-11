@@ -28,9 +28,11 @@ def submit_listens_and_sing_me_a_sweet_song(recordings):
     else:
         raise exceptions.ErrorAddingException("Failed to add data")
 
+
 def load_recording_from_msid(msid):
     with db.engine.begin() as connection:
         return data.load_recording_from_msid(connection, msid)
+
 
 def load_recording_from_mbid(mbid):
     with db.engine.begin() as connection:
