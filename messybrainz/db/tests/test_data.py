@@ -30,6 +30,7 @@ recording = {
     'additional_info': {
         'key1': 'Value1',
     },
+    'recording_mbid': "5465ca86-3881-4349-81b2-6efbd3a59451"
 }
 
 recording_diff_case = {
@@ -39,6 +40,7 @@ recording_diff_case = {
     'additional_info': {
         'key1': 'VaLue1',
     },
+    'recording_mbid': "5465ca86-3881-4349-81b2-6efbd3a59451"
 }
 
 class DataTestCase(DatabaseTestCase):
@@ -59,7 +61,7 @@ class DataTestCase(DatabaseTestCase):
         with db.engine.connect() as connection:
             recording_msid = data.submit_recording(connection, recording)
             artist_msid = data.get_artist_credit(connection, recording['artist'])
-            recording_data = data.load_recording(connection, recording_msid)
+            recording_data = data.load_recording_from_msid(connection, recording_msid)
             self.assertEqual(artist_msid, recording_data['ids']['artist_msid'])
 
 
@@ -67,7 +69,7 @@ class DataTestCase(DatabaseTestCase):
         with db.engine.connect() as connection:
             recording_msid = data.submit_recording(connection, recording)
             release_msid = data.get_release(connection, recording['release'])
-            recording_data = data.load_recording(connection, recording_msid)
+            recording_data = data.load_recording_from_msid(connection, recording_msid)
             self.assertEqual(release_msid, recording_data['ids']['release_msid'])
 
 
@@ -90,10 +92,16 @@ class DataTestCase(DatabaseTestCase):
             msid2 = str(data.get_id_from_recording(connection, recording_diff_case))
             self.assertEqual(msid1, msid2)
 
-    def test_load_recording(self):
+    def test_load_recording_from_msid(self):
         with db.engine.connect() as connection:
             recording_msid = data.submit_recording(connection, recording)
-            result = data.load_recording(connection, recording_msid)
+            result = data.load_recording_from_msid(connection, recording_msid)
+            self.assertDictEqual(result['payload'], recording)
+
+    def test_load_recording_from_mbid(self):
+        with db.engine.connect() as connection:
+            data.submit_recording(connection, recording)
+            result = data.load_recording_from_mbid(connection, recording["recording_mbid"])
             self.assertDictEqual(result['payload'], recording)
 
     def test_convert_to_messybrainz_json(self):
