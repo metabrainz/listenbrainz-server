@@ -1,0 +1,133 @@
+#pinned-recordings {
+  padding: 10px;
+  
+  .pinned-recording-card {
+    transition: .3s linear all;
+    display: flex;
+    padding: 15px;
+    margin-bottom: 7px;
+    
+    .pin-title{
+      line-height: 30px;
+    }
+  
+    &.currently-pinned {
+      background-color: @blue !important ;
+      color: white;
+
+      .text-muted {
+        color: rgb(204, 204, 204);
+      }
+    }
+
+    > div {
+      padding: 0px;
+    }
+
+    .pin-details {
+      width: 100%;
+      
+      p {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space:nowrap;
+        margin-bottom: 0px;
+      }
+
+      .blurb-content {
+        padding-top: 5px;
+        white-space: normal;
+      }
+    }
+    .pinned-recording-time {
+      font-style: italic;
+    }
+    
+    > .col-xs-9, .col-xs-12 {
+      display: flex;
+
+      > .col-xs-8, .col-xs-12 {
+        display: flex;
+      }
+
+      > .col-xs-4 {
+        display: table;
+
+        > span {
+          display: table-cell;
+          vertical-align: middle;
+        }
+      }
+    }
+    
+    > .col-xs-3 {
+      display: table;
+
+      > * {
+        display: table-cell;
+        vertical-align: middle;
+      }
+
+      a {
+        word-break: break-word;
+      }
+    }
+    
+    .pinned-recording-controls {
+      > svg:hover {
+        cursor: pointer;
+      }
+
+      .dropdown-menu {
+        min-width: 140px;
+        border-radius: 4px;
+        padding: 10px 0px;
+        width: 250px;
+        top: 70%;
+
+        button {
+          width: 100%;
+          background: none;
+          color: black;
+          border: none;
+          padding: 5px 20px;
+          font: inherit;
+          cursor: pointer;
+          outline: inherit;
+          text-align: left;
+
+          &:hover {
+            color: #ffffff;
+            background-color: #eb743b;
+          }
+        }
+      }
+    }
+
+    &.deleted {
+      animation: deleted-animation 0.3s linear forwards;
+    }
+    
+    @keyframes deleted-animation {
+      0% {
+        opacity: 1;
+        padding: inherit;
+        height: inherit;
+        margin: inherit;
+        transform: scaleY(1);
+      }
+
+      50% {
+        opacity: 0;
+      }
+
+      100% {
+        opacity: 0;
+        height: 0px;
+        margin-top: -40px;
+        transform: scaleY(0);
+        display:none;
+      }
+    }
+  }
+}

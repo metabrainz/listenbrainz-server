@@ -1,0 +1,152 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PinnedRecordingCard renders correctly 1`] = `
+<PinnedRecordingCard
+  PinnedRecording={
+    Object {
+      "blurb_content": "I LOVE",
+      "created": 1111111111,
+      "pinned_until": 9999999999,
+      "recording_mbid": "98255a8c-017a-4bc7-8dd6-1fa36124572b",
+      "row_id": 1,
+      "track_metadata": Object {
+        "artist_name": "Rick Astley",
+        "track_name": "Never Gonna Give You Up",
+      },
+    }
+  }
+  isCurrentUser={true}
+  newAlert={[Function]}
+  userName="name"
+>
+  <ForwardRef
+    className="pinned-recording-card row currently-pinned
+        "
+  >
+    <div
+      className="pinned-recording-card row currently-pinned
+        "
+      style={
+        Object {
+          "background": "#FFFFFF",
+          "border": "1px solid #EEEEEE",
+          "borderRadius": "8px",
+          "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
+          "boxSizing": "border-box",
+          "height": "100%",
+        }
+      }
+    >
+      <div
+        className=" col-xs-9"
+      >
+        <MediaQuery
+          minWidth={768}
+        />
+        <MediaQuery
+          maxWidth={767}
+        />
+      </div>
+      <div
+        className=" col-xs-3 text-center"
+      >
+        <div
+          className="pinned-recording-controls"
+        >
+          <FontAwesomeIcon
+            aria-expanded="true"
+            aria-haspopup="true"
+            border={false}
+            className="dropdown-toggle"
+            data-toggle="dropdown"
+            fixedWidth={false}
+            flip={null}
+            icon={
+              Object {
+                "icon": Array [
+                  192,
+                  512,
+                  Array [],
+                  "f142",
+                  "M96 184c39.8 0 72 32.2 72 72s-32.2 72-72 72-72-32.2-72-72 32.2-72 72-72zM24 80c0 39.8 32.2 72 72 72s72-32.2 72-72S135.8 8 96 8 24 40.2 24 80zm0 352c0 39.8 32.2 72 72 72s72-32.2 72-72-32.2-72-72-72-72 32.2-72 72z",
+                ],
+                "iconName": "ellipsis-v",
+                "prefix": "fas",
+              }
+            }
+            id="pinnedRecordingControlsDropdown"
+            inverse={false}
+            listItem={false}
+            mask={null}
+            pull={null}
+            pulse={false}
+            rotation={null}
+            size={null}
+            spin={false}
+            swapOpacity={false}
+            symbol={false}
+            title="Delete"
+            transform={null}
+          >
+            <svg
+              aria-expanded="true"
+              aria-haspopup="true"
+              aria-labelledby="svg-inline--fa-title-000000000000"
+              className="svg-inline--fa fa-ellipsis-v fa-w-6 dropdown-toggle"
+              data-icon="ellipsis-v"
+              data-prefix="fas"
+              data-toggle="dropdown"
+              id="pinnedRecordingControlsDropdown"
+              role="img"
+              style={Object {}}
+              viewBox="0 0 192 512"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <title
+                id="svg-inline--fa-title-000000000000"
+                style={Object {}}
+              >
+                Delete
+              </title>
+              <path
+                d="M96 184c39.8 0 72 32.2 72 72s-32.2 72-72 72-72-32.2-72-72 32.2-72 72-72zM24 80c0 39.8 32.2 72 72 72s72-32.2 72-72S135.8 8 96 8 24 40.2 24 80zm0 352c0 39.8 32.2 72 72 72s72-32.2 72-72-32.2-72-72-72-72 32.2-72 72z"
+                fill="currentColor"
+                style={Object {}}
+              />
+            </svg>
+          </FontAwesomeIcon>
+          <ul
+            aria-labelledby="pinnedRecordingControlsDropdown"
+            className="dropdown-menu dropdown-menu-right"
+          >
+            <ListenControl
+              action={[Function]}
+              title="Unpin"
+            >
+              <button
+                onClick={[Function]}
+                title="Unpin"
+                type="button"
+              >
+                Unpin
+              </button>
+            </ListenControl>
+            <ListenControl
+              action={[Function]}
+              title="Delete Pin"
+            >
+              <button
+                onClick={[Function]}
+                title="Delete Pin"
+                type="button"
+              >
+                Delete Pin
+              </button>
+            </ListenControl>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </ForwardRef>
+</PinnedRecordingCard>
+`;

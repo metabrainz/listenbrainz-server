@@ -59,6 +59,7 @@ export default class PinRecordingModal extends React.Component<
             `${recordingToPin.track_metadata.artist_name} - ${recordingToPin.track_metadata.track_name}`
           );
           this.setState({ blurbContent: "" });
+          window.location.reload();
         }
       } catch (error) {
         this.handleError(error, "Error while pinning recording");
