@@ -110,11 +110,6 @@ export default class PinnedRecordingCard extends React.Component<
         if (status === 200) {
           this.setState({ currentlyPinned: false });
           this.setState({ isDeleted: true });
-
-          // wait for the animation to finish
-          // setTimeout(function removeListen() {
-          //   removeListenFromListenList(listen);
-          // }, 1000);
         }
       } catch (error) {
         this.handleError(error, "Error while deleting pin");
