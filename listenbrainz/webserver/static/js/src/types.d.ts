@@ -459,13 +459,17 @@ declare type RecommendationFeedbackMap = {
 };
 
 declare type PinnedRecording = {
-  artist_name?: string | null;
   blurb_content?: string | null;
-  created: string;
-  pinned_until: string;
-  pinned_id: number;
+  created: number;
+  pinned_until: number;
+  row_id: number;
   recording_mbid: string;
-  track_name?: string | null;
+  track_metadata: {
+    artist_name: string;
+    release_name?: string | null;
+    track_name: string;
+    additional_info?: AdditionalInfo;
+  };
 };
 
 /** For recommending a track from the front-end */
