@@ -6,10 +6,11 @@ import listenbrainz.db.user as db_user
 from collections import defaultdict
 from yattag import Doc
 import yattag
-from flask import Blueprint, request, render_template
+from flask import Blueprint, request, render_template, current_app
 from flask_login import login_required, current_user
 from listenbrainz.webserver.external import messybrainz
 from brainzutils.ratelimit import ratelimit
+from brainzutils.musicbrainz_db import engine as mb_engine
 from listenbrainz.webserver.errors import InvalidAPIUsage, CompatError
 from listenbrainz.webserver.decorators import api_listenstore_needed
 import xmltodict
@@ -252,6 +253,10 @@ def record_listens(request, data):
             raise InvalidAPIUsage(CompatError.INVALID_API_KEY, output_format=output_format)   # Invalid API_KEY
         raise InvalidAPIUsage(CompatError.INVALID_SESSION_KEY, output_format=output_format)   # Invalid Session KEY
 
+    user = db_user.get(session.user_id, fetch_email=True)
+    if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and user["email"] is None:
+        raise InvalidAPIUsage(CompatError.NO_EMAIL, output_format=output_format)  # No email available for user in LB
+
     lookup = defaultdict(dict)
     for key, value in data.items():
         if key in ["sk", "token", "api_key", "method", "api_sig"]:
@@ -271,11 +276,9 @@ def record_listens(request, data):
 
     # Convert to native payload then submit 'em after validation.
     listen_type, native_payload = _to_native_api(lookup, data['method'], output_format)
-    for listen in native_payload:
-        validate_listen(listen, listen_type)
+    validated_payload = [validate_listen(listen, listen_type) for listen in native_payload]
 
-    user = db_user.get(session.user_id)
-    augmented_listens = insert_payload(native_payload, user, listen_type=listen_type)
+    augmented_listens = insert_payload(validated_payload, user, listen_type=listen_type)
 
     # With corrections than the original submitted listen.
     doc, tag, text = Doc().tagtext()

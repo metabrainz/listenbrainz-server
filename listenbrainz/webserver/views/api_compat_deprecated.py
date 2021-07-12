@@ -24,6 +24,7 @@
 
 import json
 import listenbrainz.db.user as db_user
+from brainzutils.musicbrainz_db import engine as mb_engine
 
 from hashlib import md5
 from time import time
@@ -31,7 +32,8 @@ from time import time
 from flask import current_app, Blueprint, request, render_template, redirect
 from werkzeug.exceptions import BadRequest
 from listenbrainz.db.lastfm_session import Session
-from listenbrainz.webserver.views.api_tools import insert_payload, is_valid_timestamp, LISTEN_TYPE_PLAYING_NOW
+from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
+from listenbrainz.webserver.views.api_tools import insert_payload, is_valid_timestamp, LISTEN_TYPE_PLAYING_NOW, is_valid_uuid
 
 
 api_compat_old_bp = Blueprint('api_compat_old', __name__)
@@ -50,9 +52,12 @@ def handshake():
     if request.args.get('hs', '') != 'true':
         return redirect('https://listenbrainz.org/lastfm-proxy')
 
-    user = db_user.get_by_mb_id(request.args.get('u'))
+    user = db_user.get_by_mb_id(request.args.get('u'), fetch_email=True)
     if user is None:
         return 'BADAUTH\n', 401
+
+    if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and user["email"] is None:
+        return 'BADAUTH ' + REJECT_LISTENS_WITHOUT_EMAIL_ERROR + '\n', 401
 
     auth_token = request.args.get('a', '')
     timestamp = request.args.get('t', 0)
@@ -175,7 +180,9 @@ def _to_native_api(data, append_key):
         listen['track_metadata']['additional_info']['track_number'] = data['n{}'.format(append_key)]
 
     if 'm{}'.format(append_key) in data:
-        listen['track_metadata']['additional_info']['recording_mbid'] = data['m{}'.format(append_key)]
+        mbid = data['m{}'.format(append_key)]
+        if is_valid_uuid(mbid):
+            listen['track_metadata']['additional_info']['recording_mbid'] = mbid
 
     if 'l{}'.format(append_key) in data:
         listen['track_metadata']['additional_info']['track_length'] = data['l{}'.format(append_key)]

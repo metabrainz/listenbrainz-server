@@ -128,10 +128,9 @@ export default class YoutubePlayer
     }
 
     try {
-      const { api_key, access_token } = youtubeUser;
+      const { api_key } = youtubeUser;
       const videoIds = await searchForYoutubeTrack(
         api_key,
-        access_token,
         trackName,
         artistName,
         releaseName,

@@ -38,4 +38,4 @@ services:
       - rabbitmq 
 
   rabbitmq:
-    image: rabbitmq:3.6.5
+    image: rabbitmq:3.8.16

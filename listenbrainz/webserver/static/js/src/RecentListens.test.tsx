@@ -15,6 +15,7 @@ import RecentListens, {
   RecentListensProps,
   RecentListensState,
 } from "./RecentListens";
+import PinRecordingModal from "./PinRecordingModal";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -84,6 +85,7 @@ fetchMock.mockIf(
 describe("Recentlistens", () => {
   it("renders correctly on the profile page", () => {
     // Datepicker component uses current time at load as max date,
+    // and PinnedRecordingModal component uses current time at load to display recording unpin date,
     // so we have to mock the Date constructor otherwise snapshots will be different every day
     const mockDate = new Date("2021-05-19");
     const fakeDateNow = jest
@@ -399,6 +401,22 @@ describe("isCurrentListen", () => {
     wrapper.setState({ currentListen: undefined });
 
     expect(instance.isCurrentListen({} as Listen)).toBeFalsy();
+  });
+});
+
+describe("updateRecordingToPin", () => {
+  it("sets the recordingToPin in the state", async () => {
+    const wrapper = mount<RecentListens>(
+      <RecentListens {...props} />,
+      mountOptions
+    );
+    const instance = wrapper.instance();
+    const recordingToPin = props.listens[1];
+
+    expect(wrapper.state("recordingToPin")).toEqual(props.listens[0]); // default recordingToPin
+
+    instance.updateRecordingToPin(recordingToPin);
+    expect(wrapper.state("recordingToPin")).toEqual(recordingToPin);
   });
 });
 
@@ -810,6 +828,36 @@ describe("Pagination", () => {
       expect(wrapper.state("previousListenTs")).toEqual(undefined);
       expect(pushStateSpy).toHaveBeenCalledWith(null, "", "");
       expect(scrollSpy).toHaveBeenCalled();
+    });
+  });
+});
+
+describe("pinRecordingModal", () => {
+  it("renders the PinRecordingModal component with the correct props", async () => {
+    const wrapper = mount<RecentListens>(
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
+    );
+    const instance = wrapper.instance();
+    const recordingToPin = props.listens[0];
+    let pinRecordingModal = wrapper.find(PinRecordingModal).first();
+
+    // recentListens renders pinRecordingModal with listens[0] as recordingToPin by default
+    expect(pinRecordingModal.props()).toEqual({
+      isCurrentUser: true,
+      recordingToPin: props.listens[0],
+      newAlert: props.newAlert,
+    });
+
+    instance.updateRecordingToPin(recordingToPin);
+    wrapper.update();
+
+    pinRecordingModal = wrapper.find(PinRecordingModal).first();
+    expect(pinRecordingModal.props()).toEqual({
+      isCurrentUser: true,
+      recordingToPin,
+      newAlert: props.newAlert,
     });
   });
 });

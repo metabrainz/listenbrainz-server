@@ -1,0 +1,31 @@
+{
+    "listen_type": "import",
+    "payload": [
+        {
+            "track_metadata": {
+                "track_name": "Fade",
+                "artist_name": "Kanye West",
+                "release_name": "The Life of Pablo",
+                "additional_info": {
+                    "recording_mbid": null,
+                    "release_mbid": "",
+                    "release_group_mbid": "2cfad207-3f55-4aec-8120-86cf66e34d59",
+                    "artist_mbids": [],
+                    "work_mbids": null
+                }
+            },
+            "listened_at": 1486466946
+        },
+        {
+            "track_metadata": {
+                "track_name": "Sister",
+                "artist_name": "The Black Keys",
+                "release_name": "El Camino",
+                "additional_info": {
+                    "artist_mbids": [null, "", "ac4f356f-23e5-40ab-990e-da7e34b65d6e"]
+                }
+            },
+            "listened_at": 1486466992
+        }
+    ]
+}
