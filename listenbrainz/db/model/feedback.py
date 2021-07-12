@@ -2,7 +2,7 @@ import uuid
 
 from datetime import datetime
 from pydantic import BaseModel, ValidationError, validator
-from listenbrainz.db.model.utils import check_rec_mbid_msid_is_valid_uuid
+from listenbrainz.db.model.validators import check_rec_mbid_msid_is_valid_uuid
 
 class Feedback(BaseModel):
     """ Represents a feedback object
