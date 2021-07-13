@@ -108,6 +108,8 @@ def import_data():
         "profile_url": url_for('user.profile', user_name=user_data["name"]),
         "lastfm_api_url": current_app.config["LASTFM_API_URL"],
         "lastfm_api_key": current_app.config["LASTFM_API_KEY"],
+        "librefm_api_url": current_app.config["LIBREFM_API_URL"],
+        "librefm_api_key": current_app.config["LIBREFM_API_KEY"],
     }
 
     return render_template(
