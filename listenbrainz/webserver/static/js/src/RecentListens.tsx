@@ -32,6 +32,7 @@ export type RecentListensProps = {
   oldestListenTs: number;
   profileUrl?: string;
   user: ListenBrainzUser;
+  userPinnedRecording?: PinnedRecording;
   webSocketsServerUrl: string;
 } & WithAlertNotificationsInjectedProps;
 
@@ -532,7 +533,13 @@ export default class RecentListens extends React.Component<
       dateTimePickerValue,
       recordingToPin,
     } = this.state;
-    const { latestListenTs, oldestListenTs, user, newAlert } = this.props;
+    const {
+      latestListenTs,
+      oldestListenTs,
+      user,
+      newAlert,
+      userPinnedRecording,
+    } = this.props;
     const { currentUser } = this.context;
 
     const isNewestButtonDisabled = listens?.[0]?.listened_at >= latestListenTs;
@@ -770,6 +777,7 @@ document.addEventListener("DOMContentLoaded", () => {
     listens,
     oldest_listen_ts,
     mode,
+    userPinnedRecording,
     profile_url,
     save_url,
     user,
@@ -804,6 +812,7 @@ document.addEventListener("DOMContentLoaded", () => {
           latestSpotifyUri={latest_spotify_uri}
           listens={listens}
           mode={mode}
+          userPinnedRecording={userPinnedRecording}
           oldestListenTs={oldest_listen_ts}
           profileUrl={profile_url}
           user={user}
