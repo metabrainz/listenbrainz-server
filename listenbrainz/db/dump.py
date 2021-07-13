@@ -54,7 +54,7 @@ INCREMENTAL_MAX_AGE = 26  # hours
 
 # this dict contains the tables dumped in public dump as keys
 # and a tuple of columns that should be dumped as values
-PUBLIC_TABLES = {
+PUBLIC_TABLES_DUMP = {
     '"user"': (
         'id',
         'created',
@@ -62,7 +62,7 @@ PUBLIC_TABLES = {
         'musicbrainz_row_id',
         # the following are dummy values for columns that we do not want to
         # dump in the public dump
-        '\'\'',  # auth token
+        'null',  # auth token
         'to_timestamp(0)',  # last_login
         'to_timestamp(0)',  # latest_import
     ),
@@ -108,6 +108,19 @@ PUBLIC_TABLES = {
         'created'
     ),
 }
+
+PUBLIC_TABLES_IMPORT = PUBLIC_TABLES_DUMP.copy()
+# When importing fields with COPY we need to use the names of the fields, rather
+# than the placeholders that we set for the export
+PUBLIC_TABLES_IMPORT['"user"'] = (
+        'id',
+        'created',
+        'musicbrainz_id',
+        'musicbrainz_row_id',
+        'auth_token',
+        'last_login',
+        'latest_import',
+    )
 
 # this dict contains the tables dumped in the private dump as keys
 # and a tuple of columns that should be dumped as values
@@ -353,7 +366,7 @@ def create_public_dump(location, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
     return _create_dump(
         location=location,
         dump_type='public',
-        tables=PUBLIC_TABLES,
+        tables=PUBLIC_TABLES_DUMP,
         dump_time=dump_time,
         threads=threads,
     )
@@ -552,7 +565,7 @@ def import_postgres_dump(private_dump_archive_path=None, public_dump_archive_pat
         current_app.logger.info(
             'Importing public dump %s...', public_dump_archive_path)
 
-        tables_to_import = PUBLIC_TABLES.copy()
+        tables_to_import = PUBLIC_TABLES_IMPORT.copy()
         if private_dump_archive_path:
             # if the private dump exists and has been imported, we need to
             # ignore the sanitized user table in the public dump
