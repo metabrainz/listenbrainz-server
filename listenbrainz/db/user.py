@@ -272,41 +272,6 @@ def update_last_login(musicbrainz_id):
                 "Couldn't update last_login: %s" % str(err))
 
 
-def update_latest_import(musicbrainz_id, ts):
-    """ Update the value of latest_import field for user with specified MusicBrainz ID
-
-    Args:
-        musicbrainz_id (str): MusicBrainz username of user
-        ts (int): Timestamp value with which to update the database
-    """
-
-    with db.engine.connect() as connection:
-        try:
-            connection.execute(sqlalchemy.text("""
-                UPDATE "user"
-                   SET latest_import = to_timestamp(:ts)
-                 WHERE musicbrainz_id = :musicbrainz_id
-                """), {
-                'ts': ts,
-                'musicbrainz_id': musicbrainz_id
-            })
-        except sqlalchemy.exc.ProgrammingError as e:
-            logger.error(e)
-            raise DatabaseException
-
-
-def increase_latest_import(musicbrainz_id, ts):
-    """Increases the latest_import field for user with specified MusicBrainz ID"""
-    user = get_by_mb_id(musicbrainz_id)
-    if ts > int(user['latest_import'].strftime('%s')):
-        update_latest_import(musicbrainz_id, ts)
-
-
-def reset_latest_import(musicbrainz_id):
-    """Resets the latest_import field for user with specified MusicBrainz ID to 0"""
-    update_latest_import(musicbrainz_id, 0)
-
-
 def get_all_users(created_before=None, columns=None):
     """ Returns a list of all users in the database
 

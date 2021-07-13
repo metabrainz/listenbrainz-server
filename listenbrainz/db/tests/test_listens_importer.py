@@ -8,6 +8,7 @@ import listenbrainz.db.external_service_oauth as db_oauth
 import time
 
 from data.model.external_service import ExternalServiceType
+from listenbrainz.db import listens_importer
 from listenbrainz.db.testing import DatabaseTestCase
 
 
@@ -47,3 +48,15 @@ class ListensImporterDatabaseTestCase(DatabaseTestCase):
         spotify_user = db_spotify.get_user_import_details(self.user_id)
         self.assertEqual(t, int(spotify_user['latest_listened_at'].strftime('%s')))
         self.assertIsNotNone(spotify_user['last_updated'])
+
+    def test_update_latest_import(self):
+        user = db_user.get_or_create(3, 'updatelatestimportuser')
+
+        val = int(time.time())
+        listens_importer.update_latest_listened_at(user['id'], ExternalServiceType.LASTFM, val)
+        ts = listens_importer.get_latest_listened_at(user['id'], ExternalServiceType.LASTFM)
+        self.assertEqual(int(ts.strftime('%s')), val)
+
+        listens_importer.update_latest_listened_at(user['id'], ExternalServiceType.LASTFM, 0)
+        ts = listens_importer.get_latest_listened_at(user['id'], ExternalServiceType.LASTFM)
+        self.assertEqual(int(ts.strftime('%s')), 0)

@@ -6,6 +6,7 @@ import psycopg2
 from flask import Blueprint, request, jsonify, current_app
 from brainzutils.musicbrainz_db import engine as mb_engine
 
+from data.model.external_service import ExternalServiceType
 from listenbrainz.listenstore import TimescaleListenStore
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
     APIUnauthorized
@@ -15,6 +16,7 @@ from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz import webserver
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
+from listenbrainz.db import listens_importer
 from brainzutils.ratelimit import ratelimit
 import listenbrainz.webserver.redis_connection as redis_connection
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
@@ -347,29 +349,38 @@ def latest_import():
     """
     if request.method == 'GET':
         user_name = request.args.get('user_name', '')
+        service_name = request.args.get('service', 'lastfm')
+        try:
+            service = ExternalServiceType[service_name.upper()]
+        except KeyError:
+            raise APINotFound("Service does not exist: {}".format(service_name))
         user = db_user.get_by_mb_id(user_name)
+        latest_import_ts = listens_importer.get_latest_listened_at(user["id"], service)
         if user is None:
-            raise APINotFound(
-                "Cannot find user: {user_name}".format(user_name=user_name))
+            raise APINotFound("Cannot find user: {user_name}".format(user_name=user_name))
         return jsonify({
             'musicbrainz_id': user['musicbrainz_id'],
-            'latest_import': 0 if not user['latest_import'] else int(user['latest_import'].strftime('%s'))
+            'latest_import': 0 if not latest_import_ts else int(latest_import_ts.strftime('%s'))
         })
     elif request.method == 'POST':
         user = validate_auth_header()
 
         try:
-            ts = ujson.loads(request.get_data()).get('ts', 0)
-        except ValueError:
+            data = ujson.loads(request.get_data())
+            ts = int(data.get('ts', 0))
+            service_name = data.get('service', 'lastfm')
+            service = ExternalServiceType[service_name.upper()]
+        except (ValueError, KeyError):
             raise APIBadRequest('Invalid data sent')
 
         try:
-            db_user.increase_latest_import(user['musicbrainz_id'], int(ts))
-        except DatabaseException as e:
-            current_app.logger.error(
-                "Error while updating latest import: {}".format(e))
-            raise APIInternalServerError(
-                'Could not update latest_import, try again')
+            last_import_ts = listens_importer.get_latest_listened_at(user["id"], service)
+            last_import_ts = 0 if not last_import_ts else int(last_import_ts.strftime('%s'))
+            if ts > last_import_ts:
+                listens_importer.update_latest_listened_at(user["id"], service, ts)
+        except DatabaseException:
+            current_app.logger.error("Error while updating latest import: ", exc_info=True)
+            raise APIInternalServerError('Could not update latest_import, try again')
 
         # During unrelated tests _ts may be None -- improving this would be a great headache. 
         # However, during the test of this code and while serving requests _ts is set.
