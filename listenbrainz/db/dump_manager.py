@@ -418,3 +418,12 @@ def sanity_check_dumps(location, expected_count):
     print("Expected %d dump files, found %d. Aborting." %
           (expected_count, count))
     return False
+
+@cli.command(name="create_parquet")
+def create_test_parquet_files():
+    app = create_app()
+    with app.app_context():
+        from listenbrainz.webserver.timescale_connection import _ts as ls
+        ls.dump_listens_for_spark("/tmp", 999))
+        sys.exit(0)
+
