@@ -17,7 +17,6 @@ exports[`YoutubePlayer renders 1`] = `
   show={true}
   youtubeUser={
     Object {
-      "access_token": "frontend-test",
       "api_key": "fake-api-key",
     }
   }

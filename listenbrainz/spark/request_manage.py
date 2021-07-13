@@ -311,7 +311,7 @@ def cron_request_similar_users(ctx):
 
 @cli.command(name='cron_request_recommendations')
 @click.pass_context
-def cron_request_similar_users(ctx):
+def cron_request_recommendations(ctx):
     ctx.invoke(request_dataframes)
     ctx.invoke(request_model)
     ctx.invoke(request_candidate_sets)

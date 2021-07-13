@@ -793,4 +793,27 @@ export default class APIService {
     });
     await this.checkStatus(response);
   };
+
+  submitPinRecording = async (
+    userToken: string,
+    recordingMSID: string,
+    recordingMBID?: string,
+    blurb_content?: string
+  ): Promise<number> => {
+    const url = `${this.APIBaseURI}/pin`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({
+        recording_msid: recordingMSID,
+        recording_mbid: recordingMBID,
+        blurb_content,
+      }),
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
 }

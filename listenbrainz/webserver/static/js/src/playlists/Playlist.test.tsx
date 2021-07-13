@@ -28,7 +28,6 @@ const props = {
 const GlobalContextMock: GlobalAppContextT = {
   APIService: new APIService("foo"),
   youtubeAuth: {
-    access_token: "frontend-test",
     api_key: "fake-api-key",
   },
   spotifyAuth: {
