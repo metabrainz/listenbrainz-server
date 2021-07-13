@@ -224,7 +224,7 @@ def load_recording_from_mbid(connection, musicbrainz_id):
         messybrainz_id (uuid): the MusicBrainz ID of the recording
 
     Returns:
-        dict: the recording data for the recording with specified MessyBrainz ID
+        dict: the recording data for the recording with specified MusicBrainz ID
     """
     query = text("""SELECT rj.data
                          , r.artist

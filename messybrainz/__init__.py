@@ -6,7 +6,7 @@ from messybrainz import db
 
 def submit_listens_and_sing_me_a_sweet_song(recordings):
     """ Inserts a list of recordings into MessyBrainz.
-    
+
     Args:
         recordings (list): a list of recordings to be inserted
     Returns:
@@ -51,7 +51,7 @@ def load_recording_from_msid(msid):
 
 def load_recording_from_mbid(mbid):
     """ Returns data for a recording with specified MusicBrainz ID.
-    
+
     Args:
         mbid (uuid): the MusicBrainz ID of the recording
     Returns:
@@ -63,7 +63,7 @@ def load_recording_from_mbid(mbid):
 
 def insert_single(connection, recording):
     """ Inserts a single recording into MessyBrainz.
-    
+
     Args:
         connection: the sqlalchemy db connection to be used to execute queries
         recording: the recording to be inserted
@@ -79,7 +79,7 @@ def insert_single(connection, recording):
 
 def insert_all_in_transaction(recordings):
     """ Inserts a list of recordings into MessyBrainz.
-    
+
     Args:
         recordings (list): a list of recordings to be inserted
     Returns:
