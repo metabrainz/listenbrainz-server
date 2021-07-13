@@ -197,8 +197,8 @@ def load_recording_from_msid(connection, messybrainz_id):
                          , r.artist
                          , r.release
                          , r.gid
-                      FROM recording_json rj
-                 LEFT JOIN recording r
+                      FROM recording_json AS rj
+                 LEFT JOIN recording AS r
                         ON rj.id = r.data
                      WHERE r.gid = :gid""")
     result = connection.execute(query, {"gid": str(messybrainz_id)})
@@ -230,8 +230,8 @@ def load_recording_from_mbid(connection, musicbrainz_id):
                          , r.artist
                          , r.release
                          , r.gid
-                      FROM recording_json rj
-                 LEFT JOIN recording r
+                      FROM recording_json AS rj
+                 LEFT JOIN recording AS r
                         ON rj.id = r.data
                      WHERE rj.data ->> 'recording_mbid' = :recording_mbid""")
     result = connection.execute(query, {"recording_mbid": str(musicbrainz_id)})
