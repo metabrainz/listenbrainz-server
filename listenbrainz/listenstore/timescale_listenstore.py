@@ -677,7 +677,14 @@ class TimescaleListenStore(ListenStore):
         self.log.info('Dump present at %s!', archive_path)
         return archive_path
 
-    def write_parquet_files(self, archive_dir, temp_dir, tar_file, start_time=None, end_time=None, full_dump=True):
+    def write_parquet_files(self,
+                            archive_dir,
+                            temp_dir,
+                            tar_file,
+                            start_time=None,
+                            end_time=None,
+                            full_dump=True,
+                            parquet_file_id=0):
         """
             Carry out fetching listens from the DB, joining them to the MBID mapping table and
             then writing them to parquet files.
@@ -689,6 +696,11 @@ class TimescaleListenStore(ListenStore):
             start_time and end_time (datetime): the time range for which listens should be dumped
                 start_time defaults to utc 0 (meaning a full dump) and end_time defaults to the current time
             full_dump (bool): Is this a full or incremental dump?
+            parquet_file_id: the file id number to use for indexing parquet files
+
+        Returns:
+            the next parquet_file_id to use.
+
         """
 
         listen_count = 0
@@ -699,8 +711,6 @@ class TimescaleListenStore(ListenStore):
             end_time = datetime.utcfromtimestamp(datetime.timestamp(end_time))
         else:
             end_time = datetime.now()
-
-        parquet_file_id = 0
 
         query = """SELECT listened_at,
                           user_name,
@@ -714,16 +724,16 @@ class TimescaleListenStore(ListenStore):
                      FROM listen l
                      JOIN listen_mbid_mapping m
                        ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = recording_msid
-                    WHERE created > %s
-                      AND created <= %s
+                    WHERE listened_at > %s
+                      AND listened_at <= %s
                       AND recording_mbid IS NOT NULL
                  ORDER BY created ASC"""
 
-        args = (start_time, end_time)
+        args = (int(start_time.timestamp()), int(end_time.timestamp()))
 
         listen_count = 0
 
-        current_created = None
+        current_listened_at = None
         conn = timescale.engine.raw_connection()
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as curs:
             curs.execute(query, args)
@@ -758,7 +768,7 @@ class TimescaleListenStore(ListenStore):
 
                     written += 1
                     listen_count += 1
-                    current_created = result['created']
+                    current_listened_at = datetime.utcfromtimestamp(result['listened_at'])
 
                     if approx_size > PARQUET_TARGET_SIZE:
                         break
@@ -776,11 +786,16 @@ class TimescaleListenStore(ListenStore):
                 os.unlink(filename)
                 parquet_file_id += 1
 
-                self.log.info("%d listens dumped for %s at %.2f listens/s %d approx",
-                              listen_count, current_created.strftime("%Y-%m-%d"),
-                              written / (time.monotonic() - t0), approx_size)
+                self.log.info("%d listens dumped for %s at %.2f listens/s",
+                              listen_count, current_listened_at.strftime("%Y-%m-%d"),
+                              written / (time.monotonic() - t0))
 
-    def dump_listens_for_spark(self, location, dump_id, start_time=datetime.utcfromtimestamp(0), end_time=None):
+        return parquet_file_id
+
+    def dump_listens_for_spark(self, location,
+                               dump_id,
+                               start_time=datetime.utcfromtimestamp(DATA_START_YEAR_IN_SECONDS),
+                               end_time=None):
         """ Dumps all listens in the ListenStore into spark parquet files in a .tar archive.
 
         Listens are dumped into files ideally no larger than 128MB, sorted from oldest to newest. Files
@@ -803,7 +818,7 @@ class TimescaleListenStore(ListenStore):
             end_time = datetime.now()
 
         self.log.info('Beginning spark dump of listens from TimescaleDB...')
-        full_dump = bool(start_time == datetime.utcfromtimestamp(0))
+        full_dump = bool(start_time == datetime.utcfromtimestamp(DATA_START_YEAR_IN_SECONDS))
         archive_name = 'listenbrainz-spark-dump-{dump_id}-{time}'.format(dump_id=dump_id,
                                                                          time=end_time.strftime('%Y%m%d-%H%M%S'))
         if full_dump:
@@ -813,12 +828,27 @@ class TimescaleListenStore(ListenStore):
         archive_path = os.path.join(
             location, '{filename}.tar'.format(filename=archive_name))
 
+        parquet_index = 0
         with tarfile.open(archive_path, "w") as tar:
 
             temp_dir = os.path.join(self.dump_temp_dir_root, str(uuid.uuid4()))
             create_path(temp_dir)
             self.write_dump_metadata(archive_name, start_time, end_time, temp_dir, tar, full_dump)
-            self.write_parquet_files(archive_name, temp_dir, tar, start_time, end_time, full_dump)
+
+            for year in range(start_time.year, end_time.year + 1):
+                if year == start_time.year:
+                    start = start_time
+                else:
+                    start = datetime(year=year, day=1, month=1)
+                if year == end_time.year:
+                    end = end_time
+                else:
+                    end = datetime(year=year + 1, day=1, month=1)
+
+                self.log.info("dump %s to %s" % (start.strftime("%Y-%m-%d %H:%M:%S"), end.strftime("%Y-%m-%d %H:%M:%S")))
+                parquet_index = self.write_parquet_files(archive_name, temp_dir, tar, start, end, full_dump, parquet_index)
+
+
             shutil.rmtree(temp_dir)
 
 
