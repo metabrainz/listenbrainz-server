@@ -67,9 +67,8 @@ def _convert_spotify_play_to_listen(play, listen_type):
         listen = {}
     else:
         track = play['track']
-        # Spotify provides microseconds, but we only give seconds to listenbrainz
         listen = {
-            'listened_at': int(parser.parse(play['played_at']).timestamp()),
+            'listened_at': parser.parse(play['played_at']).timestamp(),
         }
 
     if track is None:
@@ -254,16 +253,23 @@ def parse_and_validate_spotify_plays(plays, listen_type):
         listen_type: the type of the plays (import or playing now)
 
     Returns:
-        a list of valid listens to submit to ListenBrainz
+        tuple of (a list of valid listens to submit to ListenBrainz, timestamp of latest listen)
     """
     listens = []
+    latest_listen_ts = None
+
     for play in plays:
         listen = _convert_spotify_play_to_listen(play, listen_type=listen_type)
+
+        if listen_type == LISTEN_TYPE_IMPORT and \
+                (latest_listen_ts is None or listen['listened_at'] > latest_listen_ts):
+            latest_listen_ts = listen['listened_at']
+
         try:
             listens.append(validate_listen(listen, listen_type))
         except APIBadRequest:
             pass
-    return listens
+    return listens, latest_listen_ts
 
 
 def process_one_user(user: dict, service: SpotifyService) -> int:
@@ -287,6 +293,7 @@ def process_one_user(user: dict, service: SpotifyService) -> int:
         listenbrainz_user = db_user.get(user['user_id'])
 
         listens = []
+        latest_listened_at = None
 
         # If there is no playback, currently_playing will be None.
         # There are two playing types, track and episode. We use only the
@@ -299,21 +306,26 @@ def process_one_user(user: dict, service: SpotifyService) -> int:
             currently_playing_item = currently_playing.get('item', None)
             if currently_playing_item is not None:
                 current_app.logger.debug('Received a currently playing track for %s', str(user))
-                listens = parse_and_validate_spotify_plays([currently_playing_item], LISTEN_TYPE_PLAYING_NOW)
+                listens, latest_listened_at = parse_and_validate_spotify_plays(
+                    [currently_playing_item],
+                    LISTEN_TYPE_PLAYING_NOW
+                )
                 if listens:
                     submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTEN_TYPE_PLAYING_NOW)
 
         recently_played = get_user_recently_played(user)
         if recently_played is not None and 'items' in recently_played:
-            listens = parse_and_validate_spotify_plays(recently_played['items'], LISTEN_TYPE_IMPORT)
+            listens, latest_listened_at = parse_and_validate_spotify_plays(recently_played['items'], LISTEN_TYPE_IMPORT)
             current_app.logger.debug('Received %d tracks for %s', len(listens), str(user))
 
-        # if we don't have any new listens, return
-        if len(listens) == 0:
+        # if we don't have any new listens, return. we don't check whether the listens list is empty here
+        # because it will empty in both cases where we don't receive any listens and when we receive only
+        # bad listens. so instead we check latest_listened_at which is None only in case when we received
+        # nothing from spotify.
+        if latest_listened_at is None:
             service.update_user_import_status(user['user_id'])
             return 0
 
-        latest_listened_at = max(listen['listened_at'] for listen in listens)
         submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTEN_TYPE_IMPORT)
 
         # we've succeeded so update the last_updated and latest_listened_at field for this user
