@@ -16,7 +16,7 @@ def check_valid_uuid(param: str):
     """
     if param is None:
         return None
-    if param is '':
+    if param == '':
         return ''
     try:
         param = uuid.UUID(param)
