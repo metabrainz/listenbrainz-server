@@ -15,7 +15,7 @@ class SitewideArtistRecord(BaseModel):
     artist_mbids: List[constr(min_length=1)] = []
     listen_count: NonNegativeInt
     artist_name: str
-    
+
     _validate_artist_msid: classmethod = validator("artist_msid", allow_reuse=True)(check_valid_uuid)
     _validate_artist_mbids: classmethod = validator("artist_mbids", each_item=True, allow_reuse=True)(check_valid_uuid)
 

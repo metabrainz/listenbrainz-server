@@ -5,6 +5,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional, List
 
+
 class UserArtistRecord(BaseModel):
     """ Each individual record for a user's artists
 
@@ -17,6 +18,7 @@ class UserArtistRecord(BaseModel):
 
     _validate_artist_msid: classmethod = validator("artist_msid", allow_reuse=True)(check_valid_uuid)
     _validate_artist_mbids: classmethod = validator("artist_mbids", each_item=True, allow_reuse=True)(check_valid_uuid)
+
 
 class UserArtistStatRange(BaseModel):
     """ Model for user's most listened-to artists for a particular

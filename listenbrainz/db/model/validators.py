@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 def check_valid_uuid(param: str):
     """Validates that a UUID is valid. Otherwise, raises a ValueError.
-    
+
     * Validating constr(min_length=1) accepts valid UUID's only, while
       validating Optional[str] accepts valid UUID's, None, and ''.
 

@@ -23,6 +23,7 @@ class UserMissingMusicBrainzDataRecord(BaseModel):
         allow_reuse=True
     )(check_valid_uuid)
 
+
 class UserMissingMusicBrainzDataJson(BaseModel):
     """ Model for the JSON stored in the missing_musicbrainz_data table's data column
     """

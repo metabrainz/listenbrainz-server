@@ -6,6 +6,7 @@ from typing import List, Optional
 
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataRecord
 
+
 class UserMissingMusicBrainzDataMessage(BaseModel):
     """ Format of missing musicbrainz data messages sent to the ListenBrainz Server """
     type: str
