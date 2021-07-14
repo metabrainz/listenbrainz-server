@@ -66,6 +66,8 @@ declare type ListenBrainzUser = {
   auth_token?: string;
 };
 
+declare type ImportService = "lastfm" | "librefm";
+
 declare type ListenType = "single" | "playingNow" | "import";
 
 declare type BrainzPlayDirection = "up" | "down" | "hidden";
