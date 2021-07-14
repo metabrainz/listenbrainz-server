@@ -37,10 +37,13 @@ export default class LastFmImporter extends React.Component<
   ImporterProps,
   ImporterState
 > {
-  static encodeScrobbles(scrobbles: LastFmScrobblePage): any {
+  static encodeScrobbles(
+    scrobbles: LastFmScrobblePage,
+    service: ImportService = "lastfm"
+  ): any {
     const rawScrobbles = scrobbles.recenttracks.track;
     const parsedScrobbles = LastFmImporter.map((rawScrobble: any) => {
-      const scrobble = new Scrobble(rawScrobble);
+      const scrobble = new Scrobble(rawScrobble, service);
       return scrobble.asJSONSerializable();
     }, rawScrobbles);
     return parsedScrobbles;
@@ -171,7 +174,7 @@ export default class LastFmImporter extends React.Component<
     page: number,
     retries: number
   ): Promise<Array<Listen> | undefined> {
-    const { lastfmUsername } = this.state;
+    const { lastfmUsername, service } = this.state;
     const timeout = 3000;
 
     const url = `${
@@ -194,7 +197,7 @@ export default class LastFmImporter extends React.Component<
         }
 
         // Encode the page so that it can be submitted
-        const payload = LastFmImporter.encodeScrobbles(data);
+        const payload = LastFmImporter.encodeScrobbles(data, service);
         this.countReceived += payload.length;
         return payload;
       }
