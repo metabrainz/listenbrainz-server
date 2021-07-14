@@ -21,6 +21,8 @@ const props = {
   apiUrl: "apiUrl",
   lastfmApiUrl: "http://ws.audioscrobbler.com/2.0/",
   lastfmApiKey: "foobar",
+  librefmApiUrl: "http://libre.fm/2.0/",
+  librefmApiKey: "barfoo",
 };
 
 describe("encodeScrobbles", () => {
