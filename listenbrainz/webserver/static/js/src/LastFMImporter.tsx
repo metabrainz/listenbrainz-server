@@ -21,6 +21,8 @@ export type ImporterProps = {
   apiUrl?: string;
   lastfmApiUrl: string;
   lastfmApiKey: string;
+  librefmApiUrl: string;
+  librefmApiKey: string;
 };
 
 export type ImporterState = {
@@ -28,6 +30,7 @@ export type ImporterState = {
   canClose: boolean;
   lastfmUsername: string;
   msg?: React.ReactElement;
+  service: ImportService;
 };
 
 export default class LastFmImporter extends React.Component<
@@ -91,6 +94,7 @@ export default class LastFmImporter extends React.Component<
       canClose: true,
       lastfmUsername: "",
       msg: undefined,
+      service: "lastfm",
     };
 
     this.APIService = new APIService(
@@ -283,6 +287,20 @@ export default class LastFmImporter extends React.Component<
     this.setState({ lastfmUsername: event.target.value });
   };
 
+  handleServiceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const service = event.target.value;
+    if (service === "librefm") {
+      const { librefmApiUrl, librefmApiKey } = this.props;
+      this.lastfmURL = librefmApiUrl;
+      this.lastfmKey = librefmApiKey;
+    } else {
+      const { lastfmApiUrl, lastfmApiKey } = this.props;
+      this.lastfmURL = lastfmApiUrl;
+      this.lastfmKey = lastfmApiKey;
+    }
+    this.setState({ service: event.target.value as ImportService });
+  };
+
   handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     const { lastfmUsername } = this.state;
     this.toggleModal();
@@ -369,11 +387,13 @@ export default class LastFmImporter extends React.Component<
   async startImport() {
     let finalMsg: JSX.Element;
     const { profileUrl } = this.props;
+    const { service } = this.state;
     this.updateModalAction(<p>Your import from Last.fm is starting!</p>, false);
 
     try {
       this.latestImportTime = await this.APIService.getLatestImport(
-        this.userName
+        this.userName,
+        service
       );
       this.incrementalImport = this.latestImportTime > 0;
       this.playCount = await this.getTotalNumberOfScrobbles();
@@ -414,6 +434,7 @@ export default class LastFmImporter extends React.Component<
       );
       this.APIService.setLatestImport(
         this.userToken,
+        service,
         this.maxTimestampForImport
       );
     } catch {
@@ -422,6 +443,7 @@ export default class LastFmImporter extends React.Component<
         () =>
           this.APIService.setLatestImport(
             this.userToken,
+            service,
             this.maxTimestampForImport
           ),
         3000
@@ -503,16 +525,38 @@ export default class LastFmImporter extends React.Component<
   }
 
   render() {
-    const { show, canClose, lastfmUsername, msg } = this.state;
+    const { show, canClose, lastfmUsername, msg, service } = this.state;
     return (
       <div className="Importer">
         <form onSubmit={this.handleSubmit}>
+          <label style={{ marginRight: 8 }}>
+            <input
+              type="radio"
+              id="lastfm"
+              name="service"
+              value="lastfm"
+              onChange={this.handleServiceChange}
+              checked={service === "lastfm"}
+            />
+            Last.fm
+          </label>
+          <label style={{ marginRight: 8 }}>
+            <input
+              type="radio"
+              id="librefm"
+              name="service"
+              value="librefm"
+              checked={service === "librefm"}
+              onChange={this.handleServiceChange}
+            />
+            Libre.fm
+          </label>
           <input
             type="text"
             onChange={this.handleChange}
             value={lastfmUsername}
             name="lastfmUsername"
-            placeholder="Last.fm Username"
+            placeholder="Username"
             size={30}
           />
           <input type="submit" value="Import Now!" disabled={!lastfmUsername} />
@@ -539,7 +583,14 @@ export default class LastFmImporter extends React.Component<
 document.addEventListener("DOMContentLoaded", () => {
   const { domContainer, reactProps, globalReactProps } = getPageProps();
   const { api_url, sentry_dsn } = globalReactProps;
-  const { user, profile_url, lastfm_api_url, lastfm_api_key } = reactProps;
+  const {
+    user,
+    profile_url,
+    lastfm_api_url,
+    lastfm_api_key,
+    librefm_api_url,
+    librefm_api_key,
+  } = reactProps;
 
   if (sentry_dsn) {
     Sentry.init({ dsn: sentry_dsn });
@@ -552,6 +603,8 @@ document.addEventListener("DOMContentLoaded", () => {
       apiUrl={api_url}
       lastfmApiKey={lastfm_api_key}
       lastfmApiUrl={lastfm_api_url}
+      librefmApiKey={librefm_api_key}
+      librefmApiUrl={librefm_api_url}
     />,
     domContainer
   );
