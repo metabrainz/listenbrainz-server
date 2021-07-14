@@ -2,21 +2,21 @@ import uuid
 import datetime
 from typing import Dict, List, Optional
 
-from pydantic import BaseModel
-
+from pydantic import BaseModel, validator, NonNegativeInt, constr
+from listenbrainz.db.model.validators import check_valid_uuid
 
 class PlaylistRecording(BaseModel):
     """A recording that is part of a playlist"""
     # Internal id of the playlist
-    id: int
+    id: NonNegativeInt
     # What playlist this recording is a part of
-    playlist_id: int
+    playlist_id: NonNegativeInt
     # The position of this item in the playlist
-    position: int
+    position: NonNegativeInt
     # The item
     mbid: uuid.UUID
     # Who added this item to the playlist
-    added_by_id: int
+    added_by_id: NonNegativeInt
     # When the item was added
     created: datetime.datetime
 
@@ -26,8 +26,8 @@ class PlaylistRecording(BaseModel):
     # What release would this be if the recording is of more than one?
     release_mbid: Optional[uuid.UUID]
     release_name: Optional[str]
-    release_track_number: Optional[int]  # exists in xspf, probably not needed?
-    duration_ms: Optional[int]
+    release_track_number: Optional[NonNegativeInt]  # exists in xspf, probably not needed?
+    duration_ms: Optional[NonNegativeInt]
     image: Optional[str]  # who looks this up on CAA?
 
     # Computed
@@ -35,9 +35,9 @@ class PlaylistRecording(BaseModel):
 
 
 class WritablePlaylistRecording(PlaylistRecording):
-    id: int = None
-    playlist_id: int = None
-    position: int = None
+    id: NonNegativeInt = None
+    playlist_id: NonNegativeInt = None
+    position: NonNegativeInt = None
     created: datetime.datetime = None
     added_by: str = None
 
@@ -46,11 +46,11 @@ class Playlist(BaseModel):
 
     # Database fields
     # The internal ID of the playlist row in the database
-    id: int
+    id: NonNegativeInt
     # The public-facing uuid of the playlist
     mbid: uuid.UUID
     # The listenbrainz user id who created this playlist
-    creator_id: int
+    creator_id: NonNegativeInt
     # The name of the playlist
     name: str
     # An optional description of the playlist
@@ -61,16 +61,16 @@ class Playlist(BaseModel):
     # When a change was made to metadata
     last_updated: Optional[datetime.datetime]
     # If the playlist was copied from another one, the id of that playlist
-    copied_from_id: Optional[int]
+    copied_from_id: Optional[NonNegativeInt]
     # If the playlist was created by a bot, the user for who this playlist was created
-    created_for_id: Optional[int]
+    created_for_id: Optional[NonNegativeInt]
     # If the playlist was created by a bot, some freeform data about it
     algorithm_metadata: Optional[Dict]
     # The users who have permission to collaborate on this playlist
     # TODO: Because the id list isn't an FK to a table, we can't guarantee that these values
     #  actually exist. There's no agreement between collaborator_ids and collaborators.
     #  Ideally this should be a list of a User object that allows us to keep these values in sync
-    collaborator_ids: List[int] = []
+    collaborator_ids: List[NonNegativeInt] = []
     collaborators: List[str] = []
 
     # Computed fields
@@ -113,7 +113,9 @@ class Playlist(BaseModel):
 
 class WritablePlaylist(Playlist):
     id: int = None
-    mbid: str = None
+    mbid: Optional[str]
     creator: str = None
     recordings: List[PlaylistRecording] = []
     created: datetime.datetime = None
+
+    _validate_mbid: classmethod = validator("mbid", allow_reuse=True)(check_valid_uuid)

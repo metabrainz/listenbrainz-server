@@ -17,14 +17,15 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 from typing import Optional, List
-import pydantic
+from pydantic import BaseModel, validator, NonNegativeInt, constr
+from listenbrainz.db.model.validators import check_valid_uuid
 
 
-class AdditionalInfo(pydantic.BaseModel):
+class AdditionalInfo(BaseModel):
     artist_mbids: Optional[List[str]]
-    artist_msid: str
-    discnumber: Optional[int]
-    duration_ms: Optional[int]
+    artist_msid: constr(min_length=1)
+    discnumber: Optional[NonNegativeInt]
+    duration_ms: Optional[NonNegativeInt]
     isrc: Optional[str]
     listening_from: Optional[str]
     recording_mbid: Optional[str]
@@ -42,11 +43,26 @@ class AdditionalInfo(pydantic.BaseModel):
     origin_url: Optional[str]
     tags: Optional[List[str]]
     track_mbid: Optional[str]
-    tracknumber: Optional[int]
+    tracknumber: Optional[NonNegativeInt]
     work_mbids: Optional[List[str]]
 
+    _validate_uuids: classmethod = validator(
+        "artist_msid",
+        "recording_mbid",
+        "recording_msid",
+        "release_group_mbid",
+        "release_mbid",
+        "release_msid",
+        "track_mbid",
+        allow_reuse=True
+    )(check_valid_uuid)
 
-class TrackMetadata(pydantic.BaseModel):
+    _validate_list_mbids: classmethod = validator("artist_mbids", "work_mbids", each_item=True, allow_reuse=True)(
+        check_valid_uuid
+    )
+
+
+class TrackMetadata(BaseModel):
     artist_name: str
     track_name: str
     release_name: Optional[str]
@@ -55,10 +71,10 @@ class TrackMetadata(pydantic.BaseModel):
 
 # this is not an exhaustive definition
 # it might need updating, please do not rely on it for validation.
-class APIListen(pydantic.BaseModel):
-    listened_at: Optional[int]
+class APIListen(BaseModel):
+    listened_at: Optional[NonNegativeInt]
     user_name: Optional[str]
-    inserted_at: Optional[int]
+    inserted_at: Optional[NonNegativeInt]
     listened_at_iso: Optional[str]
     playing_now: Optional[bool]
     track_metadata: TrackMetadata

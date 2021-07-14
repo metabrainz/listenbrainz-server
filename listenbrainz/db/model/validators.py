@@ -2,22 +2,27 @@ import uuid
 from datetime import datetime, timezone
 
 
-def check_rec_mbid_msid_is_valid_uuid(rec_id: str):
-    """Validates that a recording MBID or MSID is a valid UUID. Otherwise, raises a ValueError.
+def check_valid_uuid(param: str):
+    """Validates that a UUID is valid. Otherwise, raises a ValueError.
+    
+    * Validating constr(min_length=1) accepts valid UUID's only, while
+      validating Optional[str] accepts valid UUID's, None, and ''.
 
     Args:
-        rec_id: the recording MBID/MSID to validate.
+        id: the UUID to validate.
 
     Returns:
-        The validated recording MBID/MSID as a string.
+        The validated recording UUID as a string.
     """
-    if rec_id is None:
+    if param is None:
         return None
+    if param is '':
+        return ''
     try:
-        rec_id = uuid.UUID(rec_id)
-        return str(rec_id)
+        param = uuid.UUID(param)
+        return str(param)
     except (AttributeError, ValueError):
-        raise ValueError("Recording MBID/MSID must be a valid UUID.")
+        raise ValueError("'{}' must be a valid UUID.".format(param))
 
 
 def check_datetime_has_tzinfo(date_time: datetime):

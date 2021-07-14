@@ -1,41 +1,41 @@
 """ Models for user's daily activity statistics.
     The daily activity shows the number of listens submitted to ListenBrainz per hour in last week/month/year.
 """
-import pydantic
+from pydantic import BaseModel, NonNegativeInt
 
 from datetime import datetime
 from typing import Optional, List
 
 
-class UserDailyActivityRecord(pydantic.BaseModel):
+class UserDailyActivityRecord(BaseModel):
     """ Each individual record for user's daily activity contains the time range,
         timestamp for start and end of the time range and listen count.
     """
     day: str
-    hour: int
-    listen_count: int
+    hour: NonNegativeInt
+    listen_count: NonNegativeInt
 
 
-class UserDailyActivityStatMessage(pydantic.BaseModel):
+class UserDailyActivityStatMessage(BaseModel):
     """ Format of messages sent to the ListenBrainz Server """
     musicbrainz_id: str
     type: str
     stats_range: str  # The range for which the stats are calculated, i.e week, month, year or all_time
-    from_ts: int
-    to_ts: int
+    from_ts: NonNegativeInt
+    to_ts: NonNegativeInt
     daily_activity: List[UserDailyActivityRecord]
 
 
-class UserDailyActivityStatRange(pydantic.BaseModel):
+class UserDailyActivityStatRange(BaseModel):
     """ Model for user's daily activity for a particular time range.
         Currently supports week, month, year and all-time
     """
-    to_ts: int
-    from_ts: int
+    to_ts: NonNegativeInt
+    from_ts: NonNegativeInt
     daily_activity: List[UserDailyActivityRecord]
 
 
-class UserDailyActivityStatJson(pydantic.BaseModel):
+class UserDailyActivityStatJson(BaseModel):
     """ Model for the JSON stored in the statistics.user table's daily_activity column
     """
     week: Optional[UserDailyActivityStatRange]
@@ -47,5 +47,5 @@ class UserDailyActivityStatJson(pydantic.BaseModel):
 class UserDailyActivityStat(UserDailyActivityStatJson):
     """ Model for stats around user's daily activity
     """
-    user_id: int
+    user_id: NonNegativeInt
     last_updated: datetime

@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional
-from pydantic import BaseModel, validator, constr
-from listenbrainz.db.model.validators import check_rec_mbid_msid_is_valid_uuid, check_datetime_has_tzinfo
+from pydantic import BaseModel, validator, constr, NonNegativeInt
+from listenbrainz.db.model.validators import check_valid_uuid, check_datetime_has_tzinfo
 
 DAYS_UNTIL_UNPIN = 7  # default = unpin after one week
 MAX_BLURB_CONTENT_LENGTH = 280  # maximum length of blurb content
@@ -20,18 +20,16 @@ class PinnedRecording(BaseModel):
         Validates that pinned_until contains tzinfo() and is greater than created.
     """
 
-    user_id: int
+    user_id: NonNegativeInt
     user_name: Optional[str]
-    row_id: int
-    recording_msid: str
-    recording_mbid: str = None
+    row_id: NonNegativeInt
+    recording_msid: constr(min_length=1)
+    recording_mbid: Optional[str]
     blurb_content: constr(max_length=MAX_BLURB_CONTENT_LENGTH) = None
     created: datetime
     pinned_until: datetime
 
-    _validate_recording_msid: classmethod = validator("recording_msid", allow_reuse=True)(check_rec_mbid_msid_is_valid_uuid)
-
-    _validate_recording_mbid: classmethod = validator("recording_mbid", allow_reuse=True)(check_rec_mbid_msid_is_valid_uuid)
+    _validate_recording_msid: classmethod = validator("recording_msid", "recording_mbid", allow_reuse=True)(check_valid_uuid)
 
     _validate_created_tzinfo: classmethod = validator("created", always=True, allow_reuse=True)(check_datetime_has_tzinfo)
 
@@ -65,7 +63,7 @@ class WritablePinnedRecording(PinnedRecording):
 
     """
 
-    row_id: int = None
+    row_id: NonNegativeInt = None
     created: datetime = None
     pinned_until: datetime = None
 

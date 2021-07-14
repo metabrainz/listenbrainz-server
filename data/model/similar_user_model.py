@@ -1,6 +1,6 @@
-import pydantic
+from pydantic import BaseModel, NonNegativeInt
 
 
-class SimilarUsers(pydantic.BaseModel):
-    user_id: int
+class SimilarUsers(BaseModel):
+    user_id: NonNegativeInt
     similar_users: dict

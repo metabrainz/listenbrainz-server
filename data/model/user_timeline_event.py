@@ -16,11 +16,12 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+from pydantic import BaseModel, validator, NonNegativeInt, constr
+from listenbrainz.db.model.validators import check_valid_uuid
+
 from datetime import datetime
 from enum import Enum
 from typing import Union, Optional
-
-import pydantic
 
 from data.model.listen import APIListen
 
@@ -32,16 +33,23 @@ class UserTimelineEventType(Enum):
     NOTIFICATION = 'notification'
 
 
-class RecordingRecommendationMetadata(pydantic.BaseModel):
+class RecordingRecommendationMetadata(BaseModel):
     artist_name: str
     track_name: str
     release_name: Optional[str]
     recording_mbid: Optional[str]
-    recording_msid: str
-    artist_msid: str
+    recording_msid: constr(min_length=1)
+    artist_msid: constr(min_length=1)
+
+    _validate_uuids: classmethod = validator(
+        "recording_mbid",
+        "recording_msid",
+        "artist_msid",
+        allow_reuse=True
+    )(check_valid_uuid)
 
 
-class NotificationMetadata(pydantic.BaseModel):
+class NotificationMetadata(BaseModel):
     creator: str
     message: str
 
@@ -49,30 +57,30 @@ class NotificationMetadata(pydantic.BaseModel):
 UserTimelineEventMetadata = Union[RecordingRecommendationMetadata, NotificationMetadata]
 
 
-class UserTimelineEvent(pydantic.BaseModel):
-    id: int
-    user_id: int
+class UserTimelineEvent(BaseModel):
+    id: NonNegativeInt
+    user_id: NonNegativeInt
     metadata: UserTimelineEventMetadata
     event_type: UserTimelineEventType
     created: Optional[datetime]
 
 
-class APINotificationEvent(pydantic.BaseModel):
+class APINotificationEvent(BaseModel):
     message: str
 
 
-class APIFollowEvent(pydantic.BaseModel):
+class APIFollowEvent(BaseModel):
     user_name_0: str
     user_name_1: str
     relationship_type: str
-    created: int
+    created: NonNegativeInt
 
 
 APIEventMetadata = Union[APIListen, APIFollowEvent, APINotificationEvent]
 
 
-class APITimelineEvent(pydantic.BaseModel):
+class APITimelineEvent(BaseModel):
     event_type: UserTimelineEventType
     user_name: str
-    created: int
+    created: NonNegativeInt
     metadata: APIEventMetadata

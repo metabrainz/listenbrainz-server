@@ -8,18 +8,18 @@ import listenbrainz.db.model.validators as validators
 
 
 class ModelUtilsTestCase(unittest.TestCase):
-    def test_check_rec_mbid_msid_is_valid_uuid(self):
+    def test_check_valid_uuid(self):
 
         # test invalid UUID formats
         with self.assertRaises(ValueError):
-            validators.check_rec_mbid_msid_is_valid_uuid("foobar")
+            validators.check_valid_uuid("foobar")
 
         with self.assertRaises(ValueError):
-            validators.check_rec_mbid_msid_is_valid_uuid("12345")
+            validators.check_valid_uuid("12345")
 
         # test valid UUID formats
         mbid_to_test = "9273e0e6-2182-4a6a-beb2-b6ab661d1e66"
-        result = validators.check_rec_mbid_msid_is_valid_uuid(mbid_to_test)
+        result = validators.check_valid_uuid(mbid_to_test)
         self.assertEqual(result, "9273e0e6-2182-4a6a-beb2-b6ab661d1e66")
 
     def test_check_datetime_has_tzinfo(self):

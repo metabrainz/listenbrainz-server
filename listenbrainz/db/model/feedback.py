@@ -1,8 +1,8 @@
 import uuid
 
 from datetime import datetime
-from pydantic import BaseModel, ValidationError, validator
-from listenbrainz.db.model.validators import check_rec_mbid_msid_is_valid_uuid
+from pydantic import BaseModel, NonNegativeInt, validator, constr
+from listenbrainz.db.model.validators import check_valid_uuid
 
 class Feedback(BaseModel):
     """ Represents a feedback object
@@ -14,9 +14,9 @@ class Feedback(BaseModel):
             created: (Optional)the timestamp when the feedback record was inserted into DB
     """
 
-    user_id: int
+    user_id: NonNegativeInt
     user_name: str = None
-    recording_msid: str
+    recording_msid: constr(min_length=1)
     score: int
     created: datetime = None
 
@@ -26,4 +26,4 @@ class Feedback(BaseModel):
             raise ValueError('Score can have a value of 1, 0 or -1.')
         return scr
 
-    _is_recording_msid_valid: classmethod = validator("recording_msid", allow_reuse=True)(check_rec_mbid_msid_is_valid_uuid)
+    _is_recording_msid_valid: classmethod = validator("recording_msid", allow_reuse=True)(check_valid_uuid)
