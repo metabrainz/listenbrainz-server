@@ -14,7 +14,7 @@ class SitewideArtistRecord(BaseModel):
     artist_msid: Optional[str]
     artist_mbids: List[constr(min_length=1)] = []
     listen_count: NonNegativeInt
-    artist_name: str
+    artist_name: constr(min_length=1)
 
     _validate_artist_msid: classmethod = validator("artist_msid", allow_reuse=True)(check_valid_uuid)
     _validate_artist_mbids: classmethod = validator("artist_mbids", each_item=True, allow_reuse=True)(check_valid_uuid)
@@ -26,7 +26,7 @@ class SitewideArtistStatRange(BaseModel):
     """
     to_ts: NonNegativeInt
     from_ts: NonNegativeInt
-    time_range: str
+    time_range: constr(min_length=1)
     artists: List[SitewideArtistRecord]
 
 
@@ -42,6 +42,6 @@ class SitewideArtistStatJson(BaseModel):
 class SitewideArtistStat(BaseModel):
     """ Model for stats around a most listened artists on the website
     """
-    stats_range: str
+    stats_range: constr(min_length=1)
     data: Optional[SitewideArtistStatJson]
     last_updated: datetime

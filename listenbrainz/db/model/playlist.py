@@ -31,7 +31,7 @@ class PlaylistRecording(BaseModel):
     image: Optional[str]  # who looks this up on CAA?
 
     # Computed
-    added_by: str
+    added_by: constr(min_length=1)
 
 
 class WritablePlaylistRecording(PlaylistRecording):
@@ -52,7 +52,7 @@ class Playlist(BaseModel):
     # The listenbrainz user id who created this playlist
     creator_id: NonNegativeInt
     # The name of the playlist
-    name: str
+    name: constr(min_length=1)
     # An optional description of the playlist
     description: Optional[str]
     public: bool = True
@@ -75,7 +75,7 @@ class Playlist(BaseModel):
 
     # Computed fields
     created_for: Optional[str]
-    creator: str
+    creator: constr(min_length=1)
     recordings: List[PlaylistRecording]
     # mbid of the playlist referred to in copied_from_id
     copied_from_mbid: Optional[uuid.UUID]

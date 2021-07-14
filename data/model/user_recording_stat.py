@@ -8,7 +8,7 @@ from typing import Optional, List
 class UserRecordingRecord(BaseModel):
     """ Each individual record for a user's recording stats
     """
-    artist_name: str
+    artist_name: constr(min_length=1)
     artist_msid: Optional[str]
     artist_mbids: List[constr(min_length=1)] = []
     recording_mbid: Optional[str]
@@ -16,7 +16,7 @@ class UserRecordingRecord(BaseModel):
     release_name: Optional[str]
     release_mbid: Optional[str]
     release_msid: Optional[str]
-    track_name: str
+    track_name: constr(min_length=1)
     listen_count: NonNegativeInt
 
     _validate_uuids: classmethod = validator(

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, NonNegativeInt
+from pydantic import BaseModel, NonNegativeInt, constr
 
 from datetime import datetime
 from enum import Enum
@@ -10,7 +10,7 @@ class UserArtistMapRecord(BaseModel):
 
     Contains the country_code and artist_count
     """
-    country: str
+    country: constr(min_length=1)
     artist_count: NonNegativeInt
     listen_count: Optional[NonNegativeInt]  # Make field optional to maintain backward compatibility
 

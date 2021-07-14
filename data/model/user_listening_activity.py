@@ -1,7 +1,7 @@
 """ Models for user's listening activity statistics.
     The listening activity shows the number of listens submitted to ListenBrainz in the last week/month/year.
 """
-from pydantic import BaseModel, NonNegativeInt
+from pydantic import BaseModel, NonNegativeInt, constr
 
 from datetime import datetime
 from typing import Optional, List
@@ -16,7 +16,7 @@ class UserListeningActivityRecord(BaseModel):
     # For monthly statistics this will be the date, i.e 1, 2...
     # For yearly statistics this will be the month, i.e January, February...
     # For all_time this will be the year, i.e. 2002, 2003...
-    time_range: str
+    time_range: constr(min_length=1)
     from_ts: NonNegativeInt
     to_ts: NonNegativeInt
     listen_count: NonNegativeInt
@@ -24,9 +24,9 @@ class UserListeningActivityRecord(BaseModel):
 
 class UserListeningActivityStatMessage(BaseModel):
     """ Format of messages sent to the ListenBrainz Server """
-    musicbrainz_id: str
-    type: str
-    stats_range: str  # The range for which the stats are calculated, i.e week, month, year or all_time
+    musicbrainz_id: constr(min_length=1)
+    type: constr(min_length=1)
+    stats_range: constr(min_length=1)  # The range for which the stats are calculated, i.e week, month, year or all_time
     from_ts: NonNegativeInt
     to_ts: NonNegativeInt
     listening_activity: List[UserListeningActivityRecord]

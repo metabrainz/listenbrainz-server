@@ -9,19 +9,19 @@ from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataR
 
 class UserMissingMusicBrainzDataMessage(BaseModel):
     """ Format of missing musicbrainz data messages sent to the ListenBrainz Server """
-    type: str
-    musicbrainz_id: str
+    type: constr(min_length=1)
+    musicbrainz_id: constr(min_length=1)
     missing_musicbrainz_data: List[UserMissingMusicBrainzDataRecord]
-    source: str
+    source: constr(min_length=1)
 
 
 class UserCreateDataframesMessage(BaseModel):
     """ Format of dataframe creation messages sent to the ListenBrainz Server """
-    type: str
-    dataframe_upload_time: str
-    total_time: str
-    from_date: str
-    to_date: str
+    type: constr(min_length=1)
+    dataframe_upload_time: constr(min_length=1)
+    total_time: constr(min_length=1)
+    from_date: constr(min_length=1)
+    to_date: constr(min_length=1)
 
 
 class UserRecommendationsRecord(BaseModel):
@@ -50,6 +50,6 @@ class UserRecommendationsData(BaseModel):
 
 class UserRecommendationsMessage(BaseModel):
     """ Format of recommendations messages sent to the ListenBrainz Server """
-    type: str
-    musicbrainz_id: str
+    type: constr(min_length=1)
+    musicbrainz_id: constr(min_length=1)
     recommendations: UserRecommendationsJson

@@ -24,7 +24,7 @@ class RecommendationFeedbackSubmit(BaseModel):
 
     user_id: NonNegativeInt
     recording_mbid: constr(min_length=1)
-    rating: str
+    rating: constr(min_length=1)
     created: datetime = None
 
     @validator('rating')

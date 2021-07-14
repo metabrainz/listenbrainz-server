@@ -34,8 +34,8 @@ class UserTimelineEventType(Enum):
 
 
 class RecordingRecommendationMetadata(BaseModel):
-    artist_name: str
-    track_name: str
+    artist_name: constr(min_length=1)
+    track_name: constr(min_length=1)
     release_name: Optional[str]
     recording_mbid: Optional[str]
     recording_msid: constr(min_length=1)
@@ -50,8 +50,8 @@ class RecordingRecommendationMetadata(BaseModel):
 
 
 class NotificationMetadata(BaseModel):
-    creator: str
-    message: str
+    creator: constr(min_length=1)
+    message: constr(min_length=1)
 
 
 UserTimelineEventMetadata = Union[RecordingRecommendationMetadata, NotificationMetadata]
@@ -66,13 +66,13 @@ class UserTimelineEvent(BaseModel):
 
 
 class APINotificationEvent(BaseModel):
-    message: str
+    message: constr(min_length=1)
 
 
 class APIFollowEvent(BaseModel):
-    user_name_0: str
-    user_name_1: str
-    relationship_type: str
+    user_name_0: constr(min_length=1)
+    user_name_1: constr(min_length=1)
+    relationship_type: constr(min_length=1)
     created: NonNegativeInt
 
 
@@ -81,6 +81,6 @@ APIEventMetadata = Union[APIListen, APIFollowEvent, APINotificationEvent]
 
 class APITimelineEvent(BaseModel):
     event_type: UserTimelineEventType
-    user_name: str
+    user_name: constr(min_length=1)
     created: NonNegativeInt
     metadata: APIEventMetadata

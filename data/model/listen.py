@@ -63,8 +63,8 @@ class AdditionalInfo(BaseModel):
 
 
 class TrackMetadata(BaseModel):
-    artist_name: str
-    track_name: str
+    artist_name: constr(min_length=1)
+    track_name: constr(min_length=1)
     release_name: Optional[str]
     additional_info: Optional[AdditionalInfo]
 
