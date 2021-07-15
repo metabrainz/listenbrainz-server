@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 from pydantic import BaseModel, validator, constr
 from listenbrainz.db.model.validators import check_rec_mbid_msid_is_valid_uuid, check_datetime_has_tzinfo
+from messybrainz import load_recording_from_msid, load_recording_from_mbid
 
 DAYS_UNTIL_UNPIN = 7  # default = unpin after one week
 MAX_BLURB_CONTENT_LENGTH = 280  # maximum length of blurb content
@@ -28,6 +29,7 @@ class PinnedRecording(BaseModel):
     blurb_content: constr(max_length=MAX_BLURB_CONTENT_LENGTH) = None
     created: datetime
     pinned_until: datetime
+    track_metadata: dict = None
 
     _validate_recording_msid: classmethod = validator("recording_msid", allow_reuse=True)(check_rec_mbid_msid_is_valid_uuid)
 
@@ -78,3 +80,20 @@ class WritablePinnedRecording(PinnedRecording):
     @validator("pinned_until", pre=True, always=True)
     def set_pinned_until_to_default(cls, pin_until, values):
         return pin_until or values["created"] + timedelta(days=DAYS_UNTIL_UNPIN)
+
+
+def fetch_track_metadata_for_pin(pin: PinnedRecording) -> PinnedRecording:
+    """ Fetches track_metadata (track_name, artist_name, release_name...) for a given PinnedRecording.
+
+        Args:
+            pin (PinnedRecording): the PinnedRecording to fetch track_metadata for.
+        Returns:
+            The given pin with track_metadata.
+    """
+    if pin.recording_mbid:
+        metadata = load_recording_from_mbid(pin.recording_mbid)['payload']
+    else:
+        metadata = load_recording_from_msid(pin.recording_msid)['payload']
+
+    pin.track_metadata = {"track_name": metadata["title"], "artist_name": metadata["artist"]}
+    return pin
