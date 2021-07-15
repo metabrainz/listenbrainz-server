@@ -69,9 +69,10 @@ function on_exit {
         local duration=$(( $(date +%s) - START_TIME ))
         echo "create-dumps took ${duration}s to run"
     fi
-}
 
-trap on_exit EXIT
+    # Remove the cron lock
+    python3 admin/cron_lock.py unlock-cron create-dumps
+}
 
 START_TIME=$(date +%s)
 echo "This script is being run by the following user: "; whoami
@@ -97,6 +98,12 @@ else
     echo "Dump type must be one of 'full', 'incremental' or 'feedback'"
     exit
 fi
+
+# Lock cron, so it cannot be accidentally terminated.
+python3 admin/cron_lock.py lock-cron create-dumps "Creating $DUMP_TYPE dump."
+
+# Trap should not be called before we lock cron to avoid wiping out an existing lock file
+trap on_exit EXIT
 
 DUMP_TEMP_DIR="$DUMP_BASE_DIR/$SUB_DIR.$$"
 echo "DUMP_BASE_DIR is $DUMP_BASE_DIR"
