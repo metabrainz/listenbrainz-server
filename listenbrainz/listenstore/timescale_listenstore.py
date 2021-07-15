@@ -719,15 +719,13 @@ class TimescaleListenStore(ListenStore):
                           data->'track_metadata'->>'release_name' AS release_name,
                           release_mbid::TEXT,
                           track_name AS recording_name,
-                          recording_mbid::TEXT,
-                          created
+                          recording_mbid::TEXT
                      FROM listen l
                      JOIN listen_mbid_mapping m
                        ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = recording_msid
                     WHERE listened_at > %s
                       AND listened_at <= %s
-                      AND recording_mbid IS NOT NULL
-                 ORDER BY created ASC"""
+                 ORDER BY listened_at ASC"""
 
         args = (int(start_time.timestamp()), int(end_time.timestamp()))
 
@@ -749,8 +747,7 @@ class TimescaleListenStore(ListenStore):
                     'release_name': [],
                     'release_mbid': [],
                     'recording_name': [],
-                    'recording_mbid': [],
-                    'created': []
+                    'recording_mbid': []
                 }
                 while True:
                     result = curs.fetchone()
@@ -760,6 +757,9 @@ class TimescaleListenStore(ListenStore):
                     for col in data:
                         if col == 'artist_credit_id':
                             data[col].append(int(result[col]))
+                        elif col == 'listened_at':
+                            current_listened_at = datetime.utcfromtimestamp(result['listened_at'])
+                            data[col].append(current_listened_at)
                         else:
                             data[col].append(result[col])
 
@@ -768,8 +768,6 @@ class TimescaleListenStore(ListenStore):
 
                     written += 1
                     listen_count += 1
-                    current_listened_at = datetime.utcfromtimestamp(result['listened_at'])
-
                     if approx_size > PARQUET_TARGET_SIZE:
                         break
 
