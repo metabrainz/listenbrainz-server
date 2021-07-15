@@ -1,7 +1,9 @@
 import os
 import pathlib
+import shutil
 import sys
 import subprocess
+import tarfile
 import time
 import logging
 from tarfile import TarError
@@ -126,3 +128,40 @@ class ListenbrainzHDFSUploader:
 
         # Cleanup
         utils.delete_dir(tmp_dump_dir, recursive=True)
+
+    def extract_and_upload_archive(self, archive, local_dir, hdfs_dir, cleanup_on_failure=True):
+        """
+        Extract the archive and upload it to the given hdfs directory.
+        Args:
+            archive: path to the tar archive to uploaded
+            local_dir: path to local dir to be used for extraction
+            hdfs_dir: path to hdfs dir where contents of tar should be uploaded
+            cleanup_on_failure: whether to delete local and hdfs directories
+                if error occurs during extraction
+        """
+        total_files = 0
+        total_time = 0.0
+        with tarfile.open(archive, mode='r') as tar:
+            for member in tar:
+                if member.isfile() and member.name.endswith(".parquet"):
+                    logger.info(f"Uploading {member.name}...")
+                    t0 = time.monotonic()
+
+                    try:
+                        tar.extract(member, path=local_dir)
+                    except tarfile.TarError as err:
+                        if cleanup_on_failure:
+                            if utils.path_exists(hdfs_dir):
+                                utils.delete_dir(hdfs_dir, recursive=True)
+                            shutil.rmtree(local_dir, ignore_errors=True)
+                        raise DumpInvalidException(f"{type(err).__name__} while extracting {member.name}, aborting import")
+
+                    hdfs_path = os.path.join(hdfs_dir, member.name)
+                    utils.upload_to_HDFS(hdfs_path, member.name)
+                    os.remove(member.name)
+
+                    time_taken = time.monotonic() - t0
+                    total_files += 1
+                    total_time += time_taken
+                    logger.info(f"Done! Current file processed in {time_taken:.2f} sec")
+        logger.info(f"Done! Total files processed {total_files}. Average time taken: {total_time / total_files:.2f}")
