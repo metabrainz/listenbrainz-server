@@ -17,13 +17,25 @@ from listenbrainz_spark.utils import read_files_from_HDFS
 logger = logging.getLogger(__name__)
 
 
-def import_dump_to_hdfs(dump_type, overwrite, dump_id=None):
-    temp_dir = tempfile.mkdtemp()
-    src, dump_name, dump_id = ListenbrainzDataDownloader().download_listens(directory=temp_dir, dump_type=dump_type,
-                                                                            listens_dump_id=dump_id)
-    ListenbrainzDataUploader().upload_listens(src, overwrite=overwrite)
-    utils.insert_dump_data(dump_id, dump_type, datetime.utcnow())
-    shutil.rmtree(temp_dir)
+def import_full_dump_to_hdfs(dump_id: int = None) -> str:
+    """ Import the full dump with the given dump_id if specified otherwise the
+     latest full dump.
+
+    Notes:
+        Deletes all the existing listens and uploads listens from new dump.
+    Args:
+        dump_id: id of the full dump to be imported
+    Returns:
+        the name of the imported dump
+    """
+    with tempfile.TemporaryDirectory() as temp_dir:
+        src, dump_name, dump_id = ListenbrainzDataDownloader().download_listens(
+            directory=temp_dir,
+            dump_type=DumpType.FULL,
+            listens_dump_id=dump_id
+        )
+        ListenbrainzDataUploader().upload_new_listens_full_dump(src)
+    utils.insert_dump_data(dump_id, DumpType.FULL, datetime.utcnow())
     return dump_name
 
 
@@ -70,7 +82,7 @@ def import_newest_full_dump_handler():
     errors = []
     dumps = []
     try:
-        dumps.append(import_dump_to_hdfs(DumpType.FULL, overwrite=True))
+        dumps.append(import_full_dump_to_hdfs(dump_id=None))
     except Exception as e:
         logger.error("Error while importing full dump: ", exc_info=True)
         errors.append(str(e))
@@ -82,11 +94,11 @@ def import_newest_full_dump_handler():
     }]
 
 
-def import_full_dump_by_id_handler(id: int):
+def import_full_dump_by_id_handler(dump_id: int):
     errors = []
     dumps = []
     try:
-        dumps.append(import_dump_to_hdfs(DumpType.FULL, overwrite=True, dump_id=id))
+        dumps.append(import_full_dump_to_hdfs(dump_id=dump_id))
     except Exception as e:
         logger.error("Error while importing full dump: ", exc_info=True)
         errors.append(str(e))
