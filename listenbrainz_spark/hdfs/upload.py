@@ -70,20 +70,6 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
                 self.upload_archive(tmp_dump_dir, tar, path.MBID_MSID_MAPPING, schema.msid_mbid_mapping_schema,
                                     self.process_json, overwrite=True)
 
-    def upload_listens(self, archive: str, overwrite: bool = False):
-        """ Decompress archive and upload listens to HDFS.
-
-            Args:
-                archive: Listens tar file to upload.
-                overwrite: If True, overwrites the previously present listens,
-                           if False merges the previously present listens with the new ones.
-        """
-        pxz = self.get_pxz_output(archive)
-        with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
-            with tempfile.TemporaryDirectory() as tmp_dump_dir:
-                self.upload_archive(tmp_dump_dir, tar, path.LISTENBRAINZ_DATA_DIRECTORY, schema.listen_schema,
-                                    self.process_json_listens, overwrite=overwrite)
-
     def upload_artist_relation(self, archive: str):
         """ Decompress archive and upload artist relation to HDFS.
 
