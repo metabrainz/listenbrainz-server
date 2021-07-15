@@ -181,7 +181,8 @@ def submit_recording(connection, data):
 
     return gid
 
-def load_recording(connection, messybrainz_id):
+
+def load_recording_from_msid(connection, messybrainz_id):
     """ Return data for a recording with specified MessyBrainz ID.
 
     Args:
@@ -193,17 +194,12 @@ def load_recording(connection, messybrainz_id):
     """
 
     query = text("""SELECT rj.data
-                         , d.recording_mbid
                          , r.artist
                          , r.release
                          , r.gid
-                      FROM recording_json rj
-                 LEFT JOIN recording r
+                      FROM recording_json AS rj
+                 LEFT JOIN recording AS r
                         ON rj.id = r.data
-                 LEFT JOIN recording_cluster rc
-                        ON rc.recording_gid = r.gid
-                 LEFT JOIN recording_redirect d
-                        ON d.recording_cluster_id = rc.cluster_id
                      WHERE r.gid = :gid""")
     result = connection.execute(query, {"gid": str(messybrainz_id)})
 
@@ -212,12 +208,45 @@ def load_recording(connection, messybrainz_id):
         raise exceptions.NoDataFoundException
     result = {}
     result["payload"] = row["data"]
-    result["ids"] = {"recording_mbid": "", "artist_mbids": [], "release_mbid": ""}
+    result["ids"] = {"artist_mbids": [], "release_mbid": ""}
+    result["ids"]["recording_mbid"] = str(row["data"]["recording_mbid"]) if "recording_mbid" in row["data"] else ''
     result["ids"]["artist_msid"] = str(row["artist"])
     result["ids"]["release_msid"] = str(row["release"]) if row["release"] else None
     result["ids"]["recording_msid"] = str(row["gid"])
     return result
 
+
+def load_recording_from_mbid(connection, musicbrainz_id):
+    """ Return data for a recording with specified MusicBrainz ID.
+
+    Args:
+        connection: sqlalchemy connection to execute db queries with
+        messybrainz_id (uuid): the MusicBrainz ID of the recording
+
+    Returns:
+        dict: the recording data for the recording with specified MusicBrainz ID
+    """
+    query = text("""SELECT rj.data
+                         , r.artist
+                         , r.release
+                         , r.gid
+                      FROM recording_json AS rj
+                 LEFT JOIN recording AS r
+                        ON rj.id = r.data
+                     WHERE rj.data ->> 'recording_mbid' = :recording_mbid""")
+    result = connection.execute(query, {"recording_mbid": str(musicbrainz_id)})
+
+    row = result.fetchone()
+    if not row:
+        raise exceptions.NoDataFoundException
+    result = {}
+    result["payload"] = row["data"]
+    result["ids"] = {"artist_mbids": [], "release_mbid": ""}
+    result["ids"]["recording_mbid"] = str(row["data"]["recording_mbid"])
+    result["ids"]["artist_msid"] = str(row["artist"])
+    result["ids"]["release_msid"] = str(row["release"]) if row["release"] else None
+    result["ids"]["recording_msid"] = str(row["gid"])
+    return result
 
 def link_recording_to_recording_id(connection, msid, mbid):
     """ Link a MessyBrainz recording to specified MusicBrainz Recording ID.
