@@ -1,8 +1,7 @@
 from datetime import datetime
 from pyspark.sql import Row
 from pyspark.sql.types import StructField, StructType, ArrayType, StringType, TimestampType, FloatType, \
-    IntegerType
-
+    IntegerType, LongType
 
 # NOTE: please keep this schema definition alphabetized
 listen_schema = [
@@ -19,6 +18,18 @@ listen_schema = [
     StructField('track_name', StringType(), nullable=False),
     StructField('user_name', StringType(), nullable=False),
 ]
+
+listens_new_schema = StructType([
+    StructField('listened_at', LongType(), nullable=False),
+    StructField('user_name', StringType(), nullable=False),
+    StructField('artist_name', StringType(), nullable=False),
+    StructField('artist_credit_id', IntegerType(), nullable=True),
+    StructField('release_name', StringType(), nullable=True),
+    StructField('release_mbid', StringType(), nullable=True),
+    StructField('recording_name', StringType(), nullable=False),
+    StructField('recording_mbid', StringType(), nullable=True),
+    StructField('created', TimestampType(), nullable=True)
+])
 
 
 # schema to contain model parameters.
