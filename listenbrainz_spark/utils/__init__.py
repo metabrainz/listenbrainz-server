@@ -5,11 +5,13 @@ from time import sleep
 
 import pika
 from py4j.protocol import Py4JJavaError
+from pyspark.sql import DataFrame
 from pyspark.sql.utils import AnalysisException
 
 import listenbrainz_spark
 from hdfs.util import HdfsError
 from listenbrainz_spark import config, hdfs_connection, path, stats
+from listenbrainz_spark.schema import listens_new_schema
 from listenbrainz_spark.exceptions import (DataFrameNotAppendedException,
                                            DataFrameNotCreatedException,
                                            FileNotFetchedException,
@@ -156,6 +158,58 @@ def get_listens(from_date, to_date, dest_path):
         logger.error('Listening history missing form HDFS')
         raise HDFSException("Listening history missing from HDFS")
     return df
+
+
+def get_listens_from_new_dump(from_ts: int, to_ts: int, location: str) -> DataFrame:
+    """ Load listens with listened_at between from_ts and to_ts from HDFS in a spark dataframe.
+
+        Args:
+            from_ts: minimum timestamp to include a listen in the dataframe
+            to_ts: maximum timestamp to include a listen in the dataframe
+            location: location of parquet listen files
+
+        Returns:
+            dataframe of listens with listened_at between from_ts and to_ts
+    """
+    # parquet files are named as 0.parquet, 1.parquet so on. listens are stored in
+    # ascending order of listened_at. so higher the number in the name of the file,
+    # newer the listens
+    files = hdfs_connection.client.list(location)
+    file_ids = []
+
+    # extract numbers from name of parquet files, so that we can sort them in reverse
+    # order and start loading newer listens first
+    for file in files:
+        if file.endswith('.parquet'):
+            file_ids.append(int(file.split(".")[0]))
+    file_ids.sort(reverse=True)
+
+    # create empty dataframe for merging loaded files into it
+    dfs = listenbrainz_spark.session.createDataFrame([], listens_new_schema)
+
+    for file_name in file_ids:
+        df = read_files_from_HDFS(os.path.join(location, f'{file_name}.parquet'))
+
+        # check if the currently loaded file has any listens newer than the starting
+        # timestamp. if not stop trying to load more files, because listens are sorted
+        # by listened_at in ascending order and we are traversing the files in reverse
+        # order. that is we are loading listens from latest to oldest so if the current
+        # file does not have any listens newer than from_ts, the remaining files will
+        # not have those either.
+        df = df.where(f"listened_at >= {from_ts}")
+        if df.count() == 0:
+            break
+
+        # cannot merge this condition with the above one because, consider the following case:
+        # we want listens between the time range - 14 days ago to 7 days ago. the latest file
+        # might have listens only from last 4 days. if the conditions were merged, we would
+        # have stopped looking in other files which is wrong. it is quite possible that the 2nd
+        # or some subsequent file has listens older than to_ts but newer than from_ts
+        df = df.where(f"listened_at <= {to_ts}")
+
+        dfs = dfs.union(df)
+
+    return dfs
 
 
 def save_parquet(df, path, mode='overwrite'):
