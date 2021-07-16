@@ -138,8 +138,8 @@ export default class YoutubePlayer
         refreshYoutubeToken,
         this.handleAccountError
       );
-      if (videoIds) {
-        this.youtubePlayer.loadPlaylist(videoIds);
+      if (videoIds?.length) {
+        this.youtubePlayer.loadPlaylist(videoIds.slice(0, 1));
       } else {
         onTrackNotFound();
       }
@@ -278,9 +278,6 @@ export default class YoutubePlayer
       width: "100%",
       height: "100%",
     };
-    if (!show) {
-      return null;
-    }
     return (
       <div className={`youtube ${!show ? "hidden" : ""}`}>
         <YouTube
