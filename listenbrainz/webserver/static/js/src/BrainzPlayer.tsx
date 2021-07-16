@@ -5,8 +5,12 @@ import {
   isString as _isString,
   get as _get,
   has as _has,
+  throttle as _throttle,
 } from "lodash";
 import * as _ from "lodash";
+import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import PlaybackControls from "./PlaybackControls";
 import GlobalAppContext from "./GlobalAppContext";
 import SpotifyPlayer from "./SpotifyPlayer";
@@ -229,6 +233,11 @@ export default class BrainzPlayer extends React.Component<
     newAlert("success", title || "Success", message);
   };
 
+  handleInfoMessage = (message: string | JSX.Element, title?: string): void => {
+    const { newAlert } = this.props;
+    newAlert("info", title || "", message);
+  };
+
   invalidateDataSource = (
     dataSource?: DataSourceTypes,
     message?: string | JSX.Element
@@ -341,14 +350,20 @@ export default class BrainzPlayer extends React.Component<
 
   /* Listeners for datasource events */
 
-  failedToFindTrack = (): void => {
-    const { isActivated } = this.state;
+  failedToPlayTrack = (): void => {
+    const { currentDataSourceIndex, isActivated } = this.state;
     if (!isActivated) {
       // Player has not been activated by the user, do nothing.
       return;
     }
+    const { currentListen } = this.props;
 
-    this.playNextTrack();
+    if (currentListen && currentDataSourceIndex < this.dataSources.length - 1) {
+      // Try playing the listen with the next dataSource
+      this.playListen(currentListen, currentDataSourceIndex + 1);
+    } else {
+      this.playNextTrack();
+    }
   };
 
   playerPauseChange = (paused: boolean): void => {
@@ -371,7 +386,21 @@ export default class BrainzPlayer extends React.Component<
 
   trackInfoChange = (title: string, artist?: string): void => {
     this.setState({ currentTrackName: title, currentTrackArtist: artist });
+    const message = (
+      <>
+        <FontAwesomeIcon icon={faPlayCircle as IconProp} />
+        &emsp;{title}
+        {artist && ` — ${artist}`}
+      </>
+    );
+    this.handleInfoMessage(message);
   };
+
+  // eslint-disable-next-line react/sort-comp
+  throttledTrackInfoChange = _throttle(this.trackInfoChange, 2000, {
+    leading: false,
+    trailing: true,
+  });
 
   /* Updating the progress bar without calling any API to check current player state */
 
@@ -459,9 +488,9 @@ export default class BrainzPlayer extends React.Component<
             onPlayerPausedChange={this.playerPauseChange}
             onProgressChange={this.progressChange}
             onDurationChange={this.durationChange}
-            onTrackInfoChange={this.trackInfoChange}
+            onTrackInfoChange={this.throttledTrackInfoChange}
             onTrackEnd={this.playNextTrack}
-            onTrackNotFound={this.failedToFindTrack}
+            onTrackNotFound={this.failedToPlayTrack}
             handleError={this.handleError}
             handleWarning={this.handleWarning}
             handleSuccess={this.handleSuccess}
@@ -480,9 +509,9 @@ export default class BrainzPlayer extends React.Component<
             onPlayerPausedChange={this.playerPauseChange}
             onProgressChange={this.progressChange}
             onDurationChange={this.durationChange}
-            onTrackInfoChange={this.trackInfoChange}
+            onTrackInfoChange={this.throttledTrackInfoChange}
             onTrackEnd={this.playNextTrack}
-            onTrackNotFound={this.failedToFindTrack}
+            onTrackNotFound={this.failedToPlayTrack}
             handleError={this.handleError}
             handleWarning={this.handleWarning}
             handleSuccess={this.handleSuccess}
@@ -499,9 +528,9 @@ export default class BrainzPlayer extends React.Component<
             onPlayerPausedChange={this.playerPauseChange}
             onProgressChange={this.progressChange}
             onDurationChange={this.durationChange}
-            onTrackInfoChange={this.trackInfoChange}
+            onTrackInfoChange={this.throttledTrackInfoChange}
             onTrackEnd={this.playNextTrack}
-            onTrackNotFound={this.failedToFindTrack}
+            onTrackNotFound={this.failedToPlayTrack}
             handleError={this.handleError}
             handleWarning={this.handleWarning}
             handleSuccess={this.handleSuccess}
