@@ -251,7 +251,10 @@ export default class BrainzPlayer extends React.Component<
     this.setState({ isActivated: true }, this.playNextTrack);
   };
 
-  playListen = (listen: Listen | JSPFTrack): void => {
+  playListen = (
+    listen: Listen | JSPFTrack,
+    datasourceIndex: number = 0
+  ): void => {
     this.setState({ isActivated: true });
     const { onCurrentListenChange } = this.props;
     onCurrentListenChange(listen);
@@ -260,23 +263,11 @@ export default class BrainzPlayer extends React.Component<
       ds.current?.isListenFromThisService(listen)
     );
 
-    /** If no matching datasource was found, try selecting the first one where
-     *  the user is authenticated to search for and play tracks
+    /** If no matching datasource was found, revert to the default bahaviour
+     * (try playing from source 0 or try next source)
      */
     if (selectedDatasourceIndex === -1) {
-      // Here, select a service that we can use to search for and play the track, if any
-      selectedDatasourceIndex = this.dataSources.findIndex((ds) =>
-        ds.current?.canSearchAndPlayTracks()
-      );
-    }
-
-    if (selectedDatasourceIndex === -1) {
-      /** If neither of the previous options worked, we can't play the track, bail out.
-       * We use setImmediate to ensure that the call to onCurrentListenChange has propagated
-       * and the new currentListen is updated in the props *before* playNextTrack is called
-       */
-      setImmediate(this.playNextTrack);
-      return;
+      selectedDatasourceIndex = datasourceIndex;
     }
 
     this.stopOtherBrainzPlayers();
