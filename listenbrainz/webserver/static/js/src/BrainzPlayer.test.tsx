@@ -518,7 +518,7 @@ describe("BrainzPlayer", () => {
     });
   });
 
-  describe("failedToFindTrack", () => {
+  describe("failedToPlayTrack", () => {
     it("does nothing if isActivated is false", () => {
       const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...props} />,
@@ -526,7 +526,7 @@ describe("BrainzPlayer", () => {
       );
       const instance = wrapper.instance();
       instance.playNextTrack = jest.fn();
-      instance.failedToFindTrack();
+      instance.failedToPlayTrack();
       expect(instance.playNextTrack).not.toHaveBeenCalled();
     });
 
@@ -538,7 +538,7 @@ describe("BrainzPlayer", () => {
       const instance = wrapper.instance();
       wrapper.setState({ isActivated: true });
       instance.playNextTrack = jest.fn();
-      instance.failedToFindTrack();
+      instance.failedToPlayTrack();
       expect(instance.playNextTrack).toHaveBeenCalledTimes(1);
     });
   });
