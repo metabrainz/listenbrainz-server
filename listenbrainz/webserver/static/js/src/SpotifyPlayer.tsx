@@ -100,7 +100,6 @@ export default class SpotifyPlayer
       loadScriptAsync(document, "https://sdk.scdn.co/spotify-player.js");
     } else {
       this.handleAccountError();
-      props.onInvalidateDataSource(this);
     }
   }
 
