@@ -182,11 +182,7 @@ export default class YoutubePlayer
   canSearchAndPlayTracks = (): boolean => {
     const { youtubeUser } = this.props;
     // check if the user is authed to search with the Youtube API
-    return (
-      Boolean(youtubeUser) &&
-      Boolean(youtubeUser?.access_token) &&
-      Boolean(youtubeUser?.api_key)
-    );
+    return Boolean(youtubeUser) && Boolean(youtubeUser?.api_key);
   };
 
   playListen = (listen: Listen | JSPFTrack) => {
