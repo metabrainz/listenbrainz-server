@@ -56,7 +56,6 @@ const searchForSpotifyTrack = async (
 
 const searchForYoutubeTrack = async (
   apiKey?: string,
-  accessToken?: string,
   trackName?: string,
   artistName?: string,
   releaseName?: string,
@@ -64,7 +63,6 @@ const searchForYoutubeTrack = async (
   onAccountError?: () => void
 ): Promise<Array<string> | null> => {
   if (!apiKey) return null;
-  if (!accessToken) return null;
   let query = trackName;
   if (artistName) {
     query += ` ${artistName}`;
@@ -80,7 +78,6 @@ const searchForYoutubeTrack = async (
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
       },
     }
   );
@@ -88,10 +85,8 @@ const searchForYoutubeTrack = async (
   if (response.status === 401) {
     if (refreshToken) {
       try {
-        const newAccessToken = await refreshToken();
         return searchForYoutubeTrack(
           apiKey,
-          newAccessToken,
           trackName,
           artistName,
           releaseName,
@@ -231,44 +226,54 @@ const formatWSMessageToListen = (wsMsg: any): Listen | null => {
 };
 
 // recieves or unix epoch timestamp int or ISO datetime string
-const preciseTimestamp = (listened_at: number | string): string => {
+const preciseTimestamp = (
+  listened_at: number | string,
+  displaySetting?: "timeAgo" | "includeYear" | "excludeYear"
+): string => {
   const listenDate: Date = new Date(listened_at);
+  let display = displaySetting;
 
   // invalid date
   if (Number.isNaN(listenDate.getTime())) {
     return String(listened_at);
   }
 
-  const msDifference = new Date().getTime() - listenDate.getTime();
-  if (
+  // determine which display setting based on time difference to use if no argument was provided
+  if (!display) {
+    const msDifference = new Date().getTime() - listenDate.getTime();
     // over one year old : show with year
-    msDifference / (1000 * 3600 * 24 * 365) >
-    1
-  ) {
-    return `${listenDate.toLocaleString(undefined, {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-      hour12: true,
-    })}`;
-  }
-  if (
+    if (msDifference / (1000 * 3600 * 24 * 365) > 1) {
+      display = "includeYear";
+    }
     // one year to yesterday : show without year
-    msDifference / (1000 * 3600 * 24 * 1) >
-    1
-  ) {
-    return `${listenDate.toLocaleString(undefined, {
-      day: "2-digit",
-      month: "short",
-      hour: "numeric",
-      minute: "numeric",
-      hour12: true,
-    })}`;
+    else if (msDifference / (1000 * 3600 * 24 * 1) > 1) {
+      display = "excludeYear";
+    }
+    // today : format using timeago
+    else display = "timeAgo";
   }
-  // today : format using timeago
-  return `${timeago.ago(listened_at)}`;
+
+  switch (display) {
+    case "includeYear":
+      return `${listenDate.toLocaleString(undefined, {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      })}`;
+    case "excludeYear":
+      return `${listenDate.toLocaleString(undefined, {
+        day: "2-digit",
+        month: "short",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      })}`;
+    default:
+      return `${timeago.ago(listened_at)}`;
+  }
 };
 
 /** Loads a script asynchronouhsly into the HTML page */

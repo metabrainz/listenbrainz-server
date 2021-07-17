@@ -2,7 +2,7 @@ import json
 import time
 
 import pytest
-from flask import url_for
+from flask import url_for, current_app
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
@@ -504,7 +504,29 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertNotIn('artist_name', sent_additional_info)
         self.assertNotIn('release_name', sent_additional_info)
 
-    def test_000_similar_users(self):
+    def test_additional_info_invalid_mbids(self):
+        """ Test mbid fields with [], "", null values are dropped without error """
+        with open(self.path_to_data_file('invalid_mbid_listens.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+        url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
+        response = self.wait_for_query_to_have_items(url, num_items=2, query_string={'count': '2'})
+        listens = json.loads(response.data)['payload']['listens']
+
+        additional_info = listens[0]['track_metadata']['additional_info']
+        self.assertEqual(["ac4f356f-23e5-40ab-990e-da7e34b65d6e"], additional_info["artist_mbids"])
+
+        additional_info = listens[1]['track_metadata']['additional_info']
+        self.assertNotIn("recording_mbid", additional_info)
+        self.assertNotIn("artist_mbids", additional_info)
+        self.assertNotIn("release_mbid", additional_info)
+        self.assertNotIn("work_mbids", additional_info)
+        self.assertEqual("2cfad207-3f55-4aec-8120-86cf66e34d59", additional_info["release_group_mbid"])
+
+    def test_similar_users(self):
 
         response = self.client.get(
             url_for('api_v1.get_similar_users', user_name='my_dear_muppet'))
@@ -512,7 +534,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
         conn = db.engine.raw_connection()
         with conn.cursor() as curs:
-            data = {self.user2['musicbrainz_id']: .123}
+            data = {self.user2['musicbrainz_id']: (.123, 0.01)}
             curs.execute("""INSERT INTO recommendation.similar_user VALUES (%s, %s)""",
                          (self.user['id'], json.dumps(data)))
         conn.commit()

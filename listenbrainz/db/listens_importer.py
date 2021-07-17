@@ -1,3 +1,5 @@
+from typing import Union
+
 from data.model.external_service import ExternalServiceType
 from listenbrainz import db, utils
 import sqlalchemy
@@ -25,7 +27,7 @@ def update_import_status(user_id: int, service: ExternalServiceType, error_messa
         })
 
 
-def update_latest_listened_at(user_id: int, service: ExternalServiceType, timestamp: int):
+def update_latest_listened_at(user_id: int, service: ExternalServiceType, timestamp: Union[int, float]):
     """ Update the timestamp of the last listen imported for the user with
     specified LB user ID.
 

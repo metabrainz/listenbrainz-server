@@ -7,6 +7,14 @@ from flask_login import current_user
 
 from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user
 
+
+REJECT_LISTENS_WITHOUT_EMAIL_ERROR = \
+    'The listens were rejected because the user does not has not provided an email. ' \
+    'Please visit https://musicbrainz.org/account/edit to add an email address. ' \
+    'Read the blog post at https://blog.metabrainz.org/?p=8915 to understand why ' \
+    'we need your email.'
+
+
 def generate_string(length):
     """Generates random string with a specified length."""
     return ''.join([random.SystemRandom().choice(

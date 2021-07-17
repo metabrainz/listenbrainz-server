@@ -18,6 +18,12 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+# usage
+# the first argument to this script is the dump type, it can be either
+# full, incremental or feedback. the remaining arguments are forwarded
+# the python dump_manager script. this can be useful in scenarios where
+# we want to pass in the --dump-id manually for recreating a failed dump.
+
 set -e
 
 LB_SERVER_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)
@@ -63,9 +69,10 @@ function on_exit {
         local duration=$(( $(date +%s) - START_TIME ))
         echo "create-dumps took ${duration}s to run"
     fi
-}
 
-trap on_exit EXIT
+    # Remove the cron lock
+    python3 admin/cron_lock.py unlock-cron create-dumps
+}
 
 START_TIME=$(date +%s)
 echo "This script is being run by the following user: "; whoami
@@ -77,6 +84,9 @@ if [ -z $DUMP_BASE_DIR ]; then
 fi
 
 DUMP_TYPE="${1:-full}"
+# consume dump type argument so that we can pass the remaining arguments to
+# the python dump manager script
+shift
 
 if [ "$DUMP_TYPE" == "full" ]; then
     SUB_DIR="fullexport"
@@ -89,23 +99,29 @@ else
     exit
 fi
 
+# Lock cron, so it cannot be accidentally terminated.
+python3 admin/cron_lock.py lock-cron create-dumps "Creating $DUMP_TYPE dump."
+
+# Trap should not be called before we lock cron to avoid wiping out an existing lock file
+trap on_exit EXIT
+
 DUMP_TEMP_DIR="$DUMP_BASE_DIR/$SUB_DIR.$$"
 echo "DUMP_BASE_DIR is $DUMP_BASE_DIR"
 echo "creating DUMP_TEMP_DIR $DUMP_TEMP_DIR"
 mkdir -p "$DUMP_TEMP_DIR"
 
 if [ "$DUMP_TYPE" == "full" ]; then
-    if ! /usr/local/bin/python manage.py dump create_full -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS" --last-dump-id; then
+    if ! /usr/local/bin/python manage.py dump create_full -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS" "$@"; then
         echo "Full dump failed, exiting!"
         exit 1
     fi
 elif [ "$DUMP_TYPE" == "incremental" ]; then
-    if ! /usr/local/bin/python manage.py dump create_incremental -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS"; then
+    if ! /usr/local/bin/python manage.py dump create_incremental -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS" "$@"; then
         echo "Incremental dump failed, exiting!"
         exit 1
     fi
 elif [ "$DUMP_TYPE" == "feedback" ]; then
-    if ! /usr/local/bin/python manage.py dump create_feedback -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS"; then
+    if ! /usr/local/bin/python manage.py dump create_feedback -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS" "$@"; then
         echo "Feedback dump failed, exiting!"
         exit 1
     fi

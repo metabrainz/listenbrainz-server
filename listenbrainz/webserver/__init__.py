@@ -172,12 +172,15 @@ def create_app(debug=None):
     from listenbrainz.model import ExternalService as ExternalServiceModel
     from listenbrainz.model import User as UserModel
     from listenbrainz.model import ListensImporter as ListensImporterModel
+    from listenbrainz.model import ReportedUsers as ReportedUsersModel
     from listenbrainz.model.external_service_oauth import ExternalServiceAdminView
     from listenbrainz.model.user import UserAdminView
     from listenbrainz.model.listens_import import ListensImporterAdminView
+    from listenbrainz.model.reported_users import ReportedUserAdminView
     admin.add_view(UserAdminView(UserModel, model.db.session, endpoint='user_model'))
     admin.add_view(ExternalServiceAdminView(ExternalServiceModel, model.db.session, endpoint='external_service_model'))
     admin.add_view(ListensImporterAdminView(ListensImporterModel, model.db.session, endpoint='listens_importer_model'))
+    admin.add_view(ReportedUserAdminView(ReportedUsersModel, model.db.session, endpoint='reported_users_model'))
 
     @app.before_request
     def before_request_gdpr_check():
@@ -306,3 +309,7 @@ def _register_blueprints(app):
 
     from listenbrainz.webserver.views.user_timeline_event_api import user_timeline_event_api_bp
     app.register_blueprint(user_timeline_event_api_bp, url_prefix=API_PREFIX)
+
+    if app.config.get("FEATURE_PINNED_REC", False):
+        from listenbrainz.webserver.views.pinned_recording_api import pinned_recording_api_bp
+        app.register_blueprint(pinned_recording_api_bp, url_prefix=API_PREFIX)

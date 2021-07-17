@@ -34,6 +34,7 @@ const props: ListenCardProps = {
   removeListenFromListenList: () => {},
   updateFeedback: () => {},
   newAlert: () => {},
+  updateRecordingToPin: () => {},
 };
 
 const globalProps = {

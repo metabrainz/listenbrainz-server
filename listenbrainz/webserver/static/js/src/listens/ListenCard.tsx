@@ -26,6 +26,7 @@ export type ListenCardProps = {
   playListen: (listen: Listen) => void;
   removeListenFromListenList: (listen: Listen) => void;
   updateFeedback: (recordingMsid: string, score: ListenFeedBack) => void;
+  updateRecordingToPin: (recordingToPin: Listen) => void;
   newAlert: (
     alertType: AlertType,
     title: string,
@@ -175,7 +176,13 @@ export default class ListenCard extends React.Component<
   };
 
   render() {
-    const { listen, mode, className, isCurrentUser } = this.props;
+    const {
+      listen,
+      mode,
+      className,
+      isCurrentUser,
+      updateRecordingToPin,
+    } = this.props;
     const { feedback, isDeleted } = this.state;
 
     return (
@@ -314,6 +321,12 @@ export default class ListenCard extends React.Component<
                     <ListenControl
                       title="Delete Listen"
                       action={this.deleteListen}
+                    />
+                    <ListenControl
+                      title="Pin this Recording"
+                      action={() => updateRecordingToPin(listen)}
+                      dataToggle="modal"
+                      dataTarget="#PinRecordingModal"
                     />
                   </ul>
                 </>

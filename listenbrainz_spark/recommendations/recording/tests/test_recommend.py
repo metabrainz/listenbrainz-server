@@ -87,6 +87,7 @@ class RecommendTestClass(SparkTestCase):
         return recommendation_df
 
     def test_get_recording_mbids(self):
+        self.maxDiff = None
         params = self.get_recommendation_params()
         recommendation_df = self.get_recommendation_df()
         users = []
@@ -94,9 +95,27 @@ class RecommendTestClass(SparkTestCase):
 
         df = recommend.get_recording_mbids(params, recommendation_df, users_df)
         self.assertEqual(df.count(), 4)
-        row = df.collect()
-        received_data = [row[0], row[1], row[2], row[3]]
-        expected_data = [
+        # Each user's rows are ordered by ratings but the order of users is not
+        # fixed so need to test each user's recommendations separately.
+        rows_rob = df.where(df.user_name == "rob").collect()
+        self.assertEqual(rows_rob, [
+            Row(
+                mb_recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                rank=1,
+                rating=7.999,
+                user_id=2,
+                user_name='rob'
+            ),
+            Row(
+                mb_recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                rank=2,
+                rating=-2.4587,
+                user_id=2,
+                user_name='rob'
+            )
+        ])
+        rows_vansika = df.where(df.user_name == "vansika").collect()
+        self.assertEqual(rows_vansika, [
             Row(mb_recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rank=1,
                 rating=6.994590001,
@@ -109,22 +128,7 @@ class RecommendTestClass(SparkTestCase):
                 user_id=1,
                 user_name='vansika'
                 ),
-            Row(
-                mb_recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                rank=1,
-                rating=7.999,
-                user_id=2,
-                user_name='rob'
-                ),
-            Row(
-                mb_recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                rank=2,
-                rating=-2.4587,
-                user_id=2,
-                user_name='rob'
-                )
-        ]
-        self.assertEqual(received_data, expected_data)
+        ])
 
     def test_filter_recommendations_on_rating(self):
         df = self.get_recommendation_df()

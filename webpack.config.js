@@ -8,6 +8,20 @@ const jsDir = path.join(baseDir, "js");
 const distDir = path.join(baseDir, "dist");
 const cssDir = path.join(baseDir, "css");
 
+const es5LibrariesToTranspile = [
+  "d3-array",
+  "d3-scale",
+  "internmap",
+  "react-date-picker",
+  "react-calendar",
+  "socket.io-client",
+  "socket.io-parser",
+  "engine.io-client",
+];
+const babelExcludeLibrariesRegexp = new RegExp(
+  `node_modules/(?!(${es5LibrariesToTranspile.join("|")})/).*`,
+  ""
+);
 module.exports = function (env, argv) {
   const isProd = argv.mode === "production";
   const plugins = [
@@ -61,8 +75,8 @@ module.exports = function (env, argv) {
       rules: [
         {
           test: /\.(js|ts)x?$/,
-          // some nivo/D3 dependencies need to be transpiled, we include them with the following regex
-          exclude: /node_modules\/(?!(d3-array|d3-scale|internmap|react-date-picker|react-calendar)\/).*/,
+          // some third-party libraries need to be transpiled to ES5, we include them with the following regex
+          exclude: babelExcludeLibrariesRegexp,
           // Don't specify the babel configuration here
           // Configuration can be found in ./babel.config.js
           use: "babel-loader",

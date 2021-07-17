@@ -16,25 +16,27 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def create(musicbrainz_row_id: int, musicbrainz_id: str) -> int:
+def create(musicbrainz_row_id: int, musicbrainz_id: str, email: str = None) -> int:
     """Create a new user.
 
     Args:
         musicbrainz_row_id (int): the MusicBrainz row ID of the user
         musicbrainz_id (str): MusicBrainz username of a user.
+        email (str): email of the user
 
     Returns:
         ID of newly created user.
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            INSERT INTO "user" (musicbrainz_id, musicbrainz_row_id, auth_token)
-                 VALUES (:mb_id, :mb_row_id, :token)
+            INSERT INTO "user" (musicbrainz_id, musicbrainz_row_id, auth_token, email)
+                 VALUES (:mb_id, :mb_row_id, :token, :email)
               RETURNING id
         """), {
             "mb_id": musicbrainz_id,
             "token": str(uuid.uuid4()),
             "mb_row_id": musicbrainz_row_id,
+            "email": email,
         })
 
         return result.fetchone()["id"]
@@ -65,11 +67,12 @@ USER_GET_COLUMNS = ['id', 'created', 'musicbrainz_id', 'auth_token',
                     'last_login', 'latest_import', 'gdpr_agreed', 'musicbrainz_row_id', 'login_id']
 
 
-def get(id):
+def get(id: int, *, fetch_email: bool = False):
     """Get user with a specified ID.
 
     Args:
-        id (int): ID of a user.
+        id: ID of a user.
+        fetch_email: whether to return email in response
 
     Returns:
         Dictionary with the following structure:
@@ -85,12 +88,13 @@ def get(id):
             "login_id": <token used for login sessions>
         }
     """
+    columns = USER_GET_COLUMNS + ['email'] if fetch_email else USER_GET_COLUMNS
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             SELECT {columns}
               FROM "user"
              WHERE id = :id
-        """.format(columns=','.join(USER_GET_COLUMNS))), {"id": id})
+        """.format(columns=','.join(columns))), {"id": id})
         row = result.fetchone()
         return dict(row) if row else None
 
@@ -145,11 +149,12 @@ def get_many_users_by_mb_id(musicbrainz_ids: List[str]):
         return {row['musicbrainz_id'].lower(): dict(row) for row in result.fetchall()}
 
 
-def get_by_mb_id(musicbrainz_id):
+def get_by_mb_id(musicbrainz_id, *, fetch_email: bool = False):
     """Get user with a specified MusicBrainz ID.
 
     Args:
         musicbrainz_id (str): MusicBrainz username of a user.
+        fetch_email: whether to return email in response
 
     Returns:
         Dictionary with the following structure:
@@ -165,21 +170,23 @@ def get_by_mb_id(musicbrainz_id):
             "login_id": <token used for login sessions>
         }
     """
+    columns = USER_GET_COLUMNS + ['email'] if fetch_email else USER_GET_COLUMNS
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             SELECT {columns}
               FROM "user"
              WHERE LOWER(musicbrainz_id) = LOWER(:mb_id)
-        """.format(columns=','.join(USER_GET_COLUMNS))), {"mb_id": musicbrainz_id})
+        """.format(columns=','.join(columns))), {"mb_id": musicbrainz_id})
         row = result.fetchone()
         return dict(row) if row else None
 
 
-def get_by_token(token):
+def get_by_token(token: str, *, fetch_email: bool = False):
     """Get user with a specified authentication token.
 
     Args:
-        token (str): Authentication token associated with user's account.
+        token: Authentication token associated with user's account.
+        fetch_email: whether to return email in response
 
     Returns:
         Dictionary with the following structure:
@@ -189,12 +196,13 @@ def get_by_token(token):
             "musicbrainz_id": <MusicBrainz username>,
         }
     """
+    columns = USER_GET_COLUMNS + ['email'] if fetch_email else USER_GET_COLUMNS
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             SELECT {columns}
               FROM "user"
              WHERE auth_token = :auth_token
-        """.format(columns=','.join(USER_GET_COLUMNS))), {"auth_token": token})
+        """.format(columns=','.join(columns))), {"auth_token": token})
         row = result.fetchone()
         return dict(row) if row else None
 
@@ -472,7 +480,7 @@ def get_users_in_order(user_ids):
 
 
 def get_similar_users(user_id: int) -> SimilarUsers:
-    """ Given a user_id, fetch the similar users for that given user. 
+    """ Given a user_id, fetch the similar users for that given user.
         Returns a dict { "user_x" : .453, "user_y": .123 } """
 
     with db.engine.connect() as connection:
@@ -484,7 +492,10 @@ def get_similar_users(user_id: int) -> SimilarUsers:
             'user_id': user_id,
         })
         row = result.fetchone()
-        return SimilarUsers(**row) if row else None
+        users = {}
+        for user in row[1]:
+            users[user] = row[1][user][0]
+        return SimilarUsers(user_id=row[0], similar_users=users) if row else None
 
 
 def get_users_by_id(user_ids: List[int]):
@@ -503,3 +514,58 @@ def get_users_by_id(user_ids: List[int]):
         for row in result.fetchall():
             row_id_username_map[row['id']] = row['musicbrainz_id']
         return row_id_username_map
+
+
+def is_user_reported(reporter_id: int, reported_id: int):
+    """ Check whether the user identified by reporter_id has reported the
+    user identified by reported_id"""
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT *
+              FROM reported_users
+             WHERE reporter_user_id = :reporter_id
+               AND reported_user_id = :reported_id
+        """), {
+            "reporter_id": reporter_id,
+            "reported_id": reported_id
+        })
+        return True if result.fetchone() else False
+
+
+def report_user(reporter_id: int, reported_id: int, reason: str = None):
+    """ Create a report from user with reporter_id against user with
+     reported_id"""
+    with db.engine.connect() as connection:
+        connection.execute(sqlalchemy.text("""
+            INSERT INTO reported_users (reporter_user_id, reported_user_id, reason)
+                 VALUES (:reporter_id, :reported_id, :reason)
+                 ON CONFLICT DO NOTHING
+                """), {
+            "reporter_id": reporter_id,
+            "reported_id": reported_id,
+            "reason": reason,
+        })
+
+
+def update_user_email(musicbrainz_id, email):
+    """ Update the email field for user with specified MusicBrainz ID
+
+    Args:
+        musicbrainz_id (str): MusicBrainz username of a user
+        email (str): email of a user
+    """
+
+    with db.engine.connect() as connection:
+        try:
+            connection.execute(sqlalchemy.text("""
+                UPDATE "user"
+                   SET email = :email
+                 WHERE musicbrainz_id = :musicbrainz_id
+                """), {
+                "musicbrainz_id": musicbrainz_id,
+                "email": email
+            })
+        except sqlalchemy.exc.ProgrammingError as err:
+            logger.error(err)
+            raise DatabaseException(
+                "Couldn't update user's email: %s" % str(err))
