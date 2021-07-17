@@ -41,7 +41,7 @@ def submit():
 @crossdomain()
 def get(messybrainz_id):
     try:
-        data = messybrainz.load_recording(messybrainz_id)
+        data = messybrainz.load_recording_from_msid(messybrainz_id)
     except messybrainz.exceptions.NoDataFoundException:
         raise NotFound
 

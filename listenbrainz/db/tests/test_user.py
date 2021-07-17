@@ -209,9 +209,9 @@ class UserTestCase(DatabaseTestCase):
         user_id_22 = db_user.create(22, "twenty_two")
         user_id_23 = db_user.create(23, "twenty_three")
 
-        similar_users_21 = {"twenty_two": 0.4, "twenty_three": 0.7}
-        similar_users_22 = {"twenty_one": 0.4}
-        similar_users_23 = {"twenty_one": 0.7}
+        similar_users_21 = {"twenty_two": [0.4, .01], "twenty_three": [0.7, 0.001]}
+        similar_users_22 = {"twenty_one": [0.4, .01]}
+        similar_users_23 = {"twenty_one": [0.7, .02]}
 
         similar_users = {
             "twenty_one": similar_users_21,
@@ -221,9 +221,12 @@ class UserTestCase(DatabaseTestCase):
 
         import_user_similarities(similar_users)
 
-        self.assertDictEqual(similar_users_21, db_user.get_similar_users(user_id_21).similar_users)
-        self.assertDictEqual(similar_users_22, db_user.get_similar_users(user_id_22).similar_users)
-        self.assertDictEqual(similar_users_23, db_user.get_similar_users(user_id_23).similar_users)
+        self.assertDictEqual({"twenty_two": 0.4, "twenty_three": 0.7},
+                             db_user.get_similar_users(user_id_21).similar_users)
+        self.assertDictEqual({"twenty_one": 0.4 },
+                             db_user.get_similar_users(user_id_22).similar_users)
+        self.assertDictEqual({"twenty_one": 0.7},
+                             db_user.get_similar_users(user_id_23).similar_users)
 
     def test_get_user_by_id(self):
         user_id_24 = db_user.create(24, "twenty_four")
@@ -235,3 +238,17 @@ class UserTestCase(DatabaseTestCase):
         }
 
         self.assertDictEqual(users, db_user.get_users_by_id([user_id_24, user_id_25]))
+
+    def test_fetch_email(self):
+        musicbrainz_id = "one"
+        email = "one@one.one"
+        user_id = db_user.create(1, musicbrainz_id, email)
+        self.assertNotIn("email", db_user.get(user_id))
+        self.assertEqual(email, db_user.get(user_id, fetch_email=True)["email"])
+
+        token = db_user.get(user_id)["auth_token"]
+        self.assertNotIn("email", db_user.get_by_token(token))
+        self.assertEqual(email, db_user.get_by_token(token, fetch_email=True)["email"])
+
+        self.assertNotIn("email", db_user.get_by_mb_id(musicbrainz_id))
+        self.assertEqual(email, db_user.get_by_mb_id(musicbrainz_id, fetch_email=True)["email"])

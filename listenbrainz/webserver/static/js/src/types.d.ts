@@ -82,7 +82,6 @@ declare type SpotifyUser = {
 
 declare type YoutubeUser = {
   api_key?: string;
-  access_token?: string;
 };
 
 declare type SpotifyPermission =

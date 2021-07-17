@@ -1,0 +1,4 @@
+#!/bin/bash
+
+sleep 1
+exec run-consul-template -config /etc/consul-template-mbid-mapping-writer.conf

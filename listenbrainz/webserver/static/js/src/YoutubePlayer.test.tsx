@@ -9,7 +9,6 @@ const props = {
   show: true,
   playerPaused: false,
   youtubeUser: {
-    access_token: "frontend-test",
     api_key: "fake-api-key",
   } as YoutubeUser,
   refreshYoutubeToken: new APIService("base-uri").refreshYoutubeToken,

@@ -32,7 +32,6 @@ const GlobalContextMock = {
       permission: ["user-read-currently-playing"] as Array<SpotifyPermission>,
     },
     youtubeAuth: {
-      access_token: "frontend-test",
       api_key: "fake-api-key",
     },
     currentUser: { name: "" },
