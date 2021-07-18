@@ -357,8 +357,8 @@ const getPageProps = (): {
 
 // This is the temporary UI feature flag for the pin recording feature and will eventually be removed
 const pinFeatureEnabled = (currentUser: string): boolean => {
-  if (!currentUser){
-    return false
+  if (!currentUser) {
+    return false;
   }
   const usersAllowedIn = [
     "jdaok",
