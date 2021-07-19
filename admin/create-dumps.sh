@@ -95,7 +95,7 @@ elif [ "$DUMP_TYPE" == "incremental" ]; then
 elif [ "$DUMP_TYPE" == "feedback" ]; then
     SUB_DIR="spark"
 elif [ "$DUMP_TYPE" == "mapping" ]; then
-    SUB_DIR="mapping"
+    SUB_DIR="fullexport"
 else
     echo "Dump type must be one of 'full', 'incremental', 'feedback' or 'mapping'"
     exit

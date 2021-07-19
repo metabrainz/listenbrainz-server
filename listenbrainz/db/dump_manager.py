@@ -277,7 +277,7 @@ def create_mbid_dump(location, threads):
 
         # Write the DUMP_ID file so that the FTP sync scripts can be more robust
         with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
-            f.write("%s 0 mbid\n" % (end_time.strftime('%Y%m%d-%H%M%S')))
+            f.write("%s 0 mapping\n" % (end_time.strftime('%Y%m%d-%H%M%S')))
 
         current_app.logger.info(
             'MBID mapping dump created and hashes written at %s' % dump_path)
