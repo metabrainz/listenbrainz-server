@@ -756,10 +756,7 @@ class TimescaleListenStore(ListenStore):
 
                     for col in data:
                         if col == 'artist_credit_id':
-                            if result[col] is not None:
-                                data[col].append(int(result[col]))
-                            else:
-                                data[col].append(None)
+                            data[col].append(result[col])
                         elif col == 'listened_at':
                             current_listened_at = datetime.utcfromtimestamp(result['listened_at'])
                             data[col].append(current_listened_at)
@@ -780,7 +777,7 @@ class TimescaleListenStore(ListenStore):
                 filename = os.path.join(temp_dir, "%d.parquet" % parquet_file_id)
 
                 # Create a pandas dataframe, then write that to a parquet files
-                df = pd.DataFrame(data)
+                df = pd.DataFrame(data, dtype=object)
                 table = pa.Table.from_pandas(df) 
                 pq.write_table(table, filename)
                 tar_file.add(filename, arcname=os.path.join(archive_dir, "%d.parquet" % parquet_file_id))
