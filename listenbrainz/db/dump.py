@@ -43,6 +43,7 @@ from flask import current_app, render_template
 from listenbrainz import DUMP_LICENSE_FILE_PATH
 import listenbrainz.db as db
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
+from listenbrainz.db import timescale as ts
 from listenbrainz.utils import create_path, log_ioerrors
 
 from listenbrainz import config
@@ -152,6 +153,20 @@ PRIVATE_TABLES = {
     ),
 }
 
+MBID_MAPPING_TABLES = {
+    'listen_mbid_mapping': (
+        'id',
+        'recording_msid',
+        'recording_mbid',
+        'release_mbid',
+        'artist_credit_id',
+        'artist_credit_name',
+        'recording_name',
+        'match_type',
+        'last_updated',
+    ),
+}
+
 
 def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
     """ Create postgres database dump in the specified location
@@ -204,6 +219,7 @@ def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
 
     current_app.logger.info('Dump of public data created at %s!', public_dump)
 
+
     current_app.logger.info(
         'ListenBrainz PostgreSQL data dump created at %s!', location)
     return private_dump, public_dump
@@ -243,6 +259,27 @@ def dump_feedback_for_spark(location, dump_time=datetime.today(), threads=None):
 
     return feedback_dump
 
+
+def dump_mbid_mapping(location, dump_time=datetime.today(), threads=None):
+    current_app.logger.info('Creating dump of mbid mapping...')
+    try:
+        mbid_dump = create_mbid_dump(location, dump_time, threads)
+    except IOError as e:
+        current_app.logger.critical(
+            'IOError while creating mbid dump: %s', str(e), exc_info=True)
+        current_app.logger.info('Removing created files and giving up...')
+        shutil.rmtree(location)
+        return
+    except Exception as e:
+        current_app.logger.critical(
+            'Unable to create mbid dump due to error %s', str(e), exc_info=True)
+        current_app.logger.info('Removing created files and giving up...')
+        shutil.rmtree(location)
+        return
+
+    current_app.logger.info('Dump of mbid mapping created at %s!', mbid_dump)
+
+    return mbid_dump
 
 def _create_dump(location, dump_type, tables, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Creates a dump of the provided tables at the location passed
@@ -303,7 +340,12 @@ def _create_dump(location, dump_type, tables, dump_time, threads=DUMP_DEFAULT_TH
             archive_tables_dir = os.path.join(temp_dir, 'lbdump', 'lbdump')
             create_path(archive_tables_dir)
 
-            with db.engine.connect() as connection:
+            if dump_type == "mbid-mapping":
+                db_mod = ts
+            else:
+                db_mod = db
+
+            with db_mod.engine.connect() as connection:
                 if dump_type == "feedback":
                     dump_user_feedback(connection, location=archive_tables_dir)
                 else:
@@ -379,6 +421,18 @@ def create_feedback_dump(location, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT)
         location=location,
         dump_type='feedback',
         tables=[],
+        dump_time=dump_time,
+        threads=threads,
+    )
+
+
+def create_mbid_dump(location, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
+    """ Create postgres database dump for the mbid mapping.
+    """
+    return _create_dump(
+        location=location,
+        dump_type='mbid-mapping',
+        tables=MBID_MAPPING_TABLES,
         dump_time=dump_time,
         threads=threads,
     )

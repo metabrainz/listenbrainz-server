@@ -239,6 +239,51 @@ def create_feedback(location, threads):
         sys.exit(0)
 
 
+@cli.command(name="create_mbid_dump")
+@click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'))
+@click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
+def create_mbid_dump(location, threads):
+    """ Create a postgres formatted dump of them mbid mapping.
+
+        Args:
+            location (str): path to the directory where the dump should be made
+            threads (int): the number of threads to be used while compression
+    """
+    app = create_app()
+    with app.app_context():
+
+        end_time = datetime.now()
+        ts = end_time.strftime('%Y%m%d-%H%M%S')
+        dump_name = 'listenbrainz-mbid-mapping-{time}'.format(time=ts)
+        dump_path = os.path.join(location, dump_name)
+        create_path(dump_path)
+        db_dump.dump_mbid_mapping(dump_path, end_time, threads)
+
+        try:
+            write_hashes(dump_path)
+        except IOError as e:
+            current_app.logger.error(
+                'Unable to create hash files! Error: %s', str(e), exc_info=True)
+            sys.exit(-1)
+
+        try:
+            if not sanity_check_dumps(dump_path, 3):
+                sys.exit(-1)
+        except OSError as e:
+            sys.exit(-1)
+
+        # if in production, send an email to interested people for observability
+        send_dump_creation_notification(dump_name, 'mbid-dump')
+
+        # Write the DUMP_ID file so that the FTP sync scripts can be more robust
+        with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
+            f.write("%s 0 mbid\n" % (end_time.strftime('%Y%m%d-%H%M%S')))
+
+        current_app.logger.info(
+            'MBID mapping dump created and hashes written at %s' % dump_path)
+
+        sys.exit(0)
+
 @cli.command(name="import_dump")
 @click.option('--private-archive', '-pr', default=None, required=False)
 @click.option('--public-archive', '-pu', default=None, required=True)
