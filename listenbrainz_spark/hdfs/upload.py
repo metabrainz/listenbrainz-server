@@ -87,10 +87,7 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
             Args:
                   archive: path to parquet listens dump to be uploaded
         """
-        self.upload_archive_to_temp(archive)
-        # dump is uploaded to HDFS_TEMP_DIR/archive_name
-        archive_name = Path(archive).stem
-        src_path = Path(HDFS_TEMP_DIR).joinpath(archive_name)
+        src_path = self.upload_archive_to_temp(archive)
         dest_path = path.LISTENBRAINZ_NEW_DATA_DIRECTORY
         # Delete existing dumps if any
         if utils.path_exists(dest_path):
@@ -109,7 +106,7 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
         utils.rename(src_path, dest_path)
         utils.logger.info(f"Done! Time taken: {time.monotonic() - t0:.2f}")
 
-    def upload_archive_to_temp(self, archive: str):
+    def upload_archive_to_temp(self, archive: str) -> os.PathLike:
         """ Upload parquet files in archive to a temporary hdfs directory
 
             Args:
@@ -124,3 +121,7 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
 
             logger.info("Uploading listens to temporary directory in HDFS...")
             self.extract_and_upload_archive(archive, local_temp_dir, HDFS_TEMP_DIR)
+
+        # dump is uploaded to HDFS_TEMP_DIR/archive_name
+        archive_name = Path(archive).stem
+        return Path(HDFS_TEMP_DIR).joinpath(archive_name)
