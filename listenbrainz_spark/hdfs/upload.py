@@ -99,14 +99,14 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
         t0 = time.monotonic()
 
         # Check if parent directory exists, if not create a directory
-        dest_path_parent = Path(dest_path).parent
+        dest_path_parent = str(Path(dest_path).parent)
         if not utils.path_exists(dest_path_parent):
             utils.create_dir(dest_path_parent)
 
         utils.rename(src_path, dest_path)
         utils.logger.info(f"Done! Time taken: {time.monotonic() - t0:.2f}")
 
-    def upload_archive_to_temp(self, archive: str) -> os.PathLike:
+    def upload_archive_to_temp(self, archive: str) -> str:
         """ Upload parquet files in archive to a temporary hdfs directory
 
             Args:
@@ -124,4 +124,4 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
 
         # dump is uploaded to HDFS_TEMP_DIR/archive_name
         archive_name = Path(archive).stem
-        return Path(HDFS_TEMP_DIR).joinpath(archive_name)
+        return str(Path(HDFS_TEMP_DIR).joinpath(archive_name))
