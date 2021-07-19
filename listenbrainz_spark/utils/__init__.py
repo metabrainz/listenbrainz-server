@@ -180,9 +180,14 @@ def get_listens_from_new_dump(from_ts: int, to_ts: int, location: str) -> DataFr
     # extract numbers from name of parquet files, so that we can sort them in reverse
     # order and start loading newer listens first
     for file in files:
-        if file.endswith('.parquet'):
+        if file == "incremental.parquet":  # handle incremental dumps separately
+            continue
+        if file.endswith(".parquet"):
             file_ids.append(int(file.split(".")[0]))
     file_ids.sort(reverse=True)
+
+    # add incremental dumps to start of list because those are the newest listens
+    file_ids.insert(0, "incremental")
 
     # create empty dataframe for merging loaded files into it
     dfs = listenbrainz_spark.session.createDataFrame([], listens_new_schema)
