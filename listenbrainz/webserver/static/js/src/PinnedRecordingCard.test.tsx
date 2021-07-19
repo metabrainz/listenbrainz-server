@@ -58,7 +58,7 @@ describe("PinnedRecordingCard", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("calls renderPinTitle, renderPinDate, renderBlurbContent", () => {
+  it("calls renderPinTitle, renderPinDate, & renderBlurbContent", () => {
     const wrapper = mount<PinnedRecordingCard>(
       <GlobalAppContext.Provider value={globalProps}>
         <PinnedRecordingCard {...{ ...props, newAlert: jest.fn() }} />
