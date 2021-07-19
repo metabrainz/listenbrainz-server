@@ -756,7 +756,10 @@ class TimescaleListenStore(ListenStore):
 
                     for col in data:
                         if col == 'artist_credit_id':
-                            data[col].append(int(result[col]))
+                            if result[col] is not None:
+                                data[col].append(int(result[col]))
+                            else:
+                                data[col].append(None)
                         elif col == 'listened_at':
                             current_listened_at = datetime.utcfromtimestamp(result['listened_at'])
                             data[col].append(current_listened_at)

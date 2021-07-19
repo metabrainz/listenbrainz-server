@@ -32,6 +32,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+from time import sleep
 
 import psycopg2
 import ujson
@@ -424,6 +425,18 @@ def create_test_parquet_files():
     app = create_app()
     with app.app_context():
         from listenbrainz.webserver.timescale_connection import _ts as ls
-        ls.dump_listens_for_spark("/tmp", 999)
+
+        start = datetime.now()
+        ls.dump_listens_for_spark("/tmp", 1000)
+
+        print("Finished dumping full dump, starting incremental dump")
+        inc_start = datetime.now()
+        ls.dump_listens_for_spark("/tmp", 1001, start)
+
+        print("Waiting 60 seconds, starting new incremental dump")
+        # collect more listens
+        sleep(60)
+        ls.dump_listens_for_spark("/tmp", 1002, inc_start)
+
         sys.exit(0)
 
