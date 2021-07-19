@@ -254,7 +254,7 @@ def create_mbid_dump(location, threads):
 
         end_time = datetime.now()
         ts = end_time.strftime('%Y%m%d-%H%M%S')
-        dump_name = 'listenbrainz-mbid-mapping-{time}'.format(time=ts)
+        dump_name = 'listenbrainz-mbid-mapping-dump-{time}'.format(time=ts)
         dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
         db_dump.dump_mbid_mapping(dump_path, end_time, threads)
