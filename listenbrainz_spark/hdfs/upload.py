@@ -96,9 +96,6 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
             utils.delete_dir(dest_path, recursive=True)
             logger.info('Done!')
 
-        logger.info("Moving the processed files to {}".format(dest_path))
-        t0 = time.monotonic()
-
         # Check if parent directory exists, if not create a directory
         dest_path_parent = pathlib.Path(dest_path).parent
         if not utils.path_exists(dest_path_parent):
@@ -106,8 +103,11 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
 
         archive_name = pathlib.Path(archive).name
         src_path = os.path.join(hdfs_temp_dir, archive_name)
+
+        logger.info("Moving the processed files {} to {}".format(src_path, dest_path))
+        t0 = time.monotonic()
         utils.rename(src_path, dest_path)
-        utils.logger.info(f"Done! Time taken: {time.monotonic() - t0:.2f}")
+        logger.info(f"Done! Time taken: {time.monotonic() - t0:.2f}")
 
     def upload_archive_to_temp(self, archive: str) -> str:
         """ Upload parquet files in archive to a temporary hdfs directory
