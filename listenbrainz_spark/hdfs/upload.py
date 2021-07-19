@@ -104,9 +104,7 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
         if not utils.path_exists(dest_path_parent):
             utils.create_dir(dest_path_parent)
 
-        archive_name = pathlib.Path(archive).name
-        src_path = os.path.join(hdfs_temp_dir, archive_name)
-        utils.rename(src_path, dest_path)
+        utils.rename(hdfs_temp_dir, dest_path)
         utils.logger.info(f"Done! Time taken: {time.monotonic() - t0:.2f}")
 
     def upload_archive_to_temp(self, archive: str) -> str:
