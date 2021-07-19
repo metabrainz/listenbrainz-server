@@ -96,7 +96,7 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
             utils.delete_dir(dest_path, recursive=True)
             logger.info('Done!')
 
-        logger.info("Moving the processed files to {}".format(dest_path))
+        logger.info(f"Moving the processed files from {hdfs_temp_dir} to {dest_path}")
         t0 = time.monotonic()
 
         # Check if parent directory exists, if not create a directory
@@ -116,7 +116,12 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
                 path of the temp dir where archive has been uploaded
         """
         with tempfile.TemporaryDirectory() as local_temp_dir:
-            hdfs_temp_dir = os.path.join(TEMP_DIR_PATH, archive)
+            # cannot use complete archive path in creating temp path here, archive can be an
+            # absolute path which will cause issues eg: os.path.join("/tmp", "/world") = "/world",
+            # this will create issues in moving dump from temporary path to destination later.
+            # so just use the archive's name
+            archive_name = pathlib.Path(archive).stem  # get archive name without extension
+            hdfs_temp_dir = os.path.join(TEMP_DIR_PATH, archive_name)
 
             logger.info("Cleaning HDFS temporary directory...")
             if utils.path_exists(hdfs_temp_dir):
