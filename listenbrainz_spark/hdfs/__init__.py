@@ -157,7 +157,8 @@ class ListenbrainzHDFSUploader:
                         raise DumpInvalidException(f"{type(err).__name__} while extracting {member.name}, aborting import")
 
                     hdfs_path = os.path.join(hdfs_dir, member.name)
-                    utils.upload_to_HDFS(hdfs_path, member.name)
+                    local_path = os.path.join(local_dir, member.name)
+                    utils.upload_to_HDFS(hdfs_path, local_path)
                     os.remove(member.name)
 
                     time_taken = time.monotonic() - t0
