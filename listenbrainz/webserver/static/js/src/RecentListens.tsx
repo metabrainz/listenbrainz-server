@@ -558,7 +558,7 @@ export default class RecentListens extends React.Component<
               <div id="pinned-recordings">
                 <PinnedRecordingCard
                   userName={user.name}
-                  PinnedRecording={userPinnedRecording}
+                  pinnedRecording={userPinnedRecording}
                   isCurrentUser={currentUser?.name === user?.name}
                   newAlert={newAlert}
                 />

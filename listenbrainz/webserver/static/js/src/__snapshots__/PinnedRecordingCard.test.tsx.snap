@@ -2,7 +2,9 @@
 
 exports[`PinnedRecordingCard renders correctly 1`] = `
 <PinnedRecordingCard
-  PinnedRecording={
+  isCurrentUser={true}
+  newAlert={[Function]}
+  pinnedRecording={
     Object {
       "blurb_content": "I LOVE",
       "created": 1111111111,
@@ -15,17 +17,13 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
       },
     }
   }
-  isCurrentUser={true}
-  newAlert={[Function]}
   userName="name"
 >
   <ForwardRef
-    className="pinned-recording-card row currently-pinned
-        "
+    className="pinned-recording-card row currently-pinned  "
   >
     <div
-      className="pinned-recording-card row currently-pinned
-        "
+      className="pinned-recording-card row currently-pinned  "
       style={
         Object {
           "background": "#FFFFFF",

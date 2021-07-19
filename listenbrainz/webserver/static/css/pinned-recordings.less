@@ -39,8 +39,10 @@
         white-space: normal;
       }
     }
+    
     .pinned-recording-time {
       font-style: italic;
+      display: table-cell;
     }
     
     > .col-xs-9, .col-xs-12 {
@@ -52,9 +54,8 @@
 
       > .col-xs-4 {
         display: table;
-
-        > span {
-          display: table-cell;
+        
+        > .pinned-recording-time {
           vertical-align: middle;
         }
       }

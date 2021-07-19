@@ -45,7 +45,7 @@ const expiredPinnedRecording: PinnedRecording = {
 
 const props: PinnedRecordingCardProps = {
   userName: user.name,
-  PinnedRecording: pinnedRecording,
+  pinnedRecording,
   isCurrentUser: true,
   newAlert: () => {},
 };
@@ -57,6 +57,24 @@ describe("PinnedRecordingCard", () => {
     );
     expect(wrapper).toMatchSnapshot();
   });
+
+  it("calls renderPinTitle, renderPinDate, & renderBlurbContent", () => {
+    const wrapper = mount<PinnedRecordingCard>(
+      <GlobalAppContext.Provider value={globalProps}>
+        <PinnedRecordingCard {...{ ...props, newAlert: jest.fn() }} />
+      </GlobalAppContext.Provider>
+    );
+    const instance = wrapper.instance();
+    
+    instance.renderPinTitle = jest.fn();
+    instance.renderPinDate = jest.fn();
+    instance.renderBlurbContent = jest.fn();
+
+    instance.render();
+    expect(instance.renderPinTitle).toHaveBeenCalledTimes(2);
+    expect(instance.renderPinDate).toHaveBeenCalledTimes(2);
+    expect(instance.renderBlurbContent).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe("determineIfCurrentlyPinned", () => {
@@ -65,17 +83,17 @@ describe("determineIfCurrentlyPinned", () => {
       <PinnedRecordingCard {...props} />
     );
     const instance = wrapper.instance();
-    expect(instance.determineIfCurrentlyPinned()).toBeTruthy();
+    expect(instance.determineIfCurrentlyPinned()).toBe(true);
   });
 
   it("returns false when pinned_until < now", () => {
     const wrapper = mount<PinnedRecordingCard>(
       <PinnedRecordingCard
-        {...{ ...props, PinnedRecording: expiredPinnedRecording }}
+        {...{ ...props, pinnedRecording: expiredPinnedRecording }}
       />
     );
     const instance = wrapper.instance();
-    expect(instance.determineIfCurrentlyPinned()).toBeFalsy();
+    expect(instance.determineIfCurrentlyPinned()).toBe(false);
   });
 });
 
