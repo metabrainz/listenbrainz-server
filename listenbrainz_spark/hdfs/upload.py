@@ -1,12 +1,12 @@
 import os
-import pathlib
+from pathlib import Path
 import time
 import tarfile
 import tempfile
 import logging
 
 from listenbrainz_spark import schema, path, utils
-from listenbrainz_spark.hdfs import ListenbrainzHDFSUploader, TEMP_DIR_PATH
+from listenbrainz_spark.hdfs import ListenbrainzHDFSUploader, TEMP_DIR_PATH as HDFS_TEMP_DIR
 
 
 logger = logging.getLogger(__name__)
@@ -87,8 +87,10 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
             Args:
                   archive: path to parquet listens dump to be uploaded
         """
-        hdfs_temp_dir = self.upload_archive_to_temp(archive)
-
+        self.upload_archive_to_temp(archive)
+        # dump is uploaded to HDFS_TEMP_DIR/archive_name
+        archive_name = Path(archive).stem
+        src_path = Path(HDFS_TEMP_DIR).joinpath(archive_name)
         dest_path = path.LISTENBRAINZ_NEW_DATA_DIRECTORY
         # Delete existing dumps if any
         if utils.path_exists(dest_path):
@@ -96,18 +98,18 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
             utils.delete_dir(dest_path, recursive=True)
             logger.info('Done!')
 
-        logger.info(f"Moving the processed files from {hdfs_temp_dir} to {dest_path}")
+        logger.info(f"Moving the processed files from {src_path} to {dest_path}")
         t0 = time.monotonic()
 
         # Check if parent directory exists, if not create a directory
-        dest_path_parent = pathlib.Path(dest_path).parent
+        dest_path_parent = Path(dest_path).parent
         if not utils.path_exists(dest_path_parent):
             utils.create_dir(dest_path_parent)
 
-        utils.rename(hdfs_temp_dir, dest_path)
+        utils.rename(src_path, dest_path)
         utils.logger.info(f"Done! Time taken: {time.monotonic() - t0:.2f}")
 
-    def upload_archive_to_temp(self, archive: str) -> str:
+    def upload_archive_to_temp(self, archive: str):
         """ Upload parquet files in archive to a temporary hdfs directory
 
             Args:
@@ -116,17 +118,9 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
                 path of the temp dir where archive has been uploaded
         """
         with tempfile.TemporaryDirectory() as local_temp_dir:
-            # cannot use complete archive path in creating temp path here, archive can be an
-            # absolute path which will cause issues eg: os.path.join("/tmp", "/world") = "/world",
-            # this will create issues in moving dump from temporary path to destination later.
-            # so just use the archive's name
-            archive_name = pathlib.Path(archive).stem  # get archive name without extension
-            hdfs_temp_dir = os.path.join(TEMP_DIR_PATH, archive_name)
-
             logger.info("Cleaning HDFS temporary directory...")
-            if utils.path_exists(hdfs_temp_dir):
-                utils.delete_dir(hdfs_temp_dir, recursive=True)
+            if utils.path_exists(HDFS_TEMP_DIR):
+                utils.delete_dir(HDFS_TEMP_DIR, recursive=True)
 
             logger.info("Uploading listens to temporary directory in HDFS...")
-            self.extract_and_upload_archive(archive, local_temp_dir, hdfs_temp_dir)
-        return hdfs_temp_dir
+            self.extract_and_upload_archive(archive, local_temp_dir, HDFS_TEMP_DIR)
