@@ -65,7 +65,7 @@ describe("PinnedRecordingCard", () => {
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
-    
+
     instance.renderPinTitle = jest.fn();
     instance.renderPinDate = jest.fn();
     instance.renderBlurbContent = jest.fn();
