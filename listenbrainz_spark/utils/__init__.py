@@ -2,6 +2,7 @@ import errno
 import logging
 import os
 from time import sleep
+from datetime import datetime
 
 import pika
 from py4j.protocol import Py4JJavaError
@@ -160,16 +161,16 @@ def get_listens(from_date, to_date, dest_path):
     return df
 
 
-def get_listens_from_new_dump(from_ts: int, to_ts: int, location: str) -> DataFrame:
+def get_listens_from_new_dump(start: datetime, end: datetime, location: str) -> DataFrame:
     """ Load listens with listened_at between from_ts and to_ts from HDFS in a spark dataframe.
 
         Args:
-            from_ts: minimum timestamp to include a listen in the dataframe
-            to_ts: maximum timestamp to include a listen in the dataframe
+            start: minimum time to include a listen in the dataframe
+            end: maximum time to include a listen in the dataframe
             location: location of parquet listen files
 
         Returns:
-            dataframe of listens with listened_at between from_ts and to_ts
+            dataframe of listens with listened_at between start and end
     """
     # parquet files are named as 0.parquet, 1.parquet so on. listens are stored in
     # ascending order of listened_at. so higher the number in the name of the file,
@@ -201,7 +202,7 @@ def get_listens_from_new_dump(from_ts: int, to_ts: int, location: str) -> DataFr
         # order. that is we are loading listens from latest to oldest so if the current
         # file does not have any listens newer than from_ts, the remaining files will
         # not have those either.
-        df = df.where(f"listened_at >= {from_ts}")
+        df = df.where(f"listened_at >= to_timestamp('{start}')")
         if df.count() == 0:
             break
 
@@ -210,7 +211,7 @@ def get_listens_from_new_dump(from_ts: int, to_ts: int, location: str) -> DataFr
         # might have listens only from last 4 days. if the conditions were merged, we would
         # have stopped looking in other files which is wrong. it is quite possible that the 2nd
         # or some subsequent file has listens older than to_ts but newer than from_ts
-        df = df.where(f"listened_at <= {to_ts}")
+        df = df.where(f"listened_at <= to_timestamp('{end}')")
 
         dfs = dfs.union(df)
 
