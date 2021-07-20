@@ -9,6 +9,7 @@ from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery
 from listenbrainz.labs_api.labs.api.year_from_artist_credit_recording import YearFromArtistCreditRecordingQuery
 from listenbrainz.labs_api.labs.api.recording_search import RecordingSearchQuery
 from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery
+from listenbrainz.labs_api.labs.api.artist_country_from_artist_credit_id import ArtistCountryFromArtistCreditIdQuery
 from listenbrainz.webserver import load_config
 
 register_query(ArtistCountryFromArtistMBIDQuery())
@@ -19,6 +20,7 @@ register_query(MBIDMappingQuery())
 register_query(YearFromArtistCreditRecordingQuery())
 register_query(RecordingSearchQuery())
 register_query(ArtistCreditRecordingLookupQuery())
+register_query(ArtistCountryFromArtistCreditIdQuery())
 
 app = create_app()
 load_config(app)
