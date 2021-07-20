@@ -199,7 +199,7 @@ def get_listens_from_new_dump(start: datetime, end: datetime, location: str) -> 
         # be an incremental.parquet.
         try:
             df = read_files_from_HDFS(os.path.join(location, f'{file_name}.parquet'))
-        except (Py4JJavaError, AnalysisException):
+        except PathNotFoundException:
             logging.warning(f"Error while trying to read {file_name}.parquet", exc_info=True)
             continue
 
