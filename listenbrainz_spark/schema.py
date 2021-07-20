@@ -20,15 +20,14 @@ listen_schema = [
 ]
 
 listens_new_schema = StructType([
-    StructField('listened_at', LongType(), nullable=False),
+    StructField('listened_at', TimestampType(), nullable=False),
     StructField('user_name', StringType(), nullable=False),
     StructField('artist_name', StringType(), nullable=False),
-    StructField('artist_credit_id', IntegerType(), nullable=True),
+    StructField('artist_credit_id', LongType(), nullable=True),
     StructField('release_name', StringType(), nullable=True),
     StructField('release_mbid', StringType(), nullable=True),
     StructField('recording_name', StringType(), nullable=False),
     StructField('recording_mbid', StringType(), nullable=True),
-    StructField('created', TimestampType(), nullable=True)
 ])
 
 
