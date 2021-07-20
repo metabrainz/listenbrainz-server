@@ -194,7 +194,14 @@ def get_listens_from_new_dump(start: datetime, end: datetime, location: str) -> 
     dfs = listenbrainz_spark.session.createDataFrame([], listens_new_schema)
 
     for file_name in file_ids:
-        df = read_files_from_HDFS(os.path.join(location, f'{file_name}.parquet'))
+        # We need the try/except here because incremental.parquet file may not always
+        # exist for instance in the case of just after after a full dump, there won't
+        # be an incremental.parquet.
+        try:
+            df = read_files_from_HDFS(os.path.join(location, f'{file_name}.parquet'))
+        except (Py4JJavaError, AnalysisException):
+            logging.warning(f"Error while trying to read {file_name}.parquet", exc_info=True)
+            continue
 
         # check if the currently loaded file has any listens newer than the starting
         # timestamp. if not stop trying to load more files, because listens are sorted
