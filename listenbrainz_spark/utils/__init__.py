@@ -200,7 +200,7 @@ def get_listens_from_new_dump(start: datetime, end: datetime, location: str) -> 
         try:
             df = read_files_from_HDFS(os.path.join(location, f'{file_name}.parquet'))
         except PathNotFoundException:
-            logging.warning(f"Error while trying to read {file_name}.parquet", exc_info=True)
+            logger.warning(f"Error while trying to read {file_name}.parquet", exc_info=True)
             continue
 
         # check if the currently loaded file has any listens newer than the starting
