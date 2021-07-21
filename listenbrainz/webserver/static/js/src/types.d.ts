@@ -468,12 +468,17 @@ declare type UserTrackRecommendationMetadata = {
   artist_msid: string;
 };
 
+declare type PinEventMetadata = Listen & {
+  blurb_content?: string;
+};
+
 /** ***********************************
  ********  USER FEED TIMELINE  ********
  ************************************* */
 
 type EventTypeT =
   | "recording_recommendation"
+  | "recording_pin"
   | "listen"
   | "like"
   | "follow"
@@ -495,6 +500,7 @@ type NotificationEventMetadata = {
 type EventMetadata =
   | Listen
   | UserRelationshipEventMetadata
+  | PinEventMetadata
   | NotificationEventMetadata;
 
 type TimelineEvent = {
