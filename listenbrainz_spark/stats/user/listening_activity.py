@@ -9,14 +9,14 @@ import listenbrainz_spark
 from data.model.user_listening_activity import UserListeningActivityStatMessage
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.exceptions import HDFSException
-from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
+from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY, LISTENBRAINZ_NEW_DATA_DIRECTORY
 from listenbrainz_spark.stats import (offset_days, offset_months, get_day_end,
                                       get_month_end, get_year_end,
                                       replace_days, replace_months, run_query)
 from listenbrainz_spark.stats.utils import (filter_listens,
                                             get_last_monday,
                                             get_latest_listen_ts)
-from listenbrainz_spark.utils import get_listens
+from listenbrainz_spark.utils import get_listens, get_listens_from_new_dump
 from pyspark.sql.functions import collect_list, sort_array, struct, lit
 from pyspark.sql.types import (StringType, StructField, StructType,
                                TimestampType)
@@ -225,5 +225,8 @@ def create_messages(data, stats_range: str, from_ts: int, to_ts: int) -> Iterato
 
 
 def _get_listens(from_date: datetime, to_date: datetime):
-    listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
-    listens_df.createOrReplaceTempView('listens')
+    get_listens_from_new_dump(
+        from_date,
+        to_date,
+        LISTENBRAINZ_NEW_DATA_DIRECTORY
+    ).createOrReplaceTempView('listens')
