@@ -65,7 +65,7 @@ export default class TimelineEventCard extends React.Component<
             </p>
             {additionalDetails && (
               <p
-                className="text-muted additional-details"
+                className="additional-details"
                 title={listen.track_metadata?.track_name}
               >
                 {additionalDetails}
