@@ -203,12 +203,13 @@ def save_playcounts_df(listens_df, recordings_df, users_df, metadata, save_path)
     # The final step uses groupBy which create groups on user_id and recording_id and counts the number of recording_ids.
     # The final dataframe tells us about the number of times a user has listend to a particular track for all users.
     playcounts_df = listens_df.join(users_df, 'user_name', 'inner') \
-                              .join(recordings_df, 'mb_recording_mbid', 'inner') \
+                              .join(recordings_df, 'recording_mbid', 'inner') \
                               .groupBy('user_id', 'recording_id') \
                               .agg(func.count('recording_id').alias('count'))
 
     metadata['playcounts_count'] = playcounts_df.count()
     save_dataframe(playcounts_df, save_path)
+
 
 def get_threshold_listens_df(mapped_listens_df, mapped_listens_path: str, threshold: int):
     """ Threshold mapped listens dataframe
@@ -398,8 +399,8 @@ def main(train_model_window, job_type, minimum_listens_threshold=0):
     metadata['from_date'] = from_date
 
     complete_listens_df = get_listens_from_new_dump(
-        to_date,
         from_date,
+        to_date,
         path.LISTENBRAINZ_NEW_DATA_DIRECTORY
     )
     logger.info(f'Listen count from {from_date} to {to_date}: {complete_listens_df.count()}')
