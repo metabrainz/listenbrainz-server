@@ -756,7 +756,7 @@ def _update_sequences():
     _update_sequence('data_dump_id_seq', 'data_dump')
 
 
-def _fetch_latest_file_info_from_ftp_dir(server, dir):
+def _fetch_latest_file_info_from_ftp_dir(server, dir, prefix):
     """
         Given a FTP server and dir, fetch the latst dump file info, parse it and
         return a tuple containing (dump_id, datetime_of_dump_file).
@@ -767,7 +767,7 @@ def _fetch_latest_file_info_from_ftp_dir(server, dir):
     def add_line(l):
         nonlocal line
         l = l.strip()
-        if l:
+        if l and l[56:].startswith(prefix):
             line = l
 
     ftp = FTP(server)
@@ -788,7 +788,9 @@ def check_ftp_dump_ages():
     msg = ""
     try:
         id, dt = _fetch_latest_file_info_from_ftp_dir(
-            MAIN_FTP_SERVER_URL, '/pub/musicbrainz/listenbrainz/fullexport')
+            MAIN_FTP_SERVER_URL,
+            '/pub/musicbrainz/listenbrainz/fullexport',
+            'listenbrainz-dump-')
         age = datetime.now() - dt
         if age > timedelta(days=FULLEXPORT_MAX_AGE):
             msg = "Full dump %d is more than %d days old: %s\n" % (
@@ -801,7 +803,9 @@ def check_ftp_dump_ages():
 
     try:
         id, dt = _fetch_latest_file_info_from_ftp_dir(
-            MAIN_FTP_SERVER_URL, '/pub/musicbrainz/listenbrainz/incremental')
+            MAIN_FTP_SERVER_URL,
+            '/pub/musicbrainz/listenbrainz/incremental',
+            'listenbrainz-dump-')
         age = datetime.now() - dt
         if age > timedelta(hours=INCREMENTAL_MAX_AGE):
             msg = "Incremental dump %s is more than %s hours old: %s\n" % (
