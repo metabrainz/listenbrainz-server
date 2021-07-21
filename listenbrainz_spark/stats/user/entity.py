@@ -10,7 +10,7 @@ from data.model.user_artist_stat import UserArtistRecord
 from data.model.user_release_stat import UserReleaseRecord
 from data.model.user_recording_stat import UserRecordingRecord
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
-from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
+from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY, LISTENBRAINZ_NEW_DATA_DIRECTORY
 from listenbrainz_spark.stats import (offset_days, replace_days,
                                       replace_months, run_query)
 from listenbrainz_spark.stats.user.artist import get_artists
@@ -19,8 +19,7 @@ from listenbrainz_spark.stats.user.release import get_releases
 from listenbrainz_spark.stats.utils import (filter_listens,
                                             get_last_monday,
                                             get_latest_listen_ts)
-from listenbrainz_spark.utils import get_listens
-
+from listenbrainz_spark.utils import get_listens, get_listens_from_new_dump
 
 logger = logging.getLogger(__name__)
 
@@ -41,15 +40,16 @@ def get_entity_week(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     """ Get the weekly top entity for all users """
     logger.debug("Calculating {}_week...".format(entity))
 
-    date = get_latest_listen_ts()
-
-    to_date = get_last_monday(date)
+    to_date = get_last_monday(datetime.now())
     from_date = offset_days(to_date, 7)
 
-    listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
-    filtered_df = filter_listens(listens_df, from_date, to_date)
+    listens_df = get_listens_from_new_dump(
+        from_date,
+        to_date,
+        LISTENBRAINZ_NEW_DATA_DIRECTORY
+    )
     table_name = 'user_{}_week'.format(entity)
-    filtered_df.createOrReplaceTempView(table_name)
+    listens_df.createOrReplaceTempView(table_name)
 
     handler = entity_handler_map[entity]
     data = handler(table_name)
