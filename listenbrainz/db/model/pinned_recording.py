@@ -91,9 +91,11 @@ def fetch_track_metadata_for_pin(pin: PinnedRecording) -> PinnedRecording:
             The given pin with track_metadata.
     """
     if pin.recording_mbid:
-        metadata = load_recording_from_mbid(pin.recording_mbid)['payload']
+        metadata = load_recording_from_mbid(pin.recording_mbid)
     else:
-        metadata = load_recording_from_msid(pin.recording_msid)['payload']
+        metadata = load_recording_from_msid(pin.recording_msid)
 
-    pin.track_metadata = {"track_name": metadata["title"], "artist_name": metadata["artist"]}
+    pin.track_metadata = {"track_name": metadata['payload']["title"],
+                         "artist_name": metadata['payload']["artist"],
+                         "artist_msid": metadata["ids"]["artist_msid"]}
     return pin
