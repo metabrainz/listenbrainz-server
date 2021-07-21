@@ -9,7 +9,7 @@ class UserArtistRecord(pydantic.BaseModel):
 
     Contains the artist name, MessyBrainz ID, MusicBrainz IDs and listen count.
     """
-    artist_credit_id: int
+    artist_credit_id: Optional[int]
     listen_count: int
     artist_name: str
 
