@@ -58,7 +58,6 @@ export default class SoundcloudPlayer
   implements DataSourceType {
   iFrameRef?: React.RefObject<HTMLIFrameElement>;
   soundcloudPlayer?: SoundCloudHTML5Widget;
-  supportsSearch = false;
   retries = 0;
   // HTML widget options: https://developers.soundcloud.com/docs/api/html5-widget#parameters
   options = {
@@ -202,7 +201,12 @@ export default class SoundcloudPlayer
       if (!currentTrack) {
         return;
       }
-      onTrackInfoChange(currentTrack.title, currentTrack.user?.username);
+      onTrackInfoChange(
+        currentTrack.title,
+        currentTrack.user?.username,
+        undefined,
+        [{ src: currentTrack.artwork_url }]
+      );
       onDurationChange(currentTrack.full_duration);
       if (event) {
         onProgressChange(event.currentPosition);

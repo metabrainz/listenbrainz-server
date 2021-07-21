@@ -190,6 +190,9 @@ export default class SpotifyPlayer
         }
       );
       let errorMessage;
+      if (response.ok) {
+        return;
+      }
       try {
         errorMessage = await response.json();
       } catch (err) {
@@ -440,7 +443,22 @@ export default class SpotifyPlayer
       const artists = current_track.artists
         .map((artist: SpotifyArtist) => artist.name)
         .join(", ");
-      onTrackInfoChange(current_track.name, artists);
+      onTrackInfoChange(
+        current_track.name,
+        artists,
+        current_track.album?.name,
+        current_track.album.images
+          .filter((image) => image.url)
+          .map((image) => {
+            const mediaImage: MediaImage = {
+              src: image.url,
+            };
+            if (image.width && image.height) {
+              mediaImage.sizes = `${image.width}x${image.height}`;
+            }
+            return mediaImage;
+          })
+      );
 
       this.setState({
         durationMs: duration,
