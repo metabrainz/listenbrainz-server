@@ -79,7 +79,10 @@ export function hasMediaSessionSupport(): boolean {
  * In order to make the media controls (forward/next controls BrainzPlayer instead of embeddded player) work the way we want,
  * we need to replace the iframe MediaSession with our own (trick from https://stackoverflow.com/a/65434258)
  */
-export function hijackMediaSession(
+
+// This method is called on each track change; I don't have a better idea for destroying the Audio objects we create
+let placeholderAudioElement;
+export function overwriteMediaSession(
   prevTrackCallback: Function,
   nextTrackCallback: Function,
   seekBackwardCallback: Function,
@@ -91,12 +94,12 @@ export function hijackMediaSession(
   const { mediaSession } = window.navigator;
   mediaSession.metadata = new window.MediaMetadata({});
   // Placeholder audio element is required in order for browser to recognize
-  // a media is playing and allow notifications
-  const audioElement = new Audio("/static/sound/5-seconds-of-silence.mp3");
-  audioElement.loop = true;
-  audioElement.volume = 0;
-  // this requires the user already interacted with your page
-  audioElement
+  // a media is playing and allow notifications and to later overwrite the MediaSession
+  placeholderAudioElement = null;
+  placeholderAudioElement = new Audio("/static/sound/5-seconds-of-silence.mp3");
+  placeholderAudioElement.loop = true;
+  placeholderAudioElement.volume = 0;
+  placeholderAudioElement
     .play()
     .then(() => {
       // We only need to override these handlers.
