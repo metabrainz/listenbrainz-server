@@ -262,26 +262,26 @@ def get_top_artists(mapped_listens_subset, top_artist_limit, users):
                 top_artist_given_users_df (dataframe): Top Y artists listened to by a user for given users where
                                                        Y = TOP_ARTISTS_LIMIT
     """
-    df = mapped_listens_subset.select('mb_artist_credit_id',
-                                      'msb_artist_credit_name_matchable',
-                                      'mb_artist_credit_mbids',
-                                      'user_name') \
-                              .groupBy('mb_artist_credit_id',
-                                       'msb_artist_credit_name_matchable',
-                                       'mb_artist_credit_mbids',
-                                       'user_name') \
-                              .agg(func.count('mb_artist_credit_id').alias('total_count'))
+    df = mapped_listens_subset\
+        .select(
+            'artist_credit_id',
+            'artist_name',
+            'user_name'
+        ) \
+        .groupBy(
+            'artist_credit_id',
+            'artist_name',
+            'user_name'
+        ) \
+        .agg(func.count('artist_credit_id').alias('total_count'))
 
     window = Window.partitionBy('user_name').orderBy(col('total_count').desc())
 
     top_artist_df = df.withColumn('rank', row_number().over(window)) \
                       .where(col('rank') <= top_artist_limit) \
-                      .select(col('mb_artist_credit_mbids'),
-                              col('mb_artist_credit_id').alias('top_artist_credit_id'),
-                              col('msb_artist_credit_name_matchable').alias('top_artist_name'),
+                      .select(col('artist_credit_id').alias('top_artist_credit_id'),
+                              col('artist_name').alias('top_artist_name'),
                               col('user_name'))
-
-    top_artist_df = append_artists_from_collaborations(top_artist_df)
 
     if users:
         top_artist_given_users_df = top_artist_df.select('top_artist_credit_id',
@@ -406,7 +406,7 @@ def filter_last_x_days_recordings(candidate_set_df, mapped_listens_subset):
         Returns:
             candidate_set without recordings of last X days of a user for all users.
     """
-    df = mapped_listens_subset.select(col('mb_recording_mbid').alias('recording_mbid'),
+    df = mapped_listens_subset.select(col('recording_mbid').alias('recording_mbid'),
                                       col('user_name').alias('user')) \
                               .distinct()
 
@@ -446,11 +446,10 @@ def get_top_artist_candidate_set(top_artist_df, recordings_df, users_df, mapped_
     joined_df = df.join(users_df, 'user_name', 'inner') \
                   .select('top_artist_credit_id',
                           'top_artist_name',
-                          'mb_artist_credit_id',
-                          'mb_artist_credit_mbids',
-                          'mb_recording_mbid',
-                          'msb_artist_credit_name_matchable',
-                          'msb_recording_name_matchable',
+                          'artist_credit_id',
+                          'recording_mbid',
+                          'artist_name',
+                          'recording_name',
                           'recording_id',
                           'user_name',
                           'user_id')
