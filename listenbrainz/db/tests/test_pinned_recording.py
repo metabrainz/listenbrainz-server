@@ -2,6 +2,7 @@
 import json
 from datetime import datetime
 from pydantic import ValidationError
+import time
 
 from listenbrainz.db.model.pinned_recording import (
     PinnedRecording,
@@ -322,3 +323,53 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
         offset = 999
         offset_following_pins = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=offset)
         self.assertFalse(offset_following_pins)
+
+    def get_pins_for_feed(self):
+        # test that correct pins are returned in correct order
+        self.insert_test_data(self.user["id"]) # pin 4 recordings for user
+        self.pin_single_sample(self.followed_user_1["id"]) # pin 1 recording for followed_user_1
+
+        feedPins = db_pinned_rec.get_pins_for_feed(
+            user_ids=(self.user['id'],),
+            min_ts=0,
+            max_ts=int(time.time()) + 10,
+            count=10,
+        )
+        self.assertEqual(len(feedPins), 4)
+        self.assertEqual(feedPins[0].blurb_content, self.pinned_rec_samples[3]["blurb_content"])
+
+        # test that user_ids param is honored
+        feedPins = db_pinned_rec.get_pins_for_feed(
+            user_ids=(self.user['id'], self.followed_user_1["id"]),
+            min_ts=0,
+            max_ts=int(time.time()) + 10,
+            count=10,
+        )
+        self.assertEqual(len(feedPins), 5)
+        self.assertEqual(feedPins[0].blurb_content, self.pinned_rec_samples[0]["blurb_content"])
+        
+        # test that count parameter is honored
+        limit = 1
+        feedPins = db_pinned_rec.get_pins_for_feed(
+            user_ids=(self.user['id'], self.followed_user_1["id"]),
+            min_ts=0,
+            max_ts=int(time.time()) + 10,
+            count=limit,
+        )
+        self.assertEqual(len(feedPins), limit)
+
+        feedPins = db_pinned_rec.get_pins_for_feed(
+            user_ids=(self.user['id'], self.followed_user_1["id"]),
+            min_ts=0,
+            max_ts=0, # too low, nothing is returned
+            count=limit,
+        )
+        self.assertEqual(len(feedPins), 0)
+
+        feedPins = db_pinned_rec.get_pins_for_feed(
+            user_ids=(self.user['id'], self.followed_user_1["id"]),
+            min_ts=9999, # too high, nothing is returned
+            max_ts=9999, 
+            count=limit,
+        )
+        self.assertEqual(len(feedPins), 0)

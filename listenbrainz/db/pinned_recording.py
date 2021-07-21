@@ -1,8 +1,9 @@
 import sqlalchemy
 import json
+from datetime import datetime
 
 from listenbrainz import db
-from listenbrainz.db.model.pinned_recording import PinnedRecording, WritablePinnedRecording
+from listenbrainz.db.model.pinned_recording import PinnedRecording, WritablePinnedRecording, fetch_track_metadata_for_pin
 from typing import List
 
 
@@ -174,6 +175,38 @@ def get_pins_for_user_following(user_id: int, count: int, offset: int) -> List[P
             'offset': offset
         })
         return [PinnedRecording(**dict(row)) for row in result.fetchall()]
+
+
+def get_pins_for_feed(user_ids: List[int], min_ts: int, max_ts: int, count: int) -> List[PinnedRecording]:
+    """ Gets a list of PinnedRecordings for specified users in descending order of their created date.
+
+    Args:
+        user_ids: a list of user row IDs
+        min_ts: History before this timestamp will not be returned
+        max_ts: History after this timestamp will not be returned
+        count: Maximum amount of objects to be returned
+
+    Returns:
+        A list of PinnedRecording objects.
+    """
+
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT {columns}
+              FROM pinned_recording as pin
+             WHERE pin.user_id IN :user_ids
+               AND pin.created > :min_ts
+               AND pin.created < :max_ts
+          ORDER BY pin.created DESC
+             LIMIT :count
+        """.format(columns=','.join(PINNED_REC_GET_COLUMNS))), {
+            "user_ids": tuple(user_ids),
+            "min_ts": datetime.utcfromtimestamp(min_ts),
+            "max_ts": datetime.utcfromtimestamp(max_ts),
+            "count": count,
+        })
+        return [PinnedRecording(**dict(row)) for row in result.fetchall()]
+
 
 def get_pin_count_for_user(user_id: int) -> int:
     """ Get the total number pinned_recordings for the user.
