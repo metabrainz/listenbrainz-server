@@ -16,6 +16,13 @@ import GlobalAppContext from "./GlobalAppContext";
 import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
 import SoundcloudPlayer from "./SoundcloudPlayer";
+import {
+  hasNotificationPermission,
+  createNotification,
+  hasMediaSessionSupport,
+  overwriteMediaSession,
+  updateMediaSession,
+} from "./Notifications";
 
 export type DataSourceType = {
   playListen: (listen: Listen | JSPFTrack) => void;
@@ -33,7 +40,12 @@ export type DataSourceProps = {
   onPlayerPausedChange: (paused: boolean) => void;
   onProgressChange: (progressMs: number) => void;
   onDurationChange: (durationMs: number) => void;
-  onTrackInfoChange: (title: string, artist?: string) => void;
+  onTrackInfoChange: (
+    title: string,
+    artist?: string,
+    album?: string,
+    artwork?: Array<MediaImage>
+  ) => void;
   onTrackEnd: () => void;
   onTrackNotFound: () => void;
   handleError: (error: BrainzPlayerError, title?: string) => void;
@@ -68,6 +80,9 @@ type BrainzPlayerState = {
   progressMs: number;
   updateTime: number;
 };
+
+// By how much should we seek in the track?
+const SEEK_TIME_MILLISECONDS = 5000;
 
 export default class BrainzPlayer extends React.Component<
   BrainzPlayerProps,
@@ -257,6 +272,12 @@ export default class BrainzPlayer extends React.Component<
   };
 
   activatePlayerAndPlay = (): void => {
+    overwriteMediaSession(
+      this.playPreviousTrack,
+      this.playNextTrack,
+      this.seekBackward,
+      this.seekForward
+    );
     this.setState({ isActivated: true }, this.playNextTrack);
   };
 
@@ -341,6 +362,16 @@ export default class BrainzPlayer extends React.Component<
     this.progressChange(msTimecode);
   };
 
+  seekForward = (): void => {
+    const { progressMs } = this.state;
+    this.seekToPositionMs(progressMs + SEEK_TIME_MILLISECONDS);
+  };
+
+  seekBackward = (): void => {
+    const { progressMs } = this.state;
+    this.seekToPositionMs(progressMs - SEEK_TIME_MILLISECONDS);
+  };
+
   toggleDirection = (): void => {
     this.setState((prevState) => {
       const direction = prevState.direction === "down" ? "up" : "down";
@@ -374,6 +405,11 @@ export default class BrainzPlayer extends React.Component<
         this.startPlayerStateTimer();
       }
     });
+    if (hasMediaSessionSupport()) {
+      window.navigator.mediaSession.playbackState = paused
+        ? "paused"
+        : "playing";
+    }
   };
 
   progressChange = (progressMs: number): void => {
@@ -384,16 +420,47 @@ export default class BrainzPlayer extends React.Component<
     this.setState({ durationMs }, this.startPlayerStateTimer);
   };
 
-  trackInfoChange = (title: string, artist?: string): void => {
+  trackInfoChange = (
+    title: string,
+    artist?: string,
+    album?: string,
+    artwork?: Array<MediaImage>
+  ): void => {
     this.setState({ currentTrackName: title, currentTrackArtist: artist });
-    const message = (
-      <>
-        <FontAwesomeIcon icon={faPlayCircle as IconProp} />
-        &emsp;{title}
-        {artist && ` — ${artist}`}
-      </>
-    );
-    this.handleInfoMessage(message);
+    const { playerPaused } = this.state;
+    if (playerPaused) {
+      // Don't send notifications or any of that if the player is not playing
+      // (Avoids getting notifications upon pausing a track)
+      return;
+    }
+    if (hasMediaSessionSupport()) {
+      overwriteMediaSession(
+        this.playPreviousTrack,
+        this.playNextTrack,
+        this.seekBackward,
+        this.seekForward
+      );
+      updateMediaSession(title, artist, album, artwork);
+    }
+    // Send a notification. If user allowed browser/OS notifications use that,
+    // otherwise show a toast notification on the page
+    if (hasNotificationPermission()) {
+      createNotification(title, artist, album, artwork?.[0]?.src);
+    } else {
+      const message = (
+        <>
+          {artwork?.length ? (
+            <img src={artwork[0].src} alt={album || title} />
+          ) : (
+            <FontAwesomeIcon icon={faPlayCircle as IconProp} />
+          )}
+          &emsp;{title}
+          {artist && ` — ${artist}`}
+          {album && ` — ${album}`}
+        </>
+      );
+      this.handleInfoMessage(message);
+    }
   };
 
   // eslint-disable-next-line react/sort-comp
