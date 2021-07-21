@@ -26,41 +26,37 @@ def get_releases(table):
                     'user2' : [{...}],
                 }
     """
-    result = run_query("""
-              WITH intermediate_table as (
-                SELECT user_name
-                     , nullif(release_name, '') as release_name
-                     , CASE
-                         WHEN release_mbid IS NOT NULL AND release_mbid != '' THEN NULL
-                         ELSE nullif(release_msid, '')
-                       END as release_msid
-                     , nullif(release_mbid, '') as release_mbid
-                     , artist_name
-                     , CASE
-                         WHEN cardinality(artist_mbids) > 0 THEN NULL
-                         ELSE nullif(artist_msid, '')
-                       END as artist_msid
-                     , artist_mbids
-                  FROM {}
-              )
-            SELECT *
-                 , count(*) as listen_count
-              FROM intermediate_table
+    result = run_query(f"""
+        WITH intermediate_table as (
+            SELECT user_name
+                , nullif(release_name, '') as release_name
+                , release_mbid
+                , artist_name
+                , artist_credit_id
+                , count(*) as listen_count
+              FROM {table}
              WHERE release_name IS NOT NULL
           GROUP BY user_name
-                 , release_name
-                 , release_msid
-                 , release_mbid
-                 , artist_name
-                 , artist_msid
-                 , artist_mbids
-        """.format(table))
+                , release_name
+                , release_mbid
+                , artist_name
+                , artist_credit_id
+        )
+        SELECT user_name
+             , sort_array(
+                    collect_list(
+                        struct(
+                            listen_count
+                          , release_name
+                          , release_mbid
+                          , artist_name
+                          , artist_credit_id
+                        )
+                    )
+                   , false
+                ) as releases
+          FROM intermediate_table
+      GROUP BY user_name
+        """)
 
-    iterator = result \
-        .withColumn("releases", struct("listen_count", "release_name", "release_msid", "release_mbid", "artist_name",
-                                       "artist_msid", "artist_mbids")) \
-        .groupBy("user_name") \
-        .agg(sort_array(collect_list("releases"), asc=False).alias("releases")) \
-        .toLocalIterator()
-
-    return iterator
+    return result.toLocalIterator()
