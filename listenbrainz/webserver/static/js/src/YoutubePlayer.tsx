@@ -60,14 +60,41 @@ export default class YoutubePlayer
       onTrackEnd();
       return;
     }
+    // New track being played
+    if (state === YouTube.PlayerState.UNSTARTED) {
+      const { onTrackInfoChange } = this.props;
+      const title = _get(player, "playerInfo.videoData.title", "");
+      const videoId = _get(player, "playerInfo.videoData.video_id", "");
+      let images: MediaImage[] = [];
+      if (videoId) {
+        // Youtube thumbnails can be loaded with <video_id>/<resolution><image>.jps
+        // where resolution is one of [hq , md, sd] and image is either 'default'
+        // or a number between 1 and 3 (there are 4 thumbnails)
+        images = [
+          {
+            src: `http://img.youtube.com/vi/${videoId}/sddefault.jpg`,
+            sizes: "640x480",
+            type: "image/jpg",
+          },
+          {
+            src: `http://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+            sizes: "480x360",
+            type: "image/jpg",
+          },
+          {
+            src: `http://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
+            sizes: "320x180",
+            type: "image/jpg",
+          },
+        ];
+      }
+      onTrackInfoChange(title, undefined, undefined, images);
+      player.playVideo();
+    }
     if (
       state === YouTube.PlayerState.UNSTARTED ||
       state === YouTube.PlayerState.BUFFERING
     ) {
-      const { onTrackInfoChange } = this.props;
-      const title = _get(player, "playerInfo.videoData.title", "");
-      onTrackInfoChange(title);
-      player.playVideo();
       onPlayerPausedChange(false);
       onDurationChange(player.getDuration() * 1000);
     }

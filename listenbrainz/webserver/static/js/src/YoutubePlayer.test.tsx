@@ -15,7 +15,12 @@ const props = {
   onPlayerPausedChange: (paused: boolean) => {},
   onProgressChange: (progressMs: number) => {},
   onDurationChange: (durationMs: number) => {},
-  onTrackInfoChange: (title: string, artist?: string) => {},
+  onTrackInfoChange: (
+    title: string,
+    artist?: string,
+    album?: string,
+    artwork?: ReadonlyArray<MediaImage>
+  ) => {},
   onTrackEnd: () => {},
   onTrackNotFound: () => {},
   handleError: (error: BrainzPlayerError, title?: string) => {},
