@@ -159,7 +159,7 @@ def get_data_missing_from_musicbrainz(listens_df):
             'artist_name',
             'listened_at',
             'release_name',
-            'track_name',
+            'recording_name',
             'user_name'
         ) \
         .where(col('recording_mbid').isNull())
@@ -176,7 +176,7 @@ def get_data_missing_from_musicbrainz(listens_df):
         .groupBy(
             'artist_name',
             'release_name',
-            'track_name',
+            'recording_name',
             'user_name'
         ) \
         .agg(func.max('listened_at').alias('listened_at')) \
@@ -317,13 +317,10 @@ def prepare_messages(missing_musicbrainz_data_itr, from_date, to_date, ti):
         try:
             missing_musicbrainz_data[row.user_name].append(UserMissingMusicBrainzDataRecord(**
                 {
-                    'artist_msid': row.artist_msid,
                     'artist_name': row.artist_name,
                     'listened_at': str(row.listened_at),
-                    'recording_msid': row.recording_msid,
-                    'release_msid': row.release_msid,
                     'release_name': row.release_name,
-                    'track_name': row.track_name,
+                    'recording_name': row.recording_name,
                 }
             ).dict())
         except ValidationError:
