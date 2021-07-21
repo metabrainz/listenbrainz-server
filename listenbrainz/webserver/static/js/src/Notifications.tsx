@@ -20,7 +20,7 @@ export function hasNotificationSupport(): boolean {
 export async function hasNotificationPermission(): Promise<boolean> {
   try {
     // Does the browser support notifications?
-    if (!hasNotificationSupport) {
+    if (!hasNotificationSupport()) {
       return false;
     }
     // If the permission has been explicitly granted we're all done

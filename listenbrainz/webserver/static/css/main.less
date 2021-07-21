@@ -205,3 +205,11 @@ h2.page-title { @media (max-width: @grid-float-breakpoint) { margin-top: 0px; } 
     margin-right: 0.7em;
   }
 }
+
+// For cover art in alerts
+@alertThumbnailSize: 60px;
+.alert .alert-thumbnail{
+	max-height: @alertThumbnailSize;
+	margin: -@alert-padding;
+	margin-right: 0;
+}

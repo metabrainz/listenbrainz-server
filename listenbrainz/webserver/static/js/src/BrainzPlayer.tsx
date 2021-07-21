@@ -444,23 +444,29 @@ export default class BrainzPlayer extends React.Component<
     }
     // Send a notification. If user allowed browser/OS notifications use that,
     // otherwise show a toast notification on the page
-    if (hasNotificationPermission()) {
-      createNotification(title, artist, album, artwork?.[0]?.src);
-    } else {
-      const message = (
-        <>
-          {artwork?.length ? (
-            <img src={artwork[0].src} alt={album || title} />
-          ) : (
-            <FontAwesomeIcon icon={faPlayCircle as IconProp} />
-          )}
-          &emsp;{title}
-          {artist && ` — ${artist}`}
-          {album && ` — ${album}`}
-        </>
-      );
-      this.handleInfoMessage(message);
-    }
+    hasNotificationPermission().then((permissionGranted) => {
+      if (permissionGranted) {
+        createNotification(title, artist, album, artwork?.[0]?.src);
+      } else {
+        const message = (
+          <>
+            {artwork?.length ? (
+              <img
+                className="alert-thumbnail"
+                src={artwork[0].src}
+                alt={album || title}
+              />
+            ) : (
+              <FontAwesomeIcon icon={faPlayCircle as IconProp} />
+            )}
+            &emsp;{title}
+            {artist && ` — ${artist}`}
+            {album && ` — ${album}`}
+          </>
+        );
+        this.handleInfoMessage(message);
+      }
+    });
   };
 
   // eslint-disable-next-line react/sort-comp
