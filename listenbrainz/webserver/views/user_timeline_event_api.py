@@ -30,8 +30,8 @@ import listenbrainz.db.user_relationship as db_user_relationship
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
 
 from data.model.listen import APIListen, TrackMetadata, AdditionalInfo
-from data.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, APIPinEvent, UserTimelineEventType, \
-    APIFollowEvent, NotificationMetadata, APINotificationEvent
+from data.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, \
+    APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent
 from listenbrainz.db.pinned_recording import get_pins_for_feed
 from listenbrainz.db.model.pinned_recording import fetch_track_metadata_for_pin
 from listenbrainz import webserver
@@ -221,8 +221,10 @@ def user_feed(user_name: str):
     )
 
     # TODO: add playlist event and like event
-    all_events = sorted(listen_events + follow_events + recording_recommendation_events + recording_pin_events + notification_events,
-                        key=lambda event: -event.created)
+    all_events = sorted(
+        listen_events + follow_events + recording_recommendation_events + recording_pin_events + notification_events,
+        key=lambda event: -event.created,
+    )
 
     # sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly
     for index, event in enumerate(all_events):
