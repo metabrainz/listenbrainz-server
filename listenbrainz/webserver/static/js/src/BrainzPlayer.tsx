@@ -267,32 +267,41 @@ export default class BrainzPlayer extends React.Component<
     this.setState({ isActivated: true });
     const { onCurrentListenChange } = this.props;
     onCurrentListenChange(listen);
-    /** If available, retrieve the service the listen was listened with */
-    let selectedDatasourceIndex = this.dataSources.findIndex((ds) =>
-      ds.current?.isListenFromThisService(listen)
-    );
-
-    /** If no matching datasource was found, revert to the default bahaviour
-     * (try playing from source 0 or try next source)
-     */
-    if (selectedDatasourceIndex === -1) {
+    let selectedDatasourceIndex: number;
+    if (datasourceIndex === 0) {
+      /** If available, retrieve the service the listen was listened with */
+      const listenedFromIndex = this.dataSources.findIndex((ds) =>
+        ds.current?.isListenFromThisService(listen)
+      );
+      selectedDatasourceIndex =
+        listenedFromIndex === -1 ? 0 : listenedFromIndex;
+    } else {
+      /** If no matching datasource was found, revert to the default bahaviour
+       * (try playing from source 0 or try next source)
+       */
       selectedDatasourceIndex = datasourceIndex;
     }
 
-    this.stopOtherBrainzPlayers();
-
-    this.setState({ currentDataSourceIndex: selectedDatasourceIndex }, () => {
-      const { currentDataSourceIndex } = this.state;
-      const dataSource =
-        this.dataSources[currentDataSourceIndex] &&
-        this.dataSources[currentDataSourceIndex].current;
-      if (!dataSource) {
-        this.invalidateDataSource();
+    const selectedDatasource = this.dataSources[selectedDatasourceIndex]
+      ?.current;
+    if (selectedDatasource) {
+      // Check if we can play the listen with the selected datasource
+      // otherwise skip to the next datasource without trying or setting currentDataSourceIndex
+      // This prevents rendering datasource iframes when we can't use the datasource
+      if (
+        !selectedDatasource.isListenFromThisService(listen) &&
+        !selectedDatasource.canSearchAndPlayTracks()
+      ) {
+        this.playListen(listen, datasourceIndex + 1);
         return;
       }
-
-      dataSource.playListen(listen);
-    });
+      this.stopOtherBrainzPlayers();
+      this.setState({ currentDataSourceIndex: selectedDatasourceIndex }, () => {
+        selectedDatasource.playListen(listen);
+      });
+    } else {
+      this.invalidateDataSource();
+    }
   };
 
   togglePlay = async (): Promise<void> => {

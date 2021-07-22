@@ -232,9 +232,6 @@ export default class SoundcloudPlayer
 
   render() {
     const { show } = this.props;
-    if (!show) {
-      return null;
-    }
     return (
       <div className={`soundcloud ${!show ? "hidden" : ""}`}>
         <iframe
