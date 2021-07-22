@@ -10,6 +10,24 @@ function checkNotificationPromise() {
   return true;
 }
 
+// On Chrome for Android, the new Notification(…) constructor is not supported and throws an error
+// We can use this utility (from https://bugs.chromium.org/p/chromium/issues/detail?id=481856)
+// to detect if we can use the constructor. The alternative is to use ServiceWorkers, but that seems a bit overkill and cumbersome.
+function isNewNotificationConstructorSupported() {
+  if (!window.Notification || !window.Notification.requestPermission)
+    return false;
+  if (window.Notification.permission === "granted")
+    throw new Error(
+      "You must only call this *before* calling Notification.requestPermission(), otherwise this feature detect would bug the user with an actual notification!"
+    );
+  try {
+    const fakeNotification = new window.Notification("");
+  } catch (e) {
+    if (e.name === "TypeError") return false;
+  }
+  return true;
+}
+
 export function hasNotificationSupport(): boolean {
   if (!("Notification" in window)) {
     return false;
@@ -31,18 +49,22 @@ export async function hasNotificationPermission(): Promise<boolean> {
     if (window.Notification.permission === "denied") {
       return false;
     }
-    // In other cases we can request permissions
-    // If the Notifications implementation supports promises, request it that way
-    if (checkNotificationPromise()) {
-      const permission = await window.Notification.requestPermission();
-      return permission === "granted";
-    }
-    // Otherwise use the deprecated callback signature
-    return new Promise((resolve) => {
-      window.Notification.requestPermission((permission) => {
-        resolve(permission === "granted");
+    // We use this utility to determine if we can use `new Notification()`. If so, we ask for permission
+    if (isNewNotificationConstructorSupported()) {
+      // In other cases we can request permissions
+      // If the Notifications implementation supports promises, request it that way
+      if (checkNotificationPromise()) {
+        const permission = await window.Notification.requestPermission();
+        return permission === "granted";
+      }
+      // Otherwise use the deprecated callback signature
+      return new Promise((resolve) => {
+        window.Notification.requestPermission((permission) => {
+          resolve(permission === "granted");
+        });
       });
-    });
+    }
+    return false;
   } catch (error) {
     return false;
   }
