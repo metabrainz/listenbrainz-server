@@ -101,6 +101,7 @@ export function hasMediaSessionSupport(): boolean {
  * In order to make the media controls (forward/next controls BrainzPlayer instead of embeddded player) work the way we want,
  * we need to replace the iframe MediaSession with our own (trick from https://stackoverflow.com/a/65434258)
  */
+/* eslint-disable no-console */
 
 // This method is called on each track change; I don't have a better idea for destroying the Audio objects we create
 let placeholderAudioElement;
@@ -133,15 +134,16 @@ export function overwriteMediaSession(
             handler();
           });
         } catch (error) {
-          console.log(
-            `The media session action "${action}" is not supported yet.`
+          console.warn(
+            `The media session action "${action}" is not supported yet.`,
+            error
           );
         }
       });
     })
-    // eslint-disable-next-line no-console
     .catch(console.warn);
 }
+/* eslint-enable no-console */
 
 export function updateMediaSession(
   title: string,
