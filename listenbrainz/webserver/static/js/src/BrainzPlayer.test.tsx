@@ -168,9 +168,13 @@ describe("BrainzPlayer", () => {
         },
       },
     };
-    // Try to play on youtube directly (index 1), should use spotify instead (index 0)
-    instance.playListen(spotifyListen, 1);
+    // Make spotify last source in array
+    instance.dataSources.splice(2, 0, ...instance.dataSources.splice(0, 1));
+    expect(instance.dataSources[2].current).toBeInstanceOf(SpotifyPlayer);
+    // Try to play, should select spotify instead of first in list
     expect(instance.state.currentDataSourceIndex).toEqual(0);
+    instance.playListen(spotifyListen);
+    expect(instance.state.currentDataSourceIndex).toEqual(2);
   });
 
   it("selects Spotify as source when listen has a spotify_id", () => {
@@ -196,9 +200,13 @@ describe("BrainzPlayer", () => {
         },
       },
     };
-    // Try to play on youtube directly (index 1), should use spotify instead (index 0)
-    instance.playListen(spotifyListen, 1);
+    // Make spotify last source in array
+    instance.dataSources.splice(2, 0, ...instance.dataSources.splice(0, 1));
+    expect(instance.dataSources[2].current).toBeInstanceOf(SpotifyPlayer);
+    // Try to play, should select spotify instead of first in list
     expect(instance.state.currentDataSourceIndex).toEqual(0);
+    instance.playListen(spotifyListen);
+    expect(instance.state.currentDataSourceIndex).toEqual(2);
   });
 
   it("selects Soundcloud as source when listen has a soundcloud URL", () => {
