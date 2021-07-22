@@ -71,7 +71,7 @@ function on_exit {
     fi
 
     # Remove the cron lock
-    python3 admin/cron_lock.py unlock-cron create-dumps
+    /usr/local/bin/python admin/cron_lock.py unlock-cron create-dumps
 }
 
 START_TIME=$(date +%s)
@@ -100,7 +100,7 @@ else
 fi
 
 # Lock cron, so it cannot be accidentally terminated.
-python3 admin/cron_lock.py lock-cron create-dumps "Creating $DUMP_TYPE dump."
+/usr/local/bin/python admin/cron_lock.py lock-cron create-dumps "Creating $DUMP_TYPE dump."
 
 # Trap should not be called before we lock cron to avoid wiping out an existing lock file
 trap on_exit EXIT
