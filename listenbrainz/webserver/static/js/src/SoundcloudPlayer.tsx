@@ -201,11 +201,14 @@ export default class SoundcloudPlayer
       if (!currentTrack) {
         return;
       }
+      const artwork: MediaImage[] = currentTrack.artwork_url
+        ? [{ src: currentTrack.artwork_url }]
+        : [];
       onTrackInfoChange(
         currentTrack.title,
         currentTrack.user?.username,
         undefined,
-        [{ src: currentTrack.artwork_url }]
+        artwork
       );
       onDurationChange(currentTrack.full_duration);
       if (event) {
