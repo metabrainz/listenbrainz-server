@@ -319,7 +319,7 @@ def filter_last_x_days_recordings(candidate_set_df, mapped_listens_subset):
                                   .select('*') \
                                   .where(df.recording_mbid.isNull() & df.user.isNull())
 
-    return filtered_df.drop(df.recording_mbid, df.user)
+    return filtered_df.drop('df.recording_mbid', 'df.user')
 
 
 def get_top_artist_candidate_set(top_artist_df, recordings_df, users_df, mapped_listens_subset):
