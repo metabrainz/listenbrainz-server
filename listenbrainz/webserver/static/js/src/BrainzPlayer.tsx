@@ -98,6 +98,11 @@ export default class BrainzPlayer extends React.Component<
 
   playerStateTimerID?: NodeJS.Timeout;
 
+  private readonly mediaSessionHandlers: Array<{
+    action: string;
+    handler: () => void;
+  }>;
+
   constructor(props: BrainzPlayerProps) {
     super(props);
 
@@ -121,6 +126,13 @@ export default class BrainzPlayer extends React.Component<
       updateTime: performance.now(),
       isActivated: false,
     };
+
+    this.mediaSessionHandlers = [
+      { action: "previoustrack", handler: this.playPreviousTrack },
+      { action: "nexttrack", handler: this.playNextTrack },
+      { action: "seekbackward", handler: this.seekBackward },
+      { action: "seekforward", handler: this.seekForward },
+    ];
   }
 
   componentDidMount = () => {
@@ -272,12 +284,7 @@ export default class BrainzPlayer extends React.Component<
   };
 
   activatePlayerAndPlay = (): void => {
-    overwriteMediaSession(
-      this.playPreviousTrack,
-      this.playNextTrack,
-      this.seekBackward,
-      this.seekForward
-    );
+    overwriteMediaSession(this.mediaSessionHandlers);
     this.setState({ isActivated: true }, this.playNextTrack);
   };
 
@@ -393,6 +400,7 @@ export default class BrainzPlayer extends React.Component<
       // Try playing the listen with the next dataSource
       this.playListen(currentListen, currentDataSourceIndex + 1);
     } else {
+      this.stopPlayerStateTimer();
       this.playNextTrack();
     }
   };
@@ -434,12 +442,7 @@ export default class BrainzPlayer extends React.Component<
       return;
     }
     if (hasMediaSessionSupport()) {
-      overwriteMediaSession(
-        this.playPreviousTrack,
-        this.playNextTrack,
-        this.seekBackward,
-        this.seekForward
-      );
+      overwriteMediaSession(this.mediaSessionHandlers);
       updateMediaSession(title, artist, album, artwork);
     }
     // Send a notification. If user allowed browser/OS notifications use that,

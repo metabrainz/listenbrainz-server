@@ -105,10 +105,10 @@ export function hasMediaSessionSupport(): boolean {
 // This method is called on each track change; I don't have a better idea for destroying the Audio objects we create
 let placeholderAudioElement;
 export function overwriteMediaSession(
-  prevTrackCallback: Function,
-  nextTrackCallback: Function,
-  seekBackwardCallback: Function,
-  seekForwardCallback: Function
+  actionHandlers: Array<{
+    action: string;
+    handler: () => void;
+  }>
 ): void {
   if (!hasMediaSessionSupport()) {
     return;
@@ -124,19 +124,19 @@ export function overwriteMediaSession(
   placeholderAudioElement
     .play()
     .then(() => {
-      // We only need to override these handlers.
+      // We only need to override prev/next and seek forward/backward handlers.
       // Play/pause should be managed appropriately by the original MediaSession.
-      mediaSession.setActionHandler("previoustrack", (e) => {
-        prevTrackCallback();
-      });
-      mediaSession.setActionHandler("nexttrack", (e) => {
-        nextTrackCallback();
-      });
-      mediaSession.setActionHandler("seekbackward", (e) => {
-        seekBackwardCallback();
-      });
-      mediaSession.setActionHandler("seekforward", (e) => {
-        seekForwardCallback();
+      // Certain handlers might not be supported so we wrap each call in a try/catch
+      actionHandlers.forEach(({ action, handler }) => {
+        try {
+          navigator.mediaSession.setActionHandler(action, (actionDetails) => {
+            handler();
+          });
+        } catch (error) {
+          console.log(
+            `The media session action "${action}" is not supported yet.`
+          );
+        }
       });
     })
     // eslint-disable-next-line no-console
