@@ -8,6 +8,8 @@ from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY, MBID_MSID_MAPPI
 from listenbrainz_spark.stats import offset_days, offset_months, run_query
 
 
+# FIXME: fix the method to calculate latest_listen_ts based on new dumps
+# also replace the temporary datetime.now() back with this method
 def get_latest_listen_ts():
     """ Get the timestamp of the latest timestamp present in spark cluster """
     now = datetime.now()
