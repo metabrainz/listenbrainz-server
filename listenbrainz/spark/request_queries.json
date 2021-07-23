@@ -62,22 +62,22 @@
   "stats.sitewide.entity.week": {
     "name": "stats.sitewide.entity.week",
     "description": "Calculate top entites listened to on the website in the past week",
-    "params": ["entity", "use_mapping"]
+    "params": ["entity"]
   },
   "stats.sitewide.entity.month": {
     "name": "stats.sitewide.entity.month",
     "description": "Calculate top entites listened to on the website in the past month",
-    "params": ["entity", "use_mapping"]
+    "params": ["entity"]
   },
   "stats.sitewide.entity.year": {
     "name": "stats.sitewide.entity.year",
     "description": "Calculate top entites listened to on the website in the past year",
-    "params": ["entity", "use_mapping"]
+    "params": ["entity"]
   },
   "stats.sitewide.entity.all_time": {
     "name": "stats.sitewide.entity.all_time",
     "description": "Calculate top entites listened to on the website in the past all_time",
-    "params": ["entity", "use_mapping"]
+    "params": ["entity"]
   },
   "import.dump.full_newest": {
     "name": "import.dump.full_newest",

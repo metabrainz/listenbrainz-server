@@ -7,13 +7,13 @@ import listenbrainz_spark
 from data.model.sitewide_artist_stat import SitewideArtistRecord
 from data.model.sitewide_entity import SitewideEntityStatMessage
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
-from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
+from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY, LISTENBRAINZ_NEW_DATA_DIRECTORY
 from listenbrainz_spark.stats import (offset_days, offset_months, replace_days,
                                       run_query, get_day_end, get_year_end, get_month_end)
 from listenbrainz_spark.stats.sitewide.artist import get_artists
 from listenbrainz_spark.stats.utils import (filter_listens, get_last_monday,
                                             get_latest_listen_ts)
-from listenbrainz_spark.utils import get_listens
+from listenbrainz_spark.utils import get_listens_from_new_dump
 from pydantic import ValidationError
 
 
@@ -31,11 +31,11 @@ entity_model_map = {
 time_range_schema = ["time_range", "from_ts", "to_ts"]
 
 
-def get_entity_week(entity: str, use_mapping: bool = False) -> Optional[List[SitewideEntityStatMessage]]:
+def get_entity_week(entity: str) -> Optional[List[SitewideEntityStatMessage]]:
     """ Get the weekly sitewide top entity """
-    logger.debug("Calculating sitewide_{}_week...".format(entity))
+    logger.debug(f"Calculating sitewide_{entity}_week...")
 
-    date = get_latest_listen_ts()
+    date = datetime.now()
 
     to_date = get_last_monday(date)
     # Set time to 00:00
@@ -52,13 +52,16 @@ def get_entity_week(entity: str, use_mapping: bool = False) -> Optional[List[Sit
     time_range_df = listenbrainz_spark.session.createDataFrame(time_range, schema=time_range_schema)
     time_range_df.createOrReplaceTempView('time_range')
 
-    listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
-    filtered_df = filter_listens(listens_df, from_date, to_date)
-    table_name = 'sitewide_{}_week'.format(entity)
-    filtered_df.createOrReplaceTempView(table_name)
+    listens_df = get_listens_from_new_dump(
+        from_date,
+        to_date,
+        LISTENBRAINZ_NEW_DATA_DIRECTORY
+    )
+    table_name = f'sitewide_{entity}_week'
+    listens_df.createOrReplaceTempView(table_name)
 
     handler = entity_handler_map[entity]
-    data = handler(table_name, "EEEE dd MMMM yyyy", use_mapping)
+    data = handler(table_name, "EEEE dd MMMM yyyy")
     message = create_message(data=data, entity=entity, stats_range='week',
                              from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
@@ -67,11 +70,11 @@ def get_entity_week(entity: str, use_mapping: bool = False) -> Optional[List[Sit
     return message
 
 
-def get_entity_month(entity: str, use_mapping: bool = False) -> Optional[List[SitewideEntityStatMessage]]:
+def get_entity_month(entity: str) -> Optional[List[SitewideEntityStatMessage]]:
     """ Get the montly sitewide top entity """
-    logger.debug("Calculating sitewide_{}_month...".format(entity))
+    logger.debug(f"Calculating sitewide_{entity}_month...")
 
-    to_date = get_latest_listen_ts()
+    to_date = datetime.now()
     # Set time to 00:00
     to_date = datetime(to_date.year, to_date.month, to_date.day)
     from_date = replace_days(offset_months(to_date, 1, shift_backwards=True), 1)
@@ -86,12 +89,16 @@ def get_entity_month(entity: str, use_mapping: bool = False) -> Optional[List[Si
     time_range_df = listenbrainz_spark.session.createDataFrame(time_range, schema=time_range_schema)
     time_range_df.createOrReplaceTempView('time_range')
 
-    listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
-    table_name = 'sitewide_{}_month'.format(entity)
+    listens_df = get_listens_from_new_dump(
+        from_date,
+        to_date,
+        LISTENBRAINZ_NEW_DATA_DIRECTORY
+    )
+    table_name = f'sitewide_{entity}_month'
     listens_df.createOrReplaceTempView(table_name)
 
     handler = entity_handler_map[entity]
-    data = handler(table_name, "dd MMMM yyyy", use_mapping)
+    data = handler(table_name, "dd MMMM yyyy")
 
     message = create_message(data=data, entity=entity, stats_range='month',
                              from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
@@ -101,11 +108,11 @@ def get_entity_month(entity: str, use_mapping: bool = False) -> Optional[List[Si
     return message
 
 
-def get_entity_year(entity: str, use_mapping: bool = False) -> Optional[List[SitewideEntityStatMessage]]:
+def get_entity_year(entity: str) -> Optional[List[SitewideEntityStatMessage]]:
     """ Get the yearly sitewide top entity """
-    logger.debug("Calculating sitewide_{}_year...".format(entity))
+    logger.debug(f"Calculating sitewide_{entity}_year...")
 
-    to_date = get_latest_listen_ts()
+    to_date = datetime.now()
     from_date = datetime(to_date.year-1, 1, 1)
     month = from_date
 
@@ -118,12 +125,16 @@ def get_entity_year(entity: str, use_mapping: bool = False) -> Optional[List[Sit
     time_range_df = listenbrainz_spark.session.createDataFrame(time_range, schema=time_range_schema)
     time_range_df.createOrReplaceTempView('time_range')
 
-    listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
-    table_name = 'sitewide_{}_year'.format(entity)
+    listens_df = get_listens_from_new_dump(
+        from_date,
+        to_date,
+        LISTENBRAINZ_NEW_DATA_DIRECTORY
+    )
+    table_name = f'sitewide_{entity}_year'
     listens_df.createOrReplaceTempView(table_name)
 
     handler = entity_handler_map[entity]
-    data = handler(table_name, "MMMM yyyy", use_mapping)
+    data = handler(table_name, "MMMM yyyy")
     message = create_message(data=data, entity=entity, stats_range='year',
                              from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
@@ -132,11 +143,11 @@ def get_entity_year(entity: str, use_mapping: bool = False) -> Optional[List[Sit
     return message
 
 
-def get_entity_all_time(entity: str, use_mapping: bool = False) -> Optional[List[SitewideEntityStatMessage]]:
+def get_entity_all_time(entity: str) -> Optional[List[SitewideEntityStatMessage]]:
     """ Get the all_time sitewide top entity """
-    logger.debug("Calculating sitewide_{}_all_time...".format(entity))
+    logger.debug(f"Calculating sitewide_{entity}_all_time...")
 
-    to_date = get_latest_listen_ts()
+    to_date = datetime.now()
     from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
 
     # Generate a dataframe containing years from "from_date" to "to_date"
@@ -147,12 +158,16 @@ def get_entity_all_time(entity: str, use_mapping: bool = False) -> Optional[List
     time_range_df = listenbrainz_spark.session.createDataFrame(time_range, schema=time_range_schema)
     time_range_df.createOrReplaceTempView('time_range')
 
-    listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
-    table_name = 'sitewide_{}_all_time'.format(entity)
+    listens_df = get_listens_from_new_dump(
+        from_date,
+        to_date,
+        LISTENBRAINZ_NEW_DATA_DIRECTORY
+    )
+    table_name = f'sitewide_{entity}_all_time'
     listens_df.createOrReplaceTempView(table_name)
 
     handler = entity_handler_map[entity]
-    data = handler(table_name, "yyyy", use_mapping)
+    data = handler(table_name, "yyyy")
     message = create_message(data=data, entity=entity, stats_range='all_time',
                              from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
