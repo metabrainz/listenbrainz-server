@@ -1,5 +1,8 @@
-// Older implementations and Safari use the deprecated callback signature of Notification.requestPermission
-// This util allows us to detect if the Promise-based signature is available
+/**
+ * Older implementations and Safari use the deprecated callback signature
+ * of Notification.requestPermission instead of the Promise-based signature
+ * This util allows us to detect if the Promise-based signature is available.
+ *  */
 function checkNotificationPromise() {
   try {
     Notification.requestPermission().then();
@@ -10,9 +13,13 @@ function checkNotificationPromise() {
   return true;
 }
 
-// On Chrome for Android, the new Notification(…) constructor is not supported and throws an error
-// We can use this utility (from https://bugs.chromium.org/p/chromium/issues/detail?id=481856)
-// to detect if we can use the constructor. The alternative is to use ServiceWorkers, but that seems a bit overkill and cumbersome.
+/**
+ * On Chrome for Android, the new Notification(…) constructor is not supported and throws an error.
+ * We can use the following method to detect if we can use the constructor
+ * (from https://bugs.chromium.org/p/chromium/issues/detail?id=481856).
+ * The proper alternative is to use ServiceWorkers for notifications
+ * instead of the Notification API, but that seems quite cumbersome.
+ *  */
 function isNewNotificationConstructorSupported() {
   if (!window.Notification || !window.Notification.requestPermission)
     return false;
@@ -34,7 +41,12 @@ export function hasNotificationSupport(): boolean {
   }
   return true;
 }
-
+/**
+ * Check if 1. Notification API can be used on this browser
+ * 2. if the user has granted permission for notifications
+ * 3. requests permission if it hasn't already been explicitly granted or denied
+ * @returns a Promise that resolves to a boolean
+ */
 export async function hasNotificationPermission(): Promise<boolean> {
   try {
     // Does the browser support notifications?
@@ -86,7 +98,8 @@ export function createNotification(
 }
 
 /**
- * The MediaSession API allows us to communicate with the native browser or device media control
+ * The MediaSession API allows us to communicate with the native browser or device media control.
+ * Presence of navigator.mediaSession on the global window object is sufficient feature detection.
  */
 
 export function hasMediaSessionSupport(): boolean {
@@ -96,15 +109,20 @@ export function hasMediaSessionSupport(): boolean {
   return false;
 }
 
-/* Our players (youtube, spotify, etc.) are usually loaded in an iFrame,
- * which use the MediaSession themselves. CORS policy prevents us from modifying it.
- * In order to make the media controls (forward/next controls BrainzPlayer instead of embeddded player) work the way we want,
+/* Our embedded players (youtube, spotify, etc.) are  loaded in an iFrame,
+ * which uses the MediaSession API themselves. CORS policy prevents us from modifying the existing MediaSession.
+ * In order to make the media controls work the way we want (prev/next media keys controls BrainzPlayer),
  * we need to replace the iframe MediaSession with our own (trick from https://stackoverflow.com/a/65434258)
  */
-/* eslint-disable no-console */
 
-// This method is called on each track change; I don't have a better idea for destroying the Audio objects we create
+/**
+ * This method is called on each track change.
+ * I don't have a better idea for destroying the Audio objects we create
+ * than to store it in a global variable and `null` it before creating a new one.
+ * They get garbage collected, I checked.
+ */
 let placeholderAudioElement;
+/* eslint-disable no-console */
 export function overwriteMediaSession(
   actionHandlers: Array<{
     action: string;
@@ -116,7 +134,7 @@ export function overwriteMediaSession(
   }
   const { mediaSession } = window.navigator;
   mediaSession.metadata = new window.MediaMetadata({});
-  // Placeholder audio element is required in order for browser to recognize
+  // Playing an audio element >= 5s in length is required in order for the browser to recognize
   // a media is playing and allow notifications and to later overwrite the MediaSession
   placeholderAudioElement = null;
   placeholderAudioElement = new Audio("/static/sound/5-seconds-of-silence.mp3");

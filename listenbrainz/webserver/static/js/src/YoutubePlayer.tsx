@@ -7,7 +7,6 @@ import {
   isString as _isString,
 } from "lodash";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
-import { getTrackExtension } from "./playlists/utils";
 import { searchForYoutubeTrack } from "./utils";
 
 type YoutubePlayerState = {
@@ -40,12 +39,14 @@ export default class YoutubePlayer
     }
   }
 
-  static getThumbnailsFromVideoid(videoId: any) {
+  /**
+   * Youtube thumbnail URLs can be composed with <video_id>/<resolution><image>.jpg
+   * where resolution is one of [hq , md, sd] and image is either 'default' (= 0)
+   * or a number between 0 -> 3 (there are 4 thumbnails)
+   */
+  static getThumbnailsFromVideoid(videoId?: string) {
     let images: MediaImage[] = [];
     if (videoId) {
-      // Youtube thumbnails can be loaded with <video_id>/<resolution><image>.jps
-      // where resolution is one of [hq , md, sd] and image is either 'default'
-      // or a number between 1 and 3 (there are 4 thumbnails)
       images = [
         {
           src: `http://img.youtube.com/vi/${videoId}/sddefault.jpg`,
