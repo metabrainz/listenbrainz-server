@@ -137,8 +137,8 @@ export default class YoutubePlayer
         refreshYoutubeToken,
         this.handleAccountError
       );
-      if (videoIds) {
-        this.youtubePlayer.loadPlaylist(videoIds);
+      if (videoIds?.length) {
+        this.youtubePlayer.loadPlaylist(videoIds.slice(0, 1));
       } else {
         onTrackNotFound();
       }
@@ -157,6 +157,32 @@ export default class YoutubePlayer
     } else {
       this.youtubePlayer.loadVideoById(videoId);
     }
+  };
+
+  isListenFromThisService = (listen: Listen | JSPFTrack): boolean => {
+    // Checks if there is a youtube ID in the listen
+    const youtubeId = _get(listen, "track_metadata.additional_info.youtube_id");
+    if (youtubeId) {
+      return true;
+    }
+
+    // or if the origin URL contains youtube.com
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    if (_isString(originURL) && originURL.length) {
+      const parsedURL = new URL(originURL);
+      const { hostname, searchParams } = parsedURL;
+      if (/youtube\.com/.test(hostname)) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  canSearchAndPlayTracks = (): boolean => {
+    const { youtubeUser } = this.props;
+    // check if the user is authed to search with the Youtube API
+    return Boolean(youtubeUser) && Boolean(youtubeUser?.api_key);
   };
 
   playListen = (listen: Listen | JSPFTrack) => {

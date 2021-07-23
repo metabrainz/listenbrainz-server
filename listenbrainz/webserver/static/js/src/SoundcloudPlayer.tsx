@@ -158,28 +158,34 @@ export default class SoundcloudPlayer
     onPlayerPausedChange(false);
   };
 
+  isListenFromThisService = (listen: Listen | JSPFTrack): boolean => {
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    return !!originURL && /soundcloud\.com/.test(originURL);
+  };
+
+  canSearchAndPlayTracks = (): boolean => {
+    return false;
+  };
+
   playListen = (listen: Listen | JSPFTrack) => {
     const { show, onTrackNotFound } = this.props;
     if (!show) {
       return;
     }
-    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
-    if (/soundcloud\.com/.test(originURL)) {
-      if (this.soundcloudPlayer) {
-        this.soundcloudPlayer.load(originURL, this.options);
-      } else if (this.retries <= 3) {
-        this.retries += 1;
-        setTimeout(this.playListen.bind(this, listen), 500);
-      } else {
-        // Abort!
-        const { onInvalidateDataSource } = this.props;
-        onInvalidateDataSource(
-          this,
-          "Soundcloud player did not load properly."
-        );
-      }
-    } else {
+    if (!this.isListenFromThisService(listen)) {
       onTrackNotFound();
+      return;
+    }
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    if (this.soundcloudPlayer) {
+      this.soundcloudPlayer.load(originURL, this.options);
+    } else if (this.retries <= 3) {
+      this.retries += 1;
+      setTimeout(this.playListen.bind(this, listen), 500);
+    } else {
+      // Abort!
+      const { onInvalidateDataSource } = this.props;
+      onInvalidateDataSource(this, "Soundcloud player did not load properly.");
     }
   };
 
@@ -237,7 +243,7 @@ export default class SoundcloudPlayer
           scrolling="no"
           frameBorder="no"
           allow="autoplay"
-          src="https://w.soundcloud.com/player/?url="
+          src="https://w.soundcloud.com/player/?auto_play=false"
         />
       </div>
     );
