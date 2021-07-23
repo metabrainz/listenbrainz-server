@@ -263,9 +263,7 @@ def get_recordings_df(mapped_listens_df, metadata, save_path):
         .select(
             'artist_credit_id',
             'recording_mbid',
-            'release_mbid',
-            'artist_name',
-            'recording_name'
+            'release_mbid'
         ) \
         .distinct() \
         .withColumn('recording_id', rank().over(recording_window))
