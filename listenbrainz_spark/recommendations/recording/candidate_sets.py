@@ -165,12 +165,10 @@ def get_top_artists(mapped_listens_subset, top_artist_limit, users):
     df = mapped_listens_subset\
         .select(
             'artist_credit_id',
-            'artist_name',
             'user_name'
         ) \
         .groupBy(
             'artist_credit_id',
-            'artist_name',
             'user_name'
         ) \
         .agg(func.count('artist_credit_id').alias('total_count'))
@@ -180,12 +178,10 @@ def get_top_artists(mapped_listens_subset, top_artist_limit, users):
     top_artist_df = df.withColumn('rank', row_number().over(window)) \
                       .where(col('rank') <= top_artist_limit) \
                       .select(col('artist_credit_id').alias('top_artist_credit_id'),
-                              col('artist_name').alias('top_artist_name'),
                               col('user_name'))
 
     if users:
         top_artist_given_users_df = top_artist_df.select('top_artist_credit_id',
-                                                         'top_artist_name',
                                                          'user_name') \
                                                  .where(top_artist_df.user_name.isin(users))
 
@@ -224,9 +220,7 @@ def filter_top_artists_from_similar_artists(similar_artist_df, top_artist_df):
 
     res_df = similar_artist_df.join(df, condition, 'left') \
                               .select('top_artist_credit_id',
-                                      'top_artist_name',
                                       'similar_artist_credit_id',
-                                      'similar_artist_name',
                                       'user_name') \
                               .where(col('artist_credit_id').isNull() & col('user').isNull())
 
@@ -250,9 +244,7 @@ def get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
 
     df1 = top_artist_df.join(artist_relation_df, condition, 'inner') \
                        .select(col('id_0').alias('top_artist_credit_id'),
-                               col('name_0').alias('top_artist_name'),
                                col('id_1').alias('similar_artist_credit_id'),
-                               col('name_1').alias('similar_artist_name'),
                                'score',
                                'user_name')
 
@@ -260,9 +252,7 @@ def get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
 
     df2 = top_artist_df.join(artist_relation_df, condition, 'inner') \
                        .select(col('id_1').alias('top_artist_credit_id'),
-                               col('name_1').alias('top_artist_name'),
                                col('id_0').alias('similar_artist_credit_id'),
-                               col('name_0').alias('similar_artist_name'),
                                'score',
                                'user_name')
 
@@ -274,9 +264,7 @@ def get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
     similar_artist_df_html = df.withColumn('rank', row_number().over(window)) \
                                .where(col('rank') <= similar_artist_limit)\
                                .select('top_artist_credit_id',
-                                       'top_artist_name',
                                        'similar_artist_credit_id',
-                                       'similar_artist_name',
                                        'user_name')
 
     similar_artist_df_html = filter_top_artists_from_similar_artists(similar_artist_df_html, top_artist_df)
@@ -284,7 +272,6 @@ def get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
     # Two or more artists can have same similar artist(s) leading to non-unique recordings
     # therefore we have filtered the distinct similar artists.
     similar_artist_df = similar_artist_df_html.select('similar_artist_credit_id',
-                                                      'similar_artist_name',
                                                       'user_name') \
                                               .distinct()
 
@@ -345,11 +332,8 @@ def get_top_artist_candidate_set(top_artist_df, recordings_df, users_df, mapped_
 
     joined_df = df.join(users_df, 'user_name', 'inner') \
                   .select('top_artist_credit_id',
-                          'top_artist_name',
                           'artist_credit_id',
                           'recording_mbid',
-                          'artist_name',
-                          'recording_name',
                           'recording_id',
                           'user_name',
                           'user_id')
@@ -384,11 +368,8 @@ def get_similar_artist_candidate_set(similar_artist_df, recordings_df, users_df,
 
     joined_df = df.join(users_df, 'user_name', 'inner') \
                   .select('similar_artist_credit_id',
-                          'similar_artist_name',
                           'artist_credit_id',
                           'recording_mbid',
-                          'artist_name',
-                          'recording_name',
                           'recording_id',
                           'user_name',
                           'user_id')
@@ -455,16 +436,13 @@ def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_can
             user_data[row.user_name] = defaultdict(list)
 
         data = (
-            row.top_artist_name,
             row.top_artist_credit_id
         )
         user_data[row.user_name]['top_artist'].append(data)
 
     for row in similar_artist_df_html.collect():
         data = (
-            row.top_artist_name,
             row.top_artist_credit_id,
-            row.similar_artist_name,
             row.similar_artist_credit_id
         )
         user_data[row.user_name]['similar_artist'].append(data)
@@ -472,11 +450,8 @@ def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_can
     for row in top_artist_candidate_set_df_html.collect():
         data = (
             row.top_artist_credit_id,
-            row.top_artist_name,
             row.artist_credit_id,
             row.recording_mbid,
-            row.artist_name,
-            row.recording_name,
             row.recording_id
         )
         user_data[row.user_name]['top_artist_candidate_set'].append(data)
@@ -484,11 +459,8 @@ def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_can
     for row in similar_artist_candidate_set_df_html.collect():
         data = (
             row.similar_artist_credit_id,
-            row.similar_artist_name,
             row.artist_credit_id,
             row.recording_mbid,
-            row.artist_name,
-            row.recording_name,
             row.recording_id
         )
         user_data[row.user_name]['similar_artist_candidate_set'].append(data)
