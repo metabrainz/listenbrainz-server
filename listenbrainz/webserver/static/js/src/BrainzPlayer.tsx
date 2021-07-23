@@ -160,9 +160,7 @@ export default class BrainzPlayer extends React.Component<
     const { currentDataSourceIndex, playerPaused } = this.state;
     if (event.storageArea !== localStorage) return;
     if (event.key === "BrainzPlayer_stop") {
-      const dataSource =
-        this.dataSources[currentDataSourceIndex] &&
-        this.dataSources[currentDataSourceIndex].current;
+      const dataSource = this.dataSources[currentDataSourceIndex]?.current;
       if (dataSource && !playerPaused) {
         await dataSource.togglePlay();
       }
@@ -295,40 +293,45 @@ export default class BrainzPlayer extends React.Component<
     this.setState({ isActivated: true });
     const { onCurrentListenChange } = this.props;
     onCurrentListenChange(listen);
-    /** If available, retrieve the service the listen was listened with */
-    let selectedDatasourceIndex = this.dataSources.findIndex((ds) =>
-      ds.current?.isListenFromThisService(listen)
-    );
-
-    /** If no matching datasource was found, revert to the default bahaviour
-     * (try playing from source 0 or try next source)
-     */
-    if (selectedDatasourceIndex === -1) {
+    let selectedDatasourceIndex: number;
+    if (datasourceIndex === 0) {
+      /** If available, retrieve the service the listen was listened with */
+      const listenedFromIndex = this.dataSources.findIndex((ds) =>
+        ds.current?.isListenFromThisService(listen)
+      );
+      selectedDatasourceIndex =
+        listenedFromIndex === -1 ? 0 : listenedFromIndex;
+    } else {
+      /** If no matching datasource was found, revert to the default bahaviour
+       * (try playing from source 0 or try next source)
+       */
       selectedDatasourceIndex = datasourceIndex;
     }
 
+    const datasource = this.dataSources[selectedDatasourceIndex]?.current;
+    if (!datasource) {
+      return;
+    }
+    // Check if we can play the listen with the selected datasource
+    // otherwise skip to the next datasource without trying or setting currentDataSourceIndex
+    // This prevents rendering datasource iframes when we can't use the datasource
+    if (
+      !datasource.isListenFromThisService(listen) &&
+      !datasource.canSearchAndPlayTracks()
+    ) {
+      this.playListen(listen, datasourceIndex + 1);
+      return;
+    }
     this.stopOtherBrainzPlayers();
-
     this.setState({ currentDataSourceIndex: selectedDatasourceIndex }, () => {
-      const { currentDataSourceIndex } = this.state;
-      const dataSource =
-        this.dataSources[currentDataSourceIndex] &&
-        this.dataSources[currentDataSourceIndex].current;
-      if (!dataSource) {
-        this.invalidateDataSource();
-        return;
-      }
-
-      dataSource.playListen(listen);
+      datasource.playListen(listen);
     });
   };
 
   togglePlay = async (): Promise<void> => {
     try {
       const { currentDataSourceIndex, playerPaused } = this.state;
-      const dataSource =
-        this.dataSources[currentDataSourceIndex] &&
-        this.dataSources[currentDataSourceIndex].current;
+      const dataSource = this.dataSources[currentDataSourceIndex]?.current;
       if (!dataSource) {
         this.invalidateDataSource();
         return;
@@ -358,9 +361,7 @@ export default class BrainzPlayer extends React.Component<
       // Player has not been activated by the user, do nothing.
       return;
     }
-    const dataSource =
-      this.dataSources[currentDataSourceIndex] &&
-      this.dataSources[currentDataSourceIndex].current;
+    const dataSource = this.dataSources[currentDataSourceIndex]?.current;
     if (!dataSource) {
       this.invalidateDataSource();
       return;
