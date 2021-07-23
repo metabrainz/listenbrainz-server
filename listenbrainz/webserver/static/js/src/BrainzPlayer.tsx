@@ -133,9 +133,7 @@ export default class BrainzPlayer extends React.Component<
     const { currentDataSourceIndex, playerPaused } = this.state;
     if (event.storageArea !== localStorage) return;
     if (event.key === "BrainzPlayer_stop") {
-      const dataSource =
-        this.dataSources[currentDataSourceIndex] &&
-        this.dataSources[currentDataSourceIndex].current;
+      const dataSource = this.dataSources[currentDataSourceIndex]?.current;
       if (dataSource && !playerPaused) {
         await dataSource.togglePlay();
       }
@@ -282,34 +280,30 @@ export default class BrainzPlayer extends React.Component<
       selectedDatasourceIndex = datasourceIndex;
     }
 
-    const selectedDatasource = this.dataSources[selectedDatasourceIndex]
-      ?.current;
-    if (selectedDatasource) {
-      // Check if we can play the listen with the selected datasource
-      // otherwise skip to the next datasource without trying or setting currentDataSourceIndex
-      // This prevents rendering datasource iframes when we can't use the datasource
-      if (
-        !selectedDatasource.isListenFromThisService(listen) &&
-        !selectedDatasource.canSearchAndPlayTracks()
-      ) {
-        this.playListen(listen, datasourceIndex + 1);
-        return;
-      }
-      this.stopOtherBrainzPlayers();
-      this.setState({ currentDataSourceIndex: selectedDatasourceIndex }, () => {
-        selectedDatasource.playListen(listen);
-      });
-    } else {
-      this.invalidateDataSource();
+    const datasource = this.dataSources[selectedDatasourceIndex]?.current;
+    if (!datasource) {
+      return;
     }
+    // Check if we can play the listen with the selected datasource
+    // otherwise skip to the next datasource without trying or setting currentDataSourceIndex
+    // This prevents rendering datasource iframes when we can't use the datasource
+    if (
+      !datasource.isListenFromThisService(listen) &&
+      !datasource.canSearchAndPlayTracks()
+    ) {
+      this.playListen(listen, datasourceIndex + 1);
+      return;
+    }
+    this.stopOtherBrainzPlayers();
+    this.setState({ currentDataSourceIndex: selectedDatasourceIndex }, () => {
+      datasource.playListen(listen);
+    });
   };
 
   togglePlay = async (): Promise<void> => {
     try {
       const { currentDataSourceIndex, playerPaused } = this.state;
-      const dataSource =
-        this.dataSources[currentDataSourceIndex] &&
-        this.dataSources[currentDataSourceIndex].current;
+      const dataSource = this.dataSources[currentDataSourceIndex]?.current;
       if (!dataSource) {
         this.invalidateDataSource();
         return;
@@ -339,9 +333,7 @@ export default class BrainzPlayer extends React.Component<
       // Player has not been activated by the user, do nothing.
       return;
     }
-    const dataSource =
-      this.dataSources[currentDataSourceIndex] &&
-      this.dataSources[currentDataSourceIndex].current;
+    const dataSource = this.dataSources[currentDataSourceIndex]?.current;
     if (!dataSource) {
       this.invalidateDataSource();
       return;
