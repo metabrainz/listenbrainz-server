@@ -520,6 +520,8 @@ def get_daily_activity(user_name: str):
     }})
 
 
+# FIXME: fix the artist map to use artist credit id lookup
+#  instead to work with new parquet dumps
 @stats_api_bp.route("/user/<user_name>/artist-map")
 @crossdomain()
 @ratelimit()
