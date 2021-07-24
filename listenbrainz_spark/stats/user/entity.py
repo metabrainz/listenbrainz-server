@@ -16,10 +16,8 @@ from listenbrainz_spark.stats import (offset_days, replace_days,
 from listenbrainz_spark.stats.user.artist import get_artists
 from listenbrainz_spark.stats.user.recording import get_recordings
 from listenbrainz_spark.stats.user.release import get_releases
-from listenbrainz_spark.stats.utils import (filter_listens,
-                                            get_last_monday,
-                                            get_latest_listen_ts)
-from listenbrainz_spark.utils import get_listens, get_listens_from_new_dump
+from listenbrainz_spark.stats.utils import filter_listens, get_last_monday
+from listenbrainz_spark.utils import get_listens, get_listens_from_new_dump, get_latest_listen_ts
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +38,7 @@ def get_entity_week(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     """ Get the weekly top entity for all users """
     logger.debug("Calculating {}_week...".format(entity))
 
-    to_date = get_last_monday(datetime.now())
+    to_date = get_last_monday(get_latest_listen_ts())
     from_date = offset_days(to_date, 7)
 
     listens_df = get_listens_from_new_dump(from_date, to_date)
@@ -61,7 +59,7 @@ def get_entity_month(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     """ Get the month top entity for all users """
     logger.debug("Calculating {}_month...".format(entity))
 
-    to_date = datetime.now()
+    to_date = get_latest_listen_ts()
     from_date = replace_days(to_date, 1)
 
     listens_df = get_listens_from_new_dump(from_date, to_date)
@@ -83,7 +81,7 @@ def get_entity_year(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     """ Get the year top entity for all users """
     logger.debug("Calculating {}_year...".format(entity))
 
-    to_date = datetime.now()
+    to_date = get_latest_listen_ts()
     from_date = replace_days(replace_months(to_date, 1), 1)
 
     listens_df = get_listens_from_new_dump(from_date, to_date)
@@ -104,7 +102,7 @@ def get_entity_all_time(entity: str) -> Iterator[Optional[UserEntityStatMessage]
     """ Get the all_time top entity for all users """
     logger.debug("Calculating {}_all_time...".format(entity))
 
-    to_date = datetime.now()
+    to_date = get_latest_listen_ts()
     from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
 
     listens_df = get_listens_from_new_dump(from_date, to_date)

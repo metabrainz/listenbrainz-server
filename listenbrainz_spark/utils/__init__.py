@@ -238,6 +238,20 @@ def get_listens_from_new_dump(start: datetime, end: datetime) -> DataFrame:
     return dfs
 
 
+def get_latest_listen_ts() -> datetime:
+    """" Get the listened_at time of the latest listen present
+     in the imported dumps
+     """
+    latest_listen_file = get_listen_files_list()[0]
+    df = read_files_from_HDFS(
+        os.path.join(path.LISTENBRAINZ_NEW_DATA_DIRECTORY, latest_listen_file)
+    )
+    return df \
+        .select('listened_at') \
+        .agg(max('listened_at').alias('latest_listen_ts'))\
+        .collect()[0]['latest_listen_ts']
+
+
 def save_parquet(df, path, mode='overwrite'):
     """ Save dataframe as parquet to given path in HDFS.
 
