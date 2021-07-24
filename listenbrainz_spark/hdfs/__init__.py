@@ -9,7 +9,7 @@ import logging
 from tarfile import TarError
 
 import listenbrainz_spark
-from listenbrainz_spark import utils, config, hdfs_connection
+from listenbrainz_spark import utils
 from listenbrainz_spark.exceptions import SparkSessionNotInitializedException, DumpInvalidException
 
 
@@ -21,7 +21,6 @@ logger = logging.getLogger(__name__)
 class ListenbrainzHDFSUploader:
 
     def __init__(self):
-        hdfs_connection.init_hdfs(config.HDFS_HTTP_URI)
         try:
             listenbrainz_spark.init_spark_session('uploader')
         except SparkSessionNotInitializedException as err:

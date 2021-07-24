@@ -172,7 +172,6 @@ def get_listens_from_new_dump(start: datetime, end: datetime, location: str) -> 
         Returns:
             dataframe of listens with listened_at between start and end
     """
-    hdfs_connection.init_hdfs(config.HDFS_HTTP_URI)
     # parquet files are named as 0.parquet, 1.parquet so on. listens are stored in
     # ascending order of listened_at. so higher the number in the name of the file,
     # newer the listens
