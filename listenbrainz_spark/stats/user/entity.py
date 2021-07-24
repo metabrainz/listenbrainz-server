@@ -43,11 +43,7 @@ def get_entity_week(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     to_date = get_last_monday(datetime.now())
     from_date = offset_days(to_date, 7)
 
-    listens_df = get_listens_from_new_dump(
-        from_date,
-        to_date,
-        LISTENBRAINZ_NEW_DATA_DIRECTORY
-    )
+    listens_df = get_listens_from_new_dump(from_date, to_date)
     table_name = 'user_{}_week'.format(entity)
     listens_df.createOrReplaceTempView(table_name)
 
@@ -68,11 +64,7 @@ def get_entity_month(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     to_date = datetime.now()
     from_date = replace_days(to_date, 1)
 
-    listens_df = get_listens_from_new_dump(
-        from_date,
-        to_date,
-        LISTENBRAINZ_NEW_DATA_DIRECTORY
-    )
+    listens_df = get_listens_from_new_dump(from_date, to_date)
     table_name = 'user_{}_month'.format(entity)
     listens_df.createOrReplaceTempView(table_name)
 
@@ -94,11 +86,7 @@ def get_entity_year(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     to_date = datetime.now()
     from_date = replace_days(replace_months(to_date, 1), 1)
 
-    listens_df = get_listens_from_new_dump(
-        from_date,
-        to_date,
-        LISTENBRAINZ_NEW_DATA_DIRECTORY
-    )
+    listens_df = get_listens_from_new_dump(from_date, to_date)
     table_name = 'user_{}_year'.format(entity)
     listens_df.createOrReplaceTempView(table_name)
 
@@ -119,11 +107,7 @@ def get_entity_all_time(entity: str) -> Iterator[Optional[UserEntityStatMessage]
     to_date = datetime.now()
     from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
 
-    listens_df = get_listens_from_new_dump(
-        from_date,
-        to_date,
-        LISTENBRAINZ_NEW_DATA_DIRECTORY
-    )
+    listens_df = get_listens_from_new_dump(from_date, to_date)
     table_name = 'user_{}_all_time'.format(entity)
     listens_df.createOrReplaceTempView(table_name)
 

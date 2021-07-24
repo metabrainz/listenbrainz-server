@@ -392,11 +392,7 @@ def main(train_model_window, job_type, minimum_listens_threshold=0):
     metadata['to_date'] = to_date
     metadata['from_date'] = from_date
 
-    complete_listens_df = get_listens_from_new_dump(
-        from_date,
-        to_date,
-        path.LISTENBRAINZ_NEW_DATA_DIRECTORY
-    )
+    complete_listens_df = get_listens_from_new_dump(from_date, to_date)
     logger.info(f'Listen count from {from_date} to {to_date}: {complete_listens_df.count()}')
 
     logger.info('Discarding listens without mbids...')

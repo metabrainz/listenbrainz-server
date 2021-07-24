@@ -3,6 +3,7 @@ import logging
 import os
 from time import sleep
 from datetime import datetime
+from typing import List
 
 import pika
 from py4j.protocol import Py4JJavaError
@@ -161,47 +162,59 @@ def get_listens(from_date, to_date, dest_path):
     return df
 
 
-def get_listens_from_new_dump(start: datetime, end: datetime, location: str) -> DataFrame:
+def get_listen_files_list() -> List[str]:
+    """ Get list of name of parquet files containing the listens.
+    The list of file names is in order of newest to oldest listens.
+    """
+    files = hdfs_connection.client.list(path.LISTENBRAINZ_NEW_DATA_DIRECTORY)
+    has_incremental = False
+    file_names = []
+
+    for file in files:
+        # handle incremental dumps separately because later we want to sort
+        # based on numbers in file name
+        if file == "incremental.parquet":
+            has_incremental = True
+            continue
+        if file.endswith(".parquet"):
+            file_names.append(file)
+
+    # parquet files which come from full dump are named as 0.parquet, 1.parquet so
+    # on. listens are stored in ascending order of listened_at. so higher the number
+    # in the name of the file, newer the listens. Therefore, we sort the list
+    # according to numbers in name of parquet files, in reverse order to start
+    # loading newer listens first.
+    file_names.sort(key=lambda x: x.split(".")[0], reverse=True)
+
+    # all incremental dumps are stored in incremental.parquet. these are the newest
+    # listens. but an incremental dump might not always exist for example at the time
+    # when a full dump has just been imported. so check if incremental dumps are
+    # present, if yes then add those to the start of list
+    if has_incremental:
+        file_names.insert(0, "incremental.parquet")
+
+    return file_names
+
+
+def get_listens_from_new_dump(start: datetime, end: datetime) -> DataFrame:
     """ Load listens with listened_at between from_ts and to_ts from HDFS in a spark dataframe.
 
         Args:
             start: minimum time to include a listen in the dataframe
             end: maximum time to include a listen in the dataframe
-            location: location of parquet listen files
 
         Returns:
             dataframe of listens with listened_at between start and end
     """
-    # parquet files are named as 0.parquet, 1.parquet so on. listens are stored in
-    # ascending order of listened_at. so higher the number in the name of the file,
-    # newer the listens
-    files = hdfs_connection.client.list(location)
-    file_ids = []
-
-    # extract numbers from name of parquet files, so that we can sort them in reverse
-    # order and start loading newer listens first
-    for file in files:
-        if file == "incremental.parquet":  # handle incremental dumps separately
-            continue
-        if file.endswith(".parquet"):
-            file_ids.append(int(file.split(".")[0]))
-    file_ids.sort(reverse=True)
-
-    # add incremental dumps to start of list because those are the newest listens
-    file_ids.insert(0, "incremental")
+    files = get_listen_files_list()
 
     # create empty dataframe for merging loaded files into it
     dfs = listenbrainz_spark.session.createDataFrame([], listens_new_schema)
 
-    for file_name in file_ids:
-        # We need the try/except here because incremental.parquet file may not always
-        # exist for instance in the case of just after after a full dump, there won't
-        # be an incremental.parquet.
-        try:
-            df = read_files_from_HDFS(os.path.join(location, f'{file_name}.parquet'))
-        except PathNotFoundException:
-            logger.warning(f"Error while trying to read {file_name}.parquet", exc_info=True)
-            continue
+    for file_name in files:
+        df = read_files_from_HDFS(
+            os.path.join(path.LISTENBRAINZ_NEW_DATA_DIRECTORY, file_name)
+        )
 
         # check if the currently loaded file has any listens newer than the starting
         # timestamp. if not stop trying to load more files, because listens are sorted
