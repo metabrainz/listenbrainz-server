@@ -52,11 +52,7 @@ def get_entity_week(entity: str) -> Optional[List[SitewideEntityStatMessage]]:
     time_range_df = listenbrainz_spark.session.createDataFrame(time_range, schema=time_range_schema)
     time_range_df.createOrReplaceTempView('time_range')
 
-    listens_df = get_listens_from_new_dump(
-        from_date,
-        to_date,
-        LISTENBRAINZ_NEW_DATA_DIRECTORY
-    )
+    listens_df = get_listens_from_new_dump(from_date, to_date)
     table_name = f'sitewide_{entity}_week'
     listens_df.createOrReplaceTempView(table_name)
 
@@ -89,11 +85,7 @@ def get_entity_month(entity: str) -> Optional[List[SitewideEntityStatMessage]]:
     time_range_df = listenbrainz_spark.session.createDataFrame(time_range, schema=time_range_schema)
     time_range_df.createOrReplaceTempView('time_range')
 
-    listens_df = get_listens_from_new_dump(
-        from_date,
-        to_date,
-        LISTENBRAINZ_NEW_DATA_DIRECTORY
-    )
+    listens_df = get_listens_from_new_dump(from_date, to_date)
     table_name = f'sitewide_{entity}_month'
     listens_df.createOrReplaceTempView(table_name)
 
@@ -125,11 +117,7 @@ def get_entity_year(entity: str) -> Optional[List[SitewideEntityStatMessage]]:
     time_range_df = listenbrainz_spark.session.createDataFrame(time_range, schema=time_range_schema)
     time_range_df.createOrReplaceTempView('time_range')
 
-    listens_df = get_listens_from_new_dump(
-        from_date,
-        to_date,
-        LISTENBRAINZ_NEW_DATA_DIRECTORY
-    )
+    listens_df = get_listens_from_new_dump(from_date, to_date)
     table_name = f'sitewide_{entity}_year'
     listens_df.createOrReplaceTempView(table_name)
 
@@ -158,11 +146,7 @@ def get_entity_all_time(entity: str) -> Optional[List[SitewideEntityStatMessage]
     time_range_df = listenbrainz_spark.session.createDataFrame(time_range, schema=time_range_schema)
     time_range_df.createOrReplaceTempView('time_range')
 
-    listens_df = get_listens_from_new_dump(
-        from_date,
-        to_date,
-        LISTENBRAINZ_NEW_DATA_DIRECTORY
-    )
+    listens_df = get_listens_from_new_dump(from_date, to_date)
     table_name = f'sitewide_{entity}_all_time'
     listens_df.createOrReplaceTempView(table_name)
 

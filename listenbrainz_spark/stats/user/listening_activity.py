@@ -225,8 +225,5 @@ def create_messages(data, stats_range: str, from_ts: int, to_ts: int) -> Iterato
 
 
 def _get_listens(from_date: datetime, to_date: datetime):
-    get_listens_from_new_dump(
-        from_date,
-        to_date,
-        LISTENBRAINZ_NEW_DATA_DIRECTORY
-    ).createOrReplaceTempView('listens')
+    get_listens_from_new_dump(from_date, to_date) \
+        .createOrReplaceTempView('listens')
