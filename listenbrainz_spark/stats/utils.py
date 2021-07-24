@@ -8,24 +8,6 @@ from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY, MBID_MSID_MAPPI
 from listenbrainz_spark.stats import offset_days, offset_months, run_query
 
 
-# FIXME: fix the method to calculate latest_listen_ts based on new dumps
-# also replace the temporary datetime.now() back with this method
-def get_latest_listen_ts():
-    """ Get the timestamp of the latest timestamp present in spark cluster """
-    now = datetime.now()
-    while True:
-        try:
-            df = utils.get_listens(now, now, LISTENBRAINZ_DATA_DIRECTORY)
-            break
-        except HDFSException:
-            now = offset_months(now, 1)
-
-    df.createOrReplaceTempView('latest_listen_ts')
-    result = run_query("SELECT MAX(listened_at) as max_timestamp FROM latest_listen_ts")
-    rows = result.collect()
-    return rows[0]['max_timestamp']
-
-
 def filter_listens(df, from_date, to_date):
     """
     Filter the given dataframe to return listens which lie between from_date and to_date

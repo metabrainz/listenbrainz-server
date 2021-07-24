@@ -11,9 +11,8 @@ from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY, LISTENBRAINZ_NE
 from listenbrainz_spark.stats import (offset_days, offset_months, replace_days,
                                       run_query, get_day_end, get_year_end, get_month_end)
 from listenbrainz_spark.stats.sitewide.artist import get_artists
-from listenbrainz_spark.stats.utils import (filter_listens, get_last_monday,
-                                            get_latest_listen_ts)
-from listenbrainz_spark.utils import get_listens_from_new_dump
+from listenbrainz_spark.stats.utils import filter_listens, get_last_monday
+from listenbrainz_spark.utils import get_listens_from_new_dump, get_latest_listen_ts
 from pydantic import ValidationError
 
 
@@ -35,9 +34,7 @@ def get_entity_week(entity: str) -> Optional[List[SitewideEntityStatMessage]]:
     """ Get the weekly sitewide top entity """
     logger.debug(f"Calculating sitewide_{entity}_week...")
 
-    date = datetime.now()
-
-    to_date = get_last_monday(date)
+    to_date = get_last_monday(get_latest_listen_ts())
     # Set time to 00:00
     to_date = datetime(to_date.year, to_date.month, to_date.day)
     from_date = offset_days(to_date, 14)
@@ -70,7 +67,7 @@ def get_entity_month(entity: str) -> Optional[List[SitewideEntityStatMessage]]:
     """ Get the montly sitewide top entity """
     logger.debug(f"Calculating sitewide_{entity}_month...")
 
-    to_date = datetime.now()
+    to_date = get_latest_listen_ts()
     # Set time to 00:00
     to_date = datetime(to_date.year, to_date.month, to_date.day)
     from_date = replace_days(offset_months(to_date, 1, shift_backwards=True), 1)
@@ -104,7 +101,7 @@ def get_entity_year(entity: str) -> Optional[List[SitewideEntityStatMessage]]:
     """ Get the yearly sitewide top entity """
     logger.debug(f"Calculating sitewide_{entity}_year...")
 
-    to_date = datetime.now()
+    to_date = get_latest_listen_ts()
     from_date = datetime(to_date.year-1, 1, 1)
     month = from_date
 
@@ -135,7 +132,7 @@ def get_entity_all_time(entity: str) -> Optional[List[SitewideEntityStatMessage]
     """ Get the all_time sitewide top entity """
     logger.debug(f"Calculating sitewide_{entity}_all_time...")
 
-    to_date = datetime.now()
+    to_date = get_latest_listen_ts()
     from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
 
     # Generate a dataframe containing years from "from_date" to "to_date"

@@ -5,7 +5,7 @@ from datetime import datetime
 import listenbrainz_spark.utils.mapping as mapping_utils
 from listenbrainz_spark.stats import (replace_days,
                                       offset_days)
-from listenbrainz_spark.stats.utils import get_latest_listen_ts
+from listenbrainz_spark.utils import get_latest_listen_ts
 from listenbrainz_spark.utils import save_parquet, get_listens
 from listenbrainz_spark.exceptions import (FileNotSavedException,
                                            FileNotFetchedException)
@@ -44,7 +44,7 @@ def get_dates_to_train_data(train_model_window):
             from_date (datetime): Date from which start fetching listens.
             to_date (datetime): Date upto which fetch listens.
     """
-    to_date = datetime.now()
+    to_date = get_latest_listen_ts()
     from_date = offset_days(to_date, train_model_window)
     # shift to the first of the month
     from_date = replace_days(from_date, 1)

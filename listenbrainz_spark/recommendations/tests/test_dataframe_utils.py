@@ -5,7 +5,7 @@ from listenbrainz_spark.tests import SparkTestCase
 
 from listenbrainz_spark.recommendations import dataframe_utils
 from listenbrainz_spark import utils, path, stats
-from listenbrainz_spark.stats.utils import get_latest_listen_ts
+from listenbrainz_spark.utils import get_latest_listen_ts
 import listenbrainz_spark.utils.mapping as mapping_utils
 
 from pyspark.sql import Row
