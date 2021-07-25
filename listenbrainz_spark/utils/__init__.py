@@ -184,7 +184,7 @@ def get_listen_files_list() -> List[str]:
     # in the name of the file, newer the listens. Therefore, we sort the list
     # according to numbers in name of parquet files, in reverse order to start
     # loading newer listens first.
-    file_names.sort(key=lambda x: x.split(".")[0], reverse=True)
+    file_names.sort(key=lambda x: int(x.split(".")[0]), reverse=True)
 
     # all incremental dumps are stored in incremental.parquet. these are the newest
     # listens. but an incremental dump might not always exist for example at the time
