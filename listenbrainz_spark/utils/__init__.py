@@ -7,7 +7,7 @@ from typing import List
 
 import pika
 from py4j.protocol import Py4JJavaError
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame, functions
 from pyspark.sql.utils import AnalysisException
 
 import listenbrainz_spark
@@ -248,7 +248,7 @@ def get_latest_listen_ts() -> datetime:
     )
     return df \
         .select('listened_at') \
-        .agg(max('listened_at').alias('latest_listen_ts'))\
+        .agg(functions.max('listened_at').alias('latest_listen_ts'))\
         .collect()[0]['latest_listen_ts']
 
 
