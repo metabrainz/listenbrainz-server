@@ -107,6 +107,11 @@ class RequestConsumer:
     def callback(self, channel, method, properties, body):
         request = json.loads(body.decode('utf-8'))
         logger.info('Received a request!')
+
+        messages = self.get_result(request)
+        if messages:
+            self.push_to_result_queue(messages)
+
         while True:
             try:
                 self.request_channel.basic_ack(delivery_tag=method.delivery_tag)
@@ -120,10 +125,6 @@ class RequestConsumer:
                 self.rabbitmq.close()
                 self.connect_to_rabbitmq()
                 self.init_rabbitmq_channels()
-
-        messages = self.get_result(request)
-        if messages:
-            self.push_to_result_queue(messages)
 
         logger.info('Request done!')
 
@@ -146,6 +147,15 @@ class RequestConsumer:
             exchange=config.SPARK_REQUEST_EXCHANGE,
             queue=config.SPARK_REQUEST_QUEUE
         )
+
+        # By default, rabbitmq tries to send as many messages as possible at a time
+        # All of these are marked as unacked. We don't get to the later messages
+        # until the current spark request is complete so we inevitably hit a consumer
+        # ack timeout on those. To fix this request rabbitmq to send only one message
+        # at a time. The next message isn't sent until the current one has been ack'ed.
+        self.request_channel.basic_qos(prefetch_count=1)
+
+        # basic_consume should be called after basic_qos otherwise basic_qos doesn't eork
         self.request_channel.basic_consume(queue=config.SPARK_REQUEST_QUEUE, on_message_callback=self.callback)
 
         self.result_channel = self.rabbitmq.channel()
