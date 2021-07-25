@@ -13,7 +13,7 @@ from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY, LISTENBRAINZ_NE
 from listenbrainz_spark.stats import (offset_days, offset_months, get_day_end,
                                       get_month_end, get_year_end,
                                       replace_days, replace_months, run_query)
-from listenbrainz_spark.stats.utils import filter_listens, get_last_monda
+from listenbrainz_spark.stats.utils import filter_listens, get_last_monday
 from listenbrainz_spark.utils import get_listens, get_listens_from_new_dump, get_latest_listen_ts
 from pyspark.sql.functions import collect_list, sort_array, struct, lit
 from pyspark.sql.types import (StringType, StructField, StructType,
