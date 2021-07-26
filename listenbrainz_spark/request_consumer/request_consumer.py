@@ -166,11 +166,9 @@ class RequestConsumer:
                 logger.critical("Critical: JAVA error in spark-request consumer: %s, message: %s",
                                             str(e), str(e.java_exception), exc_info=True)
                 time.sleep(2)
-                self.publisher.shutdown()
             except Exception as e:
                 logger.critical("Error in spark-request-consumer: %s", str(e), exc_info=True)
                 time.sleep(2)
-                self.publisher.shutdown()
 
     def ping(self):
         """ Sends a heartbeat to rabbitmq to avoid closing the connection during long processes """
