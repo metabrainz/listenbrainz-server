@@ -9,6 +9,8 @@ _logger = logging.getLogger("listenbrainz_spark")
 _logger.setLevel(logging.DEBUG)
 _logger.addHandler(_handler)
 
+logging.getLogger("pika").setLevel(logging.DEBUG)
+
 import sentry_sdk
 
 from py4j.protocol import Py4JJavaError
