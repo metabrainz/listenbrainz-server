@@ -110,6 +110,10 @@ class RequestConsumer:
         request = json.loads(body.decode('utf-8'))
         logger.info('Received a request!')
 
+        messages = self.get_result(request)
+        if messages:
+            self.push_to_result_queue(messages)
+
         # We do not retry ack'ing because rabbitmq requires the ack be sent
         # from same channel that received the message. If we an error during
         # nothing can be done, the request will be resent again later. We just
@@ -124,10 +128,6 @@ class RequestConsumer:
             self.connect_to_rabbitmq()
             self.init_request_channel()
             self.init_result_channel()
-
-        messages = self.get_result(request)
-        if messages:
-            self.push_to_result_queue(messages)
 
         logger.info('Request done!')
 
