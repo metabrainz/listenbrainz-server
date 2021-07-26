@@ -21,9 +21,12 @@ import json
 import time
 import logging
 
+from threading import Thread
+
 import listenbrainz_spark
 import listenbrainz_spark.query_map
 from listenbrainz_spark import config, hdfs_connection
+from listenbrainz_spark.request_consumer.result_publisher import invoke_query
 from listenbrainz_spark.utils import init_rabbitmq
 
 from py4j.protocol import Py4JJavaError
@@ -35,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 class RequestConsumer:
 
-    def get_result(self, request):
+    def get_query(self, request):
         try:
             query = request['query']
             params = request.get('params', {})
@@ -51,8 +54,8 @@ class RequestConsumer:
         except KeyError:
             logger.error("Bad query sent to spark request consumer: %s", query, exc_info=True)
             return None
-        except Exception as e:
-            logger.error("Error while mapping query to function: %s", str(e), exc_info=True)
+        except Exception:
+            logger.error("Error while mapping query to function:", exc_info=True)
             return None
 
         try:
@@ -69,66 +72,20 @@ class RequestConsumer:
             logger.error("Error in the query handler for query '%s': %s", query, str(e), exc_info=True)
             return None
 
-    def push_to_result_queue(self, messages):
-        logger.debug("Pushing result to RabbitMQ...")
-        num_of_messages = 0
-        avg_size_of_message = 0
-        for message in messages:
-            num_of_messages += 1
-            body = json.dumps(message)
-            avg_size_of_message += len(body)
-            while message is not None:
-                try:
-                    self.result_channel.basic_publish(
-                        exchange=config.SPARK_RESULT_EXCHANGE,
-                        routing_key='',
-                        body=body,
-                        properties=pika.BasicProperties(delivery_mode=2,),
-                    )
-                    break
-                # we do not catch ConnectionClosed exception here because when
-                # a connection closes so do all of the channels on it. so if the
-                # connection is closed, we have lost the request channel. hence,
-                # we'll be unable to ack the request later and receive it again
-                # for processing anyways.
-                except pika.exceptions.ChannelClosed:
-                    logger.error('RabbitMQ Connection error while publishing results:', exc_info=True)
-                    time.sleep(1)
-                    self.init_result_channel()
-
-        try:
-            avg_size_of_message //= num_of_messages
-        except ZeroDivisionError:
-            avg_size_of_message = 0
-            logger.warning("No messages calculated", exc_info=True)
-
-        logger.info("Done!")
-        logger.info("Number of messages sent: {}".format(num_of_messages))
-        logger.info("Average size of message: {} bytes".format(avg_size_of_message))
+        return query_handler, params
 
     def callback(self, channel, method, properties, body):
         request = json.loads(body.decode('utf-8'))
         logger.info('Received a request!')
 
-        messages = self.get_result(request)
-        if messages:
-            self.push_to_result_queue(messages)
-
-        # We do not retry ack'ing because rabbitmq requires the ack be sent
-        # from same channel that received the message. If we an error during
-        # nothing can be done, the request will be resent again later. We just
-        # cleanup and re-init the connections and channels for the upcoming
-        # requests.
-        try:
-            self.request_channel.basic_ack(delivery_tag=method.delivery_tag)
-        except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed):
-            logger.error('RabbitMQ Connection error when acknowledging request:', exc_info=True)
-            time.sleep(1)
-            self.rabbitmq.close()
-            self.connect_to_rabbitmq()
-            self.init_request_channel()
-            self.init_result_channel()
-
+        query = self.get_query(request)
+        Thread(target=invoke_query, args=(
+            self.rabbitmq,
+            self.request_channel,
+            self.result_channel,
+            method.delivery_tag,
+            *query
+        )).start()
         logger.info('Request done!')
 
     def connect_to_rabbitmq(self):
