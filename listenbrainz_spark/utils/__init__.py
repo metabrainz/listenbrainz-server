@@ -58,8 +58,8 @@ def append(df, dest_path):
         raise DataFrameNotAppendedException(err.java_exception, df.schema)
 
 
-def init_rabbitmq(username, password, host, port, vhost, log=logger.error,
-                  connection_name="listenbrainz-spark-request-consumer"):
+def init_rabbitmq(username, password, host,
+                  port, vhost, connection_name):
     while True:
         try:
             credentials = pika.PlainCredentials(username, password)
@@ -71,8 +71,8 @@ def init_rabbitmq(username, password, host, port, vhost, log=logger.error,
                 client_properties={"connection_name": connection_name}
             )
             return pika.BlockingConnection(connection_parameters)
-        except Exception as e:
-            log('Error while connecting to RabbitMQ', exc_info=True)
+        except Exception:
+            logger.error('Error while connecting to RabbitMQ', exc_info=True)
             sleep(1)
 
 

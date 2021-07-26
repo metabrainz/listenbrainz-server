@@ -21,12 +21,10 @@ import json
 import time
 import logging
 
-from threading import Thread
-
 import listenbrainz_spark
 import listenbrainz_spark.query_map
 from listenbrainz_spark import config, hdfs_connection
-from listenbrainz_spark.request_consumer.result_publisher import invoke_query
+from listenbrainz_spark.request_consumer.result_publisher import ResultPublisher
 from listenbrainz_spark.utils import init_rabbitmq
 
 from py4j.protocol import Py4JJavaError
@@ -75,17 +73,18 @@ class RequestConsumer:
         return query_handler, params
 
     def callback(self, channel, method, properties, body):
+        logger.info("Callback entered")
         request = json.loads(body.decode('utf-8'))
         logger.info('Received a request!')
 
         query = self.get_query(request)
-        Thread(target=invoke_query, args=(
+        self.publisher.add_query(
             self.rabbitmq,
             self.request_channel,
             method.delivery_tag,
-            *query
-        )).start()
-        logger.info('Request done!')
+            query
+        )
+        logger.info("Callback exited")
 
     def connect_to_rabbitmq(self):
         self.rabbitmq = init_rabbitmq(
@@ -94,7 +93,7 @@ class RequestConsumer:
             host=config.RABBITMQ_HOST,
             port=config.RABBITMQ_PORT,
             vhost=config.RABBITMQ_VHOST,
-            log=logger.critical,
+            connection_name="listenbrainz-spark-request-consumer",
         )
 
     def init_request_channel(self):
@@ -123,6 +122,9 @@ class RequestConsumer:
                 self.init_request_channel()
                 logger.info('Request consumer started!')
 
+                self.publisher = ResultPublisher()
+                self.publisher.start()
+
                 try:
                     self.request_channel.start_consuming()
                 except pika.exceptions.ConnectionClosed as e:
@@ -134,9 +136,11 @@ class RequestConsumer:
                 logger.critical("Critical: JAVA error in spark-request consumer: %s, message: %s",
                                             str(e), str(e.java_exception), exc_info=True)
                 time.sleep(2)
+                self.publisher.shutdown()
             except Exception as e:
                 logger.critical("Error in spark-request-consumer: %s", str(e), exc_info=True)
                 time.sleep(2)
+                self.publisher.shutdown()
 
     def ping(self):
         """ Sends a heartbeat to rabbitmq to avoid closing the connection during long processes """
