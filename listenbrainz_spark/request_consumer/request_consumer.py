@@ -110,19 +110,20 @@ class RequestConsumer:
         request = json.loads(body.decode('utf-8'))
         logger.info('Received a request!')
 
-        while True:
-            try:
-                self.request_channel.basic_ack(delivery_tag=method.delivery_tag)
-                break
-            except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed) as e:
-                if str(e).find("is larger than configured max size") >= 0:
-                    logger.error("Spark attempted to send a message larger than the allowed maximum message size.")
-                else:
-                    logger.error('RabbitMQ Connection error when acknowledging request: %s', str(e), exc_info=True)
-                time.sleep(1)
-                self.rabbitmq.close()
-                self.connect_to_rabbitmq()
-                self.init_request_channel()
+        # We do not retry ack'ing because rabbitmq requires the ack be sent
+        # from same channel that received the message. If we an error during
+        # nothing can be done, the request will be resent again later. We just
+        # cleanup and re-init the connections and channels for the upcoming
+        # requests.
+        try:
+            self.request_channel.basic_ack(delivery_tag=method.delivery_tag)
+        except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed):
+            logger.error('RabbitMQ Connection error when acknowledging request:', exc_info=True)
+            time.sleep(1)
+            self.rabbitmq.close()
+            self.connect_to_rabbitmq()
+            self.init_request_channel()
+            self.init_result_channel()
 
         messages = self.get_result(request)
         if messages:
