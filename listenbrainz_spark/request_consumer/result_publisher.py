@@ -105,6 +105,8 @@ class ResultPublisher(threading.Thread):
 
     def run(self):
         logger.info("Starting result publisher")
+        self.init_connection()
+        self.init_channel()
         while not self.done:
             try:
                 connection, channel, delivery_tag, query = self.queue.get(timeout=600)
