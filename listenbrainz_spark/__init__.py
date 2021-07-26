@@ -1,12 +1,12 @@
 import logging
 
 _handler = logging.StreamHandler()
-_handler.setLevel(logging.INFO)
+_handler.setLevel(logging.DEBUG)
 _formatter = logging.Formatter("%(asctime)s %(name)-20s %(levelname)-8s %(message)s")
 _handler.setFormatter(_formatter)
 
 _logger = logging.getLogger("listenbrainz_spark")
-_logger.setLevel(logging.INFO)
+_logger.setLevel(logging.DEBUG)
 _logger.addHandler(_handler)
 
 import sentry_sdk
