@@ -28,7 +28,6 @@ from listenbrainz_spark.utils import init_rabbitmq
 
 from py4j.protocol import Py4JJavaError
 
-RABBITMQ_HEARTBEAT_TIME = 2 * 60 * 60  # 2 hours -- a full dump import takes 40 minutes right now
 
 rc = None
 logger = logging.getLogger(__name__)
@@ -136,7 +135,6 @@ class RequestConsumer:
             port=config.RABBITMQ_PORT,
             vhost=config.RABBITMQ_VHOST,
             log=logger.critical,
-            heartbeat=RABBITMQ_HEARTBEAT_TIME,
         )
 
     def init_rabbitmq_channels(self):
