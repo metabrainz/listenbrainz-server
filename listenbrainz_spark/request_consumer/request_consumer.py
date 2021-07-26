@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+import threading
 
 import pika
 import json
@@ -24,7 +25,7 @@ import logging
 import listenbrainz_spark
 import listenbrainz_spark.query_map
 from listenbrainz_spark import config, hdfs_connection
-from listenbrainz_spark.request_consumer.result_publisher import ResultPublisher
+from listenbrainz_spark.request_consumer.result_publisher import invoke_query
 from listenbrainz_spark.utils import init_rabbitmq
 
 from py4j.protocol import Py4JJavaError
@@ -78,13 +79,37 @@ class RequestConsumer:
         logger.info('Received a request!')
 
         query = self.get_query(request)
-        self.publisher.add_query(
-            self.rabbitmq,
-            self.request_channel,
-            method.delivery_tag,
-            query
-        )
+        threading.Thread(
+            target=invoke_query,
+            args=(
+                self.rabbitmq,
+                self.request_channel,
+                method.delivery_tag,
+                *query,
+                self.publish_messages
+            )
+        ).start()
         logger.info("Callback exited")
+
+    def publish_messages(self, messages):
+        for message in messages:
+            try:
+                self.result_channel.basic_publish(
+                    exchange=config.SPARK_RESULT_EXCHANGE,
+                    routing_key='',
+                    body=message,
+                    properties=pika.BasicProperties(delivery_mode=2, ),
+                )
+                break
+                # we do not catch ConnectionClosed exception here because when
+                # a connection closes so do all of the channels on it. so if the
+                # connection is closed, we have lost the request channel. hence,
+                # we'll be unable to ack the request later and receive it again
+                # for processing anyways.
+            except pika.exceptions.ChannelClosed:
+                logger.error('RabbitMQ Connection error while publishing results:', exc_info=True)
+                time.sleep(1)
+                self.init_result_channel()
 
     def connect_to_rabbitmq(self):
         self.rabbitmq = init_rabbitmq(
@@ -115,15 +140,20 @@ class RequestConsumer:
         # basic_consume should be called after basic_qos otherwise basic_qos doesn't eork
         self.request_channel.basic_consume(queue=config.SPARK_REQUEST_QUEUE, on_message_callback=self.callback)
 
+    def init_result_channel(self):
+        self.result_channel = self.rabbitmq.channel()
+        self.result_channel.exchange_declare(
+            exchange=config.SPARK_RESULT_EXCHANGE,
+            exchange_type='fanout'
+        )
+
     def run(self):
         while True:
             try:
                 self.connect_to_rabbitmq()
                 self.init_request_channel()
+                self.init_request_channel()
                 logger.info('Request consumer started!')
-
-                self.publisher = ResultPublisher()
-                self.publisher.start()
 
                 try:
                     self.request_channel.start_consuming()
