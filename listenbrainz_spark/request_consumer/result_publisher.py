@@ -22,10 +22,18 @@ def get_results(query_handler, params):
         return None
 
 
+def get_result_channel(connection):
+    result_channel = connection.channel()
+    result_channel.exchange_declare(
+        exchange=config.SPARK_RESULT_EXCHANGE,
+        exchange_type='fanout'
+    )
+    return result_channel
+
+
 def invoke_query(
         connection,
         request_channel,
-        result_channel,
         delivery_tag,
         query_handler,
         params
@@ -34,6 +42,8 @@ def invoke_query(
     messages = get_results(query_handler, params)
     if messages is None:
         return
+
+    result_channel = get_result_channel(connection)
 
     logger.info("Pushing result to RabbitMQ...")
     num_of_messages = 0
@@ -60,11 +70,7 @@ def invoke_query(
             except pika.exceptions.ChannelClosed:
                 logger.error('RabbitMQ Connection error while publishing results:', exc_info=True)
                 time.sleep(1)
-                result_channel = connection.channel()
-                result_channel.exchange_declare(
-                    exchange=config.SPARK_RESULT_EXCHANGE,
-                    exchange_type='fanout'
-                )
+                result_channel = get_result_channel(connection)
 
     try:
         avg_size_of_message //= num_of_messages

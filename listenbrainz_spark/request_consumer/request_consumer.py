@@ -82,7 +82,6 @@ class RequestConsumer:
         Thread(target=invoke_query, args=(
             self.rabbitmq,
             self.request_channel,
-            self.result_channel,
             method.delivery_tag,
             *query
         )).start()
@@ -117,16 +116,11 @@ class RequestConsumer:
         # basic_consume should be called after basic_qos otherwise basic_qos doesn't eork
         self.request_channel.basic_consume(queue=config.SPARK_REQUEST_QUEUE, on_message_callback=self.callback)
 
-    def init_result_channel(self):
-        self.result_channel = self.rabbitmq.channel()
-        self.result_channel.exchange_declare(exchange=config.SPARK_RESULT_EXCHANGE, exchange_type='fanout')
-
     def run(self):
         while True:
             try:
                 self.connect_to_rabbitmq()
                 self.init_request_channel()
-                self.init_result_channel()
                 logger.info('Request consumer started!')
 
                 try:
