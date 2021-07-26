@@ -86,12 +86,15 @@ class RequestConsumer:
                         properties=pika.BasicProperties(delivery_mode=2,),
                     )
                     break
-                except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed) as e:
-                    logger.error('RabbitMQ Connection error while publishing results: %s', str(e), exc_info=True)
+                # we do not catch ConnectionClosed exception here because when
+                # a connection closes so do all of the channels on it. so if the
+                # connection is closed, we have lost the request channel. hence,
+                # we'll be unable to ack the request later and receive it again
+                # for processing anyways.
+                except pika.exceptions.ChannelClosed:
+                    logger.error('RabbitMQ Connection error while publishing results:', exc_info=True)
                     time.sleep(1)
-                    self.rabbitmq.close()
-                    self.connect_to_rabbitmq()
-                    self.init_rabbitmq_channels()
+                    self.init_result_channel()
 
         try:
             avg_size_of_message //= num_of_messages
@@ -119,7 +122,7 @@ class RequestConsumer:
                 time.sleep(1)
                 self.rabbitmq.close()
                 self.connect_to_rabbitmq()
-                self.init_rabbitmq_channels()
+                self.init_request_channel()
 
         messages = self.get_result(request)
         if messages:
@@ -137,7 +140,7 @@ class RequestConsumer:
             log=logger.critical,
         )
 
-    def init_rabbitmq_channels(self):
+    def init_request_channel(self):
         self.request_channel = self.rabbitmq.channel()
         self.request_channel.exchange_declare(exchange=config.SPARK_REQUEST_EXCHANGE, exchange_type='fanout')
         self.request_channel.queue_declare(config.SPARK_REQUEST_QUEUE, durable=True)
@@ -156,6 +159,7 @@ class RequestConsumer:
         # basic_consume should be called after basic_qos otherwise basic_qos doesn't eork
         self.request_channel.basic_consume(queue=config.SPARK_REQUEST_QUEUE, on_message_callback=self.callback)
 
+    def init_result_channel(self):
         self.result_channel = self.rabbitmq.channel()
         self.result_channel.exchange_declare(exchange=config.SPARK_RESULT_EXCHANGE, exchange_type='fanout')
 
@@ -163,7 +167,8 @@ class RequestConsumer:
         while True:
             try:
                 self.connect_to_rabbitmq()
-                self.init_rabbitmq_channels()
+                self.init_request_channel()
+                self.init_result_channel()
                 logger.info('Request consumer started!')
 
                 try:
