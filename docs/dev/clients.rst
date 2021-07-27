@@ -11,6 +11,10 @@ Go
 ^^^
 * `go-listenbrainz <https://github.com/kori/go-listenbrainz>`_
 
+Nim
+^^^
+* `listenbrainz-nim <https://gitlab.com/tandy1000/listenbrainz-nim>`_
+
 Rust
 ^^^^
 * `listenbrainz-rust <https://github.com/treeshateorcs/listenbrainz-rust>`_
