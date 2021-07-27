@@ -10,7 +10,12 @@ import {
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { getArtistLink, getTrackLink, preciseTimestamp } from "../utils";
+import {
+  getArtistLink,
+  getPlayButton,
+  getTrackLink,
+  preciseTimestamp,
+} from "../utils";
 import GlobalAppContext from "../GlobalAppContext";
 import Card from "../components/Card";
 import ListenControl from "./ListenControl";
@@ -270,13 +275,7 @@ export default class ListenCard extends React.Component<
             </div>
           </MediaQuery>
         </div>
-        <div
-          className={`${
-            isCurrentUser || mode === "recent"
-              ? " col-xs-3 text-center"
-              : "hidden"
-          }`}
-        >
+        <div className="col-xs-3 text-center">
           {mode === "recent" ? (
             <a
               href={`/user/${listen.user_name}`}
@@ -285,7 +284,8 @@ export default class ListenCard extends React.Component<
             >
               {listen.user_name}
             </a>
-          ) : (
+          ) : null}
+          {mode !== "recent" && isCurrentUser ? (
             <div className="listen-controls">
               {!listen?.playing_now && (
                 <>
@@ -301,6 +301,7 @@ export default class ListenCard extends React.Component<
                     action={() => this.submitFeedback(feedback === -1 ? 0 : -1)}
                     className={`${feedback === -1 ? " hated" : ""}`}
                   />
+
                   <FontAwesomeIcon
                     icon={faEllipsisV as IconProp}
                     title="Delete"
@@ -332,7 +333,8 @@ export default class ListenCard extends React.Component<
                 </>
               )}
             </div>
-          )}
+          ) : null}
+          {getPlayButton(listen, this.playListen)}
         </div>
       </Card>
     );
