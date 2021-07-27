@@ -54,7 +54,8 @@ class CritiqueBrainzService(ExternalService):
         return oauth.fetch_token(
             OAUTH_TOKEN_URL,
             client_secret=self.client_secret,
-            code=code
+            code=code,
+            include_client_id=True
         )
 
     def refresh_access_token(self, user_id: int, refresh_token: str):
