@@ -2,7 +2,7 @@ import sqlalchemy
 
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
-from listenbrainz.domain.critiquebrainz import CritiqueBrainzService
+from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_SCOPES
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from data.model.external_service import ExternalServiceType
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
@@ -384,5 +384,9 @@ def music_services_disconnect(service_name: str):
             action = request.form.get('youtube')
             if action:
                 return redirect(service.get_authorize_url(YOUTUBE_SCOPES))
+        elif service_name == 'critiquebrainz':
+            action = request.form.get('critiquebrainz')
+            if action:
+                return redirect(service.get_authorize_url(CRITIQUEBRAINZ_SCOPES))
 
     return redirect(url_for('profile.music_services_details'))
