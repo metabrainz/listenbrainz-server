@@ -2,6 +2,7 @@ import sqlalchemy
 
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
+from listenbrainz.domain.critiquebrainz import CritiqueBrainzService
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from data.model.external_service import ExternalServiceType
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
@@ -300,12 +301,18 @@ def music_services_details():
     youtube_user = youtube_service.get_user(current_user.id)
     current_youtube_permissions = "listen" if youtube_user else "disable"
 
+    critiquebrainz_service = CritiqueBrainzService()
+    critiquebrainz_user = critiquebrainz_service.get_user(current_user.id)
+    current_critiquebrainz_permissions = "review" if critiquebrainz_user else "disable"
+
     return render_template(
         'user/music_services.html',
         spotify_user=spotify_user,
         current_spotify_permissions=current_spotify_permissions,
         youtube_user=youtube_user,
-        current_youtube_permissions=current_youtube_permissions
+        current_youtube_permissions=current_youtube_permissions,
+        critiquebrainz_user=critiquebrainz_user,
+        current_critiquebrainz_permissions=current_critiquebrainz_permissions
     )
 
 
