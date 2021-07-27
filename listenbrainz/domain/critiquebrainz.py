@@ -2,13 +2,14 @@ import time
 from datetime import timezone
 
 from requests_oauthlib import OAuth2Session
+from oauthlib.oauth2.rfc6749.errors import InvalidGrantError
 
 from data.model.external_service import ExternalServiceType
 from listenbrainz.db import external_service_oauth
 
 from flask import current_app
 
-from listenbrainz.domain.external_service import ExternalService
+from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
 
 CRITIQUEBRAINZ_SCOPES = ["review"]
 
@@ -63,11 +64,14 @@ class CritiqueBrainzService(ExternalService):
             client_id=self.client_id,
             redirect_uri=self.redirect_uri
         )
-        token = oauth.refresh_token(
-            OAUTH_TOKEN_URL,
-            client_secret=self.client_secret,
-            refresh_token=refresh_token
-        )
+        try:
+            token = oauth.refresh_token(
+                OAUTH_TOKEN_URL,
+                client_secret=self.client_secret,
+                refresh_token=refresh_token
+            )
+        except InvalidGrantError as e:
+            raise ExternalServiceInvalidGrantError("User revoked access") from e
 
         expires_at = int(time.time()) + token['expires_in']
         external_service_oauth.update_token(
