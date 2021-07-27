@@ -226,12 +226,12 @@
 
     
     > .col-xs-3 {
-      display: table;
-      height: 40px;
+      height:40px;
+      display: flex;
 
       > * {
-        display: table-cell;
-        vertical-align: middle;
+        flex: 1;
+        align-self: center;
       }
 
       a {
@@ -313,6 +313,21 @@
             background-color: #eb743b;
           }
         }
+      }
+    }
+
+    .play-button {
+      padding: 0;
+      opacity: 0;
+      flex:0;
+      color: #8d8d8d;
+    }
+    @media (min-width: @screen-phone) {
+      .play-button {
+        transition: opacity .3s ease-in-out;
+      }
+      &:hover .play-button {
+        opacity: 1;
       }
     }
 

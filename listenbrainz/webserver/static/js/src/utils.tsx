@@ -2,7 +2,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import * as _ from "lodash";
 import * as timeago from "time-ago";
-import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
+import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
 
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
@@ -150,12 +150,12 @@ const getTrackLink = (listen: Listen): JSX.Element | string => {
   return trackName;
 };
 
-const getPlayButton = (listen: any, onClickFunction: () => void) => {
+const getPlayButton = (listen: any, onClickFunction: (event?: any) => void) => {
   /* es-lint */
   return (
     <button
       title="Play"
-      className="btn-link"
+      className="btn-transparent play-button"
       onClick={onClickFunction.bind(listen)}
       type="button"
     >
