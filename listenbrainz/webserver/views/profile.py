@@ -276,6 +276,8 @@ def _get_service_or_raise_404(name: str) -> ExternalService:
             return YoutubeService()
         elif service == ExternalServiceType.SPOTIFY:
             return SpotifyService()
+        elif service == ExternalServiceType.CRITIQUEBRAINZ:
+            return CritiqueBrainzService()
     except KeyError:
         raise NotFound("Service %s is invalid." % name)
 
