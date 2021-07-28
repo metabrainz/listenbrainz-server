@@ -198,8 +198,10 @@ export default class ListenCard extends React.Component<
         }`}
       >
         <div
-          className={`${
-            isCurrentUser || mode === "recent" ? " col-xs-9" : " col-xs-12"
+          className={`listen-details ${
+            isCurrentUser || mode === "recent"
+              ? " col-xs-8 col-sm-9"
+              : " col-xs-12"
           }`}
         >
           <MediaQuery minWidth={768}>
@@ -275,7 +277,7 @@ export default class ListenCard extends React.Component<
             </div>
           </MediaQuery>
         </div>
-        <div className="col-xs-3 text-center">
+        <div className="col-xs-4 col-sm-3 listen-controls-container">
           {mode === "recent" ? (
             <a
               href={`/user/${listen.user_name}`}
@@ -330,11 +332,11 @@ export default class ListenCard extends React.Component<
                       dataTarget="#PinRecordingModal"
                     />
                   </ul>
+                  {getPlayButton(listen, this.playListen)}
                 </>
               )}
             </div>
           ) : null}
-          {getPlayButton(listen, this.playListen)}
         </div>
       </Card>
     );
