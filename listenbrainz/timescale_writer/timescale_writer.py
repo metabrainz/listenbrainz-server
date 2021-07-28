@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import logging
 import sys
 import traceback
 from time import sleep, monotonic
@@ -25,6 +25,19 @@ from listenbrainz.webserver.views.api_tools import MAX_ITEMS_PER_MESSYBRAINZ_LOO
 
 METRIC_UPDATE_INTERVAL = 60  # seconds
 LISTEN_INSERT_ERROR_SENTINEL = -1  #
+
+
+def check_recursively_for_nulls(listen):
+    for key, value in listen.items():
+        if isinstance(value, dict):
+            check_recursively_for_nulls(value)
+        else:
+            if isinstance(value, list):
+                value = " ".join(value)
+
+            if value and '\x00' in value:
+                raise ValueError("field {} contains a null".format(value))
+
 
 class TimescaleWriterSubscriber(ListenWriter):
 
@@ -92,6 +105,14 @@ class TimescaleWriterSubscriber(ListenWriter):
                     messy_dict['track_number'] = ai['track_number']
                 if 'spotify_id' in ai:
                     messy_dict['spotify_id'] = ai['spotify_id']
+
+            try:
+                check_recursively_for_nulls(messy_dict)
+            except ValueError:
+                # temporary to make sure fix is working
+                current_app.logger.error("Found null byte in listen. Skipping!", exc_info=True)
+                continue
+
             msb_listens.append(messy_dict)
 
         try:
