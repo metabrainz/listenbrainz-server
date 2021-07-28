@@ -1,0 +1,13 @@
+{
+    "listen_type": "single",
+    "payload": [
+        {
+            "listened_at": 1486449409,
+            "track_metadata": {
+                "artist_name": "Kanye West",
+                "track_name": "\u0000Fade",
+                "release_name": "The Life of Pablo"
+            }
+        }
+    ]
+}

@@ -24,7 +24,7 @@ import logging
 import xmltodict
 
 import listenbrainz.db.user as db_user
-from flask import url_for
+from flask import url_for, current_app
 from listenbrainz.db.lastfm_session import Session
 from listenbrainz.db.lastfm_token import Token
 from listenbrainz.db.lastfm_user import User
@@ -191,6 +191,28 @@ class APICompatTestCase(APICompatIntegrationTestCase):
         time.sleep(2)
         listens, _, _ = self.ls.fetch_listens(self.lb_user['musicbrainz_id'], from_ts=timestamp-1)
         self.assertEqual(len(listens), 1)
+
+    def test_record_invalid_listen(self):
+        """ Tests that error is raised if submited data contains unicode null """
+        token = Token.generate(self.lfm_user.api_key)
+        token.approve(self.lfm_user.name)
+        session = Session.create(token)
+
+        timestamp = int(time.time())
+        data = {
+            'method': 'track.scrobble',
+            'api_key': self.lfm_user.api_key,
+            'sk': session.sid,
+            'artist[0]': '\u0000Kishore Kumar',
+            'track[0]': 'Saamne Ye Kaun Aya',
+            'album[0]': 'Jawani Diwani',
+            'duration[0]': 300,
+            'timestamp[0]': timestamp,
+        }
+
+        r = self.client.post(url_for('api_compat.api_methods'), data=data)
+        self.assert400(r)
+        self.assertEqual(r.json["error"], "\u0000Kishore Kumar contains a unicode null")
 
     def test_record_listen_multiple_listens(self):
         """ Tests if multiple listens get recorded correctly in case valid information
