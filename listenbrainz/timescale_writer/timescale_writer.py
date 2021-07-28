@@ -56,9 +56,19 @@ class TimescaleWriterSubscriber(ListenWriter):
     def callback(self, ch, method, properties, body):
 
         listens = ujson.loads(body)
+        non_null_listens = []
+
+        for listen in listens:
+            try:
+                check_recursively_for_nulls(listen)
+            except ValueError:
+                # temporary to make sure fix is working
+                current_app.logger.error("Found null byte in listen. Skipping!", exc_info=True)
+                continue
+            non_null_listens.append(listen)
 
         msb_listens = []
-        for chunk in chunked(listens, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP):
+        for chunk in chunked(non_null_listens, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP):
             msb_listens.extend(self.messybrainz_lookup(chunk))
 
         submit = []
@@ -105,13 +115,6 @@ class TimescaleWriterSubscriber(ListenWriter):
                     messy_dict['track_number'] = ai['track_number']
                 if 'spotify_id' in ai:
                     messy_dict['spotify_id'] = ai['spotify_id']
-
-            try:
-                check_recursively_for_nulls(messy_dict)
-            except ValueError:
-                # temporary to make sure fix is working
-                current_app.logger.error("Found null byte in listen. Skipping!", exc_info=True)
-                continue
 
             msb_listens.append(messy_dict)
 
