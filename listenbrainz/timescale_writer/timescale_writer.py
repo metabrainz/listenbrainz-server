@@ -35,7 +35,7 @@ def check_recursively_for_nulls(listen):
             if isinstance(value, list):
                 value = " ".join(value)
 
-            if value and '\x00' in value:
+            if isinstance(value, str)  and '\x00' in value:
                 raise ValueError("field {} contains a null".format(value))
 
 
