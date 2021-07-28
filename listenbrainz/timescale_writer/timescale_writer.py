@@ -289,9 +289,8 @@ class TimescaleWriterSubscriber(ListenWriter):
 
                     self.connection.close()
 
-            except Exception as err:
-                traceback.print_exc()
-                current_app.logger.error("failed to start timescale loop: %s", str(err))
+            except Exception:
+                current_app.logger.error("failed to start timescale loop:", exc_info=True)
 
 
 if __name__ == "__main__":
