@@ -209,7 +209,7 @@ def load_recordings_from_msids(connection, messybrainz_ids):
     rows = result.fetchall()
     if not rows:
         raise exceptions.NoDataFoundException
-    
+
     # match results to every given mbid so list is returned in the same order
     results = []
     for msid in messybrainz_ids:
@@ -242,7 +242,7 @@ def load_recordings_from_mbids(connection, musicbrainz_ids):
 
     if not musicbrainz_ids:
         return {}
-    
+
     query = text("""SELECT DISTINCT rj.data
                          , r.artist
                          , r.release

@@ -104,7 +104,7 @@ def fetch_track_metadata_for_pins(pins: List[PinnedRecording]) -> List[PinnedRec
         fetch_msids = [pin.recording_msid for pin in msid_pins]   # retrieves list of msid's to fetch with
         metadatas.extend(load_recordings_from_msids(fetch_msids))
 
-    # assign track metadata to every pin in correct order 
+    # assign track metadata to every pin in correct order
     for pin in pins:
         # find matching metadata from query results
         metadata = list(filter(lambda x: x["ids"]["recording_msid"] == pin.recording_msid, metadatas))[0]
