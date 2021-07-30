@@ -106,7 +106,7 @@ def fetch_track_metadata_for_pins(pins: List[PinnedRecording]) -> List[PinnedRec
 
     # assign track metadata to every pin in correct order
     for pin in pins:
-        # find matching metadata from query results
+        # find matching metadata in list from query results
         metadata = list(filter(lambda x: x["ids"]["recording_msid"] == pin.recording_msid, metadatas))[0]
         pin.track_metadata = {
             "track_name": metadata["payload"]["title"],
