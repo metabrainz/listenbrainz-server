@@ -677,6 +677,31 @@ class TimescaleListenStore(ListenStore):
         self.log.info('Dump present at %s!', archive_path)
         return archive_path
 
+    def _fetch_artist_MBIDs_from_artist_credits(artist_credit_ids):
+        """ Given the list or set of artist_credit_ids return a dict
+            that maps artist_credit_id -> [ ARITST_MBID, ARTIST_MBID ... ]
+        """
+
+        index = {}
+        with psycopg2.connect(config.MB_DATABASE_URI) as conn:
+            with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
+
+                query = '''SELECT acn.artist_credit,
+                                  array_agg(gid::TEXT) AS artist_mbids
+                             FROM artist
+                             JOIN artist_credit_name acn
+                               ON artist.id = acn.artist
+                            WHERE acn.artist_credit IN %s
+                         GROUP BY acn.artist_credit'''
+
+                curs.execute(query, tuple(artist_credit_ids))
+
+                for row in curs.fetchall():
+                    index[row['artist_credit']] = row['artist_mbids']
+
+        return index
+
+
     def write_parquet_files(self,
                             archive_dir,
                             temp_dir,
@@ -730,7 +755,7 @@ class TimescaleListenStore(ListenStore):
         args = (int(start_time.timestamp()), int(end_time.timestamp()))
 
         listen_count = 0
-
+        artist_credit_ids = set()
         current_listened_at = None
         conn = timescale.engine.raw_connection()
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as curs:
@@ -747,7 +772,8 @@ class TimescaleListenStore(ListenStore):
                     'release_name': [],
                     'release_mbid': [],
                     'recording_name': [],
-                    'recording_mbid': []
+                    'recording_mbid': [],
+                    'artist_credit_mbids': []
                 }
                 while True:
                     result = curs.fetchone()
@@ -756,8 +782,9 @@ class TimescaleListenStore(ListenStore):
 
                     for col in data:
                         if col == 'artist_credit_id':
-                            data[col].append(result[col])
-                        elif col == 'listened_at':
+                            artist_credit_ids.put(result[col])
+
+                        if col == 'listened_at':
                             current_listened_at = datetime.utcfromtimestamp(result['listened_at'])
                             data[col].append(current_listened_at)
                         else:
@@ -773,6 +800,11 @@ class TimescaleListenStore(ListenStore):
 
                 if written == 0:
                     break
+
+                # Fetch artist mbids for each artist_credit_id and then insert into data
+                ac_mapping = self.fetch_artist_MBIDs_from_artist_credits(artist_credit_ids)
+                for row in data[artist_credit_id]:
+                    data['artist_credit_mbids'].append(ac_mapping[row])
 
                 filename = os.path.join(temp_dir, "%d.parquet" % parquet_file_id)
 
