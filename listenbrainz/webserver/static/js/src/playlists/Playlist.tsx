@@ -19,6 +19,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { ReactSortable } from "react-sortablejs";
 import debounceAsync from "debounce-async";
 import { sanitize } from "dompurify";
+import { sanitizeUrl } from "@braintree/sanitize-url";
 import * as Sentry from "@sentry/react";
 import { io, Socket } from "socket.io-client";
 import {
@@ -776,7 +777,7 @@ export default class PlaylistPage extends React.Component<
                 <small>
                   {customFields?.public ? "Public " : "Private "}
                   playlist by{" "}
-                  <a href={`/user/${sanitize(playlist.creator)}/playlists`}>
+                  <a href={sanitizeUrl(`/user/${playlist.creator}/playlists`)}>
                     {playlist.creator}
                   </a>
                 </small>
@@ -791,7 +792,7 @@ export default class PlaylistPage extends React.Component<
                       <>
                         <a
                           key={collaborator}
-                          href={`/user/${sanitize(collaborator)}`}
+                          href={sanitizeUrl(`/user/${collaborator}`)}
                         >
                           {collaborator}
                         </a>
@@ -811,7 +812,7 @@ export default class PlaylistPage extends React.Component<
                 {customFields?.copied_from && (
                   <div>
                     Copied from:
-                    <a href={sanitize(customFields.copied_from)}>
+                    <a href={sanitizeUrl(customFields.copied_from)}>
                       {customFields.copied_from.substr(
                         PLAYLIST_URI_PREFIX.length
                       )}
