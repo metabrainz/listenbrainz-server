@@ -776,7 +776,7 @@ export default class PlaylistPage extends React.Component<
                 <small>
                   {customFields?.public ? "Public " : "Private "}
                   playlist by{" "}
-                  <a href={`/user/${playlist.creator}/playlists`}>
+                  <a href={`/user/${sanitize(playlist.creator)}/playlists`}>
                     {playlist.creator}
                   </a>
                 </small>
@@ -789,7 +789,10 @@ export default class PlaylistPage extends React.Component<
                     With the help of:&ensp;
                     {customFields.collaborators.map((collaborator, index) => (
                       <>
-                        <a key={collaborator} href={`/user/${collaborator}`}>
+                        <a
+                          key={collaborator}
+                          href={`/user/${sanitize(collaborator)}`}
+                        >
                           {collaborator}
                         </a>
                         {index < customFields.collaborators.length - 1
@@ -808,7 +811,7 @@ export default class PlaylistPage extends React.Component<
                 {customFields?.copied_from && (
                   <div>
                     Copied from:
-                    <a href={customFields.copied_from}>
+                    <a href={sanitize(customFields.copied_from)}>
                       {customFields.copied_from.substr(
                         PLAYLIST_URI_PREFIX.length
                       )}
