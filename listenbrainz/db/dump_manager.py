@@ -295,6 +295,16 @@ def check_dump_ages():
     check_ftp_dump_ages()
     sys.exit(0)
 
+@cli.command(name="create_parquet")
+def create_test_parquet_files():
+    app = create_app()
+    with app.app_context():
+        from listenbrainz.webserver.timescale_connection import _ts as ls
+
+        start = datetime.now() - datetime.timedelta(days=1)
+        ls.dump_listens_for_spark("/tmp", 1000, start)
+
+        sys.exit(-2)
 
 def get_dump_id(dump_name):
     return int(dump_name.split('-')[2])
