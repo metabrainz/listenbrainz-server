@@ -31,6 +31,7 @@ from listenbrainz.listen import Listen
 from listenbrainz.listenstore import ListenStore
 from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, LISTENS_DUMP_SCHEMA_VERSION
 from listenbrainz.utils import create_path, init_cache
+from listenbrainz import config
 
 # Append the user name for both of these keys
 REDIS_USER_LISTEN_COUNT = "lc."
@@ -56,6 +57,9 @@ LISTEN_COUNT_BUCKET_WIDTH = 2592000
 # Given our listens data, we get about about 38% compression, so rounding to 45% should ensure
 # that we don't go over the 128MB file limit. If we do, its not a real problem.
 PARQUET_APPROX_COMPRESSION_RATIO = .45
+
+# A rough guesstimate at the average length of the MBIDs fields: One UUID + some extra? We just need a guess!
+AVG_ARTIST_MBIDS_LEN = 42
 
 # This is the approximate amount of data to write to a parquet file in order to meet the max size
 PARQUET_TARGET_SIZE = 134217728 / PARQUET_APPROX_COMPRESSION_RATIO  # 128MB / compression ratio
@@ -677,14 +681,14 @@ class TimescaleListenStore(ListenStore):
         self.log.info('Dump present at %s!', archive_path)
         return archive_path
 
-    def _fetch_artist_MBIDs_from_artist_credits(artist_credit_ids):
+    def _fetch_artist_MBIDs_from_artist_credits(self, artist_credit_ids):
         """ Given the list or set of artist_credit_ids return a dict
             that maps artist_credit_id -> [ ARITST_MBID, ARTIST_MBID ... ]
         """
 
         index = {}
         with psycopg2.connect(config.MB_DATABASE_URI) as conn:
-            with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
+            with conn.cursor() as curs:
 
                 query = '''SELECT acn.artist_credit,
                                   array_agg(gid::TEXT) AS artist_mbids
@@ -693,11 +697,13 @@ class TimescaleListenStore(ListenStore):
                                ON artist.id = acn.artist
                             WHERE acn.artist_credit IN %s
                          GROUP BY acn.artist_credit'''
+                curs.execute(query, (tuple(artist_credit_ids),))
 
-                curs.execute(query, tuple(artist_credit_ids))
-
-                for row in curs.fetchall():
-                    index[row['artist_credit']] = row['artist_mbids']
+                while True:
+                    row = curs.fetchone()
+                    if not row:
+                        break
+                    index[row[0]] = row[1]
 
         return index
 
@@ -782,16 +788,17 @@ class TimescaleListenStore(ListenStore):
 
                     for col in data:
                         if col == 'artist_credit_id':
-                            artist_credit_ids.put(result[col])
+                            artist_credit_ids.add(result[col])
 
                         if col == 'listened_at':
                             current_listened_at = datetime.utcfromtimestamp(result['listened_at'])
                             data[col].append(current_listened_at)
+                            approx_size += len(str(result[col]))
+                        elif col == 'artist_credit_mbids':
+                            approx_size += AVG_ARTIST_MBIDS_LEN
                         else:
                             data[col].append(result[col])
-
-                        # This is a bit dodgy, but should be ok for an estimate
-                        approx_size += len(str(result[col]))
+                            approx_size += len(str(result[col]))
 
                     written += 1
                     listen_count += 1
@@ -802,9 +809,18 @@ class TimescaleListenStore(ListenStore):
                     break
 
                 # Fetch artist mbids for each artist_credit_id and then insert into data
-                ac_mapping = self.fetch_artist_MBIDs_from_artist_credits(artist_credit_ids)
-                for row in data[artist_credit_id]:
-                    data['artist_credit_mbids'].append(ac_mapping[row])
+                # If an ac id is not found, zero out the other MBIDs since the underlying data changed
+                ac_mapping = self._fetch_artist_MBIDs_from_artist_credits(artist_credit_ids)
+                for i, row in enumerate(data['artist_credit_id']):
+                    if row is None:
+                        data['artist_credit_mbids'].append(None)
+                    elif row not in ac_mapping:
+                        data['artist_credit_mbids'].append(None)
+                        data['release_mbid'][i] = None
+                        data['recording_mbid'][i] = None
+                        data['artist_credit_id'][i] = None
+                    else:
+                        data['artist_credit_mbids'].append(ac_mapping[row])
 
                 filename = os.path.join(temp_dir, "%d.parquet" % parquet_file_id)
 
