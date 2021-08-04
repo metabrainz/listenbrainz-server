@@ -193,7 +193,7 @@ class Listen(object):
         track_metadata['additional_info']['recording_msid'] = self.recording_msid
         track_name = track_metadata['track_name']
         del track_metadata['track_name']
-        return (self.ts_since_epoch, track_name, self.user_name, ujson.dumps({
+        return (self.ts_since_epoch, track_name, self.user_name, self.user_id, ujson.dumps({
             'user_id': self.user_id,
             'track_metadata': track_metadata
         }))

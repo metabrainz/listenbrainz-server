@@ -106,7 +106,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         for listen in listens:
             submit.append((*listen.to_timescale(), listen.inserted_timestamp))
 
-        query = """INSERT INTO listen (listened_at, track_name, user_name, data, created)
+        query = """INSERT INTO listen (listened_at, track_name, user_name, user_id, data, created)
                         VALUES %s
                    ON CONFLICT (listened_at, track_name, user_name)
                     DO NOTHING
