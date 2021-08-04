@@ -20,7 +20,8 @@
     Yes, I am sure I want to erase my entire listening history
 </p>
 <form method="post">
-    <input type="hidden" name="token" value="{{ user.auth_token }}">
-    <button id="btn-delete-listens" class="btn btn-danger btn-lg" style="width: 250px">Delete my listens.</button>
+    {{ form.hidden_tag() }}
+    {{ form.submit(value="Delete my listens.", id_="btn-delete-listens",
+                   class_="btn btn-danger btn-lg", style="width: 250px") }}
 </form>
 {% endblock %}
