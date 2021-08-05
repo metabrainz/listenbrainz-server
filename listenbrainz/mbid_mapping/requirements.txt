@@ -5,3 +5,4 @@ psycopg2-binary==2.8.5
 ujson==2.0.3
 typesense
 unidecode
+pysolr==3.9.0
