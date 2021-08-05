@@ -147,9 +147,7 @@ def create_messages(data, entity: str, stats_range: str, from_ts: int, to_ts: in
             try:
                 entity_list.append(entity_model_map[entity](**item))
             except ValidationError:
-                logger.warning("""Invalid entry present in {stats_range} top {entity} for
-                                        user: {user_name}, skipping""".format(stats_range=stats_range, entity=entity,
-                                                                              user_name=_dict['user_name']))
+                logger.error(exc_info=True)
         try:
             model = UserEntityStatMessage(**{
                 'musicbrainz_id': _dict['user_name'],
