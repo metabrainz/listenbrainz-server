@@ -42,7 +42,7 @@ def get_artists(table: str) -> Iterator[UserArtistRecord]:
                         struct(
                             listen_count
                           , artist_name
-                          , coalesce(artist_credit_mbids AS artist_mbids, array())
+                          , coalesce(artist_credit_mbids, array()) AS artist_mbids
                         )
                     )
                     , false
