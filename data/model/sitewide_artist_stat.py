@@ -10,7 +10,6 @@ class SitewideArtistRecord(pydantic.BaseModel):
 
         Contains the artist name, MessyBrainz ID, MusicBrainz IDs and listen count.
     """
-    artist_msid: Optional[str]
     artist_mbids: List[str] = []
     listen_count: int
     artist_name: str

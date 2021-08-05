@@ -7,7 +7,7 @@ from typing import Optional, List
 class UserReleaseRecord(pydantic.BaseModel):
     """ Each individual record for a user's release stats
     """
-    artist_credit_id: Optional[int]
+    artist_credit_mbids: Optional[str]
     release_mbid: Optional[str]
     release_name: str
     listen_count: int

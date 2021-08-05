@@ -8,7 +8,7 @@ class UserRecordingRecord(pydantic.BaseModel):
     """ Each individual record for a user's recording stats
     """
     artist_name: str
-    artist_credit_id: Optional[int]
+    artist_credit_mbids: Optional[str]
     recording_mbid: Optional[str]
     release_name: Optional[str]
     release_mbid: Optional[str]

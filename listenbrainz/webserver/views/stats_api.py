@@ -618,13 +618,13 @@ def get_artist_map(user_name: str):
                 raise APINoContent('')
         else:
             # Calculate the data
-            artist_credit_counts = defaultdict(int)
+            artist_mbid_counts = defaultdict(int)
             top_artists = getattr(artist_stats, stats_range).artists
             for artist in top_artists:
-                if artist.artist_credit_id:
-                    artist_credit_counts[artist.artist_credit_id] = artist.listen_count
+                for artist_mbid in artist.artist_mbids:
+                    artist_mbid_counts[artist_mbid] += artist.listen_count
 
-            country_code_data = _get_country_wise_counts(artist_credit_counts)
+            country_code_data = _get_country_wise_counts(artist_mbid_counts)
             result = UserArtistMapStatJson(**{
                 stats_range: {
                     "artist_map": country_code_data,
@@ -840,26 +840,25 @@ def _get_sitewide_entity_list(
     return sorted(result, key=lambda x: x['from_ts'])
 
 
-def _get_country_wise_counts(artist_credit_counts: Dict[int, int]) -> List[UserArtistMapRecord]:
+def _get_country_wise_counts(artist_mbids: Dict[str, int]) -> List[UserArtistMapRecord]:
     """ Get country codes from list of given artist_msids and artist_mbids
     """
     # Get artist_origin_countries from artist_credit_ids
-    artist_country_codes = _get_country_code_from_artist_credit_ids(artist_credit_counts.keys())
+    artist_country_codes = _get_country_code_from_mbids(artist_mbids)
 
     # Map country codes to appropriate MBIDs and listen counts
     result = defaultdict(lambda: {
         "artist_count": 0,
         "listen_count": 0
     })
-    for artist_credit_id, listen_count in artist_credit_counts.items():
-        for entry in artist_country_codes:
-            if entry["artist_credit_id"] == artist_credit_id:
-                # TODO: add a test to handle the case where pycountry doesn't recognize the country
-                country_alpha_3 = pycountry.countries.get(alpha_2=entry["country_code"])
-                if country_alpha_3 is None:
-                    continue
-                result[country_alpha_3.alpha_3]["artist_count"] += 1
-                result[country_alpha_3.alpha_3]["listen_count"] += listen_count
+    for artist_mbid, listen_count in artist_mbids.items():
+        if artist_mbid in artist_country_codes:
+            # TODO: add a test to handle the case where pycountry doesn't recognize the country
+            country_alpha_3 = pycountry.countries.get(alpha_2=artist_country_codes[artist_mbid])
+            if country_alpha_3 is None:
+                continue
+            result[country_alpha_3.alpha_3]["artist_count"] += 1
+            result[country_alpha_3.alpha_3]["listen_count"] += listen_count
 
     return [
         UserArtistMapRecord(**{
@@ -869,41 +868,11 @@ def _get_country_wise_counts(artist_credit_counts: Dict[int, int]) -> List[UserA
     ]
 
 
-def _get_mbids_from_msids(artist_msids: Dict[str, int]) -> Dict[str, int]:
-    """ Get list of artist_mbids corresponding to the input artist_msids
+def _get_country_code_from_mbids(artist_mbids: Dict[str, int]) -> Dict[str, str]:
+    """ Get a list of artist_country_code corresponding to the input artist_mbids
     """
-    request_data = [{"artist_msid": artist_msid} for artist_msid in artist_msids.keys()]
-    msid_mbid_mapping = defaultdict(list)
-    if len(request_data) > 0:
-        try:
-            result = requests.post("{}/artist-credit-from-artist-msid/json"
-                                   .format(current_app.config['LISTENBRAINZ_LABS_API_URL']),
-                                   json=request_data, params={'count': len(request_data)})
-            # Raise error if non 200 response is received
-            result.raise_for_status()
-            data = result.json()
-            for entry in data:
-                msid_mbid_mapping[entry['artist_msid']] = entry['[artist_credit_mbid]']
-        except requests.RequestException as err:
-            current_app.logger.error("Error while getting artist_mbids, {}".format(err), exc_info=True)
-            error_msg = ("An error occurred while calculating artist_map data, "
-                         "try setting 'force_recalculate' to 'false' to get a cached copy if available."
-                         "Payload: {}. Response: {}".format(request_data, result.text))
-            raise APIInternalServerError(error_msg)
-
-    artist_mbids = defaultdict(lambda: 0)
-    for artist_msid, listen_count in artist_msids.items():
-        if artist_msid in msid_mbid_mapping:
-            for artist_mbid in msid_mbid_mapping[artist_msid]:
-                artist_mbids[artist_mbid] += listen_count
-
-    return artist_mbids
-
-
-def _get_country_code_from_artist_credit_ids(artist_credit_ids: Iterable[int]) -> List[Dict[str, str]]:
-    """ Get a list of artist_country_code corresponding to the input artist_credit_ids
-    """
-    request_data = [{"artist_credit_id": ac_id} for ac_id in artist_credit_ids]
+    request_data = [{"artist_mbid": artist_mbid} for artist_mbid in artist_mbids.keys()]
+    artist_country_code = {}
     if len(request_data) > 0:
         try:
             result = requests.post("{}/artist-country-code-from-artist-mbid/json"
@@ -911,10 +880,13 @@ def _get_country_code_from_artist_credit_ids(artist_credit_ids: Iterable[int]) -
                                    json=request_data, params={'count': len(request_data)})
             # Raise error if non 200 response is received
             result.raise_for_status()
-            return result.json()
+            data = result.json()
+            for entry in data:
+                artist_country_code[entry["artist_mbid"]] = entry["country_code"]
         except requests.RequestException as err:
             current_app.logger.error("Error while getting artist_artist_country_code, {}".format(err), exc_info=True)
             error_msg = ("An error occurred while calculating artist_map data, "
                          "try setting 'force_recalculate' to 'false' to get a cached copy if available"
                          "Payload: {}. Response: {}".format(request_data, result.text))
             raise APIInternalServerError(error_msg)
+    return artist_country_code

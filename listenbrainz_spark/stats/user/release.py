@@ -1,5 +1,4 @@
 from listenbrainz_spark.stats import run_query
-from pyspark.sql.functions import collect_list, sort_array, struct
 
 
 def get_releases(table):
@@ -32,7 +31,7 @@ def get_releases(table):
                 , nullif(release_name, '') as release_name
                 , release_mbid
                 , artist_name
-                , artist_credit_id
+                , artist_credit_mbids
                 , count(*) as listen_count
               FROM {table}
              WHERE release_name IS NOT NULL
@@ -40,7 +39,7 @@ def get_releases(table):
                 , release_name
                 , release_mbid
                 , artist_name
-                , artist_credit_id
+                , artist_credit_mbids
         )
         SELECT user_name
              , sort_array(
