@@ -25,7 +25,7 @@ def get_artists(table: str, date_format: str):
 
     result = run_query("""
                 SELECT listens.artist_name
-                     , listens.artist_credit_mbids AS artist_mbids
+                     , coalesce(listens.artist_credit_mbids, array()) AS artist_mbids
                      , time_range.time_range
                      , time_range.from_ts
                      , time_range.to_ts
