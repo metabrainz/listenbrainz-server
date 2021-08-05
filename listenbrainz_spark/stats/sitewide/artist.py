@@ -25,7 +25,7 @@ def get_artists(table: str, date_format: str):
 
     result = run_query("""
                 SELECT listens.artist_name
-                     , listens.artist_credit_mbids
+                     , listens.artist_credit_mbids AS artist_mbids
                      , time_range.time_range
                      , time_range.from_ts
                      , time_range.to_ts
@@ -41,7 +41,7 @@ def get_artists(table: str, date_format: str):
               """)
 
     iterator = result \
-        .withColumn("artists", struct("listen_count", "artist_name", "artist_credit_mbids")) \
+        .withColumn("artists", struct("listen_count", "artist_name", "artist_mbids")) \
         .groupBy("time_range", "from_ts", "to_ts") \
         .agg(sort_array(collect_list("artists"), asc=False).alias("artists")) \
         .toLocalIterator()

@@ -53,7 +53,7 @@ def get_recordings(table):
                           , recording_name
                           , recording_mbid
                           , artist_name
-                          , artist_credit_mbids
+                          , artist_credit_mbids AS artist_mbids
                           , release_name
                           , release_mbid
                         )
