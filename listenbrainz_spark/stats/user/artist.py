@@ -42,7 +42,7 @@ def get_artists(table: str) -> Iterator[UserArtistRecord]:
                         struct(
                             listen_count
                           , artist_name
-                          , artist_credit_mbids
+                          , artist_credit_mbids AS artist_mbids
                         )
                     )
                     , false

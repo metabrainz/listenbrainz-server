@@ -49,7 +49,7 @@ def get_releases(table):
                           , release_name
                           , release_mbid
                           , artist_name
-                          , artist_credit_id
+                          , artist_credit_mbids AS artist_mbids
                         )
                     )
                    , false
