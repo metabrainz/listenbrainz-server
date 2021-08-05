@@ -48,10 +48,7 @@ class StatisticsRange(Enum):
 # FIXME: the responses returned by the ger_user_artist,
 #  get_release and get_recordings endpoints has changed.
 #  Front-end code needs to reviewed and fixed as needed.
-#  Notably, we never return msids now and artist_mbid
-#  is replaced by artist_credit_id. We should add a
-#  translation step somewhere to get artist_mbid from
-#  artist_credit_id.
+#  Notably, we never return msids now.
 
 @stats_api_bp.route("/user/<user_name>/artists")
 @crossdomain()
