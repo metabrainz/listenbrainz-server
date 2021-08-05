@@ -28,13 +28,13 @@ def get_releases(table):
     result = run_query(f"""
         WITH intermediate_table as (
             SELECT user_name
-                , nullif(release_name, '') as release_name
+                , release_name
                 , release_mbid
                 , artist_name
                 , artist_credit_mbids
                 , count(*) as listen_count
               FROM {table}
-             WHERE release_name IS NOT NULL
+             WHERE release_name != ''
           GROUP BY user_name
                 , release_name
                 , release_mbid
