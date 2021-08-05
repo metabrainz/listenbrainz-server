@@ -28,6 +28,7 @@ listens_new_schema = StructType([
     StructField('release_mbid', StringType(), nullable=True),
     StructField('recording_name', StringType(), nullable=False),
     StructField('recording_mbid', StringType(), nullable=True),
+    StructField('artist_credit_mbids', ArrayType(StringType()), nullable=True),
 ])
 
 

@@ -29,12 +29,12 @@ def get_artists(table: str) -> Iterator[UserArtistRecord]:
         WITH intermediate_table as (
             SELECT user_name
                  , artist_name
-                 , artist_credit_id
+                 , artist_credit_mbids
                  , count(*) as listen_count
               FROM {table}
           GROUP BY user_name
                  , artist_name
-                 , artist_credit_id
+                 , artist_credit_mbids
         )
         SELECT user_name
              , sort_array(
@@ -42,7 +42,7 @@ def get_artists(table: str) -> Iterator[UserArtistRecord]:
                         struct(
                             listen_count
                           , artist_name
-                          , artist_credit_id
+                          , artist_credit_mbids
                         )
                     )
                     , false

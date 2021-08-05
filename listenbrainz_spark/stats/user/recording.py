@@ -32,7 +32,7 @@ def get_recordings(table):
                  , recording_name
                  , recording_mbid
                  , artist_name
-                 , artist_credit_id
+                 , artist_credit_mbids
                  , nullif(release_name, '') as release_name
                  , release_mbid
                  , count(*) as listen_count
@@ -41,7 +41,7 @@ def get_recordings(table):
                  , recording_name
                  , recording_mbid
                  , artist_name
-                 , artist_credit_id
+                 , artist_credit_mbids
                  , release_name
                  , release_mbid
         )
@@ -53,7 +53,7 @@ def get_recordings(table):
                           , recording_name
                           , recording_mbid
                           , artist_name
-                          , artist_credit_id
+                          , artist_credit_mbids
                           , release_name
                           , release_mbid
                         )

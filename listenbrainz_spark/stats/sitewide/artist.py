@@ -17,7 +17,7 @@ def get_artists(table: str, date_format: str):
     # Format the listened_at field according to the provided date_format string
     formatted_listens = run_query(f"""
                 SELECT artist_name
-                     , artist_credit_id
+                     , artist_credit_mbids
                      , date_format(listened_at, '{date_format}') as listened_at
                   FROM {table}
             """)
@@ -25,7 +25,7 @@ def get_artists(table: str, date_format: str):
 
     result = run_query("""
                 SELECT listens.artist_name
-                     , listens.artist_credit_id
+                     , listens.artist_credit_mbids
                      , time_range.time_range
                      , time_range.from_ts
                      , time_range.to_ts
@@ -34,14 +34,14 @@ def get_artists(table: str, date_format: str):
                   JOIN time_range
                     ON listens.listened_at == time_range.time_range
               GROUP BY listens.artist_name
-                     , listens.artist_credit_id
+                     , listens.artist_credit_mbids
                      , time_range.time_range
                      , time_range.from_ts
                      , time_range.to_ts
               """)
 
     iterator = result \
-        .withColumn("artists", struct("listen_count", "artist_name", "artist_credit_id")) \
+        .withColumn("artists", struct("listen_count", "artist_name", "artist_credit_mbids")) \
         .groupBy("time_range", "from_ts", "to_ts") \
         .agg(sort_array(collect_list("artists"), asc=False).alias("artists")) \
         .toLocalIterator()
