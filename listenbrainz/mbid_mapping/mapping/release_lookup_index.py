@@ -54,9 +54,9 @@ def build_release_lookup_index():
                     "artist_credit_id": row["artist_credit_id"]
                 }
 
-                for i, artist_credit_name, recording_name in enumerate(row["recording_data"])):
-                    data["ac_name_%d"] = artist_credit_name
-                    data["recording_name_%d"] = recording_name
+                for i, recording_data in enumerate(row["recording_data"]):
+                    data["ac_name_%d"] = recording_data[0]
+                    data["recording_name_%d"] = recording_data[1]
 
                 docs.append(data)
 
