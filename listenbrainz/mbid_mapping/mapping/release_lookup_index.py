@@ -43,12 +43,17 @@ def build_release_lookup_index():
 
             docs = []
             for row in curs:
-                docs.append({
+                data = {
                     "id": row["release_mbid"],
                     "title": row["release_name"],
-                    "artist_credit_id": row["artist_credit_id"],
-                    "artist_credit_name": row["artist_credit_name"],
-                    "recording_names": row["recording_names"]})
+                    "artist_credit_id": row["artist_credit_id"]
+                }
+
+                for i, artist_credit_name, recording_name in enumerate(zip(row["artist_credit_name"], row["recording_names"])):
+                    data["ac_name_%d"] = artist_credit_name
+                    data["recording_name_%d"] = recording_name
+
+                docs.append(data)
 
                 if len(docs) == BATCH_SIZE:
                     solr.add(docs)
@@ -56,6 +61,3 @@ def build_release_lookup_index():
 
             if len(docs):
                 solr.add(docs)
-
-
-
