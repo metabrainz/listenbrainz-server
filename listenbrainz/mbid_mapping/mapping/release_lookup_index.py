@@ -54,9 +54,11 @@ def build_release_lookup_index():
                     "artist_credit_id": row["artist_credit_id"]
                 }
 
+                if len(row["recording_data"]) > 500:
+                    print(str(row["release_mbid"]))
                 for i, recording_data in enumerate(row["recording_data"]):
-                    data["ac_name_%d"] = recording_data[0]
-                    data["recording_name_%d"] = recording_data[1]
+                    data["ac_name_%d" % i ] = recording_data[0]
+                    data["recording_name_%d" % i] = recording_data[1]
 
                 docs.append(data)
 
