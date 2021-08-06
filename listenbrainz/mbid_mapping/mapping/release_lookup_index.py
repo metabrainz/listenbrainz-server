@@ -28,6 +28,7 @@ def build_release_lookup_index():
                                ac.name AS artist_credit_name,
                                rel.gid AS release_mbid,
                                rel.name AS release_name,
+                               m.position,
                                array_agg(ARRAY[rec.name, acn2.name]) AS recording_data
                           FROM artist_credit ac
                           JOIN release rel
@@ -40,7 +41,8 @@ def build_release_lookup_index():
                             ON t.recording = rec.id
                           JOIN artist_credit_name acn2
                             ON rec.artist_credit = acn2.artist_credit
-                      GROUP BY ac.id, ac.name, rel.gid, rel.name""")
+                         WHERE rel.gid in ('5fc28f73-4ccf-4b38-b96e-a8e706f388e5', 'cac64a87-42f9-4c1c-a5ef-1e6824e20678')
+                      GROUP BY ac.id, ac.name, rel.gid, rel.name, m.position""")
 
             log("Run query")
             curs.execute(query)
@@ -51,11 +53,10 @@ def build_release_lookup_index():
                 data = {
                     "id": row["release_mbid"],
                     "title": row["release_name"],
-                    "artist_credit_id": row["artist_credit_id"]
+                    "artist_credit_id": row["artist_credit_id"],
+                    "position": row["position"]
                 }
 
-                if len(row["recording_data"]) > 500:
-                    print(str(row["release_mbid"]))
                 for i, recording_data in enumerate(row["recording_data"]):
                     data["ac_name_%d" % i ] = recording_data[0]
                     data["recording_name_%d" % i] = recording_data[1]
