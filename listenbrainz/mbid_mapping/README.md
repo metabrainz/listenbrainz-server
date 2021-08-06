@@ -64,3 +64,9 @@ To test searching the index:
 To run the mapping tests:
 
 ```manage.py test-mapping```
+
+Createing SOLR indexes for release lookup
+-----------------------------------------
+
+```docker run -d -p 8983:8983 -v solr:/var/solr --network musicbrainzdocker_default --name listenbrainz-solr -t solr solr-precreate release-index```
+```docker run -d -p 8983:8983 -v solr:/var/solr --network musicbrainzdocker_default --name listenbrainz-solr -t solr```

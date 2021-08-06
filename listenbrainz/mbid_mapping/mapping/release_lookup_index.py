@@ -11,14 +11,15 @@ import config
 from mapping.utils import log
 
 
-BATCH_SIZE = 5000
+BATCH_SIZE = 100000
 SOLR_HOST = "listenbrainz-solr"
 SOLR_PORT = 8983
+SOLR_CORE = "release-index"
 
 
 def build_release_lookup_index():
 
-    solr = pysolr.Solr('http://%s:%d/solr/' % (SOLR_HOST, SOLR_PORT), always_commit=False)
+    solr = pysolr.Solr('http://%s:%d/solr/%s' % (SOLR_HOST, SOLR_PORT, SOLR_CORE), always_commit=True)
 
     with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
@@ -27,7 +28,7 @@ def build_release_lookup_index():
                                ac.name AS artist_credit_name,
                                rel.gid AS release_mbid,
                                rel.name AS release_name,
-                               array_agg(rec.name) AS recording_names
+                               array_agg(ARRAY[rec.name, acn2.name]) AS recording_data
                           FROM artist_credit ac
                           JOIN release rel
                             ON rel.artist_credit = ac.id
@@ -37,11 +38,15 @@ def build_release_lookup_index():
                             ON t.medium = m.id
                           JOIN recording rec
                             ON t.recording = rec.id
+                          JOIN artist_credit_name acn2
+                            ON rec.artist_credit = acn2.artist_credit
                       GROUP BY ac.id, ac.name, rel.gid, rel.name""")
 
+            log("Run query")
             curs.execute(query)
 
             docs = []
+            batch_count = 0
             for row in curs:
                 data = {
                     "id": row["release_mbid"],
@@ -58,6 +63,12 @@ def build_release_lookup_index():
                 if len(docs) == BATCH_SIZE:
                     solr.add(docs)
                     docs = []
+                    batch_count += 1
+
+                    if batch_count % 10 == 0:
+                        log("Added %d rows" % (BATCH_SIZE * batch_count))
 
             if len(docs):
                 solr.add(docs)
+
+            log("Done!")

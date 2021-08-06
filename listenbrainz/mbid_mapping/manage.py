@@ -9,6 +9,7 @@ import click
 from mapping.mbid_mapping import create_mbid_mapping
 from mapping.typesense_index import build_index as action_build_index
 from mapping.year_mapping import create_year_mapping
+from mapping.release_lookup_index import build_release_lookup_index 
 from mapping.mapping_test.mapping_test import test_mapping as action_test_mapping
 from mapping.utils import log, CRON_LOG_FILE
 
@@ -61,6 +62,10 @@ def build_index():
     """
     action_build_index()
 
+
+@cli.command()
+def build_release_index():
+    build_release_lookup_index()
 
 @cli.command()
 def cron_log():
