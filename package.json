@@ -30,6 +30,7 @@
   "homepage": "https://listenbrainz.org",
   "dependencies": {
     "@babel/runtime": "^7.5.5",
+    "@braintree/sanitize-url": "^5.0.2",
     "@fortawesome/fontawesome-svg-core": "^1.2.22",
     "@fortawesome/free-brands-svg-icons": "^5.13.0",
     "@fortawesome/free-regular-svg-icons": "^5.13.0",
@@ -93,6 +94,7 @@
     "@types/react-youtube": "^7.6.2",
     "@types/sortablejs": "^1.10.6",
     "@types/spotify-web-playback-sdk": "^0.1.7",
+    "@types/wicg-mediasession": "^1.1.2",
     "@types/youtube": "0.0.39",
     "@typescript-eslint/eslint-plugin": "^2.26.0",
     "@typescript-eslint/parser": "^2.26.0",

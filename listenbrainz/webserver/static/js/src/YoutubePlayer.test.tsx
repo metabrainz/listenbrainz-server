@@ -15,7 +15,12 @@ const props = {
   onPlayerPausedChange: (paused: boolean) => {},
   onProgressChange: (progressMs: number) => {},
   onDurationChange: (durationMs: number) => {},
-  onTrackInfoChange: (title: string, artist?: string) => {},
+  onTrackInfoChange: (
+    title: string,
+    artist?: string,
+    album?: string,
+    artwork?: ReadonlyArray<MediaImage>
+  ) => {},
   onTrackEnd: () => {},
   onTrackNotFound: () => {},
   handleError: (error: BrainzPlayerError, title?: string) => {},
@@ -38,7 +43,9 @@ describe("YoutubePlayer", () => {
     const youtubePlayerState = {
       data: 2,
       target: {
-        playerInfo: { videoData: { title: "FNORD" } },
+        playerInfo: {
+          videoData: { title: "FNORD", video_id: "IhaveSeenTheFnords" },
+        },
         getCurrentTime: jest.fn().mockReturnValue(3),
         getDuration: jest.fn().mockReturnValue(25),
         playVideo: jest.fn(),
@@ -96,7 +103,28 @@ describe("YoutubePlayer", () => {
       instance.handlePlayerStateChanged({ ...youtubePlayerState, data: -1 });
       // Update info with title only
       expect(instance.props.onTrackInfoChange).toHaveBeenCalledTimes(1);
-      expect(instance.props.onTrackInfoChange).toHaveBeenCalledWith("FNORD");
+      expect(instance.props.onTrackInfoChange).toHaveBeenCalledWith(
+        "FNORD",
+        undefined,
+        undefined,
+        [
+          {
+            src: "http://img.youtube.com/vi/IhaveSeenTheFnords/sddefault.jpg",
+            sizes: "640x480",
+            type: "image/jpg",
+          },
+          {
+            src: "http://img.youtube.com/vi/IhaveSeenTheFnords/hqdefault.jpg",
+            sizes: "480x360",
+            type: "image/jpg",
+          },
+          {
+            src: "http://img.youtube.com/vi/IhaveSeenTheFnords/mqdefault.jpg",
+            sizes: "320x180",
+            type: "image/jpg",
+          },
+        ]
+      );
       // Update duration in milliseconds
       expect(instance.props.onDurationChange).toHaveBeenCalledTimes(1);
       expect(instance.props.onDurationChange).toHaveBeenCalledWith(25000);
