@@ -361,14 +361,14 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase):
         feedPins = db_pinned_rec.get_pins_for_feed(
             user_ids=(self.user["id"], self.followed_user_1["id"]),
             min_ts=0,
-            max_ts=0,  # too low, nothing is returned
+            max_ts=0,  # too low, nothing is returned.
             count=limit,
         )
         self.assertEqual(len(feedPins), 0)
 
         feedPins = db_pinned_rec.get_pins_for_feed(
             user_ids=(self.user["id"], self.followed_user_1["id"]),
-            min_ts=9999,  # too high, nothing is returned
+            min_ts=9999,  # too high, nothing is returned.
             max_ts=9999,
             count=limit,
         )

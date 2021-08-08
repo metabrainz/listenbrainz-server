@@ -31,7 +31,7 @@ profile_bp = Blueprint("profile", __name__)
 EXPORT_FETCH_COUNT = 5000
 
 
-@profile_bp.route("/resettoken", methods=["GET", "POST"])
+@profile_bp.route("/resettoken/", methods=["GET", "POST"])
 @login_required
 def reset_token():
     if request.method == "POST":
@@ -54,7 +54,7 @@ def reset_token():
         )
 
 
-@profile_bp.route("/resetlatestimportts", methods=["GET", "POST"])
+@profile_bp.route("/resetlatestimportts/", methods=["GET", "POST"])
 @login_required
 def reset_latest_import_timestamp():
     if request.method == "POST":
@@ -87,7 +87,7 @@ def info():
     )
 
 
-@profile_bp.route("/import")
+@profile_bp.route("/import/")
 @login_required
 def import_data():
     """ Displays the import page to user, giving various options """
@@ -154,7 +154,7 @@ def stream_json_array(elements):
     yield ']'
 
 
-@profile_bp.route("/export", methods=["GET", "POST"])
+@profile_bp.route("/export/", methods=["GET", "POST"])
 @login_required
 @web_listenstore_needed
 def export_data():
@@ -179,7 +179,7 @@ def export_data():
         return render_template("user/export.html", user=current_user)
 
 
-@profile_bp.route("/export-feedback", methods=["POST"])
+@profile_bp.route("/export-feedback/", methods=["POST"])
 @login_required
 def export_feedback():
     """ Exporting the feedback data to json """
@@ -198,7 +198,7 @@ def export_feedback():
     return response
 
 
-@profile_bp.route('/delete', methods=['GET', 'POST'])
+@profile_bp.route('/delete/', methods=['GET', 'POST'])
 @login_required
 @web_listenstore_needed
 def delete():
@@ -230,7 +230,7 @@ def delete():
         )
 
 
-@profile_bp.route('/delete-listens', methods=['GET', 'POST'])
+@profile_bp.route('/delete-listens/', methods=['GET', 'POST'])
 @login_required
 @web_listenstore_needed
 def delete_listens():

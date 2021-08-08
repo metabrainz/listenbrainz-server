@@ -5,7 +5,7 @@ import redis
 from typing import Optional
 import ujson
 
-from listenbrainz.listen import Listen
+from listenbrainz.listen import Listen, NowPlayingListen
 from listenbrainz.listenstore import ListenStore
 from brainzutils import cache
 from listenbrainz.utils import create_path, init_cache
@@ -43,8 +43,7 @@ class RedisListenStore(ListenStore):
         if not data:
             return None
         data = ujson.loads(data)
-        data.update({'playing_now': True})
-        return Listen.from_json(data)
+        return NowPlayingListen(user_id=data['user_id'], user_name=data['user_name'], data=data['track_metadata'])
 
     def put_playing_now(self, user_id, listen, expire_time):
         """ Save a listen as `playing_now` for a particular time in Redis.
