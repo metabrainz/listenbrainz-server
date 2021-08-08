@@ -16,7 +16,12 @@ const props = {
   onPlayerPausedChange: (paused: boolean) => {},
   onProgressChange: (progressMs: number) => {},
   onDurationChange: (durationMs: number) => {},
-  onTrackInfoChange: (title: string, artist?: string) => {},
+  onTrackInfoChange: (
+    title: string,
+    artist?: string,
+    album?: string,
+    artwork?: ReadonlyArray<MediaImage>
+  ) => {},
   onTrackEnd: () => {},
   onTrackNotFound: () => {},
   handleError: (error: BrainzPlayerError, title?: string) => {},
@@ -218,7 +223,7 @@ describe("SpotifyPlayer", () => {
           album: {
             uri: "",
             name: "Album name",
-            images: [],
+            images: [{ url: "url/to/album-art.jpg", width: 200, height: 100 }],
           },
           artists: [
             { uri: "", name: "Track artist 1" },
@@ -287,9 +292,13 @@ describe("SpotifyPlayer", () => {
       });
 
       expect(instance.props.onTrackInfoChange).toHaveBeenCalledTimes(1);
-      expect(instance.props.onTrackInfoChange).toHaveBeenCalledWith(
+      expect(
+        instance.props.onTrackInfoChange
+      ).toHaveBeenCalledWith(
         "Track name",
-        "Track artist 1, Track artist 2"
+        "Track artist 1, Track artist 2",
+        "Album name",
+        [{ src: "url/to/album-art.jpg", sizes: "200x100" }]
       );
       expect(wrapper.state("durationMs")).toEqual(1234);
       expect(wrapper.state("currentSpotifyTrack")).toEqual(
