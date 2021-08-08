@@ -70,3 +70,7 @@ Createing SOLR indexes for release lookup
 
 ```docker run -d -p 8983:8983 -v solr:/var/solr --network musicbrainzdocker_default --name listenbrainz-solr -t solr solr-precreate release-index```
 ```docker run -d -p 8983:8983 -v solr:/var/solr --network musicbrainzdocker_default --name listenbrainz-solr -t solr```
+
+delete all documents in solr:
+
+curl http://localhost:8983 -H "Content-Type: text/xml" --data-binary '<delete><query>*:*</query></delete>'
