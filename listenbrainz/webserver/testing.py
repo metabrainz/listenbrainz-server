@@ -1,4 +1,5 @@
 import flask_testing
+import os
 
 from listenbrainz.webserver import create_app, create_api_compat_app
 
@@ -6,7 +7,7 @@ from listenbrainz.webserver import create_app, create_api_compat_app
 class ServerTestCase(flask_testing.TestCase):
 
     def create_app(self):
-        app = create_app(debug=False)
+        app = create_app()
         app.config['TESTING'] = True
         return app
 

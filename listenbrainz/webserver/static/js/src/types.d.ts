@@ -6,7 +6,7 @@ declare module "time-ago";
 declare module "debounce-async";
 
 declare module "react-bs-notifier";
-declare type AlertType = "danger" | "warning" | "success" | "info";
+declare type AlertType = "danger" | "warning" | "success";
 declare type Alert = {
   id: number;
   type: AlertType;

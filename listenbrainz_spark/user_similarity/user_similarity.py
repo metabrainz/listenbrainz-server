@@ -172,7 +172,7 @@ def main(max_num_users: int):
         'similarity', 'global_similarity'])\
         .join(users_df, 'user_id', 'inner')\
         .join(other_users_df, 'other_user_id', 'inner')\
-        .select('user_name', struct('other_user_name', 'similarity', 'global_similarity').alias('similar_user'))\
+        .select('user_name', struct('other_user_name', 'similarity').alias('similar_user'))\
         .groupBy('user_name')\
         .agg(collect_list('similar_user').alias('similar_users'))
 

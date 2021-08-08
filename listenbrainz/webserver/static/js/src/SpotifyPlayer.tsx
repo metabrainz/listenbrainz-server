@@ -5,7 +5,6 @@ import {
   get as _get,
   has as _has,
   debounce as _debounce,
-  isString,
 } from "lodash";
 import { searchForSpotifyTrack, loadScriptAsync } from "./utils";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
@@ -190,9 +189,6 @@ export default class SpotifyPlayer
         }
       );
       let errorMessage;
-      if (response.ok) {
-        return;
-      }
       try {
         errorMessage = await response.json();
       } catch (err) {
@@ -228,27 +224,7 @@ export default class SpotifyPlayer
     }
   };
 
-  isListenFromThisService = (listen: Listen | JSPFTrack): boolean => {
-    const listeningFrom = _get(
-      listen,
-      "track_metadata.additional_info.listening_from"
-    );
-    return (
-      (isString(listeningFrom) && listeningFrom.toLowerCase() === "spotify") ||
-      _get(listen, "track_metadata.additional_info.spotify_id")
-    );
-  };
-
-  canSearchAndPlayTracks = (): boolean => {
-    const { spotifyUser } = this.props;
-    return SpotifyPlayer.hasPermissions(spotifyUser);
-  };
-
   playListen = (listen: Listen | JSPFTrack): void => {
-    const { show } = this.props;
-    if (!show) {
-      return;
-    }
     if (_get(listen, "track_metadata.additional_info.spotify_id")) {
       this.playSpotifyURI(getSpotifyUriFromListen(listen as Listen));
     } else {
@@ -443,22 +419,7 @@ export default class SpotifyPlayer
       const artists = current_track.artists
         .map((artist: SpotifyArtist) => artist.name)
         .join(", ");
-      onTrackInfoChange(
-        current_track.name,
-        artists,
-        current_track.album?.name,
-        current_track.album.images
-          .filter((image) => image.url)
-          .map((image) => {
-            const mediaImage: MediaImage = {
-              src: image.url,
-            };
-            if (image.width && image.height) {
-              mediaImage.sizes = `${image.width}x${image.height}`;
-            }
-            return mediaImage;
-          })
-      );
+      onTrackInfoChange(current_track.name, artists);
 
       this.setState({
         durationMs: duration,

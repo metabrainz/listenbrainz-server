@@ -75,7 +75,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         """
         app = create_app(debug=True)
         client = app.test_client()
-        resp = client.get('/data/')
+        resp = client.get('/data')
         self.assert200(resp)
         self.assertIn('flDebug', str(resp.data))
 
@@ -301,7 +301,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         user = db_user.get_or_create(1, 'iliekcomputers')
         db_user.agree_to_gdpr(user['musicbrainz_id'])
         self.temporary_login(user['login_id'])
-        r = self.client.get('/feed/')
+        r = self.client.get('/feed')
         self.assert200(r)
 
     def test_similar_users(self):

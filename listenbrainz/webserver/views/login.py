@@ -15,14 +15,14 @@ def index():
     return render_template('login/login.html')
 
 
-@login_bp.route('/musicbrainz/')
+@login_bp.route('/musicbrainz')
 @login_forbidden
 def musicbrainz():
     session['next'] = request.args.get('next')
     return redirect(provider.get_authentication_uri())
 
 
-@login_bp.route('/musicbrainz/post/')
+@login_bp.route('/musicbrainz/post')
 @login_forbidden
 def musicbrainz_post():
     """Callback endpoint."""

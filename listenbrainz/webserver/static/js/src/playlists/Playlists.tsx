@@ -565,7 +565,7 @@ export default class UserPlaylists extends React.Component<
                     </div>
                   </>
                 )}
-                <a className="info" href={`/playlist/${sanitize(playlistId)}`}>
+                <a className="info" href={`/playlist/${playlistId}`}>
                   <h4>{playlist.title}</h4>
                   {playlist.annotation && (
                     <div

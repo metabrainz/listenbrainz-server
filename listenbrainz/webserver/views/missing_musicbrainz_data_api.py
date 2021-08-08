@@ -32,7 +32,7 @@ from brainzutils.ratelimit import ratelimit
 missing_musicbrainz_data_api_bp = Blueprint('missing_musicbrainz_data_v1', __name__)
 
 
-@missing_musicbrainz_data_api_bp.route("/user/<user_name>/")
+@missing_musicbrainz_data_api_bp.route("/user/<user_name>")
 @crossdomain()
 @ratelimit()
 def get_missing_musicbrainz_data(user_name):

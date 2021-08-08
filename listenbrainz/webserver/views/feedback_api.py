@@ -19,7 +19,7 @@ from pydantic import ValidationError
 feedback_api_bp = Blueprint('feedback_api_v1', __name__)
 
 
-@feedback_api_bp.route("/recording-feedback", methods=["POST", "OPTIONS"])
+@feedback_api_bp.route("recording-feedback", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def recording_feedback():

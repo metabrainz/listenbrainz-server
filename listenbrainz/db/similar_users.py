@@ -118,7 +118,7 @@ def import_user_similarities(data):
     return (user_count, target_user_count / user_count, "")
 
 
-def get_top_similar_users(count: int = 200, global_similarity: bool = False):
+def get_top_similar_users(count=200, global_similarity=False):
     """
         Fetch the count top similar users and return a tuple(user1, user2, score(0.0-1.0))
         If global_similarity is True, the return the user similarity on a global (not
