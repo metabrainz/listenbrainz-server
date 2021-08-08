@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 
 from listenbrainz import db
-from listenbrainz.db.model.pinned_recording import PinnedRecording, WritablePinnedRecording, fetch_track_metadata_for_pin
+from listenbrainz.db.model.pinned_recording import PinnedRecording, WritablePinnedRecording
 from typing import List
 
 

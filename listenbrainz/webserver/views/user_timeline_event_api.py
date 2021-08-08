@@ -33,7 +33,7 @@ from data.model.listen import APIListen, TrackMetadata, AdditionalInfo
 from data.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, \
     APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent
 from listenbrainz.db.pinned_recording import get_pins_for_feed
-from listenbrainz.db.model.pinned_recording import fetch_track_metadata_for_pin
+from listenbrainz.db.model.pinned_recording import fetch_track_metadata_for_pins
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.listenstore import TimescaleListenStore
@@ -383,11 +383,11 @@ def get_recording_pin_events(users_for_events: List[dict], min_ts: int, max_ts: 
         max_ts=max_ts,
         count=count,
     )
+    recording_pin_events_db = fetch_track_metadata_for_pins(recording_pin_events_db)
 
     events = []
     for pin in recording_pin_events_db:
         try:
-            pin = fetch_track_metadata_for_pin(pin)
             pinEvent = APIPinEvent(
                 user_name=id_username_map[pin.user_id],
                 blurb_content=pin.blurb_content,
