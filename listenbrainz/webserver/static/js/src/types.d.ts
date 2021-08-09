@@ -458,6 +458,20 @@ declare type RecommendationFeedbackMap = {
   [recordingMbid: string]: RecommendationFeedBack | null;
 };
 
+declare type PinnedRecording = {
+  blurb_content?: string | null;
+  created: number;
+  pinned_until: number;
+  row_id: number;
+  recording_mbid: string;
+  track_metadata: {
+    artist_name: string;
+    release_name?: string | null;
+    track_name: string;
+    additional_info?: AdditionalInfo;
+  };
+};
+
 /** For recommending a track from the front-end */
 declare type UserTrackRecommendationMetadata = {
   artist_name: string;
