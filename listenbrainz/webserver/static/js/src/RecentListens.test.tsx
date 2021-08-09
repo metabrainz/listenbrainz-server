@@ -1,3 +1,5 @@
+/* eslint-disable no-disabled-tests */
+
 import * as React from "react";
 import { mount } from "enzyme";
 import * as timeago from "time-ago";
@@ -867,3 +869,5 @@ describe.skip("pinRecordingModal", () => {
     });
   });
 });
+
+/* eslint-enable no-disabled-tests */
