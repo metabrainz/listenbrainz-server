@@ -31,7 +31,9 @@ import listenbrainz.db.user_timeline_event as db_user_timeline_event
 
 from data.model.listen import APIListen, TrackMetadata, AdditionalInfo
 from data.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, \
-    APIFollowEvent, NotificationMetadata, APINotificationEvent
+    APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent
+from listenbrainz.db.pinned_recording import get_pins_for_feed
+from listenbrainz.db.model.pinned_recording import fetch_track_metadata_for_pins
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.listenstore import TimescaleListenStore
@@ -211,9 +213,18 @@ def user_feed(user_name: str):
 
     notification_events = get_notification_events(user, count)
 
+    recording_pin_events = get_recording_pin_events(
+        users_for_events=users_for_feed_events,
+        min_ts=min_ts or 0,
+        max_ts=max_ts or int(time.time()),
+        count=count,
+    )
+
     # TODO: add playlist event and like event
-    all_events = sorted(listen_events + follow_events + recording_recommendation_events + notification_events,
-                        key=lambda event: -event.created)
+    all_events = sorted(
+        listen_events + follow_events + recording_recommendation_events + recording_pin_events + notification_events,
+        key=lambda event: -event.created,
+    )
 
     # sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly
     for index, event in enumerate(all_events):
@@ -355,6 +366,47 @@ def get_recording_recommendation_events(users_for_events: List[dict], min_ts: in
                 user_name=listen.user_name,
                 created=event.created.timestamp(),
                 metadata=listen,
+            ))
+        except pydantic.ValidationError as e:
+            current_app.logger.error('Validation error: ' + str(e), exc_info=True)
+            continue
+    return events
+
+
+def get_recording_pin_events(users_for_events: List[dict], min_ts: int, max_ts: int, count: int) -> List[APITimelineEvent]:
+    """ Gets all recording pin events in the feed."""
+
+    id_username_map = {user['id']: user['musicbrainz_id'] for user in users_for_events}
+    recording_pin_events_db = get_pins_for_feed(
+        user_ids=(user['id'] for user in users_for_events),
+        min_ts=min_ts,
+        max_ts=max_ts,
+        count=count,
+    )
+    recording_pin_events_db = fetch_track_metadata_for_pins(recording_pin_events_db)
+
+    events = []
+    for pin in recording_pin_events_db:
+        try:
+            pinEvent = APIPinEvent(
+                user_name=id_username_map[pin.user_id],
+                blurb_content=pin.blurb_content,
+                track_metadata=TrackMetadata(
+                    artist_name=pin.track_metadata["artist_name"],
+                    track_name=pin.track_metadata["track_name"],
+                    release_name=None,
+                    additional_info=AdditionalInfo(
+                        recording_msid=pin.recording_msid,
+                        recording_mbid=pin.recording_mbid,
+                        artist_msid=pin.track_metadata["artist_msid"],
+                    )
+                )
+            )
+            events.append(APITimelineEvent(
+                event_type=UserTimelineEventType.RECORDING_PIN,
+                user_name=pinEvent.user_name,
+                created=pin.created.timestamp(),
+                metadata=pinEvent,
             ))
         except pydantic.ValidationError as e:
             current_app.logger.error('Validation error: ' + str(e), exc_info=True)

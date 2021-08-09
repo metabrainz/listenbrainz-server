@@ -36,7 +36,7 @@ def submit_listens_and_sing_me_a_sweet_song(recordings):
         raise exceptions.ErrorAddingException("Failed to add data")
 
 
-def load_recording_from_msid(msid):
+def load_recordings_from_msids(msids):
     """ Returns data for a recording with specified MessyBrainz ID.
 
     Args:
@@ -46,10 +46,10 @@ def load_recording_from_msid(msid):
     """
 
     with db.engine.begin() as connection:
-        return data.load_recording_from_msid(connection, msid)
+        return data.load_recordings_from_msids(connection, msids)
 
 
-def load_recording_from_mbid(mbid):
+def load_recordings_from_mbids(mbids):
     """ Returns data for a recording with specified MusicBrainz ID.
 
     Args:
@@ -59,7 +59,7 @@ def load_recording_from_mbid(mbid):
     """
 
     with db.engine.begin() as connection:
-        return data.load_recording_from_mbid(connection, mbid)
+        return data.load_recordings_from_mbids(connection, mbids)
 
 def insert_single(connection, recording):
     """ Inserts a single recording into MessyBrainz.
@@ -74,7 +74,7 @@ def insert_single(connection, recording):
     gid = data.get_id_from_recording(connection, recording)
     if not gid:
         gid = data.submit_recording(connection, recording)
-    loaded = data.load_recording_from_msid(connection, gid)
+    loaded = data.load_recordings_from_msids(connection, [gid])[0]
     return loaded
 
 def insert_all_in_transaction(recordings):
