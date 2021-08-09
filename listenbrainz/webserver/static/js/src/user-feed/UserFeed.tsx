@@ -14,6 +14,7 @@ import {
   faUserPlus,
   faUserSecret,
   faUserSlash,
+  faThumbtack,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -35,6 +36,7 @@ import UserSocialNetwork from "../follow/UserSocialNetwork";
 
 export enum EventType {
   RECORDING_RECOMMENDATION = "recording_recommendation",
+  RECORDING_PIN = "recording_pin",
   LIKE = "like",
   LISTEN = "listen",
   FOLLOW = "follow",
@@ -66,6 +68,7 @@ export default class UserFeedPage extends React.Component<
     const { event_type } = event;
     return (
       event_type === EventType.RECORDING_RECOMMENDATION ||
+      event_type === EventType.RECORDING_PIN ||
       event_type === EventType.LIKE ||
       event_type === EventType.LISTEN
     );
@@ -89,6 +92,8 @@ export default class UserFeedPage extends React.Component<
         return faUserSecret;
       case EventType.NOTIFICATION:
         return faBell;
+      case EventType.RECORDING_PIN:
+        return faThumbtack;
       default:
         return faQuestion;
     }
@@ -102,6 +107,8 @@ export default class UserFeedPage extends React.Component<
         return "listened to a track";
       case EventType.LIKE:
         return "added a track to their favorites";
+      case EventType.RECORDING_PIN:
+        return "pinned a recording";
       default:
         return "";
     }
@@ -273,6 +280,11 @@ export default class UserFeedPage extends React.Component<
               this.isCurrentListen(metadata as Listen) ? " current-listen" : ""
             }
             listen={metadata as Listen}
+            additionalDetails={
+              (metadata as PinEventMetadata).blurb_content
+                ? `"${(metadata as PinEventMetadata).blurb_content}"`
+                : ""
+            }
             newAlert={newAlert}
             playListen={this.playListen}
           />
