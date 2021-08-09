@@ -1,4 +1,4 @@
-/* eslint-disable no-disabled-tests */
+/* eslint-disable jest/no-disabled-tests */
 
 import * as React from "react";
 import { mount } from "enzyme";
@@ -870,4 +870,4 @@ describe.skip("pinRecordingModal", () => {
   });
 });
 
-/* eslint-enable no-disabled-tests */
+/* eslint-enable jest/no-disabled-tests */
