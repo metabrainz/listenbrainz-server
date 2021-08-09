@@ -355,6 +355,22 @@ const getPageProps = (): {
   return { domContainer, reactProps, globalReactProps, optionalAlerts };
 };
 
+// This is the temporary UI feature flag for the pin recording feature and will eventually be removed
+const pinFeatureEnabled = (currentUser: string): boolean => {
+  if (!currentUser) {
+    return false;
+  }
+  const usersAllowedIn = [
+    "jdaok",
+    "rob",
+    "iliekcomputers",
+    "shivam-kapila",
+    "ishaanshah",
+    "mr_monkey",
+  ].map((username: string) => username.toLowerCase());
+  return usersAllowedIn.includes(currentUser.toLowerCase());
+};
+
 export {
   searchForSpotifyTrack,
   getArtistLink,
@@ -365,4 +381,5 @@ export {
   getPageProps,
   searchForYoutubeTrack,
   createAlert,
+  pinFeatureEnabled,
 };
