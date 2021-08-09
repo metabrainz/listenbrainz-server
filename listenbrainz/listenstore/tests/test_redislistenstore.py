@@ -12,7 +12,7 @@ from brainzutils import cache
 import listenbrainz.db.user as db_user
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz import config
-from listenbrainz.listen import Listen
+from listenbrainz.listen import Listen, NowPlayingListen
 from listenbrainz.webserver.redis_connection import init_redis_connection
 from listenbrainz.listenstore.redis_listenstore import RedisListenStore
 
@@ -46,7 +46,7 @@ class RedisListenStoreTestCase(DatabaseTestCase):
 
         playing_now = self._redis.get_playing_now(listen['user_id'])
         self.assertIsNotNone(playing_now)
-        self.assertIsInstance(playing_now, Listen)
+        self.assertIsInstance(playing_now, NowPlayingListen)
         self.assertEqual(playing_now.data['artist_name'], 'The Strokes')
         self.assertEqual(playing_now.data['track_name'], 'Call It Fate, Call It Karma')
 

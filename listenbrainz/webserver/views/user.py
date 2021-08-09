@@ -10,6 +10,8 @@ from flask import Blueprint, render_template, request, url_for, redirect, curren
 from flask_login import current_user, login_required
 from listenbrainz import webserver
 from listenbrainz.db.playlist import get_playlists_for_user, get_playlists_created_for_user, get_playlists_collaborated_on
+from listenbrainz.db.pinned_recording import get_current_pin_for_user
+from listenbrainz.db.model.pinned_recording import fetch_track_metadata_for_pins
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.errors import APIBadRequest
@@ -35,7 +37,6 @@ def redirect_user_page(target):
     the user to this specific page in their namespace if they are logged in."""
     def inner():
         if current_user.is_authenticated:
-            print(url_for(target, user_name=current_user.musicbrainz_id, **request.args))
             return redirect(url_for(target, user_name=current_user.musicbrainz_id, **request.args))
         else:
             return current_app.login_manager.unauthorized()
@@ -43,16 +44,16 @@ def redirect_user_page(target):
     return inner
 
 
-redirect_bp.add_url_rule("/listens", "redirect_listens", redirect_user_page("user.profile"))
-redirect_bp.add_url_rule("/charts", "redirect_charts", redirect_user_page("user.charts"))
-redirect_bp.add_url_rule("/reports", "redirect_reports", redirect_user_page("user.reports"))
-redirect_bp.add_url_rule("/playlists", "redirect_playlists", redirect_user_page("user.playlists"))
-redirect_bp.add_url_rule("/collaborations", "redirect_collaborations", redirect_user_page("user.collaborations"))
-redirect_bp.add_url_rule("/recommendations",
+redirect_bp.add_url_rule("/listens/", "redirect_listens", redirect_user_page("user.profile"))
+redirect_bp.add_url_rule("/charts/", "redirect_charts", redirect_user_page("user.charts"))
+redirect_bp.add_url_rule("/reports/", "redirect_reports", redirect_user_page("user.reports"))
+redirect_bp.add_url_rule("/playlists/", "redirect_playlists", redirect_user_page("user.playlists"))
+redirect_bp.add_url_rule("/collaborations/", "redirect_collaborations", redirect_user_page("user.collaborations"))
+redirect_bp.add_url_rule("/recommendations/",
                          "redirect_recommendations",
                          redirect_user_page("user.recommendation_playlists"))
 
-@user_bp.route("/<user_name>")
+@user_bp.route("/<user_name>/")
 @web_listenstore_needed
 def profile(user_name):
     # Which database to use to showing user listens.
@@ -116,6 +117,10 @@ def profile(user_name):
         logged_in_user_follows_user = db_user_relationship.is_following_user(current_user.id, user.id)
         already_reported_user = db_user.is_user_reported(current_user.id, user.id)
 
+    pin = get_current_pin_for_user(user_id=user.id)
+    if pin:
+        pin = dict(fetch_track_metadata_for_pins([pin])[0])
+
     props = {
         "user": {
             "id": user.id,
@@ -128,6 +133,7 @@ def profile(user_name):
         "artist_count": format(artist_count, ",d") if artist_count else None,
         "profile_url": url_for('user.profile', user_name=user_name),
         "mode": "listens",
+        "userPinnedRecording": pin,
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
         "logged_in_user_follows_user": logged_in_user_follows_user,
         "already_reported_user": already_reported_user,
@@ -140,7 +146,7 @@ def profile(user_name):
                            active_section='listens')
 
 
-@user_bp.route("/<user_name>/artists")
+@user_bp.route("/<user_name>/artists/")
 def artists(user_name):
     """ Redirect to charts page """
     page = request.args.get('page', default=1)
@@ -148,7 +154,7 @@ def artists(user_name):
     return redirect(url_for('user.charts', user_name=user_name, entity='artist', page=page, range=stats_range), code=301)
 
 
-@user_bp.route("/<user_name>/history")
+@user_bp.route("/<user_name>/history/")
 def history(user_name):
     """ Redirect to charts page """
     entity = request.args.get('entity', default="artist")
@@ -157,7 +163,7 @@ def history(user_name):
     return redirect(url_for('user.charts', user_name=user_name, entity=entity, page=page, range=stats_range), code=301)
 
 
-@user_bp.route("/<user_name>/charts")
+@user_bp.route("/<user_name>/charts/")
 def charts(user_name):
     """ Show the top entitys for the user. """
     user = _get_user(user_name)
@@ -179,7 +185,7 @@ def charts(user_name):
     )
 
 
-@user_bp.route("/<user_name>/reports")
+@user_bp.route("/<user_name>/reports/")
 def reports(user_name: str):
     """ Show user reports """
     user = _get_user(user_name)
@@ -200,7 +206,7 @@ def reports(user_name: str):
         user=user
     )
 
-@user_bp.route("/<user_name>/playlists")
+@user_bp.route("/<user_name>/playlists/")
 @web_listenstore_needed
 def playlists(user_name: str):
     """ Show user playlists """
@@ -251,7 +257,7 @@ def playlists(user_name: str):
     )
 
 
-@user_bp.route("/<user_name>/recommendations")
+@user_bp.route("/<user_name>/recommendations/")
 @web_listenstore_needed
 def recommendation_playlists(user_name: str):
     """ Show playlists created for user """
@@ -293,7 +299,8 @@ def recommendation_playlists(user_name: str):
         user=user
     )
 
-@user_bp.route("/<user_name>/collaborations")
+
+@user_bp.route("/<user_name>/collaborations/")
 @web_listenstore_needed
 def collaborations(user_name: str):
     """ Show playlists a user collaborates on """
