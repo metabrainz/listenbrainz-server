@@ -30,6 +30,7 @@ class UserTimelineEventType(Enum):
     FOLLOW = 'follow'
     LISTEN = 'listen'
     NOTIFICATION = 'notification'
+    RECORDING_PIN = 'recording_pin'
 
 
 class RecordingRecommendationMetadata(pydantic.BaseModel):
@@ -68,7 +69,11 @@ class APIFollowEvent(pydantic.BaseModel):
     created: int
 
 
-APIEventMetadata = Union[APIListen, APIFollowEvent, APINotificationEvent]
+class APIPinEvent(APIListen):
+    blurb_content: Optional[str]
+
+
+APIEventMetadata = Union[APIListen, APIFollowEvent, APINotificationEvent, APIPinEvent]
 
 
 class APITimelineEvent(pydantic.BaseModel):
