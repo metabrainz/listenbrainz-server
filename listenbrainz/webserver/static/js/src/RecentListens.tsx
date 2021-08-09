@@ -10,6 +10,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import { io, Socket } from "socket.io-client";
+import { fromPairs } from "lodash";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
@@ -22,8 +23,12 @@ import ErrorBoundary from "./ErrorBoundary";
 import ListenCard from "./listens/ListenCard";
 import Loader from "./components/Loader";
 import PinRecordingModal from "./PinRecordingModal";
-import { formatWSMessageToListen, getPageProps } from "./utils";
 import PinnedRecordingCard from "./PinnedRecordingCard";
+import {
+  formatWSMessageToListen,
+  getPageProps,
+  pinFeatureEnabled,
+} from "./utils";
 
 export type RecentListensProps = {
   latestListenTs: number;
@@ -740,11 +745,13 @@ export default class RecentListens extends React.Component<
                     </li>
                   </ul>
                 )}
-                <PinRecordingModal
-                  recordingToPin={recordingToPin || listens[0]}
-                  isCurrentUser={currentUser?.name === user?.name}
-                  newAlert={newAlert}
-                />
+                {currentUser && pinFeatureEnabled(currentUser.name) && (
+                  <PinRecordingModal
+                    recordingToPin={recordingToPin || listens[0]}
+                    isCurrentUser={currentUser?.name === user?.name}
+                    newAlert={newAlert}
+                  />
+                )}
               </div>
             )}
           </div>

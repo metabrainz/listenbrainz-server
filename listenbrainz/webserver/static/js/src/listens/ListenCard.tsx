@@ -10,7 +10,12 @@ import {
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { getArtistLink, getTrackLink, preciseTimestamp } from "../utils";
+import {
+  getArtistLink,
+  getTrackLink,
+  preciseTimestamp,
+  pinFeatureEnabled,
+} from "../utils";
 import GlobalAppContext from "../GlobalAppContext";
 import Card from "../components/Card";
 import ListenControl from "./ListenControl";
@@ -184,6 +189,7 @@ export default class ListenCard extends React.Component<
       updateRecordingToPin,
     } = this.props;
     const { feedback, isDeleted } = this.state;
+    const { currentUser } = this.context;
 
     return (
       <Card
@@ -322,12 +328,14 @@ export default class ListenCard extends React.Component<
                       title="Delete Listen"
                       action={this.deleteListen}
                     />
-                    <ListenControl
-                      title="Pin this Recording"
-                      action={() => updateRecordingToPin(listen)}
-                      dataToggle="modal"
-                      dataTarget="#PinRecordingModal"
-                    />
+                    {currentUser && pinFeatureEnabled(currentUser.name) && (
+                      <ListenControl
+                        title="Pin this Recording"
+                        action={() => updateRecordingToPin(listen)}
+                        dataToggle="modal"
+                        dataTarget="#PinRecordingModal"
+                      />
+                    )}
                   </ul>
                 </>
               )}
