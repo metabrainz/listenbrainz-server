@@ -408,21 +408,21 @@ describe("isCurrentListen", () => {
 
 // Will re-add this test when feature flag is removed
 
-// describe("updateRecordingToPin", () => {
-//   it("sets the recordingToPin in the state", async () => {
-//     const wrapper = mount<RecentListens>(
-//       <RecentListens {...props} />,
-//       mountOptions
-//     );
-//     const instance = wrapper.instance();
-//     const recordingToPin = props.listens[1];
+describe.skip("updateRecordingToPin", () => {
+  it("sets the recordingToPin in the state", async () => {
+    const wrapper = mount<RecentListens>(
+      <RecentListens {...props} />,
+      mountOptions
+    );
+    const instance = wrapper.instance();
+    const recordingToPin = props.listens[1];
 
-//     expect(wrapper.state("recordingToPin")).toEqual(props.listens[0]); // default recordingToPin
+    expect(wrapper.state("recordingToPin")).toEqual(props.listens[0]); // default recordingToPin
 
-//     instance.updateRecordingToPin(recordingToPin);
-//     expect(wrapper.state("recordingToPin")).toEqual(recordingToPin);
-//   });
-// });
+    instance.updateRecordingToPin(recordingToPin);
+    expect(wrapper.state("recordingToPin")).toEqual(recordingToPin);
+  });
+});
 
 describe("Pagination", () => {
   const pushStateSpy = jest.spyOn(window.history, "pushState");
@@ -838,32 +838,32 @@ describe("Pagination", () => {
 
 // Will re-add this test when feature flag is removed
 
-// describe("pinRecordingModal", () => {
-//   it("renders the PinRecordingModal component with the correct props", async () => {
-//     const wrapper = mount<RecentListens>(
-//       <GlobalAppContext.Provider value={mountOptions.context}>
-//         <RecentListens {...props} />
-//       </GlobalAppContext.Provider>
-//     );
-//     const instance = wrapper.instance();
-//     const recordingToPin = props.listens[0];
-//     let pinRecordingModal = wrapper.find(PinRecordingModal).first();
+describe.skip("pinRecordingModal", () => {
+  it("renders the PinRecordingModal component with the correct props", async () => {
+    const wrapper = mount<RecentListens>(
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
+    );
+    const instance = wrapper.instance();
+    const recordingToPin = props.listens[0];
+    let pinRecordingModal = wrapper.find(PinRecordingModal).first();
 
-//     // recentListens renders pinRecordingModal with listens[0] as recordingToPin by default
-//     expect(pinRecordingModal.props()).toEqual({
-//       isCurrentUser: true,
-//       recordingToPin: props.listens[0],
-//       newAlert: props.newAlert,
-//     });
+    // recentListens renders pinRecordingModal with listens[0] as recordingToPin by default
+    expect(pinRecordingModal.props()).toEqual({
+      isCurrentUser: true,
+      recordingToPin: props.listens[0],
+      newAlert: props.newAlert,
+    });
 
-//     instance.updateRecordingToPin(recordingToPin);
-//     wrapper.update();
+    instance.updateRecordingToPin(recordingToPin);
+    wrapper.update();
 
-//     pinRecordingModal = wrapper.find(PinRecordingModal).first();
-//     expect(pinRecordingModal.props()).toEqual({
-//       isCurrentUser: true,
-//       recordingToPin,
-//       newAlert: props.newAlert,
-//     });
-//   });
-// });
+    pinRecordingModal = wrapper.find(PinRecordingModal).first();
+    expect(pinRecordingModal.props()).toEqual({
+      isCurrentUser: true,
+      recordingToPin,
+      newAlert: props.newAlert,
+    });
+  });
+});
