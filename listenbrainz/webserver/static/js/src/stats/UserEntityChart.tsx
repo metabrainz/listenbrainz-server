@@ -374,8 +374,21 @@ export default class UserEntityChart extends React.Component<
     window.history.pushState(
       null,
       "",
-      `?page=${page}&range=${range}&entity=${entity}`
+      this.buildURLParams(page, range, entity)
     );
+  };
+
+  buildURLParams = (
+    page: number,
+    range: UserStatsAPIRange,
+    entity: Entity
+  ): string => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      range: range as string,
+      entity: entity as string,
+    }).toString();
+    return `?${params}`;
   };
 
   handleResize = () => {
@@ -451,7 +464,7 @@ export default class UserEntityChart extends React.Component<
                   <ul className="dropdown-menu" role="menu">
                     <li>
                       <a
-                        href=""
+                        href={this.buildURLParams(1, "week", entity)}
                         role="button"
                         onClick={(event) => this.changeRange("week", event)}
                       >
@@ -460,7 +473,7 @@ export default class UserEntityChart extends React.Component<
                     </li>
                     <li>
                       <a
-                        href=""
+                        href={this.buildURLParams(1, "month", entity)}
                         role="button"
                         onClick={(event) => this.changeRange("month", event)}
                       >
@@ -469,7 +482,7 @@ export default class UserEntityChart extends React.Component<
                     </li>
                     <li>
                       <a
-                        href=""
+                        href={this.buildURLParams(1, "year", entity)}
                         role="button"
                         onClick={(event) => this.changeRange("year", event)}
                       >
@@ -478,7 +491,7 @@ export default class UserEntityChart extends React.Component<
                     </li>
                     <li>
                       <a
-                        href=""
+                        href={this.buildURLParams(1, "all_time", entity)}
                         role="button"
                         onClick={(event) => this.changeRange("all_time", event)}
                       >
@@ -554,7 +567,7 @@ export default class UserEntityChart extends React.Component<
                       }`}
                     >
                       <a
-                        href=""
+                        href={this.buildURLParams(prevPage, range, entity)}
                         role="button"
                         onClick={(event) => this.changePage(prevPage, event)}
                       >
@@ -567,7 +580,7 @@ export default class UserEntityChart extends React.Component<
                       }`}
                     >
                       <a
-                        href=""
+                        href={this.buildURLParams(nextPage, range, entity)}
                         role="button"
                         onClick={(event) => this.changePage(nextPage, event)}
                       >
