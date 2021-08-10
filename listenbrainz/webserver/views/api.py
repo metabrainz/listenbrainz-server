@@ -386,8 +386,8 @@ def validate_token():
     """
     Check whether a User Token is a valid entry in the database.
 
-    In order to query this endpoint, send a GET request with the token in
-    the Authorization header.
+    In order to query this endpoint, send a GET request with the Authorization
+    header set to the value ``Token [the token value]``.
 
     .. note::
         - This endpoint also checks for `token` argument in query
@@ -421,7 +421,7 @@ def validate_token():
     :statuscode 400: No token was sent to the endpoint.
     """
     header = request.headers.get('Authorization')
-    if header:
+    if header and header.lower().startswith("token "):
         auth_token = header.split(" ")[1]
     else:
         # for backwards compatibility, check for auth token in query parameters as well
