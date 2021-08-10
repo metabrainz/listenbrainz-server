@@ -46,6 +46,7 @@ def build_release_lookup_index():
                                rel.gid AS release_mbid,
                                rel.name AS release_name,
                                m.position,
+                               mrel.id as rank,
                                rec.name AS recording_name,
                                array_agg(acn2.name) AS artist_credit_names
                           FROM artist_credit ac
@@ -59,7 +60,9 @@ def build_release_lookup_index():
                             ON t.recording = rec.id
                           JOIN artist_credit_name acn2
                             ON rec.artist_credit = acn2.artist_credit
-                      GROUP BY ac.id, ac.name, rel.gid, rel.name, m.position, t.position, rec.name""")
+                          JOIN mapping.mbid_mapping_releases mrel
+                            ON rel.id = mrel.release
+                      GROUP BY mrel.id, ac.id, ac.name, rel.gid, rel.name, m.position, t.position, rec.name""")
 
                         # VA example with compound AC
                         #WHERE rel.gid = 'ef35af78-a062-46df-aa3f-4fe440a0b806'
@@ -91,10 +94,12 @@ def build_release_lookup_index():
 
                     data = {
                         "id": id,
+                        "release_mbid": row["release_mbid"],
                         "title": row["release_name"],
                         "ac_id": row["artist_credit_id"],
                         "ac_name": row["artist_credit_name"],
                         "pos": row["position"],
+                        "rank": row["rank"],
                         "recording_names": [],
                         "release_ac_names": []
                     }
