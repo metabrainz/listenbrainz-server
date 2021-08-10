@@ -21,7 +21,6 @@
 </p>
 <form method="post">
     {{ form.hidden_tag() }}
-    {{ form.submit(value="Delete my listens.", id_="btn-delete-listens",
-                   class_="btn btn-danger btn-lg", style="width: 250px") }}
+    <button id="btn-delete-listens" class="btn btn-danger btn-lg" style="width: 250px">Delete my listens.</button>
 </form>
 {% endblock %}

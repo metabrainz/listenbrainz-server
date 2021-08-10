@@ -9,7 +9,9 @@
   <p>If you do, you will need to replace your old token with the newly generated token in any of your applications that use your token. The old token will stop working immediately. Be sure to update the token immediately in your applications to ensure that you have no disruptions in recording your listens.</p>
   <form method="post">
       {{ form.hidden_tag() }}
-      {{ form.submit(value="Yes, change it", class_="btn btn-info btn-lg", style="width: 200px") }}
+      <p>
+         <button type="submit" class="btn btn-info btn-lg" style="width: 200px">Yes, change it</button>
+      <p>
   </form>
 
 {% endblock %}

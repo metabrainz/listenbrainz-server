@@ -1,4 +1,5 @@
 import sqlalchemy
+from flask_wtf import FlaskForm
 
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
@@ -23,7 +24,6 @@ from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.login import api_login_required
 from listenbrainz.webserver.views.feedback_api import _feedback_to_api
-from listenbrainz.webserver.views.forms import DeleteForm
 from listenbrainz.webserver.views.user import delete_user, delete_listens_history
 from time import time
 
@@ -35,7 +35,7 @@ EXPORT_FETCH_COUNT = 5000
 @profile_bp.route("/resettoken/", methods=["GET", "POST"])
 @login_required
 def reset_token():
-    form = DeleteForm()
+    form = FlaskForm()
     if form.validate_on_submit():
         try:
             db_user.update_token(current_user.id)
@@ -57,7 +57,7 @@ def reset_token():
 @profile_bp.route("/resetlatestimportts/", methods=["GET", "POST"])
 @login_required
 def reset_latest_import_timestamp():
-    form = DeleteForm()
+    form = FlaskForm()
     if form.validate_on_submit():
         try:
             db_user.reset_latest_import(current_user.musicbrainz_id)
@@ -210,7 +210,7 @@ def delete():
     If GET request, this view renders a page asking the user to confirm
     that they wish to delete their ListenBrainz account.
     """
-    form = DeleteForm()
+    form = FlaskForm()
     if form.validate_on_submit():
         try:
             delete_user(current_user.musicbrainz_id)
@@ -245,7 +245,7 @@ def delete_listens():
     If GET request, this view renders a page asking the user to confirm that they
     wish to delete their listens.
     """
-    form = DeleteForm()
+    form = FlaskForm()
     if form.validate_on_submit():
         try:
             delete_listens_history(current_user.musicbrainz_id)
