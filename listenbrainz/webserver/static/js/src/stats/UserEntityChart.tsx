@@ -348,6 +348,7 @@ export default class UserEntityChart extends React.Component<
     let page = 1;
     if (url.searchParams.get("page")) {
       page = Number(url.searchParams.get("page"));
+      page = Math.max(page, 1);
     }
 
     // Get range from URL
