@@ -22,8 +22,7 @@
 
   <form method="post">
       {{ form.hidden_tag() }}
-      {{ form.submit(value="Delete my account.", id_="btn-delete-user",
-                     class_="btn btn-danger btn-lg", style="width: 250px") }}
+      <button id="btn-delete-user" class="btn btn-danger btn-lg" style="width: 250px">Delete my account.</button>
   </form>
 {% endblock %}
 
