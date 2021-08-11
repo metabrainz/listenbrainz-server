@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import List, Optional
 
 import sqlalchemy
 import uuid
@@ -479,7 +479,7 @@ def get_users_in_order(user_ids):
         return [dict(row) for row in r.fetchall() if row['musicbrainz_id'] is not None]
 
 
-def get_similar_users(user_id: int) -> SimilarUsers:
+def get_similar_users(user_id: int) -> Optional[SimilarUsers]:
     """ Given a user_id, fetch the similar users for that given user.
         Returns a dict { "user_x" : .453, "user_y": .123 } """
 
@@ -492,10 +492,12 @@ def get_similar_users(user_id: int) -> SimilarUsers:
             'user_id': user_id,
         })
         row = result.fetchone()
-        users = {}
-        for user in row[1]:
-            users[user] = row[1][user][0]
-        return SimilarUsers(user_id=row[0], similar_users=users) if row else None
+        if row:
+            users = {}
+            for user in row[1]:
+                users[user] = row[1][user][0]
+            return SimilarUsers(user_id=row[0], similar_users=users)
+        return None
 
 
 def get_users_by_id(user_ids: List[int]):
