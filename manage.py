@@ -264,7 +264,9 @@ def update_user_emails():
 @click.argument("window_size", type=click.IntRange(1, None))
 def set_rate_limits(per_token_limit, per_ip_limit, window_size):
     from brainzutils.ratelimit import set_rate_limits
-    set_rate_limits(per_token_limit, per_ip_limit, window_size)
+    application = webserver.create_app()
+    with application.app_context():
+        set_rate_limits(per_token_limit, per_ip_limit, window_size)
 
 
 @cli.command(name="recalculate_all_user_data")
