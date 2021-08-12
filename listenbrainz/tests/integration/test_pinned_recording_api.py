@@ -238,7 +238,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         pin_to_delete = db_pinned_rec.get_current_pin_for_user(self.user["id"])
 
         response = self.client.post(
-            url_for("pinned_rec_api_bp_v1.delete_pin_for_user", pinned_id=pin_to_delete.row_id),
+            url_for("pinned_rec_api_bp_v1.delete_pin_for_user", row_id=pin_to_delete.row_id),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
         )
 
@@ -259,14 +259,14 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         pin_to_delete = db_pinned_rec.get_current_pin_for_user(self.user["id"])
 
         response = self.client.post(
-            url_for("pinned_rec_api_bp_v1.delete_pin_for_user", pinned_id=pin_to_delete.row_id),
+            url_for("pinned_rec_api_bp_v1.delete_pin_for_user", row_id=pin_to_delete.row_id),
             headers={"Authorization": "Token {}".format("-- This is an invalid auth token --")},
         )
         self.assert401(response)
         self.assertEqual(response.json["code"], 401)
 
-    def test_delete_no_pinned_id_found(self):
-        """Tests that delete endpoint returns 404 when no pin with pinned_id is found to delete"""
+    def test_delete_no_row_id_found(self):
+        """Tests that delete endpoint returns 404 when no pin with row_id is found to delete"""
         self.client.post(
             url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
             data=json.dumps(self.pinned_rec_samples[0]),
@@ -275,7 +275,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         )
 
         response = self.client.post(
-            url_for("pinned_rec_api_bp_v1.delete_pin_for_user", pinned_id=98764),
+            url_for("pinned_rec_api_bp_v1.delete_pin_for_user", row_id=98764),
             headers={"Authorization": "Token {}".format(self.followed_user_1["auth_token"])},
         )
 
@@ -297,7 +297,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
 
         # check that data is sorted in descending order of created date
         self.assertGreaterEqual(pins[0]["created"], pins[1]["created"])
-        self.assertGreater(pins[0]["pinned_id"], pins[1]["pinned_id"])
+        self.assertGreater(pins[0]["row_id"], pins[1]["row_id"])
 
         self.assertEqual(pins[0]["recording_msid"], self.pinned_rec_samples[1]["recording_msid"])
         self.assertEqual(pins[0]["recording_mbid"], self.pinned_rec_samples[1]["recording_mbid"])
