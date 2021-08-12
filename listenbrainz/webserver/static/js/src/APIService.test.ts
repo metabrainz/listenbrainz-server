@@ -934,7 +934,7 @@ describe("getPinCountForUser", () => {
     });
   });
 
-  it("returns a number", async () => {
+  it("returns correct number", async () => {
     const result = await apiService.getPinCountForUser("jdaok");
     expect(result).toEqual(41);
   });
