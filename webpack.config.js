@@ -55,6 +55,7 @@ module.exports = function (env, argv) {
       import: path.resolve(jsDir, "src/LastFMImporter.tsx"),
       userEntityChart: path.resolve(jsDir, "src/stats/UserEntityChart.tsx"),
       userReports: path.resolve(jsDir, "src/stats/UserReports.tsx"),
+      userPins: path.resolve(jsDir, "src/stats/UserPins.tsx"),
       userPageHeading: path.resolve(jsDir, "src/UserPageHeading.tsx"),
       userFeed: path.resolve(jsDir, "src/user-feed/UserFeed.tsx"),
       playlist: path.resolve(jsDir, "src/playlists/Playlist.tsx"),
