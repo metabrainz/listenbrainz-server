@@ -10,6 +10,7 @@ import pysolr
 from solrq import Q
 from icecream import ic
 import requests
+from fuzzywuzzy.fuzz import partial_ratio as fuzzy
 
 
 SOLR_HOST = "localhost"
@@ -110,6 +111,59 @@ def listenbrainz_release_filter(user_name):
             ts = listen["listened_at"]
 
 
+def fuzzy_release_compare(mb_release, lb_release, debug=False):
+
+    artist_weight = .2
+    release_weight = .2
+    recordings_weight = .4
+    recording_count_weight = .20
+
+    artist_score = fuzzy(mb_release["artist_credit_name"], lb_release["artist_credit_name"])
+    release_score = fuzzy(mb_release["release_name"], lb_release["release_name"])
+    if len(lb_release["recordings"]) < len(mb_release["recordings"]):
+        recording_count_score = 100.0 * len(lb_release["recordings"]) / len(mb_release["recordings"])
+    else:
+        recording_count_score = 100.0 * (len(mb_release["recordings"]) / len(lb_release["recordings"]))
+
+    if debug:
+        print("%3d %-40s %-40s" % (artist_score, mb_release["artist_credit_name"][:39], lb_release["artist_credit_name"][:39]))
+        print("%3d %-40s %-40s" % (release_score, mb_release["release_name"][:39], lb_release["release_name"][:39]))
+
+    recording_score = 0.0
+    count = 0
+    for mb_track, lb_track in zip(mb_release["recordings"], lb_release["recordings"]):
+        score = fuzzy(mb_track, lb_track)
+        count += 1
+        if debug:
+            print("  %3d %-40s %-40s" % (score, mb_track[:39], lb_track[:39]))
+        recording_score += score
+
+    recording_score /= count
+    if debug:
+        print("%3d recording count score" % (recording_count_score))
+
+    score = (artist_score * artist_weight) + (release_score * release_weight) + \
+            (recording_count_score * recording_count_weight) + (recording_score * recordings_weight)
+    if debug:
+        print("%3d TOTAL" % score)
+
+    return score
+
+
+def load_and_fuzzy_release_compare(mb_release_id, lb_release_id, debug=True):
+    with open(os.path.join("test", mb_release_id + ".json"), "r") as f:
+        mb_release = json.loads(f.read())
+    with open(os.path.join("test", lb_release_id + ".json"), "r") as f:
+        lb_release = json.loads(f.read())
+
+    return fuzzy_release_compare(mb_release, lb_release, debug)
+
+
+def test_compare_releases():
+    load_and_fuzzy_release_compare("48313c92-c8a6-47c5-91e3-87d514419135", "7e5d3746-210d-439c-8711-d8d700ac7ae3")
+    load_and_fuzzy_release_compare("7e5d3746-210d-439c-8711-d8d700ac7ae3", "7e5d3746-210d-439c-8711-d8d700ac7ae3")
+    load_and_fuzzy_release_compare("7c08b5f8-2d6f-4d72-a829-3175528ef25f", "7e5d3746-210d-439c-8711-d8d700ac7ae3")
+
 
 @click.group()
 def cli():
@@ -130,6 +184,10 @@ def check(release_mbid):
 @click.argument('user_name', nargs=1)
 def filter(user_name):
     listenbrainz_release_filter(user_name)
+
+@cli.command()
+def test():
+    test_compare_releases()
 
 def usage(command):
     with click.Context(command) as ctx:
