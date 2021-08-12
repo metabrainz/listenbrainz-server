@@ -37,9 +37,8 @@ export default class PinnedRecordingCard extends React.Component<
 
   constructor(props: PinnedRecordingCardProps) {
     super(props);
-    const currentlyPinned = this.determineIfCurrentlyPinned();
     this.state = {
-      currentlyPinned,
+      currentlyPinned: this.determineIfCurrentlyPinned(),
       isDeleted: false,
     };
   }

@@ -8,9 +8,9 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
     Object {
       "blurb_content": "I LOVE",
       "created": 1111111111,
+      "row_id": 1,
       "pinned_until": 9999999999,
       "recording_mbid": "98255a8c-017a-4bc7-8dd6-1fa36124572b",
-      "row_id": 1,
       "track_metadata": Object {
         "artist_name": "Rick Astley",
         "track_name": "Never Gonna Give You Up",
