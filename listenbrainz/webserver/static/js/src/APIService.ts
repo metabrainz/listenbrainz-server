@@ -842,4 +842,42 @@ export default class APIService {
     await this.checkStatus(response);
     return response.status;
   };
+
+  getPinsForUser = async (
+    userName: string,
+    offset?: number
+  ): Promise<Array<PinnedRecording>> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+
+    let query = `${this.APIBaseURI}/${userName}/pins`;
+    if (offset) {
+      query += `?offset=${offset}`;
+    }
+
+    const response = await fetch(query, {
+      method: "GET",
+    });
+
+    await this.checkStatus(response);
+    const data = await response.json();
+    return data.pinned_recordings;
+  };
+
+  getPinCountForUser = async (userName: string): Promise<number> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    const query = `${this.APIBaseURI}/${userName}/pins`;
+
+    const response = await fetch(query, {
+      method: "GET",
+    });
+
+    await this.checkStatus(response);
+    const data = await response.json();
+
+    return data.total_count;
+  };
 }

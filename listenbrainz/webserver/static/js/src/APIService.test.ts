@@ -1,6 +1,7 @@
 import APIService from "./APIService";
 
 const feedProps = require("./__mocks__/feedProps.json");
+const pinProps = require("./__mocks__/pinProps.json");
 
 const apiService = new APIService("foobar");
 
@@ -861,5 +862,92 @@ describe("recommendTrackToFollowers", () => {
     it("returns the response code if successful", async () => {
       await expect(apiService.deletePin("foobar", 1337)).resolves.toEqual(200);
     });
+  });
+});
+
+describe("getPinsForUser", () => {
+  const payload = { ...pinProps };
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => payload,
+      });
+    });
+
+    // Mock function for checkStatus
+    apiService.checkStatus = jest.fn();
+  });
+
+  it("calls fetch correctly with offset parameter", async () => {
+    await apiService.getPinsForUser("jdaok");
+    expect(window.fetch).toHaveBeenCalledWith("foobar/1/jdaok/pins", {
+      method: "GET",
+    });
+
+    await apiService.getPinsForUser("jdaok", 25);
+    expect(window.fetch).toHaveBeenCalledWith("foobar/1/jdaok/pins?offset=25", {
+      method: "GET",
+    });
+  });
+
+  it("returns the correct PinnedRecording objects", async () => {
+    const result = await apiService.getPinsForUser("jdaok");
+    expect(result).toEqual(payload.pinned_recordings);
+  });
+
+  it("throws appropriate error if username is missing", async () => {
+    await expect(apiService.getPinsForUser("")).rejects.toThrow(
+      SyntaxError("Username missing")
+    );
+  });
+
+  it("calls checkStatus once", async () => {
+    apiService.checkStatus = jest.fn();
+    await apiService.getPinsForUser("jdaok");
+    expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("getPinCountForUser", () => {
+  const payload = { ...pinProps };
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => payload,
+      });
+    });
+
+    // Mock function for checkStatus
+    apiService.checkStatus = jest.fn();
+  });
+
+  it("calls fetch correctly", async () => {
+    await apiService.getPinCountForUser("jdaok");
+    expect(window.fetch).toHaveBeenCalledWith("foobar/1/jdaok/pins", {
+      method: "GET",
+    });
+  });
+
+  it("returns a number", async () => {
+    const result = await apiService.getPinCountForUser("jdaok");
+    expect(result).toEqual(41);
+  });
+
+  it("throws appropriate error if username is missing", async () => {
+    await expect(apiService.getPinCountForUser("")).rejects.toThrow(
+      SyntaxError("Username missing")
+    );
+  });
+
+  it("calls checkStatus once", async () => {
+    apiService.checkStatus = jest.fn();
+    await apiService.getPinCountForUser("jdaok");
+    expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
   });
 });
