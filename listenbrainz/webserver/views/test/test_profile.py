@@ -35,6 +35,8 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.assertIn(self.user['auth_token'], response.data.decode('utf-8'))
 
     def test_reset_import_timestamp(self):
+        # we do a get request first to put the CSRF token in the flask global context
+        # so that we can access it for using in the post request in the next step
         val = int(time.time())
         db_user.update_latest_import(self.user['musicbrainz_id'], val)
         self.temporary_login(self.user['login_id'])
@@ -61,6 +63,8 @@ class ProfileViewsTestCase(IntegrationTestCase):
     def test_delete_listens(self):
         """Tests delete listens end point"""
         self.temporary_login(self.user['login_id'])
+        # we do a get request first to put the CSRF token in the flask global context
+        # so that we can access it for using in the post request in the next step
         delete_listens_url = url_for('profile.delete_listens')
         response = self.client.get(delete_listens_url)
         self.assert200(response)
