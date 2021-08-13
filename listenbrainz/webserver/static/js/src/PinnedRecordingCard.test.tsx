@@ -88,7 +88,7 @@ describe("componentDidUpdate", () => {
     const instance = wrapper.instance();
     const spy = jest.spyOn(instance, "determineIfCurrentlyPinned");
 
-    // update the component twice
+    // update the component prop twice
     wrapper.setProps({ pinnedRecording: expiredPinnedRecording });
     wrapper.setProps({ pinnedRecording });
     expect(spy).toHaveBeenCalledTimes(2);
