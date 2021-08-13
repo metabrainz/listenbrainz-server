@@ -275,9 +275,7 @@ describe("deletePin", () => {
     expect(wrapper.state("currentlyPinned")).toBeFalsy();
 
     setTimeout(() => {
-      expect(instance.props.removePinFromPinsList).toHaveBeenCalledTimes(
-        1
-      );
+      expect(instance.props.removePinFromPinsList).toHaveBeenCalledTimes(1);
       expect(instance.props.removePinFromPinsList).toHaveBeenCalledWith(
         instance.props.pinnedRecording
       );

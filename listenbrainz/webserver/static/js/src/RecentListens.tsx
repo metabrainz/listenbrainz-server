@@ -577,7 +577,7 @@ export default class RecentListens extends React.Component<
                   }
                   isCurrentUser={currentUser?.name === user?.name}
                   playListen={this.playListen}
-                  removePinFromPinsList={() => {this.setState}}
+                  removePinFromPinsList={() => {}}
                   newAlert={newAlert}
                 />
               </div>
