@@ -57,7 +57,7 @@ export default class PinnedRecordingCard extends React.Component<
   componentDidUpdate(prevProps: PinnedRecordingCardProps) {
     const { pinnedRecording, playListen } = this.props;
     if (pinnedRecording !== prevProps.pinnedRecording) {
-      this.setState({ 
+      this.setState({
         currentlyPinned: this.determineIfCurrentlyPinned(),
         isDeleted: false,
       });
