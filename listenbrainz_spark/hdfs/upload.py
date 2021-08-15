@@ -7,7 +7,8 @@ import logging
 
 from listenbrainz_spark import schema, path, utils
 from listenbrainz_spark.hdfs import ListenbrainzHDFSUploader, TEMP_DIR_PATH as HDFS_TEMP_DIR
-
+from listenbrainz_spark.path import INCREMENTAL_DUMPS_SAVE_PATH
+from listenbrainz_spark.utils import read_files_from_HDFS
 
 logger = logging.getLogger(__name__)
 
@@ -81,8 +82,30 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
                 self.upload_archive(tmp_dump_dir, tar, path.SIMILAR_ARTIST_DATAFRAME_PATH, schema.artist_relation_schema,
                                     self.process_json, overwrite=True)
 
+    def upload_new_listens_incremental_dump(self, archive: str):
+        """ Upload new format parquet listens of an incremental
+         dump to HDFS.
+            Args:
+                archive: path to parquet listens dump to be uploaded
+        """
+        # upload parquet file to temporary path so that we can
+        # read it in spark in next step
+        hdfs_path = self.upload_archive_to_temp(archive)
+
+        # read the parquet file from the temporary path and append
+        # it to incremental.parquet for permanent storage
+        read_files_from_HDFS(hdfs_path) \
+            .repartition(1) \
+            .write \
+            .mode("append") \
+            .parquet(INCREMENTAL_DUMPS_SAVE_PATH)
+
+        # delete parquet from hdfs temporary path
+        utils.delete_dir(hdfs_path, recursive=True)
+
     def upload_new_listens_full_dump(self, archive: str):
-        """ Upload new format parquet listens dumps to HDFS.
+        """ Upload new format parquet listens dumps to of a full
+        dump to HDFS.
 
             Args:
                   archive: path to parquet listens dump to be uploaded
