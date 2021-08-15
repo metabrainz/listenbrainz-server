@@ -122,6 +122,9 @@ def read_files_from_HDFS(path):
         Args:
             path (str): An HDFS path.
     """
+    # if we point spark to a directory, it will read each file in the directory as a
+    # parquet file and return the dataframe. so if a non-parquet file in also present
+    # in the same directory, we will get the not a parquet file error
     try:
         df = listenbrainz_spark.sql_context.read.parquet(config.HDFS_CLUSTER_URI + path)
         return df
