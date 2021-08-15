@@ -136,6 +136,12 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
                 archive: the archive to be uploaded
             Returns:
                 path of the temp dir where archive has been uploaded
+            Notes:
+                The following dump structure should be ensured for this
+                function to work correctly. Say, the dump is named
+                v-2021-08-15.tar. The tar should contain one top level
+                directory, v-2021-08-15. This directory should contain
+                all the files that need to be uploaded.
         """
         with tempfile.TemporaryDirectory() as local_temp_dir:
             logger.info("Cleaning HDFS temporary directory...")
