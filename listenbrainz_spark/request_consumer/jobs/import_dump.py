@@ -58,23 +58,11 @@ def import_incremental_dump_to_hdfs(dump_id: int = None) -> str:
             listens_dump_id=dump_id
         )
 
-        # instantiating ListenbrainzDataUploader creates a spark session which is a bit
-        # non-intuitive.
+        # instantiating ListenbrainzDataUploader creates a spark session which
+        # is a bit non-intuitive.
         # FIXME in future to make initializing of spark session more explicit?
-        # upload parquet file to temporary path so that we can read it in spark in next step
-        hdfs_path = ListenbrainzDataUploader().upload_archive_to_temp(src)
-
-    # read the parquet file from the temporary path and append it to incremental.parquet
-    # for permanent storage
-    read_files_from_HDFS(hdfs_path) \
-        .repartition(1) \
-        .write \
-        .mode("append") \
-        .parquet(INCREMENTAL_DUMPS_SAVE_PATH)
-
+        ListenbrainzDataUploader().upload_new_listens_incremental_dump(src)
     utils.insert_dump_data(dump_id, DumpType.INCREMENTAL, datetime.utcnow())
-    # delete parquet from hdfs temporary path
-    utils.delete_dir(hdfs_path, recursive=True)
     return dump_name
 
 
