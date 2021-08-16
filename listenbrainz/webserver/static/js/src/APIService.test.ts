@@ -883,9 +883,12 @@ describe("getPinsForUser", () => {
 
   it("calls fetch with correct parameters", async () => {
     await apiService.getPinsForUser("jdaok", 25, 25);
-    expect(window.fetch).toHaveBeenCalledWith("foobar/1/jdaok/pins?offset=25&count=25", {
-      method: "GET",
-    });
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/jdaok/pins?offset=25&count=25",
+      {
+        method: "GET",
+      }
+    );
   });
 
   it("returns the correct data objects", async () => {
