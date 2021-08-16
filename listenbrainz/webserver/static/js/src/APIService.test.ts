@@ -1,6 +1,7 @@
 import APIService from "./APIService";
 
 const feedProps = require("./__mocks__/feedProps.json");
+const pinProps = require("./__mocks__/pinProps.json");
 
 const apiService = new APIService("foobar");
 
@@ -861,5 +862,49 @@ describe("recommendTrackToFollowers", () => {
     it("returns the response code if successful", async () => {
       await expect(apiService.deletePin("foobar", 1337)).resolves.toEqual(200);
     });
+  });
+});
+
+describe("getPinsForUser", () => {
+  const payload = { ...pinProps };
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => payload,
+      });
+    });
+
+    // Mock function for checkStatus
+    apiService.checkStatus = jest.fn();
+  });
+
+  it("calls fetch with correct parameters", async () => {
+    await apiService.getPinsForUser("jdaok", 25, 25);
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/jdaok/pins?offset=25&count=25",
+      {
+        method: "GET",
+      }
+    );
+  });
+
+  it("returns the correct data objects", async () => {
+    const result = await apiService.getPinsForUser("jdaok", 25, 25);
+    expect(result).toEqual(payload);
+  });
+
+  it("throws appropriate error if username is missing", async () => {
+    await expect(apiService.getPinsForUser("", 25, 25)).rejects.toThrow(
+      SyntaxError("Username missing")
+    );
+  });
+
+  it("calls checkStatus once", async () => {
+    apiService.checkStatus = jest.fn();
+    await apiService.getPinsForUser("jdaok", 25, 25);
+    expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
   });
 });
