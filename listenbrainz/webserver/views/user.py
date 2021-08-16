@@ -353,7 +353,7 @@ def collaborations(user_name: str):
 @user_bp.route("/<user_name>/pins/")
 def pins(user_name: str):
     """ Show user pin history """
-    
+
     user = _get_user(user_name)
     user_data = {
         "name": user.musicbrainz_id,
@@ -366,7 +366,7 @@ def pins(user_name: str):
 
     props = {
         "user": user_data,
-        "pins" : pins,
+        "pins": pins,
         "profile_url": url_for('user.profile', user_name=user_name),
         "total_count": total_count
     }
