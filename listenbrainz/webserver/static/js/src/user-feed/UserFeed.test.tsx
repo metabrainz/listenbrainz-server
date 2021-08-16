@@ -152,6 +152,26 @@ describe("<UserFeed />", () => {
     expect(time.text()).toEqual("Feb 16, 11:17 AM");
   });
 
+  it("renders recording pin events", () => {
+    const wrapper = mount<UserFeedPage>(
+      <GlobalAppContext.Provider value={GlobalContextMock}>
+        <UserFeedPage {...props} />
+      </GlobalAppContext.Provider>
+    );
+    const recEvent = wrapper.find("#timeline > ul >li").at(11);
+    const description = recEvent.find(".event-description-text");
+    expect(description.text()).toEqual("jdaok pinned a recording");
+    const content = recEvent.find(".event-content");
+    expect(content.exists()).toBeTruthy();
+    expect(content.children()).toHaveLength(1);
+    const time = recEvent.find(".event-time");
+    expect(time.text()).toEqual("Feb 16, 10:44 AM");
+
+    // Ensure additional details are rendered if provided
+    const additionalDetails = content.find(".additional-details");
+    expect(additionalDetails.text()).toEqual('"Very good..."');
+  });
+
   describe("Pagination", () => {
     const pushStateSpy = jest.spyOn(window.history, "pushState");
 

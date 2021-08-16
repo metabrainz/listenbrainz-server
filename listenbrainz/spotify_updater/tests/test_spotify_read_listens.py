@@ -35,7 +35,7 @@ class ConvertListensTestCase(DatabaseTestCase):
         listen = spotify_read_listens._convert_spotify_play_to_listen(data, LISTEN_TYPE_IMPORT)
 
         expected_listen = {
-            'listened_at': 1519241031,
+            'listened_at': 1519241031.761,
             'track_metadata': {
                 'artist_name': 'The Hollies',
                 'track_name': "Draggin' My Heels - Special Disco Version",
@@ -67,7 +67,7 @@ class ConvertListensTestCase(DatabaseTestCase):
         listen = spotify_read_listens._convert_spotify_play_to_listen(data, LISTEN_TYPE_IMPORT)
 
         expected_listen = {
-            'listened_at': 1519240503,
+            'listened_at': 1519240503.665,
             'track_metadata': {
                 'artist_name': 'Robert Plant, Alison Krauss',
                 'track_name': 'Rich Woman',

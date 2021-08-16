@@ -816,4 +816,46 @@ export default class APIService {
     await this.checkStatus(response);
     return response.status;
   };
+
+  unpinRecording = async (userToken: string): Promise<number> => {
+    const url = `${this.APIBaseURI}/pin/unpin`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
+  deletePin = async (userToken: string, pinID: number): Promise<number> => {
+    const url = `${this.APIBaseURI}/pin/delete/${pinID}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
+  getPinsForUser = async (userName: string, offset: number, count: number) => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+
+    const query = `${this.APIBaseURI}/${userName}/pins?offset=${offset}&count=${count}`;
+
+    const response = await fetch(query, {
+      method: "GET",
+    });
+
+    await this.checkStatus(response);
+    const data = await response.json();
+    return data;
+  };
 }
