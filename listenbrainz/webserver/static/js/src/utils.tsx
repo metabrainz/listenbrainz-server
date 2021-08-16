@@ -371,6 +371,14 @@ const pinFeatureEnabled = (currentUser: string): boolean => {
   return usersAllowedIn.includes(currentUser.toLowerCase());
 };
 
+const getListenablePin = (pinnedRecording: PinnedRecording): Listen => {
+  const pinnedRecListen: Listen = {
+    listened_at: 0,
+    ...pinnedRecording,
+  };
+  return pinnedRecListen;
+};
+
 export {
   searchForSpotifyTrack,
   getArtistLink,
@@ -382,4 +390,5 @@ export {
   searchForYoutubeTrack,
   createAlert,
   pinFeatureEnabled,
+  getListenablePin,
 };
