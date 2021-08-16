@@ -842,4 +842,20 @@ export default class APIService {
     await this.checkStatus(response);
     return response.status;
   };
+
+  getPinsForUser = async (userName: string, offset: number, count: number) => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+
+    const query = `${this.APIBaseURI}/${userName}/pins?offset=${offset}&count=${count}`;
+
+    const response = await fetch(query, {
+      method: "GET",
+    });
+
+    await this.checkStatus(response);
+    const data = await response.json();
+    return data;
+  };
 }

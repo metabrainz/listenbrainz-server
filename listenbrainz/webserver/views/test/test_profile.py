@@ -4,7 +4,7 @@ import listenbrainz.db.user as db_user
 import time
 import ujson
 
-from flask import url_for
+from flask import url_for, current_app, g
 
 from data.model.external_service import ExternalServiceType
 from listenbrainz.domain.external_service import ExternalServiceInvalidGrantError
@@ -26,12 +26,6 @@ class ProfileViewsTestCase(IntegrationTestCase):
         db_user.agree_to_gdpr(self.weirduser['musicbrainz_id'])
         self.service = SpotifyService()
 
-    def test_reset_import_timestamp_get(self):
-        self.temporary_login(self.user['login_id'])
-        response = self.client.get(url_for('profile.reset_latest_import_timestamp'))
-        self.assertTemplateUsed('profile/resetlatestimportts.html')
-        self.assert200(response)
-
     def test_profile_view(self):
         """Tests the user info view and makes sure auth token is present there"""
         self.temporary_login(self.user['login_id'])
@@ -41,35 +35,20 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.assertIn(self.user['auth_token'], response.data.decode('utf-8'))
 
     def test_reset_import_timestamp(self):
-        self.temporary_login(self.user['login_id'])
+        # we do a get request first to put the CSRF token in the flask global context
+        # so that we can access it for using in the post request in the next step
         val = int(time.time())
         db_user.update_latest_import(self.user['musicbrainz_id'], val)
+        self.temporary_login(self.user['login_id'])
+        response = self.client.get(url_for('profile.reset_latest_import_timestamp'))
+        self.assertTemplateUsed('profile/resetlatestimportts.html')
+        self.assert200(response)
 
         response = self.client.post(
             url_for('profile.reset_latest_import_timestamp'),
-            data={
-                'reset': 'yes',
-                'token': self.user['auth_token']
-            }
+            data={'csrf_token': g.csrf_token}
         )
-        self.assertStatus(response, 302) # should have redirected to the info page
-        self.assertRedirects(response, url_for('profile.info'))
-        ts = db_user.get(self.user['id'])['latest_import'].strftime('%s')
-        self.assertEqual(int(ts), 0)
-
-    def test_reset_import_timestamp_post(self):
-        self.temporary_login(self.user['login_id'])
-        val = int(time.time())
-        db_user.update_latest_import(self.user['musicbrainz_id'], val)
-
-        response = self.client.post(
-            url_for('profile.reset_latest_import_timestamp'),
-            data={
-                'reset': 'yes',
-                'token': self.user['auth_token']
-            }
-        )
-        self.assertStatus(response, 302)  # should have redirected to the import page
+        self.assertStatus(response, 302)  # should have redirected to the info page
         self.assertRedirects(response, url_for('profile.info'))
         ts = db_user.get(self.user['id'])['latest_import'].strftime('%s')
         self.assertEqual(int(ts), 0)
@@ -84,44 +63,50 @@ class ProfileViewsTestCase(IntegrationTestCase):
     def test_delete_listens(self):
         """Tests delete listens end point"""
         self.temporary_login(self.user['login_id'])
+        # we do a get request first to put the CSRF token in the flask global context
+        # so that we can access it for using in the post request in the next step
         delete_listens_url = url_for('profile.delete_listens')
         response = self.client.get(delete_listens_url)
         self.assert200(response)
 
-        response = self.client.post(delete_listens_url, data={'token': self.user['auth_token']})
+        response = self.client.post(delete_listens_url, data={'csrf_token': g.csrf_token})
+        self.assertMessageFlashed("Successfully deleted listens for %s." % self.user['musicbrainz_id'], 'info')
         self.assertRedirects(response, url_for('user.profile', user_name=self.user['musicbrainz_id']))
 
     def test_delete_listens_not_logged_in(self):
         """Tests delete listens view when not logged in"""
         delete_listens_url = url_for('profile.delete_listens')
-        response = self.client.get(delete_listens_url) # GET request
+        response = self.client.get(delete_listens_url)
         self.assertStatus(response, 302)
         self.assertRedirects(response, url_for('login.index', next=delete_listens_url))
 
-        response = self.client.post(delete_listens_url) # POST request
+        response = self.client.post(delete_listens_url)
         self.assertStatus(response, 302)
         self.assertRedirects(response, url_for('login.index', next=delete_listens_url))
 
-    def test_delete_listens_auth_token_not_provided(self):
+    def test_delete_listens_csrf_token_not_provided(self):
         """Tests delete listens end point when auth token is missing"""
         self.temporary_login(self.user['login_id'])
         delete_listens_url = url_for('profile.delete_listens')
         response = self.client.get(delete_listens_url)
         self.assert200(response)
 
-        response = self.client.post(delete_listens_url) # auth token is missing
-        self.assertStatus(response, 401)
+        response = self.client.post(delete_listens_url)
+        self.assertMessageFlashed('Cannot delete listens due to error during authentication, please try again later.',
+                                  'error')
+        self.assertRedirects(response, url_for('profile.info'))
 
-    def test_delete_listens_invalid_auth_token(self):
+    def test_delete_listens_invalid_csrf_token(self):
         """Tests delete listens end point when auth token is invalid"""
         self.temporary_login(self.user['login_id'])
         delete_listens_url = url_for('profile.delete_listens')
         response = self.client.get(delete_listens_url)
         self.assert200(response)
-        
-        invalid_auth_token = 'invalid-auth-token'
-        response = self.client.post(delete_listens_url, data={'token': invalid_auth_token}) # auth token is invalid
-        self.assertStatus(response, 401)
+
+        response = self.client.post(delete_listens_url, data={'csrf_token': 'invalid-auth-token'})
+        self.assertMessageFlashed('Cannot delete listens due to error during authentication, please try again later.',
+                                  'error')
+        self.assertRedirects(response, url_for('profile.info'))
 
     def test_music_services_details(self):
         self.temporary_login(self.user['login_id'])
