@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, validator, constr
 from listenbrainz.db.model.validators import check_rec_mbid_msid_is_valid_uuid, check_datetime_has_tzinfo
+from messybrainz import load_recordings_from_msids, load_recordings_from_mbids
 
 DAYS_UNTIL_UNPIN = 7  # default = unpin after one week
 MAX_BLURB_CONTENT_LENGTH = 280  # maximum length of blurb content
@@ -28,6 +29,7 @@ class PinnedRecording(BaseModel):
     blurb_content: constr(max_length=MAX_BLURB_CONTENT_LENGTH) = None
     created: datetime
     pinned_until: datetime
+    track_metadata: dict = None
 
     _validate_recording_msid: classmethod = validator("recording_msid", allow_reuse=True)(check_rec_mbid_msid_is_valid_uuid)
 
@@ -78,3 +80,37 @@ class WritablePinnedRecording(PinnedRecording):
     @validator("pinned_until", pre=True, always=True)
     def set_pinned_until_to_default(cls, pin_until, values):
         return pin_until or values["created"] + timedelta(days=DAYS_UNTIL_UNPIN)
+
+
+def fetch_track_metadata_for_pins(pins: List[PinnedRecording]) -> List[PinnedRecording]:
+    """ Fetches track_metadata for every object in a list of PinnedRecordings.
+
+        Args:
+            pins (List of PinnedRecordings): the PinnedRecordings to fetch track_metadata for.
+        Returns:
+            The given list of PinnedRecording objects with updated track_metadata.
+    """
+
+    # seperate pins containing mbid's from those without
+    mbid_pins = list(filter(lambda pin: pin.recording_mbid, pins))
+    msid_pins = list(filter(lambda pin: not pin.recording_mbid, pins))
+
+    metadatas = []
+
+    if mbid_pins:
+        fetch_mbids = [pin.recording_mbid for pin in mbid_pins]  # retrieves list of mbid's to fetch with
+        metadatas.extend(load_recordings_from_mbids(fetch_mbids))
+    if msid_pins:
+        fetch_msids = [pin.recording_msid for pin in msid_pins]   # retrieves list of msid's to fetch with
+        metadatas.extend(load_recordings_from_msids(fetch_msids))
+
+    # assign track metadata to every pin in correct order
+    for pin in pins:
+        # find matching metadata in list from query results
+        metadata = list(filter(lambda x: x["ids"]["recording_msid"] == pin.recording_msid, metadatas))[0]
+        pin.track_metadata = {
+            "track_name": metadata["payload"]["title"],
+            "artist_name": metadata["payload"]["artist"],
+            "artist_msid": metadata["ids"]["artist_msid"],
+        }
+    return pins
