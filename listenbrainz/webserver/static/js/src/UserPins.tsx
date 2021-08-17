@@ -4,18 +4,18 @@ import * as ReactDOM from "react-dom";
 import * as React from "react";
 
 import { isEqual } from "lodash";
-import ErrorBoundary from "../ErrorBoundary";
-import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
+import ErrorBoundary from "./ErrorBoundary";
+import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "../AlertNotificationsHOC";
+} from "./AlertNotificationsHOC";
 
-import APIServiceClass from "../APIService";
-import BrainzPlayer from "../BrainzPlayer";
-import Loader from "../components/Loader";
-import PinnedRecordingCard from "../PinnedRecordingCard";
-import { getPageProps, getListenablePin } from "../utils";
+import APIServiceClass from "./APIService";
+import BrainzPlayer from "./BrainzPlayer";
+import Loader from "./components/Loader";
+import PinnedRecordingCard from "./PinnedRecordingCard";
+import { getPageProps, getListenablePin } from "./utils";
 
 export type UserPinsProps = {
   user: ListenBrainzUser;
