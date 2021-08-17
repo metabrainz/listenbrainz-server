@@ -65,7 +65,7 @@ export default class UserPins extends React.Component<
     window.removeEventListener("popstate", this.handleURLChange);
   }
 
-  getFeedFromAPI = async (page: number) => {
+  getPinsFromAPI = async (page: number) => {
     const { newAlert, user } = this.props;
     const { APIService } = this.context;
     this.setState({ loading: true });
@@ -137,7 +137,7 @@ export default class UserPins extends React.Component<
       } else if (page >= maxPage) {
         page = maxPage;
       }
-      await this.getFeedFromAPI(page);
+      await this.getPinsFromAPI(page);
     } else {
       this.setState({ page: 1 });
     }
@@ -154,7 +154,7 @@ export default class UserPins extends React.Component<
       return;
     }
 
-    await this.getFeedFromAPI(page + 1);
+    await this.getPinsFromAPI(page + 1);
   };
 
   handleClickNewer = async (event?: React.MouseEvent) => {
@@ -167,7 +167,7 @@ export default class UserPins extends React.Component<
       return;
     }
 
-    await this.getFeedFromAPI(page - 1);
+    await this.getPinsFromAPI(page - 1);
   };
 
   // BrainzPlayer functions
@@ -251,6 +251,7 @@ export default class UserPins extends React.Component<
                   {pins?.map((pin) => {
                     return (
                       <PinnedRecordingCard
+                        key={`${pin.created}-${pin.track_metadata.track_name}-${pin.recording_msid}-${user}`}
                         userName={user.name}
                         pinnedRecording={pin}
                         className={
