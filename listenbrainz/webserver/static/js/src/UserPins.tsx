@@ -47,8 +47,8 @@ export default class UserPins extends React.Component<
     super(props);
     const { totalCount } = this.props;
     this.state = {
-      maxPage: 2,
-      page: Math.ceil(totalCount / this.DEFAULT_PINS_PER_PAGE),
+      maxPage: Math.ceil(totalCount / this.DEFAULT_PINS_PER_PAGE),
+      page: 1,
       pins: props.pins || [],
       loading: false,
       direction: "down",
@@ -65,21 +65,40 @@ export default class UserPins extends React.Component<
     window.removeEventListener("popstate", this.handleURLChange);
   }
 
-  getPinsFromAPI = async (page: number) => {
+  getPinsFromAPI = async (page: number, pushHistory: boolean = true) => {
     const { newAlert, user } = this.props;
     const { APIService } = this.context;
     this.setState({ loading: true });
 
     try {
-      const newPins = await APIService.getPinsForUser(
-        user.name,
-        (page - 1) * this.DEFAULT_PINS_PER_PAGE,
-        this.DEFAULT_PINS_PER_PAGE
-      );
+      const limit = (page - 1) * this.DEFAULT_PINS_PER_PAGE;
+      const count = this.DEFAULT_PINS_PER_PAGE;
+      const newPins = await APIService.getPinsForUser(user.name, limit, count);
 
-      this.handleAPIResponse(newPins, page, () => {
-        window.history.pushState(null, "", `?page=${page}`);
+      if (!newPins.pinned_recordings.length) {
+        // No pins were fetched
+        this.setState({ loading: false });
+        return;
+      }
+
+      const totalCount = parseInt(newPins.total_count, 10);
+      this.setState({
+        loading: false,
+        page,
+        maxPage: Math.ceil(totalCount / this.DEFAULT_PINS_PER_PAGE),
+        pins: newPins.pinned_recordings,
       });
+      if (pushHistory) {
+        window.history.pushState(null, "", `?page=${[page]}`);
+      }
+
+      // Scroll window back to the top of the events container element
+      const eventContainerElement = document.querySelector(
+        "#pinned-recordings"
+      );
+      if (eventContainerElement) {
+        eventContainerElement.scrollIntoView({ behavior: "smooth" });
+      }
     } catch (error) {
       newAlert(
         "warning",
@@ -97,56 +116,28 @@ export default class UserPins extends React.Component<
     }
   };
 
-  handleAPIResponse = (
-    newPins: {
-      pinned_recordings: PinnedRecording[];
-      total_count: string;
-      count: string;
-      offset: string;
-    },
-    page: number,
-    successCallback?: () => void
-  ) => {
-    const parsedTotalCount = parseInt(newPins.total_count, 10);
-
-    this.setState(
-      {
-        loading: false,
-        page,
-        maxPage: Math.ceil(parsedTotalCount / this.DEFAULT_PINS_PER_PAGE),
-        pins: newPins.pinned_recordings,
-      },
-      successCallback
-    );
-
-    // Scroll window back to the top of the events container element
-    const eventContainerElement = document.querySelector("#pinned-recordings");
-    if (eventContainerElement) {
-      eventContainerElement.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
   handleURLChange = async (): Promise<void> => {
-    const { maxPage } = this.state;
+    const { page, maxPage } = this.state;
     const url = new URL(window.location.href);
 
     if (url.searchParams.get("page")) {
-      let page = Number(url.searchParams.get("page"));
-      if (page <= 0 || page >= maxPage) {
-        page = 1;
-      } else if (page >= maxPage) {
-        page = maxPage;
+      let newPage = Number(url.searchParams.get("page"));
+      if (newPage === page) {
+        // page didn't change
+        return;
       }
-      await this.getPinsFromAPI(page);
-    } else {
-      this.setState({ page: 1 });
+      newPage = Math.max(newPage, 1);
+      newPage = Math.min(newPage, maxPage);
+      await this.getPinsFromAPI(newPage, false);
+    } else if (page !== 1) {
+      // occurs on back + forward history
+      await this.getPinsFromAPI(1, false);
     }
   };
 
   // pagination functions
   handleClickOlder = async (event?: React.MouseEvent) => {
     const { page, maxPage } = this.state;
-
     if (event) {
       event.preventDefault();
     }
@@ -159,7 +150,6 @@ export default class UserPins extends React.Component<
 
   handleClickNewer = async (event?: React.MouseEvent) => {
     const { page } = this.state;
-
     if (event) {
       event.preventDefault();
     }
@@ -289,6 +279,9 @@ export default class UserPins extends React.Component<
                         if (e.key === "Enter") this.handleClickNewer();
                       }}
                       tabIndex={0}
+                      href={
+                        isNewerButtonDisabled ? undefined : `?page=${page - 1}`
+                      }
                     >
                       &larr; Newer
                     </a>
@@ -306,6 +299,9 @@ export default class UserPins extends React.Component<
                         if (e.key === "Enter") this.handleClickOlder();
                       }}
                       tabIndex={0}
+                      href={
+                        isOlderButtonDisabled ? undefined : `?page=${page + 1}`
+                      }
                     >
                       Older &rarr;
                     </a>
