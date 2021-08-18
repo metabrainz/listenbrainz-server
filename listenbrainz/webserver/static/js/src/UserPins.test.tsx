@@ -161,7 +161,7 @@ describe("Pagination", () => {
     it("calls the API to get newer pins / previous page", async () => {
       const wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
       const instance = wrapper.instance();
-      
+
       const getPinsFromAPISpy = jest.spyOn(instance, "getPinsFromAPI");
 
       // move to page 2 before testing fetching page 1
