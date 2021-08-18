@@ -65,6 +65,50 @@ export default class UserPins extends React.Component<
     window.removeEventListener("popstate", this.handleURLChange);
   }
 
+  // pagination functions
+  handleURLChange = async (): Promise<void> => {
+    const { page, maxPage } = this.state;
+    const url = new URL(window.location.href);
+
+    if (url.searchParams.get("page")) {
+      let newPage = Number(url.searchParams.get("page"));
+      if (newPage === page) {
+        // page didn't change
+        return;
+      }
+      newPage = Math.max(newPage, 1);
+      newPage = Math.min(newPage, maxPage);
+      await this.getPinsFromAPI(newPage, false);
+    } else if (page !== 1) {
+      // occurs on back + forward history
+      await this.getPinsFromAPI(1, false);
+    }
+  };
+
+  handleClickOlder = async (event?: React.MouseEvent) => {
+    const { page, maxPage } = this.state;
+    if (event) {
+      event.preventDefault();
+    }
+    if (page >= maxPage) {
+      return;
+    }
+
+    await this.getPinsFromAPI(page + 1);
+  };
+
+  handleClickNewer = async (event?: React.MouseEvent) => {
+    const { page } = this.state;
+    if (event) {
+      event.preventDefault();
+    }
+    if (page === 1) {
+      return;
+    }
+
+    await this.getPinsFromAPI(page - 1);
+  };
+
   getPinsFromAPI = async (page: number, pushHistory: boolean = true) => {
     const { newAlert, user } = this.props;
     const { APIService } = this.context;
@@ -114,50 +158,6 @@ export default class UserPins extends React.Component<
       );
       this.setState({ loading: false });
     }
-  };
-
-  handleURLChange = async (): Promise<void> => {
-    const { page, maxPage } = this.state;
-    const url = new URL(window.location.href);
-
-    if (url.searchParams.get("page")) {
-      let newPage = Number(url.searchParams.get("page"));
-      if (newPage === page) {
-        // page didn't change
-        return;
-      }
-      newPage = Math.max(newPage, 1);
-      newPage = Math.min(newPage, maxPage);
-      await this.getPinsFromAPI(newPage, false);
-    } else if (page !== 1) {
-      // occurs on back + forward history
-      await this.getPinsFromAPI(1, false);
-    }
-  };
-
-  // pagination functions
-  handleClickOlder = async (event?: React.MouseEvent) => {
-    const { page, maxPage } = this.state;
-    if (event) {
-      event.preventDefault();
-    }
-    if (page >= maxPage) {
-      return;
-    }
-
-    await this.getPinsFromAPI(page + 1);
-  };
-
-  handleClickNewer = async (event?: React.MouseEvent) => {
-    const { page } = this.state;
-    if (event) {
-      event.preventDefault();
-    }
-    if (page === 1) {
-      return;
-    }
-
-    await this.getPinsFromAPI(page - 1);
   };
 
   // BrainzPlayer functions
