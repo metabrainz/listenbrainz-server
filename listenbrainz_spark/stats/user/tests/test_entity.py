@@ -66,14 +66,11 @@ class UserEntityTestCase(StatsTestCase):
         for i in range(0, 2000):
             recordings.append({
                 'artist_name': 'artist_{}'.format(i),
-                'artist_msid': str(i),
                 'artist_mbids': [str(i)],
                 'release_name': 'release_{}'.format(i),
-                'release_msid': str(i),
                 'release_mbid': str(i),
-                'track_name': 'recording_{}'.format(i),
+                'recording_name': 'recording_{}'.format(i),
                 'recording_mbid': str(i),
-                'recording_msid': str(i),
                 'listen_count': i
             })
 
@@ -88,6 +85,7 @@ class UserEntityTestCase(StatsTestCase):
         message = next(messages)
         received_list = message['data']
         expected_list = recordings[:1000]
+        self.assertCountEqual(received_list, expected_list)
 
         received_count = message['count']
         expected_count = 2000

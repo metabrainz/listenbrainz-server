@@ -1,38 +1,260 @@
 [
-  {
-    "user_name": "user1",
-    "timestamp": 1595207640
-  },
-  {
-    "user_name": "user1",
-    "timestamp": 1595208600
-  },
-  {
-    "user_name": "user1",
-    "timestamp": 1595209500
-  },
-  {
-    "user_name": "user1",
-    "timestamp": 1595223000
-  },
-  {
-    "user_name": "user1",
-    "timestamp": 1595399400
-  },
-  {
-    "user_name": "user2",
-    "timestamp": 1595316600
-  },
-  {
-    "user_name": "user2",
-    "timestamp": 1595319600
-  },
-  {
-    "user_name": "user3",
-    "timestamp": 1595508000
-  },
-  {
-    "user_name": "user3",
-    "timestamp": 1595511600
-  }
+    {
+        "musicbrainz_id": "rob",
+        "type": "user_daily_activity",
+        "stats_range": "all_time",
+        "from_ts": 1009843200,
+        "to_ts": 1628511763,
+        "daily_activity": [
+            {
+                "day": "Monday",
+                "hour": 8,
+                "listen_count": 1
+            },
+            {
+                "day": "Sunday",
+                "hour": 8,
+                "listen_count": 1
+            },
+            {
+                "day": "Thursday",
+                "hour": 8,
+                "listen_count": 1
+            },
+            {
+                "day": "Wednesday",
+                "hour": 8,
+                "listen_count": 2
+            },
+            {
+                "day": "Sunday",
+                "hour": 9,
+                "listen_count": 1
+            },
+            {
+                "day": "Thursday",
+                "hour": 9,
+                "listen_count": 4
+            },
+            {
+                "day": "Tuesday",
+                "hour": 9,
+                "listen_count": 1
+            },
+            {
+                "day": "Wednesday",
+                "hour": 9,
+                "listen_count": 1
+            },
+            {
+                "day": "Monday",
+                "hour": 10,
+                "listen_count": 3
+            },
+            {
+                "day": "Tuesday",
+                "hour": 10,
+                "listen_count": 2
+            },
+            {
+                "day": "Sunday",
+                "hour": 11,
+                "listen_count": 2
+            },
+            {
+                "day": "Monday",
+                "hour": 12,
+                "listen_count": 1
+            },
+            {
+                "day": "Sunday",
+                "hour": 12,
+                "listen_count": 2
+            },
+            {
+                "day": "Saturday",
+                "hour": 15,
+                "listen_count": 1
+            },
+            {
+                "day": "Friday",
+                "hour": 17,
+                "listen_count": 3
+            },
+            {
+                "day": "Thursday",
+                "hour": 17,
+                "listen_count": 1
+            },
+            {
+                "day": "Friday",
+                "hour": 19,
+                "listen_count": 2
+            },
+            {
+                "day": "Saturday",
+                "hour": 19,
+                "listen_count": 2
+            },
+            {
+                "day": "Sunday",
+                "hour": 19,
+                "listen_count": 3
+            },
+            {
+                "day": "Wednesday",
+                "hour": 19,
+                "listen_count": 1
+            },
+            {
+                "day": "Friday",
+                "hour": 20,
+                "listen_count": 4
+            },
+            {
+                "day": "Thursday",
+                "hour": 20,
+                "listen_count": 1
+            },
+            {
+                "day": "Monday",
+                "hour": 21,
+                "listen_count": 2
+            },
+            {
+                "day": "Saturday",
+                "hour": 21,
+                "listen_count": 2
+            }
+        ]
+    },
+    {
+        "musicbrainz_id": "amCap1712",
+        "type": "user_daily_activity",
+        "stats_range": "all_time",
+        "from_ts": 1009843200,
+        "to_ts": 1628511763,
+        "daily_activity": [
+            {
+                "day": "Monday",
+                "hour": 9,
+                "listen_count": 2
+            },
+            {
+                "day": "Saturday",
+                "hour": 9,
+                "listen_count": 3
+            },
+            {
+                "day": "Monday",
+                "hour": 10,
+                "listen_count": 2
+            },
+            {
+                "day": "Saturday",
+                "hour": 10,
+                "listen_count": 1
+            },
+            {
+                "day": "Sunday",
+                "hour": 10,
+                "listen_count": 1
+            },
+            {
+                "day": "Monday",
+                "hour": 11,
+                "listen_count": 1
+            },
+            {
+                "day": "Sunday",
+                "hour": 11,
+                "listen_count": 3
+            },
+            {
+                "day": "Wednesday",
+                "hour": 15,
+                "listen_count": 1
+            },
+            {
+                "day": "Saturday",
+                "hour": 16,
+                "listen_count": 2
+            },
+            {
+                "day": "Tuesday",
+                "hour": 16,
+                "listen_count": 1
+            },
+            {
+                "day": "Friday",
+                "hour": 17,
+                "listen_count": 2
+            },
+            {
+                "day": "Monday",
+                "hour": 17,
+                "listen_count": 2
+            },
+            {
+                "day": "Saturday",
+                "hour": 17,
+                "listen_count": 1
+            },
+            {
+                "day": "Sunday",
+                "hour": 17,
+                "listen_count": 1
+            },
+            {
+                "day": "Thursday",
+                "hour": 17,
+                "listen_count": 2
+            },
+            {
+                "day": "Tuesday",
+                "hour": 17,
+                "listen_count": 3
+            },
+            {
+                "day": "Wednesday",
+                "hour": 17,
+                "listen_count": 1
+            },
+            {
+                "day": "Friday",
+                "hour": 18,
+                "listen_count": 2
+            },
+            {
+                "day": "Saturday",
+                "hour": 18,
+                "listen_count": 2
+            },
+            {
+                "day": "Sunday",
+                "hour": 18,
+                "listen_count": 1
+            },
+            {
+                "day": "Thursday",
+                "hour": 18,
+                "listen_count": 2
+            },
+            {
+                "day": "Thursday",
+                "hour": 19,
+                "listen_count": 2
+            },
+            {
+                "day": "Wednesday",
+                "hour": 19,
+                "listen_count": 2
+            },
+            {
+                "day": "Thursday",
+                "hour": 20,
+                "listen_count": 1
+            }
+        ]
+    }
 ]
