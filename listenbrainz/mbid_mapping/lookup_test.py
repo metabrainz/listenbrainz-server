@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import json
+from operator import itemgetter
 import os
 import time
 import sys
@@ -21,7 +22,7 @@ LISTENBRAINZ_HOST = "https://api.listenbrainz.org"
 
 MIN_NUMBER_OF_RECORDINGS = 3
 
-def lookup_album_on_solr(artist, release, recordings, track_count=None, debug=False):
+def solr_search(artist, release, recordings, track_count=None, debug=False):
 
     query = {"title": release,
              "ac_name": artist,
@@ -31,7 +32,7 @@ def lookup_album_on_solr(artist, release, recordings, track_count=None, debug=Fa
          query["count"] = track_count
 
     solr = pysolr.Solr('http://%s:%d/solr/%s' % (SOLR_HOST, SOLR_PORT, SOLR_CORE), always_commit=True)
-    docs = solr.search(Q(**query), fl="*,score", debug="true")
+    docs = solr.search(Q(**query), fl="*,score") # , debug="true")
     for doc in docs:
         if debug:
             print(docs.debug["explain"][doc["id"]])
@@ -39,6 +40,41 @@ def lookup_album_on_solr(artist, release, recordings, track_count=None, debug=Fa
             continue
 
         print("  %s %8s %.3f %-30s %-30s" % (doc['id'], doc['rank'][0], doc['score'], doc['title'][0], doc['ac_name'][0]))
+
+
+ACCEPT_THRESHOLD = 85
+def lookup_album_on_solr(lb_release, debug=False):
+
+    query = {"title": lb_release["release_name"],
+             "ac_name": lb_release["artist_credit_name"],
+             "recording_names": lb_release["recordings"] }
+
+    solr = pysolr.Solr('http://%s:%d/solr/%s' % (SOLR_HOST, SOLR_PORT, SOLR_CORE), always_commit=True)
+    docs = solr.search(Q(**query), fl="*,score", debug="true")
+
+    saved_docs = []
+    last_score = None
+    for doc in docs:
+        recording_names = doc['recording_names'][0].split("\n") 
+        mb_release = { "artist_credit_name": doc['ac_name'][0],
+                       "release_name": doc['title'][0],
+                       "recordings": recording_names,
+                       "rank": doc["rank"][0] }
+        score = fuzzy_release_compare(mb_release, lb_release, True)
+        doc["fuzzy"] = score
+        if not last_score:
+            last_score = score
+
+        if score < ACCEPT_THRESHOLD or score < last_score:
+            break
+
+        saved_docs.append(doc)
+
+    if not saved_docs:
+        return None
+
+    return sorted(saved_docs, key=itemgetter("rank"))[0]
+
 
 
 def musicbrainz_lookup(release_mbid):
@@ -64,7 +100,11 @@ def musicbrainz_sanity_check(release_mbid):
     for i, track in enumerate(release["recordings"]):
         recording_names.append("%d %s " % (i, track))
 
-    return lookup_album_on_solr(release["artist_credit_name"], release["release_name"], recording_names, len(release["recordings"]))
+    rel = { "artist_credit_name": release["artist_credit_name"],
+            "release_name": release["release_name"],
+            "recordings" : recording_names }
+
+    return lookup_album_on_solr(rel)
 
 
 def load_listens_for_user(user_name, ts=None):
@@ -82,29 +122,41 @@ def load_listens_for_user(user_name, ts=None):
 
 def listenbrainz_release_filter(user_name):
 
+# TODO: Check if artist varies too much
+#       Check if a track is just on repeat
     listens = []
     ts = int(time.time())
 
     last_artist = ""
     last_release = ""
     tracks = []
-    for i in range(2):
+    for i in range(5):
         listens = load_listens_for_user("rob", ts)
         for listen in listens:
             artist = listen["track_metadata"]["artist_name"]
             release = listen["track_metadata"]["release_name"]
-            if (last_artist and artist != last_artist) or (last_release and release != last_release):
+            if (last_release and release != last_release):
                 if len(tracks) >= MIN_NUMBER_OF_RECORDINGS:
                     print("%s: %s" % (last_artist, last_release))
                     recording_names = []
+                    recording_artists = []
+                    tracks.reverse()
                     for i, track in enumerate(tracks):
-                        recording_names.append("%d %s " % (i, track["track_metadata"]["track_name"]))
+                        recording_names.append("%d %s " % (i+1, track["track_metadata"]["track_name"].replace("\n", " ")))
+                        recording_artists.append(track["track_metadata"]["artist_name"])
 
-                    lookup_album_on_solr(last_artist, last_release, recording_names)
+
+                    rel = { "artist_credit_name": last_artist,
+                            "release_name": last_release,
+                            "recordings" : recording_names,
+                            "recording_artists": recording_artists }
+                    solr_doc = lookup_album_on_solr(rel, True)
+                    if solr_doc:
+                        print("Accepted fuzzy score: %d rank %s\n" % (solr_doc["fuzzy"], solr_doc["rank"][0]))
 
                 tracks = []
-            else:
-                tracks.append(listen)
+            
+            tracks.append(listen)
 
             last_artist = artist
             last_release = release
@@ -113,13 +165,16 @@ def listenbrainz_release_filter(user_name):
 
 def fuzzy_release_compare(mb_release, lb_release, debug=False):
 
-    artist_weight = .2
-    release_weight = .2
-    recordings_weight = .4
-    recording_count_weight = .20
+# TODO: unaccent
+# Check minimum track score -- if too low, do not accept
 
-    artist_score = fuzzy(mb_release["artist_credit_name"], lb_release["artist_credit_name"])
-    release_score = fuzzy(mb_release["release_name"], lb_release["release_name"])
+    artist_weight = .17
+    release_weight = .17
+    recordings_weight = .4
+    recording_count_weight = .26
+
+    artist_score = fuzzy(mb_release["artist_credit_name"].lower(), lb_release["artist_credit_name"].lower())
+    release_score = fuzzy(mb_release["release_name"].lower(), lb_release["release_name"].lower())
     if len(lb_release["recordings"]) < len(mb_release["recordings"]):
         recording_count_score = 100.0 * len(lb_release["recordings"]) / len(mb_release["recordings"])
     else:
@@ -131,21 +186,21 @@ def fuzzy_release_compare(mb_release, lb_release, debug=False):
 
     recording_score = 0.0
     count = 0
-    for mb_track, lb_track in zip(mb_release["recordings"], lb_release["recordings"]):
-        score = fuzzy(mb_track, lb_track)
+    for mb_track, lb_track, lb_artist in zip(mb_release["recordings"], lb_release["recordings"], lb_release["recording_artists"]):
+        score = fuzzy(mb_track.lower(), lb_track.lower())
         count += 1
         if debug:
-            print("  %3d %-40s %-40s" % (score, mb_track[:39], lb_track[:39]))
+            print("    %3d %-40s %-40s %-40s" % (score, mb_track[:39], lb_track[:39], lb_artist))
         recording_score += score
 
     recording_score /= count
     if debug:
-        print("%3d recording count score" % (recording_count_score))
+        print("%3d %d tracks                                %d tracks" % (recording_count_score, len(mb_release["recordings"]), len(lb_release["recordings"])))
 
     score = (artist_score * artist_weight) + (release_score * release_weight) + \
             (recording_count_score * recording_count_weight) + (recording_score * recordings_weight)
     if debug:
-        print("%3d TOTAL" % score)
+        print("%3d total, rank %s\n" % (score, mb_release["rank"]))
 
     return score
 

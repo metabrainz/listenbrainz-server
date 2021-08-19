@@ -23,13 +23,13 @@ SOLR_CORE = "release-index"
 def build_release_lookup_index():
 
     def set_recording_data(data, row):
-        data["recording_names"].append(("%d " % rec_index) + row["recording_name"])
+        data["recording_names"].append(("%d " % rec_index) + row["recording_name"].replace("\n", " "))
         data["release_ac_names"].append(("%d " % rec_index) + " ".join(row["artist_credit_names"]))
 
     def append_to_docs(data):
         data["count"] = len(data["recording_names"])
-        data["recording_names"] = " ".join(data["recording_names"])
-        data["release_ac_names"] = " ".join(data["release_ac_names"])
+        data["recording_names"] = "\n".join(data["recording_names"])
+        data["release_ac_names"] = "\n".join(data["release_ac_names"])
 
         if data['ac_id'] != 1:
             del data["release_ac_names"]
@@ -97,7 +97,7 @@ def build_release_lookup_index():
                         "release_mbid": row["release_mbid"],
                         "title": row["release_name"],
                         "ac_id": row["artist_credit_id"],
-                        "ac_name": row["artist_credit_name"],
+                        "ac_name": row["artist_credit_name"].replace("\n", " "),
                         "pos": row["position"],
                         "rank": row["rank"],
                         "recording_names": [],
