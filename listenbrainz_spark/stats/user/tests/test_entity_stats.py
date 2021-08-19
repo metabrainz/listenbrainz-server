@@ -1,7 +1,5 @@
 import json
 
-import pytest
-
 from listenbrainz_spark.stats.user.artist import get_artists
 from listenbrainz_spark.stats.user.entity import create_messages
 from listenbrainz_spark.stats.user.recording import get_recordings
@@ -11,13 +9,12 @@ from listenbrainz_spark.stats.user.tests import StatsTestCase
 
 class ArtistTestCase(StatsTestCase):
 
-    @pytest.mark.parametrize("entity", ["artists", "recordings", "releases"])
-    def test_entity_top_stats(self, entity: str):
-        with open(self.path_to_data_file(f'user_top_{entity}_output.json')) as f:
+    def test_get_artists(self):
+        with open(self.path_to_data_file('user_top_artists_output.json')) as f:
             expected = json.load(f)
 
         data = get_artists('test_listens')
-        received = create_messages(data=data, entity=entity, stats_range='all_time',
+        received = create_messages(data=data, entity='artists', stats_range='all_time',
                                    from_ts=self.begin_date.timestamp(), to_ts=self.end_date.timestamp())
         self.assertCountEqual(list(received), expected)
 
