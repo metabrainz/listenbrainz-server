@@ -126,3 +126,6 @@ class UtilsTestCase(SparkTestCase):
         self.assertListEqual(df_a.rdd.map(list).collect(), cp_df_a.rdd.map(list).collect())
         self.assertListEqual(df_b.rdd.map(list).collect(), cp_df_b.rdd.map(list).collect())
         self.assertListEqual(df_c.rdd.map(list).collect(), cp_df_c.rdd.map(list).collect())
+
+    def test_get_latest_listen_ts(self):
+        self.assertEqual(utils.get_latest_listen_ts(), datetime(2021, 8, 9, 12, 22, 43))
