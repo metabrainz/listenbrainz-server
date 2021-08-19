@@ -60,13 +60,16 @@ def lookup_album_on_solr(lb_release, debug=False):
                        "release_name": doc['title'][0],
                        "recordings": recording_names,
                        "rank": doc["rank"][0] }
-        score = fuzzy_release_compare(mb_release, lb_release, True)
+        score, reject = fuzzy_release_compare(mb_release, lb_release, True)
         doc["fuzzy"] = score
         if not last_score:
             last_score = score
 
         if score < ACCEPT_THRESHOLD or score < last_score:
             break
+
+        if reject:
+            continue
 
         saved_docs.append(doc)
 
@@ -137,7 +140,6 @@ def listenbrainz_release_filter(user_name):
             release = listen["track_metadata"]["release_name"]
             if (last_release and release != last_release):
                 if len(tracks) >= MIN_NUMBER_OF_RECORDINGS:
-                    print("%s: %s" % (last_artist, last_release))
                     recording_names = []
                     recording_artists = []
                     tracks.reverse()
@@ -163,10 +165,10 @@ def listenbrainz_release_filter(user_name):
             ts = listen["listened_at"]
 
 
+MINIMUM_TRACK_MATCH = 60
 def fuzzy_release_compare(mb_release, lb_release, debug=False):
 
 # TODO: unaccent
-# Check minimum track score -- if too low, do not accept
 
     artist_weight = .17
     release_weight = .17
@@ -186,8 +188,12 @@ def fuzzy_release_compare(mb_release, lb_release, debug=False):
 
     recording_score = 0.0
     count = 0
+    reject = False
     for mb_track, lb_track, lb_artist in zip(mb_release["recordings"], lb_release["recordings"], lb_release["recording_artists"]):
         score = fuzzy(mb_track.lower(), lb_track.lower())
+        if score < MINIMUM_TRACK_MATCH:
+            reject = True
+
         count += 1
         if debug:
             print("    %3d %-40s %-40s %-40s" % (score, mb_track[:39], lb_track[:39], lb_artist))
@@ -198,11 +204,16 @@ def fuzzy_release_compare(mb_release, lb_release, debug=False):
         print("%3d %d tracks                                %d tracks" % (recording_count_score, len(mb_release["recordings"]), len(lb_release["recordings"])))
 
     score = (artist_score * artist_weight) + (release_score * release_weight) + \
-            (recording_count_score * recording_count_weight) + (recording_score * recordings_weight)
+                (recording_count_score * recording_count_weight) + (recording_score * recordings_weight)
     if debug:
-        print("%3d total, rank %s\n" % (score, mb_release["rank"]))
+        print("%3d total, rank %s" % (score, mb_release["rank"]), end='')
 
-    return score
+    if reject:
+        print(" *** REJECT!", end="")
+
+    print("\n")
+
+    return (score, reject)
 
 
 def load_and_fuzzy_release_compare(mb_release_id, lb_release_id, debug=True):
