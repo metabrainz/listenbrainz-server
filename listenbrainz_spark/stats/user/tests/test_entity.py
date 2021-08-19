@@ -12,7 +12,7 @@ from listenbrainz_spark.stats.user.tests import StatsTestCase
 class UserEntityTestCase(StatsTestCase):
 
     @classmethod
-    def setUpClass(cls) -> None:
+    def setUpClass(cls):
         super(UserEntityTestCase, cls).setUpClass()
         entity.entity_handler_map['test'] = MagicMock(return_value="sample_test_data")
 
