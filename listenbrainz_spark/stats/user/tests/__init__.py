@@ -7,7 +7,6 @@ class StatsTestCase(SparkNewTestCase):
     def setUpClass(cls) -> None:
         super(StatsTestCase, cls).setUpClass()
         cls.upload_test_listens()
-        cls.get_all_test_listens().createOrReplaceTempView('test_listens')
 
     @classmethod
     def tearDownClass(cls) -> None:

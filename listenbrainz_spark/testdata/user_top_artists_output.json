@@ -4,8 +4,8 @@
         "type": "user_entity",
         "entity": "artists",
         "stats_range": "all_time",
-        "from_ts": 1104537600,
-        "to_ts": 1735689600,
+        "from_ts": 1009843200,
+        "to_ts": 1628511763,
         "data": [
             {
                 "artist_mbids": [
@@ -161,8 +161,8 @@
         "type": "user_entity",
         "entity": "artists",
         "stats_range": "all_time",
-        "from_ts": 1104537600,
-        "to_ts": 1735689600,
+        "from_ts": 1009843200,
+        "to_ts": 1628511763,
         "data": [
             {
                 "artist_mbids": [],
