@@ -183,23 +183,10 @@ class SparkTestCase(unittest.TestCase):
 
     @classmethod
     def get_candidate_set(cls):
-        df = utils.create_dataframe(
-            Row(
-                user_id=1,
-                recording_id=1,
-                user_name='vansika'
-            ),
-            schema=None
-        )
-        candidate_set = df.union(utils.create_dataframe(
-            Row(
-                user_id=2,
-                recording_id=2,
-                user_name='rob'
-            ),
-            schema=None
-        ))
-        return candidate_set
+        return listenbrainz_spark.session.createDataFrame([
+            Row(user_id=1, recording_id=1, user_name='vansika'),
+            Row(user_id=2, recording_id=2, user_name='rob')
+        ])
 
     @classmethod
     def path_to_data_file(cls, file_name):

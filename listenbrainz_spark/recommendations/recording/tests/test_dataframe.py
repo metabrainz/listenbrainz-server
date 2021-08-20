@@ -21,20 +21,6 @@ import time
 
 class CreateDataframeTestCase(RecommendationsTestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        super(CreateDataframeTestCase, cls).setUpClass()
-        # upload testdata/rec_listens.parquet to HDFS
-        utils.upload_to_HDFS(LISTENBRAINZ_NEW_DATA_DIRECTORY, os.path.join(TEST_DATA_PATH, 'rec_listens.parquet'))
-        utils.upload_to_HDFS(RECOMMENDATION_RECORDING_MAPPED_LISTENS, os.path.join(TEST_DATA_PATH, 'mapped_listens.parquet'))
-
-    @classmethod
-    def tearDownClass(cls):
-        super(CreateDataframeTestCase, cls).tearDownClass()
-        cls.delete_uploaded_listens()
-        if utils.path_exists(RECOMMENDATION_RECORDING_MAPPED_LISTENS):
-            utils.delete_dir(RECOMMENDATION_RECORDING_MAPPED_LISTENS, recursive=True)
-
     def test_get_users_dataframe(self):
         metadata = {}
         mapped_listens = utils.read_files_from_HDFS(RECOMMENDATION_RECORDING_MAPPED_LISTENS)
