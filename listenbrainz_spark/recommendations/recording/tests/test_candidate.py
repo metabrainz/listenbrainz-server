@@ -31,17 +31,6 @@ class CandidateSetsTestClass(RecommendationsTestCase):
             .read \
             .parquet("file://" + os.path.join(TEST_DATA_PATH, 'mapped_listens_subset.parquet'))
 
-    @classmethod
-    def tearDownClass(cls):
-        super(CandidateSetsTestClass, cls).tearDownClass()
-
-    @classmethod
-    def get_candidate_set(cls):
-        return listenbrainz_spark.session.createDataFrame([
-            Row(user_id=1, recording_id=1, user_name='vansika'),
-            Row(user_id=2, recording_id=2, user_name='rob')
-        ])
-
     def test_get_dates_to_generate_candidate_sets(self):
         mapped_df = utils.read_files_from_HDFS(RECOMMENDATION_RECORDING_MAPPED_LISTENS)
         from_date, to_date = candidate_sets.get_dates_to_generate_candidate_sets(mapped_df, 7)

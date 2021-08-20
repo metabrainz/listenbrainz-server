@@ -44,6 +44,14 @@ class SparkNewTestCase(unittest.TestCase):
     def tearDownClass(cls):
         listenbrainz_spark.context.stop()
 
+    @classmethod
+    def delete_dir(cls):
+        walk = utils.hdfs_walk('/', depth=1)
+        # dirs in '/'
+        dirs = next(walk)[1]
+        for directory in dirs:
+            utils.delete_dir(os.path.join('/', directory), recursive=True)
+
     @staticmethod
     def create_temp_listens_tar(name: str):
         """ Create a temporary tar file containing test listens data.
@@ -155,31 +163,18 @@ class SparkTestCase(unittest.TestCase):
 
     @classmethod
     def get_recordings_df(cls):
-        df = utils.create_dataframe(
-            Row(
-                mb_artist_credit_id=1,
-                mb_artist_credit_mbids=["181c4177-f33a-441d-b15d-910acaf18b07"],
-                mb_recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                mb_release_mbid="xxxxxx",
-                msb_artist_credit_name_matchable="lessthanjake",
-                recording_id=1,
-                msb_recording_name_matchable="Al's War",
-            ),
-            schema=None
-        )
-        recordings_df = df.union(utils.create_dataframe(
-            Row(
-                mb_artist_credit_id=2,
-                mb_artist_mbids=["281c4177-f33a-441d-b15d-910acaf18b07"],
-                mb_recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                mb_release_mbid="xxxxxx",
-                msb_artist_credit_name_matchable="kishorekumar",
-                recording_id=2,
-                msb_recording_name_matchable="Mere Sapno ki Rani",
-            ),
-            schema=None
-        ))
-        return recordings_df
+        return listenbrainz_spark.session.createDataFrame([
+            Row(artist_credit_id=1,
+                artist_credit_mbids=["181c4177-f33a-441d-b15d-910acaf18b07"],
+                recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                release_mbid="xxxxxx",
+                recording_id=1),
+            Row(artist_credit_id=2,
+                artist_mbids=["281c4177-f33a-441d-b15d-910acaf18b07"],
+                recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                release_mbid="xxxxxx",
+                recording_id=2)
+            ])
 
     @classmethod
     def get_candidate_set(cls):
