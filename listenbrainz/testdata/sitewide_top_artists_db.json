@@ -4,8 +4,7 @@
     {
       "artists": [
         {
-          "artist_mbids": [],
-          "artist_msid": "cf7b0f9c-cd96-4e16-a0e7-acc7adfec457",
+          "artist_mbids": ["cf7b0f9c-cd96-4e16-a0e7-acc7adfec457"],
           "artist_name": "Judas Priest",
           "listen_count": 2521
         }
@@ -17,8 +16,7 @@
     {
       "artists": [
         {
-          "artist_mbids": [],
-          "artist_msid": "cf7b0f9c-cd96-4e16-a0e7-acc7adfec457",
+          "artist_mbids": ["cf7b0f9c-cd96-4e16-a0e7-acc7adfec457"],
           "artist_name": "Judas Priest",
           "listen_count": 1354
         }
