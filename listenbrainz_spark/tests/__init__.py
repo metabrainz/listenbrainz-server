@@ -43,6 +43,7 @@ class SparkNewTestCase(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         listenbrainz_spark.context.stop()
+        cls.delete_dir()
 
     @classmethod
     def delete_dir(cls):

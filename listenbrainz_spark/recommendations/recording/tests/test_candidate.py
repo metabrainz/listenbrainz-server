@@ -8,7 +8,7 @@ import listenbrainz_spark
 from listenbrainz_spark.path import RECOMMENDATION_RECORDING_MAPPED_LISTENS, RECOMMENDATION_RECORDINGS_DATAFRAME, \
     RECOMMENDATION_RECORDING_USERS_DATAFRAME
 from listenbrainz_spark.recommendations.recording.tests import RecommendationsTestCase
-from listenbrainz_spark.tests import SparkTestCase, TEST_DATA_PATH
+from listenbrainz_spark.tests import TEST_DATA_PATH
 from listenbrainz_spark.recommendations.recording import candidate_sets
 from listenbrainz_spark.recommendations.recording import create_dataframes
 from listenbrainz_spark import utils, path, stats

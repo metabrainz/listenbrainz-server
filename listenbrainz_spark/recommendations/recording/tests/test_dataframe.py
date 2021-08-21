@@ -5,15 +5,13 @@ from datetime import datetime
 import os
 
 import listenbrainz_spark
-import listenbrainz_spark.utils.mapping as mapping_utils
 from listenbrainz_spark.path import LISTENBRAINZ_NEW_DATA_DIRECTORY, RECOMMENDATION_RECORDING_MAPPED_LISTENS, \
     RECOMMENDATION_RECORDINGS_DATAFRAME, RECOMMENDATION_RECORDING_USERS_DATAFRAME, \
     RECOMMENDATION_RECORDING_PLAYCOUNTS_DATAFRAME, RECOMMENDATION_RECORDING_DATAFRAME_METADATA
 from listenbrainz_spark.recommendations.recording.tests import RecommendationsTestCase
-from listenbrainz_spark.tests import SparkTestCase, SparkNewTestCase, TEST_DATA_PATH
+from listenbrainz_spark.tests import TEST_DATA_PATH
 from listenbrainz_spark.recommendations.recording import create_dataframes
-from listenbrainz_spark.utils import get_latest_listen_ts, get_listens_from_new_dump
-from listenbrainz_spark import schema, utils, config, path, hdfs_connection, stats
+from listenbrainz_spark import schema, utils
 
 from pyspark.sql import Row
 import time
