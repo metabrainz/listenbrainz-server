@@ -3,7 +3,6 @@ from unittest.mock import patch, call, MagicMock
 
 import listenbrainz_spark
 from listenbrainz_spark.recommendations.recording.tests import RecommendationsTestCase
-from listenbrainz_spark.tests import SparkTestCase, SparkNewTestCase
 from listenbrainz_spark.recommendations.recording import recommend
 from listenbrainz_spark import schema, utils, path
 from listenbrainz_spark.exceptions import (RecommendationsNotGeneratedException,
@@ -39,22 +38,6 @@ class RecommendTestClass(RecommendationsTestCase):
         self.assertEqual(sorted(params.similar_artist_candidate_set_df.columns), sorted(similar_artist_candidate_set_df.columns))
         self.assertEqual(params.recommendation_top_artist_limit, recommendation_top_artist_limit)
         self.assertEqual(params.recommendation_similar_artist_limit, recommendation_similar_artist_limit)
-
-    @classmethod
-    def get_model_metadata(cls, model_id):
-        return {
-            'dataframe_id': 'xxxxx',
-            'model_id': model_id,
-            'alpha': 3.0,
-            'lmbda': 2.0,
-            'iteration': 2,
-            'rank': 4,
-            'test_data_count': 3,
-            'test_rmse': 2.0,
-            'training_data_count': 4,
-            'validation_data_count': 3,
-            'validation_rmse': 2.0,
-        }
 
     def get_recordings_df(self):
         return listenbrainz_spark.session.createDataFrame([

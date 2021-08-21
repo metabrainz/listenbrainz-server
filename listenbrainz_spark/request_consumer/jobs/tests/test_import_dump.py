@@ -8,7 +8,7 @@ from listenbrainz_spark.request_consumer.jobs import import_dump
 from listenbrainz_spark.exceptions import (DumpInvalidException,
                                            DumpNotFoundException)
 from listenbrainz_spark.path import IMPORT_METADATA
-from listenbrainz_spark.tests import SparkTestCase
+from listenbrainz_spark.tests import SparkNewTestCase
 from listenbrainz_spark.utils import (delete_dir, path_exists,
                                       read_files_from_HDFS)
 
@@ -36,7 +36,7 @@ def mock_search_dump(dump_id: int, dump_type: str, imported_at: datetime):
     return dump_id % 3 != 0
 
 
-class DumpImporterJobTestCase(SparkTestCase):
+class DumpImporterJobTestCase(SparkNewTestCase):
     # use path_ as prefix for all paths in this class.
     path_ = IMPORT_METADATA
 

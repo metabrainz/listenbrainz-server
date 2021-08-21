@@ -2,13 +2,13 @@ import os
 import tempfile
 from datetime import datetime
 
-from listenbrainz_spark.tests import SparkTestCase
+from listenbrainz_spark.tests import SparkNewTestCase
 from listenbrainz_spark import utils
 
 from pyspark.sql import Row
 
 
-class UtilsTestCase(SparkTestCase):
+class UtilsTestCase(SparkNewTestCase):
     # use path_ as prefix for all paths in this class.
     path_ = "/test"
     temp_path_ = "/temp"
@@ -128,4 +128,6 @@ class UtilsTestCase(SparkTestCase):
         self.assertListEqual(df_c.rdd.map(list).collect(), cp_df_c.rdd.map(list).collect())
 
     def test_get_latest_listen_ts(self):
+        self.upload_test_listens()
         self.assertEqual(utils.get_latest_listen_ts(), datetime(2021, 8, 9, 12, 22, 43))
+        self.delete_uploaded_listens()

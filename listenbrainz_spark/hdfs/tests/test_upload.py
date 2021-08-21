@@ -9,7 +9,7 @@ import tarfile
 from listenbrainz_spark import utils, path, schema
 from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
 from listenbrainz_spark.path import LISTENBRAINZ_NEW_DATA_DIRECTORY
-from listenbrainz_spark.tests import SparkTestCase, SparkNewTestCase
+from listenbrainz_spark.tests import SparkNewTestCase
 
 from pyspark.sql.types import StructField, StructType, StringType
 
