@@ -29,6 +29,7 @@ import {
   getPageProps,
   pinFeatureEnabled,
 } from "./utils";
+import CBReviewModal from "./CBReviewModal";
 
 export type RecentListensProps = {
   latestListenTs: number;
@@ -54,6 +55,7 @@ export interface RecentListensState {
   previousListenTs?: number;
   recordingFeedbackMap: RecordingFeedbackMap;
   recordingToPin?: Listen;
+  recordingToReview?: Listen;
   dateTimePickerValue: Date | Date[];
 }
 
@@ -83,6 +85,7 @@ export default class RecentListens extends React.Component<
       nextListenTs,
       previousListenTs: props.listens?.[0]?.listened_at,
       recordingToPin: props.listens?.[0],
+      recordingToReview: props.listens?.[0],
       direction: "down",
       recordingFeedbackMap: {},
       dateTimePickerValue: nextListenTs
@@ -429,6 +432,10 @@ export default class RecentListens extends React.Component<
     this.setState({ recordingToPin });
   };
 
+  updateRecordingToReview = (recordingToReview: Listen) => {
+    this.setState({ recordingToReview });
+  };
+
   getFeedbackForRecordingMsid = (
     recordingMsid?: string | null
   ): ListenFeedBack => {
@@ -538,6 +545,7 @@ export default class RecentListens extends React.Component<
       previousListenTs,
       dateTimePickerValue,
       recordingToPin,
+      recordingToReview,
     } = this.state;
     const {
       latestListenTs,
@@ -627,6 +635,7 @@ export default class RecentListens extends React.Component<
                           }
                           updateFeedback={this.updateFeedback}
                           updateRecordingToPin={this.updateRecordingToPin}
+                          updateRecordingToReview={this.updateRecordingToReview}
                           newAlert={newAlert}
                           className={`${
                             this.isCurrentListen(listen)
@@ -752,6 +761,11 @@ export default class RecentListens extends React.Component<
                     newAlert={newAlert}
                   />
                 )}
+                <CBReviewModal
+                  listen={recordingToReview || listens[0]}
+                  isCurrentUser={currentUser?.name === user?.name}
+                  newAlert={newAlert}
+                />
               </div>
             )}
           </div>
@@ -789,6 +803,7 @@ document.addEventListener("DOMContentLoaded", () => {
     current_user,
     spotify,
     youtube,
+    critiquebrainz,
   } = globalReactProps;
   const {
     latest_listen_ts,
@@ -820,6 +835,7 @@ document.addEventListener("DOMContentLoaded", () => {
     currentUser: current_user,
     spotifyAuth: spotify,
     youtubeAuth: youtube,
+    critiquebrainzAuth: critiquebrainz,
   };
 
   ReactDOM.render(
