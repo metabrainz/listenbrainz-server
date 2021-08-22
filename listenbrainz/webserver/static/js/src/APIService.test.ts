@@ -963,8 +963,8 @@ describe("submitReviewToCB", () => {
   });
 
   it("returns the id for the submitted review if successful", async () => {
-    await expect(apiService.submitReviewToCB
-      (accessToken, reviewToSubmit)).resolves
-      .toEqual({"id": "bf24ca37-25f4-4e34-9aec-460b94364cfc"});
+    await expect(
+      apiService.submitReviewToCB(accessToken, reviewToSubmit)
+    ).resolves.toEqual({ id: "bf24ca37-25f4-4e34-9aec-460b94364cfc" });
   });
 });
