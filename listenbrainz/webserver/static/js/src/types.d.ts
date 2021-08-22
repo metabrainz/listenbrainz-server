@@ -40,6 +40,9 @@ interface AdditionalInfo {
   track_mbid?: string | null;
   tracknumber?: number | null;
   work_mbids?: Array<string> | null;
+  lastfm_artist_mbid?: string | null;
+  lastfm_release_mbid?: string | null;
+  lastfm_track_mbid?: string | null;
 }
 
 declare type BaseListenFormat = {
@@ -535,6 +538,12 @@ type SimilarUser = {
 };
 
 type ReviewableEntityType = "recording" | "artist" | "release_group";
+
+type ReviewableEntity = {
+  type: ReviewableEntityType;
+  name?: string | null;
+  mbid: string;
+};
 
 type CritiqueBrainzReview = {
   entity_id: string;
