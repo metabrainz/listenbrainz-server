@@ -4,7 +4,7 @@ import json
 from collections import defaultdict
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Union, Iterable
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
@@ -44,6 +44,11 @@ class StatisticsRange(Enum):
     year = 'year'
     all_time = 'all_time'
 
+
+# FIXME: the responses returned by the ger_user_artist,
+#  get_release and get_recordings endpoints has changed.
+#  Front-end code needs to reviewed and fixed as needed.
+#  Notably, we never return msids now.
 
 @stats_api_bp.route("/user/<user_name>/artists")
 @crossdomain()
@@ -610,17 +615,13 @@ def get_artist_map(user_name: str):
                 raise APINoContent('')
         else:
             # Calculate the data
-            artist_msids = defaultdict(lambda: 0)
-            artist_mbids = defaultdict(lambda: 0)
+            artist_mbid_counts = defaultdict(int)
             top_artists = getattr(artist_stats, stats_range).artists
             for artist in top_artists:
-                if artist.artist_msid is not None:
-                    artist_msids[artist.artist_msid] += artist.listen_count
-                else:
-                    for artist_mbid in artist.artist_mbids:
-                        artist_mbids[artist_mbid] += artist.listen_count
+                for artist_mbid in artist.artist_mbids:
+                    artist_mbid_counts[artist_mbid] += artist.listen_count
 
-            country_code_data = _get_country_codes(artist_msids, artist_mbids)
+            country_code_data = _get_country_wise_counts(artist_mbid_counts)
             result = UserArtistMapStatJson(**{
                 stats_range: {
                     "artist_map": country_code_data,
@@ -836,30 +837,21 @@ def _get_sitewide_entity_list(
     return sorted(result, key=lambda x: x['from_ts'])
 
 
-def _get_country_codes(artist_msids: Dict[str, int], artist_mbids: Dict[str, int]) -> List[UserArtistMapRecord]:
+def _get_country_wise_counts(artist_mbids: Dict[str, int]) -> List[UserArtistMapRecord]:
     """ Get country codes from list of given artist_msids and artist_mbids
     """
-    country_map = defaultdict(int)
-
-    # Map artist_msids to artist_mbids and create a common dict
-    all_artist_mbids = defaultdict(lambda: 0)
-    for artist_mbid, listen_count in _get_mbids_from_msids(artist_msids).items():
-        all_artist_mbids[artist_mbid] += listen_count
-    for artist_mbid, listen_count in artist_mbids.items():
-        all_artist_mbids[artist_mbid] += listen_count
-
     # Get artist_origin_countries from artist_credit_ids
-    artist_country_code = _get_country_code_from_mbids(all_artist_mbids)
+    artist_country_codes = _get_country_code_from_mbids(artist_mbids)
 
     # Map country codes to appropriate MBIDs and listen counts
     result = defaultdict(lambda: {
         "artist_count": 0,
         "listen_count": 0
     })
-    for artist_mbid, listen_count in all_artist_mbids.items():
-        if artist_mbid in artist_country_code:
+    for artist_mbid, listen_count in artist_mbids.items():
+        if artist_mbid in artist_country_codes:
             # TODO: add a test to handle the case where pycountry doesn't recognize the country
-            country_alpha_3 = pycountry.countries.get(alpha_2=artist_country_code[artist_mbid])
+            country_alpha_3 = pycountry.countries.get(alpha_2=artist_country_codes[artist_mbid])
             if country_alpha_3 is None:
                 continue
             result[country_alpha_3.alpha_3]["artist_count"] += 1
@@ -871,37 +863,6 @@ def _get_country_codes(artist_msids: Dict[str, int], artist_mbids: Dict[str, int
             **data
         }) for country, data in result.items()
     ]
-
-
-def _get_mbids_from_msids(artist_msids: Dict[str, int]) -> Dict[str, int]:
-    """ Get list of artist_mbids corresponding to the input artist_msids
-    """
-    request_data = [{"artist_msid": artist_msid} for artist_msid in artist_msids.keys()]
-    msid_mbid_mapping = defaultdict(list)
-    if len(request_data) > 0:
-        try:
-            result = requests.post("{}/artist-credit-from-artist-msid/json"
-                                   .format(current_app.config['LISTENBRAINZ_LABS_API_URL']),
-                                   json=request_data, params={'count': len(request_data)})
-            # Raise error if non 200 response is received
-            result.raise_for_status()
-            data = result.json()
-            for entry in data:
-                msid_mbid_mapping[entry['artist_msid']] = entry['[artist_credit_mbid]']
-        except requests.RequestException as err:
-            current_app.logger.error("Error while getting artist_mbids, {}".format(err), exc_info=True)
-            error_msg = ("An error occurred while calculating artist_map data, "
-                         "try setting 'force_recalculate' to 'false' to get a cached copy if available."
-                         "Payload: {}. Response: {}".format(request_data, result.text))
-            raise APIInternalServerError(error_msg)
-
-    artist_mbids = defaultdict(lambda: 0)
-    for artist_msid, listen_count in artist_msids.items():
-        if artist_msid in msid_mbid_mapping:
-            for artist_mbid in msid_mbid_mapping[artist_msid]:
-                artist_mbids[artist_mbid] += listen_count
-
-    return artist_mbids
 
 
 def _get_country_code_from_mbids(artist_mbids: Dict[str, int]) -> Dict[str, str]:
@@ -925,5 +886,4 @@ def _get_country_code_from_mbids(artist_mbids: Dict[str, int]) -> Dict[str, str]
                          "try setting 'force_recalculate' to 'false' to get a cached copy if available"
                          "Payload: {}. Response: {}".format(request_data, result.text))
             raise APIInternalServerError(error_msg)
-
     return artist_country_code

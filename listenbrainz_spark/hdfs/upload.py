@@ -1,12 +1,14 @@
 import os
+from pathlib import Path
 import time
 import tarfile
 import tempfile
 import logging
 
 from listenbrainz_spark import schema, path, utils
-from listenbrainz_spark.hdfs import ListenbrainzHDFSUploader
-
+from listenbrainz_spark.hdfs import ListenbrainzHDFSUploader, TEMP_DIR_PATH as HDFS_TEMP_DIR
+from listenbrainz_spark.path import INCREMENTAL_DUMPS_SAVE_PATH
+from listenbrainz_spark.utils import read_files_from_HDFS
 
 logger = logging.getLogger(__name__)
 
@@ -69,20 +71,6 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
                 self.upload_archive(tmp_dump_dir, tar, path.MBID_MSID_MAPPING, schema.msid_mbid_mapping_schema,
                                     self.process_json, overwrite=True)
 
-    def upload_listens(self, archive: str, overwrite: bool = False):
-        """ Decompress archive and upload listens to HDFS.
-
-            Args:
-                archive: Listens tar file to upload.
-                overwrite: If True, overwrites the previously present listens,
-                           if False merges the previously present listens with the new ones.
-        """
-        pxz = self.get_pxz_output(archive)
-        with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
-            with tempfile.TemporaryDirectory() as tmp_dump_dir:
-                self.upload_archive(tmp_dump_dir, tar, path.LISTENBRAINZ_DATA_DIRECTORY, schema.listen_schema,
-                                    self.process_json_listens, overwrite=overwrite)
-
     def upload_artist_relation(self, archive: str):
         """ Decompress archive and upload artist relation to HDFS.
 
@@ -93,3 +81,70 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
             with tempfile.TemporaryDirectory() as tmp_dump_dir:
                 self.upload_archive(tmp_dump_dir, tar, path.SIMILAR_ARTIST_DATAFRAME_PATH, schema.artist_relation_schema,
                                     self.process_json, overwrite=True)
+
+    def upload_new_listens_incremental_dump(self, archive: str):
+        """ Upload new format parquet listens of an incremental
+         dump to HDFS.
+            Args:
+                archive: path to parquet listens dump to be uploaded
+        """
+        # upload parquet file to temporary path so that we can
+        # read it in spark in next step
+        hdfs_path = self.upload_archive_to_temp(archive)
+
+        # read the parquet file from the temporary path and append
+        # it to incremental.parquet for permanent storage
+        read_files_from_HDFS(hdfs_path) \
+            .repartition(1) \
+            .write \
+            .mode("append") \
+            .parquet(INCREMENTAL_DUMPS_SAVE_PATH)
+
+        # delete parquet from hdfs temporary path
+        utils.delete_dir(hdfs_path, recursive=True)
+
+    def upload_new_listens_full_dump(self, archive: str):
+        """ Upload new format parquet listens dumps to of a full
+        dump to HDFS.
+
+            Args:
+                  archive: path to parquet listens dump to be uploaded
+        """
+        src_path = self.upload_archive_to_temp(archive)
+        dest_path = path.LISTENBRAINZ_NEW_DATA_DIRECTORY
+        # Delete existing dumps if any
+        if utils.path_exists(dest_path):
+            logger.info(f'Removing {dest_path} from HDFS...')
+            utils.delete_dir(dest_path, recursive=True)
+            logger.info('Done!')
+
+        logger.info(f"Moving the processed files from {src_path} to {dest_path}")
+        t0 = time.monotonic()
+
+        # Check if parent directory exists, if not create a directory
+        dest_path_parent = str(Path(dest_path).parent)
+        if not utils.path_exists(dest_path_parent):
+            utils.create_dir(dest_path_parent)
+
+        utils.rename(src_path, dest_path)
+        utils.logger.info(f"Done! Time taken: {time.monotonic() - t0:.2f}")
+
+    def upload_archive_to_temp(self, archive: str) -> str:
+        """ Upload parquet files in archive to a temporary hdfs directory
+
+            Args:
+                archive: the archive to be uploaded
+            Returns:
+                path of the temp dir where archive has been uploaded
+        """
+        with tempfile.TemporaryDirectory() as local_temp_dir:
+            logger.info("Cleaning HDFS temporary directory...")
+            if utils.path_exists(HDFS_TEMP_DIR):
+                utils.delete_dir(HDFS_TEMP_DIR, recursive=True)
+
+            logger.info("Uploading listens to temporary directory in HDFS...")
+            self.extract_and_upload_archive(archive, local_temp_dir, HDFS_TEMP_DIR)
+
+        # dump is uploaded to HDFS_TEMP_DIR/archive_name
+        archive_name = Path(archive).stem
+        return str(Path(HDFS_TEMP_DIR).joinpath(archive_name))
