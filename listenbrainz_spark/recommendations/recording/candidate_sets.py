@@ -293,20 +293,22 @@ def filter_last_x_days_recordings(candidate_set_df, mapped_listens_subset):
         Returns:
             candidate_set without recordings of last X days of a user for all users.
     """
-    df = mapped_listens_subset.select(col('recording_mbid').alias('recording_mbid'),
-                                      col('user_name').alias('user')) \
-                              .distinct()
+    df = mapped_listens_subset.select(
+        col('recording_mbid').alias('recording_mbid2'),
+        col('user_name').alias('user')
+    ).distinct()
 
     condition = [
-        candidate_set_df.recording_mbid == df.recording_mbid,
+        candidate_set_df.recording_mbid == df.recording_mbid2,
         candidate_set_df.user_name == df.user
     ]
 
-    filtered_df = candidate_set_df.join(df, condition, 'left') \
-                                  .select('*') \
-                                  .where(df.recording_mbid.isNull() & df.user.isNull())
+    filtered_df = candidate_set_df \
+        .join(df, condition, 'left') \
+        .select('*') \
+        .where(df.recording_mbid2.isNull() & df.user.isNull())
 
-    return filtered_df.drop('df.recording_mbid', 'df.user')
+    return filtered_df.drop('recording_mbid2', 'user')
 
 
 def get_top_artist_candidate_set(top_artist_df, recordings_df, users_df, mapped_listens_subset):

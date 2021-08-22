@@ -30,13 +30,6 @@ test_listen = {
 
 class HDFSTestCase(unittest.TestCase):
 
-    @patch('listenbrainz_spark.hdfs_connection.init_hdfs')
-    @patch('listenbrainz_spark.init_spark_session')
-    def test_init(self, mock_spark_init, mock_hdfs_init):
-        ListenbrainzHDFSUploader()
-        mock_hdfs_init.assert_called_once_with(config.HDFS_HTTP_URI)
-        mock_spark_init.assert_called_once()
-
     def test_is_json_file(self):
         self.assertTrue(ListenbrainzHDFSUploader()._is_json_file('file.json'))
         self.assertFalse(ListenbrainzHDFSUploader()._is_json_file('file.txt'))

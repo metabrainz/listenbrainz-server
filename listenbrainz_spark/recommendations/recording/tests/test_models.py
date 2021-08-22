@@ -1,29 +1,25 @@
 import re
-import os
-import uuid
-import unittest
 from unittest.mock import patch, Mock, MagicMock
 
-import listenbrainz_spark
-from listenbrainz_spark.tests import SparkTestCase, TEST_PLAYCOUNTS_PATH, PLAYCOUNTS_COUNT
-from listenbrainz_spark import utils, config, hdfs_connection, path, schema
+from listenbrainz_spark.recommendations.recording.tests import RecommendationsTestCase
+from listenbrainz_spark.tests import TEST_PLAYCOUNTS_PATH, PLAYCOUNTS_COUNT
+from listenbrainz_spark import utils, config, path, schema
 from listenbrainz_spark.recommendations.recording import train_models
 
 from pyspark.sql import Row
 
-from pyspark.sql.types import StructType, StructField, IntegerType
 
-class TrainModelsTestCase(SparkTestCase):
+class TrainModelsTestCase(RecommendationsTestCase):
 
     @classmethod
     def setUpClass(cls):
-        super().setUpClass()
-        super().upload_test_playcounts()
+        super(TrainModelsTestCase, cls).setUpClass()
+        super(TrainModelsTestCase, cls).upload_test_playcounts()
 
     @classmethod
     def tearDownClass(cls):
-        super().delete_dir()
-        super().tearDownClass()
+        super(TrainModelsTestCase, cls).tearDownClass()
+        super(TrainModelsTestCase, cls).delete_dir()
 
     def test_parse_dataset(self):
         row = Row(user_id=1, recording_id=2, count=3)
