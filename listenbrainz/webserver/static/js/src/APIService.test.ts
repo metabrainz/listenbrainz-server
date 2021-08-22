@@ -908,3 +908,63 @@ describe("getPinsForUser", () => {
     expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("submitReviewToCB", () => {
+  const accessToken = "foobar";
+  const reviewToSubmit: CritiqueBrainzReview = {
+    entity_id: "bf24ca37-25f4-4e34-9aec-460b94364cfc",
+    entity_type: "artist",
+    text: "TEXT",
+    languageCode: "en",
+    rating: "4",
+  };
+
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({ id: "bf24ca37-25f4-4e34-9aec-460b94364cfc" }),
+      });
+    });
+
+    // Mock function for checkStatus
+    apiService.checkStatus = jest.fn();
+  });
+
+  it("calls fetch with correct parameters", async () => {
+    await apiService.submitReviewToCB(accessToken, reviewToSubmit);
+    expect(window.fetch).toHaveBeenCalledWith(
+      "https://critiquebrainz.org/ws/1/review/",
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer foobar",
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({
+          is_draft: false,
+          entity_id: "bf24ca37-25f4-4e34-9aec-460b94364cfc",
+          entity_type: "artist",
+          text: "TEXT",
+          license_choice: "CC BY-SA 3.0",
+          language: "en",
+          rating: "4",
+        }),
+      }
+    );
+  });
+
+  it("calls checkStatus once", async () => {
+    await apiService.submitReviewToCB(accessToken, reviewToSubmit);
+    expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns the id for the submitted review if successful", async () => {
+    await expect(apiService.submitReviewToCB
+      (accessToken, reviewToSubmit)).resolves
+      .toEqual({"id": "bf24ca37-25f4-4e34-9aec-460b94364cfc"});
+  });
+});
