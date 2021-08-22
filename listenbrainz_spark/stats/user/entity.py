@@ -16,7 +16,7 @@ from listenbrainz_spark.stats import (offset_days, replace_days,
 from listenbrainz_spark.stats.user.artist import get_artists
 from listenbrainz_spark.stats.user.recording import get_recordings
 from listenbrainz_spark.stats.user.release import get_releases
-from listenbrainz_spark.stats.utils import filter_listens, get_last_monday
+from listenbrainz_spark.stats.utils import get_last_monday
 from listenbrainz_spark.utils import get_listens, get_listens_from_new_dump, get_latest_listen_ts
 
 logger = logging.getLogger(__name__)

@@ -60,17 +60,6 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
         logger.info("Uploading to {}...".format(dest_path))
         logger.info("File processed in {:.2f} seconds!".format(time.monotonic() - start_time))
 
-    def upload_mapping(self, archive: str):
-        """ Decompress archive and upload mapping to HDFS.
-
-            Args:
-                archive: Mapping tar file to upload.
-        """
-        with tarfile.open(name=archive, mode='r:bz2') as tar:
-            with tempfile.TemporaryDirectory() as tmp_dump_dir:
-                self.upload_archive(tmp_dump_dir, tar, path.MBID_MSID_MAPPING, schema.msid_mbid_mapping_schema,
-                                    self.process_json, overwrite=True)
-
     def upload_artist_relation(self, archive: str):
         """ Decompress archive and upload artist relation to HDFS.
 

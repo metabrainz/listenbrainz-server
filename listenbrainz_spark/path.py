@@ -12,8 +12,6 @@ INCREMENTAL_DUMPS_SAVE_PATH = os.path.join(LISTENBRAINZ_NEW_DATA_DIRECTORY, "inc
 # Directory containing similar artist relation.
 # (This is a temporary path till incremental dumps for similar artists are prepared)
 SIMILAR_ARTIST_DIR = '/similar_artists'
-# Absolute path to recording mbid->msid and artist mbid-msid mapping.
-MBID_MSID_MAPPING = os.path.join('/', 'mapping', 'msid_mbid_mapping.parquet')
 # Absolute path to similar artist relation.
 SIMILAR_ARTIST_DATAFRAME_PATH = SIMILAR_ARTIST_DIR + \
     '/' + 'artist_credit_artist_credit_relations.parquet'
