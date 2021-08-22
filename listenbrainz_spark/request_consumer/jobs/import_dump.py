@@ -151,21 +151,6 @@ def import_incremental_dump_by_id_handler(dump_id: int):
     }]
 
 
-def import_mapping_to_hdfs():
-    ts = time.monotonic()
-    temp_dir = tempfile.mkdtemp()
-    src, mapping_name = ListenbrainzDataDownloader().download_msid_mbid_mapping(directory=temp_dir)
-    ListenbrainzDataUploader().upload_mapping(archive=src)
-    shutil.rmtree(temp_dir)
-
-    return [{
-        'type': 'import_mapping',
-        'imported_mapping': mapping_name,
-        'import_time': str(datetime.utcnow()),
-        'time_taken_to_import': '{:.2f}'.format(time.monotonic() - ts)
-    }]
-
-
 def import_artist_relation_to_hdfs():
     ts = time.monotonic()
     temp_dir = tempfile.mkdtemp()
