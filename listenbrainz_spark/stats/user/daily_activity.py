@@ -10,12 +10,10 @@ from pydantic import ValidationError
 import listenbrainz_spark
 from data.model.user_daily_activity import UserDailyActivityStatMessage
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
-from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
+from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY, LISTENBRAINZ_NEW_DATA_DIRECTORY
 from listenbrainz_spark.stats import offset_days, replace_days, run_query
-from listenbrainz_spark.stats.utils import (filter_listens,
-                                            get_last_monday,
-                                            get_latest_listen_ts)
-from listenbrainz_spark.utils import get_listens
+from listenbrainz_spark.stats.utils import filter_listens, get_last_monday
+from listenbrainz_spark.utils import get_listens, get_listens_from_new_dump, get_latest_listen_ts
 from pyspark.sql.functions import collect_list, sort_array, struct
 
 
@@ -171,6 +169,5 @@ def create_messages(data, stats_range: str, from_ts: int, to_ts: int) -> Iterato
 
 
 def _get_listens(from_date: datetime, to_date: datetime):
-    listens = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
-    filtered_listens = filter_listens(listens, from_date, to_date)
-    filtered_listens.createOrReplaceTempView('listens')
+    get_listens_from_new_dump(from_date, to_date) \
+        .createOrReplaceTempView('listens')
