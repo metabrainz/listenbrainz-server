@@ -12,11 +12,10 @@ from data.model.user_recording_stat import UserRecordingRecord
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY, LISTENBRAINZ_NEW_DATA_DIRECTORY
 from listenbrainz_spark.stats import (offset_days, replace_days,
-                                      replace_months, run_query)
+                                      replace_months, run_query, get_last_monday)
 from listenbrainz_spark.stats.user.artist import get_artists
 from listenbrainz_spark.stats.user.recording import get_recordings
 from listenbrainz_spark.stats.user.release import get_releases
-from listenbrainz_spark.stats.utils import get_last_monday
 from listenbrainz_spark.utils import get_listens, get_listens_from_new_dump, get_latest_listen_ts
 
 logger = logging.getLogger(__name__)
