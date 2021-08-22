@@ -305,6 +305,7 @@ interface GlobalProps {
   current_user: ListenBrainzUser;
   spotify?: SpotifyUser;
   youtube?: YoutubeUser;
+  critiquebrainz?: CritiqueBrainzUser;
 }
 
 const getPageProps = (): {
@@ -371,6 +372,12 @@ const pinFeatureEnabled = (currentUser: string): boolean => {
   return usersAllowedIn.includes(currentUser.toLowerCase());
 };
 
+const countWords = (str: string): number => {
+  const words = str.match(/\w+/g);
+  if (words === null) return 0;
+  return words.length;
+};
+
 export {
   searchForSpotifyTrack,
   getArtistLink,
@@ -382,4 +389,5 @@ export {
   searchForYoutubeTrack,
   createAlert,
   pinFeatureEnabled,
+  countWords,
 };
