@@ -32,6 +32,7 @@ export type ListenCardProps = {
   removeListenFromListenList: (listen: Listen) => void;
   updateFeedback: (recordingMsid: string, score: ListenFeedBack) => void;
   updateRecordingToPin: (recordingToPin: Listen) => void;
+  updateRecordingToReview: (recordingToReview: Listen) => void;
   newAlert: (
     alertType: AlertType,
     title: string,
@@ -187,6 +188,7 @@ export default class ListenCard extends React.Component<
       className,
       isCurrentUser,
       updateRecordingToPin,
+      updateRecordingToReview,
     } = this.props;
     const { feedback, isDeleted } = this.state;
     const { currentUser } = this.context;
@@ -336,6 +338,12 @@ export default class ListenCard extends React.Component<
                         dataTarget="#PinRecordingModal"
                       />
                     )}
+                    <ListenControl
+                      title="Review this Recording"
+                      action={() => updateRecordingToReview(listen)}
+                      dataToggle="modal"
+                      dataTarget="#CBReviewModal"
+                    />
                   </ul>
                 </>
               )}
