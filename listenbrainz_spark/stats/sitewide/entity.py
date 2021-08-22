@@ -11,7 +11,7 @@ from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY, LISTENBRAINZ_NE
 from listenbrainz_spark.stats import (offset_days, offset_months, replace_days,
                                       run_query, get_day_end, get_year_end, get_month_end)
 from listenbrainz_spark.stats.sitewide.artist import get_artists
-from listenbrainz_spark.stats.utils import filter_listens, get_last_monday
+from listenbrainz_spark.stats.utils import get_last_monday
 from listenbrainz_spark.utils import get_listens_from_new_dump, get_latest_listen_ts
 from pydantic import ValidationError
 
