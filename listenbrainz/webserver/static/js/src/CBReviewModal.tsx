@@ -351,7 +351,7 @@ export default class CBReviewModal extends React.Component<
     /* Show warning if review text doesn't meet minnimum length */
     if (textContent.length < this.minTextLength) {
       this.setState({
-        reviewValidateAlert: `Text length needs to be between ${this.minTextLength} and ${this.maxTextLength}characters.`,
+        reviewValidateAlert: `Text length needs to be between ${this.minTextLength} and ${this.maxTextLength} characters.`,
       });
       return;
     }
@@ -504,6 +504,7 @@ export default class CBReviewModal extends React.Component<
                 if (entity) {
                   return (
                     <button
+                      key={entity.mbid}
                       onClick={() => this.setState({ entityToReview: entity })}
                       type="button"
                     >
@@ -557,14 +558,11 @@ export default class CBReviewModal extends React.Component<
             onChange={this.handleInputChange}
           >
             {allLanguages.map((lang: any) => {
-              /* Set to english by default */
-              if (lang.code === "en")
-                return (
-                  <option value={lang.code} selected>
-                    {lang.name}
-                  </option>
-                );
-              return <option value={lang.code}>{lang.name}</option>;
+              return (
+                <option key={lang.code} value={lang.code}>
+                  {lang.name}
+                </option>
+              );
             })}
           </select>
         </div>
@@ -623,6 +621,7 @@ export default class CBReviewModal extends React.Component<
       return (
         <button
           type="submit"
+          id="submitReviewButton"
           className={`btn btn-success ${reviewValidateAlert ? "disabled" : ""}`}
           onClick={() =>
             this.submitReviewToCB(critiquebrainzAuth?.access_token)
