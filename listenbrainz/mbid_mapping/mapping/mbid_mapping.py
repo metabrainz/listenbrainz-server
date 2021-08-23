@@ -102,7 +102,6 @@ def create_temp_release_table(conn):
                                   JOIN musicbrainz.release_group_primary_type rgpt ON rg.type = rgpt.id
                              LEFT JOIN musicbrainz.release_group_secondary_type_join rgstj ON rg.id = rgstj.release_group
                              LEFT JOIN musicbrainz.release_group_secondary_type rgst ON rgstj.secondary_type = rgst.id
-                                 WHERE rg.artist_credit != 1
                                        %s
                                  ORDER BY rg.type, rgst.id desc, fs.sort,
                                           to_date(date_year::TEXT || '-' ||
@@ -113,7 +112,7 @@ def create_temp_release_table(conn):
         if config.USE_MINIMAL_DATASET:
             log("mbid mapping temp tables: Using a minimal dataset for artist credit pairs")
             curs.execute(query %
-                         ('AND rg.artist_credit = %d' % TEST_ARTIST_ID))
+                         ('WHERE rg.artist_credit = %d' % TEST_ARTIST_ID))
         else:
             log("mbid mapping temp tables: Using a full dataset for artist credit pairs")
             curs.execute(query % "")

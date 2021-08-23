@@ -123,22 +123,24 @@ def load_listens_for_user(user_name, ts=None):
     return r.json()["payload"]["listens"]
 
 
-def listenbrainz_release_filter(user_name):
+def listenbrainz_release_filter(user_name, ts):
 
 # TODO: Check if artist varies too much
 #       Check if a track is just on repeat
     listens = []
-    ts = int(time.time())
 
     last_artist = ""
     last_release = ""
     tracks = []
     for i in range(5):
-        listens = load_listens_for_user("rob", ts)
+        listens = load_listens_for_user(user_name, ts)
         for listen in listens:
             artist = listen["track_metadata"]["artist_name"]
-            release = listen["track_metadata"]["release_name"]
-            if (last_release and release != last_release):
+            if "release_name" in listen["track_metadata"]:
+                release = listen["track_metadata"]["release_name"]
+            else:
+                release = ""
+            if (last_release and release != "" and release != last_release):
                 if len(tracks) >= MIN_NUMBER_OF_RECORDINGS:
                     recording_names = []
                     recording_artists = []
@@ -248,8 +250,9 @@ def check(release_mbid):
 
 @cli.command()
 @click.argument('user_name', nargs=1)
-def filter(user_name):
-    listenbrainz_release_filter(user_name)
+@click.argument('ts', nargs=1, required=False, default=None)
+def filter(user_name, ts):
+    listenbrainz_release_filter(user_name, ts)
 
 @cli.command()
 def test():
