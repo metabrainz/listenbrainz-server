@@ -1017,10 +1017,10 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertEqual(data['range'], 'year')
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
 
-    @patch('listenbrainz.webserver.views.stats_api._get_country_codes')
-    def test_artist_map_not_calculated(self, mock_get_country_codes):
+    @patch('listenbrainz.webserver.views.stats_api._get_country_wise_counts')
+    def test_artist_map_not_calculated(self, mock_get_country_wise_counts):
         """ Test to make sure stats are calculated if not present in DB """
-        mock_get_country_codes.return_value = [UserArtistMapRecord(
+        mock_get_country_wise_counts.return_value = [UserArtistMapRecord(
             **country) for country in self.artist_map_payload["artist_map"]]
 
         # Delete stats
@@ -1037,17 +1037,17 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertListEqual(sent_artist_map, received_artist_map)
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
         self.assertGreater(data['last_updated'], 0)
-        mock_get_country_codes.assert_called_once()
+        mock_get_country_wise_counts.assert_called_once()
 
         # Check if stats have been saved in DB
         data = db_stats.get_user_artist_map(self.user['id'], 'all_time')
         self.assertEqual(data.all_time.dict()['artist_map'], sent_artist_map)
 
     @patch('listenbrainz.webserver.views.stats_api.db_stats.insert_user_artist_map', side_effect=NotImplementedError)
-    @patch('listenbrainz.webserver.views.stats_api._get_country_codes')
-    def test_artist_map_db_insertion_failed(self, mock_get_country_codes, mock_db_insert):
+    @patch('listenbrainz.webserver.views.stats_api._get_country_wise_counts')
+    def test_artist_map_db_insertion_failed(self, mock_get_country_wise_counts, mock_db_insert):
         """ Test to make sure that stats are calculated returned even if DB insertion fails """
-        mock_get_country_codes.return_value = [UserArtistMapRecord(
+        mock_get_country_wise_counts.return_value = [UserArtistMapRecord(
             **country) for country in self.artist_map_payload["artist_map"]]
 
         response = self.client.get(url_for('stats_api_v1.get_artist_map',
@@ -1060,7 +1060,7 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertListEqual(sent_artist_map, received_artist_map)
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
         self.assertGreater(data['last_updated'], 0)
-        mock_get_country_codes.assert_called_once()
+        mock_get_country_wise_counts.assert_called_once()
 
     def test_artist_map_not_calculated_artist_stat_not_present(self):
         """ Test to make sure that if artist stats and artist_map stats both are missing from DB, we return 204 """
@@ -1094,13 +1094,7 @@ class StatsAPITestCase(IntegrationTestCase):
 
     @requests_mock.Mocker()
     def test_get_country_code(self, mock_requests):
-        """ Test to check if "_get_country_codes" is working correctly """
-        # Mock fetching mapping from "bono"
-        with open(self.path_to_data_file("msid_mbid_mapping_result.json")) as f:
-            msid_mbid_mapping_result = json.load(f)
-        mock_requests.post("{}/artist-credit-from-artist-msid/json".format(LISTENBRAINZ_LABS_API_URL),
-                           json=msid_mbid_mapping_result)
-
+        """ Test to check if "_get_country_wise_counts" is working correctly """
         # Mock fetching country data from labs.api.listenbrainz.org
         with open(self.path_to_data_file("mbid_country_mapping_result.json")) as f:
             mbid_country_mapping_result = json.load(f)
@@ -1121,26 +1115,6 @@ class StatsAPITestCase(IntegrationTestCase):
         ]
         self.assertListEqual(expected, received)
         self.assertTrue('count' in mock_requests.request_history[0].qs)
-        self.assertTrue('count' in mock_requests.request_history[1].qs)
-
-    @requests_mock.Mocker()
-    def test_get_country_code_msid_mbid_mapping_failure(self, mock_requests):
-        """ Test to check if appropriate message is returned if fetching msid_mbid_mapping fails """
-        # Mock fetching mapping from "bono"
-        mock_requests.post("{}/artist-credit-from-artist-msid/json".format(LISTENBRAINZ_LABS_API_URL), status_code=500)
-
-        # Mock fetching country data from labs.api.listenbrainz.org
-        with open(self.path_to_data_file("mbid_country_mapping_result.json")) as f:
-            mbid_country_mapping_result = json.load(f)
-        mock_requests.post("{}/artist-country-code-from-artist-mbid/json".format(LISTENBRAINZ_LABS_API_URL),
-                           json=mbid_country_mapping_result)
-
-        response = self.client.get(url_for('stats_api_v1.get_artist_map',
-                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'all_time',
-                                                                                                 'force_recalculate': 'true'})
-        error_msg = ("An error occurred while calculating artist_map data, "
-                     "try setting 'force_recalculate' to 'false' to get a cached copy if available")
-        self.assert500(response, message=error_msg)
 
     @requests_mock.Mocker()
     def test_get_country_code_mbid_country_mapping_failure(self, mock_requests):

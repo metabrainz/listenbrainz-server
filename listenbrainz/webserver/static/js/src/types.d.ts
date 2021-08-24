@@ -84,6 +84,10 @@ declare type YoutubeUser = {
   api_key?: string;
 };
 
+declare type CritiqueBrainzUser = {
+  access_token?: string;
+};
+
 declare type SpotifyPermission =
   | "user-read-currently-playing"
   | "user-read-recently-played"
