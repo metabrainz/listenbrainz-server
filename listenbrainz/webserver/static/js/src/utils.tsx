@@ -367,7 +367,6 @@ const pinFeatureEnabled = (currentUser: string): boolean => {
     "shivam-kapila",
     "ishaanshah",
     "mr_monkey",
-    "amCap1712",
   ].map((username: string) => username.toLowerCase());
   return usersAllowedIn.includes(currentUser.toLowerCase());
 };

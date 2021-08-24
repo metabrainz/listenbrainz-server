@@ -7,16 +7,35 @@ import unittest
 from datetime import datetime
 from unittest.mock import patch, MagicMock
 
-import logging
-
 from listenbrainz_spark import config, utils, schema
 from listenbrainz_spark.exceptions import DumpInvalidException
 from listenbrainz_spark.hdfs import ListenbrainzHDFSUploader
 from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
-from listenbrainz_spark.tests import SparkNewTestCase
 
 
-class HDFSTestCase(SparkNewTestCase):
+test_listen = {
+
+            'user_name': 'vansika',
+            'artist_msid': "a36d6fc9-49d0-4789-a7dd-a2b72369ca45",
+            'release_msid' : "xxxxxx",
+            'release_name': "xxxxxx",
+            'artist_name': "Less Than Jake",
+            'release_mbid': "xxxxxx",
+            'track_name': "Al's War",
+            'recording_msid': "cb6985cd-cc71-4d59-b4fb-2e72796af741",
+            'tags': ['xxxx'],
+            'listened_at': str(datetime.utcnow())
+        }
+
+
+class HDFSTestCase(unittest.TestCase):
+
+    @patch('listenbrainz_spark.hdfs_connection.init_hdfs')
+    @patch('listenbrainz_spark.init_spark_session')
+    def test_init(self, mock_spark_init, mock_hdfs_init):
+        ListenbrainzHDFSUploader()
+        mock_hdfs_init.assert_called_once_with(config.HDFS_HTTP_URI)
+        mock_spark_init.assert_called_once()
 
     def test_is_json_file(self):
         self.assertTrue(ListenbrainzHDFSUploader()._is_json_file('file.json'))
@@ -42,19 +61,12 @@ class HDFSTestCase(SparkNewTestCase):
         with open(temp_archive, 'w') as archive:
             pxz_command = ['xz', '--compress']
             pxz = subprocess.Popen(pxz_command, stdin=subprocess.PIPE, stdout=archive)
-            test_entry = {
-                "id_1": 11285,
-                "name_1": "Wolfgang Amadeus Mozart",
-                "name_0": "Ludwig van Beethoven",
-                "id_0": 1021,
-                "score": 1.0
-            }
 
             with tarfile.open(fileobj=pxz.stdin, mode='w|') as tar:
-                json_file_path = os.path.join(temp_dir, 'artist_credit-artist_credit-relations.json')
+                json_file_path = os.path.join(temp_dir, '1.json')
                 with open(json_file_path, 'w') as f:
-                    json.dump(test_entry, f)
-                tar.add(json_file_path, arcname=os.path.join('mbdump', 'artist_credit-artist_credit-relations.json'))
+                    json.dump(test_listen, f)
+                tar.add(json_file_path, arcname=os.path.join('temp_tar', '2020', '1.json'))
 
                 invalid_json_file_path = os.path.join(temp_dir, 'invalid.txt')
                 with open(invalid_json_file_path, 'w') as f:
@@ -67,20 +79,24 @@ class HDFSTestCase(SparkNewTestCase):
 
     def test_upload_archive(self):
         archive_path = self.create_test_tar()
-        pxz = self.uploader.get_pxz_output(archive_path)
+        pxz = ListenbrainzHDFSUploader().get_pxz_output(archive_path)
         tmp_dump_dir = tempfile.mkdtemp()
 
         with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
-            self.uploader.upload_archive(tmp_dump_dir, tar, '/artist_relations.parquet',
-                                         schema.artist_relation_schema, self.uploader.process_json)
+            ListenbrainzHDFSUploader().upload_archive(tmp_dump_dir, tar, '/test', schema.listen_schema,
+                                                      ListenbrainzDataUploader().process_json_listens)
 
-        df = utils.read_files_from_HDFS('/artist_relations.parquet')
+        walk = utils.hdfs_walk('/test', depth=1)
+        dirs = next(walk)[1]
+        self.assertEqual(len(dirs), 1)
+
+        df = utils.read_files_from_HDFS('/test/2020/1.parquet')
         self.assertEqual(df.count(), 1)
 
         status = utils.path_exists(tmp_dump_dir)
         self.assertFalse(status)
 
-        utils.delete_dir('/artist_relations.parquet', recursive=True)
+        utils.delete_dir('/test', recursive=True)
 
     def test_upload_archive_failed(self):
         faulty_tar = MagicMock()
@@ -89,8 +105,8 @@ class HDFSTestCase(SparkNewTestCase):
         faulty_tar.__iter__.return_value = [member]
 
         tmp_dump_dir = tempfile.mkdtemp()
-        self.assertRaises(DumpInvalidException, self.uploader.upload_archive, tmp_dump_dir,
-                          faulty_tar, '/test', schema.artist_relation_schema, self.uploader.process_json)
+        self.assertRaises(DumpInvalidException, ListenbrainzHDFSUploader().upload_archive, tmp_dump_dir,
+                          faulty_tar, '/test', schema.listen_schema, ListenbrainzDataUploader().process_json_listens)
 
         status = utils.path_exists('/test')
         self.assertFalse(status)

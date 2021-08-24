@@ -1,38 +1,38 @@
 [
-    {
-        "musicbrainz_id": "rob",
-        "type": "user_listening_activity",
-        "stats_range": "all_time",
-        "from_ts": 1009843200,
-        "to_ts": 1628511763,
-        "listening_activity": [
-            {
-                "time_range": "2020",
-                "from_ts": 1577836800,
-                "to_ts": 1609459199,
-                "listen_count": 4
-            },
-            {
-                "time_range": "2021",
-                "from_ts": 1609459200,
-                "to_ts": 1640995199,
-                "listen_count": 40
-            }
-        ]
-    },
-    {
-        "musicbrainz_id": "amCap1712",
-        "type": "user_listening_activity",
-        "stats_range": "all_time",
-        "from_ts": 1009843200,
-        "to_ts": 1628511763,
-        "listening_activity": [
-            {
-                "time_range": "2021",
-                "from_ts": 1609459200,
-                "to_ts": 1640995199,
-                "listen_count": 41
-            }
-        ]
-    }
+  {
+    "user_name": "user1",
+    "timestamp": 1592587273
+  },
+  {
+    "user_name": "user2",
+    "timestamp": 1592587275
+  },
+  {
+    "user_name": "user3",
+    "timestamp": 1592587275
+  },
+  {
+    "user_name": "user1",
+    "timestamp": 1592587275
+  },
+  {
+    "user_name": "user3",
+    "timestamp": 1592587282
+  },
+  {
+    "user_name": "user2",
+    "timestamp": 1592587284
+  },
+  {
+    "user_name": "user3",
+    "timestamp": 1592587288
+  },
+  {
+    "user_name": "user2",
+    "timestamp": 1592587292
+  },
+  {
+    "user_name": "user1",
+    "timestamp": 1592587298
+  }
 ]

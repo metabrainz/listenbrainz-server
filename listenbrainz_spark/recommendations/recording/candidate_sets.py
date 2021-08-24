@@ -145,6 +145,106 @@ def _is_empty_dataframe(df):
     return False
 
 
+def convert_string_datatype_to_array(df):
+    """ Convert string datatype col to array<string> datatype.
+    """
+    def convert_to_list(x):
+        res = []
+        res.append(x)
+        return res
+
+    convert_to_list_udf = func.udf(convert_to_list, ArrayType(StringType()))
+    res_df = df.withColumn("mb_artist_credit_mbids", convert_to_list_udf(col("mbids")))
+
+    return res_df
+
+
+def explode_artist_collaborations(df):
+    """ artist_mbids is a list of artist mbid of artists to which a track belongs.
+        Explode the artist_mbids list and get the indivial artist mbid.
+
+        For Example:
+            Before:
+            -----------------------
+            |  artist_credit_mbids|
+            -----------------------
+            |               [a, b]|
+            -----------------------
+
+            After:
+            -----------------------
+            |  artist_credit_mbids|
+            -----------------------
+            |                    a|
+            -----------------------
+            |                    b|
+            -----------------------
+
+        Args:
+            df: A dataframe
+
+        Returns:
+            df with columns ['mb_artist_credit_mbids', 'user_name']
+    """
+    df = df.select(col('mb_artist_credit_mbids'),
+                   col('user_name')) \
+           .where(func.size('mb_artist_credit_mbids') > 1) \
+           .withColumn('mb_artist_credit_mbids', func.explode('mb_artist_credit_mbids')) \
+           .select(col('mb_artist_credit_mbids').alias('mbids'),
+                   col('user_name'))
+
+    res_df = convert_string_datatype_to_array(df).select(col('mb_artist_credit_mbids'),
+                                                         col('user_name'))
+
+    return res_df
+
+
+def append_artists_from_collaborations(top_artist_df):
+    """ Append artist info rows (artist_mbid, artist_credit_id, etc) of artists that belong
+        to an artist collaboration to top artist dataframe.
+
+        Example:
+            Before:
+            ----------------------------------------
+            | artist_credit_id| artist_credit_mbids|
+            ----------------------------------------
+            |                1|              [a, b]|
+            ----------------------------------------
+
+            After:
+            ----------------------------------------
+            | artist_credit_id| artist_credit_mbids|
+            ----------------------------------------
+            |                1|              [a, b]|
+            ----------------------------------------
+            |                2|                 [a]|
+            ----------------------------------------
+            |                3|                 [b]|
+            ----------------------------------------
+    """
+    df = explode_artist_collaborations(top_artist_df)
+
+    msid_mbid_mapping_df = utils.read_files_from_HDFS(path.MBID_MSID_MAPPING)
+
+    # get artist credit id corresponding to artist mbid.
+    res_df = msid_mbid_mapping_df.join(df, 'mb_artist_credit_mbids', 'inner') \
+                                 .select(col('mb_artist_credit_mbids'),
+                                         col('mb_artist_credit_id').alias('top_artist_credit_id'),
+                                         col('msb_artist_credit_name_matchable').alias('top_artist_name'),
+                                         col('user_name')) \
+                                 .distinct()
+
+    # append the exploded df to top artist df
+    top_artist_df = top_artist_df.union(res_df) \
+                                 .select('top_artist_credit_id',
+                                         'top_artist_name',
+                                         'user_name') \
+                                 .distinct()
+    # using distinct for extra care since pyspark union ~ SQL union all.
+
+    return top_artist_df
+
+
 def get_top_artists(mapped_listens_subset, top_artist_limit, users):
     """ Get top artists listened to by users who have a listening history in
         the past X days where X = RECOMMENDATION_GENERATION_WINDOW.
@@ -162,26 +262,30 @@ def get_top_artists(mapped_listens_subset, top_artist_limit, users):
                 top_artist_given_users_df (dataframe): Top Y artists listened to by a user for given users where
                                                        Y = TOP_ARTISTS_LIMIT
     """
-    df = mapped_listens_subset\
-        .select(
-            'artist_credit_id',
-            'user_name'
-        ) \
-        .groupBy(
-            'artist_credit_id',
-            'user_name'
-        ) \
-        .agg(func.count('artist_credit_id').alias('total_count'))
+    df = mapped_listens_subset.select('mb_artist_credit_id',
+                                      'msb_artist_credit_name_matchable',
+                                      'mb_artist_credit_mbids',
+                                      'user_name') \
+                              .groupBy('mb_artist_credit_id',
+                                       'msb_artist_credit_name_matchable',
+                                       'mb_artist_credit_mbids',
+                                       'user_name') \
+                              .agg(func.count('mb_artist_credit_id').alias('total_count'))
 
     window = Window.partitionBy('user_name').orderBy(col('total_count').desc())
 
     top_artist_df = df.withColumn('rank', row_number().over(window)) \
                       .where(col('rank') <= top_artist_limit) \
-                      .select(col('artist_credit_id').alias('top_artist_credit_id'),
+                      .select(col('mb_artist_credit_mbids'),
+                              col('mb_artist_credit_id').alias('top_artist_credit_id'),
+                              col('msb_artist_credit_name_matchable').alias('top_artist_name'),
                               col('user_name'))
+
+    top_artist_df = append_artists_from_collaborations(top_artist_df)
 
     if users:
         top_artist_given_users_df = top_artist_df.select('top_artist_credit_id',
+                                                         'top_artist_name',
                                                          'user_name') \
                                                  .where(top_artist_df.user_name.isin(users))
 
@@ -220,7 +324,9 @@ def filter_top_artists_from_similar_artists(similar_artist_df, top_artist_df):
 
     res_df = similar_artist_df.join(df, condition, 'left') \
                               .select('top_artist_credit_id',
+                                      'top_artist_name',
                                       'similar_artist_credit_id',
+                                      'similar_artist_name',
                                       'user_name') \
                               .where(col('artist_credit_id').isNull() & col('user').isNull())
 
@@ -244,7 +350,9 @@ def get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
 
     df1 = top_artist_df.join(artist_relation_df, condition, 'inner') \
                        .select(col('id_0').alias('top_artist_credit_id'),
+                               col('name_0').alias('top_artist_name'),
                                col('id_1').alias('similar_artist_credit_id'),
+                               col('name_1').alias('similar_artist_name'),
                                'score',
                                'user_name')
 
@@ -252,7 +360,9 @@ def get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
 
     df2 = top_artist_df.join(artist_relation_df, condition, 'inner') \
                        .select(col('id_1').alias('top_artist_credit_id'),
+                               col('name_1').alias('top_artist_name'),
                                col('id_0').alias('similar_artist_credit_id'),
+                               col('name_0').alias('similar_artist_name'),
                                'score',
                                'user_name')
 
@@ -264,7 +374,9 @@ def get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
     similar_artist_df_html = df.withColumn('rank', row_number().over(window)) \
                                .where(col('rank') <= similar_artist_limit)\
                                .select('top_artist_credit_id',
+                                       'top_artist_name',
                                        'similar_artist_credit_id',
+                                       'similar_artist_name',
                                        'user_name')
 
     similar_artist_df_html = filter_top_artists_from_similar_artists(similar_artist_df_html, top_artist_df)
@@ -272,6 +384,7 @@ def get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
     # Two or more artists can have same similar artist(s) leading to non-unique recordings
     # therefore we have filtered the distinct similar artists.
     similar_artist_df = similar_artist_df_html.select('similar_artist_credit_id',
+                                                      'similar_artist_name',
                                                       'user_name') \
                                               .distinct()
 
@@ -293,22 +406,20 @@ def filter_last_x_days_recordings(candidate_set_df, mapped_listens_subset):
         Returns:
             candidate_set without recordings of last X days of a user for all users.
     """
-    df = mapped_listens_subset.select(
-        col('recording_mbid').alias('recording_mbid2'),
-        col('user_name').alias('user')
-    ).distinct()
+    df = mapped_listens_subset.select(col('mb_recording_mbid').alias('recording_mbid'),
+                                      col('user_name').alias('user')) \
+                              .distinct()
 
     condition = [
-        candidate_set_df.recording_mbid == df.recording_mbid2,
+        candidate_set_df.mb_recording_mbid == df.recording_mbid,
         candidate_set_df.user_name == df.user
     ]
 
-    filtered_df = candidate_set_df \
-        .join(df, condition, 'left') \
-        .select('*') \
-        .where(df.recording_mbid2.isNull() & df.user.isNull())
+    filtered_df = candidate_set_df.join(df, condition, 'left') \
+                                  .select('*') \
+                                  .where(col('recording_mbid').isNull() & col('user').isNull())
 
-    return filtered_df.drop('recording_mbid2', 'user')
+    return filtered_df.drop('recording_mbid', 'user')
 
 
 def get_top_artist_candidate_set(top_artist_df, recordings_df, users_df, mapped_listens_subset):
@@ -327,15 +438,19 @@ def get_top_artist_candidate_set(top_artist_df, recordings_df, users_df, mapped_
             top_artists_candidate_set_df_html (dataframe): top artist info required for html file
     """
     condition = [
-        top_artist_df.top_artist_credit_id == recordings_df.artist_credit_id
+        top_artist_df.top_artist_credit_id == recordings_df.mb_artist_credit_id
     ]
 
     df = top_artist_df.join(recordings_df, condition, 'inner')
 
     joined_df = df.join(users_df, 'user_name', 'inner') \
                   .select('top_artist_credit_id',
-                          'artist_credit_id',
-                          'recording_mbid',
+                          'top_artist_name',
+                          'mb_artist_credit_id',
+                          'mb_artist_credit_mbids',
+                          'mb_recording_mbid',
+                          'msb_artist_credit_name_matchable',
+                          'msb_recording_name_matchable',
                           'recording_id',
                           'user_name',
                           'user_id')
@@ -363,15 +478,19 @@ def get_similar_artist_candidate_set(similar_artist_df, recordings_df, users_df,
             similar_artist_candidate_set_df_html (dataframe): similar artist info for html file
     """
     condition = [
-        similar_artist_df.similar_artist_credit_id == recordings_df.artist_credit_id
+        similar_artist_df.similar_artist_credit_id == recordings_df.mb_artist_credit_id
     ]
 
     df = similar_artist_df.join(recordings_df, condition, 'inner')
 
     joined_df = df.join(users_df, 'user_name', 'inner') \
                   .select('similar_artist_credit_id',
-                          'artist_credit_id',
-                          'recording_mbid',
+                          'similar_artist_name',
+                          'mb_artist_credit_id',
+                          'mb_artist_credit_mbids',
+                          'mb_recording_mbid',
+                          'msb_artist_credit_name_matchable',
+                          'msb_recording_name_matchable',
                           'recording_id',
                           'user_name',
                           'user_id')
@@ -438,13 +557,16 @@ def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_can
             user_data[row.user_name] = defaultdict(list)
 
         data = (
+            row.top_artist_name,
             row.top_artist_credit_id
         )
         user_data[row.user_name]['top_artist'].append(data)
 
     for row in similar_artist_df_html.collect():
         data = (
+            row.top_artist_name,
             row.top_artist_credit_id,
+            row.similar_artist_name,
             row.similar_artist_credit_id
         )
         user_data[row.user_name]['similar_artist'].append(data)
@@ -452,8 +574,12 @@ def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_can
     for row in top_artist_candidate_set_df_html.collect():
         data = (
             row.top_artist_credit_id,
-            row.artist_credit_id,
-            row.recording_mbid,
+            row.top_artist_name,
+            row.mb_artist_credit_id,
+            row.mb_artist_credit_mbids,
+            row.mb_recording_mbid,
+            row.msb_artist_credit_name_matchable,
+            row.msb_recording_name_matchable,
             row.recording_id
         )
         user_data[row.user_name]['top_artist_candidate_set'].append(data)
@@ -461,8 +587,12 @@ def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_can
     for row in similar_artist_candidate_set_df_html.collect():
         data = (
             row.similar_artist_credit_id,
-            row.artist_credit_id,
-            row.recording_mbid,
+            row.similar_artist_name,
+            row.mb_artist_credit_id,
+            row.mb_artist_credit_mbids,
+            row.mb_recording_mbid,
+            row.msb_artist_credit_name_matchable,
+            row.msb_recording_name_matchable,
             row.recording_id
         )
         user_data[row.user_name]['similar_artist_candidate_set'].append(data)

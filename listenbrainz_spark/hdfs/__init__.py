@@ -1,15 +1,13 @@
 import os
 import pathlib
-import shutil
 import sys
 import subprocess
-import tarfile
 import time
 import logging
 from tarfile import TarError
 
 import listenbrainz_spark
-from listenbrainz_spark import utils
+from listenbrainz_spark import utils, config, hdfs_connection
 from listenbrainz_spark.exceptions import SparkSessionNotInitializedException, DumpInvalidException
 
 
@@ -21,6 +19,7 @@ logger = logging.getLogger(__name__)
 class ListenbrainzHDFSUploader:
 
     def __init__(self):
+        hdfs_connection.init_hdfs(config.HDFS_HTTP_URI)
         try:
             listenbrainz_spark.init_spark_session('uploader')
         except SparkSessionNotInitializedException as err:
@@ -127,40 +126,3 @@ class ListenbrainzHDFSUploader:
 
         # Cleanup
         utils.delete_dir(tmp_dump_dir, recursive=True)
-
-    def extract_and_upload_archive(self, archive, local_dir, hdfs_dir, cleanup_on_failure=True):
-        """
-        Extract the archive and upload it to the given hdfs directory.
-        Args:
-            archive: path to the tar archive to uploaded
-            local_dir: path to local dir to be used for extraction
-            hdfs_dir: path to hdfs dir where contents of tar should be uploaded
-            cleanup_on_failure: whether to delete local and hdfs directories
-                if error occurs during extraction
-        """
-        total_files = 0
-        total_time = 0.0
-        with tarfile.open(archive, mode='r') as tar:
-            for member in tar:
-                if member.isfile() and member.name.endswith(".parquet"):
-                    logger.info(f"Uploading {member.name}...")
-                    t0 = time.monotonic()
-
-                    try:
-                        tar.extract(member, path=local_dir)
-                    except tarfile.TarError as err:
-                        if cleanup_on_failure:
-                            if utils.path_exists(hdfs_dir):
-                                utils.delete_dir(hdfs_dir, recursive=True)
-                            shutil.rmtree(local_dir, ignore_errors=True)
-                        raise DumpInvalidException(f"{type(err).__name__} while extracting {member.name}, aborting import")
-
-                    hdfs_path = os.path.join(hdfs_dir, member.name)
-                    local_path = os.path.join(local_dir, member.name)
-                    utils.upload_to_HDFS(hdfs_path, local_path)
-
-                    time_taken = time.monotonic() - t0
-                    total_files += 1
-                    total_time += time_taken
-                    logger.info(f"Done! Current file processed in {time_taken:.2f} sec")
-        logger.info(f"Done! Total files processed {total_files}. Average time taken: {total_time / total_files:.2f}")

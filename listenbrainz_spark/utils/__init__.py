@@ -2,18 +2,14 @@ import errno
 import logging
 import os
 from time import sleep
-from datetime import datetime
-from typing import List
 
 import pika
 from py4j.protocol import Py4JJavaError
-from pyspark.sql import DataFrame, functions
 from pyspark.sql.utils import AnalysisException
 
 import listenbrainz_spark
 from hdfs.util import HdfsError
 from listenbrainz_spark import config, hdfs_connection, path, stats
-from listenbrainz_spark.schema import listens_new_schema
 from listenbrainz_spark.exceptions import (DataFrameNotAppendedException,
                                            DataFrameNotCreatedException,
                                            FileNotFetchedException,
@@ -122,9 +118,6 @@ def read_files_from_HDFS(path):
         Args:
             path (str): An HDFS path.
     """
-    # if we point spark to a directory, it will read each file in the directory as a
-    # parquet file and return the dataframe. so if a non-parquet file in also present
-    # in the same directory, we will get the not a parquet file error
     try:
         df = listenbrainz_spark.sql_context.read.parquet(config.HDFS_CLUSTER_URI + path)
         return df
@@ -134,94 +127,35 @@ def read_files_from_HDFS(path):
         raise FileNotFetchedException(err.java_exception, path)
 
 
-def get_listen_files_list() -> List[str]:
-    """ Get list of name of parquet files containing the listens.
-    The list of file names is in order of newest to oldest listens.
-    """
-    files = hdfs_connection.client.list(path.LISTENBRAINZ_NEW_DATA_DIRECTORY)
-    has_incremental = False
-    file_names = []
-
-    for file in files:
-        # handle incremental dumps separately because later we want to sort
-        # based on numbers in file name
-        if file == "incremental.parquet":
-            has_incremental = True
-            continue
-        if file.endswith(".parquet"):
-            file_names.append(file)
-
-    # parquet files which come from full dump are named as 0.parquet, 1.parquet so
-    # on. listens are stored in ascending order of listened_at. so higher the number
-    # in the name of the file, newer the listens. Therefore, we sort the list
-    # according to numbers in name of parquet files, in reverse order to start
-    # loading newer listens first.
-    file_names.sort(key=lambda x: int(x.split(".")[0]), reverse=True)
-
-    # all incremental dumps are stored in incremental.parquet. these are the newest
-    # listens. but an incremental dump might not always exist for example at the time
-    # when a full dump has just been imported. so check if incremental dumps are
-    # present, if yes then add those to the start of list
-    if has_incremental:
-        file_names.insert(0, "incremental.parquet")
-
-    return file_names
-
-
-def get_listens_from_new_dump(start: datetime, end: datetime) -> DataFrame:
-    """ Load listens with listened_at between from_ts and to_ts from HDFS in a spark dataframe.
+def get_listens(from_date, to_date, dest_path):
+    """ Prepare dataframe of months falling between from_date and to_date (both inclusive).
 
         Args:
-            start: minimum time to include a listen in the dataframe
-            end: maximum time to include a listen in the dataframe
+            from_date (datetime): Date from which start fetching listens.
+            to_date (datetime): Date upto which fetch listens.
+            dest_path (str): HDFS path to fetch listens from.
 
         Returns:
-            dataframe of listens with listened_at between start and end
+            df: Dataframe of listens.
     """
-    files = get_listen_files_list()
-
-    # create empty dataframe for merging loaded files into it
-    dfs = listenbrainz_spark.session.createDataFrame([], listens_new_schema)
-
-    for file_name in files:
-        df = read_files_from_HDFS(
-            os.path.join(path.LISTENBRAINZ_NEW_DATA_DIRECTORY, file_name)
-        )
-
-        # check if the currently loaded file has any listens newer than the starting
-        # timestamp. if not stop trying to load more files, because listens are sorted
-        # by listened_at in ascending order and we are traversing the files in reverse
-        # order. that is we are loading listens from latest to oldest so if the current
-        # file does not have any listens newer than from_ts, the remaining files will
-        # not have those either.
-        df = df.where(f"listened_at >= to_timestamp('{start}')")
-        if df.count() == 0:
-            break
-
-        # cannot merge this condition with the above one because, consider the following case:
-        # we want listens between the time range - 14 days ago to 7 days ago. the latest file
-        # might have listens only from last 4 days. if the conditions were merged, we would
-        # have stopped looking in other files which is wrong. it is quite possible that the 2nd
-        # or some subsequent file has listens older than to_ts but newer than from_ts
-        df = df.where(f"listened_at <= to_timestamp('{end}')")
-
-        dfs = dfs.union(df)
-
-    return dfs
-
-
-def get_latest_listen_ts() -> datetime:
-    """" Get the listened_at time of the latest listen present
-     in the imported dumps
-     """
-    latest_listen_file = get_listen_files_list()[0]
-    df = read_files_from_HDFS(
-        os.path.join(path.LISTENBRAINZ_NEW_DATA_DIRECTORY, latest_listen_file)
-    )
-    return df \
-        .select('listened_at') \
-        .agg(functions.max('listened_at').alias('latest_listen_ts'))\
-        .collect()[0]['latest_listen_ts']
+    if to_date < from_date:
+        raise ValueError('{}: Data generation window is negative i.e. from_date (date from which start fetching listens)'
+                         ' is greater than to_date (date upto which fetch listens).'.format(type(ValueError).__name__))
+    df = None
+    while from_date <= to_date:
+        try:
+            month = read_files_from_HDFS('{}/{}/{}.parquet'.format(dest_path, from_date.year, from_date.month))
+            df = df.union(month) if df else month
+        except PathNotFoundException as err:
+            logger.debug('{}\nFetching file for next date...'.format(err))
+        # go to the next month of from_date
+        from_date = stats.offset_months(date=from_date, months=1, shift_backwards=False)
+        # shift to the first of the month
+        from_date = stats.replace_days(from_date, 1)
+    if not df:
+        logger.error('Listening history missing form HDFS')
+        raise HDFSException("Listening history missing from HDFS")
+    return df
 
 
 def save_parquet(df, path, mode='overwrite'):
