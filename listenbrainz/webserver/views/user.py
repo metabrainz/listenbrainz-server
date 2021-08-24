@@ -10,8 +10,8 @@ from flask import Blueprint, render_template, request, url_for, redirect, curren
 from flask_login import current_user, login_required
 from listenbrainz import webserver
 from listenbrainz.db.playlist import get_playlists_for_user, get_playlists_created_for_user, get_playlists_collaborated_on
-from listenbrainz.db.pinned_recording import get_current_pin_for_user
 from listenbrainz.db.model.pinned_recording import fetch_track_metadata_for_pins
+from listenbrainz.db.pinned_recording import get_current_pin_for_user, get_pin_count_for_user, get_pin_history_for_user
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.errors import APIBadRequest
@@ -52,6 +52,7 @@ redirect_bp.add_url_rule("/collaborations/", "redirect_collaborations", redirect
 redirect_bp.add_url_rule("/recommendations/",
                          "redirect_recommendations",
                          redirect_user_page("user.recommendation_playlists"))
+redirect_bp.add_url_rule("/pins/", "redirect_pins", redirect_user_page("user.pins"))
 
 @user_bp.route("/<user_name>/")
 @web_listenstore_needed
@@ -344,6 +345,35 @@ def collaborations(user_name: str):
     return render_template(
         "playlists/playlists.html",
         active_section="collaborations",
+        props=ujson.dumps(props),
+        user=user
+    )
+
+
+@user_bp.route("/<user_name>/pins/")
+def pins(user_name: str):
+    """ Show user pin history """
+
+    user = _get_user(user_name)
+    user_data = {
+        "name": user.musicbrainz_id,
+        "id": user.id,
+    }
+
+    pins = get_pin_history_for_user(user_id=user.id, count=25, offset=0)
+    pins = [dict(pin) for pin in fetch_track_metadata_for_pins(pins)]
+    total_count = get_pin_count_for_user(user_id=user.id)
+
+    props = {
+        "user": user_data,
+        "pins": pins,
+        "profile_url": url_for('user.profile', user_name=user_name),
+        "total_count": total_count
+    }
+
+    return render_template(
+        "user/pins.html",
+        active_section="pins",
         props=ujson.dumps(props),
         user=user
     )
