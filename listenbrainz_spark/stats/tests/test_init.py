@@ -1,7 +1,7 @@
 import datetime
 
+import listenbrainz_spark.stats
 from listenbrainz_spark import utils, stats
-from listenbrainz_spark.stats import utils as stats_utils
 from listenbrainz_spark.tests import SparkNewTestCase
 
 from pyspark.sql import Row
@@ -49,4 +49,4 @@ class InitTestCase(SparkNewTestCase):
 
     def test_get_last_monday(self):
         date = datetime.datetime(2020, 5, 19)
-        self.assertEqual(datetime.datetime(2020, 5, 18), stats_utils.get_last_monday(date))
+        self.assertEqual(datetime.datetime(2020, 5, 18), listenbrainz_spark.stats.get_last_monday(date))

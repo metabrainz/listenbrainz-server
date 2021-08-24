@@ -28,6 +28,7 @@ import {
   formatWSMessageToListen,
   getPageProps,
   pinFeatureEnabled,
+  getListenablePin,
 } from "./utils";
 import CBReviewModal from "./CBReviewModal";
 
@@ -556,6 +557,11 @@ export default class RecentListens extends React.Component<
     } = this.props;
     const { currentUser } = this.context;
 
+    let allListenables = listens;
+    if (userPinnedRecording) {
+      allListenables = [getListenablePin(userPinnedRecording), ...listens];
+    }
+
     const isNewestButtonDisabled = listens?.[0]?.listened_at >= latestListenTs;
     const isNewerButtonDisabled =
       !previousListenTs || previousListenTs >= latestListenTs;
@@ -572,7 +578,14 @@ export default class RecentListens extends React.Component<
                 <PinnedRecordingCard
                   userName={user.name}
                   pinnedRecording={userPinnedRecording}
+                  className={
+                    this.isCurrentListen(getListenablePin(userPinnedRecording))
+                      ? " current-listen"
+                      : ""
+                  }
                   isCurrentUser={currentUser?.name === user?.name}
+                  playListen={this.playListen}
+                  removePinFromPinsList={() => {}}
                   newAlert={newAlert}
                 />
               </div>
@@ -778,7 +791,7 @@ export default class RecentListens extends React.Component<
             <BrainzPlayer
               currentListen={currentListen}
               direction={direction}
-              listens={listens}
+              listens={allListenables}
               newAlert={newAlert}
               onCurrentListenChange={this.handleCurrentListenChange}
               ref={this.brainzPlayer}
