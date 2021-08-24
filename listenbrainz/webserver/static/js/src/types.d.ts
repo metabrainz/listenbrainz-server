@@ -467,7 +467,7 @@ declare type PinnedRecording = {
   created: number;
   pinned_until: number;
   row_id: number;
-  recording_mbid: string;
+  recording_mbid: string | null;
   recording_msid?: string;
   track_metadata: {
     artist_name: string;
