@@ -12,7 +12,7 @@ class UserRecordingRecord(pydantic.BaseModel):
     recording_mbid: Optional[str]
     release_name: Optional[str]
     release_mbid: Optional[str]
-    recording_name: str
+    track_name: str
     listen_count: int
     # to add empty fields to stats API response, for compatibility
     artist_msid: Optional[str]
