@@ -916,7 +916,7 @@ describe("submitReviewToCB", () => {
     entity_type: "artist",
     text: "TEXT",
     languageCode: "en",
-    rating: "4",
+    rating: 4,
   };
 
   beforeEach(() => {
