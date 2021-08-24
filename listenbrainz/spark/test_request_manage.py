@@ -109,28 +109,24 @@ class RequestManageTestCase(unittest.TestCase):
         received_message = request_manage._prepare_query_message('stats.user.daily_activity.all_time')
         self.assertEqual(expected_message, received_message)
 
-        expected_message = ujson.dumps({'query': 'stats.sitewide.entity.week', 'params': {
-                                       'entity': 'test', 'use_mapping': False}})
+        expected_message = ujson.dumps({'query': 'stats.sitewide.entity.week', 'params': {'entity': 'test'}})
         received_message = request_manage._prepare_query_message(
-            'stats.sitewide.entity.week', params={'entity': 'test', 'use_mapping': False})
+            'stats.sitewide.entity.week', params={'entity': 'test'})
         self.assertEqual(expected_message, received_message)
 
-        expected_message = ujson.dumps({'query': 'stats.sitewide.entity.month', 'params': {
-                                       'entity': 'test', 'use_mapping': False}})
+        expected_message = ujson.dumps({'query': 'stats.sitewide.entity.month', 'params': {'entity': 'test'}})
         received_message = request_manage._prepare_query_message(
-            'stats.sitewide.entity.month', params={'entity': 'test', 'use_mapping': False})
+            'stats.sitewide.entity.month', params={'entity': 'test'})
         self.assertEqual(expected_message, received_message)
 
-        expected_message = ujson.dumps({'query': 'stats.sitewide.entity.year', 'params': {
-                                       'entity': 'test', 'use_mapping': False}})
+        expected_message = ujson.dumps({'query': 'stats.sitewide.entity.year', 'params': {'entity': 'test'}})
         received_message = request_manage._prepare_query_message(
-            'stats.sitewide.entity.year', params={'entity': 'test', 'use_mapping': False})
+            'stats.sitewide.entity.year', params={'entity': 'test'})
         self.assertEqual(expected_message, received_message)
 
         expected_message = ujson.dumps({'query': 'stats.sitewide.entity.all_time',
-                                        'params': {'entity': 'test', 'use_mapping': False}})
-        received_message = request_manage._prepare_query_message('stats.sitewide.entity.all_time', params={
-                                                                 'entity': 'test', 'use_mapping': False})
+                                        'params': {'entity': 'test'}})
+        received_message = request_manage._prepare_query_message('stats.sitewide.entity.all_time', params={'entity': 'test'})
         self.assertEqual(expected_message, received_message)
 
         message = {
@@ -186,10 +182,6 @@ class RequestManageTestCase(unittest.TestCase):
         expected_message = ujson.dumps(message)
         received_message = request_manage._prepare_query_message('cf.recommendations.recording.recommendations',
                                                                  message['params'])
-        self.assertEqual(expected_message, received_message)
-
-        expected_message = ujson.dumps({'query': 'import.mapping'})
-        received_message = request_manage._prepare_query_message('import.mapping')
         self.assertEqual(expected_message, received_message)
 
         expected_message = ujson.dumps({'query': 'import.artist_relation'})
