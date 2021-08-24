@@ -359,10 +359,10 @@ export default class CBReviewModal extends React.Component<
     if (isCurrentUser && access_token && entityToReview && acceptLicense) {
       this.setState({ loading: true });
 
-      /* Convert rating to string if it was provided */
-      let stringRating;
+      /* do not include rating if it wasn't set */
+      let nonZeroRating;
       if (rating !== 0) {
-        stringRating = rating.toString();
+        nonZeroRating = rating;
       }
 
       const reviewToSubmit: CritiqueBrainzReview = {
@@ -370,7 +370,7 @@ export default class CBReviewModal extends React.Component<
         entity_type: entityToReview.type,
         text: textContent,
         languageCode: language,
-        rating: stringRating,
+        rating: nonZeroRating,
       };
 
       try {
