@@ -98,7 +98,7 @@ def get_recording_mbids(params: RecommendationParams, recommendation_df, users_d
     """
     df = params.recordings_df.join(recommendation_df, 'recording_id', 'inner') \
                              .select('rating',
-                                     'recording_mbid',
+                                     'mb_recording_mbid',
                                      'user_id')
 
     recording_mbids_df = df.join(users_df, 'user_id', 'inner')
@@ -106,7 +106,7 @@ def get_recording_mbids(params: RecommendationParams, recommendation_df, users_d
     window = Window.partitionBy('user_name').orderBy(col('rating').desc())
 
     df = recording_mbids_df.withColumn('rank', row_number().over(window)) \
-                           .select('recording_mbid',
+                           .select('mb_recording_mbid',
                                    'rank',
                                    'rating',
                                    'user_id',
@@ -295,7 +295,7 @@ def create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_u
 
             user_rec[row.user_name]['top_artist'] = [
                 {
-                    "recording_mbid": row.recording_mbid,
+                    "recording_mbid": row.mb_recording_mbid,
                     "score": row.rating
                 }
             ]
@@ -304,7 +304,7 @@ def create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_u
         else:
             user_rec[row.user_name]['top_artist'].append(
                     {
-                        "recording_mbid": row.recording_mbid,
+                        "recording_mbid": row.mb_recording_mbid,
                         "score": row.rating
                     }
             )
@@ -317,7 +317,7 @@ def create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_u
             user_rec[row.user_name] = {}
             user_rec[row.user_name]['similar_artist'] = [
                 {
-                    "recording_mbid": row.recording_mbid,
+                    "recording_mbid": row.mb_recording_mbid,
                     "score": row.rating
                 }
             ]
@@ -325,7 +325,7 @@ def create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_u
         else:
             user_rec[row.user_name]['similar_artist'].append(
                     {
-                        "recording_mbid": row.recording_mbid,
+                        "recording_mbid": row.mb_recording_mbid,
                         "score": row.rating
                     }
             )

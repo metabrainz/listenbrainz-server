@@ -35,6 +35,53 @@ class FTPDownloaderTestCase(unittest.TestCase):
         filename = ListenbrainzDataDownloader().get_listens_dump_file_name('listenbrainz-dump-17-20190101-000001-incremental/')
         self.assertEqual('listenbrainz-listens-dump-17-20190101-000001-spark-incremental.tar.xz', filename)
 
+    @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.download_dump')
+    @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.get_latest_mapping')
+    @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.list_dir')
+    @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.get_available_dumps')
+    @patch('ftplib.FTP')
+    def test_download_msid_mbid_mapping(self, mock_ftp_cons, mock_available_dump, mock_list_dir,
+                                        mock_latest_mapping, mock_download_dump):
+        directory = '/fakedir'
+        mock_list_dir.return_value = [
+            'msid-mbid-mapping-with-matchable-20200603-203731.tar.bz2',
+            'msid-mbid-mapping-with-text-20180603-202000.tar.bz2',
+            'msid-mbid-mapping-with-matchable-20200603-202732.tar.bz2',
+            'msid-mbid-mapping-with-matchable-xxxx-20200603-202732.tar.bz2'
+            'msid-mbid-mapping-with-matchable-20200603-202732.tar.bz2.md5'
+        ]
+        mock_available_dump.return_value = [
+            'msid-mbid-mapping-with-matchable-20200603-203731.tar.bz2',
+            'msid-mbid-mapping-with-matchable-20200603-202732.tar.bz2',
+        ]
+        mock_latest_mapping.return_value = 'msid-mbid-mapping-with-matchable-20200603-203731.tar.bz2'
+        dest_path, filename = ListenbrainzDataDownloader().download_msid_mbid_mapping(directory)
+
+        mock_ftp_cons.return_value.cwd.assert_called_once_with(config.FTP_MSID_MBID_DIR)
+        mock_available_dump.assert_called_once_with(mock_list_dir.return_value, 'msid-mbid-mapping-with-matchable')
+
+        mock_latest_mapping.assert_called_once_with([
+            'msid-mbid-mapping-with-matchable-20200603-203731.tar.bz2',
+            'msid-mbid-mapping-with-matchable-20200603-202732.tar.bz2',
+        ])
+        mock_download_dump.assert_called_once_with('msid-mbid-mapping-with-matchable-20200603-203731.tar.bz2', directory)
+        self.assertEqual(dest_path, mock_download_dump.return_value)
+        self.assertEqual(filename, 'msid-mbid-mapping-with-matchable-20200603-203731.tar.bz2')
+
+    @patch('ftplib.FTP')
+    def test_get_latest_mapping(self, mock_ftp):
+        mapping = [
+            'msid-mbid-mapping-with-matchable-20200603-203731.tar.bz2',
+            'msid-mbid-mapping-with-text-20180603-202000.tar.bz2',
+            'msid-mbid-mapping-with-matchable-20200603-202732.tar.bz2',
+            'msid-mbid-mapping-with-matchable-xxxx-20200603-202732.tar.bz2'
+            'msid-mbid-mapping-with-matchable-20200603-202732.tar.bz2.md5'
+        ]
+
+        expected_mapping = 'msid-mbid-mapping-with-matchable-20200603-203731.tar.bz2'
+        latest_mapping = ListenbrainzDataDownloader().get_latest_mapping(mapping)
+        self.assertEqual(latest_mapping, expected_mapping)
+
     @patch('ftplib.FTP')
     def test_get_available_dumps(self, mock_ftp):
         dump = [

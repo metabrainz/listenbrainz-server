@@ -1,8 +1,7 @@
 import logging
 from unittest.mock import patch, call, MagicMock
 
-import listenbrainz_spark
-from listenbrainz_spark.recommendations.recording.tests import RecommendationsTestCase
+from listenbrainz_spark.tests import SparkTestCase
 from listenbrainz_spark.recommendations.recording import recommend
 from listenbrainz_spark import schema, utils, path
 from listenbrainz_spark.exceptions import (RecommendationsNotGeneratedException,
@@ -17,7 +16,16 @@ from pyspark.sql.functions import col
 logger = logging.getLogger(__name__)
 
 
-class RecommendTestClass(RecommendationsTestCase):
+class RecommendTestClass(SparkTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        super().delete_dir()
+        super().tearDownClass()
 
     def test_recommendation_params_init(self):
         recordings_df = utils.create_dataframe(Row(col1=3, col2=9), schema=None)
@@ -39,21 +47,47 @@ class RecommendTestClass(RecommendationsTestCase):
         self.assertEqual(params.recommendation_top_artist_limit, recommendation_top_artist_limit)
         self.assertEqual(params.recommendation_similar_artist_limit, recommendation_similar_artist_limit)
 
-    def get_recordings_df(self):
-        return listenbrainz_spark.session.createDataFrame([
-            Row(artist_credit_id=1, recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5", recording_id=1),
-            Row(artist_credit_id=2, recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5", recording_id=2)
-        ])
-
     def get_recommendation_df(self):
-        return listenbrainz_spark.session.createDataFrame([
-            Row(user_id=1, recording_id=1, rating=0.313456),
-            Row(user_id=1, recording_id=2, rating=6.994590001),
-            Row(user_id=2, recording_id=2, rating=-2.4587),
-            Row(user_id=2, recording_id=1, rating=7.999)
-        ])
+        df = utils.create_dataframe(
+            Row(
+                user_id=1,
+                recording_id=1,
+                rating=0.313456
+            ),
+            schema=None
+        )
+
+        df = df.union(utils.create_dataframe(
+            Row(
+                user_id=1,
+                recording_id=2,
+                rating=6.994590001
+            ),
+            schema=None
+        ))
+
+        df = df.union(utils.create_dataframe(
+            Row(
+                user_id=2,
+                recording_id=2,
+                rating=-2.4587
+            ),
+            schema=None
+        ))
+
+        recommendation_df = df.union(utils.create_dataframe(
+            Row(
+                user_id=2,
+                recording_id=1,
+                rating=7.999
+            ),
+            schema=None
+        ))
+
+        return recommendation_df
 
     def test_get_recording_mbids(self):
+        self.maxDiff = None
         params = self.get_recommendation_params()
         recommendation_df = self.get_recommendation_df()
         users = []
@@ -66,14 +100,14 @@ class RecommendTestClass(RecommendationsTestCase):
         rows_rob = df.where(df.user_name == "rob").collect()
         self.assertEqual(rows_rob, [
             Row(
-                recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                mb_recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rank=1,
                 rating=7.999,
                 user_id=2,
                 user_name='rob'
             ),
             Row(
-                recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                mb_recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rank=2,
                 rating=-2.4587,
                 user_id=2,
@@ -82,13 +116,13 @@ class RecommendTestClass(RecommendationsTestCase):
         ])
         rows_vansika = df.where(df.user_name == "vansika").collect()
         self.assertEqual(rows_vansika, [
-            Row(recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+            Row(mb_recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rank=1,
                 rating=6.994590001,
                 user_id=1,
                 user_name='vansika'),
             Row(
-                recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                mb_recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rank=2,
                 rating=0.313456,
                 user_id=1,
@@ -310,7 +344,7 @@ class RecommendTestClass(RecommendationsTestCase):
 
     def get_top_artist_rec_df(self):
         df = utils.create_dataframe(
-            Row(recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+            Row(mb_recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rating=1.8,
                 recording_id=5,
                 user_id=6,
@@ -319,7 +353,7 @@ class RecommendTestClass(RecommendationsTestCase):
         )
 
         df = df.union(utils.create_dataframe(
-            Row(recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
+            Row(mb_recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rating=-0.8,
                 recording_id=6,
                 user_id=6,
@@ -328,7 +362,7 @@ class RecommendTestClass(RecommendationsTestCase):
         ))
 
         df = df.union(utils.create_dataframe(
-            Row(recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
+            Row(mb_recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rating=0.99,
                 recording_id=6,
                 user_id=7,
@@ -339,7 +373,7 @@ class RecommendTestClass(RecommendationsTestCase):
 
     def get_similar_artist_rec_df(self):
         df = utils.create_dataframe(
-            Row(recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+            Row(mb_recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rating=0.8,
                 recording_id=5,
                 user_id=8,
@@ -348,7 +382,7 @@ class RecommendTestClass(RecommendationsTestCase):
         )
 
         df = df.union(utils.create_dataframe(
-            Row(recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
+            Row(mb_recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rating=-2.8,
                 recording_id=6,
                 user_id=8,
@@ -357,7 +391,7 @@ class RecommendTestClass(RecommendationsTestCase):
         ))
 
         df = df.union(utils.create_dataframe(
-            Row(recording_mbid="7acb406f-c716-45f8-a8bd-96ca3939c2e5",
+            Row(mb_recording_mbid="7acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rating=0.19,
                 recording_id=11,
                 user_id=7,

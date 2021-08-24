@@ -3,7 +3,6 @@ from flask_wtf import FlaskForm
 
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
-from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_SCOPES
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from data.model.external_service import ExternalServiceType
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
@@ -281,8 +280,6 @@ def _get_service_or_raise_404(name: str) -> ExternalService:
             return YoutubeService()
         elif service == ExternalServiceType.SPOTIFY:
             return SpotifyService()
-        elif service == ExternalServiceType.CRITIQUEBRAINZ:
-            return CritiqueBrainzService()
     except KeyError:
         raise NotFound("Service %s is invalid." % name)
 
@@ -308,18 +305,12 @@ def music_services_details():
     youtube_user = youtube_service.get_user(current_user.id)
     current_youtube_permissions = "listen" if youtube_user else "disable"
 
-    critiquebrainz_service = CritiqueBrainzService()
-    critiquebrainz_user = critiquebrainz_service.get_user(current_user.id)
-    current_critiquebrainz_permissions = "review" if critiquebrainz_user else "disable"
-
     return render_template(
         'user/music_services.html',
         spotify_user=spotify_user,
         current_spotify_permissions=current_spotify_permissions,
         youtube_user=youtube_user,
-        current_youtube_permissions=current_youtube_permissions,
-        critiquebrainz_user=critiquebrainz_user,
-        current_critiquebrainz_permissions=current_critiquebrainz_permissions
+        current_youtube_permissions=current_youtube_permissions
     )
 
 
@@ -387,9 +378,5 @@ def music_services_disconnect(service_name: str):
             action = request.form.get('youtube')
             if action:
                 return redirect(service.get_authorize_url(YOUTUBE_SCOPES))
-        elif service_name == 'critiquebrainz':
-            action = request.form.get('critiquebrainz')
-            if action:
-                return redirect(service.get_authorize_url(CRITIQUEBRAINZ_SCOPES))
 
     return redirect(url_for('profile.music_services_details'))

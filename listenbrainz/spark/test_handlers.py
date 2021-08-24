@@ -81,6 +81,7 @@ class HandlersTestCase(unittest.TestCase):
                 count=1,
                 artists=[
                     UserArtistRecord(
+                        artist_msid=None,
                         artist_mbids=[],
                         listen_count=200,
                         artist_name='Kanye West',
@@ -195,6 +196,7 @@ class HandlersTestCase(unittest.TestCase):
                         {
                             'artist_name': 'Coldplay',
                             'artist_mbid': [],
+                            'artist_msid': None,
                             'listen_count': 20
                         }
                     ]
@@ -216,6 +218,7 @@ class HandlersTestCase(unittest.TestCase):
                 artists=[SitewideArtistRecord(
                     artist_name='Coldplay',
                     artist_mbid=[],
+                    artist_msid=None,
                     listen_count=20,
                 )]
             )]
@@ -455,10 +458,13 @@ class HandlersTestCase(unittest.TestCase):
             'musicbrainz_id': 'vansika',
             'missing_musicbrainz_data': [
                 {
+                    "artist_msid": "f26d35e3-5fdd-43cf-8b94-71936451bc07",
                     "artist_name": "Katty Peri",
                     "listened_at": "2020-04-29 23:56:23",
+                    "recording_msid": "568eeea3-9255-4878-9df8-296043344e04",
+                    "release_msid": "8c5ba30c-4851-48fd-ac02-1b194cdb34d1",
                     "release_name": "No Place Is Home",
-                    "recording_name": "How High"
+                    "track_name": "How High"
                 }
             ],
             'source': 'cf'
@@ -471,10 +477,13 @@ class HandlersTestCase(unittest.TestCase):
 
         mock_db_insert.assert_called_with(1, UserMissingMusicBrainzDataJson(
             missing_musicbrainz_data=[UserMissingMusicBrainzDataRecord(
+                artist_msid="f26d35e3-5fdd-43cf-8b94-71936451bc07",
                 artist_name="Katty Peri",
                 listened_at="2020-04-29 23:56:23",
+                recording_msid="568eeea3-9255-4878-9df8-296043344e04",
+                release_msid="8c5ba30c-4851-48fd-ac02-1b194cdb34d1",
                 release_name="No Place Is Home",
-                recording_name="How High"
+                track_name="How High"
             )]),
             'cf'
         )

@@ -5,8 +5,8 @@ import ujson
 from flask import current_app
 from flask_login import current_user
 
-from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user, \
-    get_current_critiquebrainz_user
+from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user
+
 
 REJECT_LISTENS_WITHOUT_EMAIL_ERROR = \
     'The listens were rejected because the user does not has not provided an email. ' \
@@ -57,13 +57,13 @@ def get_global_props():
             "name": current_user.musicbrainz_id,
             "auth_token": current_user.auth_token,
         }
-
+    spotify_user = get_current_spotify_user()
+    youtube_user = get_current_youtube_user()
     props = {
         "api_url": current_app.config["API_URL"],
         "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn"),
         "current_user": current_user_data,
-        "spotify": get_current_spotify_user(),
-        "youtube": get_current_youtube_user(),
-        "critiquebrainz": get_current_critiquebrainz_user(),
+        "spotify": spotify_user,
+        "youtube": youtube_user,
     }
     return ujson.dumps(props)

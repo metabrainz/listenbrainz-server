@@ -23,7 +23,7 @@ import logging
 
 import listenbrainz_spark
 import listenbrainz_spark.query_map
-from listenbrainz_spark import config, hdfs_connection
+from listenbrainz_spark import config
 from listenbrainz_spark.utils import init_rabbitmq
 
 from py4j.protocol import Py4JJavaError
@@ -57,10 +57,6 @@ class RequestConsumer:
             return None
 
         try:
-            # initialize connection to HDFS, the request consumer is a long running process
-            # so we try to create a connection everytime before executing a query to avoid
-            # affecting subsequent queries in case there's an intermittent connection issue
-            hdfs_connection.init_hdfs(config.HDFS_HTTP_URI)
             return query_handler(**params)
         except TypeError as e:
             logger.error(

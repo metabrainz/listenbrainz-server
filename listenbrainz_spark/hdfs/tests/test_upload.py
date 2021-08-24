@@ -1,27 +1,23 @@
 import os
-from pathlib import Path
-from tempfile import NamedTemporaryFile
-from unittest.mock import patch, Mock
-from datetime import datetime
+import unittest
+from unittest.mock import patch, Mock, call
 
-import tarfile
-
-from listenbrainz_spark import utils, path, schema
+import listenbrainz_spark
+from listenbrainz_spark import config, utils, path, schema
 from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
-from listenbrainz_spark.path import LISTENBRAINZ_NEW_DATA_DIRECTORY
-from listenbrainz_spark.tests import SparkNewTestCase
+from listenbrainz_spark.tests import SparkTestCase
 
+from pyspark.sql import Row
 from pyspark.sql.types import StructField, StructType, StringType
 
-from listenbrainz_spark.utils import get_listen_files_list, get_listens_from_new_dump
 
-
-class HDFSDataUploaderTestCase(SparkNewTestCase):
-
-    TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'testdata')
+class HDFSDataUploaderTestCase(SparkTestCase):
+    # use path_ as prefix for all paths in this class.
+    path_ = "/test"
 
     def tearDown(self):
-        self.delete_uploaded_listens()
+        if utils.path_exists(self.path_):
+            utils.delete_dir(self.path_, recursive=True)
 
     @patch('listenbrainz_spark.utils.read_json')
     @patch('listenbrainz_spark.utils.save_parquet')
@@ -31,36 +27,89 @@ class HDFSDataUploaderTestCase(SparkNewTestCase):
         mock_read.assert_called_once_with('/fakehdfspath', schema=fakeschema)
         mock_save.assert_called_once_with(mock_read.return_value, '/fakedestpath')
 
-    def test_upload_listens(self):
-        full_dump_tar = self.create_temp_listens_tar('full-dump')
-        self.uploader.upload_new_listens_full_dump(full_dump_tar.name)
-        self.assertListEqual(
-            get_listen_files_list(),
-            ["6.parquet", "5.parquet", "4.parquet", "3.parquet",
-             "2.parquet", "1.parquet", "0.parquet"]
-        )
+    @patch('listenbrainz_spark.utils.read_json')
+    def test_process_json_listens_overwrite(self, mock_read_json):
+        fakeschema = StructType([StructField('column_1', StringType()), StructField('column_2', StringType())])
 
-        incremental_dump_tar = self.create_temp_listens_tar('incremental-dump-1')
-        self.uploader.upload_new_listens_incremental_dump(incremental_dump_tar.name)
-        self.assertListEqual(
-            get_listen_files_list(),
-            ["incremental.parquet", "6.parquet", "5.parquet", "4.parquet",
-             "3.parquet", "2.parquet", "1.parquet", "0.parquet"]
-        )
+        # Save old dataframe in HDFS
+        old_df = utils.create_dataframe(Row(column_1='row_a', column_2='row_a'), fakeschema)
+        old_df.union(utils.create_dataframe(Row(column_1='row_b', column_2='row_b'), fakeschema))
+        utils.save_parquet(old_df, os.path.join(self.path_, '2020/1.parquet'))
 
-    def test_upload_incremental_listens(self):
-        """ Test incremental listen imports work correctly when there are no
-        existing incremental dumps and when there are existing incremental dumps"""
-        incremental_dump_tar_1 = self.create_temp_listens_tar('incremental-dump-1')
-        self.uploader.upload_new_listens_incremental_dump(incremental_dump_tar_1.name)
-        listens = self.get_all_test_listens()
-        self.assertEqual(listens.count(), 9)
+        # Mock read_json to return new dataframe
+        new_df = utils.create_dataframe(Row(column_1='row_c', column_2='row_c'), fakeschema)
+        mock_read_json.return_value = new_df
 
-        incremental_dump_tar_2 = self.create_temp_listens_tar('incremental-dump-2')
-        self.uploader.upload_new_listens_incremental_dump(incremental_dump_tar_2.name)
-        listens = self.get_all_test_listens()
-        # incremental-dump-1 has 9 listens and incremental-dump-2 has 8
-        self.assertEqual(listens.count(), 17)
+        ListenbrainzDataUploader().process_json_listens(os.path.join(self.path_, '2020/1.json'),
+                                                        self.path_, self.path_, append=False, schema=fakeschema)
+
+        received = utils.read_files_from_HDFS(os.path.join(self.path_, '2020/1.parquet')) \
+            .rdd \
+            .map(list) \
+            .collect()
+
+        expected = new_df.rdd.map(list).collect()
+
+        self.assertListEqual(received, expected)
+
+    @patch('listenbrainz_spark.utils.read_json')
+    def test_process_json_listens_append(self, mock_read_json):
+        fakeschema = StructType([StructField('column_1', StringType()), StructField('column_2', StringType())])
+
+        # Save old dataframe in HDFS
+        old_df = utils.create_dataframe(Row(column_1='row_a', column_2='row_a'), fakeschema)
+        old_df.union(utils.create_dataframe(Row(column_1='row_b', column_2='row_b'), fakeschema))
+        utils.save_parquet(old_df, os.path.join(self.path_, '/2020/1.parquet'))
+
+        # Mock read_json to return new dataframe
+        new_df = utils.create_dataframe(Row(column_1='row_c', column_2='row_c'), fakeschema)
+        mock_read_json.return_value = new_df
+
+        ListenbrainzDataUploader().process_json_listens('/2020/1.json', self.path_, self.path_, append=True, schema=fakeschema)
+
+        received = utils.read_files_from_HDFS(os.path.join(self.path_, '/2020/1.parquet')) \
+            .rdd \
+            .map(list) \
+            .collect()
+
+        old_df.union(new_df)
+        expected = old_df.rdd.map(list).collect()
+
+        self.assertCountEqual(received, expected)
+
+    @patch('listenbrainz_spark.hdfs.upload.tempfile.TemporaryDirectory')
+    @patch('listenbrainz_spark.hdfs.upload.ListenbrainzDataUploader.process_json_listens')
+    @patch('listenbrainz_spark.hdfs.ListenbrainzHDFSUploader.get_pxz_output')
+    @patch('listenbrainz_spark.hdfs.ListenbrainzHDFSUploader.upload_archive')
+    @patch('listenbrainz_spark.hdfs.upload.tarfile')
+    def test_upload_listens(self, mock_tarfile, mock_archive, mock_pxz, mock_listens, mock_tmp):
+        faketar = Mock(name='fakefile.tar')
+        fakedir = Mock(name="faketempdir")
+        mock_tmp.return_value.__enter__.return_value = fakedir
+
+        ListenbrainzDataUploader().upload_listens(faketar)
+
+        mock_pxz.assert_called_once_with(faketar)
+        mock_tarfile.open.assert_called_once_with(fileobj=mock_pxz.return_value.stdout, mode='r|')
+        mock_archive.assert_called_once_with(fakedir, mock_tarfile.open().__enter__(),
+                                             path.LISTENBRAINZ_DATA_DIRECTORY, schema.listen_schema,
+                                             mock_listens, overwrite=False)
+
+    @patch('listenbrainz_spark.hdfs.upload.tempfile.TemporaryDirectory')
+    @patch('listenbrainz_spark.hdfs.ListenbrainzHDFSUploader.upload_archive')
+    @patch('listenbrainz_spark.hdfs.upload.ListenbrainzDataUploader.process_json')
+    @patch('listenbrainz_spark.hdfs.upload.tarfile')
+    def test_upload_mapping(self, mock_tarfile, mock_json, mock_archive, mock_tmp):
+        faketar = Mock(name='fakefile.tar')
+        fakedir = Mock(name="faketempdir")
+        mock_tmp.return_value.__enter__.return_value = fakedir
+
+        ListenbrainzDataUploader().upload_mapping(faketar)
+
+        mock_tarfile.open.assert_called_once_with(name=faketar, mode='r:bz2')
+        mock_archive.assert_called_once_with(fakedir, mock_tarfile.open().__enter__(),
+                                             path.MBID_MSID_MAPPING, schema.msid_mbid_mapping_schema,
+                                             mock_json, overwrite=True)
 
     @patch('listenbrainz_spark.hdfs.upload.tempfile.TemporaryDirectory')
     @patch('listenbrainz_spark.hdfs.ListenbrainzHDFSUploader.upload_archive')
