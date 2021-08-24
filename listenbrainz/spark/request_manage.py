@@ -115,12 +115,10 @@ def request_user_stats(type_, range_, entity):
               help="Time range of statistics to calculate", required=True)
 @click.option("--entity", type=click.Choice(['artists']),
               help="Entity for which statistics should be calculated")
-@click.option("--use-mapping", type=bool, help="Set to true if MSID-MBID mapping should be used while calculating statistics")
-def request_sitewide_stats(range_, entity, use_mapping):
+def request_sitewide_stats(range_, entity):
     """ Send request to calculate sitewide stats to the spark cluster
     """
     params = {
-        'use_mapping': use_mapping,
         'entity': entity
     }
     try:
@@ -239,14 +237,6 @@ def request_recommendations(top, similar, users):
     }
     send_request_to_spark_cluster(_prepare_query_message(
         'cf.recommendations.recording.recommendations', params=params))
-
-
-@cli.command(name='request_import_mapping')
-def request_import_mapping():
-    """ Send the spark cluster a request to import msid mbid mapping.
-    """
-
-    send_request_to_spark_cluster(_prepare_query_message('import.mapping'))
 
 
 @cli.command(name='request_import_artist_relation')
