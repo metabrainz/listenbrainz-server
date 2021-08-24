@@ -40,7 +40,6 @@ from collections import defaultdict
 from pydantic import ValidationError
 
 import listenbrainz_spark
-import listenbrainz_spark.utils.mapping as mapping_utils
 from listenbrainz_spark import path, utils, schema
 from listenbrainz_spark.exceptions import (SparkSessionNotInitializedException,
                                            DataFrameNotAppendedException,
@@ -53,8 +52,7 @@ from data.model.user_cf_recommendations_recording_message import (UserCreateData
 
 from listenbrainz_spark.recommendations.dataframe_utils import (get_dataframe_id,
                                                                 save_dataframe,
-                                                                get_dates_to_train_data,
-                                                                get_listens_for_training_model_window)
+                                                                get_dates_to_train_data)
 import pyspark.sql.functions as func
 from pyspark.sql.window import Window
 from pyspark.sql.functions import rank, col, row_number

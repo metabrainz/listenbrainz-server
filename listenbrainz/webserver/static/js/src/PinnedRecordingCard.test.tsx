@@ -45,9 +45,12 @@ const expiredPinnedRecording: PinnedRecording = {
 
 const props: PinnedRecordingCardProps = {
   userName: user.name,
+  className: "",
   pinnedRecording,
   isCurrentUser: true,
   newAlert: () => {},
+  playListen: () => {},
+  removePinFromPinsList: () => {},
 };
 
 describe("PinnedRecordingCard", () => {
@@ -74,6 +77,21 @@ describe("PinnedRecordingCard", () => {
     expect(instance.renderPinTitle).toHaveBeenCalledTimes(2);
     expect(instance.renderPinDate).toHaveBeenCalledTimes(2);
     expect(instance.renderBlurbContent).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("componentDidUpdate", () => {
+  it("updates the state", () => {
+    const wrapper = mount<PinnedRecordingCard>(
+      <PinnedRecordingCard {...props} />
+    );
+    const instance = wrapper.instance();
+    const spy = jest.spyOn(instance, "determineIfCurrentlyPinned");
+
+    // update the component prop twice
+    wrapper.setProps({ pinnedRecording: expiredPinnedRecording });
+    wrapper.setProps({ pinnedRecording });
+    expect(spy).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -248,13 +266,20 @@ describe("deletePin", () => {
     expect(wrapper.state("isDeleted")).toBeFalsy();
     expect(wrapper.state("currentlyPinned")).toBeTruthy();
 
-    await instance.deletePin(pinnedRecording.row_id);
+    await instance.deletePin(pinnedRecording);
 
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith("auth_token", pinnedRecording.row_id);
 
     expect(wrapper.state("isDeleted")).toBeTruthy();
     expect(wrapper.state("currentlyPinned")).toBeFalsy();
+
+    setTimeout(() => {
+      expect(instance.props.removePinFromPinsList).toHaveBeenCalledTimes(1);
+      expect(instance.props.removePinFromPinsList).toHaveBeenCalledWith(
+        instance.props.pinnedRecording
+      );
+    }, 1000);
   });
 
   it("does nothing if isCurrentUser is false", async () => {
@@ -270,7 +295,7 @@ describe("deletePin", () => {
     spy.mockImplementation(() => Promise.resolve(200));
 
     expect(wrapper.state("isDeleted")).toBeFalsy();
-    await instance.deletePin(pinnedRecording.row_id);
+    await instance.deletePin(pinnedRecording);
 
     expect(spy).toHaveBeenCalledTimes(0);
     expect(wrapper.state("isDeleted")).toBeFalsy();
@@ -294,7 +319,7 @@ describe("deletePin", () => {
     spy.mockImplementation(() => Promise.resolve(200));
 
     expect(wrapper.state("isDeleted")).toBeFalsy();
-    await instance.deletePin(pinnedRecording.row_id);
+    await instance.deletePin(pinnedRecording);
 
     expect(spy).toHaveBeenCalledTimes(0);
     expect(wrapper.state("isDeleted")).toBeFalsy();
@@ -313,7 +338,7 @@ describe("deletePin", () => {
     spy.mockImplementation(() => Promise.resolve(201));
 
     expect(wrapper.state("isDeleted")).toBeFalsy();
-    await instance.deletePin(pinnedRecording.row_id);
+    await instance.deletePin(pinnedRecording);
 
     expect(spy).toHaveBeenCalled();
     expect(wrapper.state("isDeleted")).toBeFalsy();
@@ -335,7 +360,7 @@ describe("deletePin", () => {
       throw error;
     });
 
-    await instance.deletePin(pinnedRecording.row_id);
+    await instance.deletePin(pinnedRecording);
     expect(instance.handleError).toHaveBeenCalledTimes(1);
     expect(instance.handleError).toHaveBeenCalledWith(
       error,
