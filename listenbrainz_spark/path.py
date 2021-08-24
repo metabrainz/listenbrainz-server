@@ -1,8 +1,5 @@
 import os
 
-# Parent directory containing listens and data driven from ListenBrainz.
-LISTENBRAINZ_DATA_DIRECTORY = os.path.join('/', 'data', 'listenbrainz')
-
 # Location new parquet dump listen files
 LISTENBRAINZ_NEW_DATA_DIRECTORY = os.path.join('/', 'data', 'listenbrainz-temp')
 
