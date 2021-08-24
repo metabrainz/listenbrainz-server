@@ -951,7 +951,7 @@ describe("submitReviewToCB", () => {
           text: "TEXT",
           license_choice: "CC BY-SA 3.0",
           language: "en",
-          rating: "4",
+          rating: 4,
         }),
       }
     );
