@@ -12,6 +12,9 @@ class UserReleaseRecord(pydantic.BaseModel):
     release_name: str
     listen_count: int
     artist_name: str
+    # to add empty fields to stats API response, for compatibility
+    artist_msid: Optional[str]
+    release_msid: Optional[str]
 
 
 class UserReleaseStatRange(pydantic.BaseModel):
