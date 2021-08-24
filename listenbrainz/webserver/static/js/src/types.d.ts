@@ -550,5 +550,5 @@ type CritiqueBrainzReview = {
   entity_type: ReviewableEntityType;
   text: string;
   languageCode: string;
-  rating?: string;
+  rating?: number;
 };
