@@ -134,37 +134,6 @@ def read_files_from_HDFS(path):
         raise FileNotFetchedException(err.java_exception, path)
 
 
-def get_listens(from_date, to_date, dest_path):
-    """ Prepare dataframe of months falling between from_date and to_date (both inclusive).
-
-        Args:
-            from_date (datetime): Date from which start fetching listens.
-            to_date (datetime): Date upto which fetch listens.
-            dest_path (str): HDFS path to fetch listens from.
-
-        Returns:
-            df: Dataframe of listens.
-    """
-    if to_date < from_date:
-        raise ValueError('{}: Data generation window is negative i.e. from_date (date from which start fetching listens)'
-                         ' is greater than to_date (date upto which fetch listens).'.format(type(ValueError).__name__))
-    df = None
-    while from_date <= to_date:
-        try:
-            month = read_files_from_HDFS('{}/{}/{}.parquet'.format(dest_path, from_date.year, from_date.month))
-            df = df.union(month) if df else month
-        except PathNotFoundException as err:
-            logger.debug('{}\nFetching file for next date...'.format(err))
-        # go to the next month of from_date
-        from_date = stats.offset_months(date=from_date, months=1, shift_backwards=False)
-        # shift to the first of the month
-        from_date = stats.replace_days(from_date, 1)
-    if not df:
-        logger.error('Listening history missing form HDFS')
-        raise HDFSException("Listening history missing from HDFS")
-    return df
-
-
 def get_listen_files_list() -> List[str]:
     """ Get list of name of parquet files containing the listens.
     The list of file names is in order of newest to oldest listens.

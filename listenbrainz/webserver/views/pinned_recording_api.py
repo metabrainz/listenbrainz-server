@@ -19,7 +19,7 @@ from pydantic import ValidationError
 pinned_recording_api_bp = Blueprint("pinned_rec_api_bp_v1", __name__)
 
 
-@pinned_recording_api_bp.route("/pin", methods=["POST"])
+@pinned_recording_api_bp.route("/pin", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def pin_recording_for_user():
@@ -71,7 +71,7 @@ def pin_recording_for_user():
     return jsonify({"status": "ok"})
 
 
-@pinned_recording_api_bp.route("/pin/unpin", methods=["POST"])
+@pinned_recording_api_bp.route("/pin/unpin", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def unpin_recording_for_user():
@@ -99,7 +99,7 @@ def unpin_recording_for_user():
     return jsonify({"status": "ok"})
 
 
-@pinned_recording_api_bp.route("/pin/delete/<row_id>", methods=["POST"])
+@pinned_recording_api_bp.route("/pin/delete/<row_id>", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def delete_pin_for_user(row_id):
@@ -129,7 +129,9 @@ def delete_pin_for_user(row_id):
     return jsonify({"status": "ok"})
 
 
-@pinned_recording_api_bp.route("/<user_name>/pins", methods=["GET"])
+@pinned_recording_api_bp.route("/<user_name>/pins", methods=["GET", "OPTIONS"])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
 def get_pins_for_user(user_name):
     """
     Get a list of all recordings ever pinned by a user with given ``user_name`` in descending order of the time
@@ -204,7 +206,9 @@ def get_pins_for_user(user_name):
     )
 
 
-@pinned_recording_api_bp.route("/<user_name>/pins/following", methods=["GET"])
+@pinned_recording_api_bp.route("/<user_name>/pins/following", methods=["GET", "OPTIONS"])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
 def get_pins_for_user_following(user_name):
     """
     Get a list containing the active pinned recordings for all users in a user's ``user_name``
