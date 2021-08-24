@@ -45,11 +45,6 @@ class StatisticsRange(Enum):
     all_time = 'all_time'
 
 
-# FIXME: the responses returned by the ger_user_artist,
-#  get_release and get_recordings endpoints has changed.
-#  Front-end code needs to reviewed and fixed as needed.
-#  Notably, we never return msids now.
-
 @stats_api_bp.route("/user/<user_name>/artists")
 @crossdomain()
 @ratelimit()
@@ -67,19 +62,16 @@ def get_user_artist(user_name):
                 "artists": [
                     {
                        "artist_mbids": ["93e6118e-7fa8-49f6-9e02-699a1ebce105"],
-                       "artist_msid": "d340853d-7408-4a0d-89c2-6ff13e568815",
                        "artist_name": "The Local train",
                        "listen_count": 385
                     },
                     {
                        "artist_mbids": ["ae9ed5e2-4caf-4b3d-9cb3-2ad626b91714"],
-                       "artist_msid": "ba64b195-01dd-4613-9534-bb87dc44cffb",
                        "artist_name": "Lenka",
                        "listen_count": 333
                     },
                     {
                        "artist_mbids": ["cc197bad-dc9c-440d-a5b5-d52ba2e14234"],
-                       "artist_msid": "6599e41e-390c-4855-a2ac-68ee798538b4",
                        "artist_name": "Coldplay",
                        "listen_count": 321
                     }
@@ -162,29 +154,23 @@ def get_release(user_name):
                 "releases": [
                     {
                         "artist_mbids": [],
-                        "artist_msid": "6599e41e-390c-4855-a2ac-68ee798538b4",
                         "artist_name": "Coldplay",
                         "listen_count": 26,
                         "release_mbid": "",
-                        "release_msid": "d59730cf-f0e3-441e-a7a7-8e0f589632a5",
                         "release_name": "Live in Buenos Aires"
                     },
                     {
                         "artist_mbids": [],
-                        "artist_msid": "7addbcac-ae39-4b4c-a956-53da336d68e8",
                         "artist_name": "Ellie Goulding",
                         "listen_count": 25,
                         "release_mbid": "",
-                        "release_msid": "de97ca87-36c4-4995-a5c9-540e35944352",
                         "release_name": "Delirium (Deluxe)"
                     },
                     {
                         "artist_mbids": [],
-                        "artist_msid": "3b155259-b29e-4515-aa62-cb0b917f4cfd",
                         "artist_name": "The Fray",
                         "listen_count": 25,
                         "release_mbid": "",
-                        "release_msid": "2b2a93c3-a0bd-4f46-8507-baf5ad291966",
                         "release_name": "How to Save a Life"
                     },
                 ],
@@ -267,25 +253,19 @@ def get_recording(user_name):
                 "recordings": [
                     {
                         "artist_mbids": [],
-                        "artist_msid": "7addbcac-ae39-4b4c-a956-53da336d68e8",
                         "artist_name": "Ellie Goulding",
                         "listen_count": 25,
                         "recording_mbid": "0fe11cd3-0be4-467b-84fa-0bd524d45d74",
-                        "recording_msid": "c6b65a7e-7284-433e-ac5d-e3ff0aa4738a",
                         "release_mbid": "",
-                        "release_msid": "de97ca87-36c4-4995-a5c9-540e35944352",
                         "release_name": "Delirium (Deluxe)",
                         "track_name": "Love Me Like You Do - From \\"Fifty Shades of Grey\\""
                     },
                     {
                         "artist_mbids": [],
-                        "artist_msid": "3b155259-b29e-4515-aa62-cb0b917f4cfd",
                         "artist_name": "The Fray",
                         "listen_count": 23,
                         "recording_mbid": "0008ab49-a6ad-40b5-aa90-9d2779265c22",
-                        "recording_msid": "4b5bf07c-782f-4324-9242-bf56e4ba1e57",
                         "release_mbid": "",
-                        "release_msid": "2b2a93c3-a0bd-4f46-8507-baf5ad291966",
                         "release_name": "How to Save a Life",
                         "track_name": "How to Save a Life"
                     }
@@ -669,13 +649,11 @@ def get_sitewide_artist():
                         "artists": [
                             {
                                 "artist_mbids": ["f4fdbb4c-e4b7-47a0-b83b-d91bbfcfa387"],
-                                "artist_msid": "b4ae3356-b8a7-471a-a23a-e471a69ad454",
                                 "artist_name": "Ariana Grande",
                                 "listen_count": 519
                             },
                             {
                                 "artist_mbids": ["f4abc0b5-3f7a-4eff-8f78-ac078dbce533"],
-                                "artist_msid": "f9ee09fb-5ab4-46a2-9088-3eac0eed4920",
                                 "artist_name": "Billie Eilish",
                                 "listen_count": 447
                             }
@@ -688,13 +666,11 @@ def get_sitewide_artist():
                         "artists": [
                             {
                                 "artist_mbids": [],
-                                "artist_msid": "2b0646af-f3f0-4a5b-b629-6c31301c1c29",
                                 "artist_name": "The Weeknd",
                                 "listen_count": 621
                             },
                             {
                                 "artist_mbids": [],
-                                "artist_msid": "9720fd77-fe48-41ba-a7a2-b4795718dd97",
                                 "artist_name": "Drake",
                                 "listen_count": 554
                             }

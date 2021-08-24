@@ -5,7 +5,7 @@ import { faEllipsisV, faThumbtack } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { preciseTimestamp } from "./utils";
+import { preciseTimestamp, getListenablePin } from "./utils";
 import GlobalAppContext from "./GlobalAppContext";
 import Card from "./components/Card";
 import ListenControl from "./listens/ListenControl";
@@ -15,7 +15,10 @@ export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 export type PinnedRecordingCardProps = {
   userName: string;
   pinnedRecording: PinnedRecording;
+  className: string;
   isCurrentUser: Boolean;
+  playListen: (listen: Listen) => void;
+  removePinFromPinsList: (pin: PinnedRecording) => void;
   newAlert: (
     alertType: AlertType,
     title: string,
@@ -34,6 +37,7 @@ export default class PinnedRecordingCard extends React.Component<
 > {
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
+  playListen: (listen: Listen) => void;
 
   constructor(props: PinnedRecordingCardProps) {
     super(props);
@@ -41,6 +45,26 @@ export default class PinnedRecordingCard extends React.Component<
       currentlyPinned: this.determineIfCurrentlyPinned(),
       isDeleted: false,
     };
+
+    const { pinnedRecording } = this.props;
+    this.playListen = props.playListen.bind(
+      this,
+      getListenablePin(pinnedRecording)
+    );
+  }
+
+  componentDidUpdate(prevProps: PinnedRecordingCardProps) {
+    const { pinnedRecording, playListen } = this.props;
+    if (pinnedRecording !== prevProps.pinnedRecording) {
+      this.setState({
+        currentlyPinned: this.determineIfCurrentlyPinned(),
+        isDeleted: false,
+      });
+      this.playListen = playListen.bind(
+        this,
+        getListenablePin(pinnedRecording)
+      );
+    }
   }
 
   determineIfCurrentlyPinned = (): Boolean => {
@@ -137,19 +161,24 @@ export default class PinnedRecordingCard extends React.Component<
     }
   };
 
-  deletePin = async (pinID: number) => {
-    const { isCurrentUser } = this.props;
+  deletePin = async (pin: PinnedRecording) => {
+    const { isCurrentUser, removePinFromPinsList } = this.props;
     const { APIService, currentUser } = this.context;
 
     if (isCurrentUser && currentUser?.auth_token) {
       try {
         const status = await APIService.deletePin(
           currentUser.auth_token,
-          pinID
+          pin.row_id
         );
         if (status === 200) {
           this.setState({ currentlyPinned: false });
           this.setState({ isDeleted: true });
+
+          // wait for the animation to finish
+          setTimeout(function removeListen() {
+            removePinFromPinsList(pin);
+          }, 1000);
         }
       } catch (error) {
         this.handleError(error, "Error while deleting pin");
@@ -158,15 +187,16 @@ export default class PinnedRecordingCard extends React.Component<
   };
 
   render() {
-    const { pinnedRecording, isCurrentUser } = this.props;
+    const { pinnedRecording, isCurrentUser, className } = this.props;
     const { currentlyPinned, isDeleted } = this.state;
     const { artist_name } = pinnedRecording.track_metadata;
 
     return (
       <Card
-        className={`pinned-recording-card row ${
+        className={`pinned-recording-card row ${className} ${
           currentlyPinned ? "currently-pinned " : ""
         } ${isDeleted ? "deleted " : ""}`}
+        onDoubleClick={this.playListen}
       >
         <div className={`${isCurrentUser ? " col-xs-9" : " col-xs-12"}`}>
           {/* Desktop browser layout */}
@@ -222,7 +252,7 @@ export default class PinnedRecordingCard extends React.Component<
               )}
               <ListenControl
                 title="Delete Pin"
-                action={() => this.deletePin(pinnedRecording.row_id)}
+                action={() => this.deletePin(pinnedRecording)}
               />
             </ul>
           </div>

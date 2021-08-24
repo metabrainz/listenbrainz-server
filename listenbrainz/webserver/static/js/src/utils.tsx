@@ -368,6 +368,7 @@ const pinFeatureEnabled = (currentUser: string): boolean => {
     "shivam-kapila",
     "ishaanshah",
     "mr_monkey",
+    "amCap1712",
   ].map((username: string) => username.toLowerCase());
   return usersAllowedIn.includes(currentUser.toLowerCase());
 };
@@ -376,6 +377,14 @@ const countWords = (str: string): number => {
   const words = str.match(/\w+/g);
   if (words === null) return 0;
   return words.length;
+};
+
+const getListenablePin = (pinnedRecording: PinnedRecording): Listen => {
+  const pinnedRecListen: Listen = {
+    listened_at: 0,
+    ...pinnedRecording,
+  };
+  return pinnedRecListen;
 };
 
 export {
@@ -390,4 +399,5 @@ export {
   createAlert,
   pinFeatureEnabled,
   countWords,
+  getListenablePin,
 };
