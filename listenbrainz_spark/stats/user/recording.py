@@ -14,7 +14,7 @@ def get_recordings(table):
                 {
                     'user1' : [
                         {
-                            'recording_name': str,
+                            'track_name': str,
                             'recording_mbid': str,
                             'artist_name': str,
                             'artist_credit_id': int,
@@ -50,7 +50,7 @@ def get_recordings(table):
                     collect_list(
                         struct(
                             listen_count
-                          , recording_name
+                          , recording_name AS track_name
                           , recording_mbid
                           , artist_name
                           , coalesce(artist_credit_mbids, array()) AS artist_mbids

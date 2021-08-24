@@ -69,7 +69,7 @@ class UserEntityTestCase(StatsTestCase):
                 'artist_mbids': [str(i)],
                 'release_name': 'release_{}'.format(i),
                 'release_mbid': str(i),
-                'recording_name': 'recording_{}'.format(i),
+                'track_name': 'recording_{}'.format(i),
                 'recording_mbid': str(i),
                 'listen_count': i
             })
