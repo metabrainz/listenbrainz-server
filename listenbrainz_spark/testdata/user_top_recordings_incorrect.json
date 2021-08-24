@@ -4,7 +4,7 @@
     "artist_mbids": [],
     "release_name": "release_1",
     "release_mbid": "",
-    "recording_name": "track_1",
+    "track_name": "track_1",
     "recording_mbid": "",
     "listen_count": 1
   },
@@ -13,7 +13,7 @@
     "artist_mbids": [],
     "release_name": "release_1",
     "release_mbid": null,
-    "recording_name": "track_1",
+    "track_name": "track_1",
     "recording_mbid": "",
     "listen_count": 1
   },
@@ -22,7 +22,7 @@
     "artist_mbids": [],
     "release_name": "release_2",
     "release_mbid": null,
-    "recording_name": "track_2",
+    "track_name": "track_2",
     "recording_mbid": "",
     "listen_count": null
   },
@@ -31,7 +31,7 @@
     "artist_mbids": [],
     "release_name": "release_2",
     "release_mbid": null,
-    "recording_name": null,
+    "track_name": null,
     "recording_mbid": "",
     "listen_count": null
   }
