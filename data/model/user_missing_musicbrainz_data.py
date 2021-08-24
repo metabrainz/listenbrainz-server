@@ -7,13 +7,10 @@ from typing import List, Optional
 class UserMissingMusicBrainzDataRecord(pydantic.BaseModel):
     """ Each individual record for a user's missing musicbrainz data.
     """
-    artist_msid: str
     artist_name: str
     listened_at: str
-    recording_msid: str
-    release_msid: Optional[str]
     release_name: Optional[str]
-    track_name: str
+    recording_name: str
 
 
 class UserMissingMusicBrainzDataJson(pydantic.BaseModel):
