@@ -410,7 +410,7 @@ describe("isCurrentListen", () => {
 
 // Will re-add this test when feature flag is removed
 
-describe.skip("updateRecordingToPin", () => {
+describe("updateRecordingToPin", () => {
   it("sets the recordingToPin in the state", async () => {
     const wrapper = mount<RecentListens>(
       <RecentListens {...props} />,
@@ -840,7 +840,7 @@ describe("Pagination", () => {
 
 // Will re-add this test when feature flag is removed
 
-describe.skip("pinRecordingModal", () => {
+describe("pinRecordingModal", () => {
   it("renders the PinRecordingModal component with the correct props", async () => {
     const wrapper = mount<RecentListens>(
       <GlobalAppContext.Provider value={mountOptions.context}>
