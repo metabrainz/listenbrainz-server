@@ -16,7 +16,7 @@ from listenbrainz_spark.utils import (delete_dir, path_exists,
 def mock_import_dump_to_hdfs(dump_id: int):
     """ Mock function returning dump name all dump ids less than 210, else raising DumpNotFoundException """
     if dump_id < 210:
-        return f"listenbrainz-listens-dump-{dump_id}-spark-incremental.tar.xz"
+        return f"listenbrainz-spark-dump-{dump_id}-incremental.tar"
     else:
         raise DumpNotFoundException("Dump Not Found")
 
@@ -24,7 +24,7 @@ def mock_import_dump_to_hdfs(dump_id: int):
 def mock_import_dump_to_hdfs_error(dump_id: int):
     """ Mock function returning dump name all dump ids less than 210, else raise DumpInvalidException"""
     if (dump_id < 210) or (dump_id > 210 and dump_id < 213):
-        return f"listenbrainz-listens-dump-{dump_id}-spark-incremental.tar.xz"
+        return f"listenbrainz-spark-dump-{dump_id}-incremental.tar"
     elif dump_id == 210:
         raise DumpInvalidException("Invalid Dump")
     else:
@@ -51,7 +51,7 @@ class DumpImporterJobTestCase(SparkNewTestCase):
     @patch('listenbrainz_spark.request_consumer.jobs.import_dump.datetime')
     def test_import_full_dump_handler(self, mock_datetime, mock_upload, mock_download, _):
         mock_src = MagicMock()
-        mock_download.return_value = (mock_src, 'listenbrainz-listens-dump-202-20200915-180002-spark-full.tar.xz', 202)
+        mock_download.return_value = (mock_src, 'listenbrainz-spark-dump-202-20200915-180002-full.tar', 202)
         mock_datetime.utcnow.return_value = datetime(2020, 8, 18)
 
         messages = import_dump.import_newest_full_dump_handler()
@@ -67,7 +67,7 @@ class DumpImporterJobTestCase(SparkNewTestCase):
 
         self.assertEqual(expected_count, 1)
         self.assertEqual(len(messages), 1)
-        self.assertListEqual(['listenbrainz-listens-dump-202-20200915-180002-spark-full.tar.xz'], messages[0]['imported_dump'])
+        self.assertListEqual(['listenbrainz-spark-dump-202-20200915-180002-full.tar'], messages[0]['imported_dump'])
 
     @patch('ftplib.FTP')
     @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.download_listens')
@@ -75,7 +75,7 @@ class DumpImporterJobTestCase(SparkNewTestCase):
     @patch('listenbrainz_spark.request_consumer.jobs.import_dump.datetime')
     def test_import_full_dump_by_id_handler(self, mock_datetime, mock_upload, mock_download, _):
         mock_src = MagicMock()
-        mock_download.return_value = (mock_src, 'listenbrainz-listens-dump-202-20200915-180002-spark-full.tar.xz', 202)
+        mock_download.return_value = (mock_src, 'listenbrainz-spark-dump-202-20200915-180002-full.tar', 202)
         mock_datetime.utcnow.return_value = datetime(2020, 8, 18)
 
         messages = import_dump.import_full_dump_by_id_handler(202)
@@ -91,7 +91,7 @@ class DumpImporterJobTestCase(SparkNewTestCase):
 
         self.assertEqual(expected_count, 1)
         self.assertEqual(len(messages), 1)
-        self.assertListEqual(['listenbrainz-listens-dump-202-20200915-180002-spark-full.tar.xz'], messages[0]['imported_dump'])
+        self.assertListEqual(['listenbrainz-spark-dump-202-20200915-180002-full.tar'], messages[0]['imported_dump'])
 
     @patch('ftplib.FTP')
     @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.get_latest_dump_id', return_value=210)
@@ -110,7 +110,7 @@ class DumpImporterJobTestCase(SparkNewTestCase):
         expected_import_list = []
         for dump_id in range(204, 210, 3):
             mock_import_calls.append(call(dump_id))
-            expected_import_list.append(f"listenbrainz-listens-dump-{dump_id}-spark-incremental.tar.xz")
+            expected_import_list.append(f"listenbrainz-spark-dump-{dump_id}-incremental.tar")
 
         messages = import_dump.import_newest_incremental_dump_handler()
 
@@ -135,7 +135,7 @@ class DumpImporterJobTestCase(SparkNewTestCase):
         expected_import_list = []
         for dump_id in range(204, 210, 3):
             mock_import_calls.append(call(dump_id))
-            expected_import_list.append(f"listenbrainz-listens-dump-{dump_id}-spark-incremental.tar.xz")
+            expected_import_list.append(f"listenbrainz-spark-dump-{dump_id}-incremental.tar")
 
         messages = import_dump.import_newest_incremental_dump_handler()
 
@@ -148,13 +148,13 @@ class DumpImporterJobTestCase(SparkNewTestCase):
     @patch('listenbrainz_spark.request_consumer.jobs.utils.get_latest_full_dump', return_value=None)
     def test_import_newest_incremental_dump_handler_no_full_dump(self, mock_latest_full_dump, mock_import_dump):
         """ Test to make sure only latest incremental dump is imported if no full dump is found """
-        mock_import_dump.return_value = 'listenbrainz-listens-dump-202-20200915-180002-spark-incremental.tar.xz'
+        mock_import_dump.return_value = 'listenbrainz-spark-dump-202-20200915-180002-incremental.tar'
 
         messages = import_dump.import_newest_incremental_dump_handler()
 
         mock_import_dump.assert_called_once_with(dump_id=None)
         self.assertEqual(len(messages), 1)
-        self.assertListEqual(['listenbrainz-listens-dump-202-20200915-180002-spark-incremental.tar.xz'],
+        self.assertListEqual(['listenbrainz-spark-dump-202-20200915-180002-incremental.tar'],
                              messages[0]['imported_dump'])
 
     @patch('ftplib.FTP')
@@ -163,7 +163,7 @@ class DumpImporterJobTestCase(SparkNewTestCase):
     @patch('listenbrainz_spark.request_consumer.jobs.import_dump.datetime')
     def test_import_incremental_dump_by_id_handler(self, mock_datetime, mock_upload, mock_download, _):
         mock_src = MagicMock()
-        mock_download.return_value = (mock_src, 'listenbrainz-listens-dump-202-20200915-180002-spark-incremental.tar.xz', 202)
+        mock_download.return_value = (mock_src, 'listenbrainz-spark-dump-202-20200915-180002-incremental.tar', 202)
         mock_datetime.utcnow.return_value = datetime(2020, 8, 18)
 
         messages = import_dump.import_incremental_dump_by_id_handler(202)
@@ -180,7 +180,7 @@ class DumpImporterJobTestCase(SparkNewTestCase):
 
         self.assertEqual(expected_count, 1)
         self.assertEqual(len(messages), 1)
-        self.assertListEqual(['listenbrainz-listens-dump-202-20200915-180002-spark-incremental.tar.xz'],
+        self.assertListEqual(['listenbrainz-spark-dump-202-20200915-180002-incremental.tar'],
                              messages[0]['imported_dump'])
 
     @patch('ftplib.FTP')

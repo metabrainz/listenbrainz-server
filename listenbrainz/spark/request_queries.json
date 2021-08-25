@@ -87,7 +87,7 @@
   "import.dump.full_id": {
     "name": "import.dump.full_id",
     "description": "Import full dump with the specified ID into the spark cluster",
-    "params": ["id"]
+    "params": ["dump_id"]
   },
   "import.dump.incremental_newest": {
     "name": "import.dump.incremental_newest",
@@ -97,7 +97,7 @@
   "import.dump.incremental_id": {
     "name": "import.dump.incremental_id",
     "description": "Import incremental dump with the specified ID into the spark cluster",
-    "params": ["id"]
+    "params": ["dump_id"]
   },
   "cf.recommendations.recording.create_dataframes": {
     "name": "cf.recommendations.recording.create_dataframes",
