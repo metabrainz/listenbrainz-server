@@ -16,6 +16,9 @@ from listenbrainz_spark.utils import read_files_from_HDFS
 
 logger = logging.getLogger(__name__)
 
+# NOTE: the name of the arguments in these methods should match the name
+# of the params in request_queries.json.
+
 
 def import_full_dump_to_hdfs(dump_id: int = None) -> str:
     """ Import the full dump with the given dump_id if specified otherwise the

@@ -136,7 +136,7 @@ def request_import_new_full_dump(id_: int):
     """
     if id_:
         send_request_to_spark_cluster(_prepare_query_message(
-            'import.dump.full_id', params={'id': id_}))
+            'import.dump.full_id', params={'dump_id': id_}))
     else:
         send_request_to_spark_cluster(
             _prepare_query_message('import.dump.full_newest'))
@@ -150,7 +150,7 @@ def request_import_new_incremental_dump(id_: int):
     """
     if id_:
         send_request_to_spark_cluster(_prepare_query_message(
-            'import.dump.incremental_id', params={'id': id_}))
+            'import.dump.incremental_id', params={'dump_id': id_}))
     else:
         send_request_to_spark_cluster(
             _prepare_query_message('import.dump.incremental_newest'))
