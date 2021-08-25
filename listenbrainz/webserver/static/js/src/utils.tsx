@@ -355,23 +355,6 @@ const getPageProps = (): {
   return { domContainer, reactProps, globalReactProps, optionalAlerts };
 };
 
-// This is the temporary UI feature flag for the pin recording feature and will eventually be removed
-const pinFeatureEnabled = (currentUser: string): boolean => {
-  if (!currentUser) {
-    return false;
-  }
-  const usersAllowedIn = [
-    "jdaok",
-    "rob",
-    "iliekcomputers",
-    "shivam-kapila",
-    "ishaanshah",
-    "mr_monkey",
-    "amCap1712",
-  ].map((username: string) => username.toLowerCase());
-  return usersAllowedIn.includes(currentUser.toLowerCase());
-};
-
 const getListenablePin = (pinnedRecording: PinnedRecording): Listen => {
   const pinnedRecListen: Listen = {
     listened_at: 0,
@@ -390,6 +373,5 @@ export {
   getPageProps,
   searchForYoutubeTrack,
   createAlert,
-  pinFeatureEnabled,
   getListenablePin,
 };
