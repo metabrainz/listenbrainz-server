@@ -4,6 +4,9 @@ import APIError from "./APIError";
 export default class APIService {
   APIBaseURI: string;
 
+  MBBaseURI: string = "https://musicbrainz.org/ws/2";
+  CBBaseURI: string = "https://critiquebrainz.org/ws/1";
+
   MAX_LISTEN_SIZE: number = 10000; // Maximum size of listens that can be sent
 
   constructor(APIBaseURI: string) {
@@ -139,6 +142,10 @@ export default class APIService {
 
   refreshSpotifyToken = async (): Promise<string> => {
     return this.refreshAccessToken("spotify");
+  };
+
+  refreshCritiquebrainzToken = async (): Promise<string> => {
+    return this.refreshAccessToken("critiquebrainz");
   };
 
   refreshAccessToken = async (service: string): Promise<string> => {
@@ -856,6 +863,49 @@ export default class APIService {
 
     await this.checkStatus(response);
     const data = await response.json();
+    return data;
+  };
+
+  submitReviewToCB = async (
+    accessToken: string,
+    review: CritiqueBrainzReview
+  ) => {
+    const url = `${this.CBBaseURI}/review/`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({
+        is_draft: false,
+        entity_id: review.entity_id,
+        entity_type: review.entity_type,
+        text: review.text,
+        license_choice: "CC BY-SA 3.0",
+        language: review.languageCode,
+        rating: review.rating,
+      }),
+    });
+
+    await this.checkStatus(response);
+    const data = await response.json();
+    return data;
+  };
+
+  lookupMBRelease = async (releaseMBID: string): Promise<any> => {
+    const url = `${this.MBBaseURI}/release/${releaseMBID}?fmt=json&inc=release-groups`;
+    const response = await fetch(encodeURI(url));
+    this.checkStatus(response);
+    const data = response.json();
+    return data;
+  };
+
+  lookupMBReleaseFromTrack = async (trackMBID: string): Promise<any> => {
+    const url = `${this.MBBaseURI}/release?track=${trackMBID}&fmt=json`;
+    const response = await fetch(encodeURI(url));
+    this.checkStatus(response);
+    const data = response.json();
     return data;
   };
 }

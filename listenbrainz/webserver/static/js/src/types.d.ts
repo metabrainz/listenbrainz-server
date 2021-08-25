@@ -533,3 +533,13 @@ type SimilarUser = {
   name: string;
   similarityScore: number;
 };
+
+type ReviewableEntityType = "recording" | "artist" | "release_group";
+
+type CritiqueBrainzReview = {
+  entity_id: string;
+  entity_type: ReviewableEntityType;
+  text: string;
+  languageCode: string;
+  rating?: number;
+};
