@@ -17,12 +17,10 @@ const listen: Listen = {
     additional_info: {
       artist_msid: "03d17ddc-cd52-455a-b574-3e6a2371ca21",
       release_msid: "67c6298f-738e-44f3-ae95-4cdeb5192719",
-      recording_mbid: "508315f7-93d2-4b25-9561-0034d7e07717",
+      recording_mbid: "2bf47421-2344-4255-a525-e7d7f54de742",
       listening_from: "lastfm",
       recording_msid: "ff32f7c7-c8ce-4048-b392-770e013bc05b",
-      lastfm_track_mbid: "0255f1ea-3199-49b4-8b5c-bdcc3716ebc9",
-      lastfm_artist_mbid: "45a663b5-b1cb-4a91-bff6-2bef7bbfdd76",
-      lastfm_release_mbid: "2bf47421-2344-4255-a525-e7d7f54de742",
+      artist_mbids: ["45a663b5-b1cb-4a91-bff6-2bef7bbfdd76"],
     },
     track_name: "Criminal",
   },
@@ -226,7 +224,7 @@ describe("submitReviewToCB", () => {
     expect(spy).toHaveBeenCalledWith(
       "BL9f6rv8OXyR0qLucXoftqAhMarEcfhUXpZ8lXII",
       {
-        entity_id: "508315f7-93d2-4b25-9561-0034d7e07717",
+        entity_id: "2bf47421-2344-4255-a525-e7d7f54de742",
         entity_type: "recording",
         languageCode: "en",
         rating: undefined,
