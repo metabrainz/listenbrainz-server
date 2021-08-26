@@ -3,7 +3,7 @@ import { get as _get } from "lodash";
 
 import { Rating } from "react-simple-star-rating";
 
-const ISO6391 = require("iso-639-1")
+import ISO6391 from "iso-639-1";
 import * as _ from "lodash";
 import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
