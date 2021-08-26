@@ -3,7 +3,7 @@ import { get as _get } from "lodash";
 
 import { Rating } from "react-simple-star-rating";
 
-import ISO6391 from "iso-639-1";
+const ISO6391 = require("iso-639-1")
 import * as _ from "lodash";
 import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -214,11 +214,6 @@ export default class CBReviewModal extends React.Component<
         additional_info?.track_mbid,
         listen.track_metadata.track_name
       );
-    else if (additional_info?.lastfm_track_mbid)
-      recording_mbid = await this.getRecordingMBIDFromTrack(
-        additional_info?.lastfm_track_mbid,
-        listen.track_metadata.track_name
-      );
 
     // confirm that found mbid was valid
     if (recording_mbid.length) {
@@ -238,9 +233,7 @@ export default class CBReviewModal extends React.Component<
     const { additional_info } = listen.track_metadata;
     let artist_mbid;
 
-    if (additional_info?.lastfm_artist_mbid)
-      artist_mbid = additional_info?.lastfm_artist_mbid;
-    else if (additional_info?.artist_mbids)
+    if (additional_info?.artist_mbids)
       artist_mbid = additional_info?.artist_mbids[0];
 
     if (artist_mbid) {
@@ -268,10 +261,6 @@ export default class CBReviewModal extends React.Component<
     else if (additional_info?.release_mbid)
       release_group_mbid = await this.getGroupMBIDFromRelease(
         additional_info?.release_mbid
-      );
-    else if (additional_info?.lastfm_release_mbid)
-      release_group_mbid = await this.getGroupMBIDFromRelease(
-        additional_info?.lastfm_release_mbid
       );
 
     // confirm that found mbid is valid
