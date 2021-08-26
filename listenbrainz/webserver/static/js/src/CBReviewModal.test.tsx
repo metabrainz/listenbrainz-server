@@ -59,11 +59,9 @@ const props = {
 
 describe("CBReviewModal", () => {
   it("renders the modal correctly", async () => {
-    const wrapper = mount<CBReviewModal>(
-      <GlobalAppContext.Provider value={globalProps}>
-        <CBReviewModal {...props} />
-      </GlobalAppContext.Provider>
-    );
+    const wrapper = mount<CBReviewModal>(<CBReviewModal {...props} />, {
+      context: globalProps,
+    });
     const instance = wrapper.instance();
     expect(wrapper.html()).toMatchSnapshot(); // no entityToReview version
 
@@ -126,11 +124,9 @@ describe("componentDidUpdate", () => {
 
 describe("refreshCritiquebrainzToken", () => {
   it("calls API with the correct parameters", () => {
-    const wrapper = mount<CBReviewModal>(
-      <GlobalAppContext.Provider value={globalProps}>
-        <CBReviewModal {...props} />
-      </GlobalAppContext.Provider>
-    );
+    const wrapper = mount<CBReviewModal>(<CBReviewModal {...props} />, {
+      context: globalProps,
+    });
     const instance = wrapper.instance();
 
     const spy = jest.fn();
@@ -141,11 +137,9 @@ describe("refreshCritiquebrainzToken", () => {
   });
 
   describe("getGroupMBIDFromRelease", () => {
-    const wrapper = mount<CBReviewModal>(
-      <GlobalAppContext.Provider value={globalProps}>
-        <CBReviewModal {...props} />
-      </GlobalAppContext.Provider>
-    );
+    const wrapper = mount<CBReviewModal>(<CBReviewModal {...props} />, {
+      context: globalProps,
+    });
     const instance = wrapper.instance();
 
     it("calls API and returns the correct groupMBID string", async () => {
@@ -166,11 +160,9 @@ describe("refreshCritiquebrainzToken", () => {
   });
 
   describe("getRecordingMBIDFromTrack", () => {
-    const wrapper = mount<CBReviewModal>(
-      <GlobalAppContext.Provider value={globalProps}>
-        <CBReviewModal {...props} />
-      </GlobalAppContext.Provider>
-    );
+    const wrapper = mount<CBReviewModal>(<CBReviewModal {...props} />, {
+      context: globalProps,
+    });
     const instance = wrapper.instance();
 
     it("calls API and returns the correct groupMBID string", async () => {
@@ -198,11 +190,9 @@ describe("submitReviewToCB", () => {
   it("calls API, and sets state + creates a new alert on success", async () => {
     const extraProps = { ...props, newAlert: jest.fn() };
 
-    const wrapper = mount<CBReviewModal>(
-      <GlobalAppContext.Provider value={globalProps}>
-        <CBReviewModal {...extraProps} />
-      </GlobalAppContext.Provider>
-    );
+    const wrapper = mount<CBReviewModal>(<CBReviewModal {...extraProps} />, {
+      context: globalProps,
+    });
     const instance = wrapper.instance();
     await instance.componentDidMount(); // set valid entityToReview
 
@@ -242,11 +232,9 @@ describe("submitReviewToCB", () => {
   });
 
   it("does nothing if user hasn't authenticated with CritiqueBrainz", async () => {
-    const wrapper = mount<CBReviewModal>(
-      <GlobalAppContext.Provider value={globalProps}>
-        <CBReviewModal {...props} />
-      </GlobalAppContext.Provider>
-    );
+    const wrapper = mount<CBReviewModal>(<CBReviewModal {...props} />, {
+      context: globalProps,
+    });
 
     const instance = wrapper.instance();
     await instance.componentDidMount(); // set valid entity so submit doesn't fail from missing entity
@@ -264,11 +252,9 @@ describe("submitReviewToCB", () => {
   });
 
   it("does nothing if license was not accepted", async () => {
-    const wrapper = mount<CBReviewModal>(
-      <GlobalAppContext.Provider value={globalProps}>
-        <CBReviewModal {...props} />
-      </GlobalAppContext.Provider>
-    );
+    const wrapper = mount<CBReviewModal>(<CBReviewModal {...props} />, {
+      context: globalProps,
+    });
     const instance = wrapper.instance();
     await instance.componentDidMount(); // set valid entity so submit doesn't fail from missing entity
     // set valid review state
@@ -285,11 +271,9 @@ describe("submitReviewToCB", () => {
   });
 
   it("does nothing if entityToReview is null", async () => {
-    const wrapper = mount<CBReviewModal>(
-      <GlobalAppContext.Provider value={globalProps}>
-        <CBReviewModal {...props} />
-      </GlobalAppContext.Provider>
-    );
+    const wrapper = mount<CBReviewModal>(<CBReviewModal {...props} />, {
+      context: globalProps,
+    });
     const instance = wrapper.instance();
     instance.setState({
       textContent: "String is over 25 characters",
@@ -306,11 +290,9 @@ describe("submitReviewToCB", () => {
   });
 
   it("sets reviewValidateAlert state and returns if textContent does not meet length requirement", async () => {
-    const wrapper = mount<CBReviewModal>(
-      <GlobalAppContext.Provider value={globalProps}>
-        <CBReviewModal {...props} />
-      </GlobalAppContext.Provider>
-    );
+    const wrapper = mount<CBReviewModal>(<CBReviewModal {...props} />, {
+      context: globalProps,
+    });
     const instance = wrapper.instance();
     await instance.componentDidMount();
 
@@ -333,11 +315,9 @@ describe("submitReviewToCB", () => {
   });
 
   it("retries once if API throws invalid token error", async () => {
-    const wrapper = mount<CBReviewModal>(
-      <GlobalAppContext.Provider value={globalProps}>
-        <CBReviewModal {...props} />
-      </GlobalAppContext.Provider>
-    );
+    const wrapper = mount<CBReviewModal>(<CBReviewModal {...props} />, {
+      context: globalProps,
+    });
     const instance = wrapper.instance();
     await instance.componentDidMount();
     instance.setState({
@@ -354,7 +334,7 @@ describe("submitReviewToCB", () => {
         throw error;
       });
 
-    // mock api refreshtoken sending a new token
+    // mock api refresh token sending a new token
     instance.context.APIService.refreshCritiquebrainzToken = jest
       .fn()
       .mockImplementation(() => Promise.resolve("this is new token"));
