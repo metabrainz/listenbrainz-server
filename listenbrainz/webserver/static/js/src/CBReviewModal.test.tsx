@@ -8,8 +8,6 @@ import * as lookupMBReleaseFromTrack from "./__mocks__/lookupMBReleaseFromTrack.
 
 import CBReviewModal from "./CBReviewModal";
 
-const ISO6391 = require("iso-639-1");
-
 const listen: Listen = {
   track_metadata: {
     artist_name: "Britney Spears",
