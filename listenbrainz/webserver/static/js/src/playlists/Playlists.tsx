@@ -35,7 +35,6 @@ import {
 import { getPageProps } from "../utils";
 
 export type UserPlaylistsProps = {
-  currentUser?: ListenBrainzUser;
   playlists?: JSPFObject[];
   user: ListenBrainzUser;
   paginationOffset: string;
@@ -110,8 +109,8 @@ export default class UserPlaylists extends React.Component<
     }
 
     this.setState({ loading: true });
-    const { user, activeSection, currentUser, newAlert } = this.props;
-
+    const { user, activeSection, newAlert } = this.props;
+    const { currentUser } = this.context;
     try {
       const newPlaylists = await this.APIService.getUserPlaylists(
         user.name,
@@ -130,7 +129,7 @@ export default class UserPlaylists extends React.Component<
   };
 
   isOwner = (playlist: JSPFPlaylist): boolean => {
-    const { currentUser } = this.props;
+    const { currentUser } = this.context;
     return Boolean(currentUser) && currentUser?.name === playlist.creator;
   };
 
@@ -144,7 +143,8 @@ export default class UserPlaylists extends React.Component<
   };
 
   copyPlaylist = async (playlistId: string): Promise<void> => {
-    const { currentUser, newAlert } = this.props;
+    const { newAlert } = this.props;
+    const { currentUser } = this.context;
     if (!currentUser?.auth_token) {
       this.alertMustBeLoggedIn();
       return;
@@ -182,7 +182,8 @@ export default class UserPlaylists extends React.Component<
   };
 
   deletePlaylist = async (): Promise<void> => {
-    const { currentUser, newAlert } = this.props;
+    const { newAlert } = this.props;
+    const { currentUser } = this.context;
     const { playlistSelectedForOperation: playlist, playlists } = this.state;
     if (!currentUser?.auth_token) {
       this.alertMustBeLoggedIn();
@@ -233,7 +234,8 @@ export default class UserPlaylists extends React.Component<
     collaborators: string[],
     id?: string
   ): Promise<void> => {
-    const { currentUser, newAlert } = this.props;
+    const { newAlert } = this.props;
+    const { currentUser } = this.context;
     if (id) {
       newAlert(
         "danger",
@@ -310,7 +312,8 @@ export default class UserPlaylists extends React.Component<
     collaborators: string[],
     id?: string
   ): Promise<void> => {
-    const { currentUser, newAlert } = this.props;
+    const { newAlert } = this.props;
+    const { currentUser } = this.context;
     if (!id) {
       newAlert(
         "danger",
@@ -365,7 +368,8 @@ export default class UserPlaylists extends React.Component<
   };
 
   isCurrentUserPage = () => {
-    const { currentUser, user, activeSection } = this.props;
+    const { user, activeSection } = this.props;
+    const { currentUser } = this.context;
     if (activeSection === "recommendations") {
       return false;
     }
@@ -373,7 +377,8 @@ export default class UserPlaylists extends React.Component<
   };
 
   handleClickNext = async () => {
-    const { user, activeSection, currentUser, newAlert } = this.props;
+    const { user, activeSection, newAlert } = this.props;
+    const { currentUser } = this.context;
     const { paginationOffset, playlistsPerPage, playlistCount } = this.state;
     const newOffset = paginationOffset + playlistsPerPage;
     // No more playlists to fetch
@@ -399,7 +404,8 @@ export default class UserPlaylists extends React.Component<
   };
 
   handleClickPrevious = async () => {
-    const { user, activeSection, currentUser, newAlert } = this.props;
+    const { user, activeSection, newAlert } = this.props;
+    const { currentUser } = this.context;
     const { paginationOffset, playlistsPerPage } = this.state;
     // No more playlists to fetch
     if (paginationOffset === 0) {
