@@ -337,7 +337,9 @@
       padding: 0;
       color: #8d8d8d;
     }
-    @media (min-width: @screen-phone) {
+	// If the user has an input method compatible with hoering (f.e. a mouse)
+	// hide the play button by default and show it on card hover
+	@media (hover: hover) {
       .play-button {
         transition: opacity .3s ease-in-out;
         opacity: 0;
