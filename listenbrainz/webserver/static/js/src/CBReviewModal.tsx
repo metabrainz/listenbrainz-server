@@ -3,7 +3,8 @@ import { get as _get } from "lodash";
 
 import { Rating } from "react-simple-star-rating";
 
-import ISO6391 from "iso-639-1";
+import * as iso from "@cospired/i18n-iso-languages";
+import * as eng from "@cospired/i18n-iso-languages/langs/en.json";
 import * as _ from "lodash";
 import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -456,7 +457,7 @@ export default class CBReviewModal extends React.Component<
     }
 
     /* The default modal body */
-    const allLanguages = ISO6391.getLanguages(ISO6391.getAllCodes()); // gets all languages
+    const allLanguagesKeyValue = Object.entries(iso.getNames("en")); // gets all languages
     const allEntities = [recordingEntity, artistEntity, releaseGroupEntity];
 
     return (
@@ -546,10 +547,10 @@ export default class CBReviewModal extends React.Component<
             name="language"
             onChange={this.handleInputChange}
           >
-            {allLanguages.map((lang: any) => {
+            {allLanguagesKeyValue.map((lang: any) => {
               return (
-                <option key={lang.code} value={lang.code}>
-                  {lang.name}
+                <option key={lang[0]} value={lang[0]}>
+                  {lang[1]}
                 </option>
               );
             })}
