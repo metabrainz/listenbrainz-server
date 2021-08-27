@@ -193,7 +193,7 @@ add_rsync_include_rule \
     "listenbrainz-listens-dump-$DUMP_ID-$DUMP_TIMESTAMP-$DUMP_TYPE.tar.xz"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
-    "listenbrainz-listens-dump-$DUMP_ID-$DUMP_TIMESTAMP-spark-$DUMP_TYPE.tar.xz"
+    "listenbrainz-spark-dump-$DUMP_ID-$DUMP_TIMESTAMP-$DUMP_TYPE.tar"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
     "listenbrainz-feedback-dump-$DUMP_TIMESTAMP.tar.xz"

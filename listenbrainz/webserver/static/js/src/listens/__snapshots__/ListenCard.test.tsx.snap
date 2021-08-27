@@ -25,7 +25,6 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
   removeListenFromListenList={[Function]}
   updateFeedback={[Function]}
   updateRecordingToPin={[Function]}
-  updateRecordingToReview={[Function]}
 >
   <ForwardRef
     className="listen-card row undefined "
@@ -303,18 +302,18 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
             </ListenControl>
             <ListenControl
               action={[Function]}
-              dataTarget="#CBReviewModal"
+              dataTarget="#PinRecordingModal"
               dataToggle="modal"
-              title="Review this Recording"
+              title="Pin this Recording"
             >
               <button
-                data-target="#CBReviewModal"
+                data-target="#PinRecordingModal"
                 data-toggle="modal"
                 onClick={[Function]}
-                title="Review this Recording"
+                title="Pin this Recording"
                 type="button"
               >
-                Review this Recording
+                Pin this Recording
               </button>
             </ListenControl>
           </ul>
@@ -350,7 +349,6 @@ exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
   removeListenFromListenList={[Function]}
   updateFeedback={[Function]}
   updateRecordingToPin={[Function]}
-  updateRecordingToReview={[Function]}
 >
   <ForwardRef
     className="listen-card row undefined "
@@ -419,7 +417,6 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
   removeListenFromListenList={[Function]}
   updateFeedback={[Function]}
   updateRecordingToPin={[Function]}
-  updateRecordingToReview={[Function]}
 >
   <ForwardRef
     className="listen-card row undefined "
@@ -697,18 +694,18 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
             </ListenControl>
             <ListenControl
               action={[Function]}
-              dataTarget="#CBReviewModal"
+              dataTarget="#PinRecordingModal"
               dataToggle="modal"
-              title="Review this Recording"
+              title="Pin this Recording"
             >
               <button
-                data-target="#CBReviewModal"
+                data-target="#PinRecordingModal"
                 data-toggle="modal"
                 onClick={[Function]}
-                title="Review this Recording"
+                title="Pin this Recording"
                 type="button"
               >
-                Review this Recording
+                Pin this Recording
               </button>
             </ListenControl>
           </ul>
@@ -744,7 +741,6 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
   removeListenFromListenList={[Function]}
   updateFeedback={[Function]}
   updateRecordingToPin={[Function]}
-  updateRecordingToReview={[Function]}
 >
   <ForwardRef
     className="listen-card row undefined "
@@ -1022,18 +1018,18 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
             </ListenControl>
             <ListenControl
               action={[Function]}
-              dataTarget="#CBReviewModal"
+              dataTarget="#PinRecordingModal"
               dataToggle="modal"
-              title="Review this Recording"
+              title="Pin this Recording"
             >
               <button
-                data-target="#CBReviewModal"
+                data-target="#PinRecordingModal"
                 data-toggle="modal"
                 onClick={[Function]}
-                title="Review this Recording"
+                title="Pin this Recording"
                 type="button"
               >
-                Review this Recording
+                Pin this Recording
               </button>
             </ListenControl>
           </ul>
