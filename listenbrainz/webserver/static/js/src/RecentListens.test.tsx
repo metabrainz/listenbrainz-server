@@ -436,7 +436,7 @@ describe("updateRecordingToReview", () => {
     const instance = wrapper.instance();
     const recordingToReview = props.listens[1];
 
-    expect(wrapper.state("recordingToReview")).toEqual(props.listens[0]); // default recordingToReview
+    expect(wrapper.state("recordingToReview")).toEqual(props.listens[0]); // default recordingToreview
 
     instance.updateRecordingToPin(recordingToReview);
     expect(wrapper.state("recordingToPin")).toEqual(recordingToReview);
