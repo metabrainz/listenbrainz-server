@@ -385,6 +385,49 @@
 				},
 				"user_name": "reosarevok"
 			}
+		},
+		{
+			"created": 1613472253,
+			"event_type": "recording_pin",
+			"metadata": {
+				"blurb_content": "Very good...",
+				"inserted_at": null,
+				"listened_at": null,
+				"listened_at_iso": null,
+				"playing_now": null,
+				"track_metadata": {
+					"additional_info": {
+						"artist_mbids": null,
+						"artist_msid": "8a07a2b7-e838-4fa2-a6dc-67328350e6f5",
+						"discnumber": null,
+						"duration_ms": null,
+						"isrc": null,
+						"listening_from": null,
+						"origin_url": null,
+						"recording_mbid": null,
+						"recording_msid": "6aac964a-fbae-425e-9273-06ed38ae1bda",
+						"release_artist_name": null,
+						"release_artist_names": null,
+						"release_group_mbid": null,
+						"release_mbid": null,
+						"release_msid": null,
+						"spotify_album_artist_ids": null,
+						"spotify_album_id": null,
+						"spotify_artist_ids": null,
+						"spotify_id": null,
+						"tags": null,
+						"track_mbid": null,
+						"tracknumber": null,
+						"work_mbids": null,
+						"youtube_id": null
+					},
+					"artist_name": "Caroline Polachek",
+					"release_name": null,
+					"track_name": "So Hot You're Hurting My Feelings"
+				},
+				"user_name": "jdaok"
+			},
+			"user_name": "jdaok"
 		}
 	]
 }

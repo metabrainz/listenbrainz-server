@@ -33,8 +33,8 @@ class ListensDump(NamedTuple):
                            dump_type=DumpType.INCREMENTAL if parts[5] == 'incremental' else DumpType.FULL)
 
     def get_dump_file(self):
-        return f'listenbrainz-listens-dump-{self.dump_id}-{self.dump_date}' \
-               f'-{self.dump_tod}-spark-{self.dump_type.value}.tar.xz'
+        return f'listenbrainz-spark-dump-{self.dump_id}-{self.dump_date}' \
+               f'-{self.dump_tod}-{self.dump_type.value}.tar'
 
 
 class ListenBrainzFTPDownloader:

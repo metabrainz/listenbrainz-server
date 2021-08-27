@@ -67,6 +67,42 @@
 
         <div class="panel panel-default">
             <div class="panel-heading">
+                <h3 class="panel-title">CritiqueBrainz</h3>
+            </div>
+            <div class="panel-body">
+                <p>
+                    Connect to your CritiqueBrainz account to publish reviews for your Listens directly from
+                    ListenBrainz. Your reviews will be independently visible on CritiqueBrainz and appear publicly
+                    on your CritiqueBrainz profile unless removed. To view or delete your reviews, visit your
+                    CritiqueBrainz profile.
+                </p>
+                <br/>
+                <div class="music-service-selection">
+                    <form action="{{ url_for('profile.music_services_disconnect', service_name='critiquebrainz') }}"
+                          method="post">
+                        {{
+                                service_permission_button(
+                                "critiquebrainz",
+                                current_critiquebrainz_permissions,
+                                "review",
+                                "Reviews",
+                                "You will be able to publish mini-reviews for your Listens directly from ListenBrainz.")
+                        }}
+                        {{
+                                service_permission_button(
+                                "critiquebrainz",
+                                current_critiquebrainz_permissions,
+                                "disable",
+                                "Disable",
+                                "You will not be able to publish mini-reviews for your Listens directly from ListenBrainz.")
+                        }}
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
                 <h3 class="panel-title">Youtube</h3>
             </div>
             <div class="panel-body">

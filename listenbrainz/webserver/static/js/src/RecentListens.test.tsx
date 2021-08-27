@@ -1,3 +1,5 @@
+/* eslint-disable jest/no-disabled-tests */
+
 import * as React from "react";
 import { mount } from "enzyme";
 import * as timeago from "time-ago";
@@ -41,6 +43,7 @@ const {
   spotify,
   youtube,
   user,
+  userPinnedRecording,
   webSocketsServerUrl,
 } = recentListensProps;
 
@@ -55,6 +58,7 @@ const props = {
   oldestListenTs,
   profileUrl,
   user,
+  userPinnedRecording,
   webSocketsServerUrl,
   newAlert: () => {},
 };
@@ -403,6 +407,8 @@ describe("isCurrentListen", () => {
     expect(instance.isCurrentListen({} as Listen)).toBeFalsy();
   });
 });
+
+// Will re-add this test when feature flag is removed
 
 describe("updateRecordingToPin", () => {
   it("sets the recordingToPin in the state", async () => {
@@ -832,6 +838,8 @@ describe("Pagination", () => {
   });
 });
 
+// Will re-add this test when feature flag is removed
+
 describe("pinRecordingModal", () => {
   it("renders the PinRecordingModal component with the correct props", async () => {
     const wrapper = mount<RecentListens>(
@@ -861,3 +869,5 @@ describe("pinRecordingModal", () => {
     });
   });
 });
+
+/* eslint-enable jest/no-disabled-tests */

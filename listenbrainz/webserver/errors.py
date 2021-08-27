@@ -162,6 +162,10 @@ def init_error_handlers(app):
     def file_size_too_large(error):
         return handle_error(error, 413)
 
+    @app.errorhandler(429)
+    def too_many_requests(error):
+        return handle_error(error, 429)
+
     @app.errorhandler(500)
     def internal_server_error(error):
         # This error handler gets triggered on any uncaught exception.

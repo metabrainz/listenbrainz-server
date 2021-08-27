@@ -1,7 +1,6 @@
 import pydantic
 
 from datetime import datetime
-from enum import Enum
 from typing import Optional, List
 
 
@@ -10,10 +9,11 @@ class UserArtistRecord(pydantic.BaseModel):
 
     Contains the artist name, MessyBrainz ID, MusicBrainz IDs and listen count.
     """
-    artist_msid: Optional[str]
     artist_mbids: List[str] = []
     listen_count: int
     artist_name: str
+    # to add an empty field to stats API response, for compatibility
+    artist_msid: Optional[str]
 
 
 class UserArtistStatRange(pydantic.BaseModel):
