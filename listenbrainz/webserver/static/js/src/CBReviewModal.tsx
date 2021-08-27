@@ -3,7 +3,8 @@ import { get as _get } from "lodash";
 
 import { Rating } from "react-simple-star-rating";
 
-import ISO6391 from "iso-639-1";
+import * as iso from "@cospired/i18n-iso-languages";
+import * as eng from "@cospired/i18n-iso-languages/langs/en.json";
 import * as _ from "lodash";
 import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -214,11 +215,6 @@ export default class CBReviewModal extends React.Component<
         additional_info?.track_mbid,
         listen.track_metadata.track_name
       );
-    else if (additional_info?.lastfm_track_mbid)
-      recording_mbid = await this.getRecordingMBIDFromTrack(
-        additional_info?.lastfm_track_mbid,
-        listen.track_metadata.track_name
-      );
 
     // confirm that found mbid was valid
     if (recording_mbid.length) {
@@ -238,9 +234,7 @@ export default class CBReviewModal extends React.Component<
     const { additional_info } = listen.track_metadata;
     let artist_mbid;
 
-    if (additional_info?.lastfm_artist_mbid)
-      artist_mbid = additional_info?.lastfm_artist_mbid;
-    else if (additional_info?.artist_mbids)
+    if (additional_info?.artist_mbids)
       artist_mbid = additional_info?.artist_mbids[0];
 
     if (artist_mbid) {
@@ -268,10 +262,6 @@ export default class CBReviewModal extends React.Component<
     else if (additional_info?.release_mbid)
       release_group_mbid = await this.getGroupMBIDFromRelease(
         additional_info?.release_mbid
-      );
-    else if (additional_info?.lastfm_release_mbid)
-      release_group_mbid = await this.getGroupMBIDFromRelease(
-        additional_info?.lastfm_release_mbid
       );
 
     // confirm that found mbid is valid
@@ -467,7 +457,7 @@ export default class CBReviewModal extends React.Component<
     }
 
     /* The default modal body */
-    const allLanguages = ISO6391.getLanguages(ISO6391.getAllCodes()); // gets all languages
+    const allLanguagesKeyValue = Object.entries(iso.getNames("en")); // gets all languages
     const allEntities = [recordingEntity, artistEntity, releaseGroupEntity];
 
     return (
@@ -557,10 +547,10 @@ export default class CBReviewModal extends React.Component<
             name="language"
             onChange={this.handleInputChange}
           >
-            {allLanguages.map((lang: any) => {
+            {allLanguagesKeyValue.map((lang: any) => {
               return (
-                <option key={lang.code} value={lang.code}>
-                  {lang.name}
+                <option key={lang[0]} value={lang[0]}>
+                  {lang[1]}
                 </option>
               );
             })}
