@@ -12,7 +12,7 @@ class ServerTestCase(flask_testing.TestCase):
 
     def temporary_login(self, user_login_id):
         with self.client.session_transaction() as session:
-            session['user_id'] = user_login_id
+            session['_user_id'] = user_login_id
             session['_fresh'] = True
 
 
