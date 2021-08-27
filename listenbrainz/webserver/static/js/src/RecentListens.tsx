@@ -27,7 +27,6 @@ import PinnedRecordingCard from "./PinnedRecordingCard";
 import {
   formatWSMessageToListen,
   getPageProps,
-  pinFeatureEnabled,
   getListenablePin,
 } from "./utils";
 import CBReviewModal from "./CBReviewModal";
@@ -767,7 +766,7 @@ export default class RecentListens extends React.Component<
                     </li>
                   </ul>
                 )}
-                {currentUser && pinFeatureEnabled(currentUser.name) && (
+                {currentUser && (
                   <PinRecordingModal
                     recordingToPin={recordingToPin || listens[0]}
                     isCurrentUser={currentUser?.name === user?.name}
