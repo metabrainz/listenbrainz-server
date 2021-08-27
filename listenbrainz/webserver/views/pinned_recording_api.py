@@ -13,13 +13,13 @@ from listenbrainz.webserver.views.api_tools import (
     get_non_negative_param,
     validate_auth_header,
 )
-from listenbrainz.db.model.pinned_recording import PinnedRecording, WritablePinnedRecording
+from listenbrainz.db.model.pinned_recording import PinnedRecording, WritablePinnedRecording, fetch_track_metadata_for_pins
 from pydantic import ValidationError
 
 pinned_recording_api_bp = Blueprint("pinned_rec_api_bp_v1", __name__)
 
 
-@pinned_recording_api_bp.route("/pin", methods=["POST"])
+@pinned_recording_api_bp.route("/pin", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def pin_recording_for_user():
@@ -71,7 +71,7 @@ def pin_recording_for_user():
     return jsonify({"status": "ok"})
 
 
-@pinned_recording_api_bp.route("/pin/unpin", methods=["POST"])
+@pinned_recording_api_bp.route("/pin/unpin", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def unpin_recording_for_user():
@@ -99,37 +99,39 @@ def unpin_recording_for_user():
     return jsonify({"status": "ok"})
 
 
-@pinned_recording_api_bp.route("/pin/delete/<pinned_id>", methods=["POST"])
+@pinned_recording_api_bp.route("/pin/delete/<row_id>", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
-def delete_pin_for_user(pinned_id):
+def delete_pin_for_user(row_id):
     """
-    Deletes the pinned recording with given ``pinned_id`` from the server.
+    Deletes the pinned recording with given ``row_id`` from the server.
     A user token (found on  https://listenbrainz.org/profile/) must be provided in the Authorization header!
 
     :reqheader Authorization: Token <user token>
-    :param pinned_id: the pinned_id of the pinned recording that should be deleted.
-    :type pinned_id: ``int``
+    :param row_id: the row_id of the pinned recording that should be deleted.
+    :type row_id: ``int``
     :statuscode 200: recording unpinned.
     :statuscode 401: invalid authorization. See error message for details.
-    :statuscode 404: the requested pinned_id for the user was not found.
+    :statuscode 404: the requested row_id for the user was not found.
     :resheader Content-Type: *application/json*
     """
     user = validate_auth_header()
 
     try:
-        recording_deleted = db_pinned_rec.delete(pinned_id, user["id"])
+        recording_deleted = db_pinned_rec.delete(row_id, user["id"])
     except Exception as e:
         current_app.logger.error("Error while unpinning recording for user: {}".format(e))
         raise APIInternalServerError("Something went wrong. Please try again.")
 
     if recording_deleted is False:
-        raise APINotFound("Cannot find pin with pinned_id '%s' for user '%s'" % (pinned_id, user["musicbrainz_id"]))
+        raise APINotFound("Cannot find pin with row_id '%s' for user '%s'" % (row_id, user["musicbrainz_id"]))
 
     return jsonify({"status": "ok"})
 
 
-@pinned_recording_api_bp.route("/<user_name>/pins", methods=["GET"])
+@pinned_recording_api_bp.route("/<user_name>/pins", methods=["GET", "OPTIONS"])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
 def get_pins_for_user(user_name):
     """
     Get a list of all recordings ever pinned by a user with given ``user_name`` in descending order of the time
@@ -144,10 +146,15 @@ def get_pins_for_user(user_name):
                 {
                     "blurb_content": "Awesome recording!",
                     "created": 1623997168,
-                    "pinned_id": 10,
+                    "row_id": 10,
                     "pinned_until": 1623997485,
                     "recording_mbid": null,
                     "recording_msid": "fd7d9162-a284-4a10-906c-faae4f1e166b"
+                    "track_metadata": {
+                        "artist_msid": "8c7b4641-e363-4598-ae70-7709840fb934",
+                        "artist_name": "Rick Astley",
+                        "track_name": "Never Gonna Give You Up"
+                        }
                 },
                 "-- more pinned recording items here ---"
             ],
@@ -184,6 +191,7 @@ def get_pins_for_user(user_name):
         current_app.logger.error("Error while retrieving pins for user: {}".format(e))
         raise APIInternalServerError("Something went wrong. Please try again.")
 
+    pinned_recordings = fetch_track_metadata_for_pins(pinned_recordings)
     pinned_recordings = [_pinned_recording_to_api(pin) for pin in pinned_recordings]
     total_count = db_pinned_rec.get_pin_count_for_user(user_id=user["id"])
 
@@ -198,7 +206,9 @@ def get_pins_for_user(user_name):
     )
 
 
-@pinned_recording_api_bp.route("/<user_name>/pins/following", methods=["GET"])
+@pinned_recording_api_bp.route("/<user_name>/pins/following", methods=["GET", "OPTIONS"])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
 def get_pins_for_user_following(user_name):
     """
     Get a list containing the active pinned recordings for all users in a user's ``user_name``
@@ -214,10 +224,15 @@ def get_pins_for_user_following(user_name):
                 {
                 "blurb_content": "Spectacular recording!",
                 "created": 1624000841,
-                "pinned_id": 1,
+                "row_id": 1,
                 "pinned_until": 1624605641,
                 "recording_mbid": null,
                 "recording_msid": "40ef0ae1-5626-43eb-838f-1b34187519bf",
+                "track_metadata": {
+                        "artist_msid": "8c7b4641-e363-4598-ae70-7709840fb934",
+                        "artist_name": "Rick Astley",
+                        "track_name": "Never Gonna Give You Up"
+                },
                 "user_name": "-- the MusicBrainz ID of the user who pinned this recording --"
                 },
                 "-- more pinned recordings from different users here ---"
@@ -250,6 +265,7 @@ def get_pins_for_user_following(user_name):
         raise APINotFound("Cannot find user: %s" % user_name)
 
     pinned_recordings = db_pinned_rec.get_pins_for_user_following(user_id=user["id"], count=count, offset=offset)
+    pinned_recordings = fetch_track_metadata_for_pins(pinned_recordings)
     pinned_recordings = [_pinned_recording_to_api(pin) for pin in pinned_recordings]
 
     return jsonify(
@@ -266,8 +282,6 @@ def _pinned_recording_to_api(pinnedRecording: PinnedRecording) -> dict:
     pin = pinnedRecording.dict()
     pin["created"] = int(pin["created"].timestamp())
     pin["pinned_until"] = int(pin["pinned_until"].timestamp())
-    pin["pinned_id"] = pin["row_id"]
-    del pin["row_id"]
     del pin["user_id"]
     if pin["user_name"] is None:
         del pin["user_name"]

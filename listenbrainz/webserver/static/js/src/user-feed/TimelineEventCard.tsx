@@ -8,6 +8,7 @@ import Card from "../components/Card";
 
 type TimelineEventCardProps = {
   className?: string;
+  additionalDetails: string;
   listen: Listen;
   playListen: (listen: Listen) => void;
   newAlert: (
@@ -40,12 +41,14 @@ export default class TimelineEventCard extends React.Component<
   };
 
   render() {
-    const { className, listen } = this.props;
+    const { className, listen, additionalDetails } = this.props;
 
     return (
       <Card
         onDoubleClick={this.playListen}
-        className={`listen-card row ${className}`}
+        className={`listen-card row ${className} ${
+          additionalDetails ? "has-additional-details" : ""
+        }`}
       >
         <div className="col-xs-11">
           <div className="track-details">
@@ -60,6 +63,14 @@ export default class TimelineEventCard extends React.Component<
                 {getArtistLink(listen)}
               </small>
             </p>
+            {additionalDetails && (
+              <p
+                className="additional-details"
+                title={listen.track_metadata?.track_name}
+              >
+                {additionalDetails}
+              </p>
+            )}
           </div>
         </div>
         <div className="col-xs-1">

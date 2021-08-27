@@ -8,17 +8,13 @@ import listenbrainz.webserver.redis_connection as redis_connection
 import listenbrainz.db.user as db_user
 import pika
 import pika.exceptions
-import sys
 import time
 import ujson
 import uuid
 
 from flask import current_app, request
-from sqlalchemy.exc import DataError
 
-from listenbrainz.listen import Listen
 from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
-from listenbrainz.webserver.external import messybrainz
 from listenbrainz.webserver.errors import APIInternalServerError, APIServiceUnavailable, APIBadRequest, APIUnauthorized
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
 MAX_LISTEN_SIZE = 10240
@@ -49,12 +45,10 @@ def insert_payload(payload, user, listen_type=LISTEN_TYPE_IMPORT):
         Returns: augmented_listens
     """
     try:
-        augmented_listens = _get_augmented_listens(payload, user, listen_type)
+        augmented_listens = _get_augmented_listens(payload, user)
         _send_listens_to_queue(listen_type, augmented_listens)
-    except (APIInternalServerError, APIServiceUnavailable) as e:
+    except (APIInternalServerError, APIServiceUnavailable):
         raise
-    except DataError:
-        raise APIBadRequest("Listen submission contains invalid characters.")
     except Exception as e:
         current_app.logger.error("Error while inserting payload: %s", str(e), exc_info=True)
         raise APIInternalServerError("Something went wrong. Please try again.")
@@ -69,13 +63,21 @@ def handle_playing_now(listen):
         listen if new playing now listen, None otherwise
     """
     old_playing_now = redis_connection._redis.get_playing_now(listen['user_id'])
-    if old_playing_now and listen['recording_msid'] == old_playing_now.recording_msid:
+
+    track_metadata = listen['track_metadata']
+    if old_playing_now and \
+            listen['track_metadata']['track_name'] == old_playing_now.data['track_name'] and \
+            listen['track_metadata']['artist_name'] == old_playing_now.data['artist_name']:
         return None
-    if 'duration' in listen['track_metadata']['additional_info']:
-        listen_timeout = listen['track_metadata']['additional_info']['duration']
-    elif 'duration_ms' in listen['track_metadata']['additional_info']:
-        listen_timeout = listen['track_metadata']['additional_info']['duration_ms'] // 1000
-    else:
+
+    listen_timeout = None
+    if 'additional_info' in track_metadata:
+        additional_info = track_metadata['additional_info']
+        if 'duration' in additional_info:
+            listen_timeout = additional_info['duration']
+        elif 'duration_ms' in additional_info:
+            listen_timeout = additional_info['duration_ms'] // 1000
+    if listen_timeout is None:
         listen_timeout = current_app.config['PLAYING_NOW_MAX_DURATION']
     redis_connection._redis.put_playing_now(listen['user_id'], listen, listen_timeout)
     return listen
@@ -89,8 +91,8 @@ def _send_listens_to_queue(listen_type, listens):
                 listen = handle_playing_now(listen)
                 if listen:
                     submit.append(listen)
-            except Exception as e:
-                current_app.logger.error("Redis rpush playing_now write error: " + str(e))
+            except Exception:
+                current_app.logger.error("Redis rpush playing_now write error: ", exc_info=True)
                 raise APIServiceUnavailable("Cannot record playing_now at this time.")
         else:
             submit.append(listen)
@@ -207,96 +209,12 @@ def is_valid_uuid(u):
         return False
 
 
-def _get_augmented_listens(payload, user, listen_type):
-    """ Converts the payload to augmented list after lookup
-        in the MessyBrainz database
-    """
-
-    augmented_listens = []
-    msb_listens = []
-    for l in payload:
-        listen = l.copy()   # Create a local object to prevent the mutation of the passed object
+def _get_augmented_listens(payload, user):
+    """ Converts the payload to augmented list after adding user_id and user_name attributes """
+    for listen in payload:
         listen['user_id'] = user['id']
         listen['user_name'] = user['musicbrainz_id']
-
-        msb_listens.append(listen)
-        if len(msb_listens) >= MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP:
-            augmented_listens.extend(_messybrainz_lookup(msb_listens))
-            msb_listens = []
-
-    if msb_listens:
-        augmented_listens.extend(_messybrainz_lookup(msb_listens))
-    return augmented_listens
-
-
-def _messybrainz_lookup(listens):
-
-    msb_listens = []
-    for listen in listens:
-        messy_dict = {
-            'artist': listen['track_metadata']['artist_name'],
-            'title': listen['track_metadata']['track_name'],
-        }
-        if 'release_name' in listen['track_metadata']:
-            messy_dict['release'] = listen['track_metadata']['release_name']
-
-        if 'additional_info' in listen['track_metadata']:
-            ai = listen['track_metadata']['additional_info']
-            if 'artist_mbids' in ai and isinstance(ai['artist_mbids'], list):
-                messy_dict['artist_mbids'] = ai['artist_mbids']
-            if 'release_mbid' in ai:
-                messy_dict['release_mbid'] = ai['release_mbid']
-            if 'recording_mbid' in ai:
-                messy_dict['recording_mbid'] = ai['recording_mbid']
-            if 'track_number' in ai:
-                messy_dict['track_number'] = ai['track_number']
-            if 'spotify_id' in ai:
-                messy_dict['spotify_id'] = ai['spotify_id']
-        msb_listens.append(messy_dict)
-
-    try:
-        msb_responses = messybrainz.submit_listens(msb_listens)
-    except messybrainz.exceptions.BadDataException as e:
-        log_raise_400(str(e))
-    except messybrainz.exceptions.NoDataFoundException:
-        return []
-    except messybrainz.exceptions.ErrorAddingException as e:
-        raise APIServiceUnavailable(str(e))
-
-    augmented_listens = []
-    for listen, messybrainz_resp in zip(listens, msb_responses['payload']):
-        messybrainz_resp = messybrainz_resp['ids']
-
-        if 'additional_info' not in listen['track_metadata']:
-            listen['track_metadata']['additional_info'] = {}
-
-        try:
-            listen['recording_msid'] = messybrainz_resp['recording_msid']
-            listen['track_metadata']['additional_info']['artist_msid'] = messybrainz_resp['artist_msid']
-        except KeyError:
-            current_app.logger.error("MessyBrainz did not return a proper set of ids")
-            raise APIInternalServerError
-
-        try:
-            listen['track_metadata']['additional_info']['release_msid'] = messybrainz_resp['release_msid']
-        except KeyError:
-            pass
-
-        artist_mbids = messybrainz_resp.get('artist_mbids', [])
-        release_mbid = messybrainz_resp.get('release_mbid', None)
-        recording_mbid = messybrainz_resp.get('recording_mbid', None)
-
-        if 'artist_mbids'   not in listen['track_metadata']['additional_info'] and \
-           'release_mbid'   not in listen['track_metadata']['additional_info'] and \
-           'recording_mbid' not in listen['track_metadata']['additional_info']:
-
-            if len(artist_mbids) > 0 and release_mbid and recording_mbid:
-                listen['track_metadata']['additional_info']['artist_mbids'] = artist_mbids
-                listen['track_metadata']['additional_info']['release_mbid'] = release_mbid
-                listen['track_metadata']['additional_info']['recording_mbid'] = recording_mbid
-
-        augmented_listens.append(listen)
-    return augmented_listens
+    return payload
 
 
 def log_raise_400(msg, data=""):

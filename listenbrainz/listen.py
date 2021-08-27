@@ -123,17 +123,14 @@ class Listen(object):
     def from_json(cls, j):
         """Factory to make Listen() objects from a dict"""
 
-        if 'playing_now' in j:
-            j.update({'listened_at': None})
-        else:
-            # Let's go play whack-a-mole with our lovely whicket of timestamp fields. Hopefully one will work!
+        # Let's go play whack-a-mole with our lovely whicket of timestamp fields. Hopefully one will work!
+        try:
+            j['listened_at'] = datetime.utcfromtimestamp(float(j['listened_at']))
+        except KeyError:
             try:
-                j['listened_at'] = datetime.utcfromtimestamp(float(j['listened_at']))
+                j['listened_at'] = datetime.utcfromtimestamp(float(j['timestamp']))
             except KeyError:
-                try:
-                    j['listened_at'] = datetime.utcfromtimestamp(float(j['timestamp']))
-                except KeyError:
-                    j['listened_at'] = datetime.utcfromtimestamp(float(j['ts_since_epoch']))
+                j['listened_at'] = datetime.utcfromtimestamp(float(j['ts_since_epoch']))
 
         return cls(
             user_id=j.get('user_id'),
@@ -207,7 +204,6 @@ class Listen(object):
             'track_metadata': track_metadata
         }))
 
-
     def validate(self):
         return (self.user_id is not None and self.timestamp is not None and self.artist_msid is not None
                 and self.recording_msid is not None and self.data is not None)
@@ -223,6 +219,32 @@ class Listen(object):
     def __unicode__(self):
         return "<Listen: user_name: %s, time: %s, artist_msid: %s, release_msid: %s, recording_msid: %s, artist_name: %s, track_name: %s>" % \
                (self.user_name, self.ts_since_epoch, self.artist_msid, self.release_msid, self.recording_msid, self.data['artist_name'], self.data['track_name'])
+
+
+class NowPlayingListen:
+    """Represents a now playing listen"""
+
+    def __init__(self, user_id=None, user_name=None, data=None):
+        self.user_id = user_id
+        self.user_name = user_name
+
+        if data is None:
+            self.data = {'additional_info': {}}
+        else:
+            # submitted listens always has an additional_info key in track_metadata
+            # because of the msb lookup. now playing listens do not have a msb lookup
+            # so the additional_info key may not always be present.
+            additional_info = data.get('additional_info', {})
+            data['additional_info'] = flatten_dict(additional_info)
+            self.data = data
+
+    def __repr__(self):
+        from pprint import pformat
+        return pformat(vars(self))
+
+    def __str__(self):
+        return "<Now Playing Listen: user_name: %s, artist_name: %s, track_name: %s>" % \
+               (self.user_name, self.data['artist_name'], self.data['track_name'])
 
 
 def convert_dump_row_to_spark_row(row):

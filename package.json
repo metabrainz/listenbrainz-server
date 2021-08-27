@@ -30,6 +30,7 @@
   "homepage": "https://listenbrainz.org",
   "dependencies": {
     "@babel/runtime": "^7.5.5",
+    "@braintree/sanitize-url": "^5.0.2",
     "@fortawesome/fontawesome-svg-core": "^1.2.22",
     "@fortawesome/free-brands-svg-icons": "^5.13.0",
     "@fortawesome/free-regular-svg-icons": "^5.13.0",

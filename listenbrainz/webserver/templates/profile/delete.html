@@ -21,8 +21,8 @@
   </form>
 
   <form method="post">
-    <input type="hidden" name="token" value="{{ user.auth_token }}">
-    <button id="btn-delete-user" class="btn btn-danger btn-lg" style="width: 250px">Delete my account.</button>
+      {{ form.hidden_tag() }}
+      <button id="btn-delete-user" class="btn btn-danger btn-lg" style="width: 250px">Delete my account.</button>
   </form>
 {% endblock %}
 

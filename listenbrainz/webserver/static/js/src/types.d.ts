@@ -84,6 +84,10 @@ declare type YoutubeUser = {
   api_key?: string;
 };
 
+declare type CritiqueBrainzUser = {
+  access_token?: string;
+};
+
 declare type SpotifyPermission =
   | "user-read-currently-playing"
   | "user-read-recently-played"
@@ -458,6 +462,21 @@ declare type RecommendationFeedbackMap = {
   [recordingMbid: string]: RecommendationFeedBack | null;
 };
 
+declare type PinnedRecording = {
+  blurb_content?: string | null;
+  created: number;
+  pinned_until: number;
+  row_id: number;
+  recording_mbid: string | null;
+  recording_msid?: string;
+  track_metadata: {
+    artist_name: string;
+    release_name?: string | null;
+    track_name: string;
+    additional_info?: AdditionalInfo;
+  };
+};
+
 /** For recommending a track from the front-end */
 declare type UserTrackRecommendationMetadata = {
   artist_name: string;
@@ -468,12 +487,17 @@ declare type UserTrackRecommendationMetadata = {
   artist_msid: string;
 };
 
+declare type PinEventMetadata = Listen & {
+  blurb_content?: string;
+};
+
 /** ***********************************
  ********  USER FEED TIMELINE  ********
  ************************************* */
 
 type EventTypeT =
   | "recording_recommendation"
+  | "recording_pin"
   | "listen"
   | "like"
   | "follow"
@@ -495,6 +519,7 @@ type NotificationEventMetadata = {
 type EventMetadata =
   | Listen
   | UserRelationshipEventMetadata
+  | PinEventMetadata
   | NotificationEventMetadata;
 
 type TimelineEvent = {
@@ -507,4 +532,14 @@ type TimelineEvent = {
 type SimilarUser = {
   name: string;
   similarityScore: number;
+};
+
+type ReviewableEntityType = "recording" | "artist" | "release_group";
+
+type CritiqueBrainzReview = {
+  entity_id: string;
+  entity_type: ReviewableEntityType;
+  text: string;
+  languageCode: string;
+  rating?: number;
 };

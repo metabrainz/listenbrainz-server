@@ -189,6 +189,7 @@ export default class ListenCard extends React.Component<
       updateRecordingToPin,
     } = this.props;
     const { feedback, isDeleted } = this.state;
+    const { currentUser } = this.context;
 
     return (
       <Card
@@ -325,12 +326,14 @@ export default class ListenCard extends React.Component<
                       title="Delete Listen"
                       action={this.deleteListen}
                     />
-                    <ListenControl
-                      title="Pin this Recording"
-                      action={() => updateRecordingToPin(listen)}
-                      dataToggle="modal"
-                      dataTarget="#PinRecordingModal"
-                    />
+                    {currentUser && (
+                      <ListenControl
+                        title="Pin this Recording"
+                        action={() => updateRecordingToPin(listen)}
+                        dataToggle="modal"
+                        dataTarget="#PinRecordingModal"
+                      />
+                    )}
                   </ul>
                   {getPlayButton(listen, this.playListen)}
                 </>
