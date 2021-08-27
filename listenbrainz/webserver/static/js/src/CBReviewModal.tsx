@@ -41,6 +41,9 @@ export interface CBReviewModalState {
   success: boolean;
   reviewMBID?: string;
 }
+
+iso.registerLocale(eng); // library requires language of the language list to be initiated
+
 export default class CBReviewModal extends React.Component<
   CBReviewModalProps,
   CBReviewModalState
@@ -53,6 +56,7 @@ export default class CBReviewModal extends React.Component<
 
   private CBBaseUrl = "https://critiquebrainz.org"; // only used for href
   private MBBaseUrl = "https://metabrainz.org"; // only used for href
+  private allLanguagesKeyValue = Object.entries(iso.getNames("en")); // gets all languages
 
   private CBInfoButton = (
     <button
@@ -457,7 +461,6 @@ export default class CBReviewModal extends React.Component<
     }
 
     /* The default modal body */
-    const allLanguagesKeyValue = Object.entries(iso.getNames("en")); // gets all languages
     const allEntities = [recordingEntity, artistEntity, releaseGroupEntity];
 
     return (
@@ -547,7 +550,7 @@ export default class CBReviewModal extends React.Component<
             name="language"
             onChange={this.handleInputChange}
           >
-            {allLanguagesKeyValue.map((lang: any) => {
+            {this.allLanguagesKeyValue.map((lang: any) => {
               return (
                 <option key={lang[0]} value={lang[0]}>
                   {lang[1]}
