@@ -14,7 +14,7 @@
     "build": "npm run build:dev",
     "format": "eslint ./static/js/src --ext .js,.jsx,.ts,.tsx --fix --quiet",
     "format:ci": "eslint ./static/js/src --ext .js,.jsx,.ts,.tsx --max-warnings 0 --color",
-    "test": "TZ='Europe/London' jest",
+    "test": "jest",
     "test:ci": "TZ='Europe/London' jest --ci --reporters=default --reporters=jest-junit",
     "test:watch": "TZ='Europe/London' jest --watch",
     "test:update-snapshots": "TZ='Europe/London' jest -u",
