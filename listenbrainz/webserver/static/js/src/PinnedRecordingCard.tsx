@@ -88,7 +88,7 @@ export default class PinnedRecordingCard extends React.Component<
     const { currentlyPinned } = this.state;
     const { isCurrentUser, pinnedRecording, userName } = this.props;
 
-    const userText = isCurrentUser ? `${userName}'s` : "My";
+    const userText = isCurrentUser ? "My" : `${userName}'s`;
     const { track_name } = pinnedRecording.track_metadata;
 
     return (
