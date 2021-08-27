@@ -494,9 +494,10 @@ def get_similar_users(user_id: int) -> Optional[SimilarUsers]:
         row = result.fetchone()
         if row:
             users = {}
-            for user in row[1]:
-                users[user] = row[1][user][0]
-            return SimilarUsers(user_id=row[0], similar_users=users)
+            for user in row['similar_users']:
+                # first element of array is similarity, second is global_similarity
+                users[user] = row['similar_users'][user][0]
+            return SimilarUsers(user_id=row['user_id'], similar_users=users)
         return None
 
 
