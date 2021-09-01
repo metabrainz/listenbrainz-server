@@ -18,7 +18,7 @@ app.init_loggers(
     sentry_config=app.config.get('LOG_SENTRY')
 )
 
-socketio = SocketIO(app, cors_allowed_origins='*')
+socketio = SocketIO(app, cors_allowed_origins='*', logger=True, engineio_logger=True)
 
 
 @socketio.on('json')
