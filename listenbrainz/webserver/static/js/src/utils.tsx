@@ -240,17 +240,26 @@ const preciseTimestamp = (
 
   // determine which display setting based on time difference to use if no argument was provided
   if (!display) {
-    const msDifference = new Date().getTime() - listenDate.getTime();
-    // over one year old : show with year
-    if (msDifference / (1000 * 3600 * 24 * 365) > 1) {
-      display = "includeYear";
+    const now = new Date();
+    const currentYear = now.getUTCFullYear();
+    const listenYear = listenDate.getUTCFullYear();
+    const msDifference = now.getTime() - listenDate.getTime();
+    // Date is today : format using timeago
+    if (
+      now.getUTCDate() === listenDate.getUTCDate() &&
+      now.getUTCMonth() === listenDate.getUTCMonth() &&
+      currentYear === listenYear
+    ) {
+      display = "timeAgo";
     }
-    // one year to yesterday : show without year
-    else if (msDifference / (1000 * 3600 * 24 * 1) > 1) {
+    // Date is this current year, don't show the year
+    else if (currentYear === listenYear) {
       display = "excludeYear";
     }
-    // today : format using timeago
-    else display = "timeAgo";
+    // Not this year, show the year
+    else {
+      display = "includeYear";
+    }
   }
 
   switch (display) {
