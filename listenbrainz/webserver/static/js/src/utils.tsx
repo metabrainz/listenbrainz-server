@@ -243,7 +243,6 @@ const preciseTimestamp = (
     const now = new Date();
     const currentYear = now.getUTCFullYear();
     const listenYear = listenDate.getUTCFullYear();
-    const msDifference = now.getTime() - listenDate.getTime();
     // Date is today : format using timeago
     if (
       now.getUTCDate() === listenDate.getUTCDate() &&
