@@ -137,7 +137,7 @@ export default class PlaylistPage extends React.Component<
   };
 
   createWebsocketsConnection = (): void => {
-    this.socket = io();
+    this.socket = io(`${window.location.origin}`, { path: "/socket.io/" });
   };
 
   addWebsocketsHandlers = (): void => {

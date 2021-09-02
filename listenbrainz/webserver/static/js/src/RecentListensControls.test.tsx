@@ -27,6 +27,7 @@ const {
   profileUrl,
   spotify,
   user,
+  webSocketsServerUrl,
 } = recentListensProps;
 
 const props = {
@@ -41,6 +42,7 @@ const props = {
   profileUrl,
   spotify: spotify as SpotifyUser,
   user,
+  webSocketsServerUrl,
 };
 
 fetchMock.mockIf(

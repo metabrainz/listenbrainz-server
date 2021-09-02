@@ -22,6 +22,7 @@ export type RecommendationsProps = {
   recommendations?: Array<Recommendation>;
   profileUrl?: string;
   user: ListenBrainzUser;
+  webSocketsServerUrl: string;
 } & WithAlertNotificationsInjectedProps;
 
 export interface RecommendationsState {
@@ -349,7 +350,7 @@ document.addEventListener("DOMContentLoaded", () => {
     spotify,
     youtube,
   } = globalReactProps;
-  const { recommendations, user } = reactProps;
+  const { recommendations, user, web_sockets_server_url } = reactProps;
 
   if (sentry_dsn) {
     Sentry.init({ dsn: sentry_dsn });
@@ -376,6 +377,7 @@ document.addEventListener("DOMContentLoaded", () => {
           initialAlerts={optionalAlerts}
           recommendations={recommendations}
           user={user}
+          webSocketsServerUrl={web_sockets_server_url}
         />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,

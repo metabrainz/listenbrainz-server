@@ -181,7 +181,7 @@ describe("createWebsocketsConnection", () => {
     const instance = wrapper.instance();
     instance.createWebsocketsConnection();
 
-    expect(io).toHaveBeenCalledWith("http://localhost:8082");
+    expect(io).toHaveBeenCalled();
 
     expect(mockSocket.on).toHaveBeenNthCalledWith(
       1,
