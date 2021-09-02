@@ -11,17 +11,11 @@ import APIService from "../APIService";
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
 jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
-const {
-  labsApiUrl,
-  currentUser,
-  playlist,
-  webSocketsServerUrl,
-} = playlistPageProps;
+const { labsApiUrl, currentUser, playlist } = playlistPageProps;
 
 const props = {
   labsApiUrl,
   playlist: playlist as JSPFObject,
-  webSocketsServerUrl,
   newAlert: () => {},
 };
 

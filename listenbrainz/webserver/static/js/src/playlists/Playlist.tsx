@@ -51,7 +51,6 @@ import { getPageProps } from "../utils";
 export type PlaylistPageProps = {
   labsApiUrl: string;
   playlist: JSPFObject;
-  webSocketsServerUrl: string;
 } & WithAlertNotificationsInjectedProps;
 
 export interface PlaylistPageState {
@@ -138,8 +137,7 @@ export default class PlaylistPage extends React.Component<
   };
 
   createWebsocketsConnection = (): void => {
-    const { webSocketsServerUrl } = this.props;
-    this.socket = io("https://beta.listenbrainz.org", { path: "/socket.io/" });
+    this.socket = io();
   };
 
   addWebsocketsHandlers = (): void => {
@@ -951,7 +949,7 @@ document.addEventListener("DOMContentLoaded", () => {
     spotify,
     youtube,
   } = globalReactProps;
-  const { labs_api_url, playlist, web_sockets_server_url } = reactProps;
+  const { labs_api_url, playlist } = reactProps;
 
   if (sentry_dsn) {
     Sentry.init({ dsn: sentry_dsn });
@@ -979,7 +977,6 @@ document.addEventListener("DOMContentLoaded", () => {
           initialAlerts={optionalAlerts}
           labsApiUrl={labs_api_url}
           playlist={playlist}
-          webSocketsServerUrl={web_sockets_server_url}
         />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,

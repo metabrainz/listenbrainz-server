@@ -44,7 +44,6 @@ const {
   youtube,
   user,
   userPinnedRecording,
-  webSocketsServerUrl,
 } = recentListensProps;
 
 const props = {
@@ -59,7 +58,6 @@ const props = {
   profileUrl,
   user,
   userPinnedRecording,
-  webSocketsServerUrl,
   newAlert: () => {},
 };
 
@@ -177,7 +175,7 @@ describe("createWebsocketsConnection", () => {
   });
   it("calls io with correct parameters", () => {
     const wrapper = mount<RecentListens>(
-      <RecentListens {...props} webSocketsServerUrl="http://localhost:8082" />,
+      <RecentListens {...props} />,
       mountOptions
     );
     const instance = wrapper.instance();
@@ -206,7 +204,7 @@ describe("createWebsocketsConnection", () => {
 describe("addWebsocketsHandlers", () => {
   it('calls correct handler for "listen" event', () => {
     const wrapper = mount<RecentListens>(
-      <RecentListens {...props} webSocketsServerUrl="http://localhost:8082" />,
+      <RecentListens {...props} />,
       mountOptions
     );
     const instance = wrapper.instance();
@@ -230,7 +228,7 @@ describe("addWebsocketsHandlers", () => {
 
   it('calls correct event for "playing_now" event', () => {
     const wrapper = mount<RecentListens>(
-      <RecentListens {...props} webSocketsServerUrl="http://localhost:8082" />,
+      <RecentListens {...props} />,
       mountOptions
     );
     const instance = wrapper.instance();

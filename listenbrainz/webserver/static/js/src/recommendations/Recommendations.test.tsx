@@ -20,7 +20,6 @@ const {
   spotify,
   youtube,
   user,
-  webSocketsServerUrl,
 } = recommendationProps;
 
 const props = {
@@ -29,7 +28,6 @@ const props = {
   spotify: spotify as SpotifyUser,
   youtube: youtube as YoutubeUser,
   user,
-  webSocketsServerUrl,
   newAlert: () => {},
 };
 
