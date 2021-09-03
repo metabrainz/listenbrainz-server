@@ -283,6 +283,25 @@ const preciseTimestamp = (
       return `${timeago.ago(listened_at)}`;
   }
 };
+// recieves or unix epoch timestamp int or ISO datetime string
+const fullLocalizedDateFromTimestampOrISODate = (
+  unix_epoch_timestamp: number | string | undefined
+): string => {
+  if (!unix_epoch_timestamp) {
+    return "";
+  }
+  const date: Date = new Date(unix_epoch_timestamp);
+
+  // invalid date
+  if (Number.isNaN(date.getTime())) {
+    return String(unix_epoch_timestamp);
+  }
+  return date.toLocaleString(undefined, {
+    // @ts-ignore see https://github.com/microsoft/TypeScript/issues/40806
+    dateStyle: "full",
+    timeStyle: "long",
+  });
+};
 
 /** Loads a script asynchronouhsly into the HTML page */
 export function loadScriptAsync(document: any, scriptSrc: string): void {
@@ -378,6 +397,7 @@ export {
   getPlayButton,
   formatWSMessageToListen,
   preciseTimestamp,
+  fullLocalizedDateFromTimestampOrISODate,
   getPageProps,
   searchForYoutubeTrack,
   createAlert,
