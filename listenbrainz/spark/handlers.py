@@ -12,15 +12,14 @@ from pydantic import ValidationError
 from brainzutils.mail import send_mail
 from datetime import datetime, timezone, timedelta
 from data.model.sitewide_artist_stat import SitewideArtistStatJson
+from data.model.user_artist_stat import UserArtistStatRange
 from data.model.user_daily_activity import UserDailyActivityStatJson
 from data.model.user_listening_activity import UserListeningActivityStatJson
-from data.model.user_artist_stat import UserArtistStatJson
 from data.model.user_release_stat import UserReleaseStatJson
 from data.model.user_recording_stat import UserRecordingStatJson
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
 from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
 from listenbrainz.db.similar_users import import_user_similarities
-
 
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
@@ -54,7 +53,7 @@ def notify_user_stats_update(stat_type):
 
 def _get_user_entity_model(entity):
     if entity == 'artists':
-        return UserArtistStatJson
+        return UserArtistStatRange
     elif entity == 'releases':
         return UserReleaseStatJson
     elif entity == 'recordings':

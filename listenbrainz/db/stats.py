@@ -22,13 +22,13 @@
 
 
 import json
-from typing import Optional, List
+from typing import Optional, List, Union
 
 import sqlalchemy
 from data.model.sitewide_artist_stat import (SitewideArtistStat,
                                              SitewideArtistStatJson)
 from data.model.user_artist_map import UserArtistMapStat, UserArtistMapStatJson
-from data.model.user_artist_stat import UserArtistStat, UserArtistStatJson
+from data.model.user_artist_stat import UserArtistStat, UserArtistStatRange
 from data.model.user_daily_activity import (UserDailyActivityStat,
                                             UserDailyActivityStatJson)
 from data.model.user_listening_activity import (UserListeningActivityStat,
@@ -48,13 +48,12 @@ def get_timestamp_for_last_user_stats_update():
         result = connection.execute(sqlalchemy.text("""
             SELECT MAX(last_updated) as last_update_ts
               FROM statistics.user
-            """
-                                                    ))
+            """))
         row = result.fetchone()
         return row['last_update_ts'] if row else None
 
 
-def _insert_user_jsonb_data(user_id: int, column: str, data: dict):
+def _insert_user_jsonb_data(user_id: int, stats_type: str, stats: Union[UserArtistStatRange]):
     """ Inserts jsonb data into the given column
 
         Args:
@@ -64,14 +63,22 @@ def _insert_user_jsonb_data(user_id: int, column: str, data: dict):
     """
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
-            INSERT INTO statistics.user (user_id, {column})
-                 VALUES (:user_id, :data)
-            ON CONFLICT (user_id)
-          DO UPDATE SET {column} = COALESCE(statistics.user.{column} || :data, :data),
+            INSERT INTO statistics.user_new (user_id, stats_type, stats_range, data, count, from_ts, to_ts, last_updated)
+                 VALUES (:user_id, :stats_type, :stats_range, :data, :count, :from_ts, :to_ts, NOW())
+            ON CONFLICT (user_id, stats_type, stats_range)
+          DO UPDATE SET data = :data,
+                        count = :count,
+                        from_ts = :from_ts,
+                        to_ts = :to_ts,
                         last_updated = NOW()
-            """.format(column=column)), {
-            'user_id': user_id,
-            'data': json.dumps(data),
+            """), {
+            "user_id": user_id,
+            "stats_type": stats_type,
+            "stats_range": stats.stats_range,
+            "data": stats.data.json(exclude_none=True),
+            "count": stats.count,
+            "from_ts": stats.from_ts,
+            "to_ts": stats.to_ts
         })
 
 
@@ -96,7 +103,7 @@ def _insert_sitewide_jsonb_data(stats_range: str, column: str, data: dict):
         })
 
 
-def insert_user_artists(user_id: int, artists: UserArtistStatJson):
+def insert_user_artists(user_id: int, stats: UserArtistStatRange):
     """ Inserts artist stats calculated from Spark into the database.
 
         If stats are already present for some user, they are updated to the new
@@ -105,11 +112,10 @@ def insert_user_artists(user_id: int, artists: UserArtistStatJson):
         Args: user_id: the row id of the user,
               artists: the top artists listened to by the user
     """
-    _insert_user_jsonb_data(user_id=user_id, column='artist',
-                            data=artists.dict(exclude_none=True))
+    _insert_user_jsonb_data(user_id=user_id, stats_type='artists', stats=stats)
 
 
-def insert_user_releases(user_id: int, releases: UserReleaseStatJson):
+def insert_user_releases(user_id: int, stats: UserReleaseStatJson):
     """Inserts release stats calculated from Spark into the database.
 
        If stats are already present for some user, they are updated to the new
@@ -118,8 +124,7 @@ def insert_user_releases(user_id: int, releases: UserReleaseStatJson):
        Args: user_id: the row id of the user,
              releases: the top releases listened to by the user
     """
-    _insert_user_jsonb_data(user_id=user_id, column='release',
-                            data=releases.dict(exclude_none=True))
+    _insert_user_jsonb_data(user_id=user_id, stats_type='releases', stats=stats)
 
 
 def insert_user_recordings(user_id: int, recordings: UserRecordingStatJson):
@@ -209,7 +214,7 @@ def get_user_stats(user_id, columns):
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             SELECT user_id, {columns}, last_updated
-              FROM statistics.user
+              FROM statistics.user_new
              WHERE user_id = :user_id
             """.format(columns=columns)), {
             'user_id': user_id

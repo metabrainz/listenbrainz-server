@@ -16,6 +16,10 @@ class UserArtistRecord(pydantic.BaseModel):
     artist_msid: Optional[str]
 
 
+class UserArtistRecordList(pydantic.BaseModel):
+    __root__: List[UserArtistRecord]
+
+
 class UserArtistStatRange(pydantic.BaseModel):
     """ Model for user's most listened-to artists for a particular
     time range. Currently supports week, month, year and all-time
@@ -23,19 +27,11 @@ class UserArtistStatRange(pydantic.BaseModel):
     to_ts: int
     from_ts: int
     count: int
-    artists: List[UserArtistRecord]
+    stats_range: str
+    data: UserArtistRecordList
 
 
-class UserArtistStatJson(pydantic.BaseModel):
-    """ Model for the JSON stored in the statistics.user table's artist column
-    """
-    week: Optional[UserArtistStatRange]
-    year: Optional[UserArtistStatRange]
-    month: Optional[UserArtistStatRange]
-    all_time: Optional[UserArtistStatRange]
-
-
-class UserArtistStat(UserArtistStatJson):
+class UserArtistStat(UserArtistStatRange):
     """ Model for stats around a user's most listened artists
     """
     user_id: int

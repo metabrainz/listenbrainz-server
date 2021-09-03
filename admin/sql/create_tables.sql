@@ -179,6 +179,17 @@ CREATE TABLE statistics.user (
     last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE statistics.user_new (
+    user_id                 INTEGER NOT NULL, -- PK and FK to "user".id
+    stats_type              user_stats_type,
+    stats_range             stats_range_type,
+    data                    JSONB,
+    count                   INTEGER,
+    from_ts                 TIMESTAMP WITH TIME ZONE,
+    to_ts                   TIMESTAMP WITH TIME ZONE,
+    last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE statistics.sitewide (
     id                      SERIAL, --pk
     stats_range             TEXT,
