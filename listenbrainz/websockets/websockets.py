@@ -3,18 +3,14 @@ import eventlet
 from flask_login import current_user
 from flask_socketio import SocketIO, join_room, emit, disconnect
 from werkzeug.exceptions import BadRequest
-from brainzutils.flask import CustomFlask
 
-from listenbrainz.webserver import load_config
+from listenbrainz.webserver import gen_app
 from listenbrainz.db import playlist as db_playlist
-from listenbrainz.webserver.errors import init_error_handlers
 from listenbrainz.websockets.listens_dispatcher import ListensDispatcher
 
 eventlet.monkey_patch()
 
-app = CustomFlask(import_name=__name__, use_flask_uuid=True)
-load_config(app)
-init_error_handlers(app)
+app = gen_app()
 app.init_loggers(
     file_config=app.config.get('LOG_FILE'),
     sentry_config=app.config.get('LOG_SENTRY')
@@ -46,7 +42,7 @@ def joined(data):
         raise BadRequest("Missing key 'playlist_id'")
     playlist_mbid = data['playlist_id']
     playlist = db_playlist.get_by_mbid(playlist_mbid)
-    if playlist.is_visible_by(current_user.id):
+    if current_user.is_authenticated and playlist.is_visible_by(current_user.id):
         join_room(playlist_mbid)
         emit('joined', {'status': 'success'}, to=playlist_mbid)
     else:
