@@ -285,7 +285,7 @@ const preciseTimestamp = (
 };
 // recieves or unix epoch timestamp int or ISO datetime string
 const fullLocalizedDateFromTimestampOrISODate = (
-  unix_epoch_timestamp: number | string | undefined
+  unix_epoch_timestamp: number | string | undefined | null
 ): string => {
   if (!unix_epoch_timestamp) {
     return "";
