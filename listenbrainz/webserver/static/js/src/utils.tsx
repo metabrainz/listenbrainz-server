@@ -241,12 +241,12 @@ const preciseTimestamp = (
   // determine which display setting based on time difference to use if no argument was provided
   if (!display) {
     const now = new Date();
-    const currentYear = now.getUTCFullYear();
-    const listenYear = listenDate.getUTCFullYear();
+    const currentYear = now.getFullYear();
+    const listenYear = listenDate.getFullYear();
     // Date is today : format using timeago
     if (
-      now.getUTCDate() === listenDate.getUTCDate() &&
-      now.getUTCMonth() === listenDate.getUTCMonth() &&
+      now.getDate() === listenDate.getDate() &&
+      now.getMonth() === listenDate.getMonth() &&
       currentYear === listenYear
     ) {
       display = "timeAgo";
