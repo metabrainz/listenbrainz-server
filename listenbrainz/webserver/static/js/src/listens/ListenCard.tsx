@@ -10,7 +10,12 @@ import {
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { getArtistLink, getTrackLink, preciseTimestamp } from "../utils";
+import {
+  getArtistLink,
+  getTrackLink,
+  preciseTimestamp,
+  fullLocalizedDateFromTimestampOrISODate,
+} from "../utils";
 import GlobalAppContext from "../GlobalAppContext";
 import Card from "../components/Card";
 import ListenControl from "./ListenControl";
@@ -254,8 +259,13 @@ export default class ListenCard extends React.Component<
                       <span
                         className="listen-time text-muted"
                         title={
-                          listen.listened_at_iso?.toString() ||
-                          new Date(listen.listened_at * 1000).toISOString()
+                          listen.listened_at
+                            ? fullLocalizedDateFromTimestampOrISODate(
+                                listen.listened_at * 1000
+                              )
+                            : fullLocalizedDateFromTimestampOrISODate(
+                                listen.listened_at_iso
+                              )
                         }
                       >
                         {preciseTimestamp(
