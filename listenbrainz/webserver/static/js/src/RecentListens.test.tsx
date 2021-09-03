@@ -224,6 +224,7 @@ describe("addWebsocketsHandlers", () => {
     expect(instance.receiveNewListen).toHaveBeenCalledWith(
       JSON.stringify(recentListensPropsOneListen.listens[0])
     );
+    spy.mockReset();
   });
 
   it('calls correct event for "playing_now" event', () => {
@@ -246,6 +247,7 @@ describe("addWebsocketsHandlers", () => {
     expect(instance.receiveNewPlayingNow).toHaveBeenCalledWith(
       JSON.stringify(recentListensPropsPlayingNow.listens[0])
     );
+    spy.mockReset();
   });
 });
 
