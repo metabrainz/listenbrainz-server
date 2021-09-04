@@ -55,6 +55,15 @@ const props = {
   newAlert: () => {},
 };
 
+// There is a problem in the way jest imports the ReactTooltip component
+// that causes tests to fail, mocking it allows them to pass.
+jest.mock("react-tooltip", () => ({
+  __esModule: true,
+  default: jest.fn().mockImplementation(() => {
+    return <div>This is a mocked react-tooltip component.</div>;
+  }),
+}));
+
 describe("CBReviewModal", () => {
   it("renders the modal correctly", async () => {
     const wrapper = mount<CBReviewModal>(
@@ -86,7 +95,7 @@ describe("CBReviewModal", () => {
     // simulate writing in the textInput area
     const textInputArea = wrapper.find("#review-text").first();
     textInputArea.simulate("change", {
-      target: { value: "text!" },
+      target: { value: "This review text is more than 25 characters..." },
     });
 
     // simulate checking the acceptLicense box
@@ -95,16 +104,16 @@ describe("CBReviewModal", () => {
       target: { checked: true, type: "checkbox", name: "acceptLicense" },
     });
 
-    // Simulate submiting the form
-    const spy = jest.fn();
-    instance.submitReviewToCB = spy;
-    wrapper.find("#submitReviewButton").simulate("click", {
-      preventDefault: () => null,
-    });
+    expect(wrapper.state("loading")).toEqual(false);
 
-    expect(wrapper.state("textContent")).toEqual("text!");
+    // Simulate submiting the form
+    wrapper.find("form").simulate("submit");
+
+    expect(wrapper.state("textContent")).toEqual(
+      "This review text is more than 25 characters..."
+    );
     expect(wrapper.state("acceptLicense")).toEqual(true);
-    expect(spy).toHaveBeenCalledTimes(1);
+    expect(wrapper.state("loading")).toEqual(true);
   });
 });
 
@@ -137,58 +146,54 @@ describe("refreshCritiquebrainzToken", () => {
     instance.refreshCritiquebrainzToken();
     expect(spy).toHaveBeenCalledWith("critiquebrainz");
   });
+});
 
-  describe("getGroupMBIDFromRelease", () => {
-    const wrapper = mount<CBReviewModal>(
-      <GlobalAppContext.Provider value={globalProps}>
-        <CBReviewModal {...props} />
-      </GlobalAppContext.Provider>
-    );
-    const instance = wrapper.instance();
+describe("getGroupMBIDFromRelease", () => {
+  const wrapper = mount<CBReviewModal>(
+    <GlobalAppContext.Provider value={globalProps}>
+      <CBReviewModal {...props} />
+    </GlobalAppContext.Provider>
+  );
+  const instance = wrapper.instance();
 
-    it("calls API and returns the correct groupMBID string", async () => {
-      const mbid = "40ef0ae1-5626-43eb-838f-1b34187519bf";
-      const apiSpy = jest.fn().mockImplementation(() => {
-        return Promise.resolve(lookupMBRelease);
-      });
-      instance.context.APIService.lookupMBRelease = apiSpy;
-
-      const result = await instance.getGroupMBIDFromRelease(mbid);
-
-      expect(apiSpy).toHaveBeenCalledTimes(1);
-      expect(apiSpy).toHaveBeenCalledWith(
-        "40ef0ae1-5626-43eb-838f-1b34187519bf"
-      );
-      expect(result).toEqual(lookupMBRelease["release-group"].id);
+  it("calls API and returns the correct groupMBID string", async () => {
+    const mbid = "40ef0ae1-5626-43eb-838f-1b34187519bf";
+    const apiSpy = jest.fn().mockImplementation(() => {
+      return Promise.resolve(lookupMBRelease);
     });
+    instance.context.APIService.lookupMBRelease = apiSpy;
+
+    const result = await instance.getGroupMBIDFromRelease(mbid);
+
+    expect(apiSpy).toHaveBeenCalledTimes(1);
+    expect(apiSpy).toHaveBeenCalledWith("40ef0ae1-5626-43eb-838f-1b34187519bf");
+    expect(result).toEqual(lookupMBRelease["release-group"].id);
   });
+});
 
-  describe("getRecordingMBIDFromTrack", () => {
-    const wrapper = mount<CBReviewModal>(
-      <GlobalAppContext.Provider value={globalProps}>
-        <CBReviewModal {...props} />
-      </GlobalAppContext.Provider>
-    );
-    const instance = wrapper.instance();
+describe("getRecordingMBIDFromTrack", () => {
+  const wrapper = mount<CBReviewModal>(
+    <GlobalAppContext.Provider value={globalProps}>
+      <CBReviewModal {...props} />
+    </GlobalAppContext.Provider>
+  );
+  const instance = wrapper.instance();
 
-    it("calls API and returns the correct groupMBID string", async () => {
-      const mbid = "0255f1ea-3199-49b4-8b5c-bdcc3716ebc9";
-      const trackName = "Criminal";
-      const apiSpy = jest.fn().mockImplementation(() => {
-        return Promise.resolve(lookupMBReleaseFromTrack);
-      });
-      instance.context.APIService.lookupMBReleaseFromTrack = apiSpy;
-
-      const result = await instance.getRecordingMBIDFromTrack(mbid, trackName);
-
-      expect(apiSpy).toHaveBeenCalledTimes(1);
-      expect(apiSpy).toHaveBeenCalledWith(
-        "0255f1ea-3199-49b4-8b5c-bdcc3716ebc9"
-      );
-      expect(result).toEqual(
-        lookupMBReleaseFromTrack.releases[0].media[0].tracks[11].recording.id
-      );
+  it("calls API and returns the correct groupMBID string", async () => {
+    const mbid = "0255f1ea-3199-49b4-8b5c-bdcc3716ebc9";
+    const trackName = "Criminal";
+    const apiSpy = jest.fn().mockImplementation(() => {
+      return Promise.resolve(lookupMBReleaseFromTrack);
     });
+    instance.context.APIService.lookupMBReleaseFromTrack = apiSpy;
+
+    const result = await instance.getRecordingMBIDFromTrack(mbid, trackName);
+
+    expect(apiSpy).toHaveBeenCalledTimes(1);
+    expect(apiSpy).toHaveBeenCalledWith("0255f1ea-3199-49b4-8b5c-bdcc3716ebc9");
+    expect(result).toEqual(
+      lookupMBReleaseFromTrack.releases[0].media[0].tracks[11].recording.id
+    );
   });
 });
 
@@ -215,9 +220,7 @@ describe("submitReviewToCB", () => {
     });
     instance.context.APIService.submitReviewToCB = spy;
 
-    await instance.submitReviewToCB(
-      globalProps.critiquebrainzAuth.access_token
-    );
+    await instance.submitReviewToCB();
 
     expect(spy).toHaveBeenCalledWith(
       "BL9f6rv8OXyR0qLucXoftqAhMarEcfhUXpZ8lXII",
@@ -257,7 +260,7 @@ describe("submitReviewToCB", () => {
     const spy = jest.fn();
     instance.context.APIService.submitReviewToCB = spy;
 
-    await instance.submitReviewToCB(""); // access token not set
+    await instance.submitReviewToCB(); // access token not set
     expect(spy).not.toHaveBeenCalled();
   });
 
@@ -278,7 +281,7 @@ describe("submitReviewToCB", () => {
     const spy = jest.fn();
     instance.context.APIService.submitReviewToCB = spy;
 
-    await instance.submitReviewToCB("31132123231");
+    await instance.submitReviewToCB();
     expect(spy).not.toHaveBeenCalled();
   });
 
@@ -297,7 +300,7 @@ describe("submitReviewToCB", () => {
     const spy = jest.fn();
     instance.context.APIService.submitReviewToCB = spy;
 
-    await instance.submitReviewToCB("valid token");
+    await instance.submitReviewToCB();
 
     expect(wrapper.state("entityToReview")).toEqual(null);
     expect(spy).not.toHaveBeenCalled();
@@ -322,11 +325,11 @@ describe("submitReviewToCB", () => {
 
     expect(wrapper.state("reviewValidateAlert")).toEqual(null); // no alert before submitting
 
-    await instance.submitReviewToCB("valid access token");
+    await instance.submitReviewToCB();
     expect(spy).not.toHaveBeenCalled();
     expect(wrapper.state("reviewValidateAlert")).toEqual(
       // alert shown
-      "Text length needs to be between 25 and 100000 characters."
+      "Your review needs to be longer than 25 characters."
     );
   });
 
@@ -363,16 +366,14 @@ describe("submitReviewToCB", () => {
       "refreshCritiquebrainzToken"
     );
 
-    await instance.submitReviewToCB(
-      globalProps.critiquebrainzAuth.access_token
-    );
+    await instance.submitReviewToCB(); // this call fails, so...
 
-    expect(instanceSubmitSpy).toHaveBeenNthCalledWith(
-      // this one fails, so
-      1,
-      globalProps.critiquebrainzAuth.access_token
-    );
     expect(instanceRefreshSpy).toHaveBeenCalledTimes(1); // a new token is requested once
-    expect(instanceSubmitSpy).toHaveBeenLastCalledWith("this is new token", 0); // new token recieved, and no more retires
+    // new token was recieved, and no more retires
+    expect(instanceSubmitSpy).toHaveBeenLastCalledWith(
+      undefined,
+      "this is new token",
+      0
+    );
   });
 });
