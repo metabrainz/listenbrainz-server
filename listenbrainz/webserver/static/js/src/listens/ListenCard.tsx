@@ -164,6 +164,18 @@ export default class ListenCard extends React.Component<
     }
   };
 
+  isListenReviewable = () => {
+    const { listen } = this.props;
+    const mbids = listen.track_metadata.additional_info;
+
+    return Boolean(
+      mbids?.recording_mbid ||
+        mbids?.artist_mbids ||
+        mbids?.track_mbid ||
+        mbids?.release_group_mbid
+    );
+  };
+
   handleError = (error: string | Error, title?: string): void => {
     const { newAlert } = this.props;
     if (!error) {
@@ -187,6 +199,7 @@ export default class ListenCard extends React.Component<
     } = this.props;
     const { feedback, isDeleted } = this.state;
     const { currentUser } = this.context;
+    const isListenReviewable = this.isListenReviewable();
 
     return (
       <Card
@@ -334,10 +347,13 @@ export default class ListenCard extends React.Component<
                       />
                     )}
                     <ListenControl
+                      className={isListenReviewable ? "" : "disabled"}
                       title="Review this Recording"
                       action={() => updateRecordingToReview(listen)}
-                      dataToggle="modal"
-                      dataTarget="#CBReviewModal"
+                      dataToggle={isListenReviewable ? "modal" : undefined}
+                      dataTarget={
+                        isListenReviewable ? "#CBReviewModal" : undefined
+                      }
                     />
                   </ul>
                 </>

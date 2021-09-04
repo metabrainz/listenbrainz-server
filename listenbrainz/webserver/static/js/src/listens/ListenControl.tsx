@@ -15,16 +15,17 @@ export type ListenControlProps = {
 
 const ListenControl = (props: ListenControlProps) => {
   const { className, action, icon, title, dataToggle, dataTarget } = props;
+  const definedClassName = className || "";
   return icon ? (
     <FontAwesomeIcon
       icon={icon as IconProp}
-      className={className}
+      className={definedClassName}
       title={title}
       onClick={action}
     />
   ) : (
     <button
-      className={className}
+      className={`btn ${definedClassName}`}
       title={title}
       onClick={action}
       type="button"
