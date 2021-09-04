@@ -2,6 +2,7 @@ import * as React from "react";
 import { get as _get } from "lodash";
 
 import { Rating } from "react-simple-star-rating";
+import ReactTooltip from "react-tooltip";
 
 import * as iso from "@cospired/i18n-iso-languages";
 import * as eng from "@cospired/i18n-iso-languages/langs/en.json";
@@ -56,26 +57,29 @@ export default class CBReviewModal extends React.Component<
 
   private CBBaseUrl = "https://critiquebrainz.org"; // only used for href
   private MBBaseUrl = "https://metabrainz.org"; // only used for href
-  private allLanguagesKeyValue = Object.entries(iso.getNames("en")); // gets all languages
+  // gets all iso-639-1 languages and codes for dropdown
+  private allLanguagesKeyValue = Object.entries(iso.getNames("en"));
 
   private CBInfoButton = (
-    <button
-      type="button"
-      className="btn-transparent capitalize-bold"
-      data-toggle="popover"
-      title="What is CritiqueBrainz?"
-      data-placement="bottom"
-      data-html="true"
-      data-content={`CritiqueBrainz is a <a href='${this.MBBaseUrl}/projects'>
-      MetaBrainz project</a> aimed at providing an open platform for music critics
-      and hosting Creative Commons licensed music reviews. </br></br>
-      Your reviews will be independently visible on CritiqueBrainz and appear publicly 
-      on your CritiqueBrainz profile. To view or delete your reviews, visit your 
-      <a href='${this.CBBaseUrl}'>CritiqueBrainz</a>  profile.`}
-    >
-      {" "}
-      <FontAwesomeIcon icon={faInfoCircle as IconProp} />
-    </button>
+    <span>
+      <span
+        className="CBInfoButton"
+        data-tip={`CritiqueBrainz is a <a href='${this.MBBaseUrl}/projects'>
+        MetaBrainz project</a> aimed at providing an open platform for music critics
+        and hosting Creative Commons licensed music reviews. </br></br>
+        Your reviews will be independently visible on CritiqueBrainz and appear publicly
+        on your CritiqueBrainz profile. To view or delete your reviews, visit your
+        <a href='${this.CBBaseUrl}'>CritiqueBrainz</a>  profile.`}
+        data-event="click focus"
+        data-html
+      >
+        <FontAwesomeIcon
+          icon={faInfoCircle as IconProp}
+          style={{ color: "black" }}
+        />
+      </span>
+      <ReactTooltip place="bottom" globalEventOff="click" clickable />
+    </span>
   );
 
   constructor(props: CBReviewModalProps) {
@@ -129,10 +133,7 @@ export default class CBReviewModal extends React.Component<
   };
 
   hasPermissions = (user?: CritiqueBrainzUser) => {
-    if (!user || !user.access_token) {
-      return false;
-    }
-    return true;
+    return Boolean(user?.access_token);
   };
 
   refreshCritiquebrainzToken = async () => {
@@ -157,7 +158,7 @@ export default class CBReviewModal extends React.Component<
       const response = await APIService.lookupMBRelease(mbid);
       return response["release-group"].id;
     } catch (error) {
-      this.handleError(error, "Could fetch release group MBID");
+      this.handleError(error, "Could not fetch release group MBID");
       return "";
     }
   };
@@ -172,19 +173,23 @@ export default class CBReviewModal extends React.Component<
       const response = await APIService.lookupMBReleaseFromTrack(mbid);
       // MusicBrainz API returns multiple releases, medias, and tracks, so we need to
       // search for the track with a name that matches the supplied track_name
-      const medias = response.releases[0].media;
-      const media = medias.find((res: any) => res.tracks);
 
-      if (media) {
-        const track = media.tracks.find(
+      // Select medias from first release
+      const releaseMedias = response.releases[0].media;
+      // Select the first release media that has tracks
+      const mediaWithTracks = releaseMedias.find((res: any) => res.tracks);
+
+      if (mediaWithTracks) {
+        // find track with matching track_name in media
+        const matchingNameTrack = mediaWithTracks.tracks.find(
           (res: any) =>
             res.recording.title.toLowerCase() === track_name.toLowerCase()
         );
-        if (track) return track.recording.id;
+        if (matchingNameTrack) return matchingNameTrack.recording.id;
       }
       return "";
     } catch (error) {
-      this.handleError(error, "Could fetch recording MBID");
+      this.handleError(error, "Could not fetch recording MBID");
       return "";
     }
   };
@@ -203,23 +208,21 @@ export default class CBReviewModal extends React.Component<
   };
 
   getRecordingEntity = async () => {
-    this.setState({ recordingEntity: null });
-
     const { listen } = this.props;
     const { additional_info } = listen.track_metadata;
 
     let recording_mbid = "";
 
-    if (additional_info?.recording_mbid)
+    if (additional_info?.recording_mbid) {
       recording_mbid = additional_info?.recording_mbid;
-    // If listen doesn't contain recording_mbid attribute,
-    // search for it using the track mbid instead
-    else if (additional_info?.track_mbid)
+      // If listen doesn't contain recording_mbid attribute,
+      // search for it using the track mbid instead
+    } else if (additional_info?.track_mbid) {
       recording_mbid = await this.getRecordingMBIDFromTrack(
         additional_info?.track_mbid,
         listen.track_metadata.track_name
       );
-
+    }
     // confirm that found mbid was valid
     if (recording_mbid.length) {
       const entity: ReviewableEntity = {
@@ -228,18 +231,19 @@ export default class CBReviewModal extends React.Component<
         name: listen.track_metadata.track_name,
       };
       this.setState({ recordingEntity: entity });
+    } else {
+      this.setState({ recordingEntity: null });
     }
   };
 
   getArtistEntity = () => {
-    this.setState({ artistEntity: null });
-
     const { listen } = this.props;
     const { additional_info } = listen.track_metadata;
     let artist_mbid;
 
-    if (additional_info?.artist_mbids)
+    if (additional_info?.artist_mbids) {
       artist_mbid = additional_info?.artist_mbids[0];
+    }
 
     if (artist_mbid) {
       const entity: ReviewableEntity = {
@@ -248,25 +252,26 @@ export default class CBReviewModal extends React.Component<
         name: listen.track_metadata.artist_name,
       };
       this.setState({ artistEntity: entity });
+    } else {
+      this.setState({ artistEntity: null });
     }
   };
 
   getReleaseGroupEntity = async () => {
-    this.setState({ releaseGroupEntity: null });
-
     const { listen } = this.props;
     const { additional_info } = listen.track_metadata;
 
     let release_group_mbid = "";
 
-    if (additional_info?.release_group_mbid)
+    if (additional_info?.release_group_mbid) {
       release_group_mbid = additional_info?.release_group_mbid;
-    // If listen doesn't contain release_group_mbid attribute,
-    // search for it using the release mbid instead
-    else if (additional_info?.release_mbid)
+      // If listen doesn't contain release_group_mbid attribute,
+      // search for it using the release mbid instead
+    } else if (additional_info?.release_mbid) {
       release_group_mbid = await this.getGroupMBIDFromRelease(
         additional_info?.release_mbid
       );
+    }
 
     // confirm that found mbid is valid
     if (release_group_mbid.length) {
@@ -276,17 +281,20 @@ export default class CBReviewModal extends React.Component<
         name: listen.track_metadata.release_name,
       };
       this.setState({ releaseGroupEntity: entity });
+    } else {
+      this.setState({ releaseGroupEntity: null });
     }
   };
 
   setEntityToReview = (): void => {
     const { recordingEntity, artistEntity, releaseGroupEntity } = this.state;
-    let entity;
+    let entity = null;
 
-    if (recordingEntity) entity = recordingEntity;
-    else if (releaseGroupEntity || artistEntity)
+    if (recordingEntity) {
+      entity = recordingEntity;
+    } else if (releaseGroupEntity || artistEntity) {
       entity = releaseGroupEntity || artistEntity;
-    else entity = null;
+    }
 
     this.setState({ entityToReview: entity });
   };
@@ -328,12 +336,28 @@ export default class CBReviewModal extends React.Component<
     }
   };
 
+  resetCBReviewForm = () => {
+    this.setState({
+      loading: false,
+      reviewValidateAlert: null,
+      releaseGroupEntity: null,
+      recordingEntity: null,
+      artistEntity: null,
+      textContent: "",
+      rating: 0,
+      success: true,
+      acceptLicense: false,
+    });
+  };
+
   submitReviewToCB = async (
+    event?: React.FormEvent<HTMLFormElement>,
     access_token?: string,
     maxRetries: number = 1
-  ): Promise<void> => {
+  ): Promise<null> => {
     const { isCurrentUser, newAlert, listen } = this.props;
-    const { APIService } = this.context;
+    const { APIService, critiquebrainzAuth } = this.context;
+    const accessToken = access_token ?? critiquebrainzAuth?.access_token;
     const {
       entityToReview,
       textContent,
@@ -342,15 +366,19 @@ export default class CBReviewModal extends React.Component<
       acceptLicense,
     } = this.state;
 
+    if (event) {
+      event.preventDefault();
+    }
+
     /* Show warning if review text doesn't meet minnimum length */
     if (textContent.length < this.minTextLength) {
       this.setState({
-        reviewValidateAlert: `Text length needs to be between ${this.minTextLength} and ${this.maxTextLength} characters.`,
+        reviewValidateAlert: `Your review needs to be longer than ${this.minTextLength} characters.`,
       });
-      return;
+      return null;
     }
 
-    if (isCurrentUser && access_token && entityToReview && acceptLicense) {
+    if (isCurrentUser && accessToken && entityToReview && acceptLicense) {
       this.setState({ loading: true });
 
       /* do not include rating if it wasn't set */
@@ -369,7 +397,7 @@ export default class CBReviewModal extends React.Component<
 
       try {
         const response = await APIService.submitReviewToCB(
-          access_token,
+          accessToken,
           reviewToSubmit
         );
         if (response) {
@@ -378,27 +406,31 @@ export default class CBReviewModal extends React.Component<
             `Your review was submitted to CritiqueBrainz!`,
             `${listen.track_metadata.artist_name} - ${entityToReview?.name}`
           );
+          // show url using review mbid on success
           this.setState({
-            textContent: "",
-            rating: 0,
-            reviewValidateAlert: null,
-            success: true,
             reviewMBID: response.id,
           });
+          this.resetCBReviewForm();
         }
       } catch (error) {
         if (maxRetries > 0 && error.message === "invalid_token") {
           /* Need to refresh token and retry with new token */
           const newToken = await this.refreshCritiquebrainzToken();
-          this.submitReviewToCB(newToken, maxRetries - 1);
-        } else
-          this.handleError(
-            error,
-            "Error while submitting review to CritiqueBrainz"
+          // eslint-disable-next-line no-return-await
+          return await this.submitReviewToCB(
+            undefined,
+            newToken,
+            maxRetries - 1
           );
+        }
+        this.handleError(
+          error,
+          "Error while submitting review to CritiqueBrainz"
+        );
+        this.setState({ loading: false });
       }
-      this.setState({ loading: false });
     }
+    return null;
   };
 
   getModalBody = (hasPermissions: boolean) => {
@@ -444,7 +476,7 @@ export default class CBReviewModal extends React.Component<
           <br />
           <br />
           You can access your CritiqueBrainz review by clicking{" "}
-          <a href={`${this.CBBaseUrl}/${reviewMBID}`}> here.</a>
+          <a href={`${this.CBBaseUrl}/review/${reviewMBID}`}> here.</a>
         </div>
       );
     }
@@ -453,9 +485,18 @@ export default class CBReviewModal extends React.Component<
     if (!entityToReview) {
       return (
         <div>
-          We could not find any reviewable entities associated with{" "}
-          <b>{listen.track_metadata?.track_name}</b> by{" "}
-          <b>{listen.track_metadata?.artist_name}.</b> :(
+          We could not link <b>{listen.track_metadata?.track_name}</b> by{" "}
+          <b>{listen.track_metadata?.artist_name}</b> to any recording, artist,
+          or release group on MusicBrainz.
+          <br />
+          <br />
+          If you can&#39;t find them when searching{" "}
+          <a href="https://musicbrainz.org/search">on MusicBrainz</a> either,
+          please consider{" "}
+          <a href="https://musicbrainz.org/doc/Introduction_to_Editing">
+            adding them to our database
+          </a>
+          .
         </div>
       );
     }
@@ -473,7 +514,7 @@ export default class CBReviewModal extends React.Component<
         {/* Show warning when recordingEntity is not availible */}
         {!recordingEntity && (
           <div className="alert alert-danger">
-            We could not find the reviewable recording entity for{" "}
+            We could not find a recording for{" "}
             <b>{listen.track_metadata?.track_name}</b>.
           </div>
         )}
@@ -505,11 +546,11 @@ export default class CBReviewModal extends React.Component<
                     </button>
                   );
                 }
-                return <></>;
+                return null;
               })}
             </ul>
           </span>
-          for <a href={this.CBBaseUrl}>CritiqueBrainz</a>.{this.CBInfoButton}
+          for <a href={this.CBBaseUrl}>CritiqueBrainz</a>. {this.CBInfoButton}
         </div>
 
         <div className="form-group">
@@ -526,12 +567,17 @@ export default class CBReviewModal extends React.Component<
             required
           />
         </div>
-        <small style={{ display: "block", textAlign: "right" }}>
-          Words: {countWords(textContent)} / Chars: {textContent.length}
+        <small
+          className={
+            textContent.length < this.minTextLength ? "text-danger" : ""
+          }
+          style={{ display: "block", textAlign: "right" }}
+        >
+          Words: {countWords(textContent)} / Characters: {textContent.length}
         </small>
 
         <div className="rating-container">
-          <b>Rating: </b>
+          <b>Rating (optional): </b>
           <Rating
             className="rating-stars"
             onClick={(rate: number) => this.setState({ rating: rate })}
@@ -543,7 +589,7 @@ export default class CBReviewModal extends React.Component<
         </div>
 
         <div className="dropdown">
-          <b>Language: </b>
+          <b>Language of your review: </b>
           <select
             id="language-selector"
             value={language}
@@ -616,9 +662,6 @@ export default class CBReviewModal extends React.Component<
           type="submit"
           id="submitReviewButton"
           className={`btn btn-success ${reviewValidateAlert ? "disabled" : ""}`}
-          onClick={() =>
-            this.submitReviewToCB(critiquebrainzAuth?.access_token)
-          }
         >
           Submit Review to CritiqueBrainz
         </button>
@@ -651,7 +694,7 @@ export default class CBReviewModal extends React.Component<
         data-backdrop="static"
       >
         <div className="modal-dialog" role="document">
-          <form className="modal-content" onSubmit={(e) => e.preventDefault()}>
+          <form className="modal-content" onSubmit={this.submitReviewToCB}>
             <div className="modal-header">
               <button
                 type="button"
@@ -663,7 +706,7 @@ export default class CBReviewModal extends React.Component<
               </button>
               <h4
                 className="modal-title"
-                id="PinRecordingModalLabel"
+                id="CBReviewModalLabel"
                 style={{ textAlign: "center" }}
               >
                 <img
