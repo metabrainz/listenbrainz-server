@@ -99,6 +99,7 @@ def delete_user_timeline_event(
     except Exception as e:
         raise DatabaseException(str(e))
 
+
 def create_user_cb_review_event(user_id: int, metadata: CBReviewMetadata) -> UserTimelineEvent:
     """ Creates a CritiqueBrainz review event in the database and returns it.
     """

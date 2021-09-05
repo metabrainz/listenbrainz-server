@@ -53,6 +53,7 @@ class NotificationMetadata(BaseModel):
     creator: constr(min_length=1)
     message: constr(min_length=1)
 
+
 class CBReviewMetadata(pydantic.BaseModel):
     entity_type: str
     rating: int
@@ -64,6 +65,7 @@ class CBReviewMetadata(pydantic.BaseModel):
     recording_mbid: Optional[str]
     recording_msid: str
     artist_msid: str
+
 
 UserTimelineEventMetadata = Union[CBReviewMetadata, RecordingRecommendationMetadata, NotificationMetadata]
 
@@ -90,11 +92,13 @@ class APIFollowEvent(BaseModel):
 class APIPinEvent(APIListen):
     blurb_content: Optional[str]
 
+
 class APICBReviewEvent(APIListen):
     entity_type: str
     rating: int
     text: str
     review_mbid: str
+
 
 APIEventMetadata = Union[APIListen, APIFollowEvent, APINotificationEvent, APIPinEvent, APICBReviewEvent]
 
