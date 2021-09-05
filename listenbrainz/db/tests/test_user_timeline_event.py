@@ -26,7 +26,7 @@ import uuid
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db.exceptions import DatabaseException
 
-from data.model.user_timeline_event import UserTimelineEventType, RecordingRecommendationMetadata, NotificationMetadata
+from data.model.user_timeline_event import UserTimelineEventType, RecordingRecommendationMetadata, NotificationMetadata, CBReviewMetadata
 
 
 class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
@@ -82,6 +82,24 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
             )
         )
         self.assertEqual(UserTimelineEventType.RECORDING_RECOMMENDATION, event.event_type)
+
+    def test_create_user_cb_review_event_sets_event_type_correctly(self):
+        event = db_user_timeline_event.create_user_cb_review_event(
+            user_id=self.user['id'],
+            metadata=CBReviewMetadata(
+                entity_type="recording",
+                rating=3,
+                text="tefadfasdafsdfafdsafdasafdsxt...",
+                review_mbid="f305b3fd-a040-4cde-b5ce-a926614f5d5d",
+                artist_name="Swae Lee & Post Malone",
+                track_name="Sunflower",
+                release_name="Sunflower",
+                recording_mbid="f305b3fd-a040-4cde-b5ce-a926614f5d5d",
+                recording_msid="f305b3fd-a040-4cde-b5ce-a926614f5d5d",
+                artist_msid="f305b3fd-a040-4cde-b5ce-a926614f5d5d",
+            )
+        )
+        self.assertEqual(UserTimelineEventType.CRITIQUEBRAINZ_REVIEW, event.event_type)
 
     def test_create_user_notification_event(self):
         message = 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'
