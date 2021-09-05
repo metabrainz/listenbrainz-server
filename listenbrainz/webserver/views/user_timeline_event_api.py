@@ -31,7 +31,7 @@ import listenbrainz.db.user_relationship as db_user_relationship
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
 from data.model.listen import APIListen, TrackMetadata, AdditionalInfo
 from data.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, \
-    APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent, APICBReviewEvent
+    CBReviewMetadata, APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent, APICBReviewEvent
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.pinned_recording import get_pins_for_feed
 from listenbrainz.db.exceptions import DatabaseException
@@ -159,7 +159,8 @@ def create_user_notification_event(user_name):
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def create_user_cb_review_event(user_name):
-
+    """ Creates a CritiqueBrainz review event for the user.
+    """
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
         raise APIUnauthorized("You don't have permissions to post to this user's timeline.")
@@ -268,7 +269,8 @@ def user_feed(user_name: str):
 
     # TODO: add playlist event and like event
     all_events = sorted(
-        listen_events + follow_events + recording_recommendation_events + recording_pin_events + cb_review_events + notification_events,
+        listen_events + follow_events + recording_recommendation_events + recording_pin_events +
+        cb_review_events + notification_events,
         key=lambda event: -event.created,
     )
 

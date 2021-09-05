@@ -26,7 +26,8 @@ import uuid
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db.exceptions import DatabaseException
 
-from data.model.user_timeline_event import UserTimelineEventType, RecordingRecommendationMetadata, NotificationMetadata, CBReviewMetadata
+from data.model.user_timeline_event import UserTimelineEventType, RecordingRecommendationMetadata, \
+    NotificationMetadata, CBReviewMetadata
 
 
 class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
