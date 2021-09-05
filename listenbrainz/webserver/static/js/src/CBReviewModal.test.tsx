@@ -55,15 +55,6 @@ const props = {
   newAlert: () => {},
 };
 
-// There is a problem in the way jest imports the ReactTooltip component
-// that causes tests to fail, mocking it allows them to pass.
-jest.mock("react-tooltip", () => ({
-  __esModule: true,
-  default: jest.fn().mockImplementation(() => {
-    return <div>This is a mocked react-tooltip component.</div>;
-  }),
-}));
-
 describe("CBReviewModal", () => {
   it("renders the modal correctly", async () => {
     const wrapper = mount<CBReviewModal>(
