@@ -32,6 +32,7 @@ class UserTimelineEventType(Enum):
     LISTEN = 'listen'
     NOTIFICATION = 'notification'
     RECORDING_PIN = 'recording_pin'
+    CRITIQUEBRAINZ_REVIEW = 'critiquebrainz_review'
 
 
 class RecordingRecommendationMetadata(BaseModel):
@@ -52,8 +53,19 @@ class NotificationMetadata(BaseModel):
     creator: constr(min_length=1)
     message: constr(min_length=1)
 
+class CBReviewMetadata(pydantic.BaseModel):
+    entity_type: str
+    rating: int
+    text: str
+    review_mbid: str
+    artist_name: str
+    track_name: str
+    release_name: str
+    recording_mbid: Optional[str]
+    recording_msid: str
+    artist_msid: str
 
-UserTimelineEventMetadata = Union[RecordingRecommendationMetadata, NotificationMetadata]
+UserTimelineEventMetadata = Union[CBReviewMetadata, RecordingRecommendationMetadata, NotificationMetadata]
 
 
 class UserTimelineEvent(BaseModel):
@@ -78,8 +90,13 @@ class APIFollowEvent(BaseModel):
 class APIPinEvent(APIListen):
     blurb_content: Optional[str]
 
+class APICBReviewEvent(APIListen):
+    entity_type: str
+    rating: int
+    text: str
+    review_mbid: str
 
-APIEventMetadata = Union[APIListen, APIFollowEvent, APINotificationEvent, APIPinEvent]
+APIEventMetadata = Union[APIListen, APIFollowEvent, APINotificationEvent, APIPinEvent, APICBReviewEvent]
 
 
 class APITimelineEvent(BaseModel):
