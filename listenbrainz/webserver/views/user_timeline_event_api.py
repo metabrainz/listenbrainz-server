@@ -31,7 +31,7 @@ import listenbrainz.db.user_relationship as db_user_relationship
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
 from data.model.listen import APIListen, TrackMetadata, AdditionalInfo
 from data.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, \
-    APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent
+    APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent, APICBReviewEvent
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.pinned_recording import get_pins_for_feed
 from listenbrainz.db.exceptions import DatabaseException
@@ -155,6 +155,48 @@ def create_user_notification_event(user_name):
     return jsonify({'status': 'ok'})
 
 
+@user_timeline_event_api_bp.route('/user/<user_name>/timeline-event/create/review', methods=['POST', 'OPTIONS'])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
+def create_user_cb_review_event(user_name):
+
+    user = validate_auth_header()
+    if user_name != user['musicbrainz_id']:
+        raise APIUnauthorized("You don't have permissions to post to this user's timeline.")
+
+    try:
+        data = ujson.loads(request.get_data())
+    except ValueError as e:
+        raise APIBadRequest(f"Invalid JSON: {str(e)}")
+
+    try:
+        data = data["metadata"]
+        metadata = CBReviewMetadata(
+            entity_type=data["entity_type"],
+            rating=data.get("rating", 0),
+            text=data["text"],
+            review_mbid=data["review_mbid"],
+            artist_name=data["track_metadata"]["artist_name"],
+            track_name=data["track_metadata"]["track_name"],
+            release_name=data["track_metadata"]["release_name"],
+            recording_mbid=data["track_metadata"].get("recording_mbid", ""),
+            recording_msid=data["track_metadata"]["additional_info"]["recording_msid"],
+            artist_msid=data["track_metadata"]["additional_info"]["artist_msid"],
+        )
+    except (pydantic.ValidationError, KeyError) as e:
+        raise APIBadRequest(f"Invalid metadata: {str(data)}")
+
+    try:
+        event = db_user_timeline_event.create_user_cb_review_event(user['id'], metadata)
+    except DatabaseException:
+        raise APIInternalServerError("Something went wrong, please try again.")
+
+    event_data = event.dict()
+    event_data['created'] = event_data['created'].timestamp()
+    event_data['event_type'] = event_data['event_type'].value
+    return jsonify(event_data)
+
+
 @user_timeline_event_api_bp.route('/user/<user_name>/feed/events', methods=['OPTIONS', 'GET'])
 @crossdomain
 @ratelimit()
@@ -208,6 +250,13 @@ def user_feed(user_name: str):
         count=count,
     )
 
+    cb_review_events = get_cb_review_events(
+        users_for_events=users_for_feed_events,
+        min_ts=min_ts or 0,
+        max_ts=max_ts or int(time.time()),
+        count=count,
+    )
+
     notification_events = get_notification_events(user, count)
 
     recording_pin_events = get_recording_pin_events(
@@ -219,7 +268,7 @@ def user_feed(user_name: str):
 
     # TODO: add playlist event and like event
     all_events = sorted(
-        listen_events + follow_events + recording_recommendation_events + recording_pin_events + notification_events,
+        listen_events + follow_events + recording_recommendation_events + recording_pin_events + cb_review_events + notification_events,
         key=lambda event: -event.created,
     )
 
@@ -419,6 +468,50 @@ def get_recording_recommendation_events(users_for_events: List[dict], min_ts: in
                 user_name=listen.user_name,
                 created=event.created.timestamp(),
                 metadata=listen,
+            ))
+        except pydantic.ValidationError as e:
+            current_app.logger.error('Validation error: ' + str(e), exc_info=True)
+            continue
+    return events
+
+
+def get_cb_review_events(users_for_events: List[dict], min_ts: int, max_ts: int, count: int) -> List[APITimelineEvent]:
+    """ Gets all CritiqueBrainz review events in the feed.
+    """
+
+    id_username_map = {user['id']: user['musicbrainz_id'] for user in users_for_events}
+    cb_review_events_db = db_user_timeline_event.get_cb_review_events(
+        user_ids=(user['id'] for user in users_for_events),
+        min_ts=min_ts,
+        max_ts=max_ts,
+        count=count,
+    )
+
+    events = []
+    for event in cb_review_events_db:
+        try:
+            reviewEvent = APICBReviewEvent(
+                user_name=id_username_map[event.user_id],
+                entity_type=event.metadata.entity_type,
+                rating=event.metadata.rating,
+                text=event.metadata.text,
+                review_mbid=event.metadata.review_mbid,
+                track_metadata=TrackMetadata(
+                    artist_name=event.metadata.artist_name,
+                    track_name=event.metadata.track_name,
+                    release_name=event.metadata.release_name,
+                    additional_info=AdditionalInfo(
+                        recording_msid=event.metadata.recording_msid,
+                        recording_mbid=event.metadata.recording_mbid,
+                        artist_msid=event.metadata.artist_msid,
+                    )
+                )
+            )
+            events.append(APITimelineEvent(
+                event_type=UserTimelineEventType.CRITIQUEBRAINZ_REVIEW,
+                user_name=reviewEvent.user_name,
+                created=event.created.timestamp(),
+                metadata=reviewEvent,
             ))
         except pydantic.ValidationError as e:
             current_app.logger.error('Validation error: ' + str(e), exc_info=True)
