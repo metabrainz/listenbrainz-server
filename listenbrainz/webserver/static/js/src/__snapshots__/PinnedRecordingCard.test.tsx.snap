@@ -127,6 +127,7 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
               title="Unpin"
             >
               <button
+                className="btn "
                 onClick={[Function]}
                 title="Unpin"
                 type="button"
@@ -139,6 +140,7 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
               title="Delete Pin"
             >
               <button
+                className="btn "
                 onClick={[Function]}
                 title="Delete Pin"
                 type="button"
