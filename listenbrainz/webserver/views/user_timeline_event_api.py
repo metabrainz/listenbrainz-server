@@ -238,6 +238,53 @@ def user_feed(user_name: str):
         'events': [event.dict() for event in all_events],
     }})
 
+@user_timeline_event_api_bp.route("/user/<user_name>/feed/events/delete", methods=['OPTIONS', 'POST'])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
+def delete_feed_events(user_name):
+    '''Delete events from a user's timeline
+    The request should post the following data about deletion of recommended track
+    {
+        event_type: "recording_recommendation"
+        metadata: {
+            "artist_name": "<The name of the artist, required>",
+            "track_name": "<The name of the track, required>",
+            "artist_msid": "<The MessyBrainz ID of the artist, required>",
+            "recording_msid": "<The MessyBrainz ID of the recording, required>",
+            "release_name": "<The name of the release, optional>",
+            "recording_mbid": "<The MusicBrainz ID of the recording, optional>"
+        }
+        user_name: "riksucks"
+    }
+
+    :param user_name: The MusicBrainz ID of the user whose timeline is being requested.
+    :type user_name: ``str``
+    :statuscode 200: Successful deletion
+    :statuscode 400: Bad request, check ``response['error']`` for more details.
+    :statuscode 401: Unauthorized
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    '''
+    #TODO: implement deletion of notifications and other events once this is approved
+    #Part of LB-912
+    user = validate_auth_header()
+    if user_name != user['musicbrainz_id']:
+        raise APIUnauthorized("You don't have permissions to view this user's timeline.")
+    try:
+        event = ujson.loads(request.get_data())
+        if event["event_type"] == UserTimelineEventType.RECORDING_RECOMMENDATION.value:
+            metadata = RecordingRecommendationMetadata(**event["metadata"])
+            event = db_user_timeline_event.delete_user_timeline_event(user["id"], metadata)
+            if not event:
+                raise APIBadRequest("No such event to delete")
+            event_data = event.dict()
+            event_data['created'] = event_data['created'].timestamp()
+            event_data['event_type'] = event_data['event_type'].value
+            return jsonify(event_data)
+        raise APIBadRequest("This event type is not supported for deletion via this method")
+    except (ValueError, KeyError) as e:
+        raise APIBadRequest(f"Invalid JSON: {str(e)}")
+
 
 def get_listen_events(
     db_conn: TimescaleListenStore,

@@ -69,6 +69,33 @@ def create_user_track_recommendation_event(user_id: int, metadata: RecordingReco
         metadata=metadata,
     )
 
+def delete_user_timeline_event(user_id: int, metadata: RecordingRecommendationMetadata) -> UserTimelineEvent:
+    """ Deletes event from database and returns it.
+        Returns None if it couldn't find the queried event.
+    """
+    try:
+        meta = []
+        for i in metadata.dict().items():
+            if i[1] != None:
+                meta.append(" metadata ->> '" + i[0] + "' = '" + i[1] + "'")
+        meta_query = " AND ".join(meta)
+        with db.engine.connect() as connection:
+            result = connection.execute(sqlalchemy.text("""
+                DELETE FROM user_timeline_event WHERE
+            """ + meta_query + """
+                RETURNING *
+            """))
+            try:
+                r = dict(result.fetchone())
+            #when there is nothing to delete
+            except TypeError:
+                r = None
+        if not r:
+            return None
+        return UserTimelineEvent(**r)
+    except Exception as e:
+        raise DatabaseException(str(e))
+
 
 def create_user_notification_event(user_id: int, metadata: NotificationMetadata) -> UserTimelineEvent:
     """ Create a notification event in the database and returns it.
