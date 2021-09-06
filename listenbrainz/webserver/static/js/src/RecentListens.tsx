@@ -627,6 +627,7 @@ export default class RecentListens extends React.Component<
                         <ListenCard
                           key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
                           isCurrentUser={currentUser?.name === user?.name}
+                          isCurrentListen={this.isCurrentListen(listen)}
                           listen={listen}
                           mode={mode}
                           currentFeedback={this.getFeedbackForRecordingMsid(
@@ -641,10 +642,8 @@ export default class RecentListens extends React.Component<
                           updateRecordingToPin={this.updateRecordingToPin}
                           newAlert={newAlert}
                           className={`${
-                            this.isCurrentListen(listen)
-                              ? " current-listen"
-                              : ""
-                          }${listen.playing_now ? " playing-now" : ""}`}
+                            listen.playing_now ? "playing-now" : ""
+                          }`}
                         />
                       );
                     })}

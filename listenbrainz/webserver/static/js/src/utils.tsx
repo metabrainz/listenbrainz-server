@@ -5,6 +5,7 @@ import * as timeago from "time-ago";
 import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
 
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { faPlay } from "@fortawesome/free-solid-svg-icons";
 
 const searchForSpotifyTrack = async (
   spotifyToken?: string,
@@ -150,16 +151,24 @@ const getTrackLink = (listen: Listen): JSX.Element | string => {
   return trackName;
 };
 
-const getPlayButton = (listen: any, onClickFunction: (event?: any) => void) => {
+const getPlayButton = (
+  listen: any,
+  isCurrentListen: boolean,
+  onPlayFunction: (event?: any) => void
+) => {
   /* es-lint */
   return (
     <button
       title="Play"
       className="btn-transparent play-button"
-      onClick={onClickFunction.bind(listen)}
+      onClick={isCurrentListen ? undefined : onPlayFunction.bind(listen)}
       type="button"
     >
-      <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />
+      {isCurrentListen ? (
+        <FontAwesomeIcon size="1x" icon={faPlay as IconProp} />
+      ) : (
+        <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />
+      )}
     </button>
   );
 };
