@@ -27,7 +27,8 @@ export type ListenCardProps = {
   mode: ListensListMode;
   className?: string;
   currentFeedback: ListenFeedBack;
-  isCurrentUser: Boolean;
+  isCurrentUser: boolean;
+  isCurrentListen: boolean;
   playListen: (listen: Listen) => void;
   removeListenFromListenList: (listen: Listen) => void;
   updateFeedback: (recordingMsid: string, score: ListenFeedBack) => void;
@@ -40,7 +41,7 @@ export type ListenCardProps = {
 };
 
 type ListenCardState = {
-  isDeleted: Boolean;
+  isDeleted: boolean;
   feedback: ListenFeedBack;
 };
 
@@ -186,6 +187,7 @@ export default class ListenCard extends React.Component<
       mode,
       className,
       isCurrentUser,
+      isCurrentListen,
       updateRecordingToPin,
     } = this.props;
     const { feedback, isDeleted } = this.state;
@@ -193,10 +195,11 @@ export default class ListenCard extends React.Component<
 
     return (
       <Card
-        onDoubleClick={this.playListen}
-        className={`listen-card row ${className} ${
-          isDeleted ? " deleted" : ""
-        }`}
+        onDoubleClick={isCurrentListen ? undefined : this.playListen}
+        className={`listen-card row ${
+          isCurrentListen ? " current-listen" : ""
+        } ${isDeleted ? " deleted" : ""}
+		 ${className}`}
       >
         <div
           className={`listen-details ${
@@ -335,7 +338,7 @@ export default class ListenCard extends React.Component<
                       />
                     )}
                   </ul>
-                  {getPlayButton(listen, this.playListen)}
+                  {getPlayButton(listen, isCurrentListen, this.playListen)}
                 </>
               )}
             </div>

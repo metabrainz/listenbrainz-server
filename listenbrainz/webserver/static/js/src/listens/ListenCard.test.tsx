@@ -30,6 +30,7 @@ const props: ListenCardProps = {
   mode: "listens",
   currentFeedback: 1,
   isCurrentUser: true,
+  isCurrentListen: false,
   playListen: () => {},
   removeListenFromListenList: () => {},
   updateFeedback: () => {},
