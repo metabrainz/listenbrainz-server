@@ -199,7 +199,7 @@ export default class ListenCard extends React.Component<
         className={`listen-card row ${
           isCurrentListen ? " current-listen" : ""
         } ${isDeleted ? " deleted" : ""}
-		 ${className}`}
+		 ${className || ""}`}
       >
         <div
           className={`listen-details ${

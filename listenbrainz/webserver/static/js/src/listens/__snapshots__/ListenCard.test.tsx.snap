@@ -3,6 +3,7 @@
 exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
 <ListenCard
   currentFeedback={1}
+  isCurrentListen={false}
   isCurrentUser={true}
   listen={
     Object {
@@ -27,11 +28,13 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
   updateRecordingToPin={[Function]}
 >
   <ForwardRef
-    className="listen-card row undefined "
+    className="listen-card row  
+		 "
     onDoubleClick={[Function]}
   >
     <div
-      className="listen-card row undefined "
+      className="listen-card row  
+		 "
       onDoubleClick={[Function]}
       style={
         Object {
@@ -383,6 +386,7 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
 exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
 <ListenCard
   currentFeedback={1}
+  isCurrentListen={false}
   isCurrentUser={true}
   listen={
     Object {
@@ -407,11 +411,13 @@ exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
   updateRecordingToPin={[Function]}
 >
   <ForwardRef
-    className="listen-card row undefined "
+    className="listen-card row  
+		 "
     onDoubleClick={[Function]}
   >
     <div
-      className="listen-card row undefined "
+      className="listen-card row  
+		 "
       onDoubleClick={[Function]}
       style={
         Object {
@@ -451,6 +457,7 @@ exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
 exports[`ListenCard renders correctly for playing_now listen 1`] = `
 <ListenCard
   currentFeedback={1}
+  isCurrentListen={false}
   isCurrentUser={true}
   listen={
     Object {
@@ -475,11 +482,13 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
   updateRecordingToPin={[Function]}
 >
   <ForwardRef
-    className="listen-card row undefined "
+    className="listen-card row  
+		 "
     onDoubleClick={[Function]}
   >
     <div
-      className="listen-card row undefined "
+      className="listen-card row  
+		 "
       onDoubleClick={[Function]}
       style={
         Object {
@@ -831,6 +840,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
 exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
 <ListenCard
   currentFeedback={1}
+  isCurrentListen={false}
   isCurrentUser={true}
   listen={
     Object {
@@ -855,11 +865,13 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
   updateRecordingToPin={[Function]}
 >
   <ForwardRef
-    className="listen-card row undefined "
+    className="listen-card row  
+		 "
     onDoubleClick={[Function]}
   >
     <div
-      className="listen-card row undefined "
+      className="listen-card row  
+		 "
       onDoubleClick={[Function]}
       style={
         Object {
