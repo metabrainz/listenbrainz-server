@@ -248,6 +248,10 @@ export default class YoutubePlayer
     return Boolean(youtubeUser) && Boolean(youtubeUser?.api_key);
   };
 
+  datasourceRecordsListens = (): boolean => {
+    return false;
+  };
+
   playListen = (listen: Listen | JSPFTrack) => {
     const { show } = this.props;
     if (!show) {

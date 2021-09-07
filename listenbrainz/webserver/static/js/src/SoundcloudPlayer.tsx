@@ -166,6 +166,10 @@ export default class SoundcloudPlayer
     return false;
   };
 
+  datasourceRecordsListens = (): boolean => {
+    return false;
+  };
+
   playListen = (listen: Listen | JSPFTrack) => {
     const { show, onTrackNotFound } = this.props;
     if (!show) {
