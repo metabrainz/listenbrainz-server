@@ -12,6 +12,7 @@ const props = {
   onDurationChange: (durationMs: number) => {},
   onTrackInfoChange: (
     title: string,
+    trackId: string,
     artist?: string,
     album?: string,
     artwork?: ReadonlyArray<MediaImage>
@@ -146,6 +147,7 @@ describe("SoundcloudPlayer", () => {
     expect(onPlayerPausedChange).toHaveBeenCalledWith(false);
     expect(onTrackInfoChange).toHaveBeenCalledWith(
       "Dope track",
+      "2",
       "Emperor Norton the 1st",
       undefined,
       [{ src: "some/url/to/artwork" }]

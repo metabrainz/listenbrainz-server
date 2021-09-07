@@ -460,6 +460,7 @@ export default class SpotifyPlayer
         .join(", ");
       onTrackInfoChange(
         current_track.name,
+        current_track.uri,
         artists,
         current_track.album?.name,
         current_track.album.images

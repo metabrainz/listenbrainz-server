@@ -78,16 +78,17 @@ export default class YoutubePlayer
     const { onTrackInfoChange, onDurationChange } = this.props;
     const videoData =
       this.youtubePlayer?.getVideoData && this.youtubePlayer.getVideoData();
+    let videoId: string = "";
     if (videoData) {
       title = videoData.title;
-      const videoId = videoData.video_id;
+      videoId = videoData.video_id as string;
       images = YoutubePlayer.getThumbnailsFromVideoid(videoId);
     } else {
       // Fallback to track name from the listen we are playing
       const { currentListen } = this.state;
       title = currentListen?.track_metadata.track_name ?? "";
     }
-    onTrackInfoChange(title, undefined, undefined, images);
+    onTrackInfoChange(title, videoId, undefined, undefined, images);
     const duration = this.youtubePlayer?.getDuration();
     if (duration) {
       onDurationChange(duration * 1000);
@@ -123,7 +124,7 @@ export default class YoutubePlayer
         const images: MediaImage[] = YoutubePlayer.getThumbnailsFromVideoid(
           videoId
         );
-        onTrackInfoChange(title, undefined, undefined, images);
+        onTrackInfoChange(title, videoId, undefined, undefined, images);
       }
       player.playVideo();
     }
