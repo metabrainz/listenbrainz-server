@@ -346,6 +346,7 @@ def latest_import():
     :statuscode 200: latest import timestamp updated
     :statuscode 400: invalid JSON sent, see error message for details.
     :statuscode 401: invalid authorization. See error message for details.
+    :statuscode 404: user or service not found. See error message for details.
     """
     if request.method == 'GET':
         user_name = request.args.get('user_name', '')
@@ -355,9 +356,9 @@ def latest_import():
         except KeyError:
             raise APINotFound("Service does not exist: {}".format(service_name))
         user = db_user.get_by_mb_id(user_name)
-        latest_import_ts = listens_importer.get_latest_listened_at(user["id"], service)
         if user is None:
             raise APINotFound("Cannot find user: {user_name}".format(user_name=user_name))
+        latest_import_ts = listens_importer.get_latest_listened_at(user["id"], service)
         return jsonify({
             'musicbrainz_id': user['musicbrainz_id'],
             'latest_import': 0 if not latest_import_ts else int(latest_import_ts.strftime('%s'))
