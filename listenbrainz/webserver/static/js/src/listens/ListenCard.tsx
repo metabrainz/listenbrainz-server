@@ -10,7 +10,12 @@ import {
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { getArtistLink, getTrackLink, preciseTimestamp } from "../utils";
+import {
+  getArtistLink,
+  getPlayButton,
+  getTrackLink,
+  preciseTimestamp,
+} from "../utils";
 import GlobalAppContext from "../GlobalAppContext";
 import Card from "../components/Card";
 import ListenControl from "./ListenControl";
@@ -22,7 +27,8 @@ export type ListenCardProps = {
   mode: ListensListMode;
   className?: string;
   currentFeedback: ListenFeedBack;
-  isCurrentUser: Boolean;
+  isCurrentUser: boolean;
+  isCurrentListen: boolean;
   playListen: (listen: Listen) => void;
   removeListenFromListenList: (listen: Listen) => void;
   updateFeedback: (recordingMsid: string, score: ListenFeedBack) => void;
@@ -35,7 +41,7 @@ export type ListenCardProps = {
 };
 
 type ListenCardState = {
-  isDeleted: Boolean;
+  isDeleted: boolean;
   feedback: ListenFeedBack;
 };
 
@@ -181,6 +187,7 @@ export default class ListenCard extends React.Component<
       mode,
       className,
       isCurrentUser,
+      isCurrentListen,
       updateRecordingToPin,
     } = this.props;
     const { feedback, isDeleted } = this.state;
@@ -188,14 +195,17 @@ export default class ListenCard extends React.Component<
 
     return (
       <Card
-        onDoubleClick={this.playListen}
-        className={`listen-card row ${className} ${
-          isDeleted ? " deleted" : ""
-        }`}
+        onDoubleClick={isCurrentListen ? undefined : this.playListen}
+        className={`listen-card row ${
+          isCurrentListen ? " current-listen" : ""
+        } ${isDeleted ? " deleted" : ""}
+		 ${className || ""}`}
       >
         <div
-          className={`${
-            isCurrentUser || mode === "recent" ? " col-xs-9" : " col-xs-12"
+          className={`listen-details ${
+            isCurrentUser || mode === "recent"
+              ? " col-xs-8 col-sm-9"
+              : " col-xs-12"
           }`}
         >
           <MediaQuery minWidth={768}>
@@ -271,13 +281,7 @@ export default class ListenCard extends React.Component<
             </div>
           </MediaQuery>
         </div>
-        <div
-          className={`${
-            isCurrentUser || mode === "recent"
-              ? " col-xs-3 text-center"
-              : "hidden"
-          }`}
-        >
+        <div className="col-xs-4 col-sm-3 listen-controls-container">
           {mode === "recent" ? (
             <a
               href={`/user/${listen.user_name}`}
@@ -286,7 +290,8 @@ export default class ListenCard extends React.Component<
             >
               {listen.user_name}
             </a>
-          ) : (
+          ) : null}
+          {mode !== "recent" && isCurrentUser ? (
             <div className="listen-controls">
               {!listen?.playing_now && (
                 <>
@@ -302,6 +307,7 @@ export default class ListenCard extends React.Component<
                     action={() => this.submitFeedback(feedback === -1 ? 0 : -1)}
                     className={`${feedback === -1 ? " hated" : ""}`}
                   />
+
                   <FontAwesomeIcon
                     icon={faEllipsisV as IconProp}
                     title="Delete"
@@ -332,10 +338,11 @@ export default class ListenCard extends React.Component<
                       />
                     )}
                   </ul>
+                  {getPlayButton(listen, isCurrentListen, this.playListen)}
                 </>
               )}
             </div>
-          )}
+          ) : null}
         </div>
       </Card>
     );
