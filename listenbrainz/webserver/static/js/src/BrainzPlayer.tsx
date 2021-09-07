@@ -479,6 +479,46 @@ export default class BrainzPlayer extends React.Component<
     trailing: true,
   });
 
+  submitListenToListenBrainz = async (
+    title: string,
+    artist?: string,
+    album?: string
+  ): Promise<void> => {
+    const { APIService, currentUser } = this.context;
+    const { currentDataSourceIndex } = this.state;
+    const dataSource = this.dataSources[currentDataSourceIndex];
+    if (!currentUser || !currentUser.auth_token) {
+      return;
+    }
+    if (!dataSource?.current || !dataSource.current.isAlreadyScrobbling()) {
+      const { listens } = this.props;
+      const currentListenIndex = listens.findIndex(this.isCurrentListen);
+      // Metadata we get from the datasources maybe bad quality (looking at you, Youtube… ಠ_ಠ)
+      // so we use the current listen itself, and keep a trace of datasource metadata in a custom field
+      const brainzplayer_metadata = {
+        artist_name: artist,
+        release_name: album,
+        track_name: title,
+      };
+      try {
+        // Duplicate the current listen and augment it with the datasource's metadata
+        const manipulatedListen: Listen = assign(
+          {},
+          listens[currentListenIndex]
+        ) as Listen;
+        // ensure the track_metadata.additional_info path exists and add brainzplayer_metadata field
+        assign(manipulatedListen, {
+          track_metadata: { additional_info: { brainzplayer_metadata } },
+        });
+        await APIService.submitListens(currentUser.auth_token, "single", [
+          manipulatedListen,
+        ]);
+      } catch (error) {
+        this.handleWarning(error, "Could not save this listen");
+      }
+    }
+  };
+
   /* Updating the progress bar without calling any API to check current player state */
 
   startPlayerStateTimer = (): void => {
