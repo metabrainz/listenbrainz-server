@@ -323,10 +323,14 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
             <ListenControl
               action={[Function]}
               className="disabled"
+              dataTarget="#CBReviewModal"
+              dataToggle="modal"
               title="Review this Recording"
             >
               <button
                 className="btn disabled"
+                data-target="#CBReviewModal"
+                data-toggle="modal"
                 onClick={[Function]}
                 title="Review this Recording"
                 type="button"
@@ -734,10 +738,14 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
             <ListenControl
               action={[Function]}
               className="disabled"
+              dataTarget="#CBReviewModal"
+              dataToggle="modal"
               title="Review this Recording"
             >
               <button
                 className="btn disabled"
+                data-target="#CBReviewModal"
+                data-toggle="modal"
                 onClick={[Function]}
                 title="Review this Recording"
                 type="button"
@@ -1076,10 +1084,14 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
             <ListenControl
               action={[Function]}
               className="disabled"
+              dataTarget="#CBReviewModal"
+              dataToggle="modal"
               title="Review this Recording"
             >
               <button
                 className="btn disabled"
+                data-target="#CBReviewModal"
+                data-toggle="modal"
                 onClick={[Function]}
                 title="Review this Recording"
                 type="button"
