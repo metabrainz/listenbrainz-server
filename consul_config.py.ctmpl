@@ -76,8 +76,8 @@ TYPESENSE_HOST = "{{.Address}}"
 TYPESENSE_PORT = {{.Port}}
 {{end}}
 {{else}}
-TYPESENSE_HOST = "SERVICEDOESNOTEXIST_typesense-listenbrainz"
-TYPESENSE_PORT = "SERVICEDOESNOTEXIST_typesense-listenbrainz"
+TYPESENSE_HOST = "localhost"
+TYPESENSE_PORT = 80
 {{end}}
 TYPESENSE_API_KEY = '''{{template "KEY" "typesense_api_key"}}'''
 
@@ -178,6 +178,12 @@ SPOTIFY_CLIENT_ID = '''{{template "KEY" "spotify/client_id"}}'''
 SPOTIFY_CLIENT_SECRET = '''{{template "KEY" "spotify/client_secret"}}'''
 SPOTIFY_CALLBACK_URL = '''{{template "KEY" "spotify/redirect_uri"}}'''
 
+# CRITIQUEBRAINZ
+CRITIQUEBRAINZ_CLIENT_ID = '''{{template "KEY" "critiquebrainz/client_id"}}'''
+CRITIQUEBRAINZ_CLIENT_SECRET = '''{{template "KEY" "critiquebrainz/client_secret"}}'''
+CRITIQUEBRAINZ_REDIRECT_URI = '''{{template "KEY" "critiquebrainz/redirect_uri"}}'''
+
+
 # YOUTUBE
 YOUTUBE_API_KEY = '''{{template "KEY" "youtube/api_key"}}'''
 YOUTUBE_REDIRECT_URI = '''{{template "KEY" "youtube/redirect_uri"}}'''
@@ -210,6 +216,3 @@ REJECT_LISTENS_WITHOUT_USER_EMAIL = {{template "KEY_JSON" "reject_listens_withou
 
 # If set to True, do not allow new users without email to register and warn existing without email
 REJECT_NEW_USERS_WITHOUT_EMAIL = {{template "KEY_JSON" "reject_new_users_without_email"}}
-
-# If set to True, enabled pinned recording feature
-FEATURE_PINNED_REC = {{template "KEY_JSON" "feature_pinned_rec"}}

@@ -10,17 +10,12 @@ from data.model.user_artist_stat import UserArtistRecord
 from data.model.user_release_stat import UserReleaseRecord
 from data.model.user_recording_stat import UserRecordingRecord
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
-from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
 from listenbrainz_spark.stats import (offset_days, replace_days,
-                                      replace_months, run_query)
+                                      replace_months, run_query, get_last_monday)
 from listenbrainz_spark.stats.user.artist import get_artists
 from listenbrainz_spark.stats.user.recording import get_recordings
 from listenbrainz_spark.stats.user.release import get_releases
-from listenbrainz_spark.stats.utils import (filter_listens,
-                                            get_last_monday,
-                                            get_latest_listen_ts)
-from listenbrainz_spark.utils import get_listens
-
+from listenbrainz_spark.utils import get_listens_from_new_dump, get_latest_listen_ts
 
 logger = logging.getLogger(__name__)
 
@@ -41,15 +36,12 @@ def get_entity_week(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     """ Get the weekly top entity for all users """
     logger.debug("Calculating {}_week...".format(entity))
 
-    date = get_latest_listen_ts()
-
-    to_date = get_last_monday(date)
+    to_date = get_last_monday(get_latest_listen_ts())
     from_date = offset_days(to_date, 7)
 
-    listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
-    filtered_df = filter_listens(listens_df, from_date, to_date)
+    listens_df = get_listens_from_new_dump(from_date, to_date)
     table_name = 'user_{}_week'.format(entity)
-    filtered_df.createOrReplaceTempView(table_name)
+    listens_df.createOrReplaceTempView(table_name)
 
     handler = entity_handler_map[entity]
     data = handler(table_name)
@@ -68,7 +60,7 @@ def get_entity_month(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     to_date = get_latest_listen_ts()
     from_date = replace_days(to_date, 1)
 
-    listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
+    listens_df = get_listens_from_new_dump(from_date, to_date)
     table_name = 'user_{}_month'.format(entity)
     listens_df.createOrReplaceTempView(table_name)
 
@@ -90,7 +82,7 @@ def get_entity_year(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     to_date = get_latest_listen_ts()
     from_date = replace_days(replace_months(to_date, 1), 1)
 
-    listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
+    listens_df = get_listens_from_new_dump(from_date, to_date)
     table_name = 'user_{}_year'.format(entity)
     listens_df.createOrReplaceTempView(table_name)
 
@@ -111,7 +103,7 @@ def get_entity_all_time(entity: str) -> Iterator[Optional[UserEntityStatMessage]
     to_date = get_latest_listen_ts()
     from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
 
-    listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
+    listens_df = get_listens_from_new_dump(from_date, to_date)
     table_name = 'user_{}_all_time'.format(entity)
     listens_df.createOrReplaceTempView(table_name)
 
@@ -153,9 +145,7 @@ def create_messages(data, entity: str, stats_range: str, from_ts: int, to_ts: in
             try:
                 entity_list.append(entity_model_map[entity](**item))
             except ValidationError:
-                logger.warning("""Invalid entry present in {stats_range} top {entity} for
-                                        user: {user_name}, skipping""".format(stats_range=stats_range, entity=entity,
-                                                                              user_name=_dict['user_name']))
+                logger.error("Invalid entry in entity stats", exc_info=True)
         try:
             model = UserEntityStatMessage(**{
                 'musicbrainz_id': _dict['user_name'],

@@ -15,10 +15,9 @@
   </p>
 
   <form method="post">
-      <input type="hidden" name="reset" value="yes">
-      <input type="hidden" name="token" value="{{ token }}">
+      {{ form.hidden_tag() }}
       <p>
-         <button type="submit" class="btn btn-info btn-lg" style="width: 200px">Yes, reset it.</button>
+         <button type="submit" class="btn btn-info btn-lg" style="width: 200px">Yes, reset it</button>
       <p>
   </form>
 

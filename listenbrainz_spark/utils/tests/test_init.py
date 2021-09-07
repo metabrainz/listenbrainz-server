@@ -2,13 +2,13 @@ import os
 import tempfile
 from datetime import datetime
 
-from listenbrainz_spark.tests import SparkTestCase
+from listenbrainz_spark.tests import SparkNewTestCase
 from listenbrainz_spark import utils
 
 from pyspark.sql import Row
 
 
-class UtilsTestCase(SparkTestCase):
+class UtilsTestCase(SparkNewTestCase):
     # use path_ as prefix for all paths in this class.
     path_ = "/test"
     temp_path_ = "/temp"
@@ -51,21 +51,6 @@ class UtilsTestCase(SparkTestCase):
         utils.delete_dir(self.path_)
         status = utils.path_exists(self.path_)
         self.assertFalse(status)
-
-    def test_get_listens(self):
-        from_date = datetime(2019, 10, 1)
-        to_date = datetime(2019, 11, 1)
-
-        df = utils.create_dataframe([Row(column1=1, column2=2)], schema=None)
-        dest_path = self.path_ + '/{}/{}.parquet'.format(from_date.year, from_date.month)
-        utils.save_parquet(df, dest_path)
-
-        df = utils.create_dataframe([Row(column1=3, column2=4)], schema=None)
-        dest_path = self.path_ + '/{}/{}.parquet'.format(to_date.year, to_date.month)
-        utils.save_parquet(df, dest_path)
-
-        received_df = utils.get_listens(from_date, to_date, self.path_)
-        self.assertEqual(received_df.count(), 2)
 
     def test_path_exists(self):
         utils.create_dir(self.path_)
@@ -126,3 +111,8 @@ class UtilsTestCase(SparkTestCase):
         self.assertListEqual(df_a.rdd.map(list).collect(), cp_df_a.rdd.map(list).collect())
         self.assertListEqual(df_b.rdd.map(list).collect(), cp_df_b.rdd.map(list).collect())
         self.assertListEqual(df_c.rdd.map(list).collect(), cp_df_c.rdd.map(list).collect())
+
+    def test_get_latest_listen_ts(self):
+        self.upload_test_listens()
+        self.assertEqual(utils.get_latest_listen_ts(), datetime(2021, 8, 9, 12, 22, 43))
+        self.delete_uploaded_listens()

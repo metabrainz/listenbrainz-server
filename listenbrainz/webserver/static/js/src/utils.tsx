@@ -355,6 +355,14 @@ const getPageProps = (): {
   return { domContainer, reactProps, globalReactProps, optionalAlerts };
 };
 
+const getListenablePin = (pinnedRecording: PinnedRecording): Listen => {
+  const pinnedRecListen: Listen = {
+    listened_at: 0,
+    ...pinnedRecording,
+  };
+  return pinnedRecListen;
+};
+
 export {
   searchForSpotifyTrack,
   getArtistLink,
@@ -365,4 +373,5 @@ export {
   getPageProps,
   searchForYoutubeTrack,
   createAlert,
+  getListenablePin,
 };

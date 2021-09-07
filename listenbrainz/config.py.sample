@@ -124,6 +124,11 @@ SPOTIFY_CLIENT_ID = 'needs a non empty default value for tests, change this'
 SPOTIFY_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
 SPOTIFY_CALLBACK_URL = 'http://localhost/profile/music-services/spotify/callback/'
 
+# SPOTIFY
+CRITIQUEBRAINZ_CLIENT_ID = 'needs a non empty default value for tests, change this'
+CRITIQUEBRAINZ_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
+CRITIQUEBRAINZ_REDIRECT_URI = 'http://localhost/profile/music-services/critiquebrainz/callback/'
+
 # YOUTUBE
 YOUTUBE_CONFIG = {
    "web": {
@@ -163,6 +168,3 @@ REJECT_LISTENS_WITHOUT_USER_EMAIL = False
 
 # If set to True, do not allow new users without email to register
 REJECT_NEW_USERS_WITHOUT_EMAIL = False
-
-# feature flag for pinned recording feature
-FEATURE_PINNED_REC = True

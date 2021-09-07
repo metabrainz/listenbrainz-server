@@ -1,6 +1,7 @@
 import APIService from "./APIService";
 
 const feedProps = require("./__mocks__/feedProps.json");
+const pinProps = require("./__mocks__/pinProps.json");
 
 const apiService = new APIService("foobar");
 
@@ -791,5 +792,179 @@ describe("recommendTrackToFollowers", () => {
         apiService.submitPinRecording("foobar", "foo")
       ).resolves.toEqual(200);
     });
+  });
+
+  describe("unpinRecording", () => {
+    beforeEach(() => {
+      // Mock function for fetch
+      window.fetch = jest.fn().mockImplementation(() => {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+        });
+      });
+
+      // Mock function for checkStatus
+      apiService.checkStatus = jest.fn();
+    });
+
+    it("calls fetch with user token", async () => {
+      await apiService.unpinRecording("foobar");
+      expect(window.fetch).toHaveBeenCalledWith("foobar/1/pin/unpin", {
+        method: "POST",
+        headers: {
+          Authorization: "Token foobar",
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+      });
+    });
+
+    it("calls checkStatus once", async () => {
+      await apiService.unpinRecording("foobar");
+      expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
+    });
+
+    it("returns the response code if successful", async () => {
+      await expect(apiService.unpinRecording("foobar")).resolves.toEqual(200);
+    });
+  });
+
+  describe("deletePin", () => {
+    beforeEach(() => {
+      // Mock function for fetch
+      window.fetch = jest.fn().mockImplementation(() => {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+        });
+      });
+
+      // Mock function for checkStatus
+      apiService.checkStatus = jest.fn();
+    });
+
+    it("calls fetch with correct parameters", async () => {
+      await apiService.deletePin("foobar", 1337);
+      expect(window.fetch).toHaveBeenCalledWith("foobar/1/pin/delete/1337", {
+        method: "POST",
+        headers: {
+          Authorization: "Token foobar",
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+      });
+    });
+
+    it("calls checkStatus once", async () => {
+      await apiService.deletePin("foobar", 1337);
+      expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
+    });
+
+    it("returns the response code if successful", async () => {
+      await expect(apiService.deletePin("foobar", 1337)).resolves.toEqual(200);
+    });
+  });
+});
+
+describe("getPinsForUser", () => {
+  const payload = { ...pinProps };
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => payload,
+      });
+    });
+
+    // Mock function for checkStatus
+    apiService.checkStatus = jest.fn();
+  });
+
+  it("calls fetch with correct parameters", async () => {
+    await apiService.getPinsForUser("jdaok", 25, 25);
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/jdaok/pins?offset=25&count=25",
+      {
+        method: "GET",
+      }
+    );
+  });
+
+  it("returns the correct data objects", async () => {
+    const result = await apiService.getPinsForUser("jdaok", 25, 25);
+    expect(result).toEqual(payload);
+  });
+
+  it("throws appropriate error if username is missing", async () => {
+    await expect(apiService.getPinsForUser("", 25, 25)).rejects.toThrow(
+      SyntaxError("Username missing")
+    );
+  });
+
+  it("calls checkStatus once", async () => {
+    apiService.checkStatus = jest.fn();
+    await apiService.getPinsForUser("jdaok", 25, 25);
+    expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("submitReviewToCB", () => {
+  const accessToken = "foobar";
+  const reviewToSubmit: CritiqueBrainzReview = {
+    entity_id: "bf24ca37-25f4-4e34-9aec-460b94364cfc",
+    entity_type: "artist",
+    text: "TEXT",
+    languageCode: "en",
+    rating: 4,
+  };
+
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({ id: "bf24ca37-25f4-4e34-9aec-460b94364cfc" }),
+      });
+    });
+
+    // Mock function for checkStatus
+    apiService.checkStatus = jest.fn();
+  });
+
+  it("calls fetch with correct parameters", async () => {
+    await apiService.submitReviewToCB(accessToken, reviewToSubmit);
+    expect(window.fetch).toHaveBeenCalledWith(
+      "https://critiquebrainz.org/ws/1/review/",
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer foobar",
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({
+          is_draft: false,
+          entity_id: "bf24ca37-25f4-4e34-9aec-460b94364cfc",
+          entity_type: "artist",
+          text: "TEXT",
+          license_choice: "CC BY-SA 3.0",
+          language: "en",
+          rating: 4,
+        }),
+      }
+    );
+  });
+
+  it("calls checkStatus once", async () => {
+    await apiService.submitReviewToCB(accessToken, reviewToSubmit);
+    expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns the id for the submitted review if successful", async () => {
+    await expect(
+      apiService.submitReviewToCB(accessToken, reviewToSubmit)
+    ).resolves.toEqual({ id: "bf24ca37-25f4-4e34-9aec-460b94364cfc" });
   });
 });

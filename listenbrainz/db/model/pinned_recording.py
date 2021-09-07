@@ -95,22 +95,28 @@ def fetch_track_metadata_for_pins(pins: List[PinnedRecording]) -> List[PinnedRec
     mbid_pins = list(filter(lambda pin: pin.recording_mbid, pins))
     msid_pins = list(filter(lambda pin: not pin.recording_mbid, pins))
 
-    metadatas = []
-
     if mbid_pins:
         fetch_mbids = [pin.recording_mbid for pin in mbid_pins]  # retrieves list of mbid's to fetch with
-        metadatas.extend(load_recordings_from_mbids(fetch_mbids))
-    if msid_pins:
-        fetch_msids = [pin.recording_msid for pin in msid_pins]   # retrieves list of msid's to fetch with
-        metadatas.extend(load_recordings_from_msids(fetch_msids))
+        mbid_metadatas = load_recordings_from_mbids(fetch_mbids)
+        # we can zip the pins and metadata because load_recordings_from_mbids
+        # returns the metadata in same order of the mbid list passed to it
+        for pin, metadata in zip(mbid_pins, mbid_metadatas):
+            pin.track_metadata = {
+                "track_name": metadata["payload"]["title"],
+                "artist_name": metadata["payload"]["artist"],
+                "artist_msid": metadata["ids"]["artist_msid"]
+            }
 
-    # assign track metadata to every pin in correct order
-    for pin in pins:
-        # find matching metadata in list from query results
-        metadata = list(filter(lambda x: x["ids"]["recording_msid"] == pin.recording_msid, metadatas))[0]
-        pin.track_metadata = {
-            "track_name": metadata["payload"]["title"],
-            "artist_name": metadata["payload"]["artist"],
-            "artist_msid": metadata["ids"]["artist_msid"],
-        }
+    if msid_pins:
+        fetch_msids = [pin.recording_msid for pin in msid_pins]  # retrieves list of msid's to fetch with
+        msid_metadatas = load_recordings_from_msids(fetch_msids)
+        # we can zip the pins and metadata because load_recordings_from_msids
+        # returns the metadata in same order of the msid list passed to it
+        for pin, metadata in zip(msid_pins, msid_metadatas):
+            pin.track_metadata = {
+                "track_name": metadata["payload"]["title"],
+                "artist_name": metadata["payload"]["artist"],
+                "artist_msid": metadata["ids"]["artist_msid"]
+            }
+
     return pins

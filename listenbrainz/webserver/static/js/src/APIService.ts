@@ -4,6 +4,9 @@ import APIError from "./APIError";
 export default class APIService {
   APIBaseURI: string;
 
+  MBBaseURI: string = "https://musicbrainz.org/ws/2";
+  CBBaseURI: string = "https://critiquebrainz.org/ws/1";
+
   MAX_LISTEN_SIZE: number = 10000; // Maximum size of listens that can be sent
 
   constructor(APIBaseURI: string) {
@@ -141,6 +144,10 @@ export default class APIService {
     return this.refreshAccessToken("spotify");
   };
 
+  refreshCritiquebrainzToken = async (): Promise<string> => {
+    return this.refreshAccessToken("critiquebrainz");
+  };
+
   refreshAccessToken = async (service: string): Promise<string> => {
     const response = await fetch(
       `/profile/music-services/${service}/refresh/`,
@@ -204,8 +211,7 @@ export default class APIService {
     const url = `${this.APIBaseURI}/user/${username}/followers`;
     const response = await fetch(url);
     await this.checkStatus(response);
-    const data = response.json();
-    return data;
+    return response.json();
   };
 
   getFollowingForUser = async (
@@ -218,8 +224,7 @@ export default class APIService {
     const url = `${this.APIBaseURI}/user/${username}/following`;
     const response = await fetch(url);
     await this.checkStatus(response);
-    const data = response.json();
-    return data;
+    return response.json();
   };
 
   /*
@@ -340,8 +345,7 @@ export default class APIService {
       error.response = response;
       throw error;
     }
-    const data = response.json();
-    return data;
+    return response.json();
   };
 
   getUserListeningActivity = async (
@@ -357,8 +361,7 @@ export default class APIService {
       error.response = response;
       throw error;
     }
-    const data = response.json();
-    return data;
+    return response.json();
   };
 
   getUserDailyActivity = async (
@@ -374,8 +377,7 @@ export default class APIService {
       error.response = response;
       throw error;
     }
-    const data = response.json();
-    return data;
+    return response.json();
   };
 
   getUserArtistMap = async (
@@ -392,8 +394,7 @@ export default class APIService {
       error.response = response;
       throw error;
     }
-    const data = response.json();
-    return data;
+    return response.json();
   };
 
   checkStatus = async (response: Response): Promise<void> => {
@@ -464,8 +465,7 @@ export default class APIService {
     const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings?recordings=${recordings}`;
     const response = await fetch(url);
     await this.checkStatus(response);
-    const data = response.json();
-    return data;
+    return response.json();
   };
 
   deleteListen = async (
@@ -563,8 +563,7 @@ export default class APIService {
     });
 
     await this.checkStatus(response);
-    const data = response.json();
-    return data;
+    return response.json();
   };
 
   getPlaylist = async (playlistMBID: string, userToken?: string) => {
@@ -584,8 +583,7 @@ export default class APIService {
       headers,
     });
     await this.checkStatus(response);
-    const data = response.json();
-    return data;
+    return response.json();
   };
 
   addPlaylistItems = async (
@@ -713,7 +711,7 @@ export default class APIService {
       },
       body: JSON.stringify({ recording_mbid: recordingMBID, rating }),
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     return response.status;
   };
 
@@ -730,7 +728,7 @@ export default class APIService {
       },
       body: JSON.stringify({ recording_mbid: recordingMBID }),
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     return response.status;
   };
 
@@ -744,9 +742,8 @@ export default class APIService {
 
     const url = `${this.APIBaseURI}/recommendation/feedback/user/${userName}/recordings?mbids=${recordings}`;
     const response = await fetch(url);
-    this.checkStatus(response);
-    const data = response.json();
-    return data;
+    await this.checkStatus(response);
+    return response.json();
   };
 
   recommendTrackToFollowers = async (
@@ -779,8 +776,7 @@ export default class APIService {
     const url = `${this.APIBaseURI}/user/${username}/similar-users`;
     const response = await fetch(url);
     await this.checkStatus(response);
-    const data = response.json();
-    return data;
+    return response.json();
   };
 
   reportUser = async (userName: string, optionalContext?: string) => {
@@ -815,5 +811,86 @@ export default class APIService {
     });
     await this.checkStatus(response);
     return response.status;
+  };
+
+  unpinRecording = async (userToken: string): Promise<number> => {
+    const url = `${this.APIBaseURI}/pin/unpin`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
+  deletePin = async (userToken: string, pinID: number): Promise<number> => {
+    const url = `${this.APIBaseURI}/pin/delete/${pinID}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
+  getPinsForUser = async (userName: string, offset: number, count: number) => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+
+    const query = `${this.APIBaseURI}/${userName}/pins?offset=${offset}&count=${count}`;
+
+    const response = await fetch(query, {
+      method: "GET",
+    });
+
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  submitReviewToCB = async (
+    accessToken: string,
+    review: CritiqueBrainzReview
+  ) => {
+    const url = `${this.CBBaseURI}/review/`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({
+        is_draft: false,
+        entity_id: review.entity_id,
+        entity_type: review.entity_type,
+        text: review.text,
+        license_choice: "CC BY-SA 3.0",
+        language: review.languageCode,
+        rating: review.rating,
+      }),
+    });
+
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  lookupMBRelease = async (releaseMBID: string): Promise<any> => {
+    const url = `${this.MBBaseURI}/release/${releaseMBID}?fmt=json&inc=release-groups`;
+    const response = await fetch(encodeURI(url));
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  lookupMBReleaseFromTrack = async (trackMBID: string): Promise<any> => {
+    const url = `${this.MBBaseURI}/release?track=${trackMBID}&fmt=json`;
+    const response = await fetch(encodeURI(url));
+    await this.checkStatus(response);
+    return response.json();
   };
 }

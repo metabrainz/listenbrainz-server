@@ -49,8 +49,7 @@ If you plan to create a typesense index, you'll need typesense installed. First 
 then run:
 
 ```
-docker run -p 8108:8108 -d -v <some_data_dir_for_typesense>/data --name=typesense
-       --network=musicbrainzdocker_default typesense/typesense:0.17.0 --data-dir /data --api-key=<the api key>
+docker run -p 8108:8108 -d -v typesense:/data --name=typesense --network=musicbrainzdocker_default typesense/typesense:0.19.0 --data-dir /data --api-key=<the api key>
 ```
 
 To create the typesense index:

@@ -208,7 +208,7 @@ class DumpManagerTestCase(DatabaseTestCase):
         # a private dump and a spark dump.
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
-            if file_name.endswith('.tar.xz'):
+            if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
                 archive_count += 1
         self.assertEqual(archive_count, 4)
 
@@ -235,7 +235,7 @@ class DumpManagerTestCase(DatabaseTestCase):
         # dump should contain the 4 archives
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
-            if file_name.endswith('.tar.xz'):
+            if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
                 archive_count += 1
         self.assertEqual(archive_count, 4)
 
@@ -267,7 +267,7 @@ class DumpManagerTestCase(DatabaseTestCase):
         # make sure that the dump contains a full listens and spark dump
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
-            if file_name.endswith('.tar.xz'):
+            if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
                 archive_count += 1
         self.assertEqual(archive_count, 2)
 
@@ -299,7 +299,7 @@ class DumpManagerTestCase(DatabaseTestCase):
         # dump should contain the listen and spark archive
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
-            if file_name.endswith('.tar.xz'):
+            if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
                 archive_count += 1
         self.assertEqual(archive_count, 2)
 
@@ -365,6 +365,6 @@ class DumpManagerTestCase(DatabaseTestCase):
         # make sure that the dump contains a feedback dump
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
-            if file_name.endswith('.tar.xz'):
+            if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
                 archive_count += 1
         self.assertEqual(archive_count, 1)
