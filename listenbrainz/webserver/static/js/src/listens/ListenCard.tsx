@@ -166,7 +166,7 @@ export default class ListenCard extends React.Component<
 
   isListenReviewable = () => {
     const { listen } = this.props;
-    const mbids = listen.track_metadata.additional_info;
+    const mbids = listen.track_metadata?.additional_info;
 
     return Boolean(
       mbids?.recording_mbid ||
@@ -350,10 +350,8 @@ export default class ListenCard extends React.Component<
                       className={isListenReviewable ? "" : "disabled"}
                       title="Review this Recording"
                       action={() => updateRecordingToReview(listen)}
-                      dataToggle={isListenReviewable ? "modal" : undefined}
-                      dataTarget={
-                        isListenReviewable ? "#CBReviewModal" : undefined
-                      }
+                      dataToggle="modal"
+                      dataTarget="#CBReviewModal"
                     />
                   </ul>
                 </>
