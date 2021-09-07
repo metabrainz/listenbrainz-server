@@ -45,7 +45,7 @@ export type DataSourceProps = {
   onDurationChange: (durationMs: number) => void;
   onTrackInfoChange: (
     title: string,
-    trackId: string,
+    trackURL: string,
     artist?: string,
     album?: string,
     artwork?: Array<MediaImage>
@@ -435,7 +435,7 @@ export default class BrainzPlayer extends React.Component<
 
   trackInfoChange = (
     title: string,
-    trackId: string,
+    trackURL: string,
     artist?: string,
     album?: string,
     artwork?: Array<MediaImage>
@@ -477,7 +477,7 @@ export default class BrainzPlayer extends React.Component<
       }
     });
 
-    this.submitListenToListenBrainz(title, trackId, artist, album);
+    this.submitListenToListenBrainz(title, trackURL, artist, album);
   };
 
   // eslint-disable-next-line react/sort-comp
@@ -488,7 +488,7 @@ export default class BrainzPlayer extends React.Component<
 
   submitListenToListenBrainz = async (
     title: string,
-    trackId: string,
+    trackURL: string,
     artist?: string,
     album?: string
   ): Promise<void> => {
@@ -499,7 +499,7 @@ export default class BrainzPlayer extends React.Component<
       return;
     }
     if (
-      !dataSource?.current ||
+      !!dataSource?.current &&
       !dataSource.current.datasourceRecordsListens()
     ) {
       const { listens } = this.props;
@@ -510,7 +510,6 @@ export default class BrainzPlayer extends React.Component<
         artist_name: artist,
         release_name: album,
         track_name: title,
-        track_id: trackId,
       };
       try {
         // Duplicate the current listen and augment it with the datasource's metadata
@@ -522,9 +521,12 @@ export default class BrainzPlayer extends React.Component<
         assign(manipulatedListen, {
           track_metadata: {
             additional_info: {
-              listening_from: "listenbrainz",
-              source: dataSource.current.name,
               brainzplayer_metadata,
+              listening_from: "listenbrainz",
+              // TODO:  passs the GIT_COMMIT_SHA env variable to the globalprops and add it here as listening_from_version
+              // listening_from_version: "",
+              origin_url: trackURL,
+              source: dataSource.current.name,
             },
           },
         });

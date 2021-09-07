@@ -461,7 +461,7 @@ export default class SpotifyPlayer
         .join(", ");
       onTrackInfoChange(
         current_track.name,
-        current_track.uri,
+        `https://open.spotify.com/track/${current_track.id}`,
         artists,
         current_track.album?.name,
         current_track.album.images
