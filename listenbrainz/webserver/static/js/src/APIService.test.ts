@@ -464,7 +464,7 @@ describe("getLatestImport", () => {
   it("encodes url correctly", async () => {
     await apiService.getLatestImport("ईशान", "lastfm");
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/latest-import?user_name=%E0%A4%88%E0%A4%B6%E0%A4%BE%E0%A4%A8",
+      "foobar/1/latest-import?user_name=%E0%A4%88%E0%A4%B6%E0%A4%BE%E0%A4%A8&service=lastfm",
       {
         method: "GET",
       }
@@ -505,7 +505,7 @@ describe("setLatestImport", () => {
         Authorization: "Token foobar",
         "Content-Type": "application/json;charset=UTF-8",
       },
-      body: JSON.stringify({ ts: 0 }),
+      body: JSON.stringify({ ts: 0, service: "lastfm" }),
     });
   });
 
