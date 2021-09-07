@@ -89,7 +89,13 @@ export default class YoutubePlayer
       const { currentListen } = this.state;
       title = currentListen?.track_metadata.track_name ?? "";
     }
-    onTrackInfoChange(title, videoId, undefined, undefined, images);
+    onTrackInfoChange(
+      title,
+      `https://www.youtube.com/watch?v=${videoId}`,
+      undefined,
+      undefined,
+      images
+    );
     const duration = this.youtubePlayer?.getDuration();
     if (duration) {
       onDurationChange(duration * 1000);
