@@ -512,26 +512,26 @@ export default class BrainzPlayer extends React.Component<
         track_name: title,
       };
       try {
-        // Duplicate the current listen and augment it with the datasource's metadata
-        const manipulatedListen: Listen = assign(
-          {},
-          listens[currentListenIndex]
-        ) as Listen;
+        // Create a new listen and augment it with the existing listen and datasource's metadata
+        const newListen: Listen = {
+          // convert Javascript millisecond time to unix epoch in seconds
+          listened_at: Math.floor(Date.now() / 1000),
+          track_metadata: (listens[currentListenIndex] as Listen)
+            .track_metadata,
+        };
         // ensure the track_metadata.additional_info path exists and add brainzplayer_metadata field
-        assign(manipulatedListen, {
-          track_metadata: {
-            additional_info: {
-              brainzplayer_metadata,
-              listening_from: "listenbrainz",
-              // TODO:  passs the GIT_COMMIT_SHA env variable to the globalprops and add it here as listening_from_version
-              // listening_from_version: "",
-              origin_url: trackURL,
-              source: dataSource.current.name,
-            },
+        assign(newListen.track_metadata, {
+          additional_info: {
+            brainzplayer_metadata,
+            listening_from: "listenbrainz",
+            // TODO:  passs the GIT_COMMIT_SHA env variable to the globalprops and add it here as listening_from_version
+            // listening_from_version: "",
+            origin_url: trackURL,
+            source: dataSource.current.name,
           },
         });
         await APIService.submitListens(currentUser.auth_token, "single", [
-          manipulatedListen,
+          newListen,
         ]);
       } catch (error) {
         this.handleWarning(error, "Could not save this listen");
