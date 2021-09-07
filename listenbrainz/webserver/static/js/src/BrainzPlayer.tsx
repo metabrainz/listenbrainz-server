@@ -6,6 +6,7 @@ import {
   get as _get,
   has as _has,
   throttle as _throttle,
+  assign,
 } from "lodash";
 import * as _ from "lodash";
 import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
@@ -474,6 +475,8 @@ export default class BrainzPlayer extends React.Component<
         this.handleInfoMessage(message);
       }
     });
+
+    this.submitListenToListenBrainz(title, trackId, artist, album);
   };
 
   // eslint-disable-next-line react/sort-comp
@@ -484,6 +487,7 @@ export default class BrainzPlayer extends React.Component<
 
   submitListenToListenBrainz = async (
     title: string,
+    trackId: string,
     artist?: string,
     album?: string
   ): Promise<void> => {
@@ -505,6 +509,7 @@ export default class BrainzPlayer extends React.Component<
         artist_name: artist,
         release_name: album,
         track_name: title,
+        track_id: trackId,
       };
       try {
         // Duplicate the current listen and augment it with the datasource's metadata
