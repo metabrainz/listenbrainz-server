@@ -6,6 +6,7 @@ import {
   has as _has,
   debounce as _debounce,
   isString,
+  difference,
 } from "lodash";
 import { searchForSpotifyTrack, loadScriptAsync } from "./utils";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
@@ -242,6 +243,20 @@ export default class SpotifyPlayer
   canSearchAndPlayTracks = (): boolean => {
     const { spotifyUser } = this.props;
     return SpotifyPlayer.hasPermissions(spotifyUser);
+  };
+
+  datasourceRecordsListens = (): boolean => {
+    const { spotifyUser } = this.props;
+    const permissionsRequiredForScrobbling = [
+      "user-read-currently-playing",
+      "user-read-recently-played",
+    ];
+    return (
+      difference(
+        permissionsRequiredForScrobbling,
+        spotifyUser?.permission ?? []
+      ).length === 0
+    );
   };
 
   playListen = (listen: Listen | JSPFTrack): void => {
