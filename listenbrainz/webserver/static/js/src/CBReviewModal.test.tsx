@@ -235,7 +235,12 @@ describe("submitReviewToCB", () => {
 
   it("does nothing if user hasn't authenticated with CritiqueBrainz", async () => {
     const wrapper = mount<CBReviewModal>(
-      <GlobalAppContext.Provider value={globalProps}>
+      <GlobalAppContext.Provider
+        value={{
+          ...globalProps,
+          critiquebrainzAuth: {}, // not authenticated
+        }}
+      >
         <CBReviewModal {...props} />
       </GlobalAppContext.Provider>
     );
@@ -245,7 +250,7 @@ describe("submitReviewToCB", () => {
     // set valid review state
     instance.setState({
       textContent: "String is over 25 characters",
-      acceptLicense: false,
+      acceptLicense: true,
     });
 
     const spy = jest.fn();
@@ -285,7 +290,7 @@ describe("submitReviewToCB", () => {
     const instance = wrapper.instance();
     instance.setState({
       textContent: "String is over 25 characters",
-      acceptLicense: false,
+      acceptLicense: true,
     });
 
     const spy = jest.fn();
