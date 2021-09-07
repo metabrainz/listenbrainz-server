@@ -80,6 +80,7 @@ export default class SpotifyPlayer
     return true;
   };
 
+  public name = "spotify";
   spotifyPlayer?: SpotifyPlayerType;
   debouncedOnTrackEnd: () => void;
 

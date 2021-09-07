@@ -26,6 +26,7 @@ import {
 } from "./Notifications";
 
 export type DataSourceType = {
+  name: string;
   playListen: (listen: Listen | JSPFTrack) => void;
   togglePlay: () => void;
   seekToPositionMs: (msTimecode: number) => void;
@@ -519,7 +520,13 @@ export default class BrainzPlayer extends React.Component<
         ) as Listen;
         // ensure the track_metadata.additional_info path exists and add brainzplayer_metadata field
         assign(manipulatedListen, {
-          track_metadata: { additional_info: { brainzplayer_metadata } },
+          track_metadata: {
+            additional_info: {
+              listening_from: "listenbrainz",
+              source: dataSource.current.name,
+              brainzplayer_metadata,
+            },
+          },
         });
         await APIService.submitListens(currentUser.auth_token, "single", [
           manipulatedListen,

@@ -56,6 +56,7 @@ type SoundcloudPlayerState = {
 export default class SoundcloudPlayer
   extends React.Component<DataSourceProps, SoundcloudPlayerState>
   implements DataSourceType {
+  public name = "soundcloud";
   iFrameRef?: React.RefObject<HTMLIFrameElement>;
   soundcloudPlayer?: SoundCloudHTML5Widget;
   retries = 0;

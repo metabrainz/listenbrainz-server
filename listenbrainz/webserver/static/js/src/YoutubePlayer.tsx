@@ -27,6 +27,7 @@ type ExtendedYoutubePlayer = {
 export default class YoutubePlayer
   extends React.Component<YoutubePlayerProps, YoutubePlayerState>
   implements DataSourceType {
+  public name = "youtube";
   youtubePlayer?: ExtendedYoutubePlayer;
   checkVideoLoadedTimerId?: NodeJS.Timeout;
 
