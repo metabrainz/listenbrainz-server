@@ -43,6 +43,7 @@ export type DataSourceProps = {
   onDurationChange: (durationMs: number) => void;
   onTrackInfoChange: (
     title: string,
+    trackId: string,
     artist?: string,
     album?: string,
     artwork?: Array<MediaImage>
@@ -432,6 +433,7 @@ export default class BrainzPlayer extends React.Component<
 
   trackInfoChange = (
     title: string,
+    trackId: string,
     artist?: string,
     album?: string,
     artwork?: Array<MediaImage>

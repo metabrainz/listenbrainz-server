@@ -18,6 +18,7 @@ const props = {
   onDurationChange: (durationMs: number) => {},
   onTrackInfoChange: (
     title: string,
+    trackId: string,
     artist?: string,
     album?: string,
     artwork?: ReadonlyArray<MediaImage>
@@ -234,7 +235,7 @@ describe("SpotifyPlayer", () => {
           media_type: "audio",
           name: "Track name",
           type: "track",
-          uri: "",
+          uri: "my-spotify-uri",
         },
       },
     };
@@ -296,6 +297,7 @@ describe("SpotifyPlayer", () => {
         instance.props.onTrackInfoChange
       ).toHaveBeenCalledWith(
         "Track name",
+        "my-spotify-uri",
         "Track artist 1, Track artist 2",
         "Album name",
         [{ src: "url/to/album-art.jpg", sizes: "200x100" }]
