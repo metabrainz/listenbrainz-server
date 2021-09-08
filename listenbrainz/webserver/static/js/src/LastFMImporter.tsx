@@ -208,10 +208,10 @@ export default class LastFmImporter extends React.Component<
     } catch (err) {
       // Retry if there is a network error
       // eslint-disable-next-line no-console
-      console.warn(`Error while fetching last.fm page ${page}:`, err);
+      console.warn(`Error while fetching ${service} page ${page}:`, err);
       if (retries <= 0) {
         throw new Error(
-          `Failed to fetch page ${page} from last.fm after ${LASTFM_RETRIES} retries.`
+          `Failed to fetch page ${page} from ${service} after ${LASTFM_RETRIES} retries.`
         );
       }
       // eslint-disable-next-line no-console
@@ -391,7 +391,10 @@ export default class LastFmImporter extends React.Component<
     let finalMsg: JSX.Element;
     const { profileUrl } = this.props;
     const { service } = this.state;
-    this.updateModalAction(<p>Your import from Last.fm is starting!</p>, false);
+    this.updateModalAction(
+      <p>Your import from {service} is starting!</p>,
+      false
+    );
 
     try {
       this.latestImportTime = await this.APIService.getLatestImport(
@@ -410,7 +413,7 @@ export default class LastFmImporter extends React.Component<
       finalMsg = (
         <p>
           <FontAwesomeIcon icon={faTimes as IconProp} /> We were unable to
-          import from LastFM, please try again.
+          import from {service}, please try again.
           <br />
           If the problem persists please contact us.
           <br />
@@ -471,8 +474,8 @@ export default class LastFmImporter extends React.Component<
             <b>
               <span style={{ fontSize: `${10}pt` }} className="text-danger">
                 The number submitted listens is different from the{" "}
-                {this.playCount} that Last.fm reports due to an inconsistency in
-                their API, sorry!
+                {this.playCount} that {service} reports due to an inconsistency
+                in their API, sorry!
                 <br />
               </span>
             </b>
@@ -532,37 +535,63 @@ export default class LastFmImporter extends React.Component<
     return (
       <div className="Importer">
         <form onSubmit={this.handleSubmit}>
-          <label style={{ marginRight: 8 }}>
-            <input
-              type="radio"
-              id="lastfm"
-              name="service"
-              value="lastfm"
-              onChange={this.handleServiceChange}
-              checked={service === "lastfm"}
-            />
-            Last.fm
-          </label>
-          <label style={{ marginRight: 8 }}>
-            <input
-              type="radio"
-              id="librefm"
-              name="service"
-              value="librefm"
-              checked={service === "librefm"}
-              onChange={this.handleServiceChange}
-            />
-            Libre.fm
-          </label>
-          <input
-            type="text"
-            onChange={this.handleChange}
-            value={lastfmUsername}
-            name="lastfmUsername"
-            placeholder="Username"
-            size={30}
-          />
-          <input type="submit" value="Import Now!" disabled={!lastfmUsername} />
+          <dl>
+            <dd>Choose a service:</dd>
+            <dt className="btn-group" style={{ marginBottom: "1em" }}>
+              <label
+                className={`btn btn-default ${
+                  service === "lastfm" ? " btn-primary" : ""
+                }`}
+              >
+                <input
+                  type="radio"
+                  id="lastfm"
+                  name="service"
+                  value="lastfm"
+                  onChange={this.handleServiceChange}
+                  checked={service === "lastfm"}
+                  style={{ position: "absolute", clip: "rect(0,0,0,0)" }}
+                />
+                Last.fm
+              </label>
+              <label
+                className={`btn btn-default ${
+                  service === "librefm" ? " btn-primary" : ""
+                }`}
+              >
+                <input
+                  type="radio"
+                  id="librefm"
+                  name="service"
+                  value="librefm"
+                  checked={service === "librefm"}
+                  onChange={this.handleServiceChange}
+                  style={{ position: "absolute", clip: "rect(0,0,0,0)" }}
+                />
+                Libre.fm
+              </label>
+            </dt>
+            <dd>Your {service} username:</dd>
+            <dt>
+              <input
+                type="text"
+                className="form-control"
+                onChange={this.handleChange}
+                value={lastfmUsername}
+                name="lastfmUsername"
+                placeholder="Username"
+                size={30}
+              />
+            </dt>
+          </dl>
+
+          <button
+            className="btn btn-success"
+            type="submit"
+            disabled={!lastfmUsername}
+          >
+            Import Now!
+          </button>
         </form>
         {show && (
           <LastFMImporterModal onClose={this.toggleModal} disable={!canClose}>
