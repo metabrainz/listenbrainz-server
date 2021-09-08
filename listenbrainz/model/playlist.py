@@ -8,18 +8,18 @@ from listenbrainz.webserver.admin import AdminModelView
 
 
 class Playlist(db.Model):
-    __bind_key__ = 'timescale'
+    __bind_key__ = "timescale"
     __tablename__ = "playlist"
     __table_args__ = {"schema": "playlist"}
 
     id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    mbid = db.Column(UUID(as_uuid=True), nullable=False, default=uuid.uuid4)
+    mbid = db.Column(UUID(as_uuid=True), nullable=False)
     creator_id = db.Column(db.Integer, nullable=False)
     name = db.Column(db.String, nullable=False)
     description = db.Column(db.String)
     public = db.Column(db.Boolean, nullable=False)
-    created = db.Column(db.DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    last_updated = db.Column(db.DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created = db.Column(db.DateTime(timezone=True), nullable=False)
+    last_updated = db.Column(db.DateTime(timezone=True), nullable=False)
     copied_from_id = db.Column(db.Integer)
     created_for_id = db.Column(db.Integer)
     algorithm_metadata = db.Column(JSONB)
