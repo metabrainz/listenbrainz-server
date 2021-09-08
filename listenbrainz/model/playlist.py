@@ -33,17 +33,17 @@ class Playlist(db.Model):
 class PlaylistAdminView(AdminModelView):
     # Flask-Admin blows up if a jsonb column is added to the filter
     columns_without_jsonb = [
-        'id',
-        'mbid',
-        'creator_id',
-        'name',
-        'description',
-        'public',
-        'created',
-        'last_updated',
-        'copied_from_id',
-        'created_for_id',
+        "id",
+        "mbid",
+        "creator_id",
+        "name",
+        "description",
+        "public",
+        "created",
+        "last_updated",
+        "copied_from_id",
+        "created_for_id",
     ]
     column_searchable_list = columns_without_jsonb
     column_filters = columns_without_jsonb
-    column_list = columns_without_jsonb + ['recordings', 'algorithm_metadata']
+    column_list = columns_without_jsonb + ["recordings", "algorithm_metadata"]
