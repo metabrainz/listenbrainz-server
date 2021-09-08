@@ -536,6 +536,12 @@ type SimilarUser = {
 
 type ReviewableEntityType = "recording" | "artist" | "release_group";
 
+type ReviewableEntity = {
+  type: ReviewableEntityType;
+  name?: string | null;
+  mbid: string;
+};
+
 type CritiqueBrainzReview = {
   entity_id: string;
   entity_type: ReviewableEntityType;
