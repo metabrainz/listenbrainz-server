@@ -314,6 +314,7 @@ interface GlobalProps {
   current_user: ListenBrainzUser;
   spotify?: SpotifyUser;
   youtube?: YoutubeUser;
+  critiquebrainz?: CritiqueBrainzUser;
 }
 
 const getPageProps = (): {
@@ -372,6 +373,13 @@ const getListenablePin = (pinnedRecording: PinnedRecording): Listen => {
   return pinnedRecListen;
 };
 
+const countWords = (str: string): number => {
+  // Credit goes to iamwhitebox https://stackoverflow.com/a/39125279/14911205
+  const words = str.match(/\w+/g);
+  if (words === null) return 0;
+  return words.length;
+};
+
 export {
   searchForSpotifyTrack,
   getArtistLink,
@@ -383,4 +391,5 @@ export {
   searchForYoutubeTrack,
   createAlert,
   getListenablePin,
+  countWords,
 };
