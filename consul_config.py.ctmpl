@@ -21,7 +21,10 @@ DEBUG = False
 
 SECRET_KEY = '''{{template "KEY" "secret_key"}}'''
 
+# Remember cookie is 'Strict' by default and not configurable currently
 SESSION_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SECURE = True
+REMEMBER_COOKIE_SECURE = True
 
 {{if service "pgbouncer-master"}}
 {{with index (service "pgbouncer-master") 0}}
