@@ -189,7 +189,7 @@ describe("getPage", () => {
       // This error message is also displayed to the user
       expect(err).toEqual(
         new Error(
-          `Failed to fetch page 1 from last.fm after ${LASTFM_RETRIES} retries.`
+          `Failed to fetch page 1 from lastfm after ${LASTFM_RETRIES} retries.`
         )
       );
     }
@@ -464,7 +464,7 @@ describe("LastFmImporter Page", () => {
     wrapper.setState({ lastfmUsername: "" });
 
     // Test if button is disabled
-    expect(wrapper.find('input[type="submit"]').props().disabled).toBe(true);
+    expect(wrapper.find('button[type="submit"]').props().disabled).toBe(true);
   });
 
   it("should properly convert latest imported timestamp to string", () => {
@@ -552,7 +552,7 @@ describe("importLoop", () => {
     await expect(instance.startImport()).resolves.toBe(null);
     // verify message is failure message
     expect(instance.state.msg?.props.children).toContain(
-      " We were unable to import from LastFM, please try again."
+      " We were unable to import from "
     );
     expect(instance.state.msg?.props.children).toContain(
       "If the problem persists please contact us."
