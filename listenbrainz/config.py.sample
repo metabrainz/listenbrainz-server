@@ -4,6 +4,7 @@ DEBUG = True # set to False in production mode
 
 SECRET_KEY = "CHANGE_ME"
 
+SESSION_COOKIE_SAMESITE = 'Lax'
 
 # DATABASES
 # ListenBrainz
