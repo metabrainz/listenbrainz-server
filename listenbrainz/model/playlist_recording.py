@@ -24,4 +24,4 @@ class PlaylistRecording(db.Model):
 
 
 class PlaylistRecordingAdminView(AdminModelView):
-    column_list = ['playlist', 'position', 'mbid', 'added_by_id', 'created']
+    column_list = ["playlist", "position", "mbid", "added_by_id", "created"]
