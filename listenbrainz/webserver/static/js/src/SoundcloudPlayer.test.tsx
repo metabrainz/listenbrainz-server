@@ -132,6 +132,7 @@ describe("SoundcloudPlayer", () => {
         title: "Dope track",
         user: { username: "Emperor Norton the 1st" },
         full_duration: 420,
+        permalink_url: "some/url/to/track",
         artwork_url: "some/url/to/artwork",
       })
     );
@@ -147,7 +148,7 @@ describe("SoundcloudPlayer", () => {
     expect(onPlayerPausedChange).toHaveBeenCalledWith(false);
     expect(onTrackInfoChange).toHaveBeenCalledWith(
       "Dope track",
-      "2",
+      "some/url/to/track",
       "Emperor Norton the 1st",
       undefined,
       [{ src: "some/url/to/artwork" }]
