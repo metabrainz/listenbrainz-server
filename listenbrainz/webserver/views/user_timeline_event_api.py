@@ -28,6 +28,7 @@ from flask import Blueprint, jsonify, request, current_app
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
+import listenbrainz.db.pinned_recording as db_pinned_rec
 
 from data.model.listen import APIListen, TrackMetadata, AdditionalInfo
 from data.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, \
@@ -238,6 +239,68 @@ def user_feed(user_name: str):
         'events': [event.dict() for event in all_events],
     }})
 
+@user_timeline_event_api_bp.route("/user/<user_name>/feed/events/delete", methods=['OPTIONS', 'POST'])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
+def delete_feed_events(user_name):
+    '''
+    Delete those events from user's feed that they created themselves.
+    Supports deletion of recommendation, notification and pin events.
+    Along with the authorization token, post one of the following, according
+    to your need.
+    {
+        "event_type": "recording_recommendation",
+        "metadata": {
+            id: int
+        }
+    }
+    {
+        "event_type": "notification",
+        "metadata": {
+            id: int
+        }
+    }
+    {
+        "event_type": "recording_pin",
+        "metadata": {
+            row_id: int
+        }
+    }
+    :param user_name: The MusicBrainz ID of the user from whose timeline events are being deleted
+    :type user_name: ``str``
+    :statuscode 200: Successful deletion
+    :statuscode 400: Bad request, check ``response['error']`` for more details.
+    :statuscode 401: Unauthorized
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    '''
+    # TODO: maybe implement logging once approved
+    user = validate_auth_header()
+    if user_name != user['musicbrainz_id']:
+        raise APIUnauthorized("You don't have permissions to delete from this user's timeline.")
+    try:
+        event = ujson.loads(request.get_data())
+        if event["event_type"] in [UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+                UserTimelineEventType.NOTIFICATION.value]:
+            deleted_event = db_user_timeline_event.delete_user_recommendation_notification_event(event["metadata"]["id"],
+                    user["id"])
+            if not deleted_event:
+                raise APIBadRequest("No such event to delete")
+            event_data = deleted_event.dict()
+            event_data['created'] = event_data['created'].timestamp()
+            event_data['event_type'] = event_data['event_type'].value
+            return jsonify(event_data)
+        elif event["event_type"] == UserTimelineEventType.RECORDING_PIN.value:
+            try:
+                recording_deleted = db_pinned_rec.delete(event["metadata"]["row_id"], user["id"])
+                if not recording_deleted:
+                    raise APINotFound("Cannot find pin with row_id '%s' for user '%s'" % (row_id, user["musicbrainz_id"]))
+                return jsonify({"status": "ok"})
+            except Exception as e:
+                raise APIInternalServerError("Something went wrong. Please try again")
+        raise APIBadRequest("This event type is not supported for deletion via this method")
+    except (ValueError, KeyError) as e:
+        raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
 def get_listen_events(
     db_conn: TimescaleListenStore,
