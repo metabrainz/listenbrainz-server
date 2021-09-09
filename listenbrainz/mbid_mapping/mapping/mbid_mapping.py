@@ -108,7 +108,7 @@ def create_temp_release_table(conn):
                                           to_date(date_year::TEXT || '-' ||
                                                   COALESCE(date_month,12)::TEXT || '-' ||
                                                   COALESCE(date_day,28)::TEXT, 'YYYY-MM-DD'),
-                                          country, rg.artist_credit, rg.name"""
+                                          country, rg.artist_credit, rg.name, r.id"""
 
         if config.USE_MINIMAL_DATASET:
             log("mbid mapping temp tables: Using a minimal dataset for artist credit pairs")

@@ -89,7 +89,7 @@ describe("CBReviewModal", () => {
       target: { value: "This review text is more than 25 characters..." },
     });
 
-    // simulate checking the acceptLicense box
+    // simulate checking the accept license box
     const checkbox = wrapper.find("#acceptLicense").first();
     checkbox.simulate("change", {
       target: { checked: true, type: "checkbox", name: "acceptLicense" },

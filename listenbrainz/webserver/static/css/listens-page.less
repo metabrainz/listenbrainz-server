@@ -173,10 +173,15 @@
 }
 
 #listens {
-  padding: 10px;
+  @media (min-width: @screen-phone) {
+    padding: 10px;
+  }
   
   .listen-card {
-    padding: 15px;
+    padding: 10px 5px;
+    @media (min-width: @screen-phone) {
+      padding: 15px;
+    }
     margin-bottom: 7px;
     max-height: 72px;
     
@@ -186,6 +191,9 @@
     
     &.current-listen {
       background-color: rgba(217, 237, 247, 0.3) !important ;
+      .play-button {
+        opacity: 1;
+      }
     }
 
     > div {
@@ -206,7 +214,7 @@
       font-style: italic;
     }
     
-    > .col-xs-9, .col-xs-12 {
+    > .listen-details, .col-xs-9, .col-xs-12 {
 
       > .col-xs-8, .col-xs-12 {
         display: flex;
@@ -225,13 +233,14 @@
     }
 
     
-    > .col-xs-3 {
-      display: table;
-      height: 40px;
+    > .listen-controls-container {
+      height:40px;
+      display: flex;
+      justify-content: flex-end;
 
       > * {
-        display: table-cell;
-        vertical-align: middle;
+        flex: 1;
+        align-self: center;
       }
 
       a {
@@ -241,7 +250,15 @@
     }
     
     .listen-controls {
-
+      max-width:150px;
+      display: flex;
+      flex-wrap: nowrap;
+      align-content: center;
+      align-items: center;
+      > * {
+        flex:1;
+      }
+      
       > svg:hover {
         cursor: pointer;
       }
@@ -314,6 +331,22 @@
             background-color: #eb743b;
           }
         }
+      }
+    }
+
+    .play-button {
+      padding: 0;
+      color: #8d8d8d;
+    }
+	// If the user has an input method compatible with hoering (f.e. a mouse)
+	// hide the play button by default and show it on card hover
+	@media (hover: hover) {
+      .play-button {
+        transition: opacity .3s ease-in-out;
+        opacity: 0;
+      }
+      &:hover .play-button {
+        opacity: 1;
       }
     }
 
