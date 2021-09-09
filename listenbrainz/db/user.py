@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import List, Optional
 
 import sqlalchemy
 import uuid
@@ -272,41 +272,6 @@ def update_last_login(musicbrainz_id):
                 "Couldn't update last_login: %s" % str(err))
 
 
-def update_latest_import(musicbrainz_id, ts):
-    """ Update the value of latest_import field for user with specified MusicBrainz ID
-
-    Args:
-        musicbrainz_id (str): MusicBrainz username of user
-        ts (int): Timestamp value with which to update the database
-    """
-
-    with db.engine.connect() as connection:
-        try:
-            connection.execute(sqlalchemy.text("""
-                UPDATE "user"
-                   SET latest_import = to_timestamp(:ts)
-                 WHERE musicbrainz_id = :musicbrainz_id
-                """), {
-                'ts': ts,
-                'musicbrainz_id': musicbrainz_id
-            })
-        except sqlalchemy.exc.ProgrammingError as e:
-            logger.error(e)
-            raise DatabaseException
-
-
-def increase_latest_import(musicbrainz_id, ts):
-    """Increases the latest_import field for user with specified MusicBrainz ID"""
-    user = get_by_mb_id(musicbrainz_id)
-    if ts > int(user['latest_import'].strftime('%s')):
-        update_latest_import(musicbrainz_id, ts)
-
-
-def reset_latest_import(musicbrainz_id):
-    """Resets the latest_import field for user with specified MusicBrainz ID to 0"""
-    update_latest_import(musicbrainz_id, 0)
-
-
 def get_all_users(created_before=None, columns=None):
     """ Returns a list of all users in the database
 
@@ -479,7 +444,7 @@ def get_users_in_order(user_ids):
         return [dict(row) for row in r.fetchall() if row['musicbrainz_id'] is not None]
 
 
-def get_similar_users(user_id: int) -> SimilarUsers:
+def get_similar_users(user_id: int) -> Optional[SimilarUsers]:
     """ Given a user_id, fetch the similar users for that given user.
         Returns a dict { "user_x" : .453, "user_y": .123 } """
 
@@ -492,10 +457,13 @@ def get_similar_users(user_id: int) -> SimilarUsers:
             'user_id': user_id,
         })
         row = result.fetchone()
-        users = {}
-        for user in row[1]:
-            users[user] = row[1][user][0]
-        return SimilarUsers(user_id=row[0], similar_users=users) if row else None
+        if row:
+            users = {}
+            for user in row['similar_users']:
+                # first element of array is similarity, second is global_similarity
+                users[user] = row['similar_users'][user][0]
+            return SimilarUsers(user_id=row['user_id'], similar_users=users)
+        return None
 
 
 def get_users_by_id(user_ids: List[int]):

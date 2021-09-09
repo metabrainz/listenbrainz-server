@@ -3,6 +3,7 @@
 exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
 <ListenCard
   currentFeedback={1}
+  isCurrentListen={false}
   isCurrentUser={true}
   listen={
     Object {
@@ -28,11 +29,13 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
   updateRecordingToReview={[Function]}
 >
   <ForwardRef
-    className="listen-card row undefined "
+    className="listen-card row  
+		 "
     onDoubleClick={[Function]}
   >
     <div
-      className="listen-card row undefined "
+      className="listen-card row  
+		 "
       onDoubleClick={[Function]}
       style={
         Object {
@@ -46,7 +49,7 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
       }
     >
       <div
-        className=" col-xs-9"
+        className="listen-details  col-xs-8 col-sm-9"
       >
         <MediaQuery
           minWidth={768}
@@ -56,7 +59,7 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
         />
       </div>
       <div
-        className=" col-xs-3 text-center"
+        className="col-xs-4 col-sm-3 listen-controls-container"
       >
         <div
           className="listen-controls"
@@ -339,6 +342,62 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
               </button>
             </ListenControl>
           </ul>
+          <button
+            className="btn-transparent play-button"
+            onClick={[Function]}
+            title="Play"
+            type="button"
+          >
+            <FontAwesomeIcon
+              border={false}
+              className=""
+              fixedWidth={false}
+              flip={null}
+              icon={
+                Object {
+                  "icon": Array [
+                    512,
+                    512,
+                    Array [],
+                    "f144",
+                    "M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z",
+                  ],
+                  "iconName": "play-circle",
+                  "prefix": "far",
+                }
+              }
+              inverse={false}
+              listItem={false}
+              mask={null}
+              pull={null}
+              pulse={false}
+              rotation={null}
+              size="2x"
+              spin={false}
+              swapOpacity={false}
+              symbol={false}
+              title=""
+              transform={null}
+            >
+              <svg
+                aria-hidden="true"
+                className="svg-inline--fa fa-play-circle fa-w-16 fa-2x "
+                data-icon="play-circle"
+                data-prefix="far"
+                focusable="false"
+                role="img"
+                style={Object {}}
+                viewBox="0 0 512 512"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z"
+                  fill="currentColor"
+                  style={Object {}}
+                />
+              </svg>
+            </FontAwesomeIcon>
+          </button>
         </div>
       </div>
     </div>
@@ -349,6 +408,7 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
 exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
 <ListenCard
   currentFeedback={1}
+  isCurrentListen={false}
   isCurrentUser={true}
   listen={
     Object {
@@ -374,11 +434,13 @@ exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
   updateRecordingToReview={[Function]}
 >
   <ForwardRef
-    className="listen-card row undefined "
+    className="listen-card row  
+		 "
     onDoubleClick={[Function]}
   >
     <div
-      className="listen-card row undefined "
+      className="listen-card row  
+		 "
       onDoubleClick={[Function]}
       style={
         Object {
@@ -392,7 +454,7 @@ exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
       }
     >
       <div
-        className=" col-xs-9"
+        className="listen-details  col-xs-8 col-sm-9"
       >
         <MediaQuery
           minWidth={768}
@@ -402,7 +464,7 @@ exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
         />
       </div>
       <div
-        className=" col-xs-3 text-center"
+        className="col-xs-4 col-sm-3 listen-controls-container"
       >
         <a
           href="/user/undefined"
@@ -418,6 +480,7 @@ exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
 exports[`ListenCard renders correctly for playing_now listen 1`] = `
 <ListenCard
   currentFeedback={1}
+  isCurrentListen={false}
   isCurrentUser={true}
   listen={
     Object {
@@ -443,11 +506,13 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
   updateRecordingToReview={[Function]}
 >
   <ForwardRef
-    className="listen-card row undefined "
+    className="listen-card row  
+		 "
     onDoubleClick={[Function]}
   >
     <div
-      className="listen-card row undefined "
+      className="listen-card row  
+		 "
       onDoubleClick={[Function]}
       style={
         Object {
@@ -461,7 +526,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
       }
     >
       <div
-        className=" col-xs-9"
+        className="listen-details  col-xs-8 col-sm-9"
       >
         <MediaQuery
           minWidth={768}
@@ -471,7 +536,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
         />
       </div>
       <div
-        className=" col-xs-3 text-center"
+        className="col-xs-4 col-sm-3 listen-controls-container"
       >
         <div
           className="listen-controls"
@@ -754,6 +819,62 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
               </button>
             </ListenControl>
           </ul>
+          <button
+            className="btn-transparent play-button"
+            onClick={[Function]}
+            title="Play"
+            type="button"
+          >
+            <FontAwesomeIcon
+              border={false}
+              className=""
+              fixedWidth={false}
+              flip={null}
+              icon={
+                Object {
+                  "icon": Array [
+                    512,
+                    512,
+                    Array [],
+                    "f144",
+                    "M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z",
+                  ],
+                  "iconName": "play-circle",
+                  "prefix": "far",
+                }
+              }
+              inverse={false}
+              listItem={false}
+              mask={null}
+              pull={null}
+              pulse={false}
+              rotation={null}
+              size="2x"
+              spin={false}
+              swapOpacity={false}
+              symbol={false}
+              title=""
+              transform={null}
+            >
+              <svg
+                aria-hidden="true"
+                className="svg-inline--fa fa-play-circle fa-w-16 fa-2x "
+                data-icon="play-circle"
+                data-prefix="far"
+                focusable="false"
+                role="img"
+                style={Object {}}
+                viewBox="0 0 512 512"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z"
+                  fill="currentColor"
+                  style={Object {}}
+                />
+              </svg>
+            </FontAwesomeIcon>
+          </button>
         </div>
       </div>
     </div>
@@ -764,6 +885,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
 exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
 <ListenCard
   currentFeedback={1}
+  isCurrentListen={false}
   isCurrentUser={true}
   listen={
     Object {
@@ -789,11 +911,13 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
   updateRecordingToReview={[Function]}
 >
   <ForwardRef
-    className="listen-card row undefined "
+    className="listen-card row  
+		 "
     onDoubleClick={[Function]}
   >
     <div
-      className="listen-card row undefined "
+      className="listen-card row  
+		 "
       onDoubleClick={[Function]}
       style={
         Object {
@@ -807,7 +931,7 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
       }
     >
       <div
-        className=" col-xs-9"
+        className="listen-details  col-xs-8 col-sm-9"
       >
         <MediaQuery
           minWidth={768}
@@ -817,7 +941,7 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
         />
       </div>
       <div
-        className=" col-xs-3 text-center"
+        className="col-xs-4 col-sm-3 listen-controls-container"
       >
         <div
           className="listen-controls"
@@ -1100,6 +1224,62 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
               </button>
             </ListenControl>
           </ul>
+          <button
+            className="btn-transparent play-button"
+            onClick={[Function]}
+            title="Play"
+            type="button"
+          >
+            <FontAwesomeIcon
+              border={false}
+              className=""
+              fixedWidth={false}
+              flip={null}
+              icon={
+                Object {
+                  "icon": Array [
+                    512,
+                    512,
+                    Array [],
+                    "f144",
+                    "M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z",
+                  ],
+                  "iconName": "play-circle",
+                  "prefix": "far",
+                }
+              }
+              inverse={false}
+              listItem={false}
+              mask={null}
+              pull={null}
+              pulse={false}
+              rotation={null}
+              size="2x"
+              spin={false}
+              swapOpacity={false}
+              symbol={false}
+              title=""
+              transform={null}
+            >
+              <svg
+                aria-hidden="true"
+                className="svg-inline--fa fa-play-circle fa-w-16 fa-2x "
+                data-icon="play-circle"
+                data-prefix="far"
+                focusable="false"
+                role="img"
+                style={Object {}}
+                viewBox="0 0 512 512"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z"
+                  fill="currentColor"
+                  style={Object {}}
+                />
+              </svg>
+            </FontAwesomeIcon>
+          </button>
         </div>
       </div>
     </div>

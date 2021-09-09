@@ -12,10 +12,4 @@
 {% block scripts %}
   {{ super() }}
   <script src="{{ get_static_path('recentListens.js') }}" type="text/javascript"></script>
-  <script>
-    // Enable popovers after page load
-    window.addEventListener("load", function(){
-      $('[data-toggle="popover"]').popover();
-    });
-    </script>
 {% endblock %}

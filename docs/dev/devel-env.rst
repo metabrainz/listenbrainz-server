@@ -46,7 +46,7 @@ option to `register`_ your application. Fill out the form with the following dat
 
 - **Type**: ``Web Application``
 
-- **Callback URL**: ``http://localhost/login/musicbrainz/post``
+- **Callback URL**: ``http://localhost/login/musicbrainz/post/``
 
 After entering this information, you'll have an OAuth client ID and OAuth client
 secret. You'll use these for configuring ListenBrainz.

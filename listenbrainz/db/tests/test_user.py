@@ -57,45 +57,6 @@ class UserTestCase(DatabaseTestCase):
         # after update_last_login, the val should be greater than the old value i.e 0
         self.assertGreater(int(user['last_login'].strftime('%s')), 0)
 
-    def test_update_latest_import(self):
-        user = db_user.get_or_create(3, 'updatelatestimportuser')
-        self.assertEqual(int(user['latest_import'].strftime('%s')), 0)
-
-        val = int(time.time())
-        db_user.update_latest_import(user['musicbrainz_id'], val)
-        user = db_user.get_by_mb_id(user['musicbrainz_id'])
-        self.assertEqual(int(user['latest_import'].strftime('%s')), val)
-
-    def test_increase_latest_import(self):
-        user = db_user.get_or_create(4, 'testlatestimportuser')
-
-        val = int(time.time())
-        db_user.increase_latest_import(user['musicbrainz_id'], val)
-        user = db_user.get_by_mb_id(user['musicbrainz_id'])
-        self.assertEqual(val, int(user['latest_import'].strftime('%s')))
-
-        db_user.increase_latest_import(user['musicbrainz_id'], val - 10)
-        user = db_user.get_by_mb_id(user['musicbrainz_id'])
-        self.assertEqual(val, int(user['latest_import'].strftime('%s')))
-
-        val += 10
-        db_user.increase_latest_import(user['musicbrainz_id'], val)
-        user = db_user.get_by_mb_id(user['musicbrainz_id'])
-        self.assertEqual(val, int(user['latest_import'].strftime('%s')))
-
-    def test_reset_latest_import(self):
-        user = db_user.get_or_create(7, 'resetlatestimportuser')
-        self.assertEqual(int(user['latest_import'].strftime('%s')), 0)
-
-        val = int(time.time())
-        db_user.update_latest_import(user['musicbrainz_id'], val)
-        user = db_user.get_by_mb_id(user['musicbrainz_id'])
-        self.assertEqual(int(user['latest_import'].strftime('%s')), val)
-
-        db_user.reset_latest_import(user['musicbrainz_id'])
-        user = db_user.get_by_mb_id(user['musicbrainz_id'])
-        self.assertEqual(int(user['latest_import'].strftime('%s')), 0)
-
     def test_get_all_users(self):
         """ Tests that get_all_users returns ALL users in the db """
 

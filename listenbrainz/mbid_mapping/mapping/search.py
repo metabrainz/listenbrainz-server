@@ -25,7 +25,7 @@ def search(query):
         'num_typos': 5
     }
 
-    hits = client.collections['recording_artist_credit_mapping'].documents.search(search_parameters)
+    hits = client.collections['mbid_mapping_latest'].documents.search(search_parameters)
 
     output = []
     for hit in hits['hits']:
