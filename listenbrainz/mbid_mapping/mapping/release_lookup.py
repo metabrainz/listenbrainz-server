@@ -32,14 +32,13 @@ def solr_search(artist, release, recordings, track_count=None, debug=False):
          query["count"] = track_count
 
     solr = pysolr.Solr('http://%s:%d/solr/%s' % (SOLR_HOST, SOLR_PORT, SOLR_CORE), always_commit=True)
-    docs = solr.search(Q(**query), fl="*,score") # , debug="true")
+    docs = solr.search(Q(**query), fl="*,score")
     for doc in docs:
-        if debug:
-            print(docs.debug["explain"][doc["id"]])
         if type(track_count) is int and int(doc['count'][0]) != track_count:
             continue
 
-        print("  %s %8s %.3f %-30s %-30s" % (doc['id'], doc['rank'][0], doc['score'], doc['title'][0], doc['ac_name'][0]))
+        if debug:
+            print("  %s %8s %.3f %-30s %-30s" % (doc['id'], doc['rank'][0], doc['score'], doc['title'][0], doc['ac_name'][0]))
 
 
 ACCEPT_THRESHOLD = 85
@@ -60,7 +59,7 @@ def lookup_album_on_solr(lb_release, debug=False):
                        "release_name": doc['title'][0],
                        "recordings": recording_names,
                        "rank": doc["rank"][0] }
-        score, reject = fuzzy_release_compare(mb_release, lb_release, True)
+        score, reject = fuzzy_release_compare(mb_release, lb_release, debug)
         doc["fuzzy"] = score
         if not last_score:
             last_score = score
@@ -110,12 +109,12 @@ def musicbrainz_sanity_check(release_mbid):
     return lookup_album_on_solr(rel)
 
 
-def load_listens_for_user(user_name, ts=None):
+def load_listens_for_user(user_name, ts=None, count=100):
 
     if ts is None:
         ts = int(time.time())
 
-    r = requests.get("%s/1/user/%s/listens" % (LISTENBRAINZ_HOST, user_name), params={'max_ts':ts, "count": 100})
+    r = requests.get("%s/1/user/%s/listens" % (LISTENBRAINZ_HOST, user_name), params={'max_ts':ts, "count": count})
     if r.status_code != 200:
         print("Failed to fetch Listens")
         return []
@@ -123,7 +122,7 @@ def load_listens_for_user(user_name, ts=None):
     return r.json()["payload"]["listens"]
 
 
-def listenbrainz_release_filter(user_name, ts):
+def listenbrainz_release_filter(user_name, count, ts, debug=False):
 
 # TODO: Check if artist varies too much
 #       Check if a track is just on repeat
@@ -132,7 +131,9 @@ def listenbrainz_release_filter(user_name, ts):
     last_artist = ""
     last_release = ""
     tracks = []
-    for i in range(5):
+    num_processed = 0
+    matches = []
+    while num_processed < count:
         listens = load_listens_for_user(user_name, ts)
         for listen in listens:
             artist = listen["track_metadata"]["artist_name"]
@@ -156,15 +157,25 @@ def listenbrainz_release_filter(user_name, ts):
                             "recording_artists": recording_artists }
                     solr_doc = lookup_album_on_solr(rel, True)
                     if solr_doc:
-                        print("Accepted fuzzy score: %d rank %s\n" % (solr_doc["fuzzy"], solr_doc["rank"][0]))
+                        if debug:
+                            print("Accepted fuzzy score: %d rank %s\n" % (solr_doc["fuzzy"], solr_doc["rank"][0]))
+                        matches.append({ "artist_credit_name": solr_doc["ac_name"],
+                                         "artist_credit_id": solr_doc["ac_id"],
+                                         "release_mbid": solr_doc["release_mbid"],
+                                         "release_name": solr_doc["title"],
+                                         "recording_names": solr_doc["recording_names"],
+                                         "release_actist_credit_names": solr_doc["release_ac_names"] })
 
                 tracks = []
             
             tracks.append(listen)
+            num_processed += 1
 
             last_artist = artist
             last_release = release
             ts = listen["listened_at"]
+
+    return matches
 
 
 MINIMUM_TRACK_MATCH = 60
@@ -231,38 +242,3 @@ def test_compare_releases():
     load_and_fuzzy_release_compare("48313c92-c8a6-47c5-91e3-87d514419135", "7e5d3746-210d-439c-8711-d8d700ac7ae3")
     load_and_fuzzy_release_compare("7e5d3746-210d-439c-8711-d8d700ac7ae3", "7e5d3746-210d-439c-8711-d8d700ac7ae3")
     load_and_fuzzy_release_compare("7c08b5f8-2d6f-4d72-a829-3175528ef25f", "7e5d3746-210d-439c-8711-d8d700ac7ae3")
-
-
-@click.group()
-def cli():
-    pass
-
-@cli.command()
-@click.argument('release_mbid', nargs=1)
-def fetch(release_mbid):
-    rel = musicbrainz_lookup(release_mbid)
-    print(json.dumps(rel, indent=4, sort_keys=True))
-
-@cli.command()
-@click.argument('release_mbid', nargs=1)
-def check(release_mbid):
-    musicbrainz_sanity_check(release_mbid)
-
-@cli.command()
-@click.argument('user_name', nargs=1)
-@click.argument('ts', nargs=1, required=False, default=None)
-def filter(user_name, ts):
-    listenbrainz_release_filter(user_name, ts)
-
-@cli.command()
-def test():
-    test_compare_releases()
-
-def usage(command):
-    with click.Context(command) as ctx:
-        click.echo(command.get_help(ctx))
-
-
-if __name__ == "__main__":
-    cli()
-    sys.exit(0)
