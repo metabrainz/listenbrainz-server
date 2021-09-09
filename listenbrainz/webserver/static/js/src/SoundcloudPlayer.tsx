@@ -211,7 +211,7 @@ export default class SoundcloudPlayer
         : [];
       onTrackInfoChange(
         currentTrack.title,
-        currentTrack.permalink_url, // do we want to send the full URI here?
+        currentTrack.permalink_url,
         currentTrack.user?.username,
         undefined,
         artwork
