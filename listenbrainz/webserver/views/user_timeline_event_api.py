@@ -31,7 +31,7 @@ import listenbrainz.db.user_timeline_event as db_user_timeline_event
 
 from data.model.listen import APIListen, TrackMetadata, AdditionalInfo
 from data.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, \
-    APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent
+    APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent, APIRecommendationNotificationTimelineEvent
 from listenbrainz.db.pinned_recording import get_pins_for_feed
 from listenbrainz.db.model.pinned_recording import fetch_track_metadata_for_pins
 from listenbrainz import webserver
@@ -323,7 +323,8 @@ def get_notification_events(user: dict, count: int) -> List[APITimelineEvent]:
     notification_events_db = db_user_timeline_event.get_user_notification_events(user_id=user['id'], count=count)
     events = []
     for event in notification_events_db:
-        events.append(APITimelineEvent(
+        events.append(APIRecommendationNotificationTimelineEvent(
+            id=event.id,
             event_type=UserTimelineEventType.NOTIFICATION,
             user_name=event.metadata.creator,
             created=event.created.timestamp(),
@@ -361,7 +362,8 @@ def get_recording_recommendation_events(users_for_events: List[dict], min_ts: in
                 ),
             )
 
-            events.append(APITimelineEvent(
+            events.append(APIRecommendationNotificationTimelineEvent(
+                id=event.id,
                 event_type=UserTimelineEventType.RECORDING_RECOMMENDATION,
                 user_name=listen.user_name,
                 created=event.created.timestamp(),
