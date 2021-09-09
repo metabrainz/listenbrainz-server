@@ -29,7 +29,10 @@ const GlobalContextMock = {
     APIService: new APIService("base-uri"),
     spotifyAuth: {
       access_token: "heyo",
-      permission: ["user-read-currently-playing"] as Array<SpotifyPermission>,
+      permission: [
+        "user-read-currently-playing",
+        "user-read-recently-played",
+      ] as Array<SpotifyPermission>,
     },
     youtubeAuth: {
       api_key: "fake-api-key",
@@ -597,6 +600,142 @@ describe("BrainzPlayer", () => {
       expect(playNextTrackSpy).toHaveBeenCalledTimes(1);
       expect(instance.playListen).toHaveBeenCalledTimes(1);
       expect(instance.playListen).toHaveBeenCalledWith(listen2);
+    });
+  });
+  describe("submitListenToListenBrainz", () => {
+    const trackInfo = {
+      title: "Never Gonna Give You Up",
+      artist: "Rick Astley",
+      trackURL: "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT",
+    };
+    it("does nothing if user is not logged in", async () => {
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...props} />,
+        GlobalContextMock
+      );
+      const instance = wrapper.instance();
+      instance.playNextTrack = jest.fn();
+      const ds =
+        instance.dataSources[instance.state.currentDataSourceIndex].current;
+      const dsRecordsListens = ds && jest.spyOn(ds, "datasourceRecordsListens");
+      await instance.submitListenToListenBrainz(
+        trackInfo.title,
+        trackInfo.trackURL,
+        trackInfo.artist
+      );
+      expect(dsRecordsListens).not.toHaveBeenCalled();
+    });
+
+    it("does nothing if datasource already submits listens", async () => {
+      const wrapper = mount<BrainzPlayer>(
+        <GlobalAppContext.Provider
+          value={{
+            ...GlobalContextMock.context,
+            // These permissions suggest LB records listens and can play using BrainzPlayer
+            spotifyAuth: {
+              access_token: "merde-à-celui-qui-lit",
+              permission: [
+                "streaming",
+                "user-read-email",
+                "user-read-private",
+                "user-read-currently-playing",
+                "user-read-recently-played",
+              ],
+            },
+            currentUser: {
+              name: "Gulab Jamun",
+              auth_token: "IHaveSeenTheFnords",
+            },
+          }}
+        >
+          <BrainzPlayer
+            {...props}
+            listens={[listen2]}
+            currentListen={listen2}
+          />
+        </GlobalAppContext.Provider>
+      );
+      const instance = wrapper.instance();
+      const ds = instance.dataSources[instance.state.currentDataSourceIndex]
+        ?.current as DataSourceType;
+      expect(ds).toBeDefined();
+      expect(ds).toBeInstanceOf(SpotifyPlayer);
+      // GlobalContextMock.spotifyAuth includes permissions suggesting LB records Spotify listens already
+      expect(ds.datasourceRecordsListens()).toBeTruthy();
+      const submitListensAPISpy = jest.spyOn(
+        instance.context.APIService,
+        "submitListens"
+      );
+      await instance.submitListenToListenBrainz(
+        trackInfo.title,
+        trackInfo.trackURL,
+        trackInfo.artist
+      );
+      expect(submitListensAPISpy).not.toHaveBeenCalled();
+    });
+
+    it("submits a listen with the expected matadata", async () => {
+      const dateNowMock = jest.fn().mockReturnValue(1234567890);
+      Date.now = dateNowMock;
+      const wrapper = mount<BrainzPlayer>(
+        <GlobalAppContext.Provider
+          value={{
+            ...GlobalContextMock.context,
+            // These permissions suggest LB does *not* record listens
+            spotifyAuth: spotifyAccountWithPermissions,
+            currentUser: {
+              name: "Gulab Jamun",
+              auth_token: "IHaveSeenTheFnords",
+            },
+          }}
+        >
+          <BrainzPlayer
+            {...props}
+            listens={[listen2]}
+            currentListen={listen2}
+          />
+        </GlobalAppContext.Provider>
+      );
+      // expect API.submitListens to have been called with
+      // ucer auth token, "single", array of one listen
+      const instance = wrapper.instance();
+      const ds = instance.dataSources[instance.state.currentDataSourceIndex]
+        ?.current as DataSourceType;
+      expect(ds).toBeDefined();
+      expect(ds).toBeInstanceOf(SpotifyPlayer);
+      expect(ds.datasourceRecordsListens()).toBeFalsy();
+
+      const submitListensAPISpy = jest.spyOn(
+        instance.context.APIService,
+        "submitListens"
+      );
+      await instance.submitListenToListenBrainz(
+        trackInfo.title,
+        trackInfo.trackURL,
+        trackInfo.artist
+      );
+      const expectedListen = {
+        listened_at: 1234567,
+        track_metadata: {
+          artist_name: "Rick Astley",
+          track_name: "Never Gonna Give You Up",
+          additional_info: {
+            listening_from: "listenbrainz",
+            source: "spotify",
+            origin_url: "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT",
+            brainzplayer_metadata: {
+              artist_name: "Rick Astley",
+              release_name: undefined,
+              track_name: "Never Gonna Give You Up",
+            },
+          },
+        },
+      };
+      expect(submitListensAPISpy).toHaveBeenCalledWith(
+        "IHaveSeenTheFnords",
+        "single",
+        [expectedListen]
+      );
     });
   });
 });
