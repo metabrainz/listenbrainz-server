@@ -110,6 +110,7 @@ def create_temp_release_table(conn):
                                                   COALESCE(date_day,28)::TEXT, 'YYYY-MM-DD'),
                                           country, rg.artist_credit, rg.name, r.id"""
 
+        count = 0
         for op in ['!=', '=']:
             if config.USE_MINIMAL_DATASET:
                 log("mbid mapping temp tables: Using a minimal dataset for artist credit pairs: artist_id %s 1" % op)
@@ -122,7 +123,6 @@ def create_temp_release_table(conn):
             # destroy the sort order we so carefully crafted.
             with conn.cursor() as curs_insert:
                 rows = []
-                count = 0
                 release_index = {}
                 for row in curs:
                     if row[0] in release_index:
