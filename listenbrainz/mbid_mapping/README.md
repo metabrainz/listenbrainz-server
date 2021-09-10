@@ -72,4 +72,4 @@ Createing SOLR indexes for release lookup
 
 delete all documents in solr:
 
-curl http://localhost:8983 -H "Content-Type: text/xml" --data-binary '<delete><query>*:*</query></delete>'
+curl http://localhost:8983/solr/release-index/update?commit=true -H "Content-Type: text/xml" --data-binary '<delete><query>*:*</query></delete>'

@@ -19,12 +19,17 @@ SOLR_HOST = "listenbrainz-solr"
 SOLR_PORT = 8983
 SOLR_CORE = "release-index"
 
+def normalize(str):
+    return unidecode(str.lower())
+
 
 def build_release_lookup_index():
 
     def set_recording_data(data, row):
-        data["recording_names"].append(("%d " % rec_index) + row["recording_name"].replace("\n", " "))
-        data["release_ac_names"].append(("%d " % rec_index) + " ".join(row["artist_credit_names"]))
+#        data["recording_names"].append(("%d " % rec_index) + row["recording_name"].replace("\n", " "))
+#        data["release_ac_names"].append(("%d " % rec_index) + " ".join(row["artist_credit_names"]))
+        data["recording_names"].append(normalize(row["recording_name"].replace("\n", " ")))
+        data["release_ac_names"].append(normalize(" ".join(row["artist_credit_names"])))
 
     def append_to_docs(data):
         data["count"] = len(data["recording_names"])
@@ -94,10 +99,10 @@ def build_release_lookup_index():
 
                     data = {
                         "id": id,
-                        "release_mbid": row["release_mbid"],
-                        "title": row["release_name"],
+                        "release_mbid": normalize(row["release_mbid"]),
+                        "title": normalize(row["release_name"]),
                         "ac_id": row["artist_credit_id"],
-                        "ac_name": row["artist_credit_name"].replace("\n", " "),
+                        "ac_name": normalize(row["artist_credit_name"].replace("\n", " ")),
                         "pos": row["position"],
                         "rank": row["rank"],
                         "recording_names": [],
