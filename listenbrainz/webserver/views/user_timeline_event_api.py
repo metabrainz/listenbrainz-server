@@ -293,11 +293,11 @@ def delete_feed_events(user_name):
         elif event["event_type"] == UserTimelineEventType.RECORDING_PIN.value:
             try:
                 recording_deleted = db_pinned_rec.delete(event["metadata"]["row_id"], user["id"])
-                if not recording_deleted:
-                    raise APINotFound("Cannot find pin with row_id '%s' for user '%s'" % (row_id, user["musicbrainz_id"]))
-                return jsonify({"status": "ok"})
             except Exception as e:
                 raise APIInternalServerError("Something went wrong. Please try again")
+            if not recording_deleted:
+                raise APINotFound("Cannot find pin with row_id '%s' for user '%s'" % (event["metadata"]["row_id"], user["musicbrainz_id"]))
+            return jsonify({"status": "ok"})
         raise APIBadRequest("This event type is not supported for deletion via this method")
     except (ValueError, KeyError) as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
