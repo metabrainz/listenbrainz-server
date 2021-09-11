@@ -57,20 +57,6 @@ class RequestConsumer:
             logger.error("Error while mapping query to function:", exc_info=True)
             return None
 
-        try:
-            # initialize connection to HDFS, the request consumer is a long running process
-            # so we try to create a connection everytime before executing a query to avoid
-            # affecting subsequent queries in case there's an intermittent connection issue
-            hdfs_connection.init_hdfs(config.HDFS_HTTP_URI)
-            return query_handler(**params)
-        except TypeError as e:
-            logger.error(
-                "TypeError in the query handler for query '%s', maybe bad params. Error: %s", query, str(e), exc_info=True)
-            return None
-        except Exception as e:
-            logger.error("Error in the query handler for query '%s': %s", query, str(e), exc_info=True)
-            return None
-
         return query_handler, params
 
     def callback(self, channel, method, properties, body):

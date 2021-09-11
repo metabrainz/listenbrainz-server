@@ -3,11 +3,17 @@ import json
 import logging
 import time
 
+from listenbrainz_spark import hdfs_connection, config
+
 logger = logging.getLogger(__name__)
 
 
 def get_results(query_handler, params):
     try:
+        # initialize connection to HDFS, the request consumer is a long running process
+        # so we try to create a connection everytime before executing a query to avoid
+        # affecting subsequent queries in case there's an intermittent connection issue
+        hdfs_connection.init_hdfs(config.HDFS_HTTP_URI)
         return query_handler(**params)
     except TypeError:
         logger.error("TypeError in the query handler for query '%s', "
