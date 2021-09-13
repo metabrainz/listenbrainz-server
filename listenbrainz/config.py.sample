@@ -62,6 +62,10 @@ MUSICBRAINZ_CLIENT_SECRET = "CLIENT_SECRET"
 LASTFM_API_URL = "https://ws.audioscrobbler.com/2.0/"
 LASTFM_API_KEY = "USE_LASTFM_API_KEY"
 
+# Libre.fm API
+LIBREFM_API_URL = "https://libre.fm/2.0/"
+LIBREFM_API_KEY = "USE_LIBREFM_API_KEY"
+
 # Stats
 STATS_ENTITY_LIMIT = 100 # the number of entities to calculate at max with BQ
 STATS_CALCULATION_LOGIN_TIME = 30 # users must have logged in to LB in the past 30 days for stats to be calculated

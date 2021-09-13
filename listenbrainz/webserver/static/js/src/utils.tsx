@@ -2,9 +2,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import * as _ from "lodash";
 import * as timeago from "time-ago";
-import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
+import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
 
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { faPlay } from "@fortawesome/free-solid-svg-icons";
 
 const searchForSpotifyTrack = async (
   spotifyToken?: string,
@@ -150,16 +151,24 @@ const getTrackLink = (listen: Listen): JSX.Element | string => {
   return trackName;
 };
 
-const getPlayButton = (listen: any, onClickFunction: () => void) => {
+const getPlayButton = (
+  listen: any,
+  isCurrentListen: boolean,
+  onPlayFunction: (event?: any) => void
+) => {
   /* es-lint */
   return (
     <button
       title="Play"
-      className="btn-link"
-      onClick={onClickFunction.bind(listen)}
+      className="btn-transparent play-button"
+      onClick={isCurrentListen ? undefined : onPlayFunction.bind(listen)}
       type="button"
     >
-      <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />
+      {isCurrentListen ? (
+        <FontAwesomeIcon size="1x" icon={faPlay as IconProp} />
+      ) : (
+        <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />
+      )}
     </button>
   );
 };
@@ -332,6 +341,7 @@ interface GlobalProps {
   current_user: ListenBrainzUser;
   spotify?: SpotifyUser;
   youtube?: YoutubeUser;
+  critiquebrainz?: CritiqueBrainzUser;
 }
 
 const getPageProps = (): {
@@ -390,6 +400,13 @@ const getListenablePin = (pinnedRecording: PinnedRecording): Listen => {
   return pinnedRecListen;
 };
 
+const countWords = (str: string): number => {
+  // Credit goes to iamwhitebox https://stackoverflow.com/a/39125279/14911205
+  const words = str.match(/\w+/g);
+  if (words === null) return 0;
+  return words.length;
+};
+
 export {
   searchForSpotifyTrack,
   getArtistLink,
@@ -402,4 +419,5 @@ export {
   searchForYoutubeTrack,
   createAlert,
   getListenablePin,
+  countWords,
 };

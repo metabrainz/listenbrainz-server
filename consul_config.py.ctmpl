@@ -131,6 +131,9 @@ MUSICBRAINZ_CLIENT_SECRET = '''{{template "KEY" "musicbrainz/client_secret"}}'''
 LASTFM_API_URL = '''{{template "KEY" "lastfm_api_url"}}'''
 LASTFM_API_KEY = '''{{template "KEY" "lastfm_api_key"}}'''
 
+LIBREFM_API_URL = '''{{template "KEY" "librefm_api_url"}}'''
+LIBREFM_API_KEY = '''{{template "KEY" "librefm_api_key"}}'''
+
 # Default is fine for now
 PLAYING_NOW_MAX_DURATION = 10 * 60
 
