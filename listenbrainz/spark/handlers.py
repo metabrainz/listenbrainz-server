@@ -84,8 +84,8 @@ def handle_user_entity(data):
     data[entity] = data['data']
 
     # Strip extra data
-    to_remove = {'musicbrainz_id', 'type', 'entity', 'data', 'stats_range'}
-    data_mod = {key: data[key] for key in data if key not in to_remove}
+    # to_remove = {'musicbrainz_id', 'type', 'entity', 'data', 'stats_range'}
+    # data_mod = {key: data[key] for key in data if key not in to_remove}
 
     entity_model = _get_user_entity_model(entity)
 
@@ -93,11 +93,11 @@ def handle_user_entity(data):
     db_handler = getattr(db_stats, 'insert_user_{}'.format(entity))
 
     try:
-        db_handler(user['id'], entity_model(**{stats_range: data_mod}))
+        db_handler(user['id'], entity_model(**data))
     except ValidationError:
         current_app.logger.error("""ValidationError while inserting {stats_range} top {entity} for user with user_id: {user_id}.
                                  Data: {data}""".format(stats_range=stats_range, entity=entity,
-                                                        user_id=user['id'], data=json.dumps({stats_range: data_mod}, indent=3)),
+                                                        user_id=user['id'], data=json.dumps({stats_range: data}, indent=3)),
                                  exc_info=True)
 
 
