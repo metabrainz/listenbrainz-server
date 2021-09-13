@@ -321,7 +321,7 @@ export default class ListenCard extends React.Component<
 
                   <FontAwesomeIcon
                     icon={faEllipsisV as IconProp}
-                    title="Delete"
+                    title="More actions"
                     className="dropdown-toggle"
                     id="listenControlsDropdown"
                     data-toggle="dropdown"
