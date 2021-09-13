@@ -70,6 +70,11 @@ MBID_MAPPING_DATABASE_URI = "dbname=musicbrainz_json_dump user=musicbrainz host=
 MBID_MAPPING_DATABASE_URI = ""
 {{end}}
 
+# for use in playlists admin view
+SQLALCHEMY_BINDS = {
+   'timescale': SQLALCHEMY_TIMESCALE_URI
+}
+
 {{if service "typesense-listenbrainz"}}
 {{with index (service "typesense-listenbrainz") 0}}
 TYPESENSE_HOST = "{{.Address}}"
