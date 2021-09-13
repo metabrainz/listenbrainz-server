@@ -241,7 +241,7 @@ def get_user_artists(user_id: int, stats_range: str) -> Optional[UserArtistStat]
              AND stats_range = :stats_range
              AND stats_type = 'artists'
             """.format(range=stats_range)), {
-            'range': stats_range,
+            'stats_range': stats_range,
             'user_id': user_id
         })
         row = result.fetchone()
