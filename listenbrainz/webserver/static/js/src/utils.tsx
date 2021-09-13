@@ -249,17 +249,25 @@ const preciseTimestamp = (
 
   // determine which display setting based on time difference to use if no argument was provided
   if (!display) {
-    const msDifference = new Date().getTime() - listenDate.getTime();
-    // over one year old : show with year
-    if (msDifference / (1000 * 3600 * 24 * 365) > 1) {
-      display = "includeYear";
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const listenYear = listenDate.getFullYear();
+    // Date is today : format using timeago
+    if (
+      now.getDate() === listenDate.getDate() &&
+      now.getMonth() === listenDate.getMonth() &&
+      currentYear === listenYear
+    ) {
+      display = "timeAgo";
     }
-    // one year to yesterday : show without year
-    else if (msDifference / (1000 * 3600 * 24 * 1) > 1) {
+    // Date is this current year, don't show the year
+    else if (currentYear === listenYear) {
       display = "excludeYear";
     }
-    // today : format using timeago
-    else display = "timeAgo";
+    // Not this year, show the year
+    else {
+      display = "includeYear";
+    }
   }
 
   switch (display) {
@@ -283,6 +291,25 @@ const preciseTimestamp = (
     default:
       return `${timeago.ago(listened_at)}`;
   }
+};
+// recieves or unix epoch timestamp int or ISO datetime string
+const fullLocalizedDateFromTimestampOrISODate = (
+  unix_epoch_timestamp: number | string | undefined | null
+): string => {
+  if (!unix_epoch_timestamp) {
+    return "";
+  }
+  const date: Date = new Date(unix_epoch_timestamp);
+
+  // invalid date
+  if (Number.isNaN(date.getTime())) {
+    return String(unix_epoch_timestamp);
+  }
+  return date.toLocaleString(undefined, {
+    // @ts-ignore see https://github.com/microsoft/TypeScript/issues/40806
+    dateStyle: "full",
+    timeStyle: "long",
+  });
 };
 
 /** Loads a script asynchronouhsly into the HTML page */
@@ -387,6 +414,7 @@ export {
   getPlayButton,
   formatWSMessageToListen,
   preciseTimestamp,
+  fullLocalizedDateFromTimestampOrISODate,
   getPageProps,
   searchForYoutubeTrack,
   createAlert,
