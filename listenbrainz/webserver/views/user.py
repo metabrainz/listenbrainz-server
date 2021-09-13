@@ -458,3 +458,43 @@ def delete_listens_history(musicbrainz_id):
     timescale_connection._ts.reset_listen_count(user.musicbrainz_id)
     listens_importer.update_latest_listened_at(user.id, ExternalServiceType.LASTFM, 0)
     db_stats.delete_user_stats(user.id)
+
+
+@user_bp.route("/<user_name>/loved/")
+@web_listenstore_needed
+def recommendation_playlists(user_name: str):
+    """ Show loved/hated recordings for user """
+
+    offset = request.args.get('offset', 0)
+    try:
+        offset = int(offset)
+    except ValueError:
+        raise BadRequest("Incorrect int argument offset: %s" % request.args.get("offset"))
+
+    count = request.args.get("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
+    try:
+        count = int(count)
+    except ValueError:
+        raise BadRequest("Incorrect int argument count: %s" % request.args.get("count"))
+
+    user = _get_user(user_name)
+    user_data = {
+        "name": user.musicbrainz_id,
+        "id": user.id,
+    }
+
+
+    props = {
+        "playlists": playlists,
+        "user": user_data,
+        "active_section": "loved",
+        "playlist_count": playlist_count,
+    }
+
+    return render_template(
+        "playlists/playlists.html",
+        active_section="recommendations",
+        props=ujson.dumps(props),
+        user=user
+    )
+
