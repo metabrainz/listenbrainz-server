@@ -189,6 +189,7 @@ CREATE TABLE statistics.user_new (
     to_ts                   TIMESTAMP WITH TIME ZONE,
     last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
+ALTER TABLE statistics.user_new ADD CONSTRAINT user_stats_range_type_uniq UNIQUE (user_id, stats_type, stats_range);
 
 CREATE TABLE statistics.sitewide (
     id                      SERIAL, --pk
