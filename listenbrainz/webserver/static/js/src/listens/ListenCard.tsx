@@ -203,7 +203,7 @@ export default class ListenCard extends React.Component<
       >
         <div
           className={`listen-details ${
-            isCurrentUser || mode === "recent"
+            mode === "recent" || Boolean(currentUser?.auth_token)
               ? " col-xs-8 col-sm-9"
               : " col-xs-12"
           }`}
@@ -291,58 +291,57 @@ export default class ListenCard extends React.Component<
               {listen.user_name}
             </a>
           ) : null}
-          {mode !== "recent" && isCurrentUser ? (
-            <div className="listen-controls">
-              {!listen?.playing_now && (
-                <>
-                  <ListenControl
-                    icon={faHeart}
-                    title="Love"
-                    action={() => this.submitFeedback(feedback === 1 ? 0 : 1)}
-                    className={`${feedback === 1 ? " loved" : ""}`}
-                  />
-                  <ListenControl
-                    icon={faHeartBroken}
-                    title="Hate"
-                    action={() => this.submitFeedback(feedback === -1 ? 0 : -1)}
-                    className={`${feedback === -1 ? " hated" : ""}`}
-                  />
+          <div className="listen-controls">
+            {!currentUser?.auth_token ? null : (
+              <>
+                <ListenControl
+                  icon={faHeart}
+                  title="Love"
+                  action={() => this.submitFeedback(feedback === 1 ? 0 : 1)}
+                  className={`${feedback === 1 ? " loved" : ""}`}
+                />
+                <ListenControl
+                  icon={faHeartBroken}
+                  title="Hate"
+                  action={() => this.submitFeedback(feedback === -1 ? 0 : -1)}
+                  className={`${feedback === -1 ? " hated" : ""}`}
+                />
 
-                  <FontAwesomeIcon
-                    icon={faEllipsisV as IconProp}
-                    title="Delete"
-                    className="dropdown-toggle"
-                    id="listenControlsDropdown"
-                    data-toggle="dropdown"
-                    aria-haspopup="true"
-                    aria-expanded="true"
+                <FontAwesomeIcon
+                  icon={faEllipsisV as IconProp}
+                  title="Delete"
+                  className="dropdown-toggle"
+                  id="listenControlsDropdown"
+                  data-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="true"
+                />
+                <ul
+                  className="dropdown-menu dropdown-menu-right"
+                  aria-labelledby="listenControlsDropdown"
+                >
+                  <ListenControl
+                    title="Recommend to my followers"
+                    action={this.recommendListenToFollowers}
                   />
-                  <ul
-                    className="dropdown-menu dropdown-menu-right"
-                    aria-labelledby="listenControlsDropdown"
-                  >
-                    <ListenControl
-                      title="Recommend to my followers"
-                      action={this.recommendListenToFollowers}
-                    />
+                  <ListenControl
+                    title="Pin this Recording"
+                    action={() => updateRecordingToPin(listen)}
+                    dataToggle="modal"
+                    dataTarget="#PinRecordingModal"
+                  />
+                  {isCurrentUser ? (
                     <ListenControl
                       title="Delete Listen"
                       action={this.deleteListen}
+                      className={!isCurrentUser ? "disabled" : ""}
                     />
-                    {currentUser && (
-                      <ListenControl
-                        title="Pin this Recording"
-                        action={() => updateRecordingToPin(listen)}
-                        dataToggle="modal"
-                        dataTarget="#PinRecordingModal"
-                      />
-                    )}
-                  </ul>
-                  {getPlayButton(listen, isCurrentListen, this.playListen)}
-                </>
-              )}
-            </div>
-          ) : null}
+                  ) : null}
+                </ul>
+              </>
+            )}
+            {getPlayButton(listen, isCurrentListen, this.playListen)}
+          </div>
         </div>
       </Card>
     );
