@@ -15,6 +15,7 @@ from listenbrainz.db import listens_importer
 from listenbrainz.db.playlist import get_playlists_for_user, get_playlists_created_for_user, get_playlists_collaborated_on
 from listenbrainz.db.model.pinned_recording import fetch_track_metadata_for_pins
 from listenbrainz.db.pinned_recording import get_current_pin_for_user, get_pin_count_for_user, get_pin_history_for_user
+from listenbrainz.db.feedback import get_feedback_count_for_user, get_feedback_for_user
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.errors import APIBadRequest
@@ -26,6 +27,7 @@ from listenbrainz.webserver.views.playlist_api import serialize_jspf
 from pydantic import ValidationError
 
 LISTENS_PER_PAGE = 25
+DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL = 50
 
 user_bp = Blueprint("user", __name__)
 redirect_bp = Blueprint("redirect", __name__)
@@ -460,10 +462,25 @@ def delete_listens_history(musicbrainz_id):
     db_stats.delete_user_stats(user.id)
 
 
-@user_bp.route("/<user_name>/loved/")
+@user_bp.route("/<user_name>/feedback/")
 @web_listenstore_needed
-def recommendation_playlists(user_name: str):
-    """ Show loved/hated recordings for user """
+def user_feedback(user_name: str, score: int, offset: int, count: int):
+    """ Show user feedback, with filter on score (love/hate).
+
+    Args: 
+        musicbrainz_id (str): the MusicBrainz ID of the user
+        score (int): the score 1 (loved) or -1 (hated) to fetch.
+        offset: the offset into the data stream for pagination
+        count: the offset into the data stream for pagination
+    Raises:
+        NotFound if user isn't present in the database
+    """
+
+    score = request.args.get('score', 0)
+    try:
+        score = int(score)
+    except ValueError:
+        raise BadRequest("Incorrect int argument score: %s" % request.args.get("score"))
 
     offset = request.args.get('offset', 0)
     try:
@@ -471,7 +488,7 @@ def recommendation_playlists(user_name: str):
     except ValueError:
         raise BadRequest("Incorrect int argument offset: %s" % request.args.get("offset"))
 
-    count = request.args.get("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
+    count = request.args.get("count", DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL)
     try:
         count = int(count)
     except ValueError:
@@ -483,17 +500,19 @@ def recommendation_playlists(user_name: str):
         "id": user.id,
     }
 
+    feedback_count = get_feedback_count_for_user(user.id, score) 
+    feedback = get_feedback_for_user(user.id, count, offset, score)
 
     props = {
-        "playlists": playlists,
+        "feedback": feedback,
+        "feedback_count": feedback_count,
         "user": user_data,
-        "active_section": "loved",
-        "playlist_count": playlist_count,
+        "active_section": "feedback",
     }
 
     return render_template(
-        "playlists/playlists.html",
-        active_section="recommendations",
+        "feedback/feedback.html",
+        active_section="feedback",
         props=ujson.dumps(props),
         user=user
     )

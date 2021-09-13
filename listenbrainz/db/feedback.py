@@ -84,23 +84,28 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
         return [Feedback(**dict(row)) for row in result.fetchall()]
 
 
-def get_feedback_count_for_user(user_id: int) -> int:
+def get_feedback_count_for_user(user_id: int, score=None) -> int:
     """ Get total number of recording feedback given by the user
 
         Args:
             user_id: the row ID of the user in the DB
+            score: If 1, fetch count for all the loved feedback, 
+                   if -1 fetch count for all the hated feedback,
+                   if None, fetch count for all feedback
 
         Returns:
             The total number of recording feedback given by the user
     """
 
     query = "SELECT count(*) AS value FROM recording_feedback WHERE user_id = :user_id"
+    args = { 'user_id': user_id }
+
+    if score is not None:
+        query += " AND score = :score"
+        args['score'] = score
 
     with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text(query), {
-                'user_id': user_id,
-            }
-        )
+        result = connection.execute(sqlalchemy.text(query), args)
         count = int(result.fetchone()["value"])
 
     return count
