@@ -38,6 +38,7 @@ from data.model.user_recording_stat import (UserRecordingStat,
 from data.model.user_release_stat import UserReleaseStat, UserReleaseStatJson
 from flask import current_app
 from listenbrainz import db
+from listenbrainz.utils import unix_timestamp_to_datetime
 from pydantic import ValidationError
 
 
@@ -77,8 +78,8 @@ def _insert_user_jsonb_data(user_id: int, stats_type: str, stats: Union[UserArti
             "stats_range": stats.stats_range,
             "data": stats.data.json(exclude_none=True),
             "count": stats.count,
-            "from_ts": stats.from_ts,
-            "to_ts": stats.to_ts
+            "from_ts": unix_timestamp_to_datetime(stats.from_ts),
+            "to_ts": unix_timestamp_to_datetime(stats.to_ts)
         })
 
 
