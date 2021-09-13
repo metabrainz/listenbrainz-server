@@ -15,6 +15,7 @@ import {
   getPlayButton,
   getTrackLink,
   preciseTimestamp,
+  fullLocalizedDateFromTimestampOrISODate,
 } from "../utils";
 import GlobalAppContext from "../GlobalAppContext";
 import Card from "../components/Card";
@@ -233,8 +234,13 @@ export default class ListenCard extends React.Component<
                 <span
                   className="listen-time text-center text-muted"
                   title={
-                    listen.listened_at_iso?.toString() ||
-                    new Date(listen.listened_at * 1000).toISOString()
+                    listen.listened_at
+                      ? fullLocalizedDateFromTimestampOrISODate(
+                          listen.listened_at * 1000
+                        )
+                      : fullLocalizedDateFromTimestampOrISODate(
+                          listen.listened_at_iso
+                        )
                   }
                 >
                   {preciseTimestamp(
@@ -264,8 +270,13 @@ export default class ListenCard extends React.Component<
                       <span
                         className="listen-time text-muted"
                         title={
-                          listen.listened_at_iso?.toString() ||
-                          new Date(listen.listened_at * 1000).toISOString()
+                          listen.listened_at
+                            ? fullLocalizedDateFromTimestampOrISODate(
+                                listen.listened_at * 1000
+                              )
+                            : fullLocalizedDateFromTimestampOrISODate(
+                                listen.listened_at_iso
+                              )
                         }
                       >
                         {preciseTimestamp(
@@ -310,7 +321,7 @@ export default class ListenCard extends React.Component<
 
                   <FontAwesomeIcon
                     icon={faEllipsisV as IconProp}
-                    title="Delete"
+                    title="More actions"
                     className="dropdown-toggle"
                     id="listenControlsDropdown"
                     data-toggle="dropdown"
