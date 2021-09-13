@@ -234,9 +234,11 @@ def get_user_artists(user_id: int, stats_range: str) -> Optional[UserArtistStat]
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT user_id, artist->:range AS {range}, last_updated
-              FROM statistics.user
+            SELECT user_id, last_updated, data, count, from_ts, to_ts, stats_range
+              FROM statistics.user_new
              WHERE user_id = :user_id
+             AND stats_range = :stats_range
+             AND stats_type = 'artists'
             """.format(range=stats_range)), {
             'range': stats_range,
             'user_id': user_id
