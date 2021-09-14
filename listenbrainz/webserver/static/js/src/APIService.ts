@@ -461,8 +461,8 @@ export default class APIService {
   getFeedbackForUser = async (
     userName: string,
     offset: number = 0,
-    score?: "1" | "-1",
-    count?: number
+    count?: number,
+    score?: "1" | "-1"
   ) => {
     if (!userName) {
       throw new SyntaxError("Username missing");
