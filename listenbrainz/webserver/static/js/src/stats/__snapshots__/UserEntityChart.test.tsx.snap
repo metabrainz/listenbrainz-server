@@ -143,7 +143,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               >
                 <li>
                   <a
-                    href=""
+                    href="?page=1&range=week&entity="
                     onClick={[Function]}
                     role="button"
                   >
@@ -152,7 +152,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 </li>
                 <li>
                   <a
-                    href=""
+                    href="?page=1&range=month&entity="
                     onClick={[Function]}
                     role="button"
                   >
@@ -161,7 +161,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 </li>
                 <li>
                   <a
-                    href=""
+                    href="?page=1&range=year&entity="
                     onClick={[Function]}
                     role="button"
                   >
@@ -170,7 +170,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 </li>
                 <li>
                   <a
-                    href=""
+                    href="?page=1&range=all_time&entity="
                     onClick={[Function]}
                     role="button"
                   >
@@ -677,7 +677,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               className="next disabled"
             >
               <a
-                href=""
+                href="?page=2&range=&entity="
                 onClick={[Function]}
                 role="button"
               >
@@ -835,7 +835,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               >
                 <li>
                   <a
-                    href=""
+                    href="?page=1&range=week&entity="
                     onClick={[Function]}
                     role="button"
                   >
@@ -844,7 +844,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 </li>
                 <li>
                   <a
-                    href=""
+                    href="?page=1&range=month&entity="
                     onClick={[Function]}
                     role="button"
                   >
@@ -853,7 +853,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 </li>
                 <li>
                   <a
-                    href=""
+                    href="?page=1&range=year&entity="
                     onClick={[Function]}
                     role="button"
                   >
@@ -862,7 +862,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 </li>
                 <li>
                   <a
-                    href=""
+                    href="?page=1&range=all_time&entity="
                     onClick={[Function]}
                     role="button"
                   >
@@ -1619,7 +1619,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               className="next disabled"
             >
               <a
-                href=""
+                href="?page=2&range=&entity="
                 onClick={[Function]}
                 role="button"
               >
@@ -1777,7 +1777,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               >
                 <li>
                   <a
-                    href=""
+                    href="?page=1&range=week&entity="
                     onClick={[Function]}
                     role="button"
                   >
@@ -1786,7 +1786,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 </li>
                 <li>
                   <a
-                    href=""
+                    href="?page=1&range=month&entity="
                     onClick={[Function]}
                     role="button"
                   >
@@ -1795,7 +1795,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 </li>
                 <li>
                   <a
-                    href=""
+                    href="?page=1&range=year&entity="
                     onClick={[Function]}
                     role="button"
                   >
@@ -1804,7 +1804,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 </li>
                 <li>
                   <a
-                    href=""
+                    href="?page=1&range=all_time&entity="
                     onClick={[Function]}
                     role="button"
                   >
@@ -2461,7 +2461,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               className="next disabled"
             >
               <a
-                href=""
+                href="?page=2&range=&entity="
                 onClick={[Function]}
                 role="button"
               >
@@ -2622,7 +2622,7 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
               >
                 <li>
                   <a
-                    href=""
+                    href="?page=1&range=week&entity=artist"
                     onClick={[Function]}
                     role="button"
                   >
@@ -2631,7 +2631,7 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
                 </li>
                 <li>
                   <a
-                    href=""
+                    href="?page=1&range=month&entity=artist"
                     onClick={[Function]}
                     role="button"
                   >
@@ -2640,7 +2640,7 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
                 </li>
                 <li>
                   <a
-                    href=""
+                    href="?page=1&range=year&entity=artist"
                     onClick={[Function]}
                     role="button"
                   >
@@ -2649,7 +2649,7 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
                 </li>
                 <li>
                   <a
-                    href=""
+                    href="?page=1&range=all_time&entity=artist"
                     onClick={[Function]}
                     role="button"
                   >
