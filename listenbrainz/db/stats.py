@@ -128,7 +128,7 @@ def _insert_sitewide_jsonb_data(stats_range: str, column: str, data: dict):
         })
 
 
-def insert_user_artist_map(user_id: int, artist_map: UserArtistMapStatJson):
+def insert_user_artist_map(user_id: int, artist_map: UserArtistMapStat):
     """Inserts artist_map stats calculated from Spark into the database.
 
        If stats are already present for some user, they are updated to the new
