@@ -498,10 +498,7 @@ export default class BrainzPlayer extends React.Component<
     if (!currentUser || !currentUser.auth_token) {
       return;
     }
-    if (
-      !!dataSource?.current &&
-      !dataSource.current.datasourceRecordsListens()
-    ) {
+    if (dataSource?.current && !dataSource.current.datasourceRecordsListens()) {
       const { listens } = this.props;
       const currentListenIndex = listens.findIndex(this.isCurrentListen);
       // Metadata we get from the datasources maybe bad quality (looking at you, Youtube… ಠ_ಠ)
