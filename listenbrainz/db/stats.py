@@ -22,16 +22,15 @@
 
 
 import json
-from typing import Optional, Union
+from typing import Optional
 
 import sqlalchemy
 from data.model.sitewide_artist_stat import (SitewideArtistStat,
                                              SitewideArtistStatJson)
-from data.model.user_artist_map import UserArtistMapStat, UserArtistMapStatJson
-from data.model.user_daily_activity import (UserDailyActivityStat, UserDailyActivityStatRange)
+from data.model.user_artist_map import UserArtistMapStat
+from data.model.user_daily_activity import UserDailyActivityStat
 from data.model.user_entity import UserEntityStat, UserEntityStatRange
-from data.model.user_listening_activity import (UserListeningActivityStat, UserListeningActivityStatRange,
-                                                UserActivityStatRange, UserActivityStat)
+from data.model.user_listening_activity import (UserListeningActivityStat, UserActivityStatRange, UserActivityStat)
 from flask import current_app
 from listenbrainz import db
 from pydantic import ValidationError
