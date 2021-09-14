@@ -49,16 +49,6 @@ def notify_user_stats_update(stat_type):
         )
 
 
-def _get_user_entity_model(entity):
-    if entity == 'artists':
-        return UserArtistStatRange
-    elif entity == 'releases':
-        return UserReleaseStatRange
-    elif entity == 'recordings':
-        return UserRecordingStatRange
-    raise ValueError("Unknown entity type: %s" % entity)
-
-
 def _get_sitewide_entity_model(entity):
     if entity == 'artists':
         return SitewideArtistStatJson
