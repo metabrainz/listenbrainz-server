@@ -117,10 +117,10 @@ def get_user_artist(user_name):
     count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
     stats = db_stats.get_user_artists(user['id'], stats_range)
-    if stats is None or getattr(stats, stats_range) is None:
+    if stats is None:
         raise APINoContent('')
 
-    entity_list, total_entity_count = _process_user_entity(stats, stats_range, offset, count, entity='artist')
+    entity_list, total_entity_count = _process_user_entity(stats, offset, count, entity='artist')
     from_ts = int(getattr(stats, stats_range).from_ts)
     to_ts = int(getattr(stats, stats_range).to_ts)
     last_updated = int(stats.last_updated.timestamp())
@@ -754,7 +754,7 @@ def _process_user_entity(stats, stats_range, offset, count, entity) -> Tuple[lis
 
     count = min(count, MAX_ITEMS_PER_GET)
     count = count + offset
-    total_entity_count = getattr(stats, stats_range).count
+    total_entity_count = stats.count
     entity_list = [x.dict() for x in _get_user_entity_list(stats, stats_range, entity, offset, count)]
 
     return entity_list, total_entity_count
@@ -782,7 +782,7 @@ def _get_user_entity_list(
     """ Gets a list of entity records from the stat passed based on the offset and count
     """
     if entity == 'artist':
-        return getattr(stats, stats_range).artists[offset:count]
+        return stats.data[offset:count]
     elif entity == 'release':
         return getattr(stats, stats_range).releases[offset:count]
     elif entity == 'recording':
