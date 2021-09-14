@@ -17,6 +17,13 @@ class UserReleaseRecord(pydantic.BaseModel):
     release_msid: Optional[str]
 
 
+# we need this so that we can call json(exclude_none=True) when inserting in the db
+# not sure if this is necessary but preserving the old behaviour for now. json.dumps
+# does not have an exclude_none option.
+class UserReleaseRecordList(pydantic.BaseModel):
+    __root__: List[UserReleaseRecord]
+
+
 class UserReleaseStatRange(pydantic.BaseModel):
     """ Model for user's most listened-to releases for a particular
     time range. Currently supports week, month, year and all-time
@@ -25,7 +32,7 @@ class UserReleaseStatRange(pydantic.BaseModel):
     from_ts: int
     count: int
     stats_range: str
-    data: List[UserReleaseRecord]
+    data: UserReleaseRecordList
 
 
 class UserReleaseStat(UserReleaseStatRange):

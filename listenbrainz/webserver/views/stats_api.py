@@ -746,7 +746,7 @@ def _process_user_entity(stats, offset, count) -> Tuple[list, int]:
     count = min(count, MAX_ITEMS_PER_GET)
     count = count + offset
     total_entity_count = stats.count
-    entity_list = [x.dict() for x in stats.data[offset:count]]
+    entity_list = [x.dict() for x in stats.data.__root__[offset:count]]
 
     return entity_list, total_entity_count
 
