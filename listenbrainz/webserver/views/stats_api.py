@@ -11,7 +11,7 @@ import listenbrainz.db.user as db_user
 import pycountry
 import requests
 from data.model.sitewide_artist_stat import SitewideArtistStatJson
-from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapStatJson
+from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapStatRange
 from flask import Blueprint, current_app, jsonify, request
 
 from data.model.user_entity import UserEntityStat
@@ -508,7 +508,7 @@ def get_artist_map(user_name: str):
     # Check if stats are present in DB, if not calculate them
     calculated = not force_recalculate
     stats = db_stats.get_user_artist_map(user['id'], stats_range)
-    if stats is None or getattr(stats, stats_range) is None:
+    if stats is None:
         calculated = False
 
     # Check if the stats present in DB have been calculated in the past week, if not recalculate them
@@ -519,7 +519,7 @@ def get_artist_map(user_name: str):
             stale = True
 
     if stale or not calculated:
-        artist_stats = db_stats.get_user_artists(user['id'], stats_range)
+        artist_stats = db_stats.get_user_stats(user['id'], stats_range, 'artists')
 
         # If top artists are missing, return the stale stats if present, otherwise return 204
         if artist_stats is None or getattr(artist_stats, stats_range) is None:
@@ -536,13 +536,11 @@ def get_artist_map(user_name: str):
                     artist_mbid_counts[artist_mbid] += artist.listen_count
 
             country_code_data = _get_country_wise_counts(artist_mbid_counts)
-            result = UserArtistMapStatJson(**{
-                stats_range: {
-                    "artist_map": country_code_data,
-                    "from_ts": int(getattr(artist_stats, stats_range).from_ts),
-                    "to_ts": int(getattr(artist_stats, stats_range).to_ts),
-                    "last_updated": int(datetime.now().timestamp())
-                }
+            result = UserArtistMapStatRange(**{
+                "data": country_code_data,
+                "from_ts": artist_stats.from_ts,
+                "to_ts": artist_stats.to_ts,
+                "stats_range": stats_range,
             })
 
             # Store in DB for future use
@@ -558,7 +556,10 @@ def get_artist_map(user_name: str):
         "payload": {
             "user_id": user_name,
             "range": stats_range,
-            **(getattr(result, stats_range).dict())
+            "from_ts": stats.from_ts,
+            "to_ts": stats.to_ts,
+            "last_updated": int(stats.last_updated.timestamp()),
+            "artist_map": [x.dict() for x in stats.data.__root__]
         }
     })
 

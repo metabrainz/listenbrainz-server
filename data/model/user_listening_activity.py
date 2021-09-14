@@ -6,6 +6,7 @@ import pydantic
 from datetime import datetime
 from typing import Optional, List, Union
 
+from data.model.user_artist_map import UserArtistMapStatRange, UserArtistMapStat
 from data.model.user_daily_activity import UserDailyActivityStatRange, UserDailyActivityStat
 
 
@@ -55,5 +56,5 @@ class UserListeningActivityStat(UserListeningActivityStatRange):
     last_updated: datetime
 
 
-UserActivityStatRange = Union[UserListeningActivityStatRange, UserDailyActivityStatRange]
-UserActivityStat = Union[UserListeningActivityStat, UserDailyActivityStat]
+UserActivityStatRange = Union[UserListeningActivityStatRange, UserDailyActivityStatRange, UserArtistMapStatRange]
+UserActivityStat = Union[UserListeningActivityStat, UserDailyActivityStat, UserArtistMapStat]

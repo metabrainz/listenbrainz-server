@@ -138,8 +138,7 @@ def insert_user_artist_map(user_id: int, artist_map: UserArtistMapStatJson):
        Args: user_id: the row id of the user,
              artist_map: the artist_map stats of the user
     """
-    _insert_user_jsonb_data(
-        user_id=user_id, column='artist_map', data=artist_map.dict(exclude_none=True))
+    insert_user_jsonb_data_without_count(user_id, 'artist_map', artist_map)
 
 
 def insert_sitewide_artists(stats_range: str, artists: SitewideArtistStatJson):
@@ -248,25 +247,7 @@ def get_user_artist_map(user_id: int, stats_range: str) -> Optional[UserArtistMa
             user_id: the row ID of the user in the DB
             stats_range: the time range to fetch the stats for
     """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT user_id, artist_map->:range AS {range}, last_updated
-              FROM statistics.user
-             WHERE user_id = :user_id
-            """.format(range=stats_range)), {
-            'range': stats_range,
-            'user_id': user_id
-        })
-        row = result.fetchone()
-
-    try:
-        return UserArtistMapStat(**dict(row)) if row else None
-    except ValidationError:
-        current_app.logger.error("""ValidationError when getting {stats_range} artist_map for user with user_id: {user_id}.
-                                 Data: {data}""".format(stats_range=stats_range, user_id=user_id,
-                                                        data=json.dumps(dict(row)[stats_range], indent=3)),
-                                 exc_info=True)
-        return None
+    return get_user_activity_stats(user_id, stats_range, 'artist_map', UserArtistMapStat)
 
 
 def get_sitewide_artists(stats_range: str) -> Optional[SitewideArtistStat]:
