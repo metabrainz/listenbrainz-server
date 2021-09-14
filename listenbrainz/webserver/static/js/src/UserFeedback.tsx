@@ -45,13 +45,18 @@ export default class UserFeedback extends React.Component<
 > {
   static contextType = GlobalAppContext;
   static RecordingMetadataToListenFormat = (
-    recordingMetadata: RecordingMetadata
+    recordingMetadata: RecordingMetadata,
+    feedbackItem?: FeedbackResponseWithRecordingMetadata
   ): BaseListenFormat => {
     return {
-      listened_at: 0,
+      listened_at: feedbackItem?.created
+        ? new Date(feedbackItem.created).getTime()
+        : 0,
       track_metadata: {
         artist_name: recordingMetadata?.artist_name,
-        track_name: recordingMetadata?.track_name,
+        track_name:
+          recordingMetadata?.track_name ??
+          `MSID: ${feedbackItem?.recording_msid}`,
         additional_info: {
           recording_mbid: recordingMetadata?.recording_mbid,
           release_mbid: recordingMetadata?.release_mbid,
