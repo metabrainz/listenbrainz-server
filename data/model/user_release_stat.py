@@ -25,7 +25,7 @@ class UserReleaseStatRange(pydantic.BaseModel):
     from_ts: int
     count: int
     stats_range: str
-    releases: List[UserReleaseRecord]
+    data: List[UserReleaseRecord]
 
 
 class UserReleaseStat(UserReleaseStatRange):

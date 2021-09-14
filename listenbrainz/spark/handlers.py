@@ -81,12 +81,6 @@ def handle_user_entity(data):
 
     stats_range = data['stats_range']
     entity = data['entity']
-    data[entity] = data['data']
-
-    # Strip extra data
-    # to_remove = {'musicbrainz_id', 'type', 'entity', 'data', 'stats_range'}
-    # data_mod = {key: data[key] for key in data if key not in to_remove}
-
     entity_model = _get_user_entity_model(entity)
 
     try:
