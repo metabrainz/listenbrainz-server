@@ -778,7 +778,7 @@ def _get_user_entity_list(
     """ Gets a list of entity records from the stat passed based on the offset and count
     """
     if entity == 'artist':
-        return stats.data[offset:count]
+        return stats.data.__root__[offset:count]
     elif entity == 'release':
         return getattr(stats, stats_range).releases[offset:count]
     elif entity == 'recording':
