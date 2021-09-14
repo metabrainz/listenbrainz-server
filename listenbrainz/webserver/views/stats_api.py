@@ -338,7 +338,7 @@ def get_listening_activity(user_name: str):
     if stats is None:
         raise APINoContent('')
 
-    listening_activity = [x.dict() for x in stats.data]
+    listening_activity = [x.dict() for x in stats.data.__root__]
     return jsonify({"payload": {
         "user_id": user_name,
         "listening_activity": listening_activity,
@@ -415,7 +415,7 @@ def get_daily_activity(user_name: str):
     if stats is None:
         raise APINoContent('')
 
-    daily_activity_unprocessed = [x.dict() for x in stats.data]
+    daily_activity_unprocessed = [x.dict() for x in stats.data.__root__]
     daily_activity = {calendar.day_name[day]: [{"hour": hour, "listen_count": 0} for hour in range(0, 24)] for day in range(0, 7)}
 
     for day, day_data in daily_activity.items():
