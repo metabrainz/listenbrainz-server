@@ -82,7 +82,7 @@ def create_user_notification_event(user_id: int, metadata: NotificationMetadata)
 def delete_user_recommendation_notification_event(
         id: int,
         user_id:int
-) -> UserTimelineEvent:
+) -> bool:
     ''' Deletes recommendation and notification event using id'''
     try:
         with db.engine.connect() as connection:
@@ -90,18 +90,11 @@ def delete_user_recommendation_notification_event(
                     DELETE FROM user_timeline_event
                     WHERE user_id = :user_id
                     AND id = :id
-                    RETURNING *
                 '''), {
                     'user_id': user_id,
                     'id': id
                 })
-            try:
-                r = dict(result.fetchone())
-            except TypeError:
-                r = None
-        if not r:
-            return None
-        return UserTimelineEvent(**r)
+            return result.rowcount == 1
     except Exception as e:
         raise DatabaseException(str(e))
 
