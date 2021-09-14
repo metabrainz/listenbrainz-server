@@ -116,11 +116,11 @@ def get_user_artist(user_name):
     offset = get_non_negative_param('offset', default=0)
     count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
-    stats = db_stats.get_user_artists(user['id'], stats_range)
+    stats = db_stats.get_user_stats(user['id'], stats_range, 'artists')
     if stats is None:
         raise APINoContent('')
 
-    entity_list, total_entity_count = _process_user_entity(stats, offset, count, entity='artist')
+    entity_list, total_entity_count = _process_user_entity(stats, offset, count)
 
     return jsonify({'payload': {
         "user_id": user_name,
@@ -212,14 +212,11 @@ def get_release(user_name):
     offset = get_non_negative_param('offset', default=0)
     count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
-    stats = db_stats.get_user_releases(user['id'], stats_range)
-    if stats is None or getattr(stats, stats_range) is None:
+    stats = db_stats.get_user_stats(user['id'], stats_range, 'releases')
+    if stats is None:
         raise APINoContent('')
 
-    entity_list, total_entity_count = _process_user_entity(stats, stats_range, offset, count, entity='release')
-    from_ts = int(getattr(stats, stats_range).from_ts)
-    to_ts = int(getattr(stats, stats_range).to_ts)
-    last_updated = int(stats.last_updated.timestamp())
+    entity_list, total_entity_count = _process_user_entity(stats, offset, count)
 
     return jsonify({'payload': {
         "user_id": user_name,
@@ -228,9 +225,9 @@ def get_release(user_name):
         "total_release_count": total_entity_count,
         "offset": offset,
         "range": stats_range,
-        "from_ts": from_ts,
-        "to_ts": to_ts,
-        "last_updated": last_updated,
+        "from_ts": stats.from_ts,
+        "to_ts": stats.to_ts,
+        "last_updated": int(stats.last_updated.timestamp()),
     }})
 
 
@@ -309,14 +306,11 @@ def get_recording(user_name):
     offset = get_non_negative_param('offset', default=0)
     count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
-    stats = db_stats.get_user_recordings(user['id'], stats_range)
-    if stats is None or getattr(stats, stats_range) is None:
+    stats = db_stats.get_user_stats(user['id'], stats_range, 'recordings')
+    if stats is None:
         raise APINoContent('')
 
-    entity_list, total_entity_count = _process_user_entity(stats, stats_range, offset, count, entity='recording')
-    from_ts = int(getattr(stats, stats_range).from_ts)
-    to_ts = int(getattr(stats, stats_range).to_ts)
-    last_updated = int(stats.last_updated.timestamp())
+    entity_list, total_entity_count = _process_user_entity(stats, offset, count)
 
     return jsonify({'payload': {
         "user_id": user_name,
@@ -325,9 +319,9 @@ def get_recording(user_name):
         "total_recording_count": total_entity_count,
         "offset": offset,
         "range": stats_range,
-        "from_ts": from_ts,
-        "to_ts": to_ts,
-        "last_updated": last_updated,
+        "from_ts": stats.from_ts,
+        "to_ts": stats.to_ts,
+        "last_updated": int(stats.last_updated.timestamp()),
     }})
 
 
@@ -733,7 +727,7 @@ def get_sitewide_artist():
     })
 
 
-def _process_user_entity(stats, offset, count, entity) -> Tuple[list, int]:
+def _process_user_entity(stats, offset, count) -> Tuple[list, int]:
     """ Process the statistics data according to query params
 
         Args:
