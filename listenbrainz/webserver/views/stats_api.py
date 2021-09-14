@@ -13,6 +13,8 @@ import requests
 from data.model.sitewide_artist_stat import SitewideArtistStatJson
 from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapStatJson
 from flask import Blueprint, current_app, jsonify, request
+
+from data.model.user_entity import UserEntityStat
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError,
@@ -96,34 +98,7 @@ def get_user_artist(user_name):
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     """
-    user = db_user.get_by_mb_id(user_name)
-    if user is None:
-        raise APINotFound("Cannot find user: %s" % user_name)
-
-    stats_range = request.args.get('range', default='all_time')
-    if not _is_valid_range(stats_range):
-        raise APIBadRequest("Invalid range: {}".format(stats_range))
-
-    offset = get_non_negative_param('offset', default=0)
-    count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
-
-    stats = db_stats.get_user_stats(user['id'], stats_range, 'artists')
-    if stats is None:
-        raise APINoContent('')
-
-    entity_list, total_entity_count = _process_user_entity(stats, offset, count)
-
-    return jsonify({'payload': {
-        "user_id": user_name,
-        "artists": entity_list,
-        "count": len(entity_list),
-        "total_artist_count": total_entity_count,
-        "offset": offset,
-        "range": stats_range,
-        "from_ts": stats.from_ts,
-        "to_ts": stats.to_ts,
-        "last_updated": int(stats.last_updated.timestamp()),
-    }})
+    return _get_entity_stats(user_name, "artists", "total_artist_count")
 
 
 @stats_api_bp.route("/user/<user_name>/releases")
@@ -192,34 +167,7 @@ def get_release(user_name):
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     """
-    user = db_user.get_by_mb_id(user_name)
-    if user is None:
-        raise APINotFound("Cannot find user: %s" % user_name)
-
-    stats_range = request.args.get('range', default='all_time')
-    if not _is_valid_range(stats_range):
-        raise APIBadRequest("Invalid range: {}".format(stats_range))
-
-    offset = get_non_negative_param('offset', default=0)
-    count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
-
-    stats = db_stats.get_user_stats(user['id'], stats_range, 'releases')
-    if stats is None:
-        raise APINoContent('')
-
-    entity_list, total_entity_count = _process_user_entity(stats, offset, count)
-
-    return jsonify({'payload': {
-        "user_id": user_name,
-        'releases': entity_list,
-        "count": len(entity_list),
-        "total_release_count": total_entity_count,
-        "offset": offset,
-        "range": stats_range,
-        "from_ts": stats.from_ts,
-        "to_ts": stats.to_ts,
-        "last_updated": int(stats.last_updated.timestamp()),
-    }})
+    return _get_entity_stats(user_name, "releases", "total_release_count")
 
 
 @stats_api_bp.route("/user/<user_name>/recordings")
@@ -286,28 +234,32 @@ def get_recording(user_name):
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     """
+    return _get_entity_stats(user_name, "recordings", "total_recording_count")
+
+
+def _get_entity_stats(user_name: str, entity: str, count_key: str):
     user = db_user.get_by_mb_id(user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
-    stats_range = request.args.get('range', default='all_time')
+    stats_range = request.args.get("range", default="all_time")
     if not _is_valid_range(stats_range):
         raise APIBadRequest("Invalid range: {}".format(stats_range))
 
-    offset = get_non_negative_param('offset', default=0)
-    count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
+    offset = get_non_negative_param("offset", default=0)
+    count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
 
-    stats = db_stats.get_user_stats(user['id'], stats_range, 'recordings')
+    stats = db_stats.get_user_stats(user["id"], stats_range, entity)
     if stats is None:
         raise APINoContent('')
 
     entity_list, total_entity_count = _process_user_entity(stats, offset, count)
 
-    return jsonify({'payload': {
+    return jsonify({"payload": {
         "user_id": user_name,
-        'recordings': entity_list,
+        entity: entity_list,
         "count": len(entity_list),
-        "total_recording_count": total_entity_count,
+        count_key: total_entity_count,
         "offset": offset,
         "range": stats_range,
         "from_ts": stats.from_ts,
@@ -718,18 +670,16 @@ def get_sitewide_artist():
     })
 
 
-def _process_user_entity(stats, offset, count) -> Tuple[list, int]:
+def _process_user_entity(stats: UserEntityStat, offset, count) -> Tuple[list, int]:
     """ Process the statistics data according to query params
 
         Args:
             stats (dict): the dictionary containing statistic data
-            stats_range (str): time interval for which statistics should be collected
             offset (int): number of entities to skip from the beginning
             count (int): number of entities to return
-            entity (str): name of the entity, i.e 'artist', 'release' or 'recording'
 
         Returns:
-            entity_list, total_entity_count: a tupple of a list and integer
+            entity_list, total_entity_count: a tuple of a list and integer
                 containing the entities processed according to the query params and
                 total number of entities respectively
     """
