@@ -345,7 +345,6 @@ export default class ListenCard extends React.Component<
                     <ListenControl
                       title="Delete Listen"
                       action={this.deleteListen}
-                      className={!isCurrentUser ? "disabled" : ""}
                     />
                   ) : null}
                 </ul>
