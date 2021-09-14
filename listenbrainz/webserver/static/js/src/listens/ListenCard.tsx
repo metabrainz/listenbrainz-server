@@ -73,10 +73,9 @@ export default class ListenCard extends React.Component<
   }
 
   submitFeedback = async (score: ListenFeedBack) => {
-    const { listen, isCurrentUser, updateFeedback } = this.props;
+    const { listen, updateFeedback } = this.props;
     const { APIService, currentUser } = this.context;
-    // const { submitFeedback } = APIService;
-    if (isCurrentUser && currentUser?.auth_token) {
+    if (currentUser?.auth_token) {
       const recordingMSID = _get(
         listen,
         "track_metadata.additional_info.recording_msid"
@@ -130,10 +129,10 @@ export default class ListenCard extends React.Component<
   };
 
   recommendListenToFollowers = async () => {
-    const { listen, isCurrentUser, newAlert } = this.props;
+    const { listen, newAlert } = this.props;
     const { APIService, currentUser } = this.context;
 
-    if (isCurrentUser && currentUser?.auth_token) {
+    if (currentUser?.auth_token) {
       const metadata: UserTrackRecommendationMetadata = {
         artist_name: _get(listen, "track_metadata.artist_name"),
         track_name: _get(listen, "track_metadata.track_name"),

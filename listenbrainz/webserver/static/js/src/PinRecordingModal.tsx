@@ -5,7 +5,6 @@ import { preciseTimestamp } from "./utils";
 
 export type PinRecordingModalProps = {
   recordingToPin: Listen;
-  isCurrentUser: Boolean;
   newAlert: (
     alertType: AlertType,
     title: string,
@@ -31,11 +30,11 @@ export default class PinRecordingModal extends React.Component<
   }
 
   submitPinRecording = async () => {
-    const { recordingToPin, isCurrentUser, newAlert } = this.props;
+    const { recordingToPin, newAlert } = this.props;
     const { blurbContent } = this.state;
     const { APIService, currentUser } = this.context;
 
-    if (isCurrentUser && currentUser?.auth_token) {
+    if (currentUser?.auth_token) {
       const recordingMSID = _get(
         recordingToPin,
         "track_metadata.additional_info.recording_msid"
