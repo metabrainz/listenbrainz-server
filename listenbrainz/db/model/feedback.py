@@ -19,13 +19,15 @@ class Feedback(BaseModel):
     recording_msid: str
     score: int
     created: datetime = None
+    recording_metadata: dict = None
 
     def to_dict(self):
         return { "user_id": self.user_id,
                  "user_name": self.user_name,
                  "recording_msid": self.recording_msid,
                  "score": self.score,
-                 "created": self.created.astimezone(timezone.utc).isoformat() }
+                 "created": self.created.astimezone(timezone.utc).isoformat(),
+                 "recording_metadata":self.recording_metadata}
 
     @validator('score')
     def check_score_is_valid(cls, scr):

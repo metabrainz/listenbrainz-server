@@ -2,11 +2,12 @@ import string
 import random
 
 import ujson
-from flask import current_app
+from flask import current_app, request
 from flask_login import current_user
 
 from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user, \
     get_current_critiquebrainz_user
+
 
 REJECT_LISTENS_WITHOUT_EMAIL_ERROR = \
     'The listens were rejected because the user does not has not provided an email. ' \
@@ -67,3 +68,16 @@ def get_global_props():
         "critiquebrainz": get_current_critiquebrainz_user(),
     }
     return ujson.dumps(props)
+
+
+def parse_boolean_arg(name, default=None):
+    from listenbrainz.webserver.errors import APIBadRequest
+    value = request.args.get(name)
+    if not value:
+        return default
+
+    value = value.lower()
+    if value not in ["true", "false"]:
+        raise APIBadRequest("Invalid %s argument: %s. Must be 'true' or 'false'" % (name, value))
+
+    return True if value == "true" else False
