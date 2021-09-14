@@ -121,9 +121,6 @@ def get_user_artist(user_name):
         raise APINoContent('')
 
     entity_list, total_entity_count = _process_user_entity(stats, offset, count, entity='artist')
-    from_ts = int(getattr(stats, stats_range).from_ts)
-    to_ts = int(getattr(stats, stats_range).to_ts)
-    last_updated = int(stats.last_updated.timestamp())
 
     return jsonify({'payload': {
         "user_id": user_name,
@@ -132,9 +129,9 @@ def get_user_artist(user_name):
         "total_artist_count": total_entity_count,
         "offset": offset,
         "range": stats_range,
-        "from_ts": from_ts,
-        "to_ts": to_ts,
-        "last_updated": last_updated,
+        "from_ts": stats.from_ts,
+        "to_ts": stats.to_ts,
+        "last_updated": int(stats.last_updated.timestamp()),
     }})
 
 
@@ -736,7 +733,7 @@ def get_sitewide_artist():
     })
 
 
-def _process_user_entity(stats, stats_range, offset, count, entity) -> Tuple[list, int]:
+def _process_user_entity(stats, offset, count, entity) -> Tuple[list, int]:
     """ Process the statistics data according to query params
 
         Args:
@@ -755,7 +752,7 @@ def _process_user_entity(stats, stats_range, offset, count, entity) -> Tuple[lis
     count = min(count, MAX_ITEMS_PER_GET)
     count = count + offset
     total_entity_count = stats.count
-    entity_list = [x.dict() for x in _get_user_entity_list(stats, stats_range, entity, offset, count)]
+    entity_list = [x.dict() for x in _get_user_entity_list(stats, entity, offset, count)]
 
     return entity_list, total_entity_count
 
@@ -774,7 +771,6 @@ def _is_valid_range(stats_range: str) -> bool:
 
 def _get_user_entity_list(
     stats: Union[UserArtistStat, UserReleaseStat, UserRecordingStat],
-    stats_range: StatisticsRange,
     entity: str,
     offset: int,
     count: int,
