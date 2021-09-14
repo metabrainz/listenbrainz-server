@@ -464,19 +464,16 @@ def delete_listens_history(musicbrainz_id):
 
 @user_bp.route("/<user_name>/feedback/")
 @web_listenstore_needed
-def user_feedback(user_name: str, score: int, offset: int, count: int):
+def feedback(user_name: str):
     """ Show user feedback, with filter on score (love/hate).
 
     Args: 
         musicbrainz_id (str): the MusicBrainz ID of the user
-        score (int): the score 1 (loved) or -1 (hated) to fetch.
-        offset: the offset into the data stream for pagination
-        count: the offset into the data stream for pagination
     Raises:
         NotFound if user isn't present in the database
     """
 
-    score = request.args.get('score', 0)
+    score = request.args.get('score', 1)
     try:
         score = int(score)
     except ValueError:
@@ -502,9 +499,11 @@ def user_feedback(user_name: str, score: int, offset: int, count: int):
 
     feedback_count = get_feedback_count_for_user(user.id, score) 
     feedback = get_feedback_for_user(user.id, count, offset, score)
+    print(feedback_count)
+    print(feedback)
 
     props = {
-        "feedback": feedback,
+        "feedback": [ f.to_dict() for f in feedback],
         "feedback_count": feedback_count,
         "user": user_data,
         "active_section": "feedback",

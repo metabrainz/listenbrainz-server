@@ -1,6 +1,6 @@
 import uuid
 
-from datetime import datetime
+from datetime import datetime, timezone
 from pydantic import BaseModel, ValidationError, validator
 
 
@@ -20,6 +20,13 @@ class Feedback(BaseModel):
     score: int
     created: datetime = None
 
+    def to_dict(self):
+        return { "user_id": self.user_id,
+                 "user_name": self.user_name,
+                 "recording_msid": self.recording_msid,
+                 "score": self.score,
+                 "created": self.created.astimezone(timezone.utc).isoformat() }
+
     @validator('score')
     def check_score_is_valid(cls, scr):
         if scr not in [-1, 0, 1]:
@@ -33,3 +40,4 @@ class Feedback(BaseModel):
             return str(rec_msid)
         except (AttributeError, ValueError):
             raise ValueError('Recording MSID must be a valid UUID.')
+

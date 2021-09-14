@@ -130,6 +130,12 @@ class FeedbackDatabaseTestCase(DatabaseTestCase):
         result = db_feedback.get_feedback_count_for_user(user_id=self.user["id"])
         self.assertEqual(result, count)
 
+        result = db_feedback.get_feedback_count_for_user(user_id=self.user["id"], score=1)
+        self.assertEqual(result, 1)
+
+        result = db_feedback.get_feedback_count_for_user(user_id=self.user["id"], score=-1)
+        self.assertEqual(result, 1)
+
     def test_get_feedback_for_recording(self):
         fb_msid_1 = self.sample_feedback[0]["recording_msid"]
 
