@@ -45,12 +45,13 @@ export default class UserFeedback extends React.Component<
 > {
   static contextType = GlobalAppContext;
   static RecordingMetadataToListenFormat = (
-    recordingMetadata: RecordingMetadata,
-    feedbackItem?: FeedbackResponseWithRecordingMetadata
+    feedbackItem: FeedbackResponseWithRecordingMetadata
   ): BaseListenFormat => {
+    const { recording_metadata: recordingMetadata } = feedbackItem;
     return {
       listened_at: feedbackItem?.created
-        ? new Date(feedbackItem.created).getTime()
+        ? // We create a new JS Date with the iso string, and convert it to seconds (rather than JS milliseconds)
+          Math.floor(new Date(feedbackItem.created).getTime() / 1000)
         : 0,
       track_metadata: {
         artist_name: recordingMetadata?.artist_name,
@@ -337,9 +338,7 @@ export default class UserFeedback extends React.Component<
 
     const listensFromFeedback: BaseListenFormat[] = feedback.map(
       (feedbackItem) =>
-        UserFeedback.RecordingMetadataToListenFormat(
-          feedbackItem.recording_metadata
-        )
+        UserFeedback.RecordingMetadataToListenFormat(feedbackItem)
     );
 
     const canNavigateNewer = page !== 1;
