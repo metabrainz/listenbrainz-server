@@ -23,7 +23,11 @@ class UserDailyActivityStatMessage(pydantic.BaseModel):
     stats_range: str  # The range for which the stats are calculated, i.e week, month, year or all_time
     from_ts: int
     to_ts: int
-    daily_activity: List[UserDailyActivityRecord]
+    data: List[UserDailyActivityRecord]
+
+
+class UserDailyActivityRecordList(pydantic.BaseModel):
+    __root__: List[UserDailyActivityRecord]
 
 
 class UserDailyActivityStatRange(pydantic.BaseModel):
@@ -32,19 +36,11 @@ class UserDailyActivityStatRange(pydantic.BaseModel):
     """
     to_ts: int
     from_ts: int
-    daily_activity: List[UserDailyActivityRecord]
+    stats_range: str
+    data: UserDailyActivityRecordList
 
 
-class UserDailyActivityStatJson(pydantic.BaseModel):
-    """ Model for the JSON stored in the statistics.user table's daily_activity column
-    """
-    week: Optional[UserDailyActivityStatRange]
-    month: Optional[UserDailyActivityStatRange]
-    year: Optional[UserDailyActivityStatRange]
-    all_time: Optional[UserDailyActivityStatRange]
-
-
-class UserDailyActivityStat(UserDailyActivityStatJson):
+class UserDailyActivityStat(UserDailyActivityStatRange):
     """ Model for stats around user's daily activity
     """
     user_id: int

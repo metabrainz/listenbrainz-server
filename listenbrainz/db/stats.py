@@ -22,17 +22,15 @@
 
 
 import json
-from typing import Optional
+from typing import Optional, Union
 
 import sqlalchemy
 from data.model.sitewide_artist_stat import (SitewideArtistStat,
                                              SitewideArtistStatJson)
 from data.model.user_artist_map import UserArtistMapStat, UserArtistMapStatJson
-from data.model.user_daily_activity import (UserDailyActivityStat,
-                                            UserDailyActivityStatJson)
+from data.model.user_daily_activity import (UserDailyActivityStat, UserDailyActivityStatRange)
 from data.model.user_entity import UserEntityStat, UserEntityStatRange
-from data.model.user_listening_activity import (UserListeningActivityStat,
-                                                UserListeningActivityStatJson)
+from data.model.user_listening_activity import (UserListeningActivityStat, UserListeningActivityStatRange)
 from flask import current_app
 from listenbrainz import db
 from pydantic import ValidationError
@@ -79,6 +77,37 @@ def insert_user_jsonb_data(user_id: int, stats_type: str, stats: UserEntityStatR
         })
 
 
+def insert_user_jsonb_data_without_count(user_id, stats_type: str,
+                                         stats: Union[UserListeningActivityStatRange, UserDailyActivityStatRange]):
+    """Inserts listening_activity stats calculated from Spark into the database.
+
+       If stats are already present for some user, they are updated to the new
+       values passed.
+
+        Args:
+            user_id: the row id of the user
+            stats_type: the type of entity for which to insert stats in
+            stats: the data to be inserted
+    """
+    with db.engine.connect() as connection:
+        connection.execute(sqlalchemy.text("""
+            INSERT INTO statistics.user_new (user_id, stats_type, stats_range, data, from_ts, to_ts, last_updated)
+                 VALUES (:user_id, :stats_type, :stats_range, :data, :from_ts, :to_ts, NOW())
+            ON CONFLICT (user_id, stats_type, stats_range)
+          DO UPDATE SET data = :data,
+                        from_ts = :from_ts,
+                        to_ts = :to_ts,
+                        last_updated = NOW()
+            """), {
+            "user_id": user_id,
+            "stats_type": stats_type,
+            "stats_range": stats.stats_range,
+            "data": stats.data.json(exclude_none=True),
+            "from_ts": stats.from_ts,
+            "to_ts": stats.to_ts
+        })
+
+
 def _insert_sitewide_jsonb_data(stats_range: str, column: str, data: dict):
     """ Inserts jsonb data into the given column
 
@@ -98,32 +127,6 @@ def _insert_sitewide_jsonb_data(stats_range: str, column: str, data: dict):
             'stats_range': stats_range,
             'data': json.dumps(data)
         })
-
-
-def insert_user_listening_activity(user_id: int, listening_activity: UserListeningActivityStatJson):
-    """Inserts listening_activity stats calculated from Spark into the database.
-
-       If stats are already present for some user, they are updated to the new
-       values passed.
-
-       Args: user_id: the row id of the user,
-             listening_activity: the listening_activity stats of the user
-    """
-    _insert_user_jsonb_data(user_id=user_id, column='listening_activity',
-                            data=listening_activity.dict(exclude_none=True))
-
-
-def insert_user_daily_activity(user_id: int, daily_activity: UserDailyActivityStatJson):
-    """Inserts daily_activity stats calculated from Spark into the database.
-
-       If stats are already present for some user, they are updated to the new
-       values passed.
-
-       Args: user_id: the row id of the user,
-             daily_activity: the daily_activity stats of the user
-    """
-    _insert_user_jsonb_data(user_id=user_id, column='daily_activity',
-                            data=daily_activity.dict(exclude_none=True))
 
 
 def insert_user_artist_map(user_id: int, artist_map: UserArtistMapStatJson):

@@ -12,9 +12,9 @@ from pydantic import ValidationError
 from brainzutils.mail import send_mail
 from datetime import datetime, timezone, timedelta
 from data.model.sitewide_artist_stat import SitewideArtistStatJson
-from data.model.user_daily_activity import UserDailyActivityStatJson
+from data.model.user_daily_activity import UserDailyActivityStatRange
 from data.model.user_entity import UserEntityStatRange
-from data.model.user_listening_activity import UserListeningActivityStatJson
+from data.model.user_listening_activity import UserListeningActivityStatRange
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
 from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
 from listenbrainz.db.similar_users import import_user_similarities
@@ -94,18 +94,17 @@ def handle_user_listening_activity(data):
 
     stats_range = data['stats_range']
 
-    # Strip extra data
-    to_remove = {'musicbrainz_id', 'type', 'stats_range'}
-    data_mod = {key: data[key] for key in data if key not in to_remove}
-
     try:
-        db_stats.insert_user_listening_activity(user['id'], UserListeningActivityStatJson(**{stats_range: data_mod}))
+        db_stats.insert_user_jsonb_data_without_count(
+            user['id'], 'listening_activity', UserListeningActivityStatRange(**data)
+        )
     except ValidationError:
         current_app.logger.error("""ValidationError while inserting {stats_range} listening_activity for user with
-                                    user_id: {user_id}. Data: {data}""".format(stats_range=stats_range, user_id=user['id'],
-                                                                               data=json.dumps({stats_range: data_mod},
-                                                                                               indent=3)),
-                                 exc_info=True)
+        user_id: {user_id}. Data: {data}""".format(
+            stats_range=stats_range,
+            user_id=user['id'],
+            data=json.dumps(data, indent=3)
+        ), exc_info=True)
 
 
 def handle_user_daily_activity(data):
@@ -123,17 +122,15 @@ def handle_user_daily_activity(data):
 
     stats_range = data['stats_range']
 
-    # Strip extra data
-    to_remove = {'musicbrainz_id', 'type', 'stats_range'}
-    data_mod = {key: data[key] for key in data if key not in to_remove}
-
     try:
-        db_stats.insert_user_daily_activity(user['id'], UserDailyActivityStatJson(**{stats_range: data_mod}))
+        db_stats.insert_user_jsonb_data_without_count(user['id'], 'daily_activity', UserDailyActivityStatRange(**data))
     except ValidationError:
         current_app.logger.error("""ValidationError while inserting {stats_range} daily_activity for user with
-                                    user_id: {user_id}. Data: {data}""".format(user_id=user['id'],
-                                                                               data=json.dumps(data_mod, indent=3)),
-                                 exc_info=True)
+        user_id: {user_id}. Data: {data}""".format(
+            stats_range=stats_range,
+            user_id=user['id'],
+            data=json.dumps(data, indent=3)
+        ), exc_info=True)
 
 
 def handle_sitewide_entity(data):

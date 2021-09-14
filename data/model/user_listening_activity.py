@@ -32,25 +32,21 @@ class UserListeningActivityStatMessage(pydantic.BaseModel):
     listening_activity: List[UserListeningActivityRecord]
 
 
+class UserListeningActivityRecordList(pydantic.BaseModel):
+    __root__: List[UserListeningActivityRecord]
+
+
 class UserListeningActivityStatRange(pydantic.BaseModel):
     """ Model for user's listening activity for a particular time range.
         Currently supports week, month, year and all-time
     """
     to_ts: int
     from_ts: int
-    listening_activity: List[UserListeningActivityRecord]
+    stats_range: str
+    data: UserListeningActivityRecordList
 
 
-class UserListeningActivityStatJson(pydantic.BaseModel):
-    """ Model for the JSON stored in the statistics.user table's listening_activity column
-    """
-    week: Optional[UserListeningActivityStatRange]
-    month: Optional[UserListeningActivityStatRange]
-    year: Optional[UserListeningActivityStatRange]
-    all_time: Optional[UserListeningActivityStatRange]
-
-
-class UserListeningActivityStat(UserListeningActivityStatJson):
+class UserListeningActivityStat(UserListeningActivityStatRange):
     """ Model for stats around user's listening activity
     """
     user_id: int
