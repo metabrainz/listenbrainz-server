@@ -24,19 +24,11 @@ class UserReleaseStatRange(pydantic.BaseModel):
     to_ts: int
     from_ts: int
     count: int
+    stats_range: str
     releases: List[UserReleaseRecord]
 
 
-class UserReleaseStatJson(pydantic.BaseModel):
-    """ Model for the JSON stored in the statistics.user table's release column
-    """
-    week: Optional[UserReleaseStatRange]
-    year: Optional[UserReleaseStatRange]
-    month: Optional[UserReleaseStatRange]
-    all_time: Optional[UserReleaseStatRange]
-
-
-class UserReleaseStat(UserReleaseStatJson):
+class UserReleaseStat(UserReleaseStatRange):
     """ Model for stats around a user's most listened releases
     """
     user_id: int

@@ -27,19 +27,11 @@ class UserRecordingStatRange(pydantic.BaseModel):
     to_ts: int
     from_ts: int
     count: int
-    recordings: List[UserRecordingRecord]
+    stats_range: str
+    data: List[UserRecordingRecord]
 
 
-class UserRecordingStatJson(pydantic.BaseModel):
-    """ Model for the JSON stored in the statistics.user table's recording column
-    """
-    week: Optional[UserRecordingStatRange]
-    year: Optional[UserRecordingStatRange]
-    month: Optional[UserRecordingStatRange]
-    all_time: Optional[UserRecordingStatRange]
-
-
-class UserRecordingStat(UserRecordingStatJson):
+class UserRecordingStat(UserRecordingStatRange):
     """ Model for stats around a user's most listened recordings
     """
     user_id: int

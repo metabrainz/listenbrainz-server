@@ -15,8 +15,8 @@ from data.model.sitewide_artist_stat import SitewideArtistStatJson
 from data.model.user_artist_stat import UserArtistStatRange
 from data.model.user_daily_activity import UserDailyActivityStatJson
 from data.model.user_listening_activity import UserListeningActivityStatJson
-from data.model.user_release_stat import UserReleaseStatJson
-from data.model.user_recording_stat import UserRecordingStatJson
+from data.model.user_release_stat import UserReleaseStatRange
+from data.model.user_recording_stat import UserRecordingStatRange
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
 from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
 from listenbrainz.db.similar_users import import_user_similarities
@@ -55,9 +55,9 @@ def _get_user_entity_model(entity):
     if entity == 'artists':
         return UserArtistStatRange
     elif entity == 'releases':
-        return UserReleaseStatJson
+        return UserReleaseStatRange
     elif entity == 'recordings':
-        return UserRecordingStatJson
+        return UserRecordingStatRange
     raise ValueError("Unknown entity type: %s" % entity)
 
 
@@ -89,11 +89,8 @@ def handle_user_entity(data):
 
     entity_model = _get_user_entity_model(entity)
 
-    # Get function to insert statistics
-    db_handler = getattr(db_stats, 'insert_user_{}'.format(entity))
-
     try:
-        db_handler(user['id'], entity_model(**data))
+        db_stats.insert_user_jsonb_data(user['id'], entity, entity_model(**data))
     except ValidationError:
         current_app.logger.error("""ValidationError while inserting {stats_range} top {entity} for user with user_id: {user_id}.
                                  Data: {data}""".format(stats_range=stats_range, entity=entity,

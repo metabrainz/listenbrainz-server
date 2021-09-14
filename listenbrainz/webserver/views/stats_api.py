@@ -752,7 +752,7 @@ def _process_user_entity(stats, offset, count, entity) -> Tuple[list, int]:
     count = min(count, MAX_ITEMS_PER_GET)
     count = count + offset
     total_entity_count = stats.count
-    entity_list = [x.dict() for x in _get_user_entity_list(stats, entity, offset, count)]
+    entity_list = [x.dict() for x in stats.data[offset:count]]
 
     return entity_list, total_entity_count
 
@@ -767,23 +767,6 @@ def _is_valid_range(stats_range: str) -> bool:
         result: True if given range is valid
     """
     return stats_range in StatisticsRange.__members__
-
-
-def _get_user_entity_list(
-    stats: Union[UserArtistStat, UserReleaseStat, UserRecordingStat],
-    entity: str,
-    offset: int,
-    count: int,
-) -> List[Union[UserArtistRecord, UserReleaseRecord, UserRecordingRecord]]:
-    """ Gets a list of entity records from the stat passed based on the offset and count
-    """
-    if entity == 'artist':
-        return stats.data.__root__[offset:count]
-    elif entity == 'release':
-        return getattr(stats, stats_range).releases[offset:count]
-    elif entity == 'recording':
-        return getattr(stats, stats_range).recordings[offset:count]
-    raise APIBadRequest("Unknown entity: %s" % entity)
 
 
 def _get_sitewide_entity_list(

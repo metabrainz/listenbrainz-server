@@ -34,8 +34,8 @@ from data.model.user_daily_activity import (UserDailyActivityStat,
 from data.model.user_listening_activity import (UserListeningActivityStat,
                                                 UserListeningActivityStatJson)
 from data.model.user_recording_stat import (UserRecordingStat,
-                                            UserRecordingStatJson)
-from data.model.user_release_stat import UserReleaseStat, UserReleaseStatJson
+                                            UserRecordingStatJson, UserRecordingStatRange)
+from data.model.user_release_stat import UserReleaseStat, UserReleaseStatJson, UserReleaseStatRange
 from flask import current_app
 from listenbrainz import db
 from listenbrainz.utils import unix_timestamp_to_datetime
@@ -54,13 +54,14 @@ def get_timestamp_for_last_user_stats_update():
         return row['last_update_ts'] if row else None
 
 
-def _insert_user_jsonb_data(user_id: int, stats_type: str, stats: Union[UserArtistStatRange]):
+def insert_user_jsonb_data(user_id: int, stats_type: str,
+                           stats: Union[UserArtistStatRange, UserReleaseStatRange, UserRecordingStatRange]):
     """ Inserts jsonb data into the given column
 
         Args:
             user_id: the row id of the user,
-            column: the column in database to insert into
-            data: the data to be inserted
+            stats_type: the type of entity for which to insert stats in
+            stats: the data to be inserted
     """
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
@@ -102,43 +103,6 @@ def _insert_sitewide_jsonb_data(stats_range: str, column: str, data: dict):
             'stats_range': stats_range,
             'data': json.dumps(data)
         })
-
-
-def insert_user_artists(user_id: int, stats: UserArtistStatRange):
-    """ Inserts artist stats calculated from Spark into the database.
-
-        If stats are already present for some user, they are updated to the new
-        values passed.
-
-        Args: user_id: the row id of the user,
-              artists: the top artists listened to by the user
-    """
-    _insert_user_jsonb_data(user_id=user_id, stats_type='artists', stats=stats)
-
-
-def insert_user_releases(user_id: int, stats: UserReleaseStatJson):
-    """Inserts release stats calculated from Spark into the database.
-
-       If stats are already present for some user, they are updated to the new
-       values passed.
-
-       Args: user_id: the row id of the user,
-             releases: the top releases listened to by the user
-    """
-    _insert_user_jsonb_data(user_id=user_id, stats_type='releases', stats=stats)
-
-
-def insert_user_recordings(user_id: int, recordings: UserRecordingStatJson):
-    """Inserts recording stats calculated from Spark into the database.
-
-       If stats are already present for some user, they are updated to the new
-       values passed.
-
-       Args: user_id: the row id of the user,
-             recordings: the top releases listened to by the user
-    """
-    _insert_user_jsonb_data(
-        user_id=user_id, column='recording', data=recordings.dict(exclude_none=True))
 
 
 def insert_user_listening_activity(user_id: int, listening_activity: UserListeningActivityStatJson):
@@ -193,45 +157,14 @@ def insert_sitewide_artists(stats_range: str, artists: SitewideArtistStatJson):
         stats_range, column='artist', data=artists.dict(exclude_none=True))
 
 
-def get_user_stats(user_id, columns):
-    """ Get a particular stat for user with the given row ID.
-
-        Args:
-            user_id (int): the row ID of the user in the DB
-            columns (str): the column name(s) of the user stat to be retrieved
-
-        Returns:
-            A dict of the following format
-            {
-                'user_id' (int): the row ID of the user in the DB,
-                '<stat>'  (dict): the stats requested, for better description see below
-                'last_updated' (datetime): datetime object representing when
-                                           this stat was last updated
-            }
-
-            The `stat` dict contains all stats calculated by Apache Spark stored in that column
-            from listenbrainz.stats.user, keyed by stat name.
-    """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT user_id, {columns}, last_updated
-              FROM statistics.user_new
-             WHERE user_id = :user_id
-            """.format(columns=columns)), {
-            'user_id': user_id
-        }
-        )
-        row = result.fetchone()
-
-    return dict(row) if row else None
-
-
-def get_user_artists(user_id: int, stats_range: str) -> Optional[UserArtistStat]:
-    """ Get top artists in a time range for user with given ID.
+def get_user_stats(user_id: int, stats_range: str, stats_type: str) \
+        -> Optional[Union[UserArtistStat, UserReleaseStat, UserRecordingStat]]:
+    """ Get top stats of given type in a time range for user with given ID.
 
         Args:
             user_id: the row ID of the user in the DB
             stats_range: the time range to fetch the stats for
+            stats_type: the entity type to fetch stats for
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
@@ -239,10 +172,11 @@ def get_user_artists(user_id: int, stats_range: str) -> Optional[UserArtistStat]
               FROM statistics.user_new
              WHERE user_id = :user_id
              AND stats_range = :stats_range
-             AND stats_type = 'artists'
-            """.format(range=stats_range)), {
+             AND stats_type = :stats_type
+            """), {
             'stats_range': stats_range,
-            'user_id': user_id
+            'user_id': user_id,
+            'stats_type': stats_type,
         })
         row = result.fetchone()
 
@@ -250,62 +184,6 @@ def get_user_artists(user_id: int, stats_range: str) -> Optional[UserArtistStat]
         return UserArtistStat(**dict(row)) if row else None
     except ValidationError:
         current_app.logger.error("""ValidationError when getting {stats_range} top artists for user with user_id: {user_id}.
-                                 Data: {data}""".format(stats_range=stats_range, user_id=user_id,
-                                                        data=json.dumps(dict(row)[stats_range], indent=3)),
-                                 exc_info=True)
-        return None
-
-
-def get_user_releases(user_id: int, stats_range: str) -> Optional[UserReleaseStat]:
-    """Get top releases in a time range for user with given ID.
-
-        Args:
-            user_id: the row ID of the user in the DB
-            stats_range: the time range to fetch the stats for
-    """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT user_id, release->:range AS {range}, last_updated
-              FROM statistics.user
-             WHERE user_id = :user_id
-            """.format(range=stats_range)), {
-            'range': stats_range,
-            'user_id': user_id
-        })
-        row = result.fetchone()
-
-    try:
-        return UserReleaseStat(**dict(row)) if row else None
-    except ValidationError:
-        current_app.logger.error("""ValidationError when getting {stats_range} top releases for user with user_id: {user_id}.
-                                 Data: {data}""".format(stats_range=stats_range, user_id=user_id,
-                                                        data=json.dumps(dict(row)[stats_range], indent=3)),
-                                 exc_info=True)
-        return None
-
-
-def get_user_recordings(user_id: int, stats_range: str) -> Optional[UserRecordingStat]:
-    """Get top recordings in a time range for user with given ID.
-
-        Args:
-            user_id: the row ID of the user in the DB
-            stats_range: the time range to fetch the stats for
-    """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT user_id, recording->:range AS {range}, last_updated
-              FROM statistics.user
-             WHERE user_id = :user_id
-            """.format(range=stats_range)), {
-            'range': stats_range,
-            'user_id': user_id
-        })
-        row = result.fetchone()
-
-    try:
-        return UserRecordingStat(**dict(row)) if row else None
-    except ValidationError:
-        current_app.logger.error("""ValidationError when getting {stats_range} top recordings for user with user_id: {user_id}.
                                  Data: {data}""".format(stats_range=stats_range, user_id=user_id,
                                                         data=json.dumps(dict(row)[stats_range], indent=3)),
                                  exc_info=True)
