@@ -33,12 +33,10 @@ from data.model.user_daily_activity import (UserDailyActivityStat,
                                             UserDailyActivityStatJson)
 from data.model.user_listening_activity import (UserListeningActivityStat,
                                                 UserListeningActivityStatJson)
-from data.model.user_recording_stat import (UserRecordingStat,
-                                            UserRecordingStatJson, UserRecordingStatRange)
-from data.model.user_release_stat import UserReleaseStat, UserReleaseStatJson, UserReleaseStatRange
+from data.model.user_recording_stat import UserRecordingStat, UserRecordingStatRange
+from data.model.user_release_stat import UserReleaseStat, UserReleaseStatRange
 from flask import current_app
 from listenbrainz import db
-from listenbrainz.utils import unix_timestamp_to_datetime
 from pydantic import ValidationError
 
 
