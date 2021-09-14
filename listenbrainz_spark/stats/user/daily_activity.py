@@ -150,7 +150,7 @@ def create_messages(data, stats_range: str, from_ts: int, to_ts: int) -> Iterato
         try:
             model = UserDailyActivityStatMessage(**{
                 'musicbrainz_id': _dict['user_name'],
-                'type': 'user_daily_activity',
+                'type': 'daily_activity',
                 'from_ts': from_ts,
                 'to_ts': to_ts,
                 'stats_range': stats_range,

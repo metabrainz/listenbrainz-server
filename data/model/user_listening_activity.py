@@ -29,7 +29,7 @@ class UserListeningActivityStatMessage(pydantic.BaseModel):
     stats_range: str  # The range for which the stats are calculated, i.e week, month, year or all_time
     from_ts: int
     to_ts: int
-    listening_activity: List[UserListeningActivityRecord]
+    data: List[UserListeningActivityRecord]
 
 
 class UserListeningActivityRecordList(pydantic.BaseModel):
