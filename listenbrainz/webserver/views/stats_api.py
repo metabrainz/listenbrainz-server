@@ -335,7 +335,7 @@ def get_listening_activity(user_name: str):
         raise APIBadRequest("Invalid range: {}".format(stats_range))
 
     stats = db_stats.get_user_listening_activity(user['id'], stats_range)
-    if stats is None or getattr(stats, stats_range) is None:
+    if stats is None:
         raise APINoContent('')
 
     listening_activity = [x.dict() for x in stats.data]
@@ -412,7 +412,7 @@ def get_daily_activity(user_name: str):
         raise APIBadRequest("Invalid range: {}".format(stats_range))
 
     stats = db_stats.get_user_daily_activity(user['id'], stats_range)
-    if stats is None or getattr(stats, stats_range) is None:
+    if stats is None:
         raise APINoContent('')
 
     daily_activity_unprocessed = [x.dict() for x in stats.data]
