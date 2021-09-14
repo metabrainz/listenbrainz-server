@@ -32,7 +32,7 @@ import listenbrainz.db.pinned_recording as db_pinned_rec
 
 from data.model.listen import APIListen, TrackMetadata, AdditionalInfo
 from data.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, \
-    APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent, APIRecommendationNotificationTimelineEvent
+    APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent
 from listenbrainz.db.pinned_recording import get_pins_for_feed
 from listenbrainz.db.model.pinned_recording import fetch_track_metadata_for_pins
 from listenbrainz import webserver
@@ -239,6 +239,7 @@ def user_feed(user_name: str):
         'events': [event.dict() for event in all_events],
     }})
 
+
 @user_timeline_event_api_bp.route("/user/<user_name>/feed/events/delete", methods=['OPTIONS', 'POST'])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
@@ -250,21 +251,15 @@ def delete_feed_events(user_name):
     to your need.
     {
         "event_type": "recording_recommendation",
-        "metadata": {
-            id: int
-        }
+        "id": int
     }
     {
         "event_type": "notification",
-        "metadata": {
-            id: int
-        }
+        "id": int
     }
     {
         "event_type": "recording_pin",
-        "metadata": {
-            row_id: int
-        }
+        "row_id": int
     }
     :param user_name: The MusicBrainz ID of the user from whose timeline events are being deleted
     :type user_name: ``str``
@@ -278,29 +273,35 @@ def delete_feed_events(user_name):
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
         raise APIUnauthorized("You don't have permissions to delete from this user's timeline.")
+
     try:
         event = ujson.loads(request.get_data())
+
         if event["event_type"] in [UserTimelineEventType.RECORDING_RECOMMENDATION.value,
                 UserTimelineEventType.NOTIFICATION.value]:
-            deleted_event = db_user_timeline_event.delete_user_recommendation_notification_event(event["metadata"]["id"],
-                    user["id"])
-            if not deleted_event:
-                raise APIBadRequest("No such event to delete")
-            event_data = deleted_event.dict()
-            event_data['created'] = event_data['created'].timestamp()
-            event_data['event_type'] = event_data['event_type'].value
-            return jsonify(event_data)
+            try:
+                event_deleted = db_user_timeline_event.delete_user_recommendation_notification_event(event["id"], user["id"])
+            except Exception as e:
+                raise APIInternalServerError("Something went wrong. Please try again")
+            if not event_deleted:
+                raise APINotFound("Cannot find '%s' event with id '%s' for user '%s'" % (event["event_type"], event["id"],
+                    user["id"]))
+            return jsonify({"status": "ok"})
+
         elif event["event_type"] == UserTimelineEventType.RECORDING_PIN.value:
             try:
-                recording_deleted = db_pinned_rec.delete(event["metadata"]["row_id"], user["id"])
+                recording_deleted = db_pinned_rec.delete(event["row_id"], user["id"])
             except Exception as e:
                 raise APIInternalServerError("Something went wrong. Please try again")
             if not recording_deleted:
-                raise APINotFound("Cannot find pin with row_id '%s' for user '%s'" % (event["metadata"]["row_id"], user["musicbrainz_id"]))
+                raise APINotFound("Cannot find pin with row_id '%s' for user '%s'" % (event["row_id"], user["musicbrainz_id"]))
             return jsonify({"status": "ok"})
+
         raise APIBadRequest("This event type is not supported for deletion via this method")
+
     except (ValueError, KeyError) as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
+
 
 def get_listen_events(
     db_conn: TimescaleListenStore,
@@ -386,7 +387,7 @@ def get_notification_events(user: dict, count: int) -> List[APITimelineEvent]:
     notification_events_db = db_user_timeline_event.get_user_notification_events(user_id=user['id'], count=count)
     events = []
     for event in notification_events_db:
-        events.append(APIRecommendationNotificationTimelineEvent(
+        events.append(APITimelineEvent(
             id=event.id,
             event_type=UserTimelineEventType.NOTIFICATION,
             user_name=event.metadata.creator,
@@ -425,7 +426,7 @@ def get_recording_recommendation_events(users_for_events: List[dict], min_ts: in
                 ),
             )
 
-            events.append(APIRecommendationNotificationTimelineEvent(
+            events.append(APITimelineEvent(
                 id=event.id,
                 event_type=UserTimelineEventType.RECORDING_RECOMMENDATION,
                 user_name=listen.user_name,

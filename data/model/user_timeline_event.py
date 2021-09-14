@@ -77,15 +77,7 @@ APIEventMetadata = Union[APIListen, APIFollowEvent, APINotificationEvent, APIPin
 
 
 class APITimelineEvent(pydantic.BaseModel):
-    event_type: UserTimelineEventType
-    user_name: str
-    created: int
-    metadata: APIEventMetadata
-
-class APIRecommendationNotificationTimelineEvent(pydantic.BaseModel):
-    # since `id` is not sent in APITimelineEvent
-    # this field is needed for deletion of Recommendation and Notification Events
-    id: int
+    id: Optional[int]
     event_type: UserTimelineEventType
     user_name: str
     created: int
