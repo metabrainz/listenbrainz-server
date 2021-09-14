@@ -7,12 +7,14 @@ import * as _ from "lodash";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { faHeart, faHeartBroken } from "@fortawesome/free-solid-svg-icons";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
 } from "./AlertNotificationsHOC";
 
+import Pill from "./components/Pill";
 import APIServiceClass from "./APIService";
 import BrainzPlayer from "./BrainzPlayer";
 import ErrorBoundary from "./ErrorBoundary";
@@ -37,6 +39,7 @@ export interface UserFeedbackState {
   maxPage: number;
   recordingFeedbackMap: RecordingFeedbackMap;
   recordingToPin?: BaseListenFormat;
+  selectedFeedbackScore: ListenFeedBack;
 }
 
 export default class UserFeedback extends React.Component<
@@ -83,6 +86,7 @@ export default class UserFeedback extends React.Component<
       loading: false,
       direction: "down",
       recordingFeedbackMap: {},
+      selectedFeedbackScore: props.feedback?.[0]?.score ?? 1,
     };
 
     this.listensTable = React.createRef();
@@ -97,11 +101,7 @@ export default class UserFeedback extends React.Component<
     window.addEventListener("popstate", this.handleURLChange);
     document.addEventListener("keydown", this.handleKeyDown);
 
-    const { user } = this.props;
-
-    if (currentUser?.name && currentUser?.name === user?.name) {
-      this.loadFeedback();
-    }
+    this.loadFeedback();
   }
 
   componentWillUnmount() {
@@ -145,21 +145,29 @@ export default class UserFeedback extends React.Component<
 
   // pagination functions
   handleURLChange = async (): Promise<void> => {
-    const { page, maxPage } = this.state;
+    const { page, maxPage, selectedFeedbackScore } = this.state;
     const url = new URL(window.location.href);
+    let newPage = Number(url.searchParams.get("page"));
+    let newScore = Number(url.searchParams.get("score"));
+    if (newScore !== 1 && newScore !== -1) {
+      newScore = 1;
+    }
 
-    if (url.searchParams.get("page")) {
-      let newPage = Number(url.searchParams.get("page"));
-      if (newPage === page) {
-        // page didn't change
+    if (!_.isNaN(newPage) || !_.isNaN(newScore)) {
+      if (newPage === page && newScore === selectedFeedbackScore) {
+        // search params didn't change, do nothing
         return;
       }
       newPage = Math.max(newPage, 1);
       newPage = Math.min(newPage, maxPage);
-      await this.getFeedbackItemsFromAPI(newPage, false);
+      await this.getFeedbackItemsFromAPI(
+        newPage,
+        false,
+        newScore as ListenFeedBack
+      );
     } else if (page !== 1) {
       // occurs on back + forward history
-      await this.getFeedbackItemsFromAPI(1, false);
+      await this.getFeedbackItemsFromAPI(1, false, newScore as ListenFeedBack);
     }
   };
 
@@ -206,38 +214,54 @@ export default class UserFeedback extends React.Component<
 
   getFeedbackItemsFromAPI = async (
     page: number,
-    pushHistory: boolean = true
+    pushHistory: boolean = true,
+    feedbackScore?: ListenFeedBack
   ) => {
     const { newAlert, user } = this.props;
     const { APIService } = this.context;
+    const { selectedFeedbackScore } = this.state;
     this.setState({ loading: true });
 
     try {
       const offset = (page - 1) * this.DEFAULT_ITEMS_PER_PAGE;
       const count = this.DEFAULT_ITEMS_PER_PAGE;
-      const score = "1";
-      const feedbackItems = await APIService.getFeedbackForUser(
+      const score = feedbackScore ?? selectedFeedbackScore;
+      const feedbackResponse = await APIService.getFeedbackForUser(
         user.name,
         offset,
         count,
         score
       );
 
-      if (!feedbackItems.pinned_recordings.length) {
+      if (!feedbackResponse?.feedback?.length) {
         // No pins were fetched
-        this.setState({ loading: false });
+        this.setState({
+          loading: false,
+          page: 1,
+          maxPage: 1,
+          feedback: [],
+          selectedFeedbackScore: score,
+        });
         return;
       }
 
-      const totalCount = parseInt(feedbackItems.total_count, 10);
-      this.setState({
-        loading: false,
-        page,
-        maxPage: Math.ceil(totalCount / this.DEFAULT_ITEMS_PER_PAGE),
-        feedback: feedbackItems.feedback,
-      });
+      const totalCount = parseInt(feedbackResponse.total_count, 10);
+      this.setState(
+        {
+          loading: false,
+          page,
+          maxPage: Math.ceil(totalCount / this.DEFAULT_ITEMS_PER_PAGE),
+          feedback: feedbackResponse.feedback,
+          selectedFeedbackScore: score,
+        },
+        this.loadFeedback
+      );
       if (pushHistory) {
-        window.history.pushState(null, "", `?page=${[page]}`);
+        window.history.pushState(
+          null,
+          "",
+          `?page=${[page]}&score=${selectedFeedbackScore}`
+        );
       }
 
       // Scroll window back to the top of the events container element
@@ -265,10 +289,12 @@ export default class UserFeedback extends React.Component<
   };
 
   getFeedback = async () => {
-    const { user, feedback, newAlert } = this.props;
-    let recordings = "";
+    const { currentUser } = this.context;
+    const { user, newAlert } = this.props;
+    const { feedback } = this.state;
 
-    if (feedback) {
+    let recordings = "";
+    if (feedback?.length && currentUser?.auth_token) {
       feedback.forEach((feedbackItem) => {
         const recordingMsid = _.get(feedbackItem, "recording_msid");
         if (recordingMsid) {
@@ -292,6 +318,14 @@ export default class UserFeedback extends React.Component<
       }
     }
     return [];
+  };
+
+  changeSelectedFeedback = (newFeedbackLevel: ListenFeedBack) => {
+    const { page } = this.state;
+    this.setState(
+      { selectedFeedbackScore: newFeedbackLevel },
+      this.getFeedbackItemsFromAPI.bind(this, page)
+    );
   };
 
   loadFeedback = async () => {
@@ -332,6 +366,7 @@ export default class UserFeedback extends React.Component<
       maxPage,
       page,
       recordingToPin,
+      selectedFeedbackScore,
     } = this.state;
     const { user, newAlert } = this.props;
     const { currentUser } = this.context;
@@ -347,11 +382,36 @@ export default class UserFeedback extends React.Component<
       <div role="main">
         <div className="row">
           <div className="col-md-8">
-            <h3>Tracks you loved/hated</h3>
+            <h3
+              style={{
+                display: "inline-block",
+                marginRight: "0.5em",
+                verticalAlign: "sub",
+              }}
+            >
+              Tracks {user.name === currentUser.name ? "you" : user.name}
+            </h3>
+            <Pill
+              active={selectedFeedbackScore === 1}
+              type="secondary"
+              onClick={() => this.changeSelectedFeedback(1)}
+            >
+              <FontAwesomeIcon icon={faHeart as IconProp} /> Loved
+            </Pill>
+            <Pill
+              active={selectedFeedbackScore === -1}
+              type="secondary"
+              onClick={() => this.changeSelectedFeedback(-1)}
+            >
+              <FontAwesomeIcon icon={faHeartBroken as IconProp} /> Hated
+            </Pill>
 
             {!feedback.length && (
               <div className="lead text-center">
-                <p>No loved/hated tracks to show yet</p>
+                <p>
+                  No {selectedFeedbackScore === 1 ? "loved" : "hated"} tracks to
+                  show yet
+                </p>
               </div>
             )}
             {feedback.length > 0 && (
