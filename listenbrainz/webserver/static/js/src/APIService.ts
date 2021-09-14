@@ -462,13 +462,13 @@ export default class APIService {
     userName: string,
     offset: number = 0,
     count?: number,
-    score?: "1" | "-1"
+    score?: ListenFeedBack
   ) => {
     if (!userName) {
       throw new SyntaxError("Username missing");
     }
     let queryURL = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback`;
-    const queryParams: Array<string> = [];
+    const queryParams: Array<string> = ["metadata=true"];
     if (!isUndefined(offset)) {
       queryParams.push(`offset=${offset}`);
     }
