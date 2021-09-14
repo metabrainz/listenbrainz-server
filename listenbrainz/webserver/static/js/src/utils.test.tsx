@@ -33,9 +33,24 @@ describe("formatWSMessageToListen", () => {
 describe("preciseTimestamp", () => {
   const currentDate: Date = new Date();
 
-  it("uses timeago formatting for <24h dates", () => {
-    const testDate: number = currentDate.getTime() - 1000 * 3600 * 12; // 12 hours ago
+  it("uses timeago formatting for if timestamp is on the same day", () => {
+    const date: Date = new Date("2021-09-14T16:16:16.161Z"); // 4PM UTC
+    const testDate: number = date.getTime() - 1000 * 3600 * 12; // 12 hours ago was already today
     expect(preciseTimestamp(testDate)).toMatch(timeago.ago(testDate));
+  });
+
+  it("uses no-year formatting if timestamp is 'yesterday'", () => {
+    const date: Date = new Date("2021-09-14T03:16:16.161Z"); // 3AM UTC
+    const testDate: number = date.getTime() - 1000 * 3600 * 6; // 6 hours prior was yesterday
+    expect(preciseTimestamp(testDate)).toMatch(
+      new Date(testDate).toLocaleString(undefined, {
+        day: "2-digit",
+        month: "short",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      })
+    );
   });
 
   it("uses no-year formatting for <1y dates", () => {
