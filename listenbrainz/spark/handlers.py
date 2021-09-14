@@ -79,8 +79,7 @@ def handle_user_entity(data):
                                  exc_info=True)
 
 
-def handle_user_listening_activity(data):
-    """ Take listening activity stats for user and save it in database. """
+def _handle_user_activity_stats(stats_type, stats_model, data):
     musicbrainz_id = data['musicbrainz_id']
     user = db_user.get_by_mb_id(musicbrainz_id)
     if not user:
@@ -91,46 +90,28 @@ def handle_user_listening_activity(data):
     if is_new_user_stats_batch():
         notify_user_stats_update(stat_type=data.get('type', ''))
     current_app.logger.debug("inserting stats for user %s", musicbrainz_id)
-
     stats_range = data['stats_range']
 
     try:
-        db_stats.insert_user_jsonb_data_without_count(
-            user['id'], 'listening_activity', UserListeningActivityStatRange(**data)
-        )
+        db_stats.insert_user_jsonb_data_without_count(user['id'], stats_type, stats_model(**data))
     except ValidationError:
-        current_app.logger.error("""ValidationError while inserting {stats_range} listening_activity for user with
+        current_app.logger.error("""ValidationError while inserting {stats_range} {stats_type} for user with
         user_id: {user_id}. Data: {data}""".format(
             stats_range=stats_range,
+            stats_type=stats_type,
             user_id=user['id'],
             data=json.dumps(data, indent=3)
         ), exc_info=True)
+
+
+def handle_user_listening_activity(data):
+    """ Take listening activity stats for user and save it in database. """
+    _handle_user_activity_stats('listening_activity', UserListeningActivityStatRange, data)
 
 
 def handle_user_daily_activity(data):
     """ Take daily activity stats for user and save it in database. """
-    musicbrainz_id = data['musicbrainz_id']
-    user = db_user.get_by_mb_id(musicbrainz_id)
-    if not user:
-        current_app.logger.info("Calculated stats for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
-        return
-
-    # send a notification if this is a new batch of stats
-    if is_new_user_stats_batch():
-        notify_user_stats_update(stat_type=data.get('type', ''))
-    current_app.logger.debug("inserting stats for user %s", musicbrainz_id)
-
-    stats_range = data['stats_range']
-
-    try:
-        db_stats.insert_user_jsonb_data_without_count(user['id'], 'daily_activity', UserDailyActivityStatRange(**data))
-    except ValidationError:
-        current_app.logger.error("""ValidationError while inserting {stats_range} daily_activity for user with
-        user_id: {user_id}. Data: {data}""".format(
-            stats_range=stats_range,
-            user_id=user['id'],
-            data=json.dumps(data, indent=3)
-        ), exc_info=True)
+    _handle_user_activity_stats('daily_activity', UserDailyActivityStatRange, data)
 
 
 def handle_sitewide_entity(data):

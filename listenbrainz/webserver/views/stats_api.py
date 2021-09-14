@@ -338,12 +338,12 @@ def get_listening_activity(user_name: str):
     if stats is None or getattr(stats, stats_range) is None:
         raise APINoContent('')
 
-    listening_activity = [x.dict() for x in getattr(stats, stats_range).listening_activity]
+    listening_activity = [x.dict() for x in stats.data]
     return jsonify({"payload": {
         "user_id": user_name,
         "listening_activity": listening_activity,
-        "from_ts": int(getattr(stats, stats_range).from_ts),
-        "to_ts": int(getattr(stats, stats_range).to_ts),
+        "from_ts": stats.from_ts,
+        "to_ts": stats.to_ts,
         "range": stats_range,
         "last_updated": int(stats.last_updated.timestamp())
     }})
@@ -415,7 +415,7 @@ def get_daily_activity(user_name: str):
     if stats is None or getattr(stats, stats_range) is None:
         raise APINoContent('')
 
-    daily_activity_unprocessed = [x.dict() for x in getattr(stats, stats_range).daily_activity]
+    daily_activity_unprocessed = [x.dict() for x in stats.data]
     daily_activity = {calendar.day_name[day]: [{"hour": hour, "listen_count": 0} for hour in range(0, 24)] for day in range(0, 7)}
 
     for day, day_data in daily_activity.items():
@@ -432,8 +432,8 @@ def get_daily_activity(user_name: str):
     return jsonify({"payload": {
         "user_id": user_name,
         "daily_activity": daily_activity,
-        "from_ts": int(getattr(stats, stats_range).from_ts),
-        "to_ts": int(getattr(stats, stats_range).to_ts),
+        "from_ts": stats.from_ts,
+        "to_ts": stats.to_ts,
         "range": stats_range,
         "last_updated": int(stats.last_updated.timestamp())
     }})

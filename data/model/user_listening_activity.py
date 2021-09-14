@@ -4,7 +4,9 @@
 import pydantic
 
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Union
+
+from data.model.user_daily_activity import UserDailyActivityStatRange, UserDailyActivityStat
 
 
 class UserListeningActivityRecord(pydantic.BaseModel):
@@ -51,3 +53,7 @@ class UserListeningActivityStat(UserListeningActivityStatRange):
     """
     user_id: int
     last_updated: datetime
+
+
+UserActivityStatRange = Union[UserListeningActivityStatRange, UserDailyActivityStatRange]
+UserActivityStat = Union[UserListeningActivityStat, UserDailyActivityStat]
