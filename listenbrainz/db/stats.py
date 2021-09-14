@@ -78,8 +78,8 @@ def _insert_user_jsonb_data(user_id: int, stats_type: str, stats: Union[UserArti
             "stats_range": stats.stats_range,
             "data": stats.data.json(exclude_none=True),
             "count": stats.count,
-            "from_ts": unix_timestamp_to_datetime(stats.from_ts),
-            "to_ts": unix_timestamp_to_datetime(stats.to_ts)
+            "from_ts": stats.from_ts,
+            "to_ts": stats.to_ts
         })
 
 

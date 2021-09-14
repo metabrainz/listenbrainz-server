@@ -185,8 +185,12 @@ CREATE TABLE statistics.user_new (
     stats_range             stats_range_type,
     data                    JSONB,
     count                   INTEGER,
-    from_ts                 TIMESTAMP WITH TIME ZONE,
-    to_ts                   TIMESTAMP WITH TIME ZONE,
+    -- we use int timestamps when serializing data in spark, we return the same from the api
+    -- using timestamp with time zone here just complicates stuff. we'll need to add
+    -- datetime/timestamp conversions in code at multiple places and we never seem to use this
+    -- value anyways in LB backend atm.
+    from_ts                 BIGINT,
+    to_ts                   BIGINT,
     last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 ALTER TABLE statistics.user_new ADD CONSTRAINT user_stats_range_type_uniq UNIQUE (user_id, stats_type, stats_range);
