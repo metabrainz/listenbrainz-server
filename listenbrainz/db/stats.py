@@ -22,19 +22,17 @@
 
 
 import json
-from typing import Optional, List, Union
+from typing import Optional
 
 import sqlalchemy
 from data.model.sitewide_artist_stat import (SitewideArtistStat,
                                              SitewideArtistStatJson)
 from data.model.user_artist_map import UserArtistMapStat, UserArtistMapStatJson
-from data.model.user_artist_stat import UserArtistStat, UserArtistStatRange
 from data.model.user_daily_activity import (UserDailyActivityStat,
                                             UserDailyActivityStatJson)
+from data.model.user_entity import UserEntityStat, UserEntityStatRange
 from data.model.user_listening_activity import (UserListeningActivityStat,
                                                 UserListeningActivityStatJson)
-from data.model.user_recording_stat import UserRecordingStat, UserRecordingStatRange
-from data.model.user_release_stat import UserReleaseStat, UserReleaseStatRange
 from flask import current_app
 from listenbrainz import db
 from pydantic import ValidationError
@@ -52,8 +50,7 @@ def get_timestamp_for_last_user_stats_update():
         return row['last_update_ts'] if row else None
 
 
-def insert_user_jsonb_data(user_id: int, stats_type: str,
-                           stats: Union[UserArtistStatRange, UserReleaseStatRange, UserRecordingStatRange]):
+def insert_user_jsonb_data(user_id: int, stats_type: str, stats: UserEntityStatRange):
     """ Inserts jsonb data into the given column
 
         Args:
@@ -155,8 +152,7 @@ def insert_sitewide_artists(stats_range: str, artists: SitewideArtistStatJson):
         stats_range, column='artist', data=artists.dict(exclude_none=True))
 
 
-def get_user_stats(user_id: int, stats_range: str, stats_type: str) \
-        -> Optional[Union[UserArtistStat, UserReleaseStat, UserRecordingStat]]:
+def get_user_stats(user_id: int, stats_range: str, stats_type: str) -> Optional[UserEntityStat]:
     """ Get top stats of given type in a time range for user with given ID.
 
         Args:
@@ -179,7 +175,7 @@ def get_user_stats(user_id: int, stats_range: str, stats_type: str) \
         row = result.fetchone()
 
     try:
-        return UserArtistStat(**dict(row)) if row else None
+        return UserEntityStat(**dict(row)) if row else None
     except ValidationError:
         current_app.logger.error("""ValidationError when getting {stats_range} top artists for user with user_id: {user_id}.
                                  Data: {data}""".format(stats_range=stats_range, user_id=user_id,

@@ -10,17 +10,8 @@ import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import pycountry
 import requests
-from data.model.sitewide_artist_stat import (SitewideArtistRecord,
-                                             SitewideArtistStatJson)
-from data.model.user_artist_map import (UserArtistMapRecord, UserArtistMapStat,
-                                        UserArtistMapStatJson,
-                                        UserArtistMapStatRange)
-from data.model.user_artist_stat import UserArtistRecord, UserArtistStat
-from data.model.user_listening_activity import (UserListeningActivityRecord,
-                                                UserListeningActivityStat)
-from data.model.user_recording_stat import (UserRecordingRecord,
-                                            UserRecordingStat)
-from data.model.user_release_stat import UserReleaseRecord, UserReleaseStat
+from data.model.sitewide_artist_stat import SitewideArtistStatJson
+from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapStatJson
 from flask import Blueprint, current_app, jsonify, request
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
