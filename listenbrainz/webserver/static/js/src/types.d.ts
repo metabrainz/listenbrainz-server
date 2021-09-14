@@ -377,9 +377,20 @@ declare type ListenFeedBack = 1 | 0 | -1;
 declare type RecommendationFeedBack = "love" | "like" | "hate" | "dislike";
 
 declare type FeedbackResponse = {
+  created: string;
   recording_msid: string;
   score: ListenFeedBack;
   user_id: string;
+};
+declare type RecordingMetadata = {
+  artist_credit_id: number;
+  artist_name: string;
+  track_name: string;
+  recording_mbid?: string;
+  release_mbid?: string;
+};
+declare type FeedbackResponseWithRecordingMetadata = FeedbackResponse & {
+  recording_metadata: RecordingMetadata;
 };
 
 declare type RecommendationFeedbackResponse = {

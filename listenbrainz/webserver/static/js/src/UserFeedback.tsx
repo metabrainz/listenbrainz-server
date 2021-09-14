@@ -21,45 +21,59 @@ import Loader from "./components/Loader";
 import PinRecordingModal from "./PinRecordingModal";
 import { getPageProps } from "./utils";
 
-export type RecentListensProps = {
-  listens?: Array<Listen>;
+export type UserFeedbackProps = {
+  feedback?: Array<FeedbackResponseWithRecordingMetadata>;
   totalCount: number;
   profileUrl?: string;
   user: ListenBrainzUser;
 } & WithAlertNotificationsInjectedProps;
 
-export interface RecentListensState {
-  currentListen?: Listen;
+export interface UserFeedbackState {
+  currentListen?: BaseListenFormat;
   direction: BrainzPlayDirection;
-  listens: Array<Listen>;
+  feedback: Array<FeedbackResponseWithRecordingMetadata>;
   loading: boolean;
   page: number;
   maxPage: number;
   recordingFeedbackMap: RecordingFeedbackMap;
-  recordingToPin?: Listen;
+  recordingToPin?: BaseListenFormat;
 }
 
-export default class RecentListens extends React.Component<
-  RecentListensProps,
-  RecentListensState
+export default class UserFeedback extends React.Component<
+  UserFeedbackProps,
+  UserFeedbackState
 > {
   static contextType = GlobalAppContext;
-  declare context: React.ContextType<typeof GlobalAppContext>;
+  static RecordingMetadataToListenFormat = (
+    recordingMetadata: RecordingMetadata
+  ): BaseListenFormat => {
+    return {
+      listened_at: 0,
+      track_metadata: {
+        artist_name: recordingMetadata?.artist_name,
+        track_name: recordingMetadata?.track_name,
+        additional_info: {
+          recording_mbid: recordingMetadata?.recording_mbid,
+          release_mbid: recordingMetadata?.release_mbid,
+        },
+      },
+    };
+  };
 
   private APIService!: APIServiceClass;
   private brainzPlayer = React.createRef<BrainzPlayer>();
   private listensTable = React.createRef<HTMLTableElement>();
 
+  declare context: React.ContextType<typeof GlobalAppContext>;
   private DEFAULT_ITEMS_PER_PAGE = 25;
 
-  constructor(props: RecentListensProps) {
+  constructor(props: UserFeedbackProps) {
     super(props);
-    const nextListenTs = props.listens?.[props.listens.length - 1]?.listened_at;
     const { totalCount } = this.props;
     this.state = {
       maxPage: Math.ceil(totalCount / this.DEFAULT_ITEMS_PER_PAGE),
       page: 1,
-      listens: props.listens || [],
+      feedback: props.feedback || [],
       loading: false,
       direction: "down",
       recordingFeedbackMap: {},
@@ -90,16 +104,18 @@ export default class RecentListens extends React.Component<
   }
 
   playListen = (listen: Listen): void => {
-    if (this.brainzPlayer.current) {
+    if (this.brainzPlayer.current && listen) {
       this.brainzPlayer.current.playListen(listen);
     }
   };
 
-  handleCurrentListenChange = (listen: Listen | JSPFTrack): void => {
-    this.setState({ currentListen: listen as Listen });
+  handleCurrentListenChange = (
+    listen: BaseListenFormat | Listen | JSPFTrack
+  ): void => {
+    this.setState({ currentListen: listen as BaseListenFormat });
   };
 
-  isCurrentListen = (listen: Listen): boolean => {
+  isCurrentListen = (listen: BaseListenFormat): boolean => {
     const { currentListen } = this.state;
     return Boolean(currentListen && _.isEqual(listen, currentListen));
   };
@@ -212,7 +228,7 @@ export default class RecentListens extends React.Component<
         loading: false,
         page,
         maxPage: Math.ceil(totalCount / this.DEFAULT_ITEMS_PER_PAGE),
-        listens: feedbackItems.feedback,
+        feedback: feedbackItems.feedback,
       });
       if (pushHistory) {
         window.history.pushState(null, "", `?page=${[page]}`);
@@ -243,12 +259,12 @@ export default class RecentListens extends React.Component<
   };
 
   getFeedback = async () => {
-    const { user, listens, newAlert } = this.props;
+    const { user, feedback, newAlert } = this.props;
     let recordings = "";
 
-    if (listens) {
-      listens.forEach((listen) => {
-        const recordingMsid = _.get(listen, "recording_msid");
+    if (feedback) {
+      feedback.forEach((feedbackItem) => {
+        const recordingMsid = _.get(feedbackItem, "recording_msid");
         if (recordingMsid) {
           recordings += `${recordingMsid},`;
         }
@@ -290,7 +306,7 @@ export default class RecentListens extends React.Component<
     this.setState({ recordingFeedbackMap });
   };
 
-  updateRecordingToPin = (recordingToPin: Listen) => {
+  updateRecordingToPin = (recordingToPin: BaseListenFormat) => {
     this.setState({ recordingToPin });
   };
 
@@ -301,19 +317,11 @@ export default class RecentListens extends React.Component<
     return recordingMsid ? _.get(recordingFeedbackMap, recordingMsid, 0) : 0;
   };
 
-  removeListenFromListenList = (listen: Listen) => {
-    const { listens } = this.state;
-    const index = listens.indexOf(listen);
-
-    listens.splice(index, 1);
-    this.setState({ listens });
-  };
-
   render() {
     const {
       currentListen,
       direction,
-      listens,
+      feedback,
       loading,
       maxPage,
       page,
@@ -321,6 +329,13 @@ export default class RecentListens extends React.Component<
     } = this.state;
     const { user, newAlert } = this.props;
     const { currentUser } = this.context;
+
+    const listensFromFeedback: BaseListenFormat[] = feedback.map(
+      (feedbackItem) =>
+        UserFeedback.RecordingMetadataToListenFormat(
+          feedbackItem.recording_metadata
+        )
+    );
 
     const canNavigateNewer = page !== 1;
     const canNavigateOlder = page < maxPage;
@@ -330,12 +345,12 @@ export default class RecentListens extends React.Component<
           <div className="col-md-8">
             <h3>Tracks you loved/hated</h3>
 
-            {!listens.length && (
+            {!feedback.length && (
               <div className="lead text-center">
                 <p>No loved/hated tracks to show yet</p>
               </div>
             )}
-            {listens.length > 0 && (
+            {feedback.length > 0 && (
               <div>
                 <div
                   style={{
@@ -352,30 +367,27 @@ export default class RecentListens extends React.Component<
                   ref={this.listensTable}
                   style={{ opacity: loading ? "0.4" : "1" }}
                 >
-                  {listens.map((listen) => {
+                  {feedback.map((feedbackItem, index) => {
+                    const listen = listensFromFeedback[index];
                     return (
                       <ListenCard
-                        key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
+                        key={`${feedbackItem.created}`}
                         isCurrentUser={currentUser?.name === user?.name}
                         isCurrentListen={this.isCurrentListen(listen)}
                         listen={listen}
                         mode="listens"
                         currentFeedback={this.getFeedbackForRecordingMsid(
-                          listen.track_metadata?.additional_info?.recording_msid
+                          feedbackItem.recording_msid
                         )}
                         playListen={this.playListen}
-                        removeListenFromListenList={
-                          this.removeListenFromListenList
-                        }
                         updateFeedback={this.updateFeedback}
                         updateRecordingToPin={this.updateRecordingToPin}
                         newAlert={newAlert}
-                        className={`${listen.playing_now ? "playing-now" : ""}`}
                       />
                     );
                   })}
                 </div>
-                {listens.length < this.DEFAULT_ITEMS_PER_PAGE && (
+                {feedback.length < this.DEFAULT_ITEMS_PER_PAGE && (
                   <h5 className="text-center">No more feedback to show</h5>
                 )}
                 <ul className="pager" id="navigation">
@@ -442,7 +454,7 @@ export default class RecentListens extends React.Component<
                 </ul>
                 {currentUser && (
                   <PinRecordingModal
-                    recordingToPin={recordingToPin || listens[0]}
+                    recordingToPin={recordingToPin || listensFromFeedback[0]}
                     isCurrentUser={currentUser?.name === user?.name}
                     newAlert={newAlert}
                   />
@@ -459,7 +471,7 @@ export default class RecentListens extends React.Component<
             <BrainzPlayer
               currentListen={currentListen}
               direction={direction}
-              listens={listens}
+              listens={listensFromFeedback}
               newAlert={newAlert}
               onCurrentListenChange={this.handleCurrentListenChange}
               ref={this.brainzPlayer}
@@ -485,7 +497,7 @@ document.addEventListener("DOMContentLoaded", () => {
     spotify,
     youtube,
   } = globalReactProps;
-  const { listens, profile_url, user, total_count } = reactProps;
+  const { feedback, feedback_count, profile_url, user } = reactProps;
 
   const apiService = new APIServiceClass(
     api_url || `${window.location.origin}/1`
@@ -495,8 +507,8 @@ document.addEventListener("DOMContentLoaded", () => {
     Sentry.init({ dsn: sentry_dsn });
   }
 
-  const RecentListensWithAlertNotifications = withAlertNotifications(
-    RecentListens
+  const UserFeedbackWithAlertNotifications = withAlertNotifications(
+    UserFeedback
   );
 
   const globalProps: GlobalAppContextT = {
@@ -509,12 +521,12 @@ document.addEventListener("DOMContentLoaded", () => {
   ReactDOM.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
-        <RecentListensWithAlertNotifications
+        <UserFeedbackWithAlertNotifications
           initialAlerts={optionalAlerts}
-          listens={listens}
+          feedback={feedback}
           profileUrl={profile_url}
           user={user}
-          totalCount={total_count}
+          totalCount={feedback_count}
         />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,
