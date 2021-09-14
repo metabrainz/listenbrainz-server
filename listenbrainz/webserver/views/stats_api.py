@@ -556,10 +556,10 @@ def get_artist_map(user_name: str):
         "payload": {
             "user_id": user_name,
             "range": stats_range,
-            "from_ts": stats.from_ts,
-            "to_ts": stats.to_ts,
-            "last_updated": int(stats.last_updated.timestamp()),
-            "artist_map": [x.dict() for x in stats.data.__root__]
+            "from_ts": result.from_ts,
+            "to_ts": result.to_ts,
+            "last_updated": int(result.last_updated.timestamp()),
+            "artist_map": [x.dict() for x in result.data.__root__]
         }
     })
 
