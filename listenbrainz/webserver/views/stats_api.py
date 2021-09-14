@@ -522,7 +522,7 @@ def get_artist_map(user_name: str):
         artist_stats = db_stats.get_user_stats(user['id'], stats_range, 'artists')
 
         # If top artists are missing, return the stale stats if present, otherwise return 204
-        if artist_stats is None or getattr(artist_stats, stats_range) is None:
+        if artist_stats is None:
             if stale:
                 result = stats
             else:
@@ -530,8 +530,7 @@ def get_artist_map(user_name: str):
         else:
             # Calculate the data
             artist_mbid_counts = defaultdict(int)
-            top_artists = getattr(artist_stats, stats_range).artists
-            for artist in top_artists:
+            for artist in artist_stats.data.__root__:
                 for artist_mbid in artist.artist_mbids:
                     artist_mbid_counts[artist_mbid] += artist.listen_count
 
