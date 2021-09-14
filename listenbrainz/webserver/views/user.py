@@ -510,7 +510,7 @@ def feedback(user_name: str):
     }
 
     return render_template(
-        "feedback/feedback.html",
+        "user/feedback.html",
         active_section="feedback",
         props=ujson.dumps(props),
         user=user
