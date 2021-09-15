@@ -249,13 +249,15 @@ const preciseTimestamp = (
 
   // determine which display setting based on time difference to use if no argument was provided
   if (!display) {
-    const now = new Date();
-    const currentYear = now.getFullYear();
+    // We can easily mock Date.now in our tests to mock the current dateTime
+    const now = Date.now();
+    const nowDate = new Date(now);
+    const currentYear = nowDate.getFullYear();
     const listenYear = listenDate.getFullYear();
     // Date is today : format using timeago
     if (
-      now.getDate() === listenDate.getDate() &&
-      now.getMonth() === listenDate.getMonth() &&
+      nowDate.getDate() === listenDate.getDate() &&
+      nowDate.getMonth() === listenDate.getMonth() &&
       currentYear === listenYear
     ) {
       display = "timeAgo";
