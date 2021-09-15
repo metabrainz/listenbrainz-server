@@ -101,6 +101,7 @@ export default class BrainzPlayer extends React.Component<
   dataSources: Array<React.RefObject<DataSourceTypes>> = [];
 
   playerStateTimerID?: NodeJS.Timeout;
+  listenSubmittingTimerID?: NodeJS.Timeout;
 
   private readonly mediaSessionHandlers: Array<{
     action: string;
@@ -154,6 +155,7 @@ export default class BrainzPlayer extends React.Component<
   componentWillUnMount = () => {
     window.removeEventListener("storage", this.onLocalStorageEvent);
     this.stopPlayerStateTimer();
+    this.stopSubmitListenTimer();
   };
 
   /** We use LocalStorage events as a form of communication between BrainzPlayers
@@ -196,6 +198,9 @@ export default class BrainzPlayer extends React.Component<
   playNextTrack = (invert: boolean = false): void => {
     const { listens } = this.props;
     const { direction, isActivated } = this.state;
+
+    this.stopSubmitListenTimer();
+
     if (!isActivated) {
       // Player has not been activated by the user, do nothing.
       return;
@@ -493,7 +498,7 @@ export default class BrainzPlayer extends React.Component<
     album?: string
   ): Promise<void> => {
     const { APIService, currentUser } = this.context;
-    const { currentDataSourceIndex } = this.state;
+    const { currentDataSourceIndex, durationMs } = this.state;
     const dataSource = this.dataSources[currentDataSourceIndex];
     if (!currentUser || !currentUser.auth_token) {
       return;
@@ -501,6 +506,7 @@ export default class BrainzPlayer extends React.Component<
     if (dataSource?.current && !dataSource.current.datasourceRecordsListens()) {
       const { listens } = this.props;
       const currentListenIndex = listens.findIndex(this.isCurrentListen);
+      const currentListen = listens[currentListenIndex];
       // Metadata we get from the datasources maybe bad quality (looking at you, Youtube… ಠ_ಠ)
       // so we use the current listen itself, and keep a trace of datasource metadata in a custom field
       const brainzplayer_metadata = {
@@ -527,9 +533,18 @@ export default class BrainzPlayer extends React.Component<
             source: dataSource.current.name,
           },
         });
-        await APIService.submitListens(currentUser.auth_token, "single", [
-          newListen,
-        ]);
+        const { auth_token } = currentUser;
+        await APIService.submitListens(auth_token, "playingNow", [newListen]);
+        // create a timer to send this listen again as a full listen (first run will send "playing_now" listen)
+        // Wait for 30 seconds or track length if lower than 30s
+        const waitFor = durationMs ? Math.min(3000, durationMs) : 3000;
+        this.listenSubmittingTimerID = setTimeout(async () => {
+          try {
+            await APIService.submitListens(auth_token, "single", [newListen]);
+          } catch (error) {
+            this.handleWarning(error, "Could not save this listen");
+          }
+        }, waitFor);
       } catch (error) {
         this.handleWarning(error, "Could not save this listen");
       }
@@ -562,6 +577,13 @@ export default class BrainzPlayer extends React.Component<
       clearInterval(this.playerStateTimerID);
     }
     this.playerStateTimerID = undefined;
+  };
+
+  stopSubmitListenTimer = (): void => {
+    if (this.listenSubmittingTimerID) {
+      clearTimeout(this.listenSubmittingTimerID);
+    }
+    this.listenSubmittingTimerID = undefined;
   };
 
   render() {
