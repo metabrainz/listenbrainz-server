@@ -5,7 +5,8 @@ CREATE TYPE user_stats_type AS ENUM('artists', 'releases', 'recordings', 'daily_
 BEGIN;
 
 CREATE TABLE statistics.user_new (
-    user_id                 INTEGER NOT NULL, -- PK and FK to "user".id
+    id                      SERIAL, -- PK
+    user_id                 INTEGER NOT NULL, -- FK to "user".id
     stats_type              user_stats_type,
     stats_range             stats_range_type,
     data                    JSONB,
@@ -19,9 +20,9 @@ CREATE TABLE statistics.user_new (
     last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
-ALTER TABLE statistics.user_new ADD CONSTRAINT user_stats_range_type_uniq UNIQUE (user_id, stats_type, stats_range);
+ALTER TABLE statistics.user_new ADD CONSTRAINT stats_user_new_pkey PRIMARY KEY (id);
 
-ALTER TABLE statistics.user_new ADD CONSTRAINT stats_user_new_pkey PRIMARY KEY (user_id);
+CREATE UNIQUE INDEX user_type_range_ndx_stats ON statistics.user_new (user_id, stats_type, stats_range);
 
 ALTER TABLE statistics.user_new
     ADD CONSTRAINT user_stats_new_user_id_foreign_key
