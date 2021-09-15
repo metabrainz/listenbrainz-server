@@ -26,7 +26,7 @@ class Feedback(BaseModel):
         fb = copy(self)
         fb.user_id = fb.user_name
         if fb.created is not None:
-            fb.created = fb.created.timestamp()
+            fb.created = int(fb.created.timestamp())
         del fb.user_name
 
         return fb.dict()
