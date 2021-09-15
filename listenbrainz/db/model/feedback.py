@@ -25,7 +25,7 @@ class Feedback(BaseModel):
     def to_api(self) -> dict:
         fb = copy(self)
         fb.user_id = fb.user_name
-        fb.created = created.timestamp()
+        fb.created = fb.created.timestamp()
         del fb.user_name
 
         return fb.dict()
