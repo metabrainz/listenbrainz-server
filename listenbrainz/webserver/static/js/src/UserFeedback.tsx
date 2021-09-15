@@ -3,11 +3,11 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as Sentry from "@sentry/react";
-import * as _ from "lodash";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faHeart, faHeartBroken } from "@fortawesome/free-solid-svg-icons";
+import { isEqual, isNaN, get, set } from "lodash";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
@@ -50,11 +50,15 @@ export default class UserFeedback extends React.Component<
   static RecordingMetadataToListenFormat = (
     feedbackItem: FeedbackResponseWithTrackMetadata
   ): BaseListenFormat => {
-    const { track_metadata: trackMetadata } = feedbackItem;
     const listenFormat: BaseListenFormat = {
       listened_at: feedbackItem?.created ?? 0,
-      track_metadata: { ...trackMetadata },
+      track_metadata: feedbackItem.track_metadata,
     };
+    set(
+      listenFormat,
+      "track_metadata.additional_info.recording_msid",
+      feedbackItem.recording_msid
+    );
     if (!listenFormat.track_metadata.track_name) {
       listenFormat.track_metadata.track_name = `No metadata for MSID ${feedbackItem.recording_msid}`;
     }
@@ -115,7 +119,7 @@ export default class UserFeedback extends React.Component<
 
   isCurrentListen = (listen: BaseListenFormat): boolean => {
     const { currentListen } = this.state;
-    return Boolean(currentListen && _.isEqual(listen, currentListen));
+    return Boolean(currentListen && isEqual(listen, currentListen));
   };
 
   handleKeyDown = (event: KeyboardEvent) => {
@@ -145,7 +149,7 @@ export default class UserFeedback extends React.Component<
       newScore = 1;
     }
 
-    if (!_.isNaN(newPage) || !_.isNaN(newScore)) {
+    if (isNaN(newPage) || !isNaN(newScore)) {
       if (newPage === page && newScore === selectedFeedbackScore) {
         // search params didn't change, do nothing
         return;
@@ -288,7 +292,7 @@ export default class UserFeedback extends React.Component<
     let recordings = "";
     if (feedback?.length && currentUser?.auth_token) {
       feedback.forEach((feedbackItem) => {
-        const recordingMsid = _.get(feedbackItem, "recording_msid");
+        const recordingMsid = get(feedbackItem, "recording_msid");
         if (recordingMsid) {
           recordings += `${recordingMsid},`;
         }
@@ -346,7 +350,7 @@ export default class UserFeedback extends React.Component<
     recordingMsid?: string | null
   ): ListenFeedBack => {
     const { recordingFeedbackMap } = this.state;
-    return recordingMsid ? _.get(recordingFeedbackMap, recordingMsid, 0) : 0;
+    return recordingMsid ? get(recordingFeedbackMap, recordingMsid, 0) : 0;
   };
 
   render() {
