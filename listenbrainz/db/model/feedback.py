@@ -1,3 +1,4 @@
+from copy import copy
 import uuid
 
 from datetime import datetime, timezone
@@ -19,15 +20,14 @@ class Feedback(BaseModel):
     recording_msid: str
     score: int
     created: datetime = None
-    recording_metadata: dict = None
+    track_metadata: dict = None
 
-    def to_dict(self):
-        return { "user_id": self.user_id,
-                 "user_name": self.user_name,
-                 "recording_msid": self.recording_msid,
-                 "score": self.score,
-                 "created": self.created.astimezone(timezone.utc).isoformat(),
-                 "recording_metadata":self.recording_metadata}
+    def to_api(self) -> dict:
+        fb = copy(self)
+        fb.user_id = fb.user_name
+        del fb.user_name
+
+        return fb.dict()
 
     @validator('score')
     def check_score_is_valid(cls, scr):

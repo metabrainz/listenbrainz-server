@@ -498,12 +498,10 @@ def feedback(user_name: str):
     }
 
     feedback_count = get_feedback_count_for_user(user.id, score) 
-    feedback = get_feedback_for_user(user.id, count, offset, score)
-    print(feedback_count)
-    print(feedback)
+    feedback = get_feedback_for_user(user.id, count, offset, score, True)
 
     props = {
-        "feedback": [ f.to_dict() for f in feedback],
+        "feedback": [ f.to_api() for f in feedback],
         "feedback_count": feedback_count,
         "user": user_data,
         "active_section": "feedback",

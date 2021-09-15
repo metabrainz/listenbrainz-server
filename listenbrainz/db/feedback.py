@@ -89,9 +89,10 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
         msids = [ f.recording_msid for f in feedback ]
         index = { f.recording_msid:f for f in feedback }
 
-        query = """SELECT track_name, data->'track_metadata'->>'artist_name' AS artist_name,
+        query = """SELECT track_name, (data->'track_metadata'->>'artist_name')::TEXT AS artist_name,
+                          (data->'track_metadata'->>'release_name')::TEXT AS release_name,
                           (data->'track_metadata'->'additional_info'->>'recording_msid')::TEXT AS recording_msid,
-                          artist_credit_id, release_mbid, recording_mbid
+                          artist_credit_id, release_mbid::TEXT, recording_mbid::TEXT
                      FROM listen
                 LEFT JOIN listen_mbid_mapping
                        ON data->'track_metadata'->'additional_info'->>'recording_msid' = recording_msid::TEXT
@@ -102,12 +103,14 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
             for row in result.fetchall():
                 metadata = {
                     "artist_name": row["artist_name"],
+                    "release_name": row["release_name"],
                     "track_name": row["track_name"] }
                 if row["recording_mbid"] is not None:
-                    metadata["recording_mbid"] = row["recording_mbid"]
-                    metadata["artist_credit_id"] = row["artist_credit_id"]
-                    metadata["release_mbid"] = row["release_mbid"]
-                index[row["recording_msid"]].recording_metadata = metadata
+                    metadata["additional_metadata"] = {
+                        "recording_mbid": row["recording_mbid"],
+                        "artist_credit_id": row["artist_credit_id"],
+                        "release_mbid": row["release_mbid"] }
+                index[row["recording_msid"]].track_metadata = metadata
 
     return feedback
 
