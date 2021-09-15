@@ -514,7 +514,7 @@ def get_artist_map(user_name: str):
     # Check if the stats present in DB have been calculated in the past week, if not recalculate them
     stale = False
     if calculated:
-        if (datetime.now() - stats.last_updated.days) >= STATS_CALCULATION_INTERVAL:
+        if (datetime.now() - stats.last_updated).days >= STATS_CALCULATION_INTERVAL:
             stale = True
 
     if stale or not calculated:
