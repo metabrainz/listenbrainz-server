@@ -24,7 +24,7 @@ import PinRecordingModal from "./PinRecordingModal";
 import { getPageProps } from "./utils";
 
 export type UserFeedbackProps = {
-  feedback?: Array<FeedbackResponseWithRecordingMetadata>;
+  feedback?: Array<FeedbackResponseWithTrackMetadata>;
   totalCount: number;
   profileUrl?: string;
   user: ListenBrainzUser;
@@ -33,7 +33,7 @@ export type UserFeedbackProps = {
 export interface UserFeedbackState {
   currentListen?: BaseListenFormat;
   direction: BrainzPlayDirection;
-  feedback: Array<FeedbackResponseWithRecordingMetadata>;
+  feedback: Array<FeedbackResponseWithTrackMetadata>;
   loading: boolean;
   page: number;
   maxPage: number;
@@ -48,25 +48,17 @@ export default class UserFeedback extends React.Component<
 > {
   static contextType = GlobalAppContext;
   static RecordingMetadataToListenFormat = (
-    feedbackItem: FeedbackResponseWithRecordingMetadata
+    feedbackItem: FeedbackResponseWithTrackMetadata
   ): BaseListenFormat => {
-    const { recording_metadata: recordingMetadata } = feedbackItem;
-    return {
-      listened_at: feedbackItem?.created
-        ? // We create a new JS Date with the iso string, and convert it to seconds (rather than JS milliseconds)
-          Math.floor(new Date(feedbackItem.created).getTime() / 1000)
-        : 0,
-      track_metadata: {
-        artist_name: recordingMetadata?.artist_name,
-        track_name:
-          recordingMetadata?.track_name ??
-          `MSID: ${feedbackItem?.recording_msid}`,
-        additional_info: {
-          recording_mbid: recordingMetadata?.recording_mbid,
-          release_mbid: recordingMetadata?.release_mbid,
-        },
-      },
+    const { track_metadata: trackMetadata } = feedbackItem;
+    const listenFormat: BaseListenFormat = {
+      listened_at: feedbackItem?.created ?? 0,
+      track_metadata: { ...trackMetadata },
     };
+    if (!listenFormat.track_metadata.track_name) {
+      listenFormat.track_metadata.track_name = `No metadata for MSID ${feedbackItem.recording_msid}`;
+    }
+    return listenFormat;
   };
 
   private APIService!: APIServiceClass;
