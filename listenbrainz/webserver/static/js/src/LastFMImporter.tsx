@@ -207,15 +207,11 @@ export default class LastFmImporter extends React.Component<
       }
     } catch (err) {
       // Retry if there is a network error
-      // eslint-disable-next-line no-console
-      console.warn(`Error while fetching ${service} page ${page}:`, err);
       if (retries <= 0) {
         throw new Error(
-          `Failed to fetch page ${page} from ${service} after ${LASTFM_RETRIES} retries.`
+          `Failed to fetch page ${page} from ${service} after ${LASTFM_RETRIES} retries: ${err.toString()}`
         );
       }
-      // eslint-disable-next-line no-console
-      console.warn(`Retrying in ${timeout / 1000}s, ${retries} retries left`);
       await new Promise((resolve) => setTimeout(resolve, timeout));
       // eslint-disable-next-line no-return-await
       return await this.getPage(page, retries - 1);
@@ -426,8 +422,6 @@ export default class LastFmImporter extends React.Component<
           </span>
         </p>
       );
-      // eslint-disable-next-line no-console
-      console.error(err);
       this.setState({ canClose: true, msg: finalMsg });
       return Promise.resolve(null);
     }
@@ -444,7 +438,6 @@ export default class LastFmImporter extends React.Component<
         this.maxTimestampForImport
       );
     } catch {
-      // console.warn("Error setting latest import timestamp, retrying in 3s");
       setTimeout(
         () =>
           this.APIService.setLatestImport(
