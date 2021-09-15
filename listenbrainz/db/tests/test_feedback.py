@@ -9,7 +9,8 @@ from listenbrainz.db.model.feedback import Feedback
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
 from listenbrainz.db import timescale as ts
-
+from messybrainz import db as msb_db
+from messybrainz.db.data import submit_recording
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase
 
 
@@ -18,6 +19,7 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
     def setUp(self):
         DatabaseTestCase.setUp(self)
         TimescaleTestCase.setUp(self)
+        MessyBrainzTestCase.setUp(self)
         self.user = db_user.get_or_create(1, "recording_feedback_user")
 
         self.sample_feedback = [
@@ -28,6 +30,16 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
             {
                 "recording_msid": "222eb00d-9ead-42de-aec9-8f8c1509413d",
                 "score": -1
+            }
+        ]
+        self.sample_recording = {
+            "title": "Strangers",
+            "artist": "Portishead"
+        }
+        self.sample_feedback_with_metadata = [
+            {
+                "recording_msid": "",
+                "score": 1
             }
         ]
 
@@ -45,20 +57,35 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
 
         return len(self.sample_feedback)
 
-    def insert_test_data_with_metadata(self, user_id):
+    def insert_test_data_with_metadata(self, user_id, neg_score=False):
+        """ Insert test data with metadata into the database """
+
+        with msb_db.engine.connect() as connection:
+            msid = submit_recording(connection, self.sample_recording)
+
+        self.sample_feedback_with_metadata[0]["recording_msid"] = msid
 
         query = """INSERT INTO listen_mbid_mapping
                                (recording_msid, recording_mbid, release_mbid, artist_credit_id,
                                 artist_credit_name, recording_name, match_type)
-                               values ('d23f4719-9212-49f0-ad08-ddbfbfc50d6f',
+                               values ('%s',
                                        '076255b4-1575-11ec-ac84-135bf6a670e3',
                                        '1fd178b4-1575-11ec-b98a-d72392cd8c97',
-                                       65, 'artist name', 'recording name', 'exact_match')"""
+                                       65, 'artist name', 'recording name', 'exact_match')""" % msid
 
         with ts.engine.connect() as connection:
             connection.execute(sqlalchemy.text(query))
 
-        return self.insert_test_data(user_id)
+        for fb in self.sample_feedback_with_metadata:
+            db_feedback.insert(
+                Feedback(
+                    user_id=user_id,
+                    recording_msid=fb["recording_msid"],
+                    score=fb["score"]
+                )
+            )
+
+        return len(self.sample_feedback_with_metadata)
 
 
     def test_insert(self):
@@ -155,8 +182,12 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
         print(result[0])
         self.assertEqual(result[0].user_id, self.user["id"])
         self.assertEqual(result[0].user_name, self.user["musicbrainz_id"])
-        self.assertEqual(result[0].recording_msid, self.sample_feedback[0]["recording_msid"])
-        self.assertEqual(result[0].score, self.sample_feedback[1]["score"])
+        self.assertEqual(result[0].recording_msid, self.sample_feedback_with_metadata[0]["recording_msid"])
+        self.assertEqual(result[0].score, self.sample_feedback_with_metadata[0]["score"])
+        self.assertEqual(result[0].track_metadata["artist_name"], "Portishead")
+        self.assertEqual(result[0].track_metadata["track_name"], "Strangers")
+        self.assertEqual(result[0].track_metadata["additional_info"]["recording_mbid"], "076255b4-1575-11ec-ac84-135bf6a670e3")
+        self.assertEqual(result[0].track_metadata["additional_info"]["release_mbid"], "1fd178b4-1575-11ec-b98a-d72392cd8c97")
 
 
     def test_get_feedback_count_for_user(self):
