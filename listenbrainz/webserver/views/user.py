@@ -109,11 +109,7 @@ def profile(user_name):
             }
             listens.insert(0, listen)
 
-    user_stats = db_stats.get_user_artists(user.id, 'all_time')
-    try:
-        artist_count = user_stats.all_time.count
-    except (AttributeError, ValidationError):
-        artist_count = None
+    user_stats = db_stats.get_user_stats(user.id, 'all_time', 'artists')
 
     logged_in_user_follows_user = None
     already_reported_user = False
@@ -134,7 +130,7 @@ def profile(user_name):
         "latest_listen_ts": max_ts_per_user,
         "oldest_listen_ts": min_ts_per_user,
         "latest_spotify_uri": _get_spotify_uri_for_listens(listens),
-        "artist_count": format(artist_count, ",d") if artist_count else None,
+        "artist_count": format(user_stats.count, ",d") if user_stats.count else None,
         "profile_url": url_for('user.profile', user_name=user_name),
         "mode": "listens",
         "userPinnedRecording": pin,

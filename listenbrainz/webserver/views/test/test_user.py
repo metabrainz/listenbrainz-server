@@ -6,8 +6,9 @@ from unittest import mock
 
 from flask import url_for, current_app
 
+from data.model.common_stat import StatRange
 from data.model.external_service import ExternalServiceType
-from data.model.user_artist_stat import UserArtistStatJson
+from data.model.user_entity import UserEntityRecordList
 
 from listenbrainz.db import external_service_oauth as db_oauth
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
@@ -115,10 +116,8 @@ class UserViewsTestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_artists_db.json')) as f:
             artists_data = ujson.load(f)
 
-        db_stats.insert_user_artists(
-            user_id=self.user.id,
-            artists=UserArtistStatJson(**{'all_time': artists_data})
-        )
+        db_stats.insert_user_jsonb_data(user_id=self.user['id'], stats_type='artists',
+                                        stats=StatRange[UserEntityRecordList](**artists_data))
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertTemplateUsed('user/profile.html')
