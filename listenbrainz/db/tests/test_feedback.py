@@ -10,10 +10,10 @@ import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
 from listenbrainz.db import timescale as ts
 
-from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
+from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase
 
 
-class FeedbackDatabaseTestCase(DatabaseTestCase,TimescaleTestCase):
+class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase):
 
     def setUp(self):
         DatabaseTestCase.setUp(self)
