@@ -145,8 +145,7 @@ def get_user_stats(user_id: int, stats_range: str, stats_type: str) -> Optional[
         return None
 
 
-def get_user_activity_stats(user_id: int, stats_range: str, stats_type: str, stats_model)\
-        -> Optional[StatApi]:
+def get_user_activity_stats(user_id: int, stats_range: str, stats_type: str, stats_model) -> Optional[StatApi]:
     """Get activity stats in the given time range for user with given ID.
 
         Args:
