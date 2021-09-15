@@ -7,7 +7,7 @@ import * as Sentry from "@sentry/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faHeart, faHeartBroken } from "@fortawesome/free-solid-svg-icons";
-import { isEqual, isNaN, get, set } from "lodash";
+import { isEqual, isNaN, get, set, clone } from "lodash";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
@@ -337,9 +337,14 @@ export default class UserFeedback extends React.Component<
   };
 
   updateFeedback = (recordingMsid: string, score: ListenFeedBack) => {
-    const { recordingFeedbackMap } = this.state;
+    const { recordingFeedbackMap, feedback } = this.state;
     recordingFeedbackMap[recordingMsid] = score;
-    this.setState({ recordingFeedbackMap });
+    const index = feedback.findIndex(
+      (feedbackItem) => feedbackItem.recording_msid === recordingMsid
+    );
+    const newFeedback = clone(feedback);
+    newFeedback.splice(index, 1);
+    this.setState({ recordingFeedbackMap, feedback: newFeedback });
   };
 
   updateRecordingToPin = (recordingToPin: BaseListenFormat) => {
