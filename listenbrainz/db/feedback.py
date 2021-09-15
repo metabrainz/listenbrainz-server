@@ -111,7 +111,6 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
         with timescale.engine.connect() as connection:
             result = connection.execute(sqlalchemy.text(query), msids=tuple(msids))
             for row in result.fetchall():
-                current_app.logger.error(str(row))
                 if row["recording_mbid"] is not None:
                     index[row["recording_msid"]].track_metadata['additional_info'] = {
                         "recording_mbid": row["recording_mbid"],
