@@ -18,6 +18,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
     def setUp(self):
         DatabaseTestCase.setUp(self)
         self.user = db_user.get_or_create(1, 'stats_user')
+        self.maxDiff = None
 
     def test_insert_user_artists(self):
         """ Test if artist stats are inserted correctly """
