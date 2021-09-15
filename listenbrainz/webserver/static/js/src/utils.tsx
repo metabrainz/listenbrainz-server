@@ -377,8 +377,6 @@ const getPageProps = (): {
     }
   } catch (err) {
     // Show error to the user and ask to reload page
-    // eslint-disable-next-line no-console
-    console.error(err);
     const errorMessage = `Please refresh the page.
 	If the problem persists, please contact us.
 	Reason: ${err}`;
