@@ -29,10 +29,10 @@ import sqlalchemy
 from data.model.common_stat import StatRange, StatApi
 from data.model.sitewide_artist_stat import (SitewideArtistStat,
                                              SitewideArtistStatJson)
-from data.model.user_artist_map import UserArtistMapStat, UserArtistMapStatRange
-from data.model.user_daily_activity import UserDailyActivityStat
+from data.model.user_artist_map import UserArtistMapRecordList
+from data.model.user_daily_activity import UserDailyActivityRecordList
 from data.model.user_entity import UserEntityRecordList
-from data.model.user_listening_activity import (UserListeningActivityStat, UserActivityStatRange, UserActivityStat)
+from data.model.user_listening_activity import UserListeningActivityRecordList
 from flask import current_app
 from listenbrainz import db
 from pydantic import ValidationError
@@ -79,7 +79,7 @@ def insert_user_jsonb_data(user_id: int, stats_type: str, stats: StatRange[UserE
         })
 
 
-def insert_user_jsonb_data_without_count(user_id, stats_type: str, stats: UserActivityStatRange):
+def insert_user_jsonb_data_without_count(user_id, stats_type: str, stats: StatRange):
     """Inserts listening_activity stats calculated from Spark into the database.
 
        If stats are already present for some user, they are updated to the new
@@ -130,7 +130,7 @@ def _insert_sitewide_jsonb_data(stats_range: str, column: str, data: dict):
         })
 
 
-def insert_user_artist_map(user_id: int, artist_map: UserArtistMapStatRange):
+def insert_user_artist_map(user_id: int, artist_map: StatRange[UserArtistMapRecordList]):
     """Inserts artist_map stats calculated from Spark into the database.
 
        If stats are already present for some user, they are updated to the new
@@ -188,7 +188,7 @@ def get_user_stats(user_id: int, stats_range: str, stats_type: str) -> Optional[
 
 
 def get_user_activity_stats(user_id: int, stats_range: str, stats_type: str, stats_model)\
-        -> Optional[UserActivityStat]:
+        -> Optional[StatApi]:
     """Get activity stats in the given time range for user with given ID.
 
         Args:
@@ -221,34 +221,34 @@ def get_user_activity_stats(user_id: int, stats_range: str, stats_type: str, sta
         return None
 
 
-def get_user_listening_activity(user_id: int, stats_range: str) -> Optional[UserListeningActivityStat]:
+def get_user_listening_activity(user_id: int, stats_range: str) -> Optional[StatApi[UserListeningActivityRecordList]]:
     """Get listening activity in the given time range for user with given ID.
 
         Args:
             user_id: the row ID of the user in the DB
             stats_range: the time range to fetch the stats for
     """
-    return get_user_activity_stats(user_id, stats_range, 'listening_activity', UserListeningActivityStat)
+    return get_user_activity_stats(user_id, stats_range, 'listening_activity', StatApi[UserListeningActivityRecordList])
 
 
-def get_user_daily_activity(user_id: int, stats_range: str) -> Optional[UserDailyActivityStat]:
+def get_user_daily_activity(user_id: int, stats_range: str) -> Optional[StatApi[UserDailyActivityRecordList]]:
     """Get daily activity in the given time range for user with given ID.
 
         Args:
             user_id: the row ID of the user in the DB
             stats_range: the time range to fetch the stats for
     """
-    return get_user_activity_stats(user_id, stats_range, 'daily_activity', UserDailyActivityStat)
+    return get_user_activity_stats(user_id, stats_range, 'daily_activity', StatApi[UserDailyActivityRecordList])
 
 
-def get_user_artist_map(user_id: int, stats_range: str) -> Optional[UserArtistMapStat]:
+def get_user_artist_map(user_id: int, stats_range: str) -> Optional[StatApi[UserArtistMapRecordList]]:
     """Get artist map in the given time range for user with given ID.
 
         Args:
             user_id: the row ID of the user in the DB
             stats_range: the time range to fetch the stats for
     """
-    return get_user_activity_stats(user_id, stats_range, 'artist_map', UserArtistMapStat)
+    return get_user_activity_stats(user_id, stats_range, 'artist_map', StatApi[UserArtistMapRecordList])
 
 
 def get_sitewide_artists(stats_range: str) -> Optional[SitewideArtistStat]:

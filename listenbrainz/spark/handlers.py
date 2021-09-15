@@ -14,9 +14,9 @@ from datetime import datetime, timezone, timedelta
 
 from data.model.common_stat import StatRange
 from data.model.sitewide_artist_stat import SitewideArtistStatJson
-from data.model.user_daily_activity import UserDailyActivityStatRange
+from data.model.user_daily_activity import UserDailyActivityRecordList
 from data.model.user_entity import UserEntityRecordList
-from data.model.user_listening_activity import UserListeningActivityStatRange
+from data.model.user_listening_activity import UserListeningActivityRecordList
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
 from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
 from listenbrainz.db.similar_users import import_user_similarities
@@ -108,12 +108,12 @@ def _handle_user_activity_stats(stats_type, stats_model, data):
 
 def handle_user_listening_activity(data):
     """ Take listening activity stats for user and save it in database. """
-    _handle_user_activity_stats('listening_activity', UserListeningActivityStatRange, data)
+    _handle_user_activity_stats('listening_activity', StatRange[UserListeningActivityRecordList], data)
 
 
 def handle_user_daily_activity(data):
     """ Take daily activity stats for user and save it in database. """
-    _handle_user_activity_stats('daily_activity', UserDailyActivityStatRange, data)
+    _handle_user_activity_stats('daily_activity', StatRange[UserDailyActivityRecordList], data)
 
 
 def handle_sitewide_entity(data):

@@ -3,11 +3,7 @@
 """
 import pydantic
 
-from datetime import datetime
-from typing import Optional, List, Union
-
-from data.model.user_artist_map import UserArtistMapStatRange, UserArtistMapStat
-from data.model.user_daily_activity import UserDailyActivityStatRange, UserDailyActivityStat
+from typing import List
 
 
 class UserListeningActivityRecord(pydantic.BaseModel):
@@ -37,24 +33,3 @@ class UserListeningActivityStatMessage(pydantic.BaseModel):
 
 class UserListeningActivityRecordList(pydantic.BaseModel):
     __root__: List[UserListeningActivityRecord]
-
-
-class UserListeningActivityStatRange(pydantic.BaseModel):
-    """ Model for user's listening activity for a particular time range.
-        Currently supports week, month, year and all-time
-    """
-    to_ts: int
-    from_ts: int
-    stats_range: str
-    data: UserListeningActivityRecordList
-
-
-class UserListeningActivityStat(UserListeningActivityStatRange):
-    """ Model for stats around user's listening activity
-    """
-    user_id: int
-    last_updated: datetime
-
-
-UserActivityStatRange = Union[UserListeningActivityStatRange, UserDailyActivityStatRange, UserArtistMapStatRange]
-UserActivityStat = Union[UserListeningActivityStat, UserDailyActivityStat, UserArtistMapStat]

@@ -16,20 +16,3 @@ class UserArtistMapRecord(pydantic.BaseModel):
 
 class UserArtistMapRecordList(pydantic.BaseModel):
     __root__: List[UserArtistMapRecord]
-
-
-class UserArtistMapStatRange(pydantic.BaseModel):
-    """ Model for user's artist map for a particular
-    time range. Currently supports week, month, year and all-time
-    """
-    to_ts: int
-    from_ts: int
-    data: UserArtistMapRecordList
-    stats_range: str
-
-
-class UserArtistMapStat(UserArtistMapStatRange):
-    """ Model for stats around a user's most listened artists
-    """
-    user_id: int
-    last_updated: datetime
