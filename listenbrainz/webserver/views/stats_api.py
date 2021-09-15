@@ -238,13 +238,7 @@ def get_recording(user_name):
 
 
 def _get_entity_stats(user_name: str, entity: str, count_key: str):
-    user = db_user.get_by_mb_id(user_name)
-    if user is None:
-        raise APINotFound("Cannot find user: %s" % user_name)
-
-    stats_range = request.args.get("range", default="all_time")
-    if not _is_valid_range(stats_range):
-        raise APIBadRequest("Invalid range: {}".format(stats_range))
+    user, stats_range = _validate_stats_user_params(user_name)
 
     offset = get_non_negative_param("offset", default=0)
     count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
@@ -326,13 +320,7 @@ def get_listening_activity(user_name: str):
     :resheader Content-Type: *application/json*
 
     """
-    user = db_user.get_by_mb_id(user_name)
-    if user is None:
-        raise APINotFound("Cannot find user: {}".format(user_name))
-
-    stats_range = request.args.get('range', default='all_time')
-    if not _is_valid_range(stats_range):
-        raise APIBadRequest("Invalid range: {}".format(stats_range))
+    user, stats_range = _validate_stats_user_params(user_name)
 
     stats = db_stats.get_user_listening_activity(user['id'], stats_range)
     if stats is None:
@@ -403,13 +391,7 @@ def get_daily_activity(user_name: str):
     :resheader Content-Type: *application/json*
 
     """
-    user = db_user.get_by_mb_id(user_name)
-    if user is None:
-        raise APINotFound("Cannot find user: {}".format(user_name))
-
-    stats_range = request.args.get('range', default='all_time')
-    if not _is_valid_range(stats_range):
-        raise APIBadRequest("Invalid range: {}".format(stats_range))
+    user, stats_range = _validate_stats_user_params(user_name)
 
     stats = db_stats.get_user_daily_activity(user['id'], stats_range)
     if stats is None:
@@ -492,13 +474,7 @@ def get_artist_map(user_name: str):
     :resheader Content-Type: *application/json*
 
     """
-    user = db_user.get_by_mb_id(user_name)
-    if user is None:
-        raise APINotFound("Cannot find user: {}".format(user_name))
-
-    stats_range = request.args.get('range', default='all_time')
-    if not _is_valid_range(stats_range):
-        raise APIBadRequest("Invalid range: {}".format(stats_range))
+    user, stats_range = _validate_stats_user_params(user_name)
 
     recalculate_param = request.args.get('force_recalculate', default='false')
     if recalculate_param.lower() not in ['true', 'false']:
@@ -689,6 +665,17 @@ def _process_user_entity(stats: UserEntityStat, offset, count) -> Tuple[list, in
     entity_list = [x.dict() for x in stats.data.__root__[offset:count]]
 
     return entity_list, total_entity_count
+
+
+def _validate_stats_user_params(user_name):
+    """ Validate and return the user and common stats params """
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise APINotFound(f"Cannot find user: {user_name}")
+
+    stats_range = request.args.get("range", default="all_time")
+    if not _is_valid_range(stats_range):
+        raise APIBadRequest(f"Invalid range: {stats_range}")
 
 
 def _is_valid_range(stats_range: str) -> bool:
