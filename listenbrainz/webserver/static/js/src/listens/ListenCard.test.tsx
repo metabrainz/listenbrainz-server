@@ -127,25 +127,6 @@ describe("ListenCard", () => {
       expect(instance.props.updateFeedback).toHaveBeenCalledWith("bar", -1);
     });
 
-    it("does nothing if isCurrentUser is false", async () => {
-      const wrapper = mount<ListenCard>(
-        <GlobalAppContext.Provider value={globalProps}>
-          <ListenCard {...{ ...props, isCurrentUser: false }} />
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper.instance();
-
-      const { APIService } = instance.context;
-      const spy = jest.spyOn(APIService, "submitFeedback");
-      spy.mockImplementation(() => Promise.resolve(200));
-
-      expect(wrapper.state("feedback")).toEqual(1);
-
-      instance.submitFeedback(-1);
-      expect(spy).toHaveBeenCalledTimes(0);
-      expect(wrapper.state("feedback")).toEqual(1);
-    });
-
     it("does nothing if CurrentUser.authtoken is not set", async () => {
       const wrapper = mount<ListenCard>(
         <GlobalAppContext.Provider
@@ -383,25 +364,6 @@ describe("ListenCard", () => {
       });
 
       expect(instance.props.newAlert).toHaveBeenCalledTimes(1);
-    });
-
-    it("does nothing if isCurrentUser is false", async () => {
-      const wrapper = mount<ListenCard>(
-        <GlobalAppContext.Provider value={globalProps}>
-          <ListenCard {...{ ...props, isCurrentUser: false }} />
-        </GlobalAppContext.Provider>
-      );
-
-      const instance = wrapper.instance();
-
-      const spy = jest.spyOn(
-        instance.context.APIService,
-        "recommendTrackToFollowers"
-      );
-      spy.mockImplementation(() => Promise.resolve(200));
-
-      instance.recommendListenToFollowers();
-      expect(spy).toHaveBeenCalledTimes(0);
     });
 
     it("does nothing if CurrentUser.authtoken is not set", async () => {
