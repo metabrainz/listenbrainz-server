@@ -251,13 +251,13 @@ const preciseTimestamp = (
   if (!display) {
     // We can easily mock Date.now in our tests to mock the current dateTime
     const now = Date.now();
-    const nowDate = new Date(now);
-    const currentYear = nowDate.getFullYear();
+    const currentDate = new Date(now);
+    const currentYear = currentDate.getFullYear();
     const listenYear = listenDate.getFullYear();
     // Date is today : format using timeago
     if (
-      nowDate.getDate() === listenDate.getDate() &&
-      nowDate.getMonth() === listenDate.getMonth() &&
+      currentDate.getDate() === listenDate.getDate() &&
+      currentDate.getMonth() === listenDate.getMonth() &&
       currentYear === listenYear
     ) {
       display = "timeAgo";
