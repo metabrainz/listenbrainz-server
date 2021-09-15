@@ -669,7 +669,7 @@ def _process_user_entity(stats: StatApi[UserEntityRecordList], offset, count) ->
     return entity_list, total_entity_count
 
 
-def _validate_stats_user_params(user_name):
+def _validate_stats_user_params(user_name) -> Tuple[Dict, str]:
     """ Validate and return the user and common stats params """
     user = db_user.get_by_mb_id(user_name)
     if user is None:
@@ -678,6 +678,7 @@ def _validate_stats_user_params(user_name):
     stats_range = request.args.get("range", default="all_time")
     if not _is_valid_range(stats_range):
         raise APIBadRequest(f"Invalid range: {stats_range}")
+    return user, stats_range
 
 
 def _is_valid_range(stats_range: str) -> bool:
