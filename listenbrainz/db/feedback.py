@@ -108,7 +108,6 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
                 if row["recording_mbid"] is not None:
                     metadata["additional_metadata"] = {
                         "recording_mbid": row["recording_mbid"],
-                        "artist_credit_id": row["artist_credit_id"],
                         "release_mbid": row["release_mbid"] }
                 index[row["recording_msid"]].track_metadata = metadata
 
