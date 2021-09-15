@@ -34,9 +34,15 @@ describe("preciseTimestamp", () => {
   const currentDate: Date = new Date();
 
   it("uses timeago formatting for if timestamp is on the same day", () => {
-    const date: Date = new Date("2021-09-14T16:16:16.161Z"); // 4PM UTC
-    const testDate: number = date.getTime() - 1000 * 3600 * 12; // 12 hours ago was already today
+    const dateString = "2021-09-14T16:16:16.161Z"; // 4PM
+    const setDate: Date = new Date(dateString);
+    const epoch = setDate.getTime();
+    const testDate: number = epoch - 1000 * 3600 * 12; // 12 hours (6AM) ago was already 'today'
+
+    const dateNowMock = jest.spyOn(Date, "now").mockImplementation(() => epoch);
+
     expect(preciseTimestamp(testDate)).toMatch(timeago.ago(testDate));
+    dateNowMock.mockRestore();
   });
 
   it("uses no-year formatting if timestamp is 'yesterday'", () => {
