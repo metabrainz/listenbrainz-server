@@ -42,11 +42,7 @@ describe("PinRecordingModal", () => {
       .mockImplementation(() => mockDate.getTime());
 
     const wrapper = mount<PinRecordingModal>(
-      <PinRecordingModal
-        recordingToPin={recordingToPin}
-        isCurrentUser
-        newAlert={jest.fn()}
-      />
+      <PinRecordingModal recordingToPin={recordingToPin} newAlert={jest.fn()} />
     );
     expect(wrapper.html()).toMatchSnapshot();
     fakeDateNow.mockRestore();
@@ -59,7 +55,6 @@ describe("submitPinRecording", () => {
       <GlobalAppContext.Provider value={globalProps}>
         <PinRecordingModal
           recordingToPin={recordingToPin}
-          isCurrentUser
           newAlert={jest.fn()}
         />
       </GlobalAppContext.Provider>
@@ -86,7 +81,6 @@ describe("submitPinRecording", () => {
       <GlobalAppContext.Provider value={globalProps}>
         <PinRecordingModal
           recordingToPin={recordingToPin}
-          isCurrentUser
           newAlert={jest.fn()}
         />
       </GlobalAppContext.Provider>
@@ -106,25 +100,6 @@ describe("submitPinRecording", () => {
     expect(wrapper.state("blurbContent")).toEqual("");
   });
 
-  it("does nothing if isCurrentUser is false", async () => {
-    const wrapper = mount<PinRecordingModal>(
-      <GlobalAppContext.Provider value={globalProps}>
-        <PinRecordingModal
-          recordingToPin={recordingToPin}
-          isCurrentUser={false} // isCurrentUser is false
-          newAlert={jest.fn()}
-        />
-      </GlobalAppContext.Provider>
-    );
-    const instance = wrapper.instance();
-
-    const spy = jest.spyOn(instance.context.APIService, "submitPinRecording");
-    spy.mockImplementation(() => Promise.resolve(200));
-
-    await instance.submitPinRecording();
-    expect(spy).toHaveBeenCalledTimes(0);
-  });
-
   it("does nothing if CurrentUser.authtoken is not set", async () => {
     const wrapper = mount<PinRecordingModal>(
       <GlobalAppContext.Provider
@@ -135,7 +110,6 @@ describe("submitPinRecording", () => {
       >
         <PinRecordingModal
           recordingToPin={recordingToPin}
-          isCurrentUser
           newAlert={jest.fn()}
         />
       </GlobalAppContext.Provider>
@@ -154,7 +128,6 @@ describe("submitPinRecording", () => {
       <GlobalAppContext.Provider value={globalProps}>
         <PinRecordingModal
           recordingToPin={recordingToPin}
-          isCurrentUser
           newAlert={jest.fn()}
         />
       </GlobalAppContext.Provider>
@@ -183,7 +156,6 @@ describe("handleBlurbInputChange", () => {
       <GlobalAppContext.Provider value={globalProps}>
         <PinRecordingModal
           recordingToPin={recordingToPin}
-          isCurrentUser
           newAlert={jest.fn()}
         />
       </GlobalAppContext.Provider>
@@ -212,7 +184,6 @@ describe("handleBlurbInputChange", () => {
       <GlobalAppContext.Provider value={globalProps}>
         <PinRecordingModal
           recordingToPin={recordingToPin}
-          isCurrentUser
           newAlert={jest.fn()}
         />
       </GlobalAppContext.Provider>
@@ -245,11 +216,7 @@ describe("handleBlurbInputChange", () => {
 describe("handleError", () => {
   it("calls newAlert", async () => {
     const wrapper = mount<PinRecordingModal>(
-      <PinRecordingModal
-        recordingToPin={recordingToPin}
-        isCurrentUser
-        newAlert={jest.fn()}
-      />
+      <PinRecordingModal recordingToPin={recordingToPin} newAlert={jest.fn()} />
     );
     const instance = wrapper.instance();
 

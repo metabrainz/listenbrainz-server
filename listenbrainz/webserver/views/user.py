@@ -8,7 +8,10 @@ import ujson
 
 from flask import Blueprint, render_template, request, url_for, redirect, current_app, jsonify
 from flask_login import current_user, login_required
+
+from data.model.external_service import ExternalServiceType
 from listenbrainz import webserver
+from listenbrainz.db import listens_importer
 from listenbrainz.db.playlist import get_playlists_for_user, get_playlists_created_for_user, get_playlists_collaborated_on
 from listenbrainz.db.model.pinned_recording import fetch_track_metadata_for_pins
 from listenbrainz.db.pinned_recording import get_current_pin_for_user, get_pin_count_for_user, get_pin_history_for_user
@@ -453,5 +456,5 @@ def delete_listens_history(musicbrainz_id):
     user = _get_user(musicbrainz_id)
     timescale_connection._ts.delete(user.musicbrainz_id)
     timescale_connection._ts.reset_listen_count(user.musicbrainz_id)
-    db_user.reset_latest_import(user.musicbrainz_id)
+    listens_importer.update_latest_listened_at(user.id, ExternalServiceType.LASTFM, 0)
     db_stats.delete_user_stats(user.id)

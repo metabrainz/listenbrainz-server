@@ -462,9 +462,9 @@ describe("getLatestImport", () => {
   });
 
   it("encodes url correctly", async () => {
-    await apiService.getLatestImport("ईशान");
+    await apiService.getLatestImport("ईशान", "lastfm");
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/latest-import?user_name=%E0%A4%88%E0%A4%B6%E0%A4%BE%E0%A4%A8",
+      "foobar/1/latest-import?user_name=%E0%A4%88%E0%A4%B6%E0%A4%BE%E0%A4%A8&service=lastfm",
       {
         method: "GET",
       }
@@ -472,12 +472,14 @@ describe("getLatestImport", () => {
   });
 
   it("calls checkStatus once", async () => {
-    await apiService.getLatestImport("foobar");
+    await apiService.getLatestImport("foobar", "lastfm");
     expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
   });
 
   it("returns the latest import timestamp", async () => {
-    await expect(apiService.getLatestImport("foobar")).resolves.toEqual(0);
+    await expect(
+      apiService.getLatestImport("foobar", "lastfm")
+    ).resolves.toEqual(0);
   });
 });
 
@@ -496,24 +498,26 @@ describe("setLatestImport", () => {
   });
 
   it("calls fetch with correct parameters", async () => {
-    await apiService.setLatestImport("foobar", 0);
+    await apiService.setLatestImport("foobar", "lastfm", 0);
     expect(window.fetch).toHaveBeenCalledWith("foobar/1/latest-import", {
       method: "POST",
       headers: {
         Authorization: "Token foobar",
         "Content-Type": "application/json;charset=UTF-8",
       },
-      body: JSON.stringify({ ts: 0 }),
+      body: JSON.stringify({ ts: 0, service: "lastfm" }),
     });
   });
 
   it("calls checkStatus once", async () => {
-    await apiService.setLatestImport("foobar", 0);
+    await apiService.setLatestImport("foobar", "lastfm", 0);
     expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
   });
 
   it("returns the response code if successful", async () => {
-    await expect(apiService.setLatestImport("foobar", 0)).resolves.toEqual(200);
+    await expect(
+      apiService.setLatestImport("foobar", "lastfm", 0)
+    ).resolves.toEqual(200);
   });
 });
 
