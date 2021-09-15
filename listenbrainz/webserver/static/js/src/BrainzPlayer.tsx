@@ -85,9 +85,6 @@ type BrainzPlayerState = {
   updateTime: number;
 };
 
-// By how much should we seek in the track?
-const SEEK_TIME_MILLISECONDS = 5000;
-
 export default class BrainzPlayer extends React.Component<
   BrainzPlayerProps,
   BrainzPlayerState
@@ -107,6 +104,11 @@ export default class BrainzPlayer extends React.Component<
     action: string;
     handler: () => void;
   }>;
+
+  // By how much should we seek in the track?
+  private SEEK_TIME_MILLISECONDS = 5000;
+  // Wait X milliseconds between start of song and sending a full listen
+  private SUBMIT_LISTEN_AFTER_MS = 30000;
 
   constructor(props: BrainzPlayerProps) {
     super(props);
@@ -381,12 +383,12 @@ export default class BrainzPlayer extends React.Component<
 
   seekForward = (): void => {
     const { progressMs } = this.state;
-    this.seekToPositionMs(progressMs + SEEK_TIME_MILLISECONDS);
+    this.seekToPositionMs(progressMs + this.SEEK_TIME_MILLISECONDS);
   };
 
   seekBackward = (): void => {
     const { progressMs } = this.state;
-    this.seekToPositionMs(progressMs - SEEK_TIME_MILLISECONDS);
+    this.seekToPositionMs(progressMs - this.SEEK_TIME_MILLISECONDS);
   };
 
   toggleDirection = (): void => {
@@ -515,11 +517,12 @@ export default class BrainzPlayer extends React.Component<
         track_name: title,
       };
       try {
+        const now = Date.now();
         // Create a new listen and augment it with the existing listen and datasource's metadata
-        const newListen: Listen = {
+        const newListen: BaseListenFormat = {
           // convert Javascript millisecond time to unix epoch in seconds
           listened_at: Math.floor(Date.now() / 1000),
-          track_metadata: (listens[currentListenIndex] as Listen)
+          track_metadata: (listens[currentListenIndex] as BaseListenFormat)
             .track_metadata,
         };
         // ensure the track_metadata.additional_info path exists and add brainzplayer_metadata field
@@ -534,10 +537,12 @@ export default class BrainzPlayer extends React.Component<
           },
         });
         const { auth_token } = currentUser;
-        await APIService.submitListens(auth_token, "playingNow", [newListen]);
+        await APIService.submitListens(auth_token, "playing_now", [newListen]);
         // create a timer to send this listen again as a full listen (first run will send "playing_now" listen)
         // Wait for 30 seconds or track length if lower than 30s
-        const waitFor = durationMs ? Math.min(3000, durationMs) : 3000;
+        const waitFor = durationMs
+          ? Math.min(this.SUBMIT_LISTEN_AFTER_MS, durationMs)
+          : this.SUBMIT_LISTEN_AFTER_MS;
         this.listenSubmittingTimerID = setTimeout(async () => {
           try {
             await APIService.submitListens(auth_token, "single", [newListen]);

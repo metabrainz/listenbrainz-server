@@ -1,4 +1,4 @@
-import { isNil } from "lodash";
+import { isNil, omit } from "lodash";
 import APIError from "./APIError";
 
 export default class APIService {
@@ -235,11 +235,18 @@ export default class APIService {
     listenType: ListenType,
     payload: Array<Listen>
   ): Promise<Response> => {
-    if (JSON.stringify(payload).length <= this.MAX_LISTEN_SIZE) {
+    let processedPayload = payload;
+    // When submitting playing_now listens, listened_at must NOT be present
+    if (listenType === "playing_now") {
+      processedPayload = payload.map(
+        (listen) => omit(listen, "listened_at") as Listen
+      );
+    }
+    if (JSON.stringify(processedPayload).length <= this.MAX_LISTEN_SIZE) {
       // Payload is within submission limit, submit directly
       const struct = {
         listen_type: listenType,
-        payload,
+        payload: processedPayload,
       } as SubmitListensPayload;
 
       const url = `${this.APIBaseURI}/submit-listens`;
