@@ -10,11 +10,13 @@ import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import pycountry
 import requests
+
+from data.model.common_stat import StatApi
 from data.model.sitewide_artist_stat import SitewideArtistStatJson
 from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapStatRange
 from flask import Blueprint, current_app, jsonify, request
 
-from data.model.user_entity import UserEntityStat
+from data.model.user_entity import UserEntityRecordList
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError,
@@ -645,7 +647,7 @@ def get_sitewide_artist():
     })
 
 
-def _process_user_entity(stats: UserEntityStat, offset, count) -> Tuple[list, int]:
+def _process_user_entity(stats: StatApi[UserEntityRecordList], offset, count) -> Tuple[list, int]:
     """ Process the statistics data according to query params
 
         Args:

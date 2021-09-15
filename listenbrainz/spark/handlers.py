@@ -11,9 +11,11 @@ from flask import current_app, render_template
 from pydantic import ValidationError
 from brainzutils.mail import send_mail
 from datetime import datetime, timezone, timedelta
+
+from data.model.common_stat import StatRange
 from data.model.sitewide_artist_stat import SitewideArtistStatJson
 from data.model.user_daily_activity import UserDailyActivityStatRange
-from data.model.user_entity import UserEntityStatRange
+from data.model.user_entity import UserEntityRecordList
 from data.model.user_listening_activity import UserListeningActivityStatRange
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
 from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
@@ -71,7 +73,7 @@ def handle_user_entity(data):
     entity = data['entity']
 
     try:
-        db_stats.insert_user_jsonb_data(user['id'], entity, UserEntityStatRange(**data))
+        db_stats.insert_user_jsonb_data(user['id'], entity, StatRange[UserEntityRecordList](**data))
     except ValidationError:
         current_app.logger.error("""ValidationError while inserting {stats_range} top {entity} for user with user_id: {user_id}.
                                  Data: {data}""".format(stats_range=stats_range, entity=entity,

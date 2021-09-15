@@ -3,6 +3,7 @@ from typing import List, Union
 
 import pydantic
 
+from data.model.common_stat import StatRange, StatApi
 from data.model.user_artist_stat import UserArtistRecord
 from data.model.user_recording_stat import UserRecordingRecord
 from data.model.user_release_stat import UserReleaseRecord
@@ -29,22 +30,3 @@ class UserEntityStatMessage(pydantic.BaseModel):
 # does not have an exclude_none option.
 class UserEntityRecordList(pydantic.BaseModel):
     __root__: List[UserEntityStatRecord]
-
-
-class UserEntityStatRange(pydantic.BaseModel):
-    """ Model for user's most listened-to releases, recordings and artists
-    for a particular time range. Currently supports week, month, year
-    and all-time
-    """
-    to_ts: int
-    from_ts: int
-    count: int
-    stats_range: str
-    data: UserEntityRecordList
-
-
-class UserEntityStat(UserEntityStatRange):
-    """ Model for stats around a user's most listened releases
-    """
-    user_id: int
-    last_updated: datetime
