@@ -10,7 +10,7 @@ import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
 from listenbrainz.db import timescale as ts
 from messybrainz import db as msb_db
-from messybrainz.db.data import submit_recording
+from messybrainz.db.data import submit_recording, load_recordings_from_msids
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase
 
 
@@ -42,6 +42,7 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
                 "score": 1
             }
         ]
+        self.saved_artist_msid = None
 
     def insert_test_data(self, user_id, neg_score=False):
         """ Insert test data into the database """
@@ -62,6 +63,8 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
 
         with msb_db.engine.connect() as connection:
             msid = submit_recording(connection, self.sample_recording)
+            artists = load_recordings_from_msids(connection, [msid])
+            self.saved_artist_msid = artists[0]["ids"]["artist_msid"]
 
         self.sample_feedback_with_metadata[0]["recording_msid"] = msid
 
@@ -188,6 +191,7 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
         self.assertEqual(result[0].track_metadata["track_name"], "Strangers")
         self.assertEqual(result[0].track_metadata["additional_info"]["recording_mbid"], "076255b4-1575-11ec-ac84-135bf6a670e3")
         self.assertEqual(result[0].track_metadata["additional_info"]["release_mbid"], "1fd178b4-1575-11ec-b98a-d72392cd8c97")
+        self.assertEqual(result[0].track_metadata["additional_info"]["artist_msid"], self.saved_artist_msid)
 
 
     def test_get_feedback_count_for_user(self):

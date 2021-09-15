@@ -191,7 +191,7 @@ def export_feedback():
     # feedback into memory at once, and we can start serving the response
     # immediately.
     feedback = fetch_feedback(current_user.id)
-    output = stream_json_array(fb.to_api(fb=fb) for fb in feedback)
+    output = stream_json_array(fb.to_api() for fb in feedback)
 
     response = Response(stream_with_context(output))
     response.headers["Content-Disposition"] = "attachment; filename=" + filename

@@ -98,7 +98,7 @@ class MessyBrainzTestCase(unittest.TestCase):
         msb.run_sql_script_without_transaction(os.path.join(MESSYBRAINZ_SQL_DIR, 'create_extensions.sql'))
         msb.engine.dispose()
 
-        msb.init_db_engine(config.SQLALCHEMY_MESSYBRAINZ_URI)
+        msb.init_db_engine(config.MESSYBRAINZ_SQLALCHEMY_DATABASE_URI)
         msb.run_sql_script(os.path.join(MESSYBRAINZ_SQL_DIR, 'create_tables.sql'))
         msb.run_sql_script(os.path.join(MESSYBRAINZ_SQL_DIR, 'create_functions.sql'))
         msb.run_sql_script(os.path.join(MESSYBRAINZ_SQL_DIR, 'create_indexes.sql'))
