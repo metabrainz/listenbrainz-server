@@ -95,7 +95,7 @@ def _handle_user_activity_stats(stats_type, stats_model, data):
     stats_range = data['stats_range']
 
     try:
-        db_stats.insert_user_jsonb_data_without_count(user['id'], stats_type, stats_model(**data))
+        db_stats.insert_user_jsonb_data(user['id'], stats_type, stats_model(**data))
     except ValidationError:
         current_app.logger.error("""ValidationError while inserting {stats_range} {stats_type} for user with
         user_id: {user_id}. Data: {data}""".format(

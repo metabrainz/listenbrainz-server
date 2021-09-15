@@ -50,7 +50,7 @@ def get_timestamp_for_last_user_stats_update():
         return row['last_update_ts'] if row else None
 
 
-def insert_user_jsonb_data(user_id: int, stats_type: str, stats: StatRange[UserEntityRecordList]):
+def insert_user_jsonb_data(user_id: int, stats_type: str, stats: StatRange):
     """ Inserts jsonb data into the given column
 
         Args:
@@ -79,36 +79,6 @@ def insert_user_jsonb_data(user_id: int, stats_type: str, stats: StatRange[UserE
         })
 
 
-def insert_user_jsonb_data_without_count(user_id, stats_type: str, stats: StatRange):
-    """Inserts listening_activity stats calculated from Spark into the database.
-
-       If stats are already present for some user, they are updated to the new
-       values passed.
-
-        Args:
-            user_id: the row id of the user
-            stats_type: the type of entity for which to insert stats in
-            stats: the data to be inserted
-    """
-    with db.engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
-            INSERT INTO statistics.user_new (user_id, stats_type, stats_range, data, from_ts, to_ts, last_updated)
-                 VALUES (:user_id, :stats_type, :stats_range, :data, :from_ts, :to_ts, NOW())
-            ON CONFLICT (user_id, stats_type, stats_range)
-          DO UPDATE SET data = :data,
-                        from_ts = :from_ts,
-                        to_ts = :to_ts,
-                        last_updated = NOW()
-            """), {
-            "user_id": user_id,
-            "stats_type": stats_type,
-            "stats_range": stats.stats_range,
-            "data": stats.data.json(exclude_none=True),
-            "from_ts": stats.from_ts,
-            "to_ts": stats.to_ts
-        })
-
-
 def _insert_sitewide_jsonb_data(stats_range: str, column: str, data: dict):
     """ Inserts jsonb data into the given column
 
@@ -128,18 +98,6 @@ def _insert_sitewide_jsonb_data(stats_range: str, column: str, data: dict):
             'stats_range': stats_range,
             'data': json.dumps(data)
         })
-
-
-def insert_user_artist_map(user_id: int, artist_map: StatRange[UserArtistMapRecordList]):
-    """Inserts artist_map stats calculated from Spark into the database.
-
-       If stats are already present for some user, they are updated to the new
-       values passed.
-
-       Args: user_id: the row id of the user,
-             artist_map: the artist_map stats of the user
-    """
-    insert_user_jsonb_data_without_count(user_id, 'artist_map', artist_map)
 
 
 def insert_sitewide_artists(stats_range: str, artists: SitewideArtistStatJson):

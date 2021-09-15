@@ -521,7 +521,7 @@ def get_artist_map(user_name: str):
 
             # Store in DB for future use
             try:
-                db_stats.insert_user_artist_map(user['id'], result)
+                db_stats.insert_user_jsonb_data(user['id'], 'artist_map', result)
             except Exception as err:
                 current_app.logger.error("Error while inserting artist map stats for {user}. Error: {err}. Data: {data}".format(
                     user=user_name, err=err, data=result), exc_info=True)
