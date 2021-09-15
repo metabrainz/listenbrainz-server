@@ -10,6 +10,7 @@ from messybrainz import db as msb
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'admin', 'sql')
 TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'testdata')
 TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'admin', 'timescale')
+MESSYBRAINZ_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'admin', 'messybrainz', 'sql')
 
 
 class DatabaseTestCase(unittest.TestCase):
@@ -81,23 +82,23 @@ class TimescaleTestCase(unittest.TestCase):
 class MessyBrainzTestCase(unittest.TestCase):
 
     def setUp(self):
-        msb.init_db_connection(config.MESSYBRAINZ_ADMIN_URI)
+        msb.init_db_engine(config.MESSYBRAINZ_ADMIN_URI)
         self.reset_msb_db()
 
     def tearDown(self):
         self.drop_tables()
 
     def reset_msb_db(self):
-        msb.init_db_connection(config.MESSYBRAINZ_ADMIN_URI)
+        msb.init_db_engine(config.MESSYBRAINZ_ADMIN_URI)
         msb.run_sql_script_without_transaction(os.path.join(MESSYBRAINZ_SQL_DIR, 'drop_db.sql'))
         msb.run_sql_script_without_transaction(os.path.join(MESSYBRAINZ_SQL_DIR, 'create_db.sql'))
         msb.engine.dispose()
 
-        msb.init_db_connection(config.MESSYBRAINZ_ADMIN_LB_URI)
+        msb.init_db_engine(config.MESSYBRAINZ_ADMIN_MSB_URI)
         msb.run_sql_script_without_transaction(os.path.join(MESSYBRAINZ_SQL_DIR, 'create_extensions.sql'))
         msb.engine.dispose()
 
-        msb.init_db_connection(config.SQLALCHEMY_MESSYBRAINZ_URI)
+        msb.init_db_engine(config.SQLALCHEMY_MESSYBRAINZ_URI)
         msb.run_sql_script(os.path.join(MESSYBRAINZ_SQL_DIR, 'create_tables.sql'))
         msb.run_sql_script(os.path.join(MESSYBRAINZ_SQL_DIR, 'create_functions.sql'))
         msb.run_sql_script(os.path.join(MESSYBRAINZ_SQL_DIR, 'create_indexes.sql'))

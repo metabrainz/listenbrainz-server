@@ -88,7 +88,7 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
         result = connection.execute(sqlalchemy.text(query), args)
         feedback = [Feedback(**dict(row)) for row in result.fetchall()]
 
-    if metadata:
+    if metadata and len(feedback) > 0:
         msids = [ f.recording_msid for f in feedback ]
         index = { f.recording_msid:f for f in feedback }
 

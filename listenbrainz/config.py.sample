@@ -17,7 +17,7 @@ TIMESCALE_ADMIN_URI = "postgresql://postgres:postgres@db/postgres"
 TIMESCALE_ADMIN_LB_URI = "postgresql://postgres:postgres@db/listenbrainz_ts"
 
 # MessyBrainz
-MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@db:5432/messybrainz"
+SQLALCHEMY_MESSYBRAINZ_URI = "postgresql://messybrainz:messybrainz@db:5432/messybrainz"
 MESSYBRAINZ_ADMIN_URI = "postgresql://postgres:postgres@db/postgres"
 MESSYBRAINZ_ADMIN_MSB_URI = "postgresql://postgres:postgres@db/messybrainz"
 
