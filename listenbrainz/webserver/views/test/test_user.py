@@ -116,7 +116,7 @@ class UserViewsTestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_artists_db.json')) as f:
             artists_data = ujson.load(f)
 
-        db_stats.insert_user_jsonb_data(user_id=self.user['id'], stats_type='artists',
+        db_stats.insert_user_jsonb_data(user_id=self.user.id, stats_type='artists',
                                         stats=StatRange[UserEntityRecordList](**artists_data))
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)

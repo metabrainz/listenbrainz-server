@@ -97,7 +97,7 @@ class StatsAPITestCase(IntegrationTestCase):
         sent_to = self.user_artist_payload['to_ts']
         received_to = data['to_ts']
         self.assertEqual(sent_to, received_to)
-        sent_artist_list = self.user_artist_payload['artists'][:25]
+        sent_artist_list = self.user_artist_payload['data'][:25]
         received_artist_list = data['artists']
         self.assertListEqual(sent_artist_list, received_artist_list)
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
@@ -1153,7 +1153,7 @@ class StatsAPITestCase(IntegrationTestCase):
 
         # Overwrite the artist stats so that no artist has msids or mbids present
         artist_stats = deepcopy(self.user_artist_payload)
-        for artist in artist_stats["artists"]:
+        for artist in artist_stats["data"]:
             artist['artist_mbids'] = []
             artist['artist_msid'] = None
         db_stats.insert_user_jsonb_data(self.user['id'], 'artists',

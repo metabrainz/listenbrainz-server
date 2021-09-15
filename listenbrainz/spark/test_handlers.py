@@ -64,7 +64,7 @@ class HandlersTestCase(unittest.TestCase):
             current_app.config['TESTING'] = False  # set testing to false to check the notifications
             handle_user_entity(data)
 
-        mock_db_insert.assert_called_with(1, StatRange[UserEntityRecordList](
+        mock_db_insert.assert_called_with(1, 'artists', StatRange[UserEntityRecordList](
             to_ts=10,
             from_ts=1,
             count=1,
@@ -92,7 +92,7 @@ class HandlersTestCase(unittest.TestCase):
             'stats_range': 'all_time',
             'from_ts': 1,
             'to_ts': 10,
-            'listening_activity': [{
+            'data': [{
                 'from_ts': 1,
                 'to_ts': 5,
                 'time_range': '2020',
@@ -106,17 +106,17 @@ class HandlersTestCase(unittest.TestCase):
             current_app.config['TESTING'] = False  # set testing to false to check the notifications
             handle_user_listening_activity(data)
 
-        mock_db_insert.assert_called_with(1, StatRange[UserListeningActivityRecordList](
+        mock_db_insert.assert_called_with(1, 'listening_activity', StatRange[UserListeningActivityRecordList](
             to_ts=10,
             from_ts=1,
             stats_range='all_time',
-            all_time=UserListeningActivityRecordList(
+            data=UserListeningActivityRecordList(
                 __root__=[
                     UserListeningActivityRecord(
                         from_ts=1,
                         to_ts=5,
                         time_range='2020',
-                        listen_count=200
+                        listen_count=200,
                     )
                 ]
             )
