@@ -1,17 +1,23 @@
 # -*- coding: utf-8 -*-
 import json
 import os
+
+import sqlalchemy
+
+from listenbrainz import config
 from listenbrainz.db.model.feedback import Feedback
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
+from listenbrainz.db import timescale as ts
 
-from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 
 
-class FeedbackDatabaseTestCase(DatabaseTestCase):
+class FeedbackDatabaseTestCase(DatabaseTestCase,TimescaleTestCase):
 
     def setUp(self):
         DatabaseTestCase.setUp(self)
+        TimescaleTestCase.setUp(self)
         self.user = db_user.get_or_create(1, "recording_feedback_user")
 
         self.sample_feedback = [
@@ -38,6 +44,22 @@ class FeedbackDatabaseTestCase(DatabaseTestCase):
             )
 
         return len(self.sample_feedback)
+
+    def insert_test_data_with_metadata(self, user_id):
+
+        query = """INSERT INTO listen_mbid_mapping
+                               (recording_msid, recording_mbid, release_mbid, artist_credit_id,
+                                artist_credit_name, recording_name, match_type)
+                               values ('d23f4719-9212-49f0-ad08-ddbfbfc50d6f',
+                                       '076255b4-1575-11ec-ac84-135bf6a670e3',
+                                       '1fd178b4-1575-11ec-b98a-d72392cd8c97',
+                                       65, 'artist name', 'recording name', 'exact_match')"""
+
+        with ts.engine.connect() as connection:
+            connection.execute(sqlalchemy.text(query))
+
+        return self.insert_test_data(user_id)
+
 
     def test_insert(self):
         count = self.insert_test_data(self.user["id"])
@@ -124,6 +146,18 @@ class FeedbackDatabaseTestCase(DatabaseTestCase):
         # test the offset argument
         result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=25, offset=1)
         self.assertEqual(len(result), 1)
+
+    def test_get_feedback_for_user_with_metadata(self):
+        count = self.insert_test_data_with_metadata(self.user["id"])
+        result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=25, offset=0, score=1, metadata=True)
+        self.assertEqual(len(result), 1)
+
+        print(result[0])
+        self.assertEqual(result[0].user_id, self.user["id"])
+        self.assertEqual(result[0].user_name, self.user["musicbrainz_id"])
+        self.assertEqual(result[0].recording_msid, self.sample_feedback[0]["recording_msid"])
+        self.assertEqual(result[0].score, self.sample_feedback[1]["score"])
+
 
     def test_get_feedback_count_for_user(self):
         count = self.insert_test_data(self.user["id"])

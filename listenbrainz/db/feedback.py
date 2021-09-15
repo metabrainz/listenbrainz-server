@@ -1,8 +1,11 @@
 import sqlalchemy
 
+from flask import current_app
 from listenbrainz import db
 from listenbrainz.db import timescale
 from listenbrainz.db.model.feedback import Feedback
+from messybrainz.db.data import load_recordings_from_msids
+from messybrainz import db as msb_db
 from typing import List
 
 
@@ -89,27 +92,30 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
         msids = [ f.recording_msid for f in feedback ]
         index = { f.recording_msid:f for f in feedback }
 
-        query = """SELECT track_name, (data->'track_metadata'->>'artist_name')::TEXT AS artist_name,
-                          (data->'track_metadata'->>'release_name')::TEXT AS release_name,
-                          (data->'track_metadata'->'additional_info'->>'recording_msid')::TEXT AS recording_msid,
-                          artist_credit_id, release_mbid::TEXT, recording_mbid::TEXT
-                     FROM listen
-                LEFT JOIN listen_mbid_mapping
-                       ON data->'track_metadata'->'additional_info'->>'recording_msid' = recording_msid::TEXT
-                    WHERE data->'track_metadata'->'additional_info'->>'recording_msid' in :msids"""
+        # Fetch the artist and track names from MSB
+        with msb_db.engine.connect() as connection:
+            msb_recordings = load_recordings_from_msids(connection, msids)
+
+        for rec in msb_recordings:
+            index[rec["ids"]["recording_msid"]].track_metadata = {
+                    "artist_name": rec["payload"]["artist"],
+                    "release_name": rec["payload"].get("release_name", ""),
+                    "track_name": rec["payload"]["title"] }
+
+        # Fetch the mapped MBIDs from the mapping
+        query = """SELECT recording_msid::TEXT, recording_mbid::TEXT, release_mbid::TEXT 
+                     FROM listen_mbid_mapping
+                    WHERE recording_msid in :msids
+                 ORDER BY recording_msid"""
 
         with timescale.engine.connect() as connection:
             result = connection.execute(sqlalchemy.text(query), msids=tuple(msids))
             for row in result.fetchall():
-                metadata = {
-                    "artist_name": row["artist_name"],
-                    "release_name": row["release_name"],
-                    "track_name": row["track_name"] }
+                current_app.logger.error(str(row))
                 if row["recording_mbid"] is not None:
-                    metadata["additional_metadata"] = {
+                    index[row["recording_msid"]].track_metadata['additional_info'] = {
                         "recording_mbid": row["recording_mbid"],
                         "release_mbid": row["release_mbid"] }
-                index[row["recording_msid"]].track_metadata = metadata
 
     return feedback
 
