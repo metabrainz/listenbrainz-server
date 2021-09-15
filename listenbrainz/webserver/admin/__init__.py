@@ -20,6 +20,13 @@ class AuthMixin:
             flash.error('You are not authorized to view the admin page.')
             return redirect(url_for('login.index'))
 
+
 class AdminBaseView(AuthMixin, BaseView): pass
-class AdminModelView(AuthMixin, ModelView): pass
+
+
+class AdminModelView(AuthMixin, ModelView):
+    # Disable creating entries from admin interface
+    can_create = False
+
+
 class AdminIndexView(AuthMixin, IndexView): pass
