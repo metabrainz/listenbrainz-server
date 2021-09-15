@@ -1,7 +1,7 @@
 {
   "from_ts": 0,
   "to_ts": 10,
-  "listening_activity": [
+  "data": [
     {
       "listen_count": 230,
       "time_range": "2020",
@@ -14,5 +14,6 @@
       "from_ts": 0,
       "to_ts": 5
     }
-  ]
+  ],
+  "stats_range": "all_time"
 }

@@ -1,6 +1,6 @@
 {
   "from_ts": 1009843200,
-  "listening_activity": [
+  "data": [
     {
       "from_ts": 1009843200,
       "listen_count": 0,
@@ -116,5 +116,6 @@
       "to_ts": 1609459199
     }
   ],
-  "to_ts": 1589496658
+  "to_ts": 1589496658,
+  "stats_range": "all_time"
 }

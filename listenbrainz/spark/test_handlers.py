@@ -2,25 +2,18 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from unittest import mock
 
+from data.model.common_stat import StatRange
 from data.model.sitewide_artist_stat import (SitewideArtistRecord,
                                              SitewideArtistStatJson,
                                              SitewideArtistStatRange)
-from data.model.user_artist_stat import (UserArtistRecord, UserArtistStatJson,
-                                         UserArtistStatRange)
-from data.model.user_daily_activity import (UserDailyActivityRecord,
-                                            UserDailyActivityStatJson,
-                                            UserDailyActivityStatRange)
-from data.model.user_listening_activity import (UserListeningActivityRecord,
-                                                UserListeningActivityStatJson,
-                                                UserListeningActivityStatRange)
-
-from data.model.user_artist_stat import (UserArtistRecord,
-                                         UserArtistStatJson,
-                                         UserArtistStatRange)
+from data.model.user_daily_activity import (UserDailyActivityRecord, UserDailyActivityStatRange,
+                                            UserDailyActivityRecordList)
+from data.model.user_entity import UserEntityRecordList
+from data.model.user_listening_activity import UserListeningActivityRecord, UserListeningActivityRecordList
+from data.model.user_artist_stat import UserArtistRecord
 
 from data.model.user_missing_musicbrainz_data import (UserMissingMusicBrainzDataRecord,
-                                                      UserMissingMusicBrainzDataJson,
-                                                      UserMissingMusicBrainzData)
+                                                      UserMissingMusicBrainzDataJson)
 
 from data.model.user_cf_recommendations_recording_message import (UserRecommendationsJson,
                                                                   UserRecommendationsRecord)
@@ -46,7 +39,7 @@ class HandlersTestCase(unittest.TestCase):
     def setUp(self):
         self.app = create_app()
 
-    @mock.patch('listenbrainz.spark.handlers.db_stats.insert_user_artists')
+    @mock.patch('listenbrainz.spark.handlers.db_stats.insert_user_jsonb_data')
     @mock.patch('listenbrainz.spark.handlers.db_user.get_by_mb_id')
     @mock.patch('listenbrainz.spark.handlers.is_new_user_stats_batch')
     @mock.patch('listenbrainz.spark.handlers.send_mail')
@@ -71,15 +64,13 @@ class HandlersTestCase(unittest.TestCase):
             current_app.config['TESTING'] = False  # set testing to false to check the notifications
             handle_user_entity(data)
 
-        mock_db_insert.assert_called_with(1, UserArtistStatJson(
-            week=None,
-            year=None,
-            month=None,
-            all_time=UserArtistStatRange(
-                to_ts=10,
-                from_ts=1,
-                count=1,
-                artists=[
+        mock_db_insert.assert_called_with(1, StatRange[UserEntityRecordList](
+            to_ts=10,
+            from_ts=1,
+            count=1,
+            stats_range='all_time',
+            data=UserEntityRecordList(
+                __root__=[
                     UserArtistRecord(
                         artist_mbids=[],
                         listen_count=200,
@@ -90,7 +81,7 @@ class HandlersTestCase(unittest.TestCase):
         ))
         mock_send_mail.assert_called_once()
 
-    @mock.patch('listenbrainz.spark.handlers.db_stats.insert_user_listening_activity')
+    @mock.patch('listenbrainz.spark.handlers.db_stats.insert_user_jsonb_data')
     @mock.patch('listenbrainz.spark.handlers.db_user.get_by_mb_id')
     @mock.patch('listenbrainz.spark.handlers.is_new_user_stats_batch')
     @mock.patch('listenbrainz.spark.handlers.send_mail')
@@ -115,14 +106,12 @@ class HandlersTestCase(unittest.TestCase):
             current_app.config['TESTING'] = False  # set testing to false to check the notifications
             handle_user_listening_activity(data)
 
-        mock_db_insert.assert_called_with(1, UserListeningActivityStatJson(
-            week=None,
-            year=None,
-            month=None,
-            all_time=UserListeningActivityStatRange(
-                to_ts=10,
-                from_ts=1,
-                listening_activity=[
+        mock_db_insert.assert_called_with(1, StatRange[UserListeningActivityRecordList](
+            to_ts=10,
+            from_ts=1,
+            stats_range='all_time',
+            all_time=UserListeningActivityRecordList(
+                __root__=[
                     UserListeningActivityRecord(
                         from_ts=1,
                         to_ts=5,
@@ -134,7 +123,7 @@ class HandlersTestCase(unittest.TestCase):
         ))
         mock_send_mail.assert_called_once()
 
-    @mock.patch('listenbrainz.spark.handlers.db_stats.insert_user_daily_activity')
+    @mock.patch('listenbrainz.spark.handlers.db_stats.insert_user_jsonb_data')
     @mock.patch('listenbrainz.spark.handlers.db_user.get_by_mb_id')
     @mock.patch('listenbrainz.spark.handlers.is_new_user_stats_batch')
     @mock.patch('listenbrainz.spark.handlers.send_mail')
@@ -158,14 +147,12 @@ class HandlersTestCase(unittest.TestCase):
             current_app.config['TESTING'] = False  # set testing to false to check the notifications
             handle_user_daily_activity(data)
 
-        mock_db_insert.assert_called_with(1, UserDailyActivityStatJson(
-            week=None,
-            year=None,
-            month=None,
-            all_time=UserDailyActivityStatRange(
-                to_ts=10,
-                from_ts=1,
-                daily_activity=[
+        mock_db_insert.assert_called_with(1, StatRange[UserDailyActivityRecordList](
+            to_ts=10,
+            from_ts=1,
+            stats_range='all_time',
+            data=UserDailyActivityRecordList(
+                __root__=[
                     UserDailyActivityRecord(
                         day='Monday',
                         hour=20,
