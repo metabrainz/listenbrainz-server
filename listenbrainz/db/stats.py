@@ -44,7 +44,7 @@ def get_timestamp_for_last_user_stats_update():
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             SELECT MAX(last_updated) as last_update_ts
-              FROM statistics.user
+              FROM statistics.user_new
             """))
         row = result.fetchone()
         return row['last_update_ts'] if row else None
@@ -250,7 +250,7 @@ def valid_stats_exist(user_id, days):
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
                 SELECT user_id
-                  FROM statistics.user
+                  FROM statistics.user_new
                  WHERE user_id = :user_id
                    AND last_updated >= NOW() - INTERVAL ':x days'
             """), {
@@ -269,7 +269,7 @@ def delete_user_stats(user_id):
     """
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
-            DELETE FROM statistics.user
+            DELETE FROM statistics.user_new
              WHERE user_id = :user_id
             """), {
             'user_id': user_id

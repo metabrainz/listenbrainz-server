@@ -26,7 +26,7 @@ class MockDate(datetime):
     """ Mock class for datetime which returns epoch """
     @classmethod
     def now(cls, tzinfo=None):
-        return cls.fromtimestamp(0)
+        return cls.fromtimestamp(0, tzinfo)
 
 
 class StatsAPITestCase(IntegrationTestCase):
@@ -964,7 +964,7 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assert400(response)
         self.assertEqual("Invalid range: foobar", response.json['error'])
 
-    @freeze_time("Jan 1st, 1970", tz_offset=0)
+    @patch('listenbrainz.webserver.views.stats_api.datetime', MockDate)
     def test_artist_map_all_time_cached(self):
         """ Test to make sure the endpoint returns correct cached response """
         response = self.client.get(url_for('stats_api_v1.get_artist_map',
@@ -977,7 +977,7 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertEqual(data['range'], 'all_time')
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
 
-    @freeze_time("Jan 1st, 1970", tz_offset=0)
+    @patch('listenbrainz.webserver.views.stats_api.datetime', MockDate)
     def test_artist_map_week_cached(self):
         """ Test to make sure the endpoint returns correct cached response """
         with open(self.path_to_data_file('user_artist_map_db_data_for_api_test_week.json'), 'r') as f:
@@ -994,7 +994,7 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertEqual(data['range'], 'week')
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
 
-    @freeze_time("Jan 1st, 1970", tz_offset=0)
+    @patch('listenbrainz.webserver.views.stats_api.datetime', MockDate)
     def test_artist_map_month_cached(self):
         """ Test to make sure the endpoint returns correct cached response """
         with open(self.path_to_data_file('user_artist_map_db_data_for_api_test_month.json'), 'r') as f:
@@ -1011,7 +1011,7 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertEqual(data['range'], 'month')
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
 
-    @freeze_time("Jan 1st, 1970", tz_offset=0)
+    @patch('listenbrainz.webserver.views.stats_api.datetime', MockDate)
     def test_artist_map_year_cached(self):
         """ Test to make sure the endpoint returns correct cached response """
         with open(self.path_to_data_file('user_artist_map_db_data_for_api_test_year.json'), 'r') as f:
@@ -1032,7 +1032,7 @@ class StatsAPITestCase(IntegrationTestCase):
     def test_artist_map_not_calculated(self, mock_get_country_wise_counts):
         """ Test to make sure stats are calculated if not present in DB """
         mock_get_country_wise_counts.return_value = [UserArtistMapRecord(
-            **country) for country in self.artist_map_payload["artist_map"]]
+            **country) for country in self.artist_map_payload['data']]
 
         # Delete stats
         db_stats.delete_user_stats(user_id=self.user['id'])
@@ -1055,12 +1055,12 @@ class StatsAPITestCase(IntegrationTestCase):
         data = db_stats.get_user_artist_map(self.user['id'], 'all_time')
         self.assertEqual(data.data.dict()['artist_map'], sent_artist_map)
 
-    @patch('listenbrainz.webserver.views.stats_api.db_stats.insert_user_jsonb_stats', side_effect=NotImplementedError)
+    @patch('listenbrainz.webserver.views.stats_api.db_stats.insert_user_jsonb_data', side_effect=NotImplementedError)
     @patch('listenbrainz.webserver.views.stats_api._get_country_wise_counts')
     def test_artist_map_db_insertion_failed(self, mock_get_country_wise_counts, mock_db_insert):
         """ Test to make sure that stats are calculated returned even if DB insertion fails """
         mock_get_country_wise_counts.return_value = [UserArtistMapRecord(
-            **country) for country in self.artist_map_payload["artist_map"]]
+            **country) for country in self.artist_map_payload['data']]
 
         response = self.client.get(url_for('stats_api_v1.get_artist_map',
                                            user_name=self.user['musicbrainz_id']),
