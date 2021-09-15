@@ -33,7 +33,7 @@ import APIService from "../APIService";
 const props = {
   ...timelineProps,
   events: timelineProps.events as TimelineEvent[],
-  newAlert: () => {},
+  newAlert: jest.fn(),
 };
 
 const GlobalContextMock = {

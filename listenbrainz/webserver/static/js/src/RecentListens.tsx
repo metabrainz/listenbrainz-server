@@ -200,8 +200,12 @@ export default class RecentListens extends React.Component<
     try {
       json = JSON.parse(newListen);
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Coudn't parse the new listen as JSON: ", error);
+      const { newAlert } = this.props;
+      newAlert(
+        "danger",
+        "Coudn't parse the new listen as JSON: ",
+        error.toString()
+      );
       return;
     }
     const listen = formatWSMessageToListen(json);
