@@ -1053,7 +1053,7 @@ class StatsAPITestCase(IntegrationTestCase):
 
         # Check if stats have been saved in DB
         data = db_stats.get_user_artist_map(self.user['id'], 'all_time')
-        self.assertEqual(data.data.dict()['artist_map'], sent_artist_map)
+        self.assertEqual(data.data.dict()['__root__'], sent_artist_map)
 
     @patch('listenbrainz.webserver.views.stats_api.db_stats.insert_user_jsonb_data', side_effect=NotImplementedError)
     @patch('listenbrainz.webserver.views.stats_api._get_country_wise_counts')
@@ -1157,7 +1157,7 @@ class StatsAPITestCase(IntegrationTestCase):
             artist['artist_mbids'] = []
             artist['artist_msid'] = None
         db_stats.insert_user_jsonb_data(self.user['id'], 'artists',
-                                        StatRange[UserEntityRecordList](**self.user_artist_payload))
+                                        StatRange[UserEntityRecordList](**artist_stats))
         response = self.client.get(url_for('stats_api_v1.get_artist_map',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'all_time',
                                                                                                  'force_recalculate': 'true'})
