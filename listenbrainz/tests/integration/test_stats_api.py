@@ -11,7 +11,7 @@ import requests_mock
 
 from data.model.common_stat import StatRange
 from data.model.sitewide_artist_stat import SitewideArtistStatJson
-from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapRecordList
+from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapRecord
 from flask import current_app, url_for
 
 from data.model.user_daily_activity import UserDailyActivityRecord
@@ -68,7 +68,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_artist_map_db_data_for_api_test.json')) as f:
             self.artist_map_payload = json.load(f)
         db_stats.insert_user_jsonb_data(self.user['id'], 'artist_map',
-                                        StatRange[UserArtistMapRecordList](**self.artist_map_payload))
+                                        StatRange[UserArtistMapRecord](**self.artist_map_payload))
 
         # Insert all_time sitewide top artists
         with open(self.path_to_data_file('sitewide_top_artists_db_data_for_api_test.json'), 'r') as f:
@@ -983,7 +983,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_artist_map_db_data_for_api_test_week.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_user_jsonb_data(self.user['id'], 'artist_map', StatRange[UserArtistMapRecordList](**payload))
+        db_stats.insert_user_jsonb_data(self.user['id'], 'artist_map', StatRange[UserArtistMapRecord](**payload))
         response = self.client.get(url_for('stats_api_v1.get_artist_map',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'week'})
         self.assert200(response)
@@ -1000,7 +1000,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_artist_map_db_data_for_api_test_month.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_user_jsonb_data(self.user['id'], 'artist_map', StatRange[UserArtistMapRecordList](**payload))
+        db_stats.insert_user_jsonb_data(self.user['id'], 'artist_map', StatRange[UserArtistMapRecord](**payload))
         response = self.client.get(url_for('stats_api_v1.get_artist_map',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'month'})
         self.assert200(response)
@@ -1017,7 +1017,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_artist_map_db_data_for_api_test_year.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_user_jsonb_data(self.user['id'], 'artist_map', StatRange[UserArtistMapRecordList](**payload))
+        db_stats.insert_user_jsonb_data(self.user['id'], 'artist_map', StatRange[UserArtistMapRecord](**payload))
         response = self.client.get(url_for('stats_api_v1.get_artist_map',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'year'})
         self.assert200(response)

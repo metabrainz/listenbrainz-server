@@ -13,7 +13,7 @@ import requests
 
 from data.model.common_stat import StatApi
 from data.model.sitewide_artist_stat import SitewideArtistStatJson
-from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapRecordList
+from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapRecord
 from flask import Blueprint, current_app, jsonify, request
 
 from data.model.user_entity import UserEntityRecord
@@ -512,7 +512,7 @@ def get_artist_map(user_name: str):
                     artist_mbid_counts[artist_mbid] += artist.listen_count
 
             country_code_data = _get_country_wise_counts(artist_mbid_counts)
-            result = StatApi[UserArtistMapRecordList](**{
+            result = StatApi[UserArtistMapRecord](**{
                 "data": country_code_data,
                 "from_ts": artist_stats.from_ts,
                 "to_ts": artist_stats.to_ts,

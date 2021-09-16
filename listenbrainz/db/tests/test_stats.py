@@ -6,7 +6,7 @@ import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 from data.model.common_stat import StatRange
 from data.model.sitewide_artist_stat import SitewideArtistStatJson
-from data.model.user_artist_map import UserArtistMapRecordList
+from data.model.user_artist_map import UserArtistMapRecord
 from data.model.user_daily_activity import UserDailyActivityRecord
 from data.model.user_entity import UserEntityRecord
 from data.model.user_listening_activity import UserListeningActivityRecord
@@ -78,7 +78,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
             artist_map_data = json.load(f)
         db_stats.insert_user_jsonb_data(
             user_id=self.user['id'], stats_type='artist_map',
-            stats=StatRange[UserArtistMapRecordList](**artist_map_data)
+            stats=StatRange[UserArtistMapRecord](**artist_map_data)
         )
 
         result = db_stats.get_user_artist_map(user_id=self.user['id'], stats_range='all_time')
@@ -191,11 +191,11 @@ class StatsDatabaseTestCase(DatabaseTestCase):
 
         db_stats.insert_user_jsonb_data(
             user_id=self.user['id'], stats_type='artist_map',
-            stats=StatRange[UserArtistMapRecordList](**artist_map_data)
+            stats=StatRange[UserArtistMapRecord](**artist_map_data)
         )
         db_stats.insert_user_jsonb_data(
             user_id=self.user['id'], stats_type='artist_map',
-            stats=StatRange[UserArtistMapRecordList](**artist_map_data_year)
+            stats=StatRange[UserArtistMapRecord](**artist_map_data_year)
         )
 
         result = db_stats.get_user_artist_map(1, 'all_time')
@@ -248,7 +248,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         )
         db_stats.insert_user_jsonb_data(
             user_id=self.user['id'], stats_type='artist_map',
-            stats=StatRange[UserArtistMapRecordList](**artist_map)
+            stats=StatRange[UserArtistMapRecord](**artist_map)
         )
         db_stats.insert_sitewide_artists('all_time', SitewideArtistStatJson(**sitewide_artists))
 

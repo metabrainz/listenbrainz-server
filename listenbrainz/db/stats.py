@@ -29,7 +29,7 @@ import sqlalchemy
 from data.model.common_stat import StatRange, StatApi
 from data.model.sitewide_artist_stat import (SitewideArtistStat,
                                              SitewideArtistStatJson)
-from data.model.user_artist_map import UserArtistMapRecordList
+from data.model.user_artist_map import UserArtistMapRecord
 from data.model.user_daily_activity import UserDailyActivityRecord
 from data.model.user_entity import UserEntityRecord
 from data.model.user_listening_activity import UserListeningActivityRecord
@@ -198,14 +198,14 @@ def get_user_daily_activity(user_id: int, stats_range: str) -> Optional[StatApi[
     return get_user_activity_stats(user_id, stats_range, 'daily_activity', StatApi[UserDailyActivityRecord])
 
 
-def get_user_artist_map(user_id: int, stats_range: str) -> Optional[StatApi[UserArtistMapRecordList]]:
+def get_user_artist_map(user_id: int, stats_range: str) -> Optional[StatApi[UserArtistMapRecord]]:
     """Get artist map in the given time range for user with given ID.
 
         Args:
             user_id: the row ID of the user in the DB
             stats_range: the time range to fetch the stats for
     """
-    return get_user_activity_stats(user_id, stats_range, 'artist_map', StatApi[UserArtistMapRecordList])
+    return get_user_activity_stats(user_id, stats_range, 'artist_map', StatApi[UserArtistMapRecord])
 
 
 def get_sitewide_artists(stats_range: str) -> Optional[SitewideArtistStat]:
