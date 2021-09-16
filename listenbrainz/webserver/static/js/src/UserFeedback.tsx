@@ -290,7 +290,7 @@ export default class UserFeedback extends React.Component<
     const { feedback } = this.state;
 
     let recordings = "";
-    if (feedback?.length && currentUser?.auth_token) {
+    if (feedback?.length && currentUser?.name) {
       feedback.forEach((feedbackItem) => {
         const recordingMsid = get(feedbackItem, "recording_msid");
         if (recordingMsid) {
@@ -299,7 +299,7 @@ export default class UserFeedback extends React.Component<
       });
       try {
         const data = await this.APIService.getFeedbackForUserForRecordings(
-          user.name,
+          currentUser.name,
           recordings
         );
         return data.feedback;
