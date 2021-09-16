@@ -23,6 +23,7 @@ CREATE TABLE statistics.user_new (
 ALTER TABLE statistics.user_new ADD CONSTRAINT stats_user_new_pkey PRIMARY KEY (id);
 
 CREATE UNIQUE INDEX user_type_range_ndx_stats ON statistics.user_new (user_id, stats_type, stats_range);
+CREATE INDEX user_id_ndx__user_stats_new ON statistics.user_new (user_id);
 
 ALTER TABLE statistics.user_new
     ADD CONSTRAINT user_stats_new_user_id_foreign_key
