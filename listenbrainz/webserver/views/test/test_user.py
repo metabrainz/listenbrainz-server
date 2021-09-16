@@ -8,7 +8,7 @@ from flask import url_for, current_app
 
 from data.model.common_stat import StatRange
 from data.model.external_service import ExternalServiceType
-from data.model.user_entity import UserEntityRecordList
+from data.model.user_entity import UserEntityRecord
 
 from listenbrainz.db import external_service_oauth as db_oauth
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
@@ -117,7 +117,7 @@ class UserViewsTestCase(IntegrationTestCase):
             artists_data = ujson.load(f)
 
         db_stats.insert_user_jsonb_data(user_id=self.user.id, stats_type='artists',
-                                        stats=StatRange[UserEntityRecordList](**artists_data))
+                                        stats=StatRange[UserEntityRecord](**artists_data))
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertTemplateUsed('user/profile.html')

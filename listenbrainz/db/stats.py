@@ -30,9 +30,9 @@ from data.model.common_stat import StatRange, StatApi
 from data.model.sitewide_artist_stat import (SitewideArtistStat,
                                              SitewideArtistStatJson)
 from data.model.user_artist_map import UserArtistMapRecordList
-from data.model.user_daily_activity import UserDailyActivityRecordList
-from data.model.user_entity import UserEntityRecordList
-from data.model.user_listening_activity import UserListeningActivityRecordList
+from data.model.user_daily_activity import UserDailyActivityRecord
+from data.model.user_entity import UserEntityRecord
+from data.model.user_listening_activity import UserListeningActivityRecord
 from flask import current_app
 from listenbrainz import db
 from pydantic import ValidationError
@@ -113,7 +113,7 @@ def insert_sitewide_artists(stats_range: str, artists: SitewideArtistStatJson):
         stats_range, column='artist', data=artists.dict(exclude_none=True))
 
 
-def get_user_stats(user_id: int, stats_range: str, stats_type: str) -> Optional[StatApi[UserEntityRecordList]]:
+def get_user_stats(user_id: int, stats_range: str, stats_type: str) -> Optional[StatApi[UserEntityRecord]]:
     """ Get top stats of given type in a time range for user with given ID.
 
         Args:
@@ -136,7 +136,7 @@ def get_user_stats(user_id: int, stats_range: str, stats_type: str) -> Optional[
         row = result.fetchone()
 
     try:
-        return StatApi[UserEntityRecordList](**dict(row)) if row else None
+        return StatApi[UserEntityRecord](**dict(row)) if row else None
     except ValidationError:
         current_app.logger.error("""ValidationError when getting {stats_range} top artists for user with user_id: {user_id}.
                                  Data: {data}""".format(stats_range=stats_range, user_id=user_id,
@@ -178,24 +178,24 @@ def get_user_activity_stats(user_id: int, stats_range: str, stats_type: str, sta
         return None
 
 
-def get_user_listening_activity(user_id: int, stats_range: str) -> Optional[StatApi[UserListeningActivityRecordList]]:
+def get_user_listening_activity(user_id: int, stats_range: str) -> Optional[StatApi[UserListeningActivityRecord]]:
     """Get listening activity in the given time range for user with given ID.
 
         Args:
             user_id: the row ID of the user in the DB
             stats_range: the time range to fetch the stats for
     """
-    return get_user_activity_stats(user_id, stats_range, 'listening_activity', StatApi[UserListeningActivityRecordList])
+    return get_user_activity_stats(user_id, stats_range, 'listening_activity', StatApi[UserListeningActivityRecord])
 
 
-def get_user_daily_activity(user_id: int, stats_range: str) -> Optional[StatApi[UserDailyActivityRecordList]]:
+def get_user_daily_activity(user_id: int, stats_range: str) -> Optional[StatApi[UserDailyActivityRecord]]:
     """Get daily activity in the given time range for user with given ID.
 
         Args:
             user_id: the row ID of the user in the DB
             stats_range: the time range to fetch the stats for
     """
-    return get_user_activity_stats(user_id, stats_range, 'daily_activity', StatApi[UserDailyActivityRecordList])
+    return get_user_activity_stats(user_id, stats_range, 'daily_activity', StatApi[UserDailyActivityRecord])
 
 
 def get_user_artist_map(user_id: int, stats_range: str) -> Optional[StatApi[UserArtistMapRecordList]]:

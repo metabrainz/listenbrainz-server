@@ -16,7 +16,7 @@ from data.model.sitewide_artist_stat import SitewideArtistStatJson
 from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapRecordList
 from flask import Blueprint, current_app, jsonify, request
 
-from data.model.user_entity import UserEntityRecordList
+from data.model.user_entity import UserEntityRecord
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError,
@@ -652,7 +652,7 @@ def get_sitewide_artist():
     })
 
 
-def _process_user_entity(stats: StatApi[UserEntityRecordList], offset, count) -> Tuple[list, int]:
+def _process_user_entity(stats: StatApi[UserEntityRecord], offset, count) -> Tuple[list, int]:
     """ Process the statistics data according to query params
 
         Args:

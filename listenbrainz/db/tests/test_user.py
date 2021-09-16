@@ -9,7 +9,7 @@ import ujson
 
 from data.model.common_stat import StatRange
 from data.model.external_service import ExternalServiceType
-from data.model.user_entity import UserEntityRecordList
+from data.model.user_entity import UserEntityRecord
 from listenbrainz import db
 from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.db.testing import DatabaseTestCase
@@ -99,7 +99,7 @@ class UserTestCase(DatabaseTestCase):
         db_stats.insert_user_jsonb_data(
             user_id=user_id,
             stats_type='artists',
-            stats=StatRange[UserEntityRecordList](** artists_data),
+            stats=StatRange[UserEntityRecord](** artists_data),
         )
         user_stats = db_stats.get_user_stats(user_id, 'all_time', 'artists')
         self.assertIsNotNone(user_stats)

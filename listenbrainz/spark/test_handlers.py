@@ -6,10 +6,9 @@ from data.model.common_stat import StatRange
 from data.model.sitewide_artist_stat import (SitewideArtistRecord,
                                              SitewideArtistStatJson,
                                              SitewideArtistStatRange)
-from data.model.user_daily_activity import (UserDailyActivityRecord, UserDailyActivityStatRange,
-                                            UserDailyActivityRecordList)
-from data.model.user_entity import UserEntityRecordList
-from data.model.user_listening_activity import UserListeningActivityRecord, UserListeningActivityRecordList
+from data.model.user_daily_activity import UserDailyActivityRecord, UserDailyActivityRecord
+from data.model.user_entity import UserEntityRecord
+from data.model.user_listening_activity import UserListeningActivityRecord, UserListeningActivityRecord
 from data.model.user_artist_stat import UserArtistRecord
 
 from data.model.user_missing_musicbrainz_data import (UserMissingMusicBrainzDataRecord,
@@ -64,12 +63,12 @@ class HandlersTestCase(unittest.TestCase):
             current_app.config['TESTING'] = False  # set testing to false to check the notifications
             handle_user_entity(data)
 
-        mock_db_insert.assert_called_with(1, 'artists', StatRange[UserEntityRecordList](
+        mock_db_insert.assert_called_with(1, 'artists', StatRange[UserEntityRecord](
             to_ts=10,
             from_ts=1,
             count=1,
             stats_range='all_time',
-            data=UserEntityRecordList(
+            data=UserEntityRecord(
                 __root__=[
                     UserArtistRecord(
                         artist_mbids=[],
@@ -106,11 +105,11 @@ class HandlersTestCase(unittest.TestCase):
             current_app.config['TESTING'] = False  # set testing to false to check the notifications
             handle_user_listening_activity(data)
 
-        mock_db_insert.assert_called_with(1, 'listening_activity', StatRange[UserListeningActivityRecordList](
+        mock_db_insert.assert_called_with(1, 'listening_activity', StatRange[UserListeningActivityRecord](
             to_ts=10,
             from_ts=1,
             stats_range='all_time',
-            data=UserListeningActivityRecordList(
+            data=UserListeningActivityRecord(
                 __root__=[
                     UserListeningActivityRecord(
                         from_ts=1,
@@ -147,11 +146,11 @@ class HandlersTestCase(unittest.TestCase):
             current_app.config['TESTING'] = False  # set testing to false to check the notifications
             handle_user_daily_activity(data)
 
-        mock_db_insert.assert_called_with(1, StatRange[UserDailyActivityRecordList](
+        mock_db_insert.assert_called_with(1, StatRange[UserDailyActivityRecord](
             to_ts=10,
             from_ts=1,
             stats_range='all_time',
-            data=UserDailyActivityRecordList(
+            data=UserDailyActivityRecord(
                 __root__=[
                     UserDailyActivityRecord(
                         day='Monday',

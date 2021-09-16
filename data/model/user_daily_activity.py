@@ -28,20 +28,3 @@ class UserDailyActivityStatMessage(pydantic.BaseModel):
 
 class UserDailyActivityRecordList(pydantic.BaseModel):
     __root__: List[UserDailyActivityRecord]
-
-
-class UserDailyActivityStatRange(pydantic.BaseModel):
-    """ Model for user's daily activity for a particular time range.
-        Currently supports week, month, year and all-time
-    """
-    to_ts: int
-    from_ts: int
-    stats_range: str
-    data: UserDailyActivityRecordList
-
-
-class UserDailyActivityStat(UserDailyActivityStatRange):
-    """ Model for stats around user's daily activity
-    """
-    user_id: int
-    last_updated: datetime

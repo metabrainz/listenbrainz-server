@@ -17,7 +17,7 @@ class StatRange(GenericModel, Generic[StatT]):
     from_ts: int
     count: Optional[int]
     stats_range: str
-    data: StatT
+    data: StatRecordList[StatT]
 
 
 class StatApi(StatRange[StatT], Generic[StatT]):
