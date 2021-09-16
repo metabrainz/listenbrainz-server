@@ -29,7 +29,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
                                         stats=StatRange[UserEntityRecordList](**artists_data))
 
         result = db_stats.get_user_stats(user_id=self.user['id'], stats_range='all_time', stats_type='artists')
-        self.assertDictEqual(result.dict(), artists_data)
+        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated'}), artists_data)
 
     def test_insert_user_releases(self):
         """ Test if release stats are inserted correctly """
@@ -39,7 +39,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
                                         stats=StatRange[UserEntityRecordList](**releases_data))
 
         result = db_stats.get_user_stats(user_id=self.user['id'], stats_range='all_time', stats_type='releases')
-        self.assertDictEqual(result.dict(), releases_data)
+        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated'}), releases_data)
 
     def test_insert_user_recordings(self):
         """ Test if recording stats are inserted correctly """
@@ -49,7 +49,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
                                         stats=StatRange[UserEntityRecordList](**recordings_data))
 
         result = db_stats.get_user_stats(user_id=self.user['id'], stats_range='all_time', stats_type='recordings')
-        self.assertDictEqual(result.dict(), recordings_data)
+        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated'}), recordings_data)
 
     def test_insert_user_listening_activity(self):
         """ Test if listening activity stats are inserted correctly """
@@ -70,7 +70,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         )
 
         result = db_stats.get_user_daily_activity(user_id=self.user['id'], stats_range='all_time')
-        self.assertDictEqual(result.dict(), daily_activity_data)
+        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated', 'count'}), daily_activity_data)
 
     def test_insert_user_artist_map(self):
         """ Test if daily activity stats are inserted correctly """
@@ -82,7 +82,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         )
 
         result = db_stats.get_user_artist_map(user_id=self.user['id'], stats_range='all_time')
-        self.assertDictEqual(result.dict(), artist_map_data)
+        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated', 'count'}), artist_map_data)
 
     def test_insert_user_stats_mult_ranges_artist(self):
         """ Test if multiple time range data is inserted correctly """
@@ -280,22 +280,22 @@ class StatsDatabaseTestCase(DatabaseTestCase):
     def test_get_user_listening_activity(self):
         data_inserted = self.insert_test_data()
         result = db_stats.get_user_listening_activity(self.user['id'], 'all_time')
-        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated'}), data_inserted['user_listening_activity'])
+        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated', 'count'}), data_inserted['user_listening_activity'])
 
     def test_get_user_daily_activity(self):
         data_inserted = self.insert_test_data()
         result = db_stats.get_user_daily_activity(self.user['id'], 'all_time')
-        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated'}), data_inserted['user_daily_activity'])
+        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated', 'count'}), data_inserted['user_daily_activity'])
 
     def test_get_user_artist_map(self):
         data_inserted = self.insert_test_data()
         result = db_stats.get_user_artist_map(self.user['id'], 'all_time')
-        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated'}), data_inserted['user_artist_map'])
+        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated', 'count'}), data_inserted['user_artist_map'])
 
     def test_get_sitewide_artists(self):
         data_inserted = self.insert_test_data()
         result = db_stats.get_sitewide_artists('all_time')
-        self.assertDictEqual(result.dict(), data_inserted['sitewide_artists'])
+        self.assertDictEqual(result.data.dict(), data_inserted['sitewide_artists'])
 
     def test_valid_stats_exist(self):
         self.assertFalse(db_stats.valid_stats_exist(self.user['id'], 7))
