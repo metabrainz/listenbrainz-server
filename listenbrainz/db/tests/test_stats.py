@@ -143,7 +143,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         with open(self.path_to_data_file('user_listening_activity_db.json')) as f:
             listening_activity_data = json.load(f)
         listening_activity_data_year = deepcopy(listening_activity_data)
-        listening_activity_data_year['stat_range'] = 'year'
+        listening_activity_data_year['stats_range'] = 'year'
 
         db_stats.insert_user_jsonb_data(
             user_id=self.user['id'], stats_type='listening_activity',
@@ -165,7 +165,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         with open(self.path_to_data_file('user_daily_activity_db.json')) as f:
             daily_activity_data = json.load(f)
         daily_activity_data_year = deepcopy(daily_activity_data)
-        daily_activity_data_year['stat_range'] = 'year'
+        daily_activity_data_year['stats_range'] = 'year'
 
         db_stats.insert_user_jsonb_data(
             user_id=self.user['id'], stats_type='daily_activity',
@@ -187,7 +187,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         with open(self.path_to_data_file('user_artist_map_db.json')) as f:
             artist_map_data = json.load(f)
         artist_map_data_year = deepcopy(artist_map_data)
-        artist_map_data_year['stat_range'] = 'year'
+        artist_map_data_year['stats_range'] = 'year'
 
         db_stats.insert_user_jsonb_data(
             user_id=self.user['id'], stats_type='artist_map',
