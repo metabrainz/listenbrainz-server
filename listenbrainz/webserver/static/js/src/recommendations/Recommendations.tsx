@@ -257,7 +257,14 @@ export default class Recommendations extends React.Component<
                 {recommendations.map((recommendation) => {
                   return (
                     <RecommendationCard
-                      key={`${recommendation.track_metadata?.track_name}-${recommendation.track_metadata?.additional_info?.recording_msid}-${recommendation.user_name}`}
+                      key={`${recommendation.track_metadata?.track_name}-${
+                        recommendation.track_metadata?.additional_info
+                          ?.recording_msid ||
+                        recommendation.track_metadata?.additional_info
+                          ?.recording_mbid
+                      }-${recommendation.listened_at}-${
+                        recommendation.user_name
+                      }`}
                       isCurrentUser={currentUser?.name === user?.name}
                       recommendation={recommendation}
                       playRecommendation={this.playRecommendation}

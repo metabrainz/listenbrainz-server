@@ -189,7 +189,7 @@ describe("getPage", () => {
       // This error message is also displayed to the user
       expect(err).toEqual(
         new Error(
-          `Failed to fetch page 1 from lastfm after ${LASTFM_RETRIES} retries.`
+          `Failed to fetch page 1 from lastfm after ${LASTFM_RETRIES} retries: Error: Status 503`
         )
       );
     }
@@ -546,8 +546,6 @@ describe("importLoop", () => {
       throw error;
     });
 
-    const consoleErrorSpy = jest.spyOn(console, "error");
-
     // startImport shouldn't throw error
     await expect(instance.startImport()).resolves.toBe(null);
     // verify message is failure message
@@ -558,7 +556,5 @@ describe("importLoop", () => {
       "If the problem persists please contact us."
     );
     expect(instance.state.msg?.props.children).toContain("Error: Some error");
-
-    expect(consoleErrorSpy).toHaveBeenCalledWith(new Error("Some error"));
   });
 });

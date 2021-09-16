@@ -15,6 +15,7 @@ import {
   getPlayButton,
   getTrackLink,
   preciseTimestamp,
+  fullLocalizedDateFromTimestampOrISODate,
 } from "../utils";
 import GlobalAppContext from "../GlobalAppContext";
 import Card from "../components/Card";
@@ -72,10 +73,9 @@ export default class ListenCard extends React.Component<
   }
 
   submitFeedback = async (score: ListenFeedBack) => {
-    const { listen, isCurrentUser, updateFeedback } = this.props;
+    const { listen, updateFeedback } = this.props;
     const { APIService, currentUser } = this.context;
-    // const { submitFeedback } = APIService;
-    if (isCurrentUser && currentUser?.auth_token) {
+    if (currentUser?.auth_token) {
       const recordingMSID = _get(
         listen,
         "track_metadata.additional_info.recording_msid"
@@ -133,10 +133,10 @@ export default class ListenCard extends React.Component<
   };
 
   recommendListenToFollowers = async () => {
-    const { listen, isCurrentUser, newAlert } = this.props;
+    const { listen, newAlert } = this.props;
     const { APIService, currentUser } = this.context;
 
-    if (isCurrentUser && currentUser?.auth_token) {
+    if (currentUser?.auth_token) {
       const metadata: UserTrackRecommendationMetadata = {
         artist_name: _get(listen, "track_metadata.artist_name"),
         track_name: _get(listen, "track_metadata.track_name"),
@@ -207,7 +207,7 @@ export default class ListenCard extends React.Component<
       >
         <div
           className={`listen-details ${
-            isCurrentUser || mode === "recent"
+            mode === "recent" || Boolean(currentUser?.auth_token)
               ? " col-xs-8 col-sm-9"
               : " col-xs-12"
           }`}
@@ -237,8 +237,13 @@ export default class ListenCard extends React.Component<
                 <span
                   className="listen-time text-center text-muted"
                   title={
-                    listen.listened_at_iso?.toString() ||
-                    new Date(listen.listened_at * 1000).toISOString()
+                    listen.listened_at
+                      ? fullLocalizedDateFromTimestampOrISODate(
+                          listen.listened_at * 1000
+                        )
+                      : fullLocalizedDateFromTimestampOrISODate(
+                          listen.listened_at_iso
+                        )
                   }
                 >
                   {preciseTimestamp(
@@ -268,8 +273,13 @@ export default class ListenCard extends React.Component<
                       <span
                         className="listen-time text-muted"
                         title={
-                          listen.listened_at_iso?.toString() ||
-                          new Date(listen.listened_at * 1000).toISOString()
+                          listen.listened_at
+                            ? fullLocalizedDateFromTimestampOrISODate(
+                                listen.listened_at * 1000
+                              )
+                            : fullLocalizedDateFromTimestampOrISODate(
+                                listen.listened_at_iso
+                              )
                         }
                       >
                         {preciseTimestamp(
@@ -295,58 +305,56 @@ export default class ListenCard extends React.Component<
               {listen.user_name}
             </a>
           ) : null}
-          {mode !== "recent" && isCurrentUser ? (
-            <div className="listen-controls">
-              {!listen?.playing_now && (
-                <>
-                  <ListenControl
-                    icon={faHeart}
-                    title="Love"
-                    action={() => this.submitFeedback(feedback === 1 ? 0 : 1)}
-                    className={`${feedback === 1 ? " loved" : ""}`}
-                  />
-                  <ListenControl
-                    icon={faHeartBroken}
-                    title="Hate"
-                    action={() => this.submitFeedback(feedback === -1 ? 0 : -1)}
-                    className={`${feedback === -1 ? " hated" : ""}`}
-                  />
+          <div className="listen-controls">
+            {!currentUser?.auth_token ? null : (
+              <>
+                <ListenControl
+                  icon={faHeart}
+                  title="Love"
+                  action={() => this.submitFeedback(feedback === 1 ? 0 : 1)}
+                  className={`${feedback === 1 ? " loved" : ""}`}
+                />
+                <ListenControl
+                  icon={faHeartBroken}
+                  title="Hate"
+                  action={() => this.submitFeedback(feedback === -1 ? 0 : -1)}
+                  className={`${feedback === -1 ? " hated" : ""}`}
+                />
 
-                  <FontAwesomeIcon
-                    icon={faEllipsisV as IconProp}
-                    title="Delete"
-                    className="dropdown-toggle"
-                    id="listenControlsDropdown"
-                    data-toggle="dropdown"
-                    aria-haspopup="true"
-                    aria-expanded="true"
+                <FontAwesomeIcon
+                  icon={faEllipsisV as IconProp}
+                  title="More actions"
+                  className="dropdown-toggle"
+                  id="listenControlsDropdown"
+                  data-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="true"
+                />
+                <ul
+                  className="dropdown-menu dropdown-menu-right"
+                  aria-labelledby="listenControlsDropdown"
+                >
+                  <ListenControl
+                    title="Recommend to my followers"
+                    action={this.recommendListenToFollowers}
                   />
-                  <ul
-                    className="dropdown-menu dropdown-menu-right"
-                    aria-labelledby="listenControlsDropdown"
-                  >
-                    <ListenControl
-                      title="Recommend to my followers"
-                      action={this.recommendListenToFollowers}
-                    />
+                  <ListenControl
+                    title="Pin this Recording"
+                    action={() => updateRecordingToPin(listen)}
+                    dataToggle="modal"
+                    dataTarget="#PinRecordingModal"
+                  />
+                  {isCurrentUser ? (
                     <ListenControl
                       title="Delete Listen"
                       action={this.deleteListen}
                     />
-                    {currentUser && (
-                      <ListenControl
-                        title="Pin this Recording"
-                        action={() => updateRecordingToPin(listen)}
-                        dataToggle="modal"
-                        dataTarget="#PinRecordingModal"
-                      />
-                    )}
-                  </ul>
-                  {getPlayButton(listen, isCurrentListen, this.playListen)}
-                </>
-              )}
-            </div>
-          ) : null}
+                  ) : null}
+                </ul>
+              </>
+            )}
+            {getPlayButton(listen, isCurrentListen, this.playListen)}
+          </div>
         </div>
       </Card>
     );

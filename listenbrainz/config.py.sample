@@ -25,6 +25,10 @@ MESSYBRAINZ_ADMIN_MSB_URI = "postgresql://postgres:postgres@db/messybrainz"
 MBID_MAPPING_DATABASE_URI = ""
 MB_DATABASE_URI = ""
 
+# for use in playlists admin view
+SQLALCHEMY_BINDS = {
+   'timescale': SQLALCHEMY_TIMESCALE_URI
+}
 
 # Redis
 REDIS_HOST = "redis"
