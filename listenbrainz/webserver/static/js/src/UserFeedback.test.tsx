@@ -7,6 +7,7 @@ import UserFeedback, {
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import APIService from "./APIService";
 import * as userFeedbackProps from "./__mocks__/userFeedbackProps.json";
+import ListenCard from "./listens/ListenCard";
 
 const { totalCount, user, feedback, youtube, spotify } = userFeedbackProps;
 
@@ -114,5 +115,94 @@ describe("UserFeedback", () => {
     await flushPromises();
     expect(instance.context.currentUser).toEqual({});
     expect(apiGetFeedbackSpy).not.toHaveBeenCalled();
+  });
+
+  it("renders ListenCard items for each feedback item", async () => {
+    const wrapper = mount<UserFeedback>(
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <UserFeedback {...props} />
+      </GlobalAppContext.Provider>
+    );
+    const listens = wrapper.find(ListenCard);
+    expect(listens).toHaveLength(15);
+  });
+
+  it("shows feedback on the ListenCards according to recordingFeedbackMap", async () => {
+    const wrapper = mount<UserFeedback>(
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <UserFeedback {...props} />
+      </GlobalAppContext.Provider>
+    );
+    const instance = wrapper.instance();
+    instance.setState({
+      recordingFeedbackMap: {
+        "8aa379ad-852e-4794-9c01-64959f5d0b17": 1,
+        "edfa0bb9-a58c-406c-9f7c-f16741443f9c": 0,
+        "20059ffb-1615-4712-8235-a12840fb156e": -1,
+      },
+    });
+    wrapper.update();
+    const listens = wrapper.find(ListenCard);
+    // Score = 1 (loved) for first item
+    expect(
+      listens
+        .at(0)
+        .find(".listen-controls")
+        .first()
+        .find("[title='Love']")
+        .first()
+        .hasClass("loved")
+    ).toBeTruthy();
+    // Score = 0 (neutral) for second item
+    expect(
+      listens
+        .at(1)
+        .find(".listen-controls")
+        .first()
+        .find("[title='Love']")
+        .first()
+        .hasClass("loved")
+    ).toBeFalsy();
+    expect(
+      listens
+        .at(1)
+        .find(".listen-controls")
+        .find(".listen-controls")
+        .first()
+        .find("[title='Hate']")
+        .first()
+        .hasClass("hated")
+    ).toBeFalsy();
+    // Score = -1 (hated) for third item
+    expect(
+      listens
+        .at(2)
+        .find(".listen-controls")
+        .find(".listen-controls")
+        .first()
+        .find("[title='Hate']")
+        .first()
+        .hasClass("hated")
+    ).toBeTruthy();
+    // No score (neutral) for fourth item
+    expect(
+      listens
+        .at(3)
+        .find(".listen-controls")
+        .first()
+        .find("[title='Love']")
+        .first()
+        .hasClass("loved")
+    ).toBeFalsy();
+    expect(
+      listens
+        .at(3)
+        .find(".listen-controls")
+        .find(".listen-controls")
+        .first()
+        .find("[title='Hate']")
+        .first()
+        .hasClass("hated")
+    ).toBeFalsy();
   });
 });
