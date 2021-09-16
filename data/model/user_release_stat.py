@@ -1,6 +1,5 @@
 import pydantic
 
-from datetime import datetime
 from typing import Optional, List
 
 

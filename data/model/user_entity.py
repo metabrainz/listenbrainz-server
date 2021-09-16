@@ -22,10 +22,3 @@ class UserEntityStatMessage(pydantic.BaseModel):
     to_ts: int
     data: List[UserEntityRecord]
     count: int
-
-
-# we need this so that we can call json(exclude_none=True) when inserting in the db
-# not sure if this is necessary but preserving the old behaviour for now. json.dumps
-# does not have an exclude_none option.
-class UserEntityRecordList(pydantic.BaseModel):
-    __root__: List[UserEntityRecord]
