@@ -171,7 +171,6 @@ class StatsDatabaseTestCase(DatabaseTestCase):
             user_id=self.user['id'], stats_type='daily_activity',
             stats=StatRange[UserDailyActivityRecordList](**daily_activity_data)
         )
-        daily_activity_data['stat_range'] = 'year'
         db_stats.insert_user_jsonb_data(
             user_id=self.user['id'], stats_type='daily_activity',
             stats=StatRange[UserDailyActivityRecordList](**daily_activity_data_year)
@@ -181,7 +180,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated', 'count'}), daily_activity_data)
 
         result = db_stats.get_user_daily_activity(1, 'year')
-        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated', 'count'}), daily_activity_data)
+        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated', 'count'}), daily_activity_data_year)
 
     def test_insert_user_stats_mult_ranges_artist_map(self):
         """ Test if multiple time range data is inserted correctly """
@@ -203,7 +202,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated', 'count'}), artist_map_data)
 
         result = db_stats.get_user_artist_map(1, 'year')
-        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated', 'count'}), artist_map_data)
+        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated', 'count'}), artist_map_data_year)
 
     def test_insert_sitewide_artists(self):
         """ Test if sitewide artist data is inserted correctly """
