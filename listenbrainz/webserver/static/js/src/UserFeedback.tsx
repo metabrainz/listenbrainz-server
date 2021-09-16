@@ -457,7 +457,9 @@ export default class UserFeedback extends React.Component<
                 )}
                 <ul className="pager" id="navigation">
                   <li
-                    className={`previous ${canNavigateNewer ? "disabled" : ""}`}
+                    className={`previous ${
+                      !canNavigateNewer ? "disabled" : ""
+                    }`}
                   >
                     <a
                       role="button"
@@ -466,13 +468,15 @@ export default class UserFeedback extends React.Component<
                         if (e.key === "Enter") this.handleClickNewest();
                       }}
                       tabIndex={0}
-                      href={canNavigateNewer ? undefined : "?page=1"}
+                      href={!canNavigateNewer ? undefined : "?page=1"}
                     >
                       &#x21E4;
                     </a>
                   </li>
                   <li
-                    className={`previous ${canNavigateNewer ? "disabled" : ""}`}
+                    className={`previous ${
+                      !canNavigateNewer ? "disabled" : ""
+                    }`}
                   >
                     <a
                       role="button"
@@ -481,14 +485,14 @@ export default class UserFeedback extends React.Component<
                         if (e.key === "Enter") this.handleClickNewer();
                       }}
                       tabIndex={0}
-                      href={canNavigateNewer ? undefined : `?page=${page - 1}`}
+                      href={!canNavigateNewer ? undefined : `?page=${page - 1}`}
                     >
                       &larr; Newer
                     </a>
                   </li>
 
                   <li
-                    className={`next ${canNavigateOlder ? "disabled" : ""}`}
+                    className={`next ${!canNavigateOlder ? "disabled" : ""}`}
                     style={{ marginLeft: "auto" }}
                   >
                     <a
@@ -498,12 +502,12 @@ export default class UserFeedback extends React.Component<
                         if (e.key === "Enter") this.handleClickOlder();
                       }}
                       tabIndex={0}
-                      href={canNavigateOlder ? undefined : `?page=${page + 1}`}
+                      href={!canNavigateOlder ? undefined : `?page=${page + 1}`}
                     >
                       Older &rarr;
                     </a>
                   </li>
-                  <li className={`next ${canNavigateOlder ? "disabled" : ""}`}>
+                  <li className={`next ${!canNavigateOlder ? "disabled" : ""}`}>
                     <a
                       role="button"
                       onClick={this.handleClickOldest}
@@ -511,7 +515,7 @@ export default class UserFeedback extends React.Component<
                         if (e.key === "Enter") this.handleClickOldest();
                       }}
                       tabIndex={0}
-                      href={canNavigateOlder ? undefined : `?page=${maxPage}`}
+                      href={!canNavigateOlder ? undefined : `?page=${maxPage}`}
                     >
                       &#x21E5;
                     </a>
