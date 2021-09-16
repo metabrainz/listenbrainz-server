@@ -27,10 +27,10 @@ def insert(feedback: Feedback):
           DO UPDATE SET score = :score,
                         created = NOW()
             """), {
-                'user_id': feedback.user_id,
-                'recording_msid': feedback.recording_msid,
-                'score': feedback.score,
-            }
+            'user_id': feedback.user_id,
+            'recording_msid': feedback.recording_msid,
+            'score': feedback.score,
+        }
         )
 
 
@@ -47,9 +47,9 @@ def delete(feedback: Feedback):
              WHERE user_id = :user_id
                AND recording_msid = :recording_msid
             """), {
-                'user_id': feedback.user_id,
-                'recording_msid': feedback.recording_msid,
-            }
+            'user_id': feedback.user_id,
+            'recording_msid': feedback.recording_msid,
+        }
         )
 
 
@@ -90,8 +90,8 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
         feedback = [Feedback(**dict(row)) for row in result.fetchall()]
 
     if metadata and len(feedback) > 0:
-        msids = [ f.recording_msid for f in feedback ]
-        index = { f.recording_msid:f for f in feedback }
+        msids = [f.recording_msid for f in feedback]
+        index = {f.recording_msid: f for f in feedback}
 
         # Fetch the artist and track names from MSB
         with msb_db.engine.connect() as connection:
@@ -104,10 +104,11 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
         if msb_recordings:
             for rec in msb_recordings:
                 index[rec["ids"]["recording_msid"]].track_metadata = {
-                        "artist_name": rec["payload"]["artist"],
-                        "release_name": rec["payload"].get("release_name", ""),
-                        "track_name": rec["payload"]["title"] }
-                artist_msids[rec["ids"]["recording_msid"]] = rec["ids"]["artist_msid"]
+                    "artist_name": rec["payload"]["artist"],
+                    "release_name": rec["payload"].get("release_name", ""),
+                    "track_name": rec["payload"]["title"]}
+                artist_msids[rec["ids"]["recording_msid"]
+                             ] = rec["ids"]["artist_msid"]
 
         # Fetch the mapped MBIDs from the mapping
         query = """SELECT recording_msid::TEXT, recording_mbid::TEXT, release_mbid::TEXT 
@@ -116,14 +117,15 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
                  ORDER BY recording_msid"""
 
         with timescale.engine.connect() as connection:
-            result = connection.execute(sqlalchemy.text(query), msids=tuple(msids))
+            result = connection.execute(
+                sqlalchemy.text(query), msids=tuple(msids))
             for row in result.fetchall():
                 if row["recording_mbid"] is not None:
                     index[row["recording_msid"]].track_metadata['additional_info'] = {
                         "recording_mbid": row["recording_mbid"],
-                        "release_mbid": row["release_mbid"], 
+                        "release_mbid": row["release_mbid"],
                         "artist_msid": rec["ids"]["artist_msid"],
-                        "artist_msid": artist_msids[rec["ids"]["recording_msid"]] }
+                        "artist_msid": artist_msids[rec["ids"]["recording_msid"]]}
 
     return feedback
 
@@ -142,7 +144,7 @@ def get_feedback_count_for_user(user_id: int, score=None) -> int:
     """
 
     query = "SELECT count(*) AS value FROM recording_feedback WHERE user_id = :user_id"
-    args = { 'user_id': user_id }
+    args = {'user_id': user_id}
 
     if score is not None:
         query += " AND score = :score"
@@ -205,8 +207,8 @@ def get_feedback_count_for_recording(recording_msid: str) -> int:
 
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text(query), {
-                'recording_msid': recording_msid,
-            }
+            'recording_msid': recording_msid,
+        }
         )
         count = int(result.fetchone()["value"])
 
