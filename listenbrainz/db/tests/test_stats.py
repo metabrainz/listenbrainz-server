@@ -1,5 +1,5 @@
 import json
-import os
+from copy import deepcopy
 from datetime import datetime, timezone
 
 import listenbrainz.db.stats as db_stats
@@ -88,52 +88,56 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         """ Test if multiple time range data is inserted correctly """
         with open(self.path_to_data_file('user_top_artists_db.json')) as f:
             artists_data = json.load(f)
+        artists_data_year = deepcopy(artists_data)
+        artists_data_year['stats_range'] = 'year'
 
         db_stats.insert_user_jsonb_data(user_id=self.user['id'], stats_type='artists',
                                         stats=StatRange[UserEntityRecordList](**artists_data))
-        artists_data['stats_range'] = 'year'
         db_stats.insert_user_jsonb_data(user_id=self.user['id'], stats_type='artists',
-                                        stats=StatRange[UserEntityRecordList](**artists_data))
+                                        stats=StatRange[UserEntityRecordList](**artists_data_year))
 
         result = db_stats.get_user_stats(user_id=self.user['id'], stats_range='all_time', stats_type='artists')
-        self.assertDictEqual(result.dict(), artists_data)
+        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated'}), artists_data)
 
         result = db_stats.get_user_stats(user_id=self.user['id'], stats_range='year', stats_type='artists')
-        self.assertDictEqual(result.dict(), artists_data)
+        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated'}), artists_data_year)
 
     def test_insert_user_stats_mult_ranges_release(self):
         """ Test if multiple time range data is inserted correctly """
         with open(self.path_to_data_file('user_top_releases_db.json')) as f:
             releases_data = json.load(f)
+        releases_data_year = deepcopy(releases_data)
+        releases_data_year['stats_range'] = 'year'
 
         db_stats.insert_user_jsonb_data(user_id=self.user['id'], stats_type='releases',
                                         stats=StatRange[UserEntityRecordList](**releases_data))
-        releases_data['stats_range'] = 'year'
         db_stats.insert_user_jsonb_data(user_id=self.user['id'], stats_type='releases',
-                                        stats=StatRange[UserEntityRecordList](**releases_data))
+                                        stats=StatRange[UserEntityRecordList](**releases_data_year))
 
         result = db_stats.get_user_stats(user_id=self.user['id'], stats_range='all_time', stats_type='releases')
-        self.assertDictEqual(result.dict(), releases_data)
+        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated'}), releases_data)
 
         result = db_stats.get_user_stats(user_id=self.user['id'], stats_range='year', stats_type='releases')
-        self.assertDictEqual(result.dict(), releases_data)
+        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated'}), releases_data_year)
 
     def test_insert_user_stats_mult_ranges_recording(self):
         """ Test if multiple time range data is inserted correctly """
         with open(self.path_to_data_file('user_top_recordings_db.json')) as f:
             recordings_data = json.load(f)
+        recordings_data_year = deepcopy(recordings_data)
+        recordings_data_year['stats_range'] = 'year'
 
         db_stats.insert_user_jsonb_data(user_id=self.user['id'], stats_type='recordings',
                                         stats=StatRange[UserEntityRecordList](**recordings_data))
         recordings_data['stats_range'] = 'year'
         db_stats.insert_user_jsonb_data(user_id=self.user['id'], stats_type='recordings',
-                                        stats=StatRange[UserEntityRecordList](**recordings_data))
+                                        stats=StatRange[UserEntityRecordList](**recordings_data_year))
 
         result = db_stats.get_user_stats(user_id=self.user['id'], stats_range='all_time', stats_type='recordings')
-        self.assertDictEqual(result.dict(), recordings_data)
+        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated'}), recordings_data)
 
         result = db_stats.get_user_stats(user_id=self.user['id'], stats_range='year', stats_type='recordings')
-        self.assertDictEqual(result.dict(), recordings_data)
+        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated'}), recordings_data_year)
 
     def test_insert_user_stats_mult_ranges_listening_activity(self):
         """ Test if multiple time range data is inserted correctly """
