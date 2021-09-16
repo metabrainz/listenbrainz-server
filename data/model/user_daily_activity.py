@@ -24,7 +24,3 @@ class UserDailyActivityStatMessage(pydantic.BaseModel):
     from_ts: int
     to_ts: int
     data: List[UserDailyActivityRecord]
-
-
-class UserDailyActivityRecordList(pydantic.BaseModel):
-    __root__: List[UserDailyActivityRecord]

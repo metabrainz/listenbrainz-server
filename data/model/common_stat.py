@@ -7,7 +7,6 @@ from pydantic.generics import GenericModel
 StatT = TypeVar('StatT')
 
 
-# TODO: Use StatRecordList inside StatRange, and remove other list models
 class StatRecordList(GenericModel, Generic[StatT]):
     __root__: List[StatT]
 

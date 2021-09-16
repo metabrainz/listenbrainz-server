@@ -1,7 +1,6 @@
 import pydantic
 
-from datetime import datetime
-from typing import Optional, List
+from typing import Optional
 
 
 class UserArtistMapRecord(pydantic.BaseModel):
@@ -12,7 +11,3 @@ class UserArtistMapRecord(pydantic.BaseModel):
     country: str
     artist_count: int
     listen_count: Optional[int]  # Make field optional to maintain backward compatibility
-
-
-class UserArtistMapRecordList(pydantic.BaseModel):
-    __root__: List[UserArtistMapRecord]

@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from unittest import mock
 
-from data.model.common_stat import StatRange
+from data.model.common_stat import StatRange, StatRecordList
 from data.model.sitewide_artist_stat import (SitewideArtistRecord,
                                              SitewideArtistStatJson,
                                              SitewideArtistStatRange)
@@ -68,7 +68,7 @@ class HandlersTestCase(unittest.TestCase):
             from_ts=1,
             count=1,
             stats_range='all_time',
-            data=UserEntityRecord(
+            data=StatRecordList[UserEntityRecord](
                 __root__=[
                     UserArtistRecord(
                         artist_mbids=[],
@@ -109,7 +109,7 @@ class HandlersTestCase(unittest.TestCase):
             to_ts=10,
             from_ts=1,
             stats_range='all_time',
-            data=UserListeningActivityRecord(
+            data=StatRecordList[UserListeningActivityRecord](
                 __root__=[
                     UserListeningActivityRecord(
                         from_ts=1,
@@ -150,7 +150,7 @@ class HandlersTestCase(unittest.TestCase):
             to_ts=10,
             from_ts=1,
             stats_range='all_time',
-            data=UserDailyActivityRecord(
+            data=StatRecordList[UserDailyActivityRecord](
                 __root__=[
                     UserDailyActivityRecord(
                         day='Monday',

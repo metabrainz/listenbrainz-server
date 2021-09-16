@@ -29,7 +29,3 @@ class UserListeningActivityStatMessage(pydantic.BaseModel):
     from_ts: int
     to_ts: int
     data: List[UserListeningActivityRecord]
-
-
-class UserListeningActivityRecordList(pydantic.BaseModel):
-    __root__: List[UserListeningActivityRecord]
