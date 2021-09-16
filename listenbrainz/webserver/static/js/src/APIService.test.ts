@@ -155,6 +155,38 @@ describe("submitListens", () => {
     });
   });
 
+  it("strips the listened_at field for playing_now listen", async () => {
+    const fetchMock = jest.spyOn(window, "fetch");
+    const listensToSubmit = [
+      {
+        listened_at: 1000,
+        track_metadata: {
+          artist_name: "foobar",
+          track_name: "bazfoo",
+        },
+      },
+    ];
+    // Expecting a payload without listened_at field, otherwise we get an error response
+    const expectedBody = {
+      listen_type: "playing_now",
+      payload: [
+        {
+          track_metadata: {
+            artist_name: "foobar",
+            track_name: "bazfoo",
+          },
+        },
+      ],
+    };
+    await apiService.submitListens("foobar", "playing_now", listensToSubmit);
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${apiService.APIBaseURI}/submit-listens`,
+      expect.objectContaining({
+        body: JSON.stringify(expectedBody),
+      })
+    );
+  });
+
   it("calls itself recursively if size of payload exceeds MAX_LISTEN_SIZE", async () => {
     apiService.MAX_LISTEN_SIZE = 100;
 
