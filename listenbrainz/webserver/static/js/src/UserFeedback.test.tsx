@@ -144,7 +144,7 @@ describe("UserFeedback", () => {
     wrapper.update();
     const listens = wrapper.find(ListenCard);
     // Score = 1 (loved) for first item
-    const firstListenCard = listens.at(1).find(".listen-controls").first();
+    const firstListenCard = listens.at(0).find(".listen-controls").first();
     expect(
       firstListenCard.find("[title='Love']").first().hasClass("loved")
     ).toBeTruthy();
