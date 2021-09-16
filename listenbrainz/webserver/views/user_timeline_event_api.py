@@ -257,10 +257,6 @@ def delete_feed_events(user_name):
         "event_type": "notification",
         "id": int
     }
-    {
-        "event_type": "recording_pin",
-        "row_id": int
-    }
     :param user_name: The MusicBrainz ID of the user from whose timeline events are being deleted
     :type user_name: ``str``
     :statuscode 200: Successful deletion
@@ -286,15 +282,6 @@ def delete_feed_events(user_name):
             if not event_deleted:
                 raise APINotFound("Cannot find '%s' event with id '%s' for user '%s'" % (event["event_type"], event["id"],
                     user["id"]))
-            return jsonify({"status": "ok"})
-
-        elif event["event_type"] == UserTimelineEventType.RECORDING_PIN.value:
-            try:
-                recording_deleted = db_pinned_rec.delete(event["row_id"], user["id"])
-            except Exception as e:
-                raise APIInternalServerError("Something went wrong. Please try again")
-            if not recording_deleted:
-                raise APINotFound("Cannot find pin with row_id '%s' for user '%s'" % (event["row_id"], user["musicbrainz_id"]))
             return jsonify({"status": "ok"})
 
         raise APIBadRequest("This event type is not supported for deletion via this method")
