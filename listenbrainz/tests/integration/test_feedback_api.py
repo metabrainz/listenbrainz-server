@@ -710,8 +710,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         feedback = props["feedback"]
 
         self.assertEqual(len(feedback), 1)
-        self.assertEqual(feedback[0]["user_name"], self.user["musicbrainz_id"])
-        self.assertEqual(feedback[0]["user_id"], self.user["id"])
+        self.assertEqual(feedback[0]["user_id"], self.user["musicbrainz_id"])
         self.assertEqual(feedback[0]["recording_msid"], inserted_rows[0]["recording_msid"])
         self.assertEqual(feedback[0]["score"], inserted_rows[0]["score"])
         self.assertNotEqual(feedback[0]["created"], "")
@@ -726,8 +725,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         feedback = props["feedback"]
 
         self.assertEqual(len(feedback), 1)
-        self.assertEqual(feedback[0]["user_name"], self.user["musicbrainz_id"])
-        self.assertEqual(feedback[0]["user_id"], self.user["id"])
+        self.assertEqual(feedback[0]["user_id"], self.user["musicbrainz_id"])
         self.assertEqual(feedback[0]["recording_msid"], inserted_rows[1]["recording_msid"])
         self.assertEqual(feedback[0]["score"], inserted_rows[1]["score"])
         self.assertNotEqual(feedback[0]["created"], "")

@@ -7,6 +7,7 @@ from listenbrainz.db.model.feedback import Feedback
 from messybrainz.db.data import load_recordings_from_msids
 from messybrainz import db as msb_db
 from typing import List
+from messybrainz.db.exceptions import NoDataFoundException
 
 
 def insert(feedback: Feedback):
@@ -94,15 +95,19 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
 
         # Fetch the artist and track names from MSB
         with msb_db.engine.connect() as connection:
-            msb_recordings = load_recordings_from_msids(connection, msids)
+            try:
+                msb_recordings = load_recordings_from_msids(connection, msids)
+            except NoDataFoundException:
+                msb_recordings = []
 
         artist_msids = {}
-        for rec in msb_recordings:
-            index[rec["ids"]["recording_msid"]].track_metadata = {
-                    "artist_name": rec["payload"]["artist"],
-                    "release_name": rec["payload"].get("release_name", ""),
-                    "track_name": rec["payload"]["title"] }
-            artist_msids[rec["ids"]["recording_msid"]] = rec["ids"]["artist_msid"]
+        if msb_recordings:
+            for rec in msb_recordings:
+                index[rec["ids"]["recording_msid"]].track_metadata = {
+                        "artist_name": rec["payload"]["artist"],
+                        "release_name": rec["payload"].get("release_name", ""),
+                        "track_name": rec["payload"]["title"] }
+                artist_msids[rec["ids"]["recording_msid"]] = rec["ids"]["artist_msid"]
 
         # Fetch the mapped MBIDs from the mapping
         query = """SELECT recording_msid::TEXT, recording_mbid::TEXT, release_mbid::TEXT 
