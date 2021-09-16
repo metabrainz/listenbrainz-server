@@ -525,7 +525,6 @@ export default class UserFeedback extends React.Component<
                 {currentUser && (
                   <PinRecordingModal
                     recordingToPin={recordingToPin || listensFromFeedback[0]}
-                    isCurrentUser={currentUser?.name === user?.name}
                     newAlert={newAlert}
                   />
                 )}
