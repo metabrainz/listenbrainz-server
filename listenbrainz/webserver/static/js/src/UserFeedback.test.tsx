@@ -28,7 +28,7 @@ const mountOptions: { context: GlobalAppContextT } = {
     APIService: new APIService("foo"),
     youtubeAuth: youtube as YoutubeUser,
     spotifyAuth: spotify as SpotifyUser,
-    currentUser: user,
+    currentUser: { auth_token: "lalala", name: "pikachu" },
   },
 };
 const mountOptionsWithoutUser: { context: GlobalAppContextT } = {
@@ -37,6 +37,16 @@ const mountOptionsWithoutUser: { context: GlobalAppContextT } = {
     currentUser: {} as ListenBrainzUser,
   },
 };
+
+// from https://github.com/kentor/flush-promises/blob/46f58770b14fb74ce1ff27da00837c7e722b9d06/index.js
+const scheduler =
+  typeof setImmediate === "function" ? setImmediate : setTimeout;
+
+function flushPromises() {
+  return new Promise(function (resolve) {
+    scheduler(resolve, 0);
+  });
+}
 
 const mockDate = new Date("2021-05-19");
 const fakeDateNow = jest
@@ -53,10 +63,42 @@ describe("UserFeedback", () => {
     fakeDateNow.mockRestore();
   });
 
-  it("calls loadFeedback on componentDidMount", () => {
+  it("loads user feedback on componentDidMount", async () => {
     const wrapper = mount<UserFeedback>(
-      <UserFeedback {...props} />,
-      mountOptions
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <UserFeedback {...props} />
+      </GlobalAppContext.Provider>
+    );
+    const instance = wrapper.instance();
+    const loadFeedbackSpy = jest.spyOn(instance, "loadFeedback");
+    const getFeedbackSpy = jest.spyOn(instance, "getFeedback");
+    const apiGetFeedbackSpy = jest.spyOn(
+      // @ts-ignore
+      instance.APIService,
+      "getFeedbackForUserForRecordings"
+    );
+    await instance.componentDidMount();
+    await flushPromises();
+
+    expect(loadFeedbackSpy).toHaveBeenCalledTimes(1);
+    expect(getFeedbackSpy).toHaveBeenCalledTimes(1);
+    expect(apiGetFeedbackSpy).toHaveBeenCalledTimes(1);
+    expect(apiGetFeedbackSpy).toHaveBeenCalledWith(
+      "pikachu",
+      feedback
+        .map((item) => item.recording_msid)
+        .filter((item) => {
+          return item !== undefined;
+        })
+        .join(",")
+    );
+  });
+
+  it("does not load user feedback if no user is logged in", async () => {
+    const wrapper = mount<UserFeedback>(
+      <GlobalAppContext.Provider value={mountOptionsWithoutUser.context}>
+        <UserFeedback {...props} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
     const loadFeedbackSpy = jest.spyOn(instance, "loadFeedback");
@@ -68,25 +110,9 @@ describe("UserFeedback", () => {
     instance.componentDidMount();
     expect(loadFeedbackSpy).toHaveBeenCalledTimes(1);
     expect(getFeedbackSpy).toHaveBeenCalledTimes(1);
-    expect(apiGetFeedbackSpy).toHaveBeenCalledTimes(1);
-    expect(apiGetFeedbackSpy).toHaveBeenCalledWith(user.name);
-  });
 
-  it("does not call loadFeedback if no user is logged in", () => {
-    const wrapper = mount<UserFeedback>(
-      <UserFeedback {...props} />,
-      mountOptionsWithoutUser
-    );
-    const instance = wrapper.instance();
-    const loadFeedbackSpy = jest.spyOn(instance, "loadFeedback");
-    const getFeedbackSpy = jest.spyOn(instance, "getFeedback");
-    const apiGetFeedbackSpy = jest.spyOn(
-      instance.context.APIService,
-      "getFeedbackForUserForRecordings"
-    );
-    instance.componentDidMount();
-    expect(loadFeedbackSpy).toHaveBeenCalledTimes(1);
-    expect(getFeedbackSpy).not.toHaveBeenCalled();
+    await flushPromises();
+    expect(instance.context.currentUser).toEqual({});
     expect(apiGetFeedbackSpy).not.toHaveBeenCalled();
   });
 });
