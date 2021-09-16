@@ -286,17 +286,18 @@ export default class UserFeedback extends React.Component<
 
   getFeedback = async () => {
     const { currentUser } = this.context;
-    const { user, newAlert } = this.props;
+    const { newAlert } = this.props;
     const { feedback } = this.state;
 
     let recordings = "";
     if (feedback?.length && currentUser?.name) {
-      feedback.forEach((feedbackItem) => {
-        const recordingMsid = get(feedbackItem, "recording_msid");
-        if (recordingMsid) {
-          recordings += `${recordingMsid},`;
-        }
-      });
+      recordings = feedback
+        .map((item) => item.recording_msid)
+        .filter((item) => {
+          return item !== undefined;
+        })
+        .join(",");
+
       try {
         const data = await this.APIService.getFeedbackForUserForRecordings(
           currentUser.name,
