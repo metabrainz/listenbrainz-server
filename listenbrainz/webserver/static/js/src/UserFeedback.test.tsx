@@ -44,7 +44,7 @@ const scheduler =
   typeof setImmediate === "function" ? setImmediate : setTimeout;
 
 function flushPromises() {
-  return new Promise(function (resolve) {
+  return new Promise(function flushPromisesPromise(resolve) {
     scheduler(resolve, 0);
   });
 }
