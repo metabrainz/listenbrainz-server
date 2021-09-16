@@ -168,6 +168,9 @@ export default class RecentListens extends React.Component<
   };
 
   createWebsocketsConnection = (): void => {
+    // if modifying the uri or path, lookup socket.io namespace vs paths.
+    // tl;dr io("https://listenbrainz.org/socket.io/") and
+    // io("https://listenbrainz.org", { path: "/socket.io" }); are not equivalent
     this.socket = io(`${window.location.origin}`, { path: "/socket.io/" });
   };
 
