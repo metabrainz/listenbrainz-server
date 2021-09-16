@@ -182,7 +182,6 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
         result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=25, offset=0, score=1, metadata=True)
         self.assertEqual(len(result), 1)
 
-        print(result[0])
         self.assertEqual(result[0].user_id, self.user["id"])
         self.assertEqual(result[0].user_name, self.user["musicbrainz_id"])
         self.assertEqual(result[0].recording_msid, self.sample_feedback_with_metadata[0]["recording_msid"])

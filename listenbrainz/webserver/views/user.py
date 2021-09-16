@@ -49,15 +49,22 @@ def redirect_user_page(target):
     return inner
 
 
-redirect_bp.add_url_rule("/listens/", "redirect_listens", redirect_user_page("user.profile"))
-redirect_bp.add_url_rule("/charts/", "redirect_charts", redirect_user_page("user.charts"))
-redirect_bp.add_url_rule("/reports/", "redirect_reports", redirect_user_page("user.reports"))
-redirect_bp.add_url_rule("/playlists/", "redirect_playlists", redirect_user_page("user.playlists"))
-redirect_bp.add_url_rule("/collaborations/", "redirect_collaborations", redirect_user_page("user.collaborations"))
+redirect_bp.add_url_rule("/listens/", "redirect_listens",
+                         redirect_user_page("user.profile"))
+redirect_bp.add_url_rule("/charts/", "redirect_charts",
+                         redirect_user_page("user.charts"))
+redirect_bp.add_url_rule("/reports/", "redirect_reports",
+                         redirect_user_page("user.reports"))
+redirect_bp.add_url_rule("/playlists/", "redirect_playlists",
+                         redirect_user_page("user.playlists"))
+redirect_bp.add_url_rule("/collaborations/", "redirect_collaborations",
+                         redirect_user_page("user.collaborations"))
 redirect_bp.add_url_rule("/recommendations/",
                          "redirect_recommendations",
                          redirect_user_page("user.recommendation_playlists"))
-redirect_bp.add_url_rule("/pins/", "redirect_pins", redirect_user_page("user.pins"))
+redirect_bp.add_url_rule("/pins/", "redirect_pins",
+                         redirect_user_page("user.pins"))
+
 
 @user_bp.route("/<user_name>/")
 @web_listenstore_needed
@@ -77,21 +84,24 @@ def profile(user_name):
         try:
             max_ts = int(max_ts)
         except ValueError:
-            raise BadRequest("Incorrect timestamp argument max_ts: %s" % request.args.get("max_ts"))
+            raise BadRequest("Incorrect timestamp argument max_ts: %s" %
+                             request.args.get("max_ts"))
 
     min_ts = request.args.get("min_ts")
     if min_ts is not None:
         try:
             min_ts = int(min_ts)
         except ValueError:
-            raise BadRequest("Incorrect timestamp argument min_ts: %s" % request.args.get("min_ts"))
+            raise BadRequest("Incorrect timestamp argument min_ts: %s" %
+                             request.args.get("min_ts"))
 
     args = {}
     if max_ts:
         args['to_ts'] = max_ts
     else:
         args['from_ts'] = min_ts
-    data, min_ts_per_user, max_ts_per_user = db_conn.fetch_listens(user_name, limit=LISTENS_PER_PAGE, **args)
+    data, min_ts_per_user, max_ts_per_user = db_conn.fetch_listens(
+        user_name, limit=LISTENS_PER_PAGE, **args)
 
     listens = []
     for listen in data:
@@ -120,8 +130,10 @@ def profile(user_name):
     logged_in_user_follows_user = None
     already_reported_user = False
     if current_user.is_authenticated:
-        logged_in_user_follows_user = db_user_relationship.is_following_user(current_user.id, user.id)
-        already_reported_user = db_user.is_user_reported(current_user.id, user.id)
+        logged_in_user_follows_user = db_user_relationship.is_following_user(
+            current_user.id, user.id)
+        already_reported_user = db_user.is_user_reported(
+            current_user.id, user.id)
 
     pin = get_current_pin_for_user(user_id=user.id)
     if pin:
@@ -212,6 +224,7 @@ def reports(user_name: str):
         user=user
     )
 
+
 @user_bp.route("/<user_name>/playlists/")
 @web_listenstore_needed
 def playlists(user_name: str):
@@ -221,13 +234,15 @@ def playlists(user_name: str):
     try:
         offset = int(offset)
     except ValueError:
-        raise BadRequest("Incorrect int argument offset: %s" % request.args.get("offset"))
+        raise BadRequest("Incorrect int argument offset: %s" %
+                         request.args.get("offset"))
 
     count = request.args.get("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     try:
         count = int(count)
     except ValueError:
-        raise BadRequest("Incorrect int argument count: %s" % request.args.get("count"))
+        raise BadRequest("Incorrect int argument count: %s" %
+                         request.args.get("count"))
 
     user = _get_user(user_name)
     user_data = {
@@ -272,13 +287,15 @@ def recommendation_playlists(user_name: str):
     try:
         offset = int(offset)
     except ValueError:
-        raise BadRequest("Incorrect int argument offset: %s" % request.args.get("offset"))
+        raise BadRequest("Incorrect int argument offset: %s" %
+                         request.args.get("offset"))
 
     count = request.args.get("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     try:
         count = int(count)
     except ValueError:
-        raise BadRequest("Incorrect int argument count: %s" % request.args.get("count"))
+        raise BadRequest("Incorrect int argument count: %s" %
+                         request.args.get("count"))
     user = _get_user(user_name)
     user_data = {
         "name": user.musicbrainz_id,
@@ -286,10 +303,10 @@ def recommendation_playlists(user_name: str):
     }
 
     playlists = []
-    user_playlists, playlist_count = get_playlists_created_for_user(user.id, False, count, offset)
+    user_playlists, playlist_count = get_playlists_created_for_user(
+        user.id, False, count, offset)
     for playlist in user_playlists:
         playlists.append(serialize_jspf(playlist))
-
 
     props = {
         "playlists": playlists,
@@ -315,13 +332,15 @@ def collaborations(user_name: str):
     try:
         offset = int(offset)
     except ValueError:
-        raise BadRequest("Incorrect int argument offset: %s" % request.args.get("offset"))
+        raise BadRequest("Incorrect int argument offset: %s" %
+                         request.args.get("offset"))
 
     count = request.args.get("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     try:
         count = int(count)
     except ValueError:
-        raise BadRequest("Incorrect int argument count: %s" % request.args.get("count"))
+        raise BadRequest("Incorrect int argument count: %s" %
+                         request.args.get("count"))
 
     user = _get_user(user_name)
     user_data = {
@@ -458,7 +477,8 @@ def delete_listens_history(musicbrainz_id):
     user = _get_user(musicbrainz_id)
     timescale_connection._ts.delete(user.musicbrainz_id)
     timescale_connection._ts.reset_listen_count(user.musicbrainz_id)
-    listens_importer.update_latest_listened_at(user.id, ExternalServiceType.LASTFM, 0)
+    listens_importer.update_latest_listened_at(
+        user.id, ExternalServiceType.LASTFM, 0)
     db_stats.delete_user_stats(user.id)
 
 
@@ -477,19 +497,23 @@ def feedback(user_name: str):
     try:
         score = int(score)
     except ValueError:
-        raise BadRequest("Incorrect int argument score: %s" % request.args.get("score"))
+        raise BadRequest("Incorrect int argument score: %s" %
+                         request.args.get("score"))
 
     offset = request.args.get('offset', 0)
     try:
         offset = int(offset)
     except ValueError:
-        raise BadRequest("Incorrect int argument offset: %s" % request.args.get("offset"))
+        raise BadRequest("Incorrect int argument offset: %s" %
+                         request.args.get("offset"))
 
-    count = request.args.get("count", DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL)
+    count = request.args.get(
+        "count", DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL)
     try:
         count = int(count)
     except ValueError:
-        raise BadRequest("Incorrect int argument count: %s" % request.args.get("count"))
+        raise BadRequest("Incorrect int argument count: %s" %
+                         request.args.get("count"))
 
     user = _get_user(user_name)
     user_data = {
@@ -497,11 +521,11 @@ def feedback(user_name: str):
         "id": user.id,
     }
 
-    feedback_count = get_feedback_count_for_user(user.id, score) 
+    feedback_count = get_feedback_count_for_user(user.id, score)
     feedback = get_feedback_for_user(user.id, count, offset, score, True)
 
     props = {
-        "feedback": [ f.to_api() for f in feedback],
+        "feedback": [f.to_api() for f in feedback],
         "feedback_count": feedback_count,
         "user": user_data,
         "active_section": "feedback",
@@ -513,4 +537,3 @@ def feedback(user_name: str):
         props=ujson.dumps(props),
         user=user
     )
-
