@@ -608,6 +608,12 @@ describe("BrainzPlayer", () => {
       artist: "Rick Astley",
       trackURL: "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT",
     };
+    beforeAll(() => {
+      jest.useFakeTimers();
+    });
+    afterAll(() => {
+      jest.useRealTimers();
+    });
     it("does nothing if user is not logged in", async () => {
       const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...props} />,
@@ -674,7 +680,7 @@ describe("BrainzPlayer", () => {
       expect(submitListensAPISpy).not.toHaveBeenCalled();
     });
 
-    it("submits a listen with the expected matadata", async () => {
+    it("submits a playing_now with the expected metadata", async () => {
       const dateNowMock = jest.fn().mockReturnValue(1234567890);
       Date.now = dateNowMock;
       const wrapper = mount<BrainzPlayer>(
@@ -731,7 +737,83 @@ describe("BrainzPlayer", () => {
           },
         },
       };
+      // Cancel submission of full listen
+      instance.playNextTrack();
+      //   advance timers
+      jest.advanceTimersByTime(30001);
+      expect(submitListensAPISpy).toHaveBeenCalledTimes(1);
       expect(submitListensAPISpy).toHaveBeenCalledWith(
+        "IHaveSeenTheFnords",
+        "playing_now",
+        [expectedListen]
+      );
+    });
+
+    it("submits a full listen after 30s with the expected metadata", async () => {
+      const dateNowMock = jest.fn().mockReturnValue(1234567890);
+      Date.now = dateNowMock;
+
+      const wrapper = mount<BrainzPlayer>(
+        <GlobalAppContext.Provider
+          value={{
+            ...GlobalContextMock.context,
+            // These permissions suggest LB does *not* record listens
+            spotifyAuth: spotifyAccountWithPermissions,
+            currentUser: {
+              name: "Gulab Jamun",
+              auth_token: "IHaveSeenTheFnords",
+            },
+          }}
+        >
+          <BrainzPlayer
+            {...props}
+            listens={[listen2]}
+            currentListen={listen2}
+          />
+        </GlobalAppContext.Provider>
+      );
+      // expect API.submitListens to have been called with
+      // ucer auth token, "single", array of one listen
+      const instance = wrapper.instance();
+      const ds = instance.dataSources[instance.state.currentDataSourceIndex]
+        ?.current as DataSourceType;
+      expect(ds).toBeDefined();
+      expect(ds).toBeInstanceOf(SpotifyPlayer);
+      expect(ds.datasourceRecordsListens()).toBeFalsy();
+
+      const submitListensAPISpy = jest.spyOn(
+        instance.context.APIService,
+        "submitListens"
+      );
+      await instance.submitListenToListenBrainz(
+        trackInfo.title,
+        trackInfo.trackURL,
+        trackInfo.artist
+      );
+      const expectedListen = {
+        listened_at: 1234567,
+        track_metadata: {
+          artist_name: "Rick Astley",
+          track_name: "Never Gonna Give You Up",
+          additional_info: {
+            listening_from: "listenbrainz",
+            source: "spotify",
+            origin_url: "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT",
+            brainzplayer_metadata: {
+              artist_name: "Rick Astley",
+              release_name: undefined,
+              track_name: "Never Gonna Give You Up",
+            },
+          },
+        },
+      };
+      // Let's chack after 15 seconds
+      jest.advanceTimersByTime(15000);
+      expect(submitListensAPISpy).toHaveBeenCalledTimes(1);
+      // And now after 30 seconds
+      jest.advanceTimersByTime(30001);
+      expect(submitListensAPISpy).toHaveBeenCalledTimes(2);
+      expect(submitListensAPISpy).toHaveBeenLastCalledWith(
         "IHaveSeenTheFnords",
         "single",
         [expectedListen]
