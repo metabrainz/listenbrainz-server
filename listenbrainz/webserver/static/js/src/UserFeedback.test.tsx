@@ -144,65 +144,30 @@ describe("UserFeedback", () => {
     wrapper.update();
     const listens = wrapper.find(ListenCard);
     // Score = 1 (loved) for first item
+    const firstListenCard = listens.at(1).find(".listen-controls").first();
     expect(
-      listens
-        .at(0)
-        .find(".listen-controls")
-        .first()
-        .find("[title='Love']")
-        .first()
-        .hasClass("loved")
+      firstListenCard.find("[title='Love']").first().hasClass("loved")
     ).toBeTruthy();
     // Score = 0 (neutral) for second item
+    const secondListenCard = listens.at(1).find(".listen-controls").first();
     expect(
-      listens
-        .at(1)
-        .find(".listen-controls")
-        .first()
-        .find("[title='Love']")
-        .first()
-        .hasClass("loved")
+      secondListenCard.find("[title='Love']").first().hasClass("loved")
     ).toBeFalsy();
     expect(
-      listens
-        .at(1)
-        .find(".listen-controls")
-        .find(".listen-controls")
-        .first()
-        .find("[title='Hate']")
-        .first()
-        .hasClass("hated")
+      secondListenCard.find("[title='Hate']").first().hasClass("hated")
     ).toBeFalsy();
     // Score = -1 (hated) for third item
+    const thirdListenCard = listens.at(2).find(".listen-controls").first();
     expect(
-      listens
-        .at(2)
-        .find(".listen-controls")
-        .find(".listen-controls")
-        .first()
-        .find("[title='Hate']")
-        .first()
-        .hasClass("hated")
+      thirdListenCard.find("[title='Hate']").first().hasClass("hated")
     ).toBeTruthy();
     // No score (neutral) for fourth item
+    const fourthListenCard = listens.at(3).find(".listen-controls").first();
     expect(
-      listens
-        .at(3)
-        .find(".listen-controls")
-        .first()
-        .find("[title='Love']")
-        .first()
-        .hasClass("loved")
+      fourthListenCard.find("[title='Love']").first().hasClass("loved")
     ).toBeFalsy();
     expect(
-      listens
-        .at(3)
-        .find(".listen-controls")
-        .find(".listen-controls")
-        .first()
-        .find("[title='Hate']")
-        .first()
-        .hasClass("hated")
+      fourthListenCard.find("[title='Hate']").first().hasClass("hated")
     ).toBeFalsy();
   });
 });
