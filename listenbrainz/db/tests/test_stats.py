@@ -129,7 +129,6 @@ class StatsDatabaseTestCase(DatabaseTestCase):
 
         db_stats.insert_user_jsonb_data(user_id=self.user['id'], stats_type='recordings',
                                         stats=StatRange[UserEntityRecordList](**recordings_data))
-        recordings_data['stats_range'] = 'year'
         db_stats.insert_user_jsonb_data(user_id=self.user['id'], stats_type='recordings',
                                         stats=StatRange[UserEntityRecordList](**recordings_data_year))
 
@@ -143,27 +142,30 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         """ Test if multiple time range data is inserted correctly """
         with open(self.path_to_data_file('user_listening_activity_db.json')) as f:
             listening_activity_data = json.load(f)
+        listening_activity_data_year = deepcopy(listening_activity_data)
+        listening_activity_data_year['stat_range'] = 'year'
 
         db_stats.insert_user_jsonb_data(
             user_id=self.user['id'], stats_type='listening_activity',
             stats=StatRange[UserListeningActivityRecordList](**listening_activity_data)
         )
-        listening_activity_data['stat_range'] = 'year'
         db_stats.insert_user_jsonb_data(
             user_id=self.user['id'], stats_type='listening_activity',
-            stats=StatRange[UserListeningActivityRecordList](**listening_activity_data)
+            stats=StatRange[UserListeningActivityRecordList](**listening_activity_data_year)
         )
 
         result = db_stats.get_user_listening_activity(1, 'all_time')
-        self.assertDictEqual(result.data.dict(), listening_activity_data)
+        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated', 'count'}), listening_activity_data)
 
         result = db_stats.get_user_listening_activity(1, 'year')
-        self.assertDictEqual(result.data.dict(), listening_activity_data)
+        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated', 'count'}), listening_activity_data_year)
 
     def test_insert_user_stats_mult_ranges_daily_activity(self):
         """ Test if multiple time range data is inserted correctly """
         with open(self.path_to_data_file('user_daily_activity_db.json')) as f:
             daily_activity_data = json.load(f)
+        daily_activity_data_year = deepcopy(daily_activity_data)
+        daily_activity_data_year['stat_range'] = 'year'
 
         db_stats.insert_user_jsonb_data(
             user_id=self.user['id'], stats_type='daily_activity',
@@ -172,35 +174,36 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         daily_activity_data['stat_range'] = 'year'
         db_stats.insert_user_jsonb_data(
             user_id=self.user['id'], stats_type='daily_activity',
-            stats=StatRange[UserDailyActivityRecordList](**daily_activity_data)
+            stats=StatRange[UserDailyActivityRecordList](**daily_activity_data_year)
         )
 
         result = db_stats.get_user_daily_activity(1, 'all_time')
-        self.assertDictEqual(result.data.dict(), daily_activity_data)
+        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated', 'count'}), daily_activity_data)
 
         result = db_stats.get_user_daily_activity(1, 'year')
-        self.assertDictEqual(result.data.dict(), daily_activity_data)
+        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated', 'count'}), daily_activity_data)
 
     def test_insert_user_stats_mult_ranges_artist_map(self):
         """ Test if multiple time range data is inserted correctly """
         with open(self.path_to_data_file('user_artist_map_db.json')) as f:
             artist_map_data = json.load(f)
+        artist_map_data_year = deepcopy(artist_map_data)
+        artist_map_data_year['stat_range'] = 'year'
 
         db_stats.insert_user_jsonb_data(
             user_id=self.user['id'], stats_type='artist_map',
             stats=StatRange[UserArtistMapRecordList](**artist_map_data)
         )
-        artist_map_data['stat_range'] = 'year'
         db_stats.insert_user_jsonb_data(
             user_id=self.user['id'], stats_type='artist_map',
-            stats=StatRange[UserArtistMapRecordList](**artist_map_data)
+            stats=StatRange[UserArtistMapRecordList](**artist_map_data_year)
         )
 
         result = db_stats.get_user_artist_map(1, 'all_time')
-        self.assertDictEqual(result.data.dict(), artist_map_data)
+        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated', 'count'}), artist_map_data)
 
         result = db_stats.get_user_artist_map(1, 'year')
-        self.assertDictEqual(result.data.dict(), artist_map_data)
+        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated', 'count'}), artist_map_data)
 
     def test_insert_sitewide_artists(self):
         """ Test if sitewide artist data is inserted correctly """
