@@ -199,7 +199,6 @@
 	}
 	
 	> div {
-		padding: 0 1em;
 		display: flex;
 		flex:1;
 	}
@@ -213,7 +212,8 @@
 		flex-direction: column;
 		justify-content: center;
 		align-items: flex-end;
-		flex-basis: 60px;
+		// flex-basis: 60px;
+		padding-right: 1em;
 	}
 	
 	.listen-details{
@@ -222,18 +222,20 @@
 		max-width: 100%;
 		
 		
-		> * {
+		.artist-and-timestamp {
 			display: flex;
-    flex-flow: column;
+			flex-wrap: wrap;
+		}
+		.ellipsis {
 			overflow: hidden;
 			text-overflow: ellipsis;
 			white-space:nowrap;
-			margin-bottom: 0px;
 		}
 	}
 	
 	.listen-controls-container {
-		max-width: 150px;
+		max-width: 110px;
+    	min-width: 110px;
 		> * {
 			flex: 1;
 			align-self: center;
