@@ -240,6 +240,14 @@ export default class ListenCard extends React.Component<
       </>
     );
 
+    const listenedAt = _get(listen, "listened_at");
+    const recordingMSID = _get(
+      listen,
+      "track_metadata.additional_info.recording_msid"
+    );
+    const canDelete =
+      isCurrentUser && Boolean(listenedAt) && Boolean(recordingMSID);
+
     return (
       <Card
         onDoubleClick={isCurrentListen ? undefined : this.playListen}
@@ -323,9 +331,9 @@ export default class ListenCard extends React.Component<
                     dataTarget="#PinRecordingModal"
                   />
                   <ListenControl
-                    disabled={!isCurrentUser}
+                    disabled={!canDelete}
                     title="Delete Listen"
-                    action={isCurrentUser ? this.deleteListen : undefined}
+                    action={canDelete ? this.deleteListen : undefined}
                   />
                 </ul>
               </>
