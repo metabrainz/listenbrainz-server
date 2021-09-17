@@ -30,9 +30,12 @@ export type ListenCardProps = {
   showTimestamp: boolean;
   showUsername: boolean;
   playListen: (listen: Listen) => void;
-  removeListenFromListenList: (listen: Listen) => void;
-  updateFeedback: (recordingMsid: string, score: ListenFeedBack) => void;
-  updateRecordingToPin: (recordingToPin: Listen) => void;
+  removeListenCallback?: (listen: Listen) => void;
+  updateFeedbackCallback?: (
+    recordingMsid: string,
+    score: ListenFeedBack
+  ) => void;
+  updateRecordingToPin?: (recordingToPin: Listen) => void;
   newAlert: (
     alertType: AlertType,
     title: string,
@@ -72,7 +75,7 @@ export default class ListenCard extends React.Component<
   }
 
   submitFeedback = async (score: ListenFeedBack) => {
-    const { listen, updateFeedback } = this.props;
+    const { listen, updateFeedbackCallback } = this.props;
     const { APIService, currentUser } = this.context;
     if (currentUser?.auth_token) {
       const recordingMSID = _get(
@@ -88,7 +91,9 @@ export default class ListenCard extends React.Component<
         );
         if (status === 200) {
           this.setState({ feedback: score });
-          updateFeedback(recordingMSID, score);
+          if (updateFeedbackCallback) {
+            updateFeedbackCallback(recordingMSID, score);
+          }
         }
       } catch (error) {
         this.handleError(error, "Error while submitting feedback");
@@ -97,7 +102,7 @@ export default class ListenCard extends React.Component<
   };
 
   deleteListen = async () => {
-    const { listen, removeListenFromListenList } = this.props;
+    const { listen, removeListenCallback } = this.props;
     const { APIService, currentUser } = this.context;
     const isCurrentUser =
       Boolean(listen.user_name) && listen.user_name === currentUser?.name;
@@ -116,11 +121,12 @@ export default class ListenCard extends React.Component<
         );
         if (status === 200) {
           this.setState({ isDeleted: true });
-
-          // wait for the animation to finish
-          setTimeout(function removeListen() {
-            removeListenFromListenList(listen);
-          }, 1000);
+          if (removeListenCallback) {
+            // wait for the animation to finish
+            setTimeout(function removeListen() {
+              removeListenCallback(listen);
+            }, 1000);
+          }
         }
       } catch (error) {
         this.handleError(error, "Error while deleting listen");
@@ -246,17 +252,15 @@ export default class ListenCard extends React.Component<
           <p title={listen.track_metadata?.track_name}>
             {getTrackLink(listen)}
           </p>
-          <small>
-            <span className="visible-xs-inline">
-              {timeStampForDisplay}&nbsp; &#8212; &nbsp;
-            </span>
-            <span
-              className="text-muted"
-              title={listen.track_metadata?.artist_name}
-            >
-              {getArtistLink(listen)}
-            </span>
-          </small>
+          <span
+            className="small text-muted"
+            title={listen.track_metadata?.artist_name}
+          >
+            {getArtistLink(listen)}
+          </span>
+          <span className="small visible-xs-inline">
+            &nbsp; &#8212; &nbsp;{timeStampForDisplay}
+          </span>
         </div>
         <div className="username-and-timestamp">
           {showUsername && (
@@ -310,7 +314,11 @@ export default class ListenCard extends React.Component<
                   />
                   <ListenControl
                     title="Pin this Recording"
-                    action={() => updateRecordingToPin(listen)}
+                    action={
+                      updateRecordingToPin
+                        ? () => updateRecordingToPin(listen)
+                        : undefined
+                    }
                     dataToggle="modal"
                     dataTarget="#PinRecordingModal"
                   />
