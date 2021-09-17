@@ -102,7 +102,7 @@ def build(client, collection_name):
                           FROM mapping.mbid_mapping""")
 
             if config.USE_MINIMAL_DATASET:
-                query += " WHERE artist_credit_id = 1160983"
+                query += """ WHERE artist_mbids = '{"01039bfa-145e-45a8-940e-f3ff04f80c6f"}'"""
 
             curs.execute(query)
             documents = []
