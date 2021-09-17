@@ -48,7 +48,7 @@ CREATE TABLE listen_mbid_mapping (
         recording_msid     UUID NOT NULL,
         recording_mbid     UUID,
         release_mbid       UUID,
-        artist_credit_id   INTEGER,
+        artist_mbids       UUID[],
         artist_credit_name TEXT,
         recording_name     TEXT,
         match_type         mbid_mapping_match_type_enum NOT NULL,

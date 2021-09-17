@@ -97,7 +97,7 @@ def build(client, collection_name):
                                release_name,
                                release_mbid,
                                artist_credit_name,
-                               artist_credit_id,
+                               artist_mbids,
                                score
                           FROM mapping.mbid_mapping""")
 

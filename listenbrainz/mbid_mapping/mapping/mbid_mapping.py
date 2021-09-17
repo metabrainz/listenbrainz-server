@@ -30,7 +30,7 @@ def create_tables(mb_conn):
                                          recording_name            TEXT NOT NULL,
                                          recording_mbid            UUID NOT NULL,
                                          artist_credit_name        TEXT NOT NULL,
-                                         artist_credit_id          INTEGER NOT NULL,
+                                         artist_mbids              UUID[] NOT NULL,
                                          release_name              TEXT NOT NULL,
                                          release_mbid              UUID NOT NULL,
                                          combined_lookup           TEXT NOT NULL,
@@ -212,7 +212,7 @@ def create_mbid_mapping():
                 mb_curs.execute("""SELECT r.name AS recording_name,
                                           r.gid AS recording_mbid,
                                           ac.name AS artist_credit_name,
-                                          ac.id AS artist_credit_id,
+                                          array_agg(a.gid) AS artist_mbids,
                                           rl.name AS release_name,
                                           rl.gid AS release_mbid,
                                           rpr.id AS score
@@ -221,6 +221,8 @@ def create_mbid_mapping():
                                        ON r.artist_credit = ac.id
                                      JOIN artist_credit_name acn
                                        ON ac.id = acn.artist_credit
+                                     JOIN artist a
+                                       ON acn.artist_credit = a.id
                                      JOIN track t
                                        ON t.recording = r.id
                                      JOIN medium m
@@ -231,7 +233,7 @@ def create_mbid_mapping():
                                        ON rl.id = rpr.release
                                 LEFT JOIN release_country rc
                                        ON rc.release = rl.id
-                                    GROUP BY rpr.id, ac.id, rl.gid, artist_credit_name, r.gid, r.name, release_name
+                                    GROUP BY acn.artist_credit, artist.rpr.id, ac.id, rl.gid, artist_credit_name, r.gid, r.name, release_name
                                     ORDER BY ac.id, rpr.id""")
                 while True:
                     row = mb_curs.fetchone()
