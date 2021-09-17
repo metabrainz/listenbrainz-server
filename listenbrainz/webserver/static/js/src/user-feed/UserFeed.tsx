@@ -18,7 +18,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { isEqual } from "lodash";
+import { isEqual, get as _get } from "lodash";
 import { sanitize } from "dompurify";
 import {
   WithAlertNotificationsInjectedProps,
@@ -30,7 +30,7 @@ import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import BrainzPlayer from "../BrainzPlayer";
 import ErrorBoundary from "../ErrorBoundary";
 import Loader from "../components/Loader";
-import TimelineEventCard from "./TimelineEventCard";
+import ListenCard from "../listens/ListenCard";
 import { getPageProps, preciseTimestamp } from "../utils";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 
@@ -275,10 +275,10 @@ export default class UserFeedPage extends React.Component<
       const { newAlert } = this.props;
       return (
         <div className="event-content">
-          <TimelineEventCard
-            className={
-              this.isCurrentListen(metadata as Listen) ? " current-listen" : ""
-            }
+          <ListenCard
+            isCurrentListen={this.isCurrentListen(metadata as Listen)}
+            showUsername={false}
+            showTimestamp={false}
             listen={metadata as Listen}
             additionalDetails={
               (metadata as PinEventMetadata).blurb_content
@@ -411,7 +411,7 @@ export default class UserFeedPage extends React.Component<
         <div role="main">
           {/* display:flex to allow right-column to take all available height, for sticky player */}
           <div className="row" style={{ display: "flex", flexWrap: "wrap" }}>
-            <div className="col-md-7">
+            <div className="col-md-7 col-xs-12">
               <div
                 style={{
                   height: 0,
