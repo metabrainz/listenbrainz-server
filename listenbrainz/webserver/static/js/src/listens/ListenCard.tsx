@@ -218,24 +218,22 @@ export default class ListenCard extends React.Component<
             <FontAwesomeIcon icon={faMusic as IconProp} /> Playing now &#8212;
           </span>
         ) : (
-          showTimestamp && (
-            <span
-              className="listen-time"
-              title={
-                listen.listened_at
-                  ? fullLocalizedDateFromTimestampOrISODate(
-                      listen.listened_at * 1000
-                    )
-                  : fullLocalizedDateFromTimestampOrISODate(
-                      listen.listened_at_iso
-                    )
-              }
-            >
-              {preciseTimestamp(
-                listen.listened_at_iso || listen.listened_at * 1000
-              )}
-            </span>
-          )
+          <span
+            className="listen-time"
+            title={
+              listen.listened_at
+                ? fullLocalizedDateFromTimestampOrISODate(
+                    listen.listened_at * 1000
+                  )
+                : fullLocalizedDateFromTimestampOrISODate(
+                    listen.listened_at_iso
+                  )
+            }
+          >
+            {preciseTimestamp(
+              listen.listened_at_iso || listen.listened_at * 1000
+            )}
+          </span>
         )}
       </>
     );
@@ -257,17 +255,21 @@ export default class ListenCard extends React.Component<
 		 ${className || ""}`}
       >
         <div className="listen-details">
-          <p title={listen.track_metadata?.track_name}>
+          <div title={listen.track_metadata?.track_name} className="ellipsis">
             {getTrackLink(listen)}
-          </p>
-          <span
-            className="small text-muted"
-            title={listen.track_metadata?.artist_name}
-          >
-            {getArtistLink(listen)}
-          </span>
-          <span className="small visible-xs-inline">
-            &nbsp; &#8212; &nbsp;{timeStampForDisplay}
+          </div>
+          <span className="artist-and-timestamp">
+            {showTimestamp && (
+              <span className="small visible-xs-inline ellipsis">
+                {timeStampForDisplay}&nbsp;-&nbsp;
+              </span>
+            )}
+            <span
+              className="small text-muted ellipsis"
+              title={listen.track_metadata?.artist_name}
+            >
+              {getArtistLink(listen)}
+            </span>
           </span>
         </div>
         <div className="username-and-timestamp">
@@ -281,7 +283,9 @@ export default class ListenCard extends React.Component<
               {listen.user_name}
             </a>
           )}
-          <div className="hidden-xs">{timeStampForDisplay}</div>
+          {showTimestamp && (
+            <div className="hidden-xs">{timeStampForDisplay}</div>
+          )}
         </div>
         <div className="listen-controls-container">
           <div className="listen-controls">
