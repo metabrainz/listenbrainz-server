@@ -41,6 +41,7 @@ export type ListenCardProps = {
     title: string,
     message: string | JSX.Element
   ) => void;
+  additionalDetails?: string | JSX.Element;
 };
 
 type ListenCardState = {
@@ -189,6 +190,7 @@ export default class ListenCard extends React.Component<
 
   render() {
     const {
+      additionalDetails,
       listen,
       className,
       isCurrentListen,
@@ -345,6 +347,14 @@ export default class ListenCard extends React.Component<
             {getPlayButton(listen, isCurrentListen, this.playListen)}
           </div>
         </div>
+        {additionalDetails && (
+          <span
+            className="additional-details"
+            title={listen.track_metadata?.track_name}
+          >
+            {additionalDetails}
+          </span>
+        )}
       </Card>
     );
   }
