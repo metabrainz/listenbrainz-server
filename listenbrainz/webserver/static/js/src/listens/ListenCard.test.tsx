@@ -32,8 +32,8 @@ const props: ListenCardProps = {
   showUsername: true,
   isCurrentListen: false,
   playListen: () => {},
-  removeListenFromListenList: () => {},
-  updateFeedback: () => {},
+  removeListenCallback: () => {},
+  updateFeedbackCallback: () => {},
   newAlert: () => {},
   updateRecordingToPin: () => {},
 };
@@ -103,10 +103,10 @@ describe("ListenCard", () => {
   });
 
   describe("submitFeedback", () => {
-    it("calls API, updates feedback state and calls updateFeedback correctly", async () => {
+    it("calls API, updates feedback state and calls updateFeedbackCallback correctly", async () => {
       const wrapper = mount<ListenCard>(
         <GlobalAppContext.Provider value={globalProps}>
-          <ListenCard {...{ ...props, updateFeedback: jest.fn() }} />
+          <ListenCard {...{ ...props, updateFeedbackCallback: jest.fn() }} />
         </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
@@ -123,8 +123,11 @@ describe("ListenCard", () => {
       expect(spy).toHaveBeenCalledWith("baz", "bar", -1);
 
       expect(wrapper.state("feedback")).toEqual(-1);
-      expect(instance.props.updateFeedback).toHaveBeenCalledTimes(1);
-      expect(instance.props.updateFeedback).toHaveBeenCalledWith("bar", -1);
+      expect(instance.props.updateFeedbackCallback).toHaveBeenCalledTimes(1);
+      expect(instance.props.updateFeedbackCallback).toHaveBeenCalledWith(
+        "bar",
+        -1
+      );
     });
 
     it("does nothing if CurrentUser.authtoken is not set", async () => {
@@ -135,7 +138,7 @@ describe("ListenCard", () => {
             currentUser: { auth_token: undefined, name: "test" },
           }}
         >
-          <ListenCard {...{ ...props, updateFeedback: jest.fn() }} />
+          <ListenCard {...{ ...props, updateFeedbackCallback: jest.fn() }} />
         </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
@@ -151,14 +154,14 @@ describe("ListenCard", () => {
       expect(wrapper.state("feedback")).toEqual(1);
     });
 
-    it("doesn't update feedback state or call updateFeedback if status code is not 200", async () => {
+    it("doesn't update feedback state or call updateFeedbackCallback if status code is not 200", async () => {
       const wrapper = mount<ListenCard>(
         <GlobalAppContext.Provider value={globalProps}>
           <ListenCard {...props} />
         </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
-      props.updateFeedback = jest.fn();
+      props.updateFeedbackCallback = jest.fn();
 
       const { APIService } = instance.context;
       const spy = jest.spyOn(APIService, "submitFeedback");
@@ -172,7 +175,7 @@ describe("ListenCard", () => {
       expect(spy).toHaveBeenCalledWith("baz", "bar", -1);
 
       expect(wrapper.state("feedback")).toEqual(1);
-      expect(props.updateFeedback).toHaveBeenCalledTimes(0);
+      expect(props.updateFeedbackCallback).toHaveBeenCalledTimes(0);
     });
 
     it("calls handleError if error is returned", async () => {
@@ -219,12 +222,10 @@ describe("ListenCard", () => {
   });
 
   describe("deleteListen", () => {
-    it("calls API, sets isDeleted state and removeListenFromListenList correctly", async () => {
+    it("calls API, sets isDeleted state and removeListenCallback correctly", async () => {
       const wrapper = mount<ListenCard>(
         <GlobalAppContext.Provider value={globalProps}>
-          <ListenCard
-            {...{ ...props, removeListenFromListenList: jest.fn() }}
-          />
+          <ListenCard {...{ ...props, removeListenCallback: jest.fn() }} />
         </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
@@ -243,10 +244,8 @@ describe("ListenCard", () => {
       expect(wrapper.state("isDeleted")).toEqual(true);
 
       setTimeout(() => {
-        expect(instance.props.removeListenFromListenList).toHaveBeenCalledTimes(
-          1
-        );
-        expect(instance.props.removeListenFromListenList).toHaveBeenCalledWith(
+        expect(instance.props.removeListenCallback).toHaveBeenCalledTimes(1);
+        expect(instance.props.removeListenCallback).toHaveBeenCalledWith(
           instance.props.listen
         );
       }, 1000);
@@ -289,14 +288,14 @@ describe("ListenCard", () => {
       expect(wrapper.state("isDeleted")).toEqual(false);
     });
 
-    it("doesn't update isDeleted state call removeListenFromListenList if status code is not 200", async () => {
+    it("doesn't update isDeleted state call removeListenCallback if status code is not 200", async () => {
       const wrapper = mount<ListenCard>(
         <GlobalAppContext.Provider value={globalProps}>
           <ListenCard {...props} />
         </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
-      props.removeListenFromListenList = jest.fn();
+      props.removeListenCallback = jest.fn();
 
       const { APIService } = instance.context;
       const spy = jest.spyOn(APIService, "deleteListen");
@@ -307,7 +306,7 @@ describe("ListenCard", () => {
       expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith("baz", "bar", 0);
 
-      expect(props.removeListenFromListenList).toHaveBeenCalledTimes(0);
+      expect(props.removeListenCallback).toHaveBeenCalledTimes(0);
       expect(wrapper.state("isDeleted")).toEqual(false);
     });
 
