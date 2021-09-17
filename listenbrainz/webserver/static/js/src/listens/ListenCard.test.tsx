@@ -27,9 +27,9 @@ const listen: Listen = {
 
 const props: ListenCardProps = {
   listen,
-  mode: "listens",
   currentFeedback: 1,
-  isCurrentUser: true,
+  showTimestamp: true,
+  showUsername: true,
   isCurrentListen: false,
   playListen: () => {},
   removeListenFromListenList: () => {},

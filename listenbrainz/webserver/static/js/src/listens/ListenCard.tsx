@@ -1,6 +1,5 @@
 import * as React from "react";
-import { get as _get } from "lodash";
-import MediaQuery from "react-responsive";
+import { get as _get, has as _has } from "lodash";
 import {
   faMusic,
   faHeart,
@@ -25,11 +24,11 @@ export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
 export type ListenCardProps = {
   listen: Listen;
-  mode: ListensListMode;
   className?: string;
   currentFeedback: ListenFeedBack;
-  isCurrentUser: boolean;
   isCurrentListen: boolean;
+  showTimestamp: boolean;
+  showUsername: boolean;
   playListen: (listen: Listen) => void;
   removeListenFromListenList: (listen: Listen) => void;
   updateFeedback: (recordingMsid: string, score: ListenFeedBack) => void;
@@ -98,9 +97,10 @@ export default class ListenCard extends React.Component<
   };
 
   deleteListen = async () => {
-    const { listen, isCurrentUser, removeListenFromListenList } = this.props;
+    const { listen, removeListenFromListenList } = this.props;
     const { APIService, currentUser } = this.context;
-
+    const isCurrentUser =
+      Boolean(listen.user_name) && listen.user_name === currentUser?.name;
     if (isCurrentUser && currentUser?.auth_token) {
       const listenedAt = _get(listen, "listened_at");
       const recordingMSID = _get(
@@ -184,14 +184,55 @@ export default class ListenCard extends React.Component<
   render() {
     const {
       listen,
-      mode,
       className,
-      isCurrentUser,
       isCurrentListen,
+      showUsername,
+      showTimestamp,
       updateRecordingToPin,
     } = this.props;
-    const { feedback, isDeleted } = this.state;
     const { currentUser } = this.context;
+    const { feedback, isDeleted } = this.state;
+
+    const isCurrentUser =
+      Boolean(listen.user_name) && listen.user_name === currentUser?.name;
+
+    const enableFeedbackButtons = _has(
+      listen,
+      "track_metadata.additional_info.recording_msid"
+    );
+    const enableRecommendButton =
+      _has(listen, "track_metadata.artist_name") &&
+      _has(listen, "track_metadata.track_name") &&
+      _has(listen, "track_metadata.additional_info.recording_msid");
+
+    const timeStampForDisplay = (
+      <>
+        {listen.playing_now ? (
+          <span className="listen-time">
+            <FontAwesomeIcon icon={faMusic as IconProp} /> Playing now &#8212;
+          </span>
+        ) : (
+          showTimestamp && (
+            <span
+              className="listen-time"
+              title={
+                listen.listened_at
+                  ? fullLocalizedDateFromTimestampOrISODate(
+                      listen.listened_at * 1000
+                    )
+                  : fullLocalizedDateFromTimestampOrISODate(
+                      listen.listened_at_iso
+                    )
+              }
+            >
+              {preciseTimestamp(
+                listen.listened_at_iso || listen.listened_at * 1000
+              )}
+            </span>
+          )
+        )}
+      </>
+    );
 
     return (
       <Card
@@ -201,106 +242,36 @@ export default class ListenCard extends React.Component<
         } ${isDeleted ? " deleted" : ""}
 		 ${className || ""}`}
       >
-        <div
-          className={`listen-details ${
-            mode === "recent" || Boolean(currentUser?.auth_token)
-              ? " col-xs-8 col-sm-9"
-              : " col-xs-12"
-          }`}
-        >
-          <MediaQuery minWidth={768}>
-            <div className="col-xs-8">
-              <div className="track-details">
-                <p title={listen.track_metadata?.track_name}>
-                  {getTrackLink(listen)}
-                </p>
-                <p>
-                  <small
-                    className="text-muted"
-                    title={listen.track_metadata?.artist_name}
-                  >
-                    {getArtistLink(listen)}
-                  </small>
-                </p>
-              </div>
-            </div>
-            <div className="col-xs-4">
-              {listen.playing_now ? (
-                <span className="listen-time text-center text-muted">
-                  <FontAwesomeIcon icon={faMusic as IconProp} /> Playing now
-                </span>
-              ) : (
-                <span
-                  className="listen-time text-center text-muted"
-                  title={
-                    listen.listened_at
-                      ? fullLocalizedDateFromTimestampOrISODate(
-                          listen.listened_at * 1000
-                        )
-                      : fullLocalizedDateFromTimestampOrISODate(
-                          listen.listened_at_iso
-                        )
-                  }
-                >
-                  {preciseTimestamp(
-                    listen.listened_at_iso || listen.listened_at * 1000
-                  )}
-                </span>
-              )}
-            </div>
-          </MediaQuery>
-          <MediaQuery maxWidth={767}>
-            <div className="col-xs-12">
-              <div className="track-details">
-                <p title={listen.track_metadata?.track_name}>
-                  {getTrackLink(listen)}
-                </p>
-                <p>
-                  <small
-                    className="text-muted"
-                    title={listen.track_metadata?.artist_name}
-                  >
-                    {listen.playing_now ? (
-                      <span className="listen-time text-muted">
-                        <FontAwesomeIcon icon={faMusic as IconProp} /> Playing
-                        now &#8212;
-                      </span>
-                    ) : (
-                      <span
-                        className="listen-time text-muted"
-                        title={
-                          listen.listened_at
-                            ? fullLocalizedDateFromTimestampOrISODate(
-                                listen.listened_at * 1000
-                              )
-                            : fullLocalizedDateFromTimestampOrISODate(
-                                listen.listened_at_iso
-                              )
-                        }
-                      >
-                        {preciseTimestamp(
-                          listen.listened_at_iso || listen.listened_at * 1000
-                        )}
-                        &nbsp; &#8212; &nbsp;
-                      </span>
-                    )}
-                    {getArtistLink(listen)}
-                  </small>
-                </p>
-              </div>
-            </div>
-          </MediaQuery>
+        <div className="listen-details">
+          <p title={listen.track_metadata?.track_name}>
+            {getTrackLink(listen)}
+          </p>
+          <small>
+            <span className="visible-xs-inline">
+              {timeStampForDisplay}&nbsp; &#8212; &nbsp;
+            </span>
+            <span
+              className="text-muted"
+              title={listen.track_metadata?.artist_name}
+            >
+              {getArtistLink(listen)}
+            </span>
+          </small>
         </div>
-        <div className="col-xs-4 col-sm-3 listen-controls-container">
-          {mode === "recent" ? (
+        <div className="username-and-timestamp">
+          {showUsername && (
             <a
               href={`/user/${listen.user_name}`}
               target="_blank"
               rel="noopener noreferrer"
+              title={listen.user_name ?? undefined}
             >
               {listen.user_name}
             </a>
-          ) : null}
+          )}
+          <div className="hidden-xs">{timeStampForDisplay}</div>
+        </div>
+        <div className="listen-controls-container">
           <div className="listen-controls">
             {!currentUser?.auth_token ? null : (
               <>
@@ -309,12 +280,14 @@ export default class ListenCard extends React.Component<
                   title="Love"
                   action={() => this.submitFeedback(feedback === 1 ? 0 : 1)}
                   className={`${feedback === 1 ? " loved" : ""}`}
+                  disabled={!enableFeedbackButtons}
                 />
                 <ListenControl
                   icon={faHeartBroken}
                   title="Hate"
                   action={() => this.submitFeedback(feedback === -1 ? 0 : -1)}
                   className={`${feedback === -1 ? " hated" : ""}`}
+                  disabled={!enableFeedbackButtons}
                 />
 
                 <FontAwesomeIcon
@@ -333,6 +306,7 @@ export default class ListenCard extends React.Component<
                   <ListenControl
                     title="Recommend to my followers"
                     action={this.recommendListenToFollowers}
+                    disabled={!enableRecommendButton}
                   />
                   <ListenControl
                     title="Pin this Recording"
@@ -340,12 +314,11 @@ export default class ListenCard extends React.Component<
                     dataToggle="modal"
                     dataTarget="#PinRecordingModal"
                   />
-                  {isCurrentUser ? (
-                    <ListenControl
-                      title="Delete Listen"
-                      action={this.deleteListen}
-                    />
-                  ) : null}
+                  <ListenControl
+                    disabled={!isCurrentUser}
+                    title="Delete Listen"
+                    action={isCurrentUser ? this.deleteListen : undefined}
+                  />
                 </ul>
               </>
             )}
