@@ -630,10 +630,10 @@ export default class RecentListens extends React.Component<
                       return (
                         <ListenCard
                           key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
-                          isCurrentUser={currentUser?.name === user?.name}
+                          showTimestamp
+                          showUsername={mode === "recent"}
                           isCurrentListen={this.isCurrentListen(listen)}
                           listen={listen}
-                          mode={mode}
                           currentFeedback={this.getFeedbackForRecordingMsid(
                             listen.track_metadata?.additional_info
                               ?.recording_msid
