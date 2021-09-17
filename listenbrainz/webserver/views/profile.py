@@ -3,6 +3,7 @@ from flask_wtf import FlaskForm
 
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
+from listenbrainz.db import listens_importer
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_SCOPES
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from data.model.external_service import ExternalServiceType
@@ -61,7 +62,7 @@ def reset_latest_import_timestamp():
     form = FlaskForm()
     if form.validate_on_submit():
         try:
-            db_user.reset_latest_import(current_user.musicbrainz_id)
+            listens_importer.update_latest_listened_at(current_user.id, ExternalServiceType.LASTFM, 0)
             flash.info("Latest import time reset, we'll now import all your data instead of stopping at your last imported listen.")
         except DatabaseException:
             flash.error("Something went wrong! Unable to reset latest import timestamp right now.")
@@ -107,6 +108,8 @@ def import_data():
         "profile_url": url_for('user.profile', user_name=user_data["name"]),
         "lastfm_api_url": current_app.config["LASTFM_API_URL"],
         "lastfm_api_key": current_app.config["LASTFM_API_KEY"],
+        "librefm_api_url": current_app.config["LIBREFM_API_URL"],
+        "librefm_api_key": current_app.config["LIBREFM_API_KEY"],
     }
 
     return render_template(

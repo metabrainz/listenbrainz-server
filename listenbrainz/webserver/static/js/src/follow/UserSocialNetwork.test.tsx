@@ -25,9 +25,14 @@ import UserSocialNetwork from "./UserSocialNetwork";
 import FollowerFollowingModal from "./FollowerFollowingModal";
 import SimilarUsersModal from "./SimilarUsersModal";
 
-import * as props from "./__mocks__/userSocialNetworkProps.json";
+import * as userSocialNetworkProps from "./__mocks__/userSocialNetworkProps.json";
 
 jest.useFakeTimers();
+
+const props = {
+  ...userSocialNetworkProps,
+  newAlert: jest.fn(),
+};
 
 const similarUsers = [
   {

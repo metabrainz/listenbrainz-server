@@ -26,7 +26,7 @@ const UserListModalEntry = (props: UserListModalEntryProps) => {
       <div key={user.name}>
         <div>
           <a
-            href={`/user/${user.name}`}
+            href={`/user/${user.name}/reports/?range=month`}
             target="_blank"
             rel="noopener noreferrer"
           >
