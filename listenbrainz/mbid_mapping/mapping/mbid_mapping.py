@@ -91,6 +91,8 @@ def create_temp_release_table(conn):
 
     with conn.cursor() as curs:
         log("mbid mapping temp tables: Create temp release table: select")
+        
+        # The 1 in the WHERE clause refers to MB's Various Artists ID of 1 -- all the various artist albums.
         query = """             SELECT r.id AS release
                                   FROM musicbrainz.release_group rg
                                   JOIN musicbrainz.release r ON rg.id = r.release_group
