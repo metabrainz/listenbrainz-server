@@ -12,6 +12,7 @@ from solrq import Q
 from icecream import ic
 import requests
 from fuzzywuzzy.fuzz import partial_ratio as fuzzy
+from unidecode import unidecode
 
 
 SOLR_HOST = "localhost"
@@ -21,6 +22,12 @@ SOLR_CORE = "release-index"
 LISTENBRAINZ_HOST = "https://api.listenbrainz.org"
 
 MIN_NUMBER_OF_RECORDINGS = 3
+RELEASE_ACCEPT_THRESHOLD = 85
+
+
+def normalize(str):
+    return unidecode(str.lower())
+
 
 def solr_search(artist, release, recordings, track_count=None, debug=False):
 
@@ -41,12 +48,11 @@ def solr_search(artist, release, recordings, track_count=None, debug=False):
             print("  %s %8s %.3f %-30s %-30s" % (doc['id'], doc['rank'][0], doc['score'], doc['title'][0], doc['ac_name'][0]))
 
 
-ACCEPT_THRESHOLD = 85
 def lookup_album_on_solr(lb_release, debug=False):
 
-    query = {"title": lb_release["release_name"],
-             "ac_name": lb_release["artist_credit_name"],
-             "recording_names": lb_release["recordings"] }
+    query = {"title": normalize(lb_release["release_name"]),
+             "ac_name": normalize(lb_release["artist_credit_name"]),
+             "recording_names": [ normalize(r) for r in lb_release["recordings"]] }
 
     solr = pysolr.Solr('http://%s:%d/solr/%s' % (SOLR_HOST, SOLR_PORT, SOLR_CORE), always_commit=True)
     docs = solr.search(Q(**query), fl="*,score", debug="true")
@@ -64,7 +70,7 @@ def lookup_album_on_solr(lb_release, debug=False):
         if not last_score:
             last_score = score
 
-        if score < ACCEPT_THRESHOLD or score < last_score:
+        if score < RELEASE_ACCEPT_THRESHOLD or score < last_score:
             break
 
         if reject:
@@ -100,10 +106,10 @@ def musicbrainz_sanity_check(release_mbid):
     release = musicbrainz_lookup(release_mbid)
     recording_names = []
     for i, track in enumerate(release["recordings"]):
-        recording_names.append("%d %s " % (i, track))
+        recording_names.append("%d %s " % (i, normalize(track)))
 
-    rel = { "artist_credit_name": release["artist_credit_name"],
-            "release_name": release["release_name"],
+    rel = { "artist_credit_name": normalize(release["artist_credit_name"]),
+            "release_name": normalize(release["release_name"]),
             "recordings" : recording_names }
 
     return lookup_album_on_solr(rel)
@@ -116,13 +122,12 @@ def load_listens_for_user(user_name, ts=None, count=100):
 
     r = requests.get("%s/1/user/%s/listens" % (LISTENBRAINZ_HOST, user_name), params={'max_ts':ts, "count": count})
     if r.status_code != 200:
-        print("Failed to fetch Listens")
         return []
 
     return r.json()["payload"]["listens"]
 
 
-def listenbrainz_release_filter(user_name, count, ts, debug=False):
+def listenbrainz_release_filter(user_name, count, ts=None, debug=False):
 
 # TODO: Check if artist varies too much
 #       Check if a track is just on repeat
@@ -135,6 +140,9 @@ def listenbrainz_release_filter(user_name, count, ts, debug=False):
     matches = []
     while num_processed < count:
         listens = load_listens_for_user(user_name, ts)
+        if not listens:
+            break
+
         for listen in listens:
             artist = listen["track_metadata"]["artist_name"]
             if "release_name" in listen["track_metadata"]:
@@ -147,24 +155,26 @@ def listenbrainz_release_filter(user_name, count, ts, debug=False):
                     recording_artists = []
                     tracks.reverse()
                     for i, track in enumerate(tracks):
-                        recording_names.append("%d %s " % (i+1, track["track_metadata"]["track_name"].replace("\n", " ")))
+                        recording_names.append("%d %s " % (i+1, normalize(track["track_metadata"]["track_name"]).replace("\n", " ")))
                         recording_artists.append(track["track_metadata"]["artist_name"])
 
 
-                    rel = { "artist_credit_name": last_artist,
-                            "release_name": last_release,
+                    rel = { "artist_credit_name": normalize(last_artist),
+                            "release_name": normalize(last_release),
                             "recordings" : recording_names,
                             "recording_artists": recording_artists }
-                    solr_doc = lookup_album_on_solr(rel, True)
+                    solr_doc = lookup_album_on_solr(rel, debug)
                     if solr_doc:
                         if debug:
                             print("Accepted fuzzy score: %d rank %s\n" % (solr_doc["fuzzy"], solr_doc["rank"][0]))
-                        matches.append({ "artist_credit_name": solr_doc["ac_name"],
-                                         "artist_credit_id": solr_doc["ac_id"],
-                                         "release_mbid": solr_doc["release_mbid"],
-                                         "release_name": solr_doc["title"],
-                                         "recording_names": solr_doc["recording_names"],
-                                         "release_actist_credit_names": solr_doc["release_ac_names"] })
+
+                        matches.append({ "artist_credit_name": solr_doc["ac_name"][0],
+                                         "artist_credit_id": solr_doc["ac_id"][0],
+                                         "release_mbid": solr_doc["release_mbid"][0],
+                                         "release_name": solr_doc["title"][0],
+                                         "recording_names": solr_doc["recording_names"][0],
+                                         "release_artist_credit_names": solr_doc["release_ac_names"][0] if "release_ac_names" in solr_doc else "",
+                                         "listened_at": tracks[0]["listened_at"]})
 
                 tracks = []
             
@@ -180,8 +190,6 @@ def listenbrainz_release_filter(user_name, count, ts, debug=False):
 
 MINIMUM_TRACK_MATCH = 60
 def fuzzy_release_compare(mb_release, lb_release, debug=False):
-
-# TODO: unaccent
 
     artist_weight = .17
     release_weight = .17
@@ -221,10 +229,11 @@ def fuzzy_release_compare(mb_release, lb_release, debug=False):
     if debug:
         print("%3d total, rank %s" % (score, mb_release["rank"]), end='')
 
-    if reject:
+    if reject and debug:
         print(" *** REJECT!", end="")
 
-    print("\n")
+    if debug:
+        print("\n")
 
     return (score, reject)
 
