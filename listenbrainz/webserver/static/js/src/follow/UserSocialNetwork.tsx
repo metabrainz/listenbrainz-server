@@ -7,6 +7,11 @@ import SimilarUsersModal from "./SimilarUsersModal";
 export type UserSocialNetworkProps = {
   user: ListenBrainzUser;
   loggedInUser: ListenBrainzUser | null;
+  newAlert: (
+    alertType: AlertType,
+    title: string,
+    message: string | JSX.Element
+  ) => void;
 };
 
 type UserSocialNetworkState = {
@@ -54,8 +59,8 @@ export default class UserSocialNetwork extends React.Component<
         similarUsersList,
       });
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error(err);
+      const { newAlert } = this.props;
+      newAlert("danger", "Error while fetching followers", err.toString());
     }
   };
 
@@ -72,8 +77,8 @@ export default class UserSocialNetwork extends React.Component<
 
       this.setState({ followerList: followers });
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error(err);
+      const { newAlert } = this.props;
+      newAlert("danger", "Error while fetching followers", err.toString());
     }
   };
 
@@ -87,8 +92,8 @@ export default class UserSocialNetwork extends React.Component<
 
       this.setState({ followingList: following });
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error(err);
+      const { newAlert } = this.props;
+      newAlert("danger", "Error while fetching followers", err.toString());
     }
   };
 

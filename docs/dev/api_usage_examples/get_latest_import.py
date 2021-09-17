@@ -7,11 +7,12 @@ AUTH_HEADER = {
     "Authorization": "Token {0}".format(TOKEN)
 }
 
-def get_latest_import(username):
+def get_latest_import(username, service="lastfm"):
     """Gets the latest import timestamp of a given user.
 
     Args:
         username: User to get latest import time of.
+        service: service to get latest import time of.
 
     Returns:
         A Unix timestamp if there's an OK status.
@@ -25,6 +26,7 @@ def get_latest_import(username):
         url="http://{0}/1/latest-import".format(ROOT),
         params={
             "user_name": username,
+            "service": service
         },
         headers=AUTH_HEADER,
     )

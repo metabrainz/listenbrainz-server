@@ -291,9 +291,12 @@ export default class APIService {
    *  Send a GET request to the ListenBrainz server to get the latest import time
    *  from previous imports for the user.
    */
-  getLatestImport = async (userName: string): Promise<number> => {
+  getLatestImport = async (
+    userName: string,
+    service: ImportService
+  ): Promise<number> => {
     const url = encodeURI(
-      `${this.APIBaseURI}/latest-import?user_name=${userName}`
+      `${this.APIBaseURI}/latest-import?user_name=${userName}&service=${service}`
     );
     const response = await fetch(url, {
       method: "GET",
@@ -310,6 +313,7 @@ export default class APIService {
    */
   setLatestImport = async (
     userToken: string,
+    service: ImportService,
     timestamp: number
   ): Promise<number> => {
     const url = `${this.APIBaseURI}/latest-import`;
@@ -319,7 +323,7 @@ export default class APIService {
         Authorization: `Token ${userToken}`,
         "Content-Type": "application/json;charset=UTF-8",
       },
-      body: JSON.stringify({ ts: timestamp }),
+      body: JSON.stringify({ ts: timestamp, service }),
     });
     await this.checkStatus(response);
     return response.status; // Return true if timestamp is updated

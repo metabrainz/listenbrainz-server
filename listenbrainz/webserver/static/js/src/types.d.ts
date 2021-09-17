@@ -66,6 +66,8 @@ declare type ListenBrainzUser = {
   auth_token?: string;
 };
 
+declare type ImportService = "lastfm" | "librefm";
+
 declare type ListenType = "single" | "playingNow" | "import";
 
 declare type BrainzPlayDirection = "up" | "down" | "hidden";
@@ -535,6 +537,12 @@ type SimilarUser = {
 };
 
 type ReviewableEntityType = "recording" | "artist" | "release_group";
+
+type ReviewableEntity = {
+  type: ReviewableEntityType;
+  name?: string | null;
+  mbid: string;
+};
 
 type CritiqueBrainzReview = {
   entity_id: string;
