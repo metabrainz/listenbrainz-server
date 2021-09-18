@@ -219,7 +219,7 @@ def create_messages(data, entity: str, stats_range: str, from_ts: float, to_ts: 
         'to_ts': to_ts,
         'entity': entity,
     }
-    entry = data[0]['stats']
+    entry = next(data)['stats']
     _dict = entry.asDict(recursive=True)
     message['count'] = len(entry)
 
