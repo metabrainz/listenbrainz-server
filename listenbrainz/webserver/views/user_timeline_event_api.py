@@ -267,7 +267,7 @@ def delete_feed_events(user_name):
     '''
     # TODO: maybe implement logging once approved
     user = validate_auth_header()
-    if user_name != user['musicbrainz_id']:
+    if (user_name != user['musicbrainz_id']) or (user["musicbrainz_id"] not in current_app.config['APPROVED_PLAYLIST_BOTS']):
         raise APIUnauthorized("You don't have permissions to delete from this user's timeline.")
 
     try:
