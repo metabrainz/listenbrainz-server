@@ -12,7 +12,6 @@ import pycountry
 import requests
 
 from data.model.common_stat import StatApi
-from data.model.sitewide_artist_stat import SitewideArtistStatJson
 from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapRecord
 from flask import Blueprint, current_app, jsonify, request
 
@@ -699,7 +698,7 @@ def _is_valid_range(stats_range: str) -> bool:
 
 
 def _get_sitewide_entity_list(
-    stats: Union[SitewideArtistStatJson],
+    stats,
     entity: str,
     offset: int,
     count: int,
