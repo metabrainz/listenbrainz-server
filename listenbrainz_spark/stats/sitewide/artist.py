@@ -2,7 +2,7 @@ from listenbrainz_spark.stats import run_query
 from pyspark.sql.functions import collect_list, sort_array, struct
 
 
-def get_artists(table: str, limit: int):
+def get_artists(table: str, limit: int = 1000):
     """ Get artist information (artist_name, artist_msid etc) for every time range specified
         the "time_range" table ordered by listen count
 
