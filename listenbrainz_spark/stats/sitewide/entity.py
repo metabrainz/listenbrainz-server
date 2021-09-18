@@ -39,8 +39,8 @@ def get_entity_week(entity: str) -> Optional[List[SitewideEntityStatMessage]]:
 
     handler = entity_handler_map[entity]
     data = handler(table_name)
-    messages = create_message(data=data, entity=entity, stats_range='week',
-                              from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
+    messages = create_messages(data=data, entity=entity, stats_range='week',
+                               from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
     logger.debug("Done!")
 
