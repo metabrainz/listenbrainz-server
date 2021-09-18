@@ -38,6 +38,11 @@ from listenbrainz import db
 from pydantic import ValidationError
 
 
+# sitewide statistics are stored in the user statistics table
+# as statistics for a special user with the following user_id
+SITEWIDE_STATS_USER_ID = 15753
+
+
 def get_timestamp_for_last_user_stats_update():
     """ Get the time when the user stats table was last updated
     """
@@ -79,25 +84,14 @@ def insert_user_jsonb_data(user_id: int, stats_type: str, stats: StatRange):
         })
 
 
-def _insert_sitewide_jsonb_data(stats_range: str, column: str, data: dict):
+def insert_sitewide_jsonb_data(stats_type: str, stats: StatRange):
     """ Inserts jsonb data into the given column
 
         Args:
-            stats_range: the range for which the stats have been calculated
-            column: the column in the database to insert into
-            data: the data to be inserted
+            stats_type: the type of entity for which to insert stats in
+            stats: the data to be inserted
     """
-    with db.engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
-            INSERT INTO statistics.sitewide (stats_range, {column})
-                 VALUES (:stats_range, :data)
-            ON CONFLICT (stats_range)
-          DO UPDATE SET {column} = COALESCE(statistics.sitewide.{column} || :data, :data),
-                        last_updated = NOW()
-            """.format(column=column)), {
-            'stats_range': stats_range,
-            'data': json.dumps(data)
-        })
+    insert_user_jsonb_data(SITEWIDE_STATS_USER_ID, stats_type, stats)
 
 
 def insert_sitewide_artists(stats_range: str, artists: SitewideArtistStatJson):

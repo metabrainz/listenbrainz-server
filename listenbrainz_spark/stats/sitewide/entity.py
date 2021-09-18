@@ -25,40 +25,26 @@ entity_model_map = {
     'artists': SitewideArtistRecord
 }
 
-time_range_schema = ["time_range", "from_ts", "to_ts"]
-
 
 def get_entity_week(entity: str) -> Optional[List[SitewideEntityStatMessage]]:
     """ Get the weekly sitewide top entity """
-    logger.debug(f"Calculating sitewide_{entity}_week...")
+    logger.debug("Calculating sitewide_{}_week...".format(entity))
 
     to_date = get_last_monday(get_latest_listen_ts())
-    # Set time to 00:00
-    to_date = datetime(to_date.year, to_date.month, to_date.day)
-    from_date = offset_days(to_date, 14)
-    day = from_date
-
-    # Genarate a dataframe containing days of last and current week along with start and end time
-    time_range = []
-    while day < to_date:
-        time_range.append([day.strftime('%A %d %B %Y'), int(day.timestamp()), int(get_day_end(day).timestamp())])
-        day = offset_days(day, 1, shift_backwards=False)
-
-    time_range_df = listenbrainz_spark.session.createDataFrame(time_range, schema=time_range_schema)
-    time_range_df.createOrReplaceTempView('time_range')
+    from_date = offset_days(to_date, 7)
 
     listens_df = get_listens_from_new_dump(from_date, to_date)
-    table_name = f'sitewide_{entity}_week'
+    table_name = 'sitewide_{}_week'.format(entity)
     listens_df.createOrReplaceTempView(table_name)
 
     handler = entity_handler_map[entity]
-    data = handler(table_name, "EEEE dd MMMM yyyy")
-    message = create_message(data=data, entity=entity, stats_range='week',
-                             from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
+    data = handler(table_name)
+    messages = create_message(data=data, entity=entity, stats_range='week',
+                              from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
     logger.debug("Done!")
 
-    return message
+    return messages
 
 
 def get_entity_month(entity: str) -> Optional[List[SitewideEntityStatMessage]]:
@@ -208,4 +194,48 @@ def create_message(data, entity: str, stats_range: str, from_ts: int, to_ts: int
                                  Data: {data}""".format(stats_range=stats_range, entity=entity,
                                                         data=json.dumps(message, indent=4)),
                                  exc_info=True)
+        return None
+
+
+def create_messages(data, entity: str, stats_range: str, from_ts: float, to_ts: float):
+    """
+    Create messages to send the data to the webserver via RabbitMQ
+
+    Args:
+        data (iterator): Data to sent to the webserver
+        entity: The entity for which statistics are calculated, i.e 'artists',
+            'releases' or 'recordings'
+        stats_range: The range for which the statistics have been calculated
+        from_ts: The UNIX timestamp of start time of the stats
+        to_ts: The UNIX timestamp of end time of the stats
+
+    Returns:
+        messages: A list of messages to be sent via RabbitMQ
+    """
+    message = {
+        'type': 'sitewide_entity',
+        'stats_range': stats_range,
+        'from_ts': from_ts,
+        'to_ts': to_ts,
+        'entity': entity,
+    }
+    entry = data[0]['stats']
+    _dict = entry.asDict(recursive=True)
+    message['count'] = len(entry)
+
+    entity_list = []
+    for item in _dict[entity]:
+        try:
+            entity_list.append(entity_model_map[entity](**item))
+        except ValidationError:
+            logger.error("Invalid entry in entity stats", exc_info=True)
+    message['data'] = entity_list
+
+    try:
+        model = SitewideEntityStatMessage(**message)
+        result = model.dict(exclude_none=True)
+        return [result]
+    except ValidationError:
+        logger.error(f"""ValidationError while calculating {stats_range} sitewide top {entity}. 
+        Data: {json.dumps(message, indent=4)}""", exc_info=True)
         return None
