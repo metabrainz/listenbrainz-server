@@ -27,8 +27,6 @@ from typing import Optional
 import sqlalchemy
 
 from data.model.common_stat import StatRange, StatApi
-from data.model.sitewide_artist_stat import (SitewideArtistStat,
-                                             SitewideArtistStatJson)
 from data.model.user_artist_map import UserArtistMapRecord
 from data.model.user_daily_activity import UserDailyActivityRecord
 from data.model.user_entity import UserEntityRecord
@@ -92,19 +90,6 @@ def insert_sitewide_jsonb_data(stats_type: str, stats: StatRange):
             stats: the data to be inserted
     """
     insert_user_jsonb_data(SITEWIDE_STATS_USER_ID, stats_type, stats)
-
-
-def insert_sitewide_artists(stats_range: str, artists: SitewideArtistStatJson):
-    """Inserts sitewide artist stats calculated from Spark into the database.
-
-       If stats are already present for a time range, they are updated to the new
-       values passed.
-
-       Args: stats_range: the range for which the stats have been calculated,
-             artists: the top artists for a particular stats_range
-    """
-    _insert_sitewide_jsonb_data(
-        stats_range, column='artist', data=artists.dict(exclude_none=True))
 
 
 def get_user_stats(user_id: int, stats_range: str, stats_type: str) -> Optional[StatApi[UserEntityRecord]]:
@@ -202,7 +187,7 @@ def get_user_artist_map(user_id: int, stats_range: str) -> Optional[StatApi[User
     return get_user_activity_stats(user_id, stats_range, 'artist_map', StatApi[UserArtistMapRecord])
 
 
-def get_sitewide_artists(stats_range: str) -> Optional[SitewideArtistStat]:
+def get_sitewide_artists(stats_range: str):
     """ Get sitewide top artists for from the DB.
 
         Args:
