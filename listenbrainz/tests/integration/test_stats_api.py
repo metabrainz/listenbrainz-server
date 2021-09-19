@@ -10,7 +10,6 @@ import listenbrainz.db.user as db_user
 import requests_mock
 
 from data.model.common_stat import StatRange
-from data.model.sitewide_artist_stat import SitewideArtistStatJson
 from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapRecord
 from flask import current_app, url_for
 
@@ -33,6 +32,7 @@ class StatsAPITestCase(IntegrationTestCase):
     def setUp(self):
         super(StatsAPITestCase, self).setUp()
         self.user = db_user.get_or_create(1, 'testuserpleaseignore')
+        self.sitewide_user = db_user.get_or_create(db_stats.SITEWIDE_STATS_USER_ID, "listenbrainz-stats-user")
 
         # Insert user top artists
         with open(self.path_to_data_file('user_top_artists_db_data_for_api_test.json'), 'r') as f:
@@ -73,7 +73,7 @@ class StatsAPITestCase(IntegrationTestCase):
         # Insert all_time sitewide top artists
         with open(self.path_to_data_file('sitewide_top_artists_db_data_for_api_test.json'), 'r') as f:
             self.sitewide_artist_payload = json.load(f)
-        db_stats.insert_sitewide_artists('all_time', SitewideArtistStatJson(**self.sitewide_artist_payload))
+        db_stats.insert_sitewide_jsonb_data('artists', StatRange[UserEntityRecord](**self.sitewide_artist_payload))
 
     def tearDown(self):
         r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
@@ -1189,7 +1189,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('sitewide_top_artists_db_data_for_api_test_too_many.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_sitewide_artists('all_time', SitewideArtistStatJson(**payload))
+        db_stats.insert_sitewide_jsonb_data('artists', StatRange[UserEntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_sitewide_artist'),
                                    query_string={'count': 101})
@@ -1215,7 +1215,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('sitewide_top_artists_db_data_for_api_test_week.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_sitewide_artists('week', SitewideArtistStatJson(**payload))
+        db_stats.insert_sitewide_jsonb_data('artists', StatRange[UserEntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_sitewide_artist'), query_string={'range': 'week'})
         self.assert200(response)
@@ -1240,7 +1240,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('sitewide_top_artists_db_data_for_api_test_month.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_sitewide_artists('month', SitewideArtistStatJson(**payload))
+        db_stats.insert_sitewide_jsonb_data('artists', StatRange[UserEntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_sitewide_artist'), query_string={'range': 'month'})
         self.assert200(response)
@@ -1265,7 +1265,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('sitewide_top_artists_db_data_for_api_test_year.json'), 'r') as f:
             payload = json.load(f)
 
-        db_stats.insert_sitewide_artists('year', SitewideArtistStatJson(**payload))
+        db_stats.insert_sitewide_jsonb_data('artists', StatRange[UserEntityRecord](**payload))
 
         response = self.client.get(url_for('stats_api_v1.get_sitewide_artist'), query_string={'range': 'year'})
         self.assert200(response)
@@ -1357,6 +1357,6 @@ class StatsAPITestCase(IntegrationTestCase):
 
     def test_sitewide_artist_stat_not_calculated(self):
         """ Test to make sure that the API sends 204 if statistics have not been calculated yet """
-        db_stats.delete_sitewide_stats('all_time')
+        db_stats.delete_sitewide_stats()
         response = self.client.get(url_for('stats_api_v1.get_sitewide_artist'))
         self.assertEqual(response.status_code, 204)

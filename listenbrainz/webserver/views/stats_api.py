@@ -1,10 +1,8 @@
-import bisect
 import calendar
-import json
 from collections import defaultdict
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Dict, List, Tuple, Union, Iterable
+from typing import Dict, List, Tuple
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
@@ -12,16 +10,14 @@ import pycountry
 import requests
 
 from data.model.common_stat import StatApi
-from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapRecord
+from data.model.user_artist_map import UserArtistMapRecord
 from flask import Blueprint, current_app, jsonify, request
 
 from data.model.user_entity import UserEntityRecord
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError,
-                                           APINoContent, APINotFound,
-                                           APIServiceUnavailable,
-                                           APIUnauthorized)
+                                           APINoContent, APINotFound)
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
                                                     MAX_ITEMS_PER_GET,
