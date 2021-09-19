@@ -4,7 +4,7 @@ from typing import Optional, List
 
 
 class UserArtistRecord(pydantic.BaseModel):
-    """ Each individual record for a user's artists
+    """ Each individual record for top artists
 
     Contains the artist name, MessyBrainz ID, MusicBrainz IDs and listen count.
     """

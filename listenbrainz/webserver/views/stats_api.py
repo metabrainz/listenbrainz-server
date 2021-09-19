@@ -633,19 +633,19 @@ def get_sitewide_artist():
     offset = get_non_negative_param('offset', default=0)
     count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
-    stats = db_stats.get_sitewide_artists(stats_range)
-    if stats is None or stats.data is None:
+    stats = db_stats.get_sitewide_stats(stats_range, 'artists')
+    if stats is None:
         raise APINoContent('')
 
-    entity_data = _get_sitewide_entity_list(stats.data, entity="artists", offset=offset, count=count)
+    entity_list, total_entity_count = _process_user_entity(stats, offset, count)
     return jsonify({
-        'payload': {
-            "time_ranges": entity_data,
+        "payload": {
+            "artists": entity_list,
             "range": stats_range,
             "offset": offset,
-            "count": min(count, MAX_ITEMS_PER_GET),
-            "from_ts": stats.data.from_ts,
-            "to_ts": stats.data.to_ts,
+            "count": total_entity_count,
+            "from_ts": stats.from_ts,
+            "to_ts": stats.to_ts,
             "last_updated": int(stats.last_updated.timestamp())
         }
     })
@@ -695,29 +695,6 @@ def _is_valid_range(stats_range: str) -> bool:
         result: True if given range is valid
     """
     return stats_range in StatisticsRange.__members__
-
-
-def _get_sitewide_entity_list(
-    stats,
-    entity: str,
-    offset: int,
-    count: int,
-) -> List[dict]:
-    """ Gets a list of entity records from the stat passed based on the offset and count
-    """
-    count = min(count, MAX_ITEMS_PER_GET)
-    count = count + offset
-
-    result = []
-    for time_range in stats.time_ranges:
-        result.append({
-            "time_range": time_range.time_range,
-            "from_ts": time_range.from_ts,
-            "to_ts": time_range.to_ts,
-            entity: [x.dict() for x in getattr(time_range, entity)[offset:count]]
-        })
-
-    return sorted(result, key=lambda x: x['from_ts'])
 
 
 def _get_country_wise_counts(artist_mbids: Dict[str, int]) -> List[UserArtistMapRecord]:

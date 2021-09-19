@@ -1,5 +1,4 @@
 from listenbrainz_spark.stats import run_query
-from pyspark.sql.functions import collect_list, sort_array, struct
 
 
 def get_artists(table: str, limit: int = 1000):
