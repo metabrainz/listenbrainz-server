@@ -3,8 +3,6 @@ from copy import deepcopy
 from datetime import datetime
 from unittest.mock import patch
 
-from freezegun import freeze_time
-
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import requests_mock
@@ -19,6 +17,7 @@ from data.model.user_listening_activity import UserListeningActivityRecord
 from listenbrainz.config import LISTENBRAINZ_LABS_API_URL
 from listenbrainz.tests.integration import IntegrationTestCase
 from redis import Redis
+from flask import current_app
 
 
 class MockDate(datetime):
@@ -32,7 +31,7 @@ class StatsAPITestCase(IntegrationTestCase):
     def setUp(self):
         super(StatsAPITestCase, self).setUp()
         self.user = db_user.get_or_create(1, 'testuserpleaseignore')
-        self.sitewide_user = db_user.get_or_create(db_stats.SITEWIDE_STATS_USER_ID, "listenbrainz-stats-user")
+        self.create_user_with_id(db_stats.SITEWIDE_STATS_USER_ID, 2, "listenbrainz-stats-user")
 
         # Insert user top artists
         with open(self.path_to_data_file('user_top_artists_db_data_for_api_test.json'), 'r') as f:
@@ -1172,16 +1171,16 @@ class StatsAPITestCase(IntegrationTestCase):
         received_data = json.loads(response.data)['payload']
 
         sent_data = deepcopy(self.sitewide_artist_payload)
-        for time_range in sent_data['time_ranges']:
-            time_range['artists'] = time_range['artists'][:25]
+        sent_data['artists'], sent_data['range'] = sent_data['data'][:25], sent_data['stats_range']
+        del sent_data['data'], sent_data['stats_range']
 
         expected_response = {
             'count': 25,
             'offset': 0,
-            'range': 'all_time',
             **sent_data
         }
-
+        current_app.logger.error(expected_response)
+        current_app.logger.error(received_data)
         self.assertDictContainsSubset(expected_response, received_data)
 
     def test_sitewide_artist_stat_too_many(self):
@@ -1198,13 +1197,11 @@ class StatsAPITestCase(IntegrationTestCase):
         received_data = json.loads(response.data)['payload']
 
         sent_data = payload
-        for time_range in sent_data['time_ranges']:
-            time_range['artists'] = time_range['artists'][:100]
-
+        sent_data['artists'], sent_data['range'] = sent_data['data'][:100], sent_data['stats_range']
+        del sent_data['data'], sent_data['stats_range']
         expected_response = {
             'count': 100,
             'offset': 0,
-            'range': 'all_time',
             **sent_data
         }
 
@@ -1223,13 +1220,12 @@ class StatsAPITestCase(IntegrationTestCase):
         received_data = json.loads(response.data)['payload']
 
         sent_data = payload
-        for time_range in sent_data['time_ranges']:
-            time_range['artists'] = time_range['artists'][:25]
+        sent_data['artists'], sent_data['range'] = sent_data['data'][:25], sent_data['stats_range']
+        del sent_data['data'], sent_data['stats_range']
 
         expected_response = {
             'count': 25,
             'offset': 0,
-            'range': 'week',
             **sent_data
         }
 
@@ -1248,13 +1244,12 @@ class StatsAPITestCase(IntegrationTestCase):
         received_data = json.loads(response.data)['payload']
 
         sent_data = payload
-        for time_range in sent_data['time_ranges']:
-            time_range['artists'] = time_range['artists'][:25]
+        sent_data['artists'], sent_data['range'] = sent_data['data'][:25], sent_data['stats_range']
+        del sent_data['data'], sent_data['stats_range']
 
         expected_response = {
             'count': 25,
             'offset': 0,
-            'range': 'month',
             **sent_data
         }
 
@@ -1273,13 +1268,12 @@ class StatsAPITestCase(IntegrationTestCase):
         received_data = json.loads(response.data)['payload']
 
         sent_data = payload
-        for time_range in sent_data['time_ranges']:
-            time_range['artists'] = time_range['artists'][:25]
+        sent_data['artists'], sent_data['range'] = sent_data['data'][:25], sent_data['stats_range']
+        del sent_data['data'], sent_data['stats_range']
 
         expected_response = {
             'count': 25,
             'offset': 0,
-            'range': 'year',
             **sent_data
         }
 
@@ -1299,13 +1293,12 @@ class StatsAPITestCase(IntegrationTestCase):
         received_data = json.loads(response.data)['payload']
 
         sent_data = deepcopy(self.sitewide_artist_payload)
-        for time_range in sent_data['time_ranges']:
-            time_range['artists'] = time_range['artists'][:10]
+        sent_data['artists'], sent_data['range'] = sent_data['data'][:10], sent_data['stats_range']
+        del sent_data['data'], sent_data['stats_range']
 
         expected_response = {
             'count': 10,
             'offset': 0,
-            'range': 'all_time',
             **sent_data
         }
 
@@ -1331,13 +1324,11 @@ class StatsAPITestCase(IntegrationTestCase):
         received_data = json.loads(response.data)['payload']
 
         sent_data = deepcopy(self.sitewide_artist_payload)
-        for time_range in sent_data['time_ranges']:
-            time_range['artists'] = time_range['artists'][10:]
-
+        sent_data['artists'], sent_data['range'] = sent_data['data'][10:35], sent_data['stats_range']
+        del sent_data['data'], sent_data['stats_range']
         expected_response = {
             'count': 25,
             'offset': 10,
-            'range': 'all_time',
             **sent_data
         }
 

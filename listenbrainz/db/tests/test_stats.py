@@ -5,7 +5,6 @@ from datetime import datetime, timezone
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 from data.model.common_stat import StatRange
-from data.model.sitewide_artist_stat import SitewideArtistStatJson
 from data.model.user_artist_map import UserArtistMapRecord
 from data.model.user_daily_activity import UserDailyActivityRecord
 from data.model.user_entity import UserEntityRecord
@@ -18,6 +17,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
     def setUp(self):
         DatabaseTestCase.setUp(self)
         self.user = db_user.get_or_create(1, 'stats_user')
+        self.create_user_with_id(db_stats.SITEWIDE_STATS_USER_ID, 2, "listenbrainz-stats-user")
         self.maxDiff = None
 
     def test_insert_user_artists(self):
@@ -209,9 +209,9 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         with open(self.path_to_data_file('sitewide_top_artists_db.json')) as f:
             artists_data = json.load(f)
 
-        db_stats.insert_sitewide_artists(stats_range='all_time', artists=SitewideArtistStatJson(**artists_data))
+        db_stats.insert_sitewide_jsonb_data('artists', StatRange[UserEntityRecord](**artists_data))
 
-        result = db_stats.get_sitewide_artists('all_time')
+        result = db_stats.get_sitewide_stats('all_time', 'artists')
         self.assertDictEqual(result.data.dict(), artists_data)
 
     def insert_test_data(self):
@@ -250,7 +250,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
             user_id=self.user['id'], stats_type='artist_map',
             stats=StatRange[UserArtistMapRecord](**artist_map)
         )
-        db_stats.insert_sitewide_artists('all_time', SitewideArtistStatJson(**sitewide_artists))
+        db_stats.insert_sitewide_jsonb_data('all_time', StatRange[UserEntityRecord](**sitewide_artists))
 
         return {
             'user_artists': user_artists,
@@ -300,7 +300,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
 
     def test_get_sitewide_artists(self):
         data_inserted = self.insert_test_data()
-        result = db_stats.get_sitewide_artists('all_time')
+        result = db_stats.get_sitewide_stats('all_time', 'artists')
         self.assertDictEqual(result.data.dict(), data_inserted['sitewide_artists'])
 
     def test_valid_stats_exist(self):
