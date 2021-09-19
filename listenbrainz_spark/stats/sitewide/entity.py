@@ -220,11 +220,10 @@ def create_messages(data, entity: str, stats_range: str, from_ts: float, to_ts: 
         'entity': entity,
     }
     entry = next(data)['stats']
-    _dict = entry.asDict(recursive=True)
     message['count'] = len(entry)
 
     entity_list = []
-    for item in _dict[entity]:
+    for item in entry:
         try:
             entity_list.append(entity_model_map[entity](**item))
         except ValidationError:
