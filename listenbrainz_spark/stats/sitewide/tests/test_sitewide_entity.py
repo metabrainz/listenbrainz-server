@@ -54,30 +54,6 @@ class SitewideEntityTestCase(StatsTestCase):
         mock_create_messages.assert_called_with(data='sample_test_data', entity='test', stats_range='all_time',
                                                 from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
-    # def test_create_message(self):
-    #     """ Test to check if the number of entities are clipped to top 1000 """
-    #     artists = []
-    #     for i in range(0, 2000):
-    #         artists.append({
-    #             'artist_name': 'artist_{}'.format(i),
-    #             'artist_mbids': [str(i)],
-    #             'listen_count': i
-    #         })
-    #
-    #     mock_result = MagicMock()
-    #     mock_result.asDict.return_value = {
-    #         'time_range': "range",
-    #         'artists': artists,
-    #         'from_ts': 0,
-    #         'to_ts': 1
-    #     }
-    #
-    #     message = entity.create_messages(iter([mock_result]), 'artists', 'all_time', 0, 10)
-    #
-    #     expected_list = artists[:1000]
-    #     received_list = message[0]['data'][0]['artists']
-    #     self.assertListEqual(received_list, expected_list)
-
     def test_skip_incorrect_artists_stats(self):
         """ Test to check if entries with incorrect data is skipped for top sitewide artists """
         with open(self.path_to_data_file('sitewide_top_artists_incorrect.json')) as f:
