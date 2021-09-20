@@ -554,40 +554,16 @@ def get_sitewide_artist():
 
         {
             "payload": {
-                "time_ranges": [
+                "artists": [
                     {
-                        "time_range": "April 2020",
-                        "artists": [
-                            {
-                                "artist_mbids": ["f4fdbb4c-e4b7-47a0-b83b-d91bbfcfa387"],
-                                "artist_name": "Ariana Grande",
-                                "listen_count": 519
-                            },
-                            {
-                                "artist_mbids": ["f4abc0b5-3f7a-4eff-8f78-ac078dbce533"],
-                                "artist_name": "Billie Eilish",
-                                "listen_count": 447
-                            }
-                        ],
-                        "from_ts": 1585699200,
-                        "to_ts": 1588291199,
+                        "artist_mbids": [],
+                        "artist_name": "Kanye West",
+                        "listen_count": 1305
                     },
                     {
-                        "time_range": "May 2020",
-                        "artists": [
-                            {
-                                "artist_mbids": [],
-                                "artist_name": "The Weeknd",
-                                "listen_count": 621
-                            },
-                            {
-                                "artist_mbids": [],
-                                "artist_name": "Drake",
-                                "listen_count": 554
-                            }
-                        ],
-                        "from_ts": 1588291200,
-                        "to_ts": 1590969599
+                        "artist_mbids": ["0b30341b-b59d-4979-8130-b66c0e475321"],
+                        "artist_name": "Lil Nas X",
+                        "listen_count": 1267
                     }
                 ],
                 "offset": 0,
@@ -602,9 +578,6 @@ def get_sitewide_artist():
     .. note::
         - This endpoint is currently in beta
         - ``artist_mbids`` and ``artist_msid`` are optional fields and may not be present in all the entries
-        - The example above shows the data for two days only, however we calculate the statistics for
-          the current time range and the previous time range. For example for yearly statistics the data
-          is calculated for the months in current as well as the past year.
         - We only calculate the top 1000 artists for each time period.
 
     :param count: Optional, number of artists to return for each time range,
