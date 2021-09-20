@@ -21,7 +21,7 @@ import ErrorBoundary from "./ErrorBoundary";
 import ListenCard from "./listens/ListenCard";
 import Loader from "./components/Loader";
 import PinRecordingModal from "./PinRecordingModal";
-import { getPageProps } from "./utils";
+import { getPageProps, handleNavigationClickEvent } from "./utils";
 
 export type UserFeedbackProps = {
   feedback?: Array<FeedbackResponseWithTrackMetadata>;
@@ -168,10 +168,9 @@ export default class UserFeedback extends React.Component<
   };
 
   handleClickOlder = async (event?: React.MouseEvent) => {
+    handleNavigationClickEvent(event);
+
     const { page, maxPage } = this.state;
-    if (event) {
-      event.preventDefault();
-    }
     if (page >= maxPage) {
       return;
     }
@@ -180,27 +179,22 @@ export default class UserFeedback extends React.Component<
   };
 
   handleClickOldest = async (event?: React.MouseEvent) => {
-    const { maxPage } = this.state;
-    if (event) {
-      event.preventDefault();
-    }
+    handleNavigationClickEvent(event);
 
+    const { maxPage } = this.state;
     await this.getFeedbackItemsFromAPI(maxPage);
   };
 
   handleClickNewest = async (event?: React.MouseEvent) => {
-    if (event) {
-      event.preventDefault();
-    }
+    handleNavigationClickEvent(event);
 
     await this.getFeedbackItemsFromAPI(1);
   };
 
   handleClickNewer = async (event?: React.MouseEvent) => {
+    handleNavigationClickEvent(event);
+
     const { page } = this.state;
-    if (event) {
-      event.preventDefault();
-    }
     if (page === 1) {
       return;
     }
