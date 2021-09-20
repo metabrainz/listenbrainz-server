@@ -1,5 +1,6 @@
 import * as React from "react";
 import { mount } from "enzyme";
+import fetchMock from "jest-fetch-mock";
 import UserFeedback, {
   UserFeedbackProps,
   UserFeedbackState,
@@ -7,6 +8,7 @@ import UserFeedback, {
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import APIService from "./APIService";
 import * as userFeedbackProps from "./__mocks__/userFeedbackProps.json";
+import * as userFeedbackAPIResponse from "./__mocks__/userFeedbackAPIResponse.json";
 import ListenCard from "./listens/ListenCard";
 
 const { totalCount, user, feedback, youtube, spotify } = userFeedbackProps;
@@ -74,8 +76,7 @@ describe("UserFeedback", () => {
     const loadFeedbackSpy = jest.spyOn(instance, "loadFeedback");
     const getFeedbackSpy = jest.spyOn(instance, "getFeedback");
     const apiGetFeedbackSpy = jest.spyOn(
-      // @ts-ignore
-      instance.APIService,
+      instance.context.APIService,
       "getFeedbackForUserForRecordings"
     );
     await instance.componentDidMount();
@@ -169,5 +170,103 @@ describe("UserFeedback", () => {
     expect(
       fourthListenCard.find("[title='Hate']").first().hasClass("hated")
     ).toBeFalsy();
+  });
+  it("updates recordingFeedbackMap when clicking on a feedback button", async () => {
+    jest.useFakeTimers();
+    const wrapper = mount<UserFeedback>(
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <UserFeedback {...props} />
+      </GlobalAppContext.Provider>
+    );
+    const instance = wrapper.instance();
+    const listens = wrapper.find(ListenCard);
+    const APIsubmitFeedbackSpy = jest
+      .spyOn(instance.context.APIService, "submitFeedback")
+      .mockResolvedValue(200);
+    const updateFeedbackSpy = jest.spyOn(instance, "updateFeedback");
+    await flushPromises();
+
+    expect(instance.state.recordingFeedbackMap).toEqual({});
+    const firstListenCard = listens.at(0);
+    const inst: ListenCard = firstListenCard.instance() as ListenCard;
+    const listenCardsubmitFeedbackSpy = jest.spyOn(inst, "submitFeedback");
+
+    const loveButton = firstListenCard
+      .find(".listen-controls")
+      .first()
+      .find("[title='Love']")
+      .first();
+
+    // simulate clicking on "love" button
+    loveButton.simulate("click");
+    await flushPromises();
+
+    expect(APIsubmitFeedbackSpy).toHaveBeenCalledWith(
+      "lalala",
+      "8aa379ad-852e-4794-9c01-64959f5d0b17",
+      1
+    );
+    expect(listenCardsubmitFeedbackSpy).toHaveBeenCalledWith(1);
+
+    expect(instance.state.recordingFeedbackMap).toEqual({
+      "8aa379ad-852e-4794-9c01-64959f5d0b17": 1,
+    });
+    expect(updateFeedbackSpy).toHaveBeenCalledWith(
+      "8aa379ad-852e-4794-9c01-64959f5d0b17",
+      1
+    );
+  });
+  describe("getFeedbackItemsFromAPI", () => {
+    it("calls the API with the right parameters", async () => {
+      const wrapper = mount<UserFeedback>(
+        <GlobalAppContext.Provider value={mountOptions.context}>
+          <UserFeedback {...props} />
+        </GlobalAppContext.Provider>
+      );
+      const instance = wrapper.instance();
+      const apiGetFeedbackSpy = jest.spyOn(
+        instance.context.APIService,
+        "getFeedbackForUser"
+      );
+
+      await instance.getFeedbackItemsFromAPI(1, false);
+      expect(apiGetFeedbackSpy).toHaveBeenCalledTimes(1);
+      expect(apiGetFeedbackSpy).toHaveBeenCalledWith("mr_monkey", 0, 25, 1);
+      apiGetFeedbackSpy.mockClear();
+
+      await instance.getFeedbackItemsFromAPI(2, false, -1);
+      expect(apiGetFeedbackSpy).toHaveBeenCalledTimes(1);
+      expect(apiGetFeedbackSpy).toHaveBeenCalledWith("mr_monkey", 25, 25, -1);
+    });
+
+    it("sets the state, loads feedback for user and updates browser history", async () => {
+      const wrapper = mount<UserFeedback>(
+        <GlobalAppContext.Provider value={mountOptions.context}>
+          <UserFeedback {...props} />
+        </GlobalAppContext.Provider>
+      );
+      const instance = wrapper.instance();
+      const loadFeedbackSpy = jest.spyOn(instance, "loadFeedback");
+      const pushStateSpy = jest.spyOn(window.history, "pushState");
+      await flushPromises();
+
+      // Initially set to 1 page (15 listens), after API response should be 2 pages
+      expect(instance.state.maxPage).toEqual(1);
+      expect(instance.state.feedback).not.toEqual(
+        userFeedbackAPIResponse.feedback
+      );
+
+      fetchMock.mockResponseOnce(JSON.stringify(userFeedbackAPIResponse));
+      await instance.getFeedbackItemsFromAPI(1, true);
+      await flushPromises();
+
+      expect(instance.state.feedback).toEqual(userFeedbackAPIResponse.feedback);
+      expect(instance.state.maxPage).toEqual(2);
+      expect(instance.state.selectedFeedbackScore).toEqual(1);
+      expect(instance.state.loading).toEqual(false);
+
+      expect(loadFeedbackSpy).toHaveBeenCalledTimes(1);
+      expect(pushStateSpy).toHaveBeenCalledWith(null, "", "?page=1&score=1");
+    });
   });
 });

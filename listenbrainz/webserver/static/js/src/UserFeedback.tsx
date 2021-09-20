@@ -51,14 +51,13 @@ export default class UserFeedback extends React.Component<
     feedbackItem: FeedbackResponseWithTrackMetadata
   ): BaseListenFormat => {
     const listenFormat: BaseListenFormat = {
-      listened_at: feedbackItem?.created ?? 0,
-      track_metadata: feedbackItem.track_metadata,
+      listened_at: feedbackItem.created ?? 0,
+      track_metadata: { ...feedbackItem.track_metadata },
     };
-    set(
-      listenFormat,
-      "track_metadata.additional_info.recording_msid",
-      feedbackItem.recording_msid
-    );
+    listenFormat.track_metadata.additional_info = {
+      ...listenFormat.track_metadata.additional_info,
+      recording_msid: feedbackItem.recording_msid,
+    };
     if (!listenFormat.track_metadata.track_name) {
       listenFormat.track_metadata.track_name = `No metadata for MSID ${feedbackItem.recording_msid}`;
     }
@@ -250,7 +249,7 @@ export default class UserFeedback extends React.Component<
         window.history.pushState(
           null,
           "",
-          `?page=${[page]}&score=${selectedFeedbackScore}`
+          `?page=${page}&score=${selectedFeedbackScore}`
         );
       }
 
