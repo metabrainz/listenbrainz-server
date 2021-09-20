@@ -193,7 +193,6 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             data=json.dumps({"metadata": metadata_not}),
             headers={'Authorization': 'Token {}'.format(approved_user['auth_token'])}
         )
-
         # Adding recording recommendation to db
         new_user = db_user.get_or_create(2, "riksucks")
         metadata_rec = {
@@ -207,7 +206,6 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             data=json.dumps({'metadata': metadata_rec}),
             headers={'Authorization': 'Token {}'.format(new_user['auth_token'])},
         )
-
         # Checking if recording recommendation exists in db or not
         events = db_user_timeline_event.get_user_track_recommendation_events(
             user_id=new_user["id"],
@@ -228,8 +226,11 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(UserTimelineEventType.NOTIFICATION.value, event_not["event_type"])
 
         # Deleting notification
-        db_user_timeline_event.delete_user_recommendation_notification_event(id=event_not["id"], user_id=self.user["id"])
-
+        self.client.post(
+            url_for('user_timeline_event_api_bp.delete_feed_events', user_name=self.user["musicbrainz_id"]),
+            data=json.dumps({'event_type': UserTimelineEventType.NOTIFICATION.value, 'id': event_not["id"]}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
+        )
         # Checking if notification still exists
         r_not = self.client.get(
             url_for('user_timeline_event_api_bp.user_feed', user_name=self.user['musicbrainz_id']),
@@ -240,8 +241,11 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(self.user["musicbrainz_id"], payload_not["user_id"])
 
         # Deleting recommendation event
-        db_user_timeline_event.delete_user_recommendation_notification_event(id=event_not["id"], user_id=self.user["id"])
-
+        self.client.post(
+            url_for('user_timeline_event_api_bp.delete_feed_events', user_name=new_user["musicbrainz_id"]),
+            data=json.dumps({'event_type': UserTimelineEventType.RECORDING_RECOMMENDATION.value, 'id': events[0].id}),
+            headers={'Authorization': 'Token {}'.format(new_user['auth_token'])}
+        )
         # Checking if recording reccomendation still exists
         r_rec = self.client.get(
             url_for('user_timeline_event_api_bp.user_feed', user_name=new_user['musicbrainz_id']),
