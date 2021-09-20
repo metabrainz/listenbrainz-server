@@ -185,7 +185,6 @@
 	margin-bottom: 7px;
 	display: flex;
 	flex-wrap: wrap;
-	justify-content: end;
 	
 	&.playing-now {
 		background-color: rgba(255, 252, 202, 0.3) !important ;
@@ -202,8 +201,10 @@
 		display: flex;
 		flex:1;
 	}
-	> * {
-		padding: 0 1em;
+	@media (min-width: @screen-md-min) {
+		> * {
+			padding: 0 1em;
+		}
 	}
 	
 	
@@ -244,6 +245,7 @@
 	.listen-controls-container {
 		max-width: 110px;
 		min-width: 110px;
+		margin-left: auto; // align flexbox item at flex-end
 		> * {
 			flex: 1;
 			align-self: center;
