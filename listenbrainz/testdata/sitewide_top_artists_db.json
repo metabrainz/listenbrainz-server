@@ -18,5 +18,7 @@
             "artist_msid": null
         }
     ],
-    "to_ts": 1593043183
+    "to_ts": 1593043183,
+    "stats_range": "all_time",
+    "count": 2
 }

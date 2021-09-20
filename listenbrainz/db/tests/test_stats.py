@@ -250,7 +250,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
             user_id=self.user['id'], stats_type='artist_map',
             stats=StatRange[UserArtistMapRecord](**artist_map)
         )
-        db_stats.insert_sitewide_jsonb_data('all_time', StatRange[UserEntityRecord](**sitewide_artists))
+        db_stats.insert_sitewide_jsonb_data('artists', StatRange[UserEntityRecord](**sitewide_artists))
 
         return {
             'user_artists': user_artists,

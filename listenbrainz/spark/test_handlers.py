@@ -188,7 +188,7 @@ class HandlersTestCase(unittest.TestCase):
             from_ts=1,
             count=1,
             stats_range="artists",
-            data=StatRange[UserArtistRecord](__root__=[
+            data=StatRecordList[UserArtistRecord](__root__=[
                 UserArtistRecord(
                     artist_name='Coldplay',
                     artist_mbid=[],
