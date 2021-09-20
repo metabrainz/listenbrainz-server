@@ -239,3 +239,54 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
         # 2 events exist, should return only one, the one that is newer
         self.assertEqual(1, len(events))
         self.assertEqual('Da Funk', events[0].metadata.track_name)
+
+    def test_delete_feed_events(self):
+        # creating recording recommendation and checking
+        event_rec = db_user_timeline_event.create_user_track_recommendation_event(
+            user_id=self.user['id'],
+            metadata=RecordingRecommendationMetadata(
+                track_name="All Caps",
+                artist_name="MF DOOM",
+                recording_msid=str(uuid.uuid4()),
+                artist_msid=str(uuid.uuid4()),
+            )
+        )
+        self.assertEqual(UserTimelineEventType.RECORDING_RECOMMENDATION, event_rec.event_type)
+        self.assertEqual(self.user['id'], event_rec.user_id)
+
+        # creating a new user for notification
+        new_user = db_user.get_or_create(2, 'riksucks')
+        message = 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'
+        event_not = db_user_timeline_event.create_user_notification_event(
+            user_id=new_user['id'],
+            metadata=NotificationMetadata(
+                creator=new_user['musicbrainz_id'],
+                message=message,
+            )
+        )
+        self.assertEqual(new_user['id'], event_not.user_id)
+        self.assertEqual(message, event_not.metadata.message)
+        self.assertEqual(new_user['musicbrainz_id'], event_not.metadata.creator)
+        self.assertEqual(UserTimelineEventType.NOTIFICATION, event_not.event_type)
+
+        # deleting recording recommendation
+        db_user_timeline_event.delete_user_recommendation_notification_event(
+            id=event_rec.id,
+            user_id=self.user["id"],
+        )
+        event_rec = db_user_timeline_event.get_user_notification_events(
+            user_id=self.user["id"],
+            count=1,
+        )
+        self.assertEqual(0, len(event_rec))
+
+        # deleting notification
+        db_user_timeline_event.delete_user_recommendation_notification_event(
+            id=event_not.id,
+            user_id=new_user["id"],
+        )
+        event_not = db_user_timeline_event.get_user_notification_events(
+            user_id=new_user["id"],
+            count=1,
+        )
+        self.assertEqual(0, len(event_not))
