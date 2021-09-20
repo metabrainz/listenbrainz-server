@@ -407,13 +407,13 @@ const countWords = (str: string): number => {
   return words.length;
 };
 
-const handleNavigationClickEvent=(event?: React.MouseEvent):void {
-    // Allow opening in new tab or window with shift or control key
-	// Otherwise prevent default 
-    if (event && !event.ctrlKey && !event.shiftKey) {
-      event.preventDefault();
-    }
+const handleNavigationClickEvent = (event?: React.MouseEvent): void => {
+  // Allow opening in new tab or window with shift or control key
+  // Otherwise prevent default
+  if (event && !event.ctrlKey && !event.shiftKey) {
+    event.preventDefault();
   }
+};
 
 export {
   searchForSpotifyTrack,

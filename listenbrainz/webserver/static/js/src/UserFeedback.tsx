@@ -255,9 +255,6 @@ export default class UserFeedback extends React.Component<
       }
 
       // Scroll window back to the top of the events container element
-      const eventContainerElement = document.querySelector(
-        "#pinned-recordings"
-      );
       if (typeof this.listensTable?.current?.scrollIntoView === "function") {
         this.listensTable.current.scrollIntoView({ behavior: "smooth" });
       }
@@ -333,13 +330,22 @@ export default class UserFeedback extends React.Component<
 
   updateFeedback = (recordingMsid: string, score: ListenFeedBack) => {
     const { recordingFeedbackMap, feedback } = this.state;
-    recordingFeedbackMap[recordingMsid] = score;
-    const index = feedback.findIndex(
-      (feedbackItem) => feedbackItem.recording_msid === recordingMsid
-    );
-    const newFeedback = clone(feedback);
-    newFeedback.splice(index, 1);
-    this.setState({ recordingFeedbackMap, feedback: newFeedback });
+    const { currentUser } = this.context;
+    const { user } = this.props;
+    const newFeedbackMap = { ...recordingFeedbackMap, [recordingMsid]: score };
+    if (currentUser?.name && currentUser.name === user?.name) {
+      const index = feedback.findIndex(
+        (feedbackItem) => feedbackItem.recording_msid === recordingMsid
+      );
+      const newFeedbackArray = clone(feedback);
+      newFeedbackArray.splice(index, 1);
+      this.setState({
+        recordingFeedbackMap: newFeedbackMap,
+        feedback: newFeedbackArray,
+      });
+    } else {
+      this.setState({ recordingFeedbackMap: newFeedbackMap });
+    }
   };
 
   updateRecordingToPin = (recordingToPin: BaseListenFormat) => {
@@ -366,7 +372,6 @@ export default class UserFeedback extends React.Component<
     } = this.state;
     const { user, newAlert } = this.props;
     const { currentUser } = this.context;
-
     const listensFromFeedback: BaseListenFormat[] = feedback.map(
       (feedbackItem) =>
         UserFeedback.RecordingMetadataToListenFormat(feedbackItem)
