@@ -4,7 +4,6 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
 <ListenCard
   currentFeedback={1}
   isCurrentListen={false}
-  isCurrentUser={true}
   listen={
     Object {
       "listened_at": 0,
@@ -18,13 +17,15 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
         "artist_name": "Moondog",
         "track_name": "Bird's Lament",
       },
+      "user_name": "test",
     }
   }
-  mode="listens"
   newAlert={[Function]}
   playListen={[Function]}
-  removeListenFromListenList={[Function]}
-  updateFeedback={[Function]}
+  removeListenCallback={[Function]}
+  showTimestamp={true}
+  showUsername={true}
+  updateFeedbackCallback={[Function]}
   updateRecordingToPin={[Function]}
 >
   <ForwardRef
@@ -48,17 +49,60 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
       }
     >
       <div
-        className="listen-details  col-xs-12"
+        className="listen-details"
       >
-        <MediaQuery
-          minWidth={768}
-        />
-        <MediaQuery
-          maxWidth={767}
-        />
+        <div
+          className="ellipsis"
+          title="Bird's Lament"
+        >
+          Bird's Lament
+        </div>
+        <span
+          className="artist-and-timestamp"
+        >
+          <span
+            className="small visible-xs-inline ellipsis"
+          >
+            <span
+              className="listen-time"
+              title=""
+            >
+              Jan 01, 1970, 1:00 AM
+            </span>
+             - 
+          </span>
+          <span
+            className="small text-muted ellipsis"
+            title="Moondog"
+          >
+            Moondog
+          </span>
+        </span>
       </div>
       <div
-        className="col-xs-4 col-sm-3 listen-controls-container"
+        className="username-and-timestamp"
+      >
+        <a
+          href="/user/test"
+          rel="noopener noreferrer"
+          target="_blank"
+          title="test"
+        >
+          test
+        </a>
+        <div
+          className="hidden-xs"
+        >
+          <span
+            className="listen-time"
+            title=""
+          >
+            Jan 01, 1970, 1:00 AM
+          </span>
+        </div>
+      </div>
+      <div
+        className="listen-controls-container"
       >
         <div
           className="listen-controls"
@@ -130,7 +174,6 @@ exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
 <ListenCard
   currentFeedback={1}
   isCurrentListen={false}
-  isCurrentUser={true}
   listen={
     Object {
       "listened_at": 0,
@@ -144,13 +187,16 @@ exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
         "artist_name": "Moondog",
         "track_name": "Bird's Lament",
       },
+      "user_name": "test",
     }
   }
   mode="recent"
   newAlert={[Function]}
   playListen={[Function]}
-  removeListenFromListenList={[Function]}
-  updateFeedback={[Function]}
+  removeListenCallback={[Function]}
+  showTimestamp={true}
+  showUsername={true}
+  updateFeedbackCallback={[Function]}
   updateRecordingToPin={[Function]}
 >
   <ForwardRef
@@ -174,23 +220,61 @@ exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
       }
     >
       <div
-        className="listen-details  col-xs-8 col-sm-9"
+        className="listen-details"
       >
-        <MediaQuery
-          minWidth={768}
-        />
-        <MediaQuery
-          maxWidth={767}
-        />
+        <div
+          className="ellipsis"
+          title="Bird's Lament"
+        >
+          Bird's Lament
+        </div>
+        <span
+          className="artist-and-timestamp"
+        >
+          <span
+            className="small visible-xs-inline ellipsis"
+          >
+            <span
+              className="listen-time"
+              title=""
+            >
+              Jan 01, 1970, 1:00 AM
+            </span>
+             - 
+          </span>
+          <span
+            className="small text-muted ellipsis"
+            title="Moondog"
+          >
+            Moondog
+          </span>
+        </span>
       </div>
       <div
-        className="col-xs-4 col-sm-3 listen-controls-container"
+        className="username-and-timestamp"
       >
         <a
-          href="/user/undefined"
+          href="/user/test"
           rel="noopener noreferrer"
           target="_blank"
-        />
+          title="test"
+        >
+          test
+        </a>
+        <div
+          className="hidden-xs"
+        >
+          <span
+            className="listen-time"
+            title=""
+          >
+            Jan 01, 1970, 1:00 AM
+          </span>
+        </div>
+      </div>
+      <div
+        className="listen-controls-container"
+      >
         <div
           className="listen-controls"
         >
@@ -261,7 +345,6 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
 <ListenCard
   currentFeedback={1}
   isCurrentListen={false}
-  isCurrentUser={true}
   listen={
     Object {
       "listened_at": 0,
@@ -275,13 +358,15 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
         "artist_name": "Moondog",
         "track_name": "Bird's Lament",
       },
+      "user_name": "test",
     }
   }
-  mode="listens"
   newAlert={[Function]}
   playListen={[Function]}
-  removeListenFromListenList={[Function]}
-  updateFeedback={[Function]}
+  removeListenCallback={[Function]}
+  showTimestamp={true}
+  showUsername={true}
+  updateFeedbackCallback={[Function]}
   updateRecordingToPin={[Function]}
 >
   <ForwardRef
@@ -305,17 +390,60 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
       }
     >
       <div
-        className="listen-details  col-xs-12"
+        className="listen-details"
       >
-        <MediaQuery
-          minWidth={768}
-        />
-        <MediaQuery
-          maxWidth={767}
-        />
+        <div
+          className="ellipsis"
+          title="Bird's Lament"
+        >
+          Bird's Lament
+        </div>
+        <span
+          className="artist-and-timestamp"
+        >
+          <span
+            className="small visible-xs-inline ellipsis"
+          >
+            <span
+              className="listen-time"
+              title=""
+            >
+              Jan 01, 1970, 1:00 AM
+            </span>
+             - 
+          </span>
+          <span
+            className="small text-muted ellipsis"
+            title="Moondog"
+          >
+            Moondog
+          </span>
+        </span>
       </div>
       <div
-        className="col-xs-4 col-sm-3 listen-controls-container"
+        className="username-and-timestamp"
+      >
+        <a
+          href="/user/test"
+          rel="noopener noreferrer"
+          target="_blank"
+          title="test"
+        >
+          test
+        </a>
+        <div
+          className="hidden-xs"
+        >
+          <span
+            className="listen-time"
+            title=""
+          >
+            Jan 01, 1970, 1:00 AM
+          </span>
+        </div>
+      </div>
+      <div
+        className="listen-controls-container"
       >
         <div
           className="listen-controls"
@@ -387,7 +515,6 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
 <ListenCard
   currentFeedback={1}
   isCurrentListen={false}
-  isCurrentUser={true}
   listen={
     Object {
       "listened_at": 0,
@@ -401,13 +528,15 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
         "artist_name": "Moondog",
         "track_name": "Bird's Lament",
       },
+      "user_name": "test",
     }
   }
-  mode="listens"
   newAlert={[Function]}
   playListen={[Function]}
-  removeListenFromListenList={[Function]}
-  updateFeedback={[Function]}
+  removeListenCallback={[Function]}
+  showTimestamp={true}
+  showUsername={true}
+  updateFeedbackCallback={[Function]}
   updateRecordingToPin={[Function]}
 >
   <ForwardRef
@@ -431,17 +560,60 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
       }
     >
       <div
-        className="listen-details  col-xs-12"
+        className="listen-details"
       >
-        <MediaQuery
-          minWidth={768}
-        />
-        <MediaQuery
-          maxWidth={767}
-        />
+        <div
+          className="ellipsis"
+          title="Bird's Lament"
+        >
+          Bird's Lament
+        </div>
+        <span
+          className="artist-and-timestamp"
+        >
+          <span
+            className="small visible-xs-inline ellipsis"
+          >
+            <span
+              className="listen-time"
+              title=""
+            >
+              Jan 01, 1970, 1:00 AM
+            </span>
+             - 
+          </span>
+          <span
+            className="small text-muted ellipsis"
+            title="Moondog"
+          >
+            Moondog
+          </span>
+        </span>
       </div>
       <div
-        className="col-xs-4 col-sm-3 listen-controls-container"
+        className="username-and-timestamp"
+      >
+        <a
+          href="/user/test"
+          rel="noopener noreferrer"
+          target="_blank"
+          title="test"
+        >
+          test
+        </a>
+        <div
+          className="hidden-xs"
+        >
+          <span
+            className="listen-time"
+            title=""
+          >
+            Jan 01, 1970, 1:00 AM
+          </span>
+        </div>
+      </div>
+      <div
+        className="listen-controls-container"
       >
         <div
           className="listen-controls"

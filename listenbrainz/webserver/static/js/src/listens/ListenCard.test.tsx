@@ -23,6 +23,7 @@ const listen: Listen = {
       artist_msid: "artist_msid",
     },
   },
+  user_name: "test",
 };
 
 const props: ListenCardProps = {
@@ -71,7 +72,7 @@ describe("ListenCard", () => {
   it("should render timestamp using preciseTimestamp", () => {
     const preciseTimestamp = jest.spyOn(utils, "preciseTimestamp");
     const wrapper = mount<ListenCard>(<ListenCard {...props} />);
-    expect(preciseTimestamp).toHaveBeenCalledTimes(2);
+    expect(preciseTimestamp).toHaveBeenCalledTimes(1);
 
     expect(wrapper).toMatchSnapshot();
   });
