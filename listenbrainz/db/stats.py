@@ -37,7 +37,8 @@ from pydantic import ValidationError
 
 
 # sitewide statistics are stored in the user statistics table
-# as statistics for a special user with the following user_id
+# as statistics for a special user with the following user_id.
+# Note: this is the id from LB's "user" table and *not musicbrainz_row_id*.
 SITEWIDE_STATS_USER_ID = 15753
 
 

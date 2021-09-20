@@ -183,11 +183,11 @@ class HandlersTestCase(unittest.TestCase):
             current_app.config['TESTING'] = False  # set testing to false to check the notifications
             handle_sitewide_entity(data)
 
-        mock_db_insert.assert_called_with('all_time', StatRange[UserEntityRecord](
+        mock_db_insert.assert_called_with('artists', StatRange[UserArtistRecord](
             to_ts=10,
             from_ts=1,
             count=1,
-            stats_range="artists",
+            stats_range='all_time',
             data=StatRecordList[UserArtistRecord](__root__=[
                 UserArtistRecord(
                     artist_name='Coldplay',

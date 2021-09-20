@@ -212,7 +212,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         db_stats.insert_sitewide_jsonb_data('artists', StatRange[UserEntityRecord](**artists_data))
 
         result = db_stats.get_sitewide_stats('all_time', 'artists')
-        self.assertDictEqual(result.data.dict(), artists_data)
+        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated'}), artists_data)
 
     def insert_test_data(self):
         """ Insert test data into the database """
@@ -301,7 +301,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
     def test_get_sitewide_artists(self):
         data_inserted = self.insert_test_data()
         result = db_stats.get_sitewide_stats('all_time', 'artists')
-        self.assertDictEqual(result.data.dict(), data_inserted['sitewide_artists'])
+        self.assertDictEqual(result.dict(exclude={'user_id', 'last_updated'}), data_inserted['sitewide_artists'])
 
     def test_valid_stats_exist(self):
         self.assertFalse(db_stats.valid_stats_exist(self.user['id'], 7))
