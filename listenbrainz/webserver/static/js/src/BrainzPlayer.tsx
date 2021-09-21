@@ -510,7 +510,7 @@ export default class BrainzPlayer extends React.Component<
     if (dataSource?.current && !dataSource.current.datasourceRecordsListens()) {
       const { listens } = this.props;
       const currentListenIndex = listens.findIndex(this.isCurrentListen);
-      const currentListen = listens[currentListenIndex];
+      const currentListen = listens.find(this.isCurrentListen);
       // Metadata we get from the datasources maybe bad quality (looking at you, Youtube… ಠ_ಠ)
       // so we use the current listen itself, and keep a trace of datasource metadata in a custom field
       const brainzplayer_metadata = {
@@ -524,18 +524,25 @@ export default class BrainzPlayer extends React.Component<
         const newListen: BaseListenFormat = {
           // convert Javascript millisecond time to unix epoch in seconds
           listened_at: Math.floor(Date.now() / 1000),
-          track_metadata: (listens[currentListenIndex] as BaseListenFormat)
-            .track_metadata,
+          track_metadata: (currentListen as BaseListenFormat)?.track_metadata,
         };
+        let musicService = dataSource.current?.name;
+        try {
+          // Browser could potentially be missing the URL constructor
+          musicService = new URL(trackURL).origin;
+        } catch (e) {
+          // Do nothing, we just fallback gracefully to dataSource name.
+        }
         // ensure the track_metadata.additional_info path exists and add brainzplayer_metadata field
         assign(newListen.track_metadata, {
           additional_info: {
             brainzplayer_metadata,
-            listening_from: "listenbrainz",
-            // TODO:  passs the GIT_COMMIT_SHA env variable to the globalprops and add it here as listening_from_version
-            // listening_from_version: "",
+            media_player: "BrainzPlayer",
+            submission_client: "BrainzPlayer",
+            // TODO:  passs the GIT_COMMIT_SHA env variable to the globalprops and add it here as submission_client_version
+            // submission_client_version:"",
+            music_service: musicService,
             origin_url: trackURL,
-            source: dataSource.current.name,
           },
         });
         const { auth_token } = currentUser;
