@@ -8,6 +8,7 @@ from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError, APINotFound,
                                            APIServiceUnavailable,
                                            APIUnauthorized)
+from listenbrainz.webserver.utils import parse_boolean_arg
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api import _parse_int_arg
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid,\
@@ -84,11 +85,14 @@ def get_feedback_for_user(user_name):
     :param offset: Optional, number of feedback items to skip from the beginning, for pagination.
         Ex. An offset of 5 means the top 5 feedback will be skipped, defaults to 0.
     :type offset: ``int``
+    :param metadata: Optional, 'true' or 'false' if this call should return the metadata for the feedback.
+    :type metadata: ``str``
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
     """
 
     score = _parse_int_arg('score')
+    metadata = parse_boolean_arg('metadata')
 
     offset = get_non_negative_param('offset', default=0)
     count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
@@ -103,10 +107,10 @@ def get_feedback_for_user(user_name):
         if score not in [-1, 1]:
             log_raise_400("Score can have a value of 1 or -1.", request.args)
 
-    feedback = db_feedback.get_feedback_for_user(user_id=user["id"], limit=count, offset=offset, score=score)
+    feedback = db_feedback.get_feedback_for_user(user_id=user["id"], limit=count, offset=offset, score=score, metadata=metadata)
     total_count = db_feedback.get_feedback_count_for_user(user["id"])
 
-    feedback = [_feedback_to_api(fb) for fb in feedback]
+    feedback = [fb.to_api() for fb in feedback]
 
     return jsonify({
         "feedback": feedback,
@@ -153,7 +157,7 @@ def get_feedback_for_recording(recording_msid):
     feedback = db_feedback.get_feedback_for_recording(recording_msid=recording_msid, limit=count, offset=offset, score=score)
     total_count = db_feedback.get_feedback_count_for_recording(recording_msid)
 
-    feedback = [_feedback_to_api(fb) for fb in feedback]
+    feedback = [fb.to_api() for fb in feedback]
 
     return jsonify({
         "feedback": feedback,
@@ -200,15 +204,8 @@ def get_feedback_for_recordings_for_user(user_name):
         log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "),
                       request.args)
 
-    feedback = [_feedback_to_api(fb) for fb in feedback]
+    feedback = [fb.to_api() for fb in feedback]
 
     return jsonify({
         "feedback": feedback,
     })
-
-
-def _feedback_to_api(fb: Feedback) -> dict:
-    fb.user_id = fb.user_name
-    del fb.user_name
-
-    return fb.dict()
