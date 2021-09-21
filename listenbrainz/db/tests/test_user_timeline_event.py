@@ -290,3 +290,22 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
             count=1,
         )
         self.assertEqual(0, len(event_not))
+
+    def test_delete_feed_events_for_something_goes_wrong(self):
+        # creating recording recommendation
+        event_rec = db_user_timeline_event.create_user_track_recommendation_event(
+            user_id=self.user['id'],
+            metadata=RecordingRecommendationMetadata(
+                track_name="All Caps",
+                artist_name="MF DOOM",
+                recording_msid=str(uuid.uuid4()),
+                artist_msid=str(uuid.uuid4()),
+            )
+        )
+        with mock.patch("listenbrainz.db.engine.connect", side_effect=Exception):
+            with self.assertRaises(DatabaseException):
+                # checking if DatabaseException is raised or not
+                db_user_timeline_event.delete_user_recommendation_notification_event(
+                    id=event_rec.id,
+                    user_id=self.user["id"],
+                )
