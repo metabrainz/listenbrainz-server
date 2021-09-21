@@ -51,7 +51,7 @@ const UserPageHeading = ({
           />
         )}
       </h2>
-      {loggedInUser && (
+      {loggedInUser && user?.name !== loggedInUser.name && (
         <ReportUserButton user={user} alreadyReported={alreadyReportedUser} />
       )}
     </>
