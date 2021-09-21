@@ -46,6 +46,10 @@ const GlobalContextMock = {
 describe("<UserFeed />", () => {
   beforeAll(() => {
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
+    // Font Awesome generates a random hash ID for each icon everytime.
+    // Mocking Math.random() fixes this
+    // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
+    jest.spyOn(global.Math, "random").mockImplementation(() => 0);
   });
   it("renders correctly", () => {
     const wrapper = mount<UserFeedPage>(

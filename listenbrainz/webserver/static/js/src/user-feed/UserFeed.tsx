@@ -18,7 +18,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { isEqual } from "lodash";
+import { isEqual, get as _get } from "lodash";
 import { sanitize } from "dompurify";
 import {
   WithAlertNotificationsInjectedProps,
@@ -30,7 +30,7 @@ import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import BrainzPlayer from "../BrainzPlayer";
 import ErrorBoundary from "../ErrorBoundary";
 import Loader from "../components/Loader";
-import TimelineEventCard from "./TimelineEventCard";
+import ListenCard from "../listens/ListenCard";
 import { getPageProps, preciseTimestamp } from "../utils";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 
@@ -56,6 +56,7 @@ type UserFeedPageState = {
   earliestEventTs?: number;
   events: TimelineEvent[];
   loading: boolean;
+  recordingFeedbackMap: RecordingFeedbackMap;
 };
 
 export default class UserFeedPage extends React.Component<
@@ -119,6 +120,7 @@ export default class UserFeedPage extends React.Component<
   constructor(props: UserFeedPageProps) {
     super(props);
     this.state = {
+      recordingFeedbackMap: {},
       nextEventTs: props.events?.[props.events.length - 1]?.created,
       previousEventTs: props.events?.[0]?.created,
       events: props.events || [],
@@ -127,11 +129,13 @@ export default class UserFeedPage extends React.Component<
   }
 
   async componentDidMount(): Promise<void> {
+    const { currentUser } = this.context;
     // Listen to browser previous/next events and load page accordingly
     window.addEventListener("popstate", this.handleURLChange);
     // Fetch initial events from API
     // TODO: Pass the required data in the props and remove this initial API call
     await this.getFeedFromAPI();
+    await this.loadFeedback();
   }
 
   componentWillUnmount() {
@@ -263,6 +267,66 @@ export default class UserFeedPage extends React.Component<
     return Boolean(currentListen && isEqual(listen, currentListen));
   };
 
+  /** User feedback mechanism (love/hate button) */
+  getFeedback = async () => {
+    const { currentUser, APIService } = this.context;
+    const { events, newAlert } = this.props;
+    let recordings = "";
+
+    if (currentUser?.name && events) {
+      events.forEach((event) => {
+        const recordingMsid = _get(
+          event,
+          "metadata.track_metadata.additional_info.recording_msid"
+        );
+        if (recordingMsid) {
+          recordings += `${recordingMsid},`;
+        }
+      });
+      try {
+        const data = await APIService.getFeedbackForUserForRecordings(
+          currentUser.name,
+          recordings
+        );
+        return data.feedback;
+      } catch (error) {
+        if (newAlert) {
+          newAlert(
+            "danger",
+            "Playback error",
+            typeof error === "object" ? error.message : error
+          );
+        }
+      }
+    }
+    return [];
+  };
+
+  loadFeedback = async () => {
+    const feedback = await this.getFeedback();
+    if (!feedback) {
+      return;
+    }
+    const recordingFeedbackMap: RecordingFeedbackMap = {};
+    feedback.forEach((fb: FeedbackResponse) => {
+      recordingFeedbackMap[fb.recording_msid] = fb.score;
+    });
+    this.setState({ recordingFeedbackMap });
+  };
+
+  getFeedbackForRecordingMsid = (
+    recordingMsid?: string | null
+  ): ListenFeedBack => {
+    const { recordingFeedbackMap } = this.state;
+    return recordingMsid ? _get(recordingFeedbackMap, recordingMsid, 0) : 0;
+  };
+
+  updateFeedback = (recordingMsid: string, score: ListenFeedBack) => {
+    const { recordingFeedbackMap } = this.state;
+    recordingFeedbackMap[recordingMsid] = score;
+    this.setState({ recordingFeedbackMap });
+  };
+
   playListen = (listen: Listen): void => {
     if (this.brainzPlayer.current) {
       this.brainzPlayer.current.playListen(listen);
@@ -275,10 +339,18 @@ export default class UserFeedPage extends React.Component<
       const { newAlert } = this.props;
       return (
         <div className="event-content">
-          <TimelineEventCard
-            className={
-              this.isCurrentListen(metadata as Listen) ? " current-listen" : ""
-            }
+          <ListenCard
+            updateFeedbackCallback={this.updateFeedback}
+            currentFeedback={this.getFeedbackForRecordingMsid(
+              _get(
+                metadata,
+                "track_metadata.additional_info.recording_msid",
+                null
+              )
+            )}
+            isCurrentListen={this.isCurrentListen(metadata as Listen)}
+            showUsername={false}
+            showTimestamp={false}
             listen={metadata as Listen}
             additionalDetails={
               (metadata as PinEventMetadata).blurb_content
@@ -411,7 +483,7 @@ export default class UserFeedPage extends React.Component<
         <div role="main">
           {/* display:flex to allow right-column to take all available height, for sticky player */}
           <div className="row" style={{ display: "flex", flexWrap: "wrap" }}>
-            <div className="col-md-7">
+            <div className="col-md-7 col-xs-12">
               <div
                 style={{
                   height: 0,
