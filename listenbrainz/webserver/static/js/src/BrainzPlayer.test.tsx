@@ -726,8 +726,9 @@ describe("BrainzPlayer", () => {
           artist_name: "Rick Astley",
           track_name: "Never Gonna Give You Up",
           additional_info: {
-            listening_from: "listenbrainz",
-            source: "spotify",
+            media_player: "BrainzPlayer",
+            submission_client: "BrainzPlayer",
+            music_service: "https://open.spotify.com",
             origin_url: "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT",
             brainzplayer_metadata: {
               artist_name: "Rick Astley",
@@ -796,8 +797,9 @@ describe("BrainzPlayer", () => {
           artist_name: "Rick Astley",
           track_name: "Never Gonna Give You Up",
           additional_info: {
-            listening_from: "listenbrainz",
-            source: "spotify",
+            media_player: "BrainzPlayer",
+            submission_client: "BrainzPlayer",
+            music_service: "https://open.spotify.com",
             origin_url: "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT",
             brainzplayer_metadata: {
               artist_name: "Rick Astley",
