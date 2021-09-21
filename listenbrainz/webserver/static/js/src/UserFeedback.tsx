@@ -435,16 +435,16 @@ export default class UserFeedback extends React.Component<
                     const listen = listensFromFeedback[index];
                     return (
                       <ListenCard
+                        showUsername={false}
+                        showTimestamp
                         key={`${feedbackItem.created}`}
-                        isCurrentUser={currentUser?.name === user?.name}
                         isCurrentListen={this.isCurrentListen(listen)}
                         listen={listen}
-                        mode="listens"
                         currentFeedback={this.getFeedbackForRecordingMsid(
                           feedbackItem.recording_msid
                         )}
                         playListen={this.playListen}
-                        updateFeedback={this.updateFeedback}
+                        updateFeedbackCallback={this.updateFeedback}
                         updateRecordingToPin={this.updateRecordingToPin}
                         newAlert={newAlert}
                       />
