@@ -28,7 +28,6 @@ from flask import Blueprint, jsonify, request, current_app
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
-import listenbrainz.db.pinned_recording as db_pinned_rec
 
 from data.model.listen import APIListen, TrackMetadata, AdditionalInfo
 from data.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, \
