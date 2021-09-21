@@ -1,4 +1,4 @@
-import { isNil, omit } from "lodash";
+import { isNil, isUndefined, omit } from "lodash";
 import APIError from "./APIError";
 
 export default class APIService {
@@ -463,6 +463,34 @@ export default class APIService {
     });
     await this.checkStatus(response);
     return response.status;
+  };
+
+  getFeedbackForUser = async (
+    userName: string,
+    offset: number = 0,
+    count?: number,
+    score?: ListenFeedBack
+  ) => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    let queryURL = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback`;
+    const queryParams: Array<string> = ["metadata=true"];
+    if (!isUndefined(offset)) {
+      queryParams.push(`offset=${offset}`);
+    }
+    if (!isUndefined(score)) {
+      queryParams.push(`score=${score}`);
+    }
+    if (!isUndefined(count)) {
+      queryParams.push(`count=${count}`);
+    }
+    if (queryParams.length) {
+      queryURL += `?${queryParams.join("&")}`;
+    }
+    const response = await fetch(queryURL);
+    await this.checkStatus(response);
+    return response.json();
   };
 
   getFeedbackForUserForRecordings = async (

@@ -25,7 +25,6 @@ from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.login import api_login_required
-from listenbrainz.webserver.views.feedback_api import _feedback_to_api
 from listenbrainz.webserver.views.user import delete_user, delete_listens_history
 from time import time
 
@@ -192,7 +191,7 @@ def export_feedback():
     # feedback into memory at once, and we can start serving the response
     # immediately.
     feedback = fetch_feedback(current_user.id)
-    output = stream_json_array(_feedback_to_api(fb=fb) for fb in feedback)
+    output = stream_json_array(fb.to_api() for fb in feedback)
 
     response = Response(stream_with_context(output))
     response.headers["Content-Disposition"] = "attachment; filename=" + filename

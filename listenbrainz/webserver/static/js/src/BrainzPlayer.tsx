@@ -63,7 +63,9 @@ export type DataSourceProps = {
 
 type BrainzPlayerProps = {
   direction: BrainzPlayDirection;
-  onCurrentListenChange: (listen: Listen | JSPFTrack) => void;
+  onCurrentListenChange: (
+    listen: BaseListenFormat | Listen | JSPFTrack
+  ) => void;
   currentListen?: Listen | JSPFTrack;
   listens: Array<Listen | JSPFTrack>;
   newAlert: (
