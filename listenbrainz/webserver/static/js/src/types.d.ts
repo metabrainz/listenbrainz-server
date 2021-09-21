@@ -45,12 +45,7 @@ interface AdditionalInfo {
 declare type BaseListenFormat = {
   listened_at: number;
   user_name?: string | null;
-  track_metadata: {
-    artist_name: string;
-    release_name?: string | null;
-    track_name: string;
-    additional_info?: AdditionalInfo;
-  };
+  track_metadata: TrackMetadata;
 };
 
 declare type Listen = BaseListenFormat & {
@@ -377,9 +372,25 @@ declare type ListenFeedBack = 1 | 0 | -1;
 declare type RecommendationFeedBack = "love" | "like" | "hate" | "dislike";
 
 declare type FeedbackResponse = {
+  created: number;
   recording_msid: string;
   score: ListenFeedBack;
   user_id: string;
+};
+declare type TrackMetadata = {
+  artist_name: string;
+  track_name: string;
+  release_name?: string;
+  recording_mbid?: string;
+  recording_msid?: string;
+  artist_msid?: string;
+  release_mbid?: string;
+  release_msid?: string;
+  additional_info?: AdditionalInfo;
+};
+
+declare type FeedbackResponseWithTrackMetadata = FeedbackResponse & {
+  track_metadata: TrackMetadata;
 };
 
 declare type RecommendationFeedbackResponse = {
@@ -471,12 +482,7 @@ declare type PinnedRecording = {
   row_id: number;
   recording_mbid: string | null;
   recording_msid?: string;
-  track_metadata: {
-    artist_name: string;
-    release_name?: string | null;
-    track_name: string;
-    additional_info?: AdditionalInfo;
-  };
+  track_metadata: TrackMetadata;
 };
 
 /** For recommending a track from the front-end */
