@@ -58,25 +58,10 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
           Bird's Lament
         </div>
         <span
-          className="artist-and-timestamp"
+          className="small text-muted ellipsis"
+          title="Moondog"
         >
-          <span
-            className="small visible-xs-inline ellipsis"
-          >
-            <span
-              className="listen-time"
-              title=""
-            >
-              Jan 01, 1970, 1:00 AM
-            </span>
-             - 
-          </span>
-          <span
-            className="small text-muted ellipsis"
-            title="Moondog"
-          >
-            Moondog
-          </span>
+          Moondog
         </span>
       </div>
       <div
@@ -90,80 +75,72 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
         >
           test
         </a>
-        <div
-          className="hidden-xs"
+        <span
+          className="listen-time"
+          title=""
         >
-          <span
-            className="listen-time"
-            title=""
-          >
-            Jan 01, 1970, 1:00 AM
-          </span>
-        </div>
+          Jan 01, 1970, 1:00 AM
+        </span>
       </div>
       <div
-        className="listen-controls-container"
+        className="listen-controls"
       >
-        <div
-          className="listen-controls"
+        <button
+          className="btn-transparent play-button"
+          onClick={[Function]}
+          title="Play"
+          type="button"
         >
-          <button
-            className="btn-transparent play-button"
-            onClick={[Function]}
-            title="Play"
-            type="button"
-          >
-            <FontAwesomeIcon
-              border={false}
-              className=""
-              fixedWidth={false}
-              flip={null}
-              icon={
-                Object {
-                  "icon": Array [
-                    512,
-                    512,
-                    Array [],
-                    "f144",
-                    "M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z",
-                  ],
-                  "iconName": "play-circle",
-                  "prefix": "far",
-                }
+          <FontAwesomeIcon
+            border={false}
+            className=""
+            fixedWidth={false}
+            flip={null}
+            icon={
+              Object {
+                "icon": Array [
+                  512,
+                  512,
+                  Array [],
+                  "f144",
+                  "M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z",
+                ],
+                "iconName": "play-circle",
+                "prefix": "far",
               }
-              inverse={false}
-              listItem={false}
-              mask={null}
-              pull={null}
-              pulse={false}
-              rotation={null}
-              size="2x"
-              spin={false}
-              swapOpacity={false}
-              symbol={false}
-              title=""
-              transform={null}
+            }
+            inverse={false}
+            listItem={false}
+            mask={null}
+            pull={null}
+            pulse={false}
+            rotation={null}
+            size="2x"
+            spin={false}
+            swapOpacity={false}
+            symbol={false}
+            title=""
+            transform={null}
+          >
+            <svg
+              aria-hidden="true"
+              className="svg-inline--fa fa-play-circle fa-w-16 fa-2x "
+              data-icon="play-circle"
+              data-prefix="far"
+              focusable="false"
+              role="img"
+              style={Object {}}
+              viewBox="0 0 512 512"
+              xmlns="http://www.w3.org/2000/svg"
             >
-              <svg
-                aria-hidden="true"
-                className="svg-inline--fa fa-play-circle fa-w-16 fa-2x "
-                data-icon="play-circle"
-                data-prefix="far"
-                focusable="false"
-                role="img"
+              <path
+                d="M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z"
+                fill="currentColor"
                 style={Object {}}
-                viewBox="0 0 512 512"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z"
-                  fill="currentColor"
-                  style={Object {}}
-                />
-              </svg>
-            </FontAwesomeIcon>
-          </button>
-        </div>
+              />
+            </svg>
+          </FontAwesomeIcon>
+        </button>
       </div>
     </div>
   </ForwardRef>
@@ -229,25 +206,10 @@ exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
           Bird's Lament
         </div>
         <span
-          className="artist-and-timestamp"
+          className="small text-muted ellipsis"
+          title="Moondog"
         >
-          <span
-            className="small visible-xs-inline ellipsis"
-          >
-            <span
-              className="listen-time"
-              title=""
-            >
-              Jan 01, 1970, 1:00 AM
-            </span>
-             - 
-          </span>
-          <span
-            className="small text-muted ellipsis"
-            title="Moondog"
-          >
-            Moondog
-          </span>
+          Moondog
         </span>
       </div>
       <div
@@ -261,80 +223,72 @@ exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
         >
           test
         </a>
-        <div
-          className="hidden-xs"
+        <span
+          className="listen-time"
+          title=""
         >
-          <span
-            className="listen-time"
-            title=""
-          >
-            Jan 01, 1970, 1:00 AM
-          </span>
-        </div>
+          Jan 01, 1970, 1:00 AM
+        </span>
       </div>
       <div
-        className="listen-controls-container"
+        className="listen-controls"
       >
-        <div
-          className="listen-controls"
+        <button
+          className="btn-transparent play-button"
+          onClick={[Function]}
+          title="Play"
+          type="button"
         >
-          <button
-            className="btn-transparent play-button"
-            onClick={[Function]}
-            title="Play"
-            type="button"
-          >
-            <FontAwesomeIcon
-              border={false}
-              className=""
-              fixedWidth={false}
-              flip={null}
-              icon={
-                Object {
-                  "icon": Array [
-                    512,
-                    512,
-                    Array [],
-                    "f144",
-                    "M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z",
-                  ],
-                  "iconName": "play-circle",
-                  "prefix": "far",
-                }
+          <FontAwesomeIcon
+            border={false}
+            className=""
+            fixedWidth={false}
+            flip={null}
+            icon={
+              Object {
+                "icon": Array [
+                  512,
+                  512,
+                  Array [],
+                  "f144",
+                  "M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z",
+                ],
+                "iconName": "play-circle",
+                "prefix": "far",
               }
-              inverse={false}
-              listItem={false}
-              mask={null}
-              pull={null}
-              pulse={false}
-              rotation={null}
-              size="2x"
-              spin={false}
-              swapOpacity={false}
-              symbol={false}
-              title=""
-              transform={null}
+            }
+            inverse={false}
+            listItem={false}
+            mask={null}
+            pull={null}
+            pulse={false}
+            rotation={null}
+            size="2x"
+            spin={false}
+            swapOpacity={false}
+            symbol={false}
+            title=""
+            transform={null}
+          >
+            <svg
+              aria-hidden="true"
+              className="svg-inline--fa fa-play-circle fa-w-16 fa-2x "
+              data-icon="play-circle"
+              data-prefix="far"
+              focusable="false"
+              role="img"
+              style={Object {}}
+              viewBox="0 0 512 512"
+              xmlns="http://www.w3.org/2000/svg"
             >
-              <svg
-                aria-hidden="true"
-                className="svg-inline--fa fa-play-circle fa-w-16 fa-2x "
-                data-icon="play-circle"
-                data-prefix="far"
-                focusable="false"
-                role="img"
+              <path
+                d="M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z"
+                fill="currentColor"
                 style={Object {}}
-                viewBox="0 0 512 512"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z"
-                  fill="currentColor"
-                  style={Object {}}
-                />
-              </svg>
-            </FontAwesomeIcon>
-          </button>
-        </div>
+              />
+            </svg>
+          </FontAwesomeIcon>
+        </button>
       </div>
     </div>
   </ForwardRef>
@@ -399,25 +353,10 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
           Bird's Lament
         </div>
         <span
-          className="artist-and-timestamp"
+          className="small text-muted ellipsis"
+          title="Moondog"
         >
-          <span
-            className="small visible-xs-inline ellipsis"
-          >
-            <span
-              className="listen-time"
-              title=""
-            >
-              Jan 01, 1970, 1:00 AM
-            </span>
-             - 
-          </span>
-          <span
-            className="small text-muted ellipsis"
-            title="Moondog"
-          >
-            Moondog
-          </span>
+          Moondog
         </span>
       </div>
       <div
@@ -431,80 +370,72 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
         >
           test
         </a>
-        <div
-          className="hidden-xs"
+        <span
+          className="listen-time"
+          title=""
         >
-          <span
-            className="listen-time"
-            title=""
-          >
-            Jan 01, 1970, 1:00 AM
-          </span>
-        </div>
+          Jan 01, 1970, 1:00 AM
+        </span>
       </div>
       <div
-        className="listen-controls-container"
+        className="listen-controls"
       >
-        <div
-          className="listen-controls"
+        <button
+          className="btn-transparent play-button"
+          onClick={[Function]}
+          title="Play"
+          type="button"
         >
-          <button
-            className="btn-transparent play-button"
-            onClick={[Function]}
-            title="Play"
-            type="button"
-          >
-            <FontAwesomeIcon
-              border={false}
-              className=""
-              fixedWidth={false}
-              flip={null}
-              icon={
-                Object {
-                  "icon": Array [
-                    512,
-                    512,
-                    Array [],
-                    "f144",
-                    "M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z",
-                  ],
-                  "iconName": "play-circle",
-                  "prefix": "far",
-                }
+          <FontAwesomeIcon
+            border={false}
+            className=""
+            fixedWidth={false}
+            flip={null}
+            icon={
+              Object {
+                "icon": Array [
+                  512,
+                  512,
+                  Array [],
+                  "f144",
+                  "M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z",
+                ],
+                "iconName": "play-circle",
+                "prefix": "far",
               }
-              inverse={false}
-              listItem={false}
-              mask={null}
-              pull={null}
-              pulse={false}
-              rotation={null}
-              size="2x"
-              spin={false}
-              swapOpacity={false}
-              symbol={false}
-              title=""
-              transform={null}
+            }
+            inverse={false}
+            listItem={false}
+            mask={null}
+            pull={null}
+            pulse={false}
+            rotation={null}
+            size="2x"
+            spin={false}
+            swapOpacity={false}
+            symbol={false}
+            title=""
+            transform={null}
+          >
+            <svg
+              aria-hidden="true"
+              className="svg-inline--fa fa-play-circle fa-w-16 fa-2x "
+              data-icon="play-circle"
+              data-prefix="far"
+              focusable="false"
+              role="img"
+              style={Object {}}
+              viewBox="0 0 512 512"
+              xmlns="http://www.w3.org/2000/svg"
             >
-              <svg
-                aria-hidden="true"
-                className="svg-inline--fa fa-play-circle fa-w-16 fa-2x "
-                data-icon="play-circle"
-                data-prefix="far"
-                focusable="false"
-                role="img"
+              <path
+                d="M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z"
+                fill="currentColor"
                 style={Object {}}
-                viewBox="0 0 512 512"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z"
-                  fill="currentColor"
-                  style={Object {}}
-                />
-              </svg>
-            </FontAwesomeIcon>
-          </button>
-        </div>
+              />
+            </svg>
+          </FontAwesomeIcon>
+        </button>
       </div>
     </div>
   </ForwardRef>
@@ -569,25 +500,10 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
           Bird's Lament
         </div>
         <span
-          className="artist-and-timestamp"
+          className="small text-muted ellipsis"
+          title="Moondog"
         >
-          <span
-            className="small visible-xs-inline ellipsis"
-          >
-            <span
-              className="listen-time"
-              title=""
-            >
-              Jan 01, 1970, 1:00 AM
-            </span>
-             - 
-          </span>
-          <span
-            className="small text-muted ellipsis"
-            title="Moondog"
-          >
-            Moondog
-          </span>
+          Moondog
         </span>
       </div>
       <div
@@ -601,80 +517,72 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
         >
           test
         </a>
-        <div
-          className="hidden-xs"
+        <span
+          className="listen-time"
+          title=""
         >
-          <span
-            className="listen-time"
-            title=""
-          >
-            Jan 01, 1970, 1:00 AM
-          </span>
-        </div>
+          Jan 01, 1970, 1:00 AM
+        </span>
       </div>
       <div
-        className="listen-controls-container"
+        className="listen-controls"
       >
-        <div
-          className="listen-controls"
+        <button
+          className="btn-transparent play-button"
+          onClick={[Function]}
+          title="Play"
+          type="button"
         >
-          <button
-            className="btn-transparent play-button"
-            onClick={[Function]}
-            title="Play"
-            type="button"
-          >
-            <FontAwesomeIcon
-              border={false}
-              className=""
-              fixedWidth={false}
-              flip={null}
-              icon={
-                Object {
-                  "icon": Array [
-                    512,
-                    512,
-                    Array [],
-                    "f144",
-                    "M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z",
-                  ],
-                  "iconName": "play-circle",
-                  "prefix": "far",
-                }
+          <FontAwesomeIcon
+            border={false}
+            className=""
+            fixedWidth={false}
+            flip={null}
+            icon={
+              Object {
+                "icon": Array [
+                  512,
+                  512,
+                  Array [],
+                  "f144",
+                  "M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z",
+                ],
+                "iconName": "play-circle",
+                "prefix": "far",
               }
-              inverse={false}
-              listItem={false}
-              mask={null}
-              pull={null}
-              pulse={false}
-              rotation={null}
-              size="2x"
-              spin={false}
-              swapOpacity={false}
-              symbol={false}
-              title=""
-              transform={null}
+            }
+            inverse={false}
+            listItem={false}
+            mask={null}
+            pull={null}
+            pulse={false}
+            rotation={null}
+            size="2x"
+            spin={false}
+            swapOpacity={false}
+            symbol={false}
+            title=""
+            transform={null}
+          >
+            <svg
+              aria-hidden="true"
+              className="svg-inline--fa fa-play-circle fa-w-16 fa-2x "
+              data-icon="play-circle"
+              data-prefix="far"
+              focusable="false"
+              role="img"
+              style={Object {}}
+              viewBox="0 0 512 512"
+              xmlns="http://www.w3.org/2000/svg"
             >
-              <svg
-                aria-hidden="true"
-                className="svg-inline--fa fa-play-circle fa-w-16 fa-2x "
-                data-icon="play-circle"
-                data-prefix="far"
-                focusable="false"
-                role="img"
+              <path
+                d="M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z"
+                fill="currentColor"
                 style={Object {}}
-                viewBox="0 0 512 512"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z"
-                  fill="currentColor"
-                  style={Object {}}
-                />
-              </svg>
-            </FontAwesomeIcon>
-          </button>
-        </div>
+              />
+            </svg>
+          </FontAwesomeIcon>
+        </button>
       </div>
     </div>
   </ForwardRef>
