@@ -31,7 +31,7 @@ export type ListenCardProps = {
   isCurrentUser: boolean;
   isCurrentListen: boolean;
   playListen: (listen: Listen) => void;
-  removeListenFromListenList: (listen: Listen) => void;
+  removeListenFromListenList?: (listen: Listen) => void;
   updateFeedback: (recordingMsid: string, score: ListenFeedBack) => void;
   updateRecordingToPin: (recordingToPin: Listen) => void;
   newAlert: (
@@ -101,7 +101,11 @@ export default class ListenCard extends React.Component<
     const { listen, isCurrentUser, removeListenFromListenList } = this.props;
     const { APIService, currentUser } = this.context;
 
-    if (isCurrentUser && currentUser?.auth_token) {
+    if (
+      removeListenFromListenList &&
+      isCurrentUser &&
+      currentUser?.auth_token
+    ) {
       const listenedAt = _get(listen, "listened_at");
       const recordingMSID = _get(
         listen,
