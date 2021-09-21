@@ -216,8 +216,10 @@
 		flex-direction: column;
 		justify-content: center;
 		align-items: flex-end;
-		// flex-basis: 60px;
 		padding-right: 1em;
+		@media (min-width: @screen-phone) {
+			padding-right: 2em;
+		}
 	}
 	
 	.listen-details{
@@ -242,10 +244,16 @@
 		font-style: italic;
 	}
 	
-	.listen-controls-container {
-		max-width: 110px;
-		min-width: 110px;
+	.listen-controls {
+		display: flex;
+		flex-wrap: nowrap;
+		justify-content: space-around;
+		align-items: center;
+		position: relative; // This is need for dropdown menu positioning
+		max-width: 120px;
+		min-width: 120px;
 		margin-left: auto; // align flexbox item at flex-end
+		
 		> * {
 			flex: 1;
 			align-self: center;
@@ -253,18 +261,6 @@
 		
 		a {
 			word-break: break-word;
-		}
-		
-	}
-	
-	.listen-controls {
-		max-width:150px;
-		display: flex;
-		flex-wrap: nowrap;
-		align-content: center;
-		align-items: center;
-		> * {
-			flex:1;
 		}
 		
 		> svg:hover {
@@ -344,6 +340,7 @@
 	.play-button {
 		padding: 0;
 		color: #8d8d8d;
+		margin-left: .4em;
 	}
 	// If the user has an input method compatible with hovering (f.e. a mouse)
 	// hide the play button by default and show it on card hover

@@ -289,63 +289,61 @@ export default class ListenCard extends React.Component<
             <div className="hidden-xs">{timeStampForDisplay}</div>
           )}
         </div>
-        <div className="listen-controls-container">
-          <div className="listen-controls">
-            {!currentUser?.auth_token ? null : (
-              <>
-                <ListenControl
-                  icon={faHeart}
-                  title="Love"
-                  action={() => this.submitFeedback(feedback === 1 ? 0 : 1)}
-                  className={`${feedback === 1 ? " loved" : ""}`}
-                  disabled={!enableFeedbackButtons}
-                />
-                <ListenControl
-                  icon={faHeartBroken}
-                  title="Hate"
-                  action={() => this.submitFeedback(feedback === -1 ? 0 : -1)}
-                  className={`${feedback === -1 ? " hated" : ""}`}
-                  disabled={!enableFeedbackButtons}
-                />
+        <div className="listen-controls">
+          {!currentUser?.auth_token ? null : (
+            <>
+              <ListenControl
+                icon={faHeart}
+                title="Love"
+                action={() => this.submitFeedback(feedback === 1 ? 0 : 1)}
+                className={`${feedback === 1 ? " loved" : ""}`}
+                disabled={!enableFeedbackButtons}
+              />
+              <ListenControl
+                icon={faHeartBroken}
+                title="Hate"
+                action={() => this.submitFeedback(feedback === -1 ? 0 : -1)}
+                className={`${feedback === -1 ? " hated" : ""}`}
+                disabled={!enableFeedbackButtons}
+              />
 
-                <FontAwesomeIcon
-                  icon={faEllipsisV as IconProp}
-                  title="More actions"
-                  className="dropdown-toggle"
-                  id="listenControlsDropdown"
-                  data-toggle="dropdown"
-                  aria-haspopup="true"
-                  aria-expanded="true"
+              <FontAwesomeIcon
+                icon={faEllipsisV as IconProp}
+                title="More actions"
+                className="dropdown-toggle"
+                id="listenControlsDropdown"
+                data-toggle="dropdown"
+                aria-haspopup="true"
+                aria-expanded="true"
+              />
+              <ul
+                className="dropdown-menu dropdown-menu-right"
+                aria-labelledby="listenControlsDropdown"
+              >
+                <ListenControl
+                  title="Recommend to my followers"
+                  action={this.recommendListenToFollowers}
+                  disabled={!enableRecommendButton}
                 />
-                <ul
-                  className="dropdown-menu dropdown-menu-right"
-                  aria-labelledby="listenControlsDropdown"
-                >
-                  <ListenControl
-                    title="Recommend to my followers"
-                    action={this.recommendListenToFollowers}
-                    disabled={!enableRecommendButton}
-                  />
-                  <ListenControl
-                    title="Pin this Recording"
-                    action={
-                      updateRecordingToPin
-                        ? () => updateRecordingToPin(listen)
-                        : undefined
-                    }
-                    dataToggle="modal"
-                    dataTarget="#PinRecordingModal"
-                  />
-                  <ListenControl
-                    disabled={!canDelete}
-                    title="Delete Listen"
-                    action={canDelete ? this.deleteListen : undefined}
-                  />
-                </ul>
-              </>
-            )}
-            {getPlayButton(listen, isCurrentListen, this.playListen)}
-          </div>
+                <ListenControl
+                  title="Pin this Recording"
+                  action={
+                    updateRecordingToPin
+                      ? () => updateRecordingToPin(listen)
+                      : undefined
+                  }
+                  dataToggle="modal"
+                  dataTarget="#PinRecordingModal"
+                />
+                <ListenControl
+                  disabled={!canDelete}
+                  title="Delete Listen"
+                  action={canDelete ? this.deleteListen : undefined}
+                />
+              </ul>
+            </>
+          )}
+          {getPlayButton(listen, isCurrentListen, this.playListen)}
         </div>
         {additionalDetails && (
           <span
