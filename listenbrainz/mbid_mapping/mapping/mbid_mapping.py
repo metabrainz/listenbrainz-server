@@ -9,7 +9,8 @@ from mapping.formats import create_formats_table
 import config
 
 BATCH_SIZE = 5000
-TEST_ARTIST_ID = 1160983  # Gun'n'roses, because of obvious spelling issues
+#TEST_ARTIST_ID = 1160983  # Gun'n'roses, because of obvious spelling issues
+TEST_ARTIST_ID = 49627 # beyoncé
 
 
 def create_tables(mb_conn):
@@ -203,18 +204,19 @@ def create_mbid_mapping():
             create_temp_release_table(mb_conn)
             with mb_conn.cursor() as mb_curs2:
                 rows = []
-                last_artist_mbids = None
+                last_artist_credit_id = None
                 artist_recordings = {}
                 count = 0
                 batch_count = 0
                 serial = 1
                 log("mbid mapping: fetch recordings")
-                mb_curs.execute("""SELECT r.name AS recording_name,
+                mb_curs.execute("""SELECT ac.id as artist_credit_id,
+                                          r.name AS recording_name,
                                           r.gid AS recording_mbid,
                                           ac.name AS artist_credit_name,
-                                          array_agg(a.gid) AS artist_mbids,
-                                          rl.name AS release_name,
-                                          rl.gid AS release_mbid,
+                                          s.artist_mbids,
+                                          rl.name AS release_name,        
+                                          rl.gid AS release_mbid,         
                                           rpr.id AS score
                                      FROM recording r
                                      JOIN artist_credit ac
@@ -231,19 +233,25 @@ def create_mbid_mapping():
                                        ON rl.id = m.release
                                      JOIN mapping.tmp_mbid_mapping_releases rpr
                                        ON rl.id = rpr.release
+                                     JOIN (SELECT artist_credit, array_agg(gid) AS artist_mbids
+                                             FROM artist_credit_name acn2
+                                             JOIN artist a2
+                                               ON acn2.artist = a2.id
+                                         GROUP BY acn2.artist_credit) s
+                                       ON acn.artist_credit = s.artist_credit
                                 LEFT JOIN release_country rc
                                        ON rc.release = rl.id
-                                 GROUP BY acn.artist_credit, rpr.id, ac.id, rl.gid, artist_credit_name, r.gid, r.name, release_name
+                                 GROUP BY rpr.id, ac.id, s.artist_mbids, rl.gid, artist_credit_name, r.gid, r.name, release_name
                                  ORDER BY ac.id, rpr.id""")
                 while True:
                     row = mb_curs.fetchone()
                     if not row:
                         break
 
-                    if not last_artist_mbids:
-                        last_artist_mbids = row['artist_mbids']
+                    if not last_artist_credit_id:
+                        last_artist_credit_id = row['artist_credit_id']
 
-                    if row['artist_mbids'] != last_artist_mbids:
+                    if row['artist_credit_id'] != last_artist_credit_id:
                         # insert the rows that made it
                         rows.extend(artist_recordings.values())
                         artist_recordings = {}
@@ -262,6 +270,9 @@ def create_mbid_mapping():
                     try:
                         recording_name = row['recording_name']
                         artist_credit_name = row['artist_credit_name']
+                        if recording_name.lower() == "dream":
+                            print("%-30s %-30s" % (recording_name[:29], artist_credit_name[:29]))
+
                         release_name = row['release_name']
                         combined_lookup = unidecode(
                             re.sub(r'[^\w]+', '', artist_credit_name + recording_name).lower())
@@ -275,7 +286,7 @@ def create_mbid_mapping():
                         log(row)
                         raise
 
-                    last_artist_mbids = row['artist_mbids']
+                    last_artist_credit_id = row['artist_credit_id']
 
                 rows.extend(artist_recordings.values())
                 if rows:
