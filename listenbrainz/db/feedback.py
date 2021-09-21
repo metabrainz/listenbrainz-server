@@ -116,6 +116,7 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
                     WHERE recording_msid in :msids
                  ORDER BY recording_msid"""
 
+        # TODO: Update this to also send artist_mbids when those are available.
         with timescale.engine.connect() as connection:
             result = connection.execute(
                 sqlalchemy.text(query), msids=tuple(msids))
@@ -124,7 +125,6 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
                     index[row["recording_msid"]].track_metadata['additional_info'] = {
                         "recording_mbid": row["recording_mbid"],
                         "release_mbid": row["release_mbid"],
-                        "artist_msid": rec["ids"]["artist_msid"],
                         "artist_msid": artist_msids[rec["ids"]["recording_msid"]]}
 
     return feedback
