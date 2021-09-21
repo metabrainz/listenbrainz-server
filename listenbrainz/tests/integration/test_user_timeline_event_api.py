@@ -189,7 +189,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         metadata_not = {"message": 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'}
         approved_user = db_user.get_or_create(11, "troi-bot")
         self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_notification_event', user_name=self.user['musicbrainz_id']),
+            url_for('user_timeline_event_api_bp.create_user_notification_event',
+            user_name=self.user['musicbrainz_id']),
             data=json.dumps({"metadata": metadata_not}),
             headers={'Authorization': 'Token {}'.format(approved_user['auth_token'])}
         )
@@ -202,37 +203,22 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             'recording_msid': str(uuid.uuid4()),
         }
         self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event', user_name=new_user['musicbrainz_id']),
+            url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event',
+            user_name=new_user['musicbrainz_id']),
             data=json.dumps({'metadata': metadata_rec}),
             headers={'Authorization': 'Token {}'.format(new_user['auth_token'])},
         )
-        # Checking if recording recommendation exists in db or not
-        events_rec = db_user_timeline_event.get_user_track_recommendation_events(
-            user_id=new_user["id"],
-            count=1,
-        )
-        self.assertEqual(1, len(events_rec))
-        self.assertEqual(UserTimelineEventType.RECORDING_RECOMMENDATION, events_rec[0].event_type)
-        self.assertEqual(new_user["id"], events_rec[0].user_id)
-
-        # Checking if notification exists in db or not
-        events_not = db_user_timeline_event.get_user_notification_events(
-            user_id=self.user["id"],
-            count=1,
-        )
-        self.assertEqual(1, len(events_not))
-        self.assertEqual(UserTimelineEventType.NOTIFICATION, events_not[0].event_type)
-        self.assertEqual(self.user["id"], events_not[0].user_id)
-
         # Deleting notification
         self.client.post(
-            url_for('user_timeline_event_api_bp.delete_feed_events', user_name=self.user["musicbrainz_id"]),
-            data=json.dumps({'event_type': UserTimelineEventType.NOTIFICATION.value, 'id': events_not[0].id}),
+            url_for('user_timeline_event_api_bp.delete_feed_events',
+            user_name=self.user["musicbrainz_id"]),
+            data=json.dumps({'event_type': UserTimelineEventType.NOTIFICATION.value, 'id': 1}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
         )
         # Checking if notification still exists
         r_not = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=self.user['musicbrainz_id']),
+            url_for('user_timeline_event_api_bp.user_feed',
+            user_name=self.user['musicbrainz_id']),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
         )
         payload_not = r_not.json["payload"]
@@ -241,15 +227,99 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # Deleting recommendation event
         self.client.post(
-            url_for('user_timeline_event_api_bp.delete_feed_events', user_name=new_user["musicbrainz_id"]),
-            data=json.dumps({'event_type': UserTimelineEventType.RECORDING_RECOMMENDATION.value, 'id': events_rec[0].id}),
+            url_for('user_timeline_event_api_bp.delete_feed_events',
+            user_name=new_user["musicbrainz_id"]),
+            data=json.dumps({'event_type': UserTimelineEventType.RECORDING_RECOMMENDATION.value, 'id': 2}),
             headers={'Authorization': 'Token {}'.format(new_user['auth_token'])}
         )
         # Checking if recording recommendation still exists
         r_rec = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=new_user['musicbrainz_id']),
+            url_for('user_timeline_event_api_bp.user_feed',
+            user_name=new_user['musicbrainz_id']),
             headers={'Authorization': 'Token {}'.format(new_user['auth_token'])}
         )
         payload_rec = r_rec.json["payload"]
         self.assertEqual(0, payload_rec["count"])
         self.assertEqual(new_user["musicbrainz_id"], payload_rec["user_id"])
+
+    def test_delete_feed_events_token_for_authorization(self):
+        # Adding notification to the db
+        metadata_not = {"message": 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'}
+        approved_user = db_user.get_or_create(11, "troi-bot")
+        self.client.post(
+            url_for('user_timeline_event_api_bp.create_user_notification_event',
+            user_name=self.user['musicbrainz_id']),
+            data=json.dumps({"metadata": metadata_not}),
+            headers={'Authorization': 'Token {}'.format(approved_user['auth_token'])}
+        )
+        # Attempt to delete notifications by passing no Auth header
+        r_not = self.client.post(
+            url_for('user_timeline_event_api_bp.delete_feed_events',
+            user_name=self.user["musicbrainz_id"]),
+            data=json.dumps({'event_type': UserTimelineEventType.NOTIFICATION.value, 'id': 1}),
+        )
+        self.assert401(r_not)
+        # Adding recording recommendation to db
+        new_user = db_user.get_or_create(2, "riksucks")
+        metadata_rec = {
+            'artist_name': 'Nujabes',
+            'track_name': 'Aruarian Dance',
+            'artist_msid':  str(uuid.uuid4()),
+            'recording_msid': str(uuid.uuid4()),
+        }
+        self.client.post(
+            url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event',
+            user_name=new_user['musicbrainz_id']),
+            data=json.dumps({'metadata': metadata_rec}),
+            headers={'Authorization': 'Token {}'.format(new_user['auth_token'])},
+        )
+        # Deleting recommendation event
+        r_rec = self.client.post(
+            url_for('user_timeline_event_api_bp.delete_feed_events',
+            user_name=new_user["musicbrainz_id"]),
+            data=json.dumps({'event_type': UserTimelineEventType.RECORDING_RECOMMENDATION.value, 'id': 2}),
+            headers={'Authorization': 'Token l33thaxors'}
+        )
+        self.assert401(r_rec)
+
+    @mock.patch("listenbrainz.db.user_timeline_event.delete_user_recommendation_notification_event",
+        side_effect=DatabaseException)
+    def test_delete_feed_events_for_db_exceptions(self, mock_create_event):
+        # Adding notification to the db
+        metadata_not = {"message": 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'}
+        approved_user = db_user.get_or_create(11, "troi-bot")
+        self.client.post(
+            url_for('user_timeline_event_api_bp.create_user_notification_event',
+            user_name=self.user['musicbrainz_id']),
+            data=json.dumps({"metadata": metadata_not}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
+        )
+        # Attempt to delete notification
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.delete_feed_events',
+            user_name=self.user["musicbrainz_id"]),
+            data=json.dumps({'event_type': UserTimelineEventType.NOTIFICATION.value, 'id': 1}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
+        )
+        self.assert500(r)
+        data = json.loads(r.data)
+        self.assertEqual('Something went wrong. Please try again', data['error'])
+
+    def test_delete_feed_events_for_bad_request(self):
+        # Adding notification to the db
+        metadata_not = {"message": 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'}
+        approved_user = db_user.get_or_create(11, "troi-bot")
+        self.client.post(
+            url_for('user_timeline_event_api_bp.create_user_notification_event',
+            user_name=self.user['musicbrainz_id']),
+            data=json.dumps({"metadata": metadata_not}),
+            headers={'Authorization': 'Token {}'.format(approved_user['auth_token'])}
+        )
+        # Attempt to delete notification with empty JSON, should throw bad request error
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.delete_feed_events',
+            user_name=self.user["musicbrainz_id"]),
+            data=json.dumps({}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
+        )
+        self.assert400(r)

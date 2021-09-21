@@ -263,6 +263,7 @@ def delete_feed_events(user_name):
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized
     :statuscode 404: User not found
+    :statuscode 500: API Internal Server Error
     :resheader Content-Type: *application/json*
     '''
     # TODO: maybe implement logging once approved
