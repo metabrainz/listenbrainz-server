@@ -107,7 +107,7 @@ export default class ListenCard extends React.Component<
     const { APIService, currentUser } = this.context;
     const isCurrentUser =
       Boolean(listen.user_name) && listen.user_name === currentUser?.name;
-    if (isCurrentUser && currentUser?.auth_token) {
+    if (removeListenCallback && isCurrentUser && currentUser?.auth_token) {
       const listenedAt = _get(listen, "listened_at");
       const recordingMSID = _get(
         listen,
