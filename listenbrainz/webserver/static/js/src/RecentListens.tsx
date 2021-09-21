@@ -238,7 +238,7 @@ export default class RecentListens extends React.Component<
     });
   };
 
-  handleCurrentListenChange = (listen: Listen | JSPFTrack): void => {
+  handleCurrentListenChange = (listen: BaseListenFormat | JSPFTrack): void => {
     this.setState({ currentListen: listen as Listen });
   };
 
