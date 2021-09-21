@@ -260,18 +260,11 @@ export default class ListenCard extends React.Component<
           <div title={listen.track_metadata?.track_name} className="ellipsis">
             {getTrackLink(listen)}
           </div>
-          <span className="artist-and-timestamp">
-            {showTimestamp && (
-              <span className="small visible-xs-inline ellipsis">
-                {timeStampForDisplay}&nbsp;-&nbsp;
-              </span>
-            )}
-            <span
-              className="small text-muted ellipsis"
-              title={listen.track_metadata?.artist_name}
-            >
-              {getArtistLink(listen)}
-            </span>
+          <span
+            className="small text-muted ellipsis"
+            title={listen.track_metadata?.artist_name}
+          >
+            {getArtistLink(listen)}
           </span>
         </div>
         <div className="username-and-timestamp">
@@ -285,9 +278,7 @@ export default class ListenCard extends React.Component<
               {listen.user_name}
             </a>
           )}
-          {showTimestamp && (
-            <div className="hidden-xs">{timeStampForDisplay}</div>
-          )}
+          {showTimestamp && timeStampForDisplay}
         </div>
         <div className="listen-controls">
           {!currentUser?.auth_token ? null : (

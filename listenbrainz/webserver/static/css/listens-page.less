@@ -5,6 +5,7 @@
 @love: #C62828;
 @hate: @blue;
 @player-min-height: 320px;
+@listen-small-break: 420px;
 
 #music-player {
 	position: relative;
@@ -201,8 +202,8 @@
 		display: flex;
 		flex:1;
 	}
-	@media (min-width: @screen-md-min) {
-		> * {
+	@media (min-width: @screen-tablet) {
+		> *{
 			padding: 0 1em;
 		}
 	}
@@ -210,15 +211,21 @@
 	
 	.listen-time {
 		font-style: italic;
+		font-size: 80%;
 		&:extend(.text-muted);
+		white-space: nowrap;
 	}
 	.username-and-timestamp{
 		flex-direction: column;
 		justify-content: center;
-		align-items: flex-end;
 		padding-right: 1em;
-		@media (min-width: @screen-phone) {
-			padding-right: 2em;
+		padding-top: 0.5em;
+		@media (min-width: @screen-tablet) {
+    		padding-right: 2.5em;
+		}
+		@media (min-width: @listen-small-break) {
+			align-items: flex-end;
+			padding-top: 0;
 		}
 	}
 	
@@ -226,7 +233,7 @@
 		flex: 3;
 		flex-direction: column;
 		max-width: 100%;
-		
+		flex-basis: 300px;
 		
 		.artist-and-timestamp {
 			display: flex;
@@ -240,22 +247,22 @@
 	}
 	
 	.additional-details{
-		margin-top: 1em;
+		padding-top: 0.7em;
+		margin-top: 0.7em;
+		border-top: 1px solid @gray-lighter;
 		font-style: italic;
+		width: 100%;
 	}
 	
 	.listen-controls {
-		display: flex;
 		flex-wrap: nowrap;
 		justify-content: space-around;
-		align-items: center;
 		position: relative; // This is need for dropdown menu positioning
 		max-width: 120px;
 		min-width: 120px;
 		margin-left: auto; // align flexbox item at flex-end
 		
 		> * {
-			flex: 1;
 			align-self: center;
 		}
 		
