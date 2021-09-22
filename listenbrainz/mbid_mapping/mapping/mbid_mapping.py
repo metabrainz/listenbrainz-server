@@ -9,8 +9,7 @@ from mapping.formats import create_formats_table
 import config
 
 BATCH_SIZE = 5000
-#TEST_ARTIST_ID = 1160983  # Gun'n'roses, because of obvious spelling issues
-TEST_ARTIST_ID = 49627 # beyoncé
+TEST_ARTIST_IDS = [1160983, 49627] # Gun'n'roses, beyoncé
 
 
 def create_tables(mb_conn):
@@ -114,7 +113,7 @@ def create_temp_release_table(conn):
         if config.USE_MINIMAL_DATASET:
             log("mbid mapping temp tables: Using a minimal dataset for artist credit pairs")
             curs.execute(query %
-                         ('AND rg.artist_credit = %d' % TEST_ARTIST_ID))
+                         ('AND rg.artist_credit in (%s)' % ",".join([ str(i) for i in TEST_ARTIST_IDS])))
         else:
             log("mbid mapping temp tables: Using a full dataset for artist credit pairs")
             curs.execute(query % "")
@@ -224,7 +223,7 @@ def create_mbid_mapping():
                                      JOIN artist_credit_name acn
                                        ON ac.id = acn.artist_credit
                                      JOIN artist a
-                                       ON acn.artist_credit = a.id
+                                       ON acn.artist = a.id
                                      JOIN track t
                                        ON t.recording = r.id
                                      JOIN medium m
@@ -243,6 +242,9 @@ def create_mbid_mapping():
                                        ON rc.release = rl.id
                                  GROUP BY rpr.id, ac.id, s.artist_mbids, rl.gid, artist_credit_name, r.gid, r.name, release_name
                                  ORDER BY ac.id, rpr.id""")
+
+
+                row_count = 0
                 while True:
                     row = mb_curs.fetchone()
                     if not row:
@@ -256,9 +258,8 @@ def create_mbid_mapping():
                         rows.extend(artist_recordings.values())
                         artist_recordings = {}
 
-                        if len(rows) > BATCH_SIZE:
-                            insert_rows(
-                                mb_curs2, "mapping.tmp_mbid_mapping", rows)
+                        if len(rows) >= BATCH_SIZE:
+                            insert_rows( mb_curs2, "mapping.tmp_mbid_mapping", rows)
                             count += len(rows)
                             mb_conn.commit()
                             rows = []
@@ -270,8 +271,6 @@ def create_mbid_mapping():
                     try:
                         recording_name = row['recording_name']
                         artist_credit_name = row['artist_credit_name']
-                        if recording_name.lower() == "dream":
-                            print("%-30s %-30s" % (recording_name[:29], artist_credit_name[:29]))
 
                         release_name = row['release_name']
                         combined_lookup = unidecode(

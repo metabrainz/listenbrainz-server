@@ -32,7 +32,6 @@ def test_mapping():
     failed = 0
 
     for row in data:
-        print(row)
         hits = search(row[1] + " " + row[0])
         if not hits:
             failed += 1
