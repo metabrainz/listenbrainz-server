@@ -48,8 +48,7 @@ def insert_rows(mapping_rows, join_rows):
             execute_values(curs, query, mapping_rows, template=None)
 
             query = """INSERT INTO tmp_listen_join_listen_mbid_mapping (recording_msid, listen_mbid_mapping)
-                            VALUES %s
-                       ON CONFLICT DO NOTHING"""
+                            VALUES %s"""
             execute_values(curs, query, join_rows, template=None)
 
         except psycopg2.OperationalError as err:
@@ -79,23 +78,29 @@ def copy_rows_to_new_mbid_mapping(app):
 
         updated_rows = []
         join_rows = []
+        recording_mbid_index = {}
         id = 1
         while True:
             row = curs.fetchone()
             if not row:
                 break
 
-            if row["artist_credit_id"] is None or row["artist_credit_id"] not in artist_credit_index:
-                updated_rows.append([ id, row['recording_mbid'], row['release_mbid'], 
-                    None, None, None, None, 'no_match', row['last_updated'] ])
-            else:
-                updated_rows.append([ id, row['recording_mbid'], row['release_mbid'], 
-                    release_name_index[row['release_mbid']], artist_credit_index[row["artist_credit_id"]],
-                    row['artist_credit_name'], row["recording_name"], row["match_type"], row['last_updated'] ])
+            try:
+                insert_id = recording_mbid_index[row['recording_mbid']]
+            except KeyError:
+                insert_id = id
+                recording_mbid_index[row['recording_mbid']] = insert_id
+                id += 1
 
-            join_rows.append([ row['recording_msid'], id ])
+                if row["artist_credit_id"] is None or row["artist_credit_id"] not in artist_credit_index:
+                    updated_rows.append([ insert_id, row['recording_mbid'], row['release_mbid'], 
+                        None, None, None, None, 'no_match', row['last_updated'] ])
+                else:
+                    updated_rows.append([ insert_id, row['recording_mbid'], row['release_mbid'], 
+                        release_name_index[row['release_mbid']], artist_credit_index[row["artist_credit_id"]],
+                        row['artist_credit_name'], row["recording_name"], row["match_type"], row['last_updated'] ])
 
-            id += 1
+            join_rows.append([ row['recording_msid'], insert_id ])
 
             if len(updated_rows) >= BATCH_SIZE:
                 count += len(updated_rows)
