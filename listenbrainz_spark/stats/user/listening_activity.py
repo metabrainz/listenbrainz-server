@@ -157,31 +157,18 @@ def get_listening_activity_all_time() -> Iterator[Optional[UserListeningActivity
     from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
 
     result_without_zero_years = None
+    time_range = []
     for year in range(from_date.year, to_date.year + 1):
         year_start = datetime(year, 1, 1)
         year_end = get_year_end(year)
-        try:
-            _get_listens(year_start, year_end)
-        except HDFSException:
-            # Skip if no listens present in df
-            continue
-        year_df = run_query("""
-                    SELECT user_name,
-                           count(user_name) as listen_count
-                      FROM listens
-                  GROUP BY user_name
-                  """)
-        year_df = year_df.withColumn("time_range", lit(str(year))).withColumn(
-            "from_ts", lit(year_start.timestamp())).withColumn("to_ts", lit(year_end.timestamp()))
-        result_without_zero_years = result_without_zero_years.union(year_df) if result_without_zero_years else year_df
+        time_range.append([str(year), year_start, year_end])
 
-    # Create a table with a list of time ranges and corresponding listen count for each user
-    data = result_without_zero_years \
-        .withColumn("listening_activity", struct("from_ts", "to_ts", "listen_count", "time_range")) \
-        .groupBy("user_name") \
-        .agg(sort_array(collect_list("listening_activity")).alias("listening_activity")) \
-        .toLocalIterator()
+    time_range_df = listenbrainz_spark.session.createDataFrame(time_range, time_range_schema)
+    time_range_df.createOrReplaceTempView("time_range")
 
+    _get_listens(from_date, to_date)
+
+    data = get_listening_activity()
     messages = create_messages(data=data, stats_range="all_time", from_date=from_date, to_date=to_date)
 
     logger.debug("Done!")
