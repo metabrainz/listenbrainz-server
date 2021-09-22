@@ -5,6 +5,16 @@ const pinProps = require("./__mocks__/pinProps.json");
 
 const apiService = new APIService("foobar");
 
+// from https://github.com/kentor/flush-promises/blob/46f58770b14fb74ce1ff27da00837c7e722b9d06/index.js
+const scheduler =
+  typeof setImmediate === "function" ? setImmediate : setTimeout;
+
+function flushPromises() {
+  return new Promise(function flushPromisesPromise(resolve) {
+    scheduler(resolve, 0);
+  });
+}
+
 describe("submitListens", () => {
   beforeEach(() => {
     // Mock function for fetch
@@ -54,7 +64,7 @@ describe("submitListens", () => {
       .fn()
       .mockImplementationOnce(() => {
         // 1st call will recieve a network error
-        return Promise.reject(Error);
+        return Promise.reject(new Error("Oh no!"));
       })
       .mockImplementation(() => {
         return Promise.resolve({
@@ -62,7 +72,7 @@ describe("submitListens", () => {
           status: 200,
         });
       });
-
+    const spy = jest.spyOn(apiService, "submitListens");
     apiService.submitListens("foobar", "import", [
       {
         listened_at: 1000,
@@ -73,12 +83,28 @@ describe("submitListens", () => {
       },
     ]);
 
+    // The infamous flush promises sandwich
+    await flushPromises();
     jest.runAllTimers();
-    // Flush all promises
-    // https://stackoverflow.com/questions/51126786/jest-fake-timers-with-promises
-    await new Promise((resolve) => setImmediate(resolve));
+    await flushPromises();
 
     expect(setTimeout).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(spy).toHaveBeenNthCalledWith(
+      2,
+      "foobar",
+      "import",
+      [
+        {
+          listened_at: 1000,
+          track_metadata: {
+            artist_name: "foobar",
+            track_name: "bazfoo",
+          },
+        },
+      ],
+      2
+    );
   });
 
   it("retries if error 429 is recieved (rate limited)", async () => {
@@ -88,7 +114,7 @@ describe("submitListens", () => {
       .mockImplementationOnce(() => {
         // 1st call will recieve a 429 error
         return Promise.resolve({
-          ok: true,
+          ok: false,
           status: 429,
         });
       })
@@ -98,7 +124,7 @@ describe("submitListens", () => {
           status: 200,
         });
       });
-
+    const spy = jest.spyOn(apiService, "submitListens");
     apiService.submitListens("foobar", "import", [
       {
         listened_at: 1000,
@@ -109,12 +135,28 @@ describe("submitListens", () => {
       },
     ]);
 
+    // The infamous flush promises sandwich
+    await flushPromises();
     jest.runAllTimers();
-    // Flush all promises
-    // https://stackoverflow.com/questions/51126786/jest-fake-timers-with-promises
-    await new Promise((resolve) => setImmediate(resolve));
+    await flushPromises();
 
     expect(setTimeout).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(spy).toHaveBeenNthCalledWith(
+      2,
+      "foobar",
+      "import",
+      [
+        {
+          listened_at: 1000,
+          track_metadata: {
+            artist_name: "foobar",
+            track_name: "bazfoo",
+          },
+        },
+      ],
+      2
+    );
   });
 
   it("skips if any other response code is recieved", async () => {
@@ -125,7 +167,7 @@ describe("submitListens", () => {
         status: 404,
       });
     });
-
+    const spy = jest.spyOn(apiService, "submitListens");
     await apiService.submitListens("foobar", "import", [
       {
         listened_at: 1000,
@@ -135,6 +177,7 @@ describe("submitListens", () => {
         },
       },
     ]);
+    expect(spy).toHaveBeenCalledTimes(1);
     expect(setTimeout).not.toHaveBeenCalled(); // should return response with no calls for additional retries
   });
 
@@ -208,7 +251,7 @@ describe("submitListens", () => {
       },
     ]);
     expect(spy).toHaveBeenCalledTimes(3);
-    expect(spy).toHaveBeenCalledWith("foobar", "import", [
+    expect(spy).toHaveBeenNthCalledWith(1, "foobar", "import", [
       {
         listened_at: 1000,
         track_metadata: {
@@ -224,24 +267,36 @@ describe("submitListens", () => {
         },
       },
     ]);
-    expect(spy).toHaveBeenCalledWith("foobar", "import", [
-      {
-        listened_at: 1000,
-        track_metadata: {
-          artist_name: "foobar",
-          track_name: "bazfoo",
+    expect(spy).toHaveBeenNthCalledWith(
+      2,
+      "foobar",
+      "import",
+      [
+        {
+          listened_at: 1000,
+          track_metadata: {
+            artist_name: "foobar",
+            track_name: "bazfoo",
+          },
         },
-      },
-    ]);
-    expect(spy).toHaveBeenCalledWith("foobar", "import", [
-      {
-        listened_at: 1000,
-        track_metadata: {
-          artist_name: "bazfoo",
-          track_name: "foobar",
+      ],
+      3
+    );
+    expect(spy).toHaveBeenNthCalledWith(
+      3,
+      "foobar",
+      "import",
+      [
+        {
+          listened_at: 1000,
+          track_metadata: {
+            artist_name: "bazfoo",
+            track_name: "foobar",
+          },
         },
-      },
-    ]);
+      ],
+      3
+    );
   });
 });
 
