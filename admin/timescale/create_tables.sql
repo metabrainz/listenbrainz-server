@@ -48,9 +48,8 @@ create table listen_join_listen_mbid_mapping (
         listen_mbid_mapping int not null -- FK listen_mbid_mapping.id
 );
 
-create table listen_mbid_mapping (
+create table tmp_listen_mbid_mapping (
         id                  serial,
-        recording_msid      uuid not null,
         recording_mbid      UUID,
         release_mbid        UUID,
         release_name        TEXT,

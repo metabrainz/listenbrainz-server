@@ -27,11 +27,19 @@ def load_artist_credit_index():
 def load_release_name_index():
     with psycopg2.connect(config.MB_DATABASE_URI) as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
-            query = """SELECT gid, name FROM release"""
+            query = """SELECT gid::TEXT, name FROM release"""
             curs.execute(query)
             release_names = {}
             for row in curs.fetchall():
-                release_name[row['gid']] = row['name']
+                release_names[row['gid']] = row['name']
+
+            query = """SELECT rgd.gid::TEXT, name
+                         FROM release r
+                         JOIN release_gid_redirect rgd
+                           ON new_id = r.id"""
+            curs.execute(query)
+            for row in curs.fetchall():
+                release_names[row['gid']] = row['name']
 
     return release_names
                      
@@ -63,18 +71,19 @@ def copy_rows_to_new_mbid_mapping(app):
 
     count = 0
 
-    app.logger.warning("Load artist credits")
+    app.logger.info("Load release names")
+    release_name_index = load_release_name_index()
+
+    app.logger.info("Load artist credits")
     artist_credit_index = load_artist_credit_index()
-    app.logger.warning("Load release names")
-    release_name_index = load_name_index()
 
     conn = timescale.engine.raw_connection()
     with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
 
-        query = """SELECT * from listen_mbid_mapping limit 1000"""
-        app.logger.warning("execute query")
+        query = """SELECT * from listen_mbid_mapping"""
+        app.logger.info("execute query")
         curs.execute(query)
-        app.logger.warning("start migration")
+        app.logger.info("start migration")
 
         updated_rows = []
         join_rows = []
@@ -86,7 +95,7 @@ def copy_rows_to_new_mbid_mapping(app):
                 break
 
             try:
-                insert_id = recording_mbid_index[row['recording_mbid']]
+                insert_id = recording_mbid_index[str(row['recording_mbid'])]
             except KeyError:
                 insert_id = id
                 recording_mbid_index[row['recording_mbid']] = insert_id
@@ -97,7 +106,7 @@ def copy_rows_to_new_mbid_mapping(app):
                         None, None, None, None, 'no_match', row['last_updated'] ])
                 else:
                     updated_rows.append([ insert_id, row['recording_mbid'], row['release_mbid'], 
-                        release_name_index[row['release_mbid']], artist_credit_index[row["artist_credit_id"]],
+                        release_name_index[str(row['release_mbid'])], artist_credit_index[row["artist_credit_id"]],
                         row['artist_credit_name'], row["recording_name"], row["match_type"], row['last_updated'] ])
 
             join_rows.append([ row['recording_msid'], insert_id ])
@@ -108,10 +117,10 @@ def copy_rows_to_new_mbid_mapping(app):
                 updated_rows = []
                 join_rows = []
                 if count % 1000000 == 0:
-                    app.logger.warning("inserted %d rows" % count)
+                    app.logger.info("inserted %d rows" % count)
 
         if updated_rows:
-            insert_rows(updated_rows)
+            insert_rows(updated_rows, join_rows)
 
 if __name__ == "__main__":
     app = create_app()
