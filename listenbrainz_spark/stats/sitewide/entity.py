@@ -16,126 +16,95 @@ logger = logging.getLogger(__name__)
 
 
 entity_handler_map = {
-    'artists': get_artists,
+    "artists": get_artists,
 }
 
 entity_model_map = {
-    'artists': SitewideArtistRecord
+    "artists": SitewideArtistRecord
 }
 
 
 def get_entity_week(entity: str) -> Optional[List[SitewideEntityStatMessage]]:
     """ Get the weekly sitewide top entity """
-    logger.debug(f"Calculating sitewide_{entity}_week...")
-
     to_date = get_last_monday(get_latest_listen_ts())
     from_date = offset_days(to_date, 7)
-
-    listens_df = get_listens_from_new_dump(from_date, to_date)
-    table_name = f'sitewide_{entity}_week'
-    listens_df.createOrReplaceTempView(table_name)
-
-    handler = entity_handler_map[entity]
-    data = handler(table_name)
-    messages = create_messages(data=data, entity=entity, stats_range='week',
-                               from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
-
-    logger.debug("Done!")
-
-    return messages
+    # Set time to 00:00
+    from_date = datetime(from_date.year, from_date.month, from_date.day)
+    return _get_entity_stats(entity, "week", from_date, to_date)
 
 
 def get_entity_month(entity: str) -> Optional[List[SitewideEntityStatMessage]]:
     """ Get the montly sitewide top entity """
-    logger.debug(f"Calculating sitewide_{entity}_month...")
-
     to_date = get_latest_listen_ts()
     from_date = replace_days(to_date, 1)
-
-    listens_df = get_listens_from_new_dump(from_date, to_date)
-    table_name = f'sitewide_{entity}_month'
-    listens_df.createOrReplaceTempView(table_name)
-
-    handler = entity_handler_map[entity]
-    data = handler(table_name)
-
-    messages = create_messages(data=data, entity=entity, stats_range='month',
-                               from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
-
-    logger.debug("Done!")
-
-    return messages
+    # Set time to 00:00
+    from_date = datetime(from_date.year, from_date.month, from_date.day)
+    return _get_entity_stats(entity, "month", from_date, to_date)
 
 
 def get_entity_year(entity: str) -> Optional[List[SitewideEntityStatMessage]]:
     """ Get the yearly sitewide top entity """
-    logger.debug(f"Calculating sitewide_{entity}_year...")
-
     to_date = get_latest_listen_ts()
     from_date = replace_days(replace_months(to_date, 1), 1)
-
-    listens_df = get_listens_from_new_dump(from_date, to_date)
-    table_name = f'sitewide_{entity}_year'
-    listens_df.createOrReplaceTempView(table_name)
-
-    handler = entity_handler_map[entity]
-    data = handler(table_name)
-
-    messages = create_messages(data=data, entity=entity, stats_range='year',
-                               from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
-
-    logger.debug("Done!")
-
-    return messages
+    # Set time to 00:00
+    from_date = datetime(from_date.year, from_date.month, from_date.day)
+    return _get_entity_stats(entity, "year", from_date, to_date)
 
 
 def get_entity_all_time(entity: str) -> Optional[List[SitewideEntityStatMessage]]:
     """ Get the all_time sitewide top entity """
-    logger.debug(f"Calculating sitewide_{entity}_all_time...")
-
     to_date = get_latest_listen_ts()
     from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
+    # Set time to 00:00
+    from_date = datetime(from_date.year, from_date.month, from_date.day)
+    return _get_entity_stats(entity, "all_time", from_date, to_date)
+
+
+def _get_entity_stats(entity: str, stats_range: str, from_date: datetime, to_date: datetime) \
+        -> Optional[List[SitewideEntityStatMessage]]:
+    """ Returns top entity stats for given time period """
+    logger.debug(f"Calculating sitewide_{entity}_{stats_range}...")
 
     listens_df = get_listens_from_new_dump(from_date, to_date)
-    table_name = f'sitewide_{entity}_all_time'
+    table_name = f"sitewide_{entity}_{stats_range}"
     listens_df.createOrReplaceTempView(table_name)
 
     handler = entity_handler_map[entity]
     data = handler(table_name)
 
-    messages = create_messages(data=data, entity=entity, stats_range='all_time',
-                               from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
+    messages = create_messages(data=data, entity=entity, stats_range=stats_range,
+                               from_date=from_date, to_date=to_date)
 
     logger.debug("Done!")
 
     return messages
 
 
-def create_messages(data, entity: str, stats_range: str, from_ts: float, to_ts: float):
+def create_messages(data, entity: str, stats_range: str, from_date: datetime, to_date: datetime):
     """
     Create messages to send the data to the webserver via RabbitMQ
 
     Args:
-        data (iterator): Data to sent to the webserver
+        data: Data to sent to the webserver
         entity: The entity for which statistics are calculated, i.e 'artists',
             'releases' or 'recordings'
         stats_range: The range for which the statistics have been calculated
-        from_ts: The UNIX timestamp of start time of the stats
-        to_ts: The UNIX timestamp of end time of the stats
+        from_date: The start time of the stats
+        to_date: The end time of the stats
 
     Returns:
         messages: A list of messages to be sent via RabbitMQ
     """
     message = {
-        'type': 'sitewide_entity',
-        'stats_range': stats_range,
-        'from_ts': from_ts,
-        'to_ts': to_ts,
-        'entity': entity,
+        "type": "sitewide_entity",
+        "stats_range": stats_range,
+        "from_ts": int(from_date.timestamp()),
+        "to_ts": int(to_date.timestamp()),
+        "entity": entity,
     }
     entry = next(data).asDict(recursive=True)
-    stats = entry['stats']
-    message['count'] = len(stats)
+    stats = entry["stats"]
+    message["count"] = len(stats)
 
     entity_list = []
     for item in stats:
@@ -143,7 +112,7 @@ def create_messages(data, entity: str, stats_range: str, from_ts: float, to_ts: 
             entity_list.append(entity_model_map[entity](**item))
         except ValidationError:
             logger.error("Invalid entry in entity stats", exc_info=True)
-    message['data'] = entity_list
+    message["data"] = entity_list
 
     try:
         model = SitewideEntityStatMessage(**message)
