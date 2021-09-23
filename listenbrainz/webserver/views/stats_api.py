@@ -1,10 +1,8 @@
-import bisect
 import calendar
-import json
 from collections import defaultdict
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Dict, List, Tuple, Union, Iterable
+from typing import Dict, List, Tuple
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
@@ -12,17 +10,14 @@ import pycountry
 import requests
 
 from data.model.common_stat import StatApi
-from data.model.sitewide_artist_stat import SitewideArtistStatJson
-from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapRecord
+from data.model.user_artist_map import UserArtistMapRecord
 from flask import Blueprint, current_app, jsonify, request
 
 from data.model.user_entity import UserEntityRecord
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError,
-                                           APINoContent, APINotFound,
-                                           APIServiceUnavailable,
-                                           APIUnauthorized)
+                                           APINoContent, APINotFound)
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
                                                     MAX_ITEMS_PER_GET,
@@ -559,40 +554,16 @@ def get_sitewide_artist():
 
         {
             "payload": {
-                "time_ranges": [
+                "artists": [
                     {
-                        "time_range": "April 2020",
-                        "artists": [
-                            {
-                                "artist_mbids": ["f4fdbb4c-e4b7-47a0-b83b-d91bbfcfa387"],
-                                "artist_name": "Ariana Grande",
-                                "listen_count": 519
-                            },
-                            {
-                                "artist_mbids": ["f4abc0b5-3f7a-4eff-8f78-ac078dbce533"],
-                                "artist_name": "Billie Eilish",
-                                "listen_count": 447
-                            }
-                        ],
-                        "from_ts": 1585699200,
-                        "to_ts": 1588291199,
+                        "artist_mbids": [],
+                        "artist_name": "Kanye West",
+                        "listen_count": 1305
                     },
                     {
-                        "time_range": "May 2020",
-                        "artists": [
-                            {
-                                "artist_mbids": [],
-                                "artist_name": "The Weeknd",
-                                "listen_count": 621
-                            },
-                            {
-                                "artist_mbids": [],
-                                "artist_name": "Drake",
-                                "listen_count": 554
-                            }
-                        ],
-                        "from_ts": 1588291200,
-                        "to_ts": 1590969599
+                        "artist_mbids": ["0b30341b-b59d-4979-8130-b66c0e475321"],
+                        "artist_name": "Lil Nas X",
+                        "listen_count": 1267
                     }
                 ],
                 "offset": 0,
@@ -607,9 +578,6 @@ def get_sitewide_artist():
     .. note::
         - This endpoint is currently in beta
         - ``artist_mbids`` and ``artist_msid`` are optional fields and may not be present in all the entries
-        - The example above shows the data for two days only, however we calculate the statistics for
-          the current time range and the previous time range. For example for yearly statistics the data
-          is calculated for the months in current as well as the past year.
         - We only calculate the top 1000 artists for each time period.
 
     :param count: Optional, number of artists to return for each time range,
@@ -634,19 +602,19 @@ def get_sitewide_artist():
     offset = get_non_negative_param('offset', default=0)
     count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
-    stats = db_stats.get_sitewide_artists(stats_range)
-    if stats is None or stats.data is None:
+    stats = db_stats.get_sitewide_stats(stats_range, 'artists')
+    if stats is None:
         raise APINoContent('')
 
-    entity_data = _get_sitewide_entity_list(stats.data, entity="artists", offset=offset, count=count)
+    entity_list, total_entity_count = _process_user_entity(stats, offset, count)
     return jsonify({
-        'payload': {
-            "time_ranges": entity_data,
+        "payload": {
+            "artists": entity_list,
             "range": stats_range,
             "offset": offset,
-            "count": min(count, MAX_ITEMS_PER_GET),
-            "from_ts": stats.data.from_ts,
-            "to_ts": stats.data.to_ts,
+            "count": total_entity_count,
+            "from_ts": stats.from_ts,
+            "to_ts": stats.to_ts,
             "last_updated": int(stats.last_updated.timestamp())
         }
     })
@@ -696,29 +664,6 @@ def _is_valid_range(stats_range: str) -> bool:
         result: True if given range is valid
     """
     return stats_range in StatisticsRange.__members__
-
-
-def _get_sitewide_entity_list(
-    stats: Union[SitewideArtistStatJson],
-    entity: str,
-    offset: int,
-    count: int,
-) -> List[dict]:
-    """ Gets a list of entity records from the stat passed based on the offset and count
-    """
-    count = min(count, MAX_ITEMS_PER_GET)
-    count = count + offset
-
-    result = []
-    for time_range in stats.time_ranges:
-        result.append({
-            "time_range": time_range.time_range,
-            "from_ts": time_range.from_ts,
-            "to_ts": time_range.to_ts,
-            entity: [x.dict() for x in getattr(time_range, entity)[offset:count]]
-        })
-
-    return sorted(result, key=lambda x: x['from_ts'])
 
 
 def _get_country_wise_counts(artist_mbids: Dict[str, int]) -> List[UserArtistMapRecord]:

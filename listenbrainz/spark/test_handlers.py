@@ -3,12 +3,9 @@ from datetime import datetime, timedelta, timezone
 from unittest import mock
 
 from data.model.common_stat import StatRange, StatRecordList
-from data.model.sitewide_artist_stat import (SitewideArtistRecord,
-                                             SitewideArtistStatJson,
-                                             SitewideArtistStatRange)
-from data.model.user_daily_activity import UserDailyActivityRecord, UserDailyActivityRecord
+from data.model.user_daily_activity import UserDailyActivityRecord
 from data.model.user_entity import UserEntityRecord
-from data.model.user_listening_activity import UserListeningActivityRecord, UserListeningActivityRecord
+from data.model.user_listening_activity import UserListeningActivityRecord
 from data.model.user_artist_stat import UserArtistRecord
 
 from data.model.user_missing_musicbrainz_data import (UserMissingMusicBrainzDataRecord,
@@ -162,10 +159,10 @@ class HandlersTestCase(unittest.TestCase):
         ))
         mock_send_mail.assert_called_once()
 
-    @mock.patch('listenbrainz.spark.handlers.db_stats.insert_sitewide_artists')
+    @mock.patch('listenbrainz.spark.handlers.db_stats.insert_sitewide_jsonb_data')
     @mock.patch('listenbrainz.spark.handlers.is_new_user_stats_batch')
     @mock.patch('listenbrainz.spark.handlers.send_mail')
-    def test_handle_user_daily_activity(self, mock_send_mail, mock_new_user_stats, mock_db_insert):
+    def test_handle_user_daily_activity(self, mock_send_mail, mock_sitewide_stats, mock_db_insert):
         data = {
             'type': 'sitewide_entity',
             'stats_range': 'all_time',
@@ -174,38 +171,30 @@ class HandlersTestCase(unittest.TestCase):
             'entity': 'artists',
             'data': [
                 {
-                    'time_range': 'Monday',
-                    'from_ts': 1,
-                    'to_ts': 2,
-                    'artists': [
-                        {
-                            'artist_name': 'Coldplay',
-                            'artist_mbid': [],
-                            'listen_count': 20
-                        }
-                    ]
+                    'artist_name': 'Coldplay',
+                    'artist_mbid': [],
+                    'listen_count': 20
                 }
             ],
+            'count': 1
         }
 
         with self.app.app_context():
             current_app.config['TESTING'] = False  # set testing to false to check the notifications
             handle_sitewide_entity(data)
 
-        mock_db_insert.assert_called_with('all_time', SitewideArtistStatJson(
+        mock_db_insert.assert_called_with('artists', StatRange[UserArtistRecord](
             to_ts=10,
             from_ts=1,
-            time_ranges=[SitewideArtistStatRange(
-                time_range="Monday",
-                from_ts=1,
-                to_ts=2,
-                artists=[SitewideArtistRecord(
+            count=1,
+            stats_range='all_time',
+            data=StatRecordList[UserArtistRecord](__root__=[
+                UserArtistRecord(
                     artist_name='Coldplay',
                     artist_mbid=[],
                     listen_count=20,
-                )]
-            )]
-        ))
+                )
+            ])))
         mock_send_mail.assert_called_once()
 
     @mock.patch('listenbrainz.spark.handlers.db_stats.get_timestamp_for_last_user_stats_update')

@@ -27,8 +27,6 @@ from typing import Optional
 import sqlalchemy
 
 from data.model.common_stat import StatRange, StatApi
-from data.model.sitewide_artist_stat import (SitewideArtistStat,
-                                             SitewideArtistStatJson)
 from data.model.user_artist_map import UserArtistMapRecord
 from data.model.user_daily_activity import UserDailyActivityRecord
 from data.model.user_entity import UserEntityRecord
@@ -36,6 +34,12 @@ from data.model.user_listening_activity import UserListeningActivityRecord
 from flask import current_app
 from listenbrainz import db
 from pydantic import ValidationError
+
+
+# sitewide statistics are stored in the user statistics table
+# as statistics for a special user with the following user_id.
+# Note: this is the id from LB's "user" table and *not musicbrainz_row_id*.
+SITEWIDE_STATS_USER_ID = 15753
 
 
 def get_timestamp_for_last_user_stats_update():
@@ -79,38 +83,14 @@ def insert_user_jsonb_data(user_id: int, stats_type: str, stats: StatRange):
         })
 
 
-def _insert_sitewide_jsonb_data(stats_range: str, column: str, data: dict):
+def insert_sitewide_jsonb_data(stats_type: str, stats: StatRange):
     """ Inserts jsonb data into the given column
 
         Args:
-            stats_range: the range for which the stats have been calculated
-            column: the column in the database to insert into
-            data: the data to be inserted
+            stats_type: the type of entity for which to insert stats in
+            stats: the data to be inserted
     """
-    with db.engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
-            INSERT INTO statistics.sitewide (stats_range, {column})
-                 VALUES (:stats_range, :data)
-            ON CONFLICT (stats_range)
-          DO UPDATE SET {column} = COALESCE(statistics.sitewide.{column} || :data, :data),
-                        last_updated = NOW()
-            """.format(column=column)), {
-            'stats_range': stats_range,
-            'data': json.dumps(data)
-        })
-
-
-def insert_sitewide_artists(stats_range: str, artists: SitewideArtistStatJson):
-    """Inserts sitewide artist stats calculated from Spark into the database.
-
-       If stats are already present for a time range, they are updated to the new
-       values passed.
-
-       Args: stats_range: the range for which the stats have been calculated,
-             artists: the top artists for a particular stats_range
-    """
-    _insert_sitewide_jsonb_data(
-        stats_range, column='artist', data=artists.dict(exclude_none=True))
+    insert_user_jsonb_data(SITEWIDE_STATS_USER_ID, stats_type, stats)
 
 
 def get_user_stats(user_id: int, stats_range: str, stats_type: str) -> Optional[StatApi[UserEntityRecord]]:
@@ -208,30 +188,14 @@ def get_user_artist_map(user_id: int, stats_range: str) -> Optional[StatApi[User
     return get_user_activity_stats(user_id, stats_range, 'artist_map', StatApi[UserArtistMapRecord])
 
 
-def get_sitewide_artists(stats_range: str) -> Optional[SitewideArtistStat]:
-    """ Get sitewide top artists for from the DB.
+def get_sitewide_stats(stats_range: str, stats_type: str) -> Optional[StatApi[UserEntityRecord]]:
+    """ Get top stats of given type in a time range for user with given ID.
 
         Args:
-            stats_range: The time range for which to fetch the stats for.
-
-        Returns:
-            data: The top artists for the given time_range if they are present else None
+            stats_range: the time range to fetch the stats for
+            stats_type: the entity type to fetch stats for
     """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-                SELECT stats_range, artist as data, last_updated
-                  FROM statistics.sitewide
-                 WHERE stats_range = :stats_range
-            """), {
-            'stats_range': stats_range
-        })
-        row = result.fetchone()
-
-    try:
-        return SitewideArtistStat(**dict(row)) if row else None
-    except ValidationError:
-        current_app.logger.error("""ValidationError when getting {stats_range} sitewide top artists.
-                                 Data: {data}""".format(stats_range, data=json.dumps(dict(row)['data'], indent=3)), exc_info=True)
+    return get_user_stats(SITEWIDE_STATS_USER_ID, stats_range, stats_type)
 
 
 def valid_stats_exist(user_id, days):
@@ -279,16 +243,6 @@ def delete_user_stats(user_id):
 # TODO: Add tests for this function
 
 
-def delete_sitewide_stats(stats_range: str):
-    """ Delete stats for a particular time_range
-
-        Args:
-            stats_range: The stats_range for which stats should be deleted
-    """
-    with db.engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
-            DELETE FROM statistics.sitewide
-             WHERE stats_range = :stats_range
-            """), {
-            'stats_range': stats_range
-        })
+def delete_sitewide_stats():
+    """ Delete sitewide stats """
+    delete_user_stats(SITEWIDE_STATS_USER_ID)
