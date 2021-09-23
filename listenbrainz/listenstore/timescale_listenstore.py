@@ -728,7 +728,7 @@ class TimescaleListenStore(ListenStore):
                      JOIN listen_join_listen_mbid_mapping lj
                        ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = lj.recording_msid
                      JOIN listen_mbid_mapping m
-                       ON lj.listen_mbid_mapping == m.id
+                       ON lj.listen_mbid_mapping = m.id
                     WHERE listened_at > %s
                       AND listened_at <= %s
                  ORDER BY listened_at ASC"""
@@ -759,6 +759,7 @@ class TimescaleListenStore(ListenStore):
                     result = curs.fetchone()
                     if not result:
                         break
+                    print(result)
 
                     for col in data:
                         if col == 'listened_at':

@@ -4,6 +4,7 @@ import listenbrainz.db.dump_manager as dump_manager
 import listenbrainz.spark.request_manage as spark_request_manage
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data, \
                                                      refresh_listen_count_aggregate as ts_refresh_listen_count_aggregate
+
 from listenbrainz import db
 from listenbrainz.db import timescale as ts
 from listenbrainz import webserver
@@ -284,6 +285,22 @@ def refresh_continuous_aggregates():
         Update the continuous aggregates in timescale.
     """
     ts_refresh_listen_count_aggregate()
+
+#TODO: Remove this before making a PR
+@cli.command(name="test_dump")
+def test_dump():
+    from listenbrainz import config
+    from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStore
+    import logging
+    application = webserver.create_app()
+    with application.app_context() as app:
+        t = TimescaleListenStore({
+        'SQLALCHEMY_TIMESCALE_URI': config.SQLALCHEMY_TIMESCALE_URI,
+        'REDIS_HOST': config.REDIS_HOST,
+        'REDIS_PORT': config.REDIS_PORT,
+        'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
+        'LISTEN_DUMP_TEMP_DIR_ROOT': config.LISTEN_DUMP_TEMP_DIR_ROOT }, logging)
+        t.dump_listens_for_spark('listenbrainz-export', 99)
 
 
 # Add other commands here
