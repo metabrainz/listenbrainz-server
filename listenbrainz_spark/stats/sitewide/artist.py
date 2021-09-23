@@ -1,7 +1,9 @@
 from listenbrainz_spark.stats import run_query
 
+SITEWIDE_STATS_ENTITY_LIMIT = 1000  # number of top artists to retain in sitewide stats
 
-def get_artists(table: str, limit: int = 1000):
+
+def get_artists(table: str, limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
     """ Get artist information (artist_name, artist_msid etc) for every time range specified
         the "time_range" table ordered by listen count
 
