@@ -366,7 +366,7 @@ describe("BrainzPlayer", () => {
       );
       const instance = wrapper.instance();
 
-      wrapper.setProps({ currentListen: listen });
+      wrapper.setState({ currentListen: listen });
 
       expect(instance.isCurrentListen(listen)).toBe(true);
     });
@@ -378,7 +378,7 @@ describe("BrainzPlayer", () => {
       );
       const instance = wrapper.instance();
 
-      wrapper.setProps({ currentListen: undefined });
+      wrapper.setState({ currentListen: undefined });
 
       expect(instance.isCurrentListen({} as Listen)).toBeFalsy();
     });
@@ -392,7 +392,7 @@ describe("BrainzPlayer", () => {
       );
       const instance = wrapper.instance();
 
-      wrapper.setProps({ currentListen: listen });
+      wrapper.setState({ currentListen: listen });
 
       expect(instance.getCurrentTrackName()).toEqual("Bird's Lament");
     });
@@ -404,7 +404,7 @@ describe("BrainzPlayer", () => {
       );
       const instance = wrapper.instance();
 
-      wrapper.setProps({ currentListen: undefined });
+      wrapper.setState({ currentListen: undefined });
 
       expect(instance.getCurrentTrackName()).toEqual("");
     });
@@ -418,7 +418,7 @@ describe("BrainzPlayer", () => {
       );
       const instance = wrapper.instance();
 
-      wrapper.setProps({ currentListen: listen });
+      wrapper.setState({ currentListen: listen });
 
       expect(instance.getCurrentTrackArtists()).toEqual("Moondog");
     });
@@ -430,7 +430,7 @@ describe("BrainzPlayer", () => {
       );
       const instance = wrapper.instance();
 
-      wrapper.setProps({ currentListen: undefined });
+      wrapper.setState({ currentListen: undefined });
 
       expect(instance.getCurrentTrackArtists()).toEqual("");
     });
@@ -562,14 +562,13 @@ describe("BrainzPlayer", () => {
     it("tries playing the current listen with the next datasource", () => {
       const mockProps = {
         ...props,
-        currentListen: listen,
       };
       const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...mockProps} />,
         GlobalContextMock
       );
       const instance = wrapper.instance();
-      wrapper.setState({ isActivated: true });
+      wrapper.setState({ isActivated: true, currentListen: listen });
       instance.playNextTrack = jest.fn();
       instance.playListen = jest.fn();
       instance.failedToPlayTrack();
@@ -581,7 +580,6 @@ describe("BrainzPlayer", () => {
       const mockProps = {
         ...props,
         listens: [listen2, listen],
-        currentListen: listen,
       };
       const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...mockProps} />,
@@ -591,6 +589,7 @@ describe("BrainzPlayer", () => {
       wrapper.setState({
         isActivated: true,
         currentDataSourceIndex: instance.dataSources.length - 1,
+        currentListen: listen,
       });
       const playNextTrackSpy = jest.spyOn(instance, "playNextTrack");
       instance.playListen = jest.fn();
@@ -624,11 +623,7 @@ describe("BrainzPlayer", () => {
       const ds =
         instance.dataSources[instance.state.currentDataSourceIndex].current;
       const dsRecordsListens = ds && jest.spyOn(ds, "datasourceRecordsListens");
-      await instance.submitListenToListenBrainz(
-        trackInfo.title,
-        trackInfo.trackURL,
-        trackInfo.artist
-      );
+      await instance.submitListenToListenBrainz("single", listen);
       expect(dsRecordsListens).not.toHaveBeenCalled();
     });
 
@@ -654,11 +649,7 @@ describe("BrainzPlayer", () => {
             },
           }}
         >
-          <BrainzPlayer
-            {...props}
-            listens={[listen2]}
-            currentListen={listen2}
-          />
+          <BrainzPlayer {...props} listens={[listen2]} />
         </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
@@ -672,11 +663,7 @@ describe("BrainzPlayer", () => {
         instance.context.APIService,
         "submitListens"
       );
-      await instance.submitListenToListenBrainz(
-        trackInfo.title,
-        trackInfo.trackURL,
-        trackInfo.artist
-      );
+      await instance.submitListenToListenBrainz("single", listen);
       expect(submitListensAPISpy).not.toHaveBeenCalled();
     });
 
@@ -695,16 +682,18 @@ describe("BrainzPlayer", () => {
             },
           }}
         >
-          <BrainzPlayer
-            {...props}
-            listens={[listen2]}
-            currentListen={listen2}
-          />
+          <BrainzPlayer {...props} listens={[listen2]} />
         </GlobalAppContext.Provider>
       );
-      // expect API.submitListens to have been called with
-      // ucer auth token, "single", array of one listen
       const instance = wrapper.instance();
+      instance.setState({
+        currentListen: listen2,
+        currentTrackName: "Never Gonna Give You Up",
+        currentTrackArtist: "Rick Astley",
+        currentTrackURL:
+          "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT",
+      });
+
       const ds = instance.dataSources[instance.state.currentDataSourceIndex]
         ?.current as DataSourceType;
       expect(ds).toBeDefined();
@@ -715,11 +704,7 @@ describe("BrainzPlayer", () => {
         instance.context.APIService,
         "submitListens"
       );
-      await instance.submitListenToListenBrainz(
-        trackInfo.title,
-        trackInfo.trackURL,
-        trackInfo.artist
-      );
+      await instance.submitNowPlayingToListenBrainz();
       const expectedListen = {
         listened_at: 1234567,
         track_metadata: {
@@ -738,10 +723,6 @@ describe("BrainzPlayer", () => {
           },
         },
       };
-      // Cancel submission of full listen
-      instance.playNextTrack();
-      //   advance timers
-      jest.advanceTimersByTime(30001);
       expect(submitListensAPISpy).toHaveBeenCalledTimes(1);
       expect(submitListensAPISpy).toHaveBeenCalledWith(
         "IHaveSeenTheFnords",
@@ -766,16 +747,21 @@ describe("BrainzPlayer", () => {
             },
           }}
         >
-          <BrainzPlayer
-            {...props}
-            listens={[listen2]}
-            currentListen={listen2}
-          />
+          <BrainzPlayer {...props} listens={[listen2]} />
         </GlobalAppContext.Provider>
       );
-      // expect API.submitListens to have been called with
-      // ucer auth token, "single", array of one listen
+
       const instance = wrapper.instance();
+      instance.setState({
+        currentListen: listen2,
+        currentTrackName: "Never Gonna Give You Up",
+        currentTrackArtist: "Rick Astley",
+        currentTrackURL:
+          "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT",
+        continuousPlaybackTime: 15000,
+        durationMs: 123990,
+      });
+
       const ds = instance.dataSources[instance.state.currentDataSourceIndex]
         ?.current as DataSourceType;
       expect(ds).toBeDefined();
@@ -785,11 +771,6 @@ describe("BrainzPlayer", () => {
       const submitListensAPISpy = jest.spyOn(
         instance.context.APIService,
         "submitListens"
-      );
-      await instance.submitListenToListenBrainz(
-        trackInfo.title,
-        trackInfo.trackURL,
-        trackInfo.artist
       );
       const expectedListen = {
         listened_at: 1234567,
@@ -809,12 +790,13 @@ describe("BrainzPlayer", () => {
           },
         },
       };
-      // Let's chack after 15 seconds
-      jest.advanceTimersByTime(15000);
-      expect(submitListensAPISpy).toHaveBeenCalledTimes(1);
+      // After 15 seconds
+      await instance.checkProgressAndSubmitListen();
+      expect(submitListensAPISpy).not.toHaveBeenCalled();
       // And now after 30 seconds
-      jest.advanceTimersByTime(30001);
-      expect(submitListensAPISpy).toHaveBeenCalledTimes(2);
+      instance.setState({ continuousPlaybackTime: 30001 });
+      await instance.checkProgressAndSubmitListen();
+      expect(submitListensAPISpy).toHaveBeenCalledTimes(1);
       expect(submitListensAPISpy).toHaveBeenLastCalledWith(
         "IHaveSeenTheFnords",
         "single",

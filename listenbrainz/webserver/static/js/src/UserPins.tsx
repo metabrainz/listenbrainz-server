@@ -317,7 +317,6 @@ export default class UserPins extends React.Component<
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
             <BrainzPlayer
-              currentListen={currentListen}
               direction={direction}
               listens={pinsAsListens}
               newAlert={newAlert}
