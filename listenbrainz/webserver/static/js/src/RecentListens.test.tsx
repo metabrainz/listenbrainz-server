@@ -853,7 +853,6 @@ describe("pinRecordingModal", () => {
 
     // recentListens renders pinRecordingModal with listens[0] as recordingToPin by default
     expect(pinRecordingModal.props()).toEqual({
-      isCurrentUser: true,
       recordingToPin: props.listens[0],
       newAlert: props.newAlert,
     });
@@ -863,7 +862,6 @@ describe("pinRecordingModal", () => {
 
     pinRecordingModal = wrapper.find(PinRecordingModal).first();
     expect(pinRecordingModal.props()).toEqual({
-      isCurrentUser: true,
       recordingToPin,
       newAlert: props.newAlert,
     });

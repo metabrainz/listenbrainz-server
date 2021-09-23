@@ -198,8 +198,12 @@ export default class RecentListens extends React.Component<
     try {
       json = JSON.parse(newListen);
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Coudn't parse the new listen as JSON: ", error);
+      const { newAlert } = this.props;
+      newAlert(
+        "danger",
+        "Coudn't parse the new listen as JSON: ",
+        error.toString()
+      );
       return;
     }
     const listen = formatWSMessageToListen(json);
@@ -232,7 +236,7 @@ export default class RecentListens extends React.Component<
     });
   };
 
-  handleCurrentListenChange = (listen: Listen | JSPFTrack): void => {
+  handleCurrentListenChange = (listen: BaseListenFormat | JSPFTrack): void => {
     this.setState({ currentListen: listen as Listen });
   };
 
@@ -624,25 +628,22 @@ export default class RecentListens extends React.Component<
                       return (
                         <ListenCard
                           key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
-                          isCurrentUser={currentUser?.name === user?.name}
+                          showTimestamp
+                          showUsername={mode === "recent"}
+                          isCurrentListen={this.isCurrentListen(listen)}
                           listen={listen}
-                          mode={mode}
                           currentFeedback={this.getFeedbackForRecordingMsid(
                             listen.track_metadata?.additional_info
                               ?.recording_msid
                           )}
                           playListen={this.playListen}
-                          removeListenFromListenList={
-                            this.removeListenFromListenList
-                          }
-                          updateFeedback={this.updateFeedback}
+                          removeListenCallback={this.removeListenFromListenList}
+                          updateFeedbackCallback={this.updateFeedback}
                           updateRecordingToPin={this.updateRecordingToPin}
                           newAlert={newAlert}
                           className={`${
-                            this.isCurrentListen(listen)
-                              ? " current-listen"
-                              : ""
-                          }${listen.playing_now ? " playing-now" : ""}`}
+                            listen.playing_now ? "playing-now" : ""
+                          }`}
                         />
                       );
                     })}
@@ -758,7 +759,6 @@ export default class RecentListens extends React.Component<
                 {currentUser && (
                   <PinRecordingModal
                     recordingToPin={recordingToPin || listens[0]}
-                    isCurrentUser={currentUser?.name === user?.name}
                     newAlert={newAlert}
                   />
                 )}

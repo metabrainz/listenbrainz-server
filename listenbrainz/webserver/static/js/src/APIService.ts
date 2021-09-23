@@ -1,4 +1,4 @@
-import { isNil } from "lodash";
+import { isNil, isUndefined } from "lodash";
 import APIError from "./APIError";
 
 export default class APIService {
@@ -211,8 +211,7 @@ export default class APIService {
     const url = `${this.APIBaseURI}/user/${username}/followers`;
     const response = await fetch(url);
     await this.checkStatus(response);
-    const data = response.json();
-    return data;
+    return response.json();
   };
 
   getFollowingForUser = async (
@@ -225,8 +224,7 @@ export default class APIService {
     const url = `${this.APIBaseURI}/user/${username}/following`;
     const response = await fetch(url);
     await this.checkStatus(response);
-    const data = response.json();
-    return data;
+    return response.json();
   };
 
   /*
@@ -293,9 +291,12 @@ export default class APIService {
    *  Send a GET request to the ListenBrainz server to get the latest import time
    *  from previous imports for the user.
    */
-  getLatestImport = async (userName: string): Promise<number> => {
+  getLatestImport = async (
+    userName: string,
+    service: ImportService
+  ): Promise<number> => {
     const url = encodeURI(
-      `${this.APIBaseURI}/latest-import?user_name=${userName}`
+      `${this.APIBaseURI}/latest-import?user_name=${userName}&service=${service}`
     );
     const response = await fetch(url, {
       method: "GET",
@@ -312,6 +313,7 @@ export default class APIService {
    */
   setLatestImport = async (
     userToken: string,
+    service: ImportService,
     timestamp: number
   ): Promise<number> => {
     const url = `${this.APIBaseURI}/latest-import`;
@@ -321,7 +323,7 @@ export default class APIService {
         Authorization: `Token ${userToken}`,
         "Content-Type": "application/json;charset=UTF-8",
       },
-      body: JSON.stringify({ ts: timestamp }),
+      body: JSON.stringify({ ts: timestamp, service }),
     });
     await this.checkStatus(response);
     return response.status; // Return true if timestamp is updated
@@ -347,8 +349,7 @@ export default class APIService {
       error.response = response;
       throw error;
     }
-    const data = response.json();
-    return data;
+    return response.json();
   };
 
   getUserListeningActivity = async (
@@ -364,8 +365,7 @@ export default class APIService {
       error.response = response;
       throw error;
     }
-    const data = response.json();
-    return data;
+    return response.json();
   };
 
   getUserDailyActivity = async (
@@ -381,8 +381,7 @@ export default class APIService {
       error.response = response;
       throw error;
     }
-    const data = response.json();
-    return data;
+    return response.json();
   };
 
   getUserArtistMap = async (
@@ -399,8 +398,7 @@ export default class APIService {
       error.response = response;
       throw error;
     }
-    const data = response.json();
-    return data;
+    return response.json();
   };
 
   checkStatus = async (response: Response): Promise<void> => {
@@ -460,6 +458,34 @@ export default class APIService {
     return response.status;
   };
 
+  getFeedbackForUser = async (
+    userName: string,
+    offset: number = 0,
+    count?: number,
+    score?: ListenFeedBack
+  ) => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    let queryURL = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback`;
+    const queryParams: Array<string> = ["metadata=true"];
+    if (!isUndefined(offset)) {
+      queryParams.push(`offset=${offset}`);
+    }
+    if (!isUndefined(score)) {
+      queryParams.push(`score=${score}`);
+    }
+    if (!isUndefined(count)) {
+      queryParams.push(`count=${count}`);
+    }
+    if (queryParams.length) {
+      queryURL += `?${queryParams.join("&")}`;
+    }
+    const response = await fetch(queryURL);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   getFeedbackForUserForRecordings = async (
     userName: string,
     recordings: string
@@ -471,8 +497,7 @@ export default class APIService {
     const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings?recordings=${recordings}`;
     const response = await fetch(url);
     await this.checkStatus(response);
-    const data = response.json();
-    return data;
+    return response.json();
   };
 
   deleteListen = async (
@@ -570,8 +595,7 @@ export default class APIService {
     });
 
     await this.checkStatus(response);
-    const data = response.json();
-    return data;
+    return response.json();
   };
 
   getPlaylist = async (playlistMBID: string, userToken?: string) => {
@@ -591,8 +615,7 @@ export default class APIService {
       headers,
     });
     await this.checkStatus(response);
-    const data = response.json();
-    return data;
+    return response.json();
   };
 
   addPlaylistItems = async (
@@ -720,7 +743,7 @@ export default class APIService {
       },
       body: JSON.stringify({ recording_mbid: recordingMBID, rating }),
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     return response.status;
   };
 
@@ -737,7 +760,7 @@ export default class APIService {
       },
       body: JSON.stringify({ recording_mbid: recordingMBID }),
     });
-    this.checkStatus(response);
+    await this.checkStatus(response);
     return response.status;
   };
 
@@ -751,9 +774,8 @@ export default class APIService {
 
     const url = `${this.APIBaseURI}/recommendation/feedback/user/${userName}/recordings?mbids=${recordings}`;
     const response = await fetch(url);
-    this.checkStatus(response);
-    const data = response.json();
-    return data;
+    await this.checkStatus(response);
+    return response.json();
   };
 
   recommendTrackToFollowers = async (
@@ -786,8 +808,7 @@ export default class APIService {
     const url = `${this.APIBaseURI}/user/${username}/similar-users`;
     const response = await fetch(url);
     await this.checkStatus(response);
-    const data = response.json();
-    return data;
+    return response.json();
   };
 
   reportUser = async (userName: string, optionalContext?: string) => {
@@ -862,8 +883,7 @@ export default class APIService {
     });
 
     await this.checkStatus(response);
-    const data = await response.json();
-    return data;
+    return response.json();
   };
 
   submitReviewToCB = async (
@@ -889,23 +909,20 @@ export default class APIService {
     });
 
     await this.checkStatus(response);
-    const data = await response.json();
-    return data;
+    return response.json();
   };
 
   lookupMBRelease = async (releaseMBID: string): Promise<any> => {
     const url = `${this.MBBaseURI}/release/${releaseMBID}?fmt=json&inc=release-groups`;
     const response = await fetch(encodeURI(url));
-    this.checkStatus(response);
-    const data = response.json();
-    return data;
+    await this.checkStatus(response);
+    return response.json();
   };
 
   lookupMBReleaseFromTrack = async (trackMBID: string): Promise<any> => {
     const url = `${this.MBBaseURI}/release?track=${trackMBID}&fmt=json`;
     const response = await fetch(encodeURI(url));
-    this.checkStatus(response);
-    const data = response.json();
-    return data;
+    await this.checkStatus(response);
+    return response.json();
   };
 }

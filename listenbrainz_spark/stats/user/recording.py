@@ -29,20 +29,20 @@ def get_recordings(table):
     result = run_query(f"""
         WITH intermediate_table as (
             SELECT user_name
-                 , recording_name
+                 , first(recording_name) AS any_recording_name
                  , recording_mbid
-                 , artist_name
+                 , first(artist_name) AS any_artist_name
                  , artist_credit_mbids
-                 , nullif(release_name, '') as release_name
+                 , nullif(first(release_name), '') as any_release_name
                  , release_mbid
                  , count(*) as listen_count
               FROM {table}
           GROUP BY user_name
-                 , recording_name
+                 , lower(recording_name)
                  , recording_mbid
-                 , artist_name
+                 , lower(artist_name)
                  , artist_credit_mbids
-                 , release_name
+                 , lower(release_name)
                  , release_mbid
         )
         SELECT user_name
@@ -50,11 +50,11 @@ def get_recordings(table):
                     collect_list(
                         struct(
                             listen_count
-                          , recording_name AS track_name
+                          , any_recording_name AS track_name
                           , recording_mbid
-                          , artist_name
+                          , any_artist_name AS artist_name
                           , coalesce(artist_credit_mbids, array()) AS artist_mbids
-                          , release_name
+                          , any_release_name AS release_name
                           , release_mbid
                         )
                     )

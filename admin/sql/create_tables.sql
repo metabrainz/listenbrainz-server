@@ -179,6 +179,22 @@ CREATE TABLE statistics.user (
     last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE statistics.user_new (
+    id                      SERIAL, -- PK
+    user_id                 INTEGER NOT NULL, -- FK to "user".id
+    stats_type              user_stats_type,
+    stats_range             stats_range_type,
+    data                    JSONB,
+    count                   INTEGER,
+    -- we use int timestamps when serializing data in spark, we return the same from the api
+    -- using timestamp with time zone here just complicates stuff. we'll need to add
+    -- datetime/timestamp conversions in code at multiple places and we never seem to use this
+    -- value anyways in LB backend atm.
+    from_ts                 BIGINT,
+    to_ts                   BIGINT,
+    last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE statistics.sitewide (
     id                      SERIAL, --pk
     stats_range             TEXT,

@@ -91,6 +91,8 @@ def create_temp_release_table(conn):
 
     with conn.cursor() as curs:
         log("mbid mapping temp tables: Create temp release table: select")
+        
+        # The 1 in the WHERE clause refers to MB's Various Artists ID of 1 -- all the various artist albums.
         query = """             SELECT r.id AS release
                                   FROM musicbrainz.release_group rg
                                   JOIN musicbrainz.release r ON rg.id = r.release_group
@@ -102,47 +104,47 @@ def create_temp_release_table(conn):
                                   JOIN musicbrainz.release_group_primary_type rgpt ON rg.type = rgpt.id
                              LEFT JOIN musicbrainz.release_group_secondary_type_join rgstj ON rg.id = rgstj.release_group
                              LEFT JOIN musicbrainz.release_group_secondary_type rgst ON rgstj.secondary_type = rgst.id
-                                 WHERE rg.artist_credit != 1
+                                 WHERE rg.artist_credit %s 1
                                        %s
                                  ORDER BY rg.type, rgst.id desc, fs.sort,
                                           to_date(date_year::TEXT || '-' ||
                                                   COALESCE(date_month,12)::TEXT || '-' ||
                                                   COALESCE(date_day,28)::TEXT, 'YYYY-MM-DD'),
-                                          country, rg.artist_credit, rg.name"""
+                                          country, rg.artist_credit, rg.name, r.id"""
 
-        if config.USE_MINIMAL_DATASET:
-            log("mbid mapping temp tables: Using a minimal dataset for artist credit pairs")
-            curs.execute(query %
-                         ('AND rg.artist_credit = %d' % TEST_ARTIST_ID))
-        else:
-            log("mbid mapping temp tables: Using a full dataset for artist credit pairs")
-            curs.execute(query % "")
+        count = 0
+        for op in ['!=', '=']:
+            if config.USE_MINIMAL_DATASET:
+                log("mbid mapping temp tables: Using a minimal dataset for artist credit pairs: artist_id %s 1" % op)
+                curs.execute(query % (op, 'AND rg.artist_credit = %d' % TEST_ARTIST_ID))
+            else:
+                log("mbid mapping temp tables: Using a full dataset for artist credit pairs: artsit_id %s 1" % op)
+                curs.execute(query % (op, ""))
 
-        # Fetch releases and toss out duplicates -- using DISTINCT in the query above is not possible as it will
-        # destroy the sort order we so carefully crafted.
-        with conn.cursor() as curs_insert:
-            rows = []
-            count = 0
-            release_index = {}
-            for row in curs:
-                if row[0] in release_index:
-                    continue
+            # Fetch releases and toss out duplicates -- using DISTINCT in the query above is not possible as it will
+            # destroy the sort order we so carefully crafted.
+            with conn.cursor() as curs_insert:
+                rows = []
+                release_index = {}
+                for row in curs:
+                    if row[0] in release_index:
+                        continue
 
-                release_index[row[0]] = 1
+                    release_index[row[0]] = 1
 
-                count += 1
-                rows.append((count, row[0]))
-                if len(rows) == BATCH_SIZE:
+                    count += 1
+                    rows.append((count, row[0]))
+                    if len(rows) == BATCH_SIZE:
+                        insert_rows(
+                            curs_insert, "mapping.tmp_mbid_mapping_releases", rows)
+                        rows = []
+
+                    if count % 1000000 == 0:
+                        log("mbid mapping temp tables: inserted %s rows." % count)
+
+                if rows:
                     insert_rows(
                         curs_insert, "mapping.tmp_mbid_mapping_releases", rows)
-                    rows = []
-
-                if count % 1000000 == 0:
-                    log("mbid mapping temp tables: inserted %s rows." % count)
-
-            if rows:
-                insert_rows(
-                    curs_insert, "mapping.tmp_mbid_mapping_releases", rows)
 
         log("mbid mapping temp tables: create indexes")
         curs.execute("""CREATE INDEX tmp_mbid_mapping_releases_idx_release

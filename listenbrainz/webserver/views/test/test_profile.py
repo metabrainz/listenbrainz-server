@@ -4,7 +4,7 @@ import listenbrainz.db.user as db_user
 import time
 import ujson
 
-from flask import url_for, current_app, g
+from flask import url_for, g
 
 from data.model.external_service import ExternalServiceType
 from listenbrainz.domain.external_service import ExternalServiceInvalidGrantError
@@ -13,7 +13,7 @@ from listenbrainz.listen import Listen
 from listenbrainz.tests.integration import IntegrationTestCase
 from unittest.mock import patch
 from listenbrainz.db.model.feedback import Feedback
-from listenbrainz.db import external_service_oauth as db_oauth
+from listenbrainz.db import external_service_oauth as db_oauth, listens_importer
 
 
 class ProfileViewsTestCase(IntegrationTestCase):
@@ -38,7 +38,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         # we do a get request first to put the CSRF token in the flask global context
         # so that we can access it for using in the post request in the next step
         val = int(time.time())
-        db_user.update_latest_import(self.user['musicbrainz_id'], val)
+        listens_importer.update_latest_listened_at(self.user['id'], ExternalServiceType.LASTFM, val)
         self.temporary_login(self.user['login_id'])
         response = self.client.get(url_for('profile.reset_latest_import_timestamp'))
         self.assertTemplateUsed('profile/resetlatestimportts.html')
@@ -50,8 +50,8 @@ class ProfileViewsTestCase(IntegrationTestCase):
         )
         self.assertStatus(response, 302)  # should have redirected to the info page
         self.assertRedirects(response, url_for('profile.info'))
-        ts = db_user.get(self.user['id'])['latest_import'].strftime('%s')
-        self.assertEqual(int(ts), 0)
+        ts = listens_importer.get_latest_listened_at(self.user['id'], ExternalServiceType.LASTFM)
+        self.assertEqual(int(ts.strftime('%s')), 0)
 
     def test_user_info_not_logged_in(self):
         """Tests user info view when not logged in"""
@@ -326,18 +326,21 @@ class ProfileViewsTestCase(IntegrationTestCase):
             'score': 1,
             'user_id': None,
             'created': None,
+            'track_metadata': None,
         })
         self.assertDictEqual(results[1], {
             'recording_msid': '7ad53fd7-5b40-4e13-b680-52716fb86d5f',
             'score': 1,
             'user_id': None,
             'created': None,
+            'track_metadata': None,
         })
         self.assertDictEqual(results[2], {
             'recording_msid': '7816411a-2cc6-4e43-b7a1-60ad093c2c31',
             'score': -1,
             'user_id': None,
             'created': None,
+            'track_metadata': None,
         })
 
     def test_export_feedback_streaming_not_logged_in(self):

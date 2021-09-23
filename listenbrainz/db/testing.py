@@ -2,13 +2,18 @@
 import os
 import unittest
 
+import sqlalchemy
+import uuid
+
 from listenbrainz import config
 from listenbrainz import db
 from listenbrainz.db import timescale as ts
+from messybrainz import db as msb
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'admin', 'sql')
 TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'testdata')
 TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'admin', 'timescale')
+MESSYBRAINZ_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'admin', 'messybrainz', 'sql')
 
 
 class DatabaseTestCase(unittest.TestCase):
@@ -46,6 +51,19 @@ class DatabaseTestCase(unittest.TestCase):
         """
         return os.path.join(TEST_DATA_PATH, file_name)
 
+    def create_user_with_id(self, lb_id:int, musicbrainz_row_id: int, musicbrainz_id: str):
+        """ Create a new user with the specified LB id. """
+        with db.engine.connect() as connection:
+            result = connection.execute(sqlalchemy.text("""
+                INSERT INTO "user" (id, musicbrainz_id, musicbrainz_row_id, auth_token)
+                     VALUES (:id, :mb_id, :mb_row_id, :token)
+            """), {
+                "id": lb_id,
+                "mb_id": musicbrainz_id,
+                "token": str(uuid.uuid4()),
+                "mb_row_id": musicbrainz_row_id,
+            })
+
 
 class TimescaleTestCase(unittest.TestCase):
 
@@ -75,3 +93,31 @@ class TimescaleTestCase(unittest.TestCase):
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_primary_keys.sql'))
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_foreign_keys.sql'))
         ts.engine.dispose()
+
+
+class MessyBrainzTestCase(unittest.TestCase):
+
+    def setUp(self):
+        msb.init_db_engine(config.MESSYBRAINZ_ADMIN_URI)
+        self.reset_msb_db()
+
+    def tearDown(self):
+        self.drop_tables()
+
+    def reset_msb_db(self):
+        msb.init_db_engine(config.MESSYBRAINZ_ADMIN_URI)
+        msb.run_sql_script_without_transaction(os.path.join(MESSYBRAINZ_SQL_DIR, 'drop_db.sql'))
+        msb.run_sql_script_without_transaction(os.path.join(MESSYBRAINZ_SQL_DIR, 'create_db.sql'))
+        msb.engine.dispose()
+
+        msb.init_db_engine(config.MESSYBRAINZ_ADMIN_MSB_URI)
+        msb.run_sql_script_without_transaction(os.path.join(MESSYBRAINZ_SQL_DIR, 'create_extensions.sql'))
+        msb.engine.dispose()
+
+        msb.init_db_engine(config.MESSYBRAINZ_SQLALCHEMY_DATABASE_URI)
+        msb.run_sql_script(os.path.join(MESSYBRAINZ_SQL_DIR, 'create_tables.sql'))
+        msb.run_sql_script(os.path.join(MESSYBRAINZ_SQL_DIR, 'create_functions.sql'))
+        msb.run_sql_script(os.path.join(MESSYBRAINZ_SQL_DIR, 'create_indexes.sql'))
+        msb.run_sql_script(os.path.join(MESSYBRAINZ_SQL_DIR, 'create_primary_keys.sql'))
+        msb.run_sql_script(os.path.join(MESSYBRAINZ_SQL_DIR, 'create_foreign_keys.sql'))
+        msb.engine.dispose()

@@ -5,7 +5,6 @@ import { preciseTimestamp } from "./utils";
 
 export type PinRecordingModalProps = {
   recordingToPin: Listen;
-  isCurrentUser: Boolean;
   newAlert: (
     alertType: AlertType,
     title: string,
@@ -31,19 +30,22 @@ export default class PinRecordingModal extends React.Component<
   }
 
   submitPinRecording = async () => {
-    const { recordingToPin, isCurrentUser, newAlert } = this.props;
+    const { recordingToPin, newAlert } = this.props;
     const { blurbContent } = this.state;
     const { APIService, currentUser } = this.context;
 
-    if (isCurrentUser && currentUser?.auth_token) {
+    if (currentUser?.auth_token) {
       const recordingMSID = _get(
         recordingToPin,
         "track_metadata.additional_info.recording_msid"
       );
-      const recordingMBID = _get(
-        recordingToPin,
-        "track_metadata.additional_info.recording_mbid"
-      );
+      // We currently have an issue with submitting MSID and MBID at the same time
+      // So we temporarily remove the MBID from the submition
+      const recordingMBID = undefined;
+      //   const recordingMBID = _get(
+      //     recordingToPin,
+      //     "track_metadata.additional_info.recording_mbid"
+      //   );
 
       try {
         const status = await APIService.submitPinRecording(

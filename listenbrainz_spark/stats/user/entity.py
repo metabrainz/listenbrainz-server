@@ -10,8 +10,7 @@ from data.model.user_artist_stat import UserArtistRecord
 from data.model.user_release_stat import UserReleaseRecord
 from data.model.user_recording_stat import UserRecordingRecord
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
-from listenbrainz_spark.stats import (offset_days, replace_days,
-                                      replace_months, run_query, get_last_monday)
+from listenbrainz_spark.stats import offset_days, replace_days, replace_months, get_last_monday
 from listenbrainz_spark.stats.user.artist import get_artists
 from listenbrainz_spark.stats.user.recording import get_recordings
 from listenbrainz_spark.stats.user.release import get_releases
@@ -34,13 +33,13 @@ entity_model_map = {
 
 def get_entity_week(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     """ Get the weekly top entity for all users """
-    logger.debug("Calculating {}_week...".format(entity))
+    logger.debug(f"Calculating {entity}_week...")
 
     to_date = get_last_monday(get_latest_listen_ts())
     from_date = offset_days(to_date, 7)
 
     listens_df = get_listens_from_new_dump(from_date, to_date)
-    table_name = 'user_{}_week'.format(entity)
+    table_name = f'user_{entity}_week'
     listens_df.createOrReplaceTempView(table_name)
 
     handler = entity_handler_map[entity]
@@ -55,13 +54,13 @@ def get_entity_week(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
 
 def get_entity_month(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     """ Get the month top entity for all users """
-    logger.debug("Calculating {}_month...".format(entity))
+    logger.debug(f"Calculating {entity}_month...")
 
     to_date = get_latest_listen_ts()
     from_date = replace_days(to_date, 1)
 
     listens_df = get_listens_from_new_dump(from_date, to_date)
-    table_name = 'user_{}_month'.format(entity)
+    table_name = f'user_{entity}_month'
     listens_df.createOrReplaceTempView(table_name)
 
     handler = entity_handler_map[entity]
@@ -77,13 +76,13 @@ def get_entity_month(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
 
 def get_entity_year(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     """ Get the year top entity for all users """
-    logger.debug("Calculating {}_year...".format(entity))
+    logger.debug(f"Calculating {entity}_year...")
 
     to_date = get_latest_listen_ts()
     from_date = replace_days(replace_months(to_date, 1), 1)
 
     listens_df = get_listens_from_new_dump(from_date, to_date)
-    table_name = 'user_{}_year'.format(entity)
+    table_name = f'user_{entity}_year'
     listens_df.createOrReplaceTempView(table_name)
 
     handler = entity_handler_map[entity]
@@ -98,13 +97,13 @@ def get_entity_year(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
 
 def get_entity_all_time(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     """ Get the all_time top entity for all users """
-    logger.debug("Calculating {}_all_time...".format(entity))
+    logger.debug(f"Calculating {entity}_all_time...")
 
     to_date = get_latest_listen_ts()
     from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
 
     listens_df = get_listens_from_new_dump(from_date, to_date)
-    table_name = 'user_{}_all_time'.format(entity)
+    table_name = f'user_{entity}_all_time'
     listens_df.createOrReplaceTempView(table_name)
 
     handler = entity_handler_map[entity]
@@ -117,7 +116,8 @@ def get_entity_all_time(entity: str) -> Iterator[Optional[UserEntityStatMessage]
     return messages
 
 
-def create_messages(data, entity: str, stats_range: str, from_ts: int, to_ts: int) -> Iterator[Optional[UserEntityStatMessage]]:
+def create_messages(data, entity: str, stats_range: str, from_ts: float, to_ts: float) \
+        -> Iterator[Optional[UserEntityStatMessage]]:
     """
     Create messages to send the data to the webserver via RabbitMQ
 
@@ -160,8 +160,7 @@ def create_messages(data, entity: str, stats_range: str, from_ts: int, to_ts: in
             result = model.dict(exclude_none=True)
             yield result
         except ValidationError:
-            logger.error("""ValidationError while calculating {stats_range} top {entity} for user: {user_name}.
-                                     Data: {data}""".format(stats_range=stats_range, entity=entity, user_name=_dict['user_name'],
-                                                            data=json.dumps(_dict, indent=3)),
-                                     exc_info=True)
+            logger.error("""ValidationError while calculating {stats_range} top {entity} for user: {user_name}. 
+            Data: {data}""".format(stats_range=stats_range, entity=entity, user_name=_dict['user_name'],
+                                   data=json.dumps(_dict, indent=3)), exc_info=True)
             yield None

@@ -8,4 +8,8 @@ CREATE TYPE recommendation_feedback_type_enum AS ENUM('like', 'love', 'dislike',
 
 CREATE TYPE user_timeline_event_type_enum AS ENUM('recording_recommendation', 'notification');
 
-CREATE TYPE external_service_oauth_type AS ENUM ('spotify', 'youtube', 'critiquebrainz');
+CREATE TYPE external_service_oauth_type AS ENUM ('spotify', 'youtube', 'critiquebrainz', 'lastfm', 'librefm');
+
+CREATE TYPE stats_range_type AS ENUM ('week', 'month', 'year', 'all_time');
+
+CREATE TYPE user_stats_type AS ENUM('artists', 'releases', 'recordings', 'daily_activity', 'listening_activity', 'artist_map');

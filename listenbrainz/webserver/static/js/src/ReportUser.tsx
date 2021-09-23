@@ -52,8 +52,6 @@ class ReportUserButton extends React.Component<
         });
       })
       .catch((error: Error) => {
-        // eslint-disable-next-line no-console
-        console.error(error);
         this.setState({
           error: true,
         });
