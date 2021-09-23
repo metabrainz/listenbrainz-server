@@ -681,33 +681,6 @@ class TimescaleListenStore(ListenStore):
         self.log.info('Dump present at %s!', archive_path)
         return archive_path
 
-    def _fetch_artist_MBIDs_from_artist_credits(self, artist_credit_ids):
-        """ Given the list or set of artist_credit_ids return a dict
-            that maps artist_credit_id -> [ ARITST_MBID, ARTIST_MBID ... ]
-        """
-
-        index = {}
-        with psycopg2.connect(config.MB_DATABASE_URI) as conn:
-            with conn.cursor() as curs:
-
-                query = '''SELECT acn.artist_credit,
-                                  array_agg(gid::TEXT) AS artist_mbids
-                             FROM artist
-                             JOIN artist_credit_name acn
-                               ON artist.id = acn.artist
-                            WHERE acn.artist_credit IN %s
-                         GROUP BY acn.artist_credit'''
-                curs.execute(query, (tuple(artist_credit_ids),))
-
-                while True:
-                    row = curs.fetchone()
-                    if not row:
-                        break
-                    index[row[0]] = row[1]
-
-        return index
-
-
     def write_parquet_files(self,
                             archive_dir,
                             temp_dir,
@@ -745,11 +718,11 @@ class TimescaleListenStore(ListenStore):
 
         query = """SELECT listened_at,
                           user_name,
-                          data->'track_metadata'->>'artist_name' AS artist_name,
-                          artist_credit_id,
-                          data->'track_metadata'->>'release_name' AS release_name,
+                          artist_credit_name AS artist_name,
+                          artist_mbids::TEXT[],
+                          release_name,
                           release_mbid::TEXT,
-                          track_name AS recording_name,
+                          recording_name AS recording_name,
                           recording_mbid::TEXT
                      FROM listen l
                      JOIN listen_join_listen_mbid_mapping lj
@@ -763,7 +736,6 @@ class TimescaleListenStore(ListenStore):
         args = (int(start_time.timestamp()), int(end_time.timestamp()))
 
         listen_count = 0
-        artist_credit_ids = set()
         current_listened_at = None
         conn = timescale.engine.raw_connection()
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as curs:
@@ -776,7 +748,7 @@ class TimescaleListenStore(ListenStore):
                     'listened_at': [],
                     'user_name': [],
                     'artist_name': [],
-                    'artist_credit_id': [],
+                    'artist_mbids': [],
                     'release_name': [],
                     'release_mbid': [],
                     'recording_name': [],
@@ -789,15 +761,10 @@ class TimescaleListenStore(ListenStore):
                         break
 
                     for col in data:
-                        if col == 'artist_credit_id':
-                            artist_credit_ids.add(result[col])
-
                         if col == 'listened_at':
                             current_listened_at = datetime.utcfromtimestamp(result['listened_at'])
                             data[col].append(current_listened_at)
                             approx_size += len(str(result[col]))
-                        elif col == 'artist_credit_mbids':
-                            approx_size += AVG_ARTIST_MBIDS_LEN
                         else:
                             data[col].append(result[col])
                             approx_size += len(str(result[col]))
@@ -809,20 +776,6 @@ class TimescaleListenStore(ListenStore):
 
                 if written == 0:
                     break
-
-                # Fetch artist mbids for each artist_credit_id and then insert into data
-                # If an ac id is not found, zero out the other MBIDs since the underlying data changed
-                ac_mapping = self._fetch_artist_MBIDs_from_artist_credits(artist_credit_ids)
-                for i, row in enumerate(data['artist_credit_id']):
-                    if row is None:
-                        data['artist_credit_mbids'].append(None)
-                    elif row not in ac_mapping:
-                        data['artist_credit_mbids'].append(None)
-                        data['release_mbid'][i] = None
-                        data['recording_mbid'][i] = None
-                        data['artist_credit_id'][i] = None
-                    else:
-                        data['artist_credit_mbids'].append(ac_mapping[row])
 
                 filename = os.path.join(temp_dir, "%d.parquet" % parquet_file_id)
 

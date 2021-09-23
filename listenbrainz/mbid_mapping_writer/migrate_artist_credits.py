@@ -80,7 +80,7 @@ def copy_rows_to_new_mbid_mapping(app):
     conn = timescale.engine.raw_connection()
     with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
 
-        query = """SELECT recording_msid::TEXT,
+        query = """SELECT DISTINCT ON(recording_msid::TEXT) recording_msid,
                           recording_mbid::TEXT,
                           release_mbid::TEXT,
                           artist_credit_id,
