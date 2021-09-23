@@ -13,7 +13,7 @@ from brainzutils.mail import send_mail
 from datetime import datetime, timezone, timedelta
 
 from data.model.common_stat import StatRange
-from data.model.sitewide_artist_stat import SitewideArtistStatJson
+from data.model.sitewide_artist_stat import SitewideArtistRecord
 from data.model.user_daily_activity import UserDailyActivityRecord
 from data.model.user_entity import UserEntityRecord
 from data.model.user_listening_activity import UserListeningActivityRecord
@@ -51,12 +51,6 @@ def notify_user_stats_update(stat_type):
         )
 
 
-def _get_sitewide_entity_model(entity):
-    if entity == 'artists':
-        return SitewideArtistStatJson
-    raise ValueError("Unknown entity type: %s" % entity)
-
-
 def handle_user_entity(data):
     """ Take entity stats for a user and save it in the database. """
     musicbrainz_id = data['musicbrainz_id']
@@ -75,10 +69,8 @@ def handle_user_entity(data):
     try:
         db_stats.insert_user_jsonb_data(user['id'], entity, StatRange[UserEntityRecord](**data))
     except ValidationError:
-        current_app.logger.error("""ValidationError while inserting {stats_range} top {entity} for user with user_id: {user_id}.
-                                 Data: {data}""".format(stats_range=stats_range, entity=entity,
-                                                        user_id=user['id'], data=json.dumps({stats_range: data}, indent=3)),
-                                 exc_info=True)
+        current_app.logger.error(f"""ValidationError while inserting {stats_range} top {entity} for user
+        with user_id: {user['id']}. Data: {json.dumps({stats_range: data}, indent=3)}""", exc_info=True)
 
 
 def _handle_user_activity_stats(stats_type, stats_model, data):
@@ -97,13 +89,8 @@ def _handle_user_activity_stats(stats_type, stats_model, data):
     try:
         db_stats.insert_user_jsonb_data(user['id'], stats_type, stats_model(**data))
     except ValidationError:
-        current_app.logger.error("""ValidationError while inserting {stats_range} {stats_type} for user with
-        user_id: {user_id}. Data: {data}""".format(
-            stats_range=stats_range,
-            stats_type=stats_type,
-            user_id=user['id'],
-            data=json.dumps(data, indent=3)
-        ), exc_info=True)
+        current_app.logger.error(f"""ValidationError while inserting {stats_range} {stats_type} for 
+        user with user_id: {user['id']}. Data: {json.dumps(data, indent=3)}""", exc_info=True)
 
 
 def handle_user_listening_activity(data):
@@ -124,24 +111,12 @@ def handle_sitewide_entity(data):
 
     stats_range = data['stats_range']
     entity = data['entity']
-    data['time_ranges'] = data['data']
-
-    # Strip extra data
-    to_remove = {'type', 'entity', 'data', 'stats_range'}
-    data_mod = {key: data[key] for key in data if key not in to_remove}
-
-    entity_model = _get_sitewide_entity_model(entity)
-
-    # Get function to insert statistics
-    db_handler = getattr(db_stats, 'insert_sitewide_{}'.format(entity))
 
     try:
-        db_handler(stats_range, entity_model(**data))
+        db_stats.insert_sitewide_jsonb_data(entity, StatRange[SitewideArtistRecord](**data))
     except ValidationError:
-        current_app.logger.error("""ValidationError while inserting {stats_range} sitewide top {entity}.
-                                 Data: {data}""".format(stats_range=stats_range, entity=entity,
-                                                        data=json.dumps({stats_range: data_mod}, indent=3)),
-                                 exc_info=True)
+        current_app.logger.error(f"""ValidationError while inserting {stats_range} sitewide top {entity}.
+        Data: {json.dumps(data, indent=3)}""", exc_info=True)
 
 
 def handle_dump_imported(data):
