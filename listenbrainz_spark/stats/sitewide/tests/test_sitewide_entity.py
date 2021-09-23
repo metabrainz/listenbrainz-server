@@ -18,31 +18,31 @@ class SitewideEntityTestCase(StatsTestCase):
     @patch('listenbrainz_spark.stats.sitewide.entity.create_messages')
     def test_get_entity_week(self, mock_create_messages, mock_get_listens):
         entity.get_entity_week('test')
-        from_date = day = datetime(2021, 8, 2, 12, 22, 43)
+        from_date = datetime(2021, 8, 2)
         to_date = datetime(2021, 8, 9, 12, 22, 43)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='sample_test_data', entity='test', stats_range='week',
-                                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
+                                                from_date=from_date, to_date=to_date)
 
     @patch('listenbrainz_spark.stats.sitewide.entity.get_listens_from_new_dump')
     @patch('listenbrainz_spark.stats.sitewide.entity.create_messages')
     def test_get_entity_month(self, mock_create_messages, mock_get_listens):
         entity.get_entity_month('test')
-        from_date = datetime(2021, 8, 1, 12, 22, 43)
+        from_date = datetime(2021, 8, 1)
         to_date = datetime(2021, 8, 9, 12, 22, 43)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='sample_test_data', entity='test', stats_range='month',
-                                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
+                                                from_date=from_date, to_date=to_date)
 
     @patch('listenbrainz_spark.stats.sitewide.entity.get_listens_from_new_dump')
     @patch('listenbrainz_spark.stats.sitewide.entity.create_messages')
     def test_get_entity_year(self, mock_create_messages, mock_get_listens):
         entity.get_entity_year('test')
-        from_date = datetime(2021, 1, 1, 12, 22, 43)
+        from_date = datetime(2021, 1, 1)
         to_date = datetime(2021, 8, 9, 12, 22, 43)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='sample_test_data', entity='test', stats_range='year',
-                                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
+                                                from_date=from_date, to_date=to_date)
 
     @patch('listenbrainz_spark.stats.sitewide.entity.get_listens_from_new_dump')
     @patch('listenbrainz_spark.stats.sitewide.entity.create_messages')
@@ -52,7 +52,7 @@ class SitewideEntityTestCase(StatsTestCase):
         to_date = datetime(2021, 8, 9, 12, 22, 43)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='sample_test_data', entity='test', stats_range='all_time',
-                                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
+                                                from_date=from_date, to_date=to_date)
 
     def test_skip_incorrect_artists_stats(self):
         """ Test to check if entries with incorrect data is skipped for top sitewide artists """
@@ -62,7 +62,7 @@ class SitewideEntityTestCase(StatsTestCase):
         mock_result = MagicMock()
         mock_result.asDict.return_value = data
 
-        message = entity.create_messages(iter([mock_result]), 'artists', 'all_time', 0, 10)
+        message = entity.create_messages(iter([mock_result]), 'artists', 'all_time', datetime.now(), datetime.now())
 
         # Only the first entry in file is valid, all others must be skipped
         self.assertListEqual(data['stats'][:1], message[0]['data'])

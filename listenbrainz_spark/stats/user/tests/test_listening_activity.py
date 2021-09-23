@@ -46,7 +46,7 @@ class ListeningActivityTestCase(StatsTestCase):
     def test_get_listening_activity_week(self, mock_create_messages, _, mock_get_listens):
         listening_activity_stats.get_listening_activity_week()
 
-        from_date = day = datetime(2021, 8, 2, 0, 0, 0)
+        from_date = day = datetime(2021, 8, 2)
         to_date = datetime(2021, 8, 9, 12, 22, 43)
         time_range = []
         while day < to_date:
@@ -58,7 +58,7 @@ class ListeningActivityTestCase(StatsTestCase):
 
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='activity_table', stats_range='week',
-                                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
+                                                from_date=from_date, to_date=to_date)
 
     @patch('listenbrainz_spark.stats.user.listening_activity.get_listens_from_new_dump')
     @patch('listenbrainz_spark.stats.user.listening_activity.get_listening_activity', return_value='activity_table')
@@ -78,7 +78,7 @@ class ListeningActivityTestCase(StatsTestCase):
 
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='activity_table', stats_range='month',
-                                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
+                                                from_date=from_date, to_date=to_date)
 
     @patch('listenbrainz_spark.stats.user.listening_activity.get_listens_from_new_dump')
     @patch('listenbrainz_spark.stats.user.listening_activity.get_listening_activity', return_value='activity_table')
@@ -98,4 +98,4 @@ class ListeningActivityTestCase(StatsTestCase):
 
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='activity_table', stats_range='year',
-                                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
+                                                from_date=from_date, to_date=to_date)
