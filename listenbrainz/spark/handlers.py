@@ -11,16 +11,15 @@ from flask import current_app, render_template
 from pydantic import ValidationError
 from brainzutils.mail import send_mail
 from datetime import datetime, timezone, timedelta
+
+from data.model.common_stat import StatRange
 from data.model.sitewide_artist_stat import SitewideArtistStatJson
-from data.model.user_daily_activity import UserDailyActivityStatJson
-from data.model.user_listening_activity import UserListeningActivityStatJson
-from data.model.user_artist_stat import UserArtistStatJson
-from data.model.user_release_stat import UserReleaseStatJson
-from data.model.user_recording_stat import UserRecordingStatJson
+from data.model.user_daily_activity import UserDailyActivityRecord
+from data.model.user_entity import UserEntityRecord
+from data.model.user_listening_activity import UserListeningActivityRecord
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
 from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
 from listenbrainz.db.similar_users import import_user_similarities
-
 
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
@@ -52,16 +51,6 @@ def notify_user_stats_update(stat_type):
         )
 
 
-def _get_user_entity_model(entity):
-    if entity == 'artists':
-        return UserArtistStatJson
-    elif entity == 'releases':
-        return UserReleaseStatJson
-    elif entity == 'recordings':
-        return UserRecordingStatJson
-    raise ValueError("Unknown entity type: %s" % entity)
-
-
 def _get_sitewide_entity_model(entity):
     if entity == 'artists':
         return SitewideArtistStatJson
@@ -82,81 +71,49 @@ def handle_user_entity(data):
 
     stats_range = data['stats_range']
     entity = data['entity']
-    data[entity] = data['data']
-
-    # Strip extra data
-    to_remove = {'musicbrainz_id', 'type', 'entity', 'data', 'stats_range'}
-    data_mod = {key: data[key] for key in data if key not in to_remove}
-
-    entity_model = _get_user_entity_model(entity)
-
-    # Get function to insert statistics
-    db_handler = getattr(db_stats, 'insert_user_{}'.format(entity))
 
     try:
-        db_handler(user['id'], entity_model(**{stats_range: data_mod}))
+        db_stats.insert_user_jsonb_data(user['id'], entity, StatRange[UserEntityRecord](**data))
     except ValidationError:
         current_app.logger.error("""ValidationError while inserting {stats_range} top {entity} for user with user_id: {user_id}.
                                  Data: {data}""".format(stats_range=stats_range, entity=entity,
-                                                        user_id=user['id'], data=json.dumps({stats_range: data_mod}, indent=3)),
+                                                        user_id=user['id'], data=json.dumps({stats_range: data}, indent=3)),
                                  exc_info=True)
+
+
+def _handle_user_activity_stats(stats_type, stats_model, data):
+    musicbrainz_id = data['musicbrainz_id']
+    user = db_user.get_by_mb_id(musicbrainz_id)
+    if not user:
+        current_app.logger.info("Calculated stats for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
+        return
+
+    # send a notification if this is a new batch of stats
+    if is_new_user_stats_batch():
+        notify_user_stats_update(stat_type=data.get('type', ''))
+    current_app.logger.debug("inserting stats for user %s", musicbrainz_id)
+    stats_range = data['stats_range']
+
+    try:
+        db_stats.insert_user_jsonb_data(user['id'], stats_type, stats_model(**data))
+    except ValidationError:
+        current_app.logger.error("""ValidationError while inserting {stats_range} {stats_type} for user with
+        user_id: {user_id}. Data: {data}""".format(
+            stats_range=stats_range,
+            stats_type=stats_type,
+            user_id=user['id'],
+            data=json.dumps(data, indent=3)
+        ), exc_info=True)
 
 
 def handle_user_listening_activity(data):
     """ Take listening activity stats for user and save it in database. """
-    musicbrainz_id = data['musicbrainz_id']
-    user = db_user.get_by_mb_id(musicbrainz_id)
-    if not user:
-        current_app.logger.info("Calculated stats for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
-        return
-
-    # send a notification if this is a new batch of stats
-    if is_new_user_stats_batch():
-        notify_user_stats_update(stat_type=data.get('type', ''))
-    current_app.logger.debug("inserting stats for user %s", musicbrainz_id)
-
-    stats_range = data['stats_range']
-
-    # Strip extra data
-    to_remove = {'musicbrainz_id', 'type', 'stats_range'}
-    data_mod = {key: data[key] for key in data if key not in to_remove}
-
-    try:
-        db_stats.insert_user_listening_activity(user['id'], UserListeningActivityStatJson(**{stats_range: data_mod}))
-    except ValidationError:
-        current_app.logger.error("""ValidationError while inserting {stats_range} listening_activity for user with
-                                    user_id: {user_id}. Data: {data}""".format(stats_range=stats_range, user_id=user['id'],
-                                                                               data=json.dumps({stats_range: data_mod},
-                                                                                               indent=3)),
-                                 exc_info=True)
+    _handle_user_activity_stats('listening_activity', StatRange[UserListeningActivityRecord], data)
 
 
 def handle_user_daily_activity(data):
     """ Take daily activity stats for user and save it in database. """
-    musicbrainz_id = data['musicbrainz_id']
-    user = db_user.get_by_mb_id(musicbrainz_id)
-    if not user:
-        current_app.logger.info("Calculated stats for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
-        return
-
-    # send a notification if this is a new batch of stats
-    if is_new_user_stats_batch():
-        notify_user_stats_update(stat_type=data.get('type', ''))
-    current_app.logger.debug("inserting stats for user %s", musicbrainz_id)
-
-    stats_range = data['stats_range']
-
-    # Strip extra data
-    to_remove = {'musicbrainz_id', 'type', 'stats_range'}
-    data_mod = {key: data[key] for key in data if key not in to_remove}
-
-    try:
-        db_stats.insert_user_daily_activity(user['id'], UserDailyActivityStatJson(**{stats_range: data_mod}))
-    except ValidationError:
-        current_app.logger.error("""ValidationError while inserting {stats_range} daily_activity for user with
-                                    user_id: {user_id}. Data: {data}""".format(user_id=user['id'],
-                                                                               data=json.dumps(data_mod, indent=3)),
-                                 exc_info=True)
+    _handle_user_activity_stats('daily_activity', StatRange[UserDailyActivityRecord], data)
 
 
 def handle_sitewide_entity(data):

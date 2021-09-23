@@ -1,7 +1,7 @@
 {
     "from_ts": 0,
     "to_ts": 10,
-    "releases": [
+    "data": [
         {
             "artist_mbids": [],
             "release_mbid": null,
@@ -21,5 +21,6 @@
             "release_msid": null
         }
     ],
-    "count": 2
+    "count": 2,
+    "stats_range": "all_time"
 }

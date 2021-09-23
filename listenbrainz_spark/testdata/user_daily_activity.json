@@ -5,7 +5,7 @@
         "stats_range": "all_time",
         "from_ts": 1009843200,
         "to_ts": 1628511763,
-        "daily_activity": [
+        "data": [
             {
                 "day": "Monday",
                 "hour": 8,
@@ -134,7 +134,7 @@
         "stats_range": "all_time",
         "from_ts": 1009843200,
         "to_ts": 1628511763,
-        "daily_activity": [
+        "data": [
             {
                 "day": "Monday",
                 "hour": 9,
