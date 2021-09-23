@@ -314,7 +314,7 @@ const fullLocalizedDateFromTimestampOrISODate = (
   });
 };
 
-/** Loads a script asynchronouhsly into the HTML page */
+/** Loads a script asynchronously into the HTML page */
 export function loadScriptAsync(document: any, scriptSrc: string): void {
   const el = document.createElement("script");
   const container = document.head || document.body;
