@@ -208,15 +208,14 @@ def create_messages(data, stats_range: str, from_ts: int, to_ts: int) -> Iterato
                 'stats_range': stats_range,
                 'from_ts': from_ts,
                 'to_ts': to_ts,
-                'listening_activity': _dict['listening_activity']
+                'data': _dict['listening_activity']
             })
             result = model.dict(exclude_none=True)
             yield result
         except ValidationError:
-            logger.error("""ValidationError while calculating {stats_range} listening_activity for user: {user_name}.
-                                     Data: {data}""".format(stats_range=stats_range, user_name=_dict['user_name'],
-                                                            data=json.dumps(_dict, indent=3)),
-                                     exc_info=True)
+            logger.error("""ValidationError while calculating {stats_range} listening_activity for user: {user_name}. 
+            Data: {data}""".format(stats_range=stats_range, user_name=_dict['user_name'],
+                                   data=json.dumps(_dict, indent=3)), exc_info=True)
             yield None
 
 

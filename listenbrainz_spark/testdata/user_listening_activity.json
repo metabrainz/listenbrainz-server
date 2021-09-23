@@ -5,7 +5,7 @@
         "stats_range": "all_time",
         "from_ts": 1009843200,
         "to_ts": 1628511763,
-        "listening_activity": [
+        "data": [
             {
                 "time_range": "2020",
                 "from_ts": 1577836800,
@@ -26,7 +26,7 @@
         "stats_range": "all_time",
         "from_ts": 1009843200,
         "to_ts": 1628511763,
-        "listening_activity": [
+        "data": [
             {
                 "time_range": "2021",
                 "from_ts": 1609459200,

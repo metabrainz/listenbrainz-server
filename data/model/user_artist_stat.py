@@ -1,6 +1,5 @@
 import pydantic
 
-from datetime import datetime
 from typing import Optional, List
 
 
@@ -14,29 +13,3 @@ class UserArtistRecord(pydantic.BaseModel):
     artist_name: str
     # to add an empty field to stats API response, for compatibility
     artist_msid: Optional[str]
-
-
-class UserArtistStatRange(pydantic.BaseModel):
-    """ Model for user's most listened-to artists for a particular
-    time range. Currently supports week, month, year and all-time
-    """
-    to_ts: int
-    from_ts: int
-    count: int
-    artists: List[UserArtistRecord]
-
-
-class UserArtistStatJson(pydantic.BaseModel):
-    """ Model for the JSON stored in the statistics.user table's artist column
-    """
-    week: Optional[UserArtistStatRange]
-    year: Optional[UserArtistStatRange]
-    month: Optional[UserArtistStatRange]
-    all_time: Optional[UserArtistStatRange]
-
-
-class UserArtistStat(UserArtistStatJson):
-    """ Model for stats around a user's most listened artists
-    """
-    user_id: int
-    last_updated: datetime
