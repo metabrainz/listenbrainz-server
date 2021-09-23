@@ -26,7 +26,7 @@ def get_daily_activity():
     hours = [hour for hour in range(0, 24)]
     time_range = itertools.product(weekdays, hours)
     time_range_df = listenbrainz_spark.session.createDataFrame(time_range, schema=["day", "hour"])
-    time_range_df.createOrReplaceTempView('time_range')
+    time_range_df.createOrReplaceTempView("time_range")
 
     # Truncate listened_at to day and hour to improve matching speed
     formatted_listens = run_query("""
@@ -36,7 +36,7 @@ def get_daily_activity():
                               FROM listens
                               """)
 
-    formatted_listens.createOrReplaceTempView('listens')
+    formatted_listens.createOrReplaceTempView("listens")
 
     # Calculate the number of listens in each time range for each user except the time ranges which have zero listens.
     result = run_query("""
@@ -65,107 +65,84 @@ def get_daily_activity():
 
 def get_daily_activity_week() -> Iterator[Optional[UserDailyActivityStatMessage]]:
     """ Calculate number of listens for an user per hour on each day of the past week. """
-    logger.debug("Calculating daily_activity_week")
-
-    date = get_latest_listen_ts()
-    to_date = get_last_monday(date)
+    to_date = get_last_monday(get_latest_listen_ts())
     from_date = offset_days(to_date, 7)
-
-    _get_listens(from_date, to_date)
-
-    data = get_daily_activity()
-
-    messages = create_messages(data=data, stats_range='week', from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
-
-    logger.debug("Done!")
-
-    return messages
+    # Set time to 00:00
+    from_date = datetime(from_date.year, from_date.month, from_date.day)
+    return _get_daily_activity_range("week", from_date, to_date)
 
 
 def get_daily_activity_month() -> Iterator[Optional[UserDailyActivityStatMessage]]:
     """ Calculate number of listens for an user per hour on each day of week of the current month. """
-    logger.debug("Calculating daily_activity_month")
-
     to_date = get_latest_listen_ts()
     from_date = replace_days(to_date, 1)
     # Set time to 00:00
     from_date = datetime(from_date.year, from_date.month, from_date.day)
-
-    _get_listens(from_date, to_date)
-
-    data = get_daily_activity()
-    messages = create_messages(data=data, stats_range='month', from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
-
-    logger.debug("Done!")
-
-    return messages
+    return _get_daily_activity_range("month", from_date, to_date)
 
 
 def get_daily_activity_year() -> Iterator[Optional[UserDailyActivityStatMessage]]:
     """ Calculate number of listens for an user per hour on each day of week of the current year. """
-    logger.debug("Calculating daily_activity_year")
-
     to_date = get_latest_listen_ts()
     from_date = datetime(to_date.year, 1, 1)
-
-    _get_listens(from_date, to_date)
-
-    data = get_daily_activity()
-    messages = create_messages(data=data, stats_range='year', from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
-
-    logger.debug("Done!")
-
-    return messages
+    # Set time to 00:00
+    from_date = datetime(from_date.year, from_date.month, from_date.day)
+    return _get_daily_activity_range("year", from_date, to_date)
 
 
 def get_daily_activity_all_time() -> Iterator[Optional[UserDailyActivityStatMessage]]:
     """ Calculate number of listens for an user per hour on each day of week. """
-    logger.debug("Calculating daily_activity_all_time")
-
     to_date = get_latest_listen_ts()
     from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
+    # Set time to 00:00
+    from_date = datetime(from_date.year, from_date.month, from_date.day)
+    return _get_daily_activity_range("all_time", from_date, to_date)
 
-    _get_listens(from_date, to_date)
 
+def _get_daily_activity_range(stats_range: str, from_date: datetime, to_date: datetime) \
+        -> Iterator[Optional[UserDailyActivityStatMessage]]:
+    """ Calculate number of listens for an user for the specified time range """
+    logger.debug(f"Calculating daily_activity_{stats_range}")
+
+    get_listens_from_new_dump(from_date, to_date) \
+        .createOrReplaceTempView("listens")
     data = get_daily_activity()
-    messages = create_messages(data=data, stats_range='all_time', from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
+    messages = create_messages(data=data, stats_range=stats_range, from_date=from_date, to_date=to_date)
 
     logger.debug("Done!")
 
     return messages
 
 
-def create_messages(data, stats_range: str, from_ts: int, to_ts: int) -> Iterator[Optional[UserDailyActivityStatMessage]]:
+def create_messages(data, stats_range: str, from_date: datetime, to_date: datetime) \
+        -> Iterator[Optional[UserDailyActivityStatMessage]]:
     """
     Create messages to send the data to webserver via RabbitMQ
 
     Args:
         data: Data to send to webserver
-
+        stats_range: The range for which the statistics have been calculated
+        from_date: The start time of the stats
+        to_date: The end time of the stats
     Returns:
         messages: A list of messages to be sent via RabbitMQ
     """
+    from_ts = int(from_date.timestamp())
+    to_ts = int(to_date.timestamp())
     for entry in data:
         _dict = entry.asDict(recursive=True)
         try:
             model = UserDailyActivityStatMessage(**{
-                'musicbrainz_id': _dict['user_name'],
-                'type': 'user_daily_activity',
-                'from_ts': from_ts,
-                'to_ts': to_ts,
-                'stats_range': stats_range,
-                'data': _dict['daily_activity']
+                "musicbrainz_id": _dict["user_name"],
+                "type": "user_daily_activity",
+                "from_ts": from_ts,
+                "to_ts": to_ts,
+                "stats_range": stats_range,
+                "data": _dict["daily_activity"]
             })
             result = model.dict(exclude_none=True)
             yield result
         except ValidationError:
-            logger.error("""ValidationError while calculating {stats_range} daily_activity for user: {user_name}.
-                                     Data: {data}""".format(stats_range=stats_range, user_name=_dict['user_name'],
-                                                            data=json.dumps(_dict, indent=3)),
-                                     exc_info=True)
+            logger.error(f"""ValidationError while calculating {stats_range} daily_activity for user:
+            {_dict["user_name"]}. Data: {json.dumps(_dict, indent=3)}""", exc_info=True)
             yield None
-
-
-def _get_listens(from_date: datetime, to_date: datetime):
-    get_listens_from_new_dump(from_date, to_date) \
-        .createOrReplaceTempView('listens')
