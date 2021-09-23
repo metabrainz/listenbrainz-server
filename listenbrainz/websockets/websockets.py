@@ -42,7 +42,7 @@ def joined(data):
         raise BadRequest("Missing key 'playlist_id'")
     playlist_mbid = data['playlist_id']
     playlist = db_playlist.get_by_mbid(playlist_mbid)
-    if current_user.is_authenticated and playlist.is_visible_by(current_user.id):
+    if current_user.is_authenticated and playlist.is_modifiable_by(current_user.id):
         join_room(playlist_mbid)
         emit('joined', {'status': 'success'}, to=playlist_mbid)
     else:
