@@ -39,10 +39,13 @@ export default class PinRecordingModal extends React.Component<
         recordingToPin,
         "track_metadata.additional_info.recording_msid"
       );
-      const recordingMBID = _get(
-        recordingToPin,
-        "track_metadata.additional_info.recording_mbid"
-      );
+      // We currently have an issue with submitting MSID and MBID at the same time
+      // So we temporarily remove the MBID from the submition
+      const recordingMBID = undefined;
+      //   const recordingMBID = _get(
+      //     recordingToPin,
+      //     "track_metadata.additional_info.recording_mbid"
+      //   );
 
       try {
         const status = await APIService.submitPinRecording(

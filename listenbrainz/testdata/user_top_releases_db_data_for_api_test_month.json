@@ -1,7 +1,7 @@
 {
     "count": 25,
     "from_ts": 1588373458,
-    "releases": [
+    "data": [
         {
             "artist_mbids": [
                 "7addbcac-ae39-4b4c-a956-53da336d68e8"
@@ -278,5 +278,6 @@
             "release_msid": null
         }
     ],
-    "to_ts": 1589496658
+    "to_ts": 1589496658,
+    "stats_range": "month"
 }

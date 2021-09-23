@@ -1,7 +1,8 @@
 from typing import Dict, List, Union
 
 import pydantic
-from data.model.sitewide_artist_stat import SitewideArtistStatRange
+
+from data.model.sitewide_artist_stat import SitewideArtistRecord
 
 
 class SitewideEntityStatMessage(pydantic.BaseModel):
@@ -11,6 +12,7 @@ class SitewideEntityStatMessage(pydantic.BaseModel):
     stats_range: str  # The range for which the stats are calculated, i.e week, month, year or all_time
     from_ts: int
     to_ts: int
+    count: int
     # Order of the records in union is important and should be from more specific to less specific
     # For more info read https://pydantic-docs.helpmanual.io/usage/types/#unions
-    data: List[Union[SitewideArtistStatRange]]
+    data: List[SitewideArtistRecord]

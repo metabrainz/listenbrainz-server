@@ -1,22 +1,19 @@
 {
-  "time_range": "range",
-  "to_ts": 0,
-  "from_ts": 1,
-  "artists": [
-    {
-      "artist_name": "artist_1",
-      "artist_mbids": [],
-      "listen_count": 1
-    },
-    {
-      "artist_name": null,
-      "artist_mbids": [],
-      "listen_count": 1
-    },
-    {
-      "artist_name": "artist_2",
-      "artist_mbids": [],
-      "listen_count": null
-    }
-  ]
+    "stats": [
+        {
+          "artist_name": "artist_1",
+          "artist_mbids": [],
+          "listen_count": 1
+        },
+        {
+          "artist_name": null,
+          "artist_mbids": [],
+          "listen_count": 1
+        },
+        {
+          "artist_name": "artist_2",
+          "artist_mbids": [],
+          "listen_count": null
+        }
+    ]
 }
