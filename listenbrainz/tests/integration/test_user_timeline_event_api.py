@@ -209,12 +209,14 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             headers={'Authorization': 'Token {}'.format(new_user['auth_token'])},
         )
         # Deleting notification
-        self.client.post(
+        r_del_not = self.client.post(
             url_for('user_timeline_event_api_bp.delete_feed_events',
             user_name=self.user["musicbrainz_id"]),
             data=json.dumps({'event_type': UserTimelineEventType.NOTIFICATION.value, 'id': 1}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
         )
+        self.assert200(r_del_not)
+
         # Checking if notification still exists
         r_not = self.client.get(
             url_for('user_timeline_event_api_bp.user_feed',
@@ -226,12 +228,14 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(self.user["musicbrainz_id"], payload_not["user_id"])
 
         # Deleting recommendation event
-        self.client.post(
+        r_del_rec = self.client.post(
             url_for('user_timeline_event_api_bp.delete_feed_events',
             user_name=new_user["musicbrainz_id"]),
             data=json.dumps({'event_type': UserTimelineEventType.RECORDING_RECOMMENDATION.value, 'id': 2}),
             headers={'Authorization': 'Token {}'.format(new_user['auth_token'])}
         )
+        self.assert200(r_del_rec)
+
         # Checking if recording recommendation still exists
         r_rec = self.client.get(
             url_for('user_timeline_event_api_bp.user_feed',
