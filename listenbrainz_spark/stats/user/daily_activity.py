@@ -9,9 +9,8 @@ from pydantic import ValidationError
 
 import listenbrainz_spark
 from data.model.user_daily_activity import UserDailyActivityStatMessage
-from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
-from listenbrainz_spark.stats import offset_days, replace_days, run_query, get_last_monday
-from listenbrainz_spark.utils import get_listens_from_new_dump, get_latest_listen_ts
+from listenbrainz_spark.stats import run_query, get_dates_for_stats_range
+from listenbrainz_spark.utils import get_listens_from_new_dump
 from pyspark.sql.functions import collect_list, sort_array, struct
 
 
@@ -65,47 +64,30 @@ def get_daily_activity():
 
 def get_daily_activity_week() -> Iterator[Optional[UserDailyActivityStatMessage]]:
     """ Calculate number of listens for an user per hour on each day of the past week. """
-    to_date = get_last_monday(get_latest_listen_ts())
-    from_date = offset_days(to_date, 7)
-    # Set time to 00:00
-    from_date = datetime(from_date.year, from_date.month, from_date.day)
-    return _get_daily_activity_range("week", from_date, to_date)
+    return _get_daily_activity_range("week")
 
 
 def get_daily_activity_month() -> Iterator[Optional[UserDailyActivityStatMessage]]:
     """ Calculate number of listens for an user per hour on each day of week of the current month. """
-    to_date = get_latest_listen_ts()
-    from_date = replace_days(to_date, 1)
-    # Set time to 00:00
-    from_date = datetime(from_date.year, from_date.month, from_date.day)
-    return _get_daily_activity_range("month", from_date, to_date)
+    return _get_daily_activity_range("month")
 
 
 def get_daily_activity_year() -> Iterator[Optional[UserDailyActivityStatMessage]]:
     """ Calculate number of listens for an user per hour on each day of week of the current year. """
-    to_date = get_latest_listen_ts()
-    from_date = datetime(to_date.year, 1, 1)
-    # Set time to 00:00
-    from_date = datetime(from_date.year, from_date.month, from_date.day)
-    return _get_daily_activity_range("year", from_date, to_date)
+    return _get_daily_activity_range("year")
 
 
 def get_daily_activity_all_time() -> Iterator[Optional[UserDailyActivityStatMessage]]:
     """ Calculate number of listens for an user per hour on each day of week. """
-    to_date = get_latest_listen_ts()
-    from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
-    # Set time to 00:00
-    from_date = datetime(from_date.year, from_date.month, from_date.day)
-    return _get_daily_activity_range("all_time", from_date, to_date)
+    return _get_daily_activity_range("all_time")
 
 
-def _get_daily_activity_range(stats_range: str, from_date: datetime, to_date: datetime) \
-        -> Iterator[Optional[UserDailyActivityStatMessage]]:
+def _get_daily_activity_range(stats_range: str) -> Iterator[Optional[UserDailyActivityStatMessage]]:
     """ Calculate number of listens for an user for the specified time range """
     logger.debug(f"Calculating daily_activity_{stats_range}")
 
-    get_listens_from_new_dump(from_date, to_date) \
-        .createOrReplaceTempView("listens")
+    from_date, to_date = get_dates_for_stats_range(stats_range)
+    get_listens_from_new_dump(from_date, to_date).createOrReplaceTempView("listens")
     data = get_daily_activity()
     messages = create_messages(data=data, stats_range=stats_range, from_date=from_date, to_date=to_date)
 
