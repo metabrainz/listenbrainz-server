@@ -513,7 +513,6 @@ export default class UserFeedPage extends React.Component<
               />
               <div className="sticky-top mt-15">
                 <BrainzPlayer
-                  currentListen={currentListen}
                   direction="down"
                   listens={listens}
                   newAlert={newAlert}

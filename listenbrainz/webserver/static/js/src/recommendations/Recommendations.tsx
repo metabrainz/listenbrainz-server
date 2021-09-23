@@ -329,7 +329,6 @@ export default class Recommendations extends React.Component<
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
             <BrainzPlayer
-              currentListen={currentRecommendation}
               direction={direction}
               listens={recommendations}
               newAlert={newAlert}
