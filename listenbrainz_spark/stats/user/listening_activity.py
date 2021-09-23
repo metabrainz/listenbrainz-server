@@ -17,8 +17,11 @@ from pyspark.sql.functions import collect_list, sort_array, struct, lit
 from pyspark.sql.types import (StringType, StructField, StructType,
                                TimestampType)
 
-time_range_schema = StructType((StructField("time_range", StringType()), StructField(
-    "start", TimestampType()), StructField("end", TimestampType())))
+time_range_schema = StructType([
+    StructField("time_range", StringType()),
+    StructField("start", TimestampType()),
+    StructField("end", TimestampType())
+])
 
 
 logger = logging.getLogger(__name__)
