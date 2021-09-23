@@ -1,49 +1,38 @@
 from listenbrainz_spark.stats import run_query
-from pyspark.sql.functions import collect_list, sort_array, struct
+
+SITEWIDE_STATS_ENTITY_LIMIT = 1000  # number of top artists to retain in sitewide stats
 
 
-def get_artists(table: str, date_format: str):
+def get_artists(table: str, limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
     """ Get artist information (artist_name, artist_msid etc) for every time range specified
         the "time_range" table ordered by listen count
 
         Args:
             table: Name of the temporary table.
-            date_format: Format in which the listened_at field should be formatted.
-
+            limit: number of top artists to retain
         Returns:
             iterator (iter): An iterator over result
     """
 
-    # Format the listened_at field according to the provided date_format string
-    formatted_listens = run_query(f"""
-                SELECT artist_name
-                     , artist_credit_mbids
-                     , date_format(listened_at, '{date_format}') as listened_at
-                  FROM {table}
-            """)
-    formatted_listens.createOrReplaceTempView('listens')
+    result = run_query(f"""
+        WITH intermediate_table as (
+            SELECT artist_name
+                 , artist_credit_mbids
+                 , count(*) as listen_count
+              FROM {table}
+          GROUP BY artist_name
+                 , artist_credit_mbids
+          ORDER BY listen_count DESC
+             LIMIT {limit}
+        )
+        SELECT collect_list(
+                    struct(
+                        artist_name
+                      , coalesce(artist_credit_mbids, array()) AS artist_mbids
+                      , listen_count
+                    )
+               ) AS stats
+          FROM intermediate_table
+    """)
 
-    result = run_query("""
-                SELECT listens.artist_name
-                     , coalesce(listens.artist_credit_mbids, array()) AS artist_mbids
-                     , time_range.time_range
-                     , time_range.from_ts
-                     , time_range.to_ts
-                     , count(*) as listen_count
-                  FROM listens
-                  JOIN time_range
-                    ON listens.listened_at == time_range.time_range
-              GROUP BY listens.artist_name
-                     , listens.artist_credit_mbids
-                     , time_range.time_range
-                     , time_range.from_ts
-                     , time_range.to_ts
-              """)
-
-    iterator = result \
-        .withColumn("artists", struct("listen_count", "artist_name", "artist_mbids")) \
-        .groupBy("time_range", "from_ts", "to_ts") \
-        .agg(sort_array(collect_list("artists"), asc=False).alias("artists")) \
-        .toLocalIterator()
-
-    return iterator
+    return result.toLocalIterator()

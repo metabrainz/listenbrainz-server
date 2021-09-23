@@ -7,11 +7,12 @@ import sqlalchemy
 import time
 import ujson
 
+from data.model.common_stat import StatRange
 from data.model.external_service import ExternalServiceType
+from data.model.user_entity import UserEntityRecord
 from listenbrainz import db
 from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.db.testing import DatabaseTestCase
-from data.model.user_artist_stat import UserArtistStatJson
 
 
 class UserTestCase(DatabaseTestCase):
@@ -95,17 +96,18 @@ class UserTestCase(DatabaseTestCase):
 
         with open(self.path_to_data_file('user_top_artists_db.json')) as f:
             artists_data = ujson.load(f)
-        db_stats.insert_user_artists(
+        db_stats.insert_user_jsonb_data(
             user_id=user_id,
-            artists=UserArtistStatJson(**{'all_time': artists_data}),
+            stats_type='artists',
+            stats=StatRange[UserEntityRecord](** artists_data),
         )
-        user_stats = db_stats.get_user_artists(user_id, 'all_time')
+        user_stats = db_stats.get_user_stats(user_id, 'all_time', 'artists')
         self.assertIsNotNone(user_stats)
 
         db_user.delete(user_id)
         user = db_user.get(user_id)
         self.assertIsNone(user)
-        user_stats = db_stats.get_user_artists(user_id, 'all_time')
+        user_stats = db_stats.get_user_stats(user_id, 'all_time', 'artists')
         self.assertIsNone(user_stats)
 
     def test_delete_when_spotify_import_activated(self):

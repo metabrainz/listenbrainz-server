@@ -5,438 +5,449 @@
 @love: #C62828;
 @hate: @blue;
 @player-min-height: 320px;
+@listen-small-break: 420px;
 
 #music-player {
-  position: relative;
-  margin: auto;
-  width: 100%;
-  max-width: 500px;
-  min-height: @player-min-height;
-  border-radius: 5px;
-  overflow: hidden;
-  box-shadow: 5px 5px 15px fadeout(@dark, 60%);
-  
-  .info {
-    width: 100%;
-    position: absolute;
-    z-index: 2;
-    transition: all .5s ease;
-  }
-  .info:not(.showControls){
-    bottom: -@controlsHeight;
-  }
-  &:hover .info, .info.showControls{
-    bottom:0;
-    .currently-playing .progress{
-      height: 0.6em;
-    }
-  }
-  
-
-  
-  .currently-playing {
-    text-align: center;
-    padding-top: 10px;
-    background: fadeout(@white, 15%);
-    .song-name, .artist-name {
-      text-transform: uppercase;
-      font-weight: 400;
-      margin: 0;
-    }
-    
-    .song-name {
-      font-size: 1.2em;
-      letter-spacing: 2px;
-      color: @dark;
-    }
-    
-    .artist-name {
-      font-size: .8em;
-      letter-spacing: 1.5px;
-      color: lighten(@dark, 15%);
-      margin: 5px 0;
-    }
-    /** Progress **/
-    .progress {
-      height: 0.3em;
-      background-color: rgba(205, 235, 255, 0.2);
-      border: 0.5px solid fadeout(@dark,70%);
-      border-right: 0;
-      border-left: 0;
-    }
-
-    .progress-bar {
-      height: 100%;
-      background-color: @primary;
-      border-right: 1px solid @dark;
-    }
-  }
-  
-  
-  .controls {
-    background: fadeout(@white, 40%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: @secondary;
-    font-size: 1.5em;
-    height: @controlsHeight;
-    .play {
-      color: darken(@secondary, 10%);
-      font-size: 1em;
-    }
-    > *:not(.play){
-      font-size: .8em;
-    }
-    > * {
-      transition: all .5s ease;
-      background: none;
-      &:hover {
-        color: lighten(@dark, 15%);
-      }
-    }
-    .right{
-      position: absolute;
-      right: 10px;
-    }
-    .left{
-      position: absolute;
-      left: 10px;
-    }
-  }
-
-  .content {
-    position:relative;
-    > *:not(.no-album-art){
-      position: relative;
-      z-index: 1;
-    }
-	.connect-services-message{
-		z-index: 2;
-		text-align: center;
+	position: relative;
+	margin: auto;
+	width: 100%;
+	max-width: 500px;
+	min-height: @player-min-height;
+	border-radius: 5px;
+	overflow: hidden;
+	box-shadow: 5px 5px 15px fadeout(@dark, 60%);
+	
+	.info {
+		width: 100%;
 		position: absolute;
-		top: 0;
-		background: #ffffffd9;
-		padding: 1em;
+		z-index: 2;
+		transition: all .5s ease;
 	}
-    // Youtube iframe
-    .youtube {
-      padding-top: 100%;
-      position: relative;
-      iframe {
-        position: absolute;
-        top: 0;
-        left: 0;
-      }
-    }
-    .no-album-art{
-      position: absolute;
-      top: 0;
-      min-height: @player-min-height;
-      min-width: 100%;
-      background-image: url(../img/logo_big.svg);
-      background-repeat: no-repeat;
-      background-position: center top;
-      background-color: aliceblue;
-      opacity: 0.3;
-      text-align: center;
-    }
-}
-  
+	.info:not(.showControls){
+		bottom: -@controlsHeight;
+	}
+	&:hover .info, .info.showControls{
+		bottom:0;
+		.currently-playing .progress{
+			height: 0.6em;
+		}
+	}
+	
+	
+	
+	.currently-playing {
+		text-align: center;
+		padding-top: 10px;
+		background: fadeout(@white, 15%);
+		.song-name, .artist-name {
+			text-transform: uppercase;
+			font-weight: 400;
+			margin: 0;
+		}
+		
+		.song-name {
+			font-size: 1.2em;
+			letter-spacing: 2px;
+			color: @dark;
+		}
+		
+		.artist-name {
+			font-size: .8em;
+			letter-spacing: 1.5px;
+			color: lighten(@dark, 15%);
+			margin: 5px 0;
+		}
+		/** Progress **/
+		.progress {
+			height: 0.3em;
+			background-color: rgba(205, 235, 255, 0.2);
+			border: 0.5px solid fadeout(@dark,70%);
+			border-right: 0;
+			border-left: 0;
+		}
+		
+		.progress-bar {
+			height: 100%;
+			background-color: @primary;
+			border-right: 1px solid @dark;
+		}
+	}
+	
+	
+	.controls {
+		background: fadeout(@white, 40%);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: @secondary;
+		font-size: 1.5em;
+		height: @controlsHeight;
+		.play {
+			color: darken(@secondary, 10%);
+			font-size: 1em;
+		}
+		> *:not(.play){
+			font-size: .8em;
+		}
+		> * {
+			transition: all .5s ease;
+			background: none;
+			&:hover {
+				color: lighten(@dark, 15%);
+			}
+		}
+		.right{
+			position: absolute;
+			right: 10px;
+		}
+		.left{
+			position: absolute;
+			left: 10px;
+		}
+	}
+	
+	.content {
+		position:relative;
+		> *:not(.no-album-art){
+			position: relative;
+			z-index: 1;
+		}
+		.connect-services-message{
+			z-index: 2;
+			text-align: center;
+			position: absolute;
+			top: 0;
+			background: #ffffffd9;
+			padding: 1em;
+		}
+		// Youtube iframe
+		.youtube {
+			padding-top: 100%;
+			position: relative;
+			iframe {
+				position: absolute;
+				top: 0;
+				left: 0;
+			}
+		}
+		.no-album-art{
+			position: absolute;
+			top: 0;
+			min-height: @player-min-height;
+			min-width: 100%;
+			background-image: url(../img/logo_big.svg);
+			background-repeat: no-repeat;
+			background-position: center top;
+			background-color: aliceblue;
+			opacity: 0.3;
+			text-align: center;
+		}
+	}
+	
 }
 
 
 .listens-table > tbody {
-  
-  > tr {
-    &.playing_now {
-      background-color: #fffcca ;
-    }
-    & > td {
-      vertical-align: middle;
-      &.playButton {
-        padding: 0;
-        & > * {
-          font-size: 1.2em;
-          padding-top: 0;
-          padding-bottom: 0;
-          opacity: 0;
-          transition: opacity .3s ease-in-out;
-        }
-      }
-    }
-
-    &:hover > td.playButton > *{
-      opacity: 1;
-    }
-  }
+	
+	> tr {
+		&.playing_now {
+			background-color: #fffcca ;
+		}
+		& > td {
+			vertical-align: middle;
+			&.playButton {
+				padding: 0;
+				& > * {
+					font-size: 1.2em;
+					padding-top: 0;
+					padding-bottom: 0;
+					opacity: 0;
+					transition: opacity .3s ease-in-out;
+				}
+			}
+		}
+		
+		&:hover > td.playButton > *{
+			opacity: 1;
+		}
+	}
 }
 
 #listens {
-  @media (min-width: @screen-phone) {
-    padding: 10px;
-  }
-  
-  .listen-card {
-    padding: 10px 5px;
-    @media (min-width: @screen-phone) {
-      padding: 15px;
-    }
-    margin-bottom: 7px;
-    max-height: 72px;
-    
-    &.playing-now {
-      background-color: rgba(255, 252, 202, 0.3) !important ;
-    }
-    
-    &.current-listen {
-      background-color: rgba(217, 237, 247, 0.3) !important ;
-      .play-button {
-        opacity: 1;
-      }
-    }
-
-    > div {
-      padding: 0px;
-    }
-
-    .track-details {
-      width: 100%;
-
-      p {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space:nowrap;
-        margin-bottom: 0px;
-      }
-    }
-    .listen-time {
-      font-style: italic;
-    }
-    
-    > .listen-details, .col-xs-9, .col-xs-12 {
-
-      > .col-xs-8, .col-xs-12 {
-        display: flex;
-      }
-
-      > .col-xs-4 {
-        display: table;
-        height: 40px;
-
-        > span {
-          display: table-cell;
-          vertical-align: middle;
-        }
-      }
-
-    }
-
-    
-    > .listen-controls-container {
-      height:40px;
-      display: flex;
-      justify-content: flex-end;
-
-      > * {
-        flex: 1;
-        align-self: center;
-      }
-
-      a {
-        word-break: break-word;
-      }
-
-    }
-    
-    .listen-controls {
-      max-width:150px;
-      display: flex;
-      flex-wrap: nowrap;
-      align-content: center;
-      align-items: center;
-      > * {
-        flex:1;
-      }
-      
-      > svg:hover {
-        cursor: pointer;
-      }
-
-      .fa-heart, .fa-heart-broken, .fa-ellipsis-v {
-        stroke-width: 40px;
-        font-size: 18px;
-        margin: 0% 7%;
-        width: 1em;
-      }
-
-      .fa-heart, .fa-heart-broken {
-        color: transparent;
-        stroke: #8d8d8d;
-      }
-
-      .fa-ellipsis-v {
-        color: #8d8d8d;
-        stroke: #ffffff;
-
-        &:hover {
-          color: #46433a;
-        }
-      }
-
-      .fa-heart {
-
-        &:hover {
-          stroke: @love;
-        }
-
-        &.loved {
-          stroke: transparent;
-          color: @love;
-        }
-      }
-        
-      .fa-heart-broken {
-
-        &:hover {
-          stroke: @hate;
-        }
-
-        &.hated {
-          stroke: transparent;
-          color: @hate;
-        }
-      }
-
-      .dropdown-menu {
-        min-width: 140px;
-        border-radius: 4px;
-        padding: 10px 0px;
-        width: 250px;
-
-        button {
-          width: 100%;
-          background: none;
-          color: inherit;
-          border: none;
-          padding: 5px 20px;
-          font: inherit;
-          cursor: pointer;
-          outline: inherit;
-          text-align: left;
-
-          &:hover {
-            color: #ffffff;
-            background-color: #eb743b;
-          }
-        }
-      }
-    }
-
-    .play-button {
-      padding: 0;
-      color: #8d8d8d;
-    }
-	// If the user has an input method compatible with hoering (f.e. a mouse)
+	@media (min-width: @screen-phone) {
+		padding: 10px;
+	}
+}
+.listen-card {
+	padding: 10px 5px;
+	@media (min-width: @screen-phone) {
+		padding: 15px;
+	}
+	margin-bottom: 7px;
+	display: flex;
+	flex-wrap: wrap;
+	
+	&.playing-now {
+		background-color: rgba(255, 252, 202, 0.3) !important ;
+	}
+	
+	&.current-listen {
+		background-color: rgba(217, 237, 247, 0.3) !important ;
+		.play-button {
+			opacity: 1;
+		}
+	}
+	
+	> div {
+		display: flex;
+		flex:1;
+	}
+	@media (min-width: @screen-tablet) {
+		> *{
+			padding: 0 1em;
+		}
+	}
+	
+	
+	.listen-time {
+		font-style: italic;
+		font-size: 80%;
+		&:extend(.text-muted);
+		white-space: nowrap;
+	}
+	.username-and-timestamp{
+		flex-direction: column;
+		justify-content: center;
+		padding-right: 1em;
+		padding-top: 0.5em;
+		@media (min-width: @screen-tablet) {
+    		padding-right: 2.5em;
+		}
+		@media (min-width: @listen-small-break) {
+			align-items: flex-end;
+			padding-top: 0;
+		}
+	}
+	
+	.listen-details{
+		flex: 3;
+		flex-direction: column;
+		max-width: 100%;
+		flex-basis: 300px;
+		
+		.artist-and-timestamp {
+			display: flex;
+			flex-wrap: wrap;
+		}
+		.ellipsis {
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space:nowrap;
+		}
+	}
+	
+	.additional-details{
+		padding-top: 0.7em;
+		margin-top: 0.7em;
+		border-top: 1px solid @gray-lighter;
+		font-style: italic;
+		width: 100%;
+	}
+	
+	.listen-controls {
+		flex-wrap: nowrap;
+		justify-content: space-around;
+		position: relative; // This is need for dropdown menu positioning
+		max-width: 120px;
+		min-width: 120px;
+		margin-left: auto; // align flexbox item at flex-end
+		
+		> * {
+			align-self: center;
+		}
+		
+		a {
+			word-break: break-word;
+		}
+		
+		> svg:hover {
+			cursor: pointer;
+		}
+		
+		.fa-heart, .fa-heart-broken, .fa-ellipsis-v {
+			stroke-width: 40px;
+			font-size: 18px;
+			margin: 0% 7%;
+			width: 1em;
+		}
+		
+		.fa-heart, .fa-heart-broken {
+			color: transparent;
+			stroke: #8d8d8d;
+		}
+		
+		.fa-ellipsis-v {
+			color: #8d8d8d;
+			stroke: #ffffff;
+			
+			&:hover {
+				color: #46433a;
+			}
+		}
+		
+		.fa-heart {
+			
+			&:hover {
+				stroke: @love;
+			}
+			
+			&.loved {
+				stroke: transparent;
+				color: @love;
+			}
+		}
+		
+		.fa-heart-broken {
+			
+			&:hover {
+				stroke: @hate;
+			}
+			
+			&.hated {
+				stroke: transparent;
+				color: @hate;
+			}
+		}
+		
+		.dropdown-menu {
+			min-width: 140px;
+			border-radius: 4px;
+			padding: 10px 0px;
+			width: 250px;
+			
+			button {
+				width: 100%;
+				background: none;
+				color: inherit;
+				border: none;
+				padding: 5px 20px;
+				font: inherit;
+				cursor: pointer;
+				outline: inherit;
+				text-align: left;
+				
+				&:hover {
+					color: #ffffff;
+					background-color: #eb743b;
+				}
+			}
+		}
+	}
+	
+	.play-button {
+		padding: 0;
+		color: #8d8d8d;
+		margin-left: .4em;
+	}
+	// If the user has an input method compatible with hovering (f.e. a mouse)
 	// hide the play button by default and show it on card hover
 	@media (hover: hover) {
-      .play-button {
-        transition: opacity .3s ease-in-out;
-        opacity: 0;
-      }
-      &:hover .play-button {
-        opacity: 1;
-      }
-    }
-
-    &.deleted {
-      animation: deleted-animation 0.3s linear forwards;
-    }
-    
-    @keyframes deleted-animation {
-      0% {
-        opacity: 1;
-        padding: inherit;
-        height: inherit;
-        margin: inherit;
-        transform: scaleY(1);
-      }
-
-      50% {
-        opacity: 0;
-      }
-
-      100% {
-        opacity: 0;
-        height: 0px;
-        margin-top: -40px;
-        transform: scaleY(0);
-        display:none;
-      }
-    }
-  }
+		.play-button {
+			transition: opacity .3s ease-in-out;
+			opacity: 0;
+		}
+		&:hover .play-button {
+			opacity: 1;
+		}
+	}
+	
+	&.deleted {
+		animation: deleted-animation 0.3s linear forwards;
+	}
+	
+	@keyframes deleted-animation {
+		0% {
+			opacity: 1;
+			padding: inherit;
+			height: inherit;
+			margin: inherit;
+			transform: scaleY(1);
+		}
+		
+		50% {
+			opacity: 0;
+		}
+		
+		100% {
+			opacity: 0;
+			height: 0px;
+			margin-top: -40px;
+			transform: scaleY(0);
+			display:none;
+		}
+	}
 }
 
 .input-group-flex {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: stretch;
-  width: 100%;
-  > *:not(.form-control) {
-    width: auto;
-    line-height: 1.4;
-  }
-  > .form-control {
-    flex: 1 1 120px;
-  }
-  > .input-group-btn {
-    flex: 1;
-    display: flex;
-    > .btn {
-      flex: 1 1 auto
-    }
-  }
+	display: flex;
+	flex-wrap: wrap;
+	align-items: stretch;
+	width: 100%;
+	> *:not(.form-control) {
+		width: auto;
+		line-height: 1.4;
+	}
+	> .form-control {
+		flex: 1 1 120px;
+	}
+	> .input-group-btn {
+		flex: 1;
+		display: flex;
+		> .btn {
+			flex: 1 1 auto
+		}
+	}
 }
 
 .input-group > .input-group-btn > .btn {
-  margin-top: 0px;
-  margin-bottom: 0px;
+	margin-top: 0px;
+	margin-bottom: 0px;
 }
 
 #listen-count-card {
-  padding: 15px 50px;
-  margin-bottom: 20px;
-  text-align: center;
-  
-  > h4 {
-    font-weight: 400;
-    
-    hr {
-      margin: 8px 0px 40px 0px;
-      border-top: 1px solid #eeeeee;
-    }
-  }
-
-  > div > h4 {
-    height: 26px;
-    font-weight: 500;
-    font-size: 20px;
-    margin-bottom: 0;
-    letter-spacing: 1px;
-  }
+	padding: 15px 50px;
+	margin-bottom: 20px;
+	text-align: center;
+	
+	> h4 {
+		font-weight: 400;
+		
+		hr {
+			margin: 8px 0px 40px 0px;
+			border-top: 1px solid #eeeeee;
+		}
+	}
+	
+	> div > h4 {
+		height: 26px;
+		font-weight: 500;
+		font-size: 20px;
+		margin-bottom: 0;
+		letter-spacing: 1px;
+	}
 }
 
 #navigation.pager{
-  display: flex;
-  flex-wrap: wrap;
-  & > .date-time-picker {
-   flex: 1;
-   order: 0;
-   
-   @media (max-width: @screen-phone) {
-     // on phones, put the datepicker below the arrow nav
-     order: 1;
-	 margin-top:10px;
-    }
- }
+	display: flex;
+	flex-wrap: wrap;
+	& > .date-time-picker {
+		flex: 1;
+		order: 0;
+		
+		@media (max-width: @screen-phone) {
+			// on phones, put the datepicker below the arrow nav
+			order: 1;
+			margin-top:10px;
+		}
+	}
 }

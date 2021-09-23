@@ -1,33 +1,23 @@
-import bisect
 import calendar
-import json
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
-from typing import Dict, List, Tuple, Union, Iterable
+from typing import Dict, List, Tuple
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import pycountry
 import requests
-from data.model.sitewide_artist_stat import (SitewideArtistRecord,
-                                             SitewideArtistStatJson)
-from data.model.user_artist_map import (UserArtistMapRecord, UserArtistMapStat,
-                                        UserArtistMapStatJson,
-                                        UserArtistMapStatRange)
-from data.model.user_artist_stat import UserArtistRecord, UserArtistStat
-from data.model.user_listening_activity import (UserListeningActivityRecord,
-                                                UserListeningActivityStat)
-from data.model.user_recording_stat import (UserRecordingRecord,
-                                            UserRecordingStat)
-from data.model.user_release_stat import UserReleaseRecord, UserReleaseStat
+
+from data.model.common_stat import StatApi
+from data.model.user_artist_map import UserArtistMapRecord
 from flask import Blueprint, current_app, jsonify, request
+
+from data.model.user_entity import UserEntityRecord
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError,
-                                           APINoContent, APINotFound,
-                                           APIServiceUnavailable,
-                                           APIUnauthorized)
+                                           APINoContent, APINotFound)
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
                                                     MAX_ITEMS_PER_GET,
@@ -105,37 +95,7 @@ def get_user_artist(user_name):
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     """
-    user = db_user.get_by_mb_id(user_name)
-    if user is None:
-        raise APINotFound("Cannot find user: %s" % user_name)
-
-    stats_range = request.args.get('range', default='all_time')
-    if not _is_valid_range(stats_range):
-        raise APIBadRequest("Invalid range: {}".format(stats_range))
-
-    offset = get_non_negative_param('offset', default=0)
-    count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
-
-    stats = db_stats.get_user_artists(user['id'], stats_range)
-    if stats is None or getattr(stats, stats_range) is None:
-        raise APINoContent('')
-
-    entity_list, total_entity_count = _process_user_entity(stats, stats_range, offset, count, entity='artist')
-    from_ts = int(getattr(stats, stats_range).from_ts)
-    to_ts = int(getattr(stats, stats_range).to_ts)
-    last_updated = int(stats.last_updated.timestamp())
-
-    return jsonify({'payload': {
-        "user_id": user_name,
-        "artists": entity_list,
-        "count": len(entity_list),
-        "total_artist_count": total_entity_count,
-        "offset": offset,
-        "range": stats_range,
-        "from_ts": from_ts,
-        "to_ts": to_ts,
-        "last_updated": last_updated,
-    }})
+    return _get_entity_stats(user_name, "artists", "total_artist_count")
 
 
 @stats_api_bp.route("/user/<user_name>/releases")
@@ -204,37 +164,7 @@ def get_release(user_name):
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     """
-    user = db_user.get_by_mb_id(user_name)
-    if user is None:
-        raise APINotFound("Cannot find user: %s" % user_name)
-
-    stats_range = request.args.get('range', default='all_time')
-    if not _is_valid_range(stats_range):
-        raise APIBadRequest("Invalid range: {}".format(stats_range))
-
-    offset = get_non_negative_param('offset', default=0)
-    count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
-
-    stats = db_stats.get_user_releases(user['id'], stats_range)
-    if stats is None or getattr(stats, stats_range) is None:
-        raise APINoContent('')
-
-    entity_list, total_entity_count = _process_user_entity(stats, stats_range, offset, count, entity='release')
-    from_ts = int(getattr(stats, stats_range).from_ts)
-    to_ts = int(getattr(stats, stats_range).to_ts)
-    last_updated = int(stats.last_updated.timestamp())
-
-    return jsonify({'payload': {
-        "user_id": user_name,
-        'releases': entity_list,
-        "count": len(entity_list),
-        "total_release_count": total_entity_count,
-        "offset": offset,
-        "range": stats_range,
-        "from_ts": from_ts,
-        "to_ts": to_ts,
-        "last_updated": last_updated,
-    }})
+    return _get_entity_stats(user_name, "releases", "total_release_count")
 
 
 @stats_api_bp.route("/user/<user_name>/recordings")
@@ -301,36 +231,31 @@ def get_recording(user_name):
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     """
-    user = db_user.get_by_mb_id(user_name)
-    if user is None:
-        raise APINotFound("Cannot find user: %s" % user_name)
+    return _get_entity_stats(user_name, "recordings", "total_recording_count")
 
-    stats_range = request.args.get('range', default='all_time')
-    if not _is_valid_range(stats_range):
-        raise APIBadRequest("Invalid range: {}".format(stats_range))
 
-    offset = get_non_negative_param('offset', default=0)
-    count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
+def _get_entity_stats(user_name: str, entity: str, count_key: str):
+    user, stats_range = _validate_stats_user_params(user_name)
 
-    stats = db_stats.get_user_recordings(user['id'], stats_range)
-    if stats is None or getattr(stats, stats_range) is None:
+    offset = get_non_negative_param("offset", default=0)
+    count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
+
+    stats = db_stats.get_user_stats(user["id"], stats_range, entity)
+    if stats is None:
         raise APINoContent('')
 
-    entity_list, total_entity_count = _process_user_entity(stats, stats_range, offset, count, entity='recording')
-    from_ts = int(getattr(stats, stats_range).from_ts)
-    to_ts = int(getattr(stats, stats_range).to_ts)
-    last_updated = int(stats.last_updated.timestamp())
+    entity_list, total_entity_count = _process_user_entity(stats, offset, count)
 
-    return jsonify({'payload': {
+    return jsonify({"payload": {
         "user_id": user_name,
-        'recordings': entity_list,
+        entity: entity_list,
         "count": len(entity_list),
-        "total_recording_count": total_entity_count,
+        count_key: total_entity_count,
         "offset": offset,
         "range": stats_range,
-        "from_ts": from_ts,
-        "to_ts": to_ts,
-        "last_updated": last_updated,
+        "from_ts": stats.from_ts,
+        "to_ts": stats.to_ts,
+        "last_updated": int(stats.last_updated.timestamp()),
     }})
 
 
@@ -392,24 +317,18 @@ def get_listening_activity(user_name: str):
     :resheader Content-Type: *application/json*
 
     """
-    user = db_user.get_by_mb_id(user_name)
-    if user is None:
-        raise APINotFound("Cannot find user: {}".format(user_name))
-
-    stats_range = request.args.get('range', default='all_time')
-    if not _is_valid_range(stats_range):
-        raise APIBadRequest("Invalid range: {}".format(stats_range))
+    user, stats_range = _validate_stats_user_params(user_name)
 
     stats = db_stats.get_user_listening_activity(user['id'], stats_range)
-    if stats is None or getattr(stats, stats_range) is None:
+    if stats is None:
         raise APINoContent('')
 
-    listening_activity = [x.dict() for x in getattr(stats, stats_range).listening_activity]
+    listening_activity = [x.dict() for x in stats.data.__root__]
     return jsonify({"payload": {
         "user_id": user_name,
         "listening_activity": listening_activity,
-        "from_ts": int(getattr(stats, stats_range).from_ts),
-        "to_ts": int(getattr(stats, stats_range).to_ts),
+        "from_ts": stats.from_ts,
+        "to_ts": stats.to_ts,
         "range": stats_range,
         "last_updated": int(stats.last_updated.timestamp())
     }})
@@ -469,19 +388,13 @@ def get_daily_activity(user_name: str):
     :resheader Content-Type: *application/json*
 
     """
-    user = db_user.get_by_mb_id(user_name)
-    if user is None:
-        raise APINotFound("Cannot find user: {}".format(user_name))
-
-    stats_range = request.args.get('range', default='all_time')
-    if not _is_valid_range(stats_range):
-        raise APIBadRequest("Invalid range: {}".format(stats_range))
+    user, stats_range = _validate_stats_user_params(user_name)
 
     stats = db_stats.get_user_daily_activity(user['id'], stats_range)
-    if stats is None or getattr(stats, stats_range) is None:
+    if stats is None:
         raise APINoContent('')
 
-    daily_activity_unprocessed = [x.dict() for x in getattr(stats, stats_range).daily_activity]
+    daily_activity_unprocessed = [x.dict() for x in stats.data.__root__]
     daily_activity = {calendar.day_name[day]: [{"hour": hour, "listen_count": 0} for hour in range(0, 24)] for day in range(0, 7)}
 
     for day, day_data in daily_activity.items():
@@ -498,8 +411,8 @@ def get_daily_activity(user_name: str):
     return jsonify({"payload": {
         "user_id": user_name,
         "daily_activity": daily_activity,
-        "from_ts": int(getattr(stats, stats_range).from_ts),
-        "to_ts": int(getattr(stats, stats_range).to_ts),
+        "from_ts": stats.from_ts,
+        "to_ts": stats.to_ts,
         "range": stats_range,
         "last_updated": int(stats.last_updated.timestamp())
     }})
@@ -558,13 +471,7 @@ def get_artist_map(user_name: str):
     :resheader Content-Type: *application/json*
 
     """
-    user = db_user.get_by_mb_id(user_name)
-    if user is None:
-        raise APINotFound("Cannot find user: {}".format(user_name))
-
-    stats_range = request.args.get('range', default='all_time')
-    if not _is_valid_range(stats_range):
-        raise APIBadRequest("Invalid range: {}".format(stats_range))
+    user, stats_range = _validate_stats_user_params(user_name)
 
     recalculate_param = request.args.get('force_recalculate', default='false')
     if recalculate_param.lower() not in ['true', 'false']:
@@ -574,21 +481,20 @@ def get_artist_map(user_name: str):
     # Check if stats are present in DB, if not calculate them
     calculated = not force_recalculate
     stats = db_stats.get_user_artist_map(user['id'], stats_range)
-    if stats is None or getattr(stats, stats_range) is None:
+    if stats is None:
         calculated = False
 
     # Check if the stats present in DB have been calculated in the past week, if not recalculate them
     stale = False
     if calculated:
-        last_updated = getattr(stats, stats_range).last_updated
-        if (datetime.now() - datetime.fromtimestamp(last_updated)).days >= STATS_CALCULATION_INTERVAL:
+        if (datetime.now(timezone.utc) - stats.last_updated).days >= STATS_CALCULATION_INTERVAL:
             stale = True
 
     if stale or not calculated:
-        artist_stats = db_stats.get_user_artists(user['id'], stats_range)
+        artist_stats = db_stats.get_user_stats(user['id'], stats_range, 'artists')
 
         # If top artists are missing, return the stale stats if present, otherwise return 204
-        if artist_stats is None or getattr(artist_stats, stats_range) is None:
+        if artist_stats is None:
             if stale:
                 result = stats
             else:
@@ -596,24 +502,26 @@ def get_artist_map(user_name: str):
         else:
             # Calculate the data
             artist_mbid_counts = defaultdict(int)
-            top_artists = getattr(artist_stats, stats_range).artists
-            for artist in top_artists:
+            for artist in artist_stats.data.__root__:
                 for artist_mbid in artist.artist_mbids:
                     artist_mbid_counts[artist_mbid] += artist.listen_count
 
             country_code_data = _get_country_wise_counts(artist_mbid_counts)
-            result = UserArtistMapStatJson(**{
-                stats_range: {
-                    "artist_map": country_code_data,
-                    "from_ts": int(getattr(artist_stats, stats_range).from_ts),
-                    "to_ts": int(getattr(artist_stats, stats_range).to_ts),
-                    "last_updated": int(datetime.now().timestamp())
-                }
+            result = StatApi[UserArtistMapRecord](**{
+                "data": country_code_data,
+                "from_ts": artist_stats.from_ts,
+                "to_ts": artist_stats.to_ts,
+                "stats_range": stats_range,
+                # this isn't stored in the database, but adding it here to avoid a subsequent db call to
+                # just fetch last updated. could just store this value instead in db but that complicates
+                # the implementation a bit
+                "last_updated": datetime.now(),
+                "user_id": user['id']
             })
 
             # Store in DB for future use
             try:
-                db_stats.insert_user_artist_map(user['id'], result)
+                db_stats.insert_user_jsonb_data(user['id'], 'artist_map', result)
             except Exception as err:
                 current_app.logger.error("Error while inserting artist map stats for {user}. Error: {err}. Data: {data}".format(
                     user=user_name, err=err, data=result), exc_info=True)
@@ -624,7 +532,10 @@ def get_artist_map(user_name: str):
         "payload": {
             "user_id": user_name,
             "range": stats_range,
-            **(getattr(result, stats_range).dict())
+            "from_ts": result.from_ts,
+            "to_ts": result.to_ts,
+            "last_updated": int(result.last_updated.timestamp()),
+            "artist_map": [x.dict() for x in result.data.__root__]
         }
     })
 
@@ -643,40 +554,16 @@ def get_sitewide_artist():
 
         {
             "payload": {
-                "time_ranges": [
+                "artists": [
                     {
-                        "time_range": "April 2020",
-                        "artists": [
-                            {
-                                "artist_mbids": ["f4fdbb4c-e4b7-47a0-b83b-d91bbfcfa387"],
-                                "artist_name": "Ariana Grande",
-                                "listen_count": 519
-                            },
-                            {
-                                "artist_mbids": ["f4abc0b5-3f7a-4eff-8f78-ac078dbce533"],
-                                "artist_name": "Billie Eilish",
-                                "listen_count": 447
-                            }
-                        ],
-                        "from_ts": 1585699200,
-                        "to_ts": 1588291199,
+                        "artist_mbids": [],
+                        "artist_name": "Kanye West",
+                        "listen_count": 1305
                     },
                     {
-                        "time_range": "May 2020",
-                        "artists": [
-                            {
-                                "artist_mbids": [],
-                                "artist_name": "The Weeknd",
-                                "listen_count": 621
-                            },
-                            {
-                                "artist_mbids": [],
-                                "artist_name": "Drake",
-                                "listen_count": 554
-                            }
-                        ],
-                        "from_ts": 1588291200,
-                        "to_ts": 1590969599
+                        "artist_mbids": ["0b30341b-b59d-4979-8130-b66c0e475321"],
+                        "artist_name": "Lil Nas X",
+                        "listen_count": 1267
                     }
                 ],
                 "offset": 0,
@@ -691,9 +578,6 @@ def get_sitewide_artist():
     .. note::
         - This endpoint is currently in beta
         - ``artist_mbids`` and ``artist_msid`` are optional fields and may not be present in all the entries
-        - The example above shows the data for two days only, however we calculate the statistics for
-          the current time range and the previous time range. For example for yearly statistics the data
-          is calculated for the months in current as well as the past year.
         - We only calculate the top 1000 artists for each time period.
 
     :param count: Optional, number of artists to return for each time range,
@@ -718,46 +602,56 @@ def get_sitewide_artist():
     offset = get_non_negative_param('offset', default=0)
     count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
-    stats = db_stats.get_sitewide_artists(stats_range)
-    if stats is None or stats.data is None:
+    stats = db_stats.get_sitewide_stats(stats_range, 'artists')
+    if stats is None:
         raise APINoContent('')
 
-    entity_data = _get_sitewide_entity_list(stats.data, entity="artists", offset=offset, count=count)
+    entity_list, total_entity_count = _process_user_entity(stats, offset, count)
     return jsonify({
-        'payload': {
-            "time_ranges": entity_data,
+        "payload": {
+            "artists": entity_list,
             "range": stats_range,
             "offset": offset,
-            "count": min(count, MAX_ITEMS_PER_GET),
-            "from_ts": stats.data.from_ts,
-            "to_ts": stats.data.to_ts,
+            "count": total_entity_count,
+            "from_ts": stats.from_ts,
+            "to_ts": stats.to_ts,
             "last_updated": int(stats.last_updated.timestamp())
         }
     })
 
 
-def _process_user_entity(stats, stats_range, offset, count, entity) -> Tuple[list, int]:
+def _process_user_entity(stats: StatApi[UserEntityRecord], offset, count) -> Tuple[list, int]:
     """ Process the statistics data according to query params
 
         Args:
             stats (dict): the dictionary containing statistic data
-            stats_range (str): time interval for which statistics should be collected
             offset (int): number of entities to skip from the beginning
             count (int): number of entities to return
-            entity (str): name of the entity, i.e 'artist', 'release' or 'recording'
 
         Returns:
-            entity_list, total_entity_count: a tupple of a list and integer
+            entity_list, total_entity_count: a tuple of a list and integer
                 containing the entities processed according to the query params and
                 total number of entities respectively
     """
 
     count = min(count, MAX_ITEMS_PER_GET)
     count = count + offset
-    total_entity_count = getattr(stats, stats_range).count
-    entity_list = [x.dict() for x in _get_user_entity_list(stats, stats_range, entity, offset, count)]
+    total_entity_count = stats.count
+    entity_list = [x.dict() for x in stats.data.__root__[offset:count]]
 
     return entity_list, total_entity_count
+
+
+def _validate_stats_user_params(user_name) -> Tuple[Dict, str]:
+    """ Validate and return the user and common stats params """
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise APINotFound(f"Cannot find user: {user_name}")
+
+    stats_range = request.args.get("range", default="all_time")
+    if not _is_valid_range(stats_range):
+        raise APIBadRequest(f"Invalid range: {stats_range}")
+    return user, stats_range
 
 
 def _is_valid_range(stats_range: str) -> bool:
@@ -770,47 +664,6 @@ def _is_valid_range(stats_range: str) -> bool:
         result: True if given range is valid
     """
     return stats_range in StatisticsRange.__members__
-
-
-def _get_user_entity_list(
-    stats: Union[UserArtistStat, UserReleaseStat, UserRecordingStat],
-    stats_range: StatisticsRange,
-    entity: str,
-    offset: int,
-    count: int,
-) -> List[Union[UserArtistRecord, UserReleaseRecord, UserRecordingRecord]]:
-    """ Gets a list of entity records from the stat passed based on the offset and count
-    """
-    if entity == 'artist':
-        return getattr(stats, stats_range).artists[offset:count]
-    elif entity == 'release':
-        return getattr(stats, stats_range).releases[offset:count]
-    elif entity == 'recording':
-        return getattr(stats, stats_range).recordings[offset:count]
-    raise APIBadRequest("Unknown entity: %s" % entity)
-
-
-def _get_sitewide_entity_list(
-    stats: Union[SitewideArtistStatJson],
-    entity: str,
-    offset: int,
-    count: int,
-) -> List[dict]:
-    """ Gets a list of entity records from the stat passed based on the offset and count
-    """
-    count = min(count, MAX_ITEMS_PER_GET)
-    count = count + offset
-
-    result = []
-    for time_range in stats.time_ranges:
-        result.append({
-            "time_range": time_range.time_range,
-            "from_ts": time_range.from_ts,
-            "to_ts": time_range.to_ts,
-            entity: [x.dict() for x in getattr(time_range, entity)[offset:count]]
-        })
-
-    return sorted(result, key=lambda x: x['from_ts'])
 
 
 def _get_country_wise_counts(artist_mbids: Dict[str, int]) -> List[UserArtistMapRecord]:
