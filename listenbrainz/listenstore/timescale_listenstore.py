@@ -719,15 +719,15 @@ class TimescaleListenStore(ListenStore):
         query = """SELECT listened_at,
                           user_name,
                           artist_credit_name AS artist_name,
-                          artist_mbids::TEXT[],
+                          artist_mbids::TEXT[] AS artist_credit_mbids,
                           release_name,
                           release_mbid::TEXT,
                           recording_name AS recording_name,
                           recording_mbid::TEXT
                      FROM listen l
-                     JOIN listen_join_listen_mbid_mapping lj
+                     JOIN tmp_listen_join_listen_mbid_mapping lj
                        ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = lj.recording_msid
-                     JOIN listen_mbid_mapping m
+                     JOIN tmp_listen_mbid_mapping m
                        ON lj.listen_mbid_mapping = m.id
                     WHERE listened_at > %s
                       AND listened_at <= %s
@@ -748,18 +748,16 @@ class TimescaleListenStore(ListenStore):
                     'listened_at': [],
                     'user_name': [],
                     'artist_name': [],
-                    'artist_mbids': [],
+                    'artist_credit_mbids': [],
                     'release_name': [],
                     'release_mbid': [],
                     'recording_name': [],
-                    'recording_mbid': [],
-                    'artist_credit_mbids': []
+                    'recording_mbid': []
                 }
                 while True:
                     result = curs.fetchone()
                     if not result:
                         break
-                    print(result)
 
                     for col in data:
                         if col == 'listened_at':

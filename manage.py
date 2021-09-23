@@ -300,7 +300,7 @@ def test_dump():
         'REDIS_PORT': config.REDIS_PORT,
         'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
         'LISTEN_DUMP_TEMP_DIR_ROOT': config.LISTEN_DUMP_TEMP_DIR_ROOT }, logging)
-        t.dump_listens_for_spark('listenbrainz-export', 99)
+        t.dump_listens_for_spark('/tmp', 99)
 
 
 # Add other commands here
