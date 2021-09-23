@@ -165,7 +165,6 @@ export default class BrainzPlayer extends React.Component<
 
   componentWillUnMount = () => {
     window.removeEventListener("storage", this.onLocalStorageEvent);
-    this.debouncedCheckProgressAndSubmitListen.flush();
     this.stopPlayerStateTimer();
   };
 
