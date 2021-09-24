@@ -3,12 +3,12 @@ import logging
 from datetime import datetime
 from typing import Iterator, Optional
 
+from dateutil.relativedelta import relativedelta
 from pydantic import ValidationError
 
 import listenbrainz_spark
 from data.model.user_listening_activity import UserListeningActivityStatMessage
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
-from listenbrainz_spark.exceptions import HDFSException
 from listenbrainz_spark.stats import (offset_days, offset_months, get_day_end,
                                       get_month_end, get_year_end,
                                       replace_days, run_query, get_last_monday)
@@ -67,116 +67,65 @@ def get_listening_activity():
     return iterator
 
 
-def get_listening_activity_week() -> Iterator[Optional[UserListeningActivityStatMessage]]:
-    """ Calculate number of listens for an user on each day of the past and current week. """
-    logger.debug("Calculating listening_activity_week")
+def _calculate_listening_activity(stats_range: str, from_date: datetime, to_date: datetime,
+                                  step: relativedelta, date_format: str, get_period_end: callable):
+    logger.debug(f"Calculating listening_activity_{stats_range}")
 
-    to_date = get_latest_listen_ts()
-    from_date = offset_days(get_last_monday(to_date), 7)
     # Set time to 00:00
     from_date = datetime(from_date.year, from_date.month, from_date.day)
-    day = from_date
-
-    # Genarate a dataframe containing days of last and current week along with start and end time
     time_range = []
-    while day < to_date:
-        time_range.append([day.strftime("%A %d %B %Y"), day, get_day_end(day)])
-        day = offset_days(day, 1, shift_backwards=False)
+
+    _date = from_date
+    while _date < to_date:
+        time_range.append([_date.strftime(date_format), _date, get_period_end(_date)])
+        _date = _date + step
 
     time_range_df = listenbrainz_spark.session.createDataFrame(time_range, time_range_schema)
     time_range_df.createOrReplaceTempView("time_range")
 
-    _get_listens(from_date, to_date)
-
+    get_listens_from_new_dump(from_date, to_date).createOrReplaceTempView("listens")
     data = get_listening_activity()
-    messages = create_messages(data=data, stats_range="week", from_date=from_date, to_date=to_date)
+    messages = create_messages(data=data, stats_range=stats_range, from_date=from_date, to_date=to_date)
 
     logger.debug("Done!")
 
     return messages
+
+
+def get_listening_activity_week() -> Iterator[Optional[UserListeningActivityStatMessage]]:
+    """ Calculate number of listens for an user on each day of the past and current week. """
+    to_date = get_latest_listen_ts()
+    from_date = offset_days(get_last_monday(to_date), 7)
+    step = relativedelta(days=+1)
+    return _calculate_listening_activity(stats_range="week", from_date=from_date, to_date=to_date,
+                                         step=step, date_format="%A %d %B %Y", get_period_end=get_day_end)
 
 
 def get_listening_activity_month() -> Iterator[Optional[UserListeningActivityStatMessage]]:
     """ Calculate number of listens for an user on each day of the past month and current month. """
-    logger.debug("Calculating listening_activity_month")
-
     to_date = get_latest_listen_ts()
     from_date = offset_months(replace_days(to_date, 1), 1)
-    # Set time to 00:00
-    from_date = datetime(from_date.year, from_date.month, from_date.day)
-    day = from_date
-
-    # Genarate a dataframe containing days of last and current month along with start and end time
-    time_range = []
-    while day < to_date:
-        time_range.append([day.strftime("%d %B %Y"), day, get_day_end(day)])
-        day = offset_days(day, 1, shift_backwards=False)
-
-    time_range_df = listenbrainz_spark.session.createDataFrame(time_range, time_range_schema)
-    time_range_df.createOrReplaceTempView("time_range")
-
-    _get_listens(from_date, to_date)
-
-    data = get_listening_activity()
-    messages = create_messages(data=data, stats_range="month", from_date=from_date, to_date=to_date)
-
-    logger.debug("Done!")
-
-    return messages
+    step = relativedelta(days=+1)
+    return _calculate_listening_activity(stats_range="month", from_date=from_date, to_date=to_date,
+                                         step=step, date_format="%d %B %Y", get_period_end=get_day_end)
 
 
 def get_listening_activity_year() -> Iterator[Optional[UserListeningActivityStatMessage]]:
     """ Calculate the number of listens for an user in each month of the past and current year. """
-    logger.debug("Calculating listening_activity_year")
-
     to_date = get_latest_listen_ts()
     from_date = datetime(to_date.year - 1, 1, 1)
-    month = from_date
-    time_range = []
-
-    # Genarate a dataframe containing months of last and current year along with start and end time
-    while month < to_date:
-        time_range.append([month.strftime("%B %Y"), month, get_month_end(month)])
-        month = offset_months(month, 1, shift_backwards=False)
-
-    time_range_df = listenbrainz_spark.session.createDataFrame(time_range, time_range_schema)
-    time_range_df.createOrReplaceTempView("time_range")
-
-    _get_listens(from_date, to_date)
-
-    data = get_listening_activity()
-    messages = create_messages(data=data, stats_range="year", from_date=from_date, to_date=to_date)
-
-    logger.debug("Done!")
-
-    return messages
+    step = relativedelta(months=+1)
+    return _calculate_listening_activity(stats_range="year", from_date=from_date, to_date=to_date,
+                                         step=step, date_format="%B %Y", get_period_end=get_month_end)
 
 
 def get_listening_activity_all_time() -> Iterator[Optional[UserListeningActivityStatMessage]]:
     """ Calculate the number of listens for an user in each year starting from LAST_FM_FOUNDING_YEAR (2002). """
-    logger.debug("Calculating listening_activity_all_time")
-
     to_date = get_latest_listen_ts()
     from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
-
-    result_without_zero_years = None
-    time_range = []
-    for year in range(from_date.year, to_date.year + 1):
-        year_start = datetime(year, 1, 1)
-        year_end = get_year_end(year)
-        time_range.append([str(year), year_start, year_end])
-
-    time_range_df = listenbrainz_spark.session.createDataFrame(time_range, time_range_schema)
-    time_range_df.createOrReplaceTempView("time_range")
-
-    _get_listens(from_date, to_date)
-
-    data = get_listening_activity()
-    messages = create_messages(data=data, stats_range="all_time", from_date=from_date, to_date=to_date)
-
-    logger.debug("Done!")
-
-    return messages
+    step = relativedelta(years=+1)
+    return _calculate_listening_activity(stats_range="all_time", from_date=from_date, to_date=to_date,
+                                         step=step, date_format="%Y", get_period_end=get_year_end)
 
 
 def create_messages(data, stats_range: str, from_date: datetime, to_date: datetime) \
@@ -211,8 +160,3 @@ def create_messages(data, stats_range: str, from_date: datetime, to_date: dateti
             logger.error(f"""ValidationError while calculating {stats_range} listening_activity for user: 
             {_dict["user_name"]}. Data: {json.dumps(_dict, indent=3)}""", exc_info=True)
             yield None
-
-
-def _get_listens(from_date: datetime, to_date: datetime):
-    get_listens_from_new_dump(from_date, to_date) \
-        .createOrReplaceTempView("listens")

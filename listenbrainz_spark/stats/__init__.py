@@ -103,9 +103,9 @@ def get_month_end(month: datetime) -> datetime:
     return datetime(month.year, month.month, num_of_days, hour=23, minute=59, second=59)
 
 
-def get_year_end(year: int) -> datetime:
+def get_year_end(year: datetime) -> datetime:
     """ Returns a datetime object denoting the end of the year """
-    return datetime(year, month=12, day=31, hour=23, minute=59, second=59)
+    return datetime(year.year, month=12, day=31, hour=23, minute=59, second=59)
 
 
 def get_last_monday(date: datetime) -> datetime:
