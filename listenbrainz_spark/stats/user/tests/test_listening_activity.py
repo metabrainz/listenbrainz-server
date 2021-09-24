@@ -4,12 +4,10 @@ from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import listenbrainz_spark.stats.user.listening_activity as listening_activity_stats
-import listenbrainz_spark
 from listenbrainz_spark import utils
-from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.exceptions import HDFSException
 from listenbrainz_spark.stats import (offset_days, offset_months, get_day_end,
-                                      get_month_end, get_year_end, run_query)
+                                      get_month_end, run_query)
 from listenbrainz_spark.stats.user.tests import StatsTestCase
 from pyspark.sql import Row
 

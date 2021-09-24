@@ -45,7 +45,7 @@ class InitTestCase(SparkNewTestCase):
         self.assertEqual(datetime.datetime(2020, 6, 30, 23, 59, 59), stats.get_month_end(month))
 
     def test_get_year_end(self):
-        self.assertEqual(datetime.datetime(2020, 12, 31, 23, 59, 59), stats.get_year_end(2020))
+        self.assertEqual(datetime.datetime(2020, 12, 31, 23, 59, 59), stats.get_year_end(datetime.datetime(2020, 1, 1)))
 
     def test_get_last_monday(self):
         date = datetime.datetime(2020, 5, 19)
