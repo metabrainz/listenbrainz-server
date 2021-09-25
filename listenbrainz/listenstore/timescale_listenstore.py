@@ -54,12 +54,8 @@ WINDOW_SIZE_MULTIPLIER = 3
 LISTEN_COUNT_BUCKET_WIDTH = 2592000
 
 # These values are defined to create spark parquet files that are at most 128MB in size.
-# Given our listens data, we get about about 50% compression, so rounding to 55% should ensure
-# that we don't go over the 128MB file limit. If we do, its not a real problem.
-PARQUET_APPROX_COMPRESSION_RATIO = .55
-
-# A rough guesstimate at the average length of the MBIDs fields: One UUID + some extra? We just need a guess!
-AVG_ARTIST_MBIDS_LEN = 42
+# This compression ration allows us to roughly estimate how full we can make files before starting a new one
+PARQUET_APPROX_COMPRESSION_RATIO = .57
 
 # This is the approximate amount of data to write to a parquet file in order to meet the max size
 PARQUET_TARGET_SIZE = 134217728 / PARQUET_APPROX_COMPRESSION_RATIO  # 128MB / compression ratio
