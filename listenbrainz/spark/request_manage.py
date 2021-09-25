@@ -100,12 +100,14 @@ def send_request_to_spark_cluster(message):
 def request_user_stats(type_, range_, entity):
     """ Send a user stats request to the spark cluster
     """
-    params = {}
-    if type_ == 'entity' and entity:
-        params['entity'] = entity
+    params = {
+        "stats_range": range_
+    }
+    if type_ == "entity" and entity:
+        params["entity"] = entity
     try:
         send_request_to_spark_cluster(_prepare_query_message(
-            'stats.user.{type}.{range}'.format(range=range_, type=type_), params=params))
+            f"stats.user.{type_}", params=params))
     except InvalidSparkRequestError:
         click.echo("Incorrect arguments provided")
 
@@ -119,11 +121,12 @@ def request_sitewide_stats(range_, entity):
     """ Send request to calculate sitewide stats to the spark cluster
     """
     params = {
-        'entity': entity
+        'entity': entity,
+        'stats_range': range_
     }
     try:
         send_request_to_spark_cluster(_prepare_query_message(
-            "stats.sitewide.entity.{range}".format(range=range_), params=params))
+            "stats.sitewide.entity", params=params))
     except InvalidSparkRequestError:
         click.echo("Incorrect arguments provided")
 

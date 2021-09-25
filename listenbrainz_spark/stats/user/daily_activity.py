@@ -17,7 +17,7 @@ from pyspark.sql.functions import collect_list, sort_array, struct
 logger = logging.getLogger(__name__)
 
 
-def get_daily_activity():
+def calculate_daily_activity():
     """ Calculate number of listens for each user in each hour. """
 
     # Genarate a dataframe containing hours of all days of the week
@@ -62,33 +62,13 @@ def get_daily_activity():
     return iterator
 
 
-def get_daily_activity_week() -> Iterator[Optional[UserDailyActivityStatMessage]]:
-    """ Calculate number of listens for an user per hour on each day of the past week. """
-    return _get_daily_activity_range("week")
-
-
-def get_daily_activity_month() -> Iterator[Optional[UserDailyActivityStatMessage]]:
-    """ Calculate number of listens for an user per hour on each day of week of the current month. """
-    return _get_daily_activity_range("month")
-
-
-def get_daily_activity_year() -> Iterator[Optional[UserDailyActivityStatMessage]]:
-    """ Calculate number of listens for an user per hour on each day of week of the current year. """
-    return _get_daily_activity_range("year")
-
-
-def get_daily_activity_all_time() -> Iterator[Optional[UserDailyActivityStatMessage]]:
-    """ Calculate number of listens for an user per hour on each day of week. """
-    return _get_daily_activity_range("all_time")
-
-
-def _get_daily_activity_range(stats_range: str) -> Iterator[Optional[UserDailyActivityStatMessage]]:
+def get_daily_activity(stats_range: str) -> Iterator[Optional[UserDailyActivityStatMessage]]:
     """ Calculate number of listens for an user for the specified time range """
     logger.debug(f"Calculating daily_activity_{stats_range}")
 
     from_date, to_date = get_dates_for_stats_range(stats_range)
     get_listens_from_new_dump(from_date, to_date).createOrReplaceTempView("listens")
-    data = get_daily_activity()
+    data = calculate_daily_activity()
     messages = create_messages(data=data, stats_range=stats_range, from_date=from_date, to_date=to_date)
 
     logger.debug("Done!")

@@ -23,27 +23,7 @@ entity_model_map = {
 }
 
 
-def get_entity_week(entity: str) -> Optional[List[SitewideEntityStatMessage]]:
-    """ Get the weekly sitewide top entity """
-    return _get_entity_stats(entity, "week")
-
-
-def get_entity_month(entity: str) -> Optional[List[SitewideEntityStatMessage]]:
-    """ Get the montly sitewide top entity """
-    return _get_entity_stats(entity, "month")
-
-
-def get_entity_year(entity: str) -> Optional[List[SitewideEntityStatMessage]]:
-    """ Get the yearly sitewide top entity """
-    return _get_entity_stats(entity, "year")
-
-
-def get_entity_all_time(entity: str) -> Optional[List[SitewideEntityStatMessage]]:
-    """ Get the all_time sitewide top entity """
-    return _get_entity_stats(entity, "all_time")
-
-
-def _get_entity_stats(entity: str, stats_range: str) -> Optional[List[SitewideEntityStatMessage]]:
+def get_entity_stats(entity: str, stats_range: str) -> Optional[List[SitewideEntityStatMessage]]:
     """ Returns top entity stats for given time period """
     logger.debug(f"Calculating sitewide_{entity}_{stats_range}...")
 
