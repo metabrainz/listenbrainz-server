@@ -49,7 +49,8 @@ def insert_rows(mapping_rows, join_rows):
     conn = timescale.engine.raw_connection()
     with conn.cursor() as curs:
         try:
-            query = """INSERT INTO tmp_listen_mbid_mapping (id, recording_mbid, release_mbid, release_name,
+            # TODO: remove tmp before PR
+            query = """INSERT INTO tmp_listen_mbid_mapping (id, artist_credit_id, recording_mbid, release_mbid, release_name,
                                    artist_mbids, artist_credit_name, recording_name, match_type, last_updated)
                             VALUES %s
                        ON CONFLICT DO NOTHING"""
@@ -110,12 +111,12 @@ def copy_rows_to_new_mbid_mapping(app):
                 recording_mbid_index[row['recording_mbid']] = insert_id
 
                 if row["artist_credit_id"] is None or row["artist_credit_id"] not in artist_credit_index:
-                    updated_rows.append([ insert_id, row['recording_mbid'], row['release_mbid'], 
+                    updated_rows.append([ insert_id, None, row['recording_mbid'], row['release_mbid'], 
                         None, None, None, None, 'no_match', row['last_updated'] ])
                     id += 1
                 else:
                     try:
-                        updated_rows.append([ insert_id, row['recording_mbid'], row['release_mbid'], 
+                        updated_rows.append([ insert_id, row["artist_credit_id"], row['recording_mbid'], row['release_mbid'], 
                             release_name_index[row['release_mbid']], artist_credit_index[row["artist_credit_id"]],
                             row['artist_credit_name'], row["recording_name"], row["match_type"], row['last_updated'] ])
                         id += 1
