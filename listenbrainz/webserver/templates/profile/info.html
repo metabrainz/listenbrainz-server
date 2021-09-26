@@ -5,7 +5,10 @@
 {% block content %}
   <div id="user-profile">
     <h2 class="page-title">{{ user.musicbrainz_id }}</h2>
-
+    <div style="margin-top: 20px; margin-bottom: 20px">
+      <img src="{{ url_for('static', filename='img/musicbrainz-16.svg') }}" />
+      <b><a href="https://musicbrainz.org/user/{{ user.musicbrainz_id }}">See profile on MusicBrainz</a></b>
+    </div>
     <h3> Delete your account </h3>
 
     <p>
