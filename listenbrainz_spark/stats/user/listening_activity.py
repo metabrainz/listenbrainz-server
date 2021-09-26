@@ -9,11 +9,9 @@ from pydantic import ValidationError
 import listenbrainz_spark
 from data.model.user_listening_activity import UserListeningActivityStatMessage
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
-from listenbrainz_spark.stats import (offset_days, offset_months, get_day_end,
-                                      get_month_end, get_year_end,
-                                      replace_days, run_query, get_last_monday)
+from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import get_listens_from_new_dump, get_latest_listen_ts
-from pyspark.sql.functions import collect_list, sort_array, struct, lit
+from pyspark.sql.functions import collect_list, sort_array, struct
 from pyspark.sql.types import (StringType, StructField, StructType,
                                TimestampType)
 
