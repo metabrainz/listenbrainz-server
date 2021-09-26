@@ -21,7 +21,8 @@
           {% if current_user.is_authenticated %}
             <li><a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}">My Listens</a></li>
             <li><a href="{{ url_for('index.feed') }}">My Feed</a></li>
-          {% endif %}
+        <li><a href="{{ url_for('recommendations_cf_recording.info', user_name=current_user.musicbrainz_id) }}">For me</a></li>
+        {% endif %}
         {%- endif -%}
         <li><a href="{{ url_for('index.recent_listens') }}">Recent</a></li>
         <li class="dropdown">
@@ -72,10 +73,7 @@
               {{ current_user.musicbrainz_id }} <span class="caret"></span>
             </a>
             <ul class="dropdown-menu" role="menu">
-              <li><a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}">My Listens</a></li>
-              <li><a href="{{ url_for('index.feed') }}">My Feed</a></li>
               <li><a href="{{ url_for('user.playlists', user_name=current_user.musicbrainz_id) }}">My Playlists</a></li>
-              <li><a href="{{ url_for('recommendations_cf_recording.info', user_name=current_user.musicbrainz_id) }}">Tracks you might like</a></li>
               <li><a href="{{ url_for('profile.music_services_details') }}">Connect Services</a></li>
               <li><a href="{{ url_for('profile.import_data') }}">Import listens</a></li>
               <li><a href="{{ url_for('profile.export_data') }}">Export</a></li>
@@ -86,7 +84,22 @@
         {%- endif -%}
       </ul>
     {% endif %}
+      <form id="searchForm" class="navbar-form">
+          <input id="searchQuery" type="text" class="form-control input-sm" placeholder="Search Listener">
+        <button type="submit" class="btn input-sm"><span class="glyphicon glyphicon-search"></span></button>
+      </form>
     </div>
-
   </div>
 </nav>
+<script type="text/javascript">
+  const query = document.getElementById('searchQuery');
+  const form = document.getElementById('searchForm');
+  form.onsubmit = function() {
+    console.log(query.value);
+    if(query.value.trim().length<1){
+      return false;
+    }
+    window.location = "https://listenbrainz.org/user/"+query.value;
+    return false;
+  };
+</script>

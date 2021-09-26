@@ -5,7 +5,6 @@
 {% block content %}
   <div id="user-profile">
     <div id="user-page-heading-container"></div>
-
     <ul class="nav nav-tabs" role="tablist">
         <li {{ 'class=active' if active_section=='listens' }}><a href="{{ url_for('user.profile', user_name=user.musicbrainz_id) }}">Listens</a></li>
         <li {{ 'class=active' if active_section=='reports' }}><a href="{{ url_for('user.reports', user_name=user.musicbrainz_id) }}">Reports</a></li>
@@ -16,8 +15,6 @@
         <li {{ 'class=active' if active_section=='recommendations' }}><a href="{{ url_for('user.recommendation_playlists', user_name=user.musicbrainz_id) }}">Recommendations</a></li>
         <li {{ 'class=active' if active_section=='collaborations' }}><a href="{{ url_for('user.collaborations', user_name=user.musicbrainz_id) }}">Collaborations</a></li>
       </ul>
-
-    {% block profile_content %} {% endblock %}
 
   </div>
 
