@@ -94,18 +94,18 @@ def offset_days(date, days, shift_backwards=True):
 
 def get_day_end(day: datetime) -> datetime:
     """ Returns a datetime object denoting the end of the day """
-    return datetime(day.year, day.month, day.day, hour=23, minute=59, second=59)
+    return datetime(day.year, day.month, day.day, hour=23, minute=59, second=59, microsecond=999999)
 
 
 def get_month_end(month: datetime) -> datetime:
     """ Returns a datetime object denoting the end of the month """
     _, num_of_days = monthrange(month.year, month.month)
-    return datetime(month.year, month.month, num_of_days, hour=23, minute=59, second=59)
+    return datetime(month.year, month.month, num_of_days, hour=23, minute=59, second=59, microsecond=999999)
 
 
 def get_year_end(year: datetime) -> datetime:
     """ Returns a datetime object denoting the end of the year """
-    return datetime(year.year, month=12, day=31, hour=23, minute=59, second=59)
+    return datetime(year.year, month=12, day=31, hour=23, minute=59, second=59, microsecond=999999)
 
 
 def get_last_monday(date: datetime) -> datetime:

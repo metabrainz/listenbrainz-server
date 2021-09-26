@@ -30,8 +30,8 @@ class DailyActivityTestCase(StatsTestCase):
     def test_get_daily_activity_week(self, mock_create_messages, _, mock_get_listens):
         daily_activity.get_daily_activity_week()
 
-        from_date = datetime(2021, 7, 26)
-        to_date = datetime(2021, 8, 2)
+        from_date = datetime(2021, 8, 2)
+        to_date = datetime(2021, 8, 9)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='daily_activity_table', stats_range='week',
                                                 from_date=from_date, to_date=to_date)
@@ -67,7 +67,7 @@ class DailyActivityTestCase(StatsTestCase):
         daily_activity.get_daily_activity_all_time()
 
         from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
-        to_date = datetime(2021, 8, 9)
+        to_date = datetime(2021, 8, 9, 12, 22, 43)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='daily_activity_table', stats_range='all_time',
                                                 from_date=from_date, to_date=to_date)
