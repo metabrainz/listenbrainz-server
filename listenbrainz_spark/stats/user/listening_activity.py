@@ -51,7 +51,7 @@ def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta,
     # from_offset: this is applied to the latest_listen_date to get from_date
     # to_offset: this is applied to from_date to get to_date
     if stats_range == "week":
-        from_offset = relativedelta(days=-1, weekday=MO(-2))
+        from_offset = relativedelta(weeks=-2, weekday=MO(-1))
         to_offset = relativedelta(weeks=+2)
         # compute listening activity for each day, include weekday in date format
         step = relativedelta(days=+1)

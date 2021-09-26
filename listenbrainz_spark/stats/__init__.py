@@ -140,7 +140,7 @@ def get_dates_for_stats_range(stats_range: str) -> Tuple[datetime, datetime]:
     # from_offset: this is applied to the latest_listen_date to get from_date
     # to_offset: this is applied to from_date to get to_date
     if stats_range == "week":
-        from_offset = relativedelta(days=-1, weekday=MO(-1))  # monday of previous week
+        from_offset = relativedelta(weeks=-1, weekday=MO(-1))  # monday of previous week
         to_offset = relativedelta(weeks=+1)
     elif stats_range == "month":
         from_offset = relativedelta(months=-1, day=1)  # first day of previous month
