@@ -30,8 +30,8 @@ class DailyActivityTestCase(StatsTestCase):
     def test_get_daily_activity_week(self, mock_create_messages, _, mock_get_listens):
         daily_activity.get_daily_activity_week()
 
-        from_date = datetime(2021, 8, 2)
-        to_date = datetime(2021, 8, 9)
+        from_date = datetime(2021, 7, 26)
+        to_date = datetime(2021, 8, 2)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='daily_activity_table', stats_range='week',
                                                 from_date=from_date, to_date=to_date)

@@ -21,8 +21,8 @@ class UserEntityTestCase(StatsTestCase):
     def test_get_entity_week(self, mock_create_messages, mock_get_listens):
         entity.get_entity_week('test')
 
-        from_date = datetime(2021, 8, 2)
-        to_date = datetime(2021, 8, 9)
+        from_date = datetime(2021, 7, 26)
+        to_date = datetime(2021, 8, 2)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='sample_test_data', entity='test', stats_range='week',
                                                 from_date=from_date, to_date=to_date)
