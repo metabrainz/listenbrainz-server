@@ -244,7 +244,7 @@ def user_feed(user_name: str):
 @ratelimit()
 def delete_feed_events(user_name):
     '''
-    Delete those events from user's feed that they created themselves.
+    Delete those events from user's feed that belong to them.
     Supports deletion of recommendation and notification.
     Along with the authorization token, post one of the following, according
     to your need.
