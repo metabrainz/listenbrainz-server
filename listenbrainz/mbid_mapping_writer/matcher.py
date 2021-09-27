@@ -77,6 +77,42 @@ def process_listens(app, listens, is_legacy_listen=False):
                            ON CONFLICT DO NOTHING"""
                 execute_values(curs, query, matches, template=None)
 
+                mogrified = []
+                for match in matches:
+                    mogrified.append(curs.mogrify("(%s, %s, %s, %s, %s, %s, %s)", match))
+
+                query = """WITH data(recording_msid,
+                                     recording_mbid,
+                                     release_mbid,
+                                     artist_credit_id,
+                                     artist_credit_name,
+                                     recording_name,
+                                     match_type) AS (          
+                                     VALUES
+                                         %s
+                                     )
+                           , join_insert AS (
+                                   INSERT INTO listen_mbid_mapping (recording_mbid,
+                                                                    release_mbid,
+                                                                    artist_credit_id,
+                                                                    artist_credit_name,
+                                                                    recording_name,
+                                                                    match_type)
+                                   SELECT recording_mbid,
+                                          release_mbid,
+                                          artist_credit_id,
+                                          artist_credit_name,
+                                          recording_name,
+                                          match_type
+                                   FROM   data
+                                   RETURNING recording_msid, id AS join_id
+                                   )
+                                INSERT INTO listen_join_listen_mbid_mapping (recording_msid, listen_mbid_mapping)
+                                SELECT join_insert.join_id, recording_msid
+                                FROM   data d
+                                JOIN   join_insert USING (recording_msid)""" % ",".join(mogrified)
+
+
             except psycopg2.OperationalError as err:
                 app.logger.info(
                     "Cannot insert MBID mapping rows. (%s)" % str(err))
