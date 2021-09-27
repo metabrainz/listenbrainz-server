@@ -749,13 +749,13 @@ class TimescaleListenStore(ListenStore):
                 data = {
                     'listened_at': [],
                     'user_name': [],
-                    'artist_credit_id': [],
                     'artist_name': [],
-                    'artist_credit_mbids': [],
+                    'artist_credit_id': [],
                     'release_name': [],
                     'release_mbid': [],
                     'recording_name': [],
-                    'recording_mbid': []
+                    'recording_mbid': [],
+                    'artist_credit_mbids': []
                 }
                 while True:
                     result = curs.fetchone()
