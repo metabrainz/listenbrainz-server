@@ -245,7 +245,7 @@ def user_feed(user_name: str):
 def delete_feed_events(user_name):
     '''
     Delete those events from user's feed that they created themselves.
-    Supports deletion of recommendation, notification and pin events.
+    Supports deletion of recommendation and notification.
     Along with the authorization token, post one of the following, according
     to your need.
     {
@@ -265,7 +265,6 @@ def delete_feed_events(user_name):
     :statuscode 500: API Internal Server Error
     :resheader Content-Type: *application/json*
     '''
-    # TODO: maybe implement logging once approved
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
         raise APIUnauthorized("You don't have permissions to delete from this user's timeline.")
@@ -276,7 +275,7 @@ def delete_feed_events(user_name):
         if event["event_type"] in [UserTimelineEventType.RECORDING_RECOMMENDATION.value,
                 UserTimelineEventType.NOTIFICATION.value]:
             try:
-                event_deleted = db_user_timeline_event.delete_user_recommendation_notification_event(event["id"], user["id"])
+                event_deleted = db_user_timeline_event.delete_user_timeline_event(event["id"], user["id"])
             except Exception as e:
                 raise APIInternalServerError("Something went wrong. Please try again")
             if not event_deleted:

@@ -79,7 +79,7 @@ def create_user_notification_event(user_id: int, metadata: NotificationMetadata)
         metadata=metadata
     )
 
-def delete_user_recommendation_notification_event(
+def delete_user_timeline_event(
         id: int,
         user_id:int
 ) -> bool:

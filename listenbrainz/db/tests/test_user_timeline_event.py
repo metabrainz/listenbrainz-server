@@ -270,7 +270,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(UserTimelineEventType.NOTIFICATION, event_not.event_type)
 
         # deleting recording recommendation
-        db_user_timeline_event.delete_user_recommendation_notification_event(
+        db_user_timeline_event.delete_user_timeline_event(
             id=event_rec.id,
             user_id=self.user["id"],
         )
@@ -281,7 +281,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(0, len(event_rec))
 
         # deleting notification
-        db_user_timeline_event.delete_user_recommendation_notification_event(
+        db_user_timeline_event.delete_user_timeline_event(
             id=event_not.id,
             user_id=new_user["id"],
         )
@@ -305,7 +305,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
         with mock.patch("listenbrainz.db.engine.connect", side_effect=Exception):
             with self.assertRaises(DatabaseException):
                 # checking if DatabaseException is raised or not
-                db_user_timeline_event.delete_user_recommendation_notification_event(
+                db_user_timeline_event.delete_user_timeline_event(
                     id=event_rec.id,
                     user_id=self.user["id"],
                 )

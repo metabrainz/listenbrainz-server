@@ -286,7 +286,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
         self.assert401(r_rec)
 
-    @mock.patch("listenbrainz.db.user_timeline_event.delete_user_recommendation_notification_event",
+    @mock.patch("listenbrainz.db.user_timeline_event.delete_user_timeline_event",
         side_effect=DatabaseException)
     def test_delete_feed_events_for_db_exceptions(self, mock_create_event):
         # Adding notification to the db
