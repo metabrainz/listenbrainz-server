@@ -507,6 +507,7 @@ describe("Pagination", () => {
       const instance = wrapper.instance();
 
       // Random nextListenTs to ensure that is the value set in browser history
+      wrapper.setProps({ latestListenTs: 1586623524 });
       wrapper.setState({ listens: [], nextListenTs: 1586440600 });
 
       const spy = jest.fn().mockImplementation((username, minTs, maxTs) => {
@@ -636,6 +637,7 @@ describe("Pagination", () => {
       );
       const instance = wrapper.instance();
 
+      wrapper.setProps({ latestListenTs: 1586623524 });
       wrapper.setState({ previousListenTs: 123456 });
 
       const spy = jest.fn().mockImplementation((username, minTs, maxTs) => {
