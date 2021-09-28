@@ -30,27 +30,8 @@ entity_model_map = {
 }
 
 
-def get_entity_week(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
-    """ Get the weekly top entity for all users """
-    return _get_entity_stats(entity, "week")
-
-
-def get_entity_month(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
-    """ Get the month top entity for all users """
-    return _get_entity_stats(entity, "month")
-
-
-def get_entity_year(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
-    """ Get the year top entity for all users """
-    return _get_entity_stats(entity, "year")
-
-
-def get_entity_all_time(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
-    """ Get the all_time top entity for all users """
-    return _get_entity_stats(entity, "all_time")
-
-
-def _get_entity_stats(entity: str, stats_range: str) -> Iterator[Optional[UserEntityStatMessage]]:
+def get_entity_stats(entity: str, stats_range: str) -> Iterator[Optional[UserEntityStatMessage]]:
+    """ Get the top entity for all users for specified stats_range """
     logger.debug(f"Calculating user_{entity}_{stats_range}...")
 
     from_date, to_date = get_dates_for_stats_range(stats_range)

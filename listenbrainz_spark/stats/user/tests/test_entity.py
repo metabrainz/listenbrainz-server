@@ -2,8 +2,6 @@ import json
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from listenbrainz_spark.stats.user import entity
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.stats.user.tests import StatsTestCase
@@ -19,7 +17,7 @@ class UserEntityTestCase(StatsTestCase):
     @patch('listenbrainz_spark.stats.user.entity.get_listens_from_new_dump')
     @patch('listenbrainz_spark.stats.user.entity.create_messages')
     def test_get_entity_week(self, mock_create_messages, mock_get_listens):
-        entity.get_entity_week('test')
+        entity.get_entity_stats('test', 'week')
 
         from_date = datetime(2021, 8, 2)
         to_date = datetime(2021, 8, 9)
@@ -30,7 +28,7 @@ class UserEntityTestCase(StatsTestCase):
     @patch('listenbrainz_spark.stats.user.entity.get_listens_from_new_dump')
     @patch('listenbrainz_spark.stats.user.entity.create_messages')
     def test_get_entity_month(self, mock_create_messages, mock_get_listens):
-        entity.get_entity_month('test')
+        entity.get_entity_stats('test', 'month')
 
         from_date = datetime(2021, 7, 1)
         to_date = datetime(2021, 8, 1)
@@ -41,7 +39,7 @@ class UserEntityTestCase(StatsTestCase):
     @patch('listenbrainz_spark.stats.user.entity.get_listens_from_new_dump')
     @patch('listenbrainz_spark.stats.user.entity.create_messages')
     def test_get_entity_year(self, mock_create_messages, mock_get_listens):
-        entity.get_entity_year('test')
+        entity.get_entity_stats('test', 'year')
 
         from_date = datetime(2020, 1, 1)
         to_date = datetime(2021, 1, 1)
@@ -52,7 +50,7 @@ class UserEntityTestCase(StatsTestCase):
     @patch('listenbrainz_spark.stats.user.entity.get_listens_from_new_dump')
     @patch('listenbrainz_spark.stats.user.entity.create_messages')
     def test_get_entity_all_time(self, mock_create_messages, mock_get_listens):
-        entity.get_entity_all_time('test')
+        entity.get_entity_stats('test', 'all_time')
 
         from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
         to_date = datetime(2021, 8, 9, 12, 22, 43)
