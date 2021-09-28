@@ -26,13 +26,14 @@ def create_tables(mb_conn):
         with mb_conn.cursor() as curs:
             curs.execute("DROP TABLE IF EXISTS mapping.tmp_mbid_mapping")
             curs.execute("""CREATE TABLE mapping.tmp_mbid_mapping (
-                                         id                        INTEGER NOT NULL,
-                                         recording_name            TEXT NOT NULL,
-                                         recording_mbid            UUID NOT NULL,
-                                         artist_credit_name        TEXT NOT NULL,
+                                         id                        SERIAL,
+                                         artist_credit_id          INT NOT NULL,
                                          artist_mbids              UUID[] NOT NULL,
-                                         release_name              TEXT NOT NULL,
+                                         artist_credit_name        TEXT NOT NULL,
                                          release_mbid              UUID NOT NULL,
+                                         release_name              TEXT NOT NULL,
+                                         recording_mbid            UUID NOT NULL,
+                                         recording_name            TEXT NOT NULL,
                                          combined_lookup           TEXT NOT NULL,
                                          score                     INTEGER NOT NULL)""")
             curs.execute(
@@ -276,9 +277,15 @@ def create_mbid_mapping():
                         combined_lookup = unidecode(
                             re.sub(r'[^\w]+', '', artist_credit_name + recording_name).lower())
                         if recording_name not in artist_recordings:
-                            artist_recordings[recording_name] = (serial, recording_name, row['recording_mbid'],
-                                                                 artist_credit_name, row['artist_mbids'],
-                                                                 release_name, row['release_mbid'], combined_lookup,
+                            artist_recordings[recording_name] = (serial,
+                                                                 row['artist_credit_id'],
+                                                                 row['artist_mbids'],
+                                                                 artist_credit_name,
+                                                                 row['release_mbid'],
+                                                                 release_name,
+                                                                 row['recording_mbid'],
+                                                                 recording_name,
+                                                                 combined_lookup,
                                                                  row['score'])
                             serial += 1
                     except TypeError:
