@@ -537,3 +537,16 @@ def update_user_email(musicbrainz_id, email):
             logger.error(err)
             raise DatabaseException(
                 "Couldn't update user's email: %s" % str(err))
+
+
+def search(search_term: str, limit: int) -> List[Tuple[str, float]]:
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT musicbrainz_id, musicbrainz_id <-> :search_term AS distance
+            FROM "user"
+            ORDER BY distance LIMIT :limit
+            """), {
+            "search_term": search_term,
+            "limit": limit
+        })
+        return [(row['musicbrainz_id'], row['distance']) for row in result.fetchall()]
