@@ -2,6 +2,7 @@ import * as React from "react";
 import { ResponsiveBar, LabelFormatter } from "@nivo/bar";
 
 import getEntityLink from "./utils";
+import ListenCard from "../listens/ListenCard";
 
 export type BarProps = {
   data: UserEntityData;
@@ -27,7 +28,6 @@ type Tick = {
 export default function Bar(props: BarProps) {
   const { data, maxValue, width } = props;
   const marginLeft = Math.min((width || window.innerWidth) / 2, 400);
-  const tableDigitWidth = data[0]?.idx.toString().length;
 
   const leftAlignedTick = <Tick extends any>(tick: Tick) => {
     const datum = data[tick.tickIndex];
@@ -42,61 +42,70 @@ export default function Bar(props: BarProps) {
       idx,
     } = datum;
 
+    const listenFormat: BaseListenFormat = {
+      listened_at: -1,
+      track_metadata: {
+        track_name: entityName,
+        artist_name: artistName ?? "",
+        release_name: releaseName,
+        additional_info: {
+          artist_mbids: artistMBIDs,
+          recording_mbid: entityType === "recording" ? entityMBID : undefined,
+          release_mbid: releaseMBID,
+        },
+      },
+    };
+
     let artistMBID;
     if (artistMBIDs) {
       [artistMBID] = artistMBIDs;
     }
+    const thumbnail = <>{idx}.&nbsp;</>;
+
+    const listenDetails = (
+      <>
+        <div title={entityName} className="ellipsis">
+          {getEntityLink(entityType, entityName, entityMBID)}
+        </div>
+
+        <div
+          className="small text-muted ellipsis"
+          title={`${artistName || ""}, ${releaseName || ""}`}
+        >
+          {artistName && getEntityLink("artist", artistName, artistMBID)}
+          {releaseName && (
+            <span>
+              &nbsp;-&nbsp;
+              {getEntityLink("release", releaseName, releaseMBID)}
+            </span>
+          )}
+        </div>
+      </>
+    );
 
     return (
       <g transform={`translate(${tick.x - marginLeft}, ${tick.y})`}>
         <foreignObject
-          height="3em"
+          height="3.5em"
           width={marginLeft}
           y={datum.entityType === "artist" ? -10 : -20}
         >
-          <table
-            style={{
-              width: "90%",
-              whiteSpace: "nowrap",
-              tableLayout: "fixed",
+          <ListenCard
+            thumbnail={thumbnail}
+            mini
+            listenDetails={listenDetails}
+            listen={listenFormat}
+            showTimestamp={false}
+            showUsername={false}
+            currentFeedback={0}
+            isCurrentListen={false}
+            playListen={() => {
+              console.log("Play this song, would you?");
             }}
-          >
-            <tbody>
-              <tr style={{ color: "black" }}>
-                <td style={{ width: `${tableDigitWidth}em`, textAlign: "end" }}>
-                  {idx}.&nbsp;
-                </td>
-                <td
-                  style={{
-                    textOverflow: "ellipsis",
-                    overflow: "hidden",
-                  }}
-                >
-                  {getEntityLink(entityType, entityName, entityMBID)}
-                </td>
-              </tr>
-              {artistName && (
-                <tr>
-                  <td />
-                  <td
-                    style={{
-                      fontSize: 12,
-                      textOverflow: "ellipsis",
-                      overflow: "hidden",
-                    }}
-                  >
-                    {getEntityLink("artist", artistName, artistMBID)}
-                    {releaseName && (
-                      <span>
-                        &nbsp;-&nbsp;
-                        {getEntityLink("release", releaseName, releaseMBID)}
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+            newAlert={(...args) => {
+              console.log("Alert!", ...args);
+            }}
+          />
         </foreignObject>
       </g>
     );
@@ -141,7 +150,6 @@ export default function Bar(props: BarProps) {
       colors="#EB743B"
       indexBy="id"
       enableGridY={false}
-      padding={0.15}
       labelFormat={labelFormatter}
       labelSkipWidth={0}
       tooltip={customTooltip}
