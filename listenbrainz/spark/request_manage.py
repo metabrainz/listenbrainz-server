@@ -273,26 +273,31 @@ def request_similar_users(max_num_users):
 def cron_request_all_stats(ctx):
     ctx.invoke(request_user_stats, type_="entity", range_="week", entity="artists")
     ctx.invoke(request_user_stats, type_="entity", range_="month", entity="artists")
+    ctx.invoke(request_user_stats, type_="entity", range_="quarter", entity="artists")
     ctx.invoke(request_user_stats, type_="entity", range_="year", entity="artists")
     ctx.invoke(request_user_stats, type_="entity", range_="all_time", entity="artists")
 
     ctx.invoke(request_user_stats, type_="entity", range_="week", entity="releases")
     ctx.invoke(request_user_stats, type_="entity", range_="month", entity="releases")
+    ctx.invoke(request_user_stats, type_="entity", range_="quarter", entity="releases")
     ctx.invoke(request_user_stats, type_="entity", range_="year", entity="releases")
     ctx.invoke(request_user_stats, type_="entity", range_="all_time", entity="releases")
 
     ctx.invoke(request_user_stats, type_="entity", range_="week", entity="recordings")
     ctx.invoke(request_user_stats, type_="entity", range_="month", entity="recordings")
+    ctx.invoke(request_user_stats, type_="entity", range_="quarter", entity="recordings")
     ctx.invoke(request_user_stats, type_="entity", range_="year", entity="recordings")
     ctx.invoke(request_user_stats, type_="entity", range_="all_time", entity="recordings")
 
     ctx.invoke(request_user_stats, type_="listening_activity", range_="week")
     ctx.invoke(request_user_stats, type_="listening_activity", range_="month")
+    ctx.invoke(request_user_stats, type_="listening_activity", range_="quarter")
     ctx.invoke(request_user_stats, type_="listening_activity", range_="year")
     ctx.invoke(request_user_stats, type_="listening_activity", range_="all_time")
 
     ctx.invoke(request_user_stats, type_="daily_activity", range_="week")
     ctx.invoke(request_user_stats, type_="daily_activity", range_="month")
+    ctx.invoke(request_user_stats, type_="daily_activity", range_="quarter")
     ctx.invoke(request_user_stats, type_="daily_activity", range_="year")
     ctx.invoke(request_user_stats, type_="daily_activity", range_="all_time")
 
