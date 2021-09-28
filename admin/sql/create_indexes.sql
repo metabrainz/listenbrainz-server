@@ -4,7 +4,7 @@ CREATE UNIQUE INDEX auth_token_ndx_user ON "user" (auth_token);
 CREATE UNIQUE INDEX lower_musicbrainz_id_ndx_user ON "user" (lower(musicbrainz_id));
 CREATE UNIQUE INDEX login_id_ndx_user ON "user" (login_id);
 
-CREATE INDEX user_name_search_trgm_idx ON "user" USING GIST (musicbrainz_id gin_trgm_ops);
+CREATE INDEX user_name_search_trgm_idx ON "user" USING GIST (musicbrainz_id gist_trgm_ops);
 
 
 CREATE INDEX reporter_user_id_ndx_reported_users ON reported_users (reporter_user_id);
