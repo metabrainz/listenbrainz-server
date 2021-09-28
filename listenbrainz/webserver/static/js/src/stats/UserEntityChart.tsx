@@ -554,7 +554,7 @@ export default class UserEntityChart extends React.Component<
                 <div
                   className="col-md-12"
                   style={{
-                    height: `${(75 / this.ROWS_PER_PAGE) * data.length}em`,
+                    height: `${50 * data.length}px`,
                   }}
                   ref={this.graphContainer}
                 >
