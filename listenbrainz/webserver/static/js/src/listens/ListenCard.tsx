@@ -297,7 +297,7 @@ export default class ListenCard extends React.Component<
             </div>
           ))}
         <div className="listen-controls">
-          {!currentUser?.auth_token ? null : (
+          {!currentUser?.auth_token || mini ? null : (
             <>
               <ListenControl
                 icon={faHeart}
