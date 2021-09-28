@@ -77,8 +77,14 @@ def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta,
     return from_date, to_date, step, date_format
 
 
-def get_listening_activity():
-    """ Calculate number of listens for each user in time ranges given in the "time_range" table """
+def calculate_listening_activity():
+    """ Calculate number of listens for each user in time ranges given in the "time_range" table.
+    The time ranges are as follows:
+        1) week - each day with weekday name of the past 2 weeks.
+        2) month - each day the past 2 months. 
+        3) year - each month of the past 2 years.
+        4) all_time - each year starting from LAST_FM_FOUNDING_YEAR (2002)
+    """
     # Calculate the number of listens in each time range for each user except the time ranges which have zero listens.
     result_without_zero_days = run_query("""
             SELECT listens.user_name
@@ -117,7 +123,8 @@ def get_listening_activity():
     return iterator
 
 
-def _calculate_listening_activity(stats_range: str):
+def get_listening_activity(stats_range: str):
+    """ Calculate the number of listens of users for the given stats_range """
     logger.debug(f"Calculating listening_activity_{stats_range}")
 
     from_date, to_date, step, date_format = get_time_range(stats_range)
@@ -136,32 +143,12 @@ def _calculate_listening_activity(stats_range: str):
     time_range_df.createOrReplaceTempView("time_range")
 
     get_listens_from_new_dump(from_date, to_date).createOrReplaceTempView("listens")
-    data = get_listening_activity()
+    data = calculate_listening_activity()
     messages = create_messages(data=data, stats_range=stats_range, from_date=from_date, to_date=to_date)
 
     logger.debug("Done!")
 
     return messages
-
-
-def get_listening_activity_week() -> Iterator[Optional[UserListeningActivityStatMessage]]:
-    """ Calculate number of listens for an user on each day of the past and current week. """
-    return _calculate_listening_activity(stats_range="week")
-
-
-def get_listening_activity_month() -> Iterator[Optional[UserListeningActivityStatMessage]]:
-    """ Calculate number of listens for an user on each day of the past month and current month. """
-    return _calculate_listening_activity(stats_range="month")
-
-
-def get_listening_activity_year() -> Iterator[Optional[UserListeningActivityStatMessage]]:
-    """ Calculate the number of listens for an user in each month of the past and current year. """
-    return _calculate_listening_activity(stats_range="year")
-
-
-def get_listening_activity_all_time() -> Iterator[Optional[UserListeningActivityStatMessage]]:
-    """ Calculate the number of listens for an user in each year starting from LAST_FM_FOUNDING_YEAR (2002). """
-    return _calculate_listening_activity(stats_range="all_time")
 
 
 def create_messages(data, stats_range: str, from_date: datetime, to_date: datetime) \
