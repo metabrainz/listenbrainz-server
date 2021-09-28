@@ -544,7 +544,7 @@ def search(search_term: str, limit: int) -> List[Tuple[str, float]]:
         result = connection.execute(sqlalchemy.text("""
             SELECT musicbrainz_id, similarity(musicbrainz_id, :search_term) AS similarity
               FROM "user"
-             WHERE musicbrainz_id <% :search_term
+             WHERE musicbrainz_id % :search_term
           ORDER BY similarity DESC
              LIMIT :limit
             """), {
