@@ -9,12 +9,11 @@ from data.model.user_entity import UserEntityStatMessage
 from data.model.user_artist_stat import UserArtistRecord
 from data.model.user_release_stat import UserReleaseRecord
 from data.model.user_recording_stat import UserRecordingRecord
-from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
-from listenbrainz_spark.stats import offset_days, replace_days, replace_months, get_last_monday
+from listenbrainz_spark.stats import get_dates_for_stats_range
 from listenbrainz_spark.stats.user.artist import get_artists
 from listenbrainz_spark.stats.user.recording import get_recordings
 from listenbrainz_spark.stats.user.release import get_releases
-from listenbrainz_spark.utils import get_listens_from_new_dump, get_latest_listen_ts
+from listenbrainz_spark.utils import get_listens_from_new_dump
 
 logger = logging.getLogger(__name__)
 
@@ -33,40 +32,28 @@ entity_model_map = {
 
 def get_entity_week(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     """ Get the weekly top entity for all users """
-    to_date = get_last_monday(get_latest_listen_ts())
-    from_date = offset_days(to_date, 7)
-    # Set time to 00:00
-    from_date = datetime(from_date.year, from_date.month, from_date.day)
-    return _get_entity_stats(entity, "week", from_date, to_date)
+    return _get_entity_stats(entity, "week")
 
 
 def get_entity_month(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     """ Get the month top entity for all users """
-    to_date = get_latest_listen_ts()
-    from_date = replace_days(to_date, 1)
-    # Set time to 00:00
-    from_date = datetime(from_date.year, from_date.month, from_date.day)
-    return _get_entity_stats(entity, "month", from_date, to_date)
+    return _get_entity_stats(entity, "month")
 
 
 def get_entity_year(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     """ Get the year top entity for all users """
-    to_date = get_latest_listen_ts()
-    from_date = replace_days(replace_months(to_date, 1), 1)
-    # Set time to 00:00
-    from_date = datetime(from_date.year, from_date.month, from_date.day)
-    return _get_entity_stats(entity, "year", from_date, to_date)
+    return _get_entity_stats(entity, "year")
 
 
 def get_entity_all_time(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     """ Get the all_time top entity for all users """
-    to_date = get_latest_listen_ts()
-    from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
-    return _get_entity_stats(entity, "all_time", from_date, to_date)
+    return _get_entity_stats(entity, "all_time")
 
 
-def _get_entity_stats(entity: str, stats_range: str, from_date: datetime, to_date: datetime) \
-        -> Iterator[Optional[UserEntityStatMessage]]:
+def _get_entity_stats(entity: str, stats_range: str) -> Iterator[Optional[UserEntityStatMessage]]:
+    logger.debug(f"Calculating user_{entity}_{stats_range}...")
+
+    from_date, to_date = get_dates_for_stats_range(stats_range)
     listens_df = get_listens_from_new_dump(from_date, to_date)
     table_name = f"user_{entity}_{stats_range}"
     listens_df.createOrReplaceTempView(table_name)
@@ -128,7 +115,6 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
             result = model.dict(exclude_none=True)
             yield result
         except ValidationError:
-            logger.error("""ValidationError while calculating {stats_range} top {entity} for user: {user_name}. 
-            Data: {data}""".format(stats_range=stats_range, entity=entity, user_name=_dict["user_name"],
-                                   data=json.dumps(_dict, indent=3)), exc_info=True)
+            logger.error(f"""ValidationError while calculating {stats_range} top {entity} for user:
+             {_dict["user_name"]}. Data: {json.dumps(_dict, indent=3)}""", exc_info=True)
             yield None

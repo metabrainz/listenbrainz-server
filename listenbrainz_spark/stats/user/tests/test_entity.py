@@ -22,7 +22,7 @@ class UserEntityTestCase(StatsTestCase):
         entity.get_entity_week('test')
 
         from_date = datetime(2021, 8, 2)
-        to_date = datetime(2021, 8, 9, 12, 22, 43)
+        to_date = datetime(2021, 8, 9)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='sample_test_data', entity='test', stats_range='week',
                                                 from_date=from_date, to_date=to_date)
@@ -32,8 +32,8 @@ class UserEntityTestCase(StatsTestCase):
     def test_get_entity_month(self, mock_create_messages, mock_get_listens):
         entity.get_entity_month('test')
 
-        from_date = datetime(2021, 8, 1)
-        to_date = datetime(2021, 8, 9, 12, 22, 43)
+        from_date = datetime(2021, 7, 1)
+        to_date = datetime(2021, 8, 1)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='sample_test_data', entity='test', stats_range='month',
                                                 from_date=from_date, to_date=to_date)
@@ -43,8 +43,8 @@ class UserEntityTestCase(StatsTestCase):
     def test_get_entity_year(self, mock_create_messages, mock_get_listens):
         entity.get_entity_year('test')
 
-        from_date = datetime(2021, 1, 1)
-        to_date = datetime(2021, 8, 9, 12, 22, 43)
+        from_date = datetime(2020, 1, 1)
+        to_date = datetime(2021, 1, 1)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='sample_test_data', entity='test', stats_range='year',
                                                 from_date=from_date, to_date=to_date)

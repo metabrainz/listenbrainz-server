@@ -4,12 +4,10 @@ from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import listenbrainz_spark.stats.user.listening_activity as listening_activity_stats
-import listenbrainz_spark
 from listenbrainz_spark import utils
-from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.exceptions import HDFSException
 from listenbrainz_spark.stats import (offset_days, offset_months, get_day_end,
-                                      get_month_end, get_year_end, run_query)
+                                      get_month_end, run_query)
 from listenbrainz_spark.stats.user.tests import StatsTestCase
 from pyspark.sql import Row
 
@@ -46,8 +44,8 @@ class ListeningActivityTestCase(StatsTestCase):
     def test_get_listening_activity_week(self, mock_create_messages, _, mock_get_listens):
         listening_activity_stats.get_listening_activity_week()
 
-        from_date = day = datetime(2021, 8, 2)
-        to_date = datetime(2021, 8, 9, 12, 22, 43)
+        from_date = day = datetime(2021, 7, 26)
+        to_date = datetime(2021, 8, 9)
         time_range = []
         while day < to_date:
             time_range.append([day.strftime('%A %d %B %Y'), day, get_day_end(day)])
@@ -66,8 +64,8 @@ class ListeningActivityTestCase(StatsTestCase):
     def test_get_listening_activity_month(self, mock_create_messages, _, mock_get_listens):
         listening_activity_stats.get_listening_activity_month()
 
-        from_date = day = datetime(2021, 7, 1)
-        to_date = datetime(2021, 8, 9, 12, 22, 43)
+        from_date = day = datetime(2021, 6, 1)
+        to_date = datetime(2021, 8, 1)
         time_range = []
         while day < to_date:
             time_range.append([day.strftime('%d %B %Y'), day, get_day_end(day)])
@@ -86,8 +84,8 @@ class ListeningActivityTestCase(StatsTestCase):
     def test_get_listening_activity_year(self, mock_create_messages, _, mock_get_listens):
         listening_activity_stats.get_listening_activity_year()
 
-        from_date = month = datetime(2020, 1, 1)
-        to_date = datetime(2021, 8, 9, 12, 22, 43)
+        from_date = month = datetime(2019, 1, 1)
+        to_date = datetime(2021, 1, 1)
         time_range = []
         while month < to_date:
             time_range.append([month.strftime('%B %Y'), month, get_month_end(month)])
