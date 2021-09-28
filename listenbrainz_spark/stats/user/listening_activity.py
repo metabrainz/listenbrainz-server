@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import datetime, time
+from datetime import datetime, time, date
 from typing import Iterator, Optional, Tuple
 
 from dateutil.relativedelta import relativedelta, MO
@@ -25,6 +25,26 @@ time_range_schema = StructType([
 logger = logging.getLogger(__name__)
 
 
+def _get_quarter_offset_for_month(_date: date) -> relativedelta:
+    """ Given a month, returns the relativedelta offset to get
+    the beginning date of the previous to previous quarter."""
+    month = _date.month
+    if month <= 3:
+        # currently, in Jan-Mar so 2 quarters ago is last year's Jul-Sep
+        return relativedelta(years=-1, month=7, day=1)
+    elif month <= 6:
+        # currently, in Apr-Jun so 2 quarters ago is last year's Oct-Dec
+        return relativedelta(years=-1, month=10, day=1)
+    elif month <= 9:
+        # currently, in Jul-Sep so 2 quarters ago is Jan-Mar
+        return relativedelta(month=1, day=1)
+    else:
+        # currently, in Oct-Dec so 2 quarters ago is Apr-Jun
+        return relativedelta(month=4, day=1)
+
+
+# other stats uses a different function (get_dates_for_stats_range) to calculate
+# time ranges. if making modifications here, remember to check and update that as well
 def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta, str]:
     latest_listen_ts = get_latest_listen_ts()
     if stats_range == "all_time":
@@ -59,6 +79,12 @@ def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta,
         to_offset = relativedelta(months=+2)
         # compute listening activity for each day but no weekday
         step = relativedelta(days=+1)
+        date_format = "%d %B %Y"
+    elif stats_range == "quarter":
+        from_offset = _get_quarter_offset_for_month(latest_listen_date)
+        to_offset = relativedelta(months=+6)
+        # compute listening activity for each week with date format as day
+        step = relativedelta(weeks=+1)
         date_format = "%d %B %Y"
     else:  # year
         from_offset = relativedelta(years=-2, month=1, day=1)  # start of the previous to previous year

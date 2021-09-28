@@ -1,5 +1,5 @@
 from calendar import monthrange
-from datetime import datetime, time
+from datetime import datetime, time, date
 from typing import Tuple
 
 from dateutil.relativedelta import relativedelta, MO
@@ -113,6 +113,26 @@ def get_last_monday(date: datetime) -> datetime:
     return offset_days(date, date.weekday())
 
 
+def get_last_quarter_offset_for_month(_date: date) -> relativedelta:
+    """ Given a month, returns the relativedelta offset to get
+    the beginning date of the previous quarter."""
+    month = _date.month
+    if month <= 3:
+        # currently, in Jan-Mar, so previous quarter is last year's Oct-Dec
+        return relativedelta(years=-1, month=10, day=1)
+    elif month <= 6:
+        # currently, in Apr-Jun previous is Jan-Mar
+        return relativedelta(month=1, day=1)
+    elif month <= 9:
+        # currently, in Jul-Sep, previous is Apr-Jun
+        return relativedelta(month=4, day=1)
+    else:
+        # currently, in Oct-Dec previous is Jul-Sep
+        return relativedelta(month=7, day=1)
+
+
+# listening activity stats uses a different function to calculate time ranges
+# if making modifications here, remember to check and update that as well
 def get_dates_for_stats_range(stats_range: str) -> Tuple[datetime, datetime]:
     """ Return the range of datetimes for which stats should be calculated.
 
@@ -145,6 +165,9 @@ def get_dates_for_stats_range(stats_range: str) -> Tuple[datetime, datetime]:
     elif stats_range == "month":
         from_offset = relativedelta(months=-1, day=1)  # first day of previous month
         to_offset = relativedelta(months=+1)
+    elif stats_range == "quarter":
+        from_offset = get_last_quarter_offset_for_month(latest_listen_date)
+        to_offset = relativedelta(months=+3)
     else:  # year
         from_offset = relativedelta(years=-1, month=1, day=1)  # first day of previous year
         to_offset = relativedelta(years=+1)

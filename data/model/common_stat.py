@@ -8,6 +8,7 @@ from pydantic.generics import GenericModel
 class StatisticsRange(Enum):
     week = 'week'
     month = 'month'
+    quarter = 'quarter'
     year = 'year'
     all_time = 'all_time'
 
