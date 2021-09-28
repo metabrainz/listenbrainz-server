@@ -201,13 +201,39 @@
 	> div {
 		display: flex;
 		flex:1;
+		justify-content: center;
 	}
 	@media (min-width: @screen-tablet) {
-		> *{
+		&:not(.mini)> *{
 			padding: 0 1em;
 		}
 	}
 	
+	/** Special styles for mini size cards (i.e. charts etc.) **/
+	&.mini {
+		padding: 5px;
+    	margin: 0;
+		.listen-details{
+			flex: 1;
+			// Parent's width minus controls and thumbnail elements' width
+			max-width: calc(100% - 55px);
+		}
+		.listen-controls {
+			// In mini size, make the play button sho on the right over everything
+			position: absolute;
+			right: 5px;
+			top: 25%;
+		}
+	}
+	&:not(.mini) .listen-controls{
+		max-width: 120px;
+		min-width: 120px;
+	}
+	
+	.listen-thumbnail {
+		flex: 0;
+		align-self: center;
+	}
 	
 	.listen-time {
 		font-style: italic;
@@ -258,8 +284,6 @@
 		flex-wrap: nowrap;
 		justify-content: space-around;
 		position: relative; // This is need for dropdown menu positioning
-		max-width: 120px;
-		min-width: 120px;
 		margin-left: auto; // align flexbox item at flex-end
 		
 		> * {
