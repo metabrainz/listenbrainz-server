@@ -1,7 +1,19 @@
 from datetime import datetime
 from typing import TypeVar, Generic, Optional, List
 
+from enum import Enum
 from pydantic.generics import GenericModel
+
+
+class StatisticsRange(Enum):
+    week = 'week'
+    month = 'month'
+    year = 'year'
+    all_time = 'all_time'
+
+
+#: list of allowed value for range param accepted by various statistics endpoints
+ALLOWED_STATISTICS_RANGE = [x.value for x in StatisticsRange]
 
 
 StatT = TypeVar('StatT')

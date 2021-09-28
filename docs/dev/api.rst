@@ -189,3 +189,4 @@ Constants that are relevant to using the API:
 .. autodata:: listenbrainz.webserver.views.api_tools.DEFAULT_ITEMS_PER_GET
 .. autodata:: listenbrainz.webserver.views.api_tools.MAX_TAGS_PER_LISTEN
 .. autodata:: listenbrainz.webserver.views.api_tools.MAX_TAG_SIZE
+.. autodata:: data.model.common_stat.ALLOWED_STATISTICS_RANGE

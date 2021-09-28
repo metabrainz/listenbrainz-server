@@ -6,6 +6,8 @@ import pika
 import ujson
 
 from flask import current_app
+
+from data.model.common_stat import ALLOWED_STATISTICS_RANGE
 from listenbrainz.webserver import create_app
 
 
@@ -93,7 +95,7 @@ def send_request_to_spark_cluster(message):
 @cli.command(name="request_user_stats")
 @click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity', 'daily_activity']),
               help="Type of statistics to calculate", required=True)
-@click.option("--range", 'range_', type=click.Choice(['week', 'month', 'year', 'all_time']),
+@click.option("--range", 'range_', type=click.Choice(ALLOWED_STATISTICS_RANGE),
               help="Time range of statistics to calculate", required=True)
 @click.option("--entity", type=click.Choice(['artists', 'releases', 'recordings']),
               help="Entity for which statistics should be calculated")
@@ -113,7 +115,7 @@ def request_user_stats(type_, range_, entity):
 
 
 @cli.command(name="request_sitewide_stats")
-@click.option("--range", 'range_', type=click.Choice(['week', 'month', 'year', 'all_time']),
+@click.option("--range", 'range_', type=click.Choice(ALLOWED_STATISTICS_RANGE),
               help="Time range of statistics to calculate", required=True)
 @click.option("--entity", type=click.Choice(['artists']),
               help="Entity for which statistics should be calculated")
