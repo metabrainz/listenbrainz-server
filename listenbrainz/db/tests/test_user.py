@@ -216,7 +216,7 @@ class UserTestCase(DatabaseTestCase):
         self.assertNotIn("email", db_user.get_by_mb_id(musicbrainz_id))
         self.assertEqual(email, db_user.get_by_mb_id(musicbrainz_id, fetch_email=True)["email"])
 
-    def search(self):
+    def test_search(self):
         db_user.create(0, "Cécile")
         db_user.create(1, "Cecile")
         db_user.create(2, "lucifer")
