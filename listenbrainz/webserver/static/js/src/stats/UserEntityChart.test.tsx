@@ -16,6 +16,7 @@ const props = {
     name: "dummyUser",
   },
   apiUrl: "apiUrl",
+  newAlert: jest.fn(),
 };
 
 describe("UserEntityChart Page", () => {
@@ -267,7 +268,7 @@ describe("getInitData", () => {
     const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "getUserEntity");
+    const spy = jest.spyOn(instance.context.APIService, "getUserEntity");
     spy.mockImplementation((): any => {
       return Promise.resolve(userArtistsResponse);
     });
@@ -293,7 +294,7 @@ describe("getInitData", () => {
     const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "getUserEntity");
+    const spy = jest.spyOn(instance.context.APIService, "getUserEntity");
     spy.mockImplementation((): any => {
       return Promise.resolve(userReleasesResponse);
     });
@@ -321,7 +322,7 @@ describe("getInitData", () => {
     const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "getUserEntity");
+    const spy = jest.spyOn(instance.context.APIService, "getUserEntity");
     spy.mockImplementation((): any => {
       return Promise.resolve(userRecordingsResponse);
     });
@@ -351,7 +352,7 @@ describe("getData", () => {
     const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "getUserEntity");
+    const spy = jest.spyOn(instance.context.APIService, "getUserEntity");
     spy.mockImplementation((): any => {
       return Promise.resolve(userArtistsResponse);
     });

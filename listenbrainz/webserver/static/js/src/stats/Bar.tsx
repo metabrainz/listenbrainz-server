@@ -1,13 +1,19 @@
 import * as React from "react";
 import { ResponsiveBar, LabelFormatter } from "@nivo/bar";
 
-import getEntityLink from "./utils";
+import { getEntityLink, userChartEntityToListen } from "./utils";
 import ListenCard from "../listens/ListenCard";
 
 export type BarProps = {
   data: UserEntityData;
   maxValue: number;
   width?: number;
+  newAlert: (
+    alertType: AlertType,
+    title: string,
+    message: string | JSX.Element
+  ) => void;
+  playListen: (listen: BaseListenFormat) => void;
 };
 
 type Tick = {
@@ -26,11 +32,11 @@ type Tick = {
 };
 
 export default function Bar(props: BarProps) {
-  const { data, maxValue, width } = props;
+  const { data, maxValue, width, newAlert, playListen } = props;
   const marginLeft = Math.min((width || window.innerWidth) / 2, 400);
 
   const leftAlignedTick = <Tick extends any>(tick: Tick) => {
-    const datum = data[tick.tickIndex];
+    const datum: UserEntityDatum = data[tick.tickIndex];
     const {
       entityType,
       entity: entityName,
@@ -42,19 +48,7 @@ export default function Bar(props: BarProps) {
       idx,
     } = datum;
 
-    const listenFormat: BaseListenFormat = {
-      listened_at: -1,
-      track_metadata: {
-        track_name: entityName,
-        artist_name: artistName ?? "",
-        release_name: releaseName,
-        additional_info: {
-          artist_mbids: artistMBIDs,
-          recording_mbid: entityType === "recording" ? entityMBID : undefined,
-          release_mbid: releaseMBID,
-        },
-      },
-    };
+    const listenFormat = userChartEntityToListen(datum);
 
     let artistMBID;
     if (artistMBIDs) {
@@ -99,12 +93,8 @@ export default function Bar(props: BarProps) {
             showUsername={false}
             currentFeedback={0}
             isCurrentListen={false}
-            playListen={() => {
-              console.log("Play this song, would you?");
-            }}
-            newAlert={(...args) => {
-              console.log("Alert!", ...args);
-            }}
+            playListen={playListen}
+            newAlert={newAlert}
           />
         </foreignObject>
       </g>
