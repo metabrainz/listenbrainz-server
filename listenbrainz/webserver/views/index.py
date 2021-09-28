@@ -29,6 +29,8 @@ STATS_PREFIX = 'listenbrainz.stats' # prefix used in key to cache stats
 CACHE_TIME = 10 * 60 # time in seconds we cache the stats
 NUMBER_OF_RECENT_LISTENS = 50
 
+SEARCH_USER_LIMIT = 100  # max number of users to return in search username results
+
 @index_bp.route("/")
 def index():
 
@@ -191,6 +193,17 @@ def gdpr_notice():
         else:
             flash.error('You must agree to or decline our terms')
             return render_template('index/gdpr.html', next=request.args.get('next'))
+
+
+@index_bp.route('/search/', methods=['GET', 'OPTIONS'])
+def search():
+    search_term = request.args.get("search_term")
+    if search_term:
+        users = db_user.search(search_term, SEARCH_USER_LIMIT)
+    else:
+        users = []
+    return render_template("index/search-users.html", search_term=search_term, users=users)
+
 
 
 @index_bp.route('/delete-user/<int:musicbrainz_row_id>')

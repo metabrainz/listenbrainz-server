@@ -1,0 +1,17 @@
+{%- extends "base.html" -%}
+{%- block title -%}Search Results for {{ search_term }}{%- endblock -%}
+{%- block content -%}
+    <h2 class="page-title">Search Results for {{ search_term }}</h2>
+    <table class="table table-striped">
+    {% for row in users %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td><a href="{{ url_for("user.profile", user_name=row[0]) }}">{{ row[0] }}</a></td>
+        </tr>
+    {% else %}
+       <tr>
+           <td>No search results found.</td>
+       </tr>
+    {% endfor %}
+    </table>
+{%- endblock -%}
