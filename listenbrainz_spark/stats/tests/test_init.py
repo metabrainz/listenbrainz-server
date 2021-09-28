@@ -60,7 +60,8 @@ class InitTestCase(SparkNewTestCase):
             datetime.datetime(2021, 1, 1),
             datetime.datetime(2021, 4, 1),
             datetime.datetime(2021, 7, 1),
-            datetime.datetime(2021, 10, 1)
+            datetime.datetime(2021, 10, 1),
+            datetime.datetime(2022, 1, 1)
         ]
         with patch("listenbrainz_spark.stats.get_latest_listen_ts", return_value=datetime.datetime(2021, 4, 5, 2, 3, 0)):
             self.assertEqual((quarters[0], quarters[1]), stats.get_dates_for_stats_range("quarter"))
@@ -72,4 +73,4 @@ class InitTestCase(SparkNewTestCase):
             self.assertEqual((quarters[2], quarters[3]), stats.get_dates_for_stats_range("quarter"))
 
         with patch("listenbrainz_spark.stats.get_latest_listen_ts", return_value=datetime.datetime(2022, 1, 8, 2, 3, 0)):
-            self.assertEqual((quarters[3], quarters[0]), stats.get_dates_for_stats_range("quarter"))
+            self.assertEqual((quarters[3], quarters[4]), stats.get_dates_for_stats_range("quarter"))
