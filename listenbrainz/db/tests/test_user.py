@@ -222,5 +222,5 @@ class UserTestCase(DatabaseTestCase):
         db_user.create(2, "lucifer")
         db_user.create(3, "rob")
 
-        results = db_user.search("Ceci", 10)
+        results = db_user.search("cif", 10)
         self.assertEqual(results, [("Cecile", 0.54), ("Cécile", 0.45), ("lucifer", 0.2), ("rob", 0.1)])
