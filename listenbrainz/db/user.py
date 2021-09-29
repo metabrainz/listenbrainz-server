@@ -540,6 +540,20 @@ def update_user_email(musicbrainz_id, email):
 
 
 def search(search_term: str, limit: int, searcher_id: int = None) -> List[Tuple[str, float, float]]:
+    """ Searches for the input term in the database and returns list of potential user matches along with
+    their similarity to the searcher if available.
+
+    Args:
+        search_term: the term to search in username column
+        limit: max number of search results to fetch
+        searcher_id: the user_id of the user who did the search
+    Returns:
+          tuple of form (musicbrainz_id, query_similarity, user_similarity) where
+          musicbrainz_id: username of user returned in search result
+          query_similarity: the similarity between the query term and the returned username
+          user_similarity: the similarity between the user and the searcher as in similar users
+          calculated by spark
+    """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             SELECT musicbrainz_id, similarity(musicbrainz_id, :search_term) AS query_similarity
