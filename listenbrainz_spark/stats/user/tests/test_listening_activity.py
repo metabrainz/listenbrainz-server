@@ -78,27 +78,27 @@ class ListeningActivityTestCase(StatsTestCase):
         mock_create_messages.assert_called_with(data='activity_table', stats_range='year',
                                                 from_date=from_date, to_date=to_date)
 
-    @patch("listenbrainz_spark.stats.get_latest_listen_ts")
+    @patch("listenbrainz_spark.stats.user.listening_activity.get_latest_listen_ts")
     def test_get_quarter_offset(self, mock_listen_ts):
         quarters = [
+            datetime(2020, 7, 1),
             datetime(2020, 10, 1),
             datetime(2021, 1, 1),
             datetime(2021, 4, 1),
             datetime(2021, 7, 1),
-            datetime(2021, 10, 1),
-            datetime(2022, 1, 1)
+            datetime(2021, 10, 1)
         ]
         step = relativedelta(weeks=+1)
         date_fmt = "%d %B %Y"
 
-        mock_listen_ts.return_value = datetime(2021, 4, 5, 2, 3, 0)
+        mock_listen_ts.return_value = datetime(2021, 1, 5, 2, 3, 0)
         self.assertEqual((quarters[0], quarters[2], step, date_fmt), listening_activity_stats.get_time_range("quarter"))
 
-        mock_listen_ts.return_value = datetime(2021, 8, 7, 2, 3, 0)
+        mock_listen_ts.return_value = datetime(2021, 5, 7, 2, 3, 0)
         self.assertEqual((quarters[1], quarters[3], step, date_fmt), listening_activity_stats.get_time_range("quarter"))
 
-        mock_listen_ts.return_value = datetime(2021, 11, 9, 2, 3, 0)
+        mock_listen_ts.return_value = datetime(2021, 8, 9, 2, 3, 0)
         self.assertEqual((quarters[2], quarters[4], step, date_fmt), listening_activity_stats.get_time_range("quarter"))
 
-        mock_listen_ts.return_value = datetime(2022, 1, 8, 2, 3, 0)
+        mock_listen_ts.return_value = datetime(2022, 11, 8, 2, 3, 0)
         self.assertEqual((quarters[3], quarters[5], step, date_fmt), listening_activity_stats.get_time_range("quarter"))
