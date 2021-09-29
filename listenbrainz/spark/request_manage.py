@@ -279,7 +279,7 @@ def cron_request_all_stats(ctx):
             ctx.invoke(request_user_stats, type_=stat, range_=stats_range)
 
         for entity in ["artists"]:
-            ctx.invoke(request_sitewide_stats, type_="entity", range_=stats_range, entity=entity)
+            ctx.invoke(request_sitewide_stats, range_=stats_range, entity=entity)
 
 
 @cli.command(name='cron_request_similar_users')
