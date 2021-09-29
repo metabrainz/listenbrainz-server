@@ -539,16 +539,29 @@ def update_user_email(musicbrainz_id, email):
                 "Couldn't update user's email: %s" % str(err))
 
 
-def search(search_term: str, limit: int) -> List[Tuple[str, float]]:
+def search(search_term: str, limit: int, searcher_id: int = None) -> List[Tuple[str, float, float]]:
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT musicbrainz_id, similarity(musicbrainz_id, :search_term) AS similarity
+            SELECT musicbrainz_id, similarity(musicbrainz_id, :search_term) AS query_similarity
               FROM "user"
              WHERE musicbrainz_id <% :search_term
-          ORDER BY similarity DESC
+          ORDER BY query_similarity DESC
              LIMIT :limit
             """), {
             "search_term": search_term,
             "limit": limit
         })
-        return [(row['musicbrainz_id'], row['similarity']) for row in result.fetchall()]
+
+        rows = result.fetchall()
+        if not rows:
+            return []
+        similar_users = get_similar_users(searcher_id) if searcher_id else None
+        logger.error("Similar users: %s", similar_users)
+        search_results = []
+        if similar_users:
+            for row in rows:
+                similarity = similar_users.similar_users.get(row['musicbrainz_id'], None)
+                search_results.append((row['musicbrainz_id'], row['query_similarity'], similarity))
+        else:
+            search_results = [(row['musicbrainz_id'], row['query_similarity'], None) for row in rows]
+        return search_results

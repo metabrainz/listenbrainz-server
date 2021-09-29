@@ -198,8 +198,9 @@ def gdpr_notice():
 @index_bp.route('/search/', methods=['GET', 'OPTIONS'])
 def search():
     search_term = request.args.get("search_term")
+    user_id = current_user.id if current_user.is_authenticated else None
     if search_term:
-        users = db_user.search(search_term, SEARCH_USER_LIMIT)
+        users = db_user.search(search_term, SEARCH_USER_LIMIT, user_id)
     else:
         users = []
     return render_template("index/search-users.html", search_term=search_term, users=users)

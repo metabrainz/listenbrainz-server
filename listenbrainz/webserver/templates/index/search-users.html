@@ -14,10 +14,28 @@
     </form>
     <h2 class="page-title">Username Search Results</h2>
     <table class="table table-striped">
+    <tr>
+        <th></th>
+        <th>User</th>
+        {% if current_user.is_authenticated %}
+            <th>Similarity to you</th>
+        {% endif %}
+    </tr>
     {% for row in users %}
         <tr>
             <td>{{ loop.index }}</td>
             <td><a href="{{ url_for("user.profile", user_name=row[0]) }}">{{ row[0] }}</a></td>
+            {% if current_user.is_authenticated %}
+                <td>
+                    {% if current_user.musicbrainz_id == row[0] %}
+                        100%, we hope!
+                    {% elif row[2] %}
+                        {{ "{:.1f}".format(row[2] * 10) }}
+                    {% else %}
+                        Similarity score not available
+                    {% endif %}
+                </td>
+            {% endif %}
         </tr>
     {% else %}
        <tr>
