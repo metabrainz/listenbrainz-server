@@ -100,5 +100,5 @@ class ListeningActivityTestCase(StatsTestCase):
         mock_listen_ts.return_value = datetime(2021, 8, 9, 2, 3, 0)
         self.assertEqual((quarters[2], quarters[4], step, date_fmt), listening_activity_stats.get_time_range("quarter"))
 
-        mock_listen_ts.return_value = datetime(2022, 11, 8, 2, 3, 0)
+        mock_listen_ts.return_value = datetime(2021, 11, 8, 2, 3, 0)
         self.assertEqual((quarters[3], quarters[5], step, date_fmt), listening_activity_stats.get_time_range("quarter"))
