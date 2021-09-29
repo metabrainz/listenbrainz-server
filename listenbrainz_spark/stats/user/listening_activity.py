@@ -25,6 +25,18 @@ time_range_schema = StructType([
 logger = logging.getLogger(__name__)
 
 
+def _get_half_year_offset(_date: date) -> relativedelta:
+    """ Given a month, returns the relativedelta offset to get
+    the beginning date of the previous to previous half year."""
+    month = _date.month
+    if month <= 6:
+        # currently, in Jan-Jun previous half year is last year's Jan-Jun
+        return relativedelta(years=-1, month=1, day=1)
+    else:
+        # currently, in Jul-Dec previous half year is last year's Jul-Dec
+        return relativedelta(years=-1, month=7, day=1)
+
+
 def get_two_quarters_ago_offset(_date: date) -> relativedelta:
     """ Given a month, returns the relativedelta offset to get
     the beginning date of the previous to previous quarter.
@@ -93,6 +105,11 @@ def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta,
         # compute listening activity for each week with date format as day
         step = relativedelta(weeks=+1)
         date_format = "%d %B %Y"
+    elif stats_range == "half_yearly":
+        from_offset = _get_half_year_offset(latest_listen_date)
+        to_offset = relativedelta(months=+12)
+        step = relativedelta(months=+1)
+        date_format = "%B %Y"
     else:  # year
         from_offset = relativedelta(years=-2, month=1, day=1)  # start of the previous to previous year
         to_offset = relativedelta(years=+2)
@@ -113,9 +130,11 @@ def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta,
 def calculate_listening_activity():
     """ Calculate number of listens for each user in time ranges given in the "time_range" table.
     The time ranges are as follows:
-        1) week - each day with weekday name of the past 2 weeks.
-        2) month - each day the past 2 months. 
-        3) year - each month of the past 2 years.
+        1) week - each day with weekday name of the past 2 weeks
+        2) month - each day the past 2 months
+        3) quarter - each week of past 2 quarters
+        4) half_yearly - each month of past 2 half-years
+        5) year - each month of the past 2 years
         4) all_time - each year starting from LAST_FM_FOUNDING_YEAR (2002)
     """
     # calculates the number of listens in each time range for each user, count(listen.listened_at) so that
