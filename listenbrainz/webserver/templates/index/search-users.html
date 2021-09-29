@@ -18,7 +18,11 @@
         <th></th>
         <th>User</th>
         {% if current_user.is_authenticated %}
-            <th>Similarity to you</th>
+            <th>Similarity to you
+                <span class="glyphicon glyphicon-question-sign"
+                      title="Similarity between users is calculated based on their listen history.">
+                </span>
+            </th>
         {% endif %}
     </tr>
     {% for row in users %}
