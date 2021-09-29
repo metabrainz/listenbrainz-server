@@ -80,5 +80,5 @@ class InitTestCase(SparkNewTestCase):
         ]
         mock_get_latest_listen_ts.return_value = datetime.datetime(2021, 1, 9, 2, 3, 0)
         self.assertEqual((periods[0], periods[1]), stats.get_dates_for_stats_range("half_yearly"))
-        mock_get_latest_listen_ts.return_value = datetime.datetime(2022, 8, 8, 2, 3, 0)
+        mock_get_latest_listen_ts.return_value = datetime.datetime(2021, 8, 8, 2, 3, 0)
         self.assertEqual((periods[1], periods[2]), stats.get_dates_for_stats_range("half_yearly"))
