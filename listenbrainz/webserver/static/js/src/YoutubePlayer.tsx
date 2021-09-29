@@ -206,7 +206,7 @@ export default class YoutubePlayer
         onTrackNotFound();
       }
     } catch (error) {
-      handleWarning(error, "Youtube player error");
+      handleWarning(error?.message ?? error.toString(), "Youtube player error");
       onTrackNotFound();
     }
   };
