@@ -5,6 +5,7 @@ import {
   get as _get,
   isNil as _isNil,
   isString as _isString,
+  isFunction as _isFunction,
 } from "lodash";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
 import { searchForYoutubeTrack } from "./utils";
@@ -132,7 +133,6 @@ export default class YoutubePlayer
       state === YouTube.PlayerState.BUFFERING
     ) {
       onPlayerPausedChange(false);
-      onDurationChange(player.getDuration() * 1000);
     }
     if (state === YouTube.PlayerState.PAUSED) {
       onPlayerPausedChange(true);
@@ -141,6 +141,10 @@ export default class YoutubePlayer
       onPlayerPausedChange(false);
     }
     onProgressChange(player.getCurrentTime() * 1000);
+    const duration = _isFunction(player.getDuration) && player.getDuration();
+    if (duration) {
+      onDurationChange(duration * 1000);
+    }
   };
 
   handleAccountError = (): void => {
@@ -206,7 +210,7 @@ export default class YoutubePlayer
         onTrackNotFound();
       }
     } catch (error) {
-      handleWarning(error, "Youtube player error");
+      handleWarning(error?.message ?? error.toString(), "Youtube player error");
       onTrackNotFound();
     }
   };
