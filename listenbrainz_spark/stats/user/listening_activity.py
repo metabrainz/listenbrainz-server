@@ -25,9 +25,14 @@ time_range_schema = StructType([
 logger = logging.getLogger(__name__)
 
 
-def _get_quarter_offset(_date: date) -> relativedelta:
+def get_two_quarters_ago_offset(_date: date) -> relativedelta:
     """ Given a month, returns the relativedelta offset to get
-    the beginning date of the previous to previous quarter."""
+    the beginning date of the previous to previous quarter.
+
+    .. note:: there is similar function to calculate 1 quarter back
+    in listenbrainz_spark.stats module which is used by other stats.
+    We do not use it here because here we want two quarters back.
+    """
     month = _date.month
     if month <= 3:
         # currently, in Jan-Mar so 2 quarters ago is last year's Jul-Sep
@@ -81,7 +86,7 @@ def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta,
         step = relativedelta(days=+1)
         date_format = "%d %B %Y"
     elif stats_range == "quarter":
-        from_offset = _get_quarter_offset(latest_listen_date)
+        from_offset = get_two_quarters_ago_offset(latest_listen_date)
         to_offset = relativedelta(months=+6)
         # compute listening activity for each week with date format as day
         step = relativedelta(weeks=+1)
@@ -150,7 +155,15 @@ def calculate_listening_activity():
 
 
 def get_listening_activity(stats_range: str):
-    """ Calculate the number of listens of users for the given stats_range """
+    """ Calculate the number of listens of users for the given stats_range.
+
+    .. note::
+        Compared to other statistics, this stat needs listens for twice the time period.
+        For eg: for week range, this statistic needs the listen data of the last 2 weeks.
+        It will calculate individual listens for each weekday and send to LB webserver.
+        The LB frontend presents a chart comparing the listening activity on corresponding
+        weekdays of each week.
+    """
     logger.debug(f"Calculating listening_activity_{stats_range}")
 
     from_date, to_date, step, date_format = get_time_range(stats_range)
