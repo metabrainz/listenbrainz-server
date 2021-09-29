@@ -113,7 +113,7 @@ def get_last_monday(date: datetime) -> datetime:
     return offset_days(date, date.weekday())
 
 
-def get_last_quarter_offset_for_month(_date: date) -> relativedelta:
+def get_last_quarter_offset(_date: date) -> relativedelta:
     """ Given a month, returns the relativedelta offset to get
     the beginning date of the previous quarter."""
     month = _date.month
@@ -166,7 +166,7 @@ def get_dates_for_stats_range(stats_range: str) -> Tuple[datetime, datetime]:
         from_offset = relativedelta(months=-1, day=1)  # first day of previous month
         to_offset = relativedelta(months=+1)
     elif stats_range == "quarter":
-        from_offset = get_last_quarter_offset_for_month(latest_listen_date)
+        from_offset = get_last_quarter_offset(latest_listen_date)
         to_offset = relativedelta(months=+3)
     else:  # year
         from_offset = relativedelta(years=-1, month=1, day=1)  # first day of previous year

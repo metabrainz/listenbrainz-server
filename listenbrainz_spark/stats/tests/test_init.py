@@ -55,7 +55,8 @@ class InitTestCase(SparkNewTestCase):
         date = datetime.datetime(2020, 5, 19)
         self.assertEqual(datetime.datetime(2020, 5, 18), listenbrainz_spark.stats.get_last_monday(date))
 
-    def test_get_dates_for_stats_range(self):
+    @patch("listenbrainz_spark.stats.get_latest_listen_ts")
+    def test_get_dates_for_stats_range(self, mock_get_latest_listen_ts):
         quarters = [
             datetime.datetime(2021, 1, 1),
             datetime.datetime(2021, 4, 1),
@@ -63,14 +64,14 @@ class InitTestCase(SparkNewTestCase):
             datetime.datetime(2021, 10, 1),
             datetime.datetime(2022, 1, 1)
         ]
-        with patch("listenbrainz_spark.stats.get_latest_listen_ts", return_value=datetime.datetime(2021, 4, 5, 2, 3, 0)):
-            self.assertEqual((quarters[0], quarters[1]), stats.get_dates_for_stats_range("quarter"))
+        mock_get_latest_listen_ts.return_value = datetime.datetime(2021, 4, 5, 2, 3, 0)
+        self.assertEqual((quarters[0], quarters[1]), stats.get_dates_for_stats_range("quarter"))
 
-        with patch("listenbrainz_spark.stats.get_latest_listen_ts", return_value=datetime.datetime(2021, 8, 7, 2, 3, 0)):
-            self.assertEqual((quarters[1], quarters[2]), stats.get_dates_for_stats_range("quarter"))
+        mock_get_latest_listen_ts.return_value = datetime.datetime(2021, 8, 7, 2, 3, 0)
+        self.assertEqual((quarters[1], quarters[2]), stats.get_dates_for_stats_range("quarter"))
 
-        with patch("listenbrainz_spark.stats.get_latest_listen_ts", return_value=datetime.datetime(2021, 11, 9, 2, 3, 0)):
-            self.assertEqual((quarters[2], quarters[3]), stats.get_dates_for_stats_range("quarter"))
+        mock_get_latest_listen_ts.return_value = datetime.datetime(2021, 11, 9, 2, 3, 0)
+        self.assertEqual((quarters[2], quarters[3]), stats.get_dates_for_stats_range("quarter"))
 
-        with patch("listenbrainz_spark.stats.get_latest_listen_ts", return_value=datetime.datetime(2022, 1, 8, 2, 3, 0)):
-            self.assertEqual((quarters[3], quarters[4]), stats.get_dates_for_stats_range("quarter"))
+        mock_get_latest_listen_ts.return_value = datetime.datetime(2022, 1, 8, 2, 3, 0)
+        self.assertEqual((quarters[3], quarters[4]), stats.get_dates_for_stats_range("quarter"))
