@@ -25,7 +25,7 @@ time_range_schema = StructType([
 logger = logging.getLogger(__name__)
 
 
-def _get_quarter_offset_for_month(_date: date) -> relativedelta:
+def _get_quarter_offset(_date: date) -> relativedelta:
     """ Given a month, returns the relativedelta offset to get
     the beginning date of the previous to previous quarter."""
     month = _date.month
@@ -81,7 +81,7 @@ def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta,
         step = relativedelta(days=+1)
         date_format = "%d %B %Y"
     elif stats_range == "quarter":
-        from_offset = _get_quarter_offset_for_month(latest_listen_date)
+        from_offset = _get_quarter_offset(latest_listen_date)
         to_offset = relativedelta(months=+6)
         # compute listening activity for each week with date format as day
         step = relativedelta(weeks=+1)
