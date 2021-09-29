@@ -79,7 +79,7 @@ class ListeningActivityTestCase(StatsTestCase):
                                                 from_date=from_date, to_date=to_date)
 
     @patch("listenbrainz_spark.stats.user.listening_activity.get_latest_listen_ts")
-    def test_get_quarter_offset(self, mock_listen_ts):
+    def test_get_time_range(self, mock_listen_ts):
         quarters = [
             datetime(2020, 7, 1),
             datetime(2020, 10, 1),
