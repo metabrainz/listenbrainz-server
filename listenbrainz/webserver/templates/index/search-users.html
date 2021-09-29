@@ -1,7 +1,18 @@
 {%- extends "base.html" -%}
-{%- block title -%}Search Results for {{ search_term }}{%- endblock -%}
+{%- block title -%}Username Search Results{%- endblock -%}
 {%- block content -%}
-    <h2 class="page-title">Search Results for {{ search_term }}</h2>
+    <form class="form-inline">
+        <div class="row">
+            <div class="input-group col-sm-6 col-md-6 col-lg-6 col-sm-offset-3 col-lg-offset-3 col-md-offset-3">
+                <input type="text" class="form-control" name="search_term"
+                       placeholder="Search again..." value="{{ search_term }}">
+                <span class="input-group-btn">
+                    <button class="btn btn-default" type="submit" style="margin-left: .5em;">Find It!</button>
+                </span>
+            </div>
+        </div>
+    </form>
+    <h2 class="page-title">Username Search Results</h2>
     <table class="table table-striped">
     {% for row in users %}
         <tr>
