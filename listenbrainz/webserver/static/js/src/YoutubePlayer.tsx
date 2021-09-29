@@ -132,7 +132,6 @@ export default class YoutubePlayer
       state === YouTube.PlayerState.BUFFERING
     ) {
       onPlayerPausedChange(false);
-      onDurationChange(player.getDuration() * 1000);
     }
     if (state === YouTube.PlayerState.PAUSED) {
       onPlayerPausedChange(true);
@@ -141,6 +140,11 @@ export default class YoutubePlayer
       onPlayerPausedChange(false);
     }
     onProgressChange(player.getCurrentTime() * 1000);
+    const duration =
+      this.youtubePlayer?.getDuration && this.youtubePlayer?.getDuration();
+    if (duration) {
+      onDurationChange(duration * 1000);
+    }
   };
 
   handleAccountError = (): void => {
