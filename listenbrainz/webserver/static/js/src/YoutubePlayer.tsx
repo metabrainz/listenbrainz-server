@@ -5,6 +5,7 @@ import {
   get as _get,
   isNil as _isNil,
   isString as _isString,
+  isFunction as _isFunction,
 } from "lodash";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
 import { searchForYoutubeTrack } from "./utils";
@@ -140,8 +141,7 @@ export default class YoutubePlayer
       onPlayerPausedChange(false);
     }
     onProgressChange(player.getCurrentTime() * 1000);
-    const duration =
-      this.youtubePlayer?.getDuration && this.youtubePlayer?.getDuration();
+    const duration = _isFunction(player.getDuration) && player.getDuration();
     if (duration) {
       onDurationChange(duration * 1000);
     }
