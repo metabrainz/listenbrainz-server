@@ -29,7 +29,10 @@ const GlobalContextMock = {
     APIService: new APIService("base-uri"),
     spotifyAuth: {
       access_token: "heyo",
-      permission: ["user-read-currently-playing"] as Array<SpotifyPermission>,
+      permission: [
+        "user-read-currently-playing",
+        "user-read-recently-played",
+      ] as Array<SpotifyPermission>,
     },
     youtubeAuth: {
       api_key: "fake-api-key",
@@ -363,7 +366,7 @@ describe("BrainzPlayer", () => {
       );
       const instance = wrapper.instance();
 
-      wrapper.setProps({ currentListen: listen });
+      wrapper.setState({ currentListen: listen });
 
       expect(instance.isCurrentListen(listen)).toBe(true);
     });
@@ -375,7 +378,7 @@ describe("BrainzPlayer", () => {
       );
       const instance = wrapper.instance();
 
-      wrapper.setProps({ currentListen: undefined });
+      wrapper.setState({ currentListen: undefined });
 
       expect(instance.isCurrentListen({} as Listen)).toBeFalsy();
     });
@@ -389,7 +392,7 @@ describe("BrainzPlayer", () => {
       );
       const instance = wrapper.instance();
 
-      wrapper.setProps({ currentListen: listen });
+      wrapper.setState({ currentListen: listen });
 
       expect(instance.getCurrentTrackName()).toEqual("Bird's Lament");
     });
@@ -401,7 +404,7 @@ describe("BrainzPlayer", () => {
       );
       const instance = wrapper.instance();
 
-      wrapper.setProps({ currentListen: undefined });
+      wrapper.setState({ currentListen: undefined });
 
       expect(instance.getCurrentTrackName()).toEqual("");
     });
@@ -415,7 +418,7 @@ describe("BrainzPlayer", () => {
       );
       const instance = wrapper.instance();
 
-      wrapper.setProps({ currentListen: listen });
+      wrapper.setState({ currentListen: listen });
 
       expect(instance.getCurrentTrackArtists()).toEqual("Moondog");
     });
@@ -427,7 +430,7 @@ describe("BrainzPlayer", () => {
       );
       const instance = wrapper.instance();
 
-      wrapper.setProps({ currentListen: undefined });
+      wrapper.setState({ currentListen: undefined });
 
       expect(instance.getCurrentTrackArtists()).toEqual("");
     });
@@ -559,14 +562,13 @@ describe("BrainzPlayer", () => {
     it("tries playing the current listen with the next datasource", () => {
       const mockProps = {
         ...props,
-        currentListen: listen,
       };
       const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...mockProps} />,
         GlobalContextMock
       );
       const instance = wrapper.instance();
-      wrapper.setState({ isActivated: true });
+      wrapper.setState({ isActivated: true, currentListen: listen });
       instance.playNextTrack = jest.fn();
       instance.playListen = jest.fn();
       instance.failedToPlayTrack();
@@ -578,7 +580,6 @@ describe("BrainzPlayer", () => {
       const mockProps = {
         ...props,
         listens: [listen2, listen],
-        currentListen: listen,
       };
       const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...mockProps} />,
@@ -588,6 +589,7 @@ describe("BrainzPlayer", () => {
       wrapper.setState({
         isActivated: true,
         currentDataSourceIndex: instance.dataSources.length - 1,
+        currentListen: listen,
       });
       const playNextTrackSpy = jest.spyOn(instance, "playNextTrack");
       instance.playListen = jest.fn();
@@ -597,6 +599,209 @@ describe("BrainzPlayer", () => {
       expect(playNextTrackSpy).toHaveBeenCalledTimes(1);
       expect(instance.playListen).toHaveBeenCalledTimes(1);
       expect(instance.playListen).toHaveBeenCalledWith(listen2);
+    });
+  });
+  describe("submitListenToListenBrainz", () => {
+    const trackInfo = {
+      title: "Never Gonna Give You Up",
+      artist: "Rick Astley",
+      trackURL: "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT",
+    };
+    beforeAll(() => {
+      jest.useFakeTimers();
+    });
+    afterAll(() => {
+      jest.useRealTimers();
+    });
+    it("does nothing if user is not logged in", async () => {
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...props} />,
+        GlobalContextMock
+      );
+      const instance = wrapper.instance();
+      instance.playNextTrack = jest.fn();
+      const ds =
+        instance.dataSources[instance.state.currentDataSourceIndex].current;
+      const dsRecordsListens = ds && jest.spyOn(ds, "datasourceRecordsListens");
+      await instance.submitListenToListenBrainz("single", listen);
+      expect(dsRecordsListens).not.toHaveBeenCalled();
+    });
+
+    it("does nothing if datasource already submits listens", async () => {
+      const wrapper = mount<BrainzPlayer>(
+        <GlobalAppContext.Provider
+          value={{
+            ...GlobalContextMock.context,
+            // These permissions suggest LB records listens and can play using BrainzPlayer
+            spotifyAuth: {
+              access_token: "merde-à-celui-qui-lit",
+              permission: [
+                "streaming",
+                "user-read-email",
+                "user-read-private",
+                "user-read-currently-playing",
+                "user-read-recently-played",
+              ],
+            },
+            currentUser: {
+              name: "Gulab Jamun",
+              auth_token: "IHaveSeenTheFnords",
+            },
+          }}
+        >
+          <BrainzPlayer {...props} listens={[listen2]} />
+        </GlobalAppContext.Provider>
+      );
+      const instance = wrapper.instance();
+      const ds = instance.dataSources[instance.state.currentDataSourceIndex]
+        ?.current as DataSourceType;
+      expect(ds).toBeDefined();
+      expect(ds).toBeInstanceOf(SpotifyPlayer);
+      // GlobalContextMock.spotifyAuth includes permissions suggesting LB records Spotify listens already
+      expect(ds.datasourceRecordsListens()).toBeTruthy();
+      const submitListensAPISpy = jest.spyOn(
+        instance.context.APIService,
+        "submitListens"
+      );
+      await instance.submitListenToListenBrainz("single", listen);
+      expect(submitListensAPISpy).not.toHaveBeenCalled();
+    });
+
+    it("submits a playing_now with the expected metadata", async () => {
+      const dateNowMock = jest.fn().mockReturnValue(1234567890);
+      Date.now = dateNowMock;
+      const wrapper = mount<BrainzPlayer>(
+        <GlobalAppContext.Provider
+          value={{
+            ...GlobalContextMock.context,
+            // These permissions suggest LB does *not* record listens
+            spotifyAuth: spotifyAccountWithPermissions,
+            currentUser: {
+              name: "Gulab Jamun",
+              auth_token: "IHaveSeenTheFnords",
+            },
+          }}
+        >
+          <BrainzPlayer {...props} listens={[listen2]} />
+        </GlobalAppContext.Provider>
+      );
+      const instance = wrapper.instance();
+      instance.setState({
+        currentListen: listen2,
+        currentTrackName: "Never Gonna Give You Up",
+        currentTrackArtist: "Rick Astley",
+        currentTrackURL:
+          "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT",
+      });
+
+      const ds = instance.dataSources[instance.state.currentDataSourceIndex]
+        ?.current as DataSourceType;
+      expect(ds).toBeDefined();
+      expect(ds).toBeInstanceOf(SpotifyPlayer);
+      expect(ds.datasourceRecordsListens()).toBeFalsy();
+
+      const submitListensAPISpy = jest.spyOn(
+        instance.context.APIService,
+        "submitListens"
+      );
+      await instance.submitNowPlayingToListenBrainz();
+      const expectedListen = {
+        listened_at: 1234567,
+        track_metadata: {
+          artist_name: "Rick Astley",
+          track_name: "Never Gonna Give You Up",
+          additional_info: {
+            media_player: "BrainzPlayer",
+            submission_client: "BrainzPlayer",
+            music_service: "https://open.spotify.com",
+            origin_url: "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT",
+            brainzplayer_metadata: {
+              artist_name: "Rick Astley",
+              release_name: undefined,
+              track_name: "Never Gonna Give You Up",
+            },
+          },
+        },
+      };
+      expect(submitListensAPISpy).toHaveBeenCalledTimes(1);
+      expect(submitListensAPISpy).toHaveBeenCalledWith(
+        "IHaveSeenTheFnords",
+        "playing_now",
+        [expectedListen]
+      );
+    });
+
+    it("submits a full listen after 30s with the expected metadata", async () => {
+      const dateNowMock = jest.fn().mockReturnValue(1234567890);
+      Date.now = dateNowMock;
+
+      const wrapper = mount<BrainzPlayer>(
+        <GlobalAppContext.Provider
+          value={{
+            ...GlobalContextMock.context,
+            // These permissions suggest LB does *not* record listens
+            spotifyAuth: spotifyAccountWithPermissions,
+            currentUser: {
+              name: "Gulab Jamun",
+              auth_token: "IHaveSeenTheFnords",
+            },
+          }}
+        >
+          <BrainzPlayer {...props} listens={[listen2]} />
+        </GlobalAppContext.Provider>
+      );
+
+      const instance = wrapper.instance();
+      instance.setState({
+        currentListen: listen2,
+        currentTrackName: "Never Gonna Give You Up",
+        currentTrackArtist: "Rick Astley",
+        currentTrackURL:
+          "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT",
+        continuousPlaybackTime: 15000,
+        durationMs: 123990,
+      });
+
+      const ds = instance.dataSources[instance.state.currentDataSourceIndex]
+        ?.current as DataSourceType;
+      expect(ds).toBeDefined();
+      expect(ds).toBeInstanceOf(SpotifyPlayer);
+      expect(ds.datasourceRecordsListens()).toBeFalsy();
+
+      const submitListensAPISpy = jest.spyOn(
+        instance.context.APIService,
+        "submitListens"
+      );
+      const expectedListen = {
+        listened_at: 1234567,
+        track_metadata: {
+          artist_name: "Rick Astley",
+          track_name: "Never Gonna Give You Up",
+          additional_info: {
+            media_player: "BrainzPlayer",
+            submission_client: "BrainzPlayer",
+            music_service: "https://open.spotify.com",
+            origin_url: "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT",
+            brainzplayer_metadata: {
+              artist_name: "Rick Astley",
+              release_name: undefined,
+              track_name: "Never Gonna Give You Up",
+            },
+          },
+        },
+      };
+      // After 15 seconds
+      await instance.checkProgressAndSubmitListen();
+      expect(submitListensAPISpy).not.toHaveBeenCalled();
+      // And now after 30 seconds
+      instance.setState({ continuousPlaybackTime: 30001 });
+      await instance.checkProgressAndSubmitListen();
+      expect(submitListensAPISpy).toHaveBeenCalledTimes(1);
+      expect(submitListensAPISpy).toHaveBeenLastCalledWith(
+        "IHaveSeenTheFnords",
+        "single",
+        [expectedListen]
+      );
     });
   });
 });

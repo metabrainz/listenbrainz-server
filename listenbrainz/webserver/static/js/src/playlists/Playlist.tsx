@@ -921,7 +921,6 @@ export default class PlaylistPage extends React.Component<
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
             <BrainzPlayer
-              currentListen={currentTrack}
               direction="down"
               listens={tracks}
               newAlert={newAlert}
