@@ -105,18 +105,22 @@ def process_listens(app, listens, is_legacy_listen=False):
                                         , recording_name
                                         , match_type
                                    FROM   data
-                                   RETURNING id AS join_id
-                                           , recording_msid
+                              ON CONFLICT DO NOTHING
+                                   RETURNING id AS join_id, recording_mbid, release_mbid, artist_credit_id
                                    )
                                 INSERT INTO listen_join_listen_mbid_mapping (recording_msid, listen_mbid_mapping)
-                                SELECT recording_msid
-                                     , join_insert.join_id
-                                  FROM data d
+                                SELECT d.recording_msid
+                                     , ji.join_id
+                                  FROM data d 
                                   JOIN join_insert ji
-                                    ON ji.recording_msid = d.recording_msid""" % ",".join(mogrified)
-                curs.execute(query)
+                                    ON ji.recording_mbid = d.recording_mbid
+                                   AND ji.release_mbid = d.release_mbid
+                                   AND ji.artist_credit_id = d.artist_credit_id""" % ",".join(mogrified)
 
-                # TODO: Handle errors, dropping the current listen!
+
+
+
+                curs.execute(query)
 
             except (psycopg2.OperationalError, psycopg2.errors.DatatypeMismatch) as err:
                 app.logger.info(
@@ -155,7 +159,6 @@ def lookup_listens(app, listens, stats, exact):
         if exact:
             hit["match_type"] = MATCH_TYPE_EXACT_MATCH
         stats[MATCH_TYPES[hit["match_type"]]] += 1
-        app.logger.info(str(hit))
         artist_mbids = [ uuid.UUID(mbid) for mbid in hit["artist_mbids"].split(",") ]
         rows.append((uuid.UUID(listen['recording_msid']),
                      uuid.UUID(hit["recording_mbid"]),

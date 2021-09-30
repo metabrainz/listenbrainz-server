@@ -104,9 +104,6 @@ class MappingJobQueue(threading.Thread):
                     datetime.datetime.now().timestamp())
                 self.app.logger.info("Use date index now()")
 
-        # TODO Remove this before PR
-        self.legacy_listens_index_date = int( datetime.datetime.now().timestamp())
-
         # Check to see if we're done
         if self.legacy_listens_index_date < DATA_START_YEAR_IN_SECONDS - LEGACY_LISTENS_LOAD_WINDOW:
             self.app.logger.info(
