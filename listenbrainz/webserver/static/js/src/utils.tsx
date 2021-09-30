@@ -73,8 +73,13 @@ const searchForYoutubeTrack = async (
   // if (releaseName) {
   //   query += ` ${releaseName}`;
   // }
+  if (!query) {
+    return null;
+  }
   const response = await fetch(
-    `https://youtube.googleapis.com/youtube/v3/search?part=snippet&q=${query}&videoEmbeddable=true&type=video&key=${apiKey}`,
+    `https://youtube.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(
+      query
+    )}&videoEmbeddable=true&type=video&key=${apiKey}`,
     {
       method: "GET",
       headers: {
@@ -314,7 +319,7 @@ const fullLocalizedDateFromTimestampOrISODate = (
   });
 };
 
-/** Loads a script asynchronouhsly into the HTML page */
+/** Loads a script asynchronously into the HTML page */
 export function loadScriptAsync(document: any, scriptSrc: string): void {
   const el = document.createElement("script");
   const container = document.head || document.body;
@@ -407,6 +412,14 @@ const countWords = (str: string): number => {
   return words.length;
 };
 
+const handleNavigationClickEvent = (event?: React.MouseEvent): void => {
+  // Allow opening in new tab or window with shift or control key
+  // Otherwise prevent default
+  if (event && !event.ctrlKey && !event.shiftKey) {
+    event.preventDefault();
+  }
+};
+
 export {
   searchForSpotifyTrack,
   getArtistLink,
@@ -420,4 +433,5 @@ export {
   createAlert,
   getListenablePin,
   countWords,
+  handleNavigationClickEvent,
 };

@@ -44,7 +44,6 @@ const {
   youtube,
   user,
   userPinnedRecording,
-  webSocketsServerUrl,
 } = recentListensProps;
 
 const props = {
@@ -59,7 +58,6 @@ const props = {
   profileUrl,
   user,
   userPinnedRecording,
-  webSocketsServerUrl,
   newAlert: () => {},
 };
 
@@ -177,13 +175,13 @@ describe("createWebsocketsConnection", () => {
   });
   it("calls io with correct parameters", () => {
     const wrapper = mount<RecentListens>(
-      <RecentListens {...props} webSocketsServerUrl="http://localhost:8082" />,
+      <RecentListens {...props} />,
       mountOptions
     );
     const instance = wrapper.instance();
     instance.createWebsocketsConnection();
 
-    expect(io).toHaveBeenCalledWith("http://localhost:8082");
+    expect(io).toHaveBeenCalled();
 
     expect(mockSocket.on).toHaveBeenNthCalledWith(
       1,
@@ -206,7 +204,7 @@ describe("createWebsocketsConnection", () => {
 describe("addWebsocketsHandlers", () => {
   it('calls correct handler for "listen" event', () => {
     const wrapper = mount<RecentListens>(
-      <RecentListens {...props} webSocketsServerUrl="http://localhost:8082" />,
+      <RecentListens {...props} />,
       mountOptions
     );
     const instance = wrapper.instance();
@@ -226,11 +224,12 @@ describe("addWebsocketsHandlers", () => {
     expect(instance.receiveNewListen).toHaveBeenCalledWith(
       JSON.stringify(recentListensPropsOneListen.listens[0])
     );
+    spy.mockReset();
   });
 
   it('calls correct event for "playing_now" event', () => {
     const wrapper = mount<RecentListens>(
-      <RecentListens {...props} webSocketsServerUrl="http://localhost:8082" />,
+      <RecentListens {...props} />,
       mountOptions
     );
     const instance = wrapper.instance();
@@ -248,6 +247,7 @@ describe("addWebsocketsHandlers", () => {
     expect(instance.receiveNewPlayingNow).toHaveBeenCalledWith(
       JSON.stringify(recentListensPropsPlayingNow.listens[0])
     );
+    spy.mockReset();
   });
 });
 
@@ -507,6 +507,7 @@ describe("Pagination", () => {
       const instance = wrapper.instance();
 
       // Random nextListenTs to ensure that is the value set in browser history
+      wrapper.setProps({ latestListenTs: 1586623524 });
       wrapper.setState({ listens: [], nextListenTs: 1586440600 });
 
       const spy = jest.fn().mockImplementation((username, minTs, maxTs) => {
@@ -636,6 +637,7 @@ describe("Pagination", () => {
       );
       const instance = wrapper.instance();
 
+      wrapper.setProps({ latestListenTs: 1586623524 });
       wrapper.setState({ previousListenTs: 123456 });
 
       const spy = jest.fn().mockImplementation((username, minTs, maxTs) => {

@@ -1,83 +1,23 @@
 {
-  "stats.user.entity.week": {
-    "name": "stats.user.entity.week",
-    "description": "Entity statistics for all users in the last week",
-    "params": ["entity"]
+  "stats.user.entity": {
+    "name": "stats.user.entity",
+    "description": "Entity statistics for all users for the requested stats_range",
+    "params": ["entity", "stats_range"]
   },
-  "stats.user.entity.month": {
-    "name": "stats.user.entity.month",
-    "description": "Entity statistics for all users in the last month",
-    "params": ["entity"]
+  "stats.user.listening_activity": {
+    "name": "stats.user.listening_activity",
+    "description": "Calculates number of listens in periods depending on the stats_range value. see the documentation in spark code for details.",
+    "params": ["stats_range"]
   },
-  "stats.user.entity.year": {
-    "name": "stats.user.entity.year",
-    "description": "Entity statistics for all users in the last year",
-    "params": ["entity"]
+  "stats.user.daily_activity": {
+    "name": "stats.user.daily_activity",
+    "description": "Calculate number of listens for an user per hour on each day of the requested stats_range.",
+    "params": ["stats_range"]
   },
-  "stats.user.entity.all_time": {
-    "name": "stats.user.entity.all_time",
-    "description": "All time entity statistics for all users",
-    "params": ["entity"]
-  },
-  "stats.user.listening_activity.week": {
-    "name": "stats.user.listening_activity.week",
-    "description": "Calculate number of listens for an user on each day of the past and current week.",
-    "params": []
-  },
-  "stats.user.listening_activity.month": {
-    "name": "stats.user.listening_activity.month",
-    "description": "Calculate number of listens for an user on each day of the past month and current month.",
-    "params": []
-  },
-  "stats.user.listening_activity.year": {
-    "name": "stats.user.listening_activity.year",
-    "description": "Calculate the number of listens for an user in each month of the past and current year.",
-    "params": []
-  },
-  "stats.user.listening_activity.all_time": {
-    "name": "stats.user.listening_activity.all_time",
-    "description": "Calculate the number of listens for an user in each year starting from LAST_FM_FOUNDING_YEAR (2002).",
-    "params": []
-  },
-  "stats.user.daily_activity.week": {
-    "name": "stats.user.daily_activity.week",
-    "description": "Calculate number of listens for an user per hour on each day of the past week.",
-    "params": []
-  },
-  "stats.user.daily_activity.month": {
-    "name": "stats.user.daily_activity.month",
-    "description": "Calculate number of listens for an user per hour on each day of week of the current month.",
-    "params": []
-  },
-  "stats.user.daily_activity.year": {
-    "name": "stats.user.daily_activity.year",
-    "description": "Calculate number of listens for an user per hour on each day of week of the current year.",
-    "params": []
-  },
-  "stats.user.daily_activity.all_time": {
-    "name": "stats.user.daily_activity.all_time",
-    "description": "Calculate number of listens for an user per hour on each day of week.",
-    "params": []
-  },
-  "stats.sitewide.entity.week": {
-    "name": "stats.sitewide.entity.week",
-    "description": "Calculate top entites listened to on the website in the past week",
-    "params": ["entity"]
-  },
-  "stats.sitewide.entity.month": {
-    "name": "stats.sitewide.entity.month",
-    "description": "Calculate top entites listened to on the website in the past month",
-    "params": ["entity"]
-  },
-  "stats.sitewide.entity.year": {
-    "name": "stats.sitewide.entity.year",
-    "description": "Calculate top entites listened to on the website in the past year",
-    "params": ["entity"]
-  },
-  "stats.sitewide.entity.all_time": {
-    "name": "stats.sitewide.entity.all_time",
-    "description": "Calculate top entites listened to on the website in the past all_time",
-    "params": ["entity"]
+  "stats.sitewide.entity": {
+    "name": "stats.sitewide.entity",
+    "description": "Calculate top entites listened to on the website in the requested stats_range",
+    "params": ["entity", "stats_range"]
   },
   "import.dump.full_newest": {
     "name": "import.dump.full_newest",

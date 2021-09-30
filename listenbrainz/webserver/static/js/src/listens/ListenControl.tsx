@@ -11,22 +11,32 @@ export type ListenControlProps = {
   title: string;
   dataToggle?: string;
   dataTarget?: string;
+  disabled?: boolean;
 };
 
 const ListenControl = (props: ListenControlProps) => {
-  const { className, action, icon, title, dataToggle, dataTarget } = props;
+  const {
+    className,
+    action,
+    icon,
+    title,
+    dataToggle,
+    dataTarget,
+    disabled,
+  } = props;
   return icon ? (
     <FontAwesomeIcon
       icon={icon as IconProp}
       className={className}
       title={title}
-      onClick={action}
+      onClick={disabled ? undefined : action}
     />
   ) : (
     <button
+      disabled={disabled ?? false}
       className={className}
       title={title}
-      onClick={action}
+      onClick={disabled ? undefined : action}
       type="button"
       data-toggle={dataToggle}
       data-target={dataTarget}

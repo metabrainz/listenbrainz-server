@@ -70,7 +70,9 @@ describe("submitPinRecording", () => {
     expect(spy).toHaveBeenCalledWith(
       "auth_token",
       "recording_msid",
-      "recording_mbid",
+      // Disabling temporarily
+      //   "recording_mbid",
+      undefined,
       undefined
     );
     expect(instance.props.newAlert).toHaveBeenCalledTimes(1);
