@@ -102,9 +102,6 @@ def build(client, collection_name):
                                score
                           FROM mapping.mbid_mapping""")
 
-#            if config.USE_MINIMAL_DATASET:
-#                query += """ WHERE artist_mbids = '{"01039bfa-145e-45a8-940e-f3ff04f80c6f"}'"""
-
             curs.execute(query)
             documents = []
             for i, row in enumerate(curs):
