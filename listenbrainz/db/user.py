@@ -537,3 +537,45 @@ def update_user_email(musicbrainz_id, email):
             logger.error(err)
             raise DatabaseException(
                 "Couldn't update user's email: %s" % str(err))
+
+
+def search(search_term: str, limit: int, searcher_id: int = None) -> List[Tuple[str, float, float]]:
+    """ Searches for the input term in the database and returns list of potential user matches along with
+    their similarity to the searcher if available.
+
+    Args:
+        search_term: the term to search in username column
+        limit: max number of search results to fetch
+        searcher_id: the user_id of the user who did the search
+    Returns:
+          tuple of form (musicbrainz_id, query_similarity, user_similarity) where
+          musicbrainz_id: username of user returned in search result
+          query_similarity: the similarity between the query term and the returned username
+          user_similarity: the similarity between the user and the searcher as in similar users
+          calculated by spark
+    """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT musicbrainz_id, similarity(musicbrainz_id, :search_term) AS query_similarity
+              FROM "user"
+             WHERE musicbrainz_id <% :search_term
+          ORDER BY query_similarity DESC
+             LIMIT :limit
+            """), {
+            "search_term": search_term,
+            "limit": limit
+        })
+
+        rows = result.fetchall()
+        if not rows:
+            return []
+        similar_users = get_similar_users(searcher_id) if searcher_id else None
+
+        search_results = []
+        if similar_users:
+            for row in rows:
+                similarity = similar_users.similar_users.get(row['musicbrainz_id'], None)
+                search_results.append((row['musicbrainz_id'], row['query_similarity'], similarity))
+        else:
+            search_results = [(row['musicbrainz_id'], row['query_similarity'], None) for row in rows]
+        return search_results
