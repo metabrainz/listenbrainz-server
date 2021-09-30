@@ -712,8 +712,6 @@ class TimescaleListenStore(ListenStore):
         else:
             end_time = datetime.now()
 
-
-
         query = """SELECT listened_at,
                           user_name,
                           artist_credit_id,
@@ -769,14 +767,14 @@ class TimescaleListenStore(ListenStore):
                         data["recording_name"].append(result["l_recording_name"])
                         data["artist_credit_id"].append(None)
                         approx_size += len(result["l_artist_name"]) + len(result["l_release_name"] or "0") + \
-                                       len(result["l_recording_name"]);
+                            len(result["l_recording_name"])
                     else:
                         data["artist_name"].append(result["m_artist_name"])
                         data["release_name"].append(result["m_release_name"])
                         data["recording_name"].append(result["m_recording_name"])
                         data["artist_credit_id"].append(result["artist_credit_id"])
                         approx_size += len(result["m_artist_name"]) + len(result["m_release_name"]) + \
-                                       len(result["m_recording_name"]) + len(str(result["artist_credit_id"]))
+                            len(result["m_recording_name"]) + len(str(result["artist_credit_id"]))
 
                     for col in data:
                         if col == 'listened_at':
@@ -812,7 +810,6 @@ class TimescaleListenStore(ListenStore):
                               listen_count, current_listened_at.strftime("%Y-%m-%d"),
                               written / (time.monotonic() - t0),
                               str(round(file_size / (1024 * 1024), 3)))
-
 
         return parquet_file_id
 
@@ -872,9 +869,7 @@ class TimescaleListenStore(ListenStore):
                 self.log.info("dump %s to %s" % (start.strftime("%Y-%m-%d %H:%M:%S"), end.strftime("%Y-%m-%d %H:%M:%S")))
                 parquet_index = self.write_parquet_files(archive_name, temp_dir, tar, start, end, full_dump, parquet_index)
 
-
             shutil.rmtree(temp_dir)
-
 
         self.log.info('ListenBrainz spark listen dump done!')
         self.log.info('Dump present at %s!', archive_path)

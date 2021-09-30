@@ -8,6 +8,7 @@ from listenbrainz.webserver import create_app
 
 BATCH_SIZE = 10000
 
+
 def load_artist_credit_index():
     with psycopg2.connect(config.MB_DATABASE_URI) as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
@@ -42,7 +43,7 @@ def load_release_name_index():
                 release_names[row['gid']] = row['name']
 
     return release_names
-                     
+
 
 def insert_rows(mapping_rows, join_rows):
 
@@ -61,7 +62,7 @@ def insert_rows(mapping_rows, join_rows):
             execute_values(curs, query, join_rows, template=None)
 
         except psycopg2.OperationalError as err:
-            app.logger.info( "Cannot insert MBID mapping rows. (%s)" % str(err))
+            app.logger.info("Cannot insert MBID mapping rows. (%s)" % str(err))
             conn.rollback()
             return
 
@@ -111,21 +112,22 @@ def copy_rows_to_new_mbid_mapping(app):
                 recording_mbid_index[row['recording_mbid']] = insert_id
 
                 if row["artist_credit_id"] is None or row["artist_credit_id"] not in artist_credit_index:
-                    updated_rows.append([ insert_id, None, row['recording_mbid'], row['release_mbid'], 
-                        None, None, None, None, 'no_match', row['last_updated'] ])
+                    updated_rows.append([insert_id, None, row['recording_mbid'], row['release_mbid'],
+                                         None, None, None, None, 'no_match', row['last_updated']])
                     id += 1
                 else:
                     try:
-                        updated_rows.append([ insert_id, row["artist_credit_id"], row['recording_mbid'], row['release_mbid'], 
-                            release_name_index[row['release_mbid']], artist_credit_index[row["artist_credit_id"]],
-                            row['artist_credit_name'], row["recording_name"], row["match_type"], row['last_updated'] ])
+                        updated_rows.append([insert_id, row["artist_credit_id"], row['recording_mbid'], row['release_mbid'],
+                                             release_name_index[row['release_mbid']
+                                                                ], artist_credit_index[row["artist_credit_id"]],
+                                             row['artist_credit_name'], row["recording_name"], row["match_type"], row['last_updated']])
                         id += 1
                     except KeyError:
                         # If we fail to match the release_mbid or artist_credit, then just drop it. the next
                         # mapping pass will look it up and save a fresh record
                         skipped += 1
 
-            join_rows.append([ row['recording_msid'], insert_id ])
+            join_rows.append([row['recording_msid'], insert_id])
 
             if len(updated_rows) >= BATCH_SIZE:
                 count += len(updated_rows)

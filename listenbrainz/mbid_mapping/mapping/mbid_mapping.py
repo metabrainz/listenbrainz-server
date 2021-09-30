@@ -9,7 +9,7 @@ from mapping.formats import create_formats_table
 import config
 
 BATCH_SIZE = 5000
-TEST_ARTIST_IDS = [1160983, 49627] # Gun'n'roses, beyoncé
+TEST_ARTIST_IDS = [1160983, 49627]  # Gun'n'roses, beyoncé
 
 
 def create_tables(mb_conn):
@@ -92,7 +92,7 @@ def create_temp_release_table(conn):
 
     with conn.cursor() as curs:
         log("mbid mapping temp tables: Create temp release table: select")
-        
+
         # The 1 in the WHERE clause refers to MB's Various Artists ID of 1 -- all the various artist albums.
         query = """             SELECT r.id AS release
                                   FROM musicbrainz.release_group rg
@@ -117,7 +117,7 @@ def create_temp_release_table(conn):
         for op in ['!=', '=']:
             if config.USE_MINIMAL_DATASET:
                 log("mbid mapping temp tables: Using a minimal dataset for artist credit pairs: artist_id %s 1" % op)
-                curs.execute(query % (op, 'AND rg.artist_credit IN (%s)' % ",".join([ str(i) for i in TEST_ARTIST_IDS])))
+                curs.execute(query % (op, 'AND rg.artist_credit IN (%s)' % ",".join([str(i) for i in TEST_ARTIST_IDS])))
             else:
                 log("mbid mapping temp tables: Using a full dataset for artist credit pairs: artsit_id %s 1" % op)
                 curs.execute(query % (op, ""))
@@ -245,7 +245,6 @@ def create_mbid_mapping():
                                  GROUP BY rpr.id, ac.id, s.artist_mbids, rl.gid, artist_credit_name, r.gid, r.name, release_name
                                  ORDER BY ac.id, rpr.id""")
 
-
                 row_count = 0
                 while True:
                     row = mb_curs.fetchone()
@@ -261,7 +260,7 @@ def create_mbid_mapping():
                         artist_recordings = {}
 
                         if len(rows) >= BATCH_SIZE:
-                            insert_rows( mb_curs2, "mapping.tmp_mbid_mapping", rows)
+                            insert_rows(mb_curs2, "mapping.tmp_mbid_mapping", rows)
                             count += len(rows)
                             mb_conn.commit()
                             rows = []
