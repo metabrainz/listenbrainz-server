@@ -40,14 +40,14 @@ services:
     environment:
       FLASK_APP: listenbrainz.webserver
       FLASK_ENV: development
-    command: flask run -h 0.0.0.0 -p 8081
+    command: flask run -h 0.0.0.0 -p 80
     image: web
     volumes:
       - web_home:/root
       - ..:/code/listenbrainz:z
       - ../listenbrainz/webserver/static:/static
     ports:
-      - "8081:8081"
+      - "80:80"
     depends_on:
       - redis
       - db
