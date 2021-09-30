@@ -77,6 +77,7 @@ APIEventMetadata = Union[APIListen, APIFollowEvent, APINotificationEvent, APIPin
 
 
 class APITimelineEvent(pydantic.BaseModel):
+    id: Optional[int]
     event_type: UserTimelineEventType
     user_name: str
     created: int
