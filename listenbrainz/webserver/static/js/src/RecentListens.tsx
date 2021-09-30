@@ -39,7 +39,6 @@ export type RecentListensProps = {
   profileUrl?: string;
   user: ListenBrainzUser;
   userPinnedRecording?: PinnedRecording;
-  webSocketsServerUrl: string;
 } & WithAlertNotificationsInjectedProps;
 
 export interface RecentListensState {
@@ -164,16 +163,15 @@ export default class RecentListens extends React.Component<
   };
 
   connectWebsockets = (): void => {
-    const { webSocketsServerUrl } = this.props;
-    if (webSocketsServerUrl) {
-      this.createWebsocketsConnection();
-      this.addWebsocketsHandlers();
-    }
+    this.createWebsocketsConnection();
+    this.addWebsocketsHandlers();
   };
 
   createWebsocketsConnection = (): void => {
-    const { webSocketsServerUrl } = this.props;
-    this.socket = io(webSocketsServerUrl);
+    // if modifying the uri or path, lookup socket.io namespace vs paths.
+    // tl;dr io("https://listenbrainz.org/socket.io/") and
+    // io("https://listenbrainz.org", { path: "/socket.io" }); are not equivalent
+    this.socket = io(`${window.location.origin}`, { path: "/socket.io/" });
   };
 
   addWebsocketsHandlers = (): void => {
@@ -810,9 +808,7 @@ document.addEventListener("DOMContentLoaded", () => {
     mode,
     userPinnedRecording,
     profile_url,
-    save_url,
     user,
-    web_sockets_server_url,
   } = reactProps;
 
   const apiService = new APIServiceClass(
@@ -847,7 +843,6 @@ document.addEventListener("DOMContentLoaded", () => {
           oldestListenTs={oldest_listen_ts}
           profileUrl={profile_url}
           user={user}
-          webSocketsServerUrl={web_sockets_server_url}
         />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,
