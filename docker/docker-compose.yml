@@ -18,7 +18,7 @@ services:
     volumes:
       - redis:/data:z
 
-  lb_db:
+  db:
     image: timescale/timescaledb:2.2.0-pg11
     volumes:
       - timescaledb:/var/lib/postgresql/data:z
@@ -50,7 +50,7 @@ services:
       - "8081:8081"
     depends_on:
       - redis
-      - lb_db
+      - db
       - rabbitmq
 
   api_compat:
@@ -62,7 +62,7 @@ services:
       - ..:/code/listenbrainz:z
     depends_on:
       - redis
-      - lb_db
+      - db
       - rabbitmq
 
   timescale_writer:
@@ -105,16 +105,3 @@ services:
       # We mount this as a sort of shared volume
       # where we put the compiled output to be served by the service "web"
       - ../listenbrainz/webserver/static:/static:z
-
-  mbid_mapping_writer:
-    command: python3 -m listenbrainz.mbid_mapping_writer.mbid_mapping_writer
-    image: web
-    depends_on:
-      - redis
-      - lb_db
-      - rabbitmq
-
-networks:
-  default:
-    external: true
-    name: musicbrainzdocker_default
