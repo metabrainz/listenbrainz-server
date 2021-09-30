@@ -257,7 +257,10 @@ export default class ListenCard extends React.Component<
 		 ${className || ""}`}
       >
         <div className="listen-details">
-          <div title={listen.track_metadata?.track_name} className="ellipsis">
+          <div
+            title={listen.track_metadata?.track_name}
+            className="ellipsis-2-lines"
+          >
             {getTrackLink(listen)}
           </div>
           <span

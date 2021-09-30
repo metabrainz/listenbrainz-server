@@ -5,7 +5,7 @@
 @love: #C62828;
 @hate: @blue;
 @player-min-height: 320px;
-@listen-small-break: 420px;
+@listen-small-break: @screen-sm;
 
 #music-player {
 	position: relative;
@@ -202,7 +202,7 @@
 		display: flex;
 		flex:1;
 	}
-	@media (min-width: @screen-tablet) {
+	@media (min-width: @listen-small-break) {
 		> *{
 			padding: 0 1em;
 		}
@@ -220,20 +220,22 @@
 		justify-content: center;
 		padding-right: 1em;
 		padding-top: 0.5em;
-		@media (min-width: @screen-tablet) {
-    		padding-right: 2.5em;
-		}
 		@media (min-width: @listen-small-break) {
+    		padding-right: 2em;
 			align-items: flex-end;
 			padding-top: 0;
 		}
 	}
 	
 	.listen-details{
-		flex: 3;
+		flex: 0 0 auto;
 		flex-direction: column;
-		max-width: 100%;
-		flex-basis: 300px;
+		width: 100%;
+		line-height: 1.3em;
+
+		@media (min-width: @listen-small-break) {
+			flex: 3;
+		}
 		
 		.artist-and-timestamp {
 			display: flex;
@@ -243,6 +245,13 @@
 			overflow: hidden;
 			text-overflow: ellipsis;
 			white-space:nowrap;
+		}
+		.ellipsis-2-lines {
+			display: -webkit-box;
+			-webkit-line-clamp: 2;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+			text-overflow: ellipsis;
 		}
 	}
 	
