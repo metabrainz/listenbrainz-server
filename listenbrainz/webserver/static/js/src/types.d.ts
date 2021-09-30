@@ -63,7 +63,7 @@ declare type ListenBrainzUser = {
 
 declare type ImportService = "lastfm" | "librefm";
 
-declare type ListenType = "single" | "playingNow" | "import";
+declare type ListenType = "single" | "playing_now" | "import";
 
 declare type BrainzPlayDirection = "up" | "down" | "hidden";
 
