@@ -43,15 +43,13 @@ CREATE TABLE  playlist.playlist_collaborator (
 
 -- MBID Mapping
 
--- TODO remove tmp prefix before PR
-create table tmp_listen_join_listen_mbid_mapping (
+create table listen_join_listen_mbid_mapping (
         recording_msid      uuid not null,
         listen_mbid_mapping int not null -- FK listen_mbid_mapping.id
 );
 
--- TODO remove tmp prefix before PR
-create table tmp_listen_mbid_mapping (
-        id                  serial,
+create table listen_mbid_mapping (
+        id                  SERIAL,
         artist_credit_id    INT,
         recording_mbid      UUID,
         release_mbid        UUID,

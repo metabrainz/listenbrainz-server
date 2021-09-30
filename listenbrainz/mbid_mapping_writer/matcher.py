@@ -1,3 +1,5 @@
+import sys
+import uuid
 from operator import itemgetter
 
 import sqlalchemy
@@ -32,7 +34,9 @@ def process_listens(app, listens, is_legacy_listen=False):
         if not is_legacy_listen:
             with timescale.engine.connect() as connection:
                 query = """SELECT recording_msid 
-                             FROM listen_mbid_mapping
+                             FROM listen_join_listen_mbid_mapping lj
+                             JOIN listen_mbid_mapping mbid
+                               ON mbid.id = lj.listen_mbid_mapping
                             WHERE recording_msid IN :msids"""
                 curs = connection.execute(sqlalchemy.text(
                     query), msids=tuple(msids.keys()))
@@ -71,49 +75,50 @@ def process_listens(app, listens, is_legacy_listen=False):
                     stats["legacy_match"] += len(matches)
 
                 # Finally insert matches to PG
-                query = """INSERT INTO listen_mbid_mapping (recording_msid, recording_mbid, release_mbid, artist_credit_id,
-                                                            artist_credit_name, recording_name, match_type)
-                                VALUES %s
-                           ON CONFLICT DO NOTHING"""
-                execute_values(curs, query, matches, template=None)
-
                 mogrified = []
                 for match in matches:
-                    mogrified.append(curs.mogrify("(%s, %s, %s, %s, %s, %s, %s)", match))
+                    mogrified.append(str(curs.mogrify("(%s, %s, %s, %s, %s, %s, %s, %s::mbid_mapping_match_type_enum)", match), "utf-8"))
 
-                query = """WITH data(recording_msid,
-                                     recording_mbid,
-                                     release_mbid,
-                                     artist_credit_id,
-                                     artist_credit_name,
-                                     recording_name,
-                                     match_type) AS (          
-                                     VALUES
-                                         %s
-                                     )
+
+                query = """WITH data (recording_msid
+                                   ,  recording_mbid
+                                   ,  release_mbid
+                                   ,  artist_mbids
+                                   ,  artist_credit_id
+                                   ,  artist_credit_name
+                                   ,  recording_name
+                                   ,  match_type) AS (          
+                               VALUES %s)
                            , join_insert AS (
-                                   INSERT INTO listen_mbid_mapping (recording_mbid,
-                                                                    release_mbid,
-                                                                    artist_credit_id,
-                                                                    artist_credit_name,
-                                                                    recording_name,
-                                                                    match_type)
-                                   SELECT recording_mbid,
-                                          release_mbid,
-                                          artist_credit_id,
-                                          artist_credit_name,
-                                          recording_name,
-                                          match_type
+                                   INSERT INTO listen_mbid_mapping (recording_mbid
+                                                                 ,  release_mbid
+                                                                 ,  artist_mbids
+                                                                 ,  artist_credit_id
+                                                                 ,  artist_credit_name
+                                                                 ,  recording_name
+                                                                 ,  match_type)
+                                   SELECT recording_mbid
+                                        , release_mbid
+                                        , artist_mbids
+                                        , artist_credit_id
+                                        , artist_credit_name
+                                        , recording_name
+                                        , match_type
                                    FROM   data
-                                   RETURNING recording_msid, id AS join_id
+                                   RETURNING id AS join_id
+                                           , recording_msid
                                    )
                                 INSERT INTO listen_join_listen_mbid_mapping (recording_msid, listen_mbid_mapping)
-                                SELECT join_insert.join_id, recording_msid
-                                FROM   data d
-                                JOIN   join_insert USING (recording_msid)""" % ",".join(mogrified)
+                                SELECT recording_msid
+                                     , join_insert.join_id
+                                  FROM data d
+                                  JOIN join_insert ji
+                                    ON ji.recording_msid = d.recording_msid""" % ",".join(mogrified)
+                curs.execute(query)
 
+                # TODO: Handle errors, dropping the current listen!
 
-            except psycopg2.OperationalError as err:
+            except (psycopg2.OperationalError, psycopg2.errors.DatatypeMismatch) as err:
                 app.logger.info(
                     "Cannot insert MBID mapping rows. (%s)" % str(err))
                 conn.rollback()
@@ -150,9 +155,12 @@ def lookup_listens(app, listens, stats, exact):
         if exact:
             hit["match_type"] = MATCH_TYPE_EXACT_MATCH
         stats[MATCH_TYPES[hit["match_type"]]] += 1
-        rows.append((listen['recording_msid'],
-                     hit["recording_mbid"],
-                     hit["release_mbid"],
+        app.logger.info(str(hit))
+        artist_mbids = [ uuid.UUID(mbid) for mbid in hit["artist_mbids"].split(",") ]
+        rows.append((uuid.UUID(listen['recording_msid']),
+                     uuid.UUID(hit["recording_mbid"]),
+                     uuid.UUID(hit["release_mbid"]),
+                     artist_mbids,
                      hit["artist_credit_id"],
                      hit["artist_credit_name"],
                      hit["recording_name"],

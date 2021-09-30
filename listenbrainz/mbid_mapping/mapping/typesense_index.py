@@ -96,6 +96,7 @@ def build(client, collection_name):
                                recording_mbid,
                                release_name,
                                release_mbid,
+                               artist_credit_id,
                                artist_credit_name,
                                artist_mbids,
                                score
@@ -108,6 +109,7 @@ def build(client, collection_name):
             documents = []
             for i, row in enumerate(curs):
                 document = dict(row)
+                document['artist_mbids'] = row["artist_mbids"][1:-1]
                 document['score'] = max_score - document['score']
                 document['combined'] = prepare_string(document['recording_name'] + " " + document['artist_credit_name'])
                 documents.append(document)

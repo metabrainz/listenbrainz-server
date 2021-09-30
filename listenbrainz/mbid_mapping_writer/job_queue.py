@@ -93,7 +93,7 @@ class MappingJobQueue(threading.Thread):
 
         # Check to see where we need to pick up from, or start new
         if not self.legacy_listens_index_date:
-            dt = cache.get(LEGACY_LISTENS_INDEX_DATE_CACHE_KEY, decode=False) or ""
+            dt = cache.get(LEGACY_LISTENS_INDEX_DATE_CACHE_KEY, decode=False) or b""
             try:
                 self.legacy_listens_index_date = int(
                     datetime.datetime.strptime(str(dt, "utf-8"), "%Y-%m-%d").timestamp())
@@ -103,6 +103,9 @@ class MappingJobQueue(threading.Thread):
                 self.legacy_listens_index_date = int(
                     datetime.datetime.now().timestamp())
                 self.app.logger.info("Use date index now()")
+
+        # TODO Remove this before PR
+        self.legacy_listens_index_date = int( datetime.datetime.now().timestamp())
 
         # Check to see if we're done
         if self.legacy_listens_index_date < DATA_START_YEAR_IN_SECONDS - LEGACY_LISTENS_LOAD_WINDOW:
@@ -118,13 +121,13 @@ class MappingJobQueue(threading.Thread):
         # Load listens
         self.app.logger.info("Load more legacy listens for %s" % datetime.datetime.fromtimestamp(
             self.legacy_listens_index_date).strftime("%Y-%m-%d"))
-        query = """SELECT data->'track_metadata'->'additional_info'->>'recording_msid',
+        query = """SELECT data->'track_metadata'->'additional_info'->>'recording_msid'::TEXT AS recording_msid,
                           track_name,
-                          data->'track_metadata'->'artist_name'
+                          data->'track_metadata'->'artist_name' AS artist_name
                      FROM listen
-                LEFT JOIN listen_mbid_mapping mbid
-                       ON data->'track_metadata'->'additional_info'->>'recording_msid' = mbid.recording_msid::text
-                    WHERE mbid.match_type is null
+                LEFT JOIN listen_join_listen_mbid_mapping lj
+                       ON data->'track_metadata'->'additional_info'->>'recording_msid' = lj.recording_msid::text
+                 WHERE lj.recording_msid IS NULL
                       AND listened_at <= :max_ts
                       AND listened_at > :min_ts"""
 
