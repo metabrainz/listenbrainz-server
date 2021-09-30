@@ -216,8 +216,8 @@ def create_mbid_mapping():
                                           r.gid AS recording_mbid,
                                           ac.name AS artist_credit_name,
                                           s.artist_mbids,
-                                          rl.name AS release_name,        
-                                          rl.gid AS release_mbid,         
+                                          rl.name AS release_name,
+                                          rl.gid AS release_mbid,
                                           rpr.id AS score
                                      FROM recording r
                                      JOIN artist_credit ac

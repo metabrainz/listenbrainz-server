@@ -86,7 +86,7 @@ def process_listens(app, listens, is_legacy_listen=False):
                                    ,  artist_credit_id
                                    ,  artist_credit_name
                                    ,  recording_name
-                                   ,  match_type) AS (          
+                                   ,  match_type) AS (
                                VALUES %s)
                            , join_insert AS (
                                    INSERT INTO listen_mbid_mapping (recording_mbid
@@ -110,7 +110,7 @@ def process_listens(app, listens, is_legacy_listen=False):
                                 INSERT INTO listen_join_listen_mbid_mapping (recording_msid, listen_mbid_mapping)
                                 SELECT d.recording_msid
                                      , ji.join_id
-                                  FROM data d 
+                                  FROM data d
                                   JOIN join_insert ji
                                     ON ji.recording_mbid = d.recording_mbid
                                    AND ji.release_mbid = d.release_mbid
