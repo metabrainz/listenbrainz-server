@@ -570,7 +570,7 @@ def search(search_term: str, limit: int, searcher_id: int = None) -> List[Tuple[
         if not rows:
             return []
         similar_users = get_similar_users(searcher_id) if searcher_id else None
-        logger.error("Similar users: %s", similar_users)
+
         search_results = []
         if similar_users:
             for row in rows:
