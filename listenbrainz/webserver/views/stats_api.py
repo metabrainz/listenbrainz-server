@@ -606,6 +606,14 @@ def get_sitewide_release():
     return _get_sitewide_stats("releases")
 
 
+@stats_api_bp.route("/sitewide/recordings")
+@crossdomain()
+@ratelimit()
+def get_sitewide_recording():
+    """ TODO: Add documentation """
+    return _get_sitewide_stats("recordings")
+
+
 def _get_sitewide_stats(entity: str):
     stats_range = request.args.get("range", default="all_time")
     if not _is_valid_range(stats_range):
