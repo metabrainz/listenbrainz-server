@@ -595,21 +595,33 @@ def get_sitewide_artist():
     :statuscode 400: Bad request, check ``response['error']`` for more details
     :resheader Content-Type: *application/json*
     """
-    stats_range = request.args.get('range', default='all_time')
+    return _get_sitewide_stats("artists")
+
+
+@stats_api_bp.route("/sitewide/releases")
+@crossdomain()
+@ratelimit()
+def get_sitewide_release():
+    """ TODO: Add documentation """
+    return _get_sitewide_stats("releases")
+
+
+def _get_sitewide_stats(entity: str):
+    stats_range = request.args.get("range", default="all_time")
     if not _is_valid_range(stats_range):
-        raise APIBadRequest("Invalid range: {}".format(stats_range))
+        raise APIBadRequest(f"Invalid range: {stats_range}")
 
-    offset = get_non_negative_param('offset', default=0)
-    count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
+    offset = get_non_negative_param("offset", default=0)
+    count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
 
-    stats = db_stats.get_sitewide_stats(stats_range, 'artists')
+    stats = db_stats.get_sitewide_stats(stats_range, entity)
     if stats is None:
-        raise APINoContent('')
+        raise APINoContent("")
 
     entity_list, total_entity_count = _process_user_entity(stats, offset, count)
     return jsonify({
         "payload": {
-            "artists": entity_list,
+            entity: entity_list,
             "range": stats_range,
             "offset": offset,
             "count": total_entity_count,
