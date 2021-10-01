@@ -117,7 +117,7 @@ def request_user_stats(type_, range_, entity):
 @cli.command(name="request_sitewide_stats")
 @click.option("--range", 'range_', type=click.Choice(ALLOWED_STATISTICS_RANGE),
               help="Time range of statistics to calculate", required=True)
-@click.option("--entity", type=click.Choice(['artists']),
+@click.option("--entity", type=click.Choice(['artists', 'releases']),
               help="Entity for which statistics should be calculated")
 def request_sitewide_stats(range_, entity):
     """ Send request to calculate sitewide stats to the spark cluster
