@@ -17,11 +17,11 @@ def get_artists(table: str, limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
     # with sort_array.
     result = run_query(f"""
         WITH intermediate_table as (
-            SELECT artist_name
+            SELECT first(artist_name) AS any_artist_name
                  , artist_credit_mbids
                  , count(*) as listen_count
               FROM {table}
-          GROUP BY artist_name
+          GROUP BY lower(artist_name)
                  , artist_credit_mbids
           ORDER BY listen_count DESC
              LIMIT {limit}
@@ -30,7 +30,7 @@ def get_artists(table: str, limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
                     collect_list(
                         struct(
                             listen_count
-                          , artist_name
+                          , any_artist_name AS artist_name
                           , coalesce(artist_credit_mbids, array()) AS artist_mbids
                         )
                     )
