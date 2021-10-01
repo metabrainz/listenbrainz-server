@@ -3,6 +3,7 @@ from typing import Dict, List, Union
 import pydantic
 
 from data.model.sitewide_artist_stat import SitewideArtistRecord
+from data.model.user_entity import UserEntityRecord
 
 
 class SitewideEntityStatMessage(pydantic.BaseModel):
@@ -15,4 +16,4 @@ class SitewideEntityStatMessage(pydantic.BaseModel):
     count: int
     # Order of the records in union is important and should be from more specific to less specific
     # For more info read https://pydantic-docs.helpmanual.io/usage/types/#unions
-    data: List[SitewideArtistRecord]
+    data: List[UserEntityRecord]
