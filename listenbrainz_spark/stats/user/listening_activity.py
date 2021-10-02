@@ -110,7 +110,7 @@ def calculate_listening_activity():
                        collect_list(
                            struct(from_ts, to_ts, time_range, listen_count)
                         )
-                    )
+                    ) AS listening_activity
               FROM intermediate_table
           GROUP BY user_name
     """)
