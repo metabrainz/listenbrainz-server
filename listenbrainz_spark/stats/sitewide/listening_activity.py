@@ -156,8 +156,7 @@ def create_messages(data, stats_range: str, from_date: datetime, to_date: dateti
         "to_ts": int(to_date.timestamp())
     }
 
-    entry = next(data).asDict(recursive=True)
-    _dict = entry.asDict(recursive=True)
+    _dict = next(data).asDict(recursive=True)
     message["data"] = _dict["listening_activity"]
     try:
         model = SitewideListeningActivityStatMessage(**message)
