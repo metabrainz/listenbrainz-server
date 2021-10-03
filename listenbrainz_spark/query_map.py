@@ -5,6 +5,7 @@ import listenbrainz_spark.recommendations.recording.train_models
 import listenbrainz_spark.user_similarity.user_similarity
 import listenbrainz_spark.request_consumer.jobs.import_dump
 import listenbrainz_spark.stats.sitewide.entity
+import listenbrainz_spark.stats.sitewide.listening_activity
 import listenbrainz_spark.stats.user.daily_activity
 import listenbrainz_spark.stats.user.entity
 import listenbrainz_spark.stats.user.listening_activity
