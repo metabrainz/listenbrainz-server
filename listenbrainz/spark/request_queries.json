@@ -19,6 +19,11 @@
     "description": "Calculate top entites listened to on the website in the requested stats_range",
     "params": ["entity", "stats_range"]
   },
+  "stats.sitewide.listening_activity": {
+    "name": "stats.sitewide.listening_activity",
+    "description": "Calculates number of listens in periods depending on the stats_range value. see the documentation in spark code for details.",
+    "params": ["stats_range"]
+  },
   "import.dump.full_newest": {
     "name": "import.dump.full_newest",
     "description": "Import the newest available full dump into the spark cluster",
