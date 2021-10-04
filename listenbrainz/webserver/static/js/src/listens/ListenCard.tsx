@@ -283,22 +283,21 @@ export default class ListenCard extends React.Component<
             </span>
           </div>
         )}
-        {showUsername ||
-          (showTimestamp && (
-            <div className="username-and-timestamp">
-              {showUsername && (
-                <a
-                  href={`/user/${listen.user_name}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={listen.user_name ?? undefined}
-                >
-                  {listen.user_name}
-                </a>
-              )}
-              {showTimestamp && timeStampForDisplay}
-            </div>
-          ))}
+        {(showUsername || showTimestamp) && (
+          <div className="username-and-timestamp">
+            {showUsername && (
+              <a
+                href={`/user/${listen.user_name}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={listen.user_name ?? undefined}
+              >
+                {listen.user_name}
+              </a>
+            )}
+            {showTimestamp && timeStampForDisplay}
+          </div>
+        )}
         <div className="listen-controls">
           {!currentUser?.auth_token || mini ? null : (
             <>
