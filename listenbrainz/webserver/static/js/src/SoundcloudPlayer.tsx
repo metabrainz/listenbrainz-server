@@ -113,12 +113,15 @@ export default class SoundcloudPlayer
     if (!this.soundcloudPlayer) {
       return;
     }
-    this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.FINISH);
-    this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.PAUSE);
-    this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.PLAY);
-    this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.PLAY_PROGRESS);
-    this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.ERROR);
-    this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.READY);
+    try {
+      this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.FINISH);
+      this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.PAUSE);
+      this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.PLAY);
+      this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.PLAY_PROGRESS);
+      this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.ERROR);
+      this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.READY);
+      // eslint-disable-next-line no-empty
+    } catch (error) {}
   }
 
   onReady = (): void => {
