@@ -1,8 +1,9 @@
 import * as React from "react";
-import { mount, shallow } from "enzyme";
+import { mount } from "enzyme";
 
 import UserEntityChart from "./UserEntityChart";
 import APIError from "../APIError";
+import APIService from "../APIService";
 import * as userArtistsResponse from "../__mocks__/userArtists.json";
 import * as userArtistsProcessDataOutput from "../__mocks__/userArtistsProcessData.json";
 import * as userReleasesResponse from "../__mocks__/userReleases.json";
@@ -17,6 +18,20 @@ const props = {
   },
   apiUrl: "apiUrl",
   newAlert: jest.fn(),
+};
+const GlobalContextMock = {
+  APIService: new APIService("base-uri"),
+  spotifyAuth: {
+    access_token: "heyo",
+    permission: [
+      "user-read-currently-playing",
+      "user-read-recently-played",
+    ] as Array<SpotifyPermission>,
+  },
+  youtubeAuth: {
+    api_key: "fake-api-key",
+  },
+  currentUser: { name: "" },
 };
 
 describe("UserEntityChart Page", () => {
@@ -101,7 +116,9 @@ describe("UserEntityChart Page", () => {
 
 describe("componentDidMount", () => {
   it('adds event listener for "popstate" event', () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     const spy = jest.spyOn(window, "addEventListener");
@@ -113,7 +130,9 @@ describe("componentDidMount", () => {
   });
 
   it('adds event listener for "resize" event', () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     const spy = jest.spyOn(window, "addEventListener");
@@ -126,7 +145,9 @@ describe("componentDidMount", () => {
   });
 
   it("calls getURLParams once", () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     instance.getURLParams = jest.fn().mockImplementationOnce(() => {
@@ -139,7 +160,9 @@ describe("componentDidMount", () => {
   });
 
   it("calls replaceState with correct parameters", () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     const spy = jest.spyOn(window.history, "replaceState");
@@ -155,7 +178,9 @@ describe("componentDidMount", () => {
   });
 
   it("calls syncStateWithURL", () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     instance.syncStateWithURL = jest.fn();
@@ -167,7 +192,9 @@ describe("componentDidMount", () => {
 
 describe("componentWillUnmount", () => {
   it('removes "popstate" event listener', () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     const spy = jest.spyOn(window, "removeEventListener");
@@ -179,7 +206,9 @@ describe("componentWillUnmount", () => {
   });
 
   it('removes "resize" event listener', () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     const spy = jest.spyOn(window, "removeEventListener");
@@ -193,7 +222,9 @@ describe("componentWillUnmount", () => {
 
 describe("changePage", () => {
   it("calls setURLParams with correct parameters", () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     instance.setURLParams = jest.fn();
@@ -204,7 +235,9 @@ describe("changePage", () => {
   });
 
   it("calls syncStateWithURL once", () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     instance.setURLParams = jest.fn();
@@ -217,7 +250,9 @@ describe("changePage", () => {
 
 describe("changeRange", () => {
   it("calls setURLParams with correct parameters", () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     instance.setURLParams = jest.fn();
@@ -228,7 +263,9 @@ describe("changeRange", () => {
   });
 
   it("calls syncStateWithURL once", () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     instance.setURLParams = jest.fn();
@@ -241,31 +278,35 @@ describe("changeRange", () => {
 
 describe("changeEntity", () => {
   it("calls setURLParams with correct parameters", () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
-    instance.setURLParams = jest.fn();
-    instance.syncStateWithURL = jest.fn();
+    const setURLParamsSpy = jest.spyOn(instance, "setURLParams");
     instance.changeEntity("release");
 
-    expect(instance.setURLParams).toHaveBeenCalledWith(1, "", "release");
+    expect(setURLParamsSpy).toHaveBeenCalledWith(1, "", "release");
   });
 
   it("calls syncStateWithURL once", () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
-    instance.setURLParams = jest.fn();
-    instance.syncStateWithURL = jest.fn();
+    const syncStateWithURLSpy = jest.spyOn(instance, "syncStateWithURL");
     instance.changeEntity("release");
 
-    expect(instance.syncStateWithURL).toHaveBeenCalledTimes(1);
+    expect(syncStateWithURLSpy).toHaveBeenCalledTimes(1);
   });
 });
 
 describe("getInitData", () => {
   it("gets data correctly for artist", async () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     const spy = jest.spyOn(instance.context.APIService, "getUserEntity");
@@ -291,7 +332,9 @@ describe("getInitData", () => {
   });
 
   it("gets data correctly for release", async () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     const spy = jest.spyOn(instance.context.APIService, "getUserEntity");
@@ -319,7 +362,9 @@ describe("getInitData", () => {
   });
 
   it("gets data correctly for recording", async () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     const spy = jest.spyOn(instance.context.APIService, "getUserEntity");
@@ -349,7 +394,9 @@ describe("getInitData", () => {
 
 describe("getData", () => {
   it("calls getUserEntity with correct parameters", async () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     const spy = jest.spyOn(instance.context.APIService, "getUserEntity");
@@ -370,7 +417,9 @@ describe("getData", () => {
 
 describe("processData", () => {
   it("processes data correctly for top artists", () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     wrapper.setState({ entity: "artist" });
@@ -381,7 +430,9 @@ describe("processData", () => {
   });
 
   it("processes data correctly for top releases", () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     wrapper.setState({ entity: "release" });
@@ -392,7 +443,9 @@ describe("processData", () => {
   });
 
   it("processes data correctly for top recordings", () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     wrapper.setState({ entity: "recording" });
@@ -402,7 +455,9 @@ describe("processData", () => {
     ).toEqual(userRecordingsProcessDataOutput);
   });
   it("returns an empty array if no payload", () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     // When stats haven't been calculated, processData is called with an empty object
@@ -414,7 +469,9 @@ describe("processData", () => {
 
 describe("syncStateWithURL", () => {
   it("sets state correctly", async () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     instance.getURLParams = jest.fn().mockImplementationOnce(() => ({
@@ -439,7 +496,7 @@ describe("syncStateWithURL", () => {
       .mockImplementationOnce(() => userArtistsProcessDataOutput);
     await instance.syncStateWithURL();
 
-    expect(wrapper.state()).toMatchObject({
+    expect(instance.state).toMatchObject({
       data: userArtistsProcessDataOutput,
       currPage: 1,
       range: "all_time",
@@ -454,7 +511,9 @@ describe("syncStateWithURL", () => {
   });
 
   it("sets state correctly if stats haven't been calculated", async () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
     instance.getInitData = jest.fn().mockImplementationOnce(() => {
       const error = new APIError("Not calculated");
@@ -465,7 +524,7 @@ describe("syncStateWithURL", () => {
     });
 
     await instance.syncStateWithURL();
-    expect(wrapper.state()).toMatchObject({
+    expect(instance.state).toMatchObject({
       currPage: 1,
       range: "all_time",
       entity: "artist",
@@ -477,7 +536,9 @@ describe("syncStateWithURL", () => {
   });
 
   it("sets state correctly if range is incorrect", async () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     instance.getURLParams = jest.fn().mockImplementationOnce(() => {
@@ -485,7 +546,7 @@ describe("syncStateWithURL", () => {
     });
 
     await instance.syncStateWithURL();
-    expect(wrapper.state()).toMatchObject({
+    expect(instance.state).toMatchObject({
       currPage: 1,
       range: "invalid_range",
       entity: "artist",
@@ -496,7 +557,9 @@ describe("syncStateWithURL", () => {
   });
 
   it("sets state correctly if entity is incorrect", async () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     instance.getURLParams = jest.fn().mockImplementationOnce(() => {
@@ -504,7 +567,7 @@ describe("syncStateWithURL", () => {
     });
 
     await instance.syncStateWithURL();
-    expect(wrapper.state()).toMatchObject({
+    expect(instance.state).toMatchObject({
       currPage: 1,
       range: "all_time",
       entity: "invalid_entity",
@@ -515,7 +578,9 @@ describe("syncStateWithURL", () => {
   });
 
   it("sets state correctly if page is incorrect", async () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     instance.getURLParams = jest.fn().mockImplementationOnce(() => {
@@ -523,7 +588,7 @@ describe("syncStateWithURL", () => {
     });
 
     await instance.syncStateWithURL();
-    expect(wrapper.state()).toMatchObject({
+    expect(instance.state).toMatchObject({
       currPage: 1.5,
       range: "all_time",
       entity: "artist",
@@ -533,7 +598,9 @@ describe("syncStateWithURL", () => {
     });
   });
   it("throws error if fetch fails", async () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     instance.getInitData = jest
@@ -546,7 +613,9 @@ describe("syncStateWithURL", () => {
 
 describe("getURLParams", () => {
   it("gets default parameters if none are provided in the URL", () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     const { page, range, entity } = instance.getURLParams();
@@ -557,7 +626,9 @@ describe("getURLParams", () => {
   });
 
   it("gets parameters if provided in the URL", () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     delete window.location;
@@ -574,7 +645,9 @@ describe("getURLParams", () => {
 
 describe("setURLParams", () => {
   it("sets URL parameters", () => {
-    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+      context: GlobalContextMock,
+    });
     const instance = wrapper.instance();
 
     const spy = jest.spyOn(window.history, "pushState");

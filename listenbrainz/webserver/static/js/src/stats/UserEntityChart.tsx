@@ -444,10 +444,9 @@ export default class UserEntityChart extends React.Component<
     const { newAlert } = this.props;
     const prevPage = currPage - 1;
     const nextPage = currPage + 1;
-    // We receive the items in the worng order so we need to reorder them
-    const listenableItems: BaseListenFormat[] = data
-      .map(userChartEntityToListen)
-      .reverse();
+    // We receive the items in the wrong order so we need to reorder them
+    const listenableItems: BaseListenFormat[] =
+      data?.map(userChartEntityToListen).reverse() ?? [];
     return (
       <div role="main">
         <div className="row">
@@ -590,7 +589,7 @@ export default class UserEntityChart extends React.Component<
                       <div
                         className="col-md-12"
                         style={{
-                          height: `${50 * data.length}px`,
+                          height: `${50 * data?.length}px`,
                         }}
                         ref={this.graphContainer}
                       >
