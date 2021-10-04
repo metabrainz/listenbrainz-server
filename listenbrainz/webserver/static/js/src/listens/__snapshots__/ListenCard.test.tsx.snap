@@ -29,24 +29,12 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
   updateRecordingToPin={[Function]}
 >
   <ForwardRef
-    className="listen-card row  
-		 "
+    className="listen-card row     "
     onDoubleClick={[Function]}
   >
     <div
-      className="listen-card row  
-		 "
+      className="card listen-card row     "
       onDoubleClick={[Function]}
-      style={
-        Object {
-          "background": "#FFFFFF",
-          "border": "1px solid #EEEEEE",
-          "borderRadius": "8px",
-          "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
-          "boxSizing": "border-box",
-          "height": "100%",
-        }
-      }
     >
       <div
         className="listen-details"
@@ -177,24 +165,12 @@ exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
   updateRecordingToPin={[Function]}
 >
   <ForwardRef
-    className="listen-card row  
-		 "
+    className="listen-card row     "
     onDoubleClick={[Function]}
   >
     <div
-      className="listen-card row  
-		 "
+      className="card listen-card row     "
       onDoubleClick={[Function]}
-      style={
-        Object {
-          "background": "#FFFFFF",
-          "border": "1px solid #EEEEEE",
-          "borderRadius": "8px",
-          "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
-          "boxSizing": "border-box",
-          "height": "100%",
-        }
-      }
     >
       <div
         className="listen-details"
@@ -324,24 +300,12 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
   updateRecordingToPin={[Function]}
 >
   <ForwardRef
-    className="listen-card row  
-		 "
+    className="listen-card row     "
     onDoubleClick={[Function]}
   >
     <div
-      className="listen-card row  
-		 "
+      className="card listen-card row     "
       onDoubleClick={[Function]}
-      style={
-        Object {
-          "background": "#FFFFFF",
-          "border": "1px solid #EEEEEE",
-          "borderRadius": "8px",
-          "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
-          "boxSizing": "border-box",
-          "height": "100%",
-        }
-      }
     >
       <div
         className="listen-details"
@@ -471,24 +435,12 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
   updateRecordingToPin={[Function]}
 >
   <ForwardRef
-    className="listen-card row  
-		 "
+    className="listen-card row     "
     onDoubleClick={[Function]}
   >
     <div
-      className="listen-card row  
-		 "
+      className="card listen-card row     "
       onDoubleClick={[Function]}
-      style={
-        Object {
-          "background": "#FFFFFF",
-          "border": "1px solid #EEEEEE",
-          "borderRadius": "8px",
-          "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
-          "boxSizing": "border-box",
-          "height": "100%",
-        }
-      }
     >
       <div
         className="listen-details"

@@ -258,11 +258,11 @@ export default class ListenCard extends React.Component<
     return (
       <Card
         onDoubleClick={isCurrentListen ? undefined : this.playListen}
-        className={`listen-card row
-		${isCurrentListen ? " current-listen " : ""}
-		${isDeleted ? " deleted " : ""}
-		${mini ? " mini " : " "}
-		${className || ""}`}
+        className={`listen-card row ${
+          isCurrentListen ? "current-listen" : ""
+        } ${isDeleted ? "deleted" : ""} ${mini ? " mini" : " "} ${
+          className || ""
+        }`}
       >
         {thumbnail && <div className="listen-thumbnail">{thumbnail}</div>}
         {listenDetails ? (
