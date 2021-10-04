@@ -14,6 +14,7 @@ export type BarProps = {
     message: string | JSX.Element
   ) => void;
   playListen: (listen: BaseListenFormat) => void;
+  isCurrentListen: (listen: BaseListenFormat) => boolean;
 };
 
 type Tick = {
@@ -32,7 +33,14 @@ type Tick = {
 };
 
 export default function Bar(props: BarProps) {
-  const { data, maxValue, width, newAlert, playListen } = props;
+  const {
+    data,
+    maxValue,
+    width,
+    newAlert,
+    playListen,
+    isCurrentListen,
+  } = props;
   const marginLeft = Math.min((width || window.innerWidth) / 2, 400);
 
   const leftAlignedTick = <Tick extends any>(tick: Tick) => {
@@ -92,7 +100,7 @@ export default function Bar(props: BarProps) {
             showTimestamp={false}
             showUsername={false}
             currentFeedback={0}
-            isCurrentListen={false}
+            isCurrentListen={isCurrentListen(listenFormat)}
             playListen={playListen}
             newAlert={newAlert}
           />

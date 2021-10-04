@@ -5,6 +5,7 @@ import * as Sentry from "@sentry/react";
 import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { isEqual, isNil } from "lodash";
 import APIServiceClass from "../APIService";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import BrainzPlayer from "../BrainzPlayer";
@@ -39,6 +40,7 @@ export type UserEntityChartState = {
   graphContainerWidth?: number;
   hasError: boolean;
   errorMessage: string;
+  currentListen: BaseListenFormat | null;
 };
 
 export default class UserEntityChart extends React.Component<
@@ -69,6 +71,7 @@ export default class UserEntityChart extends React.Component<
       loading: false,
       hasError: false,
       errorMessage: "",
+      currentListen: null,
     };
 
     this.graphContainer = React.createRef();
@@ -411,8 +414,15 @@ export default class UserEntityChart extends React.Component<
   };
 
   handleCurrentListenChange = (listen: BaseListenFormat | JSPFTrack): void => {
-    console.log("current listen changed:", listen);
-    // this.setState({ currentListen: listen as Listen });
+    this.setState({ currentListen: listen as BaseListenFormat });
+  };
+
+  isCurrentListen = (element: BaseListenFormat): boolean => {
+    const { currentListen } = this.state;
+    if (isNil(currentListen)) {
+      return false;
+    }
+    return isEqual(element, currentListen);
   };
 
   render() {
@@ -590,6 +600,7 @@ export default class UserEntityChart extends React.Component<
                           data={data}
                           maxValue={maxListens}
                           width={graphContainerWidth}
+                          isCurrentListen={this.isCurrentListen}
                         />
                       </div>
                     </div>
