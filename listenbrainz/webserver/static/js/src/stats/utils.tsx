@@ -27,18 +27,21 @@ export function userChartEntityToListen(
     entityType,
     entity: entityName,
     entityMBID,
-    artist: artistName,
+    artist,
     artistMBID: artistMBIDs,
-    release: releaseName,
+    release,
     releaseMBID,
   } = datum;
 
+  const trackName = entityType === "recording" ? entityName : "";
+  const artistName = entityType === "artist" ? entityName : artist;
+  const releaseName = entityType === "release" ? entityName : release;
   return {
     listened_at: -1,
     track_metadata: {
-      track_name: entityName,
+      track_name: trackName ?? "",
       artist_name: artistName ?? "",
-      release_name: releaseName,
+      release_name: releaseName ?? "",
       additional_info: {
         artist_mbids: artistMBIDs,
         recording_mbid: entityType === "recording" ? entityMBID : undefined,
