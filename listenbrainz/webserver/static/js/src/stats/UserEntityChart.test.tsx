@@ -474,12 +474,12 @@ describe("syncStateWithURL", () => {
     });
     const instance = wrapper.instance();
 
-    instance.getURLParams = jest.fn().mockImplementationOnce(() => ({
+    jest.spyOn(instance, "getURLParams").mockImplementationOnce(() => ({
       page: 1,
       range: "all_time",
       entity: "artist",
     }));
-    instance.getInitData = jest.fn().mockImplementationOnce(() =>
+    jest.spyOn(instance, "getInitData").mockImplementationOnce(() =>
       Promise.resolve({
         startDate: new Date(0),
         endDate: new Date(10),
@@ -488,12 +488,16 @@ describe("syncStateWithURL", () => {
         entityCount: 50,
       })
     );
-    instance.getData = jest
-      .fn()
-      .mockImplementationOnce(() => Promise.resolve(userArtistsResponse));
-    instance.processData = jest
-      .fn()
-      .mockImplementationOnce(() => userArtistsProcessDataOutput);
+    jest
+      .spyOn(instance, "getData")
+      .mockImplementationOnce(() =>
+        Promise.resolve(userArtistsResponse as UserArtistsResponse)
+      );
+    jest
+      .spyOn(instance, "processData")
+      .mockImplementationOnce(
+        () => userArtistsProcessDataOutput as UserEntityData
+      );
     await instance.syncStateWithURL();
 
     expect(instance.state).toMatchObject({
