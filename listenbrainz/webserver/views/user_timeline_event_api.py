@@ -239,6 +239,56 @@ def user_feed(user_name: str):
     }})
 
 
+@user_timeline_event_api_bp.route("/user/<user_name>/feed/events/delete", methods=['OPTIONS', 'POST'])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
+def delete_feed_events(user_name):
+    '''
+    Delete those events from user's feed that belong to them.
+    Supports deletion of recommendation and notification.
+    Along with the authorization token, post one of the following, according
+    to your need.
+    {
+        "event_type": "recording_recommendation",
+        "id": int
+    }
+    {
+        "event_type": "notification",
+        "id": int
+    }
+    :param user_name: The MusicBrainz ID of the user from whose timeline events are being deleted
+    :type user_name: ``str``
+    :statuscode 200: Successful deletion
+    :statuscode 400: Bad request, check ``response['error']`` for more details.
+    :statuscode 401: Unauthorized
+    :statuscode 404: User not found
+    :statuscode 500: API Internal Server Error
+    :resheader Content-Type: *application/json*
+    '''
+    user = validate_auth_header()
+    if user_name != user['musicbrainz_id']:
+        raise APIUnauthorized("You don't have permissions to delete from this user's timeline.")
+
+    try:
+        event = ujson.loads(request.get_data())
+
+        if event["event_type"] in [UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+                UserTimelineEventType.NOTIFICATION.value]:
+            try:
+                event_deleted = db_user_timeline_event.delete_user_timeline_event(event["id"], user["id"])
+            except Exception as e:
+                raise APIInternalServerError("Something went wrong. Please try again")
+            if not event_deleted:
+                raise APINotFound("Cannot find '%s' event with id '%s' for user '%s'" % (event["event_type"], event["id"],
+                    user["id"]))
+            return jsonify({"status": "ok"})
+
+        raise APIBadRequest("This event type is not supported for deletion via this method")
+
+    except (ValueError, KeyError) as e:
+        raise APIBadRequest(f"Invalid JSON: {str(e)}")
+
+
 def get_listen_events(
     db_conn: TimescaleListenStore,
     musicbrainz_ids: List[str],
@@ -324,6 +374,7 @@ def get_notification_events(user: dict, count: int) -> List[APITimelineEvent]:
     events = []
     for event in notification_events_db:
         events.append(APITimelineEvent(
+            id=event.id,
             event_type=UserTimelineEventType.NOTIFICATION,
             user_name=event.metadata.creator,
             created=event.created.timestamp(),
@@ -362,6 +413,7 @@ def get_recording_recommendation_events(users_for_events: List[dict], min_ts: in
             )
 
             events.append(APITimelineEvent(
+                id=event.id,
                 event_type=UserTimelineEventType.RECORDING_RECOMMENDATION,
                 user_name=listen.user_name,
                 created=event.created.timestamp(),

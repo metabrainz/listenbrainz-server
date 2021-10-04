@@ -13,7 +13,7 @@ from listenbrainz_spark.stats.user.tests import StatsTestCase
 class DailyActivityTestCase(StatsTestCase):
 
     def test_get_daily_activity(self):
-        received = daily_activity.get_daily_activity_all_time()
+        received = daily_activity.get_daily_activity('all_time')
 
         time_range_expected = itertools.product(calendar.day_name, range(0, 24))
         time_range_received = run_query("SELECT * FROM time_range").toLocalIterator()
@@ -25,46 +25,46 @@ class DailyActivityTestCase(StatsTestCase):
         self.assertListEqual(expected, list(received))
 
     @patch('listenbrainz_spark.stats.user.daily_activity.get_listens_from_new_dump')
-    @patch('listenbrainz_spark.stats.user.daily_activity.get_daily_activity', return_value='daily_activity_table')
+    @patch('listenbrainz_spark.stats.user.daily_activity.calculate_daily_activity', return_value='daily_activity_table')
     @patch('listenbrainz_spark.stats.user.daily_activity.create_messages')
     def test_get_daily_activity_week(self, mock_create_messages, _, mock_get_listens):
-        daily_activity.get_daily_activity_week()
+        daily_activity.get_daily_activity('week')
 
         from_date = datetime(2021, 8, 2)
-        to_date = datetime(2021, 8, 9, 12, 22, 43)
+        to_date = datetime(2021, 8, 9)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='daily_activity_table', stats_range='week',
                                                 from_date=from_date, to_date=to_date)
 
     @patch('listenbrainz_spark.stats.user.daily_activity.get_listens_from_new_dump')
-    @patch('listenbrainz_spark.stats.user.daily_activity.get_daily_activity', return_value='daily_activity_table')
+    @patch('listenbrainz_spark.stats.user.daily_activity.calculate_daily_activity', return_value='daily_activity_table')
     @patch('listenbrainz_spark.stats.user.daily_activity.create_messages')
     def test_get_daily_activity_month(self, mock_create_messages, _, mock_get_listens):
-        daily_activity.get_daily_activity_month()
+        daily_activity.get_daily_activity('month')
 
-        from_date = datetime(2021, 8, 1)
-        to_date = datetime(2021, 8, 9, 12, 22, 43)
+        from_date = datetime(2021, 7, 1)
+        to_date = datetime(2021, 8, 1)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='daily_activity_table', stats_range='month',
                                                 from_date=from_date, to_date=to_date)
 
     @patch('listenbrainz_spark.stats.user.daily_activity.get_listens_from_new_dump')
-    @patch('listenbrainz_spark.stats.user.daily_activity.get_daily_activity', return_value='daily_activity_table')
+    @patch('listenbrainz_spark.stats.user.daily_activity.calculate_daily_activity', return_value='daily_activity_table')
     @patch('listenbrainz_spark.stats.user.daily_activity.create_messages')
     def test_get_daily_activity_year(self, mock_create_messages, _, mock_get_listens):
-        daily_activity.get_daily_activity_year()
+        daily_activity.get_daily_activity('year')
 
-        from_date = datetime(2021, 1, 1)
-        to_date = datetime(2021, 8, 9, 12, 22, 43)
+        from_date = datetime(2020, 1, 1)
+        to_date = datetime(2021, 1, 1)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='daily_activity_table', stats_range='year',
                                                 from_date=from_date, to_date=to_date)
 
     @patch('listenbrainz_spark.stats.user.daily_activity.get_listens_from_new_dump')
-    @patch('listenbrainz_spark.stats.user.daily_activity.get_daily_activity', return_value='daily_activity_table')
+    @patch('listenbrainz_spark.stats.user.daily_activity.calculate_daily_activity', return_value='daily_activity_table')
     @patch('listenbrainz_spark.stats.user.daily_activity.create_messages')
     def test_get_daily_activity_all_time(self, mock_create_messages, _, mock_get_listens):
-        daily_activity.get_daily_activity_all_time()
+        daily_activity.get_daily_activity('all_time')
 
         from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
         to_date = datetime(2021, 8, 9, 12, 22, 43)

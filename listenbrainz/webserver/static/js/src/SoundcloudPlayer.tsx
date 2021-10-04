@@ -56,6 +56,7 @@ type SoundcloudPlayerState = {
 export default class SoundcloudPlayer
   extends React.Component<DataSourceProps, SoundcloudPlayerState>
   implements DataSourceType {
+  public name = "soundcloud";
   iFrameRef?: React.RefObject<HTMLIFrameElement>;
   soundcloudPlayer?: SoundCloudHTML5Widget;
   retries = 0;
@@ -166,6 +167,10 @@ export default class SoundcloudPlayer
     return false;
   };
 
+  datasourceRecordsListens = (): boolean => {
+    return false;
+  };
+
   playListen = (listen: Listen | JSPFTrack) => {
     const { show, onTrackNotFound } = this.props;
     if (!show) {
@@ -206,6 +211,7 @@ export default class SoundcloudPlayer
         : [];
       onTrackInfoChange(
         currentTrack.title,
+        currentTrack.permalink_url,
         currentTrack.user?.username,
         undefined,
         artwork
