@@ -114,8 +114,6 @@ export default class UserFeedPage extends React.Component<
     }
   }
 
-  private brainzPlayer = React.createRef<BrainzPlayer>();
-
   constructor(props: UserFeedPageProps) {
     super(props);
     this.state = {
@@ -569,7 +567,6 @@ export default class UserFeedPage extends React.Component<
                   direction="down"
                   listens={listens}
                   newAlert={newAlert}
-                  ref={this.brainzPlayer}
                 />
               </div>
             </div>

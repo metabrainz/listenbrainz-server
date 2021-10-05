@@ -64,7 +64,6 @@ export default class UserFeedback extends React.Component<
   };
 
   private APIService!: APIServiceClass;
-  private brainzPlayer = React.createRef<BrainzPlayer>();
   private listensTable = React.createRef<HTMLTableElement>();
 
   declare context: React.ContextType<typeof GlobalAppContext>;
@@ -518,7 +517,6 @@ export default class UserFeedback extends React.Component<
               direction={direction}
               listens={listensFromFeedback}
               newAlert={newAlert}
-              ref={this.brainzPlayer}
             />
           </div>
         </div>
