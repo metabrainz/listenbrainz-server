@@ -1,20 +1,9 @@
 import * as React from "react";
 import { ResponsiveBar, LabelFormatter } from "@nivo/bar";
 
-import { getEntityLink, userChartEntityToListen } from "./utils";
-import ListenCard from "../listens/ListenCard";
-
 export type BarProps = {
   data: UserEntityData;
   maxValue: number;
-  width?: number;
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
-  playListen: (listen: BaseListenFormat) => void;
-  isCurrentListen: (listen: BaseListenFormat) => boolean;
 };
 
 type Tick = {
@@ -33,78 +22,14 @@ type Tick = {
 };
 
 export default function Bar(props: BarProps) {
-  const {
-    data,
-    maxValue,
-    width,
-    newAlert,
-    playListen,
-    isCurrentListen,
-  } = props;
-  const marginLeft = Math.min((width || window.innerWidth) / 2, 400);
+  const { data, maxValue } = props;
 
-  const leftAlignedTick = <Tick extends any>(tick: Tick) => {
+  const renderTickValue = (tick: any): React.ReactNode => {
     const datum: UserEntityDatum = data[tick.tickIndex];
-    const {
-      entityType,
-      entity: entityName,
-      entityMBID,
-      artist: artistName,
-      artistMBID: artistMBIDs,
-      release: releaseName,
-      releaseMBID,
-      idx,
-    } = datum;
-
-    const listenFormat = userChartEntityToListen(datum);
-
-    let artistMBID;
-    if (artistMBIDs) {
-      [artistMBID] = artistMBIDs;
-    }
-    const thumbnail = <>{idx}.&nbsp;</>;
-
-    const listenDetails = (
-      <>
-        <div title={entityName} className="ellipsis">
-          {getEntityLink(entityType, entityName, entityMBID)}
-        </div>
-
-        <div
-          className="small text-muted ellipsis"
-          title={`${artistName || ""}, ${releaseName || ""}`}
-        >
-          {artistName && getEntityLink("artist", artistName, artistMBID)}
-          {releaseName && (
-            <span>
-              &nbsp;-&nbsp;
-              {getEntityLink("release", releaseName, releaseMBID)}
-            </span>
-          )}
-        </div>
-      </>
-    );
-
+    const { idx } = datum;
     return (
-      <g transform={`translate(${tick.x - marginLeft}, ${tick.y})`}>
-        <foreignObject
-          height="3.5em"
-          width={marginLeft}
-          y={datum.entityType === "artist" ? -10 : -20}
-        >
-          <ListenCard
-            thumbnail={thumbnail}
-            mini
-            listenDetails={listenDetails}
-            listen={listenFormat}
-            showTimestamp={false}
-            showUsername={false}
-            currentFeedback={0}
-            isCurrentListen={isCurrentListen(listenFormat)}
-            playListen={playListen}
-            newAlert={newAlert}
-          />
-        </foreignObject>
+      <g transform={`translate(${tick.x - 10}, ${tick.y + 7})`}>
+        <text textAnchor="end">{idx}.</text>
       </g>
     );
   };
@@ -126,20 +51,12 @@ export default function Bar(props: BarProps) {
   };
 
   const theme = {
-    axis: {
-      ticks: {
-        text: {
-          fontSize: "14px",
-        },
-      },
-    },
     labels: {
       text: {
         fontSize: "14px",
       },
     },
   };
-
   return (
     <ResponsiveBar
       data={data}
@@ -148,14 +65,19 @@ export default function Bar(props: BarProps) {
       colors="#EB743B"
       indexBy="id"
       enableGridY={false}
+      padding={0.1}
       labelFormat={labelFormatter}
       labelSkipWidth={0}
       tooltip={customTooltip}
       margin={{
-        left: marginLeft,
+        top: -12,
+        left: 35,
       }}
       axisLeft={{
-        renderTick: leftAlignedTick,
+        tickSize: 0,
+        tickValues: data.length,
+        tickPadding: 5,
+        renderTick: renderTickValue,
       }}
       theme={theme}
       keys={["count"]}

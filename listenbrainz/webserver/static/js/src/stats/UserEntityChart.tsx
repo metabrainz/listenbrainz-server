@@ -19,7 +19,8 @@ import Loader from "../components/Loader";
 import ErrorBoundary from "../ErrorBoundary";
 import Pill from "../components/Pill";
 import { getPageProps } from "../utils";
-import { userChartEntityToListen } from "./utils";
+import { getChartEntityDetails, userChartEntityToListen } from "./utils";
+import ListenCard from "../listens/ListenCard";
 
 export type UserEntityChartProps = {
   user: ListenBrainzUser;
@@ -37,7 +38,7 @@ export type UserEntityChartState = {
   startDate: Date;
   endDate: Date;
   loading: boolean;
-  graphContainerWidth?: number;
+  listenContainerHeight?: number;
   hasError: boolean;
   errorMessage: string;
   currentListen: BaseListenFormat | null;
@@ -52,7 +53,7 @@ export default class UserEntityChart extends React.Component<
 
   ROWS_PER_PAGE = 25; // Number of rows to be shown on each page
 
-  graphContainer: React.RefObject<HTMLDivElement>;
+  listenContainer: React.RefObject<HTMLDivElement>;
   private brainzPlayer = React.createRef<BrainzPlayer>();
 
   constructor(props: UserEntityChartProps) {
@@ -74,7 +75,7 @@ export default class UserEntityChart extends React.Component<
       currentListen: null,
     };
 
-    this.graphContainer = React.createRef();
+    this.listenContainer = React.createRef();
   }
 
   componentDidMount() {
@@ -306,15 +307,18 @@ export default class UserEntityChart extends React.Component<
         initData = await this.getInitData(range, entity);
       }
       const data = await this.getData(page, range, entity);
-      this.setState({
-        data: this.processData(data, page, entity),
-        currPage: page,
-        loading: false,
-        hasError: false,
-        range,
-        entity,
-        ...initData,
-      });
+      this.setState(
+        {
+          data: this.processData(data, page, entity),
+          currPage: page,
+          loading: false,
+          hasError: false,
+          range,
+          entity,
+          ...initData,
+        },
+        this.handleResize
+      );
     } catch (error) {
       if (error.response && error.response?.status === 204) {
         this.setState({
@@ -386,7 +390,7 @@ export default class UserEntityChart extends React.Component<
 
   handleResize = () => {
     this.setState({
-      graphContainerWidth: this.graphContainer.current?.offsetWidth,
+      listenContainerHeight: this.listenContainer.current?.offsetHeight,
     });
   };
 
@@ -437,14 +441,14 @@ export default class UserEntityChart extends React.Component<
       startDate,
       endDate,
       loading,
-      graphContainerWidth,
+      listenContainerHeight,
       hasError,
       errorMessage,
     } = this.state;
     const { newAlert } = this.props;
     const prevPage = currPage - 1;
     const nextPage = currPage + 1;
-    // We receive the items in the wrong order so we need to reorder them
+    // We receive the items in inverse order so we need to reorder them
     const listenableItems: BaseListenFormat[] =
       data?.map(userChartEntityToListen).reverse() ?? [];
     return (
@@ -586,21 +590,37 @@ export default class UserEntityChart extends React.Component<
                       </div>
                     </div>
                     <div className="row">
+                      <div className="col-xs-6" ref={this.listenContainer}>
+                        {data
+                          ?.slice()
+                          .reverse()
+                          .map((datum, index) => {
+                            const listen = listenableItems[index];
+                            const listenDetails = getChartEntityDetails(datum);
+                            return (
+                              <ListenCard
+                                key={`${datum.idx + 1}`}
+                                mini
+                                listenDetails={listenDetails}
+                                listen={listen}
+                                showTimestamp={false}
+                                showUsername={false}
+                                currentFeedback={0}
+                                isCurrentListen={this.isCurrentListen(listen)}
+                                playListen={this.playListen}
+                                newAlert={newAlert}
+                              />
+                            );
+                          })}
+                      </div>
                       <div
-                        className="col-md-12"
+                        className="col-xs-6"
                         style={{
-                          height: `${50 * data?.length}px`,
+                          height:
+                            listenContainerHeight ?? `${55 * data?.length}px`,
                         }}
-                        ref={this.graphContainer}
                       >
-                        <Bar
-                          newAlert={newAlert}
-                          playListen={this.playListen}
-                          data={data}
-                          maxValue={maxListens}
-                          width={graphContainerWidth}
-                          isCurrentListen={this.isCurrentListen}
-                        />
+                        <Bar data={data} maxValue={maxListens} />
                       </div>
                     </div>
                     {entity === "release" && (
