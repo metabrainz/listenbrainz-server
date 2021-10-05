@@ -8,6 +8,7 @@ import {
   throttle as _throttle,
   assign,
   debounce,
+  cloneDeep,
 } from "lodash";
 import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -562,7 +563,8 @@ export default class BrainzPlayer extends React.Component<
     const newListen: BaseListenFormat = {
       // convert Javascript millisecond time to unix epoch in seconds
       listened_at: Math.floor(Date.now() / 1000),
-      track_metadata: (currentListen as BaseListenFormat)?.track_metadata,
+      track_metadata:
+        cloneDeep((currentListen as BaseListenFormat)?.track_metadata) ?? {},
     };
 
     let musicService = dataSource.current?.name;

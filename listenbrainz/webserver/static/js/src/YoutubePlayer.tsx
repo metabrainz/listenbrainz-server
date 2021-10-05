@@ -178,7 +178,11 @@ export default class YoutubePlayer
       _get(listen, "track_metadata.track_name") || _get(listen, "title");
     const artistName =
       _get(listen, "track_metadata.artist_name") || _get(listen, "creator");
-    const releaseName = _get(listen, "track_metadata.release_name");
+    // Using the releaseName has paradoxically given worst search results,
+    // so we're only using it when track name isn't provided (for example for an album search)
+    const releaseName = trackName
+      ? ""
+      : _get(listen, "track_metadata.release_name");
 
     const {
       handleWarning,
@@ -196,7 +200,7 @@ export default class YoutubePlayer
       this.handleAccountError();
       return;
     }
-    if (!trackName) {
+    if (!trackName && !artistName && !releaseName) {
       handleWarning("Not enough info to search on Youtube");
       onTrackNotFound();
       return;

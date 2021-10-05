@@ -121,15 +121,18 @@ export default class SpotifyPlayer
       _get(listen, "track_metadata.track_name") || _get(listen, "title");
     const artistName =
       _get(listen, "track_metadata.artist_name") || _get(listen, "creator");
-    // Using the releaseName has paradoxically given worst search results, so we're going to ignore it for now
-    const releaseName = ""; // _get(listen, "track_metadata.release_name");
+    // Using the releaseName has paradoxically given worst search results,
+    // so we're only using it when track name isn't provided (for example for an album search)
+    const releaseName = trackName
+      ? ""
+      : _get(listen, "track_metadata.release_name");
     const {
       handleError,
       handleWarning,
       handleSuccess,
       onTrackNotFound,
     } = this.props;
-    if (!trackName) {
+    if (!trackName && !artistName && !releaseName) {
       handleWarning("Not enough info to search on Spotify");
       onTrackNotFound();
     }
