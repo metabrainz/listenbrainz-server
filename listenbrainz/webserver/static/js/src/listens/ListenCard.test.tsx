@@ -31,8 +31,6 @@ const props: ListenCardProps = {
   currentFeedback: 1,
   showTimestamp: true,
   showUsername: true,
-  isCurrentListen: false,
-  playListen: () => {},
   removeListenCallback: () => {},
   updateFeedbackCallback: () => {},
   newAlert: () => {},

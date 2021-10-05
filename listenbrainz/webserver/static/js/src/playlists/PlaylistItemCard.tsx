@@ -2,7 +2,7 @@
 import * as timeago from "time-ago";
 
 import * as React from "react";
-import { get as _get } from "lodash";
+import { get as _get, has, isEqual, isNil } from "lodash";
 import {
   faEllipsisV,
   faGripLines,
@@ -13,7 +13,12 @@ import {
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { getTrackExtension, millisecondsToStr } from "./utils";
+import {
+  getTrackExtension,
+  JSPFTrackToListen,
+  listenToJSPFTrack,
+  millisecondsToStr,
+} from "./utils";
 import Card from "../components/Card";
 import ListenControl from "../listens/ListenControl";
 
@@ -23,9 +28,7 @@ export type PlaylistItemCardProps = {
   track: JSPFTrack;
   currentFeedback: ListenFeedBack;
   canEdit: Boolean;
-  isBeingPlayed: boolean;
   currentUser?: ListenBrainzUser;
-  playTrack: (track: JSPFTrack) => void;
   removeTrackFromPlaylist: (track: JSPFTrack) => void;
   updateFeedback: (recordingMsid: string, score: ListenFeedBack) => void;
   newAlert: (
@@ -37,23 +40,78 @@ export type PlaylistItemCardProps = {
 
 type PlaylistItemCardState = {
   isDeleted: Boolean;
+  isCurrentTrack: Boolean;
 };
 
 export default class PlaylistItemCard extends React.Component<
   PlaylistItemCardProps,
   PlaylistItemCardState
 > {
-  playTrack: (track: JSPFTrack) => void;
-
   constructor(props: PlaylistItemCardProps) {
     super(props);
 
     this.state = {
       isDeleted: false,
+      isCurrentTrack: false,
     };
-
-    this.playTrack = props.playTrack.bind(this, props.track);
   }
+
+  componentDidMount() {
+    window.addEventListener("message", this.receiveBrainzPlayerMessage);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener("message", this.receiveBrainzPlayerMessage);
+  }
+
+  /** React to events sent by BrainzPlayer */
+  receiveBrainzPlayerMessage = (event: MessageEvent) => {
+    if (event.origin !== window.location.origin) {
+      // Reveived postMessage from different origin, ignoring it
+      return;
+    }
+    const { type, payload } = event.data;
+    switch (type) {
+      case "currentListenChange":
+        this.onCurrentListenChange(payload);
+        break;
+      default:
+      // do nothing
+    }
+  };
+
+  onCurrentListenChange = (newListen: BaseListenFormat | JSPFTrack) => {
+    if (has(newListen, "identifier")) {
+      // JSPF Track
+      this.setState({
+        isCurrentTrack: this.isCurrentTrack(newListen as JSPFTrack),
+      });
+      return;
+    }
+    const track = listenToJSPFTrack(newListen as BaseListenFormat);
+    this.setState({ isCurrentTrack: this.isCurrentTrack(track) });
+  };
+
+  isCurrentTrack = (currentTrack: JSPFTrack): boolean => {
+    const { track } = this.props;
+    if (isNil(currentTrack)) {
+      return false;
+    }
+    if (track.id === currentTrack.id) {
+      return true;
+    }
+    return false;
+  };
+
+  playTrack = () => {
+    const { track } = this.props;
+    const { isCurrentTrack } = this.state;
+    if (isCurrentTrack) {
+      return;
+    }
+    const listen = JSPFTrackToListen(track);
+    window.postMessage({ type: "playListen", payload: listen }, window.origin);
+  };
 
   removeTrack = () => {
     const { track, removeTrackFromPlaylist } = this.props;
@@ -73,14 +131,8 @@ export default class PlaylistItemCard extends React.Component<
   };
 
   render() {
-    const {
-      track,
-      canEdit,
-      isBeingPlayed,
-      currentFeedback,
-      updateFeedback,
-    } = this.props;
-    const { isDeleted } = this.state;
+    const { track, canEdit, currentFeedback, updateFeedback } = this.props;
+    const { isDeleted, isCurrentTrack } = this.state;
     const customFields = getTrackExtension(track);
     const trackDuration = track.duration
       ? millisecondsToStr(track.duration)
@@ -90,7 +142,7 @@ export default class PlaylistItemCard extends React.Component<
       <Card
         onDoubleClick={this.playTrack}
         className={`playlist-item-card row ${
-          isBeingPlayed ? " current-track" : ""
+          isCurrentTrack ? " current-track" : ""
         } ${isDeleted ? " deleted" : ""}`}
         data-recording-mbid={track.id}
       >

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { get as _get } from "lodash";
+import { get as _get, has, isEqual, isNil } from "lodash";
 import MediaQuery from "react-responsive";
 import { faEllipsisV, faThumbtack } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -15,9 +15,8 @@ export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 export type PinnedRecordingCardProps = {
   userName: string;
   pinnedRecording: PinnedRecording;
-  className: string;
+  className?: string;
   isCurrentUser: Boolean;
-  playListen: (listen: Listen) => void;
   removePinFromPinsList: (pin: PinnedRecording) => void;
   newAlert: (
     alertType: AlertType,
@@ -27,6 +26,7 @@ export type PinnedRecordingCardProps = {
 };
 
 type PinnedRecordingCardState = {
+  isCurrentListen: Boolean;
   currentlyPinned?: Boolean;
   isDeleted: Boolean;
 };
@@ -37,35 +37,76 @@ export default class PinnedRecordingCard extends React.Component<
 > {
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
-  playListen: (listen: Listen) => void;
 
   constructor(props: PinnedRecordingCardProps) {
     super(props);
     this.state = {
       currentlyPinned: this.determineIfCurrentlyPinned(),
       isDeleted: false,
+      isCurrentListen: false,
     };
+  }
 
-    const { pinnedRecording } = this.props;
-    this.playListen = props.playListen.bind(
-      this,
-      getListenablePin(pinnedRecording)
-    );
+  componentDidMount() {
+    window.addEventListener("message", this.receiveBrainzPlayerMessage);
   }
 
   componentDidUpdate(prevProps: PinnedRecordingCardProps) {
-    const { pinnedRecording, playListen } = this.props;
+    const { pinnedRecording } = this.props;
     if (pinnedRecording !== prevProps.pinnedRecording) {
       this.setState({
         currentlyPinned: this.determineIfCurrentlyPinned(),
         isDeleted: false,
       });
-      this.playListen = playListen.bind(
-        this,
-        getListenablePin(pinnedRecording)
-      );
     }
   }
+
+  componentWillUnmount() {
+    window.removeEventListener("message", this.receiveBrainzPlayerMessage);
+  }
+
+  playListen = () => {
+    const { pinnedRecording } = this.props;
+    const { isCurrentListen } = this.state;
+    if (isCurrentListen) {
+      return;
+    }
+    const listen = getListenablePin(pinnedRecording);
+    window.postMessage({ type: "playListen", payload: listen }, window.origin);
+  };
+
+  /** React to events sent by BrainzPlayer */
+  receiveBrainzPlayerMessage = (event: MessageEvent) => {
+    if (event.origin !== window.location.origin) {
+      // Reveived postMessage from different origin, ignoring it
+      return;
+    }
+    const { type, payload } = event.data;
+    switch (type) {
+      case "currentListenChange":
+        this.onCurrentListenChange(payload);
+        break;
+      default:
+      // do nothing
+    }
+  };
+
+  onCurrentListenChange = (newListen: BaseListenFormat) => {
+    this.setState({ isCurrentListen: this.isCurrentListen(newListen) });
+  };
+
+  isCurrentListen = (element: BaseListenFormat | JSPFTrack): boolean => {
+    const { pinnedRecording } = this.props;
+    const listen = getListenablePin(pinnedRecording);
+    if (isNil(listen)) {
+      return false;
+    }
+    if (has(element, "identifier")) {
+      // JSPF Track format
+      return (element as JSPFTrack).id === (listen as JSPFTrack).id;
+    }
+    return isEqual(element, listen);
+  };
 
   determineIfCurrentlyPinned = (): Boolean => {
     const { pinnedRecording } = this.props;
@@ -188,14 +229,16 @@ export default class PinnedRecordingCard extends React.Component<
 
   render() {
     const { pinnedRecording, isCurrentUser, className } = this.props;
-    const { currentlyPinned, isDeleted } = this.state;
+    const { currentlyPinned, isDeleted, isCurrentListen } = this.state;
     const { artist_name } = pinnedRecording.track_metadata;
 
     return (
       <Card
-        className={`pinned-recording-card row ${className} ${
+        className={`pinned-recording-card row ${className ?? ""} ${
           currentlyPinned ? "currently-pinned " : ""
-        } ${isDeleted ? "deleted " : ""}`}
+        } ${isDeleted ? "deleted " : ""} ${
+          isCurrentListen ? "current-listen " : ""
+        }`}
         onDoubleClick={this.playListen}
       >
         <div className={`${isCurrentUser ? " col-xs-9" : " col-xs-12"}`}>

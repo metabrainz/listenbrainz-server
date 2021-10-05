@@ -15,7 +15,7 @@ import {
   faGrinStars as faGrinStarsRegular,
 } from "@fortawesome/free-regular-svg-icons";
 
-import { get as _get } from "lodash";
+import { get as _get, isEqual, isNil } from "lodash";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { IconDefinition } from "@fortawesome/fontawesome-common-types"; // eslint-disable-line import/no-unresolved
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -27,7 +27,6 @@ import GlobalAppContext from "../GlobalAppContext";
 
 export type RecommendationCardProps = {
   recommendation: Recommendation;
-  playRecommendation: (recommendation: Recommendation) => void;
   currentFeedback: RecommendationFeedBack | null;
   updateFeedback: (
     recordingMbid: string,
@@ -42,22 +41,69 @@ export type RecommendationCardProps = {
   ) => void;
 };
 
+type RecommendationCardState = {
+  isCurrentListen: Boolean;
+};
+
 export default class RecommendationCard extends React.Component<
-  RecommendationCardProps
+  RecommendationCardProps,
+  RecommendationCardState
 > {
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
-  playRecommendation: (recommendation: Recommendation) => void;
-
   constructor(props: RecommendationCardProps) {
     super(props);
-
-    this.playRecommendation = props.playRecommendation.bind(
-      this,
-      props.recommendation
-    );
+    this.state = { isCurrentListen: false };
   }
+
+  componentDidMount() {
+    window.addEventListener("message", this.receiveBrainzPlayerMessage);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener("message", this.receiveBrainzPlayerMessage);
+  }
+
+  /** React to events sent by BrainzPlayer */
+  receiveBrainzPlayerMessage = (event: MessageEvent) => {
+    if (event.origin !== window.location.origin) {
+      // Reveived postMessage from different origin, ignoring it
+      return;
+    }
+    const { type, payload } = event.data;
+    switch (type) {
+      case "currentListenChange":
+        this.onCurrentListenChange(payload);
+        break;
+      default:
+      // do nothing
+    }
+  };
+
+  onCurrentListenChange = (newListen: BaseListenFormat) => {
+    this.setState({ isCurrentListen: this.isCurrentListen(newListen) });
+  };
+
+  isCurrentListen = (element: BaseListenFormat): boolean => {
+    const { recommendation } = this.props;
+    if (isNil(recommendation)) {
+      return false;
+    }
+    return isEqual(element, recommendation);
+  };
+
+  playRecommendation = () => {
+    const { recommendation } = this.props;
+    const { isCurrentListen } = this.state;
+    if (isCurrentListen) {
+      return;
+    }
+    window.postMessage(
+      { type: "playListen", payload: recommendation },
+      window.origin
+    );
+  };
 
   submitFeedback = async (rating: RecommendationFeedBack) => {
     const { APIService, currentUser } = this.context;
