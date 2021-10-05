@@ -215,13 +215,13 @@
 		justify-content: center;
 	}
 	@media (min-width: @listen-small-break) {
-		&:not(.mini)> *{
+		&:not(.compact)> *{
 			padding: 0 1em;
 		}
 	}
 	
-	/** Special styles for mini size cards (i.e. charts etc.) **/
-	&.mini {
+	/** Special styles for compact size cards (i.e. charts etc.) **/
+	&.compact {
 		padding: 10px;
 		margin: 0;
     	margin-bottom: 3px;
@@ -235,7 +235,7 @@
 			flex-grow: 0;
 		}
 	}
-	&:not(.mini) .listen-controls{
+	&:not(.compact) .listen-controls{
 		max-width: 120px;
 		min-width: 120px;
 	}

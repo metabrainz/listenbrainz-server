@@ -45,7 +45,7 @@ export type ListenCardProps = {
   thumbnail?: JSX.Element;
   // The default details (recording name, artist name) can be superseeded
   listenDetails?: JSX.Element;
-  mini?: boolean;
+  compact?: boolean;
 };
 
 type ListenCardState = {
@@ -203,7 +203,7 @@ export default class ListenCard extends React.Component<
       updateRecordingToPin,
       thumbnail,
       listenDetails,
-      mini,
+      compact,
     } = this.props;
     const { currentUser } = this.context;
     const { feedback, isDeleted } = this.state;
@@ -260,7 +260,7 @@ export default class ListenCard extends React.Component<
         onDoubleClick={isCurrentListen ? undefined : this.playListen}
         className={`listen-card row ${
           isCurrentListen ? "current-listen" : ""
-        } ${isDeleted ? "deleted" : ""} ${mini ? " mini" : " "} ${
+        } ${isDeleted ? "deleted" : ""} ${compact ? " compact" : " "} ${
           className || ""
         }`}
       >
@@ -299,7 +299,7 @@ export default class ListenCard extends React.Component<
           </div>
         )}
         <div className="listen-controls">
-          {!currentUser?.auth_token || mini ? null : (
+          {!currentUser?.auth_token || compact ? null : (
             <>
               <ListenControl
                 icon={faHeart}

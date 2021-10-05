@@ -220,6 +220,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 className="col-xs-6"
               >
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="2"
@@ -254,18 +255,17 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       />
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -346,6 +346,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="3"
@@ -380,18 +381,17 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       />
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -472,6 +472,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="4"
@@ -506,18 +507,17 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       />
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -598,6 +598,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="5"
@@ -632,18 +633,17 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       />
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -724,6 +724,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="6"
@@ -758,18 +759,17 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       />
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -850,6 +850,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="7"
@@ -884,18 +885,17 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       />
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -976,6 +976,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="8"
@@ -1010,18 +1011,17 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       />
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -1102,6 +1102,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="9"
@@ -1136,18 +1137,17 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       />
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -1228,6 +1228,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="10"
@@ -1262,18 +1263,17 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       />
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -1354,6 +1354,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="11"
@@ -1388,18 +1389,17 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       />
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -1480,6 +1480,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="12"
@@ -1514,18 +1515,17 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       />
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -1606,6 +1606,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="13"
@@ -1640,18 +1641,17 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       />
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -1732,6 +1732,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="14"
@@ -1766,18 +1767,17 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       />
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -1858,6 +1858,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="15"
@@ -1892,18 +1893,17 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       />
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -1984,6 +1984,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="16"
@@ -2018,18 +2019,17 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       />
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -2110,6 +2110,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="17"
@@ -2144,18 +2145,17 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       />
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -2236,6 +2236,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="18"
@@ -2270,18 +2271,17 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       />
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -2362,6 +2362,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="19"
@@ -2396,18 +2397,17 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       />
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -2488,6 +2488,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="20"
@@ -2522,18 +2523,17 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       />
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -2614,6 +2614,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="21"
@@ -2648,18 +2649,17 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       />
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -2740,6 +2740,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="22"
@@ -2774,18 +2775,17 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       />
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -2866,6 +2866,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="23"
@@ -2900,18 +2901,17 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       />
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -2992,6 +2992,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="24"
@@ -3026,18 +3027,17 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       />
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -3118,6 +3118,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="25"
@@ -3152,18 +3153,17 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       />
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -3244,6 +3244,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="26"
@@ -3278,18 +3279,17 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       />
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -4987,6 +4987,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 className="col-xs-6"
               >
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="2"
@@ -5036,18 +5037,17 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -5141,6 +5141,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="3"
@@ -5190,18 +5191,17 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -5295,6 +5295,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="4"
@@ -5339,18 +5340,17 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -5437,6 +5437,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="5"
@@ -5486,18 +5487,17 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -5591,6 +5591,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="6"
@@ -5640,18 +5641,17 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -5745,6 +5745,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="7"
@@ -5794,18 +5795,17 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -5899,6 +5899,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="8"
@@ -5948,18 +5949,17 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -6053,6 +6053,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="9"
@@ -6102,18 +6103,17 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -6207,6 +6207,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="10"
@@ -6256,18 +6257,17 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -6361,6 +6361,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="11"
@@ -6405,18 +6406,17 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -6503,6 +6503,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="12"
@@ -6552,18 +6553,17 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -6657,6 +6657,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="13"
@@ -6701,18 +6702,17 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -6799,6 +6799,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="14"
@@ -6848,18 +6849,17 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -6953,6 +6953,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="15"
@@ -6997,18 +6998,17 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -7095,6 +7095,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="16"
@@ -7144,18 +7145,17 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -7249,6 +7249,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="17"
@@ -7293,18 +7294,17 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -7391,6 +7391,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="18"
@@ -7440,18 +7441,17 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -7545,6 +7545,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="19"
@@ -7594,18 +7595,17 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -7699,6 +7699,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="20"
@@ -7748,18 +7749,17 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -7853,6 +7853,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="21"
@@ -7902,18 +7903,17 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -8007,6 +8007,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="22"
@@ -8056,18 +8057,17 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -8161,6 +8161,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="23"
@@ -8205,18 +8206,17 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -8303,6 +8303,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="24"
@@ -8352,18 +8353,17 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -8457,6 +8457,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="25"
@@ -8506,18 +8507,17 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -8611,6 +8611,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="26"
@@ -8655,18 +8656,17 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -10620,6 +10620,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 className="col-xs-6"
               >
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="2"
@@ -10658,18 +10659,17 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -10752,6 +10752,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="3"
@@ -10790,18 +10791,17 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -10884,6 +10884,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="4"
@@ -10922,18 +10923,17 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -11016,6 +11016,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="5"
@@ -11054,18 +11055,17 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -11148,6 +11148,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="6"
@@ -11186,18 +11187,17 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -11280,6 +11280,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="7"
@@ -11318,18 +11319,17 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -11412,6 +11412,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="8"
@@ -11450,18 +11451,17 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -11544,6 +11544,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="9"
@@ -11582,18 +11583,17 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -11676,6 +11676,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="10"
@@ -11714,18 +11715,17 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -11808,6 +11808,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="11"
@@ -11846,18 +11847,17 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -11940,6 +11940,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="12"
@@ -11978,18 +11979,17 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -12072,6 +12072,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="13"
@@ -12110,18 +12111,17 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -12204,6 +12204,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="14"
@@ -12242,18 +12243,17 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -12336,6 +12336,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="15"
@@ -12374,18 +12375,17 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -12468,6 +12468,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="16"
@@ -12506,18 +12507,17 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -12600,6 +12600,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="17"
@@ -12638,18 +12639,17 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -12732,6 +12732,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="18"
@@ -12770,18 +12771,17 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -12864,6 +12864,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="19"
@@ -12902,18 +12903,17 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -12996,6 +12996,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="20"
@@ -13034,18 +13035,17 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -13128,6 +13128,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="21"
@@ -13166,18 +13167,17 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -13260,6 +13260,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="22"
@@ -13298,18 +13299,17 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -13392,6 +13392,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="23"
@@ -13430,18 +13431,17 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -13524,6 +13524,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="24"
@@ -13562,18 +13563,17 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -13656,6 +13656,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="25"
@@ -13694,18 +13695,17 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -13788,6 +13788,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   </ForwardRef>
                 </ListenCard>
                 <ListenCard
+                  compact={true}
                   currentFeedback={0}
                   isCurrentListen={false}
                   key="26"
@@ -13826,18 +13827,17 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       </div>
                     </React.Fragment>
                   }
-                  mini={true}
                   newAlert={[MockFunction]}
                   playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    mini "
+                    className="listen-card row    compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    mini "
+                      className="card listen-card row    compact "
                       onDoubleClick={[Function]}
                     >
                       <div
