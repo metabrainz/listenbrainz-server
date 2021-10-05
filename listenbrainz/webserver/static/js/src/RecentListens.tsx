@@ -42,7 +42,6 @@ export type RecentListensProps = {
 } & WithAlertNotificationsInjectedProps;
 
 export interface RecentListensState {
-  currentListen?: Listen;
   direction: BrainzPlayDirection;
   lastFetchedDirection?: "older" | "newer";
   listens: Array<Listen>;
@@ -186,10 +185,6 @@ export default class RecentListens extends React.Component<
     });
   };
 
-  playListen = (listen: Listen): void => {
-    window.postMessage({ type: "playListen", payload: listen }, window.origin);
-  };
-
   receiveNewListen = (newListen: string): void => {
     let json;
     try {
@@ -231,15 +226,6 @@ export default class RecentListens extends React.Component<
         listens: [playingNow].concat(prevState.listens),
       };
     });
-  };
-
-  handleCurrentListenChange = (listen: BaseListenFormat | JSPFTrack): void => {
-    this.setState({ currentListen: listen as Listen });
-  };
-
-  isCurrentListen = (listen: Listen): boolean => {
-    const { currentListen } = this.state;
-    return Boolean(currentListen && _.isEqual(listen, currentListen));
   };
 
   handleClickOlder = async (event?: React.MouseEvent) => {
@@ -527,7 +513,6 @@ export default class RecentListens extends React.Component<
 
   render() {
     const {
-      currentListen,
       direction,
       listens,
       listenCount,
@@ -568,13 +553,7 @@ export default class RecentListens extends React.Component<
                 <PinnedRecordingCard
                   userName={user.name}
                   pinnedRecording={userPinnedRecording}
-                  className={
-                    this.isCurrentListen(getListenablePin(userPinnedRecording))
-                      ? " current-listen"
-                      : ""
-                  }
                   isCurrentUser={currentUser?.name === user?.name}
-                  playListen={this.playListen}
                   removePinFromPinsList={() => {}}
                   newAlert={newAlert}
                 />

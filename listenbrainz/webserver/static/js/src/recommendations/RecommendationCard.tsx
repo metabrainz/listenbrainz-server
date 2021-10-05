@@ -173,6 +173,7 @@ export default class RecommendationCard extends React.Component<
       className,
       isCurrentUser,
     } = this.props;
+    const { isCurrentListen } = this.state;
     const { currentUser } = this.context;
     let icon: IconDefinition;
     let text: string;
@@ -202,7 +203,9 @@ export default class RecommendationCard extends React.Component<
     return (
       <Card
         onDoubleClick={this.playRecommendation}
-        className={`recommendation-card row ${className}`}
+        className={`recommendation-card row ${
+          isCurrentListen ? "current-recommendation" : ""
+        } ${className}`}
       >
         <div className="track-details">
           <div title={recommendation.track_metadata?.track_name}>

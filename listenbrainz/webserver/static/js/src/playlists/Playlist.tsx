@@ -43,8 +43,6 @@ import {
   getPlaylistExtension,
   getPlaylistId,
   getRecordingMBIDFromJSPFTrack,
-  JSPFTrackToListen,
-  listenToJSPFTrack,
 } from "./utils";
 import { getPageProps } from "../utils";
 
@@ -54,7 +52,6 @@ export type PlaylistPageProps = {
 } & WithAlertNotificationsInjectedProps;
 
 export interface PlaylistPageState {
-  currentTrack?: JSPFTrack;
   playlist: JSPFPlaylist;
   recordingFeedbackMap: RecordingFeedbackMap;
   loading: boolean;
@@ -84,7 +81,6 @@ export default class PlaylistPage extends React.Component<
   private SpotifyAPIService?: SpotifyAPIService;
   private spotifyPlaylist?: SpotifyPlaylistObject;
   private searchForTrackDebounced: any;
-  private brainzPlayer = React.createRef<BrainzPlayer>();
 
   private socket!: Socket;
 
@@ -169,13 +165,6 @@ export default class PlaylistPage extends React.Component<
       jspfTrack.id = getRecordingMBIDFromJSPFTrack(jspfTrack);
     });
     this.setState({ playlist: newPlaylist });
-  };
-
-  playTrack = (track: JSPFTrack): void => {
-    const listen = JSPFTrackToListen(track);
-    if (this.brainzPlayer.current) {
-      this.brainzPlayer.current.playListen(listen);
-    }
   };
 
   addTrack = async (
@@ -317,27 +306,6 @@ export default class PlaylistPage extends React.Component<
     } catch (error) {
       this.handleError(error);
     }
-  };
-
-  handleCurrentTrackChange = (track: JSPFTrack | Listen): void => {
-    if (has(track, "identifier")) {
-      // JSPF Track
-      this.setState({ currentTrack: track as JSPFTrack });
-      return;
-    }
-    const JSPFTrack = listenToJSPFTrack(track as Listen);
-    this.setState({ currentTrack: JSPFTrack });
-  };
-
-  isCurrentTrack = (track: JSPFTrack): boolean => {
-    const { currentTrack } = this.state;
-    if (isNil(currentTrack)) {
-      return false;
-    }
-    if (track.id === currentTrack.id) {
-      return true;
-    }
-    return false;
   };
 
   getFeedback = async (mbids?: string[]): Promise<FeedbackResponse[]> => {
@@ -859,11 +827,9 @@ export default class PlaylistPage extends React.Component<
                         key={`${track.id}-${index.toString()}`}
                         canEdit={hasRightToEdit}
                         track={track}
-                        isBeingPlayed={this.isCurrentTrack(track)}
                         currentFeedback={this.getFeedbackForRecordingMbid(
                           track.id
                         )}
-                        playTrack={this.playTrack}
                         removeTrackFromPlaylist={this.deletePlaylistItem}
                         updateFeedback={this.updateFeedback}
                         newAlert={newAlert}
@@ -923,7 +889,6 @@ export default class PlaylistPage extends React.Component<
               direction="down"
               listens={tracks}
               newAlert={newAlert}
-              ref={this.brainzPlayer}
             />
           </div>
         </div>

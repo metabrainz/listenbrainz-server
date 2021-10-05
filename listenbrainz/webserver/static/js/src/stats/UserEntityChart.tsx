@@ -53,7 +53,6 @@ export default class UserEntityChart extends React.Component<
   ROWS_PER_PAGE = 25; // Number of rows to be shown on each page
 
   listenContainer: React.RefObject<HTMLDivElement>;
-  private brainzPlayer = React.createRef<BrainzPlayer>();
 
   constructor(props: UserEntityChartProps) {
     super(props);
@@ -672,7 +671,6 @@ export default class UserEntityChart extends React.Component<
               direction="down"
               listens={listenableItems}
               newAlert={newAlert}
-              ref={this.brainzPlayer}
             />
           </div>
         </div>
