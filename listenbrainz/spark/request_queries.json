@@ -24,6 +24,11 @@
     "description": "Calculates number of listens in periods depending on the stats_range value. see the documentation in spark code for details.",
     "params": ["stats_range"]
   },
+  "stats.sitewide.daily_activity": {
+    "name": "stats.sitewide.daily_activity",
+    "description": "Calculate number of listens for an user per hour on each day of the requested stats_range.",
+    "params": ["stats_range"]
+  },
   "import.dump.full_newest": {
     "name": "import.dump.full_newest",
     "description": "Import the newest available full dump into the spark cluster",

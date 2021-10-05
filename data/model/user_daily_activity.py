@@ -18,7 +18,7 @@ class UserDailyActivityRecord(pydantic.BaseModel):
 
 class UserDailyActivityStatMessage(pydantic.BaseModel):
     """ Format of messages sent to the ListenBrainz Server """
-    musicbrainz_id: str
+    musicbrainz_id: Optional[str]
     type: str
     stats_range: str  # The range for which the stats are calculated, i.e week, month, year or all_time
     from_ts: int

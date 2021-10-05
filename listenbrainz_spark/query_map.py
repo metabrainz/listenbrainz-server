@@ -6,6 +6,7 @@ import listenbrainz_spark.user_similarity.user_similarity
 import listenbrainz_spark.request_consumer.jobs.import_dump
 import listenbrainz_spark.stats.sitewide.entity
 import listenbrainz_spark.stats.sitewide.listening_activity
+import listenbrainz_spark.stats.sitewide.daily_activity
 import listenbrainz_spark.stats.user.daily_activity
 import listenbrainz_spark.stats.user.entity
 import listenbrainz_spark.stats.user.listening_activity
@@ -16,6 +17,7 @@ functions = {
     'stats.user.daily_activity': listenbrainz_spark.stats.user.daily_activity.get_daily_activity,
     'stats.sitewide.entity': listenbrainz_spark.stats.sitewide.entity.get_entity_stats,
     'stats.sitewide.listening_activity': listenbrainz_spark.stats.sitewide.listening_activity.get_listening_activity,
+    'stats.sitewide.daily_activity': listenbrainz_spark.stats.sitewide.daily_activity.get_daily_activity,
     'import.dump.full_newest': listenbrainz_spark.request_consumer.jobs.import_dump.import_newest_full_dump_handler,
     'import.dump.full_id': listenbrainz_spark.request_consumer.jobs.import_dump.import_full_dump_by_id_handler,
     'import.dump.incremental_newest': listenbrainz_spark.request_consumer.jobs.import_dump.import_newest_incremental_dump_handler,

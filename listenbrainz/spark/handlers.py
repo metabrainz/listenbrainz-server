@@ -124,6 +124,11 @@ def handle_sitewide_listening_activity(data):
     _handle_user_activity_stats('listening_activity', StatRange[UserListeningActivityRecord], data)
 
 
+def handle_sitewide_daily_activity(data):
+    data["musicbrainz_id"] = "listenbrainz-prod"
+    _handle_user_activity_stats('daily_activity', StatRange[UserDailyActivityRecord], data)
+
+
 def handle_dump_imported(data):
     """ Process the response that the cluster sends after importing a new dump
 

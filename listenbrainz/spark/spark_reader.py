@@ -33,6 +33,7 @@ response_handler_map = {
     'user_daily_activity': handle_user_daily_activity,
     'sitewide_entity': handle_sitewide_entity,
     'sitewide_listening_activity': handle_sitewide_listening_activity,
+    'sitewide_daily_activity': handle_sitewide_daily_activity,
     'import_full_dump': handle_dump_imported,
     'import_incremental_dump': handle_dump_imported,
     'cf_recommendations_recording_dataframes': handle_dataframes,
