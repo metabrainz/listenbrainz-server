@@ -55,8 +55,8 @@ create table listen_mbid_mapping (
         release_mbid        UUID,
         release_name        TEXT,
         artist_mbids        UUID[],
-        artist_credit_name  TEXT,
-        recording_name      TEXT,
+        artist_credit_name  TEXT NOT NULL,
+        recording_name      TEXT NOT NULL,
         match_type          mbid_mapping_match_type_enum NOT NULL,
         last_updated        TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
