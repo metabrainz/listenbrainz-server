@@ -725,9 +725,9 @@ class TimescaleListenStore(ListenStore):
                           track_name AS l_recording_name,
                           recording_mbid::TEXT
                      FROM listen l
-                     JOIN tmp_listen_join_listen_mbid_mapping lj
+                     JOIN listen_join_listen_mbid_mapping lj
                        ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = lj.recording_msid
-                     JOIN tmp_listen_mbid_mapping m
+                     JOIN listen_mbid_mapping m
                        ON lj.listen_mbid_mapping = m.id
                     WHERE listened_at > %s
                       AND listened_at <= %s
