@@ -5,9 +5,9 @@ import {
   get as _get,
   isNil as _isNil,
   isString as _isString,
+  isFunction as _isFunction,
 } from "lodash";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
-import { getTrackExtension } from "./playlists/utils";
 import { searchForYoutubeTrack } from "./utils";
 
 type YoutubePlayerState = {
@@ -15,7 +15,7 @@ type YoutubePlayerState = {
 };
 
 type YoutubePlayerProps = DataSourceProps & {
-  youtubeUser: YoutubeUser;
+  youtubeUser?: YoutubeUser;
   refreshYoutubeToken: () => Promise<string>;
 };
 
@@ -28,6 +28,7 @@ type ExtendedYoutubePlayer = {
 export default class YoutubePlayer
   extends React.Component<YoutubePlayerProps, YoutubePlayerState>
   implements DataSourceType {
+  public name = "youtube";
   youtubePlayer?: ExtendedYoutubePlayer;
   checkVideoLoadedTimerId?: NodeJS.Timeout;
 
@@ -40,8 +41,66 @@ export default class YoutubePlayer
     }
   }
 
+  /**
+   * Youtube thumbnail URLs can be composed with <video_id>/<resolution><image>.jpg
+   * where resolution is one of [hq , md, sd] and image is either 'default' (= 0)
+   * or a number between 0 -> 3 (there are 4 thumbnails)
+   */
+  static getThumbnailsFromVideoid(videoId?: string) {
+    let images: MediaImage[] = [];
+    if (videoId) {
+      images = [
+        {
+          src: `http://img.youtube.com/vi/${videoId}/sddefault.jpg`,
+          sizes: "640x480",
+          type: "image/jpg",
+        },
+        {
+          src: `http://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+          sizes: "480x360",
+          type: "image/jpg",
+        },
+        {
+          src: `http://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
+          sizes: "320x180",
+          type: "image/jpg",
+        },
+      ];
+    }
+    return images;
+  }
+
   onReady = (event: YT.PlayerEvent): void => {
     this.youtubePlayer = event.target;
+  };
+
+  updateVideoInfo = (): void => {
+    let title;
+    let images: MediaImage[] = [];
+    const { onTrackInfoChange, onDurationChange } = this.props;
+    const videoData =
+      this.youtubePlayer?.getVideoData && this.youtubePlayer.getVideoData();
+    let videoId: string = "";
+    if (videoData) {
+      title = videoData.title;
+      videoId = videoData.video_id as string;
+      images = YoutubePlayer.getThumbnailsFromVideoid(videoId);
+    } else {
+      // Fallback to track name from the listen we are playing
+      const { currentListen } = this.state;
+      title = currentListen?.track_metadata.track_name ?? "";
+    }
+    onTrackInfoChange(
+      title,
+      `https://www.youtube.com/watch?v=${videoId}`,
+      undefined,
+      undefined,
+      images
+    );
+    const duration = this.youtubePlayer?.getDuration();
+    if (duration) {
+      onDurationChange(duration * 1000);
+    }
   };
 
   handlePlayerStateChanged = (event: YT.OnStateChangeEvent) => {
@@ -50,6 +109,7 @@ export default class YoutubePlayer
       onPlayerPausedChange,
       onDurationChange,
       onProgressChange,
+      onTrackInfoChange,
       show,
     } = this.props;
     if (!show) {
@@ -60,16 +120,27 @@ export default class YoutubePlayer
       onTrackEnd();
       return;
     }
+    // New track being played
+    if (state === YouTube.PlayerState.UNSTARTED) {
+      const title = _get(player, "playerInfo.videoData.title", "");
+      const videoId = _get(player, "playerInfo.videoData.video_id", "");
+      // The player info is sometimes missing a title initially.
+      // We fallback to getting it with getVideoData method once the information is loaded in the player
+      if (!title) {
+        setTimeout(this.updateVideoInfo.bind(this), 2000);
+      } else {
+        const images: MediaImage[] = YoutubePlayer.getThumbnailsFromVideoid(
+          videoId
+        );
+        onTrackInfoChange(title, videoId, undefined, undefined, images);
+      }
+      player.playVideo();
+    }
     if (
       state === YouTube.PlayerState.UNSTARTED ||
       state === YouTube.PlayerState.BUFFERING
     ) {
-      const { onTrackInfoChange } = this.props;
-      const title = _get(player, "playerInfo.videoData.title", "");
-      onTrackInfoChange(title);
-      player.playVideo();
       onPlayerPausedChange(false);
-      onDurationChange(player.getDuration() * 1000);
     }
     if (state === YouTube.PlayerState.PAUSED) {
       onPlayerPausedChange(true);
@@ -78,6 +149,10 @@ export default class YoutubePlayer
       onPlayerPausedChange(false);
     }
     onProgressChange(player.getCurrentTime() * 1000);
+    const duration = _isFunction(player.getDuration) && player.getDuration();
+    if (duration) {
+      onDurationChange(duration * 1000);
+    }
   };
 
   handleAccountError = (): void => {
@@ -128,23 +203,22 @@ export default class YoutubePlayer
     }
 
     try {
-      const { api_key, access_token } = youtubeUser;
+      const { api_key } = youtubeUser;
       const videoIds = await searchForYoutubeTrack(
         api_key,
-        access_token,
         trackName,
         artistName,
         releaseName,
         refreshYoutubeToken,
         this.handleAccountError
       );
-      if (videoIds) {
-        this.youtubePlayer.loadPlaylist(videoIds);
+      if (videoIds?.length) {
+        this.playTrackById(videoIds[0]);
       } else {
         onTrackNotFound();
       }
     } catch (error) {
-      handleWarning(error, "Youtube player error");
+      handleWarning(error?.message ?? error.toString(), "Youtube player error");
       onTrackNotFound();
     }
   };
@@ -158,6 +232,36 @@ export default class YoutubePlayer
     } else {
       this.youtubePlayer.loadVideoById(videoId);
     }
+  };
+
+  isListenFromThisService = (listen: Listen | JSPFTrack): boolean => {
+    // Checks if there is a youtube ID in the listen
+    const youtubeId = _get(listen, "track_metadata.additional_info.youtube_id");
+    if (youtubeId) {
+      return true;
+    }
+
+    // or if the origin URL contains youtube.com
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    if (_isString(originURL) && originURL.length) {
+      const parsedURL = new URL(originURL);
+      const { hostname, searchParams } = parsedURL;
+      if (/youtube\.com/.test(hostname)) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  canSearchAndPlayTracks = (): boolean => {
+    const { youtubeUser } = this.props;
+    // check if the user is authed to search with the Youtube API
+    return Boolean(youtubeUser) && Boolean(youtubeUser?.api_key);
+  };
+
+  datasourceRecordsListens = (): boolean => {
+    return false;
   };
 
   playListen = (listen: Listen | JSPFTrack) => {

@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import psycopg2
 from psycopg2.errors import UntranslatableCharacter
 import sqlalchemy
+import subprocess
 import logging
 
 from brainzutils import cache
@@ -114,6 +115,16 @@ def recalculate_all_user_data():
             pass
 
 
+def unlock_cron():
+    """ Unlock the cron container """
+
+    # Unlock the cron container
+    try:
+        subprocess.run(["/usr/local/bin/python", "admin/cron_lock.py", "unlock-cron", "cont-agg"])
+    except subprocess.CalledProcessError as err:
+        logger.error("Cannot unlock cron after updating continuous aggregates: %s" % str(err))
+
+
 def refresh_listen_count_aggregate():
     """
         Manually refresh the listen_count continuous aggregate.
@@ -130,6 +141,14 @@ def refresh_listen_count_aggregate():
            year_count 1 then all of 2021 will be refreshed.
     """
 
+    # Lock the cron container
+    try:
+        subprocess.run(["/usr/local/bin/python", "admin/cron_lock.py", "lock-cron", "cont-agg", "Updating continuous aggregates"])
+    except subprocess.CalledProcessError as err:
+        logger.error("Cannot lock cron for updating continuous aggregates: %s" % str(err))
+        sys.exit(-1)
+
+    logger.info("Starting to refresh continuous aggregates:")
     timescale.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
 
     end_ts = int(datetime.now().timestamp()) - SECONDS_IN_A_YEAR
@@ -147,8 +166,8 @@ def refresh_listen_count_aggregate():
                     "end_ts": end_ts
                 })
         except psycopg2.OperationalError as e:
-            self.log.error("Cannot refresh listen_count_30day cont agg: %s" %
-                           str(e), exc_info=True)
+            logger.error("Cannot refresh listen_count_30day cont agg: %s" % str(e), exc_info=True)
+            unlock_cron()
             raise
 
         t1 = time.monotonic()
@@ -159,6 +178,8 @@ def refresh_listen_count_aggregate():
         start_ts -= (NUM_YEARS_TO_PROCESS_FOR_CONTINUOUS_AGGREGATE_REFRESH * SECONDS_IN_A_YEAR)
         if end_ts < DATA_START_YEAR_IN_SECONDS:
             break
+
+    unlock_cron()
 
 
 class TimescaleListenStoreException(Exception):

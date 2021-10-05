@@ -6,19 +6,29 @@ SECRET_KEY = "CHANGE_ME"
 
 
 # DATABASES
-
-# Primary databases
+# ListenBrainz
 SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@db:5432/listenbrainz"
-MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@db:5432/messybrainz"
-
-POSTGRES_ADMIN_URI="postgresql://postgres:postgres@db/postgres"
+POSTGRES_ADMIN_URI = "postgresql://postgres:postgres@db/postgres"
 POSTGRES_ADMIN_LB_URI = "postgresql://postgres:postgres@db/listenbrainz"
-MB_DATABASE_URI = ""
 
+# Timescale
 SQLALCHEMY_TIMESCALE_URI = "postgresql://listenbrainz_ts:listenbrainz_ts@db/listenbrainz_ts"
 TIMESCALE_ADMIN_URI = "postgresql://postgres:postgres@db/postgres"
 TIMESCALE_ADMIN_LB_URI = "postgresql://postgres:postgres@db/listenbrainz_ts"
 
+# MessyBrainz
+MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@db:5432/messybrainz"
+MESSYBRAINZ_ADMIN_URI = "postgresql://postgres:postgres@db/postgres"
+MESSYBRAINZ_ADMIN_MSB_URI = "postgresql://postgres:postgres@db/messybrainz"
+
+# MusicBrainz & others
+MBID_MAPPING_DATABASE_URI = ""
+MB_DATABASE_URI = ""
+
+# for use in playlists admin view
+SQLALCHEMY_BINDS = {
+   'timescale': SQLALCHEMY_TIMESCALE_URI
+}
 
 # Redis
 REDIS_HOST = "redis"
@@ -60,6 +70,10 @@ MUSICBRAINZ_CLIENT_SECRET = "CLIENT_SECRET"
 LASTFM_API_URL = "https://ws.audioscrobbler.com/2.0/"
 LASTFM_API_KEY = "USE_LASTFM_API_KEY"
 
+# Libre.fm API
+LIBREFM_API_URL = "https://libre.fm/2.0/"
+LIBREFM_API_KEY = "USE_LIBREFM_API_KEY"
+
 # Stats
 STATS_ENTITY_LIMIT = 100 # the number of entities to calculate at max with BQ
 STATS_CALCULATION_LOGIN_TIME = 30 # users must have logged in to LB in the past 30 days for stats to be calculated
@@ -89,8 +103,6 @@ PLAYING_NOW_MAX_DURATION = 10 * 60
 
 # MISCELLANEOUS
 
-# Set to True if Less should be compiled in browser. Set to False if styling is pre-compiled.
-COMPILE_LESS = True
 
 # MAX file size to be allowed for the lastfm-backup import, default is infinite
 # Size is in bytes
@@ -123,6 +135,11 @@ APPROVED_PLAYLIST_BOTS = ['troi-bot']
 SPOTIFY_CLIENT_ID = 'needs a non empty default value for tests, change this'
 SPOTIFY_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
 SPOTIFY_CALLBACK_URL = 'http://localhost/profile/music-services/spotify/callback/'
+
+# SPOTIFY
+CRITIQUEBRAINZ_CLIENT_ID = 'needs a non empty default value for tests, change this'
+CRITIQUEBRAINZ_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
+CRITIQUEBRAINZ_REDIRECT_URI = 'http://localhost/profile/music-services/critiquebrainz/callback/'
 
 # YOUTUBE
 YOUTUBE_CONFIG = {
@@ -157,3 +174,9 @@ SESSION_REMEMBER_ME_DURATION = 365
 
 # listen dumps creation dir
 LISTEN_DUMP_TEMP_DIR_ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'tmp')
+
+# If set to True, reject listens from users who do not have an email
+REJECT_LISTENS_WITHOUT_USER_EMAIL = False
+
+# If set to True, do not allow new users without email to register
+REJECT_NEW_USERS_WITHOUT_EMAIL = False

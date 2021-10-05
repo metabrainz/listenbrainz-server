@@ -26,22 +26,6 @@
         <li><a href="{{ url_for('index.recent_listens') }}">Recent</a></li>
         <li class="dropdown">
           <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-             About<span class="caret"></span>
-          </a>
-          <ul class="dropdown-menu" role="menu">
-            <li><a href="{{ url_for('index.faq') }}">FAQ</a></li>
-            <li><a href="{{ url_for('index.goals') }}">Goals</a></li>
-            <li><a href="{{ url_for('index.roadmap') }}">Roadmap</a></li>
-            <li><a href="https://listenbrainz.readthedocs.io">API Docs</a></li>
-            <li><a href="{{ url_for('index.contribute') }}">Contribute</a></li>
-            <li><a href="{{ url_for('index.current_status') }}">Current site status</a></li>
-            <li><a href="https://metabrainz.org/gdpr">GDPR compliance</a></li>
-            <li><a href="https://metabrainz.org/privacy">Privacy policy</a></li>
-            <li><a href="https://metabrainz.org">About MetaBrainz</a></li>
-          </ul>
-        </li>
-        <li class="dropdown">
-          <a class="dropdown-toggle" data-toggle="dropdown" href="#">
              Data<span class="caret"></span>
           </a>
           <ul class="dropdown-menu" role="menu">
@@ -56,6 +40,22 @@
           </a>
           <ul class="dropdown-menu" role="menu">
             <li><a href="{{ url_for('index.similar_users') }}">Top similar users</a></li>
+          </ul>
+        </li>
+        <li class="dropdown">
+          <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+             About<span class="caret"></span>
+          </a>
+          <ul class="dropdown-menu" role="menu">
+            <li><a href="{{ url_for('index.faq') }}">FAQ</a></li>
+            <li><a href="{{ url_for('index.goals') }}">Goals</a></li>
+            <li><a href="{{ url_for('index.roadmap') }}">Roadmap</a></li>
+            <li><a href="https://listenbrainz.readthedocs.io">API Docs</a></li>
+            <li><a href="{{ url_for('index.contribute') }}">Contribute</a></li>
+            <li><a href="{{ url_for('index.current_status') }}">Current site status</a></li>
+            <li><a href="https://metabrainz.org/gdpr">GDPR compliance</a></li>
+            <li><a href="https://metabrainz.org/privacy">Privacy policy</a></li>
+            <li><a href="https://metabrainz.org">About MetaBrainz</a></li>
           </ul>
         </li>
     </ul>
@@ -85,6 +85,12 @@
           </li>
         {%- endif -%}
       </ul>
+      <form class="navbar-form navbar-right" role="search" method="GET" action="/search">
+        <div class="form-group">
+          <input type="text" name="search_term" class="form-control input-sm" placeholder="Search Listener" required>
+        </div>
+        <button type="submit" class="btn btn-primary input-sm"><span class="glyphicon glyphicon-search"></span></button>
+      </form>
     {% endif %}
     </div>
 

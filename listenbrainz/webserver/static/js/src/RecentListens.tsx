@@ -4,12 +4,13 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as Sentry from "@sentry/react";
 import * as _ from "lodash";
-import * as io from "socket.io-client";
 
 import DatePicker from "react-date-picker/dist/entry.nostyle";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
+import { io, Socket } from "socket.io-client";
+import { fromPairs } from "lodash";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
@@ -21,7 +22,13 @@ import BrainzPlayer from "./BrainzPlayer";
 import ErrorBoundary from "./ErrorBoundary";
 import ListenCard from "./listens/ListenCard";
 import Loader from "./components/Loader";
-import { formatWSMessageToListen } from "./utils";
+import PinRecordingModal from "./PinRecordingModal";
+import PinnedRecordingCard from "./PinnedRecordingCard";
+import {
+  formatWSMessageToListen,
+  getPageProps,
+  getListenablePin,
+} from "./utils";
 
 export type RecentListensProps = {
   latestListenTs: number;
@@ -30,16 +37,11 @@ export type RecentListensProps = {
   mode: ListensListMode;
   oldestListenTs: number;
   profileUrl?: string;
-  saveUrl?: string;
-  spotify: SpotifyUser;
-  youtube: YoutubeUser;
   user: ListenBrainzUser;
-  webSocketsServerUrl: string;
-  currentUser?: ListenBrainzUser;
+  userPinnedRecording?: PinnedRecording;
 } & WithAlertNotificationsInjectedProps;
 
 export interface RecentListensState {
-  alerts: Array<Alert>;
   currentListen?: Listen;
   direction: BrainzPlayDirection;
   lastFetchedDirection?: "older" | "newer";
@@ -49,8 +51,8 @@ export interface RecentListensState {
   mode: ListensListMode;
   nextListenTs?: number;
   previousListenTs?: number;
-  saveUrl: string;
   recordingFeedbackMap: RecordingFeedbackMap;
+  recordingToPin?: Listen;
   dateTimePickerValue: Date | Date[];
 }
 
@@ -65,7 +67,7 @@ export default class RecentListens extends React.Component<
   private brainzPlayer = React.createRef<BrainzPlayer>();
   private listensTable = React.createRef<HTMLTableElement>();
 
-  private socket!: SocketIOClient.Socket;
+  private socket!: Socket;
 
   private expectedListensPerPage = 25;
 
@@ -73,19 +75,18 @@ export default class RecentListens extends React.Component<
     super(props);
     const nextListenTs = props.listens?.[props.listens.length - 1]?.listened_at;
     this.state = {
-      alerts: [],
       listens: props.listens || [],
       mode: props.mode,
-      saveUrl: props.saveUrl || "",
       lastFetchedDirection: "older",
       loading: false,
       nextListenTs,
       previousListenTs: props.listens?.[0]?.listened_at,
+      recordingToPin: props.listens?.[0],
       direction: "down",
       recordingFeedbackMap: {},
       dateTimePickerValue: nextListenTs
         ? new Date(nextListenTs * 1000)
-        : new Date(),
+        : new Date(Date.now()),
     };
 
     this.listensTable = React.createRef();
@@ -94,7 +95,7 @@ export default class RecentListens extends React.Component<
   componentDidMount(): void {
     const { mode } = this.state;
     // Get API instance from React context provided for in top-level component
-    const { APIService } = this.context;
+    const { APIService, currentUser } = this.context;
     this.APIService = APIService;
 
     if (mode === "listens") {
@@ -103,7 +104,7 @@ export default class RecentListens extends React.Component<
       window.addEventListener("popstate", this.handleURLChange);
       document.addEventListener("keydown", this.handleKeyDown);
 
-      const { user, currentUser } = this.props;
+      const { user } = this.props;
       // Get the user listen count
       if (user?.name) {
         this.APIService.getUserListenCount(user.name).then((listenCount) => {
@@ -162,16 +163,15 @@ export default class RecentListens extends React.Component<
   };
 
   connectWebsockets = (): void => {
-    const { webSocketsServerUrl } = this.props;
-    if (webSocketsServerUrl) {
-      this.createWebsocketsConnection();
-      this.addWebsocketsHandlers();
-    }
+    this.createWebsocketsConnection();
+    this.addWebsocketsHandlers();
   };
 
   createWebsocketsConnection = (): void => {
-    const { webSocketsServerUrl } = this.props;
-    this.socket = io.connect(webSocketsServerUrl);
+    // if modifying the uri or path, lookup socket.io namespace vs paths.
+    // tl;dr io("https://listenbrainz.org/socket.io/") and
+    // io("https://listenbrainz.org", { path: "/socket.io" }); are not equivalent
+    this.socket = io(`${window.location.origin}`, { path: "/socket.io/" });
   };
 
   addWebsocketsHandlers = (): void => {
@@ -198,8 +198,12 @@ export default class RecentListens extends React.Component<
     try {
       json = JSON.parse(newListen);
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Coudn't parse the new listen as JSON: ", error);
+      const { newAlert } = this.props;
+      newAlert(
+        "danger",
+        "Coudn't parse the new listen as JSON: ",
+        error.toString()
+      );
       return;
     }
     const listen = formatWSMessageToListen(json);
@@ -232,7 +236,7 @@ export default class RecentListens extends React.Component<
     });
   };
 
-  handleCurrentListenChange = (listen: Listen | JSPFTrack): void => {
+  handleCurrentListenChange = (listen: BaseListenFormat | JSPFTrack): void => {
     this.setState({ currentListen: listen as Listen });
   };
 
@@ -423,6 +427,10 @@ export default class RecentListens extends React.Component<
     this.setState({ recordingFeedbackMap });
   };
 
+  updateRecordingToPin = (recordingToPin: Listen) => {
+    this.setState({ recordingToPin });
+  };
+
   getFeedbackForRecordingMsid = (
     recordingMsid?: string | null
   ): ListenFeedBack => {
@@ -522,28 +530,30 @@ export default class RecentListens extends React.Component<
 
   render() {
     const {
-      alerts,
       currentListen,
       direction,
-      lastFetchedDirection,
       listens,
       listenCount,
       loading,
       mode,
       nextListenTs,
       previousListenTs,
-      saveUrl,
       dateTimePickerValue,
+      recordingToPin,
     } = this.state;
     const {
       latestListenTs,
       oldestListenTs,
-      spotify,
-      youtube,
       user,
-      currentUser,
       newAlert,
+      userPinnedRecording,
     } = this.props;
+    const { currentUser } = this.context;
+
+    let allListenables = listens;
+    if (userPinnedRecording) {
+      allListenables = [getListenablePin(userPinnedRecording), ...listens];
+    }
 
     const isNewestButtonDisabled = listens?.[0]?.listened_at >= latestListenTs;
     const isNewerButtonDisabled =
@@ -556,6 +566,24 @@ export default class RecentListens extends React.Component<
       <div role="main">
         <div className="row">
           <div className="col-md-8">
+            {userPinnedRecording && (
+              <div id="pinned-recordings">
+                <PinnedRecordingCard
+                  userName={user.name}
+                  pinnedRecording={userPinnedRecording}
+                  className={
+                    this.isCurrentListen(getListenablePin(userPinnedRecording))
+                      ? " current-listen"
+                      : ""
+                  }
+                  isCurrentUser={currentUser?.name === user?.name}
+                  playListen={this.playListen}
+                  removePinFromPinsList={() => {}}
+                  newAlert={newAlert}
+                />
+              </div>
+            )}
+
             <h3>
               {mode === "listens" || mode === "recent"
                 ? `Recent listens${
@@ -600,25 +628,22 @@ export default class RecentListens extends React.Component<
                       return (
                         <ListenCard
                           key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
-                          currentUser={currentUser}
-                          isCurrentUser={currentUser?.name === user?.name}
+                          showTimestamp
+                          showUsername={mode === "recent"}
+                          isCurrentListen={this.isCurrentListen(listen)}
                           listen={listen}
-                          mode={mode}
                           currentFeedback={this.getFeedbackForRecordingMsid(
                             listen.track_metadata?.additional_info
                               ?.recording_msid
                           )}
                           playListen={this.playListen}
-                          removeListenFromListenList={
-                            this.removeListenFromListenList
-                          }
-                          updateFeedback={this.updateFeedback}
+                          removeListenCallback={this.removeListenFromListenList}
+                          updateFeedbackCallback={this.updateFeedback}
+                          updateRecordingToPin={this.updateRecordingToPin}
                           newAlert={newAlert}
                           className={`${
-                            this.isCurrentListen(listen)
-                              ? " current-listen"
-                              : ""
-                          }${listen.playing_now ? " playing-now" : ""}`}
+                            listen.playing_now ? "playing-now" : ""
+                          }`}
                         />
                       );
                     })}
@@ -675,7 +700,7 @@ export default class RecentListens extends React.Component<
                         onChange={this.onChangeDateTimePicker}
                         value={dateTimePickerValue}
                         clearIcon={null}
-                        maxDate={new Date()}
+                        maxDate={new Date(Date.now())}
                         minDate={
                           oldestListenTs
                             ? new Date(oldestListenTs * 1000)
@@ -731,6 +756,12 @@ export default class RecentListens extends React.Component<
                     </li>
                   </ul>
                 )}
+                {currentUser && (
+                  <PinRecordingModal
+                    recordingToPin={recordingToPin || listens[0]}
+                    newAlert={newAlert}
+                  />
+                )}
               </div>
             )}
           </div>
@@ -741,14 +772,11 @@ export default class RecentListens extends React.Component<
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
             <BrainzPlayer
-              currentListen={currentListen}
               direction={direction}
-              listens={listens}
+              listens={allListenables}
               newAlert={newAlert}
               onCurrentListenChange={this.handleCurrentListenChange}
               ref={this.brainzPlayer}
-              spotifyUser={spotify}
-              youtubeUser={youtube}
             />
           </div>
         </div>
@@ -758,29 +786,28 @@ export default class RecentListens extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const domContainer = document.querySelector("#react-container");
-  const propsElement = document.getElementById("react-props");
-  let reactProps;
-  try {
-    reactProps = JSON.parse(propsElement!.innerHTML);
-  } catch (err) {
-    // TODO: Show error to the user and ask to reload page
-  }
+  const {
+    domContainer,
+    reactProps,
+    globalReactProps,
+    optionalAlerts,
+  } = getPageProps();
   const {
     api_url,
+    sentry_dsn,
+    current_user,
+    spotify,
+    youtube,
+  } = globalReactProps;
+  const {
     latest_listen_ts,
     latest_spotify_uri,
     listens,
     oldest_listen_ts,
     mode,
+    userPinnedRecording,
     profile_url,
-    save_url,
-    spotify,
-    youtube,
     user,
-    web_sockets_server_url,
-    current_user,
-    sentry_dsn,
   } = reactProps;
 
   const apiService = new APIServiceClass(
@@ -799,24 +826,22 @@ document.addEventListener("DOMContentLoaded", () => {
     APIService: apiService,
     currentUser: current_user,
     spotifyAuth: spotify,
+    youtubeAuth: youtube,
   };
 
   ReactDOM.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
         <RecentListensWithAlertNotifications
+          initialAlerts={optionalAlerts}
           latestListenTs={latest_listen_ts}
           latestSpotifyUri={latest_spotify_uri}
           listens={listens}
           mode={mode}
+          userPinnedRecording={userPinnedRecording}
           oldestListenTs={oldest_listen_ts}
           profileUrl={profile_url}
-          saveUrl={save_url}
-          spotify={spotify}
-          youtube={youtube}
           user={user}
-          webSocketsServerUrl={web_sockets_server_url}
-          currentUser={current_user}
         />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,

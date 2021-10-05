@@ -5,7 +5,7 @@
     },
     "recommendations": [
       {
-        "listened_at": 0,
+        "listened_at": 1586413524,
         "track_metadata": {
           "artist_name":"Pastelle & Reflekshun",
           "track_name":"Alchemy",
@@ -15,7 +15,7 @@
         }
       },
       {
-        "listened_at": 0,
+        "listened_at": 1586513525,
         "track_metadata": {
           "artist_name":"Pastelle & My City Glory",
           "track_name":"Butterfly Water",
@@ -31,7 +31,6 @@
       "permission": ["streaming", "user-read-email", "user-read-private"]
     },
     "youtube": {
-      "access_token": "frontend-test",
       "api_key": "fake-api-key"
     },
     "profileUrl": "/user/vansika"

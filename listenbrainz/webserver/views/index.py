@@ -21,7 +21,6 @@ from listenbrainz.webserver import flash
 from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.views.user import delete_user
-from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user
 
 index_bp = Blueprint('index', __name__)
 locale.setlocale(locale.LC_ALL, '')
@@ -29,6 +28,8 @@ locale.setlocale(locale.LC_ALL, '')
 STATS_PREFIX = 'listenbrainz.stats' # prefix used in key to cache stats
 CACHE_TIME = 10 * 60 # time in seconds we cache the stats
 NUMBER_OF_RECENT_LISTENS = 50
+
+SEARCH_USER_LIMIT = 100  # max number of users to return in search username results
 
 @index_bp.route("/")
 def index():
@@ -49,7 +50,7 @@ def index():
     )
 
 
-@index_bp.route("/import")
+@index_bp.route("/import/")
 def import_data():
     if current_user.is_authenticated:
         return redirect(url_for("profile.import_data"))
@@ -57,52 +58,57 @@ def import_data():
         return current_app.login_manager.unauthorized()
 
 
-@index_bp.route("/download")
+@index_bp.route("/download/")
 def downloads():
     return redirect(url_for('index.data'))
 
 
-@index_bp.route("/data")
+@index_bp.route("/data/")
 def data():
     return render_template("index/data.html")
 
 
-@index_bp.route("/contribute")
+@index_bp.route("/contribute/")
 def contribute():
     return render_template("index/contribute.html")
 
 
-@index_bp.route("/add-data")
+@index_bp.route("/add-data/")
 def add_data_info():
     return render_template("index/add-data.html")
 
 
-@index_bp.route("/import-data")
+@index_bp.route("/import-data/")
 def import_data_info():
     return render_template("index/import-data.html")
 
 
-@index_bp.route("/goals")
+@index_bp.route("/goals/")
 def goals():
     return render_template("index/goals.html")
 
 
-@index_bp.route("/faq")
+@index_bp.route("/faq/")
 def faq():
     return render_template("index/faq.html")
 
 
-@index_bp.route("/lastfm-proxy")
+@index_bp.route("/lastfm-proxy/")
 def proxy():
     return render_template("index/lastfm-proxy.html")
 
 
-@index_bp.route("/roadmap")
+@index_bp.route("/roadmap/")
 def roadmap():
     return render_template("index/roadmap.html")
 
 
-@index_bp.route("/current-status")
+@index_bp.route("/privacy/")
+def privacy_policy():
+    return render_template("index/privacy-policy.html")
+
+
+@index_bp.route("/current-status/")
 @web_listenstore_needed
 def current_status():
 
@@ -137,7 +143,7 @@ def current_status():
     )
 
 
-@index_bp.route("/recent")
+@index_bp.route("/recent/")
 def recent_listens():
 
     recent = []
@@ -149,16 +155,9 @@ def recent_listens():
                 "listened_at_iso": listen.timestamp.isoformat() + "Z",
             })
 
-    spotify_user = get_current_spotify_user()
-    youtube_user = get_current_youtube_user()
-
     props = {
         "listens": recent,
         "mode": "recent",
-        "spotify": spotify_user,
-        "youtube": youtube_user,
-        "api_url": current_app.config["API_URL"],
-        "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn")
     }
 
     return render_template("index/recent.html",
@@ -166,31 +165,15 @@ def recent_listens():
         mode='recent',
         active_section='listens')
 
-@index_bp.route('/feed', methods=['GET', 'OPTIONS'])
+
+@index_bp.route('/feed/', methods=['GET', 'OPTIONS'])
 @login_required
 @web_listenstore_needed
 def feed():
-
-    spotify_user = get_current_spotify_user()
-    youtube_user = get_current_youtube_user()
-
-    current_user_data = {
-        "id": current_user.id,
-        "name": current_user.musicbrainz_id,
-        "auth_token": current_user.auth_token,
-    }
-
-    props = {
-        "current_user": current_user_data,
-        "spotify": spotify_user,
-        "youtube": youtube_user,
-        "api_url": current_app.config["API_URL"],
-    }
-    return render_template('index/feed.html', props=ujson.dumps(props))
+    return render_template('index/feed.html')
 
 
-
-@index_bp.route('/agree-to-terms', methods=['GET', 'POST'])
+@index_bp.route('/agree-to-terms/', methods=['GET', 'POST'])
 @login_required
 def gdpr_notice():
     if request.method == 'GET':
@@ -210,6 +193,18 @@ def gdpr_notice():
         else:
             flash.error('You must agree to or decline our terms')
             return render_template('index/gdpr.html', next=request.args.get('next'))
+
+
+@index_bp.route('/search/', methods=['GET', 'OPTIONS'])
+def search():
+    search_term = request.args.get("search_term")
+    user_id = current_user.id if current_user.is_authenticated else None
+    if search_term:
+        users = db_user.search(search_term, SEARCH_USER_LIMIT, user_id)
+    else:
+        users = []
+    return render_template("index/search-users.html", search_term=search_term, users=users)
+
 
 
 @index_bp.route('/delete-user/<int:musicbrainz_row_id>')
@@ -276,21 +271,21 @@ def _get_user_count():
         return user_count
 
 
-@index_bp.route("/similar-users")
+@index_bp.route("/similar-users/")
 def similar_users():
     """ Show all of the users with the highest similarity in order to make
         them visible to all of our users. This view can show bugs in the algorithm
         and spammers as well.
     """
 
-    similar_users = get_top_similar_users()
+    similar_users = get_top_similar_users(global_similarity=True)
     return render_template(
         "index/similar-users.html",
         similar_users=similar_users
     )
 
 
-@index_bp.route("/listens-offline")
+@index_bp.route("/listens-offline/")
 def listens_offline():
     """
         Show the "listenstore offline" message.

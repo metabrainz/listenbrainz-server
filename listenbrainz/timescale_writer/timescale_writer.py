@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-
+import logging
 import sys
 import traceback
-from time import sleep
+from time import sleep, monotonic
 from datetime import datetime
 
 import pika
 import ujson
 from flask import current_app
+from more_itertools import chunked
 from redis import Redis
 import psycopg2
 
@@ -16,6 +17,26 @@ from listenbrainz.listenstore import RedisListenStore
 from listenbrainz.listen_writer import ListenWriter
 from listenbrainz.listenstore import TimescaleListenStore
 from listenbrainz.webserver import create_app
+from listenbrainz.utils import init_cache
+from brainzutils import metrics, cache
+
+from listenbrainz.webserver.external import messybrainz
+from listenbrainz.webserver.views.api_tools import MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
+
+METRIC_UPDATE_INTERVAL = 60  # seconds
+LISTEN_INSERT_ERROR_SENTINEL = -1  #
+
+
+def check_recursively_for_nulls(listen):
+    for key, value in listen.items():
+        if isinstance(value, dict):
+            check_recursively_for_nulls(value)
+        else:
+            if isinstance(value, list):
+                value = " ".join(value)
+
+            if isinstance(value, str)  and '\x00' in value:
+                raise ValueError("field {} contains a null".format(value))
 
 
 class TimescaleWriterSubscriber(ListenWriter):
@@ -28,19 +49,39 @@ class TimescaleWriterSubscriber(ListenWriter):
         self.unique_ch = None
         self.redis_listenstore = None
 
+        self.incoming_listens = 0
+        self.unique_listens = 0
+        self.metric_submission_time = monotonic() + METRIC_UPDATE_INTERVAL
+
     def callback(self, ch, method, properties, body):
 
         listens = ujson.loads(body)
+        non_null_listens = []
+
+        for listen in listens:
+            try:
+                check_recursively_for_nulls(listen)
+            except ValueError:
+                # temporary to make sure fix is working
+                current_app.logger.error("Found null byte in listen. Skipping!", exc_info=True)
+                continue
+            non_null_listens.append(listen)
+
+        msb_listens = []
+        for chunk in chunked(non_null_listens, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP):
+            msb_listens.extend(self.messybrainz_lookup(chunk))
 
         submit = []
-        for listen in listens:
+        for listen in msb_listens:
             try:
                 submit.append(Listen.from_json(listen))
             except ValueError:
                 pass
 
         ret = self.insert_to_listenstore(submit)
-        if not ret:
+
+        # If there is an error, we do not ack the message so that rabbitmq redelivers it later.
+        if ret == LISTEN_INSERT_ERROR_SENTINEL:
             return ret
 
         while True:
@@ -52,6 +93,74 @@ class TimescaleWriterSubscriber(ListenWriter):
 
         return ret
 
+    def messybrainz_lookup(self, listens):
+        msb_listens = []
+        for listen in listens:
+            messy_dict = {
+                'artist': listen['track_metadata']['artist_name'],
+                'title': listen['track_metadata']['track_name'],
+            }
+            if 'release_name' in listen['track_metadata']:
+                messy_dict['release'] = listen['track_metadata']['release_name']
+
+            if 'additional_info' in listen['track_metadata']:
+                ai = listen['track_metadata']['additional_info']
+                if 'artist_mbids' in ai and isinstance(ai['artist_mbids'], list):
+                    messy_dict['artist_mbids'] = ai['artist_mbids']
+                if 'release_mbid' in ai:
+                    messy_dict['release_mbid'] = ai['release_mbid']
+                if 'recording_mbid' in ai:
+                    messy_dict['recording_mbid'] = ai['recording_mbid']
+                if 'track_number' in ai:
+                    messy_dict['track_number'] = ai['track_number']
+                if 'spotify_id' in ai:
+                    messy_dict['spotify_id'] = ai['spotify_id']
+
+            msb_listens.append(messy_dict)
+
+        try:
+            msb_responses = messybrainz.submit_listens(msb_listens)
+        except (messybrainz.exceptions.BadDataException, messybrainz.exceptions.ErrorAddingException):
+            current_app.logger.error("MessyBrainz lookup for listens failed: ", exc_info=True)
+            return []
+        except messybrainz.exceptions.NoDataFoundException:
+            return []
+
+        augmented_listens = []
+        for listen, messybrainz_resp in zip(listens, msb_responses['payload']):
+            messybrainz_resp = messybrainz_resp['ids']
+
+            if 'additional_info' not in listen['track_metadata']:
+                listen['track_metadata']['additional_info'] = {}
+
+            try:
+                listen['recording_msid'] = messybrainz_resp['recording_msid']
+                listen['track_metadata']['additional_info']['artist_msid'] = messybrainz_resp['artist_msid']
+            except KeyError:
+                current_app.logger.error("MessyBrainz did not return a proper set of ids")
+                return []
+
+            try:
+                listen['track_metadata']['additional_info']['release_msid'] = messybrainz_resp['release_msid']
+            except KeyError:
+                pass
+
+            artist_mbids = messybrainz_resp.get('artist_mbids', [])
+            release_mbid = messybrainz_resp.get('release_mbid', None)
+            recording_mbid = messybrainz_resp.get('recording_mbid', None)
+
+            if 'artist_mbids' not in listen['track_metadata']['additional_info'] and \
+                    'release_mbid' not in listen['track_metadata']['additional_info'] and \
+                    'recording_mbid' not in listen['track_metadata']['additional_info']:
+
+                if len(artist_mbids) > 0 and release_mbid and recording_mbid:
+                    listen['track_metadata']['additional_info']['artist_mbids'] = artist_mbids
+                    listen['track_metadata']['additional_info']['release_mbid'] = release_mbid
+                    listen['track_metadata']['additional_info']['recording_mbid'] = recording_mbid
+
+            augmented_listens.append(listen)
+        return augmented_listens
+
     def insert_to_listenstore(self, data):
         """
         Inserts a batch of listens to the ListenStore. Timescale will report back as
@@ -62,18 +171,20 @@ class TimescaleWriterSubscriber(ListenWriter):
             data: the data to be inserted into the ListenStore
             retries: the number of retries to make before deciding that we've failed
 
-        Returns: number of listens successfully sent
+        Returns: number of listens successfully sent or LISTEN_INSERT_ERROR_SENTINEL
+        if there was an error in inserting listens
         """
 
         if not data:
             return 0
 
+        self.incoming_listens += len(data)
         try:
             rows_inserted = self.ls.insert(data)
         except psycopg2.OperationalError as err:
             current_app.logger.error("Cannot write data to listenstore: %s. Sleep." % str(err), exc_info=True)
             sleep(self.ERROR_RETRY_DELAY)
-            return 0
+            return LISTEN_INSERT_ERROR_SENTINEL
 
         if not rows_inserted:
             return len(data)
@@ -110,7 +221,11 @@ class TimescaleWriterSubscriber(ListenWriter):
                 self.connect_to_rabbitmq()
 
         self.redis_listenstore.update_recent_listens(unique)
-        self._collect_and_log_stats(len(unique))
+        self.unique_listens += len(unique)
+
+        if monotonic() > self.metric_submission_time:
+            self.metric_submission_time += METRIC_UPDATE_INTERVAL
+            metrics.set("timescale_writer", incoming_listens=self.incoming_listens, unique_listens=self.unique_listens)
 
         return len(data)
 
@@ -161,8 +276,8 @@ class TimescaleWriterSubscriber(ListenWriter):
                     self.incoming_ch.queue_bind(exchange=current_app.config['INCOMING_EXCHANGE'],
                                                 queue=current_app.config['INCOMING_QUEUE'])
                     self.incoming_ch.basic_consume(
-                        lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self),
                         queue=current_app.config['INCOMING_QUEUE'],
+                        on_message_callback=lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self)
                     )
 
                     self.unique_ch = self.connection.channel()
@@ -177,9 +292,8 @@ class TimescaleWriterSubscriber(ListenWriter):
 
                     self.connection.close()
 
-            except Exception as err:
-                traceback.print_exc()
-                current_app.logger.error("failed to start timescale loop: %s", str(err))
+            except Exception:
+                current_app.logger.error("failed to start timescale loop:", exc_info=True)
 
 
 if __name__ == "__main__":

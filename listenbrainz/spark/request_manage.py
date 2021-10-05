@@ -100,12 +100,14 @@ def send_request_to_spark_cluster(message):
 def request_user_stats(type_, range_, entity):
     """ Send a user stats request to the spark cluster
     """
-    params = {}
-    if type_ == 'entity' and entity:
-        params['entity'] = entity
+    params = {
+        "stats_range": range_
+    }
+    if type_ == "entity" and entity:
+        params["entity"] = entity
     try:
         send_request_to_spark_cluster(_prepare_query_message(
-            'stats.user.{type}.{range}'.format(range=range_, type=type_), params=params))
+            f"stats.user.{type_}", params=params))
     except InvalidSparkRequestError:
         click.echo("Incorrect arguments provided")
 
@@ -115,17 +117,16 @@ def request_user_stats(type_, range_, entity):
               help="Time range of statistics to calculate", required=True)
 @click.option("--entity", type=click.Choice(['artists']),
               help="Entity for which statistics should be calculated")
-@click.option("--use-mapping", type=bool, help="Set to true if MSID-MBID mapping should be used while calculating statistics")
-def request_sitewide_stats(range_, entity, use_mapping):
+def request_sitewide_stats(range_, entity):
     """ Send request to calculate sitewide stats to the spark cluster
     """
     params = {
-        'use_mapping': use_mapping,
-        'entity': entity
+        'entity': entity,
+        'stats_range': range_
     }
     try:
         send_request_to_spark_cluster(_prepare_query_message(
-            "stats.sitewide.entity.{range}".format(range=range_), params=params))
+            "stats.sitewide.entity", params=params))
     except InvalidSparkRequestError:
         click.echo("Incorrect arguments provided")
 
@@ -138,7 +139,7 @@ def request_import_new_full_dump(id_: int):
     """
     if id_:
         send_request_to_spark_cluster(_prepare_query_message(
-            'import.dump.full_id', params={'id': id_}))
+            'import.dump.full_id', params={'dump_id': id_}))
     else:
         send_request_to_spark_cluster(
             _prepare_query_message('import.dump.full_newest'))
@@ -152,7 +153,7 @@ def request_import_new_incremental_dump(id_: int):
     """
     if id_:
         send_request_to_spark_cluster(_prepare_query_message(
-            'import.dump.incremental_id', params={'id': id_}))
+            'import.dump.incremental_id', params={'dump_id': id_}))
     else:
         send_request_to_spark_cluster(
             _prepare_query_message('import.dump.incremental_newest'))
@@ -241,14 +242,6 @@ def request_recommendations(top, similar, users):
         'cf.recommendations.recording.recommendations', params=params))
 
 
-@cli.command(name='request_import_mapping')
-def request_import_mapping():
-    """ Send the spark cluster a request to import msid mbid mapping.
-    """
-
-    send_request_to_spark_cluster(_prepare_query_message('import.mapping'))
-
-
 @cli.command(name='request_import_artist_relation')
 def request_import_artist_relation():
     """ Send the spark cluster a request to import artist relation.
@@ -268,3 +261,51 @@ def request_similar_users(max_num_users):
     }
     send_request_to_spark_cluster(_prepare_query_message(
         'similarity.similar_users', params=params))
+
+
+# Some useful commands to keep our crontabs manageable. These commands do not add new functionality
+# rather combine multiple commands related to a task so that they are always invoked in the correct order.
+
+@cli.command(name='cron_request_all_stats')
+@click.pass_context
+def cron_request_all_stats(ctx):
+    ctx.invoke(request_user_stats, type_="entity", range_="week", entity="artists")
+    ctx.invoke(request_user_stats, type_="entity", range_="month", entity="artists")
+    ctx.invoke(request_user_stats, type_="entity", range_="year", entity="artists")
+    ctx.invoke(request_user_stats, type_="entity", range_="all_time", entity="artists")
+
+    ctx.invoke(request_user_stats, type_="entity", range_="week", entity="releases")
+    ctx.invoke(request_user_stats, type_="entity", range_="month", entity="releases")
+    ctx.invoke(request_user_stats, type_="entity", range_="year", entity="releases")
+    ctx.invoke(request_user_stats, type_="entity", range_="all_time", entity="releases")
+
+    ctx.invoke(request_user_stats, type_="entity", range_="week", entity="recordings")
+    ctx.invoke(request_user_stats, type_="entity", range_="month", entity="recordings")
+    ctx.invoke(request_user_stats, type_="entity", range_="year", entity="recordings")
+    ctx.invoke(request_user_stats, type_="entity", range_="all_time", entity="recordings")
+
+    ctx.invoke(request_user_stats, type_="listening_activity", range_="week")
+    ctx.invoke(request_user_stats, type_="listening_activity", range_="month")
+    ctx.invoke(request_user_stats, type_="listening_activity", range_="year")
+    ctx.invoke(request_user_stats, type_="listening_activity", range_="all_time")
+
+    ctx.invoke(request_user_stats, type_="daily_activity", range_="week")
+    ctx.invoke(request_user_stats, type_="daily_activity", range_="month")
+    ctx.invoke(request_user_stats, type_="daily_activity", range_="year")
+    ctx.invoke(request_user_stats, type_="daily_activity", range_="all_time")
+
+
+@cli.command(name='cron_request_similar_users')
+@click.pass_context
+def cron_request_similar_users(ctx):
+    ctx.invoke(request_dataframes, job_type="similar_users", days=365, listens_threshold=50)
+    ctx.invoke(request_similar_users)
+
+
+@cli.command(name='cron_request_recommendations')
+@click.pass_context
+def cron_request_recommendations(ctx):
+    ctx.invoke(request_dataframes)
+    ctx.invoke(request_model)
+    ctx.invoke(request_candidate_sets)
+    ctx.invoke(request_recommendations, top=1000, similar=1000)

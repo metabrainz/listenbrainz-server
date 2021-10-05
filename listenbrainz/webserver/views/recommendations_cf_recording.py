@@ -2,21 +2,18 @@ import ujson
 import requests
 
 from flask import Blueprint, render_template, current_app
-from flask_login import current_user
-from listenbrainz.domain.spotify import SpotifyService
 
 from listenbrainz.webserver.views.user import _get_user
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
 from werkzeug.exceptions import BadRequest, InternalServerError
 
-from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user
 
 recommendations_cf_recording_bp = Blueprint('recommendations_cf_recording', __name__)
 
 SERVER_URL = "https://labs.api.listenbrainz.org/recording-mbid-lookup/json"
 
 
-@recommendations_cf_recording_bp.route("/<user_name>")
+@recommendations_cf_recording_bp.route("/<user_name>/")
 def info(user_name):
     """ Show info about the recommended tracks
     """
@@ -30,7 +27,7 @@ def info(user_name):
     )
 
 
-@recommendations_cf_recording_bp.route("/<user_name>/top_artist")
+@recommendations_cf_recording_bp.route("/<user_name>/top_artist/")
 def top_artist(user_name: str):
     """ Show top artist user recommendations """
     user = _get_user(user_name)
@@ -40,7 +37,7 @@ def top_artist(user_name: str):
     return template
 
 
-@recommendations_cf_recording_bp.route("/<user_name>/similar_artist")
+@recommendations_cf_recording_bp.route("/<user_name>/similar_artist/")
 def similar_artist(user_name: str):
     """ Show similar artist user recommendations """
     user = _get_user(user_name)
@@ -94,30 +91,13 @@ def _get_template(active_section, user):
             error_msg="An error occurred while processing your request. Check back later!"
         )
 
-    spotify_data = get_current_spotify_user()
-    youtube_data = get_current_youtube_user()
-
-    current_user_data = {}
-
-    if current_user.is_authenticated:
-        current_user_data = {
-                "id": current_user.id,
-                "name": current_user.musicbrainz_id,
-                "auth_token": current_user.auth_token,
-        }
-
     props = {
         "user": {
             "id": user.id,
             "name": user.musicbrainz_id,
         },
-        "current_user": current_user_data,
-        "spotify": spotify_data,
-        "youtube": youtube_data,
-        "api_url": current_app.config["API_URL"],
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
         "recommendations": recommendations,
-        "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn")
     }
 
     return render_template(

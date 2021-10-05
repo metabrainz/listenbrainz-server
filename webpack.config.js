@@ -8,6 +8,20 @@ const jsDir = path.join(baseDir, "js");
 const distDir = path.join(baseDir, "dist");
 const cssDir = path.join(baseDir, "css");
 
+const es5LibrariesToTranspile = [
+  "d3-array",
+  "d3-scale",
+  "internmap",
+  "react-date-picker",
+  "react-calendar",
+  "socket.io-client",
+  "socket.io-parser",
+  "engine.io-client",
+];
+const babelExcludeLibrariesRegexp = new RegExp(
+  `node_modules/(?!(${es5LibrariesToTranspile.join("|")})/).*`,
+  ""
+);
 module.exports = function (env, argv) {
   const isProd = argv.mode === "production";
   const plugins = [
@@ -42,6 +56,8 @@ module.exports = function (env, argv) {
       userEntityChart: path.resolve(jsDir, "src/stats/UserEntityChart.tsx"),
       userReports: path.resolve(jsDir, "src/stats/UserReports.tsx"),
       userPageHeading: path.resolve(jsDir, "src/UserPageHeading.tsx"),
+      userFeedback: path.resolve(jsDir, "src/UserFeedback.tsx"),
+      userPins: path.resolve(jsDir, "src/UserPins.tsx"),
       userFeed: path.resolve(jsDir, "src/user-feed/UserFeed.tsx"),
       playlist: path.resolve(jsDir, "src/playlists/Playlist.tsx"),
       playlists: path.resolve(jsDir, "src/playlists/Playlists.tsx"),
@@ -61,8 +77,8 @@ module.exports = function (env, argv) {
       rules: [
         {
           test: /\.(js|ts)x?$/,
-          // some nivo/D3 dependencies need to be transpiled, we include them with the following regex
-          exclude: /node_modules\/(?!(d3-array|d3-scale|internmap|react-date-picker|react-calendar)\/).*/,
+          // some third-party libraries need to be transpiled to ES5, we include them with the following regex
+          exclude: babelExcludeLibrariesRegexp,
           // Don't specify the babel configuration here
           // Configuration can be found in ./babel.config.js
           use: "babel-loader",

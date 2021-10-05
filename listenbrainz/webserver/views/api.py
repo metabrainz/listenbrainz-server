@@ -4,17 +4,22 @@ from typing import Tuple
 import ujson
 import psycopg2
 from flask import Blueprint, request, jsonify, current_app
+from brainzutils.musicbrainz_db import engine as mb_engine
 
+from data.model.external_service import ExternalServiceType
 from listenbrainz.listenstore import TimescaleListenStore
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
+    APIUnauthorized
 from listenbrainz.webserver.decorators import api_listenstore_needed
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz import webserver
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
-from listenbrainz.webserver.rate_limiter import ratelimit
+from listenbrainz.db import listens_importer
+from brainzutils.ratelimit import ratelimit
 import listenbrainz.webserver.redis_connection as redis_connection
+from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list,\
     is_valid_uuid, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT,\
     LISTEN_TYPE_PLAYING_NOW, validate_auth_header, get_non_negative_param
@@ -49,7 +54,9 @@ def submit_listen():
     :statuscode 401: invalid authorization. See error message for details.
     :resheader Content-Type: *application/json*
     """
-    user = validate_auth_header()
+    user = validate_auth_header(fetch_email=True)
+    if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
+        raise APIUnauthorized(REJECT_LISTENS_WITHOUT_EMAIL_ERROR)
 
     raw_data = request.get_data()
     try:
@@ -79,12 +86,10 @@ def submit_listen():
         log_raise_400("Invalid JSON document submitted.", raw_data)
 
     # validate listens to make sure json is okay
-    for listen in payload:
-        validate_listen(listen, listen_type)
+    validated_payload = [validate_listen(listen, listen_type) for listen in payload]
 
     try:
-        insert_payload(
-            payload, user, listen_type=_get_listen_type(data['listen_type']))
+        insert_payload(validated_payload, user, listen_type)
     except APIServiceUnavailable as e:
         raise
     except Exception as e:
@@ -293,7 +298,7 @@ def get_similar_to_user(user_name, other_user_name):
         }
 
     :param user_name: the MusicBrainz ID of the the one user
-    :param other_user_name: the MusicBrainz ID of the other user whose similar users are 
+    :param other_user_name: the MusicBrainz ID of the other user whose similar users are
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
     :statuscode 404: The requested user was not found.
@@ -341,32 +346,42 @@ def latest_import():
     :statuscode 200: latest import timestamp updated
     :statuscode 400: invalid JSON sent, see error message for details.
     :statuscode 401: invalid authorization. See error message for details.
+    :statuscode 404: user or service not found. See error message for details.
     """
     if request.method == 'GET':
         user_name = request.args.get('user_name', '')
+        service_name = request.args.get('service', 'lastfm')
+        try:
+            service = ExternalServiceType[service_name.upper()]
+        except KeyError:
+            raise APINotFound("Service does not exist: {}".format(service_name))
         user = db_user.get_by_mb_id(user_name)
         if user is None:
-            raise APINotFound(
-                "Cannot find user: {user_name}".format(user_name=user_name))
+            raise APINotFound("Cannot find user: {user_name}".format(user_name=user_name))
+        latest_import_ts = listens_importer.get_latest_listened_at(user["id"], service)
         return jsonify({
             'musicbrainz_id': user['musicbrainz_id'],
-            'latest_import': 0 if not user['latest_import'] else int(user['latest_import'].strftime('%s'))
+            'latest_import': 0 if not latest_import_ts else int(latest_import_ts.strftime('%s'))
         })
     elif request.method == 'POST':
         user = validate_auth_header()
 
         try:
-            ts = ujson.loads(request.get_data()).get('ts', 0)
-        except ValueError:
+            data = ujson.loads(request.get_data())
+            ts = int(data.get('ts', 0))
+            service_name = data.get('service', 'lastfm')
+            service = ExternalServiceType[service_name.upper()]
+        except (ValueError, KeyError):
             raise APIBadRequest('Invalid data sent')
 
         try:
-            db_user.increase_latest_import(user['musicbrainz_id'], int(ts))
-        except DatabaseException as e:
-            current_app.logger.error(
-                "Error while updating latest import: {}".format(e))
-            raise APIInternalServerError(
-                'Could not update latest_import, try again')
+            last_import_ts = listens_importer.get_latest_listened_at(user["id"], service)
+            last_import_ts = 0 if not last_import_ts else int(last_import_ts.strftime('%s'))
+            if ts > last_import_ts:
+                listens_importer.update_latest_listened_at(user["id"], service, ts)
+        except DatabaseException:
+            current_app.logger.error("Error while updating latest import: ", exc_info=True)
+            raise APIInternalServerError('Could not update latest_import, try again')
 
         # During unrelated tests _ts may be None -- improving this would be a great headache. 
         # However, during the test of this code and while serving requests _ts is set.
@@ -383,8 +398,8 @@ def validate_token():
     """
     Check whether a User Token is a valid entry in the database.
 
-    In order to query this endpoint, send a GET request with the token in
-    the Authorization header.
+    In order to query this endpoint, send a GET request with the Authorization
+    header set to the value ``Token [the token value]``.
 
     .. note::
         - This endpoint also checks for `token` argument in query
@@ -418,7 +433,7 @@ def validate_token():
     :statuscode 400: No token was sent to the endpoint.
     """
     header = request.headers.get('Authorization')
-    if header:
+    if header and header.lower().startswith("token "):
         auth_token = header.split(" ")[1]
     else:
         # for backwards compatibility, check for auth token in query parameters as well
@@ -534,7 +549,7 @@ def get_playlists_for_user(playlist_user_name):
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     """
-    user = validate_auth_header(True)
+    user = validate_auth_header(optional=True)
 
     count = get_non_negative_param(
         'count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
@@ -600,7 +615,7 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
     :resheader Content-Type: *application/json*
     """
 
-    user = validate_auth_header(True)
+    user = validate_auth_header(optional=True)
 
     count = get_non_negative_param(
         'count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)

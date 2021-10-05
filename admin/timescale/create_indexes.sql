@@ -19,4 +19,9 @@ CREATE INDEX added_by_id_playlist_recording ON playlist.playlist_recording (adde
 CREATE INDEX playlist_id_playlist_collaborator ON playlist.playlist_collaborator (playlist_id);
 CREATE INDEX collaborator_id_playlist_collaborator ON playlist.playlist_collaborator (collaborator_id);
 
+-- MBID Mapping
+
+CREATE UNIQUE INDEX id_ndx_listen_join_listen_mbid_mapping ON listen_mbid_mapping (id);
+CREATE UNIQUE INDEX recording_msid_ndx_listen_join_listen_mbid_mapping ON listen_join_listen_mbid_mapping (recording_msid);
+
 COMMIT;

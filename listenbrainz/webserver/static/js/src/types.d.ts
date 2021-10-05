@@ -6,7 +6,7 @@ declare module "time-ago";
 declare module "debounce-async";
 
 declare module "react-bs-notifier";
-declare type AlertType = "danger" | "warning" | "success";
+declare type AlertType = "danger" | "warning" | "success" | "info";
 declare type Alert = {
   id: number;
   type: AlertType;
@@ -45,12 +45,7 @@ interface AdditionalInfo {
 declare type BaseListenFormat = {
   listened_at: number;
   user_name?: string | null;
-  track_metadata: {
-    artist_name: string;
-    release_name?: string | null;
-    track_name: string;
-    additional_info?: AdditionalInfo;
-  };
+  track_metadata: TrackMetadata;
 };
 
 declare type Listen = BaseListenFormat & {
@@ -66,7 +61,9 @@ declare type ListenBrainzUser = {
   auth_token?: string;
 };
 
-declare type ListenType = "single" | "playingNow" | "import";
+declare type ImportService = "lastfm" | "librefm";
+
+declare type ListenType = "single" | "playing_now" | "import";
 
 declare type BrainzPlayDirection = "up" | "down" | "hidden";
 
@@ -82,6 +79,9 @@ declare type SpotifyUser = {
 
 declare type YoutubeUser = {
   api_key?: string;
+};
+
+declare type CritiqueBrainzUser = {
   access_token?: string;
 };
 
@@ -372,9 +372,25 @@ declare type ListenFeedBack = 1 | 0 | -1;
 declare type RecommendationFeedBack = "love" | "like" | "hate" | "dislike";
 
 declare type FeedbackResponse = {
+  created: number;
   recording_msid: string;
   score: ListenFeedBack;
   user_id: string;
+};
+declare type TrackMetadata = {
+  artist_name: string;
+  track_name: string;
+  release_name?: string;
+  recording_mbid?: string;
+  recording_msid?: string;
+  artist_msid?: string;
+  release_mbid?: string;
+  release_msid?: string;
+  additional_info?: AdditionalInfo;
+};
+
+declare type FeedbackResponseWithTrackMetadata = FeedbackResponse & {
+  track_metadata: TrackMetadata;
 };
 
 declare type RecommendationFeedbackResponse = {
@@ -459,6 +475,16 @@ declare type RecommendationFeedbackMap = {
   [recordingMbid: string]: RecommendationFeedBack | null;
 };
 
+declare type PinnedRecording = {
+  blurb_content?: string | null;
+  created: number;
+  pinned_until: number;
+  row_id: number;
+  recording_mbid: string | null;
+  recording_msid?: string;
+  track_metadata: TrackMetadata;
+};
+
 /** For recommending a track from the front-end */
 declare type UserTrackRecommendationMetadata = {
   artist_name: string;
@@ -469,12 +495,17 @@ declare type UserTrackRecommendationMetadata = {
   artist_msid: string;
 };
 
+declare type PinEventMetadata = Listen & {
+  blurb_content?: string;
+};
+
 /** ***********************************
  ********  USER FEED TIMELINE  ********
  ************************************* */
 
 type EventTypeT =
   | "recording_recommendation"
+  | "recording_pin"
   | "listen"
   | "like"
   | "follow"
@@ -496,6 +527,7 @@ type NotificationEventMetadata = {
 type EventMetadata =
   | Listen
   | UserRelationshipEventMetadata
+  | PinEventMetadata
   | NotificationEventMetadata;
 
 type TimelineEvent = {
@@ -508,4 +540,20 @@ type TimelineEvent = {
 type SimilarUser = {
   name: string;
   similarityScore: number;
+};
+
+type ReviewableEntityType = "recording" | "artist" | "release_group";
+
+type ReviewableEntity = {
+  type: ReviewableEntityType;
+  name?: string | null;
+  mbid: string;
+};
+
+type CritiqueBrainzReview = {
+  entity_id: string;
+  entity_type: ReviewableEntityType;
+  text: string;
+  languageCode: string;
+  rating?: number;
 };

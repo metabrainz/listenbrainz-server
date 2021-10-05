@@ -42,7 +42,7 @@
             "track_name": "Falling",
             "release_name": "Rennen"
           },
-          "listened_at": 1586513524,
+          "listened_at": 1586523524,
           "listened_at_iso": "2020-04-10T10:12:04Z"
         },
         {
@@ -1064,12 +1064,22 @@
     "artistCount": null,
     "profileUrl": "/user/iliekcomputers",
     "mode": "listens",
+    "userPinnedRecording": {
+      "blurb_content": "I LOVE",
+      "created": 1234512315,
+      "pinned_until": 1234512345,
+      "row_id": 1,
+      "recording_mbid": "98255a8c-017a-4bc7-8dd6-1fa36124572b",
+      "track_metadata": {
+        "artist_name": "Rick Astley",
+        "track_name": "Never Gonna Give You Up"
+      }
+    },
     "spotify": {
         "access_token": "access token",
         "permission": ["streaming", "user-read-email", "user-read-private"]
     },
     "youtube": {
-        "access_token": "frontend-test",
         "api_key": "fake-api-key"
     },
     "webSocketsServerUrl": "",

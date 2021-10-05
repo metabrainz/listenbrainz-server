@@ -18,6 +18,24 @@ ALTER TABLE statistics.user
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
+ALTER TABLE statistics.user_new
+    ADD CONSTRAINT user_stats_new_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE reported_users
+    ADD CONSTRAINT  reporter_user_id_foreign_key
+    FOREIGN KEY (reporter_user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE reported_users
+    ADD CONSTRAINT  reported_user_id_foreign_key
+    FOREIGN KEY (reported_user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
 ALTER TABLE spotify_auth
     ADD CONSTRAINT spotify_auth_user_id_foreign_key
     FOREIGN KEY (user_id)
@@ -105,6 +123,12 @@ ALTER TABLE user_relationship
 
 ALTER TABLE recommendation_feedback
     ADD CONSTRAINT recommendation_feedback_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE pinned_recording
+    ADD CONSTRAINT pinned_recording_user_id_foreign_key
     FOREIGN KEY (user_id)
     REFERENCES "user" (id)
     ON DELETE CASCADE;

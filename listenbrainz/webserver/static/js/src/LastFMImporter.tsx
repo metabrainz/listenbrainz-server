@@ -7,6 +7,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import APIService from "./APIService";
 import Scrobble from "./Scrobble";
 import LastFMImporterModal from "./LastFMImporterModal";
+import { getPageProps } from "./utils";
 
 export const LASTFM_RETRIES = 3;
 
@@ -20,6 +21,8 @@ export type ImporterProps = {
   apiUrl?: string;
   lastfmApiUrl: string;
   lastfmApiKey: string;
+  librefmApiUrl: string;
+  librefmApiKey: string;
 };
 
 export type ImporterState = {
@@ -27,16 +30,20 @@ export type ImporterState = {
   canClose: boolean;
   lastfmUsername: string;
   msg?: React.ReactElement;
+  service: ImportService;
 };
 
 export default class LastFmImporter extends React.Component<
   ImporterProps,
   ImporterState
 > {
-  static encodeScrobbles(scrobbles: LastFmScrobblePage): any {
+  static encodeScrobbles(
+    scrobbles: LastFmScrobblePage,
+    service: ImportService = "lastfm"
+  ): any {
     const rawScrobbles = scrobbles.recenttracks.track;
     const parsedScrobbles = LastFmImporter.map((rawScrobble: any) => {
-      const scrobble = new Scrobble(rawScrobble);
+      const scrobble = new Scrobble(rawScrobble, service);
       return scrobble.asJSONSerializable();
     }, rawScrobbles);
     return parsedScrobbles;
@@ -61,6 +68,7 @@ export default class LastFmImporter extends React.Component<
 
   private userName: string;
   private userToken: string;
+  private userIsPrivate: boolean;
 
   private page = 1;
   private totalPages = 0;
@@ -89,6 +97,7 @@ export default class LastFmImporter extends React.Component<
       canClose: true,
       lastfmUsername: "",
       msg: undefined,
+      service: "lastfm",
     };
 
     this.APIService = new APIService(
@@ -100,6 +109,7 @@ export default class LastFmImporter extends React.Component<
 
     this.userName = props.user.name;
     this.userToken = props.user.auth_token || "";
+    this.userIsPrivate = false;
   }
 
   async getTotalNumberOfScrobbles() {
@@ -164,7 +174,7 @@ export default class LastFmImporter extends React.Component<
     page: number,
     retries: number
   ): Promise<Array<Listen> | undefined> {
-    const { lastfmUsername } = this.state;
+    const { lastfmUsername, service } = this.state;
     const timeout = 3000;
 
     const url = `${
@@ -187,7 +197,7 @@ export default class LastFmImporter extends React.Component<
         }
 
         // Encode the page so that it can be submitted
-        const payload = LastFmImporter.encodeScrobbles(data);
+        const payload = LastFmImporter.encodeScrobbles(data, service);
         this.countReceived += payload.length;
         return payload;
       }
@@ -197,20 +207,35 @@ export default class LastFmImporter extends React.Component<
       }
     } catch (err) {
       // Retry if there is a network error
-      // eslint-disable-next-line no-console
-      console.warn(`Error while fetching last.fm page ${page}:`, err);
       if (retries <= 0) {
         throw new Error(
-          `Failed to fetch page ${page} from last.fm after ${LASTFM_RETRIES} retries.`
+          `Failed to fetch page ${page} from ${service} after ${LASTFM_RETRIES} retries: ${err.toString()}`
         );
       }
-      // eslint-disable-next-line no-console
-      console.warn(`Retrying in ${timeout / 1000}s, ${retries} retries left`);
       await new Promise((resolve) => setTimeout(resolve, timeout));
       // eslint-disable-next-line no-return-await
       return await this.getPage(page, retries - 1);
     }
     return undefined;
+  }
+
+  async getUserPrivacy() {
+    /*
+     * Determine if user's last.fm scrobbles are private
+     */
+    const { lastfmUsername } = this.state;
+    const url = `${this.lastfmURL}?method=user.getrecenttracks&user=${lastfmUsername}&api_key=${this.lastfmKey}&format=json`;
+    try {
+      const response = await fetch(encodeURI(url));
+      const data = await response.json();
+      return data.error === 17;
+    } catch (error) {
+      this.updateModalAction(
+        <p>An error occurred, please try again. :(</p>,
+        true
+      );
+      throw error;
+    }
   }
 
   static getlastImportedString(listen: Listen) {
@@ -261,12 +286,32 @@ export default class LastFmImporter extends React.Component<
     this.setState({ lastfmUsername: event.target.value });
   };
 
+  handleServiceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const service = event.target.value;
+    if (service === "librefm") {
+      const { librefmApiUrl, librefmApiKey } = this.props;
+      this.lastfmURL = librefmApiUrl;
+      this.lastfmKey = librefmApiKey;
+    } else {
+      const { lastfmApiUrl, lastfmApiKey } = this.props;
+      this.lastfmURL = lastfmApiUrl;
+      this.lastfmKey = lastfmApiKey;
+    }
+    this.setState({ service: event.target.value as ImportService });
+  };
+
   handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     const { lastfmUsername } = this.state;
     this.toggleModal();
     event.preventDefault();
     this.startImport();
   };
+
+  progressBarPercentage() {
+    if (this.totalPages >= this.numCompleted)
+      return Math.ceil((this.numCompleted / this.totalPages) * 100);
+    return 50;
+  }
 
   async submitPage(payload: Array<Listen>) {
     const delay = this.getRateLimitDelay();
@@ -299,6 +344,7 @@ export default class LastFmImporter extends React.Component<
 
       this.page -= 1;
       this.numCompleted += 1;
+      const progressBarPercentage = this.progressBarPercentage();
 
       // Update message
       const msg = (
@@ -314,9 +360,21 @@ export default class LastFmImporter extends React.Component<
               </span>
             )}
             <span>
-              Please don&apos;t close this page while this is running.
+              Closing this page during import may require a full restart of the
+              importer from the beginning.
             </span>{" "}
             <br /> <br />
+            <div className="progress" style={{ height: "7px" }}>
+              <div
+                className="progress-bar progress-bar-striped progress-bar-animated"
+                role="progressbar"
+                style={{ width: `${progressBarPercentage}%` }}
+                aria-label="Importer Progress"
+                aria-valuenow={progressBarPercentage}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              />
+            </div>
             <span> Latest import timestamp: {this.lastImportedString} </span>
           </span>
         </p>
@@ -328,15 +386,21 @@ export default class LastFmImporter extends React.Component<
   async startImport() {
     let finalMsg: JSX.Element;
     const { profileUrl } = this.props;
-    this.updateModalAction(<p>Your import from Last.fm is starting!</p>, false);
+    const { service } = this.state;
+    this.updateModalAction(
+      <p>Your import from {service} is starting!</p>,
+      false
+    );
 
     try {
       this.latestImportTime = await this.APIService.getLatestImport(
-        this.userName
+        this.userName,
+        service
       );
       this.incrementalImport = this.latestImportTime > 0;
       this.playCount = await this.getTotalNumberOfScrobbles();
       this.totalPages = await this.getNumberOfPages();
+      this.userIsPrivate = await this.getUserPrivacy();
       this.page = this.totalPages; // Start from the last page so that oldest scrobbles are imported first
 
       await this.importLoop(); // import pages
@@ -345,7 +409,7 @@ export default class LastFmImporter extends React.Component<
       finalMsg = (
         <p>
           <FontAwesomeIcon icon={faTimes as IconProp} /> We were unable to
-          import from LastFM, please try again.
+          import from {service}, please try again.
           <br />
           If the problem persists please contact us.
           <br />
@@ -358,8 +422,6 @@ export default class LastFmImporter extends React.Component<
           </span>
         </p>
       );
-      // eslint-disable-next-line no-console
-      console.error(err);
       this.setState({ canClose: true, msg: finalMsg });
       return Promise.resolve(null);
     }
@@ -372,14 +434,15 @@ export default class LastFmImporter extends React.Component<
       );
       this.APIService.setLatestImport(
         this.userToken,
+        service,
         this.maxTimestampForImport
       );
     } catch {
-      // console.warn("Error setting latest import timestamp, retrying in 3s");
       setTimeout(
         () =>
           this.APIService.setLatestImport(
             this.userToken,
+            service,
             this.maxTimestampForImport
           ),
         3000
@@ -404,8 +467,8 @@ export default class LastFmImporter extends React.Component<
             <b>
               <span style={{ fontSize: `${10}pt` }} className="text-danger">
                 The number submitted listens is different from the{" "}
-                {this.playCount} that Last.fm reports due to an inconsistency in
-                their API, sorry!
+                {this.playCount} that {service} reports due to an inconsistency
+                in their API, sorry!
                 <br />
               </span>
             </b>
@@ -422,6 +485,33 @@ export default class LastFmImporter extends React.Component<
         </span>
       </p>
     );
+
+    // If the user's last.fm scrobbles are private, prompt user to check their settings
+    if (this.userIsPrivate) {
+      finalMsg = (
+        <p>
+          <FontAwesomeIcon icon={faTimes as IconProp} /> Import failed
+          <br />
+          <br />
+          <b style={{ fontSize: `${10}pt` }} className="text-danger">
+            Please make sure your Last.fm recent listening information is public
+            by updating your privacy settings
+            <a href="https://www.last.fm/settings/privacy"> here. </a>
+          </b>
+          <br />
+          <span style={{ fontSize: `${8}pt` }}>
+            Thank you for using ListenBrainz!
+          </span>
+          <br />
+          <br />
+          <span style={{ fontSize: `${10}pt` }}>
+            <a href={`${profileUrl}`}>
+              Close and go to your ListenBrainz profile
+            </a>
+          </span>
+        </p>
+      );
+    }
     this.setState({ canClose: true, msg: finalMsg });
     return Promise.resolve(null);
   }
@@ -434,18 +524,67 @@ export default class LastFmImporter extends React.Component<
   }
 
   render() {
-    const { show, canClose, lastfmUsername, msg } = this.state;
+    const { show, canClose, lastfmUsername, msg, service } = this.state;
     return (
       <div className="Importer">
         <form onSubmit={this.handleSubmit}>
-          <input
-            type="text"
-            onChange={this.handleChange}
-            value={lastfmUsername}
-            placeholder="Last.fm Username"
-            size={30}
-          />
-          <input type="submit" value="Import Now!" disabled={!lastfmUsername} />
+          <dl>
+            <dd>Choose a service:</dd>
+            <dt className="btn-group" style={{ marginBottom: "1em" }}>
+              <label
+                className={`btn btn-default ${
+                  service === "lastfm" ? " btn-primary" : ""
+                }`}
+              >
+                <input
+                  type="radio"
+                  id="lastfm"
+                  name="service"
+                  value="lastfm"
+                  onChange={this.handleServiceChange}
+                  checked={service === "lastfm"}
+                  style={{ position: "absolute", clip: "rect(0,0,0,0)" }}
+                />
+                Last.fm
+              </label>
+              <label
+                className={`btn btn-default ${
+                  service === "librefm" ? " btn-primary" : ""
+                }`}
+              >
+                <input
+                  type="radio"
+                  id="librefm"
+                  name="service"
+                  value="librefm"
+                  checked={service === "librefm"}
+                  onChange={this.handleServiceChange}
+                  style={{ position: "absolute", clip: "rect(0,0,0,0)" }}
+                />
+                Libre.fm
+              </label>
+            </dt>
+            <dd>Your {service} username:</dd>
+            <dt>
+              <input
+                type="text"
+                className="form-control"
+                onChange={this.handleChange}
+                value={lastfmUsername}
+                name="lastfmUsername"
+                placeholder="Username"
+                size={30}
+              />
+            </dt>
+          </dl>
+
+          <button
+            className="btn btn-success"
+            type="submit"
+            disabled={!lastfmUsername}
+          >
+            Import Now!
+          </button>
         </form>
         {show && (
           <LastFMImporterModal onClose={this.toggleModal} disable={!canClose}>
@@ -467,21 +606,15 @@ export default class LastFmImporter extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const domContainer = document.querySelector("#react-container");
-  const propsElement = document.getElementById("react-props");
-  let reactProps;
-  try {
-    reactProps = JSON.parse(propsElement!.innerHTML);
-  } catch (err) {
-    // Show error to the user and ask to reload page
-  }
+  const { domContainer, reactProps, globalReactProps } = getPageProps();
+  const { api_url, sentry_dsn } = globalReactProps;
   const {
     user,
     profile_url,
-    api_url,
     lastfm_api_url,
     lastfm_api_key,
-    sentry_dsn,
+    librefm_api_url,
+    librefm_api_key,
   } = reactProps;
 
   if (sentry_dsn) {
@@ -495,6 +628,8 @@ document.addEventListener("DOMContentLoaded", () => {
       apiUrl={api_url}
       lastfmApiKey={lastfm_api_key}
       lastfmApiUrl={lastfm_api_url}
+      librefmApiKey={librefm_api_key}
+      librefmApiUrl={librefm_api_url}
     />,
     domContainer
   );

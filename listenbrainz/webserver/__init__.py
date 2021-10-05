@@ -4,8 +4,11 @@ import sys
 from time import sleep
 
 from brainzutils.flask import CustomFlask
+from brainzutils import cache, metrics
 from flask import request, url_for, redirect
 from flask_login import current_user
+
+from listenbrainz.webserver.utils import get_global_props
 
 API_PREFIX = '/1'
 
@@ -44,7 +47,7 @@ def create_rabbitmq(app):
 
 def load_config(app):
     # Load configuration files: If we're running under a docker deployment, wait until
-    config_file = os.path.join( os.path.dirname(os.path.realpath(__file__)), '..', 'config.py' )
+    config_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'config.py')
     if deploy_env:
         print("Checking if consul template generated config file exists: %s" % config_file)
         for i in range(CONSUL_CONFIG_FILE_RETRY_COUNT):
@@ -52,7 +55,7 @@ def load_config(app):
                 sleep(1)
 
         if not os.path.exists(config_file):
-            print("No configuration file generated yet. Retried %d times, exiting." % CONSUL_CONFIG_FILE_RETRY_COUNT);
+            print("No configuration file generated yet. Retried %d times, exiting." % CONSUL_CONFIG_FILE_RETRY_COUNT)
             sys.exit(-1)
 
         print("loading consul config file %s)" % config_file)
@@ -93,6 +96,10 @@ def gen_app(debug=None):
         sentry_config=app.config.get('LOG_SENTRY')
     )
 
+    # Initialize BU cache and metrics
+    cache.init(host=app.config['REDIS_HOST'], port=app.config['REDIS_PORT'], namespace=app.config['REDIS_NAMESPACE'])
+    metrics.init("listenbrainz")
+
     # Redis connection
     create_redis(app)
 
@@ -127,10 +134,10 @@ def gen_app(debug=None):
     from listenbrainz.webserver.errors import init_error_handlers
     init_error_handlers(app)
 
-    from listenbrainz.webserver import rate_limiter
+    from brainzutils.ratelimit import inject_x_rate_headers
     @app.after_request
     def after_request_callbacks(response):
-        return rate_limiter.inject_x_rate_headers(response)
+        return inject_x_rate_headers(response)
 
     # Template utilities
     app.jinja_env.add_extension('jinja2.ext.do')
@@ -147,8 +154,11 @@ def create_app(debug=None):
     # Static files
     import listenbrainz.webserver.static_manager
     static_manager.read_manifest()
-    app.context_processor(lambda: dict(get_static_path=static_manager.get_static_path))
     app.static_folder = '/static'
+
+    app.context_processor(lambda: dict(
+        get_static_path=static_manager.get_static_path,
+    ))
 
     _register_blueprints(app)
 
@@ -162,12 +172,21 @@ def create_app(debug=None):
     from listenbrainz.model import ExternalService as ExternalServiceModel
     from listenbrainz.model import User as UserModel
     from listenbrainz.model import ListensImporter as ListensImporterModel
+    from listenbrainz.model import ReportedUsers as ReportedUsersModel
+    from listenbrainz.model import Playlist as PlaylistModel
+    from listenbrainz.model import PlaylistRecording as PlaylistRecordingModel
     from listenbrainz.model.external_service_oauth import ExternalServiceAdminView
     from listenbrainz.model.user import UserAdminView
     from listenbrainz.model.listens_import import ListensImporterAdminView
+    from listenbrainz.model.reported_users import ReportedUserAdminView
+    from listenbrainz.model.playlist import PlaylistAdminView
+    from listenbrainz.model.playlist_recording import PlaylistRecordingAdminView
     admin.add_view(UserAdminView(UserModel, model.db.session, endpoint='user_model'))
     admin.add_view(ExternalServiceAdminView(ExternalServiceModel, model.db.session, endpoint='external_service_model'))
     admin.add_view(ListensImporterAdminView(ListensImporterModel, model.db.session, endpoint='listens_importer_model'))
+    admin.add_view(ReportedUserAdminView(ReportedUsersModel, model.db.session, endpoint='reported_users_model'))
+    admin.add_view(PlaylistAdminView(PlaylistModel, model.db.session, endpoint='playlist_model'))
+    admin.add_view(PlaylistRecordingAdminView(PlaylistRecordingModel, model.db.session, endpoint='playlist_recording_model'))
 
     @app.before_request
     def before_request_gdpr_check():
@@ -183,7 +202,7 @@ def create_app(debug=None):
         # redirect them to agree to terms page.
         elif current_user.is_authenticated and current_user.gdpr_agreed is None:
             return redirect(url_for('index.gdpr_notice', next=request.full_path))
-
+    app.logger.info("Flask application created!")
     return app
 
 
@@ -204,7 +223,7 @@ def create_api_compat_app(debug=None):
     # add a value into the config dict of the app to note that this is the
     # app for api_compat. This is later used in error handling.
     app.config['IS_API_COMPAT_APP'] = True
-
+    app.logger.info("Flask api compat application created!")
     return app
 
 
@@ -229,39 +248,55 @@ def create_app_rtfd():
     return app
 
 
+def _register_blueprint_with_context(app, blueprint, **kwargs):
+    """Add some global props to a blueprint context and then register it with the app.
+    This should only be used for blueprints which render html."""
+    @blueprint.context_processor
+    def inject_context_processor():
+        return {"global_props": get_global_props()}
+
+    app.register_blueprint(blueprint, **kwargs)
+
+
 def _register_blueprints(app):
     from listenbrainz.webserver.views.index import index_bp
-    app.register_blueprint(index_bp)
+    _register_blueprint_with_context(app, index_bp)
 
     from listenbrainz.webserver.views.login import login_bp
-    app.register_blueprint(login_bp, url_prefix='/login')
+    _register_blueprint_with_context(app, login_bp, url_prefix='/login')
 
-    from listenbrainz.webserver.views.api import api_bp
-    app.register_blueprint(api_bp, url_prefix=API_PREFIX)
+    from listenbrainz.webserver.views.player import player_bp
+    _register_blueprint_with_context(app, player_bp, url_prefix='/player')
 
-    from listenbrainz.webserver.views.api_compat import api_bp as api_bp_compat
-    app.register_blueprint(api_bp_compat)
+    from listenbrainz.webserver.views.playlist import playlist_bp
+    _register_blueprint_with_context(app, playlist_bp, url_prefix='/playlist')
 
-    from listenbrainz.webserver.views.user import user_bp
-    app.register_blueprint(user_bp, url_prefix='/user')
+    from listenbrainz.webserver.views.profile import profile_bp
+    _register_blueprint_with_context(app, profile_bp, url_prefix='/profile')
+
+    from listenbrainz.webserver.views.recommendations_cf_recording import recommendations_cf_recording_bp
+    _register_blueprint_with_context(app, recommendations_cf_recording_bp, url_prefix='/recommended/tracks')
 
     from listenbrainz.webserver.views.user import redirect_bp
     app.register_blueprint(redirect_bp, url_prefix='/my')
 
-    from listenbrainz.webserver.views.profile import profile_bp
-    app.register_blueprint(profile_bp, url_prefix='/profile')
+    from listenbrainz.webserver.views.user import user_bp
+    _register_blueprint_with_context(app, user_bp, url_prefix='/user')
 
-    from listenbrainz.webserver.views.stats_api import stats_api_bp
-    app.register_blueprint(stats_api_bp, url_prefix=API_PREFIX+'/stats')
+    from listenbrainz.webserver.views.api_compat import api_bp as api_bp_compat
+    app.register_blueprint(api_bp_compat)
 
-    from listenbrainz.webserver.views.status_api import status_api_bp
-    app.register_blueprint(status_api_bp, url_prefix=API_PREFIX+'/status')
-
-    from listenbrainz.webserver.views.player import player_bp
-    app.register_blueprint(player_bp, url_prefix='/player')
+    from listenbrainz.webserver.views.api import api_bp
+    app.register_blueprint(api_bp, url_prefix=API_PREFIX)
 
     from listenbrainz.webserver.views.feedback_api import feedback_api_bp
     app.register_blueprint(feedback_api_bp, url_prefix=API_PREFIX+'/feedback')
+
+    from listenbrainz.webserver.views.missing_musicbrainz_data_api import missing_musicbrainz_data_api_bp
+    app.register_blueprint(missing_musicbrainz_data_api_bp, url_prefix=API_PREFIX+'/missing/musicbrainz')
+
+    from listenbrainz.webserver.views.playlist_api import playlist_api_bp
+    app.register_blueprint(playlist_api_bp, url_prefix=API_PREFIX+'/playlist')
 
     from listenbrainz.webserver.views.recommendations_cf_recording_feedback_api import recommendation_feedback_api_bp
     app.register_blueprint(recommendation_feedback_api_bp, url_prefix=API_PREFIX+'/recommendation/feedback')
@@ -269,20 +304,17 @@ def _register_blueprints(app):
     from listenbrainz.webserver.views.recommendations_cf_recording_api import recommendations_cf_recording_api_bp
     app.register_blueprint(recommendations_cf_recording_api_bp, url_prefix=API_PREFIX+'/cf/recommendation')
 
-    from listenbrainz.webserver.views.missing_musicbrainz_data_api import missing_musicbrainz_data_api_bp
-    app.register_blueprint(missing_musicbrainz_data_api_bp, url_prefix=API_PREFIX+'/missing/musicbrainz')
+    from listenbrainz.webserver.views.social_api import social_api_bp
+    app.register_blueprint(social_api_bp, url_prefix=API_PREFIX)
 
-    from listenbrainz.webserver.views.recommendations_cf_recording import recommendations_cf_recording_bp
-    app.register_blueprint(recommendations_cf_recording_bp, url_prefix='/recommended/tracks')
+    from listenbrainz.webserver.views.stats_api import stats_api_bp
+    app.register_blueprint(stats_api_bp, url_prefix=API_PREFIX+'/stats')
 
-    from listenbrainz.webserver.views.playlist import playlist_bp
-    app.register_blueprint(playlist_bp, url_prefix='/playlist')
-
-    from listenbrainz.webserver.views.playlist_api import playlist_api_bp
-    app.register_blueprint(playlist_api_bp, url_prefix=API_PREFIX+'/playlist')
+    from listenbrainz.webserver.views.status_api import status_api_bp
+    app.register_blueprint(status_api_bp, url_prefix=API_PREFIX+'/status')
 
     from listenbrainz.webserver.views.user_timeline_event_api import user_timeline_event_api_bp
     app.register_blueprint(user_timeline_event_api_bp, url_prefix=API_PREFIX)
 
-    from listenbrainz.webserver.views.social_api import social_api_bp
-    app.register_blueprint(social_api_bp, url_prefix=API_PREFIX)
+    from listenbrainz.webserver.views.pinned_recording_api import pinned_recording_api_bp
+    app.register_blueprint(pinned_recording_api_bp, url_prefix=API_PREFIX)

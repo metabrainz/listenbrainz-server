@@ -1,12 +1,13 @@
 import datetime
 
+import listenbrainz_spark.stats
 from listenbrainz_spark import utils, stats
-from listenbrainz_spark.tests import SparkTestCase
+from listenbrainz_spark.tests import SparkNewTestCase
 
 from pyspark.sql import Row
 
 
-class InitTestCase(SparkTestCase):
+class InitTestCase(SparkNewTestCase):
     def test_replace_days(self):
         self.assertEqual(stats.replace_days(datetime.datetime(2019, 5, 12), 13), datetime.datetime(2019, 5, 13))
 
@@ -37,11 +38,15 @@ class InitTestCase(SparkTestCase):
 
     def test_get_day_end(self):
         day = datetime.datetime(2020, 6, 19)
-        self.assertEqual(datetime.datetime(2020, 6, 19, 23, 59, 59), stats.get_day_end(day))
+        self.assertEqual(datetime.datetime(2020, 6, 19, 23, 59, 59, 999999), stats.get_day_end(day))
 
     def test_get_month_end(self):
         month = datetime.datetime(2020, 6, 1)
-        self.assertEqual(datetime.datetime(2020, 6, 30, 23, 59, 59), stats.get_month_end(month))
+        self.assertEqual(datetime.datetime(2020, 6, 30, 23, 59, 59, 999999), stats.get_month_end(month))
 
     def test_get_year_end(self):
-        self.assertEqual(datetime.datetime(2020, 12, 31, 23, 59, 59), stats.get_year_end(2020))
+        self.assertEqual(datetime.datetime(2020, 12, 31, 23, 59, 59, 999999), stats.get_year_end(datetime.datetime(2020, 1, 1)))
+
+    def test_get_last_monday(self):
+        date = datetime.datetime(2020, 5, 19)
+        self.assertEqual(datetime.datetime(2020, 5, 18), listenbrainz_spark.stats.get_last_monday(date))

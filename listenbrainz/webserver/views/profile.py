@@ -1,5 +1,10 @@
+import sqlalchemy
+from flask_wtf import FlaskForm
+
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
+from listenbrainz.db import listens_importer
+from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_SCOPES
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from data.model.external_service import ExternalServiceType
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
@@ -14,13 +19,12 @@ from flask import Blueprint, Response, render_template, request, url_for, \
     redirect, current_app, jsonify, stream_with_context
 from flask_login import current_user, login_required
 from werkzeug.exceptions import NotFound, BadRequest, Unauthorized
-from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound
+from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIBadRequest
 
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.login import api_login_required
-from listenbrainz.webserver.views.feedback_api import _feedback_to_api
 from listenbrainz.webserver.views.user import delete_user, delete_listens_history
 from time import time
 
@@ -29,50 +33,48 @@ profile_bp = Blueprint("profile", __name__)
 EXPORT_FETCH_COUNT = 5000
 
 
-@profile_bp.route("/resettoken", methods=["GET", "POST"])
+@profile_bp.route("/resettoken/", methods=["GET", "POST"])
 @login_required
 def reset_token():
-    if request.method == "POST":
-        token = request.form.get("token")
-        if token != current_user.auth_token:
-            raise BadRequest("Can only reset token of currently logged in user")
-        reset = request.form.get("reset")
-        if reset == "yes":
-            try:
-                db_user.update_token(current_user.id)
-                flash.info("Access token reset")
-            except DatabaseException:
-                flash.error("Something went wrong! Unable to reset token right now.")
+    form = FlaskForm()
+    if form.validate_on_submit():
+        try:
+            db_user.update_token(current_user.id)
+            flash.info("Access token reset")
+        except DatabaseException:
+            flash.error("Something went wrong! Unable to reset token right now.")
         return redirect(url_for("profile.info"))
-    else:
-        token = current_user.auth_token
-        return render_template(
-            "user/resettoken.html",
-            token=token,
-        )
+
+    if form.csrf_token.errors:
+        flash.error('Cannot reset token due to error during authentication, please try again later.')
+        return redirect(url_for('profile.info'))
+
+    return render_template(
+        "user/resettoken.html",
+        form=form,
+    )
 
 
-@profile_bp.route("/resetlatestimportts", methods=["GET", "POST"])
+@profile_bp.route("/resetlatestimportts/", methods=["GET", "POST"])
 @login_required
 def reset_latest_import_timestamp():
-    if request.method == "POST":
-        token = request.form.get("token")
-        if token != current_user.auth_token:
-            raise BadRequest("Can only reset latest import timestamp of currently logged in user")
-        reset = request.form.get("reset")
-        if reset == "yes":
-            try:
-                db_user.reset_latest_import(current_user.musicbrainz_id)
-                flash.info("Latest import time reset, we'll now import all your data instead of stopping at your last imported listen.")
-            except DatabaseException:
-                flash.error("Something went wrong! Unable to reset latest import timestamp right now.")
+    form = FlaskForm()
+    if form.validate_on_submit():
+        try:
+            listens_importer.update_latest_listened_at(current_user.id, ExternalServiceType.LASTFM, 0)
+            flash.info("Latest import time reset, we'll now import all your data instead of stopping at your last imported listen.")
+        except DatabaseException:
+            flash.error("Something went wrong! Unable to reset latest import timestamp right now.")
         return redirect(url_for("profile.info"))
-    else:
-        token = current_user.auth_token
-        return render_template(
-            "profile/resetlatestimportts.html",
-            token=token,
-        )
+
+    if form.csrf_token.errors:
+        flash.error('Cannot reset import time due to error during authentication, please try again later.')
+        return redirect(url_for('profile.info'))
+
+    return render_template(
+        "profile/resetlatestimportts.html",
+        form=form,
+    )
 
 
 @profile_bp.route("/")
@@ -85,7 +87,7 @@ def info():
     )
 
 
-@profile_bp.route("/import")
+@profile_bp.route("/import/")
 @login_required
 def import_data():
     """ Displays the import page to user, giving various options """
@@ -103,10 +105,10 @@ def import_data():
     props = {
         "user": user_data,
         "profile_url": url_for('user.profile', user_name=user_data["name"]),
-        "api_url":  current_app.config["API_URL"],
         "lastfm_api_url": current_app.config["LASTFM_API_URL"],
         "lastfm_api_key": current_app.config["LASTFM_API_KEY"],
-        "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn")
+        "librefm_api_url": current_app.config["LIBREFM_API_URL"],
+        "librefm_api_key": current_app.config["LIBREFM_API_KEY"],
     }
 
     return render_template(
@@ -154,7 +156,7 @@ def stream_json_array(elements):
     yield ']'
 
 
-@profile_bp.route("/export", methods=["GET", "POST"])
+@profile_bp.route("/export/", methods=["GET", "POST"])
 @login_required
 @web_listenstore_needed
 def export_data():
@@ -179,7 +181,7 @@ def export_data():
         return render_template("user/export.html", user=current_user)
 
 
-@profile_bp.route("/export-feedback", methods=["POST"])
+@profile_bp.route("/export-feedback/", methods=["POST"])
 @login_required
 def export_feedback():
     """ Exporting the feedback data to json """
@@ -189,7 +191,7 @@ def export_feedback():
     # feedback into memory at once, and we can start serving the response
     # immediately.
     feedback = fetch_feedback(current_user.id)
-    output = stream_json_array(_feedback_to_api(fb=fb) for fb in feedback)
+    output = stream_json_array(fb.to_api() for fb in feedback)
 
     response = Response(stream_with_context(output))
     response.headers["Content-Disposition"] = "attachment; filename=" + filename
@@ -198,7 +200,7 @@ def export_feedback():
     return response
 
 
-@profile_bp.route('/delete', methods=['GET', 'POST'])
+@profile_bp.route('/delete/', methods=['GET', 'POST'])
 @login_required
 @web_listenstore_needed
 def delete():
@@ -211,26 +213,29 @@ def delete():
     If GET request, this view renders a page asking the user to confirm
     that they wish to delete their ListenBrainz account.
     """
-    if request.method == 'POST':
-        if request.form.get('token') == current_user.auth_token:
-            try:
-                delete_user(current_user.musicbrainz_id)
-            except Exception as e:
-                current_app.logger.error('Error while deleting %s: %s', current_user.musicbrainz_id, str(e))
-                flash.error('Error while deleting user %s, please try again later.' % current_user.musicbrainz_id)
-                return redirect(url_for('profile.info'))
+    form = FlaskForm()
+    if form.validate_on_submit():
+        try:
+            delete_user(current_user.musicbrainz_id)
+            flash.success("Successfully deleted account for %s." % current_user.musicbrainz_id)
             return redirect(url_for('index.index'))
-        else:
-            flash.error('Cannot delete user due to error during authentication, please try again later.')
+        except Exception as e:
+            current_app.logger.error('Error while deleting %s: %s', current_user.musicbrainz_id, str(e))
+            flash.error('Error while deleting user %s, please try again later.' % current_user.musicbrainz_id)
             return redirect(url_for('profile.info'))
-    else:
-        return render_template(
-            'profile/delete.html',
-            user=current_user,
-        )
+
+    if form.csrf_token.errors:
+        flash.error('Cannot delete user due to error during authentication, please try again later.')
+        return redirect(url_for('profile.info'))
+
+    return render_template(
+        'profile/delete.html',
+        user=current_user,
+        form=form
+    )
 
 
-@profile_bp.route('/delete-listens', methods=['GET', 'POST'])
+@profile_bp.route('/delete-listens/', methods=['GET', 'POST'])
 @login_required
 @web_listenstore_needed
 def delete_listens():
@@ -243,23 +248,26 @@ def delete_listens():
     If GET request, this view renders a page asking the user to confirm that they
     wish to delete their listens.
     """
-    if request.method == 'POST':
-        if request.form.get('token') and (request.form.get('token') == current_user.auth_token):
-            try:
-                delete_listens_history(current_user.musicbrainz_id)
-            except Exception as e:
-                current_app.logger.error('Error while deleting listens for %s: %s', current_user.musicbrainz_id, str(e))
-                flash.error('Error while deleting listens for %s, please try again later.' % current_user.musicbrainz_id)
-                return redirect(url_for('profile.info'))
+    form = FlaskForm()
+    if form.validate_on_submit():
+        try:
+            delete_listens_history(current_user.musicbrainz_id)
             flash.info('Successfully deleted listens for %s.' % current_user.musicbrainz_id)
             return redirect(url_for('user.profile', user_name=current_user.musicbrainz_id))
-        else:
-            raise Unauthorized("Auth token invalid or missing.")
-    else:
-        return render_template(
-            'profile/delete_listens.html',
-            user=current_user,
-        )
+        except Exception as e:
+            current_app.logger.error('Error while deleting listens for %s: %s', current_user.musicbrainz_id, str(e))
+            flash.error('Error while deleting listens for %s, please try again later.' % current_user.musicbrainz_id)
+            return redirect(url_for('profile.info'))
+
+    if form.csrf_token.errors:
+        flash.error('Cannot delete listens due to error during authentication, please try again later.')
+        return redirect(url_for('profile.info'))
+
+    return render_template(
+        'profile/delete_listens.html',
+        user=current_user,
+        form=form
+    )
 
 
 def _get_service_or_raise_404(name: str) -> ExternalService:
@@ -275,6 +283,8 @@ def _get_service_or_raise_404(name: str) -> ExternalService:
             return YoutubeService()
         elif service == ExternalServiceType.SPOTIFY:
             return SpotifyService()
+        elif service == ExternalServiceType.CRITIQUEBRAINZ:
+            return CritiqueBrainzService()
     except KeyError:
         raise NotFound("Service %s is invalid." % name)
 
@@ -287,9 +297,9 @@ def music_services_details():
 
     if spotify_user:
         permissions = set(spotify_user["scopes"])
-        if permissions == set(SPOTIFY_IMPORT_PERMISSIONS):
+        if permissions == SPOTIFY_IMPORT_PERMISSIONS:
             current_spotify_permissions = "import"
-        elif permissions == set(SPOTIFY_LISTEN_PERMISSIONS):
+        elif permissions == SPOTIFY_LISTEN_PERMISSIONS:
             current_spotify_permissions = "listen"
         else:
             current_spotify_permissions = "both"
@@ -300,12 +310,18 @@ def music_services_details():
     youtube_user = youtube_service.get_user(current_user.id)
     current_youtube_permissions = "listen" if youtube_user else "disable"
 
+    critiquebrainz_service = CritiqueBrainzService()
+    critiquebrainz_user = critiquebrainz_service.get_user(current_user.id)
+    current_critiquebrainz_permissions = "review" if critiquebrainz_user else "disable"
+
     return render_template(
         'user/music_services.html',
         spotify_user=spotify_user,
         current_spotify_permissions=current_spotify_permissions,
         youtube_user=youtube_user,
-        current_youtube_permissions=current_youtube_permissions
+        current_youtube_permissions=current_youtube_permissions,
+        critiquebrainz_user=critiquebrainz_user,
+        current_critiquebrainz_permissions=current_critiquebrainz_permissions
     )
 
 
@@ -317,13 +333,14 @@ def music_services_callback(service_name: str):
     if not code:
         raise BadRequest('missing code')
     token = service.fetch_access_token(code)
-    service.add_new_user(current_user.id, token)
-    flash.success('Successfully authenticated with %s!' % service_name.capitalize())
+    if service.add_new_user(current_user.id, token):
+        flash.success('Successfully authenticated with %s!' % service_name.capitalize())
+    else:
+        flash.error('Unable to connect to %s! Please try again.' % service_name.capitalize())
     return redirect(url_for('profile.music_services_details'))
 
 
 @profile_bp.route('/music-services/<service_name>/refresh/', methods=['POST'])
-@crossdomain()
 @api_login_required
 def refresh_service_token(service_name: str):
     service = _get_service_or_raise_404(service_name)
@@ -343,7 +360,6 @@ def refresh_service_token(service_name: str):
 
 
 @profile_bp.route('/music-services/<service_name>/disconnect/', methods=['POST'])
-@crossdomain()
 @api_login_required
 def music_services_disconnect(service_name: str):
     service = _get_service_or_raise_404(service_name)
@@ -362,7 +378,7 @@ def music_services_disconnect(service_name: str):
         if service_name == 'spotify':
             permissions = None
             if action == 'both':
-                permissions = SPOTIFY_LISTEN_PERMISSIONS + SPOTIFY_IMPORT_PERMISSIONS
+                permissions = SPOTIFY_LISTEN_PERMISSIONS | SPOTIFY_IMPORT_PERMISSIONS
             elif action == 'import':
                 permissions = SPOTIFY_IMPORT_PERMISSIONS
             elif action == 'listen':
@@ -373,5 +389,9 @@ def music_services_disconnect(service_name: str):
             action = request.form.get('youtube')
             if action:
                 return redirect(service.get_authorize_url(YOUTUBE_SCOPES))
+        elif service_name == 'critiquebrainz':
+            action = request.form.get('critiquebrainz')
+            if action:
+                return redirect(service.get_authorize_url(CRITIQUEBRAINZ_SCOPES))
 
     return redirect(url_for('profile.music_services_details'))

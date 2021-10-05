@@ -1,11 +1,16 @@
 from calendar import monthrange
-from datetime import datetime
-from dateutil.relativedelta import relativedelta
+from datetime import datetime, time
+from typing import Tuple
+
+from dateutil.relativedelta import relativedelta, MO
 
 import listenbrainz_spark
+from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.exceptions import SQLException
 
 from pyspark.sql.utils import *
+
+from listenbrainz_spark.utils import get_latest_listen_ts
 
 
 def run_query(query):
@@ -89,15 +94,66 @@ def offset_days(date, days, shift_backwards=True):
 
 def get_day_end(day: datetime) -> datetime:
     """ Returns a datetime object denoting the end of the day """
-    return datetime(day.year, day.month, day.day, hour=23, minute=59, second=59)
+    return datetime(day.year, day.month, day.day, hour=23, minute=59, second=59, microsecond=999999)
 
 
 def get_month_end(month: datetime) -> datetime:
     """ Returns a datetime object denoting the end of the month """
     _, num_of_days = monthrange(month.year, month.month)
-    return datetime(month.year, month.month, num_of_days, hour=23, minute=59, second=59)
+    return datetime(month.year, month.month, num_of_days, hour=23, minute=59, second=59, microsecond=999999)
 
 
-def get_year_end(year: int) -> datetime:
+def get_year_end(year: datetime) -> datetime:
     """ Returns a datetime object denoting the end of the year """
-    return datetime(year, month=12, day=31, hour=23, minute=59, second=59)
+    return datetime(year.year, month=12, day=31, hour=23, minute=59, second=59, microsecond=999999)
+
+
+def get_last_monday(date: datetime) -> datetime:
+    """ Get date for Monday before 'date' """
+    return offset_days(date, date.weekday())
+
+
+def get_dates_for_stats_range(stats_range: str) -> Tuple[datetime, datetime]:
+    """ Return the range of datetimes for which stats should be calculated.
+
+        Args:
+            stats_range: the stats range (week/month/year/all_time) for
+                which to get datetimes.
+    """
+    latest_listen_ts = get_latest_listen_ts()
+    if stats_range == "all_time":
+        # all_time stats range is easy, just return time from LASTFM founding
+        # to the latest listen we have in spark
+        from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
+        to_date = latest_listen_ts
+        return from_date, to_date
+
+    # following are "last" week/month/year stats, here we want the stats of the
+    # previous week/month/year and *not* from 7 days ago to today so on.
+
+    # If we had used datetime.now or date.today here and the data in spark
+    # became outdated due to some reason, empty stats would be sent to LB.
+    # Hence, we use get_latest_listen_ts to get the time of the latest listen
+    # in spark and so that instead of no stats, outdated stats are calculated.
+    latest_listen_date = latest_listen_ts.date()
+
+    # from_offset: this is applied to the latest_listen_date to get from_date
+    # to_offset: this is applied to from_date to get to_date
+    if stats_range == "week":
+        from_offset = relativedelta(weeks=-1, weekday=MO(-1))  # monday of previous week
+        to_offset = relativedelta(weeks=+1)
+    elif stats_range == "month":
+        from_offset = relativedelta(months=-1, day=1)  # first day of previous month
+        to_offset = relativedelta(months=+1)
+    else:  # year
+        from_offset = relativedelta(years=-1, month=1, day=1)  # first day of previous year
+        to_offset = relativedelta(years=+1)
+
+    from_date = latest_listen_date + from_offset
+    to_date = from_date + to_offset
+
+    # set time to 00:00
+    from_date = datetime.combine(from_date, time.min)
+    to_date = datetime.combine(to_date, time.min)
+
+    return from_date, to_date

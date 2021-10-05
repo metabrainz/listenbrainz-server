@@ -2,9 +2,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import * as _ from "lodash";
 import * as timeago from "time-ago";
-import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
+import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
 
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { faPlay } from "@fortawesome/free-solid-svg-icons";
 
 const searchForSpotifyTrack = async (
   spotifyToken?: string,
@@ -56,7 +57,6 @@ const searchForSpotifyTrack = async (
 
 const searchForYoutubeTrack = async (
   apiKey?: string,
-  accessToken?: string,
   trackName?: string,
   artistName?: string,
   releaseName?: string,
@@ -64,7 +64,6 @@ const searchForYoutubeTrack = async (
   onAccountError?: () => void
 ): Promise<Array<string> | null> => {
   if (!apiKey) return null;
-  if (!accessToken) return null;
   let query = trackName;
   if (artistName) {
     query += ` ${artistName}`;
@@ -74,13 +73,17 @@ const searchForYoutubeTrack = async (
   // if (releaseName) {
   //   query += ` ${releaseName}`;
   // }
+  if (!query) {
+    return null;
+  }
   const response = await fetch(
-    `https://youtube.googleapis.com/youtube/v3/search?part=snippet&q=${query}&videoEmbeddable=true&type=video&key=${apiKey}`,
+    `https://youtube.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(
+      query
+    )}&videoEmbeddable=true&type=video&key=${apiKey}`,
     {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
       },
     }
   );
@@ -88,10 +91,8 @@ const searchForYoutubeTrack = async (
   if (response.status === 401) {
     if (refreshToken) {
       try {
-        const newAccessToken = await refreshToken();
         return searchForYoutubeTrack(
           apiKey,
-          newAccessToken,
           trackName,
           artistName,
           releaseName,
@@ -155,16 +156,24 @@ const getTrackLink = (listen: Listen): JSX.Element | string => {
   return trackName;
 };
 
-const getPlayButton = (listen: any, onClickFunction: () => void) => {
+const getPlayButton = (
+  listen: any,
+  isCurrentListen: boolean,
+  onPlayFunction: (event?: any) => void
+) => {
   /* es-lint */
   return (
     <button
       title="Play"
-      className="btn-link"
-      onClick={onClickFunction.bind(listen)}
+      className="btn-transparent play-button"
+      onClick={isCurrentListen ? undefined : onPlayFunction.bind(listen)}
       type="button"
     >
-      <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />
+      {isCurrentListen ? (
+        <FontAwesomeIcon size="1x" icon={faPlay as IconProp} />
+      ) : (
+        <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />
+      )}
     </button>
   );
 };
@@ -231,47 +240,86 @@ const formatWSMessageToListen = (wsMsg: any): Listen | null => {
 };
 
 // recieves or unix epoch timestamp int or ISO datetime string
-const preciseTimestamp = (listened_at: number | string): string => {
+const preciseTimestamp = (
+  listened_at: number | string,
+  displaySetting?: "timeAgo" | "includeYear" | "excludeYear"
+): string => {
   const listenDate: Date = new Date(listened_at);
+  let display = displaySetting;
 
   // invalid date
   if (Number.isNaN(listenDate.getTime())) {
     return String(listened_at);
   }
 
-  const msDifference = new Date().getTime() - listenDate.getTime();
-  if (
-    // over one year old : show with year
-    msDifference / (1000 * 3600 * 24 * 365) >
-    1
-  ) {
-    return `${listenDate.toLocaleString(undefined, {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-      hour12: true,
-    })}`;
+  // determine which display setting based on time difference to use if no argument was provided
+  if (!display) {
+    // We can easily mock Date.now in our tests to mock the current dateTime
+    const now = Date.now();
+    const currentDate = new Date(now);
+    const currentYear = currentDate.getFullYear();
+    const listenYear = listenDate.getFullYear();
+    // Date is today : format using timeago
+    if (
+      currentDate.getDate() === listenDate.getDate() &&
+      currentDate.getMonth() === listenDate.getMonth() &&
+      currentYear === listenYear
+    ) {
+      display = "timeAgo";
+    }
+    // Date is this current year, don't show the year
+    else if (currentYear === listenYear) {
+      display = "excludeYear";
+    }
+    // Not this year, show the year
+    else {
+      display = "includeYear";
+    }
   }
-  if (
-    // one year to yesterday : show without year
-    msDifference / (1000 * 3600 * 24 * 1) >
-    1
-  ) {
-    return `${listenDate.toLocaleString(undefined, {
-      day: "2-digit",
-      month: "short",
-      hour: "numeric",
-      minute: "numeric",
-      hour12: true,
-    })}`;
+
+  switch (display) {
+    case "includeYear":
+      return `${listenDate.toLocaleString(undefined, {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      })}`;
+    case "excludeYear":
+      return `${listenDate.toLocaleString(undefined, {
+        day: "2-digit",
+        month: "short",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      })}`;
+    default:
+      return `${timeago.ago(listened_at)}`;
   }
-  // today : format using timeago
-  return `${timeago.ago(listened_at)}`;
+};
+// recieves or unix epoch timestamp int or ISO datetime string
+const fullLocalizedDateFromTimestampOrISODate = (
+  unix_epoch_timestamp: number | string | undefined | null
+): string => {
+  if (!unix_epoch_timestamp) {
+    return "";
+  }
+  const date: Date = new Date(unix_epoch_timestamp);
+
+  // invalid date
+  if (Number.isNaN(date.getTime())) {
+    return String(unix_epoch_timestamp);
+  }
+  return date.toLocaleString(undefined, {
+    // @ts-ignore see https://github.com/microsoft/TypeScript/issues/40806
+    dateStyle: "full",
+    timeStyle: "long",
+  });
 };
 
-/** Loads a script asynchronouhsly into the HTML page */
+/** Loads a script asynchronously into the HTML page */
 export function loadScriptAsync(document: any, scriptSrc: string): void {
   const el = document.createElement("script");
   const container = document.head || document.body;
@@ -281,6 +329,97 @@ export function loadScriptAsync(document: any, scriptSrc: string): void {
   container.appendChild(el);
 }
 
+const createAlert = (
+  type: AlertType,
+  title: string,
+  message: string | JSX.Element
+): Alert => {
+  return {
+    id: new Date().getTime(),
+    type,
+    headline: title,
+    message,
+  };
+};
+
+interface GlobalProps {
+  api_url: string;
+  sentry_dsn: string;
+  current_user: ListenBrainzUser;
+  spotify?: SpotifyUser;
+  youtube?: YoutubeUser;
+  critiquebrainz?: CritiqueBrainzUser;
+}
+
+const getPageProps = (): {
+  domContainer: HTMLElement;
+  reactProps: Record<string, any>;
+  globalReactProps: GlobalProps;
+  optionalAlerts: Alert[];
+} => {
+  let domContainer = document.getElementById("react-container");
+  const propsElement = document.getElementById("page-react-props");
+  const globalPropsElement = document.getElementById("global-react-props");
+  let reactProps = {};
+  let globalReactProps = {} as GlobalProps;
+  const optionalAlerts = [];
+  if (!domContainer) {
+    // Ensure there is a container for React rendering
+    // We should always have on on the page already, but displaying errors to the user relies on there being one
+    domContainer = document.createElement("div");
+    domContainer.id = "react-container";
+    const container = document.getElementsByClassName("wrapper");
+    container[0].appendChild(domContainer);
+  }
+  try {
+    // Global props *cannot* be empty
+    if (globalPropsElement?.innerHTML) {
+      globalReactProps = JSON.parse(globalPropsElement.innerHTML);
+    } else {
+      throw new Error("No global props element found on the page");
+    }
+    // Page props can be empty
+    if (propsElement?.innerHTML) {
+      reactProps = JSON.parse(propsElement!.innerHTML);
+    }
+  } catch (err) {
+    // Show error to the user and ask to reload page
+    const errorMessage = `Please refresh the page.
+	If the problem persists, please contact us.
+	Reason: ${err}`;
+    const newAlert = createAlert(
+      "danger",
+      "Error loading the page",
+      errorMessage
+    );
+    optionalAlerts.push(newAlert);
+  }
+  return { domContainer, reactProps, globalReactProps, optionalAlerts };
+};
+
+const getListenablePin = (pinnedRecording: PinnedRecording): Listen => {
+  const pinnedRecListen: Listen = {
+    listened_at: 0,
+    ...pinnedRecording,
+  };
+  return pinnedRecListen;
+};
+
+const countWords = (str: string): number => {
+  // Credit goes to iamwhitebox https://stackoverflow.com/a/39125279/14911205
+  const words = str.match(/\w+/g);
+  if (words === null) return 0;
+  return words.length;
+};
+
+const handleNavigationClickEvent = (event?: React.MouseEvent): void => {
+  // Allow opening in new tab or window with shift or control key
+  // Otherwise prevent default
+  if (event && !event.ctrlKey && !event.shiftKey) {
+    event.preventDefault();
+  }
+};
+
 export {
   searchForSpotifyTrack,
   getArtistLink,
@@ -288,5 +427,11 @@ export {
   getPlayButton,
   formatWSMessageToListen,
   preciseTimestamp,
+  fullLocalizedDateFromTimestampOrISODate,
+  getPageProps,
   searchForYoutubeTrack,
+  createAlert,
+  getListenablePin,
+  countWords,
+  handleNavigationClickEvent,
 };

@@ -1,7 +1,8 @@
 import logging
 from unittest.mock import patch, call, MagicMock
 
-from listenbrainz_spark.tests import SparkTestCase
+import listenbrainz_spark
+from listenbrainz_spark.recommendations.recording.tests import RecommendationsTestCase
 from listenbrainz_spark.recommendations.recording import recommend
 from listenbrainz_spark import schema, utils, path
 from listenbrainz_spark.exceptions import (RecommendationsNotGeneratedException,
@@ -16,16 +17,7 @@ from pyspark.sql.functions import col
 logger = logging.getLogger(__name__)
 
 
-class RecommendTestClass(SparkTestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-
-    @classmethod
-    def tearDownClass(cls):
-        super().delete_dir()
-        super().tearDownClass()
+class RecommendTestClass(RecommendationsTestCase):
 
     def test_recommendation_params_init(self):
         recordings_df = utils.create_dataframe(Row(col1=3, col2=9), schema=None)
@@ -47,44 +39,19 @@ class RecommendTestClass(SparkTestCase):
         self.assertEqual(params.recommendation_top_artist_limit, recommendation_top_artist_limit)
         self.assertEqual(params.recommendation_similar_artist_limit, recommendation_similar_artist_limit)
 
+    def get_recordings_df(self):
+        return listenbrainz_spark.session.createDataFrame([
+            Row(artist_credit_id=1, recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5", recording_id=1),
+            Row(artist_credit_id=2, recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5", recording_id=2)
+        ])
+
     def get_recommendation_df(self):
-        df = utils.create_dataframe(
-            Row(
-                user_id=1,
-                recording_id=1,
-                rating=0.313456
-            ),
-            schema=None
-        )
-
-        df = df.union(utils.create_dataframe(
-            Row(
-                user_id=1,
-                recording_id=2,
-                rating=6.994590001
-            ),
-            schema=None
-        ))
-
-        df = df.union(utils.create_dataframe(
-            Row(
-                user_id=2,
-                recording_id=2,
-                rating=-2.4587
-            ),
-            schema=None
-        ))
-
-        recommendation_df = df.union(utils.create_dataframe(
-            Row(
-                user_id=2,
-                recording_id=1,
-                rating=7.999
-            ),
-            schema=None
-        ))
-
-        return recommendation_df
+        return listenbrainz_spark.session.createDataFrame([
+            Row(user_id=1, recording_id=1, rating=0.313456),
+            Row(user_id=1, recording_id=2, rating=6.994590001),
+            Row(user_id=2, recording_id=2, rating=-2.4587),
+            Row(user_id=2, recording_id=1, rating=7.999)
+        ])
 
     def test_get_recording_mbids(self):
         params = self.get_recommendation_params()
@@ -94,37 +61,40 @@ class RecommendTestClass(SparkTestCase):
 
         df = recommend.get_recording_mbids(params, recommendation_df, users_df)
         self.assertEqual(df.count(), 4)
-        row = df.collect()
-        received_data = [row[0], row[1], row[2], row[3]]
-        expected_data = [
-            Row(mb_recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+        # Each user's rows are ordered by ratings but the order of users is not
+        # fixed so need to test each user's recommendations separately.
+        rows_rob = df.where(df.user_name == "rob").collect()
+        self.assertEqual(rows_rob, [
+            Row(
+                recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                rank=1,
+                rating=7.999,
+                user_id=2,
+                user_name='rob'
+            ),
+            Row(
+                recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                rank=2,
+                rating=-2.4587,
+                user_id=2,
+                user_name='rob'
+            )
+        ])
+        rows_vansika = df.where(df.user_name == "vansika").collect()
+        self.assertEqual(rows_vansika, [
+            Row(recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rank=1,
                 rating=6.994590001,
                 user_id=1,
                 user_name='vansika'),
             Row(
-                mb_recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rank=2,
                 rating=0.313456,
                 user_id=1,
                 user_name='vansika'
                 ),
-            Row(
-                mb_recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                rank=1,
-                rating=7.999,
-                user_id=2,
-                user_name='rob'
-                ),
-            Row(
-                mb_recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                rank=2,
-                rating=-2.4587,
-                user_id=2,
-                user_name='rob'
-                )
-        ]
-        self.assertEqual(received_data, expected_data)
+        ])
 
     def test_filter_recommendations_on_rating(self):
         df = self.get_recommendation_df()
@@ -340,7 +310,7 @@ class RecommendTestClass(SparkTestCase):
 
     def get_top_artist_rec_df(self):
         df = utils.create_dataframe(
-            Row(mb_recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+            Row(recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rating=1.8,
                 recording_id=5,
                 user_id=6,
@@ -349,7 +319,7 @@ class RecommendTestClass(SparkTestCase):
         )
 
         df = df.union(utils.create_dataframe(
-            Row(mb_recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
+            Row(recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rating=-0.8,
                 recording_id=6,
                 user_id=6,
@@ -358,7 +328,7 @@ class RecommendTestClass(SparkTestCase):
         ))
 
         df = df.union(utils.create_dataframe(
-            Row(mb_recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
+            Row(recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rating=0.99,
                 recording_id=6,
                 user_id=7,
@@ -369,7 +339,7 @@ class RecommendTestClass(SparkTestCase):
 
     def get_similar_artist_rec_df(self):
         df = utils.create_dataframe(
-            Row(mb_recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+            Row(recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rating=0.8,
                 recording_id=5,
                 user_id=8,
@@ -378,7 +348,7 @@ class RecommendTestClass(SparkTestCase):
         )
 
         df = df.union(utils.create_dataframe(
-            Row(mb_recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
+            Row(recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rating=-2.8,
                 recording_id=6,
                 user_id=8,
@@ -387,7 +357,7 @@ class RecommendTestClass(SparkTestCase):
         ))
 
         df = df.union(utils.create_dataframe(
-            Row(mb_recording_mbid="7acb406f-c716-45f8-a8bd-96ca3939c2e5",
+            Row(recording_mbid="7acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rating=0.19,
                 recording_id=11,
                 user_id=7,

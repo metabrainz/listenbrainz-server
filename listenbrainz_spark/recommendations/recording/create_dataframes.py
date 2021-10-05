@@ -13,7 +13,8 @@ The artist_name and track_name fields of partial_listens_df are converted to art
 respectively by removing accents, removing punctuations and whitespaces, and converting to lowercase.
 
 The partial_listens_df is joined with mapping_df (msid->mbid mapping) on artist_name_matchable and track_name_matchable to
-get the mapped_listens_df. The dataframe created is saved to HDFS.
+get the mapped_listens_df. This dataframe is then filtered and listens from users whose total listen count is below a
+given threshold are removed. The dataframe created is saved to HDFS.
 
 Distinct users are filtered from mapped_listens_df and each user is assigned a unique identification number called user_id.
 The dataframe created is called users_df and is saved to HDFS.
@@ -39,7 +40,6 @@ from collections import defaultdict
 from pydantic import ValidationError
 
 import listenbrainz_spark
-import listenbrainz_spark.utils.mapping as mapping_utils
 from listenbrainz_spark import path, utils, schema
 from listenbrainz_spark.exceptions import (SparkSessionNotInitializedException,
                                            DataFrameNotAppendedException,
@@ -52,13 +52,12 @@ from data.model.user_cf_recommendations_recording_message import (UserCreateData
 
 from listenbrainz_spark.recommendations.dataframe_utils import (get_dataframe_id,
                                                                 save_dataframe,
-                                                                get_dates_to_train_data,
-                                                                get_mapped_artist_and_recording_mbids,
-                                                                get_listens_for_training_model_window)
+                                                                get_dates_to_train_data)
 import pyspark.sql.functions as func
 from pyspark.sql.window import Window
 from pyspark.sql.functions import rank, col, row_number
 
+from listenbrainz_spark.utils import get_listens_from_new_dump
 
 logger = logging.getLogger(__name__)
 
@@ -145,33 +144,23 @@ def save_dataframe_metadata_to_hdfs(metadata: dict, df_metadata_path: str):
         raise
 
 
-def get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df):
+def get_data_missing_from_musicbrainz(listens_df):
     """ Get data that has been submitted to ListenBrainz but is missing from MusicBrainz.
 
         Args:
-            partial_listens_df (dataframe): dataframe of listens.
-            msid_mbid_mapping_df (dataframe): msid->mbid mapping. For columns refer to
-                                              msid_mbid_mapping_schema in listenbrainz_spark/schema.py
-
+            listens_df (dataframe): dataframe of listens.
         Returns:
             missing_musicbrainz_data_itr (iterator): Data missing from the MusicBrainz.
     """
-    condition = [
-        partial_listens_df.track_name_matchable == msid_mbid_mapping_df.msb_recording_name_matchable,
-        partial_listens_df.artist_name_matchable == msid_mbid_mapping_df.msb_artist_credit_name_matchable
-    ]
-
-    df = partial_listens_df.join(msid_mbid_mapping_df, condition, 'left') \
-                           .select('artist_msid',
-                                   'artist_name',
-                                   'listened_at',
-                                   'recording_msid',
-                                   'release_msid',
-                                   'release_name',
-                                   'track_name',
-                                   'user_name') \
-                           .where(col('msb_recording_name_matchable').isNull() &
-                                  col('msb_artist_credit_name_matchable').isNull())
+    df = listens_df \
+        .select(
+            'artist_name',
+            'listened_at',
+            'release_name',
+            'recording_name',
+            'user_name'
+        ) \
+        .where(col('recording_mbid').isNull())
 
     logger.info('Number of (artist, recording) pairs missing from mapping: {}'.format(df.count()))
     window = Window.partitionBy('user_name').orderBy(col('listened_at').desc())
@@ -181,13 +170,13 @@ def get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df):
     # have submitted to LB and should consider submitting to MB.
     # The data will be sorted on "listened_at"
 
-    missing_musicbrainz_data_itr = df.groupBy('artist_msid',
-                                              'artist_name',
-                                              'recording_msid',
-                                              'release_msid',
-                                              'release_name',
-                                              'track_name',
-                                              'user_name') \
+    missing_musicbrainz_data_itr = df \
+        .groupBy(
+            'artist_name',
+            'release_name',
+            'recording_name',
+            'user_name'
+        ) \
         .agg(func.max('listened_at').alias('listened_at')) \
         .withColumn('rank', row_number().over(window)) \
         .where(col('rank') <= 200) \
@@ -196,7 +185,7 @@ def get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df):
     return missing_musicbrainz_data_itr
 
 
-def save_playcounts_df(listens_df, recordings_df, users_df, threshold, metadata, save_path):
+def save_playcounts_df(listens_df, recordings_df, users_df, metadata, save_path):
     """ Prepare and save playcounts dataframe.
 
         Args:
@@ -204,7 +193,6 @@ def save_playcounts_df(listens_df, recordings_df, users_df, threshold, metadata,
             recordings_df (dataframe): Dataframe containing distinct recordings and corresponding
                                        mbids and names.
             users_df (dataframe): Dataframe containing user names and user ids.
-            threshold (int): minimum number of listens a user should have to be saved in the dataframe.
             metadata (dict): metadata dataframe to append.
             save_path (str): path where playcounts_df should be saved.
     """
@@ -213,13 +201,33 @@ def save_playcounts_df(listens_df, recordings_df, users_df, threshold, metadata,
     # The final step uses groupBy which create groups on user_id and recording_id and counts the number of recording_ids.
     # The final dataframe tells us about the number of times a user has listend to a particular track for all users.
     playcounts_df = listens_df.join(users_df, 'user_name', 'inner') \
-                              .join(recordings_df, 'mb_recording_mbid', 'inner') \
+                              .join(recordings_df, 'recording_mbid', 'inner') \
                               .groupBy('user_id', 'recording_id') \
-                              .agg(func.count('recording_id').alias('count')) \
-                              .where('count > {}'.format(threshold))
+                              .agg(func.count('recording_id').alias('count'))
 
     metadata['playcounts_count'] = playcounts_df.count()
     save_dataframe(playcounts_df, save_path)
+
+
+def get_threshold_listens_df(mapped_listens_df, mapped_listens_path: str, threshold: int):
+    """ Threshold mapped listens dataframe
+
+        Args:
+            mapped_listens_df (dataframe): listens mapped with msid_mbid_mapping.
+            mapped_listens_path: Path to store mapped listens.
+            threshold: minimum number of listens a user should have to be saved in the dataframe.
+        Returns:
+             threshold_listens_df: mapped listens dataframe after dropping data below threshold
+    """
+    threshold_users_df = mapped_listens_df \
+        .groupBy('user_name') \
+        .agg(func.count('user_name').alias('listen_count')) \
+        .where('listen_count > {}'.format(threshold)) \
+        .collect()
+    threshold_users = [x.user_name for x in threshold_users_df]
+    threshold_listens_df = mapped_listens_df.where(col('user_name').isin(threshold_users))
+    save_dataframe(threshold_listens_df, mapped_listens_path)
+    return threshold_listens_df
 
 
 def get_listens_df(mapped_listens_df, metadata):
@@ -231,7 +239,7 @@ def get_listens_df(mapped_listens_df, metadata):
         Returns:
             listens_df : Dataframe containing recording_mbids corresponding to a user.
     """
-    listens_df = mapped_listens_df.select('mb_recording_mbid', 'user_name')
+    listens_df = mapped_listens_df.select('recording_mbid', 'user_name')
     metadata['listens_count'] = listens_df.count()
     return listens_df
 
@@ -247,16 +255,15 @@ def get_recordings_df(mapped_listens_df, metadata, save_path):
             recordings_df: Dataframe containing distinct recordings and corresponding
                 mbids and names.
     """
-    recording_window = Window.orderBy('mb_recording_mbid')
+    recording_window = Window.orderBy('recording_mbid')
 
-    recordings_df = mapped_listens_df.select('mb_artist_credit_id',
-                                             'mb_artist_credit_mbids',
-                                             'mb_recording_mbid',
-                                             'mb_release_mbid',
-                                             'msb_artist_credit_name_matchable',
-                                             'msb_recording_name_matchable') \
-                                     .distinct() \
-                                     .withColumn('recording_id', rank().over(recording_window))
+    recordings_df = mapped_listens_df \
+        .select(
+            'artist_credit_id',
+            'recording_mbid',
+        ) \
+        .distinct() \
+        .withColumn('recording_id', rank().over(recording_window))
 
     metadata['recordings_count'] = recordings_df.count()
     save_dataframe(recordings_df, save_path)
@@ -296,7 +303,7 @@ def prepare_messages(missing_musicbrainz_data_itr, from_date, to_date, ti):
         Returns:
             messages: A list of messages to be sent via RabbitMQ
     """
-
+    messages = []
     missing_musicbrainz_data = defaultdict(list)
 
     current_ts = str(datetime.utcnow())
@@ -305,13 +312,10 @@ def prepare_messages(missing_musicbrainz_data_itr, from_date, to_date, ti):
         try:
             missing_musicbrainz_data[row.user_name].append(UserMissingMusicBrainzDataRecord(**
                 {
-                    'artist_msid': row.artist_msid,
                     'artist_name': row.artist_name,
                     'listened_at': str(row.listened_at),
-                    'recording_msid': row.recording_msid,
-                    'release_msid': row.release_msid,
                     'release_name': row.release_name,
-                    'track_name': row.track_name,
+                    'recording_name': row.recording_name,
                 }
             ).dict())
         except ValidationError:
@@ -320,13 +324,14 @@ def prepare_messages(missing_musicbrainz_data_itr, from_date, to_date, ti):
 
     total_time = '{:.2f}'.format((time.monotonic() - ti) / 60)
     try:
-        messages = [UserCreateDataframesMessage(**{
-            'type': 'cf_recommendations_recording_dataframes',
-            'dataframe_upload_time': current_ts,
-            'total_time': total_time,
-            'from_date': str(from_date.strftime('%b %Y')),
-            'to_date': str(to_date.strftime('%b %Y')),
-        }).dict()]
+        messages.append(
+            UserCreateDataframesMessage(**{
+                'type': 'cf_recommendations_recording_dataframes',
+                'dataframe_upload_time': current_ts,
+                'total_time': total_time,
+                'from_date': str(from_date.strftime('%b %Y')),
+                'to_date': str(to_date.strftime('%b %Y')),
+            }).dict())
     except ValidationError:
         logger.warning("Invalid entry present in dataframe creation message", exc_info=True)
 
@@ -385,36 +390,37 @@ def main(train_model_window, job_type, minimum_listens_threshold=0):
     metadata['to_date'] = to_date
     metadata['from_date'] = from_date
 
-    partial_listens_df = get_listens_for_training_model_window(to_date, from_date, path.LISTENBRAINZ_DATA_DIRECTORY)
-    logger.info('Listen count from {from_date} to {to_date}: {listens_count}'
-                            .format(from_date=from_date, to_date=to_date, listens_count=partial_listens_df.count()))
+    complete_listens_df = get_listens_from_new_dump(from_date, to_date)
+    logger.info(f'Listen count from {from_date} to {to_date}: {complete_listens_df.count()}')
 
-    logger.info('Loading mapping from HDFS...')
-    df = utils.read_files_from_HDFS(path.MBID_MSID_MAPPING)
-    msid_mbid_mapping_df = mapping_utils.get_unique_rows_from_mapping(df)
-    logger.info('Number of distinct rows in the mapping: {}'.format(msid_mbid_mapping_df.count()))
+    logger.info('Discarding listens without mbids...')
+    partial_listens_df = complete_listens_df.where(col('recording_mbid').isNotNull())
+    logger.info(f'Listen count after discarding: {partial_listens_df.count()}')
 
-    logger.info('Mapping listens...')
-    mapped_listens_df = get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_df,
-                                                              paths["mapped_listens"])
-    logger.info('Listen count after mapping: {}'.format(mapped_listens_df.count()))
+    logger.info('Thresholding listens...')
+    threshold_listens_df = get_threshold_listens_df(
+        partial_listens_df,
+        paths["mapped_listens"],
+        minimum_listens_threshold
+    )
+    logger.info(f'Listen count after thresholding: {threshold_listens_df.count()}')
 
     logger.info('Preparing users data and saving to HDFS...')
-    users_df = get_users_dataframe(mapped_listens_df, metadata, paths["users"])
+    users_df = get_users_dataframe(threshold_listens_df, metadata, paths["users"])
 
     logger.info('Preparing recordings data and saving to HDFS...')
-    recordings_df = get_recordings_df(mapped_listens_df, metadata, paths["recordings"])
+    recordings_df = get_recordings_df(threshold_listens_df, metadata, paths["recordings"])
 
     logger.info('Preparing listen data dump and playcounts, saving playcounts to HDFS...')
-    listens_df = get_listens_df(mapped_listens_df, metadata)
+    listens_df = get_listens_df(threshold_listens_df, metadata)
 
-    save_playcounts_df(listens_df, recordings_df, users_df, minimum_listens_threshold, metadata, paths["playcounts"])
+    save_playcounts_df(listens_df, recordings_df, users_df, metadata, paths["playcounts"])
 
     metadata['dataframe_id'] = get_dataframe_id(paths["prefix"])
     save_dataframe_metadata_to_hdfs(metadata, paths["metadata"])
 
     logger.info('Preparing missing MusicBrainz data...')
-    missing_musicbrainz_data_itr = get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df)
+    missing_musicbrainz_data_itr = get_data_missing_from_musicbrainz(complete_listens_df)
 
     messages = prepare_messages(missing_musicbrainz_data_itr, from_date, to_date, ti)
 

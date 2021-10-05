@@ -86,7 +86,7 @@ def build(client, collection_name):
 
     client.collections.create(schema)
 
-    with psycopg2.connect(config.DB_CONNECT_MB) as conn:
+    with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
 
             curs.execute("SELECT max(score) FROM mapping.mbid_mapping")
@@ -96,18 +96,17 @@ def build(client, collection_name):
                                recording_mbid,
                                release_name,
                                release_mbid,
-                               artist_credit_name,
                                artist_credit_id,
+                               artist_credit_name,
+                               artist_mbids,
                                score
                           FROM mapping.mbid_mapping""")
-
-            if config.USE_MINIMAL_DATASET:
-                query += " WHERE artist_credit_id = 1160983"
 
             curs.execute(query)
             documents = []
             for i, row in enumerate(curs):
                 document = dict(row)
+                document['artist_mbids'] = row["artist_mbids"][1:-1]
                 document['score'] = max_score - document['score']
                 document['combined'] = prepare_string(document['recording_name'] + " " + document['artist_credit_name'])
                 documents.append(document)

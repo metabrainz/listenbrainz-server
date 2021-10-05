@@ -1,46 +1,62 @@
 #!/bin/bash
 
-echo "Hello, this is rc.local. CONTAINER_NAME is $CONTAINER_NAME, and DEPLOY_ENV is $DEPLOY_ENV"
+function log() {
+   printf "%(%Y-%m-%d %H:%M:%S %Z)T rc.local: "
+   echo $@
+}
+
+log "Hello, this is rc.local. CONTAINER_NAME is $CONTAINER_NAME, and DEPLOY_ENV is $DEPLOY_ENV"
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-web-${DEPLOY_ENV}" ]
 then
+    log Enabling web
     rm -f /etc/service/uwsgi/down
 fi
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-timescale-writer-${DEPLOY_ENV}" ]
 then
+    log Enabling timescale writer
     rm -f /etc/service/timescale_writer/down
 fi
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-api-compat-${DEPLOY_ENV}" ]
 then
+    log Enabling api compat
     rm -f /etc/service/api_compat/down
 fi
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-websockets-${DEPLOY_ENV}" ]
 then
+    log Enabling websockets
     rm -f /etc/service/websockets/down
 fi
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-spotify-reader-${DEPLOY_ENV}" ]
 then
+    log Enabling spotify reader
     rm -f /etc/service/spotify_reader/down
 fi
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-spark-reader-${DEPLOY_ENV}" ]
 then
+    log Enabling spark reader
     rm -f /etc/service/spark_reader/down
 fi
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-labs-api-${DEPLOY_ENV}" ]
 then
+    log Enabling api labs
     rm -f /etc/service/labs_api/down
 fi
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-cron-prod" ]
 then
+    log Enabling cron
     rm -f /etc/service/cron/down
     rm -f /etc/service/cron-config/down
 fi
 
-
+if [ "${CONTAINER_NAME}" = "listenbrainz-mbid-mapping-writer-${DEPLOY_ENV}" ]
+then
+    rm -f /etc/service/mbid_mapping_writer/down
+fi

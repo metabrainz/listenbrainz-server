@@ -5,8 +5,8 @@ import re
 import psycopg2
 import psycopg2.extras
 from datasethoster import Query
-from flask import current_app
 from unidecode import unidecode
+from listenbrainz import config
 
 
 class ArtistCreditRecordingLookupQuery(Query):
@@ -24,7 +24,7 @@ class ArtistCreditRecordingLookupQuery(Query):
     def outputs(self):
         return ['index', 'artist_credit_arg', 'recording_arg',
                 'artist_credit_name', 'release_name', 'recording_name',
-                'artist_credit_id', 'release_mbid', 'recording_mbid']
+                'artist_credit_id', 'artist_mbids', 'release_mbid', 'recording_mbid']
 
     def fetch(self, params, offset=-1, count=-1):
         lookup_strings = []
@@ -37,10 +37,11 @@ class ArtistCreditRecordingLookupQuery(Query):
 
         lookup_strings = tuple(lookup_strings)
 
-        with psycopg2.connect(current_app.config['MB_DATABASE_URI']) as conn:
+        with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
                 curs.execute("""SELECT artist_credit_name,
                                        artist_credit_id,
+                                       artist_mbids,
                                        release_name,
                                        release_mbid,
                                        recording_name,

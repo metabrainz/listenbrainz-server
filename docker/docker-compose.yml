@@ -26,7 +26,7 @@ services:
       POSTGRES_PASSWORD: 'postgres'
 
   rabbitmq:
-    image: rabbitmq:3.6.5
+    image: rabbitmq:3.8.16
     volumes:
       - rabbitmq:/var/lib/rabbitmq:z
 
@@ -105,4 +105,3 @@ services:
       # We mount this as a sort of shared volume
       # where we put the compiled output to be served by the service "web"
       - ../listenbrainz/webserver/static:/static:z
-

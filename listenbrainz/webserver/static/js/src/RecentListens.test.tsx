@@ -1,9 +1,11 @@
+/* eslint-disable jest/no-disabled-tests */
+
 import * as React from "react";
 import { mount } from "enzyme";
 import * as timeago from "time-ago";
-import * as io from "socket.io-client";
 import fetchMock from "jest-fetch-mock";
-import { GlobalAppContextT } from "./GlobalAppContext";
+import { io } from "socket.io-client";
+import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import APIService from "./APIService";
 
 import * as recentListensProps from "./__mocks__/recentListensProps.json";
@@ -11,19 +13,22 @@ import * as recentListensPropsTooManyListens from "./__mocks__/recentListensProp
 import * as recentListensPropsOneListen from "./__mocks__/recentListensPropsOneListen.json";
 import * as recentListensPropsPlayingNow from "./__mocks__/recentListensPropsPlayingNow.json";
 
-import RecentListens, { RecentListensProps } from "./RecentListens";
+import RecentListens, {
+  RecentListensProps,
+  RecentListensState,
+} from "./RecentListens";
+import PinRecordingModal from "./PinRecordingModal";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
 jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
-// Create a new instance of GlobalAppContext
-const mountOptions: { context: GlobalAppContextT } = {
-  context: {
-    APIService: new APIService("foo"),
-  },
-};
+// Mock socketIO library and the Socket object it returns
+const mockSocket = { on: jest.fn(), emit: jest.fn() };
+jest.mock("socket.io-client", () => {
+  return { io: jest.fn(() => mockSocket) };
+});
 
 const {
   artistCount,
@@ -38,7 +43,7 @@ const {
   spotify,
   youtube,
   user,
-  webSocketsServerUrl,
+  userPinnedRecording,
 } = recentListensProps;
 
 const props = {
@@ -51,10 +56,24 @@ const props = {
   mode: mode as ListensListMode,
   oldestListenTs,
   profileUrl,
-  spotify: spotify as SpotifyUser,
-  youtube: youtube as YoutubeUser,
   user,
-  webSocketsServerUrl,
+  userPinnedRecording,
+  newAlert: () => {},
+};
+
+// Create a new instance of GlobalAppContext
+const mountOptions: { context: GlobalAppContextT } = {
+  context: {
+    APIService: new APIService("foo"),
+    youtubeAuth: youtube as YoutubeUser,
+    spotifyAuth: spotify as SpotifyUser,
+    currentUser: user,
+  },
+};
+
+const propsOneListen = {
+  ...recentListensPropsOneListen,
+  mode: recentListensPropsOneListen.mode as ListensListMode,
   newAlert: () => {},
 };
 
@@ -67,12 +86,21 @@ fetchMock.mockIf(
 
 describe("Recentlistens", () => {
   it("renders correctly on the profile page", () => {
+    // Datepicker component uses current time at load as max date,
+    // and PinnedRecordingModal component uses current time at load to display recording unpin date,
+    // so we have to mock the Date constructor otherwise snapshots will be different every day
+    const mockDate = new Date("2021-05-19");
+    const fakeDateNow = jest
+      .spyOn(global.Date, "now")
+      .mockImplementation(() => mockDate.getTime());
+
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
     const wrapper = mount<RecentListens>(
       <RecentListens {...props} />,
       mountOptions
     );
     expect(wrapper.html()).toMatchSnapshot();
+    fakeDateNow.mockRestore();
   });
 });
 
@@ -111,16 +139,10 @@ describe("componentDidMount", () => {
   });
 
   it('calls loadFeedback if user is the currentUser and mode "listens"', () => {
-    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
-     * so that it doesn't get passed as a reference.
-     */
     const wrapper = mount<RecentListens>(
-      <RecentListens
-        {...(JSON.parse(
-          JSON.stringify(recentListensPropsOneListen)
-        ) as RecentListensProps)}
-      />,
-      mountOptions
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <RecentListens {...propsOneListen} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
     instance.loadFeedback = jest.fn();
@@ -131,19 +153,12 @@ describe("componentDidMount", () => {
   });
 
   it('does not call loadFeedback if user is not the currentUser even if mode "listens"', () => {
-    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
-     * so that it doesn't get passed as a reference.
-     */
     const wrapper = mount<RecentListens>(
-      <RecentListens
-        {...{
-          ...(JSON.parse(
-            JSON.stringify(recentListensPropsOneListen)
-          ) as RecentListensProps),
-          currentUser: { name: "foobar" },
-        }}
-      />,
-      mountOptions
+      <GlobalAppContext.Provider
+        value={{ ...mountOptions.context, currentUser: { name: "foobar" } }}
+      >
+        <RecentListens {...propsOneListen} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
     instance.loadFeedback = jest.fn();
@@ -155,47 +170,66 @@ describe("componentDidMount", () => {
 });
 
 describe("createWebsocketsConnection", () => {
-  it("calls io.connect with correct parameters", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("calls io with correct parameters", () => {
     const wrapper = mount<RecentListens>(
-      <RecentListens {...props} webSocketsServerUrl="http://localhost:8082" />,
+      <RecentListens {...props} />,
       mountOptions
     );
     const instance = wrapper.instance();
-
-    const spy = jest.spyOn(io, "connect");
     instance.createWebsocketsConnection();
 
-    expect(spy).toHaveBeenCalledWith("http://localhost:8082");
-    jest.clearAllMocks();
+    expect(io).toHaveBeenCalled();
+
+    expect(mockSocket.on).toHaveBeenNthCalledWith(
+      1,
+      "connect",
+      expect.any(Function)
+    );
+    expect(mockSocket.on).toHaveBeenNthCalledWith(
+      2,
+      "listen",
+      expect.any(Function)
+    );
+    expect(mockSocket.on).toHaveBeenNthCalledWith(
+      3,
+      "playing_now",
+      expect.any(Function)
+    );
   });
 });
 
 describe("addWebsocketsHandlers", () => {
   it('calls correct handler for "listen" event', () => {
     const wrapper = mount<RecentListens>(
-      <RecentListens {...props} webSocketsServerUrl="http://localhost:8082" />,
+      <RecentListens {...props} />,
       mountOptions
     );
     const instance = wrapper.instance();
 
     // eslint-disable-next-line dot-notation
     const spy = jest.spyOn(instance["socket"], "on");
-    spy.mockImplementation((event, fn): any => {
-      if (event === "listen") {
-        fn(JSON.stringify(recentListensPropsOneListen.listens[0]));
+    spy.mockImplementation(
+      (event: string, listener: (...args: any[]) => void): any => {
+        if (event === "listen") {
+          listener(JSON.stringify(recentListensPropsOneListen.listens[0]));
+        }
       }
-    });
+    );
     instance.receiveNewListen = jest.fn();
     instance.addWebsocketsHandlers();
 
     expect(instance.receiveNewListen).toHaveBeenCalledWith(
       JSON.stringify(recentListensPropsOneListen.listens[0])
     );
+    spy.mockReset();
   });
 
   it('calls correct event for "playing_now" event', () => {
     const wrapper = mount<RecentListens>(
-      <RecentListens {...props} webSocketsServerUrl="http://localhost:8082" />,
+      <RecentListens {...props} />,
       mountOptions
     );
     const instance = wrapper.instance();
@@ -213,6 +247,7 @@ describe("addWebsocketsHandlers", () => {
     expect(instance.receiveNewPlayingNow).toHaveBeenCalledWith(
       JSON.stringify(recentListensPropsPlayingNow.listens[0])
     );
+    spy.mockReset();
   });
 });
 
@@ -265,20 +300,12 @@ describe("receiveNewListen", () => {
      * so that it doesn't get passed as a reference.
      */
     const wrapper = mount<RecentListens>(
-      <RecentListens
-        {...(JSON.parse(
-          JSON.stringify(recentListensPropsOneListen)
-        ) as RecentListensProps)}
-      />,
+      <RecentListens {...propsOneListen} mode="recent" />,
       mountOptions
     );
     const instance = wrapper.instance();
-    wrapper.setState({ mode: "recent" });
-    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
-     * so that it doesn't get passed as a reference.
-     */
-    const result: Array<Listen> = JSON.parse(
-      JSON.stringify(recentListensPropsOneListen.listens)
+    const result: Array<Listen> = Array.from(
+      recentListensPropsOneListen.listens
     );
     result.unshift(mockListen);
     instance.receiveNewListen(JSON.stringify(mockListen));
@@ -381,6 +408,24 @@ describe("isCurrentListen", () => {
   });
 });
 
+// Will re-add this test when feature flag is removed
+
+describe("updateRecordingToPin", () => {
+  it("sets the recordingToPin in the state", async () => {
+    const wrapper = mount<RecentListens>(
+      <RecentListens {...props} />,
+      mountOptions
+    );
+    const instance = wrapper.instance();
+    const recordingToPin = props.listens[1];
+
+    expect(wrapper.state("recordingToPin")).toEqual(props.listens[0]); // default recordingToPin
+
+    instance.updateRecordingToPin(recordingToPin);
+    expect(wrapper.state("recordingToPin")).toEqual(recordingToPin);
+  });
+});
+
 describe("Pagination", () => {
   const pushStateSpy = jest.spyOn(window.history, "pushState");
 
@@ -462,6 +507,7 @@ describe("Pagination", () => {
       const instance = wrapper.instance();
 
       // Random nextListenTs to ensure that is the value set in browser history
+      wrapper.setProps({ latestListenTs: 1586623524 });
       wrapper.setState({ listens: [], nextListenTs: 1586440600 });
 
       const spy = jest.fn().mockImplementation((username, minTs, maxTs) => {
@@ -591,6 +637,7 @@ describe("Pagination", () => {
       );
       const instance = wrapper.instance();
 
+      wrapper.setProps({ latestListenTs: 1586623524 });
       wrapper.setState({ previousListenTs: 123456 });
 
       const spy = jest.fn().mockImplementation((username, minTs, maxTs) => {
@@ -792,3 +839,35 @@ describe("Pagination", () => {
     });
   });
 });
+
+// Will re-add this test when feature flag is removed
+
+describe("pinRecordingModal", () => {
+  it("renders the PinRecordingModal component with the correct props", async () => {
+    const wrapper = mount<RecentListens>(
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
+    );
+    const instance = wrapper.instance();
+    const recordingToPin = props.listens[0];
+    let pinRecordingModal = wrapper.find(PinRecordingModal).first();
+
+    // recentListens renders pinRecordingModal with listens[0] as recordingToPin by default
+    expect(pinRecordingModal.props()).toEqual({
+      recordingToPin: props.listens[0],
+      newAlert: props.newAlert,
+    });
+
+    instance.updateRecordingToPin(recordingToPin);
+    wrapper.update();
+
+    pinRecordingModal = wrapper.find(PinRecordingModal).first();
+    expect(pinRecordingModal.props()).toEqual({
+      recordingToPin,
+      newAlert: props.newAlert,
+    });
+  });
+});
+
+/* eslint-enable jest/no-disabled-tests */

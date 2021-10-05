@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'base-react.html' %}
 
 {% block title %}Import for "{{ user.musicbrainz_id }}" - ListenBrainz{% endblock %}
 
@@ -10,9 +10,9 @@
         Most users will want to import from Last.fm directly.
     </p>
 
-    <h3>Direct import from Last.fm</h3>
+    <h3>Direct import from Last.fm and Libre.fm</h3>
       <p>
-        The Last.fm importer manually steps through your listen history and imports the listens
+        The importer manually steps through your listen history and imports the listens
         one page at a time. Should it fail for whatever reason, it is safe to restart the import
         process. Running the import process multiple times <strong>does not</strong> create duplicates in your
         ListenBrainz listen history.
@@ -28,10 +28,11 @@
         <em>NOTE</em>: Please note that your listen counts may not be accurate for up to 24 hours after
         you import your data!
       </p>
-      We need to know your Last.fm username:
-      <div class="well">
+      <div class="row">
+      <div class="well col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3">
         <div id="react-container">
         </div>
+      </div>
       </div>
   {% endif %}
 {% endblock %}
@@ -39,5 +40,4 @@
 {% block scripts %}
   {{ super() }}
   <script src="{{ get_static_path('import.js') }}" type="text/javascript"></script>
-  <script id="react-props" type="application/json">{{ props|safe }}</script>
 {% endblock %}

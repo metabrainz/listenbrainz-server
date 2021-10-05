@@ -6,8 +6,9 @@ from unittest import mock
 
 from flask import url_for, current_app
 
+from data.model.common_stat import StatRange
 from data.model.external_service import ExternalServiceType
-from data.model.user_artist_stat import UserArtistStatJson
+from data.model.user_entity import UserEntityRecord
 
 from listenbrainz.db import external_service_oauth as db_oauth
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
@@ -38,27 +39,67 @@ class UserViewsTestCase(IntegrationTestCase):
         weirduser = db_user.get_or_create(2, 'weird\\user name')
         self.weirduser = User.from_dbrow(weirduser)
 
+        abuser = db_user.get_or_create(3, 'abuser')
+        self.abuser = User.from_dbrow(abuser)
+
     def tearDown(self):
         self.logstore = None
 
     def test_redirects(self):
+        """Test the /my/[something]/ endponts which redirect to the /user/ namespace"""
         # Not logged in
         response = self.client.get(url_for("redirect.redirect_listens"))
         self.assertEqual(response.status_code, 302)
-        assert response.location.endswith("/login/?next=%2Fmy%2Flistens")
+        assert response.location.endswith("/login/?next=%2Fmy%2Flistens%2F")
 
+        # Logged in
         self.temporary_login(self.user.login_id)
         response = self.client.get(url_for("redirect.redirect_listens"))
         self.assertEqual(response.status_code, 302)
-        assert response.location.endswith("/user/iliekcomputers")
+        assert response.location.endswith("/user/iliekcomputers/")
 
         response = self.client.get(url_for("redirect.redirect_charts"))
         self.assertEqual(response.status_code, 302)
-        assert response.location.endswith("/user/iliekcomputers/charts")
+        assert response.location.endswith("/user/iliekcomputers/charts/")
 
         response = self.client.get(url_for("redirect.redirect_charts") + "?foo=bar")
         self.assertEqual(response.status_code, 302)
-        assert response.location.endswith("/user/iliekcomputers/charts?foo=bar")
+        assert response.location.endswith("/user/iliekcomputers/charts/?foo=bar")
+
+    def test_user_redirects(self):
+        response = self.client.get('/user/iliekcomputers/')
+        self.assert200(response)
+        response = self.client.get('/user/iliekcomputers')
+        self.assertEqual(response.status_code, 308)
+        assert response.location.endswith('/user/iliekcomputers/')
+
+        response = self.client.get('/user/iliekcomputers/charts/')
+        self.assert200(response)
+        response = self.client.get('/user/iliekcomputers/charts')
+        self.assertEqual(response.status_code, 308)
+        assert response.location.endswith('/user/iliekcomputers/charts/')
+
+        response = self.client.get('/user/iliekcomputers/reports/')
+        self.assert200(response)
+        response = self.client.get('/user/iliekcomputers/reports')
+        self.assertEqual(response.status_code, 308)
+        assert response.location.endswith('/user/iliekcomputers/reports/')
+
+        # these are permanent redirects to user/<username>/charts
+
+        response = self.client.get('/user/iliekcomputers/history/')
+        self.assertEqual(response.status_code, 301)
+        assert response.location.endswith('/user/iliekcomputers/charts/?entity=artist&page=1&range=all_time')
+        response = self.client.get('/user/iliekcomputers/history')
+        self.assertEqual(response.status_code, 308)
+        assert response.location.endswith('/user/iliekcomputers/history/')
+
+        response = self.client.get('/user/iliekcomputers/artists/')
+        self.assertEqual(response.status_code, 301)
+        assert response.location.endswith('/user/iliekcomputers/charts/?entity=artist&page=1&range=all_time')
+        response = self.client.get('/user/iliekcomputers/artists')
+        self.assertEqual(response.status_code, 308)
+        assert response.location.endswith('/user/iliekcomputers/artists/')
 
     def test_user_page(self):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
@@ -75,16 +116,15 @@ class UserViewsTestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_artists_db.json')) as f:
             artists_data = ujson.load(f)
 
-        db_stats.insert_user_artists(
-            user_id=self.user.id,
-            artists=UserArtistStatJson(**{'all_time': artists_data})
-        )
+        db_stats.insert_user_jsonb_data(user_id=self.user.id, stats_type='artists',
+                                        stats=StatRange[UserEntityRecord](**artists_data))
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertTemplateUsed('user/profile.html')
         props = ujson.loads(self.get_context_variable('props'))
         self.assertEqual(props['artist_count'], '2')
-        self.assertDictEqual(props['spotify'], {})
+        global_props = ujson.loads(self.get_context_variable("global_props"))
+        self.assertDictEqual(global_props['spotify'], {})
 
     def test_spotify_token_access_no_login(self):
         db_oauth.save_token(user_id=self.user.id, service=ExternalServiceType.SPOTIFY,
@@ -95,14 +135,14 @@ class UserViewsTestCase(IntegrationTestCase):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertTemplateUsed('user/profile.html')
-        props = ujson.loads(self.get_context_variable('props'))
+        props = ujson.loads(self.get_context_variable("global_props"))
         self.assertDictEqual(props['spotify'], {})
 
     def test_spotify_token_access_unlinked(self):
         self.temporary_login(self.user.login_id)
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
-        props = ujson.loads(self.get_context_variable('props'))
+        props = ujson.loads(self.get_context_variable("global_props"))
         self.assertDictEqual(props['spotify'], {})
 
     def test_spotify_token_access(self):
@@ -115,7 +155,8 @@ class UserViewsTestCase(IntegrationTestCase):
 
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
-        props = ujson.loads(self.get_context_variable('props'))
+
+        props = ujson.loads(self.get_context_variable("global_props"))
         self.assertDictEqual(props['spotify'], {
             'access_token': 'token',
             'permission': ['user-read-recently-played', 'streaming'],
@@ -123,7 +164,7 @@ class UserViewsTestCase(IntegrationTestCase):
 
         response = self.client.get(url_for('user.profile', user_name=self.weirduser.musicbrainz_id))
         self.assert200(response)
-        props = ujson.loads(self.get_context_variable('props'))
+        props = ujson.loads(self.get_context_variable("global_props"))
         self.assertDictEqual(props['spotify'], {
             'access_token': 'token',
             'permission': ['user-read-recently-played', 'streaming'],
@@ -214,3 +255,40 @@ class UserViewsTestCase(IntegrationTestCase):
         self.assertIn(b'Incorrect timestamp argument min_ts: b', response.data)
 
         timescale.assert_not_called()
+
+    def test_report_abuse(self):
+        # Assert user is not already reported by current user
+        already_reported_user = db_user.is_user_reported(self.user.id, self.abuser.id)
+        self.assertFalse(already_reported_user)
+
+        self.temporary_login(self.user.login_id)
+        # Assert reporting works
+        data = {
+            'reason': 'This user is cramping my style and I dont like it'
+        }
+        response = self.client.post(
+            url_for('user.report_abuse', user_name=self.abuser.musicbrainz_id),
+            json=data,
+        )
+        self.assert200(response, "%s has been reported successfully." % self.abuser.musicbrainz_id)
+        already_reported_user = db_user.is_user_reported(self.user.id, self.abuser.id)
+        self.assertTrue(already_reported_user)
+
+        # Assert a user cannot report themselves
+        response = self.client.post(
+            url_for('user.report_abuse', user_name=self.user.musicbrainz_id),
+            json=data,
+        )
+        self.assert400(response, "You cannot report yourself.")
+        already_reported_user = db_user.is_user_reported(self.user.id, self.user.id)
+        self.assertFalse(already_reported_user)
+
+        # Assert reason must be of type string
+        data = {
+            'reason': {'youDoneGoofed': 1234}
+        }
+        response = self.client.post(
+            url_for('user.report_abuse', user_name=self.abuser.musicbrainz_id),
+            json=data,
+        )
+        self.assert400(response, "Reason must be a string.")

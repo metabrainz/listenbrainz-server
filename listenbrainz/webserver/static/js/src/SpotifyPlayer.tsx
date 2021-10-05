@@ -5,6 +5,8 @@ import {
   get as _get,
   has as _has,
   debounce as _debounce,
+  isString,
+  difference,
 } from "lodash";
 import { searchForSpotifyTrack, loadScriptAsync } from "./utils";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
@@ -41,7 +43,7 @@ const fixSpotifyPlayerStyleIssue = () => {
 };
 
 type SpotifyPlayerProps = DataSourceProps & {
-  spotifyUser: SpotifyUser;
+  spotifyUser?: SpotifyUser;
   refreshSpotifyToken: () => Promise<string>;
 };
 
@@ -56,7 +58,10 @@ type SpotifyPlayerState = {
 export default class SpotifyPlayer
   extends React.Component<SpotifyPlayerProps, SpotifyPlayerState>
   implements DataSourceType {
-  static hasPermissions = (spotifyUser: SpotifyUser) => {
+  static hasPermissions = (spotifyUser?: SpotifyUser) => {
+    if (!spotifyUser) {
+      return false;
+    }
     const { access_token: accessToken, permission } = spotifyUser;
     if (!accessToken || !permission) {
       return false;
@@ -75,13 +80,14 @@ export default class SpotifyPlayer
     return true;
   };
 
+  public name = "spotify";
   spotifyPlayer?: SpotifyPlayerType;
   debouncedOnTrackEnd: () => void;
 
   constructor(props: SpotifyPlayerProps) {
     super(props);
     this.state = {
-      accessToken: props.spotifyUser.access_token || "",
+      accessToken: props.spotifyUser?.access_token || "",
       durationMs: 0,
     };
 
@@ -186,6 +192,9 @@ export default class SpotifyPlayer
         }
       );
       let errorMessage;
+      if (response.ok) {
+        return;
+      }
       try {
         errorMessage = await response.json();
       } catch (err) {
@@ -221,7 +230,41 @@ export default class SpotifyPlayer
     }
   };
 
+  isListenFromThisService = (listen: Listen | JSPFTrack): boolean => {
+    const listeningFrom = _get(
+      listen,
+      "track_metadata.additional_info.listening_from"
+    );
+    return (
+      (isString(listeningFrom) && listeningFrom.toLowerCase() === "spotify") ||
+      _get(listen, "track_metadata.additional_info.spotify_id")
+    );
+  };
+
+  canSearchAndPlayTracks = (): boolean => {
+    const { spotifyUser } = this.props;
+    return SpotifyPlayer.hasPermissions(spotifyUser);
+  };
+
+  datasourceRecordsListens = (): boolean => {
+    const { spotifyUser } = this.props;
+    const permissionsRequiredForScrobbling = [
+      "user-read-currently-playing",
+      "user-read-recently-played",
+    ];
+    return (
+      difference(
+        permissionsRequiredForScrobbling,
+        spotifyUser?.permission ?? []
+      ).length === 0
+    );
+  };
+
   playListen = (listen: Listen | JSPFTrack): void => {
+    const { show } = this.props;
+    if (!show) {
+      return;
+    }
     if (_get(listen, "track_metadata.additional_info.spotify_id")) {
       this.playSpotifyURI(getSpotifyUriFromListen(listen as Listen));
     } else {
@@ -416,7 +459,23 @@ export default class SpotifyPlayer
       const artists = current_track.artists
         .map((artist: SpotifyArtist) => artist.name)
         .join(", ");
-      onTrackInfoChange(current_track.name, artists);
+      onTrackInfoChange(
+        current_track.name,
+        `https://open.spotify.com/track/${current_track.id}`,
+        artists,
+        current_track.album?.name,
+        current_track.album.images
+          .filter((image) => image.url)
+          .map((image) => {
+            const mediaImage: MediaImage = {
+              src: image.url,
+            };
+            if (image.width && image.height) {
+              mediaImage.sizes = `${image.width}x${image.height}`;
+            }
+            return mediaImage;
+          })
+      );
 
       this.setState({
         durationMs: duration,

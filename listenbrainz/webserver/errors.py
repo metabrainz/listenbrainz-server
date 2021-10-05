@@ -7,6 +7,7 @@ import collections
 
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver import API_PREFIX
+from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
 
 LastFMError = collections.namedtuple('LastFMError', ['code', 'message'])
 
@@ -69,6 +70,7 @@ class CompatError(object):
     INVALID_SERVICE          = LastFMError(code = 2, message = "Invalid service -This service does not exist")
     INVALID_METHOD           = LastFMError(code = 3, message = "Invalid Method - No method with that name in this package")
     INVALID_TOKEN            = LastFMError(code = 4, message = "Invalid Token - Invalid authentication token supplied")
+    NO_EMAIL                 = LastFMError(code = 4, message = REJECT_LISTENS_WITHOUT_EMAIL_ERROR)
     INVALID_FORMAT           = LastFMError(code = 5, message = "Invalid format - This service doesn't exist in that format")
     INVALID_PARAMETERS       = LastFMError(code = 6, message = "Invalid parameters - " \
                                                                "Your request is missing a required parameter")
@@ -159,6 +161,10 @@ def init_error_handlers(app):
     @app.errorhandler(413)
     def file_size_too_large(error):
         return handle_error(error, 413)
+
+    @app.errorhandler(429)
+    def too_many_requests(error):
+        return handle_error(error, 429)
 
     @app.errorhandler(500)
     def internal_server_error(error):

@@ -67,6 +67,7 @@ class DumpManagerTestCase(DatabaseTestCase):
     @patch('listenbrainz.db.dump_manager.send_mail')
     def test_send_dump_creation_notification_full(self, mock_send_mail):
         with self.app.app_context():
+            old_testing_value = current_app.config['TESTING']
 
             # should not call send mail when testing
             current_app.config['TESTING'] = True
@@ -92,6 +93,7 @@ class DumpManagerTestCase(DatabaseTestCase):
             )
             self.assertEqual(
                 mock_send_mail.call_args[1]['text'], expected_text)
+            current_app.config['TESTING'] = old_testing_value
 
     @patch('listenbrainz.db.dump_manager.send_mail')
     def test_send_dump_creation_notification_incremental(self, mock_send_mail):
@@ -206,24 +208,7 @@ class DumpManagerTestCase(DatabaseTestCase):
         # a private dump and a spark dump.
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
-            if file_name.endswith('.tar.xz'):
-                archive_count += 1
-        self.assertEqual(archive_count, 4)
-
-        # now, remove the old dump and create a new one with the same id
-        shutil.rmtree(os.path.join(self.tempdir, dump_name))
-        self.runner.invoke(dump_manager.create_full, [
-                           '--location', self.tempdir, '--last-dump-id'])
-        self.assertEqual(len(os.listdir(self.tempdir)), 1)
-        recreated_dump_name = os.listdir(self.tempdir)[0]
-
-        # dump names should be the exact same
-        self.assertEqual(dump_name, recreated_dump_name)
-
-        # dump should contain the 4 archives
-        archive_count = 0
-        for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
-            if file_name.endswith('.tar.xz'):
+            if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
                 archive_count += 1
         self.assertEqual(archive_count, 4)
 
@@ -250,7 +235,7 @@ class DumpManagerTestCase(DatabaseTestCase):
         # dump should contain the 4 archives
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
-            if file_name.endswith('.tar.xz'):
+            if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
                 archive_count += 1
         self.assertEqual(archive_count, 4)
 
@@ -282,7 +267,7 @@ class DumpManagerTestCase(DatabaseTestCase):
         # make sure that the dump contains a full listens and spark dump
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
-            if file_name.endswith('.tar.xz'):
+            if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
                 archive_count += 1
         self.assertEqual(archive_count, 2)
 
@@ -314,7 +299,7 @@ class DumpManagerTestCase(DatabaseTestCase):
         # dump should contain the listen and spark archive
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
-            if file_name.endswith('.tar.xz'):
+            if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
                 archive_count += 1
         self.assertEqual(archive_count, 2)
 
@@ -380,6 +365,6 @@ class DumpManagerTestCase(DatabaseTestCase):
         # make sure that the dump contains a feedback dump
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
-            if file_name.endswith('.tar.xz'):
+            if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
                 archive_count += 1
         self.assertEqual(archive_count, 1)

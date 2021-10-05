@@ -18,6 +18,12 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+# usage
+# the first argument to this script is the dump type, it can be either
+# full, incremental or feedback. the remaining arguments are forwarded
+# the python dump_manager script. this can be useful in scenarios where
+# we want to pass in the --dump-id manually for recreating a failed dump.
+
 set -e
 
 LB_SERVER_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)
@@ -63,9 +69,10 @@ function on_exit {
         local duration=$(( $(date +%s) - START_TIME ))
         echo "create-dumps took ${duration}s to run"
     fi
-}
 
-trap on_exit EXIT
+    # Remove the cron lock
+    /usr/local/bin/python admin/cron_lock.py unlock-cron create-dumps
+}
 
 START_TIME=$(date +%s)
 echo "This script is being run by the following user: "; whoami
@@ -76,12 +83,10 @@ if [ -z $DUMP_BASE_DIR ]; then
     exit 1
 fi
 
-if ! findmnt -n --type cifs --target $DUMP_BASE_DIR; then
-    echo "DUMP_BASE_DIR ($DUMP_BASE_DIR) isn't mounted using CIFS as expected"
-    exit 1
-fi
-
 DUMP_TYPE="${1:-full}"
+# consume dump type argument so that we can pass the remaining arguments to
+# the python dump manager script
+shift
 
 if [ "$DUMP_TYPE" == "full" ]; then
     SUB_DIR="fullexport"
@@ -94,23 +99,29 @@ else
     exit
 fi
 
+# Lock cron, so it cannot be accidentally terminated.
+/usr/local/bin/python admin/cron_lock.py lock-cron create-dumps "Creating $DUMP_TYPE dump."
+
+# Trap should not be called before we lock cron to avoid wiping out an existing lock file
+trap on_exit EXIT
+
 DUMP_TEMP_DIR="$DUMP_BASE_DIR/$SUB_DIR.$$"
 echo "DUMP_BASE_DIR is $DUMP_BASE_DIR"
 echo "creating DUMP_TEMP_DIR $DUMP_TEMP_DIR"
 mkdir -p "$DUMP_TEMP_DIR"
 
 if [ "$DUMP_TYPE" == "full" ]; then
-    if ! /usr/local/bin/python manage.py dump create_full -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS" --last-dump-id; then
+    if ! /usr/local/bin/python manage.py dump create_full -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS" "$@"; then
         echo "Full dump failed, exiting!"
         exit 1
     fi
 elif [ "$DUMP_TYPE" == "incremental" ]; then
-    if ! /usr/local/bin/python manage.py dump create_incremental -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS"; then
+    if ! /usr/local/bin/python manage.py dump create_incremental -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS" "$@"; then
         echo "Incremental dump failed, exiting!"
         exit 1
     fi
 elif [ "$DUMP_TYPE" == "feedback" ]; then
-    if ! /usr/local/bin/python manage.py dump create_feedback -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS"; then
+    if ! /usr/local/bin/python manage.py dump create_feedback -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS" "$@"; then
         echo "Feedback dump failed, exiting!"
         exit 1
     fi
@@ -139,14 +150,10 @@ DUMP_DIR=$(dirname "$DUMP_ID_FILE")
 DUMP_NAME=$(basename "$DUMP_DIR")
 
 # Backup dumps to the backup volume
-# Create backup directories owned by user "listenbrainz"
 echo "Creating Backup directories..."
 mkdir -m "$BACKUP_DIR_MODE" -p \
-         "$BACKUP_DIR/$SUB_DIR/" \
-         "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME"
-chown "$BACKUP_USER:$BACKUP_GROUP" \
-      "$BACKUP_DIR/$SUB_DIR/" \
-      "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME"
+    "$BACKUP_DIR/$SUB_DIR" \
+    "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME"
 echo "Backup directories created!"
 
 # Copy the files into the backup directory
@@ -162,13 +169,9 @@ FTP_CURRENT_DUMP_DIR="$FTP_DIR/$SUB_DIR/$DUMP_NAME"
 # create the dir in which to copy the dumps before
 # changing their permissions to the FTP_FILE_MODE
 echo "Creating FTP directories..."
-mkdir -p "$FTP_CURRENT_DUMP_DIR"
-
-# make sure these dirs are owned by the correct user
-chown "$FTP_USER:$FTP_GROUP" \
-      "$FTP_DIR" \
-      "$FTP_DIR/$SUB_DIR" \
-      "$FTP_CURRENT_DUMP_DIR"
+mkdir  -m "$FTP_DIR_MODE" -p \
+    "$FTP_DIR/$SUB_DIR" \
+    "$FTP_CURRENT_DUMP_DIR"
 
 # make sure all dump files are owned by the correct user
 # and set appropriate mode for files to be uploaded to
@@ -190,7 +193,7 @@ add_rsync_include_rule \
     "listenbrainz-listens-dump-$DUMP_ID-$DUMP_TIMESTAMP-$DUMP_TYPE.tar.xz"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
-    "listenbrainz-listens-dump-$DUMP_ID-$DUMP_TIMESTAMP-spark-$DUMP_TYPE.tar.xz"
+    "listenbrainz-spark-dump-$DUMP_ID-$DUMP_TIMESTAMP-$DUMP_TYPE.tar"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
     "listenbrainz-feedback-dump-$DUMP_TIMESTAMP.tar.xz"
@@ -202,7 +205,6 @@ cat "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
 
 /usr/local/bin/python manage.py dump delete_old_dumps "$FTP_DIR/$SUB_DIR"
 /usr/local/bin/python manage.py dump delete_old_dumps "$BACKUP_DIR/$SUB_DIR"
-/usr/local/bin/python manage.py dump delete_old_dumps "$DUMP_BASE_DIR/$SUB_DIR"
 
 # rsync to ftp folder taking care of the rules
 ./admin/rsync-dump-files.sh "$DUMP_TYPE"

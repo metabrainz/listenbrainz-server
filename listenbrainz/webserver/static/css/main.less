@@ -1,12 +1,14 @@
 @import "theme/theme.less";
 @import "colors.less";
 @import "listens-page.less";
+@import "pinned-recordings.less";
 @import "playlists.less";
 @import "timeline.less";
 @import "follow.less";
 @import "recommendation-page.less";
 @import "DatePicker.less";
 @import "music-services.less";
+@import "cbreviewmodal.less";
 
 
 @icon-font-path:"/static/fonts/";
@@ -60,7 +62,7 @@ body {
   .navbar-form {
     padding-right: 0px;
     .btn {
-      background-color: @turquoise;
+      background-color: @orange;
       margin-right: 0px;
     }
   }
@@ -204,4 +206,12 @@ h2.page-title { @media (max-width: @grid-float-breakpoint) { margin-top: 0px; } 
     }
     margin-right: 0.7em;
   }
+}
+
+// For cover art in alerts
+@alertThumbnailSize: 60px;
+.alert .alert-thumbnail{
+	max-height: @alertThumbnailSize;
+	margin: -@alert-padding;
+	margin-right: 0;
 }

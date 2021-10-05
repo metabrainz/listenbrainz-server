@@ -33,9 +33,15 @@ def test_mapping():
 
     for row in data:
         hits = search(row[1] + " " + row[0])
+        if not hits:
+            failed += 1
+            print("Q %-30s %-30s %-25s %s" % (row[0][:29], "", row[1][:29], row[2]))
+            print("no results.")
+            continue
+
         if row[2] != hits[0]['release_mbid']:
-            print("Q %-30s %-30s %-25 %s" % (row[0][:29], "", row[1][:29], row[2]))
-            print("H %-30s %-30s %-25 %s" % (hits[0]['recording_name'][:29], hits[0]['release_name'][:29],
+            print("Q %-30s %-30s %-25s %s" % (row[0][:29], "", row[1][:29], row[2]))
+            print("H %-30s %-30s %-25s %s" % (hits[0]['recording_name'][:29], hits[0]['release_name'][:29],
                   hits[0]['artist_credit_name'][:29], hits[0]['release_mbid']))
             print()
             failed += 1

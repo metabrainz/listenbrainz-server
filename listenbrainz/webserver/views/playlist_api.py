@@ -9,9 +9,10 @@ import requests
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
 
+from listenbrainz.webserver.utils import parse_boolean_arg
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden
-from listenbrainz.webserver.rate_limiter import ratelimit
+from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, validate_auth_header, \
     _filter_description_html
 from listenbrainz.db.model.playlist import Playlist, WritablePlaylist, WritablePlaylistRecording
@@ -26,18 +27,6 @@ PLAYLIST_EXTENSION_URI = "https://musicbrainz.org/doc/jspf#playlist"
 PLAYLIST_TRACK_EXTENSION_URI = "https://musicbrainz.org/doc/jspf#track"
 RECORDING_LOOKUP_SERVER_URL = "https://labs.api.listenbrainz.org/recording-mbid-lookup/json"
 MAX_RECORDINGS_PER_ADD = 100
-
-
-def _parse_boolean_arg(name, default=None):
-    value = request.args.get(name)
-    if not value:
-        return default
-
-    value = value.lower()
-    if value not in ["true", "false"]:
-        raise APIBadRequest("Invalid %s argument: %s. Must be 'true' or 'false'" % (name, value))
-
-    return True if value == "true" else False
 
 
 def validate_create_playlist_required_items(jspf):
@@ -427,13 +416,13 @@ def get_playlist(playlist_mbid):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    fetch_metadata = _parse_boolean_arg("fetch_metadata", True)
+    fetch_metadata = parse_boolean_arg("fetch_metadata", True)
 
     playlist = db_playlist.get_by_mbid(playlist_mbid, True)
     if playlist is None:
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
-    user = validate_auth_header(True)
+    user = validate_auth_header(optional=True)
     user_id = None
     if user:
         user_id = user["id"]

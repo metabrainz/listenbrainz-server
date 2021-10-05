@@ -5,18 +5,34 @@ import {
   isString as _isString,
   get as _get,
   has as _has,
+  throttle as _throttle,
+  assign,
+  debounce,
 } from "lodash";
-import * as _ from "lodash";
+import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import PlaybackControls from "./PlaybackControls";
 import GlobalAppContext from "./GlobalAppContext";
 import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
 import SoundcloudPlayer from "./SoundcloudPlayer";
+import {
+  hasNotificationPermission,
+  createNotification,
+  hasMediaSessionSupport,
+  overwriteMediaSession,
+  updateMediaSession,
+} from "./Notifications";
 
 export type DataSourceType = {
+  name: string;
   playListen: (listen: Listen | JSPFTrack) => void;
   togglePlay: () => void;
   seekToPositionMs: (msTimecode: number) => void;
+  isListenFromThisService: (listen: Listen | JSPFTrack) => boolean;
+  canSearchAndPlayTracks: () => boolean;
+  datasourceRecordsListens: () => boolean;
 };
 
 export type DataSourceTypes = SpotifyPlayer | YoutubePlayer | SoundcloudPlayer;
@@ -27,7 +43,13 @@ export type DataSourceProps = {
   onPlayerPausedChange: (paused: boolean) => void;
   onProgressChange: (progressMs: number) => void;
   onDurationChange: (durationMs: number) => void;
-  onTrackInfoChange: (title: string, artist?: string) => void;
+  onTrackInfoChange: (
+    title: string,
+    trackURL: string,
+    artist?: string,
+    album?: string,
+    artwork?: Array<MediaImage>
+  ) => void;
   onTrackEnd: () => void;
   onTrackNotFound: () => void;
   handleError: (error: BrainzPlayerError, title?: string) => void;
@@ -40,11 +62,10 @@ export type DataSourceProps = {
 };
 
 type BrainzPlayerProps = {
-  spotifyUser: SpotifyUser;
-  youtubeUser: YoutubeUser;
   direction: BrainzPlayDirection;
-  onCurrentListenChange: (listen: Listen | JSPFTrack) => void;
-  currentListen?: Listen | JSPFTrack;
+  onCurrentListenChange: (
+    listen: BaseListenFormat | Listen | JSPFTrack
+  ) => void;
   listens: Array<Listen | JSPFTrack>;
   newAlert: (
     alertType: AlertType,
@@ -54,14 +75,20 @@ type BrainzPlayerProps = {
 };
 
 type BrainzPlayerState = {
+  currentListen?: Listen | JSPFTrack;
   currentDataSourceIndex: number;
   currentTrackName: string;
   currentTrackArtist?: string;
+  currentTrackAlbum?: string;
+  currentTrackURL?: string;
   direction: BrainzPlayDirection;
   playerPaused: boolean;
+  isActivated: boolean;
   durationMs: number;
   progressMs: number;
   updateTime: number;
+  listenSubmitted: boolean;
+  continuousPlaybackTime: number;
 };
 
 export default class BrainzPlayer extends React.Component<
@@ -76,20 +103,25 @@ export default class BrainzPlayer extends React.Component<
   soundcloudPlayer?: React.RefObject<SoundcloudPlayer>;
   dataSources: Array<React.RefObject<DataSourceTypes>> = [];
 
-  // Since we don't want autoplay on our pages, we need a way to know
-  // that a user clicked on the play/pause button for the first time
-  // to start the playlist. Subsequent uses should toggle play/pause.
-  firstRun: boolean = true;
-
   playerStateTimerID?: NodeJS.Timeout;
+
+  private readonly mediaSessionHandlers: Array<{
+    action: string;
+    handler: () => void;
+  }>;
+
+  // By how much should we seek in the track?
+  private SEEK_TIME_MILLISECONDS = 5000;
+  // Wait X milliseconds between start of song and sending a full listen
+  private SUBMIT_LISTEN_AFTER_MS = 30000;
+  // Check if it's time to submit the listen every X milliseconds
+  private SUBMIT_LISTEN_UPDATE_INTERVAL = 5000;
 
   constructor(props: BrainzPlayerProps) {
     super(props);
 
     this.spotifyPlayer = React.createRef<SpotifyPlayer>();
-    if (SpotifyPlayer.hasPermissions(props.spotifyUser)) {
-      this.dataSources.push(this.spotifyPlayer);
-    }
+    this.dataSources.push(this.spotifyPlayer);
 
     this.youtubePlayer = React.createRef<YoutubePlayer>();
     this.dataSources.push(this.youtubePlayer);
@@ -99,18 +131,36 @@ export default class BrainzPlayer extends React.Component<
 
     this.state = {
       currentDataSourceIndex: 0,
-      currentTrackName: this.getCurrentTrackName(),
-      currentTrackArtist: this.getCurrentTrackArtists(),
+      currentTrackName: "",
+      currentTrackArtist: "",
       direction: props.direction || "down",
       playerPaused: true,
       progressMs: 0,
       durationMs: 0,
       updateTime: performance.now(),
+      continuousPlaybackTime: 0,
+      isActivated: false,
+      listenSubmitted: false,
     };
+
+    this.mediaSessionHandlers = [
+      { action: "previoustrack", handler: this.playPreviousTrack },
+      { action: "nexttrack", handler: this.playNextTrack },
+      { action: "seekbackward", handler: this.seekBackward },
+      { action: "seekforward", handler: this.seekForward },
+    ];
   }
 
   componentDidMount = () => {
     window.addEventListener("storage", this.onLocalStorageEvent);
+    // Remove SpotifyPlayer if the user doesn't have the relevant permissions to use it
+    const { spotifyAuth } = this.context;
+    if (
+      !SpotifyPlayer.hasPermissions(spotifyAuth) &&
+      this.spotifyPlayer?.current
+    ) {
+      this.invalidateDataSource(this.spotifyPlayer.current);
+    }
   };
 
   componentWillUnMount = () => {
@@ -126,9 +176,7 @@ export default class BrainzPlayer extends React.Component<
     const { currentDataSourceIndex, playerPaused } = this.state;
     if (event.storageArea !== localStorage) return;
     if (event.key === "BrainzPlayer_stop") {
-      const dataSource =
-        this.dataSources[currentDataSourceIndex] &&
-        this.dataSources[currentDataSourceIndex].current;
+      const dataSource = this.dataSources[currentDataSourceIndex]?.current;
       if (dataSource && !playerPaused) {
         await dataSource.togglePlay();
       }
@@ -142,7 +190,7 @@ export default class BrainzPlayer extends React.Component<
   };
 
   isCurrentListen = (element: Listen | JSPFTrack): boolean => {
-    const { currentListen } = this.props;
+    const { currentListen } = this.state;
     if (_isNil(currentListen)) {
       return false;
     }
@@ -159,7 +207,13 @@ export default class BrainzPlayer extends React.Component<
 
   playNextTrack = (invert: boolean = false): void => {
     const { listens } = this.props;
-    const { direction } = this.state;
+    const { direction, isActivated } = this.state;
+
+    if (!isActivated) {
+      // Player has not been activated by the user, do nothing.
+      return;
+    }
+    this.debouncedCheckProgressAndSubmitListen.flush();
 
     if (listens.length === 0) {
       this.handleWarning(
@@ -222,6 +276,11 @@ export default class BrainzPlayer extends React.Component<
     newAlert("success", title || "Success", message);
   };
 
+  handleInfoMessage = (message: string | JSX.Element, title?: string): void => {
+    const { newAlert } = this.props;
+    newAlert("info", title || "", message);
+  };
+
   invalidateDataSource = (
     dataSource?: DataSourceTypes,
     message?: string | JSX.Element
@@ -240,86 +299,63 @@ export default class BrainzPlayer extends React.Component<
     }
   };
 
+  activatePlayerAndPlay = (): void => {
+    overwriteMediaSession(this.mediaSessionHandlers);
+    this.setState({ isActivated: true }, this.playNextTrack);
+  };
+
   playListen = (
     listen: Listen | JSPFTrack,
     datasourceIndex: number = 0
   ): void => {
-    if (this.firstRun) {
-      this.firstRun = false;
-    }
+    this.setState({
+      isActivated: true,
+      currentListen: listen,
+      listenSubmitted: false,
+      continuousPlaybackTime: 0,
+    });
+    const { onCurrentListenChange } = this.props;
+    onCurrentListenChange(listen);
 
-    /** If available, retreive the service the listen was listened with */
-    let selectedDatasourceIndex = this.getSourceIndexByListenData(listen);
-
-    /** If no matching datasource was found, revert to the default bahaviour
-     * (play from source 0 or if called from failedToFindTrack, try next source)
-     */
-    if (selectedDatasourceIndex === -1) {
+    let selectedDatasourceIndex: number;
+    if (datasourceIndex === 0) {
+      /** If available, retrieve the service the listen was listened with */
+      const listenedFromIndex = this.dataSources.findIndex((ds) =>
+        ds.current?.isListenFromThisService(listen)
+      );
+      selectedDatasourceIndex =
+        listenedFromIndex === -1 ? 0 : listenedFromIndex;
+    } else {
+      /** If no matching datasource was found, revert to the default bahaviour
+       * (try playing from source 0 or try next source)
+       */
       selectedDatasourceIndex = datasourceIndex;
     }
 
-    const { onCurrentListenChange } = this.props;
-    onCurrentListenChange(listen);
+    const datasource = this.dataSources[selectedDatasourceIndex]?.current;
+    if (!datasource) {
+      return;
+    }
+    // Check if we can play the listen with the selected datasource
+    // otherwise skip to the next datasource without trying or setting currentDataSourceIndex
+    // This prevents rendering datasource iframes when we can't use the datasource
+    if (
+      !datasource.isListenFromThisService(listen) &&
+      !datasource.canSearchAndPlayTracks()
+    ) {
+      this.playListen(listen, datasourceIndex + 1);
+      return;
+    }
     this.stopOtherBrainzPlayers();
-
     this.setState({ currentDataSourceIndex: selectedDatasourceIndex }, () => {
-      const { currentDataSourceIndex } = this.state;
-      const dataSource =
-        this.dataSources[currentDataSourceIndex] &&
-        this.dataSources[currentDataSourceIndex].current;
-      if (!dataSource) {
-        this.invalidateDataSource();
-        return;
-      }
-
-      dataSource.playListen(listen);
+      datasource.playListen(listen);
     });
-  };
-
-  getSourceIndexByListenData = (listen: Listen | JSPFTrack): number => {
-    let selectedDatasourceIndex = -1;
-    const listeningFrom = _get(
-      listen,
-      "track_metadata.additional_info.listening_from"
-    );
-    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
-
-    /** Spotify */
-    if (
-      listeningFrom === "spotify" ||
-      _get(listen, "track_metadata.additional_info.spotify_id")
-    ) {
-      selectedDatasourceIndex = this.dataSources.findIndex(
-        (ds) => ds.current instanceof SpotifyPlayer
-      );
-    }
-
-    /** Youtube */
-    if (
-      listeningFrom === "youtube" ||
-      /youtube\.com\/watch\?/.test(originURL)
-    ) {
-      selectedDatasourceIndex = this.dataSources.findIndex(
-        (ds) => ds.current instanceof YoutubePlayer
-      );
-    }
-
-    /** SoundCloud */
-    if (listeningFrom === "soundcloud" || /soundcloud\.com/.test(originURL)) {
-      selectedDatasourceIndex = this.dataSources.findIndex(
-        (ds) => ds.current instanceof SoundcloudPlayer
-      );
-    }
-
-    return selectedDatasourceIndex;
   };
 
   togglePlay = async (): Promise<void> => {
     try {
       const { currentDataSourceIndex, playerPaused } = this.state;
-      const dataSource =
-        this.dataSources[currentDataSourceIndex] &&
-        this.dataSources[currentDataSourceIndex].current;
+      const dataSource = this.dataSources[currentDataSourceIndex]?.current;
       if (!dataSource) {
         this.invalidateDataSource();
         return;
@@ -334,26 +370,38 @@ export default class BrainzPlayer extends React.Component<
   };
 
   getCurrentTrackName = (): string => {
-    const { currentListen } = this.props;
+    const { currentListen } = this.state;
     return _get(currentListen, "track_metadata.track_name", "");
   };
 
   getCurrentTrackArtists = (): string | undefined => {
-    const { currentListen } = this.props;
+    const { currentListen } = this.state;
     return _get(currentListen, "track_metadata.artist_name", "");
   };
 
   seekToPositionMs = (msTimecode: number): void => {
-    const { currentDataSourceIndex } = this.state;
-    const dataSource =
-      this.dataSources[currentDataSourceIndex] &&
-      this.dataSources[currentDataSourceIndex].current;
+    const { currentDataSourceIndex, isActivated } = this.state;
+    if (!isActivated) {
+      // Player has not been activated by the user, do nothing.
+      return;
+    }
+    const dataSource = this.dataSources[currentDataSourceIndex]?.current;
     if (!dataSource) {
       this.invalidateDataSource();
       return;
     }
     dataSource.seekToPositionMs(msTimecode);
     this.progressChange(msTimecode);
+  };
+
+  seekForward = (): void => {
+    const { progressMs } = this.state;
+    this.seekToPositionMs(progressMs + this.SEEK_TIME_MILLISECONDS);
+  };
+
+  seekBackward = (): void => {
+    const { progressMs } = this.state;
+    this.seekToPositionMs(progressMs - this.SEEK_TIME_MILLISECONDS);
   };
 
   toggleDirection = (): void => {
@@ -365,22 +413,19 @@ export default class BrainzPlayer extends React.Component<
 
   /* Listeners for datasource events */
 
-  failedToFindTrack = (): void => {
-    const { currentListen } = this.props;
-    if (!currentListen) {
-      this.playNextTrack();
+  failedToPlayTrack = (): void => {
+    const { currentDataSourceIndex, isActivated } = this.state;
+    if (!isActivated) {
+      // Player has not been activated by the user, do nothing.
       return;
     }
-    const { currentDataSourceIndex } = this.state;
+    const { currentListen } = this.state;
 
-    if (currentDataSourceIndex < this.dataSources.length - 1) {
+    if (currentListen && currentDataSourceIndex < this.dataSources.length - 1) {
       // Try playing the listen with the next dataSource
       this.playListen(currentListen, currentDataSourceIndex + 1);
     } else {
-      this.handleWarning(
-        "We couldn't find a matching song on any music service we tried",
-        "Oh no !"
-      );
+      this.stopPlayerStateTimer();
       this.playNextTrack();
     }
   };
@@ -393,7 +438,43 @@ export default class BrainzPlayer extends React.Component<
         this.startPlayerStateTimer();
       }
     });
+    if (hasMediaSessionSupport()) {
+      window.navigator.mediaSession.playbackState = paused
+        ? "paused"
+        : "playing";
+    }
   };
+
+  checkProgressAndSubmitListen = async () => {
+    const { durationMs, listenSubmitted, continuousPlaybackTime } = this.state;
+    const { currentUser } = this.context;
+    if (!currentUser?.auth_token || listenSubmitted) {
+      return;
+    }
+    let playbackTimeRequired = this.SUBMIT_LISTEN_AFTER_MS;
+    if (durationMs > 0) {
+      playbackTimeRequired = Math.min(
+        this.SUBMIT_LISTEN_AFTER_MS,
+        durationMs - this.SUBMIT_LISTEN_UPDATE_INTERVAL
+      );
+    }
+    if (continuousPlaybackTime >= playbackTimeRequired) {
+      const listen = this.getListenMetadataToSubmit();
+      this.setState({ listenSubmitted: true });
+      await this.submitListenToListenBrainz("single", listen);
+    }
+  };
+
+  // eslint-disable-next-line react/sort-comp
+  debouncedCheckProgressAndSubmitListen = debounce(
+    this.checkProgressAndSubmitListen,
+    this.SUBMIT_LISTEN_UPDATE_INTERVAL,
+    {
+      leading: false,
+      trailing: true,
+      maxWait: this.SUBMIT_LISTEN_UPDATE_INTERVAL,
+    }
+  );
 
   progressChange = (progressMs: number): void => {
     this.setState({ progressMs, updateTime: performance.now() });
@@ -403,8 +484,133 @@ export default class BrainzPlayer extends React.Component<
     this.setState({ durationMs }, this.startPlayerStateTimer);
   };
 
-  trackInfoChange = (title: string, artist?: string): void => {
-    this.setState({ currentTrackName: title, currentTrackArtist: artist });
+  trackInfoChange = (
+    title: string,
+    trackURL: string,
+    artist?: string,
+    album?: string,
+    artwork?: Array<MediaImage>
+  ): void => {
+    this.setState({
+      currentTrackName: title,
+      currentTrackArtist: artist,
+      currentTrackURL: trackURL,
+      currentTrackAlbum: album,
+    });
+    const { playerPaused } = this.state;
+    if (playerPaused) {
+      // Don't send notifications or any of that if the player is not playing
+      // (Avoids getting notifications upon pausing a track)
+      return;
+    }
+    if (hasMediaSessionSupport()) {
+      overwriteMediaSession(this.mediaSessionHandlers);
+      updateMediaSession(title, artist, album, artwork);
+    }
+    // Send a notification. If user allowed browser/OS notifications use that,
+    // otherwise show a toast notification on the page
+    hasNotificationPermission().then((permissionGranted) => {
+      if (permissionGranted) {
+        createNotification(title, artist, album, artwork?.[0]?.src);
+      } else {
+        const message = (
+          <>
+            {artwork?.length ? (
+              <img
+                className="alert-thumbnail"
+                src={artwork[0].src}
+                alt={album || title}
+              />
+            ) : (
+              <FontAwesomeIcon icon={faPlayCircle as IconProp} />
+            )}
+            &emsp;{title}
+            {artist && ` — ${artist}`}
+            {album && ` — ${album}`}
+          </>
+        );
+        this.handleInfoMessage(message);
+      }
+    });
+
+    this.submitNowPlayingToListenBrainz();
+  };
+
+  // eslint-disable-next-line react/sort-comp
+  throttledTrackInfoChange = _throttle(this.trackInfoChange, 2000, {
+    leading: false,
+    trailing: true,
+  });
+
+  getListenMetadataToSubmit = (): BaseListenFormat => {
+    const {
+      currentListen,
+      currentDataSourceIndex,
+      currentTrackName,
+      currentTrackArtist,
+      currentTrackAlbum,
+      currentTrackURL,
+    } = this.state;
+    const dataSource = this.dataSources[currentDataSourceIndex];
+
+    const brainzplayer_metadata = {
+      artist_name: currentTrackArtist,
+      release_name: currentTrackAlbum,
+      track_name: currentTrackName,
+    };
+    // Create a new listen and augment it with the existing listen and datasource's metadata
+    const newListen: BaseListenFormat = {
+      // convert Javascript millisecond time to unix epoch in seconds
+      listened_at: Math.floor(Date.now() / 1000),
+      track_metadata: (currentListen as BaseListenFormat)?.track_metadata,
+    };
+
+    let musicService = dataSource.current?.name;
+    try {
+      // Browser could potentially be missing the URL constructor
+      musicService = new URL(currentTrackURL ?? "").origin;
+    } catch (e) {
+      // Do nothing, we just fallback gracefully to dataSource name.
+    }
+
+    // ensure the track_metadata.additional_info path exists and add brainzplayer_metadata field
+    assign(newListen.track_metadata, {
+      additional_info: {
+        brainzplayer_metadata,
+        media_player: "BrainzPlayer",
+        submission_client: "BrainzPlayer",
+        // TODO:  passs the GIT_COMMIT_SHA env variable to the globalprops and add it here as submission_client_version
+        // submission_client_version:"",
+        music_service: musicService,
+        origin_url: currentTrackURL,
+      },
+    });
+    return newListen;
+  };
+
+  submitNowPlayingToListenBrainz = async (): Promise<void> => {
+    const newListen = this.getListenMetadataToSubmit();
+    return this.submitListenToListenBrainz("playing_now", newListen);
+  };
+
+  submitListenToListenBrainz = async (
+    listenType: ListenType,
+    listen: BaseListenFormat
+  ): Promise<void> => {
+    const { APIService, currentUser } = this.context;
+    const { currentDataSourceIndex } = this.state;
+    const dataSource = this.dataSources[currentDataSourceIndex];
+    if (!currentUser || !currentUser.auth_token) {
+      return;
+    }
+    if (dataSource?.current && !dataSource.current.datasourceRecordsListens()) {
+      try {
+        const { auth_token } = currentUser;
+        await APIService.submitListens(auth_token, listenType, [listen]);
+      } catch (error) {
+        this.handleWarning(error, "Could not save this listen");
+      }
+    }
   };
 
   /* Updating the progress bar without calling any API to check current player state */
@@ -413,22 +619,38 @@ export default class BrainzPlayer extends React.Component<
     this.stopPlayerStateTimer();
     this.playerStateTimerID = setInterval(() => {
       this.getStatePosition();
-    }, 200);
+      this.debouncedCheckProgressAndSubmitListen();
+    }, 400);
   };
 
   getStatePosition = (): void => {
     let newProgressMs: number;
-    const { playerPaused, durationMs, progressMs, updateTime } = this.state;
+    let elapsedTimeSinceLastUpdate: number;
+    const {
+      playerPaused,
+      durationMs,
+      progressMs,
+      updateTime,
+      continuousPlaybackTime,
+    } = this.state;
     if (playerPaused) {
       newProgressMs = progressMs || 0;
+      elapsedTimeSinceLastUpdate = 0;
     } else {
-      const position = progressMs + (performance.now() - updateTime);
+      elapsedTimeSinceLastUpdate = performance.now() - updateTime;
+      const position = progressMs + elapsedTimeSinceLastUpdate;
       newProgressMs = position > durationMs ? durationMs : position;
     }
-    this.setState({ progressMs: newProgressMs, updateTime: performance.now() });
+    this.setState({
+      progressMs: newProgressMs,
+      updateTime: performance.now(),
+      continuousPlaybackTime:
+        continuousPlaybackTime + elapsedTimeSinceLastUpdate,
+    });
   };
 
   stopPlayerStateTimer = (): void => {
+    this.debouncedCheckProgressAndSubmitListen.flush();
     if (this.playerStateTimerID) {
       clearInterval(this.playerStateTimerID);
     }
@@ -444,15 +666,22 @@ export default class BrainzPlayer extends React.Component<
       direction,
       progressMs,
       durationMs,
+      isActivated,
     } = this.state;
-    const { spotifyUser, youtubeUser } = this.props;
-    const { APIService } = this.context;
+    const { APIService, youtubeAuth, spotifyAuth } = this.context;
+    // Determine if the user is authenticated to search & play tracks with any of the datasources
+    const hasDatasourceToSearch =
+      this.dataSources.findIndex((ds) =>
+        ds.current?.canSearchAndPlayTracks()
+      ) !== -1;
     return (
       <div>
         <PlaybackControls
           playPreviousTrack={this.playPreviousTrack}
           playNextTrack={this.playNextTrack}
-          togglePlay={this.firstRun ? this.playNextTrack : this.togglePlay}
+          togglePlay={
+            isActivated ? this.togglePlay : this.activatePlayerAndPlay
+          }
           playerPaused={playerPaused}
           toggleDirection={this.toggleDirection}
           direction={direction}
@@ -462,50 +691,63 @@ export default class BrainzPlayer extends React.Component<
           durationMs={durationMs}
           seekToPositionMs={this.seekToPositionMs}
         >
+          {!hasDatasourceToSearch && (
+            <div className="connect-services-message">
+              You need to{" "}
+              <a href="/profile/music-services/details/" target="_blank">
+                connect to a music service
+              </a>{" "}
+              and refresh this page in order to search for and play songs on
+              ListenBrainz.
+            </div>
+          )}
           <SpotifyPlayer
             show={
+              isActivated &&
               this.dataSources[currentDataSourceIndex]?.current instanceof
-              SpotifyPlayer
+                SpotifyPlayer
             }
             refreshSpotifyToken={APIService.refreshSpotifyToken}
             onInvalidateDataSource={this.invalidateDataSource}
             ref={this.spotifyPlayer}
-            spotifyUser={spotifyUser}
+            spotifyUser={spotifyAuth}
             playerPaused={playerPaused}
             onPlayerPausedChange={this.playerPauseChange}
             onProgressChange={this.progressChange}
             onDurationChange={this.durationChange}
-            onTrackInfoChange={this.trackInfoChange}
+            onTrackInfoChange={this.throttledTrackInfoChange}
             onTrackEnd={this.playNextTrack}
-            onTrackNotFound={this.failedToFindTrack}
+            onTrackNotFound={this.failedToPlayTrack}
             handleError={this.handleError}
             handleWarning={this.handleWarning}
             handleSuccess={this.handleSuccess}
           />
           <YoutubePlayer
             show={
+              isActivated &&
               this.dataSources[currentDataSourceIndex]?.current instanceof
-              YoutubePlayer
+                YoutubePlayer
             }
             onInvalidateDataSource={this.invalidateDataSource}
             ref={this.youtubePlayer}
-            youtubeUser={youtubeUser}
+            youtubeUser={youtubeAuth}
             refreshYoutubeToken={APIService.refreshYoutubeToken}
             playerPaused={playerPaused}
             onPlayerPausedChange={this.playerPauseChange}
             onProgressChange={this.progressChange}
             onDurationChange={this.durationChange}
-            onTrackInfoChange={this.trackInfoChange}
+            onTrackInfoChange={this.throttledTrackInfoChange}
             onTrackEnd={this.playNextTrack}
-            onTrackNotFound={this.failedToFindTrack}
+            onTrackNotFound={this.failedToPlayTrack}
             handleError={this.handleError}
             handleWarning={this.handleWarning}
             handleSuccess={this.handleSuccess}
           />
           <SoundcloudPlayer
             show={
+              isActivated &&
               this.dataSources[currentDataSourceIndex]?.current instanceof
-              SoundcloudPlayer
+                SoundcloudPlayer
             }
             onInvalidateDataSource={this.invalidateDataSource}
             ref={this.soundcloudPlayer}
@@ -513,9 +755,9 @@ export default class BrainzPlayer extends React.Component<
             onPlayerPausedChange={this.playerPauseChange}
             onProgressChange={this.progressChange}
             onDurationChange={this.durationChange}
-            onTrackInfoChange={this.trackInfoChange}
+            onTrackInfoChange={this.throttledTrackInfoChange}
             onTrackEnd={this.playNextTrack}
-            onTrackNotFound={this.failedToFindTrack}
+            onTrackNotFound={this.failedToPlayTrack}
             handleError={this.handleError}
             handleWarning={this.handleWarning}
             handleSuccess={this.handleSuccess}

@@ -1,11 +1,15 @@
 {{- define "KEY" -}}
-    {{ key (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .) }}
+    {{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .)  (printf "KEYDOESNOTEXIST_%s" .) }}
 {{- end -}}
 
 {{- define "KEY_ARRAY" -}}
-    {{- range $index, $element := (key (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .) | parseJSON) -}}
+    {{- range $index, $element := (keyOrDefault (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .) (printf "[\"KEYDOESNOTEXIST_%s\"]" .) | parseJSON) -}}
         "{{.}}",
     {{- end -}}
+{{- end -}}
+
+{{- define "KEY_JSON" -}}
+    json.loads('''{{template "KEY" .}}''')
 {{- end -}}
 
 # Put everything after the defines otherwise the rendered config might eat up some newlines
@@ -23,6 +27,10 @@ SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@{{.Address}}:{
 MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@{{.Address}}:{{.Port}}/messybrainz"
 POSTGRES_ADMIN_URI="postgresql://postgres@{{.Address}}:{{.Port}}/postgres"
 {{end}}
+{{else}}
+SQLALCHEMY_DATABASE_URI = "SERVICEDOESNOTEXIST_pgbouncer-master"
+MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "SERVICEDOESNOTEXIST_pgbouncer-master"
+POSTGRES_ADMIN_URI = "SERVICEDOESNOTEXIST_pgbouncer-master"
 {{end}}
 
 
@@ -34,6 +42,8 @@ MB_DATABASE_URI = 'postgresql://musicbrainz_ro@{{.Address}}:{{.Port}}/musicbrain
 {{with index (service "pgbouncer-master") 0}}
 MB_DATABASE_URI = 'postgresql://musicbrainz_ro@{{.Address}}:{{.Port}}/musicbrainz_db'
 {{end}}
+{{else}}
+MB_DATABASE_URI = "SERVICEDOESNOTEXIST_pgbouncer-slave_pgbouncer-master"
 {{end}}
 
 SQLALCHEMY_TIMESCALE_URI = ""
@@ -46,19 +56,33 @@ SQLALCHEMY_TIMESCALE_URI = "postgresql://listenbrainz_ts:listenbrainz_ts@{{.Addr
 TIMESCALE_ADMIN_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/postgres"
 TIMESCALE_ADMIN_LB_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/listenbrainz_ts"
 {{end}}
+{{else}}
+SQLALCHEMY_TIMESCALE_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
+TIMESCALE_ADMIN_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
+TIMESCALE_ADMIN_LB_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
 {{end}}
 
-{{if service "pgbouncer-williams"}}
-{{with index (service "pgbouncer-williams") 0}}
-DB_CONNECT_MAPPING = "dbname=musicbrainz_json_dump user=musicbrainz host={{.Address}} port={{.Port}} password=musicbrainz"
+{{if service "pgbouncer-aretha"}}
+{{with index (service "pgbouncer-aretha") 0}}
+MBID_MAPPING_DATABASE_URI = "dbname=musicbrainz_json_dump user=musicbrainz host={{.Address}} port={{.Port}} password=musicbrainz"
 {{end}}
+{{else}}
+MBID_MAPPING_DATABASE_URI = ""
 {{end}}
+
+# for use in playlists admin view
+SQLALCHEMY_BINDS = {
+   'timescale': SQLALCHEMY_TIMESCALE_URI
+}
 
 {{if service "typesense-listenbrainz"}}
 {{with index (service "typesense-listenbrainz") 0}}
 TYPESENSE_HOST = "{{.Address}}"
 TYPESENSE_PORT = {{.Port}}
 {{end}}
+{{else}}
+TYPESENSE_HOST = "localhost"
+TYPESENSE_PORT = 80
 {{end}}
 TYPESENSE_API_KEY = '''{{template "KEY" "typesense_api_key"}}'''
 
@@ -68,14 +92,10 @@ REDIS_HOST = "{{.Address}}"
 REDIS_PORT = {{.Port}}
 REDIS_NAMESPACE = "listenbrainz"
 {{end}}
-{{end}}
-
-{{if service "listenbrainz-influxdb"}}
-{{with index (service "listenbrainz-influxdb") 0}}
-INFLUX_HOST    = "{{.Address}}"
-INFLUX_PORT    = {{.Port}}
-INFLUX_DB_NAME  = "listenbrainz"
-{{end}}
+{{else}}
+REDIS_HOST = "SERVICEDOESNOTEXIST_listenbrainz-redis"
+REDIS_PORT = "SERVICEDOESNOTEXIST_listenbrainz-redis"
+REDIS_NAMESPACE = "SERVICEDOESNOTEXIST_listenbrainz-redis"
 {{end}}
 
 {{ $rabbitmq_key := (printf "docker-server-configs/LB/config.%s.json/rabbitmq_service" (env "DEPLOY_ENV")) }}
@@ -85,6 +105,9 @@ INFLUX_DB_NAME  = "listenbrainz"
 RABBITMQ_HOST = "{{.Address}}"
 RABBITMQ_PORT = {{.Port}}
 {{end}}
+{{else}}
+RABBITMQ_HOST = "SERVICEDOESNOTEXIST_rabbitmq"
+RABBITMQ_PORT = "SERVICEDOESNOTEXIST_rabbitmq"
 {{end}}
 {{end}}
 RABBITMQ_USERNAME = '''{{template "KEY" "rabbitmq_user"}}'''
@@ -113,11 +136,11 @@ MUSICBRAINZ_CLIENT_SECRET = '''{{template "KEY" "musicbrainz/client_secret"}}'''
 LASTFM_API_URL = '''{{template "KEY" "lastfm_api_url"}}'''
 LASTFM_API_KEY = '''{{template "KEY" "lastfm_api_key"}}'''
 
+LIBREFM_API_URL = '''{{template "KEY" "librefm_api_url"}}'''
+LIBREFM_API_KEY = '''{{template "KEY" "librefm_api_key"}}'''
+
 # Default is fine for now
 PLAYING_NOW_MAX_DURATION = 10 * 60
-
-# Set to True if Less should be compiled in browser. Set to False if styling is pre-compiled.
-COMPILE_LESS = False
 
 # MAX file size to be allowed for the lastfm-backup import, default is infinite
 # Size is in bytes
@@ -163,12 +186,16 @@ SPOTIFY_CLIENT_ID = '''{{template "KEY" "spotify/client_id"}}'''
 SPOTIFY_CLIENT_SECRET = '''{{template "KEY" "spotify/client_secret"}}'''
 SPOTIFY_CALLBACK_URL = '''{{template "KEY" "spotify/redirect_uri"}}'''
 
+# CRITIQUEBRAINZ
+CRITIQUEBRAINZ_CLIENT_ID = '''{{template "KEY" "critiquebrainz/client_id"}}'''
+CRITIQUEBRAINZ_CLIENT_SECRET = '''{{template "KEY" "critiquebrainz/client_secret"}}'''
+CRITIQUEBRAINZ_REDIRECT_URI = '''{{template "KEY" "critiquebrainz/redirect_uri"}}'''
+
+
 # YOUTUBE
-YOUTUBE_CONFIG_JSON = '''{{template "KEY" "youtube/credentials"}}'''
 YOUTUBE_API_KEY = '''{{template "KEY" "youtube/api_key"}}'''
 YOUTUBE_REDIRECT_URI = '''{{template "KEY" "youtube/redirect_uri"}}'''
-
-YOUTUBE_CONFIG = json.loads(YOUTUBE_CONFIG_JSON)
+YOUTUBE_CONFIG = {{template "KEY_JSON" "youtube/credentials"}}
 
 
 SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -180,6 +207,9 @@ TESTING = False
 SMTP_SERVER = '''{{.Address}}'''
 SMTP_PORT = {{.Port}}
 {{end}}
+{{else}}
+SMTP_SERVER = "SERVICEDOESNOTEXIST_listenbrainz-org.exim-relay"
+SMTP_PORT = "SERVICEDOESNOTEXIST_listenbrainz-org.exim-relay"
 {{end}}
 
 MAIL_FROM_DOMAIN = '''{{template "KEY" "mail_from_domain"}}'''
@@ -188,3 +218,9 @@ WEBSOCKETS_SERVER_URL = '''{{template "KEY" "websockets_server_url"}}'''
 SESSION_REMEMBER_ME_DURATION = 365
 
 LISTEN_DUMP_TEMP_DIR_ROOT = '''{{template "KEY" "listen_dump_temp_dir"}}'''
+
+# If set to True, reject listens from users who do not have an email
+REJECT_LISTENS_WITHOUT_USER_EMAIL = {{template "KEY_JSON" "reject_listens_without_email"}}
+
+# If set to True, do not allow new users without email to register and warn existing without email
+REJECT_NEW_USERS_WITHOUT_EMAIL = {{template "KEY_JSON" "reject_new_users_without_email"}}

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.external_service_oauth as db_oauth
@@ -7,11 +8,12 @@ import sqlalchemy
 import time
 import ujson
 
+from data.model.common_stat import StatRange
 from data.model.external_service import ExternalServiceType
+from data.model.user_entity import UserEntityRecord
 from listenbrainz import db
 from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.db.testing import DatabaseTestCase
-from data.model.user_artist_stat import UserArtistStatJson
 
 
 class UserTestCase(DatabaseTestCase):
@@ -57,45 +59,6 @@ class UserTestCase(DatabaseTestCase):
         # after update_last_login, the val should be greater than the old value i.e 0
         self.assertGreater(int(user['last_login'].strftime('%s')), 0)
 
-    def test_update_latest_import(self):
-        user = db_user.get_or_create(3, 'updatelatestimportuser')
-        self.assertEqual(int(user['latest_import'].strftime('%s')), 0)
-
-        val = int(time.time())
-        db_user.update_latest_import(user['musicbrainz_id'], val)
-        user = db_user.get_by_mb_id(user['musicbrainz_id'])
-        self.assertEqual(int(user['latest_import'].strftime('%s')), val)
-
-    def test_increase_latest_import(self):
-        user = db_user.get_or_create(4, 'testlatestimportuser')
-
-        val = int(time.time())
-        db_user.increase_latest_import(user['musicbrainz_id'], val)
-        user = db_user.get_by_mb_id(user['musicbrainz_id'])
-        self.assertEqual(val, int(user['latest_import'].strftime('%s')))
-
-        db_user.increase_latest_import(user['musicbrainz_id'], val - 10)
-        user = db_user.get_by_mb_id(user['musicbrainz_id'])
-        self.assertEqual(val, int(user['latest_import'].strftime('%s')))
-
-        val += 10
-        db_user.increase_latest_import(user['musicbrainz_id'], val)
-        user = db_user.get_by_mb_id(user['musicbrainz_id'])
-        self.assertEqual(val, int(user['latest_import'].strftime('%s')))
-
-    def test_reset_latest_import(self):
-        user = db_user.get_or_create(7, 'resetlatestimportuser')
-        self.assertEqual(int(user['latest_import'].strftime('%s')), 0)
-
-        val = int(time.time())
-        db_user.update_latest_import(user['musicbrainz_id'], val)
-        user = db_user.get_by_mb_id(user['musicbrainz_id'])
-        self.assertEqual(int(user['latest_import'].strftime('%s')), val)
-
-        db_user.reset_latest_import(user['musicbrainz_id'])
-        user = db_user.get_by_mb_id(user['musicbrainz_id'])
-        self.assertEqual(int(user['latest_import'].strftime('%s')), 0)
-
     def test_get_all_users(self):
         """ Tests that get_all_users returns ALL users in the db """
 
@@ -134,17 +97,18 @@ class UserTestCase(DatabaseTestCase):
 
         with open(self.path_to_data_file('user_top_artists_db.json')) as f:
             artists_data = ujson.load(f)
-        db_stats.insert_user_artists(
+        db_stats.insert_user_jsonb_data(
             user_id=user_id,
-            artists=UserArtistStatJson(**{'all_time': artists_data}),
+            stats_type='artists',
+            stats=StatRange[UserEntityRecord](**artists_data),
         )
-        user_stats = db_stats.get_user_artists(user_id, 'all_time')
+        user_stats = db_stats.get_user_stats(user_id, 'all_time', 'artists')
         self.assertIsNotNone(user_stats)
 
         db_user.delete(user_id)
         user = db_user.get(user_id)
         self.assertIsNone(user)
-        user_stats = db_stats.get_user_artists(user_id, 'all_time')
+        user_stats = db_stats.get_user_stats(user_id, 'all_time', 'artists')
         self.assertIsNone(user_stats)
 
     def test_delete_when_spotify_import_activated(self):
@@ -209,9 +173,9 @@ class UserTestCase(DatabaseTestCase):
         user_id_22 = db_user.create(22, "twenty_two")
         user_id_23 = db_user.create(23, "twenty_three")
 
-        similar_users_21 = {"twenty_two": 0.4, "twenty_three": 0.7}
-        similar_users_22 = {"twenty_one": 0.4}
-        similar_users_23 = {"twenty_one": 0.7}
+        similar_users_21 = {"twenty_two": [0.4, .01], "twenty_three": [0.7, 0.001]}
+        similar_users_22 = {"twenty_one": [0.4, .01]}
+        similar_users_23 = {"twenty_one": [0.7, .02]}
 
         similar_users = {
             "twenty_one": similar_users_21,
@@ -221,9 +185,12 @@ class UserTestCase(DatabaseTestCase):
 
         import_user_similarities(similar_users)
 
-        self.assertDictEqual(similar_users_21, db_user.get_similar_users(user_id_21).similar_users)
-        self.assertDictEqual(similar_users_22, db_user.get_similar_users(user_id_22).similar_users)
-        self.assertDictEqual(similar_users_23, db_user.get_similar_users(user_id_23).similar_users)
+        self.assertDictEqual({"twenty_two": 0.4, "twenty_three": 0.7},
+                             db_user.get_similar_users(user_id_21).similar_users)
+        self.assertDictEqual({"twenty_one": 0.4},
+                             db_user.get_similar_users(user_id_22).similar_users)
+        self.assertDictEqual({"twenty_one": 0.7},
+                             db_user.get_similar_users(user_id_23).similar_users)
 
     def test_get_user_by_id(self):
         user_id_24 = db_user.create(24, "twenty_four")
@@ -235,3 +202,33 @@ class UserTestCase(DatabaseTestCase):
         }
 
         self.assertDictEqual(users, db_user.get_users_by_id([user_id_24, user_id_25]))
+
+    def test_fetch_email(self):
+        musicbrainz_id = "one"
+        email = "one@one.one"
+        user_id = db_user.create(1, musicbrainz_id, email)
+        self.assertNotIn("email", db_user.get(user_id))
+        self.assertEqual(email, db_user.get(user_id, fetch_email=True)["email"])
+
+        token = db_user.get(user_id)["auth_token"]
+        self.assertNotIn("email", db_user.get_by_token(token))
+        self.assertEqual(email, db_user.get_by_token(token, fetch_email=True)["email"])
+
+        self.assertNotIn("email", db_user.get_by_mb_id(musicbrainz_id))
+        self.assertEqual(email, db_user.get_by_mb_id(musicbrainz_id, fetch_email=True)["email"])
+
+    def test_search(self):
+        searcher_id = db_user.create(0, "Cécile")
+        db_user.create(1, "Cecile")
+        db_user.create(2, "lucifer")
+        db_user.create(3, "rob")
+
+        with db.engine.connect() as connection:
+            connection.execute(sqlalchemy.text("""INSERT INTO recommendation.similar_user (user_id, similar_users)
+                                                       VALUES (:user_id, :similar_users)"""), {
+                "user_id": searcher_id,
+                "similar_users": json.dumps({"Cecile": [0.42, 0.20], "lucifer": [0.61, 0.25], "rob": [0.87, 0.43]})
+            })
+
+        results = db_user.search("cif", 10, searcher_id)
+        self.assertEqual(results, [("Cécile", 0.1, None), ("Cecile", 0.1, 0.42), ("lucifer", 0.0909091, 0.61)])

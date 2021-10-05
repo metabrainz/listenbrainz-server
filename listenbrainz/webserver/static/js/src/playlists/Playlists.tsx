@@ -32,9 +32,9 @@ import {
   getPlaylistId,
   MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
 } from "./utils";
+import { getPageProps } from "../utils";
 
 export type UserPlaylistsProps = {
-  currentUser?: ListenBrainzUser;
   playlists?: JSPFObject[];
   user: ListenBrainzUser;
   paginationOffset: string;
@@ -46,7 +46,6 @@ export type UserPlaylistsProps = {
 export type UserPlaylistsState = {
   playlists: JSPFPlaylist[];
   playlistSelectedForOperation?: JSPFPlaylist;
-  alerts: Alert[];
   loading: boolean;
   paginationOffset: number;
   playlistsPerPage: number;
@@ -68,7 +67,6 @@ export default class UserPlaylists extends React.Component<
 
     const concatenatedPlaylists = props.playlists?.map((pl) => pl.playlist);
     this.state = {
-      alerts: [],
       playlists: concatenatedPlaylists ?? [],
       loading: false,
       paginationOffset: parseInt(props.paginationOffset, 10) || 0,
@@ -111,8 +109,8 @@ export default class UserPlaylists extends React.Component<
     }
 
     this.setState({ loading: true });
-    const { user, activeSection, currentUser, newAlert } = this.props;
-
+    const { user, activeSection, newAlert } = this.props;
+    const { currentUser } = this.context;
     try {
       const newPlaylists = await this.APIService.getUserPlaylists(
         user.name,
@@ -131,7 +129,7 @@ export default class UserPlaylists extends React.Component<
   };
 
   isOwner = (playlist: JSPFPlaylist): boolean => {
-    const { currentUser } = this.props;
+    const { currentUser } = this.context;
     return Boolean(currentUser) && currentUser?.name === playlist.creator;
   };
 
@@ -145,7 +143,8 @@ export default class UserPlaylists extends React.Component<
   };
 
   copyPlaylist = async (playlistId: string): Promise<void> => {
-    const { currentUser, newAlert } = this.props;
+    const { newAlert } = this.props;
+    const { currentUser } = this.context;
     if (!currentUser?.auth_token) {
       this.alertMustBeLoggedIn();
       return;
@@ -183,7 +182,8 @@ export default class UserPlaylists extends React.Component<
   };
 
   deletePlaylist = async (): Promise<void> => {
-    const { currentUser, newAlert } = this.props;
+    const { newAlert } = this.props;
+    const { currentUser } = this.context;
     const { playlistSelectedForOperation: playlist, playlists } = this.state;
     if (!currentUser?.auth_token) {
       this.alertMustBeLoggedIn();
@@ -234,7 +234,8 @@ export default class UserPlaylists extends React.Component<
     collaborators: string[],
     id?: string
   ): Promise<void> => {
-    const { currentUser, newAlert } = this.props;
+    const { newAlert } = this.props;
+    const { currentUser } = this.context;
     if (id) {
       newAlert(
         "danger",
@@ -311,7 +312,8 @@ export default class UserPlaylists extends React.Component<
     collaborators: string[],
     id?: string
   ): Promise<void> => {
-    const { currentUser, newAlert } = this.props;
+    const { newAlert } = this.props;
+    const { currentUser } = this.context;
     if (!id) {
       newAlert(
         "danger",
@@ -366,7 +368,8 @@ export default class UserPlaylists extends React.Component<
   };
 
   isCurrentUserPage = () => {
-    const { currentUser, user, activeSection } = this.props;
+    const { user, activeSection } = this.props;
+    const { currentUser } = this.context;
     if (activeSection === "recommendations") {
       return false;
     }
@@ -374,7 +377,8 @@ export default class UserPlaylists extends React.Component<
   };
 
   handleClickNext = async () => {
-    const { user, activeSection, currentUser, newAlert } = this.props;
+    const { user, activeSection, newAlert } = this.props;
+    const { currentUser } = this.context;
     const { paginationOffset, playlistsPerPage, playlistCount } = this.state;
     const newOffset = paginationOffset + playlistsPerPage;
     // No more playlists to fetch
@@ -400,7 +404,8 @@ export default class UserPlaylists extends React.Component<
   };
 
   handleClickPrevious = async () => {
-    const { user, activeSection, currentUser, newAlert } = this.props;
+    const { user, activeSection, newAlert } = this.props;
+    const { currentUser } = this.context;
     const { paginationOffset, playlistsPerPage } = this.state;
     // No more playlists to fetch
     if (paginationOffset === 0) {
@@ -455,7 +460,6 @@ export default class UserPlaylists extends React.Component<
   render() {
     const { user, activeSection } = this.props;
     const {
-      alerts,
       playlists,
       playlistSelectedForOperation,
       paginationOffset,
@@ -567,7 +571,7 @@ export default class UserPlaylists extends React.Component<
                     </div>
                   </>
                 )}
-                <a className="info" href={`/playlist/${playlistId}`}>
+                <a className="info" href={`/playlist/${sanitize(playlistId)}`}>
                   <h4>{playlist.title}</h4>
                   {playlist.annotation && (
                     <div
@@ -667,25 +671,26 @@ export default class UserPlaylists extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const domContainer = document.querySelector("#react-container");
-  const propsElement = document.getElementById("react-props");
-  let reactProps;
-  try {
-    reactProps = JSON.parse(propsElement!.innerHTML);
-  } catch (err) {
-    // Show error to the user and ask to reload page
-  }
   const {
-    current_user,
+    domContainer,
+    reactProps,
+    globalReactProps,
+    optionalAlerts,
+  } = getPageProps();
+  const {
     api_url,
-    playlists,
+    sentry_dsn,
+    current_user,
     spotify,
+    youtube,
+  } = globalReactProps;
+  const {
+    playlists,
     user,
     playlist_count: playlistCount,
     active_section: activeSection,
     pagination_offset: paginationOffset,
     playlists_per_page: playlistsPerPage,
-    sentry_dsn,
   } = reactProps;
 
   if (sentry_dsn) {
@@ -704,15 +709,16 @@ document.addEventListener("DOMContentLoaded", () => {
     APIService: apiService,
     currentUser: current_user,
     spotifyAuth: spotify,
+    youtubeAuth: youtube,
   };
 
   ReactDOM.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
         <UserPlaylistsWithAlertNotifications
+          initialAlerts={optionalAlerts}
           activeSection={activeSection}
           playlistCount={playlistCount}
-          currentUser={current_user}
           playlists={playlists}
           paginationOffset={paginationOffset}
           playlistsPerPage={playlistsPerPage}

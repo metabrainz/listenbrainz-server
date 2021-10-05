@@ -11,6 +11,7 @@ import Bar from "./Bar";
 import Loader from "../components/Loader";
 import ErrorBoundary from "../ErrorBoundary";
 import Pill from "../components/Pill";
+import { getPageProps } from "../utils";
 
 export type UserEntityChartProps = {
   user: ListenBrainzUser;
@@ -77,7 +78,7 @@ export default class UserEntityChart extends React.Component<
     window.history.replaceState(
       null,
       "",
-      `?page=${page}&range=${range}&entity=${entity}`
+      this.buildURLParams(page, range, entity)
     );
     this.syncStateWithURL();
     this.handleResize();
@@ -88,27 +89,13 @@ export default class UserEntityChart extends React.Component<
     window.removeEventListener("resize", this.handleResize);
   }
 
-  changePage = (
-    newPage: number,
-    event?: React.MouseEvent<HTMLElement>
-  ): void => {
-    if (event) {
-      event.preventDefault();
-    }
-
+  changePage = (newPage: number): void => {
     const { entity, range } = this.state;
     this.setURLParams(newPage, range, entity);
     this.syncStateWithURL();
   };
 
-  changeRange = (
-    newRange: UserStatsAPIRange,
-    event?: React.MouseEvent<HTMLElement>
-  ): void => {
-    if (event) {
-      event.preventDefault();
-    }
-
+  changeRange = (newRange: UserStatsAPIRange): void => {
     const { entity } = this.state;
     this.setURLParams(1, newRange, entity);
     this.syncStateWithURL();
@@ -347,6 +334,7 @@ export default class UserEntityChart extends React.Component<
     let page = 1;
     if (url.searchParams.get("page")) {
       page = Number(url.searchParams.get("page"));
+      page = Math.max(page, 1);
     }
 
     // Get range from URL
@@ -372,14 +360,42 @@ export default class UserEntityChart extends React.Component<
     window.history.pushState(
       null,
       "",
-      `?page=${page}&range=${range}&entity=${entity}`
+      this.buildURLParams(page, range, entity)
     );
+  };
+
+  /*
+  Build a url querystring (including the ?) for a page, range, and entity
+   */
+  buildURLParams = (
+    page: number,
+    range: UserStatsAPIRange,
+    entity: Entity
+  ): string => {
+    return `?page=${page}&range=${range}&entity=${entity}`;
   };
 
   handleResize = () => {
     this.setState({
       graphContainerWidth: this.graphContainer.current?.offsetWidth,
     });
+  };
+
+  /*
+  Handle a click on a link that will perform an action
+   - if control is held down, don't prevent the event from firing
+     this will allow ctrl/cmd-click to open links in a new tab
+   - otherwise, prevent the event from happening and call a callback
+     that performs some action (e.g. load a new page)
+   */
+  handleClickEvent = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    callback: () => any
+  ) => {
+    if (!e.ctrlKey) {
+      e.preventDefault();
+      callback();
+    }
   };
 
   render() {
@@ -449,36 +465,52 @@ export default class UserEntityChart extends React.Component<
                   <ul className="dropdown-menu" role="menu">
                     <li>
                       <a
-                        href=""
+                        href={this.buildURLParams(1, "week", entity)}
                         role="button"
-                        onClick={(event) => this.changeRange("week", event)}
+                        onClick={(e) => {
+                          this.handleClickEvent(e, () => {
+                            this.changeRange("week");
+                          });
+                        }}
                       >
                         Week
                       </a>
                     </li>
                     <li>
                       <a
-                        href=""
+                        href={this.buildURLParams(1, "month", entity)}
                         role="button"
-                        onClick={(event) => this.changeRange("month", event)}
+                        onClick={(e) => {
+                          this.handleClickEvent(e, () => {
+                            this.changeRange("month");
+                          });
+                        }}
                       >
                         Month
                       </a>
                     </li>
                     <li>
                       <a
-                        href=""
+                        href={this.buildURLParams(1, "year", entity)}
                         role="button"
-                        onClick={(event) => this.changeRange("year", event)}
+                        onClick={(e) => {
+                          this.handleClickEvent(e, () => {
+                            this.changeRange("year");
+                          });
+                        }}
                       >
                         Year
                       </a>
                     </li>
                     <li>
                       <a
-                        href=""
+                        href={this.buildURLParams(1, "all_time", entity)}
                         role="button"
-                        onClick={(event) => this.changeRange("all_time", event)}
+                        onClick={(e) => {
+                          this.handleClickEvent(e, () => {
+                            this.changeRange("all_time");
+                          });
+                        }}
                       >
                         All Time
                       </a>
@@ -554,7 +586,11 @@ export default class UserEntityChart extends React.Component<
                       <a
                         href=""
                         role="button"
-                        onClick={(event) => this.changePage(prevPage, event)}
+                        onClick={(e) => {
+                          this.handleClickEvent(e, () => {
+                            this.changePage(prevPage);
+                          });
+                        }}
                       >
                         &larr; Previous
                       </a>
@@ -565,9 +601,13 @@ export default class UserEntityChart extends React.Component<
                       }`}
                     >
                       <a
-                        href=""
+                        href={this.buildURLParams(nextPage, range, entity)}
                         role="button"
-                        onClick={(event) => this.changePage(nextPage, event)}
+                        onClick={(e) => {
+                          this.handleClickEvent(e, () => {
+                            this.changePage(nextPage);
+                          });
+                        }}
                       >
                         Next &rarr;
                       </a>
@@ -584,15 +624,9 @@ export default class UserEntityChart extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const domContainer = document.querySelector("#react-container");
-  const propsElement = document.getElementById("react-props");
-  let reactProps;
-  try {
-    reactProps = JSON.parse(propsElement!.innerHTML);
-  } catch (err) {
-    // Show error to the user and ask to reload page
-  }
-  const { user, api_url: apiUrl, sentry_dsn } = reactProps;
+  const { domContainer, reactProps, globalReactProps } = getPageProps();
+  const { api_url, sentry_dsn } = globalReactProps;
+  const { user } = reactProps;
 
   if (sentry_dsn) {
     Sentry.init({ dsn: sentry_dsn });
@@ -600,7 +634,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   ReactDOM.render(
     <ErrorBoundary>
-      <UserEntityChart apiUrl={apiUrl} user={user} />
+      <UserEntityChart apiUrl={api_url} user={user} />
     </ErrorBoundary>,
     domContainer
   );

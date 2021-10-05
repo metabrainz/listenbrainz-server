@@ -67,37 +67,50 @@
 
         <div class="panel panel-default">
             <div class="panel-heading">
+                <h3 class="panel-title">CritiqueBrainz</h3>
+            </div>
+            <div class="panel-body">
+                <p>
+                    Connect to your CritiqueBrainz account to publish reviews for your Listens directly from
+                    ListenBrainz. Your reviews will be independently visible on CritiqueBrainz and appear publicly
+                    on your CritiqueBrainz profile unless removed. To view or delete your reviews, visit your
+                    CritiqueBrainz profile.
+                </p>
+                <br/>
+                <div class="music-service-selection">
+                    <form action="{{ url_for('profile.music_services_disconnect', service_name='critiquebrainz') }}"
+                          method="post">
+                        {{
+                                service_permission_button(
+                                "critiquebrainz",
+                                current_critiquebrainz_permissions,
+                                "review",
+                                "Reviews",
+                                "You will be able to publish mini-reviews for your Listens directly from ListenBrainz.")
+                        }}
+                        {{
+                                service_permission_button(
+                                "critiquebrainz",
+                                current_critiquebrainz_permissions,
+                                "disable",
+                                "Disable",
+                                "You will not be able to publish mini-reviews for your Listens directly from ListenBrainz.")
+                        }}
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
                 <h3 class="panel-title">Youtube</h3>
             </div>
             <div class="panel-body">
                 <p>
                     ListenBrainz integrates with Youtube to let you play music tracks from ListenBrainz pages.
-                    ListenBrainz has a number of music discovery features that require authentication to search
-                    and play tracks from Youtube.
+                    You do not need to do anything to enable this. ListenBrainz will automatically search for
+                    tracks on Youtube and play one if it finds a match.
                 </p>
-                <p>
-                    You can revoke these permissions whenever you want by unlinking your Youtube account.
-                </p>
-
-                <p>
-                    <b>
-                        Our Youtube OAuth integration is currently undergoing verification. Till then, you may see a
-                        warning screen while trying to enable it.
-                    </b>
-                </p>
-                <div class="music-service-selection">
-                    <form action="{{ url_for('profile.music_services_disconnect', service_name='youtube') }}"
-                          method="post">
-                        {{ service_permission_button("youtube", current_youtube_permissions, "listen",
-                    "Play music on ListenBrainz",
-                    "Discover and play songs directly on ListenBrainz") }}
-
-                        {{ service_permission_button("youtube", current_youtube_permissions, "disable",
-                    "Disable",
-                    "Youtube integration will be disabled. You won't be able to listen to music on "
-                    "ListenBrainz using Youtube.") }}
-                    </form>
-                </div>
             </div>
         </div>
     </div>

@@ -9,11 +9,20 @@ CREATE TABLE "user" (
   latest_import         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT TIMESTAMP 'epoch',
   gdpr_agreed           TIMESTAMP WITH TIME ZONE,
   musicbrainz_row_id    INTEGER NOT NULL,
-  login_id              TEXT NOT NULL DEFAULT uuid_generate_v4()::text
+  login_id              TEXT NOT NULL DEFAULT uuid_generate_v4()::text,
+  email                 TEXT
 );
 ALTER TABLE "user" ADD CONSTRAINT user_musicbrainz_id_key UNIQUE (musicbrainz_id);
 ALTER TABLE "user" ADD CONSTRAINT user_musicbrainz_row_id_key UNIQUE (musicbrainz_row_id);
 ALTER TABLE "user" ADD CONSTRAINT user_login_id_key UNIQUE (login_id);
+
+CREATE TABLE reported_users (
+    id                  SERIAL,
+    reporter_user_id    INTEGER NOT NULL, -- FK to "user".id of the user who reported
+    reported_user_id    INTEGER NOT NULL, -- FK to "user".id of the user who was reported
+    reported_at         TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    reason              TEXT
+);
 
 CREATE TABLE api_compat.session (
     id        SERIAL,
@@ -170,6 +179,22 @@ CREATE TABLE statistics.user (
     last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE statistics.user_new (
+    id                      SERIAL, -- PK
+    user_id                 INTEGER NOT NULL, -- FK to "user".id
+    stats_type              user_stats_type,
+    stats_range             stats_range_type,
+    data                    JSONB,
+    count                   INTEGER,
+    -- we use int timestamps when serializing data in spark, we return the same from the api
+    -- using timestamp with time zone here just complicates stuff. we'll need to add
+    -- datetime/timestamp conversions in code at multiple places and we never seem to use this
+    -- value anyways in LB backend atm.
+    from_ts                 BIGINT,
+    to_ts                   BIGINT,
+    last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE statistics.sitewide (
     id                      SERIAL, --pk
     stats_range             TEXT,
@@ -205,6 +230,16 @@ CREATE TABLE user_relationship (
     user_1              INTEGER NOT NULL, -- FK to "user".id
     relationship_type   user_relationship_enum NOT NULL,
     created             TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE pinned_recording(
+    id                      SERIAL, -- PK
+    user_id                 INTEGER NOT NULL, -- FK to "user".id
+    recording_msid          UUID NOT NULL,
+    recording_mbid          UUID,
+    blurb_content           TEXT,
+    pinned_until            TIMESTAMP WITH TIME ZONE NOT NULL,
+    created                 TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listenbrainz;

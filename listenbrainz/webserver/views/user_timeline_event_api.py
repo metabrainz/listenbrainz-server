@@ -22,6 +22,7 @@ import ujson
 
 from collections import defaultdict
 from typing import Optional, List, Tuple
+
 from flask import Blueprint, jsonify, request, current_app
 
 import listenbrainz.db.user as db_user
@@ -30,7 +31,9 @@ import listenbrainz.db.user_timeline_event as db_user_timeline_event
 
 from data.model.listen import APIListen, TrackMetadata, AdditionalInfo
 from data.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, \
-    APIFollowEvent, NotificationMetadata, APINotificationEvent
+    APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent
+from listenbrainz.db.pinned_recording import get_pins_for_feed
+from listenbrainz.db.model.pinned_recording import fetch_track_metadata_for_pins
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.listenstore import TimescaleListenStore
@@ -39,8 +42,7 @@ from listenbrainz.webserver.decorators import crossdomain, api_listenstore_neede
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, \
     APIForbidden
 from listenbrainz.webserver.views.api_tools import validate_auth_header, _filter_description_html
-from listenbrainz.webserver.rate_limiter import ratelimit
-
+from brainzutils.ratelimit import ratelimit
 
 MAX_LISTEN_EVENTS_PER_USER = 2 # the maximum number of listens we want to return in the feed per user
 
@@ -211,9 +213,18 @@ def user_feed(user_name: str):
 
     notification_events = get_notification_events(user, count)
 
+    recording_pin_events = get_recording_pin_events(
+        users_for_events=users_for_feed_events,
+        min_ts=min_ts or 0,
+        max_ts=max_ts or int(time.time()),
+        count=count,
+    )
+
     # TODO: add playlist event and like event
-    all_events = sorted(listen_events + follow_events + recording_recommendation_events + notification_events,
-                        key=lambda event: -event.created)
+    all_events = sorted(
+        listen_events + follow_events + recording_recommendation_events + recording_pin_events + notification_events,
+        key=lambda event: -event.created,
+    )
 
     # sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly
     for index, event in enumerate(all_events):
@@ -226,6 +237,56 @@ def user_feed(user_name: str):
         'user_id': user_name,
         'events': [event.dict() for event in all_events],
     }})
+
+
+@user_timeline_event_api_bp.route("/user/<user_name>/feed/events/delete", methods=['OPTIONS', 'POST'])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
+def delete_feed_events(user_name):
+    '''
+    Delete those events from user's feed that belong to them.
+    Supports deletion of recommendation and notification.
+    Along with the authorization token, post one of the following, according
+    to your need.
+    {
+        "event_type": "recording_recommendation",
+        "id": int
+    }
+    {
+        "event_type": "notification",
+        "id": int
+    }
+    :param user_name: The MusicBrainz ID of the user from whose timeline events are being deleted
+    :type user_name: ``str``
+    :statuscode 200: Successful deletion
+    :statuscode 400: Bad request, check ``response['error']`` for more details.
+    :statuscode 401: Unauthorized
+    :statuscode 404: User not found
+    :statuscode 500: API Internal Server Error
+    :resheader Content-Type: *application/json*
+    '''
+    user = validate_auth_header()
+    if user_name != user['musicbrainz_id']:
+        raise APIUnauthorized("You don't have permissions to delete from this user's timeline.")
+
+    try:
+        event = ujson.loads(request.get_data())
+
+        if event["event_type"] in [UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+                UserTimelineEventType.NOTIFICATION.value]:
+            try:
+                event_deleted = db_user_timeline_event.delete_user_timeline_event(event["id"], user["id"])
+            except Exception as e:
+                raise APIInternalServerError("Something went wrong. Please try again")
+            if not event_deleted:
+                raise APINotFound("Cannot find '%s' event with id '%s' for user '%s'" % (event["event_type"], event["id"],
+                    user["id"]))
+            return jsonify({"status": "ok"})
+
+        raise APIBadRequest("This event type is not supported for deletion via this method")
+
+    except (ValueError, KeyError) as e:
+        raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
 
 def get_listen_events(
@@ -313,6 +374,7 @@ def get_notification_events(user: dict, count: int) -> List[APITimelineEvent]:
     events = []
     for event in notification_events_db:
         events.append(APITimelineEvent(
+            id=event.id,
             event_type=UserTimelineEventType.NOTIFICATION,
             user_name=event.metadata.creator,
             created=event.created.timestamp(),
@@ -351,10 +413,52 @@ def get_recording_recommendation_events(users_for_events: List[dict], min_ts: in
             )
 
             events.append(APITimelineEvent(
+                id=event.id,
                 event_type=UserTimelineEventType.RECORDING_RECOMMENDATION,
                 user_name=listen.user_name,
                 created=event.created.timestamp(),
                 metadata=listen,
+            ))
+        except pydantic.ValidationError as e:
+            current_app.logger.error('Validation error: ' + str(e), exc_info=True)
+            continue
+    return events
+
+
+def get_recording_pin_events(users_for_events: List[dict], min_ts: int, max_ts: int, count: int) -> List[APITimelineEvent]:
+    """ Gets all recording pin events in the feed."""
+
+    id_username_map = {user['id']: user['musicbrainz_id'] for user in users_for_events}
+    recording_pin_events_db = get_pins_for_feed(
+        user_ids=(user['id'] for user in users_for_events),
+        min_ts=min_ts,
+        max_ts=max_ts,
+        count=count,
+    )
+    recording_pin_events_db = fetch_track_metadata_for_pins(recording_pin_events_db)
+
+    events = []
+    for pin in recording_pin_events_db:
+        try:
+            pinEvent = APIPinEvent(
+                user_name=id_username_map[pin.user_id],
+                blurb_content=pin.blurb_content,
+                track_metadata=TrackMetadata(
+                    artist_name=pin.track_metadata["artist_name"],
+                    track_name=pin.track_metadata["track_name"],
+                    release_name=None,
+                    additional_info=AdditionalInfo(
+                        recording_msid=pin.recording_msid,
+                        recording_mbid=pin.recording_mbid,
+                        artist_msid=pin.track_metadata["artist_msid"],
+                    )
+                )
+            )
+            events.append(APITimelineEvent(
+                event_type=UserTimelineEventType.RECORDING_PIN,
+                user_name=pinEvent.user_name,
+                created=pin.created.timestamp(),
+                metadata=pinEvent,
             ))
         except pydantic.ValidationError as e:
             current_app.logger.error('Validation error: ' + str(e), exc_info=True)

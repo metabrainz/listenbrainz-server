@@ -113,17 +113,20 @@
 		}
 	}
 	.playlist-item-card {
-		&:extend(#listens .listen-card);
-		display:flex;
+		display: flex;
 		align-items: center;
 		margin-bottom: 0px;
+		padding: 10px 5px;
+    	max-height: 72px;
 		
+		@media (min-width: @screen-sm){
+			padding: 15px;
+		}
 		&.current-track {
 			background-color: rgba(217, 237, 247, 0.3) !important ;
 		}
 
 		.listen-controls {
-			&:extend(#listens .listen-card .listen-controls all);
 			flex: 0 6em;
 		}
 		> div {
