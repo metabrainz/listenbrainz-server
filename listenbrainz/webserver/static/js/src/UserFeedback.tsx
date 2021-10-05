@@ -31,7 +31,6 @@ export type UserFeedbackProps = {
 } & WithAlertNotificationsInjectedProps;
 
 export interface UserFeedbackState {
-  currentListen?: BaseListenFormat;
   direction: BrainzPlayDirection;
   feedback: Array<FeedbackResponseWithTrackMetadata>;
   loading: boolean;
@@ -103,18 +102,6 @@ export default class UserFeedback extends React.Component<
     window.removeEventListener("popstate", this.handleURLChange);
     document.removeEventListener("keydown", this.handleKeyDown);
   }
-
-
-  handleCurrentListenChange = (
-    listen: BaseListenFormat | Listen | JSPFTrack
-  ): void => {
-    this.setState({ currentListen: listen as BaseListenFormat });
-  };
-
-  isCurrentListen = (listen: BaseListenFormat): boolean => {
-    const { currentListen } = this.state;
-    return Boolean(currentListen && isEqual(listen, currentListen));
-  };
 
   handleKeyDown = (event: KeyboardEvent) => {
     if (document.activeElement?.localName === "input") {
@@ -355,7 +342,6 @@ export default class UserFeedback extends React.Component<
 
   render() {
     const {
-      currentListen,
       direction,
       feedback,
       loading,
@@ -433,7 +419,6 @@ export default class UserFeedback extends React.Component<
                         showUsername={false}
                         showTimestamp
                         key={`${feedbackItem.created}`}
-                        isCurrentListen={this.isCurrentListen(listen)}
                         listen={listen}
                         currentFeedback={this.getFeedbackForRecordingMsid(
                           feedbackItem.recording_msid
@@ -533,7 +518,6 @@ export default class UserFeedback extends React.Component<
               direction={direction}
               listens={listensFromFeedback}
               newAlert={newAlert}
-              onCurrentListenChange={this.handleCurrentListenChange}
               ref={this.brainzPlayer}
             />
           </div>

@@ -678,7 +678,6 @@ export default class PlaylistPage extends React.Component<
 
   render() {
     const {
-      currentTrack,
       playlist,
       loading,
       searchInputValue,
@@ -924,7 +923,6 @@ export default class PlaylistPage extends React.Component<
               direction="down"
               listens={tracks}
               newAlert={newAlert}
-              onCurrentListenChange={this.handleCurrentTrackChange}
               ref={this.brainzPlayer}
             />
           </div>

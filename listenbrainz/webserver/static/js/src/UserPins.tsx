@@ -320,7 +320,6 @@ export default class UserPins extends React.Component<
               direction={direction}
               listens={pinsAsListens}
               newAlert={newAlert}
-              onCurrentListenChange={this.handleCurrentListenChange}
               ref={this.brainzPlayer}
             />
           </div>

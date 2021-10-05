@@ -64,7 +64,6 @@ export default class RecentListens extends React.Component<
   declare context: React.ContextType<typeof GlobalAppContext>;
 
   private APIService!: APIServiceClass;
-  private brainzPlayer = React.createRef<BrainzPlayer>();
   private listensTable = React.createRef<HTMLTableElement>();
 
   private socket!: Socket;
@@ -628,7 +627,6 @@ export default class RecentListens extends React.Component<
                           key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
                           showTimestamp
                           showUsername={mode === "recent"}
-                          isCurrentListen={this.isCurrentListen(listen)}
                           listen={listen}
                           currentFeedback={this.getFeedbackForRecordingMsid(
                             listen.track_metadata?.additional_info
@@ -772,8 +770,6 @@ export default class RecentListens extends React.Component<
               direction={direction}
               listens={allListenables}
               newAlert={newAlert}
-              onCurrentListenChange={this.handleCurrentListenChange}
-              ref={this.brainzPlayer}
             />
           </div>
         </div>
