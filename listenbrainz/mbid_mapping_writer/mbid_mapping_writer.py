@@ -62,11 +62,6 @@ class MBIDMappingWriter(threading.Thread):
     def run(self):
 
         with self.app.app_context():
-
-
-            current_app.logger.info("Doing FUCK ALL!")
-            time.sleep(9999999)
-
             current_app.logger.info("Starting queue stuffer...")
             self.queue = MappingJobQueue(app)
             # start the queue stuffer thread
