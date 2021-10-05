@@ -618,6 +618,7 @@ export default class UserEntityChart extends React.Component<
                         style={{
                           height:
                             listenContainerHeight ?? `${55 * data?.length}px`,
+                          paddingLeft: 0,
                         }}
                       >
                         <Bar data={data} maxValue={maxListens} />
