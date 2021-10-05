@@ -327,12 +327,6 @@ export default class UserFeedPage extends React.Component<
     this.setState({ recordingFeedbackMap });
   };
 
-  playListen = (listen: Listen): void => {
-    if (this.brainzPlayer.current) {
-      this.brainzPlayer.current.playListen(listen);
-    }
-  };
-
   renderEventContent(event: TimelineEvent) {
     if (UserFeedPage.isEventListenable(event)) {
       const { metadata } = event;
@@ -358,7 +352,6 @@ export default class UserFeedPage extends React.Component<
                 : ""
             }
             newAlert={newAlert}
-            playListen={this.playListen}
           />
         </div>
       );

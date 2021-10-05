@@ -411,11 +411,6 @@ export default class UserEntityChart extends React.Component<
     }
   };
 
-  playListen = (listen: Listen): void => {
-    if (this.brainzPlayer.current) {
-      this.brainzPlayer.current.playListen(listen);
-    }
-  };
 
   handleCurrentListenChange = (listen: BaseListenFormat | JSPFTrack): void => {
     this.setState({ currentListen: listen as BaseListenFormat });
@@ -607,7 +602,6 @@ export default class UserEntityChart extends React.Component<
                                 showUsername={false}
                                 currentFeedback={0}
                                 isCurrentListen={this.isCurrentListen(listen)}
-                                playListen={this.playListen}
                                 newAlert={newAlert}
                               />
                             );
