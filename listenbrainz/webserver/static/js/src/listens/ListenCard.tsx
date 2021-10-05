@@ -1,5 +1,5 @@
 import * as React from "react";
-import { get as _get, has as _has } from "lodash";
+import { get as _get, has as _has, isEqual, isNil } from "lodash";
 import {
   faMusic,
   faHeart,
@@ -26,7 +26,6 @@ export type ListenCardProps = {
   listen: Listen;
   className?: string;
   currentFeedback: ListenFeedBack;
-  isCurrentListen: boolean;
   showTimestamp: boolean;
   showUsername: boolean;
   removeListenCallback?: (listen: Listen) => void;
@@ -50,6 +49,7 @@ export type ListenCardProps = {
 type ListenCardState = {
   isDeleted: boolean;
   feedback: ListenFeedBack;
+  isCurrentListen: boolean;
 };
 
 export default class ListenCard extends React.Component<
@@ -65,7 +65,12 @@ export default class ListenCard extends React.Component<
     this.state = {
       isDeleted: false,
       feedback: props.currentFeedback || 0,
+      isCurrentListen: false,
     };
+  }
+
+  componentDidMount() {
+    window.addEventListener("message", this.receiveBrainzPlayerMessage);
   }
 
   componentDidUpdate(prevProps: ListenCardProps) {
@@ -73,6 +78,10 @@ export default class ListenCard extends React.Component<
     if (currentFeedback !== prevProps.currentFeedback) {
       this.setState({ feedback: currentFeedback });
     }
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener("message", this.receiveBrainzPlayerMessage);
   }
 
   playListen = () => {
@@ -83,6 +92,39 @@ export default class ListenCard extends React.Component<
     }
     window.postMessage({ type: "playListen", payload: listen }, window.origin);
   };
+
+  /** React to events sent by BrainzPlayer */
+  receiveBrainzPlayerMessage = (event: MessageEvent) => {
+    if (event.origin !== window.location.origin) {
+      // Reveived postMessage from different origin, ignoring it
+      return;
+    }
+    const { type, payload } = event.data;
+    switch (type) {
+      case "currentListenChange":
+        this.onCurrentListenChange(payload);
+        break;
+      default:
+      // do nothing
+    }
+  };
+
+  onCurrentListenChange = (newListen: BaseListenFormat) => {
+    this.setState({ isCurrentListen: this.isCurrentListen(newListen) });
+  };
+
+  isCurrentListen = (element: BaseListenFormat | JSPFTrack): boolean => {
+    const { listen } = this.props;
+    if (isNil(listen)) {
+      return false;
+    }
+    if (_has(element, "identifier")) {
+      // JSPF Track format
+      return (element as JSPFTrack).id === (listen as JSPFTrack).id;
+    }
+    return isEqual(element, listen);
+  };
+
   submitFeedback = async (score: ListenFeedBack) => {
     const { listen, updateFeedbackCallback } = this.props;
     const { APIService, currentUser } = this.context;
@@ -201,7 +243,6 @@ export default class ListenCard extends React.Component<
       additionalDetails,
       listen,
       className,
-      isCurrentListen,
       showUsername,
       showTimestamp,
       updateRecordingToPin,
@@ -210,7 +251,7 @@ export default class ListenCard extends React.Component<
       compact,
     } = this.props;
     const { currentUser } = this.context;
-    const { feedback, isDeleted } = this.state;
+    const { feedback, isDeleted, isCurrentListen } = this.state;
 
     const isCurrentUser =
       Boolean(listen.user_name) && listen.user_name === currentUser?.name;
