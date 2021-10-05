@@ -29,7 +29,6 @@ export type ListenCardProps = {
   isCurrentListen: boolean;
   showTimestamp: boolean;
   showUsername: boolean;
-  playListen: (listen: Listen) => void;
   removeListenCallback?: (listen: Listen) => void;
   updateFeedbackCallback?: (
     recordingMsid: string,
@@ -60,8 +59,6 @@ export default class ListenCard extends React.Component<
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
-  playListen: (listen: Listen) => void;
-
   constructor(props: ListenCardProps) {
     super(props);
 
@@ -69,7 +66,6 @@ export default class ListenCard extends React.Component<
       isDeleted: false,
       feedback: props.currentFeedback || 0,
     };
-    this.playListen = props.playListen.bind(this, props.listen);
   }
 
   componentDidUpdate(prevProps: ListenCardProps) {
@@ -79,6 +75,14 @@ export default class ListenCard extends React.Component<
     }
   }
 
+  playListen = () => {
+    const { listen } = this.props;
+    const { isCurrentListen } = this.state;
+    if (isCurrentListen) {
+      return;
+    }
+    window.postMessage({ type: "playListen", payload: listen }, window.origin);
+  };
   submitFeedback = async (score: ListenFeedBack) => {
     const { listen, updateFeedbackCallback } = this.props;
     const { APIService, currentUser } = this.context;
@@ -257,7 +261,7 @@ export default class ListenCard extends React.Component<
 
     return (
       <Card
-        onDoubleClick={isCurrentListen ? undefined : this.playListen}
+        onDoubleClick={this.playListen}
         className={`listen-card row ${
           isCurrentListen ? "current-listen" : ""
         } ${isDeleted ? "deleted" : ""} ${compact ? " compact" : " "} ${

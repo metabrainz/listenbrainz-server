@@ -188,9 +188,7 @@ export default class RecentListens extends React.Component<
   };
 
   playListen = (listen: Listen): void => {
-    if (this.brainzPlayer.current) {
-      this.brainzPlayer.current.playListen(listen);
-    }
+    window.postMessage({ type: "playListen", payload: listen }, window.origin);
   };
 
   receiveNewListen = (newListen: string): void => {
@@ -636,7 +634,6 @@ export default class RecentListens extends React.Component<
                             listen.track_metadata?.additional_info
                               ?.recording_msid
                           )}
-                          playListen={this.playListen}
                           removeListenCallback={this.removeListenFromListenList}
                           updateFeedbackCallback={this.updateFeedback}
                           updateRecordingToPin={this.updateRecordingToPin}

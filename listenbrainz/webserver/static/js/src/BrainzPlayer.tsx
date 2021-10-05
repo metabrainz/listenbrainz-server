@@ -154,6 +154,8 @@ export default class BrainzPlayer extends React.Component<
 
   componentDidMount = () => {
     window.addEventListener("storage", this.onLocalStorageEvent);
+    window.addEventListener("message", this.receiveBrainzPlayerMessage);
+
     // Remove SpotifyPlayer if the user doesn't have the relevant permissions to use it
     const { spotifyAuth } = this.context;
     if (
@@ -166,7 +168,23 @@ export default class BrainzPlayer extends React.Component<
 
   componentWillUnMount = () => {
     window.removeEventListener("storage", this.onLocalStorageEvent);
+    window.removeEventListener("message", this.receiveBrainzPlayerMessage);
     this.stopPlayerStateTimer();
+  };
+
+  receiveBrainzPlayerMessage = (event: MessageEvent) => {
+    if (event.origin !== window.location.origin) {
+      // Reveived postMessage from different origin, ignoring it
+      return;
+    }
+    const { type, payload } = event.data;
+    switch (type) {
+      case "playListen":
+        this.playListen(payload);
+        break;
+      default:
+      // do nothing
+    }
   };
 
   /** We use LocalStorage events as a form of communication between BrainzPlayers

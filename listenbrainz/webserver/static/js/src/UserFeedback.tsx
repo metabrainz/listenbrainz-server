@@ -104,11 +104,6 @@ export default class UserFeedback extends React.Component<
     document.removeEventListener("keydown", this.handleKeyDown);
   }
 
-  playListen = (listen: Listen): void => {
-    if (this.brainzPlayer.current && listen) {
-      this.brainzPlayer.current.playListen(listen);
-    }
-  };
 
   handleCurrentListenChange = (
     listen: BaseListenFormat | Listen | JSPFTrack
@@ -443,7 +438,6 @@ export default class UserFeedback extends React.Component<
                         currentFeedback={this.getFeedbackForRecordingMsid(
                           feedbackItem.recording_msid
                         )}
-                        playListen={this.playListen}
                         updateFeedbackCallback={this.updateFeedback}
                         updateRecordingToPin={this.updateRecordingToPin}
                         newAlert={newAlert}

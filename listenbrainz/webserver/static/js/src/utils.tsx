@@ -165,7 +165,7 @@ const getPlayButton = (
     <button
       title="Play"
       className="btn-transparent play-button"
-      onClick={isCurrentListen ? undefined : onPlayFunction.bind(listen)}
+      onClick={onPlayFunction.bind(listen)}
       type="button"
     >
       {isCurrentListen ? (
