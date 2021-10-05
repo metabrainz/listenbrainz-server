@@ -23,7 +23,8 @@ from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          notify_mapping_import,
                                          handle_missing_musicbrainz_data,
                                          notify_cf_recording_recommendations_generation,
-                                         handle_similar_users, handle_sitewide_listening_activity)
+                                         handle_similar_users, handle_sitewide_listening_activity,
+                                         handle_sitewide_daily_activity)
 
 from listenbrainz.webserver import create_app
 
