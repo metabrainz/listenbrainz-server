@@ -600,7 +600,7 @@ export default class UserEntityChart extends React.Component<
                             return (
                               <ListenCard
                                 key={`${datum.idx + 1}`}
-                                mini
+                                compact
                                 listenDetails={listenDetails}
                                 listen={listen}
                                 showTimestamp={false}
