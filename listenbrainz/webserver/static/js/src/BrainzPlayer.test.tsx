@@ -9,7 +9,6 @@ import GlobalAppContext from "./GlobalAppContext";
 
 const props = {
   direction: "up" as BrainzPlayDirection,
-  onCurrentListenChange: (listen: Listen | JSPFTrack) => {},
   listens: [],
   newAlert: (
     alertType: AlertType,

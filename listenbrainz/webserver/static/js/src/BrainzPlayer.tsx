@@ -64,9 +64,6 @@ export type DataSourceProps = {
 
 type BrainzPlayerProps = {
   direction: BrainzPlayDirection;
-  onCurrentListenChange: (
-    listen: BaseListenFormat | Listen | JSPFTrack
-  ) => void;
   listens: Array<Listen | JSPFTrack>;
   newAlert: (
     alertType: AlertType,
@@ -333,8 +330,11 @@ export default class BrainzPlayer extends React.Component<
       listenSubmitted: false,
       continuousPlaybackTime: 0,
     });
-    const { onCurrentListenChange } = this.props;
-    onCurrentListenChange(listen);
+
+    window.postMessage(
+      { type: "currentListenChange", payload: listen },
+      window.origin
+    );
 
     let selectedDatasourceIndex: number;
     if (datasourceIndex === 0) {

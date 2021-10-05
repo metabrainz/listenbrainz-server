@@ -41,7 +41,6 @@ export type UserEntityChartState = {
   listenContainerHeight?: number;
   hasError: boolean;
   errorMessage: string;
-  currentListen: BaseListenFormat | null;
 };
 
 export default class UserEntityChart extends React.Component<
@@ -72,7 +71,6 @@ export default class UserEntityChart extends React.Component<
       loading: false,
       hasError: false,
       errorMessage: "",
-      currentListen: null,
     };
 
     this.listenContainer = React.createRef();
@@ -411,19 +409,6 @@ export default class UserEntityChart extends React.Component<
     }
   };
 
-
-  handleCurrentListenChange = (listen: BaseListenFormat | JSPFTrack): void => {
-    this.setState({ currentListen: listen as BaseListenFormat });
-  };
-
-  isCurrentListen = (element: BaseListenFormat): boolean => {
-    const { currentListen } = this.state;
-    if (isNil(currentListen)) {
-      return false;
-    }
-    return isEqual(element, currentListen);
-  };
-
   render() {
     const {
       data,
@@ -601,7 +586,6 @@ export default class UserEntityChart extends React.Component<
                                 showTimestamp={false}
                                 showUsername={false}
                                 currentFeedback={0}
-                                isCurrentListen={this.isCurrentListen(listen)}
                                 newAlert={newAlert}
                               />
                             );
@@ -688,7 +672,6 @@ export default class UserEntityChart extends React.Component<
               direction="down"
               listens={listenableItems}
               newAlert={newAlert}
-              onCurrentListenChange={this.handleCurrentListenChange}
               ref={this.brainzPlayer}
             />
           </div>

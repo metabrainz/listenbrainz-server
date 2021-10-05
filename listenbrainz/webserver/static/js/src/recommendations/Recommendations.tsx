@@ -332,7 +332,6 @@ export default class Recommendations extends React.Component<
               direction={direction}
               listens={recommendations}
               newAlert={newAlert}
-              onCurrentListenChange={this.handleCurrentRecommendationChange}
               ref={this.brainzPlayer}
             />
           </div>
