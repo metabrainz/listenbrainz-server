@@ -1,4 +1,5 @@
 import * as React from "react";
+import ListenCard from "../listens/ListenCard";
 
 export function getEntityLink(
   entityType: Entity,
@@ -49,4 +50,43 @@ export function userChartEntityToListen(
       },
     },
   };
+}
+
+export function getChartEntityDetails(datum: UserEntityDatum): JSX.Element {
+  const {
+    entityType,
+    entity: entityName,
+    entityMBID,
+    artist: artistName,
+    artistMBID: artistMBIDs,
+    release: releaseName,
+    releaseMBID,
+    idx,
+  } = datum;
+
+  let artistMBID;
+  if (artistMBIDs) {
+    [artistMBID] = artistMBIDs;
+  }
+
+  return (
+    <>
+      <div title={entityName} className="ellipsis">
+        {getEntityLink(entityType, entityName, entityMBID)}
+      </div>
+
+      <div
+        className="small text-muted ellipsis"
+        title={`${artistName || ""}, ${releaseName || ""}`}
+      >
+        {artistName && getEntityLink("artist", artistName, artistMBID)}
+        {releaseName && (
+          <span>
+            &nbsp;-&nbsp;
+            {getEntityLink("release", releaseName, releaseMBID)}
+          </span>
+        )}
+      </div>
+    </>
+  );
 }

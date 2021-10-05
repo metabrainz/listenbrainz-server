@@ -222,18 +222,16 @@
 	
 	/** Special styles for mini size cards (i.e. charts etc.) **/
 	&.mini {
-		padding: 5px;
-    	margin: 0;
+		padding: 10px;
+    	margin-bottom: 3px;
 		.listen-details{
 			flex: 1;
 			// Parent's width minus controls and thumbnail elements' width
-			max-width: calc(100% - 50px);
+			max-width: calc(100% - 60px);
 		}
 		.listen-controls {
-			// In mini size, make the play button sho on the right over everything
-			position: absolute;
-			right: 5px;
-			top: 25%;
+
+			flex-grow: 0;
 		}
 	}
 	&:not(.mini) .listen-controls{
