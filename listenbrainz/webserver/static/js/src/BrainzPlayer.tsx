@@ -614,7 +614,7 @@ export default class BrainzPlayer extends React.Component<
         let processedPayload = listen;
         // When submitting playing_now listens, listened_at must NOT be present
         if (listenType === "playing_now") {
-          processedPayload = omit(listen, "listened_at") as Listen
+          processedPayload = omit(listen, "listened_at") as Listen;
         }
 
         const struct = {
