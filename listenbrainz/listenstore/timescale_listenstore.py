@@ -54,12 +54,8 @@ WINDOW_SIZE_MULTIPLIER = 3
 LISTEN_COUNT_BUCKET_WIDTH = 2592000
 
 # These values are defined to create spark parquet files that are at most 128MB in size.
-# Given our listens data, we get about about 38% compression, so rounding to 45% should ensure
-# that we don't go over the 128MB file limit. If we do, its not a real problem.
-PARQUET_APPROX_COMPRESSION_RATIO = .45
-
-# A rough guesstimate at the average length of the MBIDs fields: One UUID + some extra? We just need a guess!
-AVG_ARTIST_MBIDS_LEN = 42
+# This compression ration allows us to roughly estimate how full we can make files before starting a new one
+PARQUET_APPROX_COMPRESSION_RATIO = .57
 
 # This is the approximate amount of data to write to a parquet file in order to meet the max size
 PARQUET_TARGET_SIZE = 134217728 / PARQUET_APPROX_COMPRESSION_RATIO  # 128MB / compression ratio
@@ -681,33 +677,6 @@ class TimescaleListenStore(ListenStore):
         self.log.info('Dump present at %s!', archive_path)
         return archive_path
 
-    def _fetch_artist_MBIDs_from_artist_credits(self, artist_credit_ids):
-        """ Given the list or set of artist_credit_ids return a dict
-            that maps artist_credit_id -> [ ARITST_MBID, ARTIST_MBID ... ]
-        """
-
-        index = {}
-        with psycopg2.connect(config.MB_DATABASE_URI) as conn:
-            with conn.cursor() as curs:
-
-                query = '''SELECT acn.artist_credit,
-                                  array_agg(gid::TEXT) AS artist_mbids
-                             FROM artist
-                             JOIN artist_credit_name acn
-                               ON artist.id = acn.artist
-                            WHERE acn.artist_credit IN %s
-                         GROUP BY acn.artist_credit'''
-                curs.execute(query, (tuple(artist_credit_ids),))
-
-                while True:
-                    row = curs.fetchone()
-                    if not row:
-                        break
-                    index[row[0]] = row[1]
-
-        return index
-
-
     def write_parquet_files(self,
                             archive_dir,
                             temp_dir,
@@ -745,15 +714,21 @@ class TimescaleListenStore(ListenStore):
 
         query = """SELECT listened_at,
                           user_name,
-                          data->'track_metadata'->>'artist_name' AS artist_name,
                           artist_credit_id,
-                          data->'track_metadata'->>'release_name' AS release_name,
+                          artist_mbids::TEXT[] AS artist_credit_mbids,
+                          artist_credit_name AS m_artist_name,
+                          data->'track_metadata'->>'artist_name' AS l_artist_name,
+                          release_name AS m_release_name,
+                          data->'track_metadata'->>'release_name' AS l_release_name,
                           release_mbid::TEXT,
-                          track_name AS recording_name,
+                          recording_name AS m_recording_name,
+                          track_name AS l_recording_name,
                           recording_mbid::TEXT
                      FROM listen l
+                     JOIN listen_join_listen_mbid_mapping lj
+                       ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = lj.recording_msid
                      JOIN listen_mbid_mapping m
-                       ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = recording_msid
+                       ON lj.listen_mbid_mapping = m.id
                     WHERE listened_at > %s
                       AND listened_at <= %s
                  ORDER BY listened_at ASC"""
@@ -761,7 +736,6 @@ class TimescaleListenStore(ListenStore):
         args = (int(start_time.timestamp()), int(end_time.timestamp()))
 
         listen_count = 0
-        artist_credit_ids = set()
         current_listened_at = None
         conn = timescale.engine.raw_connection()
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as curs:
@@ -786,16 +760,29 @@ class TimescaleListenStore(ListenStore):
                     if not result:
                         break
 
-                    for col in data:
-                        if col == 'artist_credit_id':
-                            artist_credit_ids.add(result[col])
+                    # Either take the original listen metadata or the mapping metadata
+                    if result["artist_credit_id"] is None:
+                        data["artist_name"].append(result["l_artist_name"])
+                        data["release_name"].append(result["l_release_name"])
+                        data["recording_name"].append(result["l_recording_name"])
+                        data["artist_credit_id"].append(None)
+                        approx_size += len(result["l_artist_name"]) + len(result["l_release_name"] or "0") + \
+                            len(result["l_recording_name"])
+                    else:
+                        data["artist_name"].append(result["m_artist_name"])
+                        data["release_name"].append(result["m_release_name"])
+                        data["recording_name"].append(result["m_recording_name"])
+                        data["artist_credit_id"].append(result["artist_credit_id"])
+                        approx_size += len(result["m_artist_name"]) + len(result["m_release_name"]) + \
+                            len(result["m_recording_name"]) + len(str(result["artist_credit_id"]))
 
+                    for col in data:
                         if col == 'listened_at':
                             current_listened_at = datetime.utcfromtimestamp(result['listened_at'])
                             data[col].append(current_listened_at)
                             approx_size += len(str(result[col]))
-                        elif col == 'artist_credit_mbids':
-                            approx_size += AVG_ARTIST_MBIDS_LEN
+                        elif col in ['artist_name', 'release_name', 'recording_name', 'artist_credit_id']:
+                            pass
                         else:
                             data[col].append(result[col])
                             approx_size += len(str(result[col]))
@@ -808,33 +795,21 @@ class TimescaleListenStore(ListenStore):
                 if written == 0:
                     break
 
-                # Fetch artist mbids for each artist_credit_id and then insert into data
-                # If an ac id is not found, zero out the other MBIDs since the underlying data changed
-                ac_mapping = self._fetch_artist_MBIDs_from_artist_credits(artist_credit_ids)
-                for i, row in enumerate(data['artist_credit_id']):
-                    if row is None:
-                        data['artist_credit_mbids'].append(None)
-                    elif row not in ac_mapping:
-                        data['artist_credit_mbids'].append(None)
-                        data['release_mbid'][i] = None
-                        data['recording_mbid'][i] = None
-                        data['artist_credit_id'][i] = None
-                    else:
-                        data['artist_credit_mbids'].append(ac_mapping[row])
-
                 filename = os.path.join(temp_dir, "%d.parquet" % parquet_file_id)
 
                 # Create a pandas dataframe, then write that to a parquet files
                 df = pd.DataFrame(data, dtype=object)
                 table = pa.Table.from_pandas(df, preserve_index=False)
                 pq.write_table(table, filename)
+                file_size = os.path.getsize(filename)
                 tar_file.add(filename, arcname=os.path.join(archive_dir, "%d.parquet" % parquet_file_id))
                 os.unlink(filename)
                 parquet_file_id += 1
 
-                self.log.info("%d listens dumped for %s at %.2f listens/s",
+                self.log.info("%d listens dumped for %s at %.2f listens/s (%sMB)",
                               listen_count, current_listened_at.strftime("%Y-%m-%d"),
-                              written / (time.monotonic() - t0))
+                              written / (time.monotonic() - t0),
+                              str(round(file_size / (1024 * 1024), 3)))
 
         return parquet_file_id
 
@@ -894,9 +869,7 @@ class TimescaleListenStore(ListenStore):
                 self.log.info("dump %s to %s" % (start.strftime("%Y-%m-%d %H:%M:%S"), end.strftime("%Y-%m-%d %H:%M:%S")))
                 parquet_index = self.write_parquet_files(archive_name, temp_dir, tar, start, end, full_dump, parquet_index)
 
-
             shutil.rmtree(temp_dir)
-
 
         self.log.info('ListenBrainz spark listen dump done!')
         self.log.info('Dump present at %s!', archive_path)

@@ -10,4 +10,4 @@ TYPESENSE_PORT = 8108
 TYPESENSE_API_KEY = "sooper secret api key"
 
 # For debugging, only fetches a tiny portion of the data if True
-USE_MINIMAL_DATASET = False
+USE_MINIMAL_DATASET = True 
