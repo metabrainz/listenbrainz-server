@@ -110,7 +110,10 @@ export default class PlaylistItemCard extends React.Component<
       return;
     }
     const listen = JSPFTrackToListen(track);
-    window.postMessage({ type: "playListen", payload: listen }, window.origin);
+    window.postMessage(
+      { type: "playListen", payload: listen },
+      window.location.origin
+    );
   };
 
   removeTrack = () => {

@@ -72,7 +72,10 @@ export default class PinnedRecordingCard extends React.Component<
       return;
     }
     const listen = getListenablePin(pinnedRecording);
-    window.postMessage({ type: "playListen", payload: listen }, window.origin);
+    window.postMessage(
+      { type: "playListen", payload: listen },
+      window.location.origin
+    );
   };
 
   /** React to events sent by BrainzPlayer */
@@ -95,15 +98,11 @@ export default class PinnedRecordingCard extends React.Component<
     this.setState({ isCurrentListen: this.isCurrentListen(newListen) });
   };
 
-  isCurrentListen = (element: BaseListenFormat | JSPFTrack): boolean => {
+  isCurrentListen = (element: BaseListenFormat): boolean => {
     const { pinnedRecording } = this.props;
     const listen = getListenablePin(pinnedRecording);
     if (isNil(listen)) {
       return false;
-    }
-    if (has(element, "identifier")) {
-      // JSPF Track format
-      return (element as JSPFTrack).id === (listen as JSPFTrack).id;
     }
     return isEqual(element, listen);
   };

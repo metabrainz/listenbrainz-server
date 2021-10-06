@@ -101,7 +101,7 @@ export default class RecommendationCard extends React.Component<
     }
     window.postMessage(
       { type: "playListen", payload: recommendation },
-      window.origin
+      window.location.origin
     );
   };
 
@@ -205,7 +205,7 @@ export default class RecommendationCard extends React.Component<
         onDoubleClick={this.playRecommendation}
         className={`recommendation-card row ${
           isCurrentListen ? "current-recommendation" : ""
-        } ${className}`}
+        } ${className || ""}`}
       >
         <div className="track-details">
           <div title={recommendation.track_metadata?.track_name}>

@@ -76,18 +76,36 @@ describe("ListenCard", () => {
   });
 
   it("should render a play button", () => {
-    const playListenMock = jest.fn();
-    const wrapper = mount<ListenCard>(
-      <ListenCard {...props} playListen={playListenMock} />
-    );
+    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
+    const instance = wrapper.instance();
     const playButton = wrapper.find(".play-button");
-    expect(playButton).toBeDefined();
-    expect(playListenMock).not.toHaveBeenCalled();
-    playButton.simulate("click");
-    expect(playListenMock).toHaveBeenCalledWith(
-      props.listen,
-      expect.anything() // the click event
+    expect(playButton).toHaveLength(1);
+    expect(playButton.props().onClick).toEqual(instance.playListen);
+  });
+
+  it("should send an event to BrainzPlayer when playListen is called", () => {
+    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
+    const instance = wrapper.instance();
+    const postMessageSpy = jest.spyOn(window, "postMessage");
+    expect(postMessageSpy).not.toHaveBeenCalled();
+
+    instance.playListen();
+
+    expect(postMessageSpy).toHaveBeenCalledWith(
+      { type: "playListen", payload: props.listen },
+      window.location.origin
     );
+  });
+
+  it("should do nothing when playListen is called on currently playing listen", () => {
+    const postMessageSpy = jest.spyOn(window, "postMessage");
+    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
+    const instance = wrapper.instance();
+    instance.setState({ isCurrentListen: true });
+
+    instance.playListen();
+
+    expect(postMessageSpy).not.toHaveBeenCalled();
   });
 
   describe("componentDidUpdate", () => {
