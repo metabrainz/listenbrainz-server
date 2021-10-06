@@ -73,7 +73,7 @@ export default class RecommendationCard extends React.Component<
     }
     const { type, payload } = event.data;
     switch (type) {
-      case "currentListenChange":
+      case "current-listen-change":
         this.onCurrentListenChange(payload);
         break;
       default:
@@ -100,7 +100,7 @@ export default class RecommendationCard extends React.Component<
       return;
     }
     window.postMessage(
-      { type: "playListen", payload: recommendation },
+      { brainzplayer_event: "play-listen", payload: recommendation },
       window.location.origin
     );
   };

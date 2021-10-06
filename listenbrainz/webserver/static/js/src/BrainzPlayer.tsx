@@ -174,9 +174,9 @@ export default class BrainzPlayer extends React.Component<
       // Reveived postMessage from different origin, ignoring it
       return;
     }
-    const { type, payload } = event.data;
-    switch (type) {
-      case "playListen":
+    const { brainzplayer_event, payload } = event.data;
+    switch (brainzplayer_event) {
+      case "play-listen":
         this.playListen(payload);
         break;
       default:
@@ -332,7 +332,7 @@ export default class BrainzPlayer extends React.Component<
     });
 
     window.postMessage(
-      { type: "currentListenChange", payload: listen },
+      { brainzplayer_event: "current-listen-change", payload: listen },
       window.location.origin
     );
 

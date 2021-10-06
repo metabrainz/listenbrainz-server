@@ -93,7 +93,7 @@ export default class ListenCard extends React.Component<
       return;
     }
     window.postMessage(
-      { type: "playListen", payload: listen },
+      { brainzplayer_event: "play-listen", payload: listen },
       window.location.origin
     );
   };
@@ -106,7 +106,7 @@ export default class ListenCard extends React.Component<
     }
     const { type, payload } = event.data;
     switch (type) {
-      case "currentListenChange":
+      case "current-listen-change":
         this.onCurrentListenChange(payload);
         break;
       default:
