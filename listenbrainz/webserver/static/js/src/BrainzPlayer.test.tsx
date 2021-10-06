@@ -59,6 +59,13 @@ const listen2: Listen = {
 };
 
 describe("BrainzPlayer", () => {
+  beforeAll(() => {
+    // delete window.location;
+    window.location = {
+      href: "http://nevergonnagiveyouup.com",
+    } as Window["location"];
+  });
+
   it("renders correctly", () => {
     const wrapper = mount<BrainzPlayer>(
       <BrainzPlayer {...props} />,

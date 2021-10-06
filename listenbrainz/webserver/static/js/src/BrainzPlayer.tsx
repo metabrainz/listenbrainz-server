@@ -333,7 +333,7 @@ export default class BrainzPlayer extends React.Component<
 
     window.postMessage(
       { type: "currentListenChange", payload: listen },
-      window.origin
+      window.location.origin
     );
 
     let selectedDatasourceIndex: number;

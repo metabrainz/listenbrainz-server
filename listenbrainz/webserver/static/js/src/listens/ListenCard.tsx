@@ -113,14 +113,10 @@ export default class ListenCard extends React.Component<
     this.setState({ isCurrentListen: this.isCurrentListen(newListen) });
   };
 
-  isCurrentListen = (element: BaseListenFormat | JSPFTrack): boolean => {
+  isCurrentListen = (element: BaseListenFormat): boolean => {
     const { listen } = this.props;
     if (isNil(listen)) {
       return false;
-    }
-    if (_has(element, "identifier")) {
-      // JSPF Track format
-      return (element as JSPFTrack).id === (listen as JSPFTrack).id;
     }
     return isEqual(element, listen);
   };

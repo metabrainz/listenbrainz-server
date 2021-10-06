@@ -78,8 +78,6 @@ describe("UserPins", () => {
     const wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
     const instance = wrapper.instance();
     expect(wrapper.find(BrainzPlayer)).toHaveLength(1);
-    // eslint-disable-next-line dot-notation
-    expect(instance["brainzPlayer"].current).toBeInstanceOf(BrainzPlayer);
   });
 
   it("renders the correct number of pinned recordings", () => {
@@ -183,61 +181,6 @@ describe("Pagination", () => {
         APIPins.pinned_recordings as Array<PinnedRecording>
       );
     });
-  });
-});
-
-describe("isCurrentListen", () => {
-  it("returns true if currentListen and passed listen is same", () => {
-    const wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
-    const instance = wrapper.instance();
-
-    const pin: PinnedRecording = {
-      blurb_content: "text",
-      created: 1628708775,
-      pinned_until: 1628708779,
-      recording_mbid: null,
-      recording_msid: "8b74361c-604e-4c5a-91b2-5d092d6df9ae",
-      row_id: 17,
-      track_metadata: {
-        artist_name: "TWICE",
-        track_name: "MAKE ME GO",
-      },
-    };
-    wrapper.setState({ currentListen: getListenablePin(pin) });
-
-    expect(instance.isCurrentListen(getListenablePin(pin))).toBe(true);
-  });
-
-  it("returns false if currentListen is not set", () => {
-    const wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
-    const instance = wrapper.instance();
-
-    wrapper.setState({ currentListen: undefined });
-    expect(instance.isCurrentListen({} as Listen)).toBeFalsy();
-  });
-});
-
-describe("handleCurrentListenChange", () => {
-  it("sets the state correctly", () => {
-    const wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
-    const instance = wrapper.instance();
-
-    const pin: PinnedRecording = {
-      blurb_content: "text",
-      created: 1628708775,
-      pinned_until: 1628708779,
-      recording_mbid: null,
-      recording_msid: "8b74361c-604e-4c5a-91b2-5d092d6df9ae",
-      row_id: 17,
-      track_metadata: {
-        artist_name: "TWICE",
-        track_name: "MAKE ME GO",
-      },
-    };
-
-    instance.handleCurrentListenChange(getListenablePin(pin));
-
-    expect(wrapper.state().currentListen).toEqual(getListenablePin(pin));
   });
 });
 

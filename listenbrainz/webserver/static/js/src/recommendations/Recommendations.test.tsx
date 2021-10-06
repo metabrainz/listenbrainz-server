@@ -207,51 +207,6 @@ describe("updateFeedback", () => {
   });
 });
 
-describe("isCurrentRecommendation", () => {
-  it("returns true if currentRecommendation and passed recommendation is same", () => {
-    const wrapper = shallow<Recommendations>(<Recommendations {...props} />);
-    const instance = wrapper.instance();
-
-    const recommendation: Recommendation = {
-      listened_at: 0,
-      track_metadata: {
-        artist_name: "Coldplay",
-        track_name: "Up & Up",
-      },
-    };
-    wrapper.setState({ currentRecommendation: recommendation });
-
-    expect(instance.isCurrentRecommendation(recommendation)).toBe(true);
-  });
-
-  it("returns false if currentRecommendation is not set", () => {
-    const wrapper = shallow<Recommendations>(<Recommendations {...props} />);
-    const instance = wrapper.instance();
-
-    wrapper.setState({ currentRecommendation: undefined });
-
-    expect(instance.isCurrentRecommendation({} as Recommendation)).toBeFalsy();
-  });
-});
-
-describe("handleCurrentRecommendationChange", () => {
-  it("sets the state correctly", () => {
-    const wrapper = shallow<Recommendations>(<Recommendations {...props} />);
-    const instance = wrapper.instance();
-
-    const recommendation: Recommendation = {
-      listened_at: 0,
-      track_metadata: {
-        artist_name: "George Erza",
-        track_name: "Shotgun",
-      },
-    };
-    instance.handleCurrentRecommendationChange(recommendation);
-
-    expect(wrapper.state().currentRecommendation).toEqual(recommendation);
-  });
-});
-
 describe("handleClickPrevious", () => {
   it("don't do anything if already on first page", async () => {
     const wrapper = shallow<Recommendations>(<Recommendations {...props} />);
