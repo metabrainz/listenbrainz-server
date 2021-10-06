@@ -610,7 +610,6 @@ export default class BrainzPlayer extends React.Component<
     if (dataSource?.current && !dataSource.current.datasourceRecordsListens()) {
       try {
         const { auth_token } = currentUser;
-        
         let processedPayload = listen;
         // When submitting playing_now listens, listened_at must NOT be present
         if (listenType === "playing_now") {
@@ -621,7 +620,6 @@ export default class BrainzPlayer extends React.Component<
           listen_type: listenType,
           payload: [processedPayload],
         } as SubmitListensPayload;
-  
         const url = `${this.APIBaseURI}/submit-listens`;
 
         const response = await fetch(url, {
