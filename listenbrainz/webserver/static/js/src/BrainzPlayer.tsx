@@ -611,14 +611,15 @@ export default class BrainzPlayer extends React.Component<
       try {
         const { auth_token } = currentUser;
         
+        let processedPayload = listen;
         // When submitting playing_now listens, listened_at must NOT be present
         if (listenType === "playing_now") {
-          listen = omit(listen, "listened_at") as Listen
+          processedPayload = omit(listen, "listened_at") as Listen
         }
 
         const struct = {
           listen_type: listenType,
-          payload: [listen],
+          payload: [processedPayload],
         } as SubmitListensPayload;
   
         const url = `${this.APIBaseURI}/submit-listens`;
