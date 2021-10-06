@@ -99,6 +99,7 @@ export default class BrainzPlayer extends React.Component<
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
+  APIBaseURI: string = "https://api.listenbrainz.org/1";
   spotifyPlayer?: React.RefObject<SpotifyPlayer>;
   youtubePlayer?: React.RefObject<YoutubePlayer>;
   soundcloudPlayer?: React.RefObject<SoundcloudPlayer>;
@@ -608,7 +609,22 @@ export default class BrainzPlayer extends React.Component<
     if (dataSource?.current && !dataSource.current.datasourceRecordsListens()) {
       try {
         const { auth_token } = currentUser;
-        await APIService.submitListens(auth_token, listenType, [listen]);
+        const struct = {
+          listen_type: listenType,
+          payload: [listen],
+        } as SubmitListensPayload;
+  
+        const url = `${this.APIBaseURI}/submit-listens`;
+  
+        try {
+          const response = await fetch(url, {
+            method: "POST",
+            headers: {
+              Authorization: `Token ${auth_token}`,
+              "Content-Type": "application/json;charset=UTF-8",
+            },
+            body: JSON.stringify(struct),
+          });
       } catch (error) {
         this.handleWarning(error, "Could not save this listen");
       }
