@@ -111,12 +111,13 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
                              ] = rec["ids"]["artist_msid"]
 
         # Fetch the mapped MBIDs from the mapping
-        query = """SELECT recording_msid::TEXT, recording_mbid::TEXT, release_mbid::TEXT 
-                     FROM listen_mbid_mapping
+        query = """SELECT recording_msid::TEXT, recording_mbid::TEXT, release_mbid::TEXT, artist_mbids::TEXT[]
+                     FROM listen_join_listen_mbid_mapping lj
+                     JOIN listen_mbid_mapping mbid
+                       ON lj.listen_mbid_mapping = mbid.id
                     WHERE recording_msid in :msids
                  ORDER BY recording_msid"""
 
-        # TODO: Update this to also send artist_mbids when those are available.
         with timescale.engine.connect() as connection:
             result = connection.execute(
                 sqlalchemy.text(query), msids=tuple(msids))
@@ -125,6 +126,7 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
                     index[row["recording_msid"]].track_metadata['additional_info'] = {
                         "recording_mbid": row["recording_mbid"],
                         "release_mbid": row["release_mbid"],
+                        "artist_mbids": row["artist_mbids"],
                         "artist_msid": artist_msids[rec["ids"]["recording_msid"]]}
 
     return feedback
