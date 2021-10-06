@@ -615,16 +615,14 @@ export default class BrainzPlayer extends React.Component<
         } as SubmitListensPayload;
   
         const url = `${this.APIBaseURI}/submit-listens`;
-  
-        try {
-          const response = await fetch(url, {
-            method: "POST",
-            headers: {
-              Authorization: `Token ${auth_token}`,
-              "Content-Type": "application/json;charset=UTF-8",
-            },
-            body: JSON.stringify(struct),
-          });
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            Authorization: `Token ${auth_token}`,
+            "Content-Type": "application/json;charset=UTF-8",
+          },
+          body: JSON.stringify(struct),
+        });
       } catch (error) {
         this.handleWarning(error, "Could not save this listen");
       }
