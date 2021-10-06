@@ -5,13 +5,15 @@ import {
   faHeart,
   faHeartBroken,
   faEllipsisV,
+  faPlay,
 } from "@fortawesome/free-solid-svg-icons";
+import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
+
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import {
   getArtistLink,
-  getPlayButton,
   getTrackLink,
   preciseTimestamp,
   fullLocalizedDateFromTimestampOrISODate,
@@ -90,7 +92,10 @@ export default class ListenCard extends React.Component<
     if (isCurrentListen) {
       return;
     }
-    window.postMessage({ type: "playListen", payload: listen }, window.origin);
+    window.postMessage(
+      { type: "playListen", payload: listen },
+      window.location.origin
+    );
   };
 
   /** React to events sent by BrainzPlayer */
@@ -393,7 +398,18 @@ export default class ListenCard extends React.Component<
               </ul>
             </>
           )}
-          {getPlayButton(listen, isCurrentListen, this.playListen)}
+          <button
+            title="Play"
+            className="btn-transparent play-button"
+            onClick={this.playListen}
+            type="button"
+          >
+            {isCurrentListen ? (
+              <FontAwesomeIcon size="1x" icon={faPlay as IconProp} />
+            ) : (
+              <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />
+            )}
+          </button>
         </div>
         {additionalDetails && (
           <span

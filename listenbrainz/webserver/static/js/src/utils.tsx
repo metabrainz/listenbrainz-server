@@ -1,11 +1,6 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import * as _ from "lodash";
 import * as timeago from "time-ago";
-import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
-
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { faPlay } from "@fortawesome/free-solid-svg-icons";
 
 const searchForSpotifyTrack = async (
   spotifyToken?: string,
@@ -153,28 +148,6 @@ const getTrackLink = (listen: Listen): JSX.Element | string => {
     );
   }
   return trackName;
-};
-
-const getPlayButton = (
-  listen: any,
-  isCurrentListen: boolean,
-  onPlayFunction: (event?: any) => void
-) => {
-  /* es-lint */
-  return (
-    <button
-      title="Play"
-      className="btn-transparent play-button"
-      onClick={onPlayFunction.bind(listen)}
-      type="button"
-    >
-      {isCurrentListen ? (
-        <FontAwesomeIcon size="1x" icon={faPlay as IconProp} />
-      ) : (
-        <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />
-      )}
-    </button>
-  );
 };
 
 const formatWSMessageToListen = (wsMsg: any): Listen | null => {
@@ -423,7 +396,6 @@ export {
   searchForSpotifyTrack,
   getArtistLink,
   getTrackLink,
-  getPlayButton,
   formatWSMessageToListen,
   preciseTimestamp,
   fullLocalizedDateFromTimestampOrISODate,
