@@ -72,7 +72,7 @@ export default class PlaylistItemCard extends React.Component<
     }
     const { type, payload } = event.data;
     switch (type) {
-      case "currentListenChange":
+      case "current-listen-change":
         this.onCurrentListenChange(payload);
         break;
       default:
@@ -111,7 +111,7 @@ export default class PlaylistItemCard extends React.Component<
     }
     const listen = JSPFTrackToListen(track);
     window.postMessage(
-      { type: "playListen", payload: listen },
+      { brainzplayer_event: "play-listen", payload: listen },
       window.location.origin
     );
   };

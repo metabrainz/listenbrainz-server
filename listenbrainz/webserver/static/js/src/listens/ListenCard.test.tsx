@@ -92,7 +92,7 @@ describe("ListenCard", () => {
     instance.playListen();
 
     expect(postMessageSpy).toHaveBeenCalledWith(
-      { type: "playListen", payload: props.listen },
+      { brainzplayer_event: "play-listen", payload: props.listen },
       window.location.origin
     );
   });
