@@ -28,18 +28,8 @@ exports[`RecommendationCard renders correctly if CurrentUser.authtoken is not se
     onDoubleClick={[Function]}
   >
     <div
-      className="recommendation-card row undefined"
+      className="card recommendation-card row undefined"
       onDoubleClick={[Function]}
-      style={
-        Object {
-          "background": "#FFFFFF",
-          "border": "1px solid #EEEEEE",
-          "borderRadius": "8px",
-          "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
-          "boxSizing": "border-box",
-          "height": "100%",
-        }
-      }
     >
       <div
         className="track-details"
@@ -101,18 +91,8 @@ exports[`RecommendationCard renders correctly if isCurrentUser is False 1`] = `
     onDoubleClick={[Function]}
   >
     <div
-      className="recommendation-card row undefined"
+      className="card recommendation-card row undefined"
       onDoubleClick={[Function]}
-      style={
-        Object {
-          "background": "#FFFFFF",
-          "border": "1px solid #EEEEEE",
-          "borderRadius": "8px",
-          "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
-          "boxSizing": "border-box",
-          "height": "100%",
-        }
-      }
     >
       <div
         className="track-details"
@@ -174,18 +154,8 @@ exports[`RecommendationCard renders correctly if isCurrentUser is true and Curre
     onDoubleClick={[Function]}
   >
     <div
-      className="recommendation-card row undefined"
+      className="card recommendation-card row undefined"
       onDoubleClick={[Function]}
-      style={
-        Object {
-          "background": "#FFFFFF",
-          "border": "1px solid #EEEEEE",
-          "borderRadius": "8px",
-          "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
-          "boxSizing": "border-box",
-          "height": "100%",
-        }
-      }
     >
       <div
         className="track-details"

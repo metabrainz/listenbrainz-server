@@ -42,6 +42,10 @@ export type ListenCardProps = {
     message: string | JSX.Element
   ) => void;
   additionalDetails?: string | JSX.Element;
+  thumbnail?: JSX.Element;
+  // The default details (recording name, artist name) can be superseeded
+  listenDetails?: JSX.Element;
+  compact?: boolean;
 };
 
 type ListenCardState = {
@@ -197,6 +201,9 @@ export default class ListenCard extends React.Component<
       showUsername,
       showTimestamp,
       updateRecordingToPin,
+      thumbnail,
+      listenDetails,
+      compact,
     } = this.props;
     const { currentUser } = this.context;
     const { feedback, isDeleted } = this.state;
@@ -252,39 +259,47 @@ export default class ListenCard extends React.Component<
       <Card
         onDoubleClick={isCurrentListen ? undefined : this.playListen}
         className={`listen-card row ${
-          isCurrentListen ? " current-listen" : ""
-        } ${isDeleted ? " deleted" : ""}
-		 ${className || ""}`}
+          isCurrentListen ? "current-listen" : ""
+        } ${isDeleted ? "deleted" : ""} ${compact ? " compact" : " "} ${
+          className || ""
+        }`}
       >
-        <div className="listen-details">
-          <div
-            title={listen.track_metadata?.track_name}
-            className="ellipsis-2-lines"
-          >
-            {getTrackLink(listen)}
-          </div>
-          <span
-            className="small text-muted ellipsis"
-            title={listen.track_metadata?.artist_name}
-          >
-            {getArtistLink(listen)}
-          </span>
-        </div>
-        <div className="username-and-timestamp">
-          {showUsername && (
-            <a
-              href={`/user/${listen.user_name}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              title={listen.user_name ?? undefined}
+        {thumbnail && <div className="listen-thumbnail">{thumbnail}</div>}
+        {listenDetails ? (
+          <div className="listen-details">{listenDetails}</div>
+        ) : (
+          <div className="listen-details">
+            <div
+              title={listen.track_metadata?.track_name}
+              className="ellipsis-2-lines"
             >
-              {listen.user_name}
-            </a>
-          )}
-          {showTimestamp && timeStampForDisplay}
-        </div>
+              {getTrackLink(listen)}
+            </div>
+            <span
+              className="small text-muted ellipsis"
+              title={listen.track_metadata?.artist_name}
+            >
+              {getArtistLink(listen)}
+            </span>
+          </div>
+        )}
+        {(showUsername || showTimestamp) && (
+          <div className="username-and-timestamp">
+            {showUsername && (
+              <a
+                href={`/user/${listen.user_name}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={listen.user_name ?? undefined}
+              >
+                {listen.user_name}
+              </a>
+            )}
+            {showTimestamp && timeStampForDisplay}
+          </div>
+        )}
         <div className="listen-controls">
-          {!currentUser?.auth_token ? null : (
+          {!currentUser?.auth_token || compact ? null : (
             <>
               <ListenControl
                 icon={faHeart}

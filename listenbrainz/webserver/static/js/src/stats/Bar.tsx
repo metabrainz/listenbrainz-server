@@ -1,12 +1,9 @@
 import * as React from "react";
 import { ResponsiveBar, LabelFormatter } from "@nivo/bar";
 
-import getEntityLink from "./utils";
-
 export type BarProps = {
   data: UserEntityData;
   maxValue: number;
-  width?: number;
 };
 
 type Tick = {
@@ -25,79 +22,14 @@ type Tick = {
 };
 
 export default function Bar(props: BarProps) {
-  const { data, maxValue, width } = props;
-  const marginLeft = Math.min((width || window.innerWidth) / 2, 400);
-  const tableDigitWidth = data[0]?.idx.toString().length;
+  const { data, maxValue } = props;
 
-  const leftAlignedTick = <Tick extends any>(tick: Tick) => {
-    const datum = data[tick.tickIndex];
-    const {
-      entityType,
-      entity: entityName,
-      entityMBID,
-      artist: artistName,
-      artistMBID: artistMBIDs,
-      release: releaseName,
-      releaseMBID,
-      idx,
-    } = datum;
-
-    let artistMBID;
-    if (artistMBIDs) {
-      [artistMBID] = artistMBIDs;
-    }
-
+  const renderTickValue = (tick: any): React.ReactNode => {
+    const datum: UserEntityDatum = data[tick.tickIndex];
+    const { idx } = datum;
     return (
-      <g transform={`translate(${tick.x - marginLeft}, ${tick.y})`}>
-        <foreignObject
-          height="3em"
-          width={marginLeft}
-          y={datum.entityType === "artist" ? -10 : -20}
-        >
-          <table
-            style={{
-              width: "90%",
-              whiteSpace: "nowrap",
-              tableLayout: "fixed",
-            }}
-          >
-            <tbody>
-              <tr style={{ color: "black" }}>
-                <td style={{ width: `${tableDigitWidth}em`, textAlign: "end" }}>
-                  {idx}.&nbsp;
-                </td>
-                <td
-                  style={{
-                    textOverflow: "ellipsis",
-                    overflow: "hidden",
-                  }}
-                >
-                  {getEntityLink(entityType, entityName, entityMBID)}
-                </td>
-              </tr>
-              {artistName && (
-                <tr>
-                  <td />
-                  <td
-                    style={{
-                      fontSize: 12,
-                      textOverflow: "ellipsis",
-                      overflow: "hidden",
-                    }}
-                  >
-                    {getEntityLink("artist", artistName, artistMBID)}
-                    {releaseName && (
-                      <span>
-                        &nbsp;-&nbsp;
-                        {getEntityLink("release", releaseName, releaseMBID)}
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </foreignObject>
+      <g transform={`translate(${tick.x - 10}, ${tick.y + 7})`}>
+        <text textAnchor="end">{idx}.</text>
       </g>
     );
   };
@@ -119,20 +51,12 @@ export default function Bar(props: BarProps) {
   };
 
   const theme = {
-    axis: {
-      ticks: {
-        text: {
-          fontSize: "14px",
-        },
-      },
-    },
     labels: {
       text: {
         fontSize: "14px",
       },
     },
   };
-
   return (
     <ResponsiveBar
       data={data}
@@ -141,15 +65,19 @@ export default function Bar(props: BarProps) {
       colors="#EB743B"
       indexBy="id"
       enableGridY={false}
-      padding={0.15}
+      padding={0.1}
       labelFormat={labelFormatter}
       labelSkipWidth={0}
       tooltip={customTooltip}
       margin={{
-        left: marginLeft,
+        top: -12,
+        left: 35,
       }}
       axisLeft={{
-        renderTick: leftAlignedTick,
+        tickSize: 0,
+        tickValues: data.length,
+        tickPadding: 5,
+        renderTick: renderTickValue,
       }}
       theme={theme}
       keys={["count"]}
