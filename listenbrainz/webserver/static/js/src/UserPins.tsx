@@ -26,7 +26,6 @@ export type UserPinsProps = {
 
 export type UserPinsState = {
   direction: BrainzPlayDirection;
-  currentListen?: Listen;
   pins: PinnedRecording[];
   page: number;
   maxPage: number;
@@ -40,7 +39,6 @@ export default class UserPins extends React.Component<
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
-  private brainzPlayer = React.createRef<BrainzPlayer>();
   private DEFAULT_PINS_PER_PAGE = 25;
 
   constructor(props: UserPinsProps) {
@@ -169,31 +167,9 @@ export default class UserPins extends React.Component<
     this.setState({ pins });
   };
 
-  handleCurrentListenChange = (listen: Listen | JSPFTrack): void => {
-    this.setState({ currentListen: listen as Listen });
-  };
-
-  isCurrentListen = (listen: Listen): boolean => {
-    const { currentListen } = this.state;
-    return Boolean(currentListen && isEqual(listen, currentListen));
-  };
-
-  playListen = (listen: Listen): void => {
-    if (this.brainzPlayer.current) {
-      this.brainzPlayer.current.playListen(listen);
-    }
-  };
-
   render() {
     const { user, profileUrl, newAlert } = this.props;
-    const {
-      pins,
-      page,
-      direction,
-      loading,
-      currentListen,
-      maxPage,
-    } = this.state;
+    const { pins, page, direction, loading, maxPage } = this.state;
     const { currentUser } = this.context;
 
     const isNewerButtonDisabled = page === 1;
@@ -244,13 +220,7 @@ export default class UserPins extends React.Component<
                         key={`${pin.created}-${pin.track_metadata.track_name}-${pin.recording_msid}-${user}`}
                         userName={user.name}
                         pinnedRecording={pin}
-                        className={
-                          this.isCurrentListen(getListenablePin(pin))
-                            ? " current-listen"
-                            : ""
-                        }
                         isCurrentUser={currentUser?.name === user?.name}
-                        playListen={this.playListen}
                         removePinFromPinsList={this.removePinFromPinsList}
                         newAlert={newAlert}
                       />
@@ -320,8 +290,6 @@ export default class UserPins extends React.Component<
               direction={direction}
               listens={pinsAsListens}
               newAlert={newAlert}
-              onCurrentListenChange={this.handleCurrentListenChange}
-              ref={this.brainzPlayer}
             />
           </div>
         </div>

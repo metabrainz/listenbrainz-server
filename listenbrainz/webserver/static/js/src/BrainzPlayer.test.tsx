@@ -9,7 +9,6 @@ import GlobalAppContext from "./GlobalAppContext";
 
 const props = {
   direction: "up" as BrainzPlayDirection,
-  onCurrentListenChange: (listen: Listen | JSPFTrack) => {},
   listens: [],
   newAlert: (
     alertType: AlertType,
@@ -60,6 +59,13 @@ const listen2: Listen = {
 };
 
 describe("BrainzPlayer", () => {
+  beforeAll(() => {
+    // delete window.location;
+    window.location = {
+      href: "http://nevergonnagiveyouup.com",
+    } as Window["location"];
+  });
+
   it("renders correctly", () => {
     const wrapper = mount<BrainzPlayer>(
       <BrainzPlayer {...props} />,
@@ -358,7 +364,7 @@ describe("BrainzPlayer", () => {
     });
   });
 
-  describe("isCurrentListen", () => {
+  describe("isCurrentlyPlaying", () => {
     it("returns true if currentListen and passed listen is same", () => {
       const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...props} />,
@@ -368,7 +374,7 @@ describe("BrainzPlayer", () => {
 
       wrapper.setState({ currentListen: listen });
 
-      expect(instance.isCurrentListen(listen)).toBe(true);
+      expect(instance.isCurrentlyPlaying(listen)).toBe(true);
     });
 
     it("returns false if currentListen is not set", () => {
@@ -380,7 +386,7 @@ describe("BrainzPlayer", () => {
 
       wrapper.setState({ currentListen: undefined });
 
-      expect(instance.isCurrentListen({} as Listen)).toBeFalsy();
+      expect(instance.isCurrentlyPlaying({} as Listen)).toBeFalsy();
     });
   });
 

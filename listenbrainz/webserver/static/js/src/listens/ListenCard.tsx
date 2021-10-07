@@ -1,17 +1,19 @@
 import * as React from "react";
-import { get as _get, has as _has } from "lodash";
+import { get as _get, has as _has, isEqual, isNil } from "lodash";
 import {
   faMusic,
   faHeart,
   faHeartBroken,
   faEllipsisV,
+  faPlay,
 } from "@fortawesome/free-solid-svg-icons";
+import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
+
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import {
   getArtistLink,
-  getPlayButton,
   getTrackLink,
   preciseTimestamp,
   fullLocalizedDateFromTimestampOrISODate,
@@ -26,10 +28,8 @@ export type ListenCardProps = {
   listen: Listen;
   className?: string;
   currentFeedback: ListenFeedBack;
-  isCurrentListen: boolean;
   showTimestamp: boolean;
   showUsername: boolean;
-  playListen: (listen: Listen) => void;
   removeListenCallback?: (listen: Listen) => void;
   updateFeedbackCallback?: (
     recordingMsid: string,
@@ -51,6 +51,7 @@ export type ListenCardProps = {
 type ListenCardState = {
   isDeleted: boolean;
   feedback: ListenFeedBack;
+  isCurrentlyPlaying: boolean;
 };
 
 export default class ListenCard extends React.Component<
@@ -60,16 +61,18 @@ export default class ListenCard extends React.Component<
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
-  playListen: (listen: Listen) => void;
-
   constructor(props: ListenCardProps) {
     super(props);
 
     this.state = {
       isDeleted: false,
       feedback: props.currentFeedback || 0,
+      isCurrentlyPlaying: false,
     };
-    this.playListen = props.playListen.bind(this, props.listen);
+  }
+
+  componentDidMount() {
+    window.addEventListener("message", this.receiveBrainzPlayerMessage);
   }
 
   componentDidUpdate(prevProps: ListenCardProps) {
@@ -78,6 +81,50 @@ export default class ListenCard extends React.Component<
       this.setState({ feedback: currentFeedback });
     }
   }
+
+  componentWillUnmount() {
+    window.removeEventListener("message", this.receiveBrainzPlayerMessage);
+  }
+
+  playListen = () => {
+    const { listen } = this.props;
+    const { isCurrentlyPlaying } = this.state;
+    if (isCurrentlyPlaying) {
+      return;
+    }
+    window.postMessage(
+      { brainzplayer_event: "play-listen", payload: listen },
+      window.location.origin
+    );
+  };
+
+  /** React to events sent by BrainzPlayer */
+  receiveBrainzPlayerMessage = (event: MessageEvent) => {
+    if (event.origin !== window.location.origin) {
+      // Received postMessage from different origin, ignoring it
+      return;
+    }
+    const { type, payload } = event.data;
+    switch (type) {
+      case "current-listen-change":
+        this.onCurrentListenChange(payload);
+        break;
+      default:
+      // do nothing
+    }
+  };
+
+  onCurrentListenChange = (newListen: BaseListenFormat) => {
+    this.setState({ isCurrentlyPlaying: this.isCurrentlyPlaying(newListen) });
+  };
+
+  isCurrentlyPlaying = (element: BaseListenFormat): boolean => {
+    const { listen } = this.props;
+    if (isNil(listen)) {
+      return false;
+    }
+    return isEqual(element, listen);
+  };
 
   submitFeedback = async (score: ListenFeedBack) => {
     const { listen, updateFeedbackCallback } = this.props;
@@ -197,7 +244,6 @@ export default class ListenCard extends React.Component<
       additionalDetails,
       listen,
       className,
-      isCurrentListen,
       showUsername,
       showTimestamp,
       updateRecordingToPin,
@@ -206,7 +252,7 @@ export default class ListenCard extends React.Component<
       compact,
     } = this.props;
     const { currentUser } = this.context;
-    const { feedback, isDeleted } = this.state;
+    const { feedback, isDeleted, isCurrentlyPlaying } = this.state;
 
     const isCurrentUser =
       Boolean(listen.user_name) && listen.user_name === currentUser?.name;
@@ -257,9 +303,9 @@ export default class ListenCard extends React.Component<
 
     return (
       <Card
-        onDoubleClick={isCurrentListen ? undefined : this.playListen}
+        onDoubleClick={this.playListen}
         className={`listen-card row ${
-          isCurrentListen ? "current-listen" : ""
+          isCurrentlyPlaying ? "current-listen" : ""
         } ${isDeleted ? "deleted" : ""} ${compact ? " compact" : " "} ${
           className || ""
         }`}
@@ -352,7 +398,18 @@ export default class ListenCard extends React.Component<
               </ul>
             </>
           )}
-          {getPlayButton(listen, isCurrentListen, this.playListen)}
+          <button
+            title="Play"
+            className="btn-transparent play-button"
+            onClick={this.playListen}
+            type="button"
+          >
+            {isCurrentlyPlaying ? (
+              <FontAwesomeIcon size="1x" icon={faPlay as IconProp} />
+            ) : (
+              <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />
+            )}
+          </button>
         </div>
         {additionalDetails && (
           <span
