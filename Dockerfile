@@ -1,4 +1,4 @@
-ARG PYTHON_BASE_IMAGE_VERSION=3.7-20210115
+ARG PYTHON_BASE_IMAGE_VERSION=3.9-focal-20211007
 FROM metabrainz/python:$PYTHON_BASE_IMAGE_VERSION as listenbrainz-base
 
 ARG PYTHON_BASE_IMAGE_VERSION
@@ -34,7 +34,6 @@ RUN apt-get update \
                        libffi-dev \
                        libpq-dev \
                        libssl-dev \
-                       pxz \
                        redis-tools \
                        rsync \
                        uuid \
@@ -53,7 +52,6 @@ RUN apt-get update \
 RUN mkdir -p /code/listenbrainz /static
 
 WORKDIR /code/listenbrainz
-RUN pip3 install pip==21.0.1
 COPY requirements.txt /code/listenbrainz/
 RUN pip3 install --no-cache-dir -r requirements.txt
 
