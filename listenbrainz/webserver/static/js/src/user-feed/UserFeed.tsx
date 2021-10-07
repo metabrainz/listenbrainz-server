@@ -50,7 +50,6 @@ type UserFeedPageProps = {
 } & WithAlertNotificationsInjectedProps;
 
 type UserFeedPageState = {
-  currentListen?: Listen;
   nextEventTs?: number;
   previousEventTs?: number;
   earliestEventTs?: number;
@@ -114,8 +113,6 @@ export default class UserFeedPage extends React.Component<
         return "";
     }
   }
-
-  private brainzPlayer = React.createRef<BrainzPlayer>();
 
   constructor(props: UserFeedPageProps) {
     super(props);
@@ -258,15 +255,6 @@ export default class UserFeedPage extends React.Component<
     }
   };
 
-  handleCurrentListenChange = (listen: Listen | JSPFTrack): void => {
-    this.setState({ currentListen: listen as Listen });
-  };
-
-  isCurrentListen = (listen: Listen): boolean => {
-    const { currentListen } = this.state;
-    return Boolean(currentListen && isEqual(listen, currentListen));
-  };
-
   /** User feedback mechanism (love/hate button) */
   getFeedback = async () => {
     const { currentUser, APIService } = this.context;
@@ -327,12 +315,6 @@ export default class UserFeedPage extends React.Component<
     this.setState({ recordingFeedbackMap });
   };
 
-  playListen = (listen: Listen): void => {
-    if (this.brainzPlayer.current) {
-      this.brainzPlayer.current.playListen(listen);
-    }
-  };
-
   renderEventContent(event: TimelineEvent) {
     if (UserFeedPage.isEventListenable(event)) {
       const { metadata } = event;
@@ -348,7 +330,6 @@ export default class UserFeedPage extends React.Component<
                 null
               )
             )}
-            isCurrentListen={this.isCurrentListen(metadata as Listen)}
             showUsername={false}
             showTimestamp={false}
             listen={metadata as Listen}
@@ -358,7 +339,6 @@ export default class UserFeedPage extends React.Component<
                 : ""
             }
             newAlert={newAlert}
-            playListen={this.playListen}
           />
         </div>
       );
@@ -436,7 +416,6 @@ export default class UserFeedPage extends React.Component<
     const { currentUser } = this.context;
     const { newAlert } = this.props;
     const {
-      currentListen,
       events,
       previousEventTs,
       nextEventTs,
@@ -588,8 +567,6 @@ export default class UserFeedPage extends React.Component<
                   direction="down"
                   listens={listens}
                   newAlert={newAlert}
-                  onCurrentListenChange={this.handleCurrentListenChange}
-                  ref={this.brainzPlayer}
                 />
               </div>
             </div>

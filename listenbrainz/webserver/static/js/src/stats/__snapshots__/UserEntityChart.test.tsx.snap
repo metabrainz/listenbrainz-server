@@ -222,7 +222,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="2"
                   listen={
                     Object {
@@ -256,7 +255,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -348,7 +346,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="3"
                   listen={
                     Object {
@@ -382,7 +379,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -474,7 +470,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="4"
                   listen={
                     Object {
@@ -508,7 +503,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -600,7 +594,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="5"
                   listen={
                     Object {
@@ -634,7 +627,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -726,7 +718,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="6"
                   listen={
                     Object {
@@ -760,7 +751,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -852,7 +842,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="7"
                   listen={
                     Object {
@@ -886,7 +875,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -978,7 +966,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="8"
                   listen={
                     Object {
@@ -1012,7 +999,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -1104,7 +1090,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="9"
                   listen={
                     Object {
@@ -1138,7 +1123,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -1230,7 +1214,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="10"
                   listen={
                     Object {
@@ -1264,7 +1247,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -1356,7 +1338,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="11"
                   listen={
                     Object {
@@ -1390,7 +1371,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -1482,7 +1462,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="12"
                   listen={
                     Object {
@@ -1516,7 +1495,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -1608,7 +1586,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="13"
                   listen={
                     Object {
@@ -1642,7 +1619,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -1734,7 +1710,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="14"
                   listen={
                     Object {
@@ -1768,7 +1743,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -1860,7 +1834,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="15"
                   listen={
                     Object {
@@ -1894,7 +1867,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -1986,7 +1958,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="16"
                   listen={
                     Object {
@@ -2020,7 +1991,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -2112,7 +2082,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="17"
                   listen={
                     Object {
@@ -2146,7 +2115,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -2238,7 +2206,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="18"
                   listen={
                     Object {
@@ -2272,7 +2239,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -2364,7 +2330,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="19"
                   listen={
                     Object {
@@ -2398,7 +2363,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -2490,7 +2454,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="20"
                   listen={
                     Object {
@@ -2524,7 +2487,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -2616,7 +2578,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="21"
                   listen={
                     Object {
@@ -2650,7 +2611,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -2742,7 +2702,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="22"
                   listen={
                     Object {
@@ -2776,7 +2735,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -2868,7 +2826,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="23"
                   listen={
                     Object {
@@ -2902,7 +2859,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -2994,7 +2950,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="24"
                   listen={
                     Object {
@@ -3028,7 +2983,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -3120,7 +3074,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="25"
                   listen={
                     Object {
@@ -3154,7 +3107,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -3246,7 +3198,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="26"
                   listen={
                     Object {
@@ -3280,7 +3231,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -4193,7 +4143,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
             ]
           }
           newAlert={[MockFunction]}
-          onCurrentListenChange={[Function]}
         >
           <div>
             <PlaybackControls
@@ -4989,7 +4938,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="2"
                   listen={
                     Object {
@@ -5038,7 +4986,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -5143,7 +5090,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="3"
                   listen={
                     Object {
@@ -5192,7 +5138,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -5297,7 +5242,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="4"
                   listen={
                     Object {
@@ -5341,7 +5285,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -5439,7 +5382,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="5"
                   listen={
                     Object {
@@ -5488,7 +5430,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -5593,7 +5534,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="6"
                   listen={
                     Object {
@@ -5642,7 +5582,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -5747,7 +5686,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="7"
                   listen={
                     Object {
@@ -5796,7 +5734,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -5901,7 +5838,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="8"
                   listen={
                     Object {
@@ -5950,7 +5886,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -6055,7 +5990,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="9"
                   listen={
                     Object {
@@ -6104,7 +6038,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -6209,7 +6142,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="10"
                   listen={
                     Object {
@@ -6258,7 +6190,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -6363,7 +6294,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="11"
                   listen={
                     Object {
@@ -6407,7 +6337,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -6505,7 +6434,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="12"
                   listen={
                     Object {
@@ -6554,7 +6482,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -6659,7 +6586,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="13"
                   listen={
                     Object {
@@ -6703,7 +6629,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -6801,7 +6726,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="14"
                   listen={
                     Object {
@@ -6850,7 +6774,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -6955,7 +6878,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="15"
                   listen={
                     Object {
@@ -6999,7 +6921,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -7097,7 +7018,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="16"
                   listen={
                     Object {
@@ -7146,7 +7066,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -7251,7 +7170,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="17"
                   listen={
                     Object {
@@ -7295,7 +7213,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -7393,7 +7310,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="18"
                   listen={
                     Object {
@@ -7442,7 +7358,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -7547,7 +7462,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="19"
                   listen={
                     Object {
@@ -7596,7 +7510,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -7701,7 +7614,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="20"
                   listen={
                     Object {
@@ -7750,7 +7662,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -7855,7 +7766,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="21"
                   listen={
                     Object {
@@ -7904,7 +7814,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -8009,7 +7918,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="22"
                   listen={
                     Object {
@@ -8058,7 +7966,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -8163,7 +8070,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="23"
                   listen={
                     Object {
@@ -8207,7 +8113,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -8305,7 +8210,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="24"
                   listen={
                     Object {
@@ -8354,7 +8258,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -8459,7 +8362,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="25"
                   listen={
                     Object {
@@ -8508,7 +8410,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -8613,7 +8514,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="26"
                   listen={
                     Object {
@@ -8657,7 +8557,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -9826,7 +9725,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
             ]
           }
           newAlert={[MockFunction]}
-          onCurrentListenChange={[Function]}
         >
           <div>
             <PlaybackControls
@@ -10622,7 +10520,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="2"
                   listen={
                     Object {
@@ -10660,7 +10557,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -10754,7 +10650,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="3"
                   listen={
                     Object {
@@ -10792,7 +10687,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -10886,7 +10780,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="4"
                   listen={
                     Object {
@@ -10924,7 +10817,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -11018,7 +10910,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="5"
                   listen={
                     Object {
@@ -11056,7 +10947,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -11150,7 +11040,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="6"
                   listen={
                     Object {
@@ -11188,7 +11077,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -11282,7 +11170,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="7"
                   listen={
                     Object {
@@ -11320,7 +11207,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -11414,7 +11300,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="8"
                   listen={
                     Object {
@@ -11452,7 +11337,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -11546,7 +11430,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="9"
                   listen={
                     Object {
@@ -11584,7 +11467,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -11678,7 +11560,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="10"
                   listen={
                     Object {
@@ -11716,7 +11597,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -11810,7 +11690,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="11"
                   listen={
                     Object {
@@ -11848,7 +11727,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -11942,7 +11820,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="12"
                   listen={
                     Object {
@@ -11980,7 +11857,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -12074,7 +11950,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="13"
                   listen={
                     Object {
@@ -12112,7 +11987,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -12206,7 +12080,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="14"
                   listen={
                     Object {
@@ -12244,7 +12117,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -12338,7 +12210,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="15"
                   listen={
                     Object {
@@ -12376,7 +12247,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -12470,7 +12340,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="16"
                   listen={
                     Object {
@@ -12508,7 +12377,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -12602,7 +12470,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="17"
                   listen={
                     Object {
@@ -12640,7 +12507,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -12734,7 +12600,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="18"
                   listen={
                     Object {
@@ -12772,7 +12637,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -12866,7 +12730,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="19"
                   listen={
                     Object {
@@ -12904,7 +12767,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -12998,7 +12860,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="20"
                   listen={
                     Object {
@@ -13036,7 +12897,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -13130,7 +12990,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="21"
                   listen={
                     Object {
@@ -13168,7 +13027,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -13262,7 +13120,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="22"
                   listen={
                     Object {
@@ -13300,7 +13157,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -13394,7 +13250,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="23"
                   listen={
                     Object {
@@ -13432,7 +13287,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -13526,7 +13380,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="24"
                   listen={
                     Object {
@@ -13564,7 +13417,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -13658,7 +13510,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="25"
                   listen={
                     Object {
@@ -13696,7 +13547,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -13790,7 +13640,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 <ListenCard
                   compact={true}
                   currentFeedback={0}
-                  isCurrentListen={false}
                   key="26"
                   listen={
                     Object {
@@ -13828,7 +13677,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     </React.Fragment>
                   }
                   newAlert={[MockFunction]}
-                  playListen={[Function]}
                   showTimestamp={false}
                   showUsername={false}
                 >
@@ -14893,7 +14741,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
             ]
           }
           newAlert={[MockFunction]}
-          onCurrentListenChange={[Function]}
         >
           <div>
             <PlaybackControls
@@ -15745,7 +15592,6 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
           direction="down"
           listens={Array []}
           newAlert={[MockFunction]}
-          onCurrentListenChange={[Function]}
         >
           <div>
             <PlaybackControls
