@@ -79,9 +79,11 @@ def process_listens(app, listens, is_legacy_listen=False):
                 mogrified = []
                 for match in matches:
                     if match[1] is None:
-                        m = str(curs.mogrify("(%s::UUID, NULL::UUID, NULL::UUID, NULL::UUID[], NULL::INT, NULL, NULL, %s::mbid_mapping_match_type_enum)", (match[1], match[7])), "utf-8")
+                        m = str(curs.mogrify(
+                            "(%s::UUID, NULL::UUID, NULL::UUID, NULL::UUID[], NULL::INT, NULL, NULL, %s::mbid_mapping_match_type_enum)", (match[1], match[7])), "utf-8")
                     else:
-                        m = str(curs.mogrify("(%s::UUID, %s::UUID, %s::UUID, %s::UUID[], %s, %s, %s, %s::mbid_mapping_match_type_enum)", match), "utf-8")
+                        m = str(curs.mogrify(
+                            "(%s::UUID, %s::UUID, %s::UUID, %s::UUID[], %s, %s, %s, %s::mbid_mapping_match_type_enum)", match), "utf-8")
                     mogrified.append(m)
 
                 query = """WITH data (recording_msid
