@@ -1,10 +1,12 @@
+# This workflow can be used to push an image off a branch to Docker Hub.
+# This is useful to deploy changes to LB beta or test for testing.
 name: Push development image
 
 on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Image Tag'
+        description: 'Docker Image Tag (Version)'
         required: true
         default: 'beta'
 
