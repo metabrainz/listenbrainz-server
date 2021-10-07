@@ -332,7 +332,7 @@ def get_top_artist_candidate_set(top_artist_df, recordings_df, users_df, mapped_
 
     df = top_artist_df.join(recordings_df, condition, 'inner')
 
-    joined_df = df.join(users_df, 'user_name', 'inner') \
+    top_artist_candidate_set_df_html = df.join(users_df, 'user_name', 'inner') \
                   .select('top_artist_credit_id',
                           'artist_credit_id',
                           'recording_mbid',
@@ -340,7 +340,7 @@ def get_top_artist_candidate_set(top_artist_df, recordings_df, users_df, mapped_
                           'user_name',
                           'user_id')
 
-    top_artist_candidate_set_df_html = filter_last_x_days_recordings(joined_df, mapped_listens_subset)
+    # top_artist_candidate_set_df_html = filter_last_x_days_recordings(joined_df, mapped_listens_subset)
 
     top_artist_candidate_set_df = top_artist_candidate_set_df_html.select('recording_id', 'user_id', 'user_name')
 
