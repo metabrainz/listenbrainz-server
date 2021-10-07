@@ -48,6 +48,9 @@ def process_listens(app, listens, is_legacy_listen=False):
         else:
             stats["processed"] += len(msids)
 
+        if len(msids) == 0:
+            return stats
+
         conn = timescale.engine.raw_connection()
         with conn.cursor() as curs:
             try:
@@ -65,7 +68,7 @@ def process_listens(app, listens, is_legacy_listen=False):
                     # keep attempting to look up more listens.
                     for listen in remaining_listens:
                         matches.append(
-                            (listen['recording_msid'], None, None, None, None, None, MATCH_TYPES[0]))
+                            (listen['recording_msid'], None, None, None, None, None, None, MATCH_TYPES[0]))
                         stats['no_match'] += 1
 
                 stats["processed"] += len(matches)
@@ -75,8 +78,13 @@ def process_listens(app, listens, is_legacy_listen=False):
                 # Finally insert matches to PG
                 mogrified = []
                 for match in matches:
-                    mogrified.append(
-                        str(curs.mogrify("(%s, %s, %s, %s, %s, %s, %s, %s::mbid_mapping_match_type_enum)", match), "utf-8"))
+                    if match[1] is None:
+                        m = str(curs.mogrify(
+                            "(%s::UUID, NULL::UUID, NULL::UUID, NULL::UUID[], NULL::INT, NULL, NULL, %s::mbid_mapping_match_type_enum)", (match[1], match[7])), "utf-8")
+                    else:
+                        m = str(curs.mogrify(
+                            "(%s::UUID, %s::UUID, %s::UUID, %s::UUID[], %s, %s, %s, %s::mbid_mapping_match_type_enum)", match), "utf-8")
+                    mogrified.append(m)
 
                 query = """WITH data (recording_msid
                                    ,  recording_mbid
@@ -114,7 +122,6 @@ def process_listens(app, listens, is_legacy_listen=False):
                                     ON ji.recording_mbid = d.recording_mbid
                                    AND ji.release_mbid = d.release_mbid
                                    AND ji.artist_credit_id = d.artist_credit_id""" % ",".join(mogrified)
-
                 curs.execute(query)
 
             except (psycopg2.OperationalError, psycopg2.errors.DatatypeMismatch) as err:
@@ -154,11 +161,10 @@ def lookup_listens(app, listens, stats, exact):
         if exact:
             hit["match_type"] = MATCH_TYPE_EXACT_MATCH
         stats[MATCH_TYPES[hit["match_type"]]] += 1
-        artist_mbids = [uuid.UUID(mbid) for mbid in hit["artist_mbids"].split(",")]
-        rows.append((uuid.UUID(listen['recording_msid']),
-                     uuid.UUID(hit["recording_mbid"]),
-                     uuid.UUID(hit["release_mbid"]),
-                     artist_mbids,
+        rows.append((listen['recording_msid'],
+                     hit["recording_mbid"],
+                     hit["release_mbid"],
+                     "{" + str(hit["artist_mbids"]) + "}",
                      hit["artist_credit_id"],
                      hit["artist_credit_name"],
                      hit["recording_name"],
