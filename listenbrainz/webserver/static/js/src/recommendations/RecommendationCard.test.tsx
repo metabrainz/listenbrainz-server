@@ -44,7 +44,6 @@ const recommendation: Recommendation = {
 const props: RecommendationCardProps = {
   recommendation,
   isCurrentUser: true,
-  playRecommendation: () => {},
   currentFeedback: "love",
   updateFeedback: () => {},
   newAlert: () => {},

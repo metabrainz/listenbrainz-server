@@ -78,8 +78,6 @@ describe("<UserFeed />", () => {
     );
     const instance = wrapper.instance();
     expect(wrapper.find(BrainzPlayer)).toHaveLength(1);
-    // eslint-disable-next-line dot-notation
-    expect(instance["brainzPlayer"].current).toBeInstanceOf(BrainzPlayer);
   });
 
   it("renders the correct number of timeline events", () => {
