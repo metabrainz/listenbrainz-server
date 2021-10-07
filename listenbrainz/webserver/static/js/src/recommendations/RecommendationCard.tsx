@@ -42,7 +42,7 @@ export type RecommendationCardProps = {
 };
 
 type RecommendationCardState = {
-  isCurrentListen: Boolean;
+  isCurrentlyPlaying: Boolean;
 };
 
 export default class RecommendationCard extends React.Component<
@@ -54,7 +54,7 @@ export default class RecommendationCard extends React.Component<
 
   constructor(props: RecommendationCardProps) {
     super(props);
-    this.state = { isCurrentListen: false };
+    this.state = { isCurrentlyPlaying: false };
   }
 
   componentDidMount() {
@@ -82,10 +82,10 @@ export default class RecommendationCard extends React.Component<
   };
 
   onCurrentListenChange = (newListen: BaseListenFormat) => {
-    this.setState({ isCurrentListen: this.isCurrentListen(newListen) });
+    this.setState({ isCurrentlyPlaying: this.isCurrentlyPlaying(newListen) });
   };
 
-  isCurrentListen = (element: BaseListenFormat): boolean => {
+  isCurrentlyPlaying = (element: BaseListenFormat): boolean => {
     const { recommendation } = this.props;
     if (isNil(recommendation)) {
       return false;
@@ -95,8 +95,8 @@ export default class RecommendationCard extends React.Component<
 
   playRecommendation = () => {
     const { recommendation } = this.props;
-    const { isCurrentListen } = this.state;
-    if (isCurrentListen) {
+    const { isCurrentlyPlaying } = this.state;
+    if (isCurrentlyPlaying) {
       return;
     }
     window.postMessage(
@@ -173,7 +173,7 @@ export default class RecommendationCard extends React.Component<
       className,
       isCurrentUser,
     } = this.props;
-    const { isCurrentListen } = this.state;
+    const { isCurrentlyPlaying } = this.state;
     const { currentUser } = this.context;
     let icon: IconDefinition;
     let text: string;
@@ -204,7 +204,7 @@ export default class RecommendationCard extends React.Component<
       <Card
         onDoubleClick={this.playRecommendation}
         className={`recommendation-card row ${
-          isCurrentListen ? "current-recommendation" : ""
+          isCurrentlyPlaying ? "current-recommendation" : ""
         } ${className || ""}`}
       >
         <div className="track-details">

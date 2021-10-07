@@ -51,7 +51,7 @@ export type ListenCardProps = {
 type ListenCardState = {
   isDeleted: boolean;
   feedback: ListenFeedBack;
-  isCurrentListen: boolean;
+  isCurrentlyPlaying: boolean;
 };
 
 export default class ListenCard extends React.Component<
@@ -67,7 +67,7 @@ export default class ListenCard extends React.Component<
     this.state = {
       isDeleted: false,
       feedback: props.currentFeedback || 0,
-      isCurrentListen: false,
+      isCurrentlyPlaying: false,
     };
   }
 
@@ -88,8 +88,8 @@ export default class ListenCard extends React.Component<
 
   playListen = () => {
     const { listen } = this.props;
-    const { isCurrentListen } = this.state;
-    if (isCurrentListen) {
+    const { isCurrentlyPlaying } = this.state;
+    if (isCurrentlyPlaying) {
       return;
     }
     window.postMessage(
@@ -115,10 +115,10 @@ export default class ListenCard extends React.Component<
   };
 
   onCurrentListenChange = (newListen: BaseListenFormat) => {
-    this.setState({ isCurrentListen: this.isCurrentListen(newListen) });
+    this.setState({ isCurrentlyPlaying: this.isCurrentlyPlaying(newListen) });
   };
 
-  isCurrentListen = (element: BaseListenFormat): boolean => {
+  isCurrentlyPlaying = (element: BaseListenFormat): boolean => {
     const { listen } = this.props;
     if (isNil(listen)) {
       return false;
@@ -252,7 +252,7 @@ export default class ListenCard extends React.Component<
       compact,
     } = this.props;
     const { currentUser } = this.context;
-    const { feedback, isDeleted, isCurrentListen } = this.state;
+    const { feedback, isDeleted, isCurrentlyPlaying } = this.state;
 
     const isCurrentUser =
       Boolean(listen.user_name) && listen.user_name === currentUser?.name;
@@ -305,7 +305,7 @@ export default class ListenCard extends React.Component<
       <Card
         onDoubleClick={this.playListen}
         className={`listen-card row ${
-          isCurrentListen ? "current-listen" : ""
+          isCurrentlyPlaying ? "current-listen" : ""
         } ${isDeleted ? "deleted" : ""} ${compact ? " compact" : " "} ${
           className || ""
         }`}
@@ -404,7 +404,7 @@ export default class ListenCard extends React.Component<
             onClick={this.playListen}
             type="button"
           >
-            {isCurrentListen ? (
+            {isCurrentlyPlaying ? (
               <FontAwesomeIcon size="1x" icon={faPlay as IconProp} />
             ) : (
               <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />

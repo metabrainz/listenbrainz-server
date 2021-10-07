@@ -101,7 +101,7 @@ describe("ListenCard", () => {
     const postMessageSpy = jest.spyOn(window, "postMessage");
     const wrapper = mount<ListenCard>(<ListenCard {...props} />);
     const instance = wrapper.instance();
-    instance.setState({ isCurrentListen: true });
+    instance.setState({ isCurrentlyPlaying: true });
 
     instance.playListen();
 
