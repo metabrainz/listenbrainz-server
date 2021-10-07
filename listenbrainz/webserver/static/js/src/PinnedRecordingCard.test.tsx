@@ -49,7 +49,6 @@ const props: PinnedRecordingCardProps = {
   pinnedRecording,
   isCurrentUser: true,
   newAlert: () => {},
-  playListen: () => {},
   removePinFromPinsList: () => {},
 };
 
