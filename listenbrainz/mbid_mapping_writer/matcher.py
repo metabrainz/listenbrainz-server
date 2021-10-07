@@ -26,6 +26,15 @@ def process_listens(app, listens, is_legacy_listen=False):
 
     skipped = 0
 
+    # Test for listens with no metadata
+    filtered = []
+    for listen in listens:
+        if not listen["data"]["artist_name"] or not listen["data"]["track_name"]:
+            app.logger.info("listen %s %d has incomplete metadata" % (str(listen['recording_msid']), listen['listened_at']))
+        else:
+            filtered.append(listen)
+    listens = filtered
+
     msids = {str(listen['recording_msid']): listen for listen in listens}
     stats["total"] = len(msids)
     if len(msids):
