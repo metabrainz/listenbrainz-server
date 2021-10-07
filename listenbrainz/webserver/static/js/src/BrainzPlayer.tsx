@@ -171,7 +171,7 @@ export default class BrainzPlayer extends React.Component<
 
   receiveBrainzPlayerMessage = (event: MessageEvent) => {
     if (event.origin !== window.location.origin) {
-      // Reveived postMessage from different origin, ignoring it
+      // Received postMessage from different origin, ignoring it
       return;
     }
     const { brainzplayer_event, payload } = event.data;

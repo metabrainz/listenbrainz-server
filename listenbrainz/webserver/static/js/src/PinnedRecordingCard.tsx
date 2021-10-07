@@ -1,5 +1,5 @@
 import * as React from "react";
-import { get as _get, has, isEqual, isNil } from "lodash";
+import { isEqual, isNil } from "lodash";
 import MediaQuery from "react-responsive";
 import { faEllipsisV, faThumbtack } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -81,7 +81,7 @@ export default class PinnedRecordingCard extends React.Component<
   /** React to events sent by BrainzPlayer */
   receiveBrainzPlayerMessage = (event: MessageEvent) => {
     if (event.origin !== window.location.origin) {
-      // Reveived postMessage from different origin, ignoring it
+      // Received postMessage from different origin, ignoring it
       return;
     }
     const { type, payload } = event.data;
