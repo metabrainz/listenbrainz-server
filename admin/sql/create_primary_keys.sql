@@ -6,7 +6,6 @@ ALTER TABLE spotify_auth ADD CONSTRAINT spotify_auth_pkey PRIMARY KEY (user_id);
 ALTER TABLE external_service_oauth ADD CONSTRAINT external_service_oauth_pkey PRIMARY KEY (id);
 ALTER TABLE listens_importer ADD CONSTRAINT listens_importer_pkey PRIMARY KEY (id);
 
-ALTER TABLE statistics.user ADD CONSTRAINT stats_user_pkey PRIMARY KEY (user_id);
 ALTER TABLE statistics.artist ADD CONSTRAINT stats_artist_pkey PRIMARY KEY (id);
 ALTER TABLE statistics.release ADD CONSTRAINT stats_release_pkey PRIMARY KEY (id);
 ALTER TABLE statistics.recording ADD CONSTRAINT stats_recording_pkey PRIMARY KEY (id);

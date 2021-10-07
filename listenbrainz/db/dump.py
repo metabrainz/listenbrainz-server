@@ -67,11 +67,14 @@ PUBLIC_TABLES_DUMP = {
         'to_timestamp(0)',  # last_login
         'to_timestamp(0)',  # latest_import
     ),
-    'statistics.user': (
+    'statistics.user_new': (
         'user_id',
-        'artist',
-        'release',
-        'recording',
+        'stats_type',
+        'stats_range',
+        'data',
+        'count',
+        'from_ts',
+        'to_ts',
         'last_updated',
     ),
     'statistics.artist': (
@@ -463,7 +466,7 @@ def create_public_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT_
     """ Create postgres database dump for statistics and user info in db.
         This includes a sanitized dump of the "user" table and dumps of all tables
         in the statistics schema:
-            statistics.user
+            statistics.user_new
             statistics.artist
             statistics.release
             statistics.recording
@@ -865,6 +868,10 @@ def _update_sequences():
     # session_id_seq
     current_app.logger.info('Updating session_id_seq...')
     _update_sequence(db.engine, 'api_compat.session_id_seq', 'api_compat.session')
+
+    # statistics.user_new_id_seq
+    current_app.logger.info('Updating statistics.user_new_id_seq...')
+    _update_sequence('statistics.user_new_id_seq', 'statistics.user_new')
 
     # artist_id_seq
     current_app.logger.info('Updating artist_id_seq...')

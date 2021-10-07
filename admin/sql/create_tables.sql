@@ -168,17 +168,6 @@ CREATE TABLE statistics.recording (
 );
 ALTER TABLE statistics.recording ADD CONSTRAINT recording_stats_msid_uniq UNIQUE (msid);
 
-CREATE TABLE statistics.user (
-    user_id                 INTEGER NOT NULL, -- PK and FK to "user".id
-    artist                  JSONB,
-    release                 JSONB,
-    recording               JSONB,
-    listening_activity      JSONB,
-    daily_activity          JSONB,
-    artist_map              JSONB,
-    last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-);
-
 CREATE TABLE statistics.user_new (
     id                      SERIAL, -- PK
     user_id                 INTEGER NOT NULL, -- FK to "user".id
