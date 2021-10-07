@@ -5,6 +5,7 @@
 @love: #C62828;
 @hate: @blue;
 @player-min-height: 320px;
+@card-shadow-color: #c0c0c0;
 @listen-small-break: @screen-sm;
 
 #music-player {
@@ -178,7 +179,17 @@
 		padding: 10px;
 	}
 }
+
+.card{
+	background: white;
+    border: 1px solid rgb(238, 238, 238);
+    box-sizing: border-box;
+    box-shadow: fade(@card-shadow-color,10%) 0px 1px 1px, fade(@card-shadow-color,15%) 0px 2px 2px, fade(@card-shadow-color,20%) 0px 4px 4px;
+    border-radius: 8px;
+    height: 100%;
+}
 .listen-card {
+	
 	padding: 10px 5px;
 	@media (min-width: @screen-phone) {
 		padding: 15px;
@@ -201,13 +212,38 @@
 	> div {
 		display: flex;
 		flex:1;
+		justify-content: center;
 	}
 	@media (min-width: @listen-small-break) {
-		> *{
+		&:not(.compact)> *{
 			padding: 0 1em;
 		}
 	}
 	
+	/** Special styles for compact size cards (i.e. charts etc.) **/
+	&.compact {
+		padding: 10px;
+		margin: 0;
+    	margin-bottom: 3px;
+		.listen-details{
+			flex: 1;
+			// Parent's width minus controls and thumbnail elements' width
+			max-width: calc(100% - 60px);
+		}
+		.listen-controls {
+
+			flex-grow: 0;
+		}
+	}
+	&:not(.compact) .listen-controls{
+		max-width: 120px;
+		min-width: 120px;
+	}
+	
+	.listen-thumbnail {
+		flex: 0;
+		align-self: center;
+	}
 	
 	.listen-time {
 		font-style: italic;
@@ -267,8 +303,6 @@
 		flex-wrap: nowrap;
 		justify-content: space-around;
 		position: relative; // This is need for dropdown menu positioning
-		max-width: 120px;
-		min-width: 120px;
 		margin-left: auto; // align flexbox item at flex-end
 		
 		> * {

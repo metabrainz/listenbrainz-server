@@ -21,11 +21,10 @@ const searchForSpotifyTrack = async (
       })
     );
   }
-  if (!trackName) {
-    // search for track was not provided a track name, cannot proceed
-    return null;
+  let queryString = `type=track&q=`;
+  if (trackName) {
+    queryString += `track:${encodeURIComponent(trackName)}`;
   }
-  let queryString = `type=track&q=track:${encodeURIComponent(trackName)}`;
   if (artistName) {
     queryString += ` artist:${encodeURIComponent(artistName)}`;
   }
@@ -64,15 +63,15 @@ const searchForYoutubeTrack = async (
   onAccountError?: () => void
 ): Promise<Array<string> | null> => {
   if (!apiKey) return null;
-  let query = trackName;
+  let query = trackName ?? "";
   if (artistName) {
     query += ` ${artistName}`;
   }
   // Considering we cannot tell the Youtube API that this should match only an album title,
   // results are paradoxically sometimes worse if we add it to the query (YT will find random matches for album title words)
-  // if (releaseName) {
-  //   query += ` ${releaseName}`;
-  // }
+  if (releaseName) {
+    query += ` ${releaseName}`;
+  }
   if (!query) {
     return null;
   }
