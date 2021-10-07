@@ -333,8 +333,12 @@ class TimescaleListenStore(ListenStore):
             return ([], min_user_ts, max_user_ts)
 
         window_size = DEFAULT_FETCH_WINDOW
-        query = """SELECT listened_at, track_name, user_name, created, data
+        query = """SELECT listened_at, track_name, user_name, created, data, recording_mbid, release_mbid, artist_mbids
                      FROM listen
+          FULL OUTER JOIN listen_join_listen_mbid_mapping lj
+                       ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = lj.recording_msid
+          FULL OUTER JOIN listen_mbid_mapping m
+                       ON lj.listen_mbid_mapping = m.id
                     WHERE user_name IN :user_names
                       AND listened_at > :from_ts
                       AND listened_at < :to_ts
@@ -395,6 +399,8 @@ class TimescaleListenStore(ListenStore):
 
                         break
 
+
+                    self.log.info(Listen.from_timescale(*result))
                     listens.append(Listen.from_timescale(*result))
                     if len(listens) == limit:
                         done = True
@@ -425,14 +431,18 @@ class TimescaleListenStore(ListenStore):
         args = {'user_list': tuple(user_list), 'ts': int(
             time.time()) - max_age, 'limit': limit}
         query = """SELECT * FROM (
-                              SELECT listened_at, track_name, user_name, created, data,
+                              SELECT listened_at, track_name, user_name, created, data, recording_mbid, release_mbid, artist_mbids,
                                      row_number() OVER (partition by user_name ORDER BY listened_at DESC) AS rownum
-                                FROM listen
+                                FROM listen l
+                           LEFT JOIN listen_join_listen_mbid_mapping lj
+                                  ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = lj.recording_msid
+                                JOIN listen_mbid_mapping m
+                                  ON lj.listen_mbid_mapping = m.id
                                WHERE user_name IN :user_list
                                  AND listened_at > :ts
-                            GROUP BY user_name, listened_at, track_name, created, data
+                            GROUP BY user_name, listened_at, track_name, created, data, recording_mbid, release_mbid, artist_mbids
                             ORDER BY listened_at DESC) tmp
-                           WHERE rownum <= :limit"""
+                               WHERE rownum <= :limit"""
 
         listens = []
         with timescale.engine.connect() as connection:
@@ -442,8 +452,7 @@ class TimescaleListenStore(ListenStore):
                 if not result:
                     break
 
-                listens.append(Listen.from_timescale(
-                    result[0], result[1], result[2], result[3], result[4]))
+                listens.append(Listen.from_timescale(*result))
 
         return listens
 
