@@ -37,6 +37,7 @@ const props = {
 const mountOptions: { context: GlobalAppContextT } = {
   context: {
     APIService: new APIService("foo"),
+    APIBaseURI: "foo",
     youtubeAuth: youtube as YoutubeUser,
     spotifyAuth: spotify as SpotifyUser,
     currentUser: user,
