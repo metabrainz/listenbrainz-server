@@ -18,16 +18,15 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
       },
     }
   }
-  playListen={[Function]}
   removePinFromPinsList={[Function]}
   userName="name"
 >
   <ForwardRef
-    className="pinned-recording-card row  currently-pinned  "
+    className="pinned-recording-card row  currently-pinned   "
     onDoubleClick={[Function]}
   >
     <div
-      className="card pinned-recording-card row  currently-pinned  "
+      className="card pinned-recording-card row  currently-pinned   "
       onDoubleClick={[Function]}
     >
       <div
