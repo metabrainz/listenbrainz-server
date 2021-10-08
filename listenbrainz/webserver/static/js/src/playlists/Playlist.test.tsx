@@ -27,6 +27,7 @@ const props = {
 
 const GlobalContextMock: GlobalAppContextT = {
   APIService: new APIService("foo"),
+  APIBaseURI: "foo",
   youtubeAuth: {
     api_key: "fake-api-key",
   },
