@@ -65,9 +65,6 @@ export type DataSourceProps = {
 
 type BrainzPlayerProps = {
   direction: BrainzPlayDirection;
-  onCurrentListenChange: (
-    listen: BaseListenFormat | Listen | JSPFTrack
-  ) => void;
   listens: Array<Listen | JSPFTrack>;
   newAlert: (
     alertType: AlertType,
@@ -156,6 +153,8 @@ export default class BrainzPlayer extends React.Component<
 
   componentDidMount = () => {
     window.addEventListener("storage", this.onLocalStorageEvent);
+    window.addEventListener("message", this.receiveBrainzPlayerMessage);
+
     // Remove SpotifyPlayer if the user doesn't have the relevant permissions to use it
     const { spotifyAuth } = this.context;
     if (
@@ -168,7 +167,23 @@ export default class BrainzPlayer extends React.Component<
 
   componentWillUnMount = () => {
     window.removeEventListener("storage", this.onLocalStorageEvent);
+    window.removeEventListener("message", this.receiveBrainzPlayerMessage);
     this.stopPlayerStateTimer();
+  };
+
+  receiveBrainzPlayerMessage = (event: MessageEvent) => {
+    if (event.origin !== window.location.origin) {
+      // Received postMessage from different origin, ignoring it
+      return;
+    }
+    const { brainzplayer_event, payload } = event.data;
+    switch (brainzplayer_event) {
+      case "play-listen":
+        this.playListen(payload);
+        break;
+      default:
+      // do nothing
+    }
   };
 
   /** We use LocalStorage events as a form of communication between BrainzPlayers
@@ -192,7 +207,7 @@ export default class BrainzPlayer extends React.Component<
     window.localStorage.setItem("BrainzPlayer_stop", Date.now().toString());
   };
 
-  isCurrentListen = (element: Listen | JSPFTrack): boolean => {
+  isCurrentlyPlaying = (element: Listen | JSPFTrack): boolean => {
     const { currentListen } = this.state;
     if (_isNil(currentListen)) {
       return false;
@@ -226,7 +241,7 @@ export default class BrainzPlayer extends React.Component<
       return;
     }
 
-    const currentListenIndex = listens.findIndex(this.isCurrentListen);
+    const currentListenIndex = listens.findIndex(this.isCurrentlyPlaying);
 
     let nextListenIndex;
     if (currentListenIndex === -1) {
@@ -317,8 +332,11 @@ export default class BrainzPlayer extends React.Component<
       listenSubmitted: false,
       continuousPlaybackTime: 0,
     });
-    const { onCurrentListenChange } = this.props;
-    onCurrentListenChange(listen);
+
+    window.postMessage(
+      { brainzplayer_event: "current-listen-change", payload: listen },
+      window.location.origin
+    );
 
     let selectedDatasourceIndex: number;
     if (datasourceIndex === 0) {

@@ -42,7 +42,6 @@ export default class Recommendations extends React.Component<
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
-  private brainzPlayer = React.createRef<BrainzPlayer>();
   private recommendationsTable = React.createRef<HTMLTableElement>();
 
   private APIService!: APIServiceClass;
@@ -145,18 +144,6 @@ export default class Recommendations extends React.Component<
       : null;
   };
 
-  playRecommendation = (recommendation: Recommendation): void => {
-    if (this.brainzPlayer.current) {
-      this.brainzPlayer.current.playListen(recommendation);
-    }
-  };
-
-  handleCurrentRecommendationChange = (
-    recommendation: Recommendation | JSPFTrack
-  ): void => {
-    this.setState({ currentRecommendation: recommendation as Recommendation });
-  };
-
   handleClickPrevious = () => {
     const { recommendations } = this.props;
     const { currRecPage } = this.state;
@@ -201,13 +188,6 @@ export default class Recommendations extends React.Component<
       );
       window.history.pushState(null, "", `?page=${updatedRecPage}`);
     }
-  };
-
-  isCurrentRecommendation = (recommendation: Recommendation): boolean => {
-    const { currentRecommendation } = this.state;
-    return Boolean(
-      currentRecommendation && isEqual(recommendation, currentRecommendation)
-    );
   };
 
   afterRecommendationsDisplay() {
@@ -267,12 +247,6 @@ export default class Recommendations extends React.Component<
                       }`}
                       isCurrentUser={currentUser?.name === user?.name}
                       recommendation={recommendation}
-                      playRecommendation={this.playRecommendation}
-                      className={`${
-                        this.isCurrentRecommendation(recommendation)
-                          ? " current-recommendation"
-                          : ""
-                      }`}
                       currentFeedback={this.getFeedbackForRecordingMbid(
                         recommendation.track_metadata?.additional_info
                           ?.recording_mbid
@@ -332,8 +306,6 @@ export default class Recommendations extends React.Component<
               direction={direction}
               listens={recommendations}
               newAlert={newAlert}
-              onCurrentListenChange={this.handleCurrentRecommendationChange}
-              ref={this.brainzPlayer}
             />
           </div>
         </div>
