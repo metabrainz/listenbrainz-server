@@ -40,6 +40,7 @@ const loggedInUser = {
 // Create a new instance of GlobalAppContext
 const globalContext: GlobalAppContextT = {
   APIService: new APIService("foo"),
+  APIBaseURI: "foo",
   youtubeAuth: {},
   spotifyAuth: {},
   currentUser: loggedInUser,
