@@ -599,7 +599,8 @@ export default class BrainzPlayer extends React.Component<
 
   submitListenToListenBrainz = async (
     listenType: ListenType,
-    listen: BaseListenFormat
+    listen: BaseListenFormat,
+    retries: number = 3
   ): Promise<void> => {
     const { APIService, currentUser } = this.context;
     const { currentDataSourceIndex } = this.state;
@@ -630,9 +631,23 @@ export default class BrainzPlayer extends React.Component<
           },
           body: JSON.stringify(struct),
         });
+        if (!response.ok) {
+          throw response.statusText;
+        }
       } catch (error) {
-        this.handleWarning(error, "Could not save this listen");
-      }
+        if (retries > 0) {
+          // Something went wrong, try again in 3 seconds.
+          await new Promise((resolve) => {
+            setTimeout(resolve, 3000);
+          });
+          return this.submitListenToListenBrainz(
+            listenType,
+            listen,
+            retries - 1
+          );
+        } else {
+          this.handleWarning(error, "Could not save this listen");
+        }
     }
   };
 
