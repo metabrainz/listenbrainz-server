@@ -749,6 +749,8 @@ export default class RecentListens extends React.Component<
               direction={direction}
               listens={allListenables}
               newAlert={newAlert}
+              refreshSpotifyToken={this.APIService.refreshSpotifyToken}
+              refreshYoutubeToken={this.APIService.refreshYoutubeToken}
             />
           </div>
         </div>
