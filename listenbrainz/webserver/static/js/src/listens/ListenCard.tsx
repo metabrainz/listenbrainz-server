@@ -269,7 +269,7 @@ export default class ListenCard extends React.Component<
       hasRecordingMSID;
     const canDelete = isCurrentUser && Boolean(listenedAt) && hasRecordingMSID;
     const hideListenControls =
-      hasRecordingMSID || !currentUser?.auth_token || compact;
+      !hasRecordingMSID || !currentUser?.auth_token || compact;
 
     const timeStampForDisplay = (
       <>
