@@ -71,6 +71,8 @@ type BrainzPlayerProps = {
     title: string,
     message: string | JSX.Element
   ) => void;
+  refreshSpotifyToken: `refreshSpotifyToken: () => Promise<string>;`;
+  refreshYoutubeToken: `refreshYoutubeToken: () => Promise<string>;`;
 };
 
 type BrainzPlayerState = {
@@ -98,7 +100,9 @@ export default class BrainzPlayer extends React.Component<
   declare context: React.ContextType<typeof GlobalAppContext>;
 
   spotifyPlayer?: React.RefObject<SpotifyPlayer>;
+  refreshSpotifyToken?: `refreshSpotifyToken: () => Promise<string>;`;
   youtubePlayer?: React.RefObject<YoutubePlayer>;
+  refreshYoutubeToken?: `refreshYoutubeToken: () => Promise<string>;`;
   soundcloudPlayer?: React.RefObject<SoundcloudPlayer>;
   dataSources: Array<React.RefObject<DataSourceTypes>> = [];
 
@@ -723,7 +727,7 @@ export default class BrainzPlayer extends React.Component<
       durationMs,
       isActivated,
     } = this.state;
-    const { APIService, youtubeAuth, spotifyAuth } = this.context;
+    const { youtubeAuth, spotifyAuth } = this.context;
     // Determine if the user is authenticated to search & play tracks with any of the datasources
     const hasDatasourceToSearch =
       this.dataSources.findIndex((ds) =>
@@ -762,7 +766,7 @@ export default class BrainzPlayer extends React.Component<
               this.dataSources[currentDataSourceIndex]?.current instanceof
                 SpotifyPlayer
             }
-            refreshSpotifyToken={APIService.refreshSpotifyToken}
+            refreshSpotifyToken={this.refreshSpotifyToken}
             onInvalidateDataSource={this.invalidateDataSource}
             ref={this.spotifyPlayer}
             spotifyUser={spotifyAuth}
@@ -786,7 +790,7 @@ export default class BrainzPlayer extends React.Component<
             onInvalidateDataSource={this.invalidateDataSource}
             ref={this.youtubePlayer}
             youtubeUser={youtubeAuth}
-            refreshYoutubeToken={APIService.refreshYoutubeToken}
+            refreshYoutubeToken={this.refreshYoutubeToken}
             playerPaused={playerPaused}
             onPlayerPausedChange={this.playerPauseChange}
             onProgressChange={this.progressChange}
