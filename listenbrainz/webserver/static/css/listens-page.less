@@ -182,11 +182,11 @@
 
 .card{
 	background: white;
-    border: 1px solid rgb(238, 238, 238);
-    box-sizing: border-box;
-    box-shadow: fade(@card-shadow-color,10%) 0px 1px 1px, fade(@card-shadow-color,15%) 0px 2px 2px, fade(@card-shadow-color,20%) 0px 4px 4px;
-    border-radius: 8px;
-    height: 100%;
+	border: 1px solid rgb(238, 238, 238);
+	box-sizing: border-box;
+	box-shadow: fade(@card-shadow-color,10%) 0px 1px 1px, fade(@card-shadow-color,15%) 0px 2px 2px, fade(@card-shadow-color,20%) 0px 4px 4px;
+	border-radius: 8px;
+	height: 100%;
 }
 .listen-card {
 	
@@ -224,7 +224,7 @@
 	&.compact {
 		padding: 10px;
 		margin: 0;
-    	margin-bottom: 3px;
+		margin-bottom: 3px;
 		.listen-details{
 			flex: 1;
 			// Parent's width minus controls and thumbnail elements' width
@@ -257,7 +257,7 @@
 		padding-right: 1em;
 		padding-top: 0.5em;
 		@media (min-width: @listen-small-break) {
-    		padding-right: 2em;
+			padding-right: 2em;
 			align-items: flex-end;
 			padding-top: 0;
 		}
@@ -383,6 +383,68 @@
 					color: #ffffff;
 					background-color: #eb743b;
 				}
+			}
+		}
+	}
+	.recommendation-controls {
+		
+		flex: 0 140px;
+		
+		&.open .dropdown-menu {
+			display: flex;
+			justify-content: space-around;
+		
+			> * {
+				flex: 1;
+				text-align: center;
+			}
+		}
+		
+		.btn {
+			font-size: 1em;
+			color: @blue;
+			background-color: white;
+			
+			&:hover {
+				background-color: @blue;
+				color: white;
+			}
+		}
+		
+		.hate {
+			color: #C62828;
+		}
+		
+		.dislike {
+			color: #f5873d;
+		}
+		
+		.like {
+			color: #b0e111;
+		}
+		
+		.love {
+			color: #32cd32;
+		}
+		
+		.recommendation-icon {
+			> span {
+				stroke-width: 40px;
+				font-size: 18px;
+				flex: 1;
+				text-align: center;
+				margin: 0 0.4em;
+			}
+
+			&:hover .off,
+			&.selected .off,
+			& .on {
+				display: none;
+			}
+
+			&:hover .on,
+			&.selected .on {
+				display: inline;
 			}
 		}
 	}
