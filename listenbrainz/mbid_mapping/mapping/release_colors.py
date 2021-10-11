@@ -6,9 +6,15 @@ import requests
 
 import psycopg2
 from psycopg2.errors import OperationalError
+from psycopg2.extensions import register_adapter
 
+from mapping.cube import Cube, adapt_cube
 from mapping.utils import log
 import config
+
+
+register_adapter(Cube, adapt_cube)
+
 
 def process_image(filename, mime_type):
 
@@ -24,25 +30,69 @@ def process_image(filename, mime_type):
     lines = out[0].split(b"\n", 3)
     return (lines[3][0], lines[3][1], lines[3][2])
 
+def insert_row(release_mbid, red, green, blue):
+
+    # FIX THIS
+    with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
+            sql = """INSERT INTO release_colors (release_mbid, red, green, blue, color)
+                          VALUES (%s, %s, %s, %s, %s::cube)"""
+            args = (release_mbid, red, green, blue, Cube(red, green, blue))
+            try:
+                curs.execute(sql, args)
+                conn.commit()
+            except psycopg2.IntegrityError:
+                conn.rollback()
+
+
+def fetch_latest_release_mbid():
+
+    query = """SELECT release_mbid
+                 FROM release_colors
+             ORDER BY release_mbid DESC
+                LIMIT 1"""
+
+    with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
+        with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
+
+            mb_curs.execute(query)
+            while True:
+                row = mb_curs.fetchone()
+                if not row:
+                    return None
+
+                return row["release_mbid"]
+
 
 def download_cover_art():
 
     log("download cover art starting...")
+
+    latest_mbid = fetch_latest_release_mbid()
+    print("latest mbid: %s" % str(latest_mbid))
+
     query = """SELECT caa.id AS caa_id
                     , release AS release_id
                     , release.gid AS release_mbid
                     , mime_type
                  FROM cover_art_archive.cover_art caa
+                 JOIN cover_art_archive.cover_art_type cat
+                   ON cat.id = caa.id
                  JOIN musicbrainz.release
                    ON caa.release = release.id
-                LIMIT 100"""
-#             ORDER BY release"""
+                WHERE type_id = 1 """
+    args = []
+    if latest_mbid:
+        query += "AND release.gid > %s::UUID "
+        args.append((latest_mbid,))
+
+    query += "ORDER BY release"""
 
     with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
         with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
 
             log("execute query")
-            mb_curs.execute(query)
+            mb_curs.execute(query, tuple(args))
             log("process rows")
             while True:
                 row = mb_curs.fetchone()
@@ -55,6 +105,7 @@ def download_cover_art():
                     if r.status_code == 200: 
                         if row["mime_type"] == "application/pdf":
                             # TODO Skip this in the future
+                            print("skip PDF")
                             continue
 
                         # TODO: Use proper file name
@@ -63,8 +114,13 @@ def download_cover_art():
                             for chunk in r:
                                 f.write(chunk)
 
-                        red, green, blue = process_image(filename, row["mime_type"]) 
-                        print("%s: (%s, %s, %s)" % (row["release_mbid"], red, green, blue))
+                        try:
+                            red, green, blue = process_image(filename, row["mime_type"]) 
+                            insert_row(row["release_mbid"], red, green, blue)
+                            print("%s: (%s, %s, %s)" % (row["release_mbid"], red, green, blue))
+                        except Exception as err:
+                            print("Could not process %s" % url)
+
                         break
 
                     if r.status_code == 503:

@@ -229,6 +229,7 @@ CREATE TABLE release_colors(
     red                     SMALLINT NOT NULL,
     green                   SMALLINT NOT NULL,
     blue                    SMALLINT NOT NULL,
+    color                   CUBE,
     last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
