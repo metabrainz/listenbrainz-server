@@ -61,8 +61,11 @@ export function millisecondsToStr(milliseconds: number) {
 }
 
 export function JSPFTrackToListen(track: JSPFTrack): Listen {
+  const customFields = getTrackExtension(track);
   return {
-    listened_at: 0,
+    listened_at: customFields?.added_at
+      ? new Date(customFields?.added_at).getTime()
+      : 0,
     track_metadata: {
       artist_name: track.creator,
       track_name: track.title,
@@ -73,6 +76,7 @@ export function JSPFTrackToListen(track: JSPFTrack): Listen {
         origin_url: track.location?.[0],
       },
     },
+    user_name: customFields?.added_by,
   };
 }
 

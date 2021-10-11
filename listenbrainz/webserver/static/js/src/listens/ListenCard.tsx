@@ -42,7 +42,9 @@ export type ListenCardProps = {
   currentFeedback: ListenFeedBack | RecommendationFeedBack | null;
   showTimestamp: boolean;
   showUsername: boolean;
-  removeListenCallback?: (listen: Listen) => void;
+  removeListenText?: string;
+  removeListenFunction?: (listen?: BaseListenFormat) => void;
+  removeListenCallback?: (listen: BaseListenFormat) => void;
   updateFeedbackCallback?: (
     recordingMsid: string,
     score: ListenFeedBack | RecommendationFeedBack
@@ -210,7 +212,7 @@ export default class ListenCard extends React.Component<
     const { APIService, currentUser } = this.context;
     const isCurrentUser =
       Boolean(listen.user_name) && listen.user_name === currentUser?.name;
-    if (removeListenCallback && isCurrentUser && currentUser?.auth_token) {
+    if (isCurrentUser && currentUser?.auth_token) {
       const listenedAt = _get(listen, "listened_at");
       const recordingMSID = _get(
         listen,
@@ -380,6 +382,8 @@ export default class ListenCard extends React.Component<
       listenDetails,
       compact,
       useRecommendationFeedback,
+      removeListenFunction,
+      removeListenText,
     } = this.props;
     const { currentUser } = this.context;
     const { feedback, isDeleted, isCurrentListen } = this.state;
@@ -387,14 +391,14 @@ export default class ListenCard extends React.Component<
     const isCurrentUser =
       Boolean(listen.user_name) && listen.user_name === currentUser?.name;
 
-    const enableFeedbackButtons = _has(
-      listen,
-      "track_metadata.additional_info.recording_msid"
+    const hasRecordingMsid = Boolean(
+      _get(listen, "track_metadata.additional_info.recording_msid")
     );
+    const enableFeedbackButtons = hasRecordingMsid;
     const enableRecommendButton =
-      _has(listen, "track_metadata.artist_name") &&
-      _has(listen, "track_metadata.track_name") &&
-      _has(listen, "track_metadata.additional_info.recording_msid");
+      Boolean(_get(listen, "track_metadata.artist_name")) &&
+      Boolean(_get(listen, "track_metadata.track_name")) &&
+      hasRecordingMsid;
 
     const timeStampForDisplay = (
       <>
@@ -424,12 +428,9 @@ export default class ListenCard extends React.Component<
     );
 
     const listenedAt = _get(listen, "listened_at");
-    const recordingMSID = _get(
-      listen,
-      "track_metadata.additional_info.recording_msid"
-    );
     const canDelete =
-      isCurrentUser && Boolean(listenedAt) && Boolean(recordingMSID);
+      (isCurrentUser && Boolean(listenedAt) && hasRecordingMsid) ||
+      Boolean(removeListenFunction);
 
     return (
       <Card
@@ -524,8 +525,12 @@ export default class ListenCard extends React.Component<
                 />
                 <ListenControl
                   disabled={!canDelete}
-                  title="Delete Listen"
-                  action={canDelete ? this.deleteListen : undefined}
+                  title={removeListenText ?? "Delete Listen"}
+                  action={
+                    canDelete
+                      ? removeListenFunction ?? this.deleteListen
+                      : undefined
+                  }
                 />
               </ul>
             </>
