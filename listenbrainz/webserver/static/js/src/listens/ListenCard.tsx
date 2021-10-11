@@ -384,17 +384,25 @@ export default class ListenCard extends React.Component<
     const { currentUser } = this.context;
     const { feedback, isDeleted, isCurrentlyPlaying } = this.state;
 
-    const isCurrentUser =
-      Boolean(listen.user_name) && listen.user_name === currentUser?.name;
-
-    const enableFeedbackButtons = _has(
+    const listenedAt = _get(listen, "listened_at");
+    const recordingMSID = _get(
       listen,
       "track_metadata.additional_info.recording_msid"
     );
+
+    const isCurrentUser =
+      Boolean(listen.user_name) && listen.user_name === currentUser?.name;
+    const hasRecordingMSID = Boolean(recordingMSID);
     const enableRecommendButton =
       _has(listen, "track_metadata.artist_name") &&
       _has(listen, "track_metadata.track_name") &&
-      _has(listen, "track_metadata.additional_info.recording_msid");
+      hasRecordingMSID;
+    const canDelete = isCurrentUser && Boolean(listenedAt) && hasRecordingMSID;
+    const hideListenControls =
+      !hasRecordingMSID ||
+      !currentUser?.auth_token ||
+      compact ||
+      useRecommendationFeedback;
 
     const timeStampForDisplay = (
       <>
@@ -422,14 +430,6 @@ export default class ListenCard extends React.Component<
         )}
       </>
     );
-
-    const listenedAt = _get(listen, "listened_at");
-    const recordingMSID = _get(
-      listen,
-      "track_metadata.additional_info.recording_msid"
-    );
-    const canDelete =
-      isCurrentUser && Boolean(listenedAt) && Boolean(recordingMSID);
 
     return (
       <Card
@@ -475,24 +475,24 @@ export default class ListenCard extends React.Component<
           </div>
         )}
         <div className="listen-controls">
-          {!currentUser?.auth_token ||
-          compact ||
-          useRecommendationFeedback ? null : (
+          {hideListenControls ? null : (
             <>
-              <ListenControl
-                icon={faHeart}
-                title="Love"
-                action={() => this.submitFeedback(feedback === 1 ? 0 : 1)}
-                className={`${feedback === 1 ? " loved" : ""}`}
-                disabled={!enableFeedbackButtons}
-              />
-              <ListenControl
-                icon={faHeartBroken}
-                title="Hate"
-                action={() => this.submitFeedback(feedback === -1 ? 0 : -1)}
-                className={`${feedback === -1 ? " hated" : ""}`}
-                disabled={!enableFeedbackButtons}
-              />
+              {hasRecordingMSID && (
+                <ListenControl
+                  icon={faHeart}
+                  title="Love"
+                  action={() => this.submitFeedback(feedback === 1 ? 0 : 1)}
+                  className={`${feedback === 1 ? " loved" : ""}`}
+                />
+              )}
+              {hasRecordingMSID && (
+                <ListenControl
+                  icon={faHeartBroken}
+                  title="Hate"
+                  action={() => this.submitFeedback(feedback === -1 ? 0 : -1)}
+                  className={`${feedback === -1 ? " hated" : ""}`}
+                />
+              )}
 
               <FontAwesomeIcon
                 icon={faEllipsisV as IconProp}
@@ -507,11 +507,12 @@ export default class ListenCard extends React.Component<
                 className="dropdown-menu dropdown-menu-right"
                 aria-labelledby="listenControlsDropdown"
               >
-                <ListenControl
-                  title="Recommend to my followers"
-                  action={this.recommendListenToFollowers}
-                  disabled={!enableRecommendButton}
-                />
+                {enableRecommendButton && (
+                  <ListenControl
+                    title="Recommend to my followers"
+                    action={this.recommendListenToFollowers}
+                  />
+                )}
                 <ListenControl
                   title="Pin this Recording"
                   action={
@@ -522,11 +523,12 @@ export default class ListenCard extends React.Component<
                   dataToggle="modal"
                   dataTarget="#PinRecordingModal"
                 />
-                <ListenControl
-                  disabled={!canDelete}
-                  title="Delete Listen"
-                  action={canDelete ? this.deleteListen : undefined}
-                />
+                {canDelete && (
+                  <ListenControl
+                    title="Delete Listen"
+                    action={this.deleteListen}
+                  />
+                )}
               </ul>
             </>
           )}
