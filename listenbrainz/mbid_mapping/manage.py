@@ -11,6 +11,7 @@ from mapping.typesense_index import build_index as action_build_index
 from mapping.year_mapping import create_year_mapping
 from mapping.mapping_test.mapping_test import test_mapping as action_test_mapping
 from mapping.utils import log, CRON_LOG_FILE
+from mapping.release_colors import download_cover_art 
 
 
 @click.group()
@@ -60,6 +61,11 @@ def build_index():
         Build the typesense index of the mbid mapping. The mbid mapping must be run first in order to build this index.
     """
     action_build_index()
+
+
+@cli.command()
+def download_coverart():
+    download_cover_art()
 
 
 @cli.command()
