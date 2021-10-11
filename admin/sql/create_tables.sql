@@ -223,6 +223,15 @@ CREATE TABLE recording_feedback (
     created                 TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE release_colors(
+    id                      SERIAL, -- PK
+    release_mbid            UUID NOT NULL,
+    red                     SMALLINT NOT NULL,
+    green                   SMALLINT NOT NULL,
+    blue                    SMALLINT NOT NULL,
+    last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE user_relationship (
     -- relationships go from 0 to 1
     -- for example, if relationship type is "follow", then user_0 follows user_1
