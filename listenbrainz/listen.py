@@ -144,11 +144,17 @@ class Listen(object):
         )
 
     @classmethod
-    def from_timescale(cls, listened_at, track_name, user_name, created, j):
+    def from_timescale(cls, listened_at, track_name, user_name, created, j,
+                       recording_mbid=None, release_mbid=None, artist_mbids=None):
         """Factory to make Listen() objects from a timescale dict"""
 
         j['listened_at'] = datetime.utcfromtimestamp(float(listened_at))
         j['track_metadata']['track_name'] = track_name
+        if recording_mbid is not None:
+            j["track_metadata"]["mbid_mapping"] = {
+                "recording_mbid": str(recording_mbid),
+                "release_mbid": str(release_mbid),
+                "artist_mbids": [ str(m) for m in artist_mbids ] }
         return cls(
             user_id=j.get('user_id'),
             user_name=user_name,
