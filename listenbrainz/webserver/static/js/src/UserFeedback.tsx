@@ -308,11 +308,17 @@ export default class UserFeedback extends React.Component<
     this.setState({ recordingFeedbackMap });
   };
 
-  updateFeedback = (recordingMsid: string, score: ListenFeedBack) => {
+  updateFeedback = (
+    recordingMsid: string,
+    score: ListenFeedBack | RecommendationFeedBack
+  ) => {
     const { recordingFeedbackMap, feedback } = this.state;
     const { currentUser } = this.context;
     const { user } = this.props;
-    const newFeedbackMap = { ...recordingFeedbackMap, [recordingMsid]: score };
+    const newFeedbackMap = {
+      ...recordingFeedbackMap,
+      [recordingMsid]: score as ListenFeedBack,
+    };
     if (currentUser?.name && currentUser.name === user?.name) {
       const index = feedback.findIndex(
         (feedbackItem) => feedbackItem.recording_msid === recordingMsid
