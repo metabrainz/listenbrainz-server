@@ -5,7 +5,6 @@ exports[`RecommendationCard renders correctly if CurrentUser.authtoken is not se
   currentFeedback="love"
   isCurrentUser={true}
   newAlert={[Function]}
-  playRecommendation={[Function]}
   recommendation={
     Object {
       "listened_at": 0,
@@ -24,11 +23,11 @@ exports[`RecommendationCard renders correctly if CurrentUser.authtoken is not se
   updateFeedback={[Function]}
 >
   <ForwardRef
-    className="recommendation-card row undefined"
+    className="recommendation-card row  "
     onDoubleClick={[Function]}
   >
     <div
-      className="card recommendation-card row undefined"
+      className="card recommendation-card row  "
       onDoubleClick={[Function]}
     >
       <div
@@ -68,7 +67,6 @@ exports[`RecommendationCard renders correctly if isCurrentUser is False 1`] = `
   currentFeedback="love"
   isCurrentUser={false}
   newAlert={[Function]}
-  playRecommendation={[Function]}
   recommendation={
     Object {
       "listened_at": 0,
@@ -87,11 +85,11 @@ exports[`RecommendationCard renders correctly if isCurrentUser is False 1`] = `
   updateFeedback={[Function]}
 >
   <ForwardRef
-    className="recommendation-card row undefined"
+    className="recommendation-card row  "
     onDoubleClick={[Function]}
   >
     <div
-      className="card recommendation-card row undefined"
+      className="card recommendation-card row  "
       onDoubleClick={[Function]}
     >
       <div
@@ -131,7 +129,6 @@ exports[`RecommendationCard renders correctly if isCurrentUser is true and Curre
   currentFeedback="love"
   isCurrentUser={true}
   newAlert={[Function]}
-  playRecommendation={[Function]}
   recommendation={
     Object {
       "listened_at": 0,
@@ -150,11 +147,11 @@ exports[`RecommendationCard renders correctly if isCurrentUser is true and Curre
   updateFeedback={[Function]}
 >
   <ForwardRef
-    className="recommendation-card row undefined"
+    className="recommendation-card row  "
     onDoubleClick={[Function]}
   >
     <div
-      className="card recommendation-card row undefined"
+      className="card recommendation-card row  "
       onDoubleClick={[Function]}
     >
       <div
