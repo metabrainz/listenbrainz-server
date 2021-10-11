@@ -64,7 +64,7 @@ export type ListenCardProps = {
 type ListenCardState = {
   isDeleted: boolean;
   feedback: ListenFeedBack | RecommendationFeedBack | null;
-  isCurrentListen: boolean;
+  isCurrentlyPlaying: boolean;
 };
 
 export default class ListenCard extends React.Component<
@@ -80,7 +80,7 @@ export default class ListenCard extends React.Component<
     this.state = {
       isDeleted: false,
       feedback: props.currentFeedback || null,
-      isCurrentListen: false,
+      isCurrentlyPlaying: false,
     };
   }
 
@@ -101,8 +101,8 @@ export default class ListenCard extends React.Component<
 
   playListen = () => {
     const { listen } = this.props;
-    const { isCurrentListen } = this.state;
-    if (isCurrentListen) {
+    const { isCurrentlyPlaying } = this.state;
+    if (isCurrentlyPlaying) {
       return;
     }
     window.postMessage(
@@ -114,7 +114,7 @@ export default class ListenCard extends React.Component<
   /** React to events sent by BrainzPlayer */
   receiveBrainzPlayerMessage = (event: MessageEvent) => {
     if (event.origin !== window.location.origin) {
-      // Reveived postMessage from different origin, ignoring it
+      // Received postMessage from different origin, ignoring it
       return;
     }
     const { type, payload } = event.data;
@@ -128,10 +128,10 @@ export default class ListenCard extends React.Component<
   };
 
   onCurrentListenChange = (newListen: BaseListenFormat) => {
-    this.setState({ isCurrentListen: this.isCurrentListen(newListen) });
+    this.setState({ isCurrentlyPlaying: this.isCurrentlyPlaying(newListen) });
   };
 
-  isCurrentListen = (element: BaseListenFormat): boolean => {
+  isCurrentlyPlaying = (element: BaseListenFormat): boolean => {
     const { listen } = this.props;
     if (isNil(listen)) {
       return false;
@@ -382,7 +382,7 @@ export default class ListenCard extends React.Component<
       useRecommendationFeedback,
     } = this.props;
     const { currentUser } = this.context;
-    const { feedback, isDeleted, isCurrentListen } = this.state;
+    const { feedback, isDeleted, isCurrentlyPlaying } = this.state;
 
     const isCurrentUser =
       Boolean(listen.user_name) && listen.user_name === currentUser?.name;
@@ -435,7 +435,7 @@ export default class ListenCard extends React.Component<
       <Card
         onDoubleClick={this.playListen}
         className={`listen-card row ${
-          isCurrentListen ? "current-listen" : ""
+          isCurrentlyPlaying ? "current-listen" : ""
         } ${isDeleted ? "deleted" : ""} ${compact ? " compact" : " "} ${
           className || ""
         }`}
@@ -539,7 +539,7 @@ export default class ListenCard extends React.Component<
             onClick={this.playListen}
             type="button"
           >
-            {isCurrentListen ? (
+            {isCurrentlyPlaying ? (
               <FontAwesomeIcon size="1x" icon={faPlay as IconProp} />
             ) : (
               <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />

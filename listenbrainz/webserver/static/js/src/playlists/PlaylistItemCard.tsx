@@ -40,7 +40,7 @@ export type PlaylistItemCardProps = {
 
 type PlaylistItemCardState = {
   isDeleted: Boolean;
-  isCurrentTrack: Boolean;
+  isCurrentlyPlaying: Boolean;
 };
 
 export default class PlaylistItemCard extends React.Component<
@@ -52,7 +52,7 @@ export default class PlaylistItemCard extends React.Component<
 
     this.state = {
       isDeleted: false,
-      isCurrentTrack: false,
+      isCurrentlyPlaying: false,
     };
   }
 
@@ -67,7 +67,7 @@ export default class PlaylistItemCard extends React.Component<
   /** React to events sent by BrainzPlayer */
   receiveBrainzPlayerMessage = (event: MessageEvent) => {
     if (event.origin !== window.location.origin) {
-      // Reveived postMessage from different origin, ignoring it
+      // Received postMessage from different origin, ignoring it
       return;
     }
     const { type, payload } = event.data;
@@ -84,15 +84,15 @@ export default class PlaylistItemCard extends React.Component<
     if (has(newListen, "identifier")) {
       // JSPF Track
       this.setState({
-        isCurrentTrack: this.isCurrentTrack(newListen as JSPFTrack),
+        isCurrentlyPlaying: this.isCurrentlyPlaying(newListen as JSPFTrack),
       });
       return;
     }
     const track = listenToJSPFTrack(newListen as BaseListenFormat);
-    this.setState({ isCurrentTrack: this.isCurrentTrack(track) });
+    this.setState({ isCurrentlyPlaying: this.isCurrentlyPlaying(track) });
   };
 
-  isCurrentTrack = (currentTrack: JSPFTrack): boolean => {
+  isCurrentlyPlaying = (currentTrack: JSPFTrack): boolean => {
     const { track } = this.props;
     if (isNil(currentTrack)) {
       return false;
@@ -105,8 +105,8 @@ export default class PlaylistItemCard extends React.Component<
 
   playTrack = () => {
     const { track } = this.props;
-    const { isCurrentTrack } = this.state;
-    if (isCurrentTrack) {
+    const { isCurrentlyPlaying } = this.state;
+    if (isCurrentlyPlaying) {
       return;
     }
     const listen = JSPFTrackToListen(track);
@@ -135,7 +135,7 @@ export default class PlaylistItemCard extends React.Component<
 
   render() {
     const { track, canEdit, currentFeedback, updateFeedback } = this.props;
-    const { isDeleted, isCurrentTrack } = this.state;
+    const { isDeleted, isCurrentlyPlaying } = this.state;
     const customFields = getTrackExtension(track);
     const trackDuration = track.duration
       ? millisecondsToStr(track.duration)
@@ -145,7 +145,7 @@ export default class PlaylistItemCard extends React.Component<
       <Card
         onDoubleClick={this.playTrack}
         className={`playlist-item-card row ${
-          isCurrentTrack ? " current-track" : ""
+          isCurrentlyPlaying ? " current-track" : ""
         } ${isDeleted ? " deleted" : ""}`}
         data-recording-mbid={track.id}
       >
