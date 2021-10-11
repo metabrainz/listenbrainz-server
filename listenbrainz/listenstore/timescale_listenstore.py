@@ -400,7 +400,6 @@ class TimescaleListenStore(ListenStore):
                         break
 
 
-                    self.log.info(Listen.from_timescale(*result))
                     listens.append(Listen.from_timescale(*result))
                     if len(listens) == limit:
                         done = True
@@ -434,9 +433,9 @@ class TimescaleListenStore(ListenStore):
                               SELECT listened_at, track_name, user_name, created, data, recording_mbid, release_mbid, artist_mbids,
                                      row_number() OVER (partition by user_name ORDER BY listened_at DESC) AS rownum
                                 FROM listen l
-                           LEFT JOIN listen_join_listen_mbid_mapping lj
+                     FULL OUTER JOIN listen_join_listen_mbid_mapping lj
                                   ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = lj.recording_msid
-                                JOIN listen_mbid_mapping m
+                     FULL OUTER JOIN listen_mbid_mapping m
                                   ON lj.listen_mbid_mapping = m.id
                                WHERE user_name IN :user_list
                                  AND listened_at > :ts
@@ -452,7 +451,7 @@ class TimescaleListenStore(ListenStore):
                 if not result:
                     break
 
-                listens.append(Listen.from_timescale(*result))
+                listens.append(Listen.from_timescale(*result[0:8]))
 
         return listens
 

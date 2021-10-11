@@ -152,9 +152,9 @@ class Listen(object):
         j['track_metadata']['track_name'] = track_name
         if recording_mbid is not None:
             j["track_metadata"]["mbid_mapping"] = {
-                "recording_mbid": recording_mbid,
-                "release_mbid": release_mbid,
-                "artist_mbids": artist_mbids }
+                "recording_mbid": str(recording_mbid),
+                "release_mbid": str(release_mbid),
+                "artist_mbids": [ str(m) for m in artist_mbids ] }
         return cls(
             user_id=j.get('user_id'),
             user_name=user_name,
