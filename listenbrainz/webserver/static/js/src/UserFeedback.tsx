@@ -7,7 +7,7 @@ import * as Sentry from "@sentry/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faHeart, faHeartBroken } from "@fortawesome/free-solid-svg-icons";
-import { isEqual, isNaN, get, set, clone } from "lodash";
+import { isNaN, get, clone } from "lodash";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,

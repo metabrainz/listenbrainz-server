@@ -1,3 +1,4 @@
+import uuid
 from operator import itemgetter
 
 import sqlalchemy
@@ -18,7 +19,6 @@ def process_listens(app, listens, is_legacy_listen=False):
        the DB. Note: Legacy listens to not need to be checked to see if
        a result alrady exists in the DB -- the selection of legacy listens
        has already taken care of this."""
-       
 
     stats = {"processed": 0, "total": 0, "errors": 0, "legacy_match": 0}
     for typ in MATCH_TYPES:
@@ -32,7 +32,9 @@ def process_listens(app, listens, is_legacy_listen=False):
         if not is_legacy_listen:
             with timescale.engine.connect() as connection:
                 query = """SELECT recording_msid 
-                             FROM listen_mbid_mapping
+                             FROM listen_join_listen_mbid_mapping lj
+                             JOIN listen_mbid_mapping mbid
+                               ON mbid.id = lj.listen_mbid_mapping
                             WHERE recording_msid IN :msids"""
                 curs = connection.execute(sqlalchemy.text(
                     query), msids=tuple(msids.keys()))
@@ -45,6 +47,9 @@ def process_listens(app, listens, is_legacy_listen=False):
                     skipped += 1
         else:
             stats["processed"] += len(msids)
+
+        if len(msids) == 0:
+            return stats
 
         conn = timescale.engine.raw_connection()
         with conn.cursor() as curs:
@@ -59,11 +64,11 @@ def process_listens(app, listens, is_legacy_listen=False):
                         app, remaining_listens, stats, False)
                     matches.extend(new_matches)
 
-                    # For all listens that are not matched, enter a no match entry, so we don't 
+                    # For all listens that are not matched, enter a no match entry, so we don't
                     # keep attempting to look up more listens.
                     for listen in remaining_listens:
                         matches.append(
-                            (listen['recording_msid'], None, None, None, None, None, MATCH_TYPES[0]))
+                            (listen['recording_msid'], None, None, None, None, None, None, MATCH_TYPES[0]))
                         stats['no_match'] += 1
 
                 stats["processed"] += len(matches)
@@ -71,13 +76,55 @@ def process_listens(app, listens, is_legacy_listen=False):
                     stats["legacy_match"] += len(matches)
 
                 # Finally insert matches to PG
-                query = """INSERT INTO listen_mbid_mapping (recording_msid, recording_mbid, release_mbid, artist_credit_id,
-                                                            artist_credit_name, recording_name, match_type)
-                                VALUES %s
-                           ON CONFLICT DO NOTHING"""
-                execute_values(curs, query, matches, template=None)
+                mogrified = []
+                for match in matches:
+                    if match[1] is None:
+                        m = str(curs.mogrify(
+                            "(%s::UUID, NULL::UUID, NULL::UUID, NULL::UUID[], NULL::INT, NULL, NULL, %s::mbid_mapping_match_type_enum)", (match[1], match[7])), "utf-8")
+                    else:
+                        m = str(curs.mogrify(
+                            "(%s::UUID, %s::UUID, %s::UUID, %s::UUID[], %s, %s, %s, %s::mbid_mapping_match_type_enum)", match), "utf-8")
+                    mogrified.append(m)
 
-            except psycopg2.OperationalError as err:
+                query = """WITH data (recording_msid
+                                   ,  recording_mbid
+                                   ,  release_mbid
+                                   ,  artist_mbids
+                                   ,  artist_credit_id
+                                   ,  artist_credit_name
+                                   ,  recording_name
+                                   ,  match_type) AS (
+                               VALUES %s)
+                           , join_insert AS (
+                                   INSERT INTO listen_mbid_mapping (recording_mbid
+                                                                 ,  release_mbid
+                                                                 ,  artist_mbids
+                                                                 ,  artist_credit_id
+                                                                 ,  artist_credit_name
+                                                                 ,  recording_name
+                                                                 ,  match_type)
+                                   SELECT recording_mbid
+                                        , release_mbid
+                                        , artist_mbids
+                                        , artist_credit_id
+                                        , artist_credit_name
+                                        , recording_name
+                                        , match_type
+                                   FROM   data
+                              ON CONFLICT DO NOTHING
+                                   RETURNING id AS join_id, recording_mbid, release_mbid, artist_credit_id
+                                   )
+                                INSERT INTO listen_join_listen_mbid_mapping (recording_msid, listen_mbid_mapping)
+                                SELECT d.recording_msid
+                                     , ji.join_id
+                                  FROM data d
+                                  JOIN join_insert ji
+                                    ON ji.recording_mbid = d.recording_mbid
+                                   AND ji.release_mbid = d.release_mbid
+                                   AND ji.artist_credit_id = d.artist_credit_id""" % ",".join(mogrified)
+                curs.execute(query)
+
+            except (psycopg2.OperationalError, psycopg2.errors.DatatypeMismatch) as err:
                 app.logger.info(
                     "Cannot insert MBID mapping rows. (%s)" % str(err))
                 conn.rollback()
@@ -117,6 +164,7 @@ def lookup_listens(app, listens, stats, exact):
         rows.append((listen['recording_msid'],
                      hit["recording_mbid"],
                      hit["release_mbid"],
+                     "{" + str(hit["artist_mbids"]) + "}",
                      hit["artist_credit_id"],
                      hit["artist_credit_name"],
                      hit["recording_name"],
