@@ -958,4 +958,15 @@ export default class APIService {
     await this.checkStatus(response);
     return response.json();
   };
+
+  lookupReleaseFromColor = async (
+    color: string,
+    count?: number
+  ): Promise<any> => {
+    let query = `${this.APIBaseURI}/1/color/${color}`;
+    if (!isUndefined(count)) query += `?count=${count}`;
+    const response = await fetch(query);
+    await this.checkStatus(response);
+    return response.json();
+  };
 }

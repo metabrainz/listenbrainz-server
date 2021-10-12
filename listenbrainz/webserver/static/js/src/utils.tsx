@@ -384,6 +384,23 @@ const countWords = (str: string): number => {
   return words.length;
 };
 
+const convertColorReleaseToListen = (
+  item: ColorReleaseItem
+): BaseListenFormat => {
+  const { release_name, artist_name, release_mbid } = item;
+  return {
+    listened_at: -1,
+    track_metadata: {
+      track_name: "",
+      artist_name,
+      release_name,
+      additional_info: {
+        release_mbid,
+      },
+    },
+  };
+};
+
 const handleNavigationClickEvent = (event?: React.MouseEvent): void => {
   // Allow opening in new tab or window with shift or control key
   // Otherwise prevent default
@@ -405,4 +422,5 @@ export {
   getListenablePin,
   countWords,
   handleNavigationClickEvent,
+  convertColorReleaseToListen,
 };

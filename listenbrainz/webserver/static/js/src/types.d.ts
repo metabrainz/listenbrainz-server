@@ -557,3 +557,17 @@ type CritiqueBrainzReview = {
   languageCode: string;
   rating?: number;
 };
+
+type ColorReleaseItem = {
+  artist_name: string;
+  color: Uint8Array[3];
+  dist: number;
+  release_name: string;
+  release_mbid: string;
+};
+
+type ColorReleasesResponse = {
+  payload: {
+    releases: Array<ColorReleaseItem>;
+  };
+};
