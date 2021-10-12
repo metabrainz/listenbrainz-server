@@ -11,7 +11,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import { io, Socket } from "socket.io-client";
 import { fromPairs } from "lodash";
-import ColourWheel, {ColorResult, SwatchesPicker} from "react-color";
+import { ColorResult, SwatchesPicker } from "react-color";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
@@ -31,6 +31,7 @@ import {
   getListenablePin,
   convertColorReleaseToListen,
 } from "./utils";
+import { getEntityLink } from "./stats/utils";
 
 export type RecentListensProps = {
   latestListenTs: number;
@@ -55,6 +56,7 @@ export interface RecentListensState {
   recordingFeedbackMap: RecordingFeedbackMap;
   recordingToPin?: Listen;
   dateTimePickerValue: Date | Date[];
+  colorReleases?: Array<ColorReleaseItem>;
 }
 
 export default class RecentListens extends React.Component<
@@ -507,16 +509,15 @@ export default class RecentListens extends React.Component<
   onColorChanged = async (color: ColorResult) => {
     let { hex } = color;
     hex = hex.substring(1); // remove # from the start of the color
-    // eslint-disable-next-line no-console
-    console.log(hex);
     const colorReleases: ColorReleasesResponse = await this.APIService.lookupReleaseFromColor(
       hex
     );
-    // eslint-disable-next-line no-console
-    console.log(colorReleases);
     const { releases } = colorReleases.payload;
-    const listenables = releases.map(convertColorReleaseToListen);
-    this.setState({ listens: listenables });
+    // eslint-disable-next-line react/no-unused-state
+    this.setState({
+      colorReleases: releases,
+      listens: releases.map(convertColorReleaseToListen),
+    });
   };
 
   afterListensFetch() {
@@ -532,6 +533,7 @@ export default class RecentListens extends React.Component<
     const {
       direction,
       listens,
+      colorReleases,
       listenCount,
       loading,
       mode,
@@ -573,9 +575,48 @@ export default class RecentListens extends React.Component<
             // eslint-disable-next-line no-dupe-keys
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
+            {!listens.length && (
+              <div className="lead text-center">
+                <p>No listens yet</p>
+              </div>
+            )}
+            {listens.length > 0 && (
+              <div
+                id="listens"
+                ref={this.listensTable}
+                style={{ opacity: loading ? "0.4" : "1" }}
+              >
+                {colorReleases &&
+                  colorReleases.map((release, index) => {
+                    return (
+                      // eslint-disable-next-line react/no-array-index-key
+                      <React.Fragment key={index}>
+                        <tr style={{ height: 22 }}>
+                          <td style={{ width: "10%", textAlign: "end" }}>
+                            {index + 1}.&nbsp;
+                          </td>
+                          <td
+                            style={{
+                              textOverflow: "ellipsis",
+                              overflow: "hidden",
+                              paddingRight: 10,
+                            }}
+                          >
+                            {getEntityLink(
+                              "release",
+                              release.release_name,
+                              release.release_mbid
+                            )}
+                          </td>
+                        </tr>
+                      </React.Fragment>
+                    );
+                  })}
+              </div>
+            )}
             <BrainzPlayer
               direction={direction}
-              listens={allListenables}
+              listens={listens}
               newAlert={newAlert}
             />
           </div>
