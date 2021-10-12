@@ -505,10 +505,12 @@ export default class RecentListens extends React.Component<
   };
 
   onColorChanged = async (color: ColorResult) => {
+    let { hex } = color;
+    hex = hex.substring(1); // remove # from the start of the color
     // eslint-disable-next-line no-console
-    console.log(color.hex);
+    console.log(hex);
     const colorReleases: ColorReleasesResponse = await this.APIService.lookupReleaseFromColor(
-      color.hex
+      hex
     );
     // eslint-disable-next-line no-console
     console.log(colorReleases);
