@@ -26,14 +26,33 @@ def get_releases_for_color(red: int, green: int, blue: int, count: int ) -> List
     cube = ColorCube(red=red, green=green, blue=blue)
     args = ( cube, cube, count )
 
+    mb_query = """SELECT r.gid::TEXT AS release_mbid
+                       , r.name AS release_name
+                       , ac.name AS artist_credit_name
+                    FROM release r
+                    JOIN artist_credit ac
+                      ON r.artist_credit = ac.id
+                   WHERE r.gid in %s"""
+
     conn = db.engine.raw_connection()
     with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
 
         results = []
+        mbids = []
+        index = {}
         curs.execute(query, args)
-        for row in curs.fetchall():
+        for i, row in enumerate(curs.fetchall()):
             results.append(ColorResult(release_mbid=row["release_mbid"],
                                        color=ColorCube(red=row["red"], green=row["green"], blue=row["blue"]),
                                        distance=row["dist"]))
+            index[row["release_mbid"]] = i
+            mbids.append(row["release_mbid"])
+
+
+        curs.execute(mb_query, (tuple(mbids),))
+        for row in curs.fetchall():
+            i = index[row["release_mbid"]]
+            results[i].release_name = row["release_name"]
+            results[i].artist_name = row["artist_credit_name"]
 
         return results
