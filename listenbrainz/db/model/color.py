@@ -25,8 +25,8 @@ class ColorResult(BaseModel):
     artist_name: Optional[str]
 
     def to_api(self) -> dict:
-        return { "release_mbid": self.release_mbid,
-                 "color": (self.color.red, self.color.green, self.color.blue),
-                 "dist": round(self.distance, 3),
-                 "release_name": self.release_name or "",
-                 "artist_name": self.artist_name or "" }
+        return {"release_mbid": self.release_mbid,
+                "color": (self.color.red, self.color.green, self.color.blue),
+                "dist": round(self.distance, 3),
+                "release_name": self.release_name or "",
+                "artist_name": self.artist_name or ""}

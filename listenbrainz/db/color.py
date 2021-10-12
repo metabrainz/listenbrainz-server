@@ -10,9 +10,11 @@ from psycopg2.extensions import adapt, AsIs, register_adapter
 def adapt_cube(cube):
     return AsIs("'(%s, %s, %s)'" % (adapt(cube.red), adapt(cube.green), adapt(cube.blue)))
 
+
 register_adapter(ColorCube, adapt_cube)
 
-def get_releases_for_color(red: int, green: int, blue: int, count: int ) -> List[ColorResult]:
+
+def get_releases_for_color(red: int, green: int, blue: int, count: int) -> List[ColorResult]:
 
     query = """SELECT release_mbid::TEXT
                     , red
@@ -24,7 +26,7 @@ def get_releases_for_color(red: int, green: int, blue: int, count: int ) -> List
                 LIMIT %s"""
 
     cube = ColorCube(red=red, green=green, blue=blue)
-    args = ( cube, cube, count )
+    args = (cube, cube, count)
 
     mb_query = """SELECT r.gid::TEXT AS release_mbid
                        , r.name AS release_name
@@ -47,7 +49,6 @@ def get_releases_for_color(red: int, green: int, blue: int, count: int ) -> List
                                        distance=row["dist"]))
             index[row["release_mbid"]] = i
             mbids.append(row["release_mbid"])
-
 
         curs.execute(mb_query, (tuple(mbids),))
         for row in curs.fetchall():
