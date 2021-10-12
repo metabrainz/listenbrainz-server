@@ -403,7 +403,7 @@ const convertColorReleaseToListen = (
 };
 
 const tintColor = (value: number): number => {
-  return value + (255 - value) * 0.15; // tint the shade by 15%
+  return value + (255 - value) * 0.25; // tint the shade by 25%
 };
 
 const tintRGBColor = (color: Uint8Array): Uint8Array => {
@@ -422,7 +422,7 @@ const getBackgroundSetButton = (
   return (
     <button
       type="button"
-      color={`rgb(${color[0]},${color[1]},${color[2]})`}
+      style={{ backgroundColor: `rgb(${color[0]},${color[1]},${color[2]})` }}
       onClick={() => {
         const tint = tintRGBColor(color);
         document.body.style.backgroundColor = `rgb(${tint[0]},${tint[1]},${tint[2]})`;
