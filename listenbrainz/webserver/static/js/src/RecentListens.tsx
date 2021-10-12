@@ -578,11 +578,14 @@ export default class RecentListens extends React.Component<
               <div className="coverArtGrid">
                 {colorReleases.map((release, index) => {
                   return (
-                    <div>
+                    // eslint-disable-next-line react/no-array-index-key
+                    <div key={index}>
                       {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events,jsx-a11y/no-noninteractive-element-interactions */}
                       <img
                         src={`https://coverartarchive.org/release/${release.release_mbid}/${release.caa_id}-250.jpg`}
                         alt={`Cover art for Release ${release.release_name}`}
+                        width={125}
+                        height={125}
                         onClick={() => {
                           const tint = lighterColor(release.color);
                           document.body.style.backgroundColor = `rgb(${tint[0]},${tint[1]},${tint[2]})`;
