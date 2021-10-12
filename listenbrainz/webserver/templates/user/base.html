@@ -15,6 +15,7 @@
         <li {{ 'class=active' if active_section=='playlists' }}><a href="{{ url_for('user.playlists', user_name=user.musicbrainz_id) }}">Playlists</a></li>
         <li {{ 'class=active' if active_section=='recommendations' }}><a href="{{ url_for('user.recommendation_playlists', user_name=user.musicbrainz_id) }}">Recommendations</a></li>
         <li {{ 'class=active' if active_section=='collaborations' }}><a href="{{ url_for('user.collaborations', user_name=user.musicbrainz_id) }}">Collaborations</a></li>
+        <li {{ 'class=active' if active_section=='colorPlay' }}><a href="{{ url_for('user.color_play', user_name=user.musicbrainz_id) }}">Color Play</a></li>
       </ul>
 
     {% block profile_content %} {% endblock %}
