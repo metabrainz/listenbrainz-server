@@ -44,6 +44,8 @@
     "@nivo/legends": "^0.62.0",
     "@nivo/tooltip": "^0.62.0",
     "@sentry/react": "^6.2.2",
+    "@react-spectrum/color": "^3.0.0-beta.4",
+    "@react-types/color": "^3.0.0-beta.3",
     "clean-css": "^4.2.1",
     "core-js": "^3.9.1",
     "d3-array": "~2.3.3",
