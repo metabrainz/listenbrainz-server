@@ -32,6 +32,7 @@ import {
   convertColorReleaseToListen,
 } from "./utils";
 import { getEntityLink } from "./stats/utils";
+import Card from "./components/Card";
 
 export type RecentListensProps = {
   latestListenTs: number;
@@ -591,24 +592,13 @@ export default class RecentListens extends React.Component<
                     return (
                       // eslint-disable-next-line react/no-array-index-key
                       <React.Fragment key={index}>
-                        <tr style={{ height: 22 }}>
-                          <td style={{ width: "10%", textAlign: "end" }}>
-                            {index + 1}.&nbsp;
-                          </td>
-                          <td
-                            style={{
-                              textOverflow: "ellipsis",
-                              overflow: "hidden",
-                              paddingRight: 10,
-                            }}
-                          >
-                            {getEntityLink(
-                              "release",
-                              release.release_name,
-                              release.release_mbid
-                            )}
-                          </td>
-                        </tr>
+                        <Card>
+                          {getEntityLink(
+                            "release",
+                            release.release_name,
+                            release.release_mbid
+                          )}
+                        </Card>
                       </React.Fragment>
                     );
                   })}
