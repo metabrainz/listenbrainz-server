@@ -30,6 +30,7 @@ def process_image(filename, mime_type):
     lines = out[0].split(b"\n", 3)
     return (lines[3][0], lines[3][1], lines[3][2])
 
+
 def insert_row(release_mbid, red, green, blue):
 
     # FIX THIS
@@ -102,7 +103,7 @@ def download_cover_art():
                 while True:
                     url = "https://coverartarchive.org/release/%s/%d-250.jpg" % (row["release_mbid"], row["caa_id"])
                     r = requests.get(url)
-                    if r.status_code == 200: 
+                    if r.status_code == 200:
                         if row["mime_type"] == "application/pdf":
                             # TODO Skip this in the future
                             print("skip PDF")
@@ -115,7 +116,7 @@ def download_cover_art():
                                 f.write(chunk)
 
                         try:
-                            red, green, blue = process_image(filename, row["mime_type"]) 
+                            red, green, blue = process_image(filename, row["mime_type"])
                             insert_row(row["release_mbid"], red, green, blue)
                             print("%s: (%s, %s, %s)" % (row["release_mbid"], red, green, blue))
                         except Exception as err:

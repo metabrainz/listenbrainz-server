@@ -31,10 +31,10 @@ def color_releases(color):
         color_tuple = tuple(int(color[i:i+2], 16) for i in (0, 2, 4))
     except ValueError:
         raise APIBadRequest("color must be a 6 digit hex color code.")
-        
-    count = _parse_int_arg("count", DEFAULT_NUMBER_OF_RELEASES)  
+
+    count = _parse_int_arg("count", DEFAULT_NUMBER_OF_RELEASES)
 
     results = get_releases_for_color(*color_tuple, count)
-    results = [ c.to_api() for c in results ]
+    results = [c.to_api() for c in results]
 
-    return jsonify({ "payload": { "releases": results } })
+    return jsonify({"payload": {"releases": results}})
