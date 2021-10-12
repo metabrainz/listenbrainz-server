@@ -17,7 +17,7 @@ import config
 
 register_adapter(Cube, adapt_cube)
 
-MAX_THREADS = 1
+MAX_THREADS = 8
 
 # P5
 # 1 1
@@ -31,9 +31,23 @@ MAX_THREADS = 1
 
 def process_image(filename, mime_type):
 
-    program = mime_type[6:] + "topnm"
-
     with open(filename, "rb") as raw:
+        proc = subprocess.Popen(["file", filename], stdout=subprocess.PIPE)
+        tmp = proc.communicate(raw.read())
+        program = None
+        if tmp[0].find(b"JPEG") >= 0:
+            program = "jpegtopnm"
+        elif tmp[0].find(b"GIF") >= 0:
+            program = "giftopnm"
+        elif tmp[0].find(b"PNG") >= 0:
+            program = "pngtopnm"
+        else:
+            print("Could not determine file type ", tmp[0])
+            raise RuntimeError
+
+        print(program)
+
+        raw.seek(0)
         proc = subprocess.Popen([program, filename], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         tmp = proc.communicate(raw.read())
 
@@ -89,7 +103,6 @@ def process_row(row):
     while True:
         headers = { 'User-Agent': 'ListenBrainz HueSound Color Bot ( rob@metabrainz.org )' }
         url = "https://beta.coverartarchive.org/release/%s/%d-250.jpg" % (row["release_mbid"], row["caa_id"])
-        print(url)
         r = requests.get(url, headers=headers)
         if r.status_code == 200:
             if row["mime_type"] == "application/pdf":
@@ -103,13 +116,13 @@ def process_row(row):
                 for chunk in r:
                     f.write(chunk)
 
-#            try:
-            red, green, blue = process_image(filename, row["mime_type"])
-            insert_row(row["release_mbid"], red, green, blue, row["caa_id"])
-            print("%s %s: (%s, %s, %s)" % (get_ident(), row["release_mbid"], red, green, blue))
-#            except Exception as err:
-#                print("Could not process %s" % url)
-#                print(err)
+            try:
+                red, green, blue = process_image(filename, row["mime_type"])
+                insert_row(row["release_mbid"], red, green, blue, row["caa_id"])
+                print("%s %s: (%s, %s, %s)" % (get_ident(), row["release_mbid"], red, green, blue))
+            except Exception as err:
+                print("Could not process %s" % url)
+                print(err)
 
             os.unlink(filename)
 
