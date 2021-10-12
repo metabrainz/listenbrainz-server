@@ -16,12 +16,14 @@ import { getPageProps } from "../utils";
 
 export type ColorPlayProps = {
   user: ListenBrainzUser;
+  tracks: Array<Listen>;
   totalCount: number;
   profileUrl?: string;
 } & WithAlertNotificationsInjectedProps;
 
 export type ColorPlayState = {
   direction: BrainzPlayDirection;
+  tracks: Array<Listen>;
   page: number;
   maxPage: number;
   loading: boolean;
@@ -34,13 +36,14 @@ export default class ColorPlay extends React.Component<
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
-  private DEFAULT_PINS_PER_PAGE = 25;
+  private DEFAULT_TRACKS_PER_PAGE = 25;
 
   constructor(props: ColorPlayProps) {
     super(props);
     const { totalCount } = this.props;
     this.state = {
-      maxPage: Math.ceil(totalCount / this.DEFAULT_PINS_PER_PAGE),
+      maxPage: Math.ceil(totalCount / this.DEFAULT_TRACKS_PER_PAGE),
+      tracks: props.tracks || [],
       page: 1,
       loading: false,
       direction: "down",
@@ -76,20 +79,14 @@ export default class ColorPlay extends React.Component<
   };
 
   handleClickOlder = async (event?: React.MouseEvent) => {
-    const { page, maxPage } = this.state;
     if (event) {
       event.preventDefault();
-    }
-    if (page >= maxPage) {
     }
   };
 
   handleClickNewer = async (event?: React.MouseEvent) => {
-    const { page } = this.state;
     if (event) {
       event.preventDefault();
-    }
-    if (page === 1) {
     }
   };
 
@@ -112,19 +109,7 @@ export default class ColorPlay extends React.Component<
               </>
             )}
 
-            {tracks.length > 0 && (
-              <div>
-                style=
-                {{
-                  height: 0,
-                  position: "sticky",
-                  top: "50%",
-                  zIndex: 1,
-                }}
-                >
-                <Loader isLoading={loading} />
-              </div>
-            )}
+            {tracks.length > 0 && <Loader isLoading={loading} />}
           </div>
           <div
             className="col-md-4"
@@ -132,7 +117,11 @@ export default class ColorPlay extends React.Component<
             // eslint-disable-next-line no-dupe-keys
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
-            <BrainzPlayer direction={direction} newAlert={newAlert} />
+            <BrainzPlayer
+              direction={direction}
+              newAlert={newAlert}
+              listens={tracks}
+            />
           </div>
         </div>
       </div>
@@ -143,7 +132,7 @@ export default class ColorPlay extends React.Component<
 document.addEventListener("DOMContentLoaded", () => {
   const { domContainer, reactProps, globalReactProps } = getPageProps();
   const { api_url, current_user, spotify, youtube } = globalReactProps;
-  const { user, pins, total_count, profile_url } = reactProps;
+  const { user, tracks, total_count, profile_url } = reactProps;
 
   const apiService = new APIServiceClass(
     api_url || `${window.location.origin}/1`
@@ -163,6 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <GlobalAppContext.Provider value={globalProps}>
         <ColorPlayWithAlertNotifications
           user={user}
+          tracks={tracks}
           totalCount={total_count}
           profileUrl={profile_url}
         />
