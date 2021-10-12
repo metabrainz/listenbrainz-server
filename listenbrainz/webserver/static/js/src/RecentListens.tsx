@@ -568,14 +568,6 @@ export default class RecentListens extends React.Component<
       <div role="main">
         <div className="row">
           <div className="col-md-8">
-            <SwatchesPicker onChangeComplete={this.onColorChanged} />
-          </div>
-          <div
-            className="col-md-4"
-            // @ts-ignore
-            // eslint-disable-next-line no-dupe-keys
-            style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
-          >
             {!listens.length && (
               <div className="lead text-center">
                 <p>No listens yet</p>
@@ -604,6 +596,14 @@ export default class RecentListens extends React.Component<
                   })}
               </div>
             )}
+          </div>
+          <div
+            className="col-md-4"
+            // @ts-ignore
+            // eslint-disable-next-line no-dupe-keys
+            style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
+          >
+            <SwatchesPicker onChangeComplete={this.onColorChanged} />
             <BrainzPlayer
               direction={direction}
               listens={listens}
