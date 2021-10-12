@@ -28,6 +28,6 @@ ALTER TABLE recommendation_feedback ADD CONSTRAINT recommendation_feedback_pkey 
 
 ALTER TABLE pinned_recording ADD CONSTRAINT pinned_recording_pkey PRIMARY KEY (id);
 
-ALTER TABLE release_colors ADD CONSTRAINT release_colors_pkey PRIMARY KEY (id);
+ALTER TABLE release_color ADD CONSTRAINT release_color_pkey PRIMARY KEY (id);
 
 COMMIT;

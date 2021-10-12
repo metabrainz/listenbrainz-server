@@ -31,14 +31,14 @@ def process_image(filename, mime_type):
     return (lines[3][0], lines[3][1], lines[3][2])
 
 
-def insert_row(release_mbid, red, green, blue):
+def insert_row(release_mbid, red, green, blue, caa_id):
 
     # FIX THIS
     with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
-            sql = """INSERT INTO release_colors (release_mbid, red, green, blue, color)
-                          VALUES (%s, %s, %s, %s, %s::cube)"""
-            args = (release_mbid, red, green, blue, Cube(red, green, blue))
+            sql = """INSERT INTO release_color (release_mbid, red, green, blue, color, caa_id)
+                          VALUES (%s, %s, %s, %s, %s::cube, %s)"""
+            args = (release_mbid, red, green, blue, Cube(red, green, blue), caa_id)
             try:
                 curs.execute(sql, args)
                 conn.commit()
@@ -49,7 +49,7 @@ def insert_row(release_mbid, red, green, blue):
 def fetch_latest_release_mbid():
 
     query = """SELECT release_mbid
-                 FROM release_colors
+                 FROM release_color
              ORDER BY release_mbid DESC
                 LIMIT 1"""
 
@@ -101,8 +101,9 @@ def download_cover_art():
                     break
 
                 while True:
+                    headers = { 'User-Agent': 'ListenBrainz HueSound Color Bot ( rob@metabrainz.org )' }
                     url = "https://coverartarchive.org/release/%s/%d-250.jpg" % (row["release_mbid"], row["caa_id"])
-                    r = requests.get(url)
+                    r = requests.get(url, headers=headers)
                     if r.status_code == 200:
                         if row["mime_type"] == "application/pdf":
                             # TODO Skip this in the future
@@ -117,15 +118,16 @@ def download_cover_art():
 
                         try:
                             red, green, blue = process_image(filename, row["mime_type"])
-                            insert_row(row["release_mbid"], red, green, blue)
+                            insert_row(row["release_mbid"], red, green, blue, row["caa_id"])
                             print("%s: (%s, %s, %s)" % (row["release_mbid"], red, green, blue))
                         except Exception as err:
                             print("Could not process %s" % url)
+                            print(err)
 
                         break
 
-                    if r.status_code == 503:
-                        print("Exceeded rate limit. sleeing 2 seconds.")
+                    if r.status_code in (503, 429):
+                        print("Exceeded rate limit. sleeping 2 seconds.")
                         sleep(2)
                         continue
 
