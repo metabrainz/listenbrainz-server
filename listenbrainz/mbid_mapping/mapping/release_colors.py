@@ -1,6 +1,8 @@
+import os
 import re
 import subprocess
 from time import sleep
+from threading import Thread, get_ident
 
 import requests
 
@@ -15,6 +17,17 @@ import config
 
 register_adapter(Cube, adapt_cube)
 
+MAX_THREADS = 1
+
+# P5
+# 1 1
+# 255
+# @
+
+# P6
+# 247 250
+# 255
+
 
 def process_image(filename, mime_type):
 
@@ -28,7 +41,14 @@ def process_image(filename, mime_type):
     out = proc.communicate(tmp[0])
 
     lines = out[0].split(b"\n", 3)
-    return (lines[3][0], lines[3][1], lines[3][2])
+    if lines[0].startswith(b"P6"):  # PPM
+        return (lines[3][0], lines[3][1], lines[3][2])
+
+    if lines[0].startswith(b"P5"):  # PGM
+        print("graymap %d" % lines[3][0])
+        return (lines[3][0], lines[3][0], lines[3][0])
+
+    raise RuntimeError
 
 
 def insert_row(release_mbid, red, green, blue, caa_id):
@@ -65,6 +85,49 @@ def fetch_latest_release_mbid():
                 return row["release_mbid"]
 
 
+def process_row(row):
+    while True:
+        headers = { 'User-Agent': 'ListenBrainz HueSound Color Bot ( rob@metabrainz.org )' }
+        url = "https://beta.coverartarchive.org/release/%s/%d-250.jpg" % (row["release_mbid"], row["caa_id"])
+        print(url)
+        r = requests.get(url, headers=headers)
+        if r.status_code == 200:
+            if row["mime_type"] == "application/pdf":
+                # TODO Skip this in the future
+                print("skip PDF")
+                break
+
+            # TODO: Use proper file name
+            filename = "/tmp/release-colors-%s.img" % get_ident()
+            with open(filename, 'wb') as f:
+                for chunk in r:
+                    f.write(chunk)
+
+#            try:
+            red, green, blue = process_image(filename, row["mime_type"])
+            insert_row(row["release_mbid"], red, green, blue, row["caa_id"])
+            print("%s %s: (%s, %s, %s)" % (get_ident(), row["release_mbid"], red, green, blue))
+#            except Exception as err:
+#                print("Could not process %s" % url)
+#                print(err)
+
+            os.unlink(filename)
+
+            break
+
+        if r.status_code == 403:
+            print("Got 403, skipping")
+            continue
+            
+        if r.status_code in (503, 429):
+            print("Exceeded rate limit. sleeping 2 seconds.")
+            sleep(2)
+            continue
+
+        print("Unhandled %d" % r.status_code)
+        break
+
+
 def download_cover_art():
 
     log("download cover art starting...")
@@ -95,41 +158,22 @@ def download_cover_art():
             log("execute query")
             mb_curs.execute(query, tuple(args))
             log("process rows")
+
+            threads = []
             while True:
                 row = mb_curs.fetchone()
                 if not row:
                     break
 
-                while True:
-                    headers = { 'User-Agent': 'ListenBrainz HueSound Color Bot ( rob@metabrainz.org )' }
-                    url = "https://coverartarchive.org/release/%s/%d-250.jpg" % (row["release_mbid"], row["caa_id"])
-                    r = requests.get(url, headers=headers)
-                    if r.status_code == 200:
-                        if row["mime_type"] == "application/pdf":
-                            # TODO Skip this in the future
-                            print("skip PDF")
+                while len(threads) == MAX_THREADS:
+                    for i, thread in enumerate(threads):
+                        if not thread.is_alive():
+                            thread.join()
+                            threads.pop(i)
                             break
-
-                        # TODO: Use proper file name
-                        filename = "/tmp/release-colors.img"
-                        with open(filename, 'wb') as f:
-                            for chunk in r:
-                                f.write(chunk)
-
-                        try:
-                            red, green, blue = process_image(filename, row["mime_type"])
-                            insert_row(row["release_mbid"], red, green, blue, row["caa_id"])
-                            print("%s: (%s, %s, %s)" % (row["release_mbid"], red, green, blue))
-                        except Exception as err:
-                            print("Could not process %s" % url)
-                            print(err)
-
-                        break
-
-                    if r.status_code in (503, 429):
-                        print("Exceeded rate limit. sleeping 2 seconds.")
-                        sleep(2)
-                        continue
-
-                    print("Unhandled %d" % r.status_code)
-                    break
+                    else:
+                        sleep(.001)
+           
+                t = Thread(target=process_row, args=(row,))
+                t.start()
+                threads.append(t)
