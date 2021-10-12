@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as _ from "lodash";
 import * as timeago from "time-ago";
+import { colors } from "react-select/src/theme";
 
 const searchForSpotifyTrack = async (
   spotifyToken?: string,
@@ -401,6 +402,37 @@ const convertColorReleaseToListen = (
   };
 };
 
+const tintColor = (value: number): number => {
+  return value + (255 - value) * 0.15; // tint the shade by 15%
+};
+
+const tintRGBColor = (color: Uint8Array): Uint8Array => {
+  const tintedColor = new Uint8Array(3);
+  for (let index = 0; index < color.length; index += 1) {
+    tintedColor[index] = tintColor(color[index]);
+  }
+  return tintedColor;
+};
+
+const getBackgroundSetButton = (
+  name: string,
+  release_mbid: string,
+  color: Uint8Array
+): JSX.Element => {
+  return (
+    <button
+      type="button"
+      color={`rgb(${color[0]},${color[1]},${color[2]})`}
+      onClick={() => {
+        const tint = tintRGBColor(color);
+        document.body.style.backgroundColor = `rgb(${tint[0]},${tint[1]},${tint[2]})`;
+      }}
+    >
+      {name}
+    </button>
+  );
+};
+
 const handleNavigationClickEvent = (event?: React.MouseEvent): void => {
   // Allow opening in new tab or window with shift or control key
   // Otherwise prevent default
@@ -423,4 +455,5 @@ export {
   countWords,
   handleNavigationClickEvent,
   convertColorReleaseToListen,
+  getBackgroundSetButton,
 };
