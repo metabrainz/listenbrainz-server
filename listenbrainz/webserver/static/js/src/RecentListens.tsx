@@ -11,8 +11,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import { io, Socket } from "socket.io-client";
 import { fromPairs } from "lodash";
-import { ColorWheel } from "@react-spectrum/color";
-import { Color } from "@react-types/color";
+import ColourWheel, {ColorResult, SwatchesPicker} from "react-color";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
@@ -505,11 +504,11 @@ export default class RecentListens extends React.Component<
     window.history.pushState(null, "", `?min_ts=${minTimestampInSeconds}`);
   };
 
-  onColorChanged = async (color: Color) => {
+  onColorChanged = async (color: ColorResult) => {
     // eslint-disable-next-line no-console
-    console.log(color);
+    console.log(color.hex);
     const colorReleases: ColorReleasesResponse = await this.APIService.lookupReleaseFromColor(
-      color.toString("rgb")
+      color.hex
     );
     // eslint-disable-next-line no-console
     console.log(colorReleases);
@@ -564,7 +563,7 @@ export default class RecentListens extends React.Component<
       <div role="main">
         <div className="row">
           <div className="col-md-8">
-            <ColorWheel onChangeEnd={this.onColorChanged} />
+            <SwatchesPicker onChangeComplete={this.onColorChanged} />
           </div>
           <div
             className="col-md-4"
