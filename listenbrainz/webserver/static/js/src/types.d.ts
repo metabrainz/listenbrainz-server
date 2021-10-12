@@ -562,6 +562,7 @@ type ColorReleaseItem = {
   artist_name: string;
   color: Uint8Array;
   dist: number;
+  caa_id: number;
   release_name: string;
   release_mbid: string;
 };
