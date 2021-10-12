@@ -29,7 +29,7 @@ import {
   formatWSMessageToListen,
   getPageProps,
   getListenablePin,
-  convertColorReleaseToListen,
+  convertColorReleaseToListen, getBackgroundSetButton,
 } from "./utils";
 import { getEntityLink } from "./stats/utils";
 import Card from "./components/Card";
@@ -593,10 +593,10 @@ export default class RecentListens extends React.Component<
                       // eslint-disable-next-line react/no-array-index-key
                       <React.Fragment key={index}>
                         <Card>
-                          {getEntityLink(
-                            "release",
+                          {getBackgroundSetButton(
                             release.release_name,
-                            release.release_mbid
+                            release.release_mbid,
+                            release.color
                           )}
                         </Card>
                       </React.Fragment>
