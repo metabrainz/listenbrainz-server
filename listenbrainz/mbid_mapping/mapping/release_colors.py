@@ -86,7 +86,7 @@ def download_cover_art():
         query += "AND release.gid > %s::UUID "
         args.append((latest_mbid,))
 
-    query += "ORDER BY release"""
+    query += "ORDER BY release_mbid"""
 
     with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
         with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
@@ -106,7 +106,7 @@ def download_cover_art():
                         if row["mime_type"] == "application/pdf":
                             # TODO Skip this in the future
                             print("skip PDF")
-                            continue
+                            break
 
                         # TODO: Use proper file name
                         filename = "/tmp/release-colors.img"
