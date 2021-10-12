@@ -2,6 +2,7 @@
 
 import * as ReactDOM from "react-dom";
 import * as React from "react";
+import { ColorResult, SwatchesPicker } from "react-color";
 import ErrorBoundary from "../ErrorBoundary";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import {
@@ -12,7 +13,11 @@ import {
 import APIServiceClass from "../APIService";
 import BrainzPlayer from "../BrainzPlayer";
 import Loader from "../components/Loader";
-import { getPageProps } from "../utils";
+import {
+  convertColorReleaseToListen,
+  getPageProps,
+  lighterColor,
+} from "../utils";
 
 export type ColorPlayProps = {
   user: ListenBrainzUser;
@@ -24,6 +29,7 @@ export type ColorPlayProps = {
 export type ColorPlayState = {
   direction: BrainzPlayDirection;
   tracks: Array<Listen>;
+  colorReleases: Array<ColorReleaseItem>;
   page: number;
   maxPage: number;
   loading: boolean;
@@ -35,6 +41,7 @@ export default class ColorPlay extends React.Component<
 > {
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
+  private APIService!: APIServiceClass;
 
   private DEFAULT_TRACKS_PER_PAGE = 25;
 
@@ -44,6 +51,7 @@ export default class ColorPlay extends React.Component<
     this.state = {
       maxPage: Math.ceil(totalCount / this.DEFAULT_TRACKS_PER_PAGE),
       tracks: props.tracks || [],
+      colorReleases: [],
       page: 1,
       loading: false,
       direction: "down",
@@ -54,6 +62,8 @@ export default class ColorPlay extends React.Component<
     // Listen to browser previous/next events and load page accordingly
     window.addEventListener("popstate", this.handleURLChange);
     this.handleURLChange();
+    const { APIService } = this.context;
+    this.APIService = APIService;
   }
 
   componentWillUnmount() {
@@ -90,9 +100,23 @@ export default class ColorPlay extends React.Component<
     }
   };
 
+  onColorChanged = async (color: ColorResult) => {
+    let { hex } = color;
+    hex = hex.substring(1); // remove # from the start of the color
+    const colorReleases: ColorReleasesResponse = await this.APIService.lookupReleaseFromColor(
+      hex
+    );
+    const { releases } = colorReleases.payload;
+    // eslint-disable-next-line react/no-unused-state
+    this.setState({
+      colorReleases: releases,
+      tracks: releases.map(convertColorReleaseToListen),
+    });
+  };
+
   render() {
     const { user, newAlert } = this.props;
-    const { tracks, direction, loading } = this.state;
+    const { tracks, direction, loading, colorReleases } = this.state;
     const { currentUser } = this.context;
 
     return (
@@ -109,6 +133,36 @@ export default class ColorPlay extends React.Component<
               </>
             )}
 
+            {colorReleases && (
+              <div className="coverArtGrid">
+                {colorReleases.map((release, index) => {
+                  return (
+                    // eslint-disable-next-line react/no-array-index-key
+                    <div key={index}>
+                      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events,jsx-a11y/no-noninteractive-element-interactions */}
+                      <img
+                        src={`https://coverartarchive.org/release/${release.release_mbid}/${release.caa_id}-250.jpg`}
+                        alt={`Cover art for Release ${release.release_name}`}
+                        width={125}
+                        height={125}
+                        onClick={() => {
+                          const tint = lighterColor(release.color);
+                          document.body.style.backgroundColor = `rgb(${tint[0]},${tint[1]},${tint[2]})`;
+                          window.postMessage(
+                            {
+                              brainzplayer_event: "play-listen",
+                              payload: tracks[index],
+                            },
+                            window.location.origin
+                          );
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             {tracks.length > 0 && <Loader isLoading={loading} />}
           </div>
           <div
@@ -117,6 +171,9 @@ export default class ColorPlay extends React.Component<
             // eslint-disable-next-line no-dupe-keys
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
+            <div style={{ marginBottom: 10 }}>
+              <SwatchesPicker onChangeComplete={this.onColorChanged} />
+            </div>
             <BrainzPlayer
               direction={direction}
               newAlert={newAlert}
