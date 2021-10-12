@@ -8,6 +8,7 @@ from psycopg2.extensions import adapt, AsIs, register_adapter
 
 
 def adapt_cube(cube):
+    """ Function required by Postgres for inserting/searching cube extension colors """
     return AsIs("'(%s, %s, %s)'" % (adapt(cube.red), adapt(cube.green), adapt(cube.blue)))
 
 
@@ -15,6 +16,15 @@ register_adapter(ColorCube, adapt_cube)
 
 
 def get_releases_for_color(red: int, green: int, blue: int, count: int) -> List[ColorResult]:
+    """ Fetch matching releases, their euclidian distance in RGB space and the
+        release_name and artist_name for the returned releases.
+
+        Args:
+          red, green, blue: ints for each of the red, green and blue color components.
+          count: int -- the number of matches to return
+        Returns:
+          A list of ColorResult objects.
+    """
 
     query = """SELECT release_mbid::TEXT
                     , red

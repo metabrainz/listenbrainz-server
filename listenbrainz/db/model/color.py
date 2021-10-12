@@ -16,7 +16,8 @@ class ColorCube(BaseModel):
 
 
 class ColorResult(BaseModel):
-    """ Represents a color object that include a colorcube object """
+    """ Represents a color result object that includes a
+        colorcube object and metadata about the returned releases. """
 
     release_mbid: str
     color: ColorCube
