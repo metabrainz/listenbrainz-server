@@ -37,4 +37,4 @@ def color_releases(color):
     results = get_releases_for_color(*color_tuple, count)
     results = [ c.to_api() for c in results ]
 
-    return jsonify(results)
+    return jsonify({ "payload": { "releases": results } })
