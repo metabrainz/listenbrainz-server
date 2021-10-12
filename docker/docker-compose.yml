@@ -47,7 +47,7 @@ services:
       - ..:/code/listenbrainz:z
       - ../listenbrainz/webserver/static:/static
     ports:
-      - "80:80"
+      - "8081:80"
     depends_on:
       - redis
       - db
@@ -105,3 +105,8 @@ services:
       # We mount this as a sort of shared volume
       # where we put the compiled output to be served by the service "web"
       - ../listenbrainz/webserver/static:/static:z
+
+networks:
+  default:
+    name: musicbrainzdocker_default
+    external: true
