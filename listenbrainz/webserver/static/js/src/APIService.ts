@@ -963,7 +963,7 @@ export default class APIService {
     color: string,
     count?: number
   ): Promise<any> => {
-    let query = `${this.APIBaseURI}/1/color/${color}`;
+    let query = `${this.APIBaseURI}/color/${color}`;
     if (!isUndefined(count)) query += `?count=${count}`;
     const response = await fetch(query);
     await this.checkStatus(response);
