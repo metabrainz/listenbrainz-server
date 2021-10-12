@@ -29,7 +29,8 @@ import {
   formatWSMessageToListen,
   getPageProps,
   getListenablePin,
-  convertColorReleaseToListen, getBackgroundSetButton,
+  convertColorReleaseToListen,
+  lighterColor,
 } from "./utils";
 import { getEntityLink } from "./stats/utils";
 import Card from "./components/Card";
@@ -573,27 +574,23 @@ export default class RecentListens extends React.Component<
                 <p>No listens yet</p>
               </div>
             )}
-            {listens.length > 0 && (
-              <div
-                id="listens"
-                ref={this.listensTable}
-                style={{ opacity: loading ? "0.4" : "1" }}
-              >
-                {colorReleases &&
-                  colorReleases.map((release, index) => {
-                    return (
-                      // eslint-disable-next-line react/no-array-index-key
-                      <React.Fragment key={index}>
-                        <Card>
-                          {getBackgroundSetButton(
-                            release.release_name,
-                            release.release_mbid,
-                            release.color
-                          )}
-                        </Card>
-                      </React.Fragment>
-                    );
-                  })}
+            {colorReleases && (
+              <div className="coverArtGrid">
+                {colorReleases.map((release, index) => {
+                  return (
+                    <div>
+                      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events,jsx-a11y/no-noninteractive-element-interactions */}
+                      <img
+                        src={`https://coverartarchive.org/release/${release.release_mbid}/${release.caa_id}-250.jpg`}
+                        alt={`Cover art for Release ${release.release_name}`}
+                        onClick={() => {
+                          const tint = lighterColor(release.color);
+                          document.body.style.backgroundColor = `rgb(${tint[0]},${tint[1]},${tint[2]})`;
+                        }}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
