@@ -223,8 +223,9 @@ CREATE TABLE recording_feedback (
     created                 TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE release_colors(
+CREATE TABLE release_color(
     id                      SERIAL, -- PK
+    caa_id                  BIGINT NOT NULL,
     release_mbid            UUID NOT NULL,
     red                     SMALLINT NOT NULL,
     green                   SMALLINT NOT NULL,

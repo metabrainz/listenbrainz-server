@@ -27,6 +27,7 @@ def get_releases_for_color(red: int, green: int, blue: int, count: int) -> List[
     """
 
     query = """SELECT release_mbid::TEXT
+                    , caa_id
                     , red
                     , green
                     , blue
@@ -55,6 +56,7 @@ def get_releases_for_color(red: int, green: int, blue: int, count: int) -> List[
         curs.execute(query, args)
         for i, row in enumerate(curs.fetchall()):
             results.append(ColorResult(release_mbid=row["release_mbid"],
+                                       caa_id=row["caa_id"],
                                        color=ColorCube(red=row["red"], green=row["green"], blue=row["blue"]),
                                        distance=row["dist"]))
             index[row["release_mbid"]] = i

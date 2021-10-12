@@ -28,6 +28,7 @@ def color_releases(color):
                   "color": [ 250, 90, 192 ],
                   "dist": 109.973,
                   "release_mbid": "00a109da-400c-4350-9751-6e6f25e89073",
+                  "caa_id": 34897349734,
                   "release_name": "EP5"
                },
                . . .
