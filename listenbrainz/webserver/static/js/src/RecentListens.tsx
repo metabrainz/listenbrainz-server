@@ -11,7 +11,6 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import { io, Socket } from "socket.io-client";
 import { fromPairs } from "lodash";
-import { ColorResult, SwatchesPicker } from "react-color";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
@@ -29,10 +28,7 @@ import {
   formatWSMessageToListen,
   getPageProps,
   getListenablePin,
-  convertColorReleaseToListen, getBackgroundSetButton,
 } from "./utils";
-import { getEntityLink } from "./stats/utils";
-import Card from "./components/Card";
 
 export type RecentListensProps = {
   latestListenTs: number;
@@ -57,7 +53,6 @@ export interface RecentListensState {
   recordingFeedbackMap: RecordingFeedbackMap;
   recordingToPin?: Listen;
   dateTimePickerValue: Date | Date[];
-  colorReleases?: Array<ColorReleaseItem>;
 }
 
 export default class RecentListens extends React.Component<
@@ -507,20 +502,6 @@ export default class RecentListens extends React.Component<
     window.history.pushState(null, "", `?min_ts=${minTimestampInSeconds}`);
   };
 
-  onColorChanged = async (color: ColorResult) => {
-    let { hex } = color;
-    hex = hex.substring(1); // remove # from the start of the color
-    const colorReleases: ColorReleasesResponse = await this.APIService.lookupReleaseFromColor(
-      hex
-    );
-    const { releases } = colorReleases.payload;
-    // eslint-disable-next-line react/no-unused-state
-    this.setState({
-      colorReleases: releases,
-      listens: releases.map(convertColorReleaseToListen),
-    });
-  };
-
   afterListensFetch() {
     this.setState({ loading: false });
     // Scroll to the top of the listens list
@@ -534,7 +515,6 @@ export default class RecentListens extends React.Component<
     const {
       direction,
       listens,
-      colorReleases,
       listenCount,
       loading,
       mode,
@@ -568,32 +548,194 @@ export default class RecentListens extends React.Component<
       <div role="main">
         <div className="row">
           <div className="col-md-8">
+            {userPinnedRecording && (
+              <div id="pinned-recordings">
+                <PinnedRecordingCard
+                  userName={user.name}
+                  pinnedRecording={userPinnedRecording}
+                  isCurrentUser={currentUser?.name === user?.name}
+                  removePinFromPinsList={() => {}}
+                  newAlert={newAlert}
+                />
+              </div>
+            )}
+
+            <h3>
+              {mode === "listens" || mode === "recent"
+                ? `Recent listens${
+                    _.isNil(listenCount) ? "" : ` (${listenCount} total)`
+                  }`
+                : "Playlist"}
+            </h3>
+
             {!listens.length && (
               <div className="lead text-center">
                 <p>No listens yet</p>
               </div>
             )}
             {listens.length > 0 && (
-              <div
-                id="listens"
-                ref={this.listensTable}
-                style={{ opacity: loading ? "0.4" : "1" }}
-              >
-                {colorReleases &&
-                  colorReleases.map((release, index) => {
-                    return (
-                      // eslint-disable-next-line react/no-array-index-key
-                      <React.Fragment key={index}>
-                        <Card>
-                          {getBackgroundSetButton(
-                            release.release_name,
-                            release.release_mbid,
-                            release.color
+              <div>
+                <div
+                  style={{
+                    height: 0,
+                    position: "sticky",
+                    top: "50%",
+                    zIndex: 1,
+                  }}
+                >
+                  <Loader isLoading={loading} />
+                </div>
+                <div
+                  id="listens"
+                  ref={this.listensTable}
+                  style={{ opacity: loading ? "0.4" : "1" }}
+                >
+                  {listens
+                    .sort((a, b) => {
+                      if (a.playing_now) {
+                        return -1;
+                      }
+                      if (b.playing_now) {
+                        return 1;
+                      }
+                      return 0;
+                    })
+                    .map((listen) => {
+                      return (
+                        <ListenCard
+                          key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
+                          showTimestamp
+                          showUsername={mode === "recent"}
+                          listen={listen}
+                          currentFeedback={this.getFeedbackForRecordingMsid(
+                            listen.track_metadata?.additional_info
+                              ?.recording_msid
                           )}
-                        </Card>
-                      </React.Fragment>
-                    );
-                  })}
+                          removeListenCallback={this.removeListenFromListenList}
+                          updateFeedbackCallback={this.updateFeedback}
+                          updateRecordingToPin={this.updateRecordingToPin}
+                          newAlert={newAlert}
+                          className={`${
+                            listen.playing_now ? "playing-now" : ""
+                          }`}
+                        />
+                      );
+                    })}
+                </div>
+                {listens.length < this.expectedListensPerPage && (
+                  <h5 className="text-center">No more listens to show</h5>
+                )}
+                {mode === "listens" && (
+                  <ul className="pager" id="navigation">
+                    <li
+                      className={`previous ${
+                        isNewestButtonDisabled ? "disabled" : ""
+                      }`}
+                    >
+                      <a
+                        role="button"
+                        onClick={this.handleClickNewest}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") this.handleClickNewest();
+                        }}
+                        tabIndex={0}
+                        href={
+                          isNewestButtonDisabled
+                            ? undefined
+                            : window.location.pathname
+                        }
+                      >
+                        &#x21E4;
+                      </a>
+                    </li>
+                    <li
+                      className={`previous ${
+                        isNewerButtonDisabled ? "disabled" : ""
+                      }`}
+                    >
+                      <a
+                        role="button"
+                        onClick={this.handleClickNewer}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") this.handleClickNewer();
+                        }}
+                        tabIndex={0}
+                        href={
+                          isNewerButtonDisabled
+                            ? undefined
+                            : `?min_ts=${previousListenTs}`
+                        }
+                      >
+                        &larr; Newer
+                      </a>
+                    </li>
+                    <li className="date-time-picker">
+                      <DatePicker
+                        onChange={this.onChangeDateTimePicker}
+                        value={dateTimePickerValue}
+                        clearIcon={null}
+                        maxDate={new Date(Date.now())}
+                        minDate={
+                          oldestListenTs
+                            ? new Date(oldestListenTs * 1000)
+                            : undefined
+                        }
+                        calendarIcon={
+                          <FontAwesomeIcon icon={faCalendar as IconProp} />
+                        }
+                      />
+                    </li>
+                    <li
+                      className={`next ${
+                        isOlderButtonDisabled ? "disabled" : ""
+                      }`}
+                      style={{ marginLeft: "auto" }}
+                    >
+                      <a
+                        role="button"
+                        onClick={this.handleClickOlder}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") this.handleClickOlder();
+                        }}
+                        tabIndex={0}
+                        href={
+                          isOlderButtonDisabled
+                            ? undefined
+                            : `?max_ts=${nextListenTs}`
+                        }
+                      >
+                        Older &rarr;
+                      </a>
+                    </li>
+                    <li
+                      className={`next ${
+                        isOldestButtonDisabled ? "disabled" : ""
+                      }`}
+                    >
+                      <a
+                        role="button"
+                        onClick={this.handleClickOldest}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") this.handleClickOldest();
+                        }}
+                        tabIndex={0}
+                        href={
+                          isOldestButtonDisabled
+                            ? undefined
+                            : `?min_ts=${oldestListenTs - 1}`
+                        }
+                      >
+                        &#x21E5;
+                      </a>
+                    </li>
+                  </ul>
+                )}
+                {currentUser && (
+                  <PinRecordingModal
+                    recordingToPin={recordingToPin || listens[0]}
+                    newAlert={newAlert}
+                  />
+                )}
               </div>
             )}
           </div>
@@ -603,10 +745,9 @@ export default class RecentListens extends React.Component<
             // eslint-disable-next-line no-dupe-keys
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
-            <SwatchesPicker onChangeComplete={this.onColorChanged} />
             <BrainzPlayer
               direction={direction}
-              listens={listens}
+              listens={allListenables}
               newAlert={newAlert}
             />
           </div>

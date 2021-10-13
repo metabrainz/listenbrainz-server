@@ -402,35 +402,14 @@ const convertColorReleaseToListen = (
   };
 };
 
-const tintColor = (value: number): number => {
-  return value + (255 - value) * 0.25; // tint the shade by 25%
-};
-
-const tintRGBColor = (color: Uint8Array): Uint8Array => {
+const lighterColor = (color: Uint8Array): Uint8Array => {
+  const ratio = 0.6;
+  const difference = Math.round(ratio * 256);
   const tintedColor = new Uint8Array(3);
   for (let index = 0; index < color.length; index += 1) {
-    tintedColor[index] = tintColor(color[index]);
+    tintedColor[index] = Math.min(color[index] + difference, 255);
   }
   return tintedColor;
-};
-
-const getBackgroundSetButton = (
-  name: string,
-  release_mbid: string,
-  color: Uint8Array
-): JSX.Element => {
-  return (
-    <button
-      type="button"
-      style={{ backgroundColor: `rgb(${color[0]},${color[1]},${color[2]})` }}
-      onClick={() => {
-        const tint = tintRGBColor(color);
-        document.body.style.backgroundColor = `rgb(${tint[0]},${tint[1]},${tint[2]})`;
-      }}
-    >
-      {name}
-    </button>
-  );
 };
 
 const handleNavigationClickEvent = (event?: React.MouseEvent): void => {
@@ -455,5 +434,5 @@ export {
   countWords,
   handleNavigationClickEvent,
   convertColorReleaseToListen,
-  getBackgroundSetButton,
+  lighterColor,
 };
