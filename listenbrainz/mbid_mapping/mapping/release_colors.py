@@ -17,7 +17,7 @@ import config
 
 register_adapter(Cube, adapt_cube)
 
-MAX_THREADS = 8
+MAX_THREADS = 16
 
 # P5
 # 1 1
@@ -44,8 +44,6 @@ def process_image(filename, mime_type):
         else:
             print("Could not determine file type ", tmp[0])
             raise RuntimeError
-
-        print(program)
 
         raw.seek(0)
         proc = subprocess.Popen([program, filename], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -129,8 +127,8 @@ def process_row(row):
             break
 
         if r.status_code == 403:
-            print("Got 403, skipping")
-            continue
+            print("Got 403, skipping\n%s" % url)
+            break
             
         if r.status_code in (503, 429):
             print("Exceeded rate limit. sleeping 2 seconds.")

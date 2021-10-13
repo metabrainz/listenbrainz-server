@@ -18,7 +18,7 @@ services:
     volumes:
       - redis:/data:z
 
-  db:
+  lb_db:
     image: timescale/timescaledb:2.2.0-pg11
     volumes:
       - timescaledb:/var/lib/postgresql/data:z
@@ -50,7 +50,7 @@ services:
       - "8081:80"
     depends_on:
       - redis
-      - db
+      - lb_db
       - rabbitmq
 
   api_compat:
@@ -62,7 +62,7 @@ services:
       - ..:/code/listenbrainz:z
     depends_on:
       - redis
-      - db
+      - lb_db
       - rabbitmq
 
   timescale_writer:

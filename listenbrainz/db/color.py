@@ -39,13 +39,27 @@ def get_releases_for_color(red: int, green: int, blue: int, count: int) -> List[
     cube = ColorCube(red=red, green=green, blue=blue)
     args = (cube, cube, count)
 
-    mb_query = """SELECT r.gid::TEXT AS release_mbid
+    mb_query = """SELECT rec.name AS recording_name
+                       , rec.gid::TEXT AS recording_mbid
+                       , r.gid::TEXT AS release_mbid
                        , r.name AS release_name
                        , ac.name AS artist_credit_name
+                       , array_agg(a.gid::TEXT) AS artist_mbids
                     FROM release r
                     JOIN artist_credit ac
                       ON r.artist_credit = ac.id
-                   WHERE r.gid in %s"""
+                    JOIN artist_credit_name acn
+                      ON acn.artist_credit = ac.id
+                    JOIN artist a
+                      ON acn.artist = a.id
+                    JOIN medium m
+                      ON m.release = r.id
+                    JOIN track t
+                      ON t.medium = m.id
+                    JOIN recording rec
+                      ON t.recording = rec.id
+                   WHERE r.gid in %s
+                GROUP BY r.gid, r.name, rec.gid, rec.name, ac.name"""
 
     conn = db.engine.raw_connection()
     with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
@@ -55,17 +69,42 @@ def get_releases_for_color(red: int, green: int, blue: int, count: int) -> List[
         index = {}
         curs.execute(query, args)
         for i, row in enumerate(curs.fetchall()):
+            index[row["release_mbid"]] = i
+            mbids.append(row["release_mbid"])
             results.append(ColorResult(release_mbid=row["release_mbid"],
                                        caa_id=row["caa_id"],
                                        color=ColorCube(red=row["red"], green=row["green"], blue=row["blue"]),
-                                       distance=row["dist"]))
-            index[row["release_mbid"]] = i
-            mbids.append(row["release_mbid"])
+                                       distance=row["dist"] ))
 
+        recordings = []
+        last_release_mbid = None
         curs.execute(mb_query, (tuple(mbids),))
         for row in curs.fetchall():
-            i = index[row["release_mbid"]]
-            results[i].release_name = row["release_name"]
-            results[i].artist_name = row["artist_credit_name"]
+            if last_release_mbid is not None and last_release_mbid != row["release_mbid"]:
+                i = index[row["release_mbid"]]
+                results[i].release_name = row["release_name"]
+                results[i].artist_name = row["artist_credit_name"]
+                results[i].rec_metadata = recordings
+                recordings = []
+
+            recordings.append({
+                "track_metadata": { 
+                    "track_name": row["recording_name"],
+                    "release_name": row["release_name"],
+                    "artist_name": row["artist_credit_name"],
+                    "additional_metadata": {
+                        "recording_mbid": row["recording_mbid"],
+                        "release_mbid": row["release_mbid"],
+                        "artist_mbids": row["artist_mbids"]
+                    }
+                }
+            })
+            last_release_mbid = row["release_mbid"]
+
+        if recordings:
+            i = index[last_release_mbid]
+            results[i].release_name = recordings[0]["track_metadata"]["release_name"]
+            results[i].artist_name = recordings[0]["track_metadata"]["artist_name"]
+            results[i].rec_metadata = recordings
 
         return results
