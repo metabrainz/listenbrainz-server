@@ -3,6 +3,7 @@
 import * as ReactDOM from "react-dom";
 import * as React from "react";
 import { ColorResult, SwatchesPicker } from "react-color";
+import { get, has } from "lodash";
 import ErrorBoundary from "../ErrorBoundary";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import {
@@ -175,26 +176,37 @@ export default class ColorPlay extends React.Component<
               <div>
                 <Card style={{ display: "flex" }}>
                   <img
+                    className="img-rounded"
                     style={{ flex: 1 }}
                     src={`https://coverartarchive.org/release/${selectedRelease.release_mbid}/${selectedRelease.caa_id}-250.jpg`}
                     alt={`Cover art for Release ${selectedRelease.release_name}`}
-                    width={250}
-                    height={250}
+                    width={200}
+                    height={200}
                   />
-                  <div style={{ flex: 3 }}>
-                    <h5>
+                  <div style={{ flex: 3, padding: "0.5em 2em" }}>
+                    <div className="h3">
                       <a
                         href={`https://musicbrainz.org/release/${selectedRelease.release_mbid}`}
                       >
                         {selectedRelease.release_name}
                       </a>
-                    </h5>
-                    <div>
-                      <a
-                        href={`https://musicbrainz.org/artist/${selectedRelease.artist_mbids?.[0]}`}
-                      >
-                        {selectedRelease.artist_name}
-                      </a>
+                    </div>
+                    <div className="h4">
+                      {has(
+                        selectedRelease,
+                        "recordings[0].track_metadata.additional_info.artist_mbids[0]"
+                      ) ? (
+                        <a
+                          href={`https://musicbrainz.org/artist/${get(
+                            selectedRelease,
+                            "recordings[0].track_metadata.additional_info.artist_mbids[0]"
+                          )}`}
+                        >
+                          {selectedRelease.artist_name}
+                        </a>
+                      ) : (
+                        selectedRelease.artist_name
+                      )}
                     </div>
                   </div>
                 </Card>
