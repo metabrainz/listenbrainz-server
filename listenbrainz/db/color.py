@@ -92,7 +92,7 @@ def get_releases_for_color(red: int, green: int, blue: int, count: int) -> List[
                     "track_name": row["recording_name"],
                     "release_name": row["release_name"],
                     "artist_name": row["artist_credit_name"],
-                    "additional_metadata": {
+                    "additional_info": {
                         "recording_mbid": row["recording_mbid"],
                         "release_mbid": row["release_mbid"],
                         "artist_mbids": row["artist_mbids"]
