@@ -46,7 +46,6 @@ export default class ColorPlay extends React.Component<
 > {
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
-  private APIService!: APIServiceClass;
 
   private DEFAULT_TRACKS_PER_PAGE = 25;
 
@@ -62,58 +61,22 @@ export default class ColorPlay extends React.Component<
     };
   }
 
-  async componentDidMount(): Promise<void> {
-    // Listen to browser previous/next events and load page accordingly
-    window.addEventListener("popstate", this.handleURLChange);
-    this.handleURLChange();
-    const { APIService } = this.context;
-    this.APIService = APIService;
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener("popstate", this.handleURLChange);
-  }
-
-  // pagination functions
-  handleURLChange = async (): Promise<void> => {
-    const { page, maxPage } = this.state;
-    const url = new URL(window.location.href);
-
-    if (url.searchParams.get("page")) {
-      let newPage = Number(url.searchParams.get("page"));
-      if (newPage === page) {
-        // page didn't change
-        return;
-      }
-      newPage = Math.max(newPage, 1);
-      newPage = Math.min(newPage, maxPage);
-    } else if (page !== 1) {
-      // occurs on back + forward history
-    }
-  };
-
-  handleClickOlder = async (event?: React.MouseEvent) => {
-    if (event) {
-      event.preventDefault();
-    }
-  };
-
-  handleClickNewer = async (event?: React.MouseEvent) => {
-    if (event) {
-      event.preventDefault();
-    }
-  };
-
   onColorChanged = async (rgbString: string) => {
+    const { newAlert } = this.props;
+    const { APIService } = this.context;
     const hex = tinycolor(rgbString).toHex(); // returns hex value without leading '#'
-    const colorReleases: ColorReleasesResponse = await this.APIService.lookupReleaseFromColor(
-      hex
-    );
-    const { releases } = colorReleases.payload;
-    this.setState({
-      colorReleases: releases,
-      selectedColorString: rgbString,
-    });
+    try {
+      const colorReleases: ColorReleasesResponse = await APIService.lookupReleaseFromColor(
+        hex
+      );
+      const { releases } = colorReleases.payload;
+      this.setState({
+        colorReleases: releases,
+        selectedColorString: rgbString,
+      });
+    } catch (err) {
+      newAlert("danger", "", err.message ?? err);
+    }
   };
 
   selectRelease = (
