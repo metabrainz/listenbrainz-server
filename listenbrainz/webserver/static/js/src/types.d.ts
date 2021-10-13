@@ -565,6 +565,7 @@ type ColorReleaseItem = {
   caa_id: number;
   release_name: string;
   release_mbid: string;
+  recordings?: BaseListenFormat[];
 };
 
 type ColorReleasesResponse = {
