@@ -560,7 +560,6 @@ type CritiqueBrainzReview = {
 
 type ColorReleaseItem = {
   artist_name: string;
-  artist_mbids: Array<string>;
   color: Uint8Array;
   dist: number;
   caa_id: number;
