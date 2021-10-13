@@ -13,25 +13,25 @@ import {
 } from "./utils/utils";
 import defaultColors from "./utils/defaultColors";
 
-type ColourWheelProps = {
+type ColorWheelProps = {
   radius: number;
   lineWidth: number;
-  onColourSelected: (rgbValue: string) => void;
+  onColorSelected: (rgbValue: string) => void;
   padding: number;
   spacers: {
     colour: string;
-    shadowColour: string;
+    shadowColor: string;
     shadowBlur: number | string;
   };
   colours: string[];
   shades: number;
   dynamicCursor: boolean;
   preset: boolean;
-  presetColour: string;
+  presetColor: string;
   animated: boolean;
-  onRef?: (arg?: ColourWheel) => void;
+  onRef?: (arg?: ColorWheel) => void;
 };
-type ColourWheelState = {
+type ColorWheelState = {
   rgb: { r: string | number; g: string | number; b: string | number } | null;
   innerWheelOpen: boolean;
   centerCircleOpen: boolean;
@@ -41,9 +41,9 @@ type ColourWheelState = {
 const fullCircle = 2 * Math.PI;
 const quarterCircle = fullCircle / 4;
 
-export default class ColourWheel extends React.Component<
-  ColourWheelProps,
-  ColourWheelState
+export default class ColorWheel extends React.Component<
+  ColorWheelProps,
+  ColorWheelState
 > {
   outerWheelBounds: any = null;
   innerWheelBounds: any = null;
@@ -66,10 +66,10 @@ export default class ColourWheel extends React.Component<
     preset: false,
     animated: true,
     spacers: {},
-    presetColour: "",
+    presetColor: "",
   };
 
-  constructor(props: ColourWheelProps) {
+  constructor(props: ColorWheelProps) {
     super(props);
 
     this.state = {
@@ -112,7 +112,7 @@ export default class ColourWheel extends React.Component<
   }
 
   componentDidMount() {
-    const { onRef, preset, presetColour } = this.props;
+    const { onRef, preset, presetColor } = this.props;
     // Giving this context to our parent component.
     if (onRef) onRef(this);
 
@@ -121,7 +121,7 @@ export default class ColourWheel extends React.Component<
     this.ctx = this.canvasEl.getContext("2d");
 
     if (preset) {
-      const rgb = colourToRgbObj(presetColour);
+      const rgb = colourToRgbObj(presetColor);
 
       this.setState({ rgb }, () => {
         this.drawOuterWheel();
@@ -136,7 +136,7 @@ export default class ColourWheel extends React.Component<
   }
 
   componentWillUnmount() {
-    const { onRef, preset, presetColour } = this.props;
+    const { onRef, preset, presetColor } = this.props;
     if (onRef) {
       onRef(undefined);
     }
@@ -221,7 +221,7 @@ export default class ColourWheel extends React.Component<
 
   // MARK - Clicks & action methods:
   outerWheelClicked(evtPos: { x: number; y: number }) {
-    const { onColourSelected } = this.props;
+    const { onColorSelected } = this.props;
     // returns an rgba array of the pixel-clicked.
     const rgbaArr = this.ctx.getImageData(evtPos.x, evtPos.y, 1, 1).data;
     const [r, g, b] = rgbaArr;
@@ -231,7 +231,7 @@ export default class ColourWheel extends React.Component<
     // Whether the user wants rgb-strings or rgb objects returned.
     const rgbArg = convertObjToString(rgb); // TODO: Let user set different return values in props; e.g. rbg obj, string, etc.
 
-    onColourSelected(rgbArg);
+    onColorSelected(rgbArg);
 
     this.setState(
       {
@@ -247,7 +247,7 @@ export default class ColourWheel extends React.Component<
   }
 
   innerWheelClicked(evtPos: { x: number; y: number }) {
-    const { onColourSelected } = this.props;
+    const { onColorSelected } = this.props;
     const rgbaArr = this.ctx.getImageData(evtPos.x, evtPos.y, 1, 1).data;
     const [r, g, b] = rgbaArr;
 
@@ -255,7 +255,7 @@ export default class ColourWheel extends React.Component<
 
     const rgbArg = convertObjToString(rgb);
 
-    onColourSelected(rgbArg);
+    onColorSelected(rgbArg);
 
     this.setState(
       {
@@ -331,7 +331,7 @@ export default class ColourWheel extends React.Component<
     const {
       radius,
       padding,
-      spacers: { colour, shadowColour, shadowBlur },
+      spacers: { colour, shadowColor, shadowBlur },
     } = this.props;
 
     const height = radius * 2;
@@ -344,7 +344,7 @@ export default class ColourWheel extends React.Component<
     this.ctx.arc(width / 2, height / 2, effectiveRadius, 0, fullCircle);
     this.ctx.lineWidth = padding;
 
-    this.ctx.shadowColor = shadowColour;
+    this.ctx.shadowColor = shadowColor;
     this.ctx.shadowBlur = shadowBlur;
     this.ctx.strokeStyle = colour;
     this.ctx.stroke();

@@ -4,7 +4,7 @@ import * as ReactDOM from "react-dom";
 import * as React from "react";
 import { get, has } from "lodash";
 import tinycolor from "tinycolor2";
-import ColourWheel from "./ColourWheel";
+import ColorWheel from "./ColorWheel";
 import defaultColors from "./utils/defaultColors";
 import ErrorBoundary from "../ErrorBoundary";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
@@ -16,25 +16,17 @@ import {
 import APIServiceClass from "../APIService";
 import BrainzPlayer from "../BrainzPlayer";
 import Loader from "../components/Loader";
-import {
-  convertColorReleaseToListen,
-  getPageProps,
-  lighterColor,
-} from "../utils";
+import { convertColorReleaseToListen, getPageProps } from "../utils";
 import ListenCard from "../listens/ListenCard";
 import Card from "../components/Card";
 
 export type ColorPlayProps = {
   user: ListenBrainzUser;
-  totalCount: number;
-  profileUrl?: string;
 } & WithAlertNotificationsInjectedProps;
 
 export type ColorPlayState = {
   direction: BrainzPlayDirection;
   colorReleases: Array<ColorReleaseItem>;
-  page: number;
-  maxPage: number;
   loading: boolean;
   selectedRelease?: ColorReleaseItem;
   selectedColorString?: string;
@@ -46,82 +38,45 @@ export default class ColorPlay extends React.Component<
 > {
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
-  private APIService!: APIServiceClass;
-
-  private DEFAULT_TRACKS_PER_PAGE = 25;
 
   constructor(props: ColorPlayProps) {
     super(props);
-    const { totalCount } = this.props;
     this.state = {
-      maxPage: Math.ceil(totalCount / this.DEFAULT_TRACKS_PER_PAGE),
       colorReleases: [],
-      page: 1,
       loading: false,
       direction: "down",
     };
+    document.body.style.transition = "background-color 1s";
   }
-
-  async componentDidMount(): Promise<void> {
-    // Listen to browser previous/next events and load page accordingly
-    window.addEventListener("popstate", this.handleURLChange);
-    this.handleURLChange();
-    const { APIService } = this.context;
-    this.APIService = APIService;
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener("popstate", this.handleURLChange);
-  }
-
-  // pagination functions
-  handleURLChange = async (): Promise<void> => {
-    const { page, maxPage } = this.state;
-    const url = new URL(window.location.href);
-
-    if (url.searchParams.get("page")) {
-      let newPage = Number(url.searchParams.get("page"));
-      if (newPage === page) {
-        // page didn't change
-        return;
-      }
-      newPage = Math.max(newPage, 1);
-      newPage = Math.min(newPage, maxPage);
-    } else if (page !== 1) {
-      // occurs on back + forward history
-    }
-  };
-
-  handleClickOlder = async (event?: React.MouseEvent) => {
-    if (event) {
-      event.preventDefault();
-    }
-  };
-
-  handleClickNewer = async (event?: React.MouseEvent) => {
-    if (event) {
-      event.preventDefault();
-    }
-  };
 
   onColorChanged = async (rgbString: string) => {
+    const { newAlert } = this.props;
+    const { APIService } = this.context;
     const hex = tinycolor(rgbString).toHex(); // returns hex value without leading '#'
-    const colorReleases: ColorReleasesResponse = await this.APIService.lookupReleaseFromColor(
-      hex
-    );
-    const { releases } = colorReleases.payload;
-    this.setState({
-      colorReleases: releases,
-      selectedColorString: rgbString,
-    });
+    try {
+      const colorReleases: ColorReleasesResponse = await APIService.lookupReleaseFromColor(
+        hex
+      );
+      const { releases } = colorReleases.payload;
+      const lighterColor = tinycolor(rgbString).lighten(40);
+      document.body.style.backgroundColor = lighterColor.toRgbString();
+      this.setState({
+        colorReleases: releases,
+        selectedColorString: rgbString,
+      });
+    } catch (err) {
+      newAlert(
+        "danger",
+        "",
+        err.message ? err.message.toString() : err.toString()
+      );
+    }
   };
 
   selectRelease = (
     release: ColorReleaseItem,
     event: React.MouseEvent<HTMLImageElement>
   ) => {
-    const tint = lighterColor(release.color);
-    document.body.style.backgroundColor = `rgb(${tint[0]},${tint[1]},${tint[2]})`;
     this.setState({ selectedRelease: release }, () => {
       window.postMessage(
         {
@@ -149,36 +104,62 @@ export default class ColorPlay extends React.Component<
     return (
       <div role="main">
         <div className="row">
-          <div className="col-md-8">
-            <h3>Huesound Color Play</h3>
-
-            {colorReleases.length === 0 && (
-              <>
-                <div className="lead text-center">No Tracks found</div>
-
-                {user.name === currentUser.name && <>Click on the wheel</>}
-              </>
-            )}
-
-            {colorReleases && (
-              <div className="coverArtGrid">
-                {colorReleases.map((release, index) => {
-                  return (
-                    // eslint-disable-next-line react/no-array-index-key
-                    <div key={index}>
-                      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events,jsx-a11y/no-noninteractive-element-interactions */}
-                      <img
-                        src={`https://coverartarchive.org/release/${release.release_mbid}/${release.caa_id}-250.jpg`}
-                        alt={`Cover art for Release ${release.release_name}`}
-                        width={125}
-                        height={125}
-                        onClick={this.selectRelease.bind(this, release)}
-                      />
-                    </div>
-                  );
-                })}
+          <div className="col-md-8 justify-content-center align-items-center">
+            <h3>Huesound Color Play (alpha version)</h3>
+            <div className="row">
+              <div className="col-md-6">
+                <ColorWheel
+                  radius={175}
+                  padding={1}
+                  lineWidth={70}
+                  onColorSelected={this.onColorChanged}
+                  spacers={{
+                    colour: "#FFFFFF",
+                    shadowColor: "grey",
+                    shadowBlur: 5,
+                  }}
+                  colours={defaultColors}
+                  preset={false} // You can set this bool depending on whether you have a pre-selected colour in state.
+                  presetColor={selectedColorString}
+                  animated
+                />
               </div>
-            )}
+              {colorReleases.length === 0 && (
+                <>
+                  <div className="lead text-center col-4 align-items-center">
+                    Go ahead and pick a color!
+                  </div>
+
+                  {user.name === currentUser.name && (
+                    <div className="text-center">Click on the wheel</div>
+                  )}
+                </>
+              )}
+              {colorReleases && (
+                <div className="coverArtGrid col-8">
+                  {colorReleases.map((release, index) => {
+                    if (index > 8) {
+                      return;
+                    }
+                    return (
+                      // eslint-disable-next-line react/no-array-index-key
+
+                      <div key={index}>
+                        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events,jsx-a11y/no-noninteractive-element-interactions */}
+                        <img
+                          src={`https://coverartarchive.org/release/${release.release_mbid}/${release.caa_id}-250.jpg`}
+                          alt={`Cover art for Release ${release.release_name}`}
+                          width={125}
+                          height={125}
+                          onClick={this.selectRelease.bind(this, release)}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
             {colorReleases.length > 0 && <Loader isLoading={loading} />}
 
             {selectedRelease && (
@@ -237,29 +218,7 @@ export default class ColorPlay extends React.Component<
               </div>
             )}
           </div>
-          <div
-            className="col-md-4"
-            // @ts-ignore
-            // eslint-disable-next-line no-dupe-keys
-            style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
-          >
-            <div style={{ margin: "1.5em 0" }}>
-              <ColourWheel
-                radius={175}
-                padding={1}
-                lineWidth={70}
-                onColourSelected={this.onColorChanged}
-                spacers={{
-                  colour: "#FFFFFF",
-                  shadowColour: "grey",
-                  shadowBlur: 5,
-                }}
-                colours={defaultColors}
-                preset={false} // You can set this bool depending on whether you have a pre-selected colour in state.
-                presetColour={selectedColorString}
-                animated
-              />
-            </div>
+          <div className="col-md-4 sticky-top">
             <BrainzPlayer
               direction={direction}
               newAlert={newAlert}
@@ -275,7 +234,7 @@ export default class ColorPlay extends React.Component<
 document.addEventListener("DOMContentLoaded", () => {
   const { domContainer, reactProps, globalReactProps } = getPageProps();
   const { api_url, current_user, spotify, youtube } = globalReactProps;
-  const { user, total_count, profile_url } = reactProps;
+  const { user } = reactProps;
 
   const apiService = new APIServiceClass(
     api_url || `${window.location.origin}/1`
@@ -293,11 +252,7 @@ document.addEventListener("DOMContentLoaded", () => {
   ReactDOM.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
-        <ColorPlayWithAlertNotifications
-          user={user}
-          totalCount={total_count}
-          profileUrl={profile_url}
-        />
+        <ColorPlayWithAlertNotifications user={user} />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,
     domContainer

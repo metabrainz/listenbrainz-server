@@ -412,7 +412,7 @@ def color_play(user_name: str):
 
     props = {
         "user": user_data,
-        "active_section": "recommendations",
+        "active_section": "colorPlay",
     }
 
     return render_template(
