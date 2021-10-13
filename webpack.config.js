@@ -33,6 +33,7 @@ module.exports = function (env, argv) {
           syntactic: true,
         },
         mode: "write-references",
+        memoryLimit: 4096,
       },
       eslint: {
         // Starting the path with "**/" because of current dev/prod path discrepancy
