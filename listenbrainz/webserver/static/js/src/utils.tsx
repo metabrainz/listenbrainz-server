@@ -1,7 +1,6 @@
 import * as React from "react";
 import * as _ from "lodash";
 import * as timeago from "time-ago";
-import { colors } from "react-select/src/theme";
 
 const searchForSpotifyTrack = async (
   spotifyToken?: string,

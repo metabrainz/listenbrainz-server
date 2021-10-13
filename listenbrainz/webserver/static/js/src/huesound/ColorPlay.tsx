@@ -2,8 +2,10 @@
 
 import * as ReactDOM from "react-dom";
 import * as React from "react";
-import { ColorResult, SwatchesPicker } from "react-color";
 import { get, has } from "lodash";
+import tinycolor from "tinycolor2";
+import ColourWheel from "./ColourWheel";
+import defaultColors from "./utils/defaultColors";
 import ErrorBoundary from "../ErrorBoundary";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import {
@@ -35,6 +37,7 @@ export type ColorPlayState = {
   maxPage: number;
   loading: boolean;
   selectedRelease?: ColorReleaseItem;
+  selectedColorString?: string;
 };
 
 export default class ColorPlay extends React.Component<
@@ -101,15 +104,15 @@ export default class ColorPlay extends React.Component<
     }
   };
 
-  onColorChanged = async (color: ColorResult) => {
-    let { hex } = color;
-    hex = hex.substring(1); // remove # from the start of the color
+  onColorChanged = async (rgbString: string) => {
+    const hex = tinycolor(rgbString).toHex(); // returns hex value without leading '#'
     const colorReleases: ColorReleasesResponse = await this.APIService.lookupReleaseFromColor(
       hex
     );
     const { releases } = colorReleases.payload;
     this.setState({
       colorReleases: releases,
+      selectedColorString: rgbString,
     });
   };
 
@@ -133,7 +136,13 @@ export default class ColorPlay extends React.Component<
 
   render() {
     const { user, newAlert } = this.props;
-    const { direction, loading, colorReleases, selectedRelease } = this.state;
+    const {
+      direction,
+      loading,
+      colorReleases,
+      selectedRelease,
+      selectedColorString,
+    } = this.state;
     const { currentUser } = this.context;
 
     const selectedReleaseTracks = selectedRelease?.recordings ?? [];
@@ -234,8 +243,22 @@ export default class ColorPlay extends React.Component<
             // eslint-disable-next-line no-dupe-keys
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
-            <div style={{ marginBottom: 10 }}>
-              <SwatchesPicker onChangeComplete={this.onColorChanged} />
+            <div style={{ margin: "1.5em 0" }}>
+              <ColourWheel
+                radius={175}
+                padding={1}
+                lineWidth={70}
+                onColourSelected={this.onColorChanged}
+                spacers={{
+                  colour: "#FFFFFF",
+                  shadowColour: "grey",
+                  shadowBlur: 5,
+                }}
+                colours={defaultColors}
+                preset={false} // You can set this bool depending on whether you have a pre-selected colour in state.
+                presetColour={selectedColorString}
+                animated
+              />
             </div>
             <BrainzPlayer
               direction={direction}
