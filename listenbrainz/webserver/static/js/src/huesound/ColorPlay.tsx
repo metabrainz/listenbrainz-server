@@ -16,25 +16,17 @@ import {
 import APIServiceClass from "../APIService";
 import BrainzPlayer from "../BrainzPlayer";
 import Loader from "../components/Loader";
-import {
-  convertColorReleaseToListen,
-  getPageProps,
-  lighterColor,
-} from "../utils";
+import { convertColorReleaseToListen, getPageProps } from "../utils";
 import ListenCard from "../listens/ListenCard";
 import Card from "../components/Card";
 
 export type ColorPlayProps = {
   user: ListenBrainzUser;
-  totalCount: number;
-  profileUrl?: string;
 } & WithAlertNotificationsInjectedProps;
 
 export type ColorPlayState = {
   direction: BrainzPlayDirection;
   colorReleases: Array<ColorReleaseItem>;
-  page: number;
-  maxPage: number;
   loading: boolean;
   selectedRelease?: ColorReleaseItem;
   selectedColorString?: string;
@@ -47,18 +39,14 @@ export default class ColorPlay extends React.Component<
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
-  private DEFAULT_TRACKS_PER_PAGE = 25;
-
   constructor(props: ColorPlayProps) {
     super(props);
-    const { totalCount } = this.props;
     this.state = {
-      maxPage: Math.ceil(totalCount / this.DEFAULT_TRACKS_PER_PAGE),
       colorReleases: [],
-      page: 1,
       loading: false,
       direction: "down",
     };
+    document.body.style.transition = "background-color 1s";
   }
 
   onColorChanged = async (rgbString: string) => {
@@ -70,12 +58,18 @@ export default class ColorPlay extends React.Component<
         hex
       );
       const { releases } = colorReleases.payload;
+      const lighterColor = tinycolor(rgbString).lighten(40);
+      document.body.style.backgroundColor = lighterColor.toRgbString();
       this.setState({
         colorReleases: releases,
         selectedColorString: rgbString,
       });
     } catch (err) {
-      newAlert("danger", "", err.message ?? err);
+      newAlert(
+        "danger",
+        "",
+        err.message ? err.message.toString() : err.toString()
+      );
     }
   };
 
@@ -83,8 +77,6 @@ export default class ColorPlay extends React.Component<
     release: ColorReleaseItem,
     event: React.MouseEvent<HTMLImageElement>
   ) => {
-    const tint = lighterColor(release.color);
-    document.body.style.backgroundColor = `rgb(${tint[0]},${tint[1]},${tint[2]})`;
     this.setState({ selectedRelease: release }, () => {
       window.postMessage(
         {
@@ -113,7 +105,7 @@ export default class ColorPlay extends React.Component<
       <div role="main">
         <div className="row">
           <div className="col-md-8">
-            <h3>Huesound Color Play</h3>
+            <h3>Huesound Color Play (alpha version)</h3>
 
             {colorReleases.length === 0 && (
               <>
@@ -200,13 +192,8 @@ export default class ColorPlay extends React.Component<
               </div>
             )}
           </div>
-          <div
-            className="col-md-4"
-            // @ts-ignore
-            // eslint-disable-next-line no-dupe-keys
-            style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
-          >
-            <div style={{ margin: "1.5em 0" }}>
+          <div className="col-md-4">
+            <div style={{ margin: "1em 0" }}>
               <ColourWheel
                 radius={175}
                 padding={1}
@@ -223,11 +210,13 @@ export default class ColorPlay extends React.Component<
                 animated
               />
             </div>
-            <BrainzPlayer
-              direction={direction}
-              newAlert={newAlert}
-              listens={selectedReleaseTracks}
-            />
+            <div className="sticky-top">
+              <BrainzPlayer
+                direction={direction}
+                newAlert={newAlert}
+                listens={selectedReleaseTracks}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -238,7 +227,7 @@ export default class ColorPlay extends React.Component<
 document.addEventListener("DOMContentLoaded", () => {
   const { domContainer, reactProps, globalReactProps } = getPageProps();
   const { api_url, current_user, spotify, youtube } = globalReactProps;
-  const { user, total_count, profile_url } = reactProps;
+  const { user } = reactProps;
 
   const apiService = new APIServiceClass(
     api_url || `${window.location.origin}/1`
@@ -256,11 +245,7 @@ document.addEventListener("DOMContentLoaded", () => {
   ReactDOM.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
-        <ColorPlayWithAlertNotifications
-          user={user}
-          totalCount={total_count}
-          profileUrl={profile_url}
-        />
+        <ColorPlayWithAlertNotifications user={user} />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,
     domContainer
