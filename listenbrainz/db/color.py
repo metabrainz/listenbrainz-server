@@ -81,9 +81,9 @@ def get_releases_for_color(red: int, green: int, blue: int, count: int) -> List[
         curs.execute(mb_query, (tuple(mbids),))
         for row in curs.fetchall():
             if last_release_mbid is not None and last_release_mbid != row["release_mbid"]:
-                i = index[row["release_mbid"]]
-                results[i].release_name = row["release_name"]
-                results[i].artist_name = row["artist_credit_name"]
+                i = index[last_release_mbid]
+                results[i].release_name = recordings[0]["track_metadata"]["release_name"]
+                results[i].artist_name = recordings[0]["track_metadata"]["artist_name"]
                 results[i].rec_metadata = recordings
                 recordings = []
 
