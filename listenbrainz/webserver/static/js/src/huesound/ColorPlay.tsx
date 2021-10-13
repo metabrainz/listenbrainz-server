@@ -173,7 +173,7 @@ export default class ColorPlay extends React.Component<
             {colorReleases.length > 0 && <Loader isLoading={loading} />}
 
             {selectedRelease && (
-              <div>
+              <div style={{ marginTop: "3em" }}>
                 <Card style={{ display: "flex" }}>
                   <img
                     className="img-rounded"
@@ -210,7 +210,7 @@ export default class ColorPlay extends React.Component<
                     </div>
                   </div>
                 </Card>
-                <div style={{ marginLeft: "2em" }}>
+                <div style={{ padding: "2em" }}>
                   {selectedRelease.recordings?.map(
                     (recording: BaseListenFormat) => {
                       return (
