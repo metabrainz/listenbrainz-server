@@ -18,21 +18,22 @@ import {
   getPageProps,
   lighterColor,
 } from "../utils";
+import ListenCard from "../listens/ListenCard";
+import Card from "../components/Card";
 
 export type ColorPlayProps = {
   user: ListenBrainzUser;
-  tracks: Array<Listen>;
   totalCount: number;
   profileUrl?: string;
 } & WithAlertNotificationsInjectedProps;
 
 export type ColorPlayState = {
   direction: BrainzPlayDirection;
-  tracks: Array<Listen>;
   colorReleases: Array<ColorReleaseItem>;
   page: number;
   maxPage: number;
   loading: boolean;
+  selectedRelease?: ColorReleaseItem;
 };
 
 export default class ColorPlay extends React.Component<
@@ -50,7 +51,6 @@ export default class ColorPlay extends React.Component<
     const { totalCount } = this.props;
     this.state = {
       maxPage: Math.ceil(totalCount / this.DEFAULT_TRACKS_PER_PAGE),
-      tracks: props.tracks || [],
       colorReleases: [],
       page: 1,
       loading: false,
@@ -107,25 +107,42 @@ export default class ColorPlay extends React.Component<
       hex
     );
     const { releases } = colorReleases.payload;
-    // eslint-disable-next-line react/no-unused-state
     this.setState({
       colorReleases: releases,
-      tracks: releases.map(convertColorReleaseToListen),
+    });
+  };
+
+  selectRelease = (
+    release: ColorReleaseItem,
+    event: React.MouseEvent<HTMLImageElement>
+  ) => {
+    const tint = lighterColor(release.color);
+    document.body.style.backgroundColor = `rgb(${tint[0]},${tint[1]},${tint[2]})`;
+    this.setState({ selectedRelease: release }, () => {
+      window.postMessage(
+        {
+          brainzplayer_event: "play-listen",
+          payload:
+            release.recordings?.[0] ?? convertColorReleaseToListen(release),
+        },
+        window.location.origin
+      );
     });
   };
 
   render() {
     const { user, newAlert } = this.props;
-    const { tracks, direction, loading, colorReleases } = this.state;
+    const { direction, loading, colorReleases, selectedRelease } = this.state;
     const { currentUser } = this.context;
 
+    const selectedReleaseTracks = selectedRelease?.recordings ?? [];
     return (
       <div role="main">
         <div className="row">
           <div className="col-md-8">
             <h3>Huesound Color Play</h3>
 
-            {tracks.length === 0 && (
+            {colorReleases.length === 0 && (
               <>
                 <div className="lead text-center">No Tracks found</div>
 
@@ -145,25 +162,59 @@ export default class ColorPlay extends React.Component<
                         alt={`Cover art for Release ${release.release_name}`}
                         width={125}
                         height={125}
-                        onClick={() => {
-                          const tint = lighterColor(release.color);
-                          document.body.style.backgroundColor = `rgb(${tint[0]},${tint[1]},${tint[2]})`;
-                          window.postMessage(
-                            {
-                              brainzplayer_event: "play-listen",
-                              payload: tracks[index],
-                            },
-                            window.location.origin
-                          );
-                        }}
+                        onClick={this.selectRelease.bind(this, release)}
                       />
                     </div>
                   );
                 })}
               </div>
             )}
+            {colorReleases.length > 0 && <Loader isLoading={loading} />}
 
-            {tracks.length > 0 && <Loader isLoading={loading} />}
+            {selectedRelease && (
+              <div>
+                <Card style={{ display: "flex" }}>
+                  <img
+                    style={{ flex: 1 }}
+                    src={`https://coverartarchive.org/release/${selectedRelease.release_mbid}/${selectedRelease.caa_id}-250.jpg`}
+                    alt={`Cover art for Release ${selectedRelease.release_name}`}
+                    width={250}
+                    height={250}
+                  />
+                  <div style={{ flex: 3 }}>
+                    <h5>
+                      <a
+                        href={`https://musicbrainz.org/release/${selectedRelease.release_mbid}`}
+                      >
+                        {selectedRelease.release_name}
+                      </a>
+                    </h5>
+                    <div>
+                      <a
+                        href={`https://musicbrainz.org/artist/${selectedRelease.artist_mbids?.[0]}`}
+                      >
+                        {selectedRelease.artist_name}
+                      </a>
+                    </div>
+                  </div>
+                </Card>
+                <div style={{ marginLeft: "2em" }}>
+                  {selectedRelease.recordings?.map(
+                    (recording: BaseListenFormat) => {
+                      return (
+                        <ListenCard
+                          listen={recording}
+                          currentFeedback={0}
+                          showTimestamp={false}
+                          showUsername={false}
+                          newAlert={newAlert}
+                        />
+                      );
+                    }
+                  )}
+                </div>
+              </div>
+            )}
           </div>
           <div
             className="col-md-4"
@@ -177,7 +228,7 @@ export default class ColorPlay extends React.Component<
             <BrainzPlayer
               direction={direction}
               newAlert={newAlert}
-              listens={tracks}
+              listens={selectedReleaseTracks}
             />
           </div>
         </div>
@@ -189,7 +240,7 @@ export default class ColorPlay extends React.Component<
 document.addEventListener("DOMContentLoaded", () => {
   const { domContainer, reactProps, globalReactProps } = getPageProps();
   const { api_url, current_user, spotify, youtube } = globalReactProps;
-  const { user, tracks, total_count, profile_url } = reactProps;
+  const { user, total_count, profile_url } = reactProps;
 
   const apiService = new APIServiceClass(
     api_url || `${window.location.origin}/1`
@@ -209,7 +260,6 @@ document.addEventListener("DOMContentLoaded", () => {
       <GlobalAppContext.Provider value={globalProps}>
         <ColorPlayWithAlertNotifications
           user={user}
-          tracks={tracks}
           totalCount={total_count}
           profileUrl={profile_url}
         />
