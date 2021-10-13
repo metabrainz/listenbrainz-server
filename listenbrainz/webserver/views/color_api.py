@@ -5,9 +5,11 @@ from listenbrainz.webserver.errors import APIBadRequest
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api import _parse_int_arg
 from listenbrainz.db.color import get_releases_for_color
+from brainzutils import cache
 
 
 DEFAULT_NUMBER_OF_RELEASES = 25  # 5x5 grid
+DEFAULT_CACHE_EXPIRE_TIME = 3600  # 1 hour
 
 color_api_bp = Blueprint('color_api_v1', __name__)
 
@@ -29,7 +31,8 @@ def color_releases(color):
                   "dist": 109.973,
                   "release_mbid": "00a109da-400c-4350-9751-6e6f25e89073",
                   "caa_id": 34897349734,
-                  "release_name": "EP5"
+                  "release_name": "EP5",
+                  "recordings": < array of listen formatted metadata >,
                },
                . . .
            ]
@@ -49,7 +52,11 @@ def color_releases(color):
 
     count = _parse_int_arg("count", DEFAULT_NUMBER_OF_RELEASES)
 
-    results = get_releases_for_color(*color_tuple, count)
-    results = [c.to_api() for c in results]
+    cache_key = "huesound.%s.%d" % (color, count)
+    results = cache.get(cache_key, decode=True)
+    if not results:
+        results = get_releases_for_color(*color_tuple, count)
+        results = [c.to_api() for c in results]
+        cache.set(cache_key, results, DEFAULT_CACHE_EXPIRE_TIME, encode=True)
 
     return jsonify({"payload": {"releases": results}})
