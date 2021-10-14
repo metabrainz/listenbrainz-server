@@ -59,7 +59,9 @@ export default class ColorPlay extends React.Component<
       );
       const { releases } = colorReleases.payload;
       const lighterColor = tinycolor(rgbString).lighten(40);
-      document.body.style.backgroundColor = lighterColor.toRgbString();
+      document.getElementById(
+        "bgHuesound"
+      ).style.backgroundColor = lighterColor.toRgbString();
       this.setState({
         colorReleases: releases,
         selectedColorString: rgbString,
@@ -104,7 +106,9 @@ export default class ColorPlay extends React.Component<
     return (
       <div role="main">
         <div>
-          <h3>Huesound Color Play (alpha version)</h3>
+          <h3 id="bgHuesound" className="text-center">
+            Huesound Color Play (alpha version)
+          </h3>
           <div className="row vertical-align">
             <div className="col-md-4">
               <h1 className="text-center">Pick a Color</h1>
@@ -124,13 +128,14 @@ export default class ColorPlay extends React.Component<
                 animated
               />
               {colorReleases.length === 0 && (
-                <>
-                  <h1 className="text-center">Click on the wheel</h1>
-                </>
+                <h1 className="text-center">Click on the wheel</h1>
               )}
+              <h3 className="text-center">
+                This is where the description for this section goes
+              </h3>
             </div>
-            {colorReleases && (
-              <div className="coverArtGrid col-8">
+            {colorReleases && colorReleases.length > 0 && (
+              <div className="col-md-8 coverArtGrid">
                 {colorReleases.map((release, index) => {
                   return (
                     // eslint-disable-next-line react/no-array-index-key
@@ -139,8 +144,8 @@ export default class ColorPlay extends React.Component<
                       <img
                         src={`https://coverartarchive.org/release/${release.release_mbid}/${release.caa_id}-250.jpg`}
                         alt={`Cover art for Release ${release.release_name}`}
-                        width={125}
-                        height={125}
+                        width={142}
+                        height={142}
                         onClick={this.selectRelease.bind(this, release)}
                       />
                     </div>
