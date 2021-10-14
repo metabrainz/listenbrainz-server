@@ -36,7 +36,7 @@ jobs:
     # but this is built locally for the listenbrainz service and reused for timescale writer, hence the pull fails.
     # to avoid this we specifically mention the services to pull images for here,
     - name: Pull docker images
-      run: docker-compose -f docker/docker-compose.integration.yml pull db redis rabbitmq
+      run: docker-compose -f docker/docker-compose.integration.yml pull lb_db redis rabbitmq
 
     - uses: satackey/action-docker-layer-caching@v0.0.11
       continue-on-error: true
