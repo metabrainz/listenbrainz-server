@@ -76,37 +76,38 @@ def get_releases_for_color(red: int, green: int, blue: int, count: int) -> List[
                                        color=ColorCube(red=row["red"], green=row["green"], blue=row["blue"]),
                                        distance=row["dist"] ))
 
-        mb_conn = mb_db.engine.raw_connection()
-        with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
-            recordings = []
-            last_release_mbid = None
-            mb_curs.execute(mb_query, (tuple(mbids),))
-            for row in mb_curs.fetchall():
-                if last_release_mbid is not None and last_release_mbid != row["release_mbid"]:
+        if mb_db.engine is not None:
+            mb_conn = mb_db.engine.raw_connection()
+            with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
+                recordings = []
+                last_release_mbid = None
+                mb_curs.execute(mb_query, (tuple(mbids),))
+                for row in mb_curs.fetchall():
+                    if last_release_mbid is not None and last_release_mbid != row["release_mbid"]:
+                        i = index[last_release_mbid]
+                        results[i].release_name = recordings[0]["track_metadata"]["release_name"]
+                        results[i].artist_name = recordings[0]["track_metadata"]["artist_name"]
+                        results[i].rec_metadata = recordings
+                        recordings = []
+
+                    recordings.append({
+                        "track_metadata": {
+                            "track_name": row["recording_name"],
+                            "release_name": row["release_name"],
+                            "artist_name": row["artist_credit_name"],
+                            "additional_info": {
+                                "recording_mbid": row["recording_mbid"],
+                                "release_mbid": row["release_mbid"],
+                                "artist_mbids": row["artist_mbids"]
+                            }
+                        }
+                    })
+                    last_release_mbid = row["release_mbid"]
+
+                if recordings:
                     i = index[last_release_mbid]
                     results[i].release_name = recordings[0]["track_metadata"]["release_name"]
                     results[i].artist_name = recordings[0]["track_metadata"]["artist_name"]
                     results[i].rec_metadata = recordings
-                    recordings = []
-
-                recordings.append({
-                    "track_metadata": { 
-                        "track_name": row["recording_name"],
-                        "release_name": row["release_name"],
-                        "artist_name": row["artist_credit_name"],
-                        "additional_info": {
-                            "recording_mbid": row["recording_mbid"],
-                            "release_mbid": row["release_mbid"],
-                            "artist_mbids": row["artist_mbids"]
-                        }
-                    }
-                })
-                last_release_mbid = row["release_mbid"]
-
-            if recordings:
-                i = index[last_release_mbid]
-                results[i].release_name = recordings[0]["track_metadata"]["release_name"]
-                results[i].artist_name = recordings[0]["track_metadata"]["artist_name"]
-                results[i].rec_metadata = recordings
 
         return results
