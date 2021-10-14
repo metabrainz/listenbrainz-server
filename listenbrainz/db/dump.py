@@ -269,7 +269,7 @@ def _create_dump(location, dump_type, tables, dump_time, threads=DUMP_DEFAULT_TH
 
     with open(archive_path, 'w') as archive:
 
-        pxz_command = ['pxz', '--compress',
+        pxz_command = ['xz', '--compress',
                        '-T{threads}'.format(threads=threads)]
         pxz = subprocess.Popen(
             pxz_command, stdin=subprocess.PIPE, stdout=archive)
@@ -605,7 +605,7 @@ def _import_dump(archive_path, dump_type, tables, threads=DUMP_DEFAULT_THREAD_CO
                             db.DUMP_DEFAULT_THREAD_COUNT
     """
 
-    pxz_command = ['pxz', '--decompress', '--stdout',
+    pxz_command = ['xz', '--decompress', '--stdout',
                    archive_path, '-T{threads}'.format(threads=threads)]
     pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
 
