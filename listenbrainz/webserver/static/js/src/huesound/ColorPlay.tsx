@@ -103,67 +103,66 @@ export default class ColorPlay extends React.Component<
     const selectedReleaseTracks = selectedRelease?.recordings ?? [];
     return (
       <div role="main">
-        <div className="row">
-          <div className="col-md-8 justify-content-center align-items-center">
-            <h3>Huesound Color Play (alpha version)</h3>
-            <div className="row">
-              <div className="col-md-6">
-                <ColorWheel
-                  radius={175}
-                  padding={1}
-                  lineWidth={70}
-                  onColorSelected={this.onColorChanged}
-                  spacers={{
-                    colour: "#FFFFFF",
-                    shadowColor: "grey",
-                    shadowBlur: 5,
-                  }}
-                  colours={defaultColors}
-                  preset={false} // You can set this bool depending on whether you have a pre-selected colour in state.
-                  presetColor={selectedColorString}
-                  animated
-                />
-              </div>
-              {colorReleases.length === 0 && (
-                <>
-                  <div className="lead text-center col-4 align-items-center">
-                    Go ahead and pick a color!
-                  </div>
-
-                  {user.name === currentUser.name && (
-                    <div className="text-center">Click on the wheel</div>
-                  )}
-                </>
-              )}
-              {colorReleases && (
-                <div className="coverArtGrid col-8">
-                  {colorReleases.map((release, index) => {
-                    if (index > 8) {
-                      return;
-                    }
-                    return (
-                      // eslint-disable-next-line react/no-array-index-key
-
-                      <div key={index}>
-                        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events,jsx-a11y/no-noninteractive-element-interactions */}
-                        <img
-                          src={`https://coverartarchive.org/release/${release.release_mbid}/${release.caa_id}-250.jpg`}
-                          alt={`Cover art for Release ${release.release_name}`}
-                          width={125}
-                          height={125}
-                          onClick={this.selectRelease.bind(this, release)}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+        <div>
+          <h3>Huesound Color Play (alpha version)</h3>
+          <div className="row vertical-align">
+            <div className="col-md-6">
+              <ColorWheel
+                radius={175}
+                padding={1}
+                lineWidth={70}
+                onColorSelected={this.onColorChanged}
+                spacers={{
+                  colour: "#FFFFFF",
+                  shadowColor: "grey",
+                  shadowBlur: 5,
+                }}
+                colours={defaultColors}
+                preset={false} // You can set this bool depending on whether you have a pre-selected colour in state.
+                presetColor={selectedColorString}
+                animated
+              />
             </div>
+            {colorReleases.length === 0 && (
+              <>
+                <div className="lead text-center col-6 ">
+                  Go ahead and pick a color!
+                </div>
 
-            {colorReleases.length > 0 && <Loader isLoading={loading} />}
+                {user.name === currentUser.name && (
+                  <div className="text-center">Click on the wheel</div>
+                )}
+              </>
+            )}
+            {colorReleases && (
+              <div className="coverArtGrid col-6">
+                {colorReleases.map((release, index) => {
+                  if (index > 24) {
+                    return;
+                  }
+                  return (
+                    // eslint-disable-next-line react/no-array-index-key
 
+                    <div key={index}>
+                      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events,jsx-a11y/no-noninteractive-element-interactions */}
+                      <img
+                        src={`https://coverartarchive.org/release/${release.release_mbid}/${release.caa_id}-250.jpg`}
+                        alt={`Cover art for Release ${release.release_name}`}
+                        width={125}
+                        height={125}
+                        onClick={this.selectRelease.bind(this, release)}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {colorReleases.length > 0 && <Loader isLoading={loading} />}
+          <div className="row align-items-center">
             {selectedRelease && (
-              <div style={{ marginTop: "3em" }}>
+              <div className="col-md-8" style={{ marginTop: "3em" }}>
                 <Card style={{ display: "flex" }}>
                   <img
                     className="img-rounded"
@@ -217,13 +216,13 @@ export default class ColorPlay extends React.Component<
                 </div>
               </div>
             )}
-          </div>
-          <div className="col-md-4 sticky-top">
-            <BrainzPlayer
-              direction={direction}
-              newAlert={newAlert}
-              listens={selectedReleaseTracks}
-            />
+            <div className="col-md-4 sticky-top">
+              <BrainzPlayer
+                direction={direction}
+                newAlert={newAlert}
+                listens={selectedReleaseTracks}
+              />
+            </div>
           </div>
         </div>
       </div>
