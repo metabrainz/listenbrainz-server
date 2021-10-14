@@ -59,7 +59,8 @@ def get_releases_for_color(red: int, green: int, blue: int, count: int) -> List[
                     JOIN recording rec
                       ON t.recording = rec.id
                    WHERE r.gid in %s
-                GROUP BY r.gid, r.name, rec.gid, rec.name, ac.name"""
+                GROUP BY r.gid, r.name, t.position, rec.gid, rec.name, ac.name
+                ORDER BY r.gid, t.position"""
 
     conn = db.engine.raw_connection()
     with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
