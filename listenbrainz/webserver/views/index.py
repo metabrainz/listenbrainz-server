@@ -292,3 +292,14 @@ def listens_offline():
     """
 
     return render_template("index/listens_offline.html")
+
+
+@index_bp.route("/huesound/")
+def huesound():
+    """ Hue Sound browse music by color of cover art """
+
+    return render_template(
+        "huesound/color_play.html",
+        props=ujson.dumps({})
+    )
+

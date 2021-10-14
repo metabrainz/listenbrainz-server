@@ -400,28 +400,6 @@ def pins(user_name: str):
         user=user
     )
 
-@user_bp.route("/<user_name>/colorPlay/")
-def color_play(user_name: str):
-    """ Select music based on user color selections """
-
-    user = _get_user(user_name)
-    user_data = {
-        "name": user.musicbrainz_id,
-        "id": user.id,
-    }
-
-    props = {
-        "user": user_data,
-        "active_section": "colorPlay",
-    }
-
-    return render_template(
-        "huesound/color_play.html",
-        active_section="colorPlay",
-        props=ujson.dumps(props),
-        user=user
-    )
-
 @user_bp.route("/<user_name>/report-user/", methods=['POST'])
 @api_login_required
 def report_abuse(user_name):
