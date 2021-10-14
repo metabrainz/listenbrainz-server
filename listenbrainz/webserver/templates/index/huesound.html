@@ -1,0 +1,6 @@
+{%- extends 'base-react.html' -%}
+
+{% block scripts %}
+    {{ super() }}
+    <script src="{{ get_static_path('huesound.js') }}" type="text/javascript"></script>
+{% endblock %}

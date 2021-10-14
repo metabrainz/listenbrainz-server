@@ -299,7 +299,7 @@ def huesound():
     """ Hue Sound browse music by color of cover art """
 
     return render_template(
-        "huesound/color_play.html",
+        "index/huesound.html",
         props=ujson.dumps({})
     )
 

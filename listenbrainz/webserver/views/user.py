@@ -64,9 +64,6 @@ redirect_bp.add_url_rule("/recommendations/",
                          redirect_user_page("user.recommendation_playlists"))
 redirect_bp.add_url_rule("/pins/", "redirect_pins",
                          redirect_user_page("user.pins"))
-redirect_bp.add_url_rule("/colorPlay/", "huesound_color_play",
-                         redirect_user_page("user.color_play"))
-
 
 @user_bp.route("/<user_name>/")
 @web_listenstore_needed
