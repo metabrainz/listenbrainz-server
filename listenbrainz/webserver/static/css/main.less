@@ -223,11 +223,22 @@ h2.page-title {
 .coverArtGrid {
   display: grid;
   grid-gap: 5px;
-  grid-template-columns: repeat(6, 125px);
-  grid-template-rows: repeat(6, 125px);
+  grid-template-columns: repeat(5, 142px);
+  grid-template-rows: repeat(5, 142px);
   grid-auto-flow: row;
   justify-content: center;
-  margin: 10px;
+  margin: 30px;
+}
+@media(max-width: 600px) {
+  .coverArtGrid {
+    display: grid;
+    grid-gap: 5px;
+    grid-template-columns: repeat(3, 42px);
+    grid-template-rows: repeat(3, 42px);
+    grid-auto-flow: row;
+    justify-content: center;
+    margin: 10px;
+  }
 }
 .vertical-align {
   display: flex;
@@ -236,12 +247,12 @@ h2.page-title {
 .coverArtGrid div img {
 	-webkit-transform: scale(1);
 	transform: scale(1);
-	-webkit-transition: .3s ease-in-out;
-	transition: .3s ease-in-out;
+	-webkit-transition: .2s ease-in-out;
+	transition: .2s ease-in-out;
 }
 .coverArtGrid div:hover img {
-	-webkit-transform: scale(1.2);
-	transform: scale(1.2);
+	-webkit-transform: scale(1.1);
+	transform: scale(1.1);
 }
 
 
