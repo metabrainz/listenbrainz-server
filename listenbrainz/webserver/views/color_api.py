@@ -9,7 +9,7 @@ from brainzutils import cache
 
 
 DEFAULT_NUMBER_OF_RELEASES = 25  # 5x5 grid
-DEFAULT_CACHE_EXPIRE_TIME = 3600  # 1 hour
+DEFAULT_CACHE_EXPIRE_TIME = 3600 * 24  # 1 day
 
 color_api_bp = Blueprint('color_api_v1', __name__)
 
