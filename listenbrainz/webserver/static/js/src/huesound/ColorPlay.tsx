@@ -106,7 +106,8 @@ export default class ColorPlay extends React.Component<
         <div>
           <h3>Huesound Color Play (alpha version)</h3>
           <div className="row vertical-align">
-            <div className="col-md-6">
+            <div className="col-md-4">
+              <h1 className="text-center">Pick a Color</h1>
               <ColorWheel
                 radius={175}
                 padding={1}
@@ -122,24 +123,15 @@ export default class ColorPlay extends React.Component<
                 presetColor={selectedColorString}
                 animated
               />
+              {colorReleases.length === 0 && (
+                <>
+                  <h1 className="text-center">Click on the wheel</h1>
+                </>
+              )}
             </div>
-            {colorReleases.length === 0 && (
-              <>
-                <div className="lead text-center col-6 ">
-                  Go ahead and pick a color!
-                </div>
-
-                {user.name === currentUser.name && (
-                  <div className="text-center">Click on the wheel</div>
-                )}
-              </>
-            )}
             {colorReleases && (
-              <div className="coverArtGrid col-6">
+              <div className="coverArtGrid col-8">
                 {colorReleases.map((release, index) => {
-                  if (index > 24) {
-                    return;
-                  }
                   return (
                     // eslint-disable-next-line react/no-array-index-key
 
