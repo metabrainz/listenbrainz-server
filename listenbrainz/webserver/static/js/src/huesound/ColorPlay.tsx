@@ -134,7 +134,6 @@ export default class ColorPlay extends React.Component<
                 {colorReleases.map((release, index) => {
                   return (
                     // eslint-disable-next-line react/no-array-index-key
-
                     <div key={index}>
                       {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events,jsx-a11y/no-noninteractive-element-interactions */}
                       <img
