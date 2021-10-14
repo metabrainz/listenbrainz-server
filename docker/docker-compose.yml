@@ -47,7 +47,7 @@ services:
       - ..:/code/listenbrainz:z
       - ../listenbrainz/webserver/static:/static
     ports:
-      - "80:80"
+      - "7000:80"
     depends_on:
       - redis
       - lb_db
