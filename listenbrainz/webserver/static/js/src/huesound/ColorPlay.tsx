@@ -156,9 +156,11 @@ export default class ColorPlay extends React.Component<
                   {colorReleases.length === 0 && (
                     <h1 className="text-center">Click on the wheel</h1>
                   )}
-                  <h3 className="text-center">
-                    This is where the description for this section goes
-                  </h3>
+                  {selectedRelease && (
+                    <h3 className="text-center">
+                      Now click on an album cover to listen to that album
+                    </h3>
+                  )}
                 </div>
                 <div
                   className="col-md-8 coverArtGrid"
@@ -185,8 +187,8 @@ export default class ColorPlay extends React.Component<
           </div>
 
           {colorReleases.length > 0 && <Loader isLoading={loading} />}
-          <div className="row align-items-center">
-            {selectedRelease && (
+          {selectedRelease && (
+            <div className="row align-items-center">
               <div className="col-md-8" style={{ marginTop: "3em" }}>
                 <Card style={{ display: "flex" }}>
                   <img
@@ -240,15 +242,15 @@ export default class ColorPlay extends React.Component<
                   )}
                 </div>
               </div>
-            )}
-            <div className="col-md-4 sticky-top">
-              <BrainzPlayer
-                direction={direction}
-                newAlert={newAlert}
-                listens={selectedReleaseTracks}
-              />
+              <div className="col-md-4 sticky-top">
+                <BrainzPlayer
+                  direction={direction}
+                  newAlert={newAlert}
+                  listens={selectedReleaseTracks}
+                />
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     );
