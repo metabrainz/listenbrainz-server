@@ -110,7 +110,7 @@ export default class ColorPlay extends React.Component<
           <div className="row vertical-align">
             <div
               className={`col-md-4 ${
-                colorReleases.length === 0 ? "col-md-offset-4" : ""
+                selectedColorString ? "" : "col-md-offset-4"
               }`}
             >
               <h1 className="text-center">Pick a Color</h1>
