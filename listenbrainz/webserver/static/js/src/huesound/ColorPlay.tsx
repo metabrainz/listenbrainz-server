@@ -30,6 +30,7 @@ export type ColorPlayState = {
   loading: boolean;
   selectedRelease?: ColorReleaseItem;
   selectedColorString?: string;
+  gridBackground: string;
 };
 
 export default class ColorPlay extends React.Component<
@@ -45,8 +46,8 @@ export default class ColorPlay extends React.Component<
       colorReleases: [],
       loading: false,
       direction: "down",
+      gridBackground: "#FFFFFF",
     };
-    document.body.style.transition = "background-color 1s";
   }
 
   onColorChanged = async (rgbString: string) => {
@@ -59,10 +60,10 @@ export default class ColorPlay extends React.Component<
       );
       const { releases } = colorReleases.payload;
       const lighterColor = tinycolor(rgbString).lighten(40);
-      document.body.style.backgroundColor = lighterColor.toRgbString();
       this.setState({
         colorReleases: releases,
         selectedColorString: rgbString,
+        gridBackground: lighterColor.toRgbString(),
       });
     } catch (err) {
       newAlert(
@@ -97,6 +98,7 @@ export default class ColorPlay extends React.Component<
       colorReleases,
       selectedRelease,
       selectedColorString,
+      gridBackground,
     } = this.state;
     const { currentUser } = this.context;
 
@@ -158,7 +160,13 @@ export default class ColorPlay extends React.Component<
                     This is where the description for this section goes
                   </h3>
                 </div>
-                <div className="col-md-8 coverArtGrid">
+                <div
+                  className="col-md-8 coverArtGrid"
+                  style={{
+                    backgroundColor: gridBackground,
+                    transition: "background-color 1s",
+                  }}
+                >
                   {colorReleases.map((release, index) => {
                     return (
                       // eslint-disable-next-line react/no-array-index-key
