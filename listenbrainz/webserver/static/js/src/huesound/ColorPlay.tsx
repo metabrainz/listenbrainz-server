@@ -107,7 +107,7 @@ export default class ColorPlay extends React.Component<
       <div role="main">
         <div>
           <h3 className="text-center">Huesound Color Play (alpha version)</h3>
-          <div className="row vertical-align">
+          <div className="row vertical-align" style={{ transition: "all 1s" }}>
             <div
               className={`col-md-4 ${
                 selectedColorString ? "" : "col-md-offset-4"
