@@ -107,8 +107,8 @@ export default class ColorPlay extends React.Component<
       <div role="main">
         <div>
           <h3 className="text-center">Huesound Color Play (alpha version)</h3>
-          {colorReleases && colorReleases.length < 1 && (
-            <div>
+          <div className="row vertical-align">
+            <div className="col-md-4">
               <h1 className="text-center">Pick a Color</h1>
               <ColorWheel
                 radius={175}
@@ -128,37 +128,14 @@ export default class ColorPlay extends React.Component<
               {colorReleases.length === 0 && (
                 <h1 className="text-center">Click on the wheel</h1>
               )}
+              {!selectedRelease && (
+                <h3 className="text-center">
+                  Now click on an album cover to listen to that album
+                </h3>
+              )}
             </div>
-          )}
-          <div className="row vertical-align">
             {colorReleases && colorReleases.length > 0 && (
               <>
-                <div className="col-md-4">
-                  <h1 className="text-center">Pick a Color</h1>
-                  <ColorWheel
-                    radius={175}
-                    padding={1}
-                    lineWidth={70}
-                    onColorSelected={this.onColorChanged}
-                    spacers={{
-                      colour: "#FFFFFF",
-                      shadowColor: "grey",
-                      shadowBlur: 5,
-                    }}
-                    colours={defaultColors}
-                    preset={false} // You can set this bool depending on whether you have a pre-selected colour in state.
-                    presetColor={selectedColorString}
-                    animated
-                  />
-                  {colorReleases.length === 0 && (
-                    <h1 className="text-center">Click on the wheel</h1>
-                  )}
-                  {!selectedRelease && (
-                    <h3 className="text-center">
-                      Now click on an album cover to listen to that album
-                    </h3>
-                  )}
-                </div>
                 <div
                   className="col-md-8 coverArtGrid"
                   style={{ backgroundColor: gridBackground }}
