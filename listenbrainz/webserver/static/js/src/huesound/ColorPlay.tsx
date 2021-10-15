@@ -162,10 +162,7 @@ export default class ColorPlay extends React.Component<
                 </div>
                 <div
                   className="col-md-8 coverArtGrid"
-                  style={{
-                    backgroundColor: gridBackground,
-                    transition: "background-color 1s",
-                  }}
+                  style={{ backgroundColor: gridBackground }}
                 >
                   {colorReleases.map((release, index) => {
                     return (
