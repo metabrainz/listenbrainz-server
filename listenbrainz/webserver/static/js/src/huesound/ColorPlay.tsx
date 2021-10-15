@@ -102,11 +102,17 @@ export default class ColorPlay extends React.Component<
     } = this.state;
     const { currentUser } = this.context;
 
+    const colorWheelCol =
+      colorReleases && colorReleases.length > 0 ? "col-md-4" : "col-md-12";
     const selectedReleaseTracks = selectedRelease?.recordings ?? [];
+
     return (
       <div role="main">
         <div>
           <h3 className="text-center">Huesound Color Play (alpha version)</h3>
+          <div className="row">
+            <h1 className={`text-center ${colorWheelCol}`}>Pick a Color</h1>
+          </div>
           <div className="row vertical-align">
             <div
               className={
@@ -115,7 +121,6 @@ export default class ColorPlay extends React.Component<
                   : "col-md-12"
               }
             >
-              <h1 className="text-center">Pick a Color</h1>
               <ColorWheel
                 radius={175}
                 padding={1}
@@ -131,14 +136,6 @@ export default class ColorPlay extends React.Component<
                 presetColor={selectedColorString}
                 animated
               />
-              {colorReleases.length === 0 && (
-                <h1 className="text-center">Click on the wheel</h1>
-              )}
-              {!selectedRelease && (
-                <h3 className="text-center">
-                  Now click on an album cover to listen to that album
-                </h3>
-              )}
             </div>
             {colorReleases && colorReleases.length > 0 && (
               <div
@@ -161,6 +158,18 @@ export default class ColorPlay extends React.Component<
                   );
                 })}
               </div>
+            )}
+          </div>
+          <div className="row">
+            {colorReleases.length === 0 && (
+              <h1 className={`text-center ${colorWheelCol}`}>
+                Click on the wheel
+              </h1>
+            )}
+            {!selectedRelease && (
+              <h3 className={`text-center ${colorWheelCol}`}>
+                Now click on an album cover to listen to that album
+              </h3>
             )}
           </div>
 
