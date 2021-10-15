@@ -128,9 +128,6 @@ export default class ColorPlay extends React.Component<
               {colorReleases.length === 0 && (
                 <h1 className="text-center">Click on the wheel</h1>
               )}
-              <h3 className="text-center">
-                This is where the description for this section goes
-              </h3>
             </div>
           )}
           <div className="row vertical-align">
@@ -156,7 +153,7 @@ export default class ColorPlay extends React.Component<
                   {colorReleases.length === 0 && (
                     <h1 className="text-center">Click on the wheel</h1>
                   )}
-                  {selectedRelease && (
+                  {!selectedRelease && (
                     <h3 className="text-center">
                       Now click on an album cover to listen to that album
                     </h3>
