@@ -117,9 +117,10 @@ const searchForYoutubeTrack = async (
 
 const getArtistLink = (listen: Listen) => {
   const artistName = _.get(listen, "track_metadata.artist_name");
-  const firstArtist = _.first(
-    _.get(listen, "track_metadata.additional_info.artist_mbids")
-  );
+  const artistMbids =
+    _.get(listen, "track_metadata.additional_info.artist_mbids") ??
+    _.get(listen, "track_metadata.mbid_mapping.artist_mbids");
+  const firstArtist = _.first(artistMbids);
   if (firstArtist) {
     return (
       <a
@@ -136,10 +137,13 @@ const getArtistLink = (listen: Listen) => {
 
 const getTrackLink = (listen: Listen): JSX.Element | string => {
   const trackName = _.get(listen, "track_metadata.track_name");
-  if (_.get(listen, "track_metadata.additional_info.recording_mbid")) {
+  const recordingMbid =
+    _.get(listen, "track_metadata.additional_info.recording_mbid") ??
+    _.get(listen, "track_metadata.mbid_mapping.recording_mbid");
+  if (recordingMbid) {
     return (
       <a
-        href={`https://musicbrainz.org/recording/${listen.track_metadata.additional_info?.recording_mbid}`}
+        href={`https://musicbrainz.org/recording/${recordingMbid}`}
         target="_blank"
         rel="noopener noreferrer"
       >
