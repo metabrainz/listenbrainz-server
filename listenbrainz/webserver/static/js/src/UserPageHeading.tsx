@@ -70,7 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
     current_user,
     spotify,
     youtube,
-    sentry_traces_sample_rate
+    sentry_traces_sample_rate,
   } = globalReactProps;
   const {
     user,

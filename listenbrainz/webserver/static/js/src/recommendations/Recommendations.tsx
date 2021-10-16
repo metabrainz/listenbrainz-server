@@ -337,7 +337,8 @@ document.addEventListener("DOMContentLoaded", () => {
       dsn: sentry_dsn,
       integrations: [new Integrations.BrowserTracing()],
       tracesSampleRate: sentry_traces_sample_rate,
-    });  }
+    });
+  }
 
   const apiService = new APIServiceClass(
     api_url || `${window.location.origin}/1`
