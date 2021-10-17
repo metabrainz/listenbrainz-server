@@ -311,8 +311,8 @@ export default class UserFeedPage extends React.Component<
 
   updateFeedback = (recordingMsid: string, score: ListenFeedBack) => {
     const { recordingFeedbackMap } = this.state;
-    recordingFeedbackMap[recordingMsid] = score;
-    this.setState({ recordingFeedbackMap });
+    const newFeedbackMap = { ...recordingFeedbackMap, [recordingMsid]: score };
+    this.setState({ recordingFeedbackMap: newFeedbackMap });
   };
 
   renderEventContent(event: TimelineEvent) {
