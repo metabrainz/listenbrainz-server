@@ -115,7 +115,6 @@ class SparkReader:
                     callback_function=self.callback,
                     auto_ack=True,
                 )
-                self.incoming_ch.basic_qos(prefetch_count=1)
                 current_app.logger.info('Spark consumer attempt to start consuming!')
                 try:
                     self.incoming_ch.start_consuming()
