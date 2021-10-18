@@ -11,6 +11,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import { io, Socket } from "socket.io-client";
 import { fromPairs } from "lodash";
+import { Integrations } from "@sentry/tracing";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
@@ -770,6 +771,7 @@ document.addEventListener("DOMContentLoaded", () => {
     current_user,
     spotify,
     youtube,
+    sentry_traces_sample_rate,
   } = globalReactProps;
   const {
     latest_listen_ts,
@@ -787,7 +789,11 @@ document.addEventListener("DOMContentLoaded", () => {
   );
 
   if (sentry_dsn) {
-    Sentry.init({ dsn: sentry_dsn });
+    Sentry.init({
+      dsn: sentry_dsn,
+      integrations: [new Integrations.BrowserTracing()],
+      tracesSampleRate: sentry_traces_sample_rate,
+    });
   }
 
   const RecentListensWithAlertNotifications = withAlertNotifications(

@@ -325,6 +325,7 @@ interface GlobalProps {
   spotify?: SpotifyUser;
   youtube?: YoutubeUser;
   critiquebrainz?: CritiqueBrainzUser;
+  sentry_traces_sample_rate?: number;
 }
 
 const getPageProps = (): {
