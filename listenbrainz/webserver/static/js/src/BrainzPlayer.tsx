@@ -227,7 +227,6 @@ export default class BrainzPlayer extends React.Component<
   playNextTrack = (invert: boolean = false): void => {
     const { listens } = this.props;
     const { direction, isActivated } = this.state;
-    const {refreshSpotifyToken, refreshYoutubeToken} = this.props;
 
     if (!isActivated) {
       // Player has not been activated by the user, do nothing.
@@ -660,7 +659,7 @@ export default class BrainzPlayer extends React.Component<
           await new Promise((resolve) => {
             setTimeout(resolve, 3000);
           });
-          return this.submitListenToListenBrainz(
+          await this.submitListenToListenBrainz(
             listenType,
             listen,
             retries - 1
@@ -668,6 +667,7 @@ export default class BrainzPlayer extends React.Component<
         } else {
           this.handleWarning(error, "Could not save this listen");
         }
+      }
     }
   };
 
@@ -726,6 +726,7 @@ export default class BrainzPlayer extends React.Component<
       durationMs,
       isActivated,
     } = this.state;
+    const { refreshSpotifyToken, refreshYoutubeToken } = this.props;
     const { youtubeAuth, spotifyAuth } = this.context;
     // Determine if the user is authenticated to search & play tracks with any of the datasources
     const hasDatasourceToSearch =
