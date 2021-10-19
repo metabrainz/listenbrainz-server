@@ -100,9 +100,7 @@ export default class BrainzPlayer extends React.Component<
   declare context: React.ContextType<typeof GlobalAppContext>;
 
   spotifyPlayer?: React.RefObject<SpotifyPlayer>;
-  refreshSpotifyToken?: `refreshSpotifyToken: () => Promise<string>;`;
   youtubePlayer?: React.RefObject<YoutubePlayer>;
-  refreshYoutubeToken?: `refreshYoutubeToken: () => Promise<string>;`;
   soundcloudPlayer?: React.RefObject<SoundcloudPlayer>;
   dataSources: Array<React.RefObject<DataSourceTypes>> = [];
 
