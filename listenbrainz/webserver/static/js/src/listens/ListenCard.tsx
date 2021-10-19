@@ -52,6 +52,7 @@ type ListenCardState = {
   isDeleted: boolean;
   feedback: ListenFeedBack;
   isCurrentlyPlaying: boolean;
+  thumbnailSrc?: string; // Full URL to the CoverArtArchive thumbnail
 };
 
 export default class ListenCard extends React.Component<
@@ -73,6 +74,7 @@ export default class ListenCard extends React.Component<
 
   componentDidMount() {
     window.addEventListener("message", this.receiveBrainzPlayerMessage);
+    this.getMusicBrainzMetadata();
   }
 
   componentDidUpdate(prevProps: ListenCardProps) {
@@ -85,6 +87,30 @@ export default class ListenCard extends React.Component<
   componentWillUnmount() {
     window.removeEventListener("message", this.receiveBrainzPlayerMessage);
   }
+
+  getMusicBrainzMetadata = async () => {
+    const { listen } = this.props;
+    const releaseMBID =
+      _get(listen, "track_metadata.additional_info.release_mbid") ??
+      _get(listen, "track_metadata.mbid_mapping.release_mbid");
+    if (!releaseMBID) {
+      return;
+    }
+    try {
+      const CAAResponse = await fetch(
+        `https://coverartarchive.org/release/${releaseMBID}`
+      );
+      if (CAAResponse.ok) {
+        const body: CoverArtArchiveResponse = await CAAResponse.json();
+        const thumbnail = body.images?.[0]?.thumbnails?.[250];
+        if (thumbnail) {
+          this.setState({ thumbnailSrc: thumbnail });
+        }
+      }
+    } catch (error) {
+      // Do nothing with the error, I guess.
+    }
+  };
 
   playListen = () => {
     const { listen } = this.props;
@@ -247,12 +273,17 @@ export default class ListenCard extends React.Component<
       showUsername,
       showTimestamp,
       updateRecordingToPin,
-      thumbnail,
+      thumbnail: thumbnailOverwrite,
       listenDetails,
       compact,
     } = this.props;
     const { currentUser } = this.context;
-    const { feedback, isDeleted, isCurrentlyPlaying } = this.state;
+    const {
+      feedback,
+      isDeleted,
+      isCurrentlyPlaying,
+      thumbnailSrc,
+    } = this.state;
 
     const listenedAt = _get(listen, "listened_at");
     const recordingMSID = _get(
@@ -307,7 +338,16 @@ export default class ListenCard extends React.Component<
           className || ""
         }`}
       >
-        {thumbnail && <div className="listen-thumbnail">{thumbnail}</div>}
+        {(thumbnailOverwrite ?? thumbnailSrc) && (
+          <div className="listen-thumbnail">
+            {thumbnailOverwrite || (
+              <img
+                src={thumbnailSrc}
+                alt={listen.track_metadata?.release_name ?? "Cover art"}
+              />
+            )}
+          </div>
+        )}
         {listenDetails ? (
           <div className="listen-details">{listenDetails}</div>
         ) : (
