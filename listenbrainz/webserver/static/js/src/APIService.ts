@@ -958,4 +958,11 @@ export default class APIService {
     await this.checkStatus(response);
     return response.json();
   };
+
+  getMissingMBData = async (userName: string): Promise<any> => {
+    const url = `${this.APIBaseURI}/missing/musicbrainz/user/${userName}/`;
+    const response = await fetch(encodeURI(url));
+    await this.checkStatus(response);
+    return response.json();
+  };
 }
