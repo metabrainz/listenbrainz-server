@@ -51,6 +51,7 @@ const props: RecommendationCardProps = {
 
 // Create a new instance of GlobalAppContext
 const GlobalContextMock: GlobalAppContextT = {
+  APIBaseURI: "base-uri",
   APIService: new APIService("foo"),
   youtubeAuth: {},
   spotifyAuth: {},

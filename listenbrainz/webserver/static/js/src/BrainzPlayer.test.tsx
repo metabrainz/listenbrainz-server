@@ -15,6 +15,8 @@ const props = {
     title: string,
     message: string | JSX.Element
   ) => {},
+  refreshSpotifyToken: jest.fn(),
+  refreshYoutubeToken: jest.fn(),
 };
 const spotifyAccountWithPermissions = {
   access_token: "haveyouseenthefnords",
@@ -25,6 +27,7 @@ const spotifyAccountWithPermissions = {
 
 const GlobalContextMock = {
   context: {
+    APIBaseURI: "base-uri",
     APIService: new APIService("base-uri"),
     spotifyAuth: {
       access_token: "heyo",
