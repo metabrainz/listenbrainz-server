@@ -6,6 +6,12 @@ from listenbrainz.db.model.color import ColorResult, ColorCube
 from typing import List
 from psycopg2.extensions import adapt, AsIs, register_adapter
 
+# This determines how many releases for a given color are fetched and then randomly chosen from.
+# If COUNT releases are requested, we use COUNT * INTERMEDIARY_COUNT_MULTIPLIER to create
+# the possible set to choose from. If this number is too large, we may get too much color variability
+# in the results and if it is too small, we get no variability at all.
+INTERMEDIARY_COUNT_MULTIPLIER = 4
+
 
 def adapt_cube(cube):
     """ Function required by Postgres for inserting/searching cube extension colors """
@@ -36,8 +42,27 @@ def get_releases_for_color(red: int, green: int, blue: int, count: int) -> List[
              ORDER BY cube_distance(color, %s) 
                 LIMIT %s"""
 
+    query = """SELECT release_mbid
+                   , caa_id
+                   , red
+                   , green
+                   , blue
+                   , dist                                         
+                FROM (SELECT release_mbid::TEXT
+                           , caa_id
+                           , red
+                           , green
+                           , blue
+                           , cube_distance(color, %s) AS dist
+                           , random() AS sort_order
+                       FROM release_color
+                      ORDER BY dist
+                      LIMIT %s) AS hs
+                ORDER BY sort_order
+                   LIMIT %s"""
+
     cube = ColorCube(red=red, green=green, blue=blue)
-    args = (cube, cube, count)
+    args = (cube, INTERMEDIARY_COUNT_MULTIPLIER * count, count)
 
     mb_query = """SELECT rec.name AS recording_name
                        , rec.gid::TEXT AS recording_mbid
