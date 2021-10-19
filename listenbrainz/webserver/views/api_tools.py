@@ -220,11 +220,10 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
             validate_multiple_mbids_field(listen, key)
 
     # monitor performance of unicode null check because it might be a potential bottleneck
-    if sentry_sdk.Hub.current.scope.transaction:
-        with sentry_sdk.start_span(op="null check", description="check for unicode null in submitted listen json"):
-            # If unicode null is present in the listen, postgres will raise an
-            # error while trying to insert it. hence, reject such listens.
-            check_for_unicode_null_recursively(listen)
+    with sentry_sdk.start_span(op="null check", description="check for unicode null in submitted listen json"):
+        # If unicode null is present in the listen, postgres will raise an
+        # error while trying to insert it. hence, reject such listens.
+        check_for_unicode_null_recursively(listen)
 
     return listen
 
