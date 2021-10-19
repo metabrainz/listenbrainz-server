@@ -225,13 +225,10 @@
 		padding: 10px;
 		margin: 0;
     	margin-bottom: 3px;
-		.listen-details{
-			flex: 1;
-			// Parent's width minus controls and thumbnail elements' width
-			max-width: calc(100% - 60px);
+		.listen-details {
+			flex-basis: 0%;
 		}
 		.listen-controls {
-
 			flex-grow: 0;
 		}
 	}
@@ -255,40 +252,33 @@
 		flex-direction: column;
 		justify-content: center;
 		padding-right: 1em;
-		padding-top: 0.5em;
-		@media (min-width: @listen-small-break) {
-    		padding-right: 2em;
-			align-items: flex-end;
-			padding-top: 0;
-		}
+		align-items: flex-end;
 	}
 	
 	.listen-details{
-		flex: 0 0 auto;
 		flex-direction: column;
-		width: 100%;
 		line-height: 1.3em;
-
-		@media (min-width: @listen-small-break) {
-			flex: 3;
-		}
+		overflow: hidden;
+		flex: 3;
+		flex-basis: 270px;
 		
 		.artist-and-timestamp {
 			display: flex;
 			flex-wrap: wrap;
 		}
-		.ellipsis {
-			overflow: hidden;
-			text-overflow: ellipsis;
-			white-space:nowrap;
-		}
-		.ellipsis-2-lines {
-			display: -webkit-box;
-			-webkit-line-clamp: 2;
-			-webkit-box-orient: vertical;
-			overflow: hidden;
-			text-overflow: ellipsis;
-		}
+	}
+	
+	.ellipsis {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space:nowrap;
+	}
+	.ellipsis-2-lines {
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 	
 	.additional-details{
