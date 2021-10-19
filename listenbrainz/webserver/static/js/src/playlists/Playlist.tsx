@@ -890,6 +890,8 @@ export default class PlaylistPage extends React.Component<
               direction="down"
               listens={tracks}
               newAlert={newAlert}
+              refreshSpotifyToken={this.APIService.refreshSpotifyToken}
+              refreshYoutubeToken={this.APIService.refreshYoutubeToken}
             />
           </div>
         </div>

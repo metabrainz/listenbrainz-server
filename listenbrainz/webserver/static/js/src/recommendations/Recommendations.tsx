@@ -307,6 +307,8 @@ export default class Recommendations extends React.Component<
               direction={direction}
               listens={recommendations}
               newAlert={newAlert}
+              refreshSpotifyToken={this.APIService.refreshSpotifyToken}
+              refreshYoutubeToken={this.APIService.refreshYoutubeToken}
             />
           </div>
         </div>

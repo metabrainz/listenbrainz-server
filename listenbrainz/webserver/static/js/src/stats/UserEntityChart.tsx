@@ -425,6 +425,7 @@ export default class UserEntityChart extends React.Component<
       hasError,
       errorMessage,
     } = this.state;
+    const { APIService } = this.context;
     const { newAlert } = this.props;
     const prevPage = currPage - 1;
     const nextPage = currPage + 1;
@@ -672,6 +673,8 @@ export default class UserEntityChart extends React.Component<
               direction="down"
               listens={listenableItems}
               newAlert={newAlert}
+              refreshSpotifyToken={APIService.refreshSpotifyToken}
+              refreshYoutubeToken={APIService.refreshYoutubeToken}
             />
           </div>
         </div>

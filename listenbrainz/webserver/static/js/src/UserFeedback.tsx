@@ -518,6 +518,8 @@ export default class UserFeedback extends React.Component<
               direction={direction}
               listens={listensFromFeedback}
               newAlert={newAlert}
+              refreshSpotifyToken={this.APIService.refreshSpotifyToken}
+              refreshYoutubeToken={this.APIService.refreshYoutubeToken}
             />
           </div>
         </div>
