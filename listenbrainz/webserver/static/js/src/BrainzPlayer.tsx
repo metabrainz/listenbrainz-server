@@ -227,6 +227,7 @@ export default class BrainzPlayer extends React.Component<
   playNextTrack = (invert: boolean = false): void => {
     const { listens } = this.props;
     const { direction, isActivated } = this.state;
+    const {refreshSpotifyToken, refreshYoutubeToken} = this.props;
 
     if (!isActivated) {
       // Player has not been activated by the user, do nothing.
@@ -764,7 +765,7 @@ export default class BrainzPlayer extends React.Component<
               this.dataSources[currentDataSourceIndex]?.current instanceof
                 SpotifyPlayer
             }
-            refreshSpotifyToken={this.refreshSpotifyToken}
+            refreshSpotifyToken={refreshSpotifyToken}
             onInvalidateDataSource={this.invalidateDataSource}
             ref={this.spotifyPlayer}
             spotifyUser={spotifyAuth}
@@ -788,7 +789,7 @@ export default class BrainzPlayer extends React.Component<
             onInvalidateDataSource={this.invalidateDataSource}
             ref={this.youtubePlayer}
             youtubeUser={youtubeAuth}
-            refreshYoutubeToken={this.refreshYoutubeToken}
+            refreshYoutubeToken={refreshYoutubeToken}
             playerPaused={playerPaused}
             onPlayerPausedChange={this.playerPauseChange}
             onProgressChange={this.progressChange}
