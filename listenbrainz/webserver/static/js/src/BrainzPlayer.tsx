@@ -71,8 +71,8 @@ type BrainzPlayerProps = {
     title: string,
     message: string | JSX.Element
   ) => void;
-  refreshSpotifyToken: `refreshSpotifyToken: () => Promise<string>;`;
-  refreshYoutubeToken: `refreshYoutubeToken: () => Promise<string>;`;
+  refreshSpotifyToken: () => Promise<string>;
+  refreshYoutubeToken: () => Promise<string>;
 };
 
 type BrainzPlayerState = {

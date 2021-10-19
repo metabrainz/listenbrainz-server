@@ -20,6 +20,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { isEqual, get as _get } from "lodash";
 import { sanitize } from "dompurify";
+import { Integrations } from "@sentry/tracing";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
@@ -311,8 +312,8 @@ export default class UserFeedPage extends React.Component<
 
   updateFeedback = (recordingMsid: string, score: ListenFeedBack) => {
     const { recordingFeedbackMap } = this.state;
-    recordingFeedbackMap[recordingMsid] = score;
-    this.setState({ recordingFeedbackMap });
+    const newFeedbackMap = { ...recordingFeedbackMap, [recordingMsid]: score };
+    this.setState({ recordingFeedbackMap: newFeedbackMap });
   };
 
   renderEventContent(event: TimelineEvent) {
@@ -590,11 +591,16 @@ document.addEventListener("DOMContentLoaded", () => {
     current_user,
     spotify,
     youtube,
+    sentry_traces_sample_rate,
   } = globalReactProps;
   const { events } = reactProps;
 
   if (sentry_dsn) {
-    Sentry.init({ dsn: sentry_dsn });
+    Sentry.init({
+      dsn: sentry_dsn,
+      integrations: [new Integrations.BrowserTracing()],
+      tracesSampleRate: sentry_traces_sample_rate,
+    });
   }
 
   const apiService = new APIServiceClass(
