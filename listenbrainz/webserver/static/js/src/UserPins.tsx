@@ -172,7 +172,7 @@ export default class UserPins extends React.Component<
   render() {
     const { user, profileUrl, newAlert } = this.props;
     const { pins, page, direction, loading, maxPage } = this.state;
-    const { currentUser } = this.context;
+    const { currentUser, APIService } = this.context;
 
     const isNewerButtonDisabled = page === 1;
     const isOlderButtonDisabled = page >= maxPage;
@@ -292,6 +292,8 @@ export default class UserPins extends React.Component<
               direction={direction}
               listens={pinsAsListens}
               newAlert={newAlert}
+              refreshSpotifyToken={APIService.refreshSpotifyToken}
+              refreshYoutubeToken={APIService.refreshYoutubeToken}
             />
           </div>
         </div>
