@@ -106,7 +106,7 @@ export default class ColorPlay extends React.Component<
     return (
       <div role="main">
         <div>
-          <h3 className="text-center">Huesound Color Play (alpha version)</h3>
+          <h1 className="text-center">Huesound (beta)</h1>
           <div className="row vertical-align">
             <div
               className={`col-md-4 ${
@@ -114,7 +114,9 @@ export default class ColorPlay extends React.Component<
               }`}
               style={{ transition: "all 1s" }}
             >
-              <h1 className="text-center">Pick a Color</h1>
+              {colorReleases.length === 0 && (
+                <h2 className="text-center">cover art music discovery</h2>
+              )}
               <ColorWheel
                 radius={175}
                 padding={1}
@@ -131,12 +133,16 @@ export default class ColorPlay extends React.Component<
                 animated
               />
               {colorReleases.length === 0 && (
-                <h1 className="text-center">Click on the wheel</h1>
+                <h2 className="text-center">
+                  Choose a color
+                  <br />
+                  on the wheel!
+                </h2>
               )}
               {colorReleases.length > 0 && !selectedRelease && (
-                <h3 className="text-center">
-                  Now click on an album cover to listen to that album
-                </h3>
+                <h2 className="text-center">
+                  Click an album cover to start playing!
+                </h2>
               )}
             </div>
             {colorReleases && colorReleases.length > 0 && (
