@@ -130,7 +130,7 @@ const getArtistLink = (listen: Listen) => {
   if (firstArtist) {
     return (
       <a
-        href={`https://musicbrainz.org/artist/${firstArtist}`}
+        href={`http://musicbrainz.org/artist/${firstArtist}`}
         target="_blank"
         rel="noopener noreferrer"
       >
