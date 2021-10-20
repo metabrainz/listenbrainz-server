@@ -1,3 +1,4 @@
+
 name: ListenBrainz Frontend Tests
 
 on:
@@ -8,6 +9,7 @@ on:
     paths:
       - '**.jsx?'
       - '**.tsx?'
+      - '**.snap'
       - '**.json'
       - 'docker/Dockerfile.webpack'
       - 'docker/docker-compose.test.yml'
