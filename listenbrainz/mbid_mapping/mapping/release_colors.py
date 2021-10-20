@@ -121,6 +121,34 @@ def process_cover_art(threads, row):
     threads.append(t)
 
 
+def join_threads(threads):
+
+    while len(threads) > 0:
+        for i, thread in enumerate(threads):
+            if not thread.is_alive():
+                thread.join()
+                threads.pop(i)
+                break
+        else:
+            sleep(.001)
+
+def get_cover_art_counts(mb_curs, lb_curs):
+
+    mb_curs.execute("""SELECT COUNT(*)
+                         FROM cover_art_archive.cover_art caa
+                         JOIN cover_art_archive.cover_art_type cat
+                           ON cat.id = caa.id
+                        WHERE type_id = 1""")
+    row = mb_curs.fetchone()
+    mb_count = row["count"]
+
+    lb_curs.execute("SELECT COUNT(*) FROM release_color")
+    row = lb_curs.fetchone()
+    lb_count = row["count"]
+
+    return mb_count, lb_count
+
+
 def sync_release_color_table():
 
     log("cover art sync starting...")
@@ -152,19 +180,7 @@ def sync_release_color_table():
             with psycopg2.connect(config.LB_DATABASE_URI) as lb_conn:
                 with lb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
 
-                    mb_curs.execute("""SELECT COUNT(*)
-                                         FROM cover_art_archive.cover_art caa
-                                         JOIN cover_art_archive.cover_art_type cat
-                                           ON cat.id = caa.id
-                                        WHERE type_id = 1""")
-
-                    row = mb_curs.fetchone()
-                    mb_count = row["count"]
-
-                    lb_curs.execute("SELECT COUNT(*) FROM release_color")
-                    row = lb_curs.fetchone()
-                    lb_count = row["count"]
-
+                    mb_count, lb_count = get_cover_art_counts(mb_curs, lb_curs)
                     print("%d items in MB\n%d items in LB" % (mb_count, lb_count))
 
                     threads = []
@@ -183,14 +199,12 @@ def sync_release_color_table():
 
                     while True:
                         if len(mb_rows) == 0 and not mb_done:
-#                            print("Fetch for MB: %d" % mb_caa_id)
                             mb_curs.execute(caa_query, (mb_caa_id, SYNC_BATCH_SIZE))
                             mb_rows = mb_curs.fetchall()
                             if len(mb_rows) == 0:
                                 mb_done = True
 
                         if len(lb_rows) == 0 and not lb_done:
-#                            print("Fetch for LB: %d" % lb_caa_id)
                             lb_curs.execute(lb_query, (lb_caa_id, SYNC_BATCH_SIZE))
                             lb_rows = lb_curs.fetchall()
                             if len(lb_rows) == 0:
@@ -211,8 +225,6 @@ def sync_release_color_table():
 
                         # If the item is in MB, but not in LB, add to LB
                         if lb_row is None or mb_row["caa_id"] < lb_row["caa_id"]:
-#                            print("MB %d LB %d" % (mb_row["caa_id"], lb_row["caa_id"]))
-#                            print("  missing from LB")
                             process_cover_art(threads, mb_row)
                             missing += 1
                             mb_caa_id = mb_row["caa_id"]
@@ -221,8 +233,6 @@ def sync_release_color_table():
 
                         # If the item is in LB, but not in MB, remove from LB
                         if mb_row is None or mb_row["caa_id"] > lb_row["caa_id"]:
-#                            print("MB %d LB %d" % (mb_row["caa_id"], lb_row["caa_id"]))
-#                            print("  extra in LB")
                             extra += 1
                             delete_from_lb(lb_row["caa_id"])
                             lb_caa_id = lb_row["caa_id"]
@@ -238,3 +248,11 @@ def sync_release_color_table():
                             continue
 
                         assert False
+
+                    join_threads(threads)
+
+                    mb_count, lb_count = get_cover_art_counts(mb_curs, lb_curs)
+
+                    print("Finished! added/skipped %d removed %d from release_color" % (missing, extra))
+                    print("%d items in MB\n%d items in LB" % (mb_count, lb_count))
+                    print("difference: %d items" % (mb_count - lb_count))
