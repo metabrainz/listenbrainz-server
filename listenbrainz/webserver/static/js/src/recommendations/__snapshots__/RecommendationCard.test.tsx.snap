@@ -49,7 +49,7 @@ exports[`RecommendationCard renders correctly if CurrentUser.authtoken is not se
           title="Kishore Kumar"
         >
           <a
-            href="http://musicbrainz.org/artist/xxxx"
+            href="https://musicbrainz.org/artist/xxxx"
             rel="noopener noreferrer"
             target="_blank"
           >
@@ -111,7 +111,7 @@ exports[`RecommendationCard renders correctly if isCurrentUser is False 1`] = `
           title="Kishore Kumar"
         >
           <a
-            href="http://musicbrainz.org/artist/xxxx"
+            href="https://musicbrainz.org/artist/xxxx"
             rel="noopener noreferrer"
             target="_blank"
           >
@@ -173,7 +173,7 @@ exports[`RecommendationCard renders correctly if isCurrentUser is true and Curre
           title="Kishore Kumar"
         >
           <a
-            href="http://musicbrainz.org/artist/xxxx"
+            href="https://musicbrainz.org/artist/xxxx"
             rel="noopener noreferrer"
             target="_blank"
           >
