@@ -93,6 +93,7 @@ export default class RecentListens extends React.Component<
 
   componentDidMount(): void {
     const { mode } = this.state;
+    const { newAlert } = this.props;
     // Get API instance from React context provided for in top-level component
     const { APIService, currentUser } = this.context;
     this.APIService = APIService;
@@ -106,9 +107,17 @@ export default class RecentListens extends React.Component<
       const { user } = this.props;
       // Get the user listen count
       if (user?.name) {
-        this.APIService.getUserListenCount(user.name).then((listenCount) => {
-          this.setState({ listenCount });
-        });
+        this.APIService.getUserListenCount(user.name)
+          .then((listenCount) => {
+            this.setState({ listenCount });
+          })
+          .catch((error) => {
+            newAlert(
+              "danger",
+              "Sorry, we couldn't load your listens count…",
+              error?.toString()
+            );
+          });
       }
       if (currentUser?.name && currentUser?.name === user?.name) {
         this.loadFeedback();
