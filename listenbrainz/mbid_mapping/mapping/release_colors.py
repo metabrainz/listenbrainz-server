@@ -17,8 +17,8 @@ import config
 
 register_adapter(Cube, adapt_cube)
 
-MAX_THREADS = 1 # 16
-SYNC_BATCH_SIZE = 5000
+MAX_THREADS = 16
+SYNC_BATCH_SIZE = 10000
 
 
 def process_image(filename, mime_type):
@@ -61,7 +61,7 @@ def insert_row(release_mbid, red, green, blue, caa_id):
 def process_row(row):
     while True:
         headers = { 'User-Agent': 'ListenBrainz HueSound Color Bot ( rob@metabrainz.org )' }
-        url = "https://coverartarchive.org/release/%s/%d-250.jpg" % (row["release_mbid"], row["caa_id"])
+        url = "https://beta.coverartarchive.org/release/%s/%d-250.jpg" % (row["release_mbid"], row["caa_id"])
         r = requests.get(url, headers=headers)
         if r.status_code == 200:
             # TODO: Use proper file name
@@ -100,7 +100,7 @@ def process_row(row):
 
 
 def delete_from_lb(caa_id):
-    with psycopg2.connect(config.SQLALCHEMY_DATABASE_URI) as lb_conn:
+    with psycopg2.connect(config.LB_DATABASE_URI) as lb_conn:
         with lb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
             lb_curs.execute("""DELETE FROM release_color WHERE caa_id = %s """, (caa_id,))
 
