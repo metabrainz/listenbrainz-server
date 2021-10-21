@@ -12,6 +12,7 @@ import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import { io, Socket } from "socket.io-client";
 import { fromPairs, get, isEqual } from "lodash";
 import { Integrations } from "@sentry/tracing";
+import { faThumbtack, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
@@ -661,6 +662,7 @@ export default class RecentListens extends React.Component<
                         <>
                           <ListenControl
                             title="Pin this recording"
+                            icon={faThumbtack}
                             action={this.updateRecordingToPin.bind(
                               this,
                               listen
@@ -670,6 +672,7 @@ export default class RecentListens extends React.Component<
                           />
                           <ListenControl
                             title="Delete Listen"
+                            icon={faTrashAlt}
                             action={this.deleteListen.bind(this, listen)}
                           />
                         </>

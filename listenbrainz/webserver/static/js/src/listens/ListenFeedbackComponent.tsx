@@ -66,12 +66,14 @@ export default class ListenFeedbackComponent extends React.Component<
     return (
       <>
         <ListenControl
+          iconOnly
           icon={faHeart}
           title="Love"
           action={() => this.submitFeedback(currentFeedback === 1 ? 0 : 1)}
           className={`${currentFeedback === 1 ? " loved" : ""}`}
         />
         <ListenControl
+          iconOnly
           icon={faHeartBroken}
           title="Hate"
           action={() => this.submitFeedback(currentFeedback === -1 ? 0 : -1)}

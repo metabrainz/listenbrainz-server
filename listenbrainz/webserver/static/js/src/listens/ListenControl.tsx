@@ -8,6 +8,7 @@ export type ListenControlProps = {
   className?: string;
   action?: (event: React.MouseEvent) => void;
   icon?: IconDefinition;
+  iconOnly?: boolean;
   title: string;
   dataToggle?: string;
   dataTarget?: string;
@@ -19,18 +20,27 @@ const ListenControl = (props: ListenControlProps) => {
     className,
     action,
     icon,
+    iconOnly,
     title,
     dataToggle,
     dataTarget,
     disabled,
   } = props;
-  return icon ? (
-    <FontAwesomeIcon
-      icon={icon as IconProp}
-      className={className}
-      title={title}
-      onClick={disabled ? undefined : action}
-    />
+
+  let iconElement;
+  if (icon) {
+    iconElement = (
+      <FontAwesomeIcon
+        icon={icon as IconProp}
+        className={className}
+        title={title}
+        onClick={disabled ? undefined : action}
+      />
+    );
+  }
+
+  return iconOnly ? (
+    iconElement ?? <>No icon to render</>
   ) : (
     <button
       disabled={disabled ?? false}
@@ -41,7 +51,7 @@ const ListenControl = (props: ListenControlProps) => {
       data-toggle={dataToggle}
       data-target={dataTarget}
     >
-      {title}
+      {iconElement} {title}
     </button>
   );
 };

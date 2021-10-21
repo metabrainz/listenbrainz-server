@@ -6,7 +6,11 @@ import * as Sentry from "@sentry/react";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { faHeart, faHeartBroken } from "@fortawesome/free-solid-svg-icons";
+import {
+  faHeart,
+  faHeartBroken,
+  faThumbtack,
+} from "@fortawesome/free-solid-svg-icons";
 import { isNaN, get, clone } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
@@ -425,6 +429,7 @@ export default class UserFeedback extends React.Component<
                       <>
                         <ListenControl
                           title="Pin this recording"
+                          icon={faThumbtack}
                           // eslint-disable-next-line react/jsx-no-bind
                           action={this.updateRecordingToPin.bind(this, listen)}
                           dataToggle="modal"
