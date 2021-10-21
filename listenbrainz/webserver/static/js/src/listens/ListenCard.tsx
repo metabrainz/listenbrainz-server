@@ -66,7 +66,7 @@ export type ListenCardProps = {
 type ListenCardState = {
   isDeleted: boolean;
   feedback: ListenFeedBack | RecommendationFeedBack | null;
-  isCurrentListen: boolean;
+  isCurrentlyPlaying: boolean;
 };
 
 export default class ListenCard extends React.Component<
@@ -82,7 +82,7 @@ export default class ListenCard extends React.Component<
     this.state = {
       isDeleted: false,
       feedback: props.currentFeedback || null,
-      isCurrentListen: false,
+      isCurrentlyPlaying: false,
     };
   }
 
@@ -103,8 +103,8 @@ export default class ListenCard extends React.Component<
 
   playListen = () => {
     const { listen } = this.props;
-    const { isCurrentListen } = this.state;
-    if (isCurrentListen) {
+    const { isCurrentlyPlaying } = this.state;
+    if (isCurrentlyPlaying) {
       return;
     }
     window.postMessage(
@@ -116,7 +116,7 @@ export default class ListenCard extends React.Component<
   /** React to events sent by BrainzPlayer */
   receiveBrainzPlayerMessage = (event: MessageEvent) => {
     if (event.origin !== window.location.origin) {
-      // Reveived postMessage from different origin, ignoring it
+      // Received postMessage from different origin, ignoring it
       return;
     }
     const { type, payload } = event.data;
@@ -130,10 +130,10 @@ export default class ListenCard extends React.Component<
   };
 
   onCurrentListenChange = (newListen: BaseListenFormat) => {
-    this.setState({ isCurrentListen: this.isCurrentListen(newListen) });
+    this.setState({ isCurrentlyPlaying: this.isCurrentlyPlaying(newListen) });
   };
 
-  isCurrentListen = (element: BaseListenFormat): boolean => {
+  isCurrentlyPlaying = (element: BaseListenFormat): boolean => {
     const { listen } = this.props;
     if (isNil(listen)) {
       return false;
@@ -386,19 +386,30 @@ export default class ListenCard extends React.Component<
       removeListenText,
     } = this.props;
     const { currentUser } = this.context;
-    const { feedback, isDeleted, isCurrentListen } = this.state;
+    const { feedback, isDeleted, isCurrentlyPlaying } = this.state;
+
+    const listenedAt = _get(listen, "listened_at");
+    const recordingMSID = _get(
+      listen,
+      "track_metadata.additional_info.recording_msid"
+    );
 
     const isCurrentUser =
       Boolean(listen.user_name) && listen.user_name === currentUser?.name;
-
-    const hasRecordingMsid = Boolean(
-      _get(listen, "track_metadata.additional_info.recording_msid")
-    );
-    const enableFeedbackButtons = hasRecordingMsid;
+    const hasRecordingMSID = Boolean(recordingMSID);
     const enableRecommendButton =
-      Boolean(_get(listen, "track_metadata.artist_name")) &&
-      Boolean(_get(listen, "track_metadata.track_name")) &&
-      hasRecordingMsid;
+      _has(listen, "track_metadata.artist_name") &&
+      _has(listen, "track_metadata.track_name") &&
+      hasRecordingMSID;
+    const canDelete =
+      (isCurrentUser && Boolean(listenedAt) && hasRecordingMSID) ||
+      Boolean(removeListenFunction);
+
+    const hideListenControls =
+      !hasRecordingMSID ||
+      !currentUser?.auth_token ||
+      compact ||
+      useRecommendationFeedback;
 
     const timeStampForDisplay = (
       <>
@@ -427,16 +438,11 @@ export default class ListenCard extends React.Component<
       </>
     );
 
-    const listenedAt = _get(listen, "listened_at");
-    const canDelete =
-      (isCurrentUser && Boolean(listenedAt) && hasRecordingMsid) ||
-      Boolean(removeListenFunction);
-
     return (
       <Card
         onDoubleClick={this.playListen}
         className={`listen-card row ${
-          isCurrentListen ? "current-listen" : ""
+          isCurrentlyPlaying ? "current-listen" : ""
         } ${isDeleted ? "deleted" : ""} ${compact ? " compact" : " "} ${
           className || ""
         }`}
@@ -476,24 +482,24 @@ export default class ListenCard extends React.Component<
           </div>
         )}
         <div className="listen-controls">
-          {!currentUser?.auth_token ||
-          compact ||
-          useRecommendationFeedback ? null : (
+          {hideListenControls ? null : (
             <>
-              <ListenControl
-                icon={faHeart}
-                title="Love"
-                action={() => this.submitFeedback(feedback === 1 ? 0 : 1)}
-                className={`${feedback === 1 ? " loved" : ""}`}
-                disabled={!enableFeedbackButtons}
-              />
-              <ListenControl
-                icon={faHeartBroken}
-                title="Hate"
-                action={() => this.submitFeedback(feedback === -1 ? 0 : -1)}
-                className={`${feedback === -1 ? " hated" : ""}`}
-                disabled={!enableFeedbackButtons}
-              />
+              {hasRecordingMSID && (
+                <ListenControl
+                  icon={faHeart}
+                  title="Love"
+                  action={() => this.submitFeedback(feedback === 1 ? 0 : 1)}
+                  className={`${feedback === 1 ? " loved" : ""}`}
+                />
+              )}
+              {hasRecordingMSID && (
+                <ListenControl
+                  icon={faHeartBroken}
+                  title="Hate"
+                  action={() => this.submitFeedback(feedback === -1 ? 0 : -1)}
+                  className={`${feedback === -1 ? " hated" : ""}`}
+                />
+              )}
 
               <FontAwesomeIcon
                 icon={faEllipsisV as IconProp}
@@ -508,11 +514,12 @@ export default class ListenCard extends React.Component<
                 className="dropdown-menu dropdown-menu-right"
                 aria-labelledby="listenControlsDropdown"
               >
-                <ListenControl
-                  title="Recommend to my followers"
-                  action={this.recommendListenToFollowers}
-                  disabled={!enableRecommendButton}
-                />
+                {enableRecommendButton && (
+                  <ListenControl
+                    title="Recommend to my followers"
+                    action={this.recommendListenToFollowers}
+                  />
+                )}
                 <ListenControl
                   title="Pin this Recording"
                   action={
@@ -523,15 +530,12 @@ export default class ListenCard extends React.Component<
                   dataToggle="modal"
                   dataTarget="#PinRecordingModal"
                 />
-                <ListenControl
-                  disabled={!canDelete}
-                  title={removeListenText ?? "Delete Listen"}
-                  action={
-                    canDelete
-                      ? removeListenFunction ?? this.deleteListen
-                      : undefined
-                  }
-                />
+                {canDelete && (
+                  <ListenControl
+                    title={removeListenText ?? "Delete Listen"}
+                    action={removeListenFunction ?? this.deleteListen}
+                  />
+                )}
               </ul>
             </>
           )}
@@ -544,7 +548,7 @@ export default class ListenCard extends React.Component<
             onClick={this.playListen}
             type="button"
           >
-            {isCurrentListen ? (
+            {isCurrentlyPlaying ? (
               <FontAwesomeIcon size="1x" icon={faPlay as IconProp} />
             ) : (
               <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />

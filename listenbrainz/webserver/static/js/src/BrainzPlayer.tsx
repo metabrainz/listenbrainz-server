@@ -171,7 +171,7 @@ export default class BrainzPlayer extends React.Component<
 
   receiveBrainzPlayerMessage = (event: MessageEvent) => {
     if (event.origin !== window.location.origin) {
-      // Reveived postMessage from different origin, ignoring it
+      // Received postMessage from different origin, ignoring it
       return;
     }
     const { brainzplayer_event, payload } = event.data;
@@ -205,7 +205,7 @@ export default class BrainzPlayer extends React.Component<
     window.localStorage.setItem("BrainzPlayer_stop", Date.now().toString());
   };
 
-  isCurrentListen = (element: Listen | JSPFTrack): boolean => {
+  isCurrentlyPlaying = (element: Listen | JSPFTrack): boolean => {
     const { currentListen } = this.state;
     if (_isNil(currentListen)) {
       return false;
@@ -239,7 +239,7 @@ export default class BrainzPlayer extends React.Component<
       return;
     }
 
-    const currentListenIndex = listens.findIndex(this.isCurrentListen);
+    const currentListenIndex = listens.findIndex(this.isCurrentlyPlaying);
 
     let nextListenIndex;
     if (currentListenIndex === -1) {
