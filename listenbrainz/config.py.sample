@@ -98,6 +98,7 @@ PLAYING_NOW_MAX_DURATION = 10 * 60
 #     'dsn':'',
 #     'environment': 'development',
 #     'level': 'ERROR',
+#     'traces_sample_rate': 1.0,
 # }
 
 

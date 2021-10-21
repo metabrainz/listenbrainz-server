@@ -42,6 +42,12 @@ interface AdditionalInfo {
   work_mbids?: Array<string> | null;
 }
 
+declare type MbidMapping = {
+  recording_mbid: string;
+  release_mbid: string;
+  artist_mbids: Array<string>;
+};
+
 declare type BaseListenFormat = {
   listened_at: number;
   user_name?: string | null;
@@ -387,6 +393,7 @@ declare type TrackMetadata = {
   release_mbid?: string;
   release_msid?: string;
   additional_info?: AdditionalInfo;
+  mbid_mapping?: MbidMapping;
 };
 
 declare type FeedbackResponseWithTrackMetadata = FeedbackResponse & {
