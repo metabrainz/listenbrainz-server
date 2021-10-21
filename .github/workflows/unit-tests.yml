@@ -11,6 +11,7 @@ on:
       - '**/Dockerfile.spark*'
       - '**.jsx?'
       - '**.tsx?'
+      - '**.snap'
       - 'docker/Dockerfile.webpack'
       - 'docker/docker-compose.spark*.yml'
       - 'docs/**'
