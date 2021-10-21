@@ -24,14 +24,18 @@ LAST_UPDATED_CACHE_KEY = "mbid.release_color_timestamp"
 
 
 def process_image(filename, mime_type):
+    """ Process the downloaded image with netpbm to scale it to 1 pixel
+        and return the (reg, green, blue) tuple """
 
     with open(filename, "rb") as raw:
         proc = subprocess.Popen(["file", filename], stdout=subprocess.PIPE)
         tmp = proc.communicate(raw.read())
-        proc = subprocess.Popen(["jpegtopnm", filename], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(["jpegtopnm", filename],
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         tmp = proc.communicate(raw.read())
 
-    proc = subprocess.Popen(["pnmscale", "-xsize", "1", "-ysize", "1"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    proc = subprocess.Popen(["pnmscale", "-xsize", "1", "-ysize", "1"],
+                            stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     out = proc.communicate(tmp[0])
 
     lines = out[0].split(b"\n", 3)
@@ -45,14 +49,16 @@ def process_image(filename, mime_type):
 
 
 def insert_row(release_mbid, red, green, blue, caa_id):
+    """ Insert a row into release_color mapping """
 
     with psycopg2.connect(config.SQLALCHEMY_DATABASE_URI) as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
             sql = """INSERT INTO release_color (release_mbid, red, green, blue, color, caa_id)
                           VALUES (%s, %s, %s, %s, %s::cube, %s)
                      ON CONFLICT DO NOTHING"""
-                    
-            args = (release_mbid, red, green, blue, Cube(red, green, blue), caa_id)
+
+            args = (release_mbid, red, green, blue,
+                    Cube(red, green, blue), caa_id)
             try:
                 curs.execute(sql, args)
                 conn.commit()
@@ -60,11 +66,15 @@ def insert_row(release_mbid, red, green, blue, caa_id):
                 conn.rollback()
 
 
-
 def process_row(row):
+    """ Process one CAA query row, by fetching the 250px thumbnail,
+        process the color, then import into the DB """
+
     while True:
-        headers = { 'User-Agent': 'ListenBrainz HueSound Color Bot ( rob@metabrainz.org )' }
-        url = "https://beta.coverartarchive.org/release/%s/%d-250.jpg" % (row["release_mbid"], row["caa_id"])
+        headers = {
+            'User-Agent': 'ListenBrainz HueSound Color Bot ( rob@metabrainz.org )'}
+        url = "https://beta.coverartarchive.org/release/%s/%d-250.jpg" % (
+            row["release_mbid"], row["caa_id"])
         r = requests.get(url, headers=headers)
         if r.status_code == 200:
             filename = "/tmp/release-colors-%s.img" % get_ident()
@@ -74,8 +84,10 @@ def process_row(row):
 
             try:
                 red, green, blue = process_image(filename, row["mime_type"])
-                insert_row(row["release_mbid"], red, green, blue, row["caa_id"])
-                print("%s %s: (%s, %s, %s)" % (row["caa_id"], row["release_mbid"], red, green, blue))
+                insert_row(row["release_mbid"], red,
+                           green, blue, row["caa_id"])
+                print("%s %s: (%s, %s, %s)" %
+                      (row["caa_id"], row["release_mbid"], red, green, blue))
             except Exception as err:
                 print("Could not process %s" % url)
                 print(err)
@@ -89,7 +101,7 @@ def process_row(row):
 
         if r.status_code == 404:
             break
-            
+
         if r.status_code in (503, 429):
             print("Exceeded rate limit. sleeping 2 seconds.")
             sleep(2)
@@ -100,12 +112,17 @@ def process_row(row):
 
 
 def delete_from_lb(caa_id):
+    """ Delete a piece of coverart from the release_color table. """
+
     with psycopg2.connect(config.SQLALCHEMY_DATABASE_URI) as lb_conn:
         with lb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
-            lb_curs.execute("""DELETE FROM release_color WHERE caa_id = %s """, (caa_id,))
+            lb_curs.execute(
+                """DELETE FROM release_color WHERE caa_id = %s """, (caa_id,))
 
 
 def process_cover_art(threads, row):
+    """ Process one row of the CAA query, waiting for a thread to free up.
+        This function blocks until a thread is available. """
 
     while len(threads) == MAX_THREADS:
         for i, thread in enumerate(threads):
@@ -122,6 +139,7 @@ def process_cover_art(threads, row):
 
 
 def join_threads(threads):
+    """ Given the currently active threads, wait for all active threads to finish. """
 
     while len(threads) > 0:
         for i, thread in enumerate(threads):
@@ -134,6 +152,7 @@ def join_threads(threads):
 
 
 def get_cover_art_counts(mb_curs, lb_curs):
+    """ Fetch the cover art counts from the CAA and the release_color table. """
 
     mb_curs.execute("""SELECT COUNT(*)
                          FROM cover_art_archive.cover_art caa
@@ -150,7 +169,28 @@ def get_cover_art_counts(mb_curs, lb_curs):
     return mb_count, lb_count
 
 
+def get_last_updated_from_caa():
+    """ Fetch the last_updated (last date_updated) value from the CAA table """
+
+    with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
+        with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
+            mb_curs.execute("""SELECT max(date_uploaded) AS date_uploaded
+                                 FROM cover_art_archive.cover_art""")
+            last_updated = None
+            row = mb_curs.fetchone()
+            if row:
+                try:
+                    last_updated = row["date_uploaded"]
+                except ValueError:
+                    pass
+
+            return last_updated
+
+
 def sync_release_color_table():
+    """ Top level function to sync the two CAA and LB cover art tables
+        by fetching all rows sorted by caa_id and adding or removing
+        cover art as needed. """
 
     log("cover art sync starting...")
     mb_query = """SELECT caa.id AS caa_id
@@ -176,26 +216,13 @@ def sync_release_color_table():
     compare_coverart(mb_query, lb_query, 0, 0, "caa_id", "caa_id")
 
 
-def get_last_updated_from_caa():
-
-    with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
-        with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
-            mb_curs.execute("""SELECT max(date_uploaded) AS date_uploaded
-                                 FROM cover_art_archive.cover_art""")
-            last_updated = None
-            row = mb_curs.fetchone()
-            if row:
-                try:
-                    last_updated = row["date_uploaded"]
-                except ValueError:
-                    pass
-
-            return last_updated
-
-
 def incremental_update_release_color_table():
+    """ Incrementally update the cover art mapping. This is designed to run hourly
+        and save a last_updated timestamp in the cache. If the cache value cannot be
+        found, a complete sync is run instead and the cache value is set. """
 
-    cache.init(host=config.REDIS_HOST, port=config.REDIS_PORT, namespace=config.REDIS_NAMESPACE)
+    cache.init(host=config.REDIS_HOST, port=config.REDIS_PORT,
+               namespace=config.REDIS_NAMESPACE)
 
     try:
         last_updated = cache.get(LAST_UPDATED_CACHE_KEY, decode=True) or None
@@ -206,7 +233,8 @@ def incremental_update_release_color_table():
         print("No timestamp found, performing full sync")
         sync_release_color_table()
         last_updated = get_last_updated_from_caa()
-        cache.set(LAST_UPDATED_CACHE_KEY, last_updated, expirein=0, encode=True)
+        cache.set(LAST_UPDATED_CACHE_KEY, last_updated,
+                  expirein=0, encode=True)
         return
 
     log("cover art incremental update starting...")
@@ -225,13 +253,20 @@ def incremental_update_release_color_table():
                 ORDER BY caa.date_uploaded
                    LIMIT %s"""
 
-    compare_coverart(mb_query, None, last_updated, None, "date_uploaded", "last_updated")
+    compare_coverart(mb_query, None, last_updated, None,
+                     "date_uploaded", "last_updated")
 
     last_updated = get_last_updated_from_caa()
     cache.set(LAST_UPDATED_CACHE_KEY, last_updated, expirein=0, encode=True)
 
 
 def compare_coverart(mb_query, lb_query, mb_caa_index, lb_caa_index, mb_compare_key, lb_compare_key):
+    """ The core cover art comparison function. Given two sets of queries, index values, and 
+        comparison keys this function can perform a complete sync as well as an incremental update.
+
+        The queries must fetch chunks of data from the MB and LB tables ordered by
+        the corresponding compare key. The starting indexes (the current comparison index
+        into the data) must be provided and match the type of the comparison keys. """
 
     with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
         with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
@@ -239,6 +274,8 @@ def compare_coverart(mb_query, lb_query, mb_caa_index, lb_caa_index, mb_compare_
                 with lb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
 
                     mb_count, lb_count = get_cover_art_counts(mb_curs, lb_curs)
+                    print("CAA count: %d\n LB count: %d" %
+                          (mb_count, lb_count))
 
                     threads = []
                     mb_row = None
@@ -256,17 +293,19 @@ def compare_coverart(mb_query, lb_query, mb_caa_index, lb_caa_index, mb_compare_
 
                     while True:
                         if len(mb_rows) == 0 and not mb_done:
-                            mb_curs.execute(mb_query, (mb_caa_index, SYNC_BATCH_SIZE))
+                            mb_curs.execute(
+                                mb_query, (mb_caa_index, SYNC_BATCH_SIZE))
                             mb_rows = mb_curs.fetchall()
                             if len(mb_rows) == 0:
                                 mb_done = True
 
                         if len(lb_rows) == 0 and not lb_done:
-                            lb_curs.execute(lb_query, (lb_caa_index, SYNC_BATCH_SIZE))
+                            lb_curs.execute(
+                                lb_query, (lb_caa_index, SYNC_BATCH_SIZE))
                             lb_rows = lb_curs.fetchall()
                             if len(lb_rows) == 0:
                                 lb_done = True
-                            
+
                         if not mb_row and len(mb_rows) > 0:
                             mb_row = mb_rows.pop(0)
 
@@ -278,7 +317,8 @@ def compare_coverart(mb_query, lb_query, mb_caa_index, lb_caa_index, mb_compare_
 
                         processed += 1
                         if processed % 100000 == 0:
-                            print("processed %d of %d: missing %d extra %d" % (processed, mb_count, missing, extra))
+                            print("processed %d of %d: missing %d extra %d" %
+                                  (processed, mb_count, missing, extra))
 
                         # If the item is in MB, but not in LB, add to LB
                         if lb_row is None or mb_row[mb_compare_key] < lb_row[lb_compare_key]:
@@ -291,7 +331,6 @@ def compare_coverart(mb_query, lb_query, mb_caa_index, lb_caa_index, mb_compare_
                         # If the item is in LB, but not in MB, remove from LB
                         if mb_row is None or mb_row[mb_compare_key] > lb_row[lb_compare_key]:
                             extra += 1
-                            print("remove")
                             delete_from_lb(lb_row[lb_compare_key])
                             lb_caa_index = lb_row[lb_compare_key]
                             lb_row = None
@@ -308,4 +347,12 @@ def compare_coverart(mb_query, lb_query, mb_caa_index, lb_caa_index, mb_compare_
                         assert False
 
                     join_threads(threads)
-                    print("Finished! added/skipped %d removed %d from release_color" % (missing, extra))
+                    print(
+                        "Finished! added/skipped %d removed %d from release_color" % (missing, extra))
+
+                    mb_count, lb_count = get_cover_art_counts(mb_curs, lb_curs)
+                    print("CAA count: %d\n LB count: %d" %
+                          (mb_count, lb_count))
+
+                    metrics.set("listenbrainz-caa-mapper",
+                                caa_front_count=mb_count, lb_caa_count=lb_count)
