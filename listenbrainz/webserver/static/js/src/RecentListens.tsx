@@ -10,7 +10,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import { io, Socket } from "socket.io-client";
-import { fromPairs } from "lodash";
+import { fromPairs, get } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import {
@@ -30,6 +30,7 @@ import {
   getPageProps,
   getListenablePin,
 } from "./utils";
+import ListenControl from "./listens/ListenControl";
 
 export type RecentListensProps = {
   latestListenTs: number;
@@ -437,6 +438,41 @@ export default class RecentListens extends React.Component<
     return recordingMsid ? _.get(recordingFeedbackMap, recordingMsid, 0) : 0;
   };
 
+  deleteListen = async (listen: Listen) => {
+    const { newAlert } = this.props;
+    const { APIService, currentUser } = this.context;
+    const isCurrentUser =
+      Boolean(listen.user_name) && listen.user_name === currentUser?.name;
+    if (isCurrentUser && currentUser?.auth_token) {
+      const listenedAt = get(listen, "listened_at");
+      const recordingMSID = get(
+        listen,
+        "track_metadata.additional_info.recording_msid"
+      );
+
+      try {
+        const status = await APIService.deleteListen(
+          currentUser.auth_token,
+          recordingMSID,
+          listenedAt
+        );
+        if (status === 200) {
+          // this.setState({ isDeleted: true });
+          // wait for the animation to finish
+          setTimeout(() => {
+            this.removeListenFromListenList(listen);
+          }, 1000);
+        }
+      } catch (error) {
+        newAlert(
+          "danger",
+          "Error while deleting listen",
+          typeof error === "object" ? error.message : error.toString()
+        );
+      }
+    }
+  };
+
   removeListenFromListenList = (listen: Listen) => {
     const { listens } = this.state;
     const index = listens.indexOf(listen);
@@ -617,6 +653,25 @@ export default class RecentListens extends React.Component<
                       return 0;
                     })
                     .map((listen) => {
+                      /* eslint-disable react/jsx-no-bind */
+                      const additionalMenuItems = (
+                        <>
+                          <ListenControl
+                            title="Pin this recording"
+                            action={this.updateRecordingToPin.bind(
+                              this,
+                              listen
+                            )}
+                            dataToggle="modal"
+                            dataTarget="#PinRecordingModal"
+                          />
+                          <ListenControl
+                            title="Delete Listen"
+                            action={this.deleteListen.bind(this, listen)}
+                          />
+                        </>
+                      );
+                      /* eslint-enable react/jsx-no-bind */
                       return (
                         <ListenCard
                           key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
@@ -627,13 +682,12 @@ export default class RecentListens extends React.Component<
                             listen.track_metadata?.additional_info
                               ?.recording_msid
                           )}
-                          removeListenCallback={this.removeListenFromListenList}
                           updateFeedbackCallback={this.updateFeedback}
-                          updateRecordingToPin={this.updateRecordingToPin}
                           newAlert={newAlert}
                           className={`${
                             listen.playing_now ? "playing-now" : ""
                           }`}
+                          additionalMenuItems={additionalMenuItems}
                         />
                       );
                     })}

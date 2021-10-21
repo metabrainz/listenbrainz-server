@@ -23,6 +23,7 @@ import ListenCard from "./listens/ListenCard";
 import Loader from "./components/Loader";
 import PinRecordingModal from "./PinRecordingModal";
 import { getPageProps, handleNavigationClickEvent } from "./utils";
+import ListenControl from "./listens/ListenControl";
 
 export type UserFeedbackProps = {
   feedback?: Array<FeedbackResponseWithTrackMetadata>;
@@ -420,6 +421,17 @@ export default class UserFeedback extends React.Component<
                 >
                   {feedback.map((feedbackItem, index) => {
                     const listen = listensFromFeedback[index];
+                    const additionalMenuItems = (
+                      <>
+                        <ListenControl
+                          title="Pin this recording"
+                          // eslint-disable-next-line react/jsx-no-bind
+                          action={this.updateRecordingToPin.bind(this, listen)}
+                          dataToggle="modal"
+                          dataTarget="#PinRecordingModal"
+                        />
+                      </>
+                    );
                     return (
                       <ListenCard
                         showUsername={false}
@@ -430,7 +442,7 @@ export default class UserFeedback extends React.Component<
                           feedbackItem.recording_msid
                         )}
                         updateFeedbackCallback={this.updateFeedback}
-                        updateRecordingToPin={this.updateRecordingToPin}
+                        additionalMenuItems={additionalMenuItems}
                         newAlert={newAlert}
                       />
                     );
