@@ -339,7 +339,7 @@ describe("ListenCard", () => {
         instance.context.APIService,
         "submitRecommendationFeedback"
       );
-      spy.mockImplementation(() => Promise.resolve(201));
+      spy.mockImplementation(() => Promise.resolve(500));
 
       instance.submitRecommendationFeedback("hate");
 
