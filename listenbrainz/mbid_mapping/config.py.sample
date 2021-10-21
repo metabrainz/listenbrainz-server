@@ -1,6 +1,9 @@
 #
 # Database connection.
 
+# Connection to LB database
+SQLALCHEMY_DATABASE_URI = "dbname=listenbrainz user=listenbrainz host=listenbrainz_lb_db_1 port=5432 password=listenbrainz"
+
 # If you are connecting to a musicbrainz-docker instance for MusicBrainz data, this string should work:
 MBID_MAPPING_DATABASE_URI = "dbname=musicbrainz_db user=musicbrainz host=localhost port=25432 password=musicbrainz"
 

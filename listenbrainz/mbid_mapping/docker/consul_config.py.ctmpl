@@ -8,6 +8,16 @@ MBID_MAPPING_DATABASE_URI = "dbname=musicbrainz_json_dump user=musicbrainz host=
 {{end}}
 {{end}}
 
+{{if service "pgbouncer-master"}}
+{{with index (service "pgbouncer-master") 0}}
+SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@{{.Address}}:{{.Port}}/listenbrainz"
+MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@{{.Address}}:{{.Port}}/messybrainz"
+POSTGRES_ADMIN_URI="postgresql://postgres@{{.Address}}:{{.Port}}/postgres"
+{{end}}
+{{else}}
+SQLALCHEMY_DATABASE_URI = "SERVICEDOESNOTEXIST_pgbouncer-master"
+{{end}}
+
 {{if service "typesense-listenbrainz"}}
 {{with index (service "typesense-listenbrainz") 0}}
 TYPESENSE_HOST = "{{.Address}}"

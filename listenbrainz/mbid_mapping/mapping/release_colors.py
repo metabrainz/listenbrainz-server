@@ -46,7 +46,7 @@ def process_image(filename, mime_type):
 
 def insert_row(release_mbid, red, green, blue, caa_id):
 
-    with psycopg2.connect(config.LB_DATABASE_URI) as conn:
+    with psycopg2.connect(config.SQLALCHEMY_DATABASE_URI) as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
             sql = """INSERT INTO release_color (release_mbid, red, green, blue, color, caa_id)
                           VALUES (%s, %s, %s, %s, %s::cube, %s)
@@ -100,7 +100,7 @@ def process_row(row):
 
 
 def delete_from_lb(caa_id):
-    with psycopg2.connect(config.LB_DATABASE_URI) as lb_conn:
+    with psycopg2.connect(config.SQLALCHEMY_DATABASE_URI) as lb_conn:
         with lb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
             lb_curs.execute("""DELETE FROM release_color WHERE caa_id = %s """, (caa_id,))
 
@@ -203,7 +203,7 @@ def incremental_update_release_color_table():
         last_updated = None
 
     if not last_updated:
-        print("Not timestamp found, performing full sync")
+        print("No timestamp found, performing full sync")
         sync_release_color_table()
         last_updated = get_last_updated_from_caa()
         cache.set(LAST_UPDATED_CACHE_KEY, last_updated, expirein=0, encode=True)
@@ -235,7 +235,7 @@ def compare_coverart(mb_query, lb_query, mb_caa_index, lb_caa_index, mb_compare_
 
     with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
         with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
-            with psycopg2.connect(config.LB_DATABASE_URI) as lb_conn:
+            with psycopg2.connect(config.SQLALCHEMY_DATABASE_URI) as lb_conn:
                 with lb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
 
                     mb_count, lb_count = get_cover_art_counts(mb_curs, lb_curs)
@@ -282,7 +282,6 @@ def compare_coverart(mb_query, lb_query, mb_caa_index, lb_caa_index, mb_compare_
 
                         # If the item is in MB, but not in LB, add to LB
                         if lb_row is None or mb_row[mb_compare_key] < lb_row[lb_compare_key]:
-                            print("add %s" % mb_row["release_mbid"])
                             process_cover_art(threads, mb_row)
                             missing += 1
                             mb_caa_index = mb_row[mb_compare_key]
