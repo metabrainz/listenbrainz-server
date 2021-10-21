@@ -16,8 +16,8 @@ import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import BrainzPlayer from "../BrainzPlayer";
 import ErrorBoundary from "../ErrorBoundary";
 import Loader from "../components/Loader";
-import RecommendationCard from "./RecommendationCard";
 import { getPageProps } from "../utils";
+import ListenCard from "../listens/ListenCard";
 
 export type RecommendationsProps = {
   recommendations?: Array<Recommendation>;
@@ -126,12 +126,12 @@ export default class Recommendations extends React.Component<
 
   updateFeedback = (
     recordingMbid: string,
-    rating: RecommendationFeedBack | null
+    rating: ListenFeedBack | RecommendationFeedBack | null
   ) => {
     this.setState((state) => ({
       recommendationFeedbackMap: {
         ...state.recommendationFeedbackMap,
-        [recordingMbid]: rating,
+        [recordingMbid]: rating as RecommendationFeedBack,
       },
     }));
   };
@@ -214,7 +214,8 @@ export default class Recommendations extends React.Component<
     } = this.state;
     const { user, newAlert } = this.props;
     const { currentUser } = this.context;
-
+    const isCurrentUser =
+      Boolean(currentUser?.name) && currentUser?.name === user?.name;
     return (
       <div role="main">
         <div className="row">
@@ -237,7 +238,7 @@ export default class Recommendations extends React.Component<
               >
                 {recommendations.map((recommendation) => {
                   return (
-                    <RecommendationCard
+                    <ListenCard
                       key={`${recommendation.track_metadata?.track_name}-${
                         recommendation.track_metadata?.additional_info
                           ?.recording_msid ||
@@ -246,13 +247,15 @@ export default class Recommendations extends React.Component<
                       }-${recommendation.listened_at}-${
                         recommendation.user_name
                       }`}
-                      isCurrentUser={currentUser?.name === user?.name}
-                      recommendation={recommendation}
+                      showTimestamp={false}
+                      showUsername={false}
+                      useRecommendationFeedback={isCurrentUser}
+                      listen={recommendation}
                       currentFeedback={this.getFeedbackForRecordingMbid(
                         recommendation.track_metadata?.additional_info
                           ?.recording_mbid
                       )}
-                      updateFeedback={this.updateFeedback}
+                      updateFeedbackCallback={this.updateFeedback}
                       newAlert={newAlert}
                     />
                   );

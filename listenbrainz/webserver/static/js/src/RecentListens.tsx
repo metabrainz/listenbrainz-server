@@ -414,9 +414,15 @@ export default class RecentListens extends React.Component<
     this.setState({ recordingFeedbackMap });
   };
 
-  updateFeedback = (recordingMsid: string, score: ListenFeedBack) => {
+  updateFeedback = (
+    recordingMsid: string,
+    score: ListenFeedBack | RecommendationFeedBack
+  ) => {
     const { recordingFeedbackMap } = this.state;
-    const newFeedbackMap = { ...recordingFeedbackMap, [recordingMsid]: score };
+    const newFeedbackMap = {
+      ...recordingFeedbackMap,
+      [recordingMsid]: score as ListenFeedBack,
+    };
     this.setState({ recordingFeedbackMap: newFeedbackMap });
   };
 
