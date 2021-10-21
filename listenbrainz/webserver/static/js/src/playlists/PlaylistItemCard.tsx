@@ -11,6 +11,7 @@ import {
   millisecondsToStr,
 } from "./utils";
 import ListenCard from "../listens/ListenCard";
+import ListenControl from "../listens/ListenControl";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
@@ -60,6 +61,16 @@ export default class PlaylistItemCard extends React.Component<
         />
       </div>
     ) : undefined;
+    const additionalMenuItems = (
+      <>
+        {canEdit && (
+          <ListenControl
+            title="Remove from playlist"
+            action={this.removeTrack}
+          />
+        )}
+      </>
+    );
     const listen = JSPFTrackToListen(track);
     return (
       <ListenCard
@@ -70,8 +81,7 @@ export default class PlaylistItemCard extends React.Component<
         newAlert={newAlert}
         thumbnail={thumbnail}
         data-recording-mbid={track.id}
-        removeListenFunction={canEdit ? this.removeTrack : undefined}
-        removeListenText="Remove from playlist"
+        additionalMenuItems={additionalMenuItems}
         updateFeedbackCallback={updateFeedbackCallback}
       />
     );
