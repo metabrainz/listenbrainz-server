@@ -239,7 +239,6 @@ def compare_coverart(mb_query, lb_query, mb_caa_index, lb_caa_index, mb_compare_
                 with lb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
 
                     mb_count, lb_count = get_cover_art_counts(mb_curs, lb_curs)
-                    print("%d items in MB\n%d items in LB" % (mb_count, lb_count))
 
                     threads = []
                     mb_row = None
@@ -310,8 +309,4 @@ def compare_coverart(mb_query, lb_query, mb_caa_index, lb_caa_index, mb_compare_
                         assert False
 
                     join_threads(threads)
-
-                    mb_count, lb_count = get_cover_art_counts(mb_curs, lb_curs)
-
                     print("Finished! added/skipped %d removed %d from release_color" % (missing, extra))
-                    print("%d items in MB\n%d items in LB" % (mb_count, lb_count))
