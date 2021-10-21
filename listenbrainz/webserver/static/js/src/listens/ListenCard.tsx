@@ -6,9 +6,20 @@ import {
   faHeartBroken,
   faEllipsisV,
   faPlay,
+  faAngry,
+  faFrown,
+  faSmileBeam,
+  faGrinStars,
 } from "@fortawesome/free-solid-svg-icons";
-import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
-
+import {
+  faPlayCircle,
+  faThumbsUp as faThumbsUpRegular,
+  faAngry as faAngryRegular,
+  faFrown as faFrownRegular,
+  faSmileBeam as faSmileBeamRegular,
+  faGrinStars as faGrinStarsRegular,
+} from "@fortawesome/free-regular-svg-icons";
+import { IconDefinition } from "@fortawesome/fontawesome-common-types"; // eslint-disable-line import/no-unresolved
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -21,19 +32,20 @@ import {
 import GlobalAppContext from "../GlobalAppContext";
 import Card from "../components/Card";
 import ListenControl from "./ListenControl";
+import RecommendationControl from "../recommendations/RecommendationControl";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
 export type ListenCardProps = {
   listen: Listen;
   className?: string;
-  currentFeedback: ListenFeedBack;
+  currentFeedback: ListenFeedBack | RecommendationFeedBack | null;
   showTimestamp: boolean;
   showUsername: boolean;
   removeListenCallback?: (listen: Listen) => void;
   updateFeedbackCallback?: (
     recordingMsid: string,
-    score: ListenFeedBack
+    score: ListenFeedBack | RecommendationFeedBack
   ) => void;
   updateRecordingToPin?: (recordingToPin: Listen) => void;
   newAlert: (
@@ -46,11 +58,12 @@ export type ListenCardProps = {
   // The default details (recording name, artist name) can be superseeded
   listenDetails?: JSX.Element;
   compact?: boolean;
+  useRecommendationFeedback?: boolean;
 };
 
 type ListenCardState = {
   isDeleted: boolean;
-  feedback: ListenFeedBack;
+  feedback: ListenFeedBack | RecommendationFeedBack | null;
   isCurrentlyPlaying: boolean;
 };
 
@@ -66,7 +79,7 @@ export default class ListenCard extends React.Component<
 
     this.state = {
       isDeleted: false,
-      feedback: props.currentFeedback || 0,
+      feedback: props.currentFeedback || null,
       isCurrentlyPlaying: false,
     };
   }
@@ -149,6 +162,45 @@ export default class ListenCard extends React.Component<
         }
       } catch (error) {
         this.handleError(error, "Error while submitting feedback");
+      }
+    }
+  };
+
+  submitRecommendationFeedback = async (rating: RecommendationFeedBack) => {
+    const {
+      listen,
+      updateFeedbackCallback,
+      currentFeedback,
+      useRecommendationFeedback,
+    } = this.props;
+    const { APIService, currentUser } = this.context;
+
+    if (useRecommendationFeedback && currentUser?.auth_token) {
+      const recordingMBID = _get(
+        listen,
+        "track_metadata.additional_info.recording_mbid"
+      );
+      try {
+        let status;
+        if (currentFeedback === rating) {
+          status = await APIService.deleteRecommendationFeedback(
+            currentUser.auth_token,
+            recordingMBID
+          );
+        } else {
+          status = await APIService.submitRecommendationFeedback(
+            currentUser.auth_token,
+            recordingMBID,
+            rating
+          );
+        }
+        if (status === 200 && updateFeedbackCallback) {
+          updateFeedbackCallback(recordingMBID, rating);
+        }
+      } catch (error) {
+        this.handleError(
+          `Error while submitting recommendation feedback - ${error.message}`
+        );
       }
     }
   };
@@ -239,6 +291,83 @@ export default class ListenCard extends React.Component<
     );
   };
 
+  getRecommendationFeedbackButtons = (): JSX.Element => {
+    const { currentFeedback } = this.props;
+    let icon: IconDefinition;
+    let text: string;
+    switch (currentFeedback) {
+      case "hate":
+        icon = faAngry;
+        text = "Hate";
+        break;
+      case "dislike":
+        icon = faFrown;
+        text = "Dislike";
+        break;
+      case "like":
+        icon = faSmileBeam;
+        text = "Like";
+        break;
+      case "love":
+        icon = faGrinStars;
+        text = "Love";
+        break;
+      default:
+        icon = faThumbsUpRegular;
+        text = "Like";
+        break;
+    }
+    return (
+      <div className="recommendation-controls">
+        <button
+          className={`btn ${currentFeedback}`}
+          id="recommendationControlsDropdown"
+          data-toggle="dropdown"
+          aria-haspopup="true"
+          aria-expanded="true"
+          type="button"
+        >
+          <FontAwesomeIcon icon={icon as IconProp} /> {text}
+        </button>
+        <ul
+          className="dropdown-menu dropdown-menu-right"
+          aria-labelledby="recommendationControlsDropdown"
+        >
+          <RecommendationControl
+            iconHover={faAngry}
+            icon={faAngryRegular}
+            title="I never want to hear this again!"
+            action={() => this.submitRecommendationFeedback("hate")}
+            cssClass={`hate ${currentFeedback === "hate" ? "selected" : ""}`}
+          />
+          <RecommendationControl
+            iconHover={faFrown}
+            icon={faFrownRegular}
+            title="I don't like this!"
+            action={() => this.submitRecommendationFeedback("dislike")}
+            cssClass={`dislike ${
+              currentFeedback === "dislike" ? "selected" : ""
+            }`}
+          />
+          <RecommendationControl
+            iconHover={faSmileBeam}
+            icon={faSmileBeamRegular}
+            title="I like this!"
+            action={() => this.submitRecommendationFeedback("like")}
+            cssClass={`like ${currentFeedback === "like" ? "selected" : ""}`}
+          />
+          <RecommendationControl
+            iconHover={faGrinStars}
+            icon={faGrinStarsRegular}
+            title="I really love this!"
+            action={() => this.submitRecommendationFeedback("love")}
+            cssClass={`love ${currentFeedback === "love" ? "selected" : ""}`}
+          />
+        </ul>
+      </div>
+    );
+  };
+
   render() {
     const {
       additionalDetails,
@@ -250,6 +379,7 @@ export default class ListenCard extends React.Component<
       thumbnail,
       listenDetails,
       compact,
+      useRecommendationFeedback,
     } = this.props;
     const { currentUser } = this.context;
     const { feedback, isDeleted, isCurrentlyPlaying } = this.state;
@@ -269,7 +399,10 @@ export default class ListenCard extends React.Component<
       hasRecordingMSID;
     const canDelete = isCurrentUser && Boolean(listenedAt) && hasRecordingMSID;
     const hideListenControls =
-      !hasRecordingMSID || !currentUser?.auth_token || compact;
+      !hasRecordingMSID ||
+      !currentUser?.auth_token ||
+      compact ||
+      useRecommendationFeedback;
 
     const timeStampForDisplay = (
       <>
@@ -399,6 +532,9 @@ export default class ListenCard extends React.Component<
               </ul>
             </>
           )}
+          {useRecommendationFeedback && currentUser?.auth_token
+            ? this.getRecommendationFeedbackButtons()
+            : null}
           <button
             title="Play"
             className="btn-transparent play-button"

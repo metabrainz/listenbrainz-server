@@ -9,7 +9,11 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
       "playing_now": false,
       "track_metadata": Object {
         "additional_info": Object {
+          "artist_mbids": Array [
+            "xxxx",
+          ],
           "artist_msid": "artist_msid",
+          "recording_mbid": "yyyy",
           "recording_msid": "bar",
           "release_mbid": "foo",
         },
@@ -41,13 +45,25 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
           className="ellipsis-2-lines"
           title="Bird's Lament"
         >
-          Bird's Lament
+          <a
+            href="https://musicbrainz.org/recording/yyyy"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Bird's Lament
+          </a>
         </div>
         <span
           className="small text-muted ellipsis"
           title="Moondog"
         >
-          Moondog
+          <a
+            href="https://musicbrainz.org/artist/xxxx"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Moondog
+          </a>
         </span>
       </div>
       <div
@@ -142,7 +158,11 @@ exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
       "playing_now": false,
       "track_metadata": Object {
         "additional_info": Object {
+          "artist_mbids": Array [
+            "xxxx",
+          ],
           "artist_msid": "artist_msid",
+          "recording_mbid": "yyyy",
           "recording_msid": "bar",
           "release_mbid": "foo",
         },
@@ -175,13 +195,25 @@ exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
           className="ellipsis-2-lines"
           title="Bird's Lament"
         >
-          Bird's Lament
+          <a
+            href="https://musicbrainz.org/recording/yyyy"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Bird's Lament
+          </a>
         </div>
         <span
           className="small text-muted ellipsis"
           title="Moondog"
         >
-          Moondog
+          <a
+            href="https://musicbrainz.org/artist/xxxx"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Moondog
+          </a>
         </span>
       </div>
       <div
@@ -276,7 +308,11 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
       "playing_now": false,
       "track_metadata": Object {
         "additional_info": Object {
+          "artist_mbids": Array [
+            "xxxx",
+          ],
           "artist_msid": "artist_msid",
+          "recording_mbid": "yyyy",
           "recording_msid": "bar",
           "release_mbid": "foo",
         },
@@ -308,13 +344,25 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
           className="ellipsis-2-lines"
           title="Bird's Lament"
         >
-          Bird's Lament
+          <a
+            href="https://musicbrainz.org/recording/yyyy"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Bird's Lament
+          </a>
         </div>
         <span
           className="small text-muted ellipsis"
           title="Moondog"
         >
-          Moondog
+          <a
+            href="https://musicbrainz.org/artist/xxxx"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Moondog
+          </a>
         </span>
       </div>
       <div
@@ -409,7 +457,11 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
       "playing_now": false,
       "track_metadata": Object {
         "additional_info": Object {
+          "artist_mbids": Array [
+            "xxxx",
+          ],
           "artist_msid": "artist_msid",
+          "recording_mbid": "yyyy",
           "recording_msid": "bar",
           "release_mbid": "foo",
         },
@@ -441,13 +493,25 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
           className="ellipsis-2-lines"
           title="Bird's Lament"
         >
-          Bird's Lament
+          <a
+            href="https://musicbrainz.org/recording/yyyy"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Bird's Lament
+          </a>
         </div>
         <span
           className="small text-muted ellipsis"
           title="Moondog"
         >
-          Moondog
+          <a
+            href="https://musicbrainz.org/artist/xxxx"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Moondog
+          </a>
         </span>
       </div>
       <div

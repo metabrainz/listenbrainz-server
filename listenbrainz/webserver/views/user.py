@@ -104,11 +104,7 @@ def profile(user_name):
 
     listens = []
     for listen in data:
-        listens.append({
-            "track_metadata": listen.data,
-            "listened_at": listen.ts_since_epoch,
-            "listened_at_iso": listen.timestamp.isoformat() + "Z",
-        })
+        listens.append(listen.to_api())
 
     # If there are no previous listens then display now_playing
     if not listens or listens[0]['listened_at'] >= max_ts_per_user:
