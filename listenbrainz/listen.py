@@ -150,7 +150,7 @@ class Listen(object):
 
         j['listened_at'] = datetime.utcfromtimestamp(float(listened_at))
         j['track_metadata']['track_name'] = track_name
-        if recording_mbid is not None:
+        if recording_mbid is not None and release_mbid is not None and artist_mbids is not None:
             j["track_metadata"]["mbid_mapping"] = {
                 "recording_mbid": str(recording_mbid),
                 "release_mbid": str(release_mbid),
