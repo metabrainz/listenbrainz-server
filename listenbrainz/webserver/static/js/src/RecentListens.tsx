@@ -11,6 +11,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import { io, Socket } from "socket.io-client";
 import { fromPairs } from "lodash";
+import { Integrations } from "@sentry/tracing";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
@@ -92,6 +93,7 @@ export default class RecentListens extends React.Component<
 
   componentDidMount(): void {
     const { mode } = this.state;
+    const { newAlert } = this.props;
     // Get API instance from React context provided for in top-level component
     const { APIService, currentUser } = this.context;
     this.APIService = APIService;
@@ -105,9 +107,17 @@ export default class RecentListens extends React.Component<
       const { user } = this.props;
       // Get the user listen count
       if (user?.name) {
-        this.APIService.getUserListenCount(user.name).then((listenCount) => {
-          this.setState({ listenCount });
-        });
+        this.APIService.getUserListenCount(user.name)
+          .then((listenCount) => {
+            this.setState({ listenCount });
+          })
+          .catch((error) => {
+            newAlert(
+              "danger",
+              "Sorry, we couldn't load your listens count…",
+              error?.toString()
+            );
+          });
       }
       if (currentUser?.name && currentUser?.name === user?.name) {
         this.loadFeedback();
@@ -409,8 +419,11 @@ export default class RecentListens extends React.Component<
     score: ListenFeedBack | RecommendationFeedBack
   ) => {
     const { recordingFeedbackMap } = this.state;
-    recordingFeedbackMap[recordingMsid] = score as ListenFeedBack;
-    this.setState({ recordingFeedbackMap });
+    const newFeedbackMap = {
+      ...recordingFeedbackMap,
+      [recordingMsid]: score as ListenFeedBack,
+    };
+    this.setState({ recordingFeedbackMap: newFeedbackMap });
   };
 
   updateRecordingToPin = (recordingToPin: Listen) => {
@@ -773,6 +786,7 @@ document.addEventListener("DOMContentLoaded", () => {
     current_user,
     spotify,
     youtube,
+    sentry_traces_sample_rate,
   } = globalReactProps;
   const {
     latest_listen_ts,
@@ -790,7 +804,11 @@ document.addEventListener("DOMContentLoaded", () => {
   );
 
   if (sentry_dsn) {
-    Sentry.init({ dsn: sentry_dsn });
+    Sentry.init({
+      dsn: sentry_dsn,
+      integrations: [new Integrations.BrowserTracing()],
+      tracesSampleRate: sentry_traces_sample_rate,
+    });
   }
 
   const RecentListensWithAlertNotifications = withAlertNotifications(
