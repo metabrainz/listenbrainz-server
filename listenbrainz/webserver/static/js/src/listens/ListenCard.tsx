@@ -42,9 +42,6 @@ export type ListenCardProps = {
   currentFeedback: ListenFeedBack | RecommendationFeedBack | null;
   showTimestamp: boolean;
   showUsername: boolean;
-  removeListenText?: string;
-  removeListenFunction?: (listen?: BaseListenFormat) => void;
-  removeListenCallback?: (listen: BaseListenFormat) => void;
   updateFeedbackCallback?: (
     recordingMsid: string,
     score: ListenFeedBack | RecommendationFeedBack
@@ -61,6 +58,7 @@ export type ListenCardProps = {
   listenDetails?: JSX.Element;
   compact?: boolean;
   useRecommendationFeedback?: boolean;
+  additionalMenuItems?: JSX.Element;
 };
 
 type ListenCardState = {
@@ -207,39 +205,6 @@ export default class ListenCard extends React.Component<
     }
   };
 
-  deleteListen = async () => {
-    const { listen, removeListenCallback } = this.props;
-    const { APIService, currentUser } = this.context;
-    const isCurrentUser =
-      Boolean(listen.user_name) && listen.user_name === currentUser?.name;
-    if (isCurrentUser && currentUser?.auth_token) {
-      const listenedAt = _get(listen, "listened_at");
-      const recordingMSID = _get(
-        listen,
-        "track_metadata.additional_info.recording_msid"
-      );
-
-      try {
-        const status = await APIService.deleteListen(
-          currentUser.auth_token,
-          recordingMSID,
-          listenedAt
-        );
-        if (status === 200) {
-          this.setState({ isDeleted: true });
-          if (removeListenCallback) {
-            // wait for the animation to finish
-            setTimeout(function removeListen() {
-              removeListenCallback(listen);
-            }, 1000);
-          }
-        }
-      } catch (error) {
-        this.handleError(error, "Error while deleting listen");
-      }
-    }
-  };
-
   recommendListenToFollowers = async () => {
     const { listen, newAlert } = this.props;
     const { APIService, currentUser } = this.context;
@@ -382,13 +347,11 @@ export default class ListenCard extends React.Component<
       listenDetails,
       compact,
       useRecommendationFeedback,
-      removeListenFunction,
-      removeListenText,
+      additionalMenuItems,
     } = this.props;
     const { currentUser } = this.context;
     const { feedback, isDeleted, isCurrentlyPlaying } = this.state;
 
-    const listenedAt = _get(listen, "listened_at");
     const recordingMSID = _get(
       listen,
       "track_metadata.additional_info.recording_msid"
@@ -401,15 +364,9 @@ export default class ListenCard extends React.Component<
       _has(listen, "track_metadata.artist_name") &&
       _has(listen, "track_metadata.track_name") &&
       hasRecordingMSID;
-    const canDelete =
-      (isCurrentUser && Boolean(listenedAt) && hasRecordingMSID) ||
-      Boolean(removeListenFunction);
 
     const hideListenControls =
-      !hasRecordingMSID ||
-      !currentUser?.auth_token ||
-      compact ||
-      useRecommendationFeedback;
+      !hasRecordingMSID || !currentUser?.auth_token || compact;
 
     const timeStampForDisplay = (
       <>
@@ -530,12 +487,7 @@ export default class ListenCard extends React.Component<
                   dataToggle="modal"
                   dataTarget="#PinRecordingModal"
                 />
-                {canDelete && (
-                  <ListenControl
-                    title={removeListenText ?? "Delete Listen"}
-                    action={removeListenFunction ?? this.deleteListen}
-                  />
-                )}
+                {additionalMenuItems}
               </ul>
             </>
           )}
