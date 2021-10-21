@@ -213,8 +213,9 @@ export default class ListenCard extends React.Component<
       _has(listen, "track_metadata.track_name") &&
       hasRecordingMSID;
 
-    const hideListenControls =
-      !hasRecordingMSID || !currentUser?.auth_token || compact;
+    // Hide the actions menu if in compact mode or no buttons to be shown
+    const hideActionsMenu =
+      compact || (!additionalMenuItems && !enableRecommendButton);
 
     const timeStampForDisplay = (
       <>
@@ -295,7 +296,7 @@ export default class ListenCard extends React.Component<
               updateFeedbackCallback={updateFeedbackCallback}
             />
           )}
-          {hideListenControls ? null : (
+          {hideActionsMenu ? null : (
             <>
               <FontAwesomeIcon
                 icon={faEllipsisV as IconProp}

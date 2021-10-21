@@ -10,7 +10,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import { io, Socket } from "socket.io-client";
-import { fromPairs, get } from "lodash";
+import { fromPairs, get, isEqual } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import {
@@ -55,6 +55,7 @@ export interface RecentListensState {
   recordingFeedbackMap: RecordingFeedbackMap;
   recordingToPin?: Listen;
   dateTimePickerValue: Date | Date[];
+  deletedListen: Listen | null;
 }
 
 export default class RecentListens extends React.Component<
@@ -87,6 +88,7 @@ export default class RecentListens extends React.Component<
       dateTimePickerValue: nextListenTs
         ? new Date(nextListenTs * 1000)
         : new Date(Date.now()),
+      deletedListen: null,
     };
 
     this.listensTable = React.createRef();
@@ -457,8 +459,8 @@ export default class RecentListens extends React.Component<
           listenedAt
         );
         if (status === 200) {
-          // this.setState({ isDeleted: true });
-          // wait for the animation to finish
+          this.setState({ deletedListen: listen });
+          // wait for the delete animation to finish
           setTimeout(() => {
             this.removeListenFromListenList(listen);
           }, 1000);
@@ -574,6 +576,7 @@ export default class RecentListens extends React.Component<
       previousListenTs,
       dateTimePickerValue,
       recordingToPin,
+      deletedListen,
     } = this.state;
     const {
       latestListenTs,
@@ -671,6 +674,7 @@ export default class RecentListens extends React.Component<
                           />
                         </>
                       );
+                      const shouldBeDeleted = isEqual(deletedListen, listen);
                       /* eslint-enable react/jsx-no-bind */
                       return (
                         <ListenCard
@@ -685,8 +689,8 @@ export default class RecentListens extends React.Component<
                           updateFeedbackCallback={this.updateFeedback}
                           newAlert={newAlert}
                           className={`${
-                            listen.playing_now ? "playing-now" : ""
-                          }`}
+                            listen.playing_now ? "playing-now " : ""
+                          }${shouldBeDeleted ? "deleted " : ""}`}
                           additionalMenuItems={additionalMenuItems}
                         />
                       );
