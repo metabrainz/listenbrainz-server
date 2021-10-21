@@ -1,18 +1,19 @@
+import datetime
 import os
 import re
 import subprocess
 from time import sleep
 from threading import Thread, get_ident
 
-import requests
-
 import psycopg2
 from psycopg2.errors import OperationalError
 from psycopg2.extensions import register_adapter
+import requests
 
+#from brainzutils import metrics, cache
+import config
 from mapping.cube import Cube, adapt_cube
 from mapping.utils import log
-import config
 
 
 register_adapter(Cube, adapt_cube)
@@ -44,11 +45,12 @@ def process_image(filename, mime_type):
 
 def insert_row(release_mbid, red, green, blue, caa_id):
 
-    # FIX THIS
     with psycopg2.connect(config.LB_DATABASE_URI) as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
             sql = """INSERT INTO release_color (release_mbid, red, green, blue, color, caa_id)
-                          VALUES (%s, %s, %s, %s, %s::cube, %s)"""
+                          VALUES (%s, %s, %s, %s, %s::cube, %s)
+                     ON CONFLICT DO NOTHING"""
+                    
             args = (release_mbid, red, green, blue, Cube(red, green, blue), caa_id)
             try:
                 curs.execute(sql, args)
@@ -83,11 +85,9 @@ def process_row(row):
             break
 
         if r.status_code == 403:
-            print("Got 403, skipping %s" % url)
             break
 
         if r.status_code == 404:
-            print("Got 404, skipping %s" % url)
             break
             
         if r.status_code in (503, 429):
@@ -152,19 +152,19 @@ def get_cover_art_counts(mb_curs, lb_curs):
 def sync_release_color_table():
 
     log("cover art sync starting...")
-    caa_query = """SELECT caa.id AS caa_id
-                        , release AS release_id
-                        , release.gid AS release_mbid
-                        , mime_type
-                     FROM cover_art_archive.cover_art caa
-                     JOIN cover_art_archive.cover_art_type cat
-                       ON cat.id = caa.id
-                     JOIN musicbrainz.release
-                       ON caa.release = release.id
-                    WHERE type_id = 1
-                      AND caa.id > %s
-                 ORDER BY caa.id
-                    LIMIT %s"""
+    mb_query = """SELECT caa.id AS caa_id
+                       , release AS release_id
+                       , release.gid AS release_mbid
+                       , mime_type
+                    FROM cover_art_archive.cover_art caa
+                    JOIN cover_art_archive.cover_art_type cat
+                      ON cat.id = caa.id
+                    JOIN musicbrainz.release
+                      ON caa.release = release.id
+                   WHERE type_id = 1
+                     AND caa.id > %s
+                ORDER BY caa.id
+                   LIMIT %s"""
 
     lb_query = """ SELECT caa_id
                      FROM release_color
@@ -172,8 +172,37 @@ def sync_release_color_table():
                  ORDER BY caa_id
                     LIMIT %s"""
 
-    mb_caa_id = 0
-    lb_caa_id = 0
+    return compare_coverart(mb_query, lb_query, 0, 0, "caa_id", "caa_id")
+
+
+def incremental_update_release_color_table():
+
+#    init_cache(host=config.REDIS_HOST, port=config.REDIS_PORT, namespace=config.REDIS_NAMESPACE)
+
+    dt = datetime.datetime.now()
+    dt -= datetime.timedelta(hours=3)
+    print(dt)
+
+    log("cover art incremental update starting...")
+    mb_query = """SELECT caa.id AS caa_id
+                       , release AS release_id
+                       , release.gid AS release_mbid
+                       , mime_type
+                       , date_uploaded
+                    FROM cover_art_archive.cover_art caa
+                    JOIN cover_art_archive.cover_art_type cat
+                      ON cat.id = caa.id
+                    JOIN musicbrainz.release
+                      ON caa.release = release.id
+                   WHERE type_id = 1
+                     AND caa.date_uploaded > %s
+                ORDER BY caa.date_uploaded
+                   LIMIT %s"""
+
+    return compare_coverart(mb_query, None, dt, None, "date_uploaded", "last_updated")
+
+
+def compare_coverart(mb_query, lb_query, mb_caa_index, lb_caa_index, mb_compare_key, lb_compare_key):
 
     with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
         with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
@@ -191,7 +220,7 @@ def sync_release_color_table():
                     lb_rows = []
 
                     mb_done = False
-                    lb_done = False
+                    lb_done = True if lb_query is None else False
 
                     extra = 0
                     missing = 0
@@ -199,13 +228,13 @@ def sync_release_color_table():
 
                     while True:
                         if len(mb_rows) == 0 and not mb_done:
-                            mb_curs.execute(caa_query, (mb_caa_id, SYNC_BATCH_SIZE))
+                            mb_curs.execute(mb_query, (mb_caa_index, SYNC_BATCH_SIZE))
                             mb_rows = mb_curs.fetchall()
                             if len(mb_rows) == 0:
                                 mb_done = True
 
                         if len(lb_rows) == 0 and not lb_done:
-                            lb_curs.execute(lb_query, (lb_caa_id, SYNC_BATCH_SIZE))
+                            lb_curs.execute(lb_query, (lb_caa_index, SYNC_BATCH_SIZE))
                             lb_rows = lb_curs.fetchall()
                             if len(lb_rows) == 0:
                                 lb_done = True
@@ -224,25 +253,27 @@ def sync_release_color_table():
                             print("processed %d of %d: missing %d extra %d" % (processed, mb_count, missing, extra))
 
                         # If the item is in MB, but not in LB, add to LB
-                        if lb_row is None or mb_row["caa_id"] < lb_row["caa_id"]:
+                        if lb_row is None or mb_row[mb_compare_key] < lb_row[lb_compare_key]:
+                            print("add %s" % mb_row["release_mbid"])
                             process_cover_art(threads, mb_row)
                             missing += 1
-                            mb_caa_id = mb_row["caa_id"]
+                            mb_caa_index = mb_row[mb_compare_key]
                             mb_row = None
                             continue
 
                         # If the item is in LB, but not in MB, remove from LB
-                        if mb_row is None or mb_row["caa_id"] > lb_row["caa_id"]:
+                        if mb_row is None or mb_row[mb_compare_key] > lb_row[lb_compare_key]:
                             extra += 1
-                            delete_from_lb(lb_row["caa_id"])
-                            lb_caa_id = lb_row["caa_id"]
+                            print("remove")
+                            delete_from_lb(lb_row[lb_compare_key])
+                            lb_caa_index = lb_row[lb_compare_key]
                             lb_row = None
                             continue
 
                         # If the caa_id is present in both, skip both
-                        if mb_row["caa_id"] == lb_row["caa_id"]:
-                            mb_caa_id = mb_row["caa_id"]
-                            lb_caa_id = lb_row["caa_id"]
+                        if mb_row[mb_compare_key] == lb_row[lb_compare_key]:
+                            mb_caa_index = mb_row[mb_compare_key]
+                            lb_caa_index = lb_row[lb_compare_key]
                             lb_row = None
                             mb_row = None
                             continue

@@ -11,7 +11,7 @@ from mapping.typesense_index import build_index as action_build_index
 from mapping.year_mapping import create_year_mapping
 from mapping.mapping_test.mapping_test import test_mapping as action_test_mapping
 from mapping.utils import log, CRON_LOG_FILE
-from mapping.release_colors import sync_release_color_table
+from mapping.release_colors import sync_release_color_table, incremental_update_release_color_table
 
 
 @click.group()
@@ -66,6 +66,11 @@ def build_index():
 @cli.command()
 def sync_coverart():
     sync_release_color_table()
+
+
+@cli.command()
+def update_coverart():
+    incremental_update_release_color_table()
 
 
 @cli.command()

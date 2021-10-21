@@ -55,6 +55,6 @@ CREATE INDEX user_id_event_type_ndx_user_timeline_event ON user_timeline_event (
 CREATE INDEX user_id_ndx_pinned_recording ON pinned_recording (user_id);
 
 CREATE INDEX release_mbid_ndx_release_color ON release_color (release_mbid);
-CREATE INDEX caa_id_ndx_release_color ON release_color (caa_id);
+CREATE UNIQUE INDEX caa_id_ndx_release_color ON release_color (caa_id);
 
 COMMIT;

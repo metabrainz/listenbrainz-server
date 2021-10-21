@@ -15,6 +15,18 @@ TYPESENSE_PORT = {{.Port}}
 {{end}}
 {{end}}
 
+{{if service "listenbrainz-redis"}}
+{{with index (service "listenbrainz-redis") 0}}
+REDIS_HOST = "{{.Address}}"
+REDIS_PORT = {{.Port}}
+REDIS_NAMESPACE = "listenbrainz"
+{{end}}
+{{else}}
+REDIS_HOST = "SERVICEDOESNOTEXIST_listenbrainz-redis"
+REDIS_PORT = "SERVICEDOESNOTEXIST_listenbrainz-redis"
+REDIS_NAMESPACE = "SERVICEDOESNOTEXIST_listenbrainz-redis"
+{{end}}
+
 TYPESENSE_API_KEY = '''{{template "KEY" "typesense_api_key"}}'''
 
 # Mapping specific settings
