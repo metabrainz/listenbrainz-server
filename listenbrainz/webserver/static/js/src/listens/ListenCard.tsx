@@ -10,6 +10,7 @@ import {
   faFrown,
   faSmileBeam,
   faGrinStars,
+  faCommentDots,
 } from "@fortawesome/free-solid-svg-icons";
 import {
   faPlayCircle,
@@ -313,6 +314,7 @@ export default class ListenCard extends React.Component<
               >
                 {enableRecommendButton && (
                   <ListenControl
+                    icon={faCommentDots}
                     title="Recommend to my followers"
                     action={this.recommendListenToFollowers}
                   />

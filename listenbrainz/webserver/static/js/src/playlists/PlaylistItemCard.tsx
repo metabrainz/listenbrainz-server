@@ -1,6 +1,6 @@
 import * as React from "react";
 import { get as _get } from "lodash";
-import { faGripLines } from "@fortawesome/free-solid-svg-icons";
+import { faGripLines, faMinusCircle } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -66,6 +66,7 @@ export default class PlaylistItemCard extends React.Component<
         {canEdit && (
           <ListenControl
             title="Remove from playlist"
+            icon={faMinusCircle}
             action={this.removeTrack}
           />
         )}
@@ -78,6 +79,7 @@ export default class PlaylistItemCard extends React.Component<
         currentFeedback={currentFeedback}
         showTimestamp={Boolean(listen.listened_at)}
         showUsername={Boolean(listen.user_name)}
+        // showTrackLength
         newAlert={newAlert}
         thumbnail={thumbnail}
         data-recording-mbid={track.id}
