@@ -10,7 +10,7 @@ from psycopg2.errors import OperationalError
 from psycopg2.extensions import register_adapter
 import requests
 
-#from brainzutils import metrics, cache
+from brainzutils import metrics, cache
 import config
 from mapping.cube import Cube, adapt_cube
 from mapping.utils import log
@@ -20,6 +20,7 @@ register_adapter(Cube, adapt_cube)
 
 MAX_THREADS = 16
 SYNC_BATCH_SIZE = 10000
+LAST_UPDATED_CACHE_KEY = "mbid.release_color_timestamp"
 
 
 def process_image(filename, mime_type):
@@ -66,7 +67,6 @@ def process_row(row):
         url = "https://beta.coverartarchive.org/release/%s/%d-250.jpg" % (row["release_mbid"], row["caa_id"])
         r = requests.get(url, headers=headers)
         if r.status_code == 200:
-            # TODO: Use proper file name
             filename = "/tmp/release-colors-%s.img" % get_ident()
             with open(filename, 'wb') as f:
                 for chunk in r:
@@ -132,6 +132,7 @@ def join_threads(threads):
         else:
             sleep(.001)
 
+
 def get_cover_art_counts(mb_curs, lb_curs):
 
     mb_curs.execute("""SELECT COUNT(*)
@@ -172,16 +173,41 @@ def sync_release_color_table():
                  ORDER BY caa_id
                     LIMIT %s"""
 
-    return compare_coverart(mb_query, lb_query, 0, 0, "caa_id", "caa_id")
+    compare_coverart(mb_query, lb_query, 0, 0, "caa_id", "caa_id")
+
+
+def get_last_updated_from_caa():
+
+    with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
+        with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
+            mb_curs.execute("""SELECT max(date_uploaded) AS date_uploaded
+                                 FROM cover_art_archive.cover_art""")
+            last_updated = None
+            row = mb_curs.fetchone()
+            if row:
+                try:
+                    last_updated = row["date_uploaded"]
+                except ValueError:
+                    pass
+
+            return last_updated
 
 
 def incremental_update_release_color_table():
 
-#    init_cache(host=config.REDIS_HOST, port=config.REDIS_PORT, namespace=config.REDIS_NAMESPACE)
+    cache.init(host=config.REDIS_HOST, port=config.REDIS_PORT, namespace=config.REDIS_NAMESPACE)
 
-    dt = datetime.datetime.now()
-    dt -= datetime.timedelta(hours=3)
-    print(dt)
+    try:
+        last_updated = cache.get(LAST_UPDATED_CACHE_KEY, decode=True) or None
+    except Exception:
+        last_updated = None
+
+    if not last_updated:
+        print("Not timestamp found, performing full sync")
+        sync_release_color_table()
+        last_updated = get_last_updated_from_caa()
+        cache.set(LAST_UPDATED_CACHE_KEY, last_updated, expirein=0, encode=True)
+        return
 
     log("cover art incremental update starting...")
     mb_query = """SELECT caa.id AS caa_id
@@ -199,7 +225,10 @@ def incremental_update_release_color_table():
                 ORDER BY caa.date_uploaded
                    LIMIT %s"""
 
-    return compare_coverart(mb_query, None, dt, None, "date_uploaded", "last_updated")
+    compare_coverart(mb_query, None, last_updated, None, "date_uploaded", "last_updated")
+
+    last_updated = get_last_updated_from_caa()
+    cache.set(LAST_UPDATED_CACHE_KEY, last_updated, expirein=0, encode=True)
 
 
 def compare_coverart(mb_query, lb_query, mb_caa_index, lb_caa_index, mb_compare_key, lb_compare_key):
@@ -286,4 +315,3 @@ def compare_coverart(mb_query, lb_query, mb_caa_index, lb_caa_index, mb_compare_
 
                     print("Finished! added/skipped %d removed %d from release_color" % (missing, extra))
                     print("%d items in MB\n%d items in LB" % (mb_count, lb_count))
-                    print("difference: %d items" % (mb_count - lb_count))
