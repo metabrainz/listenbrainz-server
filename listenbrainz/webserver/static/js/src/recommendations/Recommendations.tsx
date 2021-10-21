@@ -18,6 +18,7 @@ import ErrorBoundary from "../ErrorBoundary";
 import Loader from "../components/Loader";
 import { getPageProps } from "../utils";
 import ListenCard from "../listens/ListenCard";
+import RecommendationFeedbackComponent from "../listens/RecommendationFeedbackComponent";
 
 export type RecommendationsProps = {
   recommendations?: Array<Recommendation>;
@@ -237,6 +238,17 @@ export default class Recommendations extends React.Component<
                 style={{ opacity: loading ? "0.4" : "1" }}
               >
                 {recommendations.map((recommendation) => {
+                  const recommendationFeedbackComponent = (
+                    <RecommendationFeedbackComponent
+                      newAlert={newAlert}
+                      updateFeedbackCallback={this.updateFeedback}
+                      listen={recommendation}
+                      currentFeedback={this.getFeedbackForRecordingMbid(
+                        recommendation.track_metadata?.additional_info
+                          ?.recording_mbid
+                      )}
+                    />
+                  );
                   return (
                     <ListenCard
                       key={`${recommendation.track_metadata?.track_name}-${
@@ -249,13 +261,8 @@ export default class Recommendations extends React.Component<
                       }`}
                       showTimestamp={false}
                       showUsername={false}
-                      useRecommendationFeedback={isCurrentUser}
+                      feedbackComponent={recommendationFeedbackComponent}
                       listen={recommendation}
-                      currentFeedback={this.getFeedbackForRecordingMbid(
-                        recommendation.track_metadata?.additional_info
-                          ?.recording_mbid
-                      )}
-                      updateFeedbackCallback={this.updateFeedback}
                       newAlert={newAlert}
                     />
                   );

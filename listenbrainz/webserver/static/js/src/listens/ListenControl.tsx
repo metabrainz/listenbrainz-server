@@ -6,7 +6,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 export type ListenControlProps = {
   className?: string;
-  action?: () => void;
+  action?: (event: React.MouseEvent) => void;
   icon?: IconDefinition;
   title: string;
   dataToggle?: string;
