@@ -90,6 +90,32 @@ describe("ListenCard", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
+  it("should use mapped mbids if listen does not have user submitted mbids", () => {
+    const differentListen: Listen = {
+      listened_at: 0,
+      playing_now: false,
+      track_metadata: {
+        artist_name: "Moondog",
+        track_name: "Bird's Lament",
+        mbid_mapping: {
+          release_mbid: "foo",
+          recording_mbid: "bar",
+          artist_mbids: ["foobar"],
+        },
+      },
+      user_name: "test",
+    };
+    const wrapper = mount<ListenCard>(
+      <ListenCard {...{ ...props, listen: differentListen }} />
+    );
+    expect(
+      wrapper.find('[href="https://musicbrainz.org/recording/bar"]')
+    ).toHaveLength(1);
+    expect(
+      wrapper.find('[href="https://musicbrainz.org/artist/foobar"]')
+    ).toHaveLength(1);
+  });
+
   it("should render a play button", () => {
     const wrapper = mount<ListenCard>(<ListenCard {...props} />);
     const instance = wrapper.instance();
