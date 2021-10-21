@@ -22,6 +22,7 @@ import { sanitize } from "dompurify";
 import { sanitizeUrl } from "@braintree/sanitize-url";
 import * as Sentry from "@sentry/react";
 import { io, Socket } from "socket.io-client";
+import { Integrations } from "@sentry/tracing";
 import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
@@ -898,11 +899,16 @@ document.addEventListener("DOMContentLoaded", () => {
     current_user,
     spotify,
     youtube,
+    sentry_traces_sample_rate,
   } = globalReactProps;
   const { labs_api_url, playlist } = reactProps;
 
   if (sentry_dsn) {
-    Sentry.init({ dsn: sentry_dsn });
+    Sentry.init({
+      dsn: sentry_dsn,
+      integrations: [new Integrations.BrowserTracing()],
+      tracesSampleRate: sentry_traces_sample_rate,
+    });
   }
 
   const PlaylistPageWithAlertNotifications = withAlertNotifications(

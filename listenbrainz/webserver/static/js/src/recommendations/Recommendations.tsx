@@ -5,6 +5,7 @@ import * as ReactDOM from "react-dom";
 import * as Sentry from "@sentry/react";
 
 import { get, isEqual } from "lodash";
+import { Integrations } from "@sentry/tracing";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
@@ -330,11 +331,16 @@ document.addEventListener("DOMContentLoaded", () => {
     current_user,
     spotify,
     youtube,
+    sentry_traces_sample_rate,
   } = globalReactProps;
   const { recommendations, user, web_sockets_server_url } = reactProps;
 
   if (sentry_dsn) {
-    Sentry.init({ dsn: sentry_dsn });
+    Sentry.init({
+      dsn: sentry_dsn,
+      integrations: [new Integrations.BrowserTracing()],
+      tracesSampleRate: sentry_traces_sample_rate,
+    });
   }
 
   const apiService = new APIServiceClass(

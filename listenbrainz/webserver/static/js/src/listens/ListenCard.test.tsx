@@ -116,7 +116,7 @@ describe("ListenCard", () => {
     const postMessageSpy = jest.spyOn(window, "postMessage");
     const wrapper = mount<ListenCard>(<ListenCard {...props} />);
     const instance = wrapper.instance();
-    instance.setState({ isCurrentListen: true });
+    instance.setState({ isCurrentlyPlaying: true });
 
     instance.playListen();
 
@@ -339,7 +339,7 @@ describe("ListenCard", () => {
         instance.context.APIService,
         "submitRecommendationFeedback"
       );
-      spy.mockImplementation(() => Promise.resolve(201));
+      spy.mockImplementation(() => Promise.resolve(500));
 
       instance.submitRecommendationFeedback("hate");
 

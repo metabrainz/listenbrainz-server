@@ -1,5 +1,5 @@
 import * as React from "react";
-import { get as _get, has, isEqual, isNil } from "lodash";
+import { isEqual, isNil } from "lodash";
 import MediaQuery from "react-responsive";
 import { faEllipsisV, faThumbtack } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -26,7 +26,7 @@ export type PinnedRecordingCardProps = {
 };
 
 type PinnedRecordingCardState = {
-  isCurrentListen: Boolean;
+  isCurrentlyPlaying: Boolean;
   currentlyPinned?: Boolean;
   isDeleted: Boolean;
 };
@@ -43,7 +43,7 @@ export default class PinnedRecordingCard extends React.Component<
     this.state = {
       currentlyPinned: this.determineIfCurrentlyPinned(),
       isDeleted: false,
-      isCurrentListen: false,
+      isCurrentlyPlaying: false,
     };
   }
 
@@ -67,8 +67,8 @@ export default class PinnedRecordingCard extends React.Component<
 
   playListen = () => {
     const { pinnedRecording } = this.props;
-    const { isCurrentListen } = this.state;
-    if (isCurrentListen) {
+    const { isCurrentlyPlaying } = this.state;
+    if (isCurrentlyPlaying) {
       return;
     }
     const listen = getListenablePin(pinnedRecording);
@@ -81,7 +81,7 @@ export default class PinnedRecordingCard extends React.Component<
   /** React to events sent by BrainzPlayer */
   receiveBrainzPlayerMessage = (event: MessageEvent) => {
     if (event.origin !== window.location.origin) {
-      // Reveived postMessage from different origin, ignoring it
+      // Received postMessage from different origin, ignoring it
       return;
     }
     const { type, payload } = event.data;
@@ -95,10 +95,10 @@ export default class PinnedRecordingCard extends React.Component<
   };
 
   onCurrentListenChange = (newListen: BaseListenFormat) => {
-    this.setState({ isCurrentListen: this.isCurrentListen(newListen) });
+    this.setState({ isCurrentlyPlaying: this.isCurrentlyPlaying(newListen) });
   };
 
-  isCurrentListen = (element: BaseListenFormat): boolean => {
+  isCurrentlyPlaying = (element: BaseListenFormat): boolean => {
     const { pinnedRecording } = this.props;
     const listen = getListenablePin(pinnedRecording);
     if (isNil(listen)) {
@@ -228,7 +228,7 @@ export default class PinnedRecordingCard extends React.Component<
 
   render() {
     const { pinnedRecording, isCurrentUser, className } = this.props;
-    const { currentlyPinned, isDeleted, isCurrentListen } = this.state;
+    const { currentlyPinned, isDeleted, isCurrentlyPlaying } = this.state;
     const { artist_name } = pinnedRecording.track_metadata;
 
     return (
@@ -236,7 +236,7 @@ export default class PinnedRecordingCard extends React.Component<
         className={`pinned-recording-card row ${className ?? ""} ${
           currentlyPinned ? "currently-pinned " : ""
         } ${isDeleted ? "deleted " : ""} ${
-          isCurrentListen ? "current-listen " : ""
+          isCurrentlyPlaying ? "current-listen " : ""
         }`}
         onDoubleClick={this.playListen}
       >
