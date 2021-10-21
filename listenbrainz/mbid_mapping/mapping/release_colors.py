@@ -18,7 +18,7 @@ from mapping.utils import log
 
 register_adapter(Cube, adapt_cube)
 
-MAX_THREADS = 16
+MAX_THREADS = 2
 SYNC_BATCH_SIZE = 10000
 LAST_UPDATED_CACHE_KEY = "mbid.release_color_timestamp"
 
@@ -73,7 +73,7 @@ def process_row(row):
     while True:
         headers = {
             'User-Agent': 'ListenBrainz HueSound Color Bot ( rob@metabrainz.org )'}
-        url = "https://beta.coverartarchive.org/release/%s/%d-250.jpg" % (
+        url = "https://coverartarchive.org/release/%s/%d-250.jpg" % (
             row["release_mbid"], row["caa_id"])
         r = requests.get(url, headers=headers)
         if r.status_code == 200:
@@ -354,5 +354,6 @@ def compare_coverart(mb_query, lb_query, mb_caa_index, lb_caa_index, mb_compare_
                     print("CAA count: %d\n LB count: %d" %
                           (mb_count, lb_count))
 
+                    metrics.init("listenbrainz")
                     metrics.set("listenbrainz-caa-mapper",
                                 caa_front_count=mb_count, lb_caa_count=lb_count)
