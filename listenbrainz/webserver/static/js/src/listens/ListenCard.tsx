@@ -184,6 +184,7 @@ export default class ListenCard extends React.Component<
       currentFeedback,
       newAlert,
       updateFeedbackCallback,
+      ...otherProps
     } = this.props;
     const { isCurrentlyPlaying } = this.state;
 
@@ -231,6 +232,7 @@ export default class ListenCard extends React.Component<
 
     return (
       <Card
+        {...otherProps}
         onDoubleClick={this.playListen}
         className={`listen-card row ${
           isCurrentlyPlaying ? "current-listen" : ""
