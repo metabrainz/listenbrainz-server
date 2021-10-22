@@ -30,6 +30,7 @@ import {
   formatWSMessageToListen,
   getPageProps,
   getListenablePin,
+  getRecordingMBID,
 } from "./utils";
 import ListenControl from "./listens/ListenControl";
 
@@ -60,6 +61,7 @@ export interface RecentListensState {
   which give the UI some time to animate it out of the page
   before being removed from the state */
   deletedListen: Listen | null;
+  userPinnedRecording?: PinnedRecording;
 }
 
 export default class RecentListens extends React.Component<
@@ -93,6 +95,7 @@ export default class RecentListens extends React.Component<
         ? new Date(nextListenTs * 1000)
         : new Date(Date.now()),
       deletedListen: null,
+      userPinnedRecording: props.userPinnedRecording,
     };
 
     this.listensTable = React.createRef();
@@ -569,6 +572,10 @@ export default class RecentListens extends React.Component<
     }
   }
 
+  handlePinnedRecording(pinnedRecording: PinnedRecording) {
+    this.setState({ userPinnedRecording: pinnedRecording });
+  }
+
   render() {
     const {
       direction,
@@ -581,14 +588,9 @@ export default class RecentListens extends React.Component<
       dateTimePickerValue,
       recordingToPin,
       deletedListen,
-    } = this.state;
-    const {
-      latestListenTs,
-      oldestListenTs,
-      user,
-      newAlert,
       userPinnedRecording,
-    } = this.props;
+    } = this.state;
+    const { latestListenTs, oldestListenTs, user, newAlert } = this.props;
     const { currentUser } = this.context;
 
     let allListenables = listens;
@@ -814,6 +816,9 @@ export default class RecentListens extends React.Component<
                   <PinRecordingModal
                     recordingToPin={recordingToPin || listens[0]}
                     newAlert={newAlert}
+                    onSuccessfulPin={(pinnedListen) =>
+                      this.handlePinnedRecording(pinnedListen)
+                    }
                   />
                 )}
               </div>

@@ -10,6 +10,7 @@ export type PinRecordingModalProps = {
     title: string,
     message: string | JSX.Element
   ) => void;
+  onSuccessfulPin?: (pinnedrecording: PinnedRecording) => void;
 };
 
 export interface PinRecordingModalState {
@@ -30,7 +31,7 @@ export default class PinRecordingModal extends React.Component<
   }
 
   submitPinRecording = async () => {
-    const { recordingToPin, newAlert } = this.props;
+    const { recordingToPin, newAlert, onSuccessfulPin } = this.props;
     const { blurbContent } = this.state;
     const { APIService, currentUser } = this.context;
 
@@ -62,8 +63,22 @@ export default class PinRecordingModal extends React.Component<
           );
           this.setState({ blurbContent: "" });
 
-          // reload the page for the new pinnedRecording to appear
-          window.location.reload();
+          if (onSuccessfulPin) {
+            // The API doesn't send back a PinnedRecording after successful pin
+            // so we transform the Listen we wanted to pin
+            const pinnedUntil = new Date();
+            // Defautl pinned until 7 days
+            pinnedUntil.setDate(pinnedUntil.getDate() + 7);
+
+            const pinnedRecording: PinnedRecording = {
+              track_metadata: recordingToPin.track_metadata,
+              created: Date.now() / 1000,
+              recording_mbid: recordingMBID ?? null,
+              pinned_until: pinnedUntil.getTime() / 1000,
+              row_id: NaN,
+            };
+            onSuccessfulPin(pinnedRecording);
+          }
         }
       } catch (error) {
         this.handleError(error, "Error while pinning recording");
