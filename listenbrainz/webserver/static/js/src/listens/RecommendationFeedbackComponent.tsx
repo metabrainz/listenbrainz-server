@@ -19,6 +19,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { get } from "lodash";
 import RecommendationControl from "../recommendations/RecommendationControl";
 import GlobalAppContext from "../GlobalAppContext";
+import { getRecordingMBID } from "../utils";
 
 export type RecommendationFeedbackComponentProps = {
   newAlert: (
@@ -50,10 +51,7 @@ export default class RecommendationFeedbackComponent extends React.Component<
     const { APIService, currentUser } = this.context;
 
     if (currentUser?.auth_token) {
-      const recordingMBID = get(
-        listen,
-        "track_metadata.additional_info.recording_mbid"
-      );
+      const recordingMBID = getRecordingMBID(listen);
       try {
         let status;
         if (currentFeedback === rating) {

@@ -15,6 +15,7 @@ import {
   getTrackLink,
   preciseTimestamp,
   fullLocalizedDateFromTimestampOrISODate,
+  getRecordingMBID,
 } from "../utils";
 import GlobalAppContext from "../GlobalAppContext";
 import Card from "../components/Card";
@@ -127,10 +128,7 @@ export default class ListenCard extends React.Component<
         artist_name: _get(listen, "track_metadata.artist_name"),
         track_name: _get(listen, "track_metadata.track_name"),
         release_name: _get(listen, "track_metadata.release_name"),
-        recording_mbid: _get(
-          listen,
-          "track_metadata.additional_info.recording_mbid"
-        ),
+        recording_mbid: getRecordingMBID(listen),
         recording_msid: _get(
           listen,
           "track_metadata.additional_info.recording_msid"
