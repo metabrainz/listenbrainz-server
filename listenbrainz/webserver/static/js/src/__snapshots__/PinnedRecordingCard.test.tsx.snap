@@ -121,6 +121,7 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
                 title="Unpin"
                 type="button"
               >
+                 
                 Unpin
               </button>
             </ListenControl>
@@ -134,6 +135,7 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
                 title="Delete Pin"
                 type="button"
               >
+                 
                 Delete Pin
               </button>
             </ListenControl>

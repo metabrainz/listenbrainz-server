@@ -479,9 +479,9 @@ export default class RecentListens extends React.Component<
   removeListenFromListenList = (listen: Listen) => {
     const { listens } = this.state;
     const index = listens.indexOf(listen);
-
-    listens.splice(index, 1);
-    this.setState({ listens });
+    const listensCopy = [...listens];
+    listensCopy.splice(index, 1);
+    this.setState({ listens: listensCopy });
   };
 
   updatePaginationVariables = () => {

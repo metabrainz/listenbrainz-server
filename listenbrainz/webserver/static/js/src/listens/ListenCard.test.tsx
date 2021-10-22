@@ -108,17 +108,6 @@ describe("ListenCard", () => {
     expect(postMessageSpy).not.toHaveBeenCalled();
   });
 
-  describe("componentDidUpdate", () => {
-    it("updates the feedbackState", () => {
-      const wrapper = mount<ListenCard>(<ListenCard {...props} />);
-
-      expect(wrapper.state("feedback")).toEqual(1);
-
-      wrapper.setProps({ currentFeedback: -1 });
-      expect(wrapper.state("feedback")).toEqual(-1);
-    });
-  });
-
   describe("handleError", () => {
     it("calls newAlert", async () => {
       const wrapper = mount<ListenCard>(

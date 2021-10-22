@@ -44,9 +44,7 @@ const listen: Listen = {
 
 const props: RecommendationFeedbackComponentProps = {
   listen,
-  currentFeedback: 1,
-  showTimestamp: true,
-  showUsername: true,
+  currentFeedback: "love",
   updateFeedbackCallback: () => {},
   newAlert: () => {},
 };
@@ -67,7 +65,6 @@ describe("Recommendation feedback", () => {
           <RecommendationFeedbackComponent
             {...props}
             updateFeedbackCallback={updateFeedbackSpy}
-            currentFeedback="love"
           />
         </GlobalAppContext.Provider>
       );
@@ -76,8 +73,6 @@ describe("Recommendation feedback", () => {
       const spy = jest
         .spyOn(instance.context.APIService, "submitRecommendationFeedback")
         .mockImplementation(() => Promise.resolve(200));
-
-      expect(instance.state.feedback).toEqual("love");
 
       await instance.submitRecommendationFeedback("hate");
 
@@ -111,7 +106,7 @@ describe("Recommendation feedback", () => {
       );
       spy.mockImplementation(() => Promise.resolve(200));
 
-      instance.submitRecommendationFeedback("love");
+      instance.submitRecommendationFeedback("hate");
       expect(spy).toHaveBeenCalledTimes(0);
       expect(updateFeedbackSpy).toHaveBeenCalledTimes(0);
       expect(wrapper.exists(".recommendation-controls")).toEqual(false);
@@ -166,13 +161,15 @@ describe("Recommendation feedback", () => {
         "submitRecommendationFeedback"
       );
       spy.mockImplementation(() => {
-        throw new Error("error");
+        throw new Error("my error message");
       });
 
       instance.submitRecommendationFeedback("dislike");
       expect(newAlertSpy).toHaveBeenCalledTimes(1);
       expect(newAlertSpy).toHaveBeenCalledWith(
-        "Error while submitting recommendation feedback - error"
+        "danger",
+        "Error while submitting recommendation feedback",
+        "my error message"
       );
       expect(updateFeedbackSpy).toHaveBeenCalledTimes(0);
       expect(

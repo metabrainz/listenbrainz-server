@@ -57,6 +57,11 @@ const fakeDateNow = jest
   .spyOn(global.Date, "now")
   .mockImplementation(() => mockDate.getTime());
 
+// Font Awesome generates a random hash ID for each icon everytime.
+// Mocking Math.random() fixes this
+// https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
+jest.spyOn(global.Math, "random").mockImplementation(() => 0);
+
 describe("UserFeedback", () => {
   it("renders correctly", () => {
     const wrapper = mount<UserFeedback>(
