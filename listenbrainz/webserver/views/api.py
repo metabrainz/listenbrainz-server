@@ -416,7 +416,7 @@ def validate_token():
             "code": 200,
             "message": "Token valid.",
             "valid": true,
-            "user": "MusicBrainz ID of the user with the passed token"
+            "user_name": "MusicBrainz ID of the user with the passed token"
         }
 
     - If the given token is invalid:
