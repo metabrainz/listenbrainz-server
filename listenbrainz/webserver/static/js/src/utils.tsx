@@ -402,6 +402,13 @@ const handleNavigationClickEvent = (event?: React.MouseEvent): void => {
   }
 };
 
+const pinnedRecordingToListen = (pinnedRecording: PinnedRecording): Listen => {
+  return {
+    listened_at: pinnedRecording.created,
+    track_metadata: pinnedRecording.track_metadata,
+  };
+};
+
 export {
   searchForSpotifyTrack,
   getArtistLink,
@@ -417,4 +424,5 @@ export {
   handleNavigationClickEvent,
   getRecordingMBID,
   getArtistMBIDs,
+  pinnedRecordingToListen,
 };
