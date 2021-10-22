@@ -7,7 +7,6 @@ from flask import Blueprint, request, jsonify, current_app
 from brainzutils.musicbrainz_db import engine as mb_engine
 
 from data.model.external_service import ExternalServiceType
-from listenbrainz.listenstore import TimescaleListenStore
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
     APIUnauthorized
 from listenbrainz.webserver.decorators import api_listenstore_needed
@@ -118,7 +117,11 @@ def get_listens(user_name):
     """
     db_conn = webserver.create_timescale(current_app)
 
-    min_ts, max_ts, count = _validate_get_endpoint_params(db_conn, user_name)
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise APINotFound("Cannot find user: %s" % user_name)
+
+    min_ts, max_ts, count = _validate_get_endpoint_params()
     if min_ts and max_ts and min_ts >= max_ts:
         raise APIBadRequest("min_ts should be less than max_ts")
 
@@ -654,7 +657,7 @@ def _get_listen_type(listen_type):
     }.get(listen_type)
 
 
-def _validate_get_endpoint_params(db_conn: TimescaleListenStore, user_name: str) -> Tuple[int, int, int, int]:
+def _validate_get_endpoint_params() -> Tuple[int, int, int]:
     """ Validates parameters for listen GET endpoints like /username/listens and /username/feed/events
 
     Returns a tuple of integers: (min_ts, max_ts, count)
