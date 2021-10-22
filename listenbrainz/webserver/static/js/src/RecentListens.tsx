@@ -56,6 +56,9 @@ export interface RecentListensState {
   recordingFeedbackMap: RecordingFeedbackMap;
   recordingToPin?: Listen;
   dateTimePickerValue: Date | Date[];
+  /* This is used to mark a listen as deleted
+  which give the UI some time to animate it out of the page
+  before being removed from the state */
   deletedListen: Listen | null;
 }
 
