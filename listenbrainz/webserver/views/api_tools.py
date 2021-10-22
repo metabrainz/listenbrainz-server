@@ -200,8 +200,9 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
     return listen
 
 
-# lifted from AcousticBrainz
 def is_valid_uuid(u):
+    if u is None:
+        return False
     try:
         u = uuid.UUID(u)
         return True
