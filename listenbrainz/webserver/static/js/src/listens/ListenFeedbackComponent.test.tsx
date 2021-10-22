@@ -1,7 +1,9 @@
 import * as React from "react";
 import { mount, shallow } from "enzyme";
 
-import ListenCard, { ListenCardProps } from "./ListenCard";
+import ListenFeedbackComponent, {
+  ListenFeedbackComponentProps,
+} from "./ListenFeedbackComponent";
 import * as utils from "../utils";
 import APIServiceClass from "../APIService";
 import GlobalAppContext from "../GlobalAppContext";
@@ -28,11 +30,9 @@ const listen: Listen = {
   user_name: "test",
 };
 
-const props: ListenCardProps = {
+const props: ListenFeedbackComponentProps = {
   listen,
   currentFeedback: 1,
-  showTimestamp: true,
-  showUsername: true,
   updateFeedbackCallback: () => {},
   newAlert: () => {},
 };
@@ -47,9 +47,11 @@ const globalProps = {
 describe("ListenFeedbackComponent", () => {
   describe("submitFeedback", () => {
     it("calls API, updates feedback state and calls updateFeedbackCallback correctly", async () => {
-      const wrapper = mount<ListenCard>(
+      const wrapper = mount<ListenFeedbackComponent>(
         <GlobalAppContext.Provider value={globalProps}>
-          <ListenCard {...{ ...props, updateFeedbackCallback: jest.fn() }} />
+          <ListenFeedbackComponent
+            {...{ ...props, updateFeedbackCallback: jest.fn() }}
+          />
         </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
@@ -58,14 +60,11 @@ describe("ListenFeedbackComponent", () => {
       const spy = jest.spyOn(APIService, "submitFeedback");
       spy.mockImplementation(() => Promise.resolve(200));
 
-      expect(wrapper.state("feedback")).toEqual(1);
-
       await instance.submitFeedback(-1);
 
       expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith("baz", "bar", -1);
 
-      expect(wrapper.state("feedback")).toEqual(-1);
       expect(instance.props.updateFeedbackCallback).toHaveBeenCalledTimes(1);
       expect(instance.props.updateFeedbackCallback).toHaveBeenCalledWith(
         "bar",
@@ -74,14 +73,16 @@ describe("ListenFeedbackComponent", () => {
     });
 
     it("does nothing if CurrentUser.authtoken is not set", async () => {
-      const wrapper = mount<ListenCard>(
+      const wrapper = mount<ListenFeedbackComponent>(
         <GlobalAppContext.Provider
           value={{
             ...globalProps,
             currentUser: { auth_token: undefined, name: "test" },
           }}
         >
-          <ListenCard {...{ ...props, updateFeedbackCallback: jest.fn() }} />
+          <ListenFeedbackComponent
+            {...{ ...props, updateFeedbackCallback: jest.fn() }}
+          />
         </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
@@ -90,17 +91,14 @@ describe("ListenFeedbackComponent", () => {
       const spy = jest.spyOn(APIService, "submitFeedback");
       spy.mockImplementation(() => Promise.resolve(200));
 
-      expect(wrapper.state("feedback")).toEqual(1);
-
       instance.submitFeedback(-1);
       expect(spy).toHaveBeenCalledTimes(0);
-      expect(wrapper.state("feedback")).toEqual(1);
     });
 
     it("doesn't update feedback state or call updateFeedbackCallback if status code is not 200", async () => {
-      const wrapper = mount<ListenCard>(
+      const wrapper = mount<ListenFeedbackComponent>(
         <GlobalAppContext.Provider value={globalProps}>
-          <ListenCard {...props} />
+          <ListenFeedbackComponent {...props} />
         </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
@@ -110,27 +108,24 @@ describe("ListenFeedbackComponent", () => {
       const spy = jest.spyOn(APIService, "submitFeedback");
       spy.mockImplementation(() => Promise.resolve(201));
 
-      expect(wrapper.state("feedback")).toEqual(1);
-
       instance.submitFeedback(-1);
 
       expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith("baz", "bar", -1);
 
-      expect(wrapper.state("feedback")).toEqual(1);
       expect(props.updateFeedbackCallback).toHaveBeenCalledTimes(0);
     });
 
     it("calls handleError if error is returned", async () => {
-      const wrapper = mount<ListenCard>(
+      const newAlertSpy = jest.fn();
+      const wrapper = mount<ListenFeedbackComponent>(
         <GlobalAppContext.Provider value={globalProps}>
-          <ListenCard {...props} />
+          <ListenFeedbackComponent {...props} newAlert={newAlertSpy} />
         </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
-      instance.handleError = jest.fn();
 
-      const error = new Error("error");
+      const error = new Error("my error message");
       const { APIService } = instance.context;
       const spy = jest.spyOn(APIService, "submitFeedback");
       spy.mockImplementation(() => {
@@ -138,10 +133,11 @@ describe("ListenFeedbackComponent", () => {
       });
 
       instance.submitFeedback(-1);
-      expect(instance.handleError).toHaveBeenCalledTimes(1);
-      expect(instance.handleError).toHaveBeenCalledWith(
-        error,
-        "Error while submitting feedback"
+      expect(newAlertSpy).toHaveBeenCalledTimes(1);
+      expect(newAlertSpy).toHaveBeenCalledWith(
+        "danger",
+        "Error while submitting feedback",
+        "my error message"
       );
     });
   });

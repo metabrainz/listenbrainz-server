@@ -2,8 +2,9 @@ import * as React from "react";
 import { faHeart, faHeartBroken } from "@fortawesome/free-solid-svg-icons";
 import { get } from "lodash";
 import ListenControl from "./ListenControl";
+import GlobalAppContext from "../GlobalAppContext";
 
-type ListenFeedbackComponentProps = {
+export type ListenFeedbackComponentProps = {
   newAlert: (
     type: AlertType,
     title: string,
@@ -17,12 +18,12 @@ type ListenFeedbackComponentProps = {
   ) => void;
 };
 
-type ListenFeedbackComponentState = {};
-
 export default class ListenFeedbackComponent extends React.Component<
-  ListenFeedbackComponentProps,
-  ListenFeedbackComponentState
+  ListenFeedbackComponentProps
 > {
+  static contextType = GlobalAppContext;
+  declare context: React.ContextType<typeof GlobalAppContext>;
+
   submitFeedback = async (score: ListenFeedBack) => {
     const { listen, updateFeedbackCallback, newAlert } = this.props;
     const { APIService, currentUser } = this.context;

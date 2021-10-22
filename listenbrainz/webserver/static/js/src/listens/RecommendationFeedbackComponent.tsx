@@ -18,6 +18,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { get } from "lodash";
 import RecommendationControl from "../recommendations/RecommendationControl";
+import GlobalAppContext from "../GlobalAppContext";
 
 export type RecommendationFeedbackComponentProps = {
   newAlert: (
@@ -33,12 +34,12 @@ export type RecommendationFeedbackComponentProps = {
   ) => void;
 };
 
-type RecommendationFeedbackComponentState = {};
-
 export default class RecommendationFeedbackComponent extends React.Component<
-  RecommendationFeedbackComponentProps,
-  RecommendationFeedbackComponentState
+  RecommendationFeedbackComponentProps
 > {
+  static contextType = GlobalAppContext;
+  declare context: React.ContextType<typeof GlobalAppContext>;
+
   submitRecommendationFeedback = async (rating: RecommendationFeedBack) => {
     const {
       listen,
@@ -73,7 +74,7 @@ export default class RecommendationFeedbackComponent extends React.Component<
       } catch (error) {
         newAlert(
           "danger",
-          "Error while submitting feedback",
+          "Error while submitting recommendation feedback",
           error?.message ?? error.toString()
         );
       }
@@ -81,12 +82,13 @@ export default class RecommendationFeedbackComponent extends React.Component<
   };
 
   render() {
+    const { currentUser } = this.context;
     const { currentFeedback, listen } = this.props;
     const recordingMSID = get(
       listen,
       "track_metadata.additional_info.recording_msid"
     );
-    if (!recordingMSID) {
+    if (!currentUser?.auth_token || !recordingMSID) {
       return null;
     }
     let icon: IconDefinition;
