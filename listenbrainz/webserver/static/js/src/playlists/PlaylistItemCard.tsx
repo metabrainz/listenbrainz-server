@@ -77,7 +77,7 @@ export default class PlaylistItemCard extends React.Component<
       <ListenCard
         listen={listen}
         currentFeedback={currentFeedback}
-        showTimestamp={Boolean(listen.listened_at)}
+        showTimestamp={Boolean(listen.listened_at_iso)}
         showUsername={Boolean(listen.user_name)}
         // showTrackLength
         newAlert={newAlert}
