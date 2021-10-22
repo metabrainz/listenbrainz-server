@@ -2,25 +2,11 @@ import * as React from "react";
 import { get as _get, has as _has, isEqual, isNil } from "lodash";
 import {
   faMusic,
-  faHeart,
-  faHeartBroken,
   faEllipsisV,
   faPlay,
-  faAngry,
-  faFrown,
-  faSmileBeam,
-  faGrinStars,
   faCommentDots,
 } from "@fortawesome/free-solid-svg-icons";
-import {
-  faPlayCircle,
-  faThumbsUp as faThumbsUpRegular,
-  faAngry as faAngryRegular,
-  faFrown as faFrownRegular,
-  faSmileBeam as faSmileBeamRegular,
-  faGrinStars as faGrinStarsRegular,
-} from "@fortawesome/free-regular-svg-icons";
-import { IconDefinition } from "@fortawesome/fontawesome-common-types"; // eslint-disable-line import/no-unresolved
+import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -33,7 +19,6 @@ import {
 import GlobalAppContext from "../GlobalAppContext";
 import Card from "../components/Card";
 import ListenControl from "./ListenControl";
-import RecommendationControl from "../recommendations/RecommendationControl";
 import ListenFeedbackComponent from "./ListenFeedbackComponent";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
@@ -44,6 +29,7 @@ export type ListenCardProps = {
   currentFeedback?: ListenFeedBack | RecommendationFeedBack | null;
   showTimestamp: boolean;
   showUsername: boolean;
+  // Only used when not passing a custom feedbackComponent
   updateFeedbackCallback?: (
     recordingMsid: string,
     score: ListenFeedBack | RecommendationFeedBack
@@ -53,17 +39,19 @@ export type ListenCardProps = {
     title: string,
     message: string | JSX.Element
   ) => void;
+  // This show under the first line of listen details. It's meant for reviews, etc.
   additionalDetails?: string | JSX.Element;
   thumbnail?: JSX.Element;
-  // The default details (recording name, artist name) can be superseeded
+  // The default details (recording name, artist name) can be replaced
   listenDetails?: JSX.Element;
   compact?: boolean;
+  // The default Listen fedback (love/hate) can be replaced
   feedbackComponent?: JSX.Element;
+  // These go in the dropdown menu
   additionalMenuItems?: JSX.Element;
 };
 
 type ListenCardState = {
-  isDeleted: boolean;
   isCurrentlyPlaying: boolean;
 };
 
@@ -78,7 +66,6 @@ export default class ListenCard extends React.Component<
     super(props);
 
     this.state = {
-      isDeleted: false,
       isCurrentlyPlaying: false,
     };
   }
@@ -200,8 +187,7 @@ export default class ListenCard extends React.Component<
       newAlert,
       updateFeedbackCallback,
     } = this.props;
-    const { currentUser } = this.context;
-    const { isDeleted, isCurrentlyPlaying } = this.state;
+    const { isCurrentlyPlaying } = this.state;
 
     const recordingMSID = _get(
       listen,
@@ -250,9 +236,7 @@ export default class ListenCard extends React.Component<
         onDoubleClick={this.playListen}
         className={`listen-card row ${
           isCurrentlyPlaying ? "current-listen" : ""
-        } ${isDeleted ? "deleted" : ""} ${compact ? " compact" : " "} ${
-          className || ""
-        }`}
+        }${compact ? " compact" : " "} ${className || ""}`}
       >
         {thumbnail && <div className="listen-thumbnail">{thumbnail}</div>}
         {listenDetails ? (
