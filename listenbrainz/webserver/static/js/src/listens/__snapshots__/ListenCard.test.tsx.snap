@@ -29,11 +29,11 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
   updateFeedbackCallback={[Function]}
 >
   <ForwardRef
-    className="listen-card row     "
+    className="listen-card row   "
     onDoubleClick={[Function]}
   >
     <div
-      className="card listen-card row     "
+      className="card listen-card row   "
       onDoubleClick={[Function]}
     >
       <div
@@ -505,11 +505,11 @@ exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
   updateFeedbackCallback={[Function]}
 >
   <ForwardRef
-    className="listen-card row     "
+    className="listen-card row   "
     onDoubleClick={[Function]}
   >
     <div
-      className="card listen-card row     "
+      className="card listen-card row   "
       onDoubleClick={[Function]}
     >
       <div
@@ -980,11 +980,11 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
   updateFeedbackCallback={[Function]}
 >
   <ForwardRef
-    className="listen-card row     "
+    className="listen-card row   "
     onDoubleClick={[Function]}
   >
     <div
-      className="card listen-card row     "
+      className="card listen-card row   "
       onDoubleClick={[Function]}
     >
       <div
@@ -1455,11 +1455,11 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
   updateFeedbackCallback={[Function]}
 >
   <ForwardRef
-    className="listen-card row     "
+    className="listen-card row   "
     onDoubleClick={[Function]}
   >
     <div
-      className="card listen-card row     "
+      className="card listen-card row   "
       onDoubleClick={[Function]}
     >
       <div
