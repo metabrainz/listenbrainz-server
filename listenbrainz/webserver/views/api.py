@@ -1,5 +1,4 @@
 from operator import itemgetter
-from typing import Tuple
 
 import ujson
 import psycopg2
@@ -19,9 +18,9 @@ from listenbrainz.db import listens_importer
 from brainzutils.ratelimit import ratelimit
 import listenbrainz.webserver.redis_connection as redis_connection
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
-from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list,\
-    is_valid_uuid, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT,\
-    LISTEN_TYPE_PLAYING_NOW, validate_auth_header, get_non_negative_param
+from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list, \
+    is_valid_uuid, MAX_LISTEN_SIZE, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, _validate_get_endpoint_params, \
+    _parse_int_arg, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, get_non_negative_param
 from listenbrainz.webserver.views.playlist_api import serialize_jspf
 from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStoreException
 from listenbrainz.webserver.timescale_connection import _ts
@@ -638,41 +637,9 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
-def _parse_int_arg(name, default=None):
-    value = request.args.get(name)
-    if value:
-        try:
-            return int(value)
-        except ValueError:
-            raise APIBadRequest("Invalid %s argument: %s" % (name, value))
-    else:
-        return default
-
-
 def _get_listen_type(listen_type):
     return {
         'single': LISTEN_TYPE_SINGLE,
         'import': LISTEN_TYPE_IMPORT,
         'playing_now': LISTEN_TYPE_PLAYING_NOW
     }.get(listen_type)
-
-
-def _validate_get_endpoint_params() -> Tuple[int, int, int]:
-    """ Validates parameters for listen GET endpoints like /username/listens and /username/feed/events
-
-    Returns a tuple of integers: (min_ts, max_ts, count)
-    """
-    max_ts = _parse_int_arg("max_ts")
-    min_ts = _parse_int_arg("min_ts")
-
-    if max_ts and min_ts:
-        if max_ts < min_ts:
-            log_raise_400("max_ts should be greater than min_ts")
-
-    # Validate requetsed listen count is positive
-    count = min(_parse_int_arg(
-        "count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET)
-    if count < 0:
-        log_raise_400("Number of items requested should be positive")
-
-    return min_ts, max_ts, count
