@@ -93,7 +93,22 @@ class TimescaleListenStore(ListenStore):
         """
 
         count = cache.get(REDIS_USER_LISTEN_COUNT + user_name, decode=False)
-        if count is None:
+        # count < 0, yeah that's possible. when a user imports from last.fm,
+        # we call set_listen_count_expiry_for_user to set a TTL on the count.
+        # the intent is that when the key expires and the listen counts will
+        # be recalculated and put into redis again. the issue is that listen
+        # counts are only calculated when the listen-count api endpoint is
+        # called. So imagine this, I do a last.fm import at 13:00 on 2021-10-23.
+        # The key expires at 13:00 on 2021-10-24. From this moment, redis has no
+        # key for my listens. Then, I delete a listen using the API at say 13:05.
+        # The listen is deleted and the listenstore tries to decrement the listen
+        # count but hey redis has no key. So what does it do, it creates one with
+        # a value of 0 and decrements that. Voila, we have the key with a negative
+        # value.
+        # Note that the check is still incomplete. If instead of deleting, one had
+        # inserted a listen. redis would create a key with value 0 and increment it
+        # by 1. only now we don't have a way to detect this.
+        if count is None or count < 0:
             return self.reset_listen_count(user_name)
         else:
             return int(count)
