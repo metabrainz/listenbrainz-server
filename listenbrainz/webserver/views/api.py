@@ -112,6 +112,7 @@ def get_listens(user_name):
     :param min_ts: If you specify a ``min_ts`` timestamp, listens with listened_at greater than (but not including) this value will be returned.
     :param count: Optional, number of listens to return. Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` . Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
     :statuscode 200: Yay, you have data!
+    :statuscode 404: The requested user was not found.
     :resheader Content-Type: *application/json*
     """
     db_conn = webserver.create_timescale(current_app)
@@ -185,6 +186,7 @@ def get_playing_now(user_name):
     The format for the JSON returned is defined in our :ref:`json-doc`.
 
     :statuscode 200: Yay, you have data!
+    :statuscode 404: The requested user was not found.
     :resheader Content-Type: *application/json*
     """
 
@@ -219,6 +221,11 @@ def get_recent_listens_for_user_list(user_list):
     """
     Fetch the most recent listens for a comma separated list of users. Take care to properly HTTP escape
     user names that contain commas!
+
+    .. note::
+
+        This is a bulk lookup endpoint. Hence, any non-existing users in the list will be simply ignored
+        without raising any error.
 
     :statuscode 200: Fetched listens successfully.
     :statuscode 400: Your user list was incomplete or otherwise invalid.
