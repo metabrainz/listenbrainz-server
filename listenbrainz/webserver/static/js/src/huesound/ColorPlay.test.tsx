@@ -30,20 +30,16 @@ const mountOptions: { context: GlobalAppContextT } = {
 };
 
 describe("ColorPlay", () => {
-
   it("contains a BrainzPlayer instance", () => {
     const wrapper = mount<ColorPlay>(<ColorPlay {...props} />, mountOptions);
     const instance = wrapper.instance();
     expect(wrapper.find(BrainzPlayer)).toHaveLength(1);
   });
-
 });
-
 
 describe("selectRelease", () => {
   it("selects the particular release and starts playing it in brainzplayer", async () => {
     const wrapper = mount<ColorPlay>(<ColorPlay {...props} />, mountOptions);
     const instance = wrapper.instance();
-   
   });
 });
