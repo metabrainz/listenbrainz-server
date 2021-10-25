@@ -1,5 +1,4 @@
 from operator import itemgetter
-from typing import Tuple
 
 import ujson
 import psycopg2
@@ -7,7 +6,6 @@ from flask import Blueprint, request, jsonify, current_app
 from brainzutils.musicbrainz_db import engine as mb_engine
 
 from data.model.external_service import ExternalServiceType
-from listenbrainz.listenstore import TimescaleListenStore
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
     APIUnauthorized
 from listenbrainz.webserver.decorators import api_listenstore_needed
@@ -20,9 +18,9 @@ from listenbrainz.db import listens_importer
 from brainzutils.ratelimit import ratelimit
 import listenbrainz.webserver.redis_connection as redis_connection
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
-from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list,\
-    is_valid_uuid, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT,\
-    LISTEN_TYPE_PLAYING_NOW, validate_auth_header, get_non_negative_param
+from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list, \
+    is_valid_uuid, MAX_LISTEN_SIZE, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, _validate_get_endpoint_params, \
+    _parse_int_arg, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, get_non_negative_param
 from listenbrainz.webserver.views.playlist_api import serialize_jspf
 from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStoreException
 from listenbrainz.webserver.timescale_connection import _ts
@@ -114,11 +112,16 @@ def get_listens(user_name):
     :param min_ts: If you specify a ``min_ts`` timestamp, listens with listened_at greater than (but not including) this value will be returned.
     :param count: Optional, number of listens to return. Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` . Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
     :statuscode 200: Yay, you have data!
+    :statuscode 404: The requested user was not found.
     :resheader Content-Type: *application/json*
     """
     db_conn = webserver.create_timescale(current_app)
 
-    min_ts, max_ts, count = _validate_get_endpoint_params(db_conn, user_name)
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise APINotFound("Cannot find user: %s" % user_name)
+
+    min_ts, max_ts, count = _validate_get_endpoint_params()
     if min_ts and max_ts and min_ts >= max_ts:
         raise APIBadRequest("min_ts should be less than max_ts")
 
@@ -152,14 +155,16 @@ def get_listen_count(user_name):
         which unsurprisingly contains the listen count for the user.
 
     :statuscode 200: Yay, you have listen counts!
+    :statuscode 404: The requested user was not found.
     :resheader Content-Type: *application/json*
     """
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise APINotFound("Cannot find user: %s" % user_name)
 
     try:
         db_conn = webserver.create_timescale(current_app)
         listen_count = db_conn.get_listen_count_for_user(user_name)
-        if listen_count < 0:
-            raise APINotFound("Cannot find user: %s" % user_name)
     except psycopg2.OperationalError as err:
         current_app.logger.error("cannot fetch user listen count: ", str(err))
         raise APIServiceUnavailable(
@@ -183,6 +188,7 @@ def get_playing_now(user_name):
     The format for the JSON returned is defined in our :ref:`json-doc`.
 
     :statuscode 200: Yay, you have data!
+    :statuscode 404: The requested user was not found.
     :resheader Content-Type: *application/json*
     """
 
@@ -217,6 +223,11 @@ def get_recent_listens_for_user_list(user_list):
     """
     Fetch the most recent listens for a comma separated list of users. Take care to properly HTTP escape
     user names that contain commas!
+
+    .. note::
+
+        This is a bulk lookup endpoint. Hence, any non-existing users in the list will be simply ignored
+        without raising any error.
 
     :statuscode 200: Fetched listens successfully.
     :statuscode 400: Your user list was incomplete or otherwise invalid.
@@ -416,7 +427,7 @@ def validate_token():
             "code": 200,
             "message": "Token valid.",
             "valid": true,
-            "user": "MusicBrainz ID of the user with the passed token"
+            "user_name": "MusicBrainz ID of the user with the passed token"
         }
 
     - If the given token is invalid:
@@ -635,41 +646,9 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
-def _parse_int_arg(name, default=None):
-    value = request.args.get(name)
-    if value:
-        try:
-            return int(value)
-        except ValueError:
-            raise APIBadRequest("Invalid %s argument: %s" % (name, value))
-    else:
-        return default
-
-
 def _get_listen_type(listen_type):
     return {
         'single': LISTEN_TYPE_SINGLE,
         'import': LISTEN_TYPE_IMPORT,
         'playing_now': LISTEN_TYPE_PLAYING_NOW
     }.get(listen_type)
-
-
-def _validate_get_endpoint_params(db_conn: TimescaleListenStore, user_name: str) -> Tuple[int, int, int, int]:
-    """ Validates parameters for listen GET endpoints like /username/listens and /username/feed/events
-
-    Returns a tuple of integers: (min_ts, max_ts, count)
-    """
-    max_ts = _parse_int_arg("max_ts")
-    min_ts = _parse_int_arg("min_ts")
-
-    if max_ts and min_ts:
-        if max_ts < min_ts:
-            log_raise_400("max_ts should be greater than min_ts")
-
-    # Validate requetsed listen count is positive
-    count = min(_parse_int_arg(
-        "count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET)
-    if count < 0:
-        log_raise_400("Number of items requested should be positive")
-
-    return min_ts, max_ts, count
