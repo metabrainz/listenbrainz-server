@@ -39,4 +39,3 @@ class HuesoundTestCase(DatabaseTestCase):
         self.assertEqual(r[2].caa_id, 3)
         self.assertEqual(r[2].release_mbid, "8c276439-d5e8-4560-8df0-2b7c996fd1a4")
         self.assertEqual(r[2].color, ColorCube(red=255, green=0, blue=0))
-

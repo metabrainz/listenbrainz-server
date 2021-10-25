@@ -100,7 +100,7 @@ def get_releases_for_color(red: int, green: int, blue: int, count: int) -> List[
             results.append(ColorResult(release_mbid=row["release_mbid"],
                                        caa_id=row["caa_id"],
                                        color=ColorCube(red=row["red"], green=row["green"], blue=row["blue"]),
-                                       distance=row["dist"] ))
+                                       distance=row["dist"]))
 
         if mb_db.engine is not None:
             mb_conn = mb_db.engine.raw_connection()
