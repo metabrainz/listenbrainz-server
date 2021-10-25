@@ -3,6 +3,7 @@ import time
 
 import spotipy
 from brainzutils import metrics
+from typing import Dict, List
 
 import listenbrainz.webserver
 
@@ -23,7 +24,6 @@ from listenbrainz.db.exceptions import DatabaseException
 from spotipy import SpotifyException
 from werkzeug.exceptions import InternalServerError, ServiceUnavailable
 from brainzutils.mail import send_mail
-from brainzutils.musicbrainz_db import editor as mb_editor
 
 METRIC_UPDATE_INTERVAL = 60  # seconds
 _listens_imported_since_start = 0
@@ -222,20 +222,21 @@ def get_user_currently_playing(user):
     return make_api_request(user, 'current_user_playing_track')
 
 
-def submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTEN_TYPE_IMPORT):
+def submit_listens_to_listenbrainz(user: Dict, listens: List, listen_type=LISTEN_TYPE_IMPORT):
     """ Submit a batch of listens to ListenBrainz
 
     Args:
-        listenbrainz_user (dict): the user whose listens are to be submitted
-        listens (list): a list of listens to be submitted
+        user: the user whose listens are to be submitted, dict should contain
+            at least musicbrainz_id and user_id
+        listens: a list of listens to be submitted
         listen_type: the type of listen (single, import, playing_now)
     """
-    username = listenbrainz_user['musicbrainz_id']
+    username = user['musicbrainz_id']
     retries = 10
     while retries >= 0:
         try:
             current_app.logger.debug('Submitting %d listens for user %s', len(listens), username)
-            insert_payload(listens, listenbrainz_user, listen_type=listen_type)
+            insert_payload(listens, user, listen_type=listen_type)
             current_app.logger.debug('Submitted!')
             break
         except (InternalServerError, ServiceUnavailable) as e:
@@ -290,8 +291,6 @@ def process_one_user(user: dict, service: SpotifyService) -> int:
         if service.user_oauth_token_has_expired(user):
             user = service.refresh_access_token(user['user_id'], user['refresh_token'])
 
-        listenbrainz_user = db_user.get(user['user_id'])
-
         listens = []
         latest_listened_at = None
 
@@ -311,7 +310,7 @@ def process_one_user(user: dict, service: SpotifyService) -> int:
                     LISTEN_TYPE_PLAYING_NOW
                 )
                 if listens:
-                    submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTEN_TYPE_PLAYING_NOW)
+                    submit_listens_to_listenbrainz(user, listens, listen_type=LISTEN_TYPE_PLAYING_NOW)
 
         recently_played = get_user_recently_played(user)
         if recently_played is not None and 'items' in recently_played:
@@ -326,7 +325,7 @@ def process_one_user(user: dict, service: SpotifyService) -> int:
             service.update_user_import_status(user['user_id'])
             return 0
 
-        submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTEN_TYPE_IMPORT)
+        submit_listens_to_listenbrainz(user, listens, listen_type=LISTEN_TYPE_IMPORT)
 
         # we've succeeded so update the last_updated and latest_listened_at field for this user
         service.update_latest_listen_ts(user['user_id'], latest_listened_at)
@@ -380,11 +379,9 @@ def process_all_spotify_users():
         try:
             _listens_imported_since_start += process_one_user(u, service)
             success += 1
-        except ExternalServiceError as e:
-            current_app.logger.critical('spotify_reader could not import listens: %s', str(e), exc_info=True)
-            failure += 1
-        except Exception as e:
-            current_app.logger.critical('spotify_reader could not import listens: %s', str(e), exc_info=True)
+        except Exception:
+            current_app.logger.critical('spotify_reader could not import listens for user %s:',
+                                        u['musicbrainz_id'], exc_info=True)
             failure += 1
 
     if time.monotonic() > _metric_submission_time:
