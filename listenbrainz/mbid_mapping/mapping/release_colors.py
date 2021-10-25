@@ -18,8 +18,13 @@ from mapping.utils import log
 
 register_adapter(Cube, adapt_cube)
 
+# max number of threads to use -- with 2 we don't need to worry about rate limiting.
 MAX_THREADS = 2
+
+# The number of items to compare in one batch
 SYNC_BATCH_SIZE = 10000
+
+# cache key for the last_updated timestamp for the sync
 LAST_UPDATED_CACHE_KEY = "mbid.release_color_timestamp"
 
 
@@ -70,6 +75,7 @@ def process_row(row):
     """ Process one CAA query row, by fetching the 250px thumbnail,
         process the color, then import into the DB """
 
+    sleep_duation = 2
     while True:
         headers = {
             'User-Agent': 'ListenBrainz HueSound Color Bot ( rob@metabrainz.org )'}
@@ -86,14 +92,14 @@ def process_row(row):
                 red, green, blue = process_image(filename, row["mime_type"])
                 insert_row(row["release_mbid"], red,
                            green, blue, row["caa_id"])
-                print("%s %s: (%s, %s, %s)" %
+                log("%s %s: (%s, %s, %s)" %
                       (row["caa_id"], row["release_mbid"], red, green, blue))
             except Exception as err:
-                print("Could not process %s" % url)
-                print(err)
+                log("Could not process %s" % url)
+                log(err)
 
             os.unlink(filename)
-
+            sleep_duation = 2
             break
 
         if r.status_code == 403:
@@ -102,12 +108,24 @@ def process_row(row):
         if r.status_code == 404:
             break
 
-        if r.status_code in (503, 429):
-            print("Exceeded rate limit. sleeping 2 seconds.")
-            sleep(2)
+        if r.status_code == 429:
+            log("Exceeded rate limit. sleeping %d seconds." % sleep_duration)
+            sleep(sleep_duration)
+            sleep_duration *= 2
+            if sleep_duration > 100:
+                return
+
             continue
 
-        print("Unhandled %d" % r.status_code)
+        if r.status_code == 503:
+            log("Service not available. sleeping %d seconds." % sleep_duration)
+            sleep(sleep_duration)
+            sleep_duration *= 2
+            if sleep_duration > 100:
+                return
+            continue
+
+        log("Unhandled %d" % r.status_code)
         break
 
 
@@ -230,7 +248,7 @@ def incremental_update_release_color_table():
         last_updated = None
 
     if not last_updated:
-        print("No timestamp found, performing full sync")
+        log("No timestamp found, performing full sync")
         sync_release_color_table()
         last_updated = get_last_updated_from_caa()
         cache.set(LAST_UPDATED_CACHE_KEY, last_updated,
@@ -274,8 +292,7 @@ def compare_coverart(mb_query, lb_query, mb_caa_index, lb_caa_index, mb_compare_
                 with lb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
 
                     mb_count, lb_count = get_cover_art_counts(mb_curs, lb_curs)
-                    print("CAA count: %d\n LB count: %d" %
-                          (mb_count, lb_count))
+                    log("CAA count: %d\n LB count: %d" % (mb_count, lb_count))
 
                     threads = []
                     mb_row = None
@@ -317,7 +334,7 @@ def compare_coverart(mb_query, lb_query, mb_caa_index, lb_caa_index, mb_compare_
 
                         processed += 1
                         if processed % 100000 == 0:
-                            print("processed %d of %d: missing %d extra %d" %
+                            log("processed %d of %d: missing %d extra %d" %
                                   (processed, mb_count, missing, extra))
 
                         # If the item is in MB, but not in LB, add to LB
@@ -347,12 +364,10 @@ def compare_coverart(mb_query, lb_query, mb_caa_index, lb_caa_index, mb_compare_
                         assert False
 
                     join_threads(threads)
-                    print(
-                        "Finished! added/skipped %d removed %d from release_color" % (missing, extra))
+                    log( "Finished! added/skipped %d removed %d from release_color" % (missing, extra))
 
                     mb_count, lb_count = get_cover_art_counts(mb_curs, lb_curs)
-                    print("CAA count: %d\n LB count: %d" %
-                          (mb_count, lb_count))
+                    log("CAA count: %d\n LB count: %d" % (mb_count, lb_count))
 
                     metrics.init("listenbrainz")
                     metrics.set("listenbrainz-caa-mapper",

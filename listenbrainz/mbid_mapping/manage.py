@@ -65,16 +65,25 @@ def build_index():
 
 @cli.command()
 def sync_coverart():
+    """
+        Force a re-sync of the release_color table, in case it has gone out of sync.
+    """
     sync_release_color_table()
 
 
 @cli.command()
 def update_coverart():
+    """
+        Update the release_color table incrementally. Designed to be called hourly by cron.
+    """
     incremental_update_release_color_table()
 
 
 @cli.command()
 def cron_log():
+    """
+        Print the internal cron log file for debugging purposes.
+    """
     if os.path.exists(CRON_LOG_FILE):
         log("Current cron job log file:")
         subprocess.run(["cat", CRON_LOG_FILE])
