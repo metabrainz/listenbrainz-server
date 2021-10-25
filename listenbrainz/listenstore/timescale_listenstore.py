@@ -108,7 +108,7 @@ class TimescaleListenStore(ListenStore):
         # Note that the check is still incomplete. If instead of deleting, one had
         # inserted a listen. redis would create a key with value 0 and increment it
         # by 1. only now we don't have a way to detect this.
-        if count is None or count < 0:
+        if count is None or int(count) < 0:
             return self.reset_listen_count(user_name)
         else:
             return int(count)
