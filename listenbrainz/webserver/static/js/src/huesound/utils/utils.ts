@@ -1,4 +1,4 @@
-import tinycolor, { ColorFormats, ColorInputWithoutInstance } from "tinycolor2";
+import * as tinycolor from "tinycolor2";
 
 export function produceRgbShades(
   r: number | string,
@@ -19,7 +19,7 @@ export function produceRgbShades(
   return shades;
 }
 
-export function colourToRgbObj(colour: ColorInputWithoutInstance) {
+export function colourToRgbObj(colour: tinycolor.ColorInputWithoutInstance) {
   // TODO: Note which colours tinycolor() can take; i.e. hex / rgb strings, objects, etc.
   return tinycolor(colour).toRgb();
 }
@@ -34,7 +34,7 @@ export function calculateBounds(min: number, max: number) {
   };
 }
 
-export function convertObjToString(obj: ColorFormats.RGB) {
+export function convertObjToString(obj: tinycolor.ColorFormats.RGB) {
   return tinycolor(obj).toRgbString();
 }
 
