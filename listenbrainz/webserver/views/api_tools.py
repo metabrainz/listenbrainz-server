@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Tuple
 from urllib.parse import urlparse
 
 import bleach
@@ -200,8 +200,9 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
     return listen
 
 
-# lifted from AcousticBrainz
 def is_valid_uuid(u):
+    if u is None:
+        return False
     try:
         u = uuid.UUID(u)
         return True
@@ -278,6 +279,7 @@ def validate_multiple_mbids_field(listen, key):
 
         listen['track_metadata']['additional_info'][key] = mbids  # set the filtered in the listen payload
 
+
 def is_valid_timestamp(ts):
     """ Returns True if the timestamp passed is in the API's
     allowed range of timestamps, False otherwise
@@ -348,6 +350,38 @@ def parse_param_list(params: str) -> list:
         param_list.append(param)
 
     return param_list
+
+
+def _parse_int_arg(name, default=None):
+    value = request.args.get(name)
+    if value:
+        try:
+            return int(value)
+        except ValueError:
+            raise APIBadRequest("Invalid %s argument: %s" % (name, value))
+    else:
+        return default
+
+
+def _validate_get_endpoint_params() -> Tuple[int, int, int]:
+    """ Validates parameters for listen GET endpoints like /username/listens and /username/feed/events
+
+    Returns a tuple of integers: (min_ts, max_ts, count)
+    """
+    max_ts = _parse_int_arg("max_ts")
+    min_ts = _parse_int_arg("min_ts")
+
+    if max_ts and min_ts:
+        if max_ts < min_ts:
+            log_raise_400("max_ts should be greater than min_ts")
+
+    # Validate requetsed listen count is positive
+    count = min(_parse_int_arg(
+        "count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET)
+    if count < 0:
+        log_raise_400("Number of items requested should be positive")
+
+    return min_ts, max_ts, count
 
 
 def validate_auth_header(*, optional: bool = False, fetch_email: bool = False):
