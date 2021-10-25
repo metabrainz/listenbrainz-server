@@ -232,6 +232,8 @@ def submit_listens_to_listenbrainz(user: Dict, listens: List, listen_type=LISTEN
         listen_type: the type of listen (single, import, playing_now)
     """
     username = user['musicbrainz_id']
+    # insert payload looks for 'id' key whereas the user dict here has it in 'user_id' key
+    user['id'] = user['user_id']
     retries = 10
     while retries >= 0:
         try:
