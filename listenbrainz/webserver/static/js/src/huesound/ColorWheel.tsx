@@ -55,7 +55,7 @@ export default class ColorWheel extends React.Component<
   firstSpacerRadius: any = null;
   secondSpacerRadius: any = null;
 
-  canvasEl: any = null;
+  canvasEl: React.RefObject<HTMLCanvasElement>;
   ctx: any = null;
 
   static defaultProps = {
@@ -81,6 +81,8 @@ export default class ColorWheel extends React.Component<
     // Bindings:
     this.onCanvasHover = this.onCanvasHover.bind(this);
     this.onCanvasClick = this.onCanvasClick.bind(this);
+
+    this.canvasEl = React.createRef<HTMLCanvasElement>();
   }
 
   // MARK - Life-cycle methods:
@@ -116,9 +118,7 @@ export default class ColorWheel extends React.Component<
     // Giving this context to our parent component.
     if (onRef) onRef(this);
 
-    // Initialising our canvas & context objs.
-    this.canvasEl = document.getElementById("colour-picker");
-    this.ctx = this.canvasEl.getContext("2d");
+    this.ctx = this.canvasEl.current?.getContext("2d");
 
     if (preset) {
       const rgb = colourToRgbObj(presetColor);
@@ -149,20 +149,23 @@ export default class ColorWheel extends React.Component<
   }) => {
     const { innerWheelOpen, centerCircleOpen } = this.state;
     const evt = this.getRelativeMousePos(clientX, clientY);
-
+    const { current: canvasElement } = this.canvasEl;
+    if (!canvasElement || !evt) {
+      return;
+    }
     // Cases for mouse-location:
     if (this.outerWheelBounds.inside(evt.fromCenter)) {
-      this.canvasEl.style.cursor = "crosshair";
+      canvasElement.style.cursor = "crosshair";
     } else if (this.innerWheelBounds.inside(evt.fromCenter) && innerWheelOpen) {
-      this.canvasEl.style.cursor = "crosshair";
+      canvasElement.style.cursor = "crosshair";
     } else if (
       this.centerCircleBounds.inside(evt.fromCenter) &&
       centerCircleOpen
     ) {
       // TODO: Have it clear on click?
-      this.canvasEl.style.cursor = "pointer";
+      canvasElement.style.cursor = "pointer";
     } else {
-      this.canvasEl.style.cursor = "auto";
+      canvasElement.style.cursor = "auto";
     }
   };
 
@@ -171,6 +174,9 @@ export default class ColorWheel extends React.Component<
     clientY,
   }) => {
     const evt = this.getRelativeMousePos(clientX, clientY);
+    if (!evt) {
+      return;
+    }
     const { innerWheelOpen } = this.state;
     // Cases for click-events:
     if (this.outerWheelBounds.inside(evt.fromCenter)) {
@@ -181,10 +187,16 @@ export default class ColorWheel extends React.Component<
   };
 
   // MARK - Common:
-  getRelativeMousePos(clientX: number, clientY: number) {
+  getRelativeMousePos(
+    clientX: number,
+    clientY: number
+  ): { fromCenter: number; onCanvas: { x: number; y: number } } | null {
     const { radius } = this.props;
 
-    const canvasPos = this.canvasEl.getBoundingClientRect();
+    const canvasPos = this.canvasEl.current?.getBoundingClientRect();
+    if (!canvasPos) {
+      return null;
+    }
     const h = radius * 2;
     const w = radius * 2;
 
@@ -485,6 +497,7 @@ export default class ColorWheel extends React.Component<
     return dynamicCursor ? (
       <canvas
         id="colour-picker"
+        ref={this.canvasEl}
         onClick={this.onCanvasClick}
         onMouseMove={this.onCanvasHover}
         width={`${radius * 2}px`}
@@ -493,6 +506,7 @@ export default class ColorWheel extends React.Component<
     ) : (
       <canvas
         id="colour-picker"
+        ref={this.canvasEl}
         onClick={this.onCanvasClick}
         width={`${radius * 2}px`}
         height={`${radius * 2}px`}
