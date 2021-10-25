@@ -70,8 +70,8 @@ export default class PlaylistItemCard extends React.Component<
       // Received postMessage from different origin, ignoring it
       return;
     }
-    const { type, payload } = event.data;
-    switch (type) {
+    const { brainzplayer_event, payload } = event.data;
+    switch (brainzplayer_event) {
       case "current-listen-change":
         this.onCurrentListenChange(payload);
         break;
