@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, current_app
+from flask import Blueprint, jsonify
 
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest
@@ -10,6 +10,7 @@ from brainzutils import cache
 
 DEFAULT_NUMBER_OF_RELEASES = 25  # 5x5 grid
 DEFAULT_CACHE_EXPIRE_TIME = 3600 * 24  # 1 day
+HUESOUND_PAGE_CACHE_KEY = "huesound.%s.%d"
 
 color_api_bp = Blueprint('color_api_v1', __name__)
 
@@ -42,7 +43,6 @@ def huesound(color):
     :resheader Content-Type: *application/json*
     """
 
-    current_app.logger.info("1")
     try:
         if len(color) != 6:
             raise ValueError()
@@ -51,18 +51,12 @@ def huesound(color):
     except ValueError:
         raise APIBadRequest("color must be a 6 digit hex color code.")
 
-    current_app.logger.info("2")
     count = _parse_int_arg("count", DEFAULT_NUMBER_OF_RELEASES)
-    current_app.logger.info("3")
 
-    current_app.logger.info("4")
-    cache_key = "huesound.%s.%d" % (color, count)
+    cache_key = HUESOUND_PAGE_CACHE_KEY % (color, count)
     results = cache.get(cache_key, decode=True)
-    current_app.logger.info("5")
     if not results:
-        current_app.logger.info("6")
         results = get_releases_for_color(*color_tuple, count)
-        current_app.logger.info("7")
         results = [c.to_api() for c in results]
         cache.set(cache_key, results, DEFAULT_CACHE_EXPIRE_TIME, encode=True)
 
