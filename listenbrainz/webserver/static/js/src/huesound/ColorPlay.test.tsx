@@ -7,6 +7,7 @@ import APIService from "../APIService";
 import BrainzPlayer from "../BrainzPlayer";
 import * as colorPlayProps from "../__mocks__/colorPlayProps.json";
 import ColorPlay from "./ColorPlay";
+import ColorWheel from "./ColorWheel";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -29,17 +30,37 @@ const mountOptions: { context: GlobalAppContextT } = {
   },
 };
 
+const release: ColorReleaseItem = {
+  artist_name: "Letherette",
+  color: [250, 90, 192],
+  dist: 109.973,
+  release_mbid: "00a109da-400c-4350-9751-6e6f25e89073",
+  caa_id: 34897349734,
+  release_name: "EP5",
+  recordings: [],
+};
+
 describe("ColorPlay", () => {
-  it("contains a BrainzPlayer instance", () => {
+  it("contains a ColorWheel instance", () => {
     const wrapper = mount<ColorPlay>(<ColorPlay {...props} />, mountOptions);
-    const instance = wrapper.instance();
+    // const instance = wrapper.instance();
+    expect(wrapper.find(ColorWheel)).toHaveLength(1);
+  });
+
+  it("contains a BrainzPlayer instance when a release is selected", () => {
+    const wrapper = mount<ColorPlay>(<ColorPlay {...props} />, mountOptions);
+
+    expect(wrapper.state("selectedRelease")).toBeUndefined();
+    expect(wrapper.find(BrainzPlayer)).toHaveLength(0);
+
+    wrapper.setState({ selectedRelease: release });
     expect(wrapper.find(BrainzPlayer)).toHaveLength(1);
   });
 });
 
 describe("selectRelease", () => {
-  it("selects the particular release and starts playing it in brainzplayer", async () => {
-    const wrapper = mount<ColorPlay>(<ColorPlay {...props} />, mountOptions);
-    const instance = wrapper.instance();
-  });
+  // it("selects the particular release and starts playing it in brainzplayer", async () => {
+  //   const wrapper = mount<ColorPlay>(<ColorPlay {...props} />, mountOptions);
+  //   const instance = wrapper.instance();
+  // });
 });
