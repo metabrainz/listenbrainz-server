@@ -2,6 +2,8 @@ import os
 import json
 import time
 
+from flask import url_for
+
 import listenbrainz.webserver
 from datetime import datetime
 
@@ -11,26 +13,30 @@ from listenbrainz.domain.external_service import ExternalServiceAPIError, \
     ExternalServiceInvalidGrantError
 from listenbrainz.domain.spotify import SpotifyService
 from listenbrainz.spotify_updater import spotify_read_listens
+from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
+from listenbrainz.webserver.testing import ServerTestCase
 from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_IMPORT
 from unittest.mock import patch
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db import external_service_oauth as db_oauth
 
 
-class ConvertListensTestCase(DatabaseTestCase):
+class SpotifyReaderTestCase(ListenAPIIntegrationTestCase):
 
     def setUp(self):
-        super(ConvertListensTestCase, self).setUp()
-        self.user = db_user.get_or_create(1, 'testuserpleaseignore')
-
+        super(SpotifyReaderTestCase, self).setUp()
         self.DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
         db_oauth.save_token(user_id=self.user['id'], service=ExternalServiceType.SPOTIFY,
                             access_token='token', refresh_token='refresh',
-                            token_expires_ts=int(time.time()) + 1000, record_listens=True,
+                            token_expires_ts=int(time.time()) + 3000, record_listens=True,
                             scopes=['user-read-recently-played'])
 
+    def get_test_data(self, test_file):
+        with open(os.path.join(self.DATA_DIR, test_file)) as f:
+            return json.load(f)
+
     def test_parse_play_to_listen_no_isrc(self):
-        data = json.load(open(os.path.join(self.DATA_DIR, 'spotify_play_no_isrc.json')))
+        data = self.get_test_data('spotify_play_no_isrc.json')
 
         listen = spotify_read_listens._convert_spotify_play_to_listen(data, LISTEN_TYPE_IMPORT)
 
@@ -62,7 +68,7 @@ class ConvertListensTestCase(DatabaseTestCase):
         self.maxDiff = None
 
         # If a spotify play record has many artists, make sure they are appended
-        data = json.load(open(os.path.join(self.DATA_DIR, 'spotify_play_two_artists.json')))
+        data = self.get_test_data('spotify_play_two_artists.json')
 
         listen = spotify_read_listens._convert_spotify_play_to_listen(data, LISTEN_TYPE_IMPORT)
 
@@ -153,3 +159,18 @@ class ConvertListensTestCase(DatabaseTestCase):
         )
         with self.assertRaises(ExternalServiceInvalidGrantError):
             spotify_read_listens.process_one_user(expired_token_spotify_user, SpotifyService())
+
+    @patch('listenbrainz.spotify_updater.spotify_read_listens.get_user_currently_playing')
+    @patch('listenbrainz.spotify_updater.spotify_read_listens.get_user_recently_played')
+    def test_spotify_recently_played_submitted(self, mock_recently_played, mock_currently_playing):
+        mock_recently_played.return_value = self.get_test_data('spotify_recently_played_submitted.json')
+        mock_currently_playing.return_value = None
+
+        result = spotify_read_listens.process_all_spotify_users()
+        self.assertEqual(result, (1, 0))
+
+        expected_listens = self.get_test_data('spotify_recently_played_expected.json')
+        url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
+        r = self.client.get(url)
+        self.assert200(r)
+        self.assertEqual(expected_listens, r.json)

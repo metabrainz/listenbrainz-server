@@ -1,0 +1,52 @@
+{
+    "payload": {
+        "count": 1,
+        "latest_listen_ts": 1635138793,
+        "listens": [
+            {
+                "inserted_at": "Mon, 25 Oct 2021 09:51:54 GMT",
+                "listened_at": 1635138793,
+                "recording_msid": "41505db2-8342-49c5-a5b5-5f4cb7a81175",
+                "track_metadata": {
+                    "additional_info": {
+                        "artist_msid": "0c792f66-f898-4cc0-b60d-b62f0313ae45",
+                        "artist_names": [
+                            "Glass Animals"
+                        ],
+                        "discnumber": 1,
+                        "duration_ms": 238805,
+                        "isrc": "GBUM72000433",
+                        "listening_from": "spotify",
+                        "recording_msid": "41505db2-8342-49c5-a5b5-5f4cb7a81175",
+                        "release_artist_name": "Glass Animals",
+                        "release_artist_names": [
+                            "Glass Animals"
+                        ],
+                        "release_msid": "ea7fe93e-e228-4180-8795-a3d8cab5ab87",
+                        "spotify_album_artist_ids": [
+                            "https://open.spotify.com/artist/4yvcSjfu4PC0CYQyLy4wSq"
+                        ],
+                        "spotify_album_id": "https://open.spotify.com/album/0KTj6k94XZh0c6IEMfxeWV",
+                        "spotify_artist_ids": [
+                            "https://open.spotify.com/artist/4yvcSjfu4PC0CYQyLy4wSq"
+                        ],
+                        "spotify_id": "https://open.spotify.com/track/02MWAaffLxlfxAUY7c5dvx",
+                        "tracknumber": 14
+                    },
+                    "artist_name": "Glass Animals",
+                    "mbid_mapping": {
+                        "artist_mbids": [
+                            "20395131-fbde-43ce-b141-b700cfdae99c"
+                        ],
+                        "recording_mbid": "9f61e4a7-d4c3-4d0d-a6e4-dc62e31e30db",
+                        "release_mbid": "bd0fd9c6-5b86-46f8-8d68-1b6640cce223"
+                    },
+                    "release_name": "Dreamland (+ Bonus Levels)",
+                    "track_name": "Heat Waves"
+                },
+                "user_name": "amCap1712"
+            }
+        ],
+        "user_id": "amCap1712"
+    }
+}
