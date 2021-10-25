@@ -146,9 +146,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
         url = url_for('api_v1.get_listen_count', user_name="sir_dumpsterfire")
         response = self.client.get(url)
-        self.assert200(response)
-        data = json.loads(response.data)['payload']
-        self.assertEqual(data['count'], 0)
+        self.asser404(response)
 
 
     def test_get_listens_order(self):

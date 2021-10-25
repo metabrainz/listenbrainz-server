@@ -152,6 +152,7 @@ def get_listen_count(user_name):
         which unsurprisingly contains the listen count for the user.
 
     :statuscode 200: Yay, you have listen counts!
+    :statuscode 404: The requested user was not found.
     :resheader Content-Type: *application/json*
     """
     user = db_user.get_by_mb_id(user_name)
