@@ -152,14 +152,16 @@ def get_listen_count(user_name):
         which unsurprisingly contains the listen count for the user.
 
     :statuscode 200: Yay, you have listen counts!
+    :statuscode 404: The requested user was not found.
     :resheader Content-Type: *application/json*
     """
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise APINotFound("Cannot find user: %s" % user_name)
 
     try:
         db_conn = webserver.create_timescale(current_app)
         listen_count = db_conn.get_listen_count_for_user(user_name)
-        if listen_count < 0:
-            raise APINotFound("Cannot find user: %s" % user_name)
     except psycopg2.OperationalError as err:
         current_app.logger.error("cannot fetch user listen count: ", str(err))
         raise APIServiceUnavailable(
