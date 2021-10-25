@@ -297,4 +297,3 @@ def huesound():
         "index/huesound.html",
         props=ujson.dumps({})
     )
-

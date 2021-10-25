@@ -34,4 +34,4 @@ class ColorResult(BaseModel):
                 "dist": round(self.distance, 3),
                 "release_name": self.release_name or "",
                 "artist_name": self.artist_name or "",
-                "recordings": self.rec_metadata or [] }
+                "recordings": self.rec_metadata or []}
