@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, current_app
 
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest
@@ -17,7 +17,7 @@ color_api_bp = Blueprint('color_api_v1', __name__)
 @color_api_bp.route("/<color>", methods=["GET", "OPTIONS"])
 @crossdomain(headers="Content-Type")
 @ratelimit()
-def color_releases(color):
+def huesound(color):
     """
     Fetch a list of releases that have cover art that has a predominant
     color that is close to the given color.
@@ -42,6 +42,7 @@ def color_releases(color):
     :resheader Content-Type: *application/json*
     """
 
+    current_app.logger.info("1")
     try:
         if len(color) != 6:
             raise ValueError()
@@ -50,12 +51,18 @@ def color_releases(color):
     except ValueError:
         raise APIBadRequest("color must be a 6 digit hex color code.")
 
+    current_app.logger.info("2")
     count = _parse_int_arg("count", DEFAULT_NUMBER_OF_RELEASES)
+    current_app.logger.info("3")
 
+    current_app.logger.info("4")
     cache_key = "huesound.%s.%d" % (color, count)
     results = cache.get(cache_key, decode=True)
+    current_app.logger.info("5")
     if not results:
+        current_app.logger.info("6")
         results = get_releases_for_color(*color_tuple, count)
+        current_app.logger.info("7")
         results = [c.to_api() for c in results]
         cache.set(cache_key, results, DEFAULT_CACHE_EXPIRE_TIME, encode=True)
 
