@@ -103,11 +103,6 @@ def roadmap():
     return render_template("index/roadmap.html")
 
 
-@index_bp.route("/privacy/")
-def privacy_policy():
-    return render_template("index/privacy-policy.html")
-
-
 @index_bp.route("/current-status/")
 @web_listenstore_needed
 def current_status():
