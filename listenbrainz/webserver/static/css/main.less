@@ -135,6 +135,8 @@ h2.page-title {
 .flex-center, .vertical-align {
   display: flex;
   align-items: center;
+}
+.flex-center{
   justify-content: center;
 }
 
@@ -228,7 +230,6 @@ h2.page-title {
   display: grid;
   grid-gap: 5px;
   grid-template-columns: repeat(5,1fr);
-  grid-template-rows: repeat(5,1fr);
   grid-auto-flow: row;
   justify-content: center;
   margin: 1em;
@@ -236,7 +237,6 @@ h2.page-title {
   @media(max-width: @screen-sm) {
     & {
       grid-template-columns: repeat(3,1fr);
-      grid-template-rows: repeat(3,1fr);
     }
   }
   @media(min-width: @screen-lg) {
@@ -251,6 +251,7 @@ h2.page-title {
     transition: .2s ease-in-out;
     width: 100%;
     height: auto;
+    max-height: 140px;
   }
   div:hover img {
     -webkit-transform: scale(1.1);
