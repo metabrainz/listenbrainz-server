@@ -32,16 +32,6 @@ def get_releases_for_color(red: int, green: int, blue: int, count: int) -> List[
           A list of ColorResult objects.
     """
 
-    query = """SELECT release_mbid::TEXT
-                    , caa_id
-                    , red
-                    , green
-                    , blue
-                    , cube_distance(color, %s) AS dist
-                 FROM release_color
-             ORDER BY cube_distance(color, %s) 
-                LIMIT %s"""
-
     query = """SELECT release_mbid
                    , caa_id
                    , red
