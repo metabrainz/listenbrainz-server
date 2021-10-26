@@ -752,7 +752,7 @@ class TimescaleListenStore(ListenStore):
                       AND created <= %s
                  ORDER BY created ASC"""
 
-        args = (int(start_time.timestamp()), int(end_time.timestamp()))
+        args = (start_time, end_time)
 
         listen_count = 0
         current_listened_at = None
@@ -886,7 +886,15 @@ class TimescaleListenStore(ListenStore):
                     end = datetime(year=year + 1, day=1, month=1)
 
                 self.log.info("dump %s to %s" % (start.strftime("%Y-%m-%d %H:%M:%S"), end.strftime("%Y-%m-%d %H:%M:%S")))
-                parquet_index = self.write_parquet_files(archive_name, temp_dir, tar, start, end, full_dump, parquet_index)
+
+                # This try block is here in an effort to expose bugs that occur during testing
+                # Without it sometimes test pass and sometimes they give totally unrelated errors.
+                # Keeping this block should help with future testing...
+                try:
+                    parquet_index = self.write_parquet_files(archive_name, temp_dir, tar, start, end, full_dump, parquet_index)
+                except Exception as err:
+                    self.log.info("likely test failure: " + str(err))
+                    raise
 
             shutil.rmtree(temp_dir)
 
