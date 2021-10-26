@@ -728,11 +728,7 @@ class TimescaleListenStore(ListenStore):
 
         listen_count = 0
 
-        if start_time:
-            start_time = datetime.utcfromtimestamp(datetime.timestamp(start_time))
-        if end_time:
-            end_time = datetime.utcfromtimestamp(datetime.timestamp(end_time))
-        else:
+        if end_time is None:
             end_time = datetime.now()
 
         query = """SELECT listened_at,
@@ -752,9 +748,9 @@ class TimescaleListenStore(ListenStore):
                        ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = lj.recording_msid
                      JOIN listen_mbid_mapping m
                        ON lj.listen_mbid_mapping = m.id
-                    WHERE listened_at > %s
-                      AND listened_at <= %s
-                 ORDER BY listened_at ASC"""
+                    WHERE created > %s
+                      AND created <= %s
+                 ORDER BY created ASC"""
 
         args = (int(start_time.timestamp()), int(end_time.timestamp()))
 
