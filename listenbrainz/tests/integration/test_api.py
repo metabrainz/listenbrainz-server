@@ -627,6 +627,16 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(
             'Value for key listened_at is too high.', response.json['error'])
 
+    def test_too_low_timestamps(self):
+        """ Tests for timestamps earlier than last.fm founding year """
+        with open(self.path_to_data_file('timestamp_before_lfm_founding.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+        self.assertEqual('Value for key listened_at is too low. listened_at timestamp should'
+                         ' be greater than the timestamp of start of 2005.', response.json['error'])
+
     def test_invalid_token_validation(self):
         """Sends an invalid token to api.validate_token"""
         url = url_for('api_v1.validate_token')
