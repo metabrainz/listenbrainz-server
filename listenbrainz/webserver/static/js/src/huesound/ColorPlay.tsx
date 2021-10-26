@@ -106,7 +106,9 @@ export default class ColorPlay extends React.Component<
     return (
       <div role="main">
         <div>
-          <h1 className="text-center">Huesound (beta)</h1>
+          <h1 className="text-center">
+            Huesound<span className="beta">beta</span>
+          </h1>
           <div className="row vertical-align">
             <div
               className={`col-md-4 ${
@@ -159,8 +161,6 @@ export default class ColorPlay extends React.Component<
                         <img
                           src={`https://coverartarchive.org/release/${release.release_mbid}/${release.caa_id}-250.jpg`}
                           alt={`Cover art for Release ${release.release_name}`}
-                          width={142}
-                          height={142}
                           onClick={this.selectRelease.bind(this, release)}
                         />
                       </div>
