@@ -77,8 +77,11 @@ export default class ColorPlay extends React.Component<
 
   selectRelease = (
     release: ColorReleaseItem,
-    event: React.MouseEvent<HTMLImageElement>
+    event: React.MouseEvent<HTMLButtonElement>
   ) => {
+    if (event) {
+      event.preventDefault();
+    }
     this.setState({ selectedRelease: release }, () => {
       window.postMessage(
         {
@@ -110,13 +113,8 @@ export default class ColorPlay extends React.Component<
           <h1 className="text-center">
             Huesound<span className="beta">beta</span>
           </h1>
-          <div className="row vertical-align">
-            <div
-              className={`col-md-4 ${
-                selectedColorString ? "" : "col-md-offset-4"
-              }`}
-              style={{ transition: "all 1s" }}
-            >
+          <div className="row huesound-container">
+            <div className="colour-picker-container">
               {colorReleases.length === 0 && (
                 <h2 className="text-center">cover art music discovery</h2>
               )}
@@ -148,28 +146,29 @@ export default class ColorPlay extends React.Component<
                 </h2>
               )}
             </div>
-            {colorReleases && colorReleases.length > 0 && (
-              <>
-                <div
-                  className="col-md-8 coverArtGrid"
-                  style={{ backgroundColor: gridBackground }}
-                >
-                  {colorReleases.map((release, index) => {
-                    return (
-                      // eslint-disable-next-line react/no-array-index-key
-                      <div key={index}>
-                        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events,jsx-a11y/no-noninteractive-element-interactions */}
-                        <img
-                          src={`https://coverartarchive.org/release/${release.release_mbid}/${release.caa_id}-250.jpg`}
-                          alt={`Cover art for Release ${release.release_name}`}
-                          onClick={this.selectRelease.bind(this, release)}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            )}
+            <div
+              className={`cover-art-grid ${
+                !colorReleases?.length ? "invisible" : ""
+              }`}
+              style={{ backgroundColor: gridBackground }}
+            >
+              {colorReleases?.map((release, index) => {
+                return (
+                  <button
+                    key={`${release.release_mbid}-${index}`}
+                    onClick={this.selectRelease.bind(this, release)}
+                    type="button"
+                    className="cover-art-container"
+                  >
+                    <img
+                      src={`https://coverartarchive.org/release/${release.release_mbid}/${release.caa_id}-250.jpg`}
+                      alt={`Cover art for Release ${release.release_name}`}
+                      height={150}
+                    />
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {colorReleases.length > 0 && <Loader isLoading={loading} />}

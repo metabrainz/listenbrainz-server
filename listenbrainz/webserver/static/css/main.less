@@ -9,6 +9,7 @@
 @import "DatePicker.less";
 @import "music-services.less";
 @import "cbreviewmodal.less";
+@import "huesound.less";
 
 
 @icon-font-path:"/static/fonts/";
@@ -220,49 +221,4 @@ h2.page-title {
 	max-height: @alertThumbnailSize;
 	margin: -@alert-padding;
 	margin-right: 0;
-}
-
-.coverArtGrid {
-  border-radius: 10px;
-  padding-top: 15px;
-  padding-bottom: 15px;
-  transition: background-color 1s;
-  display: grid;
-  grid-gap: 5px;
-  grid-template-columns: repeat(5,1fr);
-  grid-auto-flow: row;
-  justify-content: center;
-  margin: 1em;
-  
-  @media(max-width: @screen-sm) {
-    & {
-      grid-template-columns: repeat(3,1fr);
-    }
-  }
-  @media(min-width: @screen-lg) {
-    & {
-      margin: 2em;
-    }
-  }
-  div img {
-    -webkit-transform: scale(1);
-    transform: scale(1);
-    -webkit-transition: .2s ease-in-out;
-    transition: .2s ease-in-out;
-    width: 100%;
-    height: auto;
-    max-height: 140px;
-  }
-  div:hover img {
-    -webkit-transform: scale(1.1);
-    transform: scale(1.1);
-  }
-}
-
-
-.beta {
-  font-size: 45%;
-  font-style: italic;
-  vertical-align: .8em;
-  color: @orange;
 }
