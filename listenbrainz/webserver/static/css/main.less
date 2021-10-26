@@ -132,7 +132,7 @@ h2.page-title {
   margin-bottom: 15px
 }
 
-.flex-center {
+.flex-center, .vertical-align {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -232,31 +232,23 @@ h2.page-title {
   grid-auto-flow: row;
   justify-content: center;
   margin: 30px;
-}
-@media(max-width: 600px) {
-  .coverArtGrid {
-    display: grid;
-    grid-gap: 5px;
-    grid-template-columns: repeat(3, 42px);
-    grid-template-rows: repeat(3, 42px);
-    grid-auto-flow: row;
-    justify-content: center;
-    margin: 10px;
+  @media(max-width: 600px) {
+    & {
+      grid-template-columns: repeat(3, 42px);
+      grid-template-rows: repeat(3, 42px);
+      margin: 10px;
+    }
   }
-}
-.vertical-align {
-  display: flex;
-  align-items: center;
-}
-.coverArtGrid div img {
-	-webkit-transform: scale(1);
-	transform: scale(1);
-	-webkit-transition: .2s ease-in-out;
-	transition: .2s ease-in-out;
-}
-.coverArtGrid div:hover img {
-	-webkit-transform: scale(1.1);
-	transform: scale(1.1);
+  div img {
+    -webkit-transform: scale(1);
+    transform: scale(1);
+    -webkit-transition: .2s ease-in-out;
+    transition: .2s ease-in-out;
+  }
+  div:hover img {
+    -webkit-transform: scale(1.1);
+    transform: scale(1.1);
+  }
 }
 
 
