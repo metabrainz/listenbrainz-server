@@ -394,33 +394,6 @@ const countWords = (str: string): number => {
   return words.length;
 };
 
-const convertColorReleaseToListen = (
-  item: ColorReleaseItem
-): BaseListenFormat => {
-  const { release_name, artist_name, release_mbid } = item;
-  return {
-    listened_at: -1,
-    track_metadata: {
-      track_name: "",
-      artist_name,
-      release_name,
-      additional_info: {
-        release_mbid,
-      },
-    },
-  };
-};
-
-const lighterColor = (color: Uint8Array): Uint8Array => {
-  const ratio = 0.6;
-  const difference = Math.round(ratio * 256);
-  const tintedColor = new Uint8Array(3);
-  for (let index = 0; index < color.length; index += 1) {
-    tintedColor[index] = Math.min(color[index] + difference, 255);
-  }
-  return tintedColor;
-};
-
 const handleNavigationClickEvent = (event?: React.MouseEvent): void => {
   // Allow opening in new tab or window with shift or control key
   // Otherwise prevent default
@@ -442,6 +415,4 @@ export {
   getListenablePin,
   countWords,
   handleNavigationClickEvent,
-  convertColorReleaseToListen,
-  lighterColor,
 };

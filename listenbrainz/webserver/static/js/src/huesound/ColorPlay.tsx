@@ -5,6 +5,7 @@ import * as React from "react";
 import { get, has } from "lodash";
 import tinycolor from "tinycolor2";
 import ColorWheel from "./ColorWheel";
+import { convertColorReleaseToListen } from "./utils/utils";
 import defaultColors from "./utils/defaultColors";
 import ErrorBoundary from "../ErrorBoundary";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
@@ -16,7 +17,7 @@ import {
 import APIServiceClass from "../APIService";
 import BrainzPlayer from "../BrainzPlayer";
 import Loader from "../components/Loader";
-import { convertColorReleaseToListen, getPageProps } from "../utils";
+import { getPageProps } from "../utils";
 import ListenCard from "../listens/ListenCard";
 import Card from "../components/Card";
 

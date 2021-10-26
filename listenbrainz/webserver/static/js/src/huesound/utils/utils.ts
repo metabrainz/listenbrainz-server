@@ -42,3 +42,20 @@ export function convertObjToString(obj: tinycolor.ColorFormats.RGB) {
 export function getEffectiveRadius(trueRadius: number, lineWidth: number) {
   return trueRadius - lineWidth / 2;
 }
+
+export function convertColorReleaseToListen(
+  item: ColorReleaseItem
+): BaseListenFormat {
+  const { release_name, artist_name, release_mbid } = item;
+  return {
+    listened_at: -1,
+    track_metadata: {
+      track_name: "",
+      artist_name,
+      release_name,
+      additional_info: {
+        release_mbid,
+      },
+    },
+  };
+}
