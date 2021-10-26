@@ -101,7 +101,7 @@ class SpotifyReaderTestCase(ListenAPIIntegrationTestCase):
 
     @patch('listenbrainz.spotify_updater.spotify_read_listens.send_mail')
     def test_notify_user(self, mock_send_mail):
-        db_user.create(2, "two", "one@two.one")
+        db_user.create(3, "two", "one@two.one")
         app = listenbrainz.webserver.create_app()
         app.config['SERVER_NAME'] = "test"
         with app.app_context():
@@ -171,6 +171,6 @@ class SpotifyReaderTestCase(ListenAPIIntegrationTestCase):
 
         expected_listens = self.get_test_data('spotify_recently_played_expected.json')
         url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
-        r = self.client.get(url)
+        r = self.wait_for_query_to_have_items(url, 1)
         self.assert200(r)
         self.assertEqual(expected_listens, r.json)
