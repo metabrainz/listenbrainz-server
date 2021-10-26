@@ -154,7 +154,7 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
         # check that listened_at value is greater than last.fm founding year.
         if listen['listened_at'] < LISTEN_MINIMUM_TS:
             raise APIBadRequest("Value for key listened_at is too low. listened_at timestamp"
-                                " should be grater than the timestamp of start of 2005.", listen)
+                                " should be greater than the timestamp of start of 2005.", listen)
 
     elif listen_type == LISTEN_TYPE_PLAYING_NOW:
         if 'listened_at' in listen:
