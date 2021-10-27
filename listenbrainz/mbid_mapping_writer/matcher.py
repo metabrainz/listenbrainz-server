@@ -164,7 +164,7 @@ def lookup_listens(app, listens, stats, exact):
         rows.append((listen['recording_msid'],
                      hit["recording_mbid"],
                      hit["release_mbid"],
-                     "{" + str(hit["artist_mbids"]) + "}",
+                     str(hit["artist_mbids"]),
                      hit["artist_credit_id"],
                      hit["artist_credit_name"],
                      hit["recording_name"],
