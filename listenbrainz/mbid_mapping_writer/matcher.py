@@ -80,15 +80,16 @@ def process_listens(app, listens, is_legacy_listen=False):
                 for match in matches:
                     if match[1] is None:
                         m = str(curs.mogrify(
-                            "(%s::UUID, NULL::UUID, NULL::UUID, NULL::UUID[], NULL::INT, NULL, NULL, %s::mbid_mapping_match_type_enum)", (match[1], match[7])), "utf-8")
+                            "(%s::UUID, NULL::UUID, NULL::UUID, NULL, NULL::UUID[], NULL::INT, NULL, NULL, %s::mbid_mapping_match_type_enum)", (match[1], match[7])), "utf-8")
                     else:
                         m = str(curs.mogrify(
-                            "(%s::UUID, %s::UUID, %s::UUID, %s::UUID[], %s, %s, %s, %s::mbid_mapping_match_type_enum)", match), "utf-8")
+                            "(%s::UUID, %s::UUID, %s::UUID, %s, %s::UUID[], %s, %s, %s, %s::mbid_mapping_match_type_enum)", match), "utf-8")
                     mogrified.append(m)
 
                 query = """WITH data (recording_msid
                                    ,  recording_mbid
                                    ,  release_mbid
+                                   ,  release_name
                                    ,  artist_mbids
                                    ,  artist_credit_id
                                    ,  artist_credit_name
@@ -98,6 +99,7 @@ def process_listens(app, listens, is_legacy_listen=False):
                            , join_insert AS (
                                    INSERT INTO listen_mbid_mapping (recording_mbid
                                                                  ,  release_mbid
+                                                                 ,  release_name
                                                                  ,  artist_mbids
                                                                  ,  artist_credit_id
                                                                  ,  artist_credit_name
@@ -105,6 +107,7 @@ def process_listens(app, listens, is_legacy_listen=False):
                                                                  ,  match_type)
                                    SELECT recording_mbid
                                         , release_mbid
+                                        , release_name
                                         , artist_mbids
                                         , artist_credit_id
                                         , artist_credit_name
@@ -164,7 +167,8 @@ def lookup_listens(app, listens, stats, exact):
         rows.append((listen['recording_msid'],
                      hit["recording_mbid"],
                      hit["release_mbid"],
-                     "{" + str(hit["artist_mbids"]) + "}",
+                     hit["release_name"],
+                     str(hit["artist_mbids"]),
                      hit["artist_credit_id"],
                      hit["artist_credit_name"],
                      hit["recording_name"],
