@@ -1,7 +1,7 @@
 #!/bin/bash
 
-POSTGRES_LB_URI="postgresql://listenbrainz:listenbrainz@db/listenbrainz"
-SQLALCHEMY_TIMESCALE_URI="postgresql://listenbrainz_ts:listenbrainz_ts@db/listenbrainz_ts"
+POSTGRES_LB_URI="postgresql://listenbrainz:listenbrainz@lb_db/listenbrainz"
+SQLALCHEMY_TIMESCALE_URI="postgresql://listenbrainz_ts:listenbrainz_ts@lb_db/listenbrainz_ts"
 
 if [[ ! -d "docker" ]]; then
     echo "This script must be run from the top level directory of the listenbrainz-server source."

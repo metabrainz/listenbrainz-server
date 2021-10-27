@@ -65,7 +65,6 @@ redirect_bp.add_url_rule("/recommendations/",
 redirect_bp.add_url_rule("/pins/", "redirect_pins",
                          redirect_user_page("user.pins"))
 
-
 @user_bp.route("/<user_name>/")
 @web_listenstore_needed
 def profile(user_name):
@@ -393,7 +392,6 @@ def pins(user_name: str):
         props=ujson.dumps(props),
         user=user
     )
-
 
 @user_bp.route("/<user_name>/report-user/", methods=['POST'])
 @api_login_required

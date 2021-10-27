@@ -6,7 +6,7 @@ version: "3.4"
 
 services:
 
-  db:
+  lb_db:
     image: timescale/timescaledb:2.2.0-pg11
     command: postgres -F
     environment:
@@ -26,7 +26,7 @@ services:
       - ..:/code/listenbrainz:z
     depends_on:
       - redis
-      - db
+      - lb_db
       - rabbitmq
 
   timescale_writer:
@@ -34,7 +34,7 @@ services:
     command: python3 -m "listenbrainz.timescale_writer.timescale_writer"
     depends_on:
       - redis
-      - db
+      - lb_db
       - rabbitmq 
 
   rabbitmq:
