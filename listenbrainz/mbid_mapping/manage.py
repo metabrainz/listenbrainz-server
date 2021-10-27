@@ -11,6 +11,7 @@ from mapping.typesense_index import build_index as action_build_index
 from mapping.year_mapping import create_year_mapping
 from mapping.mapping_test.mapping_test import test_mapping as action_test_mapping
 from mapping.utils import log, CRON_LOG_FILE
+from mapping.release_colors import sync_release_color_table, incremental_update_release_color_table
 
 
 @click.group()
@@ -63,7 +64,26 @@ def build_index():
 
 
 @cli.command()
+def sync_coverart():
+    """
+        Force a re-sync of the release_color table, in case it has gone out of sync.
+    """
+    sync_release_color_table()
+
+
+@cli.command()
+def update_coverart():
+    """
+        Update the release_color table incrementally. Designed to be called hourly by cron.
+    """
+    incremental_update_release_color_table()
+
+
+@cli.command()
 def cron_log():
+    """
+        Print the internal cron log file for debugging purposes.
+    """
     if os.path.exists(CRON_LOG_FILE):
         log("Current cron job log file:")
         subprocess.run(["cat", CRON_LOG_FILE])

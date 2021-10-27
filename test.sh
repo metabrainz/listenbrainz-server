@@ -46,13 +46,13 @@ fi
 function build_unit_containers {
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                build db redis rabbitmq listenbrainz
+                build lb_db redis rabbitmq listenbrainz
 }
 
 function bring_up_unit_db {
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                up -d db redis rabbitmq
+                up -d lb_db redis rabbitmq
 }
 
 function unit_setup {
@@ -61,7 +61,7 @@ function unit_setup {
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
                 run --rm listenbrainz dockerize \
-                  -wait tcp://db:5432 -timeout 60s \
+                  -wait tcp://lb_db:5432 -timeout 60s \
                   -wait tcp://rabbitmq:5672 -timeout 60s \
                 bash -c "python3 manage.py init_db --create-db && \
                          python3 manage.py init_msb_db --create-db && \
@@ -70,7 +70,7 @@ function unit_setup {
 
 function is_unit_db_running {
     # Check if the database container is running
-    containername="${COMPOSE_PROJECT_NAME}_db_1"
+    containername="${COMPOSE_PROJECT_NAME}_lb_db_1"
     res=`docker ps --filter "name=$containername" --filter "status=running" -q`
     if [ -n "$res" ]; then
         return 0
@@ -80,7 +80,7 @@ function is_unit_db_running {
 }
 
 function is_unit_db_exists {
-    containername="${COMPOSE_PROJECT_NAME}_db_1"
+    containername="${COMPOSE_PROJECT_NAME}_lb_db_1"
     res=`docker ps --filter "name=$containername" --filter "status=exited" -q`
     if [ -n "$res" ]; then
         return 0
@@ -182,7 +182,7 @@ function int_setup {
     docker-compose -f $INT_COMPOSE_FILE_LOC \
                    -p $INT_COMPOSE_PROJECT_NAME \
                 run --rm listenbrainz dockerize \
-                  -wait tcp://db:5432 -timeout 60s \
+                  -wait tcp://lb_db:5432 -timeout 60s \
                 bash -c "python3 manage.py init_db --create-db && \
                          python3 manage.py init_msb_db --create-db && \
                          python3 manage.py init_ts_db --create-db"
@@ -191,7 +191,7 @@ function int_setup {
 function bring_up_int_containers {
     docker-compose -f $INT_COMPOSE_FILE_LOC \
                    -p $INT_COMPOSE_PROJECT_NAME \
-                up -d db redis timescale_writer rabbitmq
+                up -d lb_db redis timescale_writer rabbitmq
 }
 
 # Exit immediately if a command exits with a non-zero status.
@@ -235,7 +235,7 @@ if [ "$1" == "int" ]; then
     docker-compose -f $INT_COMPOSE_FILE_LOC \
                    -p $INT_COMPOSE_PROJECT_NAME \
                 run --rm listenbrainz dockerize \
-                  -wait tcp://db:5432 -timeout 60s \
+                  -wait tcp://lb_db:5432 -timeout 60s \
                   -wait tcp://redis:6379 -timeout 60s \
                   -wait tcp://rabbitmq:5672 -timeout 60s \
                 bash -c "pytest $TESTS_TO_RUN"
