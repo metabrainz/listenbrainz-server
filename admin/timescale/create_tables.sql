@@ -61,4 +61,8 @@ create table listen_mbid_mapping (
         last_updated        TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
 
+-- postgres does not enforce dimensionality of arrays. add explicit check to avoid regressions (once burnt, twice shy!).
+ALTER TABLE listen_mbid_mapping
+    ADD CONSTRAINT listen_mbid_mapping_artist_mbids_check
+    CHECK ( array_ndims(artist_mbids) = 1 );
 COMMIT;
