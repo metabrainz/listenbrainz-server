@@ -704,9 +704,8 @@ class TimescaleListenStore(ListenStore):
                             archive_dir,
                             temp_dir,
                             tar_file,
-                            start_time=None,
-                            end_time=None,
-                            full_dump=True,
+                            start_time,
+                            end_time,
                             parquet_file_id=0):
         """
             Carry out fetching listens from the DB, joining them to the MBID mapping table and
@@ -714,11 +713,10 @@ class TimescaleListenStore(ListenStore):
 
         Args:
             archive_dir: the directory where the listens dump archive should be created
-            tmp_dir: the directory where tmp files should be written
+            temp_dir: the directory where tmp files should be written
+            tar_file: the tarfile object that the dumps are being written to
             dump_id (int): the ID of the dump in the dump sequence
             start_time and end_time (datetime): the time range for which listens should be dumped
-                start_time defaults to utc 0 (meaning a full dump) and end_time defaults to the current time
-            full_dump (bool): Is this a full or incremental dump?
             parquet_file_id: the file id number to use for indexing parquet files
 
         Returns:
@@ -727,13 +725,6 @@ class TimescaleListenStore(ListenStore):
         """
 
         listen_count = 0
-
-        if start_time:
-            start_time = datetime.utcfromtimestamp(datetime.timestamp(start_time))
-        if end_time:
-            end_time = datetime.utcfromtimestamp(datetime.timestamp(end_time))
-        else:
-            end_time = datetime.now()
 
         query = """SELECT listened_at,
                           user_name,
@@ -752,11 +743,11 @@ class TimescaleListenStore(ListenStore):
                        ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = lj.recording_msid
                      JOIN listen_mbid_mapping m
                        ON lj.listen_mbid_mapping = m.id
-                    WHERE listened_at > %s
-                      AND listened_at <= %s
-                 ORDER BY listened_at ASC"""
+                    WHERE created > %s
+                      AND created <= %s
+                 ORDER BY created ASC"""
 
-        args = (int(start_time.timestamp()), int(end_time.timestamp()))
+        args = (start_time, end_time)
 
         listen_count = 0
         current_listened_at = None
@@ -890,7 +881,15 @@ class TimescaleListenStore(ListenStore):
                     end = datetime(year=year + 1, day=1, month=1)
 
                 self.log.info("dump %s to %s" % (start.strftime("%Y-%m-%d %H:%M:%S"), end.strftime("%Y-%m-%d %H:%M:%S")))
-                parquet_index = self.write_parquet_files(archive_name, temp_dir, tar, start, end, full_dump, parquet_index)
+
+                # This try block is here in an effort to expose bugs that occur during testing
+                # Without it sometimes test pass and sometimes they give totally unrelated errors.
+                # Keeping this block should help with future testing...
+                try:
+                    parquet_index = self.write_parquet_files(archive_name, temp_dir, tar, start, end, parquet_index)
+                except Exception as err:
+                    self.log.info("likely test failure: " + str(err))
+                    raise
 
             shutil.rmtree(temp_dir)
 
