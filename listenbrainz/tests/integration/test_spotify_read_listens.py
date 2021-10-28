@@ -35,4 +35,7 @@ class SpotifyReaderTestCase(ListenAPIIntegrationTestCase):
         url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
         r = self.wait_for_query_to_have_items(url, 1)
         self.assert200(r)
+        actual_listens = r.json
+        # inserted_at depends on the time, the test is run. set it to our expected value before testing equality
+        actual_listens['payload']['listens'][0]['inserted_at'] = expected_listens['payload']['listens'][0]['inserted_at']
         self.assertEqual(expected_listens, r.json)
