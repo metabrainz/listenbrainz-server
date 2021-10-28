@@ -34,7 +34,6 @@ export type PlaylistItemCardProps = {
 export default class PlaylistItemCard extends React.Component<
   PlaylistItemCardProps
 > {
-
   removeTrack = () => {
     const { track, removeTrackFromPlaylist } = this.props;
     removeTrackFromPlaylist(track);
