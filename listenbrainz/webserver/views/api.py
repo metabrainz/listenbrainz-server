@@ -88,7 +88,7 @@ def submit_listen():
     validated_payload = [validate_listen(listen, listen_type) for listen in payload]
 
     try:
-        user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=['musicbrainz_id'])
+        user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])
         insert_payload(validated_payload, user_metadata, listen_type)
     except APIServiceUnavailable as e:
         raise

@@ -97,7 +97,7 @@ def submit_now_playing():
 
     listens = [listen]
     user = db_user.get(session.user_id)
-    user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=['musicbrainz_id'])
+    user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])
     insert_payload(listens, user_metadata, LISTEN_TYPE_PLAYING_NOW)
 
     return 'OK\n'

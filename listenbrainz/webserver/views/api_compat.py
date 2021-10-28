@@ -280,7 +280,7 @@ def record_listens(request, data):
     listen_type, native_payload = _to_native_api(lookup, data['method'], output_format)
     validated_payload = [validate_listen(listen, listen_type) for listen in native_payload]
 
-    user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=['musicbrainz_id'])
+    user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])
     augmented_listens = insert_payload(validated_payload, user_metadata, listen_type=listen_type)
 
     # With corrections than the original submitted listen.
