@@ -14,26 +14,32 @@
     }
     flex: 1 0 320px;
     border-radius: 10px;
-    padding-top: 15px;
-    padding-bottom: 15px;
     transition: all 1s;
     display: grid;
     grid-gap: 5px;
     grid-template-columns: repeat(5,1fr);
     grid-auto-flow: row;
     justify-content: center;
+    
     padding: 1em;
+    margin: 1em;
+    min-height: 375px;
     
     @media(max-width: @screen-sm) {
       grid-template-columns: repeat(4,1fr);
+      min-height: 580px;
     }
     
     @media(max-width: @screen-xs) {
       grid-template-columns: repeat(3,1fr);
     }
     
+    @media(min-width: @screen-md) {
+      min-height: 600px;
+    }
+    
     @media(min-width: @screen-lg) {
-      padding: 2em;
+      min-height: 794px;
     }
     .cover-art-container{
       // Using a <button> element for semantic behaviour, we need to reset the browser styles
