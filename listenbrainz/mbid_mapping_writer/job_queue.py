@@ -241,11 +241,7 @@ class MappingJobQueue(threading.Thread):
                         for complete in completed:
                             exc = complete.exception()
                             if exc:
-                                f = StringIO()
-                                traceback.print_exception(
-                                    None, exc, exc.__traceback__, limit=None, file=f)
-                                f.seek(0)
-                                self.app.logger.error(f.read())
+                                self.app.logger.error("Error in listen mbid mapping writer:", exc_info=exc)
                                 stats["errors"] += 1
                             else:
                                 job_stats = complete.result()
