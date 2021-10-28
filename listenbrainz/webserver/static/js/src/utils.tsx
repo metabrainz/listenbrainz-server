@@ -415,4 +415,6 @@ export {
   getListenablePin,
   countWords,
   handleNavigationClickEvent,
+  getRecordingMBID,
+  getArtistMBIDs,
 };

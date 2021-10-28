@@ -16,8 +16,9 @@ import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import BrainzPlayer from "../BrainzPlayer";
 import ErrorBoundary from "../ErrorBoundary";
 import Loader from "../components/Loader";
-import { getPageProps } from "../utils";
+import { getPageProps, getRecordingMBID } from "../utils";
 import ListenCard from "../listens/ListenCard";
+import RecommendationFeedbackComponent from "../listens/RecommendationFeedbackComponent";
 
 export type RecommendationsProps = {
   recommendations?: Array<Recommendation>;
@@ -87,10 +88,7 @@ export default class Recommendations extends React.Component<
 
     if (recommendations) {
       recommendations.forEach((recommendation) => {
-        const recordingMbid = get(
-          recommendation,
-          "track_metadata.additional_info.recording_mbid"
-        );
+        const recordingMbid = getRecordingMBID(recommendation);
         if (recordingMbid) {
           recordings.push(recordingMbid);
         }
@@ -237,25 +235,29 @@ export default class Recommendations extends React.Component<
                 style={{ opacity: loading ? "0.4" : "1" }}
               >
                 {recommendations.map((recommendation) => {
+                  const recordingMBID = getRecordingMBID(recommendation);
+                  const recommendationFeedbackComponent = (
+                    <RecommendationFeedbackComponent
+                      newAlert={newAlert}
+                      updateFeedbackCallback={this.updateFeedback}
+                      listen={recommendation}
+                      currentFeedback={this.getFeedbackForRecordingMbid(
+                        recordingMBID
+                      )}
+                    />
+                  );
                   return (
                     <ListenCard
                       key={`${recommendation.track_metadata?.track_name}-${
                         recommendation.track_metadata?.additional_info
-                          ?.recording_msid ||
-                        recommendation.track_metadata?.additional_info
-                          ?.recording_mbid
+                          ?.recording_msid ?? recordingMBID
                       }-${recommendation.listened_at}-${
                         recommendation.user_name
                       }`}
                       showTimestamp={false}
                       showUsername={false}
-                      useRecommendationFeedback={isCurrentUser}
+                      feedbackComponent={recommendationFeedbackComponent}
                       listen={recommendation}
-                      currentFeedback={this.getFeedbackForRecordingMbid(
-                        recommendation.track_metadata?.additional_info
-                          ?.recording_mbid
-                      )}
-                      updateFeedbackCallback={this.updateFeedback}
                       newAlert={newAlert}
                     />
                   );
