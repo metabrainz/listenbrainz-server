@@ -15,6 +15,7 @@ on:
       - 'docker/Dockerfile.webpack'
       - 'docker/docker-compose.spark*.yml'
       - 'docs/**'
+      - '**.less'
       - '**.md'
 
 jobs:

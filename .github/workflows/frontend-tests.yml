@@ -9,6 +9,7 @@ on:
       - '**.jsx?'
       - '**.tsx?'
       - '**.snap'
+      - '**.less'
       - '**.json'
       - 'docker/Dockerfile.webpack'
       - 'docker/docker-compose.test.yml'
