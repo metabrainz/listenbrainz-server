@@ -113,44 +113,9 @@
 		}
 	}
 	.playlist-item-card {
-		display: flex;
-		align-items: center;
 		margin-bottom: 0px;
-		padding: 10px 5px;
-    	max-height: 72px;
-		
-		@media (min-width: @screen-sm){
-			padding: 15px;
-		}
-		&.current-track {
-			background-color: rgba(217, 237, 247, 0.3) !important ;
-		}
-
-		.listen-controls {
-			flex: 0 6em;
-		}
-		> div {
-			padding: 0 0.8em;
-		}
-		> *:first-child {
-			margin: 1em 1em 1em 0em;
-		}
-		> *:first-child, > *:last-child {
-			align-self:center;
-		}
-		.addition-details{
-			flex: 1;
-			font-size: 0.85em;
-			&:extend(.text-muted);
-			text-align: right;
-		}
-		.track-details{
-			flex: 2;
-		}
-		.drag-handle {
-			&:extend(.text-muted);
-		}
 	}
+
 	#add-track {
 		background-color: @orange !important;
 		> *:first-child {

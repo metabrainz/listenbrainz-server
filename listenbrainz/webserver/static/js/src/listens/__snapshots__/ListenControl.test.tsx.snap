@@ -15,6 +15,7 @@ exports[`ListenCountCard renders correctly 1`] = `
       "prefix": "fas",
     }
   }
+  iconOnly={true}
   title="foobar"
 >
   <FontAwesomeIcon
