@@ -32,6 +32,7 @@ from time import time
 from flask import current_app, Blueprint, request, render_template, redirect
 from werkzeug.exceptions import BadRequest
 from listenbrainz.db.lastfm_session import Session
+from listenbrainz.webserver.models import SubmitListenUserMetadata
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
 from listenbrainz.webserver.views.api_tools import insert_payload, is_valid_timestamp, LISTEN_TYPE_PLAYING_NOW, is_valid_uuid
 
@@ -96,7 +97,8 @@ def submit_now_playing():
 
     listens = [listen]
     user = db_user.get(session.user_id)
-    insert_payload(listens, user, LISTEN_TYPE_PLAYING_NOW)
+    user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=['musicbrainz_id'])
+    insert_payload(listens, user_metadata, LISTEN_TYPE_PLAYING_NOW)
 
     return 'OK\n'
 

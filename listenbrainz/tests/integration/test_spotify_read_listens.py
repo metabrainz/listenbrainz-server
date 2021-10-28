@@ -12,9 +12,11 @@ from listenbrainz.db import external_service_oauth
 class SpotifyReaderTestCase(ListenAPIIntegrationTestCase):
     def setUp(self):
         super(SpotifyReaderTestCase, self).setUp()
-        external_service_oauth.save_token(user_id=self.user['id'], service=ExternalServiceType.SPOTIFY,
+        external_service_oauth.save_token(user_id=self.user['id'],
+                                          service=ExternalServiceType.SPOTIFY,
                                           access_token='token', refresh_token='refresh',
-                                          token_expires_ts=int(time.time()) + 3000, record_listens=True,
+                                          token_expires_ts=int(time.time()) + 3000,
+                                          record_listens=True,
                                           scopes=['user-read-recently-played'])
 
     @patch('listenbrainz.spotify_updater.spotify_read_listens.get_user_currently_playing')

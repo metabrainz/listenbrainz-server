@@ -8,6 +8,8 @@ from typing import Dict, List
 import listenbrainz.webserver
 
 from listenbrainz.utils import safely_import_config
+from listenbrainz.webserver.models import SubmitListenUserMetadata
+
 safely_import_config()
 
 from listenbrainz.domain.external_service import ExternalServiceError, ExternalServiceAPIError, \
@@ -233,12 +235,12 @@ def submit_listens_to_listenbrainz(user: Dict, listens: List, listen_type=LISTEN
     """
     username = user['musicbrainz_id']
     # insert payload looks for 'id' key whereas the user dict here has it in 'user_id' key
-    user['id'] = user['user_id']
+    user_metadata = SubmitListenUserMetadata(user_id=user['user_id'], musicbrainz_id=username)
     retries = 10
     while retries >= 0:
         try:
             current_app.logger.debug('Submitting %d listens for user %s', len(listens), username)
-            insert_payload(listens, user, listen_type=listen_type)
+            insert_payload(listens, user_metadata, listen_type=listen_type)
             current_app.logger.debug('Submitted!')
             break
         except (InternalServerError, ServiceUnavailable) as e:
