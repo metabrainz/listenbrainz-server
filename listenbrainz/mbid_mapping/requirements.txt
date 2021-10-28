@@ -5,3 +5,4 @@ psycopg2-binary==2.8.5
 ujson==2.0.3
 typesense
 unidecode
+git+https://github.com/metabrainz/brainzutils-python.git@v2.1.0

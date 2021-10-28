@@ -1,6 +1,7 @@
 BEGIN;
 
 CREATE INDEX listened_at_user_name_ndx_listen ON listen (listened_at DESC, user_name);
+CREATE INDEX created_ndx_listen ON listen (created);
 CREATE UNIQUE INDEX listened_at_track_name_user_name_ndx_listen ON listen (listened_at DESC, track_name, user_name);
 
 -- View indexes are created in listenbrainz/db/timescale.py
@@ -22,6 +23,7 @@ CREATE INDEX collaborator_id_playlist_collaborator ON playlist.playlist_collabor
 -- MBID Mapping
 
 CREATE UNIQUE INDEX id_ndx_listen_join_listen_mbid_mapping ON listen_mbid_mapping (id);
+CREATE INDEX listen_mbid_mapping_ndx_listen_join_listen_mbid_mapping on listen_join_listen_mbid_mapping(listen_mbid_mapping);
 CREATE UNIQUE INDEX recording_msid_ndx_listen_join_listen_mbid_mapping ON listen_join_listen_mbid_mapping (recording_msid);
 
 COMMIT;
