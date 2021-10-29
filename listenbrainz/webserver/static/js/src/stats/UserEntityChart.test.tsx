@@ -21,7 +21,6 @@ const props = {
 };
 const GlobalContextMock = {
   APIService: new APIService("base-uri"),
-  APIBaseURI: "base-uri",
   spotifyAuth: {
     access_token: "heyo",
     permission: [

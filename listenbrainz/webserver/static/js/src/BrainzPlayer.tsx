@@ -73,6 +73,7 @@ type BrainzPlayerProps = {
   ) => void;
   refreshSpotifyToken: () => Promise<string>;
   refreshYoutubeToken: () => Promise<string>;
+  listenBrainzAPIBaseURI: string;
 };
 
 type BrainzPlayerState = {
@@ -621,8 +622,9 @@ export default class BrainzPlayer extends React.Component<
     listen: BaseListenFormat,
     retries: number = 3
   ): Promise<void> => {
-    const { APIBaseURI, currentUser } = this.context;
+    const { currentUser } = this.context;
     const { currentDataSourceIndex } = this.state;
+    const { listenBrainzAPIBaseURI } = this.props;
     const dataSource = this.dataSources[currentDataSourceIndex];
     if (!currentUser || !currentUser.auth_token) {
       return;
@@ -640,7 +642,7 @@ export default class BrainzPlayer extends React.Component<
           listen_type: listenType,
           payload: [processedPayload],
         } as SubmitListensPayload;
-        const url = `${APIBaseURI}/submit-listens`;
+        const url = `${listenBrainzAPIBaseURI}/submit-listens`;
 
         const response = await fetch(url, {
           method: "POST",

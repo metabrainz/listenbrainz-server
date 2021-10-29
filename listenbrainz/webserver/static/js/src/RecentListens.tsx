@@ -589,7 +589,7 @@ export default class RecentListens extends React.Component<
       newAlert,
       userPinnedRecording,
     } = this.props;
-    const { currentUser } = this.context;
+    const { APIService, currentUser } = this.context;
 
     let allListenables = listens;
     if (userPinnedRecording) {
@@ -829,8 +829,9 @@ export default class RecentListens extends React.Component<
               direction={direction}
               listens={allListenables}
               newAlert={newAlert}
-              refreshSpotifyToken={this.APIService.refreshSpotifyToken}
-              refreshYoutubeToken={this.APIService.refreshYoutubeToken}
+              listenBrainzAPIBaseURI={APIService.APIBaseURI}
+              refreshSpotifyToken={APIService.refreshSpotifyToken}
+              refreshYoutubeToken={APIService.refreshYoutubeToken}
             />
           </div>
         </div>
@@ -883,7 +884,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const globalProps: GlobalAppContextT = {
     APIService: apiService,
-    APIBaseURI: api_url || `${window.location.origin}/1`,
     currentUser: current_user,
     spotifyAuth: spotify,
     youtubeAuth: youtube,
