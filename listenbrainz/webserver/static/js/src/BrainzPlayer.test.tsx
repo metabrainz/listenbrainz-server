@@ -1,5 +1,6 @@
 import * as React from "react";
 import { mount } from "enzyme";
+import fetchMock from "jest-fetch-mock";
 import BrainzPlayer, { DataSourceType } from "./BrainzPlayer";
 import SoundcloudPlayer from "./SoundcloudPlayer";
 import YoutubePlayer from "./YoutubePlayer";
@@ -710,13 +711,10 @@ describe("BrainzPlayer", () => {
       expect(ds).toBeInstanceOf(SpotifyPlayer);
       expect(ds.datasourceRecordsListens()).toBeFalsy();
 
-      const submitListensAPISpy = jest.spyOn(
-        instance.context.APIService,
-        "submitListens"
-      );
+      fetchMock.mockResponse(JSON.stringify({ ok: true }));
+
       await instance.submitNowPlayingToListenBrainz();
       const expectedListen = {
-        listened_at: 1234567,
         track_metadata: {
           artist_name: "Rick Astley",
           track_name: "Never Gonna Give You Up",
@@ -727,18 +725,23 @@ describe("BrainzPlayer", () => {
             origin_url: "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT",
             brainzplayer_metadata: {
               artist_name: "Rick Astley",
-              release_name: undefined,
               track_name: "Never Gonna Give You Up",
             },
           },
         },
       };
-      expect(submitListensAPISpy).toHaveBeenCalledTimes(1);
-      expect(submitListensAPISpy).toHaveBeenCalledWith(
-        "IHaveSeenTheFnords",
-        "playing_now",
-        [expectedListen]
+      expect(fetchMock.mock.calls).toHaveLength(1);
+
+      expect(fetchMock.mock.calls[0][0]).toEqual(
+        `${props.listenBrainzAPIBaseURI}/submit-listens`
       );
+
+      const parsedFetchbody =
+        fetchMock.mock.calls[0] &&
+        fetchMock.mock.calls[0][1] &&
+        JSON.parse(fetchMock.mock.calls[0][1].body as string);
+      expect(parsedFetchbody.listen_type).toEqual("playing_now");
+      expect(parsedFetchbody.payload[0]).toEqual(expectedListen);
     });
 
     it("submits a full listen after 30s with the expected metadata", async () => {
@@ -778,10 +781,8 @@ describe("BrainzPlayer", () => {
       expect(ds).toBeInstanceOf(SpotifyPlayer);
       expect(ds.datasourceRecordsListens()).toBeFalsy();
 
-      const submitListensAPISpy = jest.spyOn(
-        instance.context.APIService,
-        "submitListens"
-      );
+      fetchMock.mockResponse(JSON.stringify({ ok: true }));
+
       const expectedListen = {
         listened_at: 1234567,
         track_metadata: {
@@ -794,7 +795,6 @@ describe("BrainzPlayer", () => {
             origin_url: "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT",
             brainzplayer_metadata: {
               artist_name: "Rick Astley",
-              release_name: undefined,
               track_name: "Never Gonna Give You Up",
             },
           },
@@ -802,16 +802,22 @@ describe("BrainzPlayer", () => {
       };
       // After 15 seconds
       await instance.checkProgressAndSubmitListen();
-      expect(submitListensAPISpy).not.toHaveBeenCalled();
+      expect(fetchMock.mock.calls).toHaveLength(0);
       // And now after 30 seconds
       instance.setState({ continuousPlaybackTime: 30001 });
       await instance.checkProgressAndSubmitListen();
-      expect(submitListensAPISpy).toHaveBeenCalledTimes(1);
-      expect(submitListensAPISpy).toHaveBeenLastCalledWith(
-        "IHaveSeenTheFnords",
-        "single",
-        [expectedListen]
+
+      expect(fetchMock.mock.calls).toHaveLength(1);
+
+      expect(fetchMock.mock.calls[0][0]).toEqual(
+        `${props.listenBrainzAPIBaseURI}/submit-listens`
       );
+      const parsedFetchbody =
+        fetchMock.mock.calls[0] &&
+        fetchMock.mock.calls[0][1] &&
+        JSON.parse(fetchMock.mock.calls[0][1].body as string);
+      expect(parsedFetchbody.listen_type).toEqual("single");
+      expect(parsedFetchbody.payload[0]).toEqual(expectedListen);
     });
   });
 });
