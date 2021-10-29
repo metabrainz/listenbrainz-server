@@ -1,5 +1,4 @@
 from flask import render_template, make_response, jsonify, request, has_request_context, _request_ctx_stack, current_app
-from werkzeug.exceptions import InternalServerError
 from yattag import Doc
 import yattag
 import ujson
@@ -232,3 +231,15 @@ class InvalidAPIUsage(Exception):
             with tag('error', code=self.api_error.code):
                 text(self.api_error.message)
         return '<?xml version="1.0" encoding="utf-8"?>\n' + yattag.indent(doc.getvalue())
+
+
+class ValidationError(Exception):
+    """ Error class for raising when the submitted payload does not pass validation.
+    Only use for code paths common to LB API, API compat & API compat deprecated.
+    Throw this error from an util method, capture it in each of the corresponding
+    views and re-raise the API dependent error.
+    """
+
+    def __init__(self, message, payload=None):
+        self.message = message
+        self.payload = payload
