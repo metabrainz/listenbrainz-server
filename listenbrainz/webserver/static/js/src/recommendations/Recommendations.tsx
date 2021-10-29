@@ -211,7 +211,7 @@ export default class Recommendations extends React.Component<
       totalRecPages,
     } = this.state;
     const { user, newAlert } = this.props;
-    const { currentUser } = this.context;
+    const { APIService, currentUser } = this.context;
     const isCurrentUser =
       Boolean(currentUser?.name) && currentUser?.name === user?.name;
     return (
@@ -312,8 +312,9 @@ export default class Recommendations extends React.Component<
               direction={direction}
               listens={recommendations}
               newAlert={newAlert}
-              refreshSpotifyToken={this.APIService.refreshSpotifyToken}
-              refreshYoutubeToken={this.APIService.refreshYoutubeToken}
+              listenBrainzAPIBaseURI={APIService.APIBaseURI}
+              refreshSpotifyToken={APIService.refreshSpotifyToken}
+              refreshYoutubeToken={APIService.refreshYoutubeToken}
             />
           </div>
         </div>
@@ -353,7 +354,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const globalProps: GlobalAppContextT = {
     APIService: apiService,
-    APIBaseURI: api_url || `${window.location.origin}/1`,
     currentUser: current_user,
     spotifyAuth: spotify,
     youtubeAuth: youtube,

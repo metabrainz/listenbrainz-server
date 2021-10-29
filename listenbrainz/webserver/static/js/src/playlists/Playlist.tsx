@@ -640,6 +640,7 @@ export default class PlaylistPage extends React.Component<
       searchInputValue,
       cachedSearchResults,
     } = this.state;
+    const { APIService } = this.context;
     const { newAlert } = this.props;
     const { track: tracks } = playlist;
     const hasRightToEdit = this.hasRightToEdit();
@@ -878,8 +879,9 @@ export default class PlaylistPage extends React.Component<
               direction="down"
               listens={tracks.map(JSPFTrackToListen)}
               newAlert={newAlert}
-              refreshSpotifyToken={this.APIService.refreshSpotifyToken}
-              refreshYoutubeToken={this.APIService.refreshYoutubeToken}
+              listenBrainzAPIBaseURI={APIService.APIBaseURI}
+              refreshSpotifyToken={APIService.refreshSpotifyToken}
+              refreshYoutubeToken={APIService.refreshYoutubeToken}
             />
           </div>
         </div>
@@ -923,7 +925,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const globalProps: GlobalAppContextT = {
     APIService: apiService,
-    APIBaseURI: api_url || `${window.location.origin}/1`,
     currentUser: current_user,
     spotifyAuth: spotify,
     youtubeAuth: youtube,

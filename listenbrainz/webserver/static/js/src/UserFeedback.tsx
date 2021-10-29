@@ -362,7 +362,7 @@ export default class UserFeedback extends React.Component<
       selectedFeedbackScore,
     } = this.state;
     const { user, newAlert } = this.props;
-    const { currentUser } = this.context;
+    const { APIService, currentUser } = this.context;
     const listensFromFeedback: BaseListenFormat[] = feedback.map(
       (feedbackItem) =>
         UserFeedback.RecordingMetadataToListenFormat(feedbackItem)
@@ -541,8 +541,9 @@ export default class UserFeedback extends React.Component<
               direction={direction}
               listens={listensFromFeedback}
               newAlert={newAlert}
-              refreshSpotifyToken={this.APIService.refreshSpotifyToken}
-              refreshYoutubeToken={this.APIService.refreshYoutubeToken}
+              listenBrainzAPIBaseURI={APIService.APIBaseURI}
+              refreshSpotifyToken={APIService.refreshSpotifyToken}
+              refreshYoutubeToken={APIService.refreshYoutubeToken}
             />
           </div>
         </div>
@@ -586,7 +587,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const globalProps: GlobalAppContextT = {
     APIService: apiService,
-    APIBaseURI: api_url || `${window.location.origin}/1`,
     currentUser: current_user,
     spotifyAuth: spotify,
     youtubeAuth: youtube,

@@ -15,6 +15,7 @@ const props = {
     title: string,
     message: string | JSX.Element
   ) => {},
+  listenBrainzAPIBaseURI: "base-uri",
   refreshSpotifyToken: jest.fn(),
   refreshYoutubeToken: jest.fn(),
 };

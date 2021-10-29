@@ -673,6 +673,7 @@ export default class UserEntityChart extends React.Component<
               direction="down"
               listens={listenableItems}
               newAlert={newAlert}
+              listenBrainzAPIBaseURI={APIService.APIBaseURI}
               refreshSpotifyToken={APIService.refreshSpotifyToken}
               refreshYoutubeToken={APIService.refreshYoutubeToken}
             />
@@ -718,7 +719,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const globalProps: GlobalAppContextT = {
     APIService: apiService,
-    APIBaseURI: api_url || `${window.location.origin}/1`,
     currentUser: current_user,
     spotifyAuth: spotify,
     youtubeAuth: youtube,
