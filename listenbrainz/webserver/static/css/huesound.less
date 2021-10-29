@@ -7,11 +7,6 @@
   }
   
   .cover-art-grid {
-    &.invisible{
-      flex: 0 1 0px;
-      width: 0px;
-      padding: 0;
-    }
     flex: 1 0 320px;
     border-radius: 10px;
     transition: all 1s;
@@ -40,6 +35,12 @@
     
     @media(min-width: @screen-lg) {
       min-height: 794px;
+    }
+    &.invisible{
+      flex: 0 1 0px;
+      width: 0px;
+      padding: 0;
+      min-height: initial;
     }
     .cover-art-container{
       // Using a <button> element for semantic behaviour, we need to reset the browser styles
