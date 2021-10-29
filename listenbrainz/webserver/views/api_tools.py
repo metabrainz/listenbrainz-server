@@ -153,8 +153,7 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
         raise ListenValidationError("Listen is empty and cannot be validated.")
 
     if listen_type in (LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT):
-        if 'listened_at' not in listen:
-            raise ListenValidationError("JSON document must contain the key listened_at at the top level.", listen)
+        validate_listened_at(listen)
 
         if "track_metadata" not in listen:
             raise ListenValidationError("JSON document must contain the key track_metadata"
@@ -163,8 +162,6 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
         if len(listen) > 2:
             raise ListenValidationError("JSON document may only contain listened_at and "
                                         "track_metadata top level keys", listen)
-
-        validate_listened_at(listen)
 
         # check that listened_at value is greater than last.fm founding year.
         if listen['listened_at'] < LISTEN_MINIMUM_TS:
@@ -316,9 +313,9 @@ def validate_multiple_mbids_field(listen, key):
 
 
 def validate_listened_at(listen):
-    """ Raises an error if the listened_at field is invalid. The field can be invalid
-     if it is missing, contains a non integer value, the timestamp it represents is
-     too high or too low.
+    """ Raises an error if the listened_at timestamp is invalid. The timestamp is invalid
+    if it is lower than the minimum acceptable timestamp or if its in future beyond
+    tolerable skew.
 
     Args:
         listen: the listen to be validated
