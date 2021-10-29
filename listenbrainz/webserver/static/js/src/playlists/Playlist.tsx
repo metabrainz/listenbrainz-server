@@ -832,7 +832,7 @@ export default class PlaylistPage extends React.Component<
                 </div>
               )}
               {hasRightToEdit && (
-                <Card className="playlist-item-card row" id="add-track">
+                <Card className="listen-card row" id="add-track">
                   <span>
                     <FontAwesomeIcon icon={faPlusCircle as IconProp} />
                     &nbsp;&nbsp;Add a track
