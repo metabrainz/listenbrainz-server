@@ -420,7 +420,7 @@ export default class UserFeedPage extends React.Component<
   }
 
   render() {
-    const { currentUser } = this.context;
+    const { currentUser, APIService } = this.context;
     const { newAlert } = this.props;
     const {
       events,
@@ -574,6 +574,9 @@ export default class UserFeedPage extends React.Component<
                   direction="down"
                   listens={listens}
                   newAlert={newAlert}
+                  listenBrainzAPIBaseURI={APIService.APIBaseURI}
+                  refreshSpotifyToken={APIService.refreshSpotifyToken}
+                  refreshYoutubeToken={APIService.refreshYoutubeToken}
                 />
               </div>
             </div>

@@ -4288,6 +4288,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
       >
         <BrainzPlayer
           direction="down"
+          listenBrainzAPIBaseURI="http://localhost/1"
           listens={
             Array [
               Object {
@@ -4618,6 +4619,8 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
             ]
           }
           newAlert={[MockFunction]}
+          refreshSpotifyToken={[Function]}
+          refreshYoutubeToken={[Function]}
         >
           <div>
             <PlaybackControls
@@ -10345,6 +10348,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
       >
         <BrainzPlayer
           direction="down"
+          listenBrainzAPIBaseURI="http://localhost/1"
           listens={
             Array [
               Object {
@@ -10675,6 +10679,8 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
             ]
           }
           newAlert={[MockFunction]}
+          refreshSpotifyToken={[Function]}
+          refreshYoutubeToken={[Function]}
         >
           <div>
             <PlaybackControls
@@ -15836,6 +15842,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
       >
         <BrainzPlayer
           direction="down"
+          listenBrainzAPIBaseURI="http://localhost/1"
           listens={
             Array [
               Object {
@@ -16166,6 +16173,8 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
             ]
           }
           newAlert={[MockFunction]}
+          refreshSpotifyToken={[Function]}
+          refreshYoutubeToken={[Function]}
         >
           <div>
             <PlaybackControls
@@ -17015,8 +17024,11 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
       >
         <BrainzPlayer
           direction="down"
+          listenBrainzAPIBaseURI="http://localhost/1"
           listens={Array []}
           newAlert={[MockFunction]}
+          refreshSpotifyToken={[Function]}
+          refreshYoutubeToken={[Function]}
         >
           <div>
             <PlaybackControls

@@ -589,7 +589,7 @@ export default class RecentListens extends React.Component<
       newAlert,
       userPinnedRecording,
     } = this.props;
-    const { currentUser } = this.context;
+    const { APIService, currentUser } = this.context;
 
     let allListenables = listens;
     if (userPinnedRecording) {
@@ -829,6 +829,9 @@ export default class RecentListens extends React.Component<
               direction={direction}
               listens={allListenables}
               newAlert={newAlert}
+              listenBrainzAPIBaseURI={APIService.APIBaseURI}
+              refreshSpotifyToken={APIService.refreshSpotifyToken}
+              refreshYoutubeToken={APIService.refreshYoutubeToken}
             />
           </div>
         </div>
