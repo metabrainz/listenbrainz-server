@@ -22,6 +22,7 @@ class SpotifyReaderTestCase(ListenAPIIntegrationTestCase):
     @patch('listenbrainz.spotify_updater.spotify_read_listens.get_user_currently_playing')
     @patch('listenbrainz.spotify_updater.spotify_read_listens.get_user_recently_played')
     def test_spotify_recently_played_submitted(self, mock_recently_played, mock_currently_playing):
+        self.maxDiff = None
         with open(self.path_to_data_file('spotify_recently_played_submitted.json')) as f:
             mock_recently_played.return_value = json.load(f)
         mock_currently_playing.return_value = None
