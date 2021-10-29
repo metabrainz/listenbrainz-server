@@ -67,6 +67,7 @@ module.exports = function (env, argv) {
         jsDir,
         "src/recommendations/Recommendations.tsx"
       ),
+      missingMBData: path.resolve(jsDir, "src/MissingMBData.tsx"),
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",

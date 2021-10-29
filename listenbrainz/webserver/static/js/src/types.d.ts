@@ -580,3 +580,9 @@ type ColorReleasesResponse = {
     releases: Array<ColorReleaseItem>;
   };
 };
+type MissingMBData = {
+  artist_name: string;
+  listened_at: string;
+  recording_name: string;
+  release_name?: string;
+};
