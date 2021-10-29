@@ -168,7 +168,7 @@ CREATE TABLE statistics.recording (
 );
 ALTER TABLE statistics.recording ADD CONSTRAINT recording_stats_msid_uniq UNIQUE (msid);
 
-CREATE TABLE statistics.user_new (
+CREATE TABLE statistics.user (
     id                      SERIAL, -- PK
     user_id                 INTEGER NOT NULL, -- FK to "user".id
     stats_type              user_stats_type,
