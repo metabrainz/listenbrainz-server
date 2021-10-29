@@ -104,8 +104,7 @@ export default class ColorPlay extends React.Component<
       selectedColorString,
       gridBackground,
     } = this.state;
-    const { currentUser } = this.context;
-
+    const { APIService, currentUser } = this.context;
     const selectedReleaseTracks = selectedRelease?.recordings ?? [];
     return (
       <div role="main">
@@ -232,6 +231,9 @@ export default class ColorPlay extends React.Component<
                   direction={direction}
                   newAlert={newAlert}
                   listens={selectedReleaseTracks}
+                  listenBrainzAPIBaseURI={APIService.APIBaseURI}
+                  refreshSpotifyToken={APIService.refreshSpotifyToken}
+                  refreshYoutubeToken={APIService.refreshYoutubeToken}
                 />
               </div>
             </div>
