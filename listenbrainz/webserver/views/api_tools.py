@@ -54,14 +54,8 @@ def insert_payload(payload, user: SubmitListenUserMetadata, listen_type=LISTEN_T
     """ Convert the payload into augmented listens then submit them.
         Returns: augmented_listens
     """
-    try:
-        augmented_listens = _get_augmented_listens(payload, user)
-        _send_listens_to_queue(listen_type, augmented_listens)
-    except (APIInternalServerError, APIServiceUnavailable):
-        raise
-    except Exception as e:
-        current_app.logger.error("Error while inserting payload: %s", str(e), exc_info=True)
-        raise APIInternalServerError("Something went wrong. Please try again.")
+    augmented_listens = _get_augmented_listens(payload, user)
+    _send_listens_to_queue(listen_type, augmented_listens)
     return augmented_listens
 
 
