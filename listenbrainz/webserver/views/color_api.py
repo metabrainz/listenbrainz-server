@@ -23,21 +23,24 @@ def huesound(color):
     Fetch a list of releases that have cover art that has a predominant
     color that is close to the given color.
 
-    Returns JSON:
-       { "payload":
-           "releases" : [
-               {
-                  "artist_name": "Letherette",
-                  "color": [ 250, 90, 192 ],
-                  "dist": 109.973,
-                  "release_mbid": "00a109da-400c-4350-9751-6e6f25e89073",
-                  "caa_id": 34897349734,
-                  "release_name": "EP5",
-                  "recordings": < array of listen formatted metadata >,
-               },
-               . . .
-           ]
-       }
+    .. code-block:: json
+
+        {
+            "payload": {
+                "releases" : [
+                    {
+                      "artist_name": "Letherette",
+                      "color": [ 250, 90, 192 ],
+                      "dist": 109.973,
+                      "release_mbid": "00a109da-400c-4350-9751-6e6f25e89073",
+                      "caa_id": 34897349734,
+                      "release_name": "EP5",
+                      "recordings": "< array of listen formatted metadata >",
+                      },
+                    ". . ."
+                ]
+            }
+        }
 
     :statuscode 200: success
     :resheader Content-Type: *application/json*
