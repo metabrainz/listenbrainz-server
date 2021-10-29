@@ -181,6 +181,9 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
             raise ListenValidationError("JSON document may only contain track_metadata as top level"
                                         " key when submitting playing_now.", listen)
 
+    if listen["track_metadata"] is None:
+        raise ValidationError("JSON document may not have track_metadata with null value.", listen)
+
     # Basic metadata
     if 'track_name' in listen['track_metadata']:
         if not isinstance(listen['track_metadata']['track_name'], str):
