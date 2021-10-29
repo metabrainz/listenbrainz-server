@@ -44,6 +44,7 @@ import {
   getPlaylistExtension,
   getPlaylistId,
   getRecordingMBIDFromJSPFTrack,
+  JSPFTrackToListen,
 } from "./utils";
 import { getPageProps } from "../utils";
 
@@ -345,26 +346,13 @@ export default class PlaylistPage extends React.Component<
     return newRecordingFeedbackMap;
   };
 
-  updateFeedback = async (recordingMbid: string, score: ListenFeedBack) => {
+  updateFeedback = (
+    recordingMsid: string,
+    score: ListenFeedBack | RecommendationFeedBack
+  ) => {
     const { recordingFeedbackMap } = this.state;
-    const { currentUser } = this.context;
-    const { newAlert } = this.props;
-    if (currentUser?.auth_token) {
-      try {
-        const status = await this.APIService.submitFeedback(
-          currentUser.auth_token,
-          recordingMbid,
-          score
-        );
-        if (status === 200) {
-          const newRecordingFeedbackMap = { ...recordingFeedbackMap };
-          newRecordingFeedbackMap[recordingMbid] = score;
-          this.setState({ recordingFeedbackMap: newRecordingFeedbackMap });
-        }
-      } catch (error) {
-        newAlert("danger", "Error while submitting feedback", error.message);
-      }
-    }
+    recordingFeedbackMap[recordingMsid] = score as ListenFeedBack;
+    this.setState({ recordingFeedbackMap });
   };
 
   getFeedbackForRecordingMbid = (
@@ -832,7 +820,7 @@ export default class PlaylistPage extends React.Component<
                           track.id
                         )}
                         removeTrackFromPlaylist={this.deletePlaylistItem}
-                        updateFeedback={this.updateFeedback}
+                        updateFeedbackCallback={this.updateFeedback}
                         newAlert={newAlert}
                       />
                     );
@@ -844,7 +832,7 @@ export default class PlaylistPage extends React.Component<
                 </div>
               )}
               {hasRightToEdit && (
-                <Card className="playlist-item-card row" id="add-track">
+                <Card className="listen-card row" id="add-track">
                   <span>
                     <FontAwesomeIcon icon={faPlusCircle as IconProp} />
                     &nbsp;&nbsp;Add a track
@@ -888,7 +876,7 @@ export default class PlaylistPage extends React.Component<
           >
             <BrainzPlayer
               direction="down"
-              listens={tracks}
+              listens={tracks.map(JSPFTrackToListen)}
               newAlert={newAlert}
             />
           </div>

@@ -448,6 +448,14 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
 
+    def test_unicode_null_error(self):
+        with open(self.path_to_data_file('listen_having_unicode_null.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+        self.assertEqual(response.json['error'], '\x00Fade contains a unicode null')
+
     def test_additional_info(self):
         """ Test to make sure that user generated data present in additional_info field
             of listens is preserved
@@ -626,6 +634,16 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(response.json['code'], 400)
         self.assertEqual(
             'Value for key listened_at is too high.', response.json['error'])
+
+    def test_too_low_timestamps(self):
+        """ Tests for timestamps earlier than last.fm founding year """
+        with open(self.path_to_data_file('timestamp_before_lfm_founding.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+        self.assertEqual('Value for key listened_at is too low. listened_at timestamp should'
+                         ' be greater than the timestamp of start of 2005.', response.json['error'])
 
     def test_invalid_token_validation(self):
         """Sends an invalid token to api.validate_token"""

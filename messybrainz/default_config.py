@@ -6,13 +6,13 @@ SECRET_KEY = "CHANGE_ME"
 # DATABASES
 
 # Primary database
-SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@db:5432/messybrainz"
+SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@lb_db:5432/messybrainz"
 
 # Database for testing
-TEST_SQLALCHEMY_DATABASE_URI = "postgresql://msb_test:msb_test@db:5432/msb_test"
+TEST_SQLALCHEMY_DATABASE_URI = "postgresql://msb_test:msb_test@lb_db:5432/msb_test"
 
 # Admin database
-POSTGRES_ADMIN_URI = "postgresql://postgres:postgres@db/postgres"
+POSTGRES_ADMIN_URI = "postgresql://postgres:postgres@lb_db/postgres"
 
 
 
