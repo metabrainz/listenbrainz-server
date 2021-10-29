@@ -33,7 +33,7 @@ def pin_recording_for_user():
 
         {
             "recording_msid": "40ef0ae1-5626-43eb-838f-1b34187519bf",
-            "recording_mbid": "40ef0ae1-5626-43eb-838f-1b34187519bf", // Optional
+            "recording_mbid": "<this field is optional>",
             "blurb_content": "Wow..",
             "pinned_until": 1824001816
         }

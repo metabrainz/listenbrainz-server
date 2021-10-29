@@ -413,9 +413,10 @@ def validate_token():
     header set to the value ``Token [the token value]``.
 
     .. note::
-        - This endpoint also checks for `token` argument in query
-        params (example: /validate-token?token=token-to-check) if the
-        Authorization header is missing for backward compatibility.
+
+        This endpoint also checks for `token` argument in query params
+        (example: /validate-token?token=token-to-check) if the Authorization
+        header is missing for backward compatibility.
 
     A JSON response, with the following format, will be returned.
 
