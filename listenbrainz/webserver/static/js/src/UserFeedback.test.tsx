@@ -10,6 +10,7 @@ import APIService from "./APIService";
 import * as userFeedbackProps from "./__mocks__/userFeedbackProps.json";
 import * as userFeedbackAPIResponse from "./__mocks__/userFeedbackAPIResponse.json";
 import ListenCard from "./listens/ListenCard";
+import ListenFeedbackComponent from "./listens/ListenFeedbackComponent";
 
 const { totalCount, user, feedback, youtube, spotify } = userFeedbackProps;
 
@@ -56,6 +57,11 @@ const mockDate = new Date("2021-05-19");
 const fakeDateNow = jest
   .spyOn(global.Date, "now")
   .mockImplementation(() => mockDate.getTime());
+
+// Font Awesome generates a random hash ID for each icon everytime.
+// Mocking Math.random() fixes this
+// https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
+jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
 describe("UserFeedback", () => {
   it("renders correctly", () => {
@@ -188,9 +194,7 @@ describe("UserFeedback", () => {
     await flushPromises();
 
     expect(instance.state.recordingFeedbackMap).toEqual({});
-    const firstListenCard = listens.at(0);
-    const inst: ListenCard = firstListenCard.instance() as ListenCard;
-    const listenCardsubmitFeedbackSpy = jest.spyOn(inst, "submitFeedback");
+    const firstListenCard = listens.first();
 
     const loveButton = firstListenCard
       .find(".listen-controls")
@@ -207,7 +211,6 @@ describe("UserFeedback", () => {
       "8aa379ad-852e-4794-9c01-64959f5d0b17",
       1
     );
-    expect(listenCardsubmitFeedbackSpy).toHaveBeenCalledWith(1);
 
     expect(instance.state.recordingFeedbackMap).toEqual({
       "8aa379ad-852e-4794-9c01-64959f5d0b17": 1,

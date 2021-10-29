@@ -6,7 +6,7 @@ import * as timeago from "time-ago";
 import fetchMock from "jest-fetch-mock";
 import { io } from "socket.io-client";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
-import APIService from "./APIService";
+import APIServiceClass from "./APIService";
 
 import * as recentListensProps from "./__mocks__/recentListensProps.json";
 import * as recentListensPropsTooManyListens from "./__mocks__/recentListensPropsTooManyListens.json";
@@ -64,11 +64,11 @@ const props = {
 // Create a new instance of GlobalAppContext
 const mountOptions: { context: GlobalAppContextT } = {
   context: {
-    APIService: new APIService("foo"),
+    APIService: new APIServiceClass("foo"),
     APIBaseURI: "foo",
     youtubeAuth: youtube as YoutubeUser,
     spotifyAuth: spotify as SpotifyUser,
-    currentUser: user,
+    currentUser: { id: 1, name: "iliekcomputers", auth_token: "fnord" },
   },
 };
 
@@ -363,6 +363,7 @@ describe("updateRecordingToPin", () => {
       <RecentListens {...props} />,
       mountOptions
     );
+
     const instance = wrapper.instance();
     const recordingToPin = props.listens[1];
 
@@ -370,6 +371,147 @@ describe("updateRecordingToPin", () => {
 
     instance.updateRecordingToPin(recordingToPin);
     expect(wrapper.state("recordingToPin")).toEqual(recordingToPin);
+  });
+});
+
+describe("deleteListen", () => {
+  it("calls API and removeListenFromListenList correctly, and updates the state", async () => {
+    jest.useFakeTimers();
+
+    const wrapper = mount<RecentListens>(
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
+    );
+    const instance = wrapper.instance();
+    expect(instance.context.currentUser.name).toEqual("iliekcomputers");
+    const spy = jest
+      .spyOn(instance.context.APIService, "deleteListen")
+      .mockImplementation(() => Promise.resolve(200));
+    const removeListenCallbackSpy = jest.spyOn(
+      instance,
+      "removeListenFromListenList"
+    );
+
+    const listenToDelete = props.listens[0];
+    await instance.deleteListen(listenToDelete);
+
+    jest.advanceTimersByTime(1000);
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(
+      "fnord",
+      "973e5620-829d-46dd-89a8-760d87076287",
+      1586523524
+    );
+
+    expect(removeListenCallbackSpy).toHaveBeenCalledTimes(1);
+    expect(removeListenCallbackSpy).toHaveBeenCalledWith(listenToDelete);
+    expect(instance.state.deletedListen).toEqual(listenToDelete);
+    expect(instance.state.listens).not.toContainEqual(listenToDelete);
+  });
+
+  it("does nothing if isCurrentUser is false", async () => {
+    const wrapper = mount<RecentListens>(
+      <GlobalAppContext.Provider
+        value={{ ...mountOptions.context, currentUser: {} as ListenBrainzUser }}
+      >
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
+    );
+    const instance = wrapper.instance();
+
+    const { APIService } = instance.context;
+    const spy = jest.spyOn(APIService, "deleteListen");
+    spy.mockImplementation(() => Promise.resolve(200));
+
+    expect(instance.state.deletedListen).toEqual(null);
+    const listenToDelete = props.listens[0];
+    await instance.deleteListen(listenToDelete);
+
+    expect(spy).toHaveBeenCalledTimes(0);
+    expect(instance.state.deletedListen).toEqual(null);
+  });
+
+  it("does nothing if CurrentUser.authtoken is not set", async () => {
+    const wrapper = mount<RecentListens>(
+      <GlobalAppContext.Provider
+        value={{
+          ...mountOptions.context,
+          currentUser: { auth_token: undefined, name: "test" },
+        }}
+      >
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
+    );
+    const instance = wrapper.instance();
+
+    const { APIService } = instance.context;
+    const spy = jest.spyOn(APIService, "deleteListen");
+    spy.mockImplementation(() => Promise.resolve(200));
+
+    expect(instance.state.deletedListen).toEqual(null);
+    const listenToDelete = props.listens[0];
+    await instance.deleteListen(listenToDelete);
+
+    expect(spy).toHaveBeenCalledTimes(0);
+    expect(instance.state.deletedListen).toEqual(null);
+  });
+
+  it("doesn't call removeListenFromListenList or update state if status code is not 200", async () => {
+    const wrapper = mount<RecentListens>(
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
+    );
+    const instance = wrapper.instance();
+    const removeListenCallbackSpy = jest.spyOn(
+      instance,
+      "removeListenFromListenList"
+    );
+
+    const { APIService } = instance.context;
+    const spy = jest.spyOn(APIService, "deleteListen");
+    spy.mockImplementation(() => Promise.resolve(500));
+
+    const listenToDelete = props.listens[0];
+    await instance.deleteListen(listenToDelete);
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(
+      "fnord",
+      "973e5620-829d-46dd-89a8-760d87076287",
+      1586523524
+    );
+
+    expect(removeListenCallbackSpy).toHaveBeenCalledTimes(0);
+    expect(instance.state.listens).toContainEqual(listenToDelete);
+  });
+
+  it("calls newAlert if error is returned", async () => {
+    const newAlertMock = jest.fn();
+    const wrapper = mount<RecentListens>(
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <RecentListens {...props} newAlert={newAlertMock} />
+      </GlobalAppContext.Provider>
+    );
+    const instance = wrapper.instance();
+
+    const error = new Error("my error message");
+    const { APIService } = instance.context;
+    const spy = jest.spyOn(APIService, "deleteListen");
+    spy.mockImplementation(() => {
+      throw error;
+    });
+
+    const listenToDelete = props.listens[0];
+    await instance.deleteListen(listenToDelete);
+
+    expect(newAlertMock).toHaveBeenCalledWith(
+      "danger",
+      "Error while deleting listen",
+      "my error message"
+    );
   });
 });
 
@@ -465,8 +607,6 @@ describe("Pagination", () => {
 
       await instance.handleClickOlder();
 
-      await new Promise((done) => setTimeout(done, 500));
-
       expect(wrapper.state("listens")).toEqual(listens);
       expect(wrapper.state("loading")).toBeFalsy();
       expect(wrapper.state("nextListenTs")).toEqual(
@@ -501,7 +641,6 @@ describe("Pagination", () => {
       instance.getFeedback = jest.fn();
 
       await instance.handleClickOlder();
-      await new Promise((done) => setTimeout(done, 500));
 
       expect(wrapper.state("loading")).toBeFalsy();
       expect(wrapper.state("nextListenTs")).toBeUndefined();
@@ -594,8 +733,6 @@ describe("Pagination", () => {
       const scrollSpy = jest.spyOn(instance, "afterListensFetch");
 
       await instance.handleClickNewer();
-
-      await new Promise((done) => setTimeout(done, 500));
 
       expect(wrapper.state("listens")).toEqual(listens);
       expect(wrapper.state("loading")).toBeFalsy();
