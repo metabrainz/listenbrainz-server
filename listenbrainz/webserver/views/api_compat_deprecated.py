@@ -127,7 +127,8 @@ def submit_listens():
         return 'FAILED Invalid data submitted!\n', 400
 
     user = db_user.get(session.user_id)
-    insert_payload(listens, user)
+    user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])
+    insert_payload(listens, user_metadata)
 
     return 'OK\n'
 
