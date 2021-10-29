@@ -329,6 +329,13 @@ exports[`ListenCard renders correctly 1`] = `
           aria-labelledby="listenControlsDropdown"
           className="dropdown-menu dropdown-menu-right"
         >
+          <a
+            href="https://musicbrainz.org/recording/yyyy"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Open in MusicBrainz
+          </a>
           <ListenControl
             action={[Function]}
             icon={
@@ -804,6 +811,13 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
           aria-labelledby="listenControlsDropdown"
           className="dropdown-menu dropdown-menu-right"
         >
+          <a
+            href="https://musicbrainz.org/recording/yyyy"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Open in MusicBrainz
+          </a>
           <ListenControl
             action={[Function]}
             icon={
@@ -1279,6 +1293,13 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
           aria-labelledby="listenControlsDropdown"
           className="dropdown-menu dropdown-menu-right"
         >
+          <a
+            href="https://musicbrainz.org/recording/yyyy"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Open in MusicBrainz
+          </a>
           <ListenControl
             action={[Function]}
             icon={
