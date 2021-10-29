@@ -409,9 +409,13 @@ def missing_mb_data(user_name: str):
     }
     source = "cf"
     missing_data = get_user_missing_musicbrainz_data(current_user.id, source)
+    if missing_data is None:
+        missing_data_list = []
+    else:
+        missing_data_list = getattr(missing_data, 'data').dict()['missing_musicbrainz_data']
 
     props = {
-        "missingData": missing_data,
+        "missingData": missing_data_list,
         "user": user_data,
     }
 

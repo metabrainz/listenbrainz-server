@@ -63,19 +63,20 @@ export default class MissingMBDataPage extends React.Component<
     const { currentUser } = this.context;
     const isCurrentUser =
       Boolean(currentUser?.name) && currentUser?.name === user?.name;
-    console.log(missingData);
     return (
       <div role="main">
         <div className="row">
           <div className="col-md-8">
             <div>
               <div id="missingMBData" ref={this.MissingMBDataTable}>
-                <h2>SS</h2>
+                <h2>Missing Data:</h2>
                 {missingData?.map((data) => {
-                  return <h1>Test</h1>;
+                  return (
+                    <div>
+                      <h1>{data.recording_name}</h1>
+                    </div>
+                  );
                 })}
-                {console.log(22)}
-                {console.log(missingData)}
               </div>
             </div>
           </div>
