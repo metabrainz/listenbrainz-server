@@ -41,6 +41,7 @@ class CandidateSetsTestClass(SparkNewTestCase):
             cls.mapped_listens_df, {}, RECOMMENDATION_RECORDING_USERS_DATAFRAME
         )
 
+    @pytest.mark.skip
     def test_get_top_artist_candidate_set(self):
         top_artist_limit = 1
         top_artist_df = candidate_sets.get_top_artists(self.mapped_listens_subset, top_artist_limit, [])
@@ -57,6 +58,7 @@ class CandidateSetsTestClass(SparkNewTestCase):
         )
         self.assertEqual(top_artist_candidate_set_df_html.count(), 2)
 
+    @pytest.mark.skip
     def test_get_similar_artist_candidate_set_df(self):
         similar_artist_df = listenbrainz_spark.session.createDataFrame([
             Row(similar_artist_credit_id=2, similar_artist_name='martinkemp', user_name='rob'),

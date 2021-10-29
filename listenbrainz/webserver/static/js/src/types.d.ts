@@ -42,6 +42,12 @@ interface AdditionalInfo {
   work_mbids?: Array<string> | null;
 }
 
+declare type MbidMapping = {
+  recording_mbid: string;
+  release_mbid: string;
+  artist_mbids: Array<string>;
+};
+
 declare type BaseListenFormat = {
   listened_at: number;
   user_name?: string | null;
@@ -387,6 +393,7 @@ declare type TrackMetadata = {
   release_mbid?: string;
   release_msid?: string;
   additional_info?: AdditionalInfo;
+  mbid_mapping?: MbidMapping;
 };
 
 declare type FeedbackResponseWithTrackMetadata = FeedbackResponse & {
@@ -556,4 +563,20 @@ type CritiqueBrainzReview = {
   text: string;
   languageCode: string;
   rating?: number;
+};
+
+type ColorReleaseItem = {
+  artist_name: string;
+  color: number[];
+  dist: number;
+  caa_id: number;
+  release_name: string;
+  release_mbid: string;
+  recordings?: BaseListenFormat[];
+};
+
+type ColorReleasesResponse = {
+  payload: {
+    releases: Array<ColorReleaseItem>;
+  };
 };
