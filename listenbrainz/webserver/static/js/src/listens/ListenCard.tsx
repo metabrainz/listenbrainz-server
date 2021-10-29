@@ -192,6 +192,7 @@ export default class ListenCard extends React.Component<
       listen,
       "track_metadata.additional_info.recording_msid"
     );
+    const recordingMBID = getRecordingMBID(listen);
 
     const hasRecordingMSID = Boolean(recordingMSID);
     const enableRecommendButton =
@@ -296,6 +297,15 @@ export default class ListenCard extends React.Component<
                 className="dropdown-menu dropdown-menu-right"
                 aria-labelledby="listenControlsDropdown"
               >
+                {recordingMBID ? (
+                  <a
+                    href={`https://musicbrainz.org/recording/${recordingMBID}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Open in MusicBrainz
+                  </a>
+                ) : null}
                 {enableRecommendButton && (
                   <ListenControl
                     icon={faCommentDots}
