@@ -31,12 +31,26 @@ class SpotifyReaderTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(result, (1, 0))
 
         with open(self.path_to_data_file('spotify_recently_played_expected.json')) as f:
-            expected_listens = json.load(f)
+            expected_data = json.load(f)
 
         url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
         r = self.wait_for_query_to_have_items(url, 1)
         self.assert200(r)
-        actual_listens = r.json
-        # inserted_at depends on the time, the test is run. set it to our expected value before testing equality
-        actual_listens['payload']['listens'][0]['inserted_at'] = expected_listens['payload']['listens'][0]['inserted_at']
-        self.assertEqual(expected_listens, r.json)
+
+        payload = r.json['payload']
+        self.assertEqual(payload['count'], 1)
+        self.assertEqual(payload['latest_listen_ts'], 1635138793)
+
+        actual_listen = payload['listens'][0]
+        expected_listen = expected_data['payload']['listens'][0]
+        # some fields vary from run to run, set those to our expected values before testing equality
+        actual_listen['inserted_at'] = expected_listen['inserted_at']
+        actual_listen['recording_msid'] = expected_listen['recording_msid']
+        actual_listen['track_metadata']['additional_info']['recording_msid'] = \
+            expected_listen['track_metadata']['additional_info']['recording_msid']
+        actual_listen['track_metadata']['additional_info']['release_msid'] = \
+            expected_listen['track_metadata']['additional_info']['release_msid']
+        actual_listen['track_metadata']['additional_info']['artist_msid'] = \
+            expected_listen['track_metadata']['additional_info']['artist_msid']
+
+        self.assertEqual(expected_listen, actual_listen)
