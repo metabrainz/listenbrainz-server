@@ -42,6 +42,7 @@ LISTEN_TYPE_IMPORT = 2
 LISTEN_TYPE_PLAYING_NOW = 3
 
 # October 2002 is date before which most Last.FM data is rubbish
+#: The minimum acceptable value for listened_at field
 LISTEN_MINIMUM_TS = int(datetime(2002, 10, 1).timestamp())
 
 
