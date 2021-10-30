@@ -658,12 +658,12 @@ class TimescaleListenStore(ListenStore):
             location, '{filename}.tar.xz'.format(filename=archive_name))
         with open(archive_path, 'w') as archive:
 
-            pxz_command = ['pxz', '--compress',
-                           '-T{threads}'.format(threads=threads)]
-            pxz = subprocess.Popen(
-                pxz_command, stdin=subprocess.PIPE, stdout=archive)
+            xz_command = ['xz', '--compress',
+                          '-T{threads}'.format(threads=threads)]
+            xz = subprocess.Popen(
+                xz_command, stdin=subprocess.PIPE, stdout=archive)
 
-            with tarfile.open(fileobj=pxz.stdin, mode='w|') as tar:
+            with tarfile.open(fileobj=xz.stdin, mode='w|') as tar:
 
                 temp_dir = os.path.join(
                     self.dump_temp_dir_root, str(uuid.uuid4()))
@@ -678,9 +678,9 @@ class TimescaleListenStore(ListenStore):
                 # remove the temporary directory
                 shutil.rmtree(temp_dir)
 
-            pxz.stdin.close()
+            xz.stdin.close()
 
-        pxz.wait()
+        xz.wait()
         self.log.info('ListenBrainz listen dump done!')
         self.log.info('Dump present at %s!', archive_path)
         return archive_path
@@ -898,14 +898,14 @@ class TimescaleListenStore(ListenStore):
         self.log.info(
             'Beginning import of listens from dump %s...', archive_path)
 
-        # construct the pxz command to decompress the archive
-        pxz_command = ['pxz', '--decompress', '--stdout',
-                       archive_path, '-T{threads}'.format(threads=threads)]
-        pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
+        # construct the xz command to decompress the archive
+        xz_command = ['xz', '--decompress', '--stdout',
+                      archive_path, '-T{threads}'.format(threads=threads)]
+        xz = subprocess.Popen(xz_command, stdout=subprocess.PIPE)
 
         schema_checked = False
         total_imported = 0
-        with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
+        with tarfile.open(fileobj=xz.stdout, mode='r|') as tar:
             listens = []
             for member in tar:
                 if member.name.endswith('SCHEMA_SEQUENCE'):
@@ -949,7 +949,7 @@ class TimescaleListenStore(ListenStore):
                 "SCHEMA_SEQUENCE file missing from listen dump.")
 
         self.log.info('Import of listens from dump %s done!', archive_path)
-        pxz.stdout.close()
+        xz.stdout.close()
 
         return total_imported
 

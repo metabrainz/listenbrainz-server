@@ -269,12 +269,12 @@ def _create_dump(location, dump_type, tables, dump_time, threads=DUMP_DEFAULT_TH
 
     with open(archive_path, 'w') as archive:
 
-        pxz_command = ['xz', '--compress',
-                       '-T{threads}'.format(threads=threads)]
-        pxz = subprocess.Popen(
-            pxz_command, stdin=subprocess.PIPE, stdout=archive)
+        xz_command = ['xz', '--compress',
+                      '-T{threads}'.format(threads=threads)]
+        xz = subprocess.Popen(
+            xz_command, stdin=subprocess.PIPE, stdout=archive)
 
-        with tarfile.open(fileobj=pxz.stdin, mode='w|') as tar:
+        with tarfile.open(fileobj=xz.stdin, mode='w|') as tar:
 
             temp_dir = tempfile.mkdtemp()
 
@@ -332,9 +332,9 @@ def _create_dump(location, dump_type, tables, dump_time, threads=DUMP_DEFAULT_TH
 
             shutil.rmtree(temp_dir)
 
-        pxz.stdin.close()
+        xz.stdin.close()
 
-    pxz.wait()
+    xz.wait()
     return archive_path
 
 
@@ -605,14 +605,14 @@ def _import_dump(archive_path, dump_type, tables, threads=DUMP_DEFAULT_THREAD_CO
                             db.DUMP_DEFAULT_THREAD_COUNT
     """
 
-    pxz_command = ['xz', '--decompress', '--stdout',
-                   archive_path, '-T{threads}'.format(threads=threads)]
-    pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
+    xz_command = ['xz', '--decompress', '--stdout',
+                  archive_path, '-T{threads}'.format(threads=threads)]
+    xz = subprocess.Popen(xz_command, stdout=subprocess.PIPE)
 
     connection = db.engine.raw_connection()
     try:
         cursor = connection.cursor()
-        with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
+        with tarfile.open(fileobj=xz.stdout, mode='r|') as tar:
             for member in tar:
                 file_name = member.name.split('/')[-1]
 
@@ -646,7 +646,7 @@ def _import_dump(archive_path, dump_type, tables, threads=DUMP_DEFAULT_THREAD_CO
                         current_app.logger.info('Imported table %s', file_name)
     finally:
         connection.close()
-        pxz.stdout.close()
+        xz.stdout.close()
 
     try:
         _update_sequences()
