@@ -31,7 +31,9 @@ def get_two_quarters_ago_offset(_date: date) -> relativedelta:
 
     .. note:: there is similar function to calculate 1 quarter back
     in listenbrainz_spark.stats module which is used by other stats.
-    We do not use it here because here we want two quarters back.
+    However, here in listening_activity stats we need two quarters
+    so that we can compare the quarter with the previous quarter of
+    the same duration and .
     """
     month = _date.month
     if month <= 3:
@@ -155,14 +157,13 @@ def calculate_listening_activity():
 
 
 def get_listening_activity(stats_range: str):
-    """ Calculate the number of listens of users for the given stats_range.
+    """ Compute the number of listens for a time range compared to the previous range
 
-    .. note::
-        Compared to other statistics, this stat needs listens for twice the time period.
-        For eg: for week range, this statistic needs the listen data of the last 2 weeks.
-        It will calculate individual listens for each weekday and send to LB webserver.
-        The LB frontend presents a chart comparing the listening activity on corresponding
-        weekdays of each week.
+    Given a time range, this computes a histogram of a users' listens for that range
+    and the previous range of the same duration, so that they can be compared. The
+    bin size of the histogram depends on the size of the range (e.g.
+    year -> 12 months, month -> ~30 days, week -> ~7 days, see get_time_range for
+    details). These values are used on the listening activity reports.
     """
     logger.debug(f"Calculating listening_activity_{stats_range}")
 
