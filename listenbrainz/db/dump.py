@@ -220,7 +220,7 @@ PRIVATE_TABLES_TIMESCALE = {
 }
 
 
-def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
+def dump_postgres_db(location, dump_time=datetime.today(), threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Create postgres database dump in the specified location
 
         Arguments:
@@ -326,7 +326,7 @@ def dump_timescale_db(location: str, dump_time: datetime = datetime.today(),
     return private_timescale_dump, public_timescale_dump
 
 
-def dump_feedback_for_spark(location, dump_time=datetime.today(), threads=None):
+def dump_feedback_for_spark(location, dump_time=datetime.today(), threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Dump user/recommendation feedback from postgres into spark format.
 
         Arguments:
