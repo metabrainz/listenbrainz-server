@@ -4,6 +4,8 @@ import * as ReactDOM from "react-dom";
 import * as React from "react";
 
 import { isEqual } from "lodash";
+import { Integrations } from "@sentry/tracing";
+import * as Sentry from "@sentry/react";
 import ErrorBoundary from "./ErrorBoundary";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import {
@@ -170,7 +172,7 @@ export default class UserPins extends React.Component<
   render() {
     const { user, profileUrl, newAlert } = this.props;
     const { pins, page, direction, loading, maxPage } = this.state;
-    const { currentUser } = this.context;
+    const { currentUser, APIService } = this.context;
 
     const isNewerButtonDisabled = page === 1;
     const isOlderButtonDisabled = page >= maxPage;
@@ -290,6 +292,9 @@ export default class UserPins extends React.Component<
               direction={direction}
               listens={pinsAsListens}
               newAlert={newAlert}
+              listenBrainzAPIBaseURI={APIService.APIBaseURI}
+              refreshSpotifyToken={APIService.refreshSpotifyToken}
+              refreshYoutubeToken={APIService.refreshYoutubeToken}
             />
           </div>
         </div>
@@ -300,12 +305,27 @@ export default class UserPins extends React.Component<
 
 document.addEventListener("DOMContentLoaded", () => {
   const { domContainer, reactProps, globalReactProps } = getPageProps();
-  const { api_url, current_user, spotify, youtube } = globalReactProps;
+  const {
+    api_url,
+    current_user,
+    spotify,
+    youtube,
+    sentry_dsn,
+    sentry_traces_sample_rate,
+  } = globalReactProps;
   const { user, pins, total_count, profile_url } = reactProps;
 
   const apiService = new APIServiceClass(
     api_url || `${window.location.origin}/1`
   );
+
+  if (sentry_dsn) {
+    Sentry.init({
+      dsn: sentry_dsn,
+      integrations: [new Integrations.BrowserTracing()],
+      tracesSampleRate: sentry_traces_sample_rate,
+    });
+  }
 
   const UserPinsWithAlertNotifications = withAlertNotifications(UserPins);
 

@@ -6,6 +6,7 @@ import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { isEqual, isNil } from "lodash";
+import { Integrations } from "@sentry/tracing";
 import APIServiceClass from "../APIService";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import BrainzPlayer from "../BrainzPlayer";
@@ -424,6 +425,7 @@ export default class UserEntityChart extends React.Component<
       hasError,
       errorMessage,
     } = this.state;
+    const { APIService } = this.context;
     const { newAlert } = this.props;
     const prevPage = currPage - 1;
     const nextPage = currPage + 1;
@@ -671,6 +673,9 @@ export default class UserEntityChart extends React.Component<
               direction="down"
               listens={listenableItems}
               newAlert={newAlert}
+              listenBrainzAPIBaseURI={APIService.APIBaseURI}
+              refreshSpotifyToken={APIService.refreshSpotifyToken}
+              refreshYoutubeToken={APIService.refreshYoutubeToken}
             />
           </div>
         </div>
@@ -692,6 +697,7 @@ document.addEventListener("DOMContentLoaded", () => {
     current_user,
     spotify,
     youtube,
+    sentry_traces_sample_rate,
   } = globalReactProps;
   const { user } = reactProps;
 
@@ -700,7 +706,11 @@ document.addEventListener("DOMContentLoaded", () => {
   );
 
   if (sentry_dsn) {
-    Sentry.init({ dsn: sentry_dsn });
+    Sentry.init({
+      dsn: sentry_dsn,
+      integrations: [new Integrations.BrowserTracing()],
+      tracesSampleRate: sentry_traces_sample_rate,
+    });
   }
 
   const UserEntityChartWithAlertNotifications = withAlertNotifications(

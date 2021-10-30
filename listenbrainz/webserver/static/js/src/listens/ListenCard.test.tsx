@@ -5,7 +5,7 @@ import ListenCard, { ListenCardProps } from "./ListenCard";
 import * as utils from "../utils";
 import APIServiceClass from "../APIService";
 import GlobalAppContext from "../GlobalAppContext";
-
+import RecommendationControl from "../recommendations/RecommendationControl";
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
@@ -21,6 +21,8 @@ const listen: Listen = {
       release_mbid: "foo",
       recording_msid: "bar",
       artist_msid: "artist_msid",
+      recording_mbid: "yyyy",
+      artist_mbids: ["xxxx"],
     },
   },
   user_name: "test",
@@ -31,10 +33,8 @@ const props: ListenCardProps = {
   currentFeedback: 1,
   showTimestamp: true,
   showUsername: true,
-  removeListenCallback: () => {},
   updateFeedbackCallback: () => {},
   newAlert: () => {},
-  updateRecordingToPin: () => {},
 };
 
 const globalProps = {
@@ -45,16 +45,8 @@ const globalProps = {
 };
 
 describe("ListenCard", () => {
-  it("renders correctly for mode = 'listens'", () => {
+  it("renders correctly", () => {
     const wrapper = mount<ListenCard>(<ListenCard {...props} />);
-    expect(wrapper).toMatchSnapshot();
-  });
-
-  it("renders correctly for mode = 'recent '", () => {
-    const wrapper = mount<ListenCard>(
-      <ListenCard {...{ ...props, mode: "recent" }} />
-    );
-
     expect(wrapper).toMatchSnapshot();
   });
 
@@ -73,6 +65,32 @@ describe("ListenCard", () => {
     expect(preciseTimestamp).toHaveBeenCalledTimes(1);
 
     expect(wrapper).toMatchSnapshot();
+  });
+
+  it("should use mapped mbids if listen does not have user submitted mbids", () => {
+    const differentListen: Listen = {
+      listened_at: 0,
+      playing_now: false,
+      track_metadata: {
+        artist_name: "Moondog",
+        track_name: "Bird's Lament",
+        mbid_mapping: {
+          release_mbid: "foo",
+          recording_mbid: "bar",
+          artist_mbids: ["foobar"],
+        },
+      },
+      user_name: "test",
+    };
+    const wrapper = mount<ListenCard>(
+      <ListenCard {...{ ...props, listen: differentListen }} />
+    );
+    expect(
+      wrapper.find('[href="https://musicbrainz.org/recording/bar"]')
+    ).toHaveLength(1);
+    expect(
+      wrapper.find('[href="https://musicbrainz.org/artist/foobar"]')
+    ).toHaveLength(1);
   });
 
   it("should render a play button", () => {
@@ -108,118 +126,6 @@ describe("ListenCard", () => {
     expect(postMessageSpy).not.toHaveBeenCalled();
   });
 
-  describe("componentDidUpdate", () => {
-    it("updates the feedbackState", () => {
-      const wrapper = mount<ListenCard>(<ListenCard {...props} />);
-
-      expect(wrapper.state("feedback")).toEqual(1);
-
-      wrapper.setProps({ currentFeedback: -1 });
-      expect(wrapper.state("feedback")).toEqual(-1);
-    });
-  });
-
-  describe("submitFeedback", () => {
-    it("calls API, updates feedback state and calls updateFeedbackCallback correctly", async () => {
-      const wrapper = mount<ListenCard>(
-        <GlobalAppContext.Provider value={globalProps}>
-          <ListenCard {...{ ...props, updateFeedbackCallback: jest.fn() }} />
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper.instance();
-
-      const { APIService } = instance.context;
-      const spy = jest.spyOn(APIService, "submitFeedback");
-      spy.mockImplementation(() => Promise.resolve(200));
-
-      expect(wrapper.state("feedback")).toEqual(1);
-
-      await instance.submitFeedback(-1);
-
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith("baz", "bar", -1);
-
-      expect(wrapper.state("feedback")).toEqual(-1);
-      expect(instance.props.updateFeedbackCallback).toHaveBeenCalledTimes(1);
-      expect(instance.props.updateFeedbackCallback).toHaveBeenCalledWith(
-        "bar",
-        -1
-      );
-    });
-
-    it("does nothing if CurrentUser.authtoken is not set", async () => {
-      const wrapper = mount<ListenCard>(
-        <GlobalAppContext.Provider
-          value={{
-            ...globalProps,
-            currentUser: { auth_token: undefined, name: "test" },
-          }}
-        >
-          <ListenCard {...{ ...props, updateFeedbackCallback: jest.fn() }} />
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper.instance();
-
-      const { APIService } = instance.context;
-      const spy = jest.spyOn(APIService, "submitFeedback");
-      spy.mockImplementation(() => Promise.resolve(200));
-
-      expect(wrapper.state("feedback")).toEqual(1);
-
-      instance.submitFeedback(-1);
-      expect(spy).toHaveBeenCalledTimes(0);
-      expect(wrapper.state("feedback")).toEqual(1);
-    });
-
-    it("doesn't update feedback state or call updateFeedbackCallback if status code is not 200", async () => {
-      const wrapper = mount<ListenCard>(
-        <GlobalAppContext.Provider value={globalProps}>
-          <ListenCard {...props} />
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper.instance();
-      props.updateFeedbackCallback = jest.fn();
-
-      const { APIService } = instance.context;
-      const spy = jest.spyOn(APIService, "submitFeedback");
-      spy.mockImplementation(() => Promise.resolve(201));
-
-      expect(wrapper.state("feedback")).toEqual(1);
-
-      instance.submitFeedback(-1);
-
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith("baz", "bar", -1);
-
-      expect(wrapper.state("feedback")).toEqual(1);
-      expect(props.updateFeedbackCallback).toHaveBeenCalledTimes(0);
-    });
-
-    it("calls handleError if error is returned", async () => {
-      const wrapper = mount<ListenCard>(
-        <GlobalAppContext.Provider value={globalProps}>
-          <ListenCard {...props} />
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper.instance();
-      instance.handleError = jest.fn();
-
-      const error = new Error("error");
-      const { APIService } = instance.context;
-      const spy = jest.spyOn(APIService, "submitFeedback");
-      spy.mockImplementation(() => {
-        throw error;
-      });
-
-      instance.submitFeedback(-1);
-      expect(instance.handleError).toHaveBeenCalledTimes(1);
-      expect(instance.handleError).toHaveBeenCalledWith(
-        error,
-        "Error while submitting feedback"
-      );
-    });
-  });
-
   describe("handleError", () => {
     it("calls newAlert", async () => {
       const wrapper = mount<ListenCard>(
@@ -234,120 +140,6 @@ describe("ListenCard", () => {
         "danger",
         "Error",
         "error"
-      );
-    });
-  });
-
-  describe("deleteListen", () => {
-    it("calls API, sets isDeleted state and removeListenCallback correctly", async () => {
-      const wrapper = mount<ListenCard>(
-        <GlobalAppContext.Provider value={globalProps}>
-          <ListenCard {...{ ...props, removeListenCallback: jest.fn() }} />
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper.instance();
-
-      const { APIService } = instance.context;
-      const spy = jest.spyOn(APIService, "deleteListen");
-      spy.mockImplementation(() => Promise.resolve(200));
-
-      expect(wrapper.state("isDeleted")).toEqual(false);
-
-      await instance.deleteListen();
-
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith("baz", "bar", 0);
-
-      expect(wrapper.state("isDeleted")).toEqual(true);
-
-      setTimeout(() => {
-        expect(instance.props.removeListenCallback).toHaveBeenCalledTimes(1);
-        expect(instance.props.removeListenCallback).toHaveBeenCalledWith(
-          instance.props.listen
-        );
-      }, 1000);
-    });
-
-    it("does nothing if isCurrentUser is false", async () => {
-      const wrapper = mount<ListenCard>(
-        <ListenCard {...{ ...props, isCurrentUser: false }} />
-      );
-      const instance = wrapper.instance();
-
-      const { APIService } = instance.context;
-      const spy = jest.spyOn(APIService, "deleteListen");
-      spy.mockImplementation(() => Promise.resolve(200));
-
-      instance.deleteListen();
-      expect(spy).toHaveBeenCalledTimes(0);
-      expect(wrapper.state("isDeleted")).toEqual(false);
-    });
-
-    it("does nothing if CurrentUser.authtoken is not set", async () => {
-      const wrapper = mount<ListenCard>(
-        <GlobalAppContext.Provider
-          value={{
-            ...globalProps,
-            currentUser: { auth_token: undefined, name: "test" },
-          }}
-        >
-          <ListenCard {...props} />
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper.instance();
-
-      const { APIService } = instance.context;
-      const spy = jest.spyOn(APIService, "deleteListen");
-      spy.mockImplementation(() => Promise.resolve(200));
-
-      instance.deleteListen();
-      expect(spy).toHaveBeenCalledTimes(0);
-      expect(wrapper.state("isDeleted")).toEqual(false);
-    });
-
-    it("doesn't update isDeleted state call removeListenCallback if status code is not 200", async () => {
-      const wrapper = mount<ListenCard>(
-        <GlobalAppContext.Provider value={globalProps}>
-          <ListenCard {...props} />
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper.instance();
-      props.removeListenCallback = jest.fn();
-
-      const { APIService } = instance.context;
-      const spy = jest.spyOn(APIService, "deleteListen");
-      spy.mockImplementation(() => Promise.resolve(201));
-
-      instance.deleteListen();
-
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith("baz", "bar", 0);
-
-      expect(props.removeListenCallback).toHaveBeenCalledTimes(0);
-      expect(wrapper.state("isDeleted")).toEqual(false);
-    });
-
-    it("calls handleError if error is returned", async () => {
-      const wrapper = mount<ListenCard>(
-        <GlobalAppContext.Provider value={globalProps}>
-          <ListenCard {...props} />
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper.instance();
-      instance.handleError = jest.fn();
-
-      const error = new Error("error");
-      const { APIService } = instance.context;
-      const spy = jest.spyOn(APIService, "deleteListen");
-      spy.mockImplementation(() => {
-        throw error;
-      });
-
-      instance.deleteListen();
-      expect(instance.handleError).toHaveBeenCalledTimes(1);
-      expect(instance.handleError).toHaveBeenCalledWith(
-        error,
-        "Error while deleting listen"
       );
     });
   });
@@ -377,6 +169,8 @@ describe("ListenCard", () => {
           instance.props.listen.track_metadata.additional_info?.artist_msid,
         recording_msid:
           instance.props.listen.track_metadata.additional_info?.recording_msid,
+        recording_mbid:
+          instance.props.listen.track_metadata.additional_info?.recording_mbid,
       });
 
       expect(instance.props.newAlert).toHaveBeenCalledTimes(1);

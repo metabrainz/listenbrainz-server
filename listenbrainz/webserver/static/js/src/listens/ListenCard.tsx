@@ -2,13 +2,11 @@ import * as React from "react";
 import { get as _get, has as _has, isEqual, isNil } from "lodash";
 import {
   faMusic,
-  faHeart,
-  faHeartBroken,
   faEllipsisV,
   faPlay,
+  faCommentDots,
 } from "@fortawesome/free-solid-svg-icons";
 import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
-
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -17,40 +15,44 @@ import {
   getTrackLink,
   preciseTimestamp,
   fullLocalizedDateFromTimestampOrISODate,
+  getRecordingMBID,
 } from "../utils";
 import GlobalAppContext from "../GlobalAppContext";
 import Card from "../components/Card";
 import ListenControl from "./ListenControl";
+import ListenFeedbackComponent from "./ListenFeedbackComponent";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
 export type ListenCardProps = {
   listen: Listen;
   className?: string;
-  currentFeedback: ListenFeedBack;
+  currentFeedback?: ListenFeedBack | RecommendationFeedBack | null;
   showTimestamp: boolean;
   showUsername: boolean;
-  removeListenCallback?: (listen: Listen) => void;
+  // Only used when not passing a custom feedbackComponent
   updateFeedbackCallback?: (
     recordingMsid: string,
-    score: ListenFeedBack
+    score: ListenFeedBack | RecommendationFeedBack
   ) => void;
-  updateRecordingToPin?: (recordingToPin: Listen) => void;
   newAlert: (
     alertType: AlertType,
     title: string,
     message: string | JSX.Element
   ) => void;
+  // This show under the first line of listen details. It's meant for reviews, etc.
   additionalDetails?: string | JSX.Element;
   thumbnail?: JSX.Element;
-  // The default details (recording name, artist name) can be superseeded
+  // The default details (recording name, artist name) can be replaced
   listenDetails?: JSX.Element;
   compact?: boolean;
+  // The default Listen fedback (love/hate) can be replaced
+  feedbackComponent?: JSX.Element;
+  // These go in the dropdown menu
+  additionalMenuItems?: JSX.Element;
 };
 
 type ListenCardState = {
-  isDeleted: boolean;
-  feedback: ListenFeedBack;
   isCurrentlyPlaying: boolean;
 };
 
@@ -65,21 +67,12 @@ export default class ListenCard extends React.Component<
     super(props);
 
     this.state = {
-      isDeleted: false,
-      feedback: props.currentFeedback || 0,
       isCurrentlyPlaying: false,
     };
   }
 
   componentDidMount() {
     window.addEventListener("message", this.receiveBrainzPlayerMessage);
-  }
-
-  componentDidUpdate(prevProps: ListenCardProps) {
-    const { currentFeedback } = this.props;
-    if (currentFeedback !== prevProps.currentFeedback) {
-      this.setState({ feedback: currentFeedback });
-    }
   }
 
   componentWillUnmount() {
@@ -104,8 +97,8 @@ export default class ListenCard extends React.Component<
       // Received postMessage from different origin, ignoring it
       return;
     }
-    const { type, payload } = event.data;
-    switch (type) {
+    const { brainzplayer_event, payload } = event.data;
+    switch (brainzplayer_event) {
       case "current-listen-change":
         this.onCurrentListenChange(payload);
         break;
@@ -126,66 +119,6 @@ export default class ListenCard extends React.Component<
     return isEqual(element, listen);
   };
 
-  submitFeedback = async (score: ListenFeedBack) => {
-    const { listen, updateFeedbackCallback } = this.props;
-    const { APIService, currentUser } = this.context;
-    if (currentUser?.auth_token) {
-      const recordingMSID = _get(
-        listen,
-        "track_metadata.additional_info.recording_msid"
-      );
-
-      try {
-        const status = await APIService.submitFeedback(
-          currentUser.auth_token,
-          recordingMSID,
-          score
-        );
-        if (status === 200) {
-          this.setState({ feedback: score });
-          if (updateFeedbackCallback) {
-            updateFeedbackCallback(recordingMSID, score);
-          }
-        }
-      } catch (error) {
-        this.handleError(error, "Error while submitting feedback");
-      }
-    }
-  };
-
-  deleteListen = async () => {
-    const { listen, removeListenCallback } = this.props;
-    const { APIService, currentUser } = this.context;
-    const isCurrentUser =
-      Boolean(listen.user_name) && listen.user_name === currentUser?.name;
-    if (removeListenCallback && isCurrentUser && currentUser?.auth_token) {
-      const listenedAt = _get(listen, "listened_at");
-      const recordingMSID = _get(
-        listen,
-        "track_metadata.additional_info.recording_msid"
-      );
-
-      try {
-        const status = await APIService.deleteListen(
-          currentUser.auth_token,
-          recordingMSID,
-          listenedAt
-        );
-        if (status === 200) {
-          this.setState({ isDeleted: true });
-          if (removeListenCallback) {
-            // wait for the animation to finish
-            setTimeout(function removeListen() {
-              removeListenCallback(listen);
-            }, 1000);
-          }
-        }
-      } catch (error) {
-        this.handleError(error, "Error while deleting listen");
-      }
-    }
-  };
-
   recommendListenToFollowers = async () => {
     const { listen, newAlert } = this.props;
     const { APIService, currentUser } = this.context;
@@ -195,10 +128,7 @@ export default class ListenCard extends React.Component<
         artist_name: _get(listen, "track_metadata.artist_name"),
         track_name: _get(listen, "track_metadata.track_name"),
         release_name: _get(listen, "track_metadata.release_name"),
-        recording_mbid: _get(
-          listen,
-          "track_metadata.additional_info.recording_mbid"
-        ),
+        recording_mbid: getRecordingMBID(listen),
         recording_msid: _get(
           listen,
           "track_metadata.additional_info.recording_msid"
@@ -246,30 +176,32 @@ export default class ListenCard extends React.Component<
       className,
       showUsername,
       showTimestamp,
-      updateRecordingToPin,
       thumbnail,
       listenDetails,
       compact,
+      feedbackComponent,
+      additionalMenuItems,
+      currentFeedback,
+      newAlert,
+      updateFeedbackCallback,
+      ...otherProps
     } = this.props;
-    const { currentUser } = this.context;
-    const { feedback, isDeleted, isCurrentlyPlaying } = this.state;
+    const { isCurrentlyPlaying } = this.state;
 
-    const listenedAt = _get(listen, "listened_at");
     const recordingMSID = _get(
       listen,
       "track_metadata.additional_info.recording_msid"
     );
 
-    const isCurrentUser =
-      Boolean(listen.user_name) && listen.user_name === currentUser?.name;
     const hasRecordingMSID = Boolean(recordingMSID);
     const enableRecommendButton =
       _has(listen, "track_metadata.artist_name") &&
       _has(listen, "track_metadata.track_name") &&
       hasRecordingMSID;
-    const canDelete = isCurrentUser && Boolean(listenedAt) && hasRecordingMSID;
-    const hideListenControls =
-      !hasRecordingMSID || !currentUser?.auth_token || compact;
+
+    // Hide the actions menu if in compact mode or no buttons to be shown
+    const hideActionsMenu =
+      compact || (!additionalMenuItems && !enableRecommendButton);
 
     const timeStampForDisplay = (
       <>
@@ -300,12 +232,11 @@ export default class ListenCard extends React.Component<
 
     return (
       <Card
+        {...otherProps}
         onDoubleClick={this.playListen}
         className={`listen-card row ${
           isCurrentlyPlaying ? "current-listen" : ""
-        } ${isDeleted ? "deleted" : ""} ${compact ? " compact" : " "} ${
-          className || ""
-        }`}
+        }${compact ? " compact" : " "} ${className || ""}`}
       >
         {thumbnail && <div className="listen-thumbnail">{thumbnail}</div>}
         {listenDetails ? (
@@ -342,25 +273,16 @@ export default class ListenCard extends React.Component<
           </div>
         )}
         <div className="listen-controls">
-          {hideListenControls ? null : (
+          {feedbackComponent ?? (
+            <ListenFeedbackComponent
+              newAlert={newAlert}
+              listen={listen}
+              currentFeedback={currentFeedback as ListenFeedBack}
+              updateFeedbackCallback={updateFeedbackCallback}
+            />
+          )}
+          {hideActionsMenu ? null : (
             <>
-              {hasRecordingMSID && (
-                <ListenControl
-                  icon={faHeart}
-                  title="Love"
-                  action={() => this.submitFeedback(feedback === 1 ? 0 : 1)}
-                  className={`${feedback === 1 ? " loved" : ""}`}
-                />
-              )}
-              {hasRecordingMSID && (
-                <ListenControl
-                  icon={faHeartBroken}
-                  title="Hate"
-                  action={() => this.submitFeedback(feedback === -1 ? 0 : -1)}
-                  className={`${feedback === -1 ? " hated" : ""}`}
-                />
-              )}
-
               <FontAwesomeIcon
                 icon={faEllipsisV as IconProp}
                 title="More actions"
@@ -376,26 +298,12 @@ export default class ListenCard extends React.Component<
               >
                 {enableRecommendButton && (
                   <ListenControl
+                    icon={faCommentDots}
                     title="Recommend to my followers"
                     action={this.recommendListenToFollowers}
                   />
                 )}
-                <ListenControl
-                  title="Pin this Recording"
-                  action={
-                    updateRecordingToPin
-                      ? () => updateRecordingToPin(listen)
-                      : undefined
-                  }
-                  dataToggle="modal"
-                  dataTarget="#PinRecordingModal"
-                />
-                {canDelete && (
-                  <ListenControl
-                    title="Delete Listen"
-                    action={this.deleteListen}
-                  />
-                )}
+                {additionalMenuItems}
               </ul>
             </>
           )}

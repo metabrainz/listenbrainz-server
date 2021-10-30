@@ -4,6 +4,7 @@ import * as Sentry from "@sentry/react";
 import { faSpinner, faCheck, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { Integrations } from "@sentry/tracing";
 import APIService from "./APIService";
 import Scrobble from "./Scrobble";
 import LastFMImporterModal from "./LastFMImporterModal";
@@ -607,7 +608,7 @@ export default class LastFmImporter extends React.Component<
 
 document.addEventListener("DOMContentLoaded", () => {
   const { domContainer, reactProps, globalReactProps } = getPageProps();
-  const { api_url, sentry_dsn } = globalReactProps;
+  const { api_url, sentry_dsn, sentry_traces_sample_rate } = globalReactProps;
   const {
     user,
     profile_url,
@@ -618,7 +619,11 @@ document.addEventListener("DOMContentLoaded", () => {
   } = reactProps;
 
   if (sentry_dsn) {
-    Sentry.init({ dsn: sentry_dsn });
+    Sentry.init({
+      dsn: sentry_dsn,
+      integrations: [new Integrations.BrowserTracing()],
+      tracesSampleRate: sentry_traces_sample_rate,
+    });
   }
 
   ReactDOM.render(

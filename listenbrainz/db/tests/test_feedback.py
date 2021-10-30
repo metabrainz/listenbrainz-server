@@ -69,12 +69,13 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
         self.sample_feedback_with_metadata[0]["recording_msid"] = msid
 
         query = """INSERT INTO listen_mbid_mapping
-                               (id, recording_mbid, release_mbid, artist_credit_id, artist_mbids,
-                                artist_credit_name, recording_name, match_type)
+                               (id, recording_mbid, release_mbid, release_name, artist_credit_id,
+                                artist_mbids, artist_credit_name, recording_name, match_type)
                         VALUES (1,
                                 '076255b4-1575-11ec-ac84-135bf6a670e3',
                                 '1fd178b4-1575-11ec-b98a-d72392cd8c97',
-                                65, 
+                                'release_name',
+                                65,
                                 '{6a221fda-2200-11ec-ac7d-dfa16a57158f}'::UUID[],
                                 'artist name', 'recording name', 'exact_match')"""
 

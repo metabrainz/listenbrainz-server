@@ -95,6 +95,7 @@ def create_channel_to_consume(connection, exchange: str, queue: str, callback_fu
     ch.exchange_declare(exchange=exchange, exchange_type='fanout')
     ch.queue_declare(queue, durable=True)
     ch.queue_bind(exchange=exchange, queue=queue)
+    ch.basic_qos(prefetch_count=1)
     ch.basic_consume(queue=queue, on_message_callback=callback_function, auto_ack=auto_ack)
     return ch
 
