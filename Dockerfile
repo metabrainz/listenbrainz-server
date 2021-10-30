@@ -10,13 +10,6 @@ LABEL org.label-schema.vcs-url="https://github.com/metabrainz/listenbrainz-serve
       org.label-schema.name="ListenBrainz" \
       org.metabrainz.based-on-image="metabrainz/python:$PYTHON_BASE_IMAGE_VERSION"
 
-# remove expired let's encrypt certificate and install new ones
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates \
-    && rm -rf /usr/share/ca-certificates/mozilla/DST_Root_CA_X3.crt \
-    && update-ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
 ENV DOCKERIZE_VERSION v0.6.1
 RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
