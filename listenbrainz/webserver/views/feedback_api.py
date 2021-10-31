@@ -109,7 +109,7 @@ def recording_feedback_now_playing():
         msb_listen["release"] = data["release_name"]
 
     msb_response = messybrainz.submit_listens_and_sing_me_a_sweet_song([msb_listen])
-    recording_msid = msb_response["payload"]["ids"]["recording_msid"]
+    recording_msid = msb_response["payload"][0]["ids"]["recording_msid"]
     feedback = Feedback(user_id=user["id"], recording_msid=recording_msid, score=data["score"])
     if feedback.score == 0:
         db_feedback.delete(feedback)
