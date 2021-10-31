@@ -11,7 +11,8 @@ from brainzutils import cache
 from listenbrainz.utils import init_cache
 from listenbrainz import db
 from listenbrainz.db import timescale
-from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT, REDIS_USER_TIMESTAMPS, DATA_START_YEAR_IN_SECONDS
+from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT, REDIS_USER_TIMESTAMPS, \
+    DATA_START_YEAR_IN_SECONDS, REDIS_USER_LISTEN_COUNT_UPDATER_TS
 from listenbrainz import config
 
 
@@ -20,6 +21,29 @@ logger = logging.getLogger(__name__)
 NUM_YEARS_TO_PROCESS_FOR_CONTINUOUS_AGGREGATE_REFRESH = 3
 SECONDS_IN_A_YEAR = 31536000
 
+
+def update_user_listen_counts():
+    timescale.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
+    # TODO: Check if doing existing users once and new users separately is more performant
+    query = """
+    WITH nc AS (
+        SELECT l.user_name, count(*) as count
+          FROM listen l
+          JOIN listen_count lc on l.user_name = lc.user_name
+         WHERE listened_at > lc.timestamp
+           AND listened_at <= :until
+      GROUP BY l.user_name
+    )
+    UPDATE listen_count oc
+       SET count = oc.count + nc.count
+         , timestamp = :until
+      FROM nc
+     WHERE oc.user_name = nc.user_name;
+    """
+    with timescale.engine.connect() as connection:
+        until = int(datetime.now().timestamp())
+        connection.execute(sqlalchemy.text(query), until=until)
+        cache.set(REDIS_USER_LISTEN_COUNT_UPDATER_TS, until, expirein=0)
 
 def recalculate_all_user_data():
 
