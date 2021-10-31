@@ -286,13 +286,13 @@ class TimescaleListenStore(ListenStore):
         user_timestamps = {}
         user_counts = defaultdict(int)
         for ts, _, user_name in inserted_rows:
-            if listen.user_name in user_timestamps:
-                if ts < user_timestamps[listen.user_name][0]:
-                    user_timestamps[listen.user_name][0] = ts
-                if ts > user_timestamps[listen.user_name][1]:
-                    user_timestamps[listen.user_name][1] = ts
+            if user_name in user_timestamps:
+                if ts < user_timestamps[user_name][0]:
+                    user_timestamps[user_name][0] = ts
+                if ts > user_timestamps[user_name][1]:
+                    user_timestamps[user_name][1] = ts
             else:
-                user_timestamps[listen.user_name] = [ts, ts]
+                user_timestamps[user_name] = [ts, ts]
 
             user_counts[user_name] += 1
 
