@@ -4,6 +4,8 @@ CREATE INDEX listened_at_user_id_ndx_listen ON listen (listened_at DESC, user_id
 CREATE INDEX created_ndx_listen ON listen (created);
 CREATE UNIQUE INDEX listened_at_track_name_user_id_ndx_listen ON listen (listened_at DESC, track_name, user_id);
 
+CREATE UNIQUE INDEX user_name_ndx_listen_count ON listen (user_name);
+
 -- View indexes are created in listenbrainz/db/timescale.py
 
 -- Playlists

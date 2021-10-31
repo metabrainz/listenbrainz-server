@@ -9,6 +9,12 @@ CREATE TABLE listen (
         data            JSONB                    NOT NULL
 );
 
+CREATE TABLE listen_count(
+    user_name       TEXT    NOT NULL,
+    count           BIGINT  NOT NULL,
+    timestamp       BIGINT  NOT NULL
+);
+
 -- 86400 seconds * 5 = 432000 seconds = 5 days
 SELECT create_hypertable('listen', 'listened_at', chunk_time_interval => 432000);
 

@@ -36,6 +36,7 @@ REDIS_USER_LISTEN_COUNT = "lc."
 REDIS_USER_TIMESTAMPS = "ts."
 REDIS_TOTAL_LISTEN_COUNT = "lc-total"
 REDIS_POST_IMPORT_LISTEN_COUNT_EXPIRY = 86400  # 24 hours
+REDIS_USER_LISTEN_COUNT_UPDATER_TS = "lc-updater-ts"
 
 DUMP_CHUNK_SIZE = 100000
 NUMBER_OF_USERS_PER_DIRECTORY = 1000
@@ -89,27 +90,28 @@ class TimescaleListenStore(ListenStore):
         Args:
             user_name: the user to get listens for
         """
+        with timescale.engine.connect() as connection:
+            query = "SELECT count, timestamp FROM listen_count WHERE user_name = :user_name"
+            result = connection.execute(sqlalchemy.text(query), {"user_name": user_name})
+            if result.rowcount > 0:
+                row = result.fetchone()
+                count, timestamp = row["count"], int(row["timestamp"].timestamp())
+            else:
+                count, timestamp = 0, 0
 
-        count = cache.get(REDIS_USER_LISTEN_COUNT + user_name, decode=False)
-        # count < 0, yeah that's possible. when a user imports from last.fm,
-        # we call set_listen_count_expiry_for_user to set a TTL on the count.
-        # the intent is that when the key expires and the listen counts will
-        # be recalculated and put into redis again. the issue is that listen
-        # counts are only calculated when the listen-count api endpoint is
-        # called. So imagine this, I do a last.fm import at 13:00 on 2021-10-23.
-        # The key expires at 13:00 on 2021-10-24. From this moment, redis has no
-        # key for my listens. Then, I delete a listen using the API at say 13:05.
-        # The listen is deleted and the listenstore tries to decrement the listen
-        # count but hey redis has no key. So what does it do, it creates one with
-        # a value of 0 and decrements that. Voila, we have the key with a negative
-        # value.
-        # Note that the check is still incomplete. If instead of deleting, one had
-        # inserted a listen. redis would create a key with value 0 and increment it
-        # by 1. only now we don't have a way to detect this.
-        if count is None or int(count) < 0:
-            return self.reset_listen_count(user_name)
-        else:
-            return int(count)
+            query_remaining = """
+                SELECT count(*) AS remaining_count
+                  FROM listen 
+                 WHERE user_name = : user_name 
+                   AND listened_at > :timestamp
+                """
+            result = connection.execute(sqlalchemy.text(query_remaining), {
+                "user_name": user_name,
+                "timestamp": timestamp
+            })
+            remaining_count = result.fetchone()["remaining_count"]
+
+            return count + remaining_count
 
     def reset_listen_count(self, user_name):
         """ Reset the listen count of a user from cache and put in a new calculated value.
@@ -277,6 +279,7 @@ class TimescaleListenStore(ListenStore):
 
         conn.commit()
 
+        ts_updater_last_run = cache.get(REDIS_USER_LISTEN_COUNT_UPDATER_TS)
         # update the listen counts and timestamps for the users
         user_timestamps = {}
         user_counts = defaultdict(int)
@@ -289,9 +292,10 @@ class TimescaleListenStore(ListenStore):
             else:
                 user_timestamps[user_id] = [ts, ts]
 
-            user_counts[user_name] += 1
+            if ts <= ts_updater_last_run:
+                user_counts[user_name] += 1
 
-        for user_name in user_counts:
+        for user_name, count in user_counts:
             cache.increment(REDIS_USER_LISTEN_COUNT + str(user_name), amount=user_counts[user_name])
 
         for user in user_timestamps:
@@ -1027,11 +1031,15 @@ class TimescaleListenStore(ListenStore):
                       AND user_id = :user_id
                       AND data -> 'track_metadata' -> 'additional_info' ->> 'recording_msid' = :recording_msid """
 
+        query_decr_lc = """ UPDATE listen_count 
+                               SET count = count - 1 
+                             WHERE user_name = :user_name"""
         try:
             with timescale.engine.connect() as connection:
                 connection.execute(sqlalchemy.text(query), args)
+                if listened_at <= cache.get(REDIS_USER_LISTEN_COUNT_UPDATER_TS):
+                    connection.execute(sqlalchemy.text(query_decr_lc), user_name=user_name)
 
-            cache._r.decrby(cache._prep_key(REDIS_USER_LISTEN_COUNT + user_name))
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listen for user: %s" % str(e))
             raise TimescaleListenStoreException

@@ -10,7 +10,8 @@ from listenbrainz import webserver
 from listenbrainz.db import timescale as ts
 from listenbrainz.listenstore import timescale_fill_userid
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data, \
-    refresh_listen_count_aggregate as ts_refresh_listen_count_aggregate
+    refresh_listen_count_aggregate as ts_refresh_listen_count_aggregate, \
+    update_user_listen_counts as ts_update_user_listen_counts
 from listenbrainz.webserver import create_app
 
 
@@ -260,6 +261,14 @@ def recalculate_all_user_data():
         **ONLY USE THIS WHEN YOU KNOW WHAT YOU ARE DOING!**
     """
     ts_recalculate_all_user_data()
+
+
+@cli.command(name="update_user_listen_counts")
+def update_all_user_listen_counts():
+    """ Scans listen table and update listen counts for all users """
+    application = webserver.create_app()
+    with application.app_context():
+        ts_update_user_listen_counts()
 
 
 @cli.command(name="refresh_continuous_aggregates")
