@@ -20,6 +20,19 @@ A sample feedback may look like:
         "score": 1
     }
 
+If a recording_msid is unavailable (as in the case for now playing listens), an alternative
+API endpoint is available at ``recording-feedback-now-playing`` which accepts json as the
+following sample:
+
+.. code-block:: json
+
+    {
+        "artist_name": "Anne-Marie",
+        "track_name": "Alarm",
+        "release_name": "Speak Your Mind",
+        "score": 1
+    }
+
 Score can have one of these three values:
 
 - ``1``: Mark the track as loved

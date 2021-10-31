@@ -3,6 +3,8 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.feedback as db_feedback
 
 from flask import Blueprint, current_app, jsonify, request
+
+import messybrainz
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError, APINotFound,
@@ -65,6 +67,56 @@ def recording_feedback():
         raise APIInternalServerError("Something went wrong. Please try again.")
 
     return jsonify({'status': 'ok'})
+
+
+@feedback_api_bp.route("/recording-feedback-now-playing", methods=["POST", "OPTIONS"])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
+def recording_feedback_now_playing():
+    """
+    Submit recording feedback (love/hate) for a now playing track to the server. A user token
+    (found on  https://listenbrainz.org/profile/ ) must be provided in the Authorization header! Each request
+    should contain only one feedback in the payload.
+
+    For complete details on the format of the JSON to be POSTed to this endpoint, see :ref:`feedback-json-doc`.
+
+    :reqheader Authorization: Token <user token>
+    :statuscode 200: feedback accepted.
+    :statuscode 400: invalid JSON sent, see error message for details.
+    :statuscode 401: invalid authorization. See error message for details.
+    :resheader Content-Type: *application/json*
+    """
+    user = validate_auth_header()
+
+    data = request.json
+
+    if "artist_name" not in data or "track_name" not in data or "score" not in data:
+        raise APIBadRequest("JSON document must contain track_name, artist_name and score top level keys", data)
+
+    if "artist_name" in data or "track_name" in data and "release_name" in data \
+            and "score" in data and len(data) > 4:
+        raise APIBadRequest("JSON document may only contain track_name, artist_name, release_name and"
+                            " score as top level keys", data)
+        
+    if data["score"] not in [-1, 0, 1]:
+        raise APIBadRequest("Submitted score %s is invalid. Allowed values for score are -1, 0 and 1.", data["score"])
+
+    msb_listen = {
+        "title": data["track_name"],
+        "aritst": data["artist_name"]
+    }
+    if "release_name" in data:
+        msb_listen["release"] = data["release_name"]
+
+    msb_response = messybrainz.submit_listens_and_sing_me_a_sweet_song([msb_listen])
+    recording_msid = msb_response["payload"]["ids"]["recording_msid"]
+    feedback = Feedback(user_id=user["id"], recording_msid=recording_msid, score=data["score"])
+    if feedback.score == 0:
+        db_feedback.delete(feedback)
+    else:
+        db_feedback.insert(feedback)
+
+    return jsonify({"status": "ok"})
 
 
 @feedback_api_bp.route("/user/<user_name>/get-feedback", methods=["GET"])
