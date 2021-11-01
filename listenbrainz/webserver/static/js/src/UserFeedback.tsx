@@ -362,7 +362,7 @@ export default class UserFeedback extends React.Component<
       selectedFeedbackScore,
     } = this.state;
     const { user, newAlert } = this.props;
-    const { currentUser } = this.context;
+    const { APIService, currentUser } = this.context;
     const listensFromFeedback: BaseListenFormat[] = feedback.map(
       (feedbackItem) =>
         UserFeedback.RecordingMetadataToListenFormat(feedbackItem)
@@ -541,6 +541,9 @@ export default class UserFeedback extends React.Component<
               direction={direction}
               listens={listensFromFeedback}
               newAlert={newAlert}
+              listenBrainzAPIBaseURI={APIService.APIBaseURI}
+              refreshSpotifyToken={APIService.refreshSpotifyToken}
+              refreshYoutubeToken={APIService.refreshYoutubeToken}
             />
           </div>
         </div>

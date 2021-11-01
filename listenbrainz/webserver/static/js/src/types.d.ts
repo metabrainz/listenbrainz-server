@@ -564,3 +564,19 @@ type CritiqueBrainzReview = {
   languageCode: string;
   rating?: number;
 };
+
+type ColorReleaseItem = {
+  artist_name: string;
+  color: number[];
+  dist: number;
+  caa_id: number;
+  release_name: string;
+  release_mbid: string;
+  recordings?: BaseListenFormat[];
+};
+
+type ColorReleasesResponse = {
+  payload: {
+    releases: Array<ColorReleaseItem>;
+  };
+};

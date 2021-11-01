@@ -29,24 +29,21 @@ def process_listens(app, listens, is_legacy_listen=False):
     msids = {str(listen['recording_msid']): listen for listen in listens}
     stats["total"] = len(msids)
     if len(msids):
-        if not is_legacy_listen:
-            with timescale.engine.connect() as connection:
-                query = """SELECT recording_msid 
-                             FROM listen_join_listen_mbid_mapping lj
-                             JOIN listen_mbid_mapping mbid
-                               ON mbid.id = lj.listen_mbid_mapping
-                            WHERE recording_msid IN :msids"""
-                curs = connection.execute(sqlalchemy.text(
-                    query), msids=tuple(msids.keys()))
-                while True:
-                    result = curs.fetchone()
-                    if not result:
-                        break
-                    del msids[str(result[0])]
-                    stats["processed"] += 1
-                    skipped += 1
-        else:
-            stats["processed"] += len(msids)
+        with timescale.engine.connect() as connection:
+            query = """SELECT recording_msid 
+                         FROM listen_join_listen_mbid_mapping lj
+                         JOIN listen_mbid_mapping mbid
+                           ON mbid.id = lj.listen_mbid_mapping
+                        WHERE recording_msid IN :msids"""
+            curs = connection.execute(sqlalchemy.text(
+                query), msids=tuple(msids.keys()))
+            while True:
+                result = curs.fetchone()
+                if not result:
+                    break
+                del msids[str(result[0])]
+                stats["processed"] += 1
+                skipped += 1
 
         if len(msids) == 0:
             return stats
@@ -80,15 +77,16 @@ def process_listens(app, listens, is_legacy_listen=False):
                 for match in matches:
                     if match[1] is None:
                         m = str(curs.mogrify(
-                            "(%s::UUID, NULL::UUID, NULL::UUID, NULL::UUID[], NULL::INT, NULL, NULL, %s::mbid_mapping_match_type_enum)", (match[1], match[7])), "utf-8")
+                            "(%s::UUID, NULL::UUID, NULL::UUID, NULL, NULL::UUID[], NULL::INT, NULL, NULL, %s::mbid_mapping_match_type_enum)", (match[1], match[7])), "utf-8")
                     else:
                         m = str(curs.mogrify(
-                            "(%s::UUID, %s::UUID, %s::UUID, %s::UUID[], %s, %s, %s, %s::mbid_mapping_match_type_enum)", match), "utf-8")
+                            "(%s::UUID, %s::UUID, %s::UUID, %s, %s::UUID[], %s, %s, %s, %s::mbid_mapping_match_type_enum)", match), "utf-8")
                     mogrified.append(m)
 
                 query = """WITH data (recording_msid
                                    ,  recording_mbid
                                    ,  release_mbid
+                                   ,  release_name
                                    ,  artist_mbids
                                    ,  artist_credit_id
                                    ,  artist_credit_name
@@ -98,6 +96,7 @@ def process_listens(app, listens, is_legacy_listen=False):
                            , join_insert AS (
                                    INSERT INTO listen_mbid_mapping (recording_mbid
                                                                  ,  release_mbid
+                                                                 ,  release_name
                                                                  ,  artist_mbids
                                                                  ,  artist_credit_id
                                                                  ,  artist_credit_name
@@ -105,6 +104,7 @@ def process_listens(app, listens, is_legacy_listen=False):
                                                                  ,  match_type)
                                    SELECT recording_mbid
                                         , release_mbid
+                                        , release_name
                                         , artist_mbids
                                         , artist_credit_id
                                         , artist_credit_name
@@ -121,7 +121,8 @@ def process_listens(app, listens, is_legacy_listen=False):
                                   JOIN join_insert ji
                                     ON ji.recording_mbid = d.recording_mbid
                                    AND ji.release_mbid = d.release_mbid
-                                   AND ji.artist_credit_id = d.artist_credit_id""" % ",".join(mogrified)
+                                   AND ji.artist_credit_id = d.artist_credit_id
+                           ON CONFLICT DO NOTHING""" % ",".join(mogrified)
                 curs.execute(query)
 
             except (psycopg2.OperationalError, psycopg2.errors.DatatypeMismatch) as err:
@@ -164,7 +165,8 @@ def lookup_listens(app, listens, stats, exact):
         rows.append((listen['recording_msid'],
                      hit["recording_mbid"],
                      hit["release_mbid"],
-                     "{" + str(hit["artist_mbids"]) + "}",
+                     hit["release_name"],
+                     str(hit["artist_mbids"]),
                      hit["artist_credit_id"],
                      hit["artist_credit_name"],
                      hit["recording_name"],

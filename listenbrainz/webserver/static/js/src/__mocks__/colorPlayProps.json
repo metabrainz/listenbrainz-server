@@ -1,0 +1,14 @@
+{
+    "user": {
+        "name": "akshaaatt",
+        "id": 1
+      },
+    "profileUrl": "/user/akshaaatt/",
+    "spotify": {
+      "access_token": "access token",
+      "permission": ["streaming", "user-read-email", "user-read-private"]
+    },
+    "youtube": {
+      "api_key": "fake-api-key"
+    }
+}

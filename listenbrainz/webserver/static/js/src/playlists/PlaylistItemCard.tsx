@@ -34,7 +34,6 @@ export type PlaylistItemCardProps = {
 export default class PlaylistItemCard extends React.Component<
   PlaylistItemCardProps
 > {
-
   removeTrack = () => {
     const { track, removeTrackFromPlaylist } = this.props;
     removeTrackFromPlaylist(track);
@@ -76,6 +75,7 @@ export default class PlaylistItemCard extends React.Component<
     const listen = JSPFTrackToListen(track);
     return (
       <ListenCard
+        className="playlist-item-card"
         listen={listen}
         currentFeedback={currentFeedback}
         showTimestamp={Boolean(listen.listened_at_iso)}
