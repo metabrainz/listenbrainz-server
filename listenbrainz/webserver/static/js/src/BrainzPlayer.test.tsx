@@ -723,10 +723,10 @@ describe("BrainzPlayer", () => {
             submission_client: "BrainzPlayer",
             music_service: "https://open.spotify.com",
             origin_url: "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT",
-            brainzplayer_metadata: {
-              artist_name: "Rick Astley",
-              track_name: "Never Gonna Give You Up",
-            },
+          },
+          brainzplayer_metadata: {
+            artist_name: "Rick Astley",
+            track_name: "Never Gonna Give You Up",
           },
         },
       };
@@ -793,10 +793,10 @@ describe("BrainzPlayer", () => {
             submission_client: "BrainzPlayer",
             music_service: "https://open.spotify.com",
             origin_url: "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT",
-            brainzplayer_metadata: {
-              artist_name: "Rick Astley",
-              track_name: "Never Gonna Give You Up",
-            },
+          },
+          brainzplayer_metadata: {
+            artist_name: "Rick Astley",
+            track_name: "Never Gonna Give You Up",
           },
         },
       };

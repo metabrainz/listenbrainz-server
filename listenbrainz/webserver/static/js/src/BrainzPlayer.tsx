@@ -599,8 +599,8 @@ export default class BrainzPlayer extends React.Component<
 
     // ensure the track_metadata.additional_info path exists and add brainzplayer_metadata field
     assign(newListen.track_metadata, {
+      brainzplayer_metadata,
       additional_info: {
-        brainzplayer_metadata,
         media_player: "BrainzPlayer",
         submission_client: "BrainzPlayer",
         // TODO:  passs the GIT_COMMIT_SHA env variable to the globalprops and add it here as submission_client_version
