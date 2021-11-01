@@ -660,6 +660,18 @@ export default class RecentListens extends React.Component<
                       return 0;
                     })
                     .map((listen) => {
+                      const isCurrentUser =
+                        Boolean(listen.user_name) &&
+                        listen.user_name === currentUser?.name;
+                      const listenedAt = get(listen, "listened_at");
+                      const recordingMSID = get(
+                        listen,
+                        "track_metadata.additional_info.recording_msid"
+                      );
+                      const canDelete =
+                        isCurrentUser &&
+                        Boolean(listenedAt) &&
+                        Boolean(recordingMSID);
                       /* eslint-disable react/jsx-no-bind */
                       const additionalMenuItems = (
                         <>
@@ -673,11 +685,13 @@ export default class RecentListens extends React.Component<
                             dataToggle="modal"
                             dataTarget="#PinRecordingModal"
                           />
-                          <ListenControl
-                            title="Delete Listen"
-                            icon={faTrashAlt}
-                            action={this.deleteListen.bind(this, listen)}
-                          />
+                          {canDelete && (
+                            <ListenControl
+                              title="Delete Listen"
+                              icon={faTrashAlt}
+                              action={this.deleteListen.bind(this, listen)}
+                            />
+                          )}
                         </>
                       );
                       const shouldBeDeleted = isEqual(deletedListen, listen);
