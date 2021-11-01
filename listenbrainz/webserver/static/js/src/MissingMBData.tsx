@@ -73,7 +73,23 @@ export default class MissingMBDataPage extends React.Component<
                 {missingData?.map((data) => {
                   return (
                     <div>
-                      <h1>{data.recording_name}</h1>
+                      <ListenCard
+                        key={
+                          "${data.recording_name}-${data.artist_name}-${data.listened_at}"
+                        }
+                        showTimestamp={true}
+                        showUsername={true}
+                        newAlert={newAlert}
+                        listen={{
+                          listened_at:
+                            new Date(data.listened_at).getTime() / 1000,
+                          user_name: user.name,
+                          track_metadata: {
+                            artist_name: data.artist_name,
+                            track_name: data.recording_name,
+                          },
+                        }}
+                      />
                     </div>
                   );
                 })}
