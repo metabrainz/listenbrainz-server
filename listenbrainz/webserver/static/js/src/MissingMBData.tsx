@@ -65,34 +65,35 @@ export default class MissingMBDataPage extends React.Component<
       Boolean(currentUser?.name) && currentUser?.name === user?.name;
     return (
       <div role="main">
-        <div className="row">
-          <div className="col-md-8">
+        <div className="row" style={{ display: "flex", flexWrap: "wrap" }}>
+          <div className="col-md-7 col-xs-12">
             <div>
               <div id="missingMBData" ref={this.MissingMBDataTable}>
                 <h2>Missing Data:</h2>
-                {missingData?.map((data) => {
-                  return (
-                    <div>
-                      <ListenCard
-                        key={
-                          "${data.recording_name}-${data.artist_name}-${data.listened_at}"
-                        }
-                        showTimestamp={true}
-                        showUsername={true}
-                        newAlert={newAlert}
-                        listen={{
-                          listened_at:
-                            new Date(data.listened_at).getTime() / 1000,
-                          user_name: user.name,
-                          track_metadata: {
-                            artist_name: data.artist_name,
-                            track_name: data.recording_name,
-                          },
-                        }}
-                      />
-                    </div>
-                  );
-                })}
+                <div>
+                  {missingData?.map((data) => {
+                    return (
+                      <div className="event-content" style={{ width: "100%" }}>
+                        <ListenCard
+                          key={`${data.recording_name}-${data.artist_name}-${data.listened_at}`}
+                          showTimestamp
+                          showUsername={false}
+                          newAlert={newAlert}
+                          listen={{
+                            listened_at:
+                              new Date(data.listened_at).getTime() / 1000,
+                            user_name: user.name,
+                            track_metadata: {
+                              artist_name: data.artist_name,
+                              track_name: data.recording_name,
+                              release_name: data?.release_name,
+                            },
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
