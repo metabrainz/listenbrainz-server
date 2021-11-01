@@ -3,6 +3,8 @@ from typing import Dict, Tuple
 from urllib.parse import urlparse
 
 import bleach
+from kombu import Exchange, Queue
+from kombu.pools import producers
 
 import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
 import listenbrainz.webserver.redis_connection as redis_connection
@@ -339,23 +341,17 @@ def publish_data_to_queue(data, exchange, queue, error_msg):
         queue (str): the name of the queue
         error_msg (str): the error message to be returned in case of an error
     """
-    try:
-        with rabbitmq_connection._rabbitmq.get() as connection:
-            channel = connection.channel
-            channel.exchange_declare(exchange=exchange, exchange_type='fanout')
-            channel.queue_declare(queue, durable=True)
-            channel.basic_publish(
-                exchange=exchange,
-                routing_key='',
-                body=ujson.dumps(data),
-                properties=pika.BasicProperties(delivery_mode=2, ),
-            )
-    except pika.exceptions.ConnectionClosed as e:
-        current_app.logger.error("Connection to rabbitmq closed while trying to publish: %s" % str(e), exc_info=True)
-        raise APIServiceUnavailable(error_msg)
-    except Exception as e:
-        current_app.logger.error("Cannot publish to rabbitmq channel: %s / %s" % (type(e).__name__, str(e)), exc_info=True)
-        raise APIServiceUnavailable(error_msg)
+    with producers[rabbitmq_connection._rabbitmq].acquire(block=True, timeout=10) as producer:
+        _exchange = Exchange(exchange, "fanout")
+        _queue = Queue(queue, exchange=_exchange, durable=True)
+        producer.publish(
+            ujson.dumps(data),
+            routing_key="",
+            delivery_mode=2,
+            content_type="application/json",
+            content_encoding="binary",
+            exchange=_exchange
+        )
 
 
 def get_non_negative_param(param, default=None):
