@@ -45,16 +45,8 @@ const globalProps = {
 };
 
 describe("ListenCard", () => {
-  it("renders correctly for mode = 'listens'", () => {
+  it("renders correctly", () => {
     const wrapper = mount<ListenCard>(<ListenCard {...props} />);
-    expect(wrapper).toMatchSnapshot();
-  });
-
-  it("renders correctly for mode = 'recent '", () => {
-    const wrapper = mount<ListenCard>(
-      <ListenCard {...{ ...props, mode: "recent" }} />
-    );
-
     expect(wrapper).toMatchSnapshot();
   });
 

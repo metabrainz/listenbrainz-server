@@ -640,6 +640,7 @@ export default class PlaylistPage extends React.Component<
       searchInputValue,
       cachedSearchResults,
     } = this.state;
+    const { APIService } = this.context;
     const { newAlert } = this.props;
     const { track: tracks } = playlist;
     const hasRightToEdit = this.hasRightToEdit();
@@ -832,7 +833,7 @@ export default class PlaylistPage extends React.Component<
                 </div>
               )}
               {hasRightToEdit && (
-                <Card className="playlist-item-card row" id="add-track">
+                <Card className="listen-card row" id="add-track">
                   <span>
                     <FontAwesomeIcon icon={faPlusCircle as IconProp} />
                     &nbsp;&nbsp;Add a track
@@ -878,6 +879,9 @@ export default class PlaylistPage extends React.Component<
               direction="down"
               listens={tracks.map(JSPFTrackToListen)}
               newAlert={newAlert}
+              listenBrainzAPIBaseURI={APIService.APIBaseURI}
+              refreshSpotifyToken={APIService.refreshSpotifyToken}
+              refreshYoutubeToken={APIService.refreshYoutubeToken}
             />
           </div>
         </div>

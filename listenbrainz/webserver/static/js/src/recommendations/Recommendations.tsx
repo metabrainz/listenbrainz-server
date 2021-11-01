@@ -211,7 +211,7 @@ export default class Recommendations extends React.Component<
       totalRecPages,
     } = this.state;
     const { user, newAlert } = this.props;
-    const { currentUser } = this.context;
+    const { APIService, currentUser } = this.context;
     const isCurrentUser =
       Boolean(currentUser?.name) && currentUser?.name === user?.name;
     return (
@@ -312,6 +312,9 @@ export default class Recommendations extends React.Component<
               direction={direction}
               listens={recommendations}
               newAlert={newAlert}
+              listenBrainzAPIBaseURI={APIService.APIBaseURI}
+              refreshSpotifyToken={APIService.refreshSpotifyToken}
+              refreshYoutubeToken={APIService.refreshYoutubeToken}
             />
           </div>
         </div>

@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Dict, Tuple
 from urllib.parse import urlparse
 
@@ -11,6 +12,7 @@ import pika.exceptions
 import time
 import ujson
 import uuid
+import sentry_sdk
 
 from flask import current_app, request
 
@@ -38,6 +40,9 @@ MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
 LISTEN_TYPE_SINGLE = 1
 LISTEN_TYPE_IMPORT = 2
 LISTEN_TYPE_PLAYING_NOW = 3
+
+# 2002 is Last.FM founding year but the data before 2005 is mostly rubbish
+LISTEN_MINIMUM_TS = datetime(2005, 1, 1).timestamp()
 
 
 def insert_payload(payload, user, listen_type=LISTEN_TYPE_IMPORT):
@@ -121,9 +126,29 @@ def _send_listens_to_queue(listen_type, listens):
         )
 
 
+def _raise_error_if_has_unicode_null(value, listen):
+    if isinstance(value, str) and '\x00' in value:
+        raise APIBadRequest("{} contains a unicode null".format(value), listen)
+
+
+def check_for_unicode_null_recursively(listen: Dict):
+    """ Checks for unicode null in all items in the dict, including inside
+    nested dicts and lists."""
+    for key, value in listen.items():
+        if isinstance(value, dict):
+            check_for_unicode_null_recursively(value)
+        elif isinstance(value, list):
+            for item in value:
+                _raise_error_if_has_unicode_null(item, listen)
+        else:
+            _raise_error_if_has_unicode_null(value, listen)
+
+
 def validate_listen(listen: Dict, listen_type) -> Dict:
     """Make sure that required keys are present, filled out and not too large.
-    The function may also mutate listens in place if needed."""
+    Also, check all keys for absence of unicode null which cannot be
+    inserted into Postgres. The function may also mutate listens
+    in place if needed."""
 
     if listen is None:
         raise APIBadRequest("Listen is empty and cannot be validated.")
@@ -146,6 +171,11 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
         # timestamps to be one hour ahead of server time
         if not is_valid_timestamp(listen['listened_at']):
             raise APIBadRequest("Value for key listened_at is too high.", listen)
+
+        # check that listened_at value is greater than last.fm founding year.
+        if listen['listened_at'] < LISTEN_MINIMUM_TS:
+            raise APIBadRequest("Value for key listened_at is too low. listened_at timestamp"
+                                " should be greater than the timestamp of start of 2005.", listen)
 
     elif listen_type == LISTEN_TYPE_PLAYING_NOW:
         if 'listened_at' in listen:
@@ -197,6 +227,13 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
         multiple_mbid_keys = ['artist_mbids', 'work_mbids']
         for key in multiple_mbid_keys:
             validate_multiple_mbids_field(listen, key)
+
+    # monitor performance of unicode null check because it might be a potential bottleneck
+    with sentry_sdk.start_span(op="null check", description="check for unicode null in submitted listen json"):
+        # If unicode null is present in the listen, postgres will raise an
+        # error while trying to insert it. hence, reject such listens.
+        check_for_unicode_null_recursively(listen)
+
     return listen
 
 
