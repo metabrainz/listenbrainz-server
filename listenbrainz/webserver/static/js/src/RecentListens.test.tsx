@@ -96,8 +96,9 @@ describe("Recentlistens", () => {
 
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
     const wrapper = mount<RecentListens>(
-      <RecentListens {...props} />,
-      mountOptions
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
     );
     expect(wrapper.html()).toMatchSnapshot();
     fakeDateNow.mockRestore();
