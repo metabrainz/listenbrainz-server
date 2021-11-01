@@ -349,7 +349,7 @@ def publish_data_to_queue(data, exchange, queue, error_msg):
             routing_key="",
             delivery_mode=2,
             content_type="application/json",
-            content_encoding="binary",
+            content_encoding="utf-8",
             exchange=_exchange
         )
 
