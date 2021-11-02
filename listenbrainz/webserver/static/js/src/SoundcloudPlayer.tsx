@@ -124,6 +124,16 @@ export default class SoundcloudPlayer
     } catch (error) {}
   }
 
+  static getSoundcloudURLFromListen = (
+    listen: Listen | JSPFTrack
+  ): string | undefined => {
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    if (originURL && /soundcloud\.com/.test(originURL)) {
+      return originURL;
+    }
+    return undefined;
+  };
+
   onReady = (): void => {
     if (!this.soundcloudPlayer) {
       return;
