@@ -483,12 +483,16 @@ export default class PlaylistPage extends React.Component<
       return;
     }
     const { playlist } = this.state;
+    // Owner can't be collaborator
+    const collaboratorsWithoutOwner = collaborators.filter(
+      (username) => username !== playlist.creator
+    );
     if (
       description === playlist.annotation &&
       name === playlist.title &&
       isPublic ===
         playlist.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]?.public &&
-      collaborators ===
+      collaboratorsWithoutOwner ===
         playlist.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]?.collaborators
     ) {
       // Nothing changed
@@ -502,7 +506,7 @@ export default class PlaylistPage extends React.Component<
         extension: {
           [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
             public: isPublic,
-            collaborators,
+            collaborators: collaboratorsWithoutOwner,
           },
         },
       };
@@ -740,24 +744,22 @@ export default class PlaylistPage extends React.Component<
               <div className="info">
                 <div>{playlist.track?.length} tracks</div>
                 <div>Created: {new Date(playlist.date).toLocaleString()}</div>
-                {customFields?.collaborators?.length && (
-                  <div>
-                    With the help of:&ensp;
-                    {customFields.collaborators.map((collaborator, index) => (
-                      <>
-                        <a
-                          key={collaborator}
-                          href={sanitizeUrl(`/user/${collaborator}`)}
-                        >
-                          {collaborator}
-                        </a>
-                        {index < customFields.collaborators.length - 1
-                          ? ", "
-                          : ""}
-                      </>
-                    ))}
-                  </div>
-                )}
+                {customFields?.collaborators &&
+                  Boolean(customFields.collaborators.length) && (
+                    <div>
+                      With the help of:&ensp;
+                      {customFields.collaborators.map((collaborator, index) => (
+                        <React.Fragment key={collaborator}>
+                          <a href={sanitizeUrl(`/user/${collaborator}`)}>
+                            {collaborator}
+                          </a>
+                          {index < customFields.collaborators.length - 1
+                            ? ", "
+                            : ""}
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  )}
                 {customFields?.last_modified_at && (
                   <div>
                     Last modified:{" "}
