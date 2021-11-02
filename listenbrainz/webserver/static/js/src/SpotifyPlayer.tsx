@@ -11,23 +11,6 @@ import {
 import { searchForSpotifyTrack, loadScriptAsync } from "./utils";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
 
-const getSpotifyUriFromListen = (listen: Listen): string => {
-  if (
-    !listen ||
-    !listen.track_metadata ||
-    !listen.track_metadata.additional_info ||
-    typeof listen.track_metadata.additional_info.spotify_id !== "string"
-  ) {
-    return "";
-  }
-  const spotifyId = listen.track_metadata.additional_info.spotify_id;
-  const spotifyTrack = spotifyId.split("https://open.spotify.com/")[1];
-  if (typeof spotifyTrack !== "string") {
-    return "";
-  }
-  return `spotify:${spotifyTrack.replace("/", ":")}`;
-};
-
 // Fix for LB-447 (Player does not play any sound)
 // https://github.com/spotify/web-playback-sdk/issues/75#issuecomment-487325589
 const fixSpotifyPlayerStyleIssue = () => {
@@ -114,6 +97,24 @@ export default class SpotifyPlayer
 
   componentWillUnmount(): void {
     this.disconnectSpotifyPlayer();
+  }
+
+  static getSpotifyURLFromListen(
+    listen: Listen | JSPFTrack
+  ): string | undefined {
+    return _get(listen, "track_metadata.additional_info.spotify_id");
+  }
+
+  static getSpotifyUriFromListen(listen: Listen | JSPFTrack): string {
+    const spotifyId = SpotifyPlayer.getSpotifyURLFromListen(listen);
+    if (!spotifyId) {
+      return "";
+    }
+    const spotifyTrack = spotifyId.split("https://open.spotify.com/")[1];
+    if (typeof spotifyTrack !== "string") {
+      return "";
+    }
+    return `spotify:${spotifyTrack.replace("/", ":")}`;
   }
 
   searchAndPlayTrack = async (listen: Listen | JSPFTrack): Promise<void> => {
@@ -240,7 +241,7 @@ export default class SpotifyPlayer
     );
     return (
       (isString(listeningFrom) && listeningFrom.toLowerCase() === "spotify") ||
-      _get(listen, "track_metadata.additional_info.spotify_id")
+      Boolean(SpotifyPlayer.getSpotifyURLFromListen(listen))
     );
   };
 
@@ -268,8 +269,10 @@ export default class SpotifyPlayer
     if (!show) {
       return;
     }
-    if (_get(listen, "track_metadata.additional_info.spotify_id")) {
-      this.playSpotifyURI(getSpotifyUriFromListen(listen as Listen));
+    if (SpotifyPlayer.getSpotifyURLFromListen(listen)) {
+      this.playSpotifyURI(
+        SpotifyPlayer.getSpotifyUriFromListen(listen as Listen)
+      );
     } else {
       this.searchAndPlayTrack(listen);
     }
