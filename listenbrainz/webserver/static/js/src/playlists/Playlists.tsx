@@ -210,6 +210,7 @@ export default class UserPlaylists extends React.Component<
           playlists: playlists.filter(
             (pl) => getPlaylistId(pl) !== getPlaylistId(playlist)
           ),
+          playlistSelectedForOperation: undefined,
         },
         newAlert.bind(
           this,
@@ -300,6 +301,7 @@ export default class UserPlaylists extends React.Component<
       );
       this.setState((prevState) => ({
         playlists: [JSPFObject.playlist, ...prevState.playlists],
+        playlistSelectedForOperation: undefined,
       }));
     } catch (error) {
       newAlert("danger", "Error", error.message);
@@ -357,7 +359,10 @@ export default class UserPlaylists extends React.Component<
 
       // Once API call succeeds, update playlist in state
       playlistsCopy[playlistIndex] = editedPlaylist;
-      this.setState({ playlists: playlistsCopy });
+      this.setState({
+        playlists: playlistsCopy,
+        playlistSelectedForOperation: undefined,
+      });
     } catch (error) {
       newAlert("danger", "Error", error.message);
     }
