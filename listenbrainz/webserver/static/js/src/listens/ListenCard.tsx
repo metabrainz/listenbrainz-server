@@ -5,6 +5,7 @@ import {
   faEllipsisV,
   faPlay,
   faCommentDots,
+  faExternalLinkAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -192,6 +193,7 @@ export default class ListenCard extends React.Component<
       listen,
       "track_metadata.additional_info.recording_msid"
     );
+    const recordingMBID = getRecordingMBID(listen);
 
     const hasRecordingMSID = Boolean(recordingMSID);
     const enableRecommendButton =
@@ -296,6 +298,17 @@ export default class ListenCard extends React.Component<
                 className="dropdown-menu dropdown-menu-right"
                 aria-labelledby="listenControlsDropdown"
               >
+                {recordingMBID && (
+                  <ListenControl
+                    icon={faExternalLinkAlt}
+                    title="Open in MusicBrainz"
+                    link={`https://musicbrainz.org/recording/${recordingMBID}`}
+                    anchorTagAttributes={{
+                      target: "_blank",
+                      rel: "noopener noreferrer",
+                    }}
+                  />
+                )}
                 {enableRecommendButton && (
                   <ListenControl
                     icon={faCommentDots}
