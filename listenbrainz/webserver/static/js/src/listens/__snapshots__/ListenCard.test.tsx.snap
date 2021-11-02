@@ -330,6 +330,88 @@ exports[`ListenCard renders correctly 1`] = `
           className="dropdown-menu dropdown-menu-right"
         >
           <ListenControl
+            anchorTagAttributes={
+              Object {
+                "rel": "noopener noreferrer",
+                "target": "_blank",
+              }
+            }
+            icon={
+              Object {
+                "icon": Array [
+                  512,
+                  512,
+                  Array [],
+                  "f35d",
+                  "M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z",
+                ],
+                "iconName": "external-link-alt",
+                "prefix": "fas",
+              }
+            }
+            link="https://musicbrainz.org/recording/yyyy"
+            title="Open in MusicBrainz"
+          >
+            <a
+              href="https://musicbrainz.org/recording/yyyy"
+              rel="noopener noreferrer"
+              target="_blank"
+              title="Open in MusicBrainz"
+            >
+              <FontAwesomeIcon
+                border={false}
+                className=""
+                fixedWidth={false}
+                flip={null}
+                icon={
+                  Object {
+                    "icon": Array [
+                      512,
+                      512,
+                      Array [],
+                      "f35d",
+                      "M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z",
+                    ],
+                    "iconName": "external-link-alt",
+                    "prefix": "fas",
+                  }
+                }
+                inverse={false}
+                listItem={false}
+                mask={null}
+                pull={null}
+                pulse={false}
+                rotation={null}
+                size={null}
+                spin={false}
+                swapOpacity={false}
+                symbol={false}
+                title=""
+                transform={null}
+              >
+                <svg
+                  aria-hidden="true"
+                  className="svg-inline--fa fa-external-link-alt fa-w-16 "
+                  data-icon="external-link-alt"
+                  data-prefix="fas"
+                  focusable="false"
+                  role="img"
+                  style={Object {}}
+                  viewBox="0 0 512 512"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z"
+                    fill="currentColor"
+                    style={Object {}}
+                  />
+                </svg>
+              </FontAwesomeIcon>
+               
+              Open in MusicBrainz
+            </a>
+          </ListenControl>
+          <ListenControl
             action={[Function]}
             icon={
               Object {
@@ -805,6 +887,88 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
           className="dropdown-menu dropdown-menu-right"
         >
           <ListenControl
+            anchorTagAttributes={
+              Object {
+                "rel": "noopener noreferrer",
+                "target": "_blank",
+              }
+            }
+            icon={
+              Object {
+                "icon": Array [
+                  512,
+                  512,
+                  Array [],
+                  "f35d",
+                  "M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z",
+                ],
+                "iconName": "external-link-alt",
+                "prefix": "fas",
+              }
+            }
+            link="https://musicbrainz.org/recording/yyyy"
+            title="Open in MusicBrainz"
+          >
+            <a
+              href="https://musicbrainz.org/recording/yyyy"
+              rel="noopener noreferrer"
+              target="_blank"
+              title="Open in MusicBrainz"
+            >
+              <FontAwesomeIcon
+                border={false}
+                className=""
+                fixedWidth={false}
+                flip={null}
+                icon={
+                  Object {
+                    "icon": Array [
+                      512,
+                      512,
+                      Array [],
+                      "f35d",
+                      "M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z",
+                    ],
+                    "iconName": "external-link-alt",
+                    "prefix": "fas",
+                  }
+                }
+                inverse={false}
+                listItem={false}
+                mask={null}
+                pull={null}
+                pulse={false}
+                rotation={null}
+                size={null}
+                spin={false}
+                swapOpacity={false}
+                symbol={false}
+                title=""
+                transform={null}
+              >
+                <svg
+                  aria-hidden="true"
+                  className="svg-inline--fa fa-external-link-alt fa-w-16 "
+                  data-icon="external-link-alt"
+                  data-prefix="fas"
+                  focusable="false"
+                  role="img"
+                  style={Object {}}
+                  viewBox="0 0 512 512"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z"
+                    fill="currentColor"
+                    style={Object {}}
+                  />
+                </svg>
+              </FontAwesomeIcon>
+               
+              Open in MusicBrainz
+            </a>
+          </ListenControl>
+          <ListenControl
             action={[Function]}
             icon={
               Object {
@@ -1279,6 +1443,88 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
           aria-labelledby="listenControlsDropdown"
           className="dropdown-menu dropdown-menu-right"
         >
+          <ListenControl
+            anchorTagAttributes={
+              Object {
+                "rel": "noopener noreferrer",
+                "target": "_blank",
+              }
+            }
+            icon={
+              Object {
+                "icon": Array [
+                  512,
+                  512,
+                  Array [],
+                  "f35d",
+                  "M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z",
+                ],
+                "iconName": "external-link-alt",
+                "prefix": "fas",
+              }
+            }
+            link="https://musicbrainz.org/recording/yyyy"
+            title="Open in MusicBrainz"
+          >
+            <a
+              href="https://musicbrainz.org/recording/yyyy"
+              rel="noopener noreferrer"
+              target="_blank"
+              title="Open in MusicBrainz"
+            >
+              <FontAwesomeIcon
+                border={false}
+                className=""
+                fixedWidth={false}
+                flip={null}
+                icon={
+                  Object {
+                    "icon": Array [
+                      512,
+                      512,
+                      Array [],
+                      "f35d",
+                      "M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z",
+                    ],
+                    "iconName": "external-link-alt",
+                    "prefix": "fas",
+                  }
+                }
+                inverse={false}
+                listItem={false}
+                mask={null}
+                pull={null}
+                pulse={false}
+                rotation={null}
+                size={null}
+                spin={false}
+                swapOpacity={false}
+                symbol={false}
+                title=""
+                transform={null}
+              >
+                <svg
+                  aria-hidden="true"
+                  className="svg-inline--fa fa-external-link-alt fa-w-16 "
+                  data-icon="external-link-alt"
+                  data-prefix="fas"
+                  focusable="false"
+                  role="img"
+                  style={Object {}}
+                  viewBox="0 0 512 512"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z"
+                    fill="currentColor"
+                    style={Object {}}
+                  />
+                </svg>
+              </FontAwesomeIcon>
+               
+              Open in MusicBrainz
+            </a>
+          </ListenControl>
           <ListenControl
             action={[Function]}
             icon={
