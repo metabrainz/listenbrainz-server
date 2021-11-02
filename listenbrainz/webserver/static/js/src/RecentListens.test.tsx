@@ -96,8 +96,9 @@ describe("Recentlistens", () => {
 
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
     const wrapper = mount<RecentListens>(
-      <RecentListens {...props} />,
-      mountOptions
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
     );
     expect(wrapper.html()).toMatchSnapshot();
     fakeDateNow.mockRestore();
@@ -430,6 +431,17 @@ describe("deleteListen", () => {
 
     expect(spy).toHaveBeenCalledTimes(0);
     expect(instance.state.deletedListen).toEqual(null);
+  });
+
+  it("does not render delete listen control if isCurrentUser is false", async () => {
+    const wrapper = mount<RecentListens>(
+      <GlobalAppContext.Provider
+        value={{ ...mountOptions.context, currentUser: {} as ListenBrainzUser }}
+      >
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
+    );
+    expect(wrapper.find("button[title='Delete Listen']")).toHaveLength(0);
   });
 
   it("does nothing if CurrentUser.authtoken is not set", async () => {
