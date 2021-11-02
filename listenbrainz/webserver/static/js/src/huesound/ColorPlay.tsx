@@ -160,7 +160,7 @@ export default class ColorPlay extends React.Component<
                     className="cover-art-container"
                   >
                     <img
-                      src={`https://coverartarchive.org/release/${release.release_mbid}/${release.caa_id}-250.jpg`}
+                      src={`https://archive.org/download/mbid-${release.release_mbid}/mbid-${release.release_mbid}-${release.caa_id}_thumb250.jpg`}
                       alt={`Cover art for Release ${release.release_name}`}
                       height={150}
                     />
@@ -178,7 +178,7 @@ export default class ColorPlay extends React.Component<
                   <img
                     className="img-rounded"
                     style={{ flex: 1 }}
-                    src={`https://coverartarchive.org/release/${selectedRelease.release_mbid}/${selectedRelease.caa_id}-250.jpg`}
+                    src={`https://archive.org/download/mbid-${selectedRelease.release_mbid}/mbid-${selectedRelease.release_mbid}-${selectedRelease.caa_id}_thumb250.jpg`}
                     alt={`Cover art for Release ${selectedRelease.release_name}`}
                     width={200}
                     height={200}
