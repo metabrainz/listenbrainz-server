@@ -5,6 +5,7 @@ import {
   faEllipsisV,
   faPlay,
   faCommentDots,
+  faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -50,6 +51,10 @@ export type ListenCardProps = {
   feedbackComponent?: JSX.Element;
   // These go in the dropdown menu
   additionalMenuItems?: JSX.Element;
+  // Mode for displaying missing MusicBrainz data
+  isMissingData?: boolean;
+  // Disables the play button that pops up when hovering, disables play on click too
+  disablePlay?: boolean;
 };
 
 type ListenCardState = {
@@ -89,6 +94,20 @@ export default class ListenCard extends React.Component<
       { brainzplayer_event: "play-listen", payload: listen },
       window.location.origin
     );
+  };
+
+  submitMissingData = () => {
+    const { listen } = this.props;
+    const form = document.createElement("form");
+    form.method = "post";
+    form.action = "https://musicbrainz.org/release/add";
+    const hiddenInput = document.createElement("input");
+    hiddenInput.type = "hidden";
+    hiddenInput.name = "name";
+    hiddenInput.value = listen.track_metadata.release_name || "test";
+    form.appendChild(hiddenInput);
+    document.body.appendChild(form);
+    form.submit();
   };
 
   /** React to events sent by BrainzPlayer */
@@ -187,6 +206,7 @@ export default class ListenCard extends React.Component<
       ...otherProps
     } = this.props;
     const { isCurrentlyPlaying } = this.state;
+    const { isMissingData, disablePlay } = this.props;
 
     const recordingMSID = _get(
       listen,
@@ -307,18 +327,30 @@ export default class ListenCard extends React.Component<
               </ul>
             </>
           )}
-          <button
-            title="Play"
-            className="btn-transparent play-button"
-            onClick={this.playListen}
-            type="button"
-          >
-            {isCurrentlyPlaying ? (
-              <FontAwesomeIcon size="1x" icon={faPlay as IconProp} />
-            ) : (
-              <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />
-            )}
-          </button>
+          {disablePlay ? null : (
+            <button
+              title="Play"
+              className="btn-transparent play-button"
+              onClick={this.playListen}
+              type="button"
+            >
+              {isCurrentlyPlaying ? (
+                <FontAwesomeIcon size="1x" icon={faPlay as IconProp} />
+              ) : (
+                <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />
+              )}
+            </button>
+          )}
+          {isMissingData ? (
+            <button
+              title="Add to MusicBrainz"
+              className="btn-transparent"
+              onClick={this.submitMissingData}
+              type="button"
+            >
+              <FontAwesomeIcon size="2x" icon={faPlus as IconProp} />
+            </button>
+          ) : null}
         </div>
         {additionalDetails && (
           <span
