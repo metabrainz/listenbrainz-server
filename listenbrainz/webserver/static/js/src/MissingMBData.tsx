@@ -66,7 +66,7 @@ export default class MissingMBDataPage extends React.Component<
     return (
       <div role="main">
         <div className="row" style={{ display: "flex", flexWrap: "wrap" }}>
-          <div className="col-md-7 col-xs-12">
+          <div className="col-xs-12">
             <div>
               <div id="missingMBData" ref={this.MissingMBDataTable}>
                 <h2>Missing Data:</h2>
@@ -79,6 +79,8 @@ export default class MissingMBDataPage extends React.Component<
                           showTimestamp
                           showUsername={false}
                           newAlert={newAlert}
+                          isMissingData
+                          disablePlay
                           listen={{
                             listened_at:
                               new Date(data.listened_at).getTime() / 1000,
