@@ -280,9 +280,4 @@ There can be quite a lot of logs in the terminal, so if you want to look only at
 
    ./develop.sh logs -f static_builder
 
-FAQ
---------------
-We have a :doc:`FAQ page <faqs>` for questions that come up often. Please take a look
-if you have any issues.
-
 .. include:: develop-sh.rst
