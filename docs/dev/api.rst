@@ -144,6 +144,15 @@ These API endpoints allow submitting, deleting, and retrieving ListenBrainz pinn
    :include-empty-docstring:
    :undoc-static:
 
+Color API Endpoints
+^^^^^^^^^^^^^^^^^^^
+These API endpoints allow fetching releases with recordings and cover art details for a given color.
+
+.. autoflask:: listenbrainz.webserver:create_app_rtfd()
+   :blueprints: color_api_v1
+   :include-empty-docstring:
+   :undoc-static:
+
 Rate limiting
 ^^^^^^^^^^^^^
 
