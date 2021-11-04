@@ -379,7 +379,7 @@ export default class RecentListens extends React.Component<
     const { APIService, currentUser } = this.context;
     let recordings = "";
 
-    if (listens && currentUser?.name) {
+    if (listens && listens.length && currentUser?.name) {
       listens.forEach((listen) => {
         const recordingMsid = _.get(
           listen,

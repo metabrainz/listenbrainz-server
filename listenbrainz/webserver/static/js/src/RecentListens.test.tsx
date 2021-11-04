@@ -139,7 +139,7 @@ describe("componentDidMount", () => {
     expect(wrapper.state("listenCount")).toEqual(42);
   });
 
-  it('calls loadFeedback if user is the currentUser and mode "listens"', () => {
+  it('calls loadFeedback if user is logged in and mode "listens"', () => {
     const wrapper = mount<RecentListens>(
       <GlobalAppContext.Provider value={mountOptions.context}>
         <RecentListens {...propsOneListen} />
@@ -153,20 +153,25 @@ describe("componentDidMount", () => {
     expect(instance.loadFeedback).toHaveBeenCalledTimes(1);
   });
 
-  it('does not call loadFeedback if user is not the currentUser even if mode "listens"', () => {
+  it('does not fetch user feedback if user is not logged in"', () => {
     const wrapper = mount<RecentListens>(
       <GlobalAppContext.Provider
-        value={{ ...mountOptions.context, currentUser: { name: "foobar" } }}
+        value={{ ...mountOptions.context, currentUser: {} as ListenBrainzUser }}
       >
         <RecentListens {...propsOneListen} />
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
-    instance.loadFeedback = jest.fn();
+    const loadFeedbackSpy = jest.spyOn(instance, "loadFeedback");
+    const APIFeedbackSpy = jest.spyOn(
+      instance.context.APIService,
+      "getFeedbackForUserForRecordings"
+    );
 
     instance.componentDidMount();
 
-    expect(instance.loadFeedback).toHaveBeenCalledTimes(0);
+    expect(loadFeedbackSpy).toHaveBeenCalledTimes(1);
+    expect(APIFeedbackSpy).not.toHaveBeenCalled();
   });
 });
 
