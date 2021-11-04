@@ -5,11 +5,17 @@ import {
   faEllipsisV,
   faPlay,
   faCommentDots,
+  faExternalLinkAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
+import {
+  faSoundcloud,
+  faSpotify,
+  faYoutube,
+} from "@fortawesome/free-brands-svg-icons";
 import {
   getArtistLink,
   getTrackLink,
@@ -21,6 +27,9 @@ import GlobalAppContext from "../GlobalAppContext";
 import Card from "../components/Card";
 import ListenControl from "./ListenControl";
 import ListenFeedbackComponent from "./ListenFeedbackComponent";
+import YoutubePlayer from "../YoutubePlayer";
+import SpotifyPlayer from "../SpotifyPlayer";
+import SoundcloudPlayer from "../SoundcloudPlayer";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
@@ -192,6 +201,10 @@ export default class ListenCard extends React.Component<
       listen,
       "track_metadata.additional_info.recording_msid"
     );
+    const recordingMBID = getRecordingMBID(listen);
+    const spotifyURL = SpotifyPlayer.getSpotifyURLFromListen(listen);
+    const youtubeURL = YoutubePlayer.getYoutubeURLFromListen(listen);
+    const soundcloudURL = SoundcloudPlayer.getSoundcloudURLFromListen(listen);
 
     const hasRecordingMSID = Boolean(recordingMSID);
     const enableRecommendButton =
@@ -296,6 +309,50 @@ export default class ListenCard extends React.Component<
                 className="dropdown-menu dropdown-menu-right"
                 aria-labelledby="listenControlsDropdown"
               >
+                {recordingMBID && (
+                  <ListenControl
+                    icon={faExternalLinkAlt}
+                    title="Open in MusicBrainz"
+                    link={`https://musicbrainz.org/recording/${recordingMBID}`}
+                    anchorTagAttributes={{
+                      target: "_blank",
+                      rel: "noopener noreferrer",
+                    }}
+                  />
+                )}
+                {spotifyURL && (
+                  <ListenControl
+                    icon={faSpotify}
+                    title="Open in Spotify"
+                    link={spotifyURL}
+                    anchorTagAttributes={{
+                      target: "_blank",
+                      rel: "noopener noreferrer",
+                    }}
+                  />
+                )}
+                {youtubeURL && (
+                  <ListenControl
+                    icon={faYoutube}
+                    title="Open in YouTube"
+                    link={youtubeURL}
+                    anchorTagAttributes={{
+                      target: "_blank",
+                      rel: "noopener noreferrer",
+                    }}
+                  />
+                )}
+                {soundcloudURL && (
+                  <ListenControl
+                    icon={faSoundcloud}
+                    title="Open in Soundcloud"
+                    link={soundcloudURL}
+                    anchorTagAttributes={{
+                      target: "_blank",
+                      rel: "noopener noreferrer",
+                    }}
+                  />
+                )}
                 {enableRecommendButton && (
                   <ListenControl
                     icon={faCommentDots}
