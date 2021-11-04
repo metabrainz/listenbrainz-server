@@ -116,7 +116,7 @@ def create_user_notification_event(user_name):
 
         {
             "metadata": {
-                "message": <the message to post, required>,
+                "message": "<the message to post, required>",
             }
         }
 
@@ -246,16 +246,23 @@ def delete_feed_events(user_name):
     '''
     Delete those events from user's feed that belong to them.
     Supports deletion of recommendation and notification.
-    Along with the authorization token, post one of the following, according
-    to your need.
-    {
-        "event_type": "recording_recommendation",
-        "id": int
-    }
-    {
-        "event_type": "notification",
-        "id": int
-    }
+    Along with the authorization token, post the event type and event id.
+    For example:
+
+    .. code-block:: json
+
+        {
+            "event_type": "recording_recommendation",
+            "id": "<integer id of the event>"
+        }
+
+    .. code-block:: json
+
+        {
+            "event_type": "notification",
+            "id": "<integer id of the event>"
+        }
+
     :param user_name: The MusicBrainz ID of the user from whose timeline events are being deleted
     :type user_name: ``str``
     :statuscode 200: Successful deletion
