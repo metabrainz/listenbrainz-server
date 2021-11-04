@@ -246,7 +246,12 @@ export default class UserFeedPage extends React.Component<
         previousEventTs: newEvents[0].created,
         ...optionalProps,
       },
-      successCallback
+      async () => {
+        if (successCallback) {
+          successCallback();
+        }
+        await this.loadFeedback();
+      }
     );
 
     // Scroll window back to the top of the events container element
