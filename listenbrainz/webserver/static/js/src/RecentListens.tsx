@@ -615,6 +615,10 @@ export default class RecentListens extends React.Component<
                   userName={user.name}
                   pinnedRecording={userPinnedRecording}
                   isCurrentUser={currentUser?.name === user?.name}
+                  currentFeedback={this.getFeedbackForRecordingMsid(
+                    userPinnedRecording?.recording_msid
+                  )}
+                  updateFeedbackCallback={this.updateFeedback}
                   removePinFromPinsList={() => {}}
                   newAlert={newAlert}
                 />

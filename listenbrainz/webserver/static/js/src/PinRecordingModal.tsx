@@ -71,10 +71,12 @@ export default class PinRecordingModal extends React.Component<
             pinnedUntil.setDate(pinnedUntil.getDate() + 7);
 
             const pinnedRecording: PinnedRecording = {
-              track_metadata: recordingToPin.track_metadata,
-              created: Date.now() / 1000,
+              blurb_content: blurbContent,
+              track_metadata: { ...recordingToPin.track_metadata },
+              created: Math.round(Date.now() / 1000),
               recording_mbid: recordingMBID ?? null,
-              pinned_until: pinnedUntil.getTime() / 1000,
+              recording_msid: recordingMSID,
+              pinned_until: Math.round(pinnedUntil.getTime() / 1000),
               row_id: NaN,
             };
             onSuccessfulPin(pinnedRecording);

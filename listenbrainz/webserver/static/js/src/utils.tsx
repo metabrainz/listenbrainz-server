@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as _ from "lodash";
 import * as timeago from "time-ago";
+import { set } from "lodash";
 
 const searchForSpotifyTrack = async (
   spotifyToken?: string,
@@ -384,6 +385,11 @@ const getListenablePin = (pinnedRecording: PinnedRecording): Listen => {
     listened_at: 0,
     ...pinnedRecording,
   };
+  set(
+    pinnedRecListen,
+    "track_metadata.additional_info.recording_msid",
+    pinnedRecording.recording_msid
+  );
   return pinnedRecListen;
 };
 

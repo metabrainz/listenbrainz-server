@@ -20,6 +20,12 @@ export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 export type PinnedRecordingCardProps = {
   userName: string;
   pinnedRecording: PinnedRecording;
+  currentFeedback?: ListenFeedBack | null;
+  // Only used when not passing a custom feedbackComponent
+  updateFeedbackCallback?: (
+    recordingMsid: string,
+    score: ListenFeedBack | RecommendationFeedBack
+  ) => void;
   className?: string;
   isCurrentUser: Boolean;
   removePinFromPinsList: (pin: PinnedRecording) => void;
@@ -126,7 +132,12 @@ export default class PinnedRecordingCard extends React.Component<
   };
 
   render() {
-    const { pinnedRecording, newAlert } = this.props;
+    const {
+      pinnedRecording,
+      newAlert,
+      currentFeedback,
+      updateFeedbackCallback,
+    } = this.props;
     const { currentlyPinned, isDeleted } = this.state;
 
     const thumbnail = currentlyPinned ? (
@@ -166,7 +177,8 @@ export default class PinnedRecordingCard extends React.Component<
       <ListenCard
         className={cssClasses.join(" ")}
         listen={pinnedRecordingToListen(pinnedRecording)}
-        // currentFeedback={currentFeedback}
+        currentFeedback={currentFeedback}
+        updateFeedbackCallback={updateFeedbackCallback}
         showTimestamp
         showUsername={false}
         newAlert={newAlert}
