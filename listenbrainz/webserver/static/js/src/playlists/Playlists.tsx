@@ -234,7 +234,8 @@ export default class UserPlaylists extends React.Component<
     isPublic: boolean,
     // Not sure what to do with those yet
     collaborators: string[],
-    id?: string
+    id?: string,
+    onSuccessCallback?: () => void
   ): Promise<void> => {
     const { newAlert } = this.props;
     const { currentUser } = this.context;
@@ -299,10 +300,12 @@ export default class UserPlaylists extends React.Component<
         newPlaylistId,
         currentUser.auth_token
       );
-      this.setState((prevState) => ({
-        playlists: [JSPFObject.playlist, ...prevState.playlists],
-        playlistSelectedForOperation: undefined,
-      }));
+      this.setState(
+        (prevState) => ({
+          playlists: [JSPFObject.playlist, ...prevState.playlists],
+        }),
+        onSuccessCallback
+      );
     } catch (error) {
       newAlert("danger", "Error", error.message);
     }
