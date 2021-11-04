@@ -206,6 +206,8 @@ export default class PlaylistPage extends React.Component<
           {
             playlist: { ...playlist, track: [...playlist.track, jspfTrack] },
             // recordingFeedbackMap,
+            searchInputValue: "",
+            cachedSearchResults: [],
           },
           this.emitPlaylistChanged
         );
