@@ -92,10 +92,6 @@ export default class UserFeedback extends React.Component<
   }
 
   componentDidMount(): void {
-    // Get API instance from React context provided for in top-level component
-    const { APIService, currentUser } = this.context;
-    this.APIService = APIService;
-
     // Listen to browser previous/next events and load page accordingly
     window.addEventListener("popstate", this.handleURLChange);
     document.addEventListener("keydown", this.handleKeyDown);
@@ -262,7 +258,7 @@ export default class UserFeedback extends React.Component<
   };
 
   getFeedback = async () => {
-    const { currentUser } = this.context;
+    const { currentUser, APIService } = this.context;
     const { newAlert } = this.props;
     const { feedback } = this.state;
 
@@ -276,7 +272,7 @@ export default class UserFeedback extends React.Component<
         .join(",");
 
       try {
-        const data = await this.APIService.getFeedbackForUserForRecordings(
+        const data = await APIService.getFeedbackForUserForRecordings(
           currentUser.name,
           recordings
         );
