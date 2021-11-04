@@ -81,6 +81,7 @@ export default class SpotifyPlayer
   };
 
   public name = "spotify";
+  public domainName = "spotify.com";
   spotifyPlayer?: SpotifyPlayerType;
   debouncedOnTrackEnd: () => void;
 

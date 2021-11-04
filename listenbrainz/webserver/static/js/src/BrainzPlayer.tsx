@@ -589,12 +589,16 @@ export default class BrainzPlayer extends React.Component<
         cloneDeep((currentListen as BaseListenFormat)?.track_metadata) ?? {},
     };
 
-    let musicService = dataSource.current?.name;
-    try {
-      // Browser could potentially be missing the URL constructor
-      musicService = new URL(currentTrackURL ?? "").origin;
-    } catch (e) {
-      // Do nothing, we just fallback gracefully to dataSource name.
+    const musicServiceName = dataSource.current?.name;
+    let musicServiceDomain = dataSource.current?.domainName;
+    // Best effort try?
+    if (!musicServiceDomain && currentTrackURL) {
+      try {
+        // Browser could potentially be missing the URL constructor
+        musicServiceDomain = new URL(currentTrackURL).hostname;
+      } catch (e) {
+        // Do nothing, we just fallback gracefully to dataSource name.
+      }
     }
 
     // ensure the track_metadata.additional_info path exists and add brainzplayer_metadata field
@@ -605,7 +609,8 @@ export default class BrainzPlayer extends React.Component<
         submission_client: "BrainzPlayer",
         // TODO:  passs the GIT_COMMIT_SHA env variable to the globalprops and add it here as submission_client_version
         // submission_client_version:"",
-        music_service: musicService,
+        music_service: musicServiceDomain,
+        music_service_name: musicServiceName,
         origin_url: currentTrackURL,
       },
     });
