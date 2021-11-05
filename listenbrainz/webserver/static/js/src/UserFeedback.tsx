@@ -11,7 +11,7 @@ import {
   faHeartBroken,
   faThumbtack,
 } from "@fortawesome/free-solid-svg-icons";
-import { isNaN, get, clone } from "lodash";
+import { isNaN, get, clone, has } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import {
@@ -69,7 +69,6 @@ export default class UserFeedback extends React.Component<
     return listenFormat;
   };
 
-  private APIService!: APIServiceClass;
   private listensTable = React.createRef<HTMLTableElement>();
 
   declare context: React.ContextType<typeof GlobalAppContext>;
@@ -84,7 +83,14 @@ export default class UserFeedback extends React.Component<
       feedback: props.feedback || [],
       loading: false,
       direction: "down",
-      recordingFeedbackMap: {},
+      recordingFeedbackMap:
+        // Build RecordingFeedbackMap from props.feedback which already contains the feedback score for each item
+        /* eslint-disable no-param-reassign */
+        props.feedback?.reduce((result, item, index) => {
+          result[item.recording_msid] = item.score;
+          return result;
+        }, {} as RecordingFeedbackMap) || {},
+      /* eslint-enable no-param-reassign */
       selectedFeedbackScore: props.feedback?.[0]?.score ?? 1,
     };
 
@@ -95,8 +101,6 @@ export default class UserFeedback extends React.Component<
     // Listen to browser previous/next events and load page accordingly
     window.addEventListener("popstate", this.handleURLChange);
     document.addEventListener("keydown", this.handleKeyDown);
-
-    this.loadFeedback();
   }
 
   componentWillUnmount() {
@@ -243,7 +247,7 @@ export default class UserFeedback extends React.Component<
     } catch (error) {
       newAlert(
         "warning",
-        "Could not load loved/hated tracks",
+        "We could not load love/hate feedback",
         <>
           Something went wrong when we tried to load your loved/hated
           recordings, please try again or contact us if the problem persists.
@@ -260,7 +264,7 @@ export default class UserFeedback extends React.Component<
   getFeedback = async () => {
     const { currentUser, APIService } = this.context;
     const { newAlert } = this.props;
-    const { feedback } = this.state;
+    const { feedback, recordingFeedbackMap } = this.state;
 
     let recordings = "";
     if (feedback?.length && currentUser?.name) {
@@ -280,8 +284,8 @@ export default class UserFeedback extends React.Component<
       } catch (error) {
         if (newAlert) {
           newAlert(
-            "danger",
-            "Playback error",
+            "warning",
+            "We could not load love/hate feedback",
             typeof error === "object" ? error.message : error
           );
         }
