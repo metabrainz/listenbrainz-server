@@ -1,3 +1,5 @@
+/* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
+
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as Sentry from "@sentry/react";
@@ -23,7 +25,7 @@ export type MissingMBDataProps = {
 export interface MissingMBDataState {
   missingData?: Array<MissingMBData>;
   currPage?: number;
-  totalPages?: number;
+  totalPages: number;
 }
 
 export default class MissingMBDataPage extends React.Component<
@@ -33,7 +35,6 @@ export default class MissingMBDataPage extends React.Component<
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
   private expectedDataPerPage = 25;
-  private APIService!: APIServiceClass; // don't know if needed or not
   private MissingMBDataTable = React.createRef<HTMLTableElement>();
 
   constructor(props: MissingMBDataProps) {
@@ -50,19 +51,43 @@ export default class MissingMBDataPage extends React.Component<
   }
 
   componentDidMount(): void {
-    const { user } = this.props;
     const { currPage } = this.state;
-    const { APIService, currentUser } = this.context;
-    this.APIService = APIService;
     window.history.replaceState(null, "", `?page=${currPage}`);
   }
+
+  handleClickPrevious = () => {
+    const { missingData } = this.props;
+    const { currPage } = this.state;
+    if (currPage && currPage > 1) {
+      const offset = (currPage - 1) * this.expectedDataPerPage;
+      const updatedPage = currPage - 1;
+      this.setState({
+        missingData:
+          missingData?.slice(offset - this.expectedDataPerPage, offset) || [],
+        currPage: updatedPage,
+      });
+      window.history.pushState(null, "", `?page=${updatedPage}`);
+    }
+  };
+
+  handleClickNext = () => {
+    const { missingData } = this.props;
+    const { currPage, totalPages } = this.state;
+    if (currPage && currPage < totalPages) {
+      const offset = currPage * this.expectedDataPerPage;
+      const updatedPage = currPage + 1;
+      this.setState({
+        missingData:
+          missingData?.slice(offset, offset + this.expectedDataPerPage) || [],
+        currPage: updatedPage,
+      });
+      window.history.pushState(null, "", `?page=${updatedPage}`);
+    }
+  };
 
   render() {
     const { missingData, currPage, totalPages } = this.state;
     const { user, newAlert } = this.props;
-    const { currentUser } = this.context;
-    const isCurrentUser =
-      Boolean(currentUser?.name) && currentUser?.name === user?.name;
     return (
       <div role="main">
         <div className="row" style={{ display: "flex", flexWrap: "wrap" }}>
@@ -83,7 +108,7 @@ export default class MissingMBDataPage extends React.Component<
                           disablePlay
                           listen={{
                             listened_at:
-                              new Date(data.listened_at).getTime() / 1000,
+                              new Date(`${data.listened_at}Z`).getTime() / 1000,
                             user_name: user.name,
                             track_metadata: {
                               artist_name: data.artist_name,
@@ -96,6 +121,41 @@ export default class MissingMBDataPage extends React.Component<
                     );
                   })}
                 </div>
+                <ul className="pager" style={{ display: "flex" }}>
+                  <li
+                    className={`previous ${
+                      currPage && currPage <= 1 ? "hidden" : ""
+                    }`}
+                  >
+                    <a
+                      role="button"
+                      onClick={this.handleClickPrevious}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") this.handleClickPrevious();
+                      }}
+                      tabIndex={0}
+                    >
+                      &larr; Previous
+                    </a>
+                  </li>
+                  <li
+                    className={`next ${
+                      currPage && currPage >= totalPages ? "hidden" : ""
+                    }`}
+                    style={{ marginLeft: "auto" }}
+                  >
+                    <a
+                      role="button"
+                      onClick={this.handleClickNext}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") this.handleClickNext();
+                      }}
+                      tabIndex={0}
+                    >
+                      Next &rarr;
+                    </a>
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
