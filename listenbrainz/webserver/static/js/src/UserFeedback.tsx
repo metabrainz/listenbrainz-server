@@ -306,15 +306,18 @@ export default class UserFeedback extends React.Component<
   };
 
   loadFeedback = async () => {
+    const { recordingFeedbackMap } = this.state;
     const feedback = await this.getFeedback();
-    if (!feedback) {
+    if (!feedback?.length) {
       return;
     }
-    const recordingFeedbackMap: RecordingFeedbackMap = {};
+    const newRecordingFeedbackMap: RecordingFeedbackMap = {
+      ...recordingFeedbackMap,
+    };
     feedback.forEach((fb: FeedbackResponse) => {
-      recordingFeedbackMap[fb.recording_msid] = fb.score;
+      newRecordingFeedbackMap[fb.recording_msid] = fb.score;
     });
-    this.setState({ recordingFeedbackMap });
+    this.setState({ recordingFeedbackMap: newRecordingFeedbackMap });
   };
 
   updateFeedback = (
