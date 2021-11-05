@@ -21,12 +21,11 @@ import unittest
 from listenbrainz.messybrainz import init_db_connection, run_sql_script, run_sql_script_without_transaction
 from listenbrainz import config
 
-ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', '..', 'admin', 'messybrainz',
-                             'sql')
+ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'admin', 'messybrainz', 'sql')
 TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'testdata')
 
 
-class DatabaseTestCase(unittest.TestCase):
+class MessyBrainzTestCase(unittest.TestCase):
 
     def setUp(self):
         init_db_connection(config.MESSYBRAINZ_ADMIN_URI)

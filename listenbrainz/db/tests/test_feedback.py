@@ -1,17 +1,13 @@
-# -*- coding: utf-8 -*-
-import json
-import os
-
 import sqlalchemy
 
-from listenbrainz import config
 from listenbrainz.db.model.feedback import Feedback
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
 from listenbrainz.db import timescale as ts
-from messybrainz import db as msb_db
-from messybrainz.db.data import submit_recording, load_recordings_from_msids
-from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase
+from listenbrainz import messybrainz as msb_db
+from listenbrainz.messybrainz.testing import MessyBrainzTestCase
+from listenbrainz.messybrainz.data import submit_recording, load_recordings_from_msids
+from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 
 
 class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase):

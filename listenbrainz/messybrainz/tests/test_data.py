@@ -19,7 +19,7 @@
 import json
 
 from listenbrainz.messybrainz import data, engine
-from listenbrainz.messybrainz.tests.testing import DatabaseTestCase
+from listenbrainz.messybrainz.testing import MessyBrainzTestCase
 
 
 recording = {
@@ -42,7 +42,7 @@ recording_diff_case = {
     'recording_mbid': "5465ca86-3881-4349-81b2-6efbd3a59451"
 }
 
-class DataTestCase(DatabaseTestCase):
+class DataTestCase(MessyBrainzTestCase):
 
     def test_get_id_from_meta_hash(self):
         with engine.connect() as connection:

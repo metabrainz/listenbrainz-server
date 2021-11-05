@@ -1,13 +1,12 @@
 import sqlalchemy
 
-from flask import current_app
 from listenbrainz import db
 from listenbrainz.db import timescale
 from listenbrainz.db.model.feedback import Feedback
-from messybrainz.db.data import load_recordings_from_msids
-from messybrainz import db as msb_db
+from listenbrainz import messybrainz as msb_db
+from listenbrainz.messybrainz.data import load_recordings_from_msids
 from typing import List
-from messybrainz.db.exceptions import NoDataFoundException
+from listenbrainz.messybrainz.exceptions import NoDataFoundException
 
 
 def insert(feedback: Feedback):
