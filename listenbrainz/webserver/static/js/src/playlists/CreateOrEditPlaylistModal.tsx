@@ -232,7 +232,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
                   />
                   <span className="input-group-btn">
                     <button
-                      className="btn"
+                      className="btn btn-default"
                       type="submit"
                       onClick={this.addCollaborator}
                       disabled={
