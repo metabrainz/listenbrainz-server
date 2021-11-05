@@ -375,8 +375,9 @@ export default class RecentListens extends React.Component<
   };
 
   getFeedback = async () => {
-    const { user, listens, newAlert } = this.props;
+    const { user, newAlert } = this.props;
     const { APIService, currentUser } = this.context;
+    const { listens } = this.state;
     let recordings = "";
 
     if (listens && listens.length && currentUser?.name) {
