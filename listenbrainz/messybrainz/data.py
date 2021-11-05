@@ -1,9 +1,8 @@
 import json
-import logging
 import uuid
 
 from hashlib import sha256
-from messybrainz.db import exceptions
+from listenbrainz.messybrainz import exceptions
 from sqlalchemy import text
 
 

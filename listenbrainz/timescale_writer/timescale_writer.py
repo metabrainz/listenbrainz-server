@@ -15,10 +15,9 @@ from listenbrainz.listenstore import RedisListenStore
 from listenbrainz.listen_writer import ListenWriter
 from listenbrainz.listenstore import TimescaleListenStore
 from listenbrainz.webserver import create_app
-from listenbrainz.utils import init_cache
-from brainzutils import metrics, cache
+from brainzutils import metrics
 
-from listenbrainz.webserver.external import messybrainz
+from listenbrainz import messybrainz
 from listenbrainz.webserver.views.api_tools import MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
 
 METRIC_UPDATE_INTERVAL = 60  # seconds
@@ -95,7 +94,7 @@ class TimescaleWriterSubscriber(ListenWriter):
             msb_listens.append(messy_dict)
 
         try:
-            msb_responses = messybrainz.submit_listens(msb_listens)
+            msb_responses = messybrainz.submit_listens_and_sing_me_a_sweet_song(msb_listens)
         except (messybrainz.exceptions.BadDataException, messybrainz.exceptions.ErrorAddingException):
             current_app.logger.error("MessyBrainz lookup for listens failed: ", exc_info=True)
             return []

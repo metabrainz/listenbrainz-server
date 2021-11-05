@@ -1,8 +1,58 @@
-from messybrainz.db import exceptions
-import sqlalchemy.exc
-from messybrainz.db import data
+import time
 
-from messybrainz import db
+import sqlalchemy.exc
+
+from sqlalchemy import create_engine
+from sqlalchemy.pool import NullPool
+import sqlalchemy
+import psycopg2
+
+from listenbrainz.messybrainz import exceptions, data
+
+# This value must be incremented after schema changes on replicated tables!
+SCHEMA_VERSION = 1
+
+engine = None
+
+
+def init_db_connection(connect_str):
+    global engine
+    while True:
+        try:
+            engine = create_engine(connect_str, poolclass=NullPool)
+            break
+        except psycopg2.OperationalError as e:
+            print("Couldn't establish connection to db: {}".format(str(e)))
+            print("Sleeping for 2 seconds and trying again...")
+            time.sleep(2)
+
+
+def run_sql_script(sql_file_path):
+    with open(sql_file_path) as sql:
+        connection = engine.connect()
+        connection.execute(sql.read())
+        connection.close()
+
+
+def run_sql_script_without_transaction(sql_file_path):
+    with open(sql_file_path) as sql:
+        connection = engine.connect()
+        connection.connection.set_isolation_level(0)
+        lines = sql.read().splitlines()
+        try:
+            for line in lines:
+                # TODO: Not a great way of removing comments. The alternative is to catch
+                # the exception sqlalchemy.exc.ProgrammingError "can't execute an empty query"
+                if line and not line.startswith("--"):
+                    connection.execute(line)
+        except sqlalchemy.exc.ProgrammingError as e:
+            print("Error: {}".format(e))
+            return False
+        finally:
+            connection.connection.set_isolation_level(1)
+            connection.close()
+        return True
+
 
 def submit_listens_and_sing_me_a_sweet_song(recordings):
     """ Inserts a list of recordings into MessyBrainz.
@@ -45,7 +95,7 @@ def load_recordings_from_msids(msids):
         A dict containing the recording data for the recording with specified MessyBrainz ID
     """
 
-    with db.engine.begin() as connection:
+    with engine.begin() as connection:
         return data.load_recordings_from_msids(connection, msids)
 
 
@@ -58,8 +108,9 @@ def load_recordings_from_mbids(mbids):
         A dict containing the recording data for the recording with specified MusicBrainz ID
     """
 
-    with db.engine.begin() as connection:
+    with engine.begin() as connection:
         return data.load_recordings_from_mbids(connection, mbids)
+
 
 def insert_single(connection, recording):
     """ Inserts a single recording into MessyBrainz.
@@ -77,6 +128,7 @@ def insert_single(connection, recording):
     loaded = data.load_recordings_from_msids(connection, [gid])[0]
     return loaded
 
+
 def insert_all_in_transaction(recordings):
     """ Inserts a list of recordings into MessyBrainz.
 
@@ -87,7 +139,7 @@ def insert_all_in_transaction(recordings):
     """
 
     ret = []
-    with db.engine.begin() as connection:
+    with engine.begin() as connection:
         for recording in recordings:
             result = insert_single(connection, recording)
             ret.append(result)
