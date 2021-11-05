@@ -275,7 +275,9 @@ export default class UserFeedback extends React.Component<
         // Only request feedback we don't already have
         .filter((msid) => !has(recordingFeedbackMap, msid))
         .join(",");
-
+      if (!recordings) {
+        return [];
+      }
       try {
         const data = await APIService.getFeedbackForUserForRecordings(
           currentUser.name,
