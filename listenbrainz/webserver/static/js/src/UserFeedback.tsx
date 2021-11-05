@@ -80,7 +80,7 @@ export default class UserFeedback extends React.Component<
     this.state = {
       maxPage: Math.ceil(totalCount / this.DEFAULT_ITEMS_PER_PAGE),
       page: 1,
-      feedback: props.feedback || [],
+      feedback: props.feedback?.slice(0, this.DEFAULT_ITEMS_PER_PAGE) || [],
       loading: false,
       direction: "down",
       recordingFeedbackMap:
