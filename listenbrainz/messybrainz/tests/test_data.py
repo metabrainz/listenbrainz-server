@@ -42,6 +42,7 @@ recording_diff_case = {
     'recording_mbid': "5465ca86-3881-4349-81b2-6efbd3a59451"
 }
 
+
 class DataTestCase(MessyBrainzTestCase):
 
     def test_get_id_from_meta_hash(self):
