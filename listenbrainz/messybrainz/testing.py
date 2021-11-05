@@ -18,50 +18,26 @@
 
 import os
 import unittest
-from listenbrainz.messybrainz import init_db_connection, run_sql_script, run_sql_script_without_transaction
+from listenbrainz.messybrainz import init_db_connection, run_sql_script
 from listenbrainz import config
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'admin', 'messybrainz', 'sql')
-TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'testdata')
 
 
 class MessyBrainzTestCase(unittest.TestCase):
 
     def setUp(self):
-        init_db_connection(config.MESSYBRAINZ_ADMIN_URI)
-        self.drop_db()
-        self.create_db()
         init_db_connection(config.MESSYBRAINZ_SQLALCHEMY_DATABASE_URI)
         self.init_db()
 
     def tearDown(self):
         self.drop_tables()
 
-    def reset_db(self):
-        self.drop_tables()
-        self.init_db()
-
-    def create_db(self):
-        run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_db.sql'))
-        run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'))
-
     def init_db(self):
         run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_tables.sql'))
         run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_primary_keys.sql'))
         run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
-        run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_functions.sql'))
         run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
 
     def drop_tables(self):
         run_sql_script(os.path.join(ADMIN_SQL_DIR, 'drop_tables.sql'))
-
-    def drop_db(self):
-        run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'drop_db.sql'))
-
-    def path_to_data_file(self, file_name):
-        """ Returns the path of the test data file relative to listenbrainz/db/testing.py.
-
-            Args:
-                file_name: the name of the data file
-        """
-        return os.path.join(TEST_DATA_PATH, file_name)

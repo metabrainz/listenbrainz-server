@@ -96,7 +96,6 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
 
         return len(self.sample_feedback_with_metadata)
 
-
     def test_insert(self):
         count = self.insert_test_data(self.user["id"])
         result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=25, offset=0)
@@ -197,7 +196,6 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
         self.assertEqual(result[0].track_metadata["additional_info"]["recording_mbid"], "076255b4-1575-11ec-ac84-135bf6a670e3")
         self.assertEqual(result[0].track_metadata["additional_info"]["release_mbid"], "1fd178b4-1575-11ec-b98a-d72392cd8c97")
         self.assertEqual(result[0].track_metadata["additional_info"]["artist_msid"], self.saved_artist_msid)
-
 
     def test_get_feedback_count_for_user(self):
         count = self.insert_test_data(self.user["id"])
