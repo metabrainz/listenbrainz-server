@@ -270,9 +270,10 @@ export default class UserFeedback extends React.Component<
     if (feedback?.length && currentUser?.name) {
       recordings = feedback
         .map((item) => item.recording_msid)
-        .filter((item) => {
-          return item !== undefined;
-        })
+        // Only request non-undefined and non-empty string
+        .filter(Boolean)
+        // Only request feedback we don't already have
+        .filter((msid) => !has(recordingFeedbackMap, msid))
         .join(",");
 
       try {
