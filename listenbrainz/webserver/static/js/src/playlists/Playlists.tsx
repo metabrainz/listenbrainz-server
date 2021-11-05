@@ -338,6 +338,10 @@ export default class UserPlaylists extends React.Component<
       return;
     }
     try {
+      // Owner can't be collaborator
+      const collaboratorsWithoutOwner = collaborators.filter(
+        (username) => username !== playlistToEdit.creator
+      );
       const editedPlaylist: JSPFPlaylist = {
         ...playlistToEdit,
         annotation: description,
@@ -345,7 +349,7 @@ export default class UserPlaylists extends React.Component<
         extension: {
           [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
             public: isPublic,
-            collaborators,
+            collaborators: collaboratorsWithoutOwner,
           },
         },
       };
