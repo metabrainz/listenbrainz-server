@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional, List
 from pydantic import BaseModel, validator, constr
 from listenbrainz.db.model.validators import check_rec_mbid_msid_is_valid_uuid, check_datetime_has_tzinfo
-from messybrainz import load_recordings_from_msids, load_recordings_from_mbids
+from listenbrainz.messybrainz import load_recordings_from_msids, load_recordings_from_mbids
 
 DAYS_UNTIL_UNPIN = 7  # default = unpin after one week
 MAX_BLURB_CONTENT_LENGTH = 280  # maximum length of blurb content
