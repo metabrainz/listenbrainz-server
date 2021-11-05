@@ -1,7 +1,6 @@
 import calendar
 from collections import defaultdict
 from datetime import datetime, timezone
-from enum import Enum
 from typing import Dict, List, Tuple
 
 import listenbrainz.db.stats as db_stats
@@ -9,7 +8,7 @@ import listenbrainz.db.user as db_user
 import pycountry
 import requests
 
-from data.model.common_stat import StatApi
+from data.model.common_stat import StatApi, StatisticsRange
 from data.model.user_artist_map import UserArtistMapRecord
 from flask import Blueprint, current_app, jsonify, request
 
@@ -26,13 +25,6 @@ from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
 STATS_CALCULATION_INTERVAL = 7  # Stats are recalculated every 7 days
 
 stats_api_bp = Blueprint('stats_api_v1', __name__)
-
-
-class StatisticsRange(Enum):
-    week = 'week'
-    month = 'month'
-    year = 'year'
-    all_time = 'all_time'
 
 
 @stats_api_bp.route("/user/<user_name>/artists")
@@ -86,8 +78,8 @@ def get_user_artist(user_name):
     :param offset: Optional, number of artists to skip from the beginning, for pagination.
         Ex. An offset of 5 means the top 5 artists will be skipped, defaults to 0
     :type offset: ``int``
-    :param range: Optional, time interval for which statistics should be collected, possible values are ``week``,
-        ``month``, ``year``, ``all_time``, defaults to ``all_time``
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
     :type range: ``str``
     :statuscode 200: Successful query, you have data!
     :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
@@ -155,8 +147,8 @@ def get_release(user_name):
     :param offset: Optional, number of releases to skip from the beginning, for pagination.
         Ex. An offset of 5 means the top 5 releases will be skipped, defaults to 0
     :type offset: ``int``
-    :param range: Optional, time interval for which statistics should be collected, possible values are ``week``,
-        ``month``, ``year``, ``all_time``, defaults to ``all_time``
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
     :type range: ``str``
     :statuscode 200: Successful query, you have data!
     :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
@@ -222,8 +214,8 @@ def get_recording(user_name):
     :param offset: Optional, number of recordings to skip from the beginning, for pagination.
         Ex. An offset of 5 means the top 5 recordings will be skipped, defaults to 0
     :type offset: ``int``
-    :param range: Optional, time interval for which statistics should be collected, possible values are ``week``,
-        ``month``, ``year``, ``all_time``, defaults to ``all_time``
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
     :type range: ``str``
     :statuscode 200: Successful query, you have data!
     :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
@@ -307,8 +299,8 @@ def get_listening_activity(user_name: str):
         - For ``all_time`` listening activity statistics we only return the years which have more than
           zero listens.
 
-    :param range: Optional, time interval for which statistics should be returned, possible values are ``week``,
-        ``month``, ``year``, ``all_time``, defaults to ``all_time``
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
     :type range: ``str``
     :statuscode 200: Successful query, you have data!
     :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
@@ -378,8 +370,8 @@ def get_daily_activity(user_name: str):
     .. note::
         - This endpoint is currently in beta
 
-    :param range: Optional, time interval for which statistics should be returned, possible values are ``week``,
-        ``month``, ``year``, ``all_time``, defaults to ``all_time``
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
     :type range: ``str``
     :statuscode 200: Successful query, you have data!
     :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
@@ -459,8 +451,8 @@ def get_artist_map(user_name: str):
         - We cache the results for this query for a week to improve page load times, if you want to request fresh data you
           can use the ``force_recalculate`` flag.
 
-    :param range: Optional, time interval for which statistics should be returned, possible values are ``week``,
-        ``month``, ``year``, ``all_time``, defaults to ``all_time``
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
     :type range: ``str``
     :param force_recalculate: Optional, recalculate the data instead of returning the cached result.
     :type force_recalculate: ``bool``
@@ -587,8 +579,8 @@ def get_sitewide_artist():
     :param offset: Optional, number of artists to skip from the beginning, for pagination.
         Ex. An offset of 5 means the top 5 artists will be skipped, defaults to 0
     :type offset: ``int``
-    :param range: Optional, time interval for which statistics should be collected, possible values are ``week``,
-        ``month``, ``year``, ``all_time``, defaults to ``all_time``
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
     :type range: ``str``
     :statuscode 200: Successful query, you have data!
     :statuscode 204: Statistics haven't been calculated, empty response will be returned
