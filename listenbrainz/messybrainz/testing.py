@@ -28,6 +28,7 @@ class MessyBrainzTestCase(unittest.TestCase):
 
     def setUp(self):
         init_db_connection(config.MESSYBRAINZ_SQLALCHEMY_DATABASE_URI)
+        self.drop_tables()
         self.init_db()
 
     def tearDown(self):
