@@ -18,9 +18,8 @@
 
 import json
 
-from messybrainz import db
-from messybrainz.db import data
-from messybrainz.db.testing import DatabaseTestCase
+from listenbrainz.messybrainz import data, engine
+from listenbrainz.messybrainz.tests.testing import DatabaseTestCase
 
 
 recording = {
@@ -46,19 +45,19 @@ recording_diff_case = {
 class DataTestCase(DatabaseTestCase):
 
     def test_get_id_from_meta_hash(self):
-        with db.engine.connect() as connection:
+        with engine.connect() as connection:
             recording_msid = data.submit_recording(connection, recording)
             self.assertEqual(recording_msid, str(data.get_id_from_meta_hash(connection, recording)))
 
 
     def test_submit_recording(self):
-        with db.engine.connect() as connection:
+        with engine.connect() as connection:
             recording_msid = data.submit_recording(connection, recording)
             self.assertEqual(recording_msid, str(data.get_id_from_recording(connection, recording)))
 
 
     def test_get_artist_credit(self):
-        with db.engine.connect() as connection:
+        with engine.connect() as connection:
             recording_msid = data.submit_recording(connection, recording)
             artist_msid = data.get_artist_credit(connection, recording['artist'])
             recording_data = data.load_recordings_from_msids(connection, [recording_msid])[0]
@@ -66,7 +65,7 @@ class DataTestCase(DatabaseTestCase):
 
 
     def test_get_release(self):
-        with db.engine.connect() as connection:
+        with engine.connect() as connection:
             recording_msid = data.submit_recording(connection, recording)
             release_msid = data.get_release(connection, recording['release'])
             recording_data = data.load_recordings_from_msids(connection, [recording_msid])[0]
@@ -74,32 +73,32 @@ class DataTestCase(DatabaseTestCase):
 
 
     def test_add_artist_credit(self):
-        with db.engine.connect() as connection:
+        with engine.connect() as connection:
             artist_msid = data.add_artist_credit(connection, 'Kanye West')
             self.assertEqual(artist_msid, data.get_artist_credit(connection, 'Kanye West'))
 
 
     def test_add_release(self):
-        with db.engine.connect() as connection:
+        with engine.connect() as connection:
             release_msid = data.add_release(connection, 'The College Dropout')
             self.assertEqual(release_msid, data.get_release(connection, 'The College Dropout'))
 
     def test_add_recording_different_cases(self):
         """ Tests that recordings with only case differences get the same MessyBrainz ID.
         """
-        with db.engine.connect() as connection:
+        with engine.connect() as connection:
             msid1 = data.submit_recording(connection, recording)
             msid2 = str(data.get_id_from_recording(connection, recording_diff_case))
             self.assertEqual(msid1, msid2)
 
     def test_load_recordings_from_msids(self):
-        with db.engine.connect() as connection:
+        with engine.connect() as connection:
             recording_msid = data.submit_recording(connection, recording)
             result = data.load_recordings_from_msids(connection, [recording_msid])[0]
             self.assertDictEqual(result['payload'], recording)
 
     def test_load_recordings_from_mbids(self):
-        with db.engine.connect() as connection:
+        with engine.connect() as connection:
             data.submit_recording(connection, recording)
             result = data.load_recordings_from_mbids(connection, [recording["recording_mbid"]])[0]
             self.assertDictEqual(result['payload'], recording)
