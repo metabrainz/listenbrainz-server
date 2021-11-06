@@ -1,7 +1,7 @@
 import * as React from "react";
 import { get as _get } from "lodash";
 import GlobalAppContext from "./GlobalAppContext";
-import { preciseTimestamp } from "./utils";
+import {getRecordingMBID, preciseTimestamp} from "./utils";
 
 export type PinRecordingModalProps = {
   recordingToPin: Listen;
@@ -40,13 +40,7 @@ export default class PinRecordingModal extends React.Component<
         recordingToPin,
         "track_metadata.additional_info.recording_msid"
       );
-      // We currently have an issue with submitting MSID and MBID at the same time
-      // So we temporarily remove the MBID from the submition
-      const recordingMBID = undefined;
-      //   const recordingMBID = _get(
-      //     recordingToPin,
-      //     "track_metadata.additional_info.recording_mbid"
-      //   );
+      const recordingMBID = getRecordingMBID(recordingToPin);
 
       try {
         const status = await APIService.submitPinRecording(
