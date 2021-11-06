@@ -108,19 +108,19 @@ def fetch_track_metadata_for_pins(pins: List[PinnedRecording]) -> List[PinnedRec
         with timescale.engine.connect() as connection:
             mbid_metadatas = connection.execute(sqlalchemy.text(query), mbids=mbids)
 
-        # we can zip the pins and metadata because the query returns
-        # the metadata in same order of the mbid list passed to it
-        for pin, metadata in zip(mbid_pins, mbid_metadatas):
-            pin.track_metadata = {
-                "track_name": metadata["title"],
-                "artist_name": metadata["artist"],
-                "release_name": metadata["release"],
-                "additional_info": {
-                    "recording_mbid": metadata["recording_mbid"],
-                    "release_mbid": metadata["release_mbid"],
-                    "artist_mbids": metadata["artist_mbids"],
+            # we can zip the pins and metadata because the query returns
+            # the metadata in same order of the mbid list passed to it
+            for pin, metadata in zip(mbid_pins, mbid_metadatas):
+                pin.track_metadata = {
+                    "track_name": metadata["title"],
+                    "artist_name": metadata["artist"],
+                    "release_name": metadata["release"],
+                    "additional_info": {
+                        "recording_mbid": metadata["recording_mbid"],
+                        "release_mbid": metadata["release_mbid"],
+                        "artist_mbids": metadata["artist_mbids"],
+                    }
                 }
-            }
 
     if msid_pins:
         fetch_msids = [pin.recording_msid for pin in msid_pins]  # retrieves list of msid's to fetch with
