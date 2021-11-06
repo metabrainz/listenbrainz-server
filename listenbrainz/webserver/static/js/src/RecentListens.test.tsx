@@ -952,6 +952,7 @@ describe("pinRecordingModal", () => {
     expect(pinRecordingModal.props()).toEqual({
       recordingToPin: props.listens[0],
       newAlert: props.newAlert,
+      onSuccessfulPin: expect.any(Function),
     });
 
     instance.updateRecordingToPin(recordingToPin);
@@ -961,6 +962,7 @@ describe("pinRecordingModal", () => {
     expect(pinRecordingModal.props()).toEqual({
       recordingToPin,
       newAlert: props.newAlert,
+      onSuccessfulPin: expect.any(Function),
     });
   });
 });
