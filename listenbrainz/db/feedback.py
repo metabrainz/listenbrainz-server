@@ -127,7 +127,7 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
                         "recording_mbid": row["recording_mbid"],
                         "release_mbid": row["release_mbid"],
                         "artist_mbids": row["artist_mbids"],
-                        "artist_msid": artist_msids[rec["ids"]["recording_msid"]]}
+                        "artist_msid": artist_msids[row["recording_msid"]]}
 
     return feedback
 
