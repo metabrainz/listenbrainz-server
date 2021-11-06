@@ -59,39 +59,6 @@ describe("PinnedRecordingCard", () => {
     );
     expect(wrapper).toMatchSnapshot();
   });
-
-  it("calls renderPinTitle, renderPinDate, & renderBlurbContent", () => {
-    const wrapper = mount<PinnedRecordingCard>(
-      <GlobalAppContext.Provider value={globalProps}>
-        <PinnedRecordingCard {...{ ...props, newAlert: jest.fn() }} />
-      </GlobalAppContext.Provider>
-    );
-    const instance = wrapper.instance();
-
-    instance.renderPinTitle = jest.fn();
-    instance.renderPinDate = jest.fn();
-    instance.renderBlurbContent = jest.fn();
-
-    instance.render();
-    expect(instance.renderPinTitle).toHaveBeenCalledTimes(2);
-    expect(instance.renderPinDate).toHaveBeenCalledTimes(2);
-    expect(instance.renderBlurbContent).toHaveBeenCalledTimes(2);
-  });
-});
-
-describe("componentDidUpdate", () => {
-  it("updates the state", () => {
-    const wrapper = mount<PinnedRecordingCard>(
-      <PinnedRecordingCard {...props} />
-    );
-    const instance = wrapper.instance();
-    const spy = jest.spyOn(instance, "determineIfCurrentlyPinned");
-
-    // update the component prop twice
-    wrapper.setProps({ pinnedRecording: expiredPinnedRecording });
-    wrapper.setProps({ pinnedRecording });
-    expect(spy).toHaveBeenCalledTimes(2);
-  });
 });
 
 describe("determineIfCurrentlyPinned", () => {
