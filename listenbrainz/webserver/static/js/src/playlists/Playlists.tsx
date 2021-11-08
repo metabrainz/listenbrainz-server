@@ -340,7 +340,8 @@ export default class UserPlaylists extends React.Component<
     try {
       // Owner can't be collaborator
       const collaboratorsWithoutOwner = collaborators.filter(
-        (username) => username !== playlistToEdit.creator
+        (username) =>
+          username.toLowerCase() !== playlistToEdit.creator.toLowerCase()
       );
       const editedPlaylist: JSPFPlaylist = {
         ...playlistToEdit,

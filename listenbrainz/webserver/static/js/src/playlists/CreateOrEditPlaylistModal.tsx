@@ -238,8 +238,10 @@ export default class CreateOrEditPlaylistModal extends React.Component<
                       disabled={
                         !newCollaborator ||
                         (isEdit
-                          ? playlist?.creator === newCollaborator
-                          : currentUser.name === newCollaborator)
+                          ? playlist?.creator.toLowerCase() ===
+                            newCollaborator.toLowerCase()
+                          : currentUser.name.toLowerCase() ===
+                            newCollaborator.toLowerCase())
                       }
                     >
                       <FontAwesomeIcon icon={faPlusCircle as IconProp} /> Add
