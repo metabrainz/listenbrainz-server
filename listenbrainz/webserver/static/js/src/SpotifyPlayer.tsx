@@ -63,6 +63,22 @@ export default class SpotifyPlayer
     return true;
   };
 
+  static isListenFromThisService = (listen: Listen | JSPFTrack): boolean => {
+    const listeningFrom = _get(
+      listen,
+      "track_metadata.additional_info.listening_from"
+    );
+    return (
+      (isString(listeningFrom) && listeningFrom.toLowerCase() === "spotify") ||
+      Boolean(SpotifyPlayer.getSpotifyURLFromListen(listen))
+    );
+  };
+
+  /**
+   * @see https://github.com/Microsoft/TypeScript/issues/3841#issuecomment-337560146
+   */
+  ["constructor"]: typeof SpotifyPlayer;
+
   public name = "spotify";
   public domainName = "spotify.com";
   spotifyPlayer?: SpotifyPlayerType;
