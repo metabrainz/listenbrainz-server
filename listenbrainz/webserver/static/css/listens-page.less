@@ -243,16 +243,19 @@
 	}
 	
 	.listen-thumbnail {
-		flex: 1 0 65px;
+		flex: 1 0 @cover-art-thumbnail-size;
 		align-self: center;
 		padding-right: 1em;
 		margin: -1em;
 		margin-right: initial;
 		border-radius: 8px;
-		max-width: 65px;
-		max-height: 65px;
-		> src {
-			height: @cover-art-thumbnail-size;
+		width: @cover-art-thumbnail-size;
+		height: @cover-art-thumbnail-size;
+    	justify-content: flex-start;
+		> img {
+			height: inherit;
+			width: inherit;
+			object-fit: cover;
 		}
 	}
 	
