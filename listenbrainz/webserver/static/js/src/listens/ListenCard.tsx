@@ -22,6 +22,7 @@ import {
   preciseTimestamp,
   fullLocalizedDateFromTimestampOrISODate,
   getRecordingMBID,
+  getAlbumArtFromListenMetadata,
 } from "../utils";
 import GlobalAppContext from "../GlobalAppContext";
 import Card from "../components/Card";
@@ -81,8 +82,14 @@ export default class ListenCard extends React.Component<
     };
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     window.addEventListener("message", this.receiveBrainzPlayerMessage);
+
+    const { listen } = this.props;
+    const albumArtSrc = await getAlbumArtFromListenMetadata(listen);
+    if (albumArtSrc) {
+      this.setState({ thumbnailSrc: albumArtSrc });
+    }
   }
 
   componentWillUnmount() {
