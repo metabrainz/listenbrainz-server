@@ -76,27 +76,15 @@ export default class UserFeedback extends React.Component<
 
   constructor(props: UserFeedbackProps) {
     super(props);
-    const { user, totalCount, feedback } = props;
-    const { currentUser } = this.context;
+    const { totalCount, feedback } = props;
 
-    let recordingFeedbackMap = {};
-    if (currentUser?.name === user.name && feedback?.length) {
-      // Logged in user is looking at their own feedback, we can build
-      // the RecordingFeedbackMap from feedback which already contains the feedback score for each item
-      /* eslint-disable no-param-reassign */
-      recordingFeedbackMap = feedback.reduce((result, item, index) => {
-        result[item.recording_msid] = item.score;
-        return result;
-      }, {} as RecordingFeedbackMap);
-      /* eslint-enaable no-param-reassign */
-    }
     this.state = {
       maxPage: Math.ceil(totalCount / this.DEFAULT_ITEMS_PER_PAGE),
       page: 1,
       feedback: feedback?.slice(0, this.DEFAULT_ITEMS_PER_PAGE) || [],
       loading: false,
       direction: "down",
-      recordingFeedbackMap,
+      recordingFeedbackMap: {},
       selectedFeedbackScore: feedback?.[0]?.score ?? 1,
     };
 
@@ -104,10 +92,25 @@ export default class UserFeedback extends React.Component<
   }
 
   componentDidMount(): void {
+    const { currentUser } = this.context;
+    const { user, feedback } = this.props;
+
     // Listen to browser previous/next events and load page accordingly
     window.addEventListener("popstate", this.handleURLChange);
     document.addEventListener("keydown", this.handleKeyDown);
-    this.loadFeedback();
+
+    if (currentUser?.name === user.name && feedback?.length) {
+      // Logged in user is looking at their own feedback, we can build
+      // the RecordingFeedbackMap from feedback which already contains the feedback score for each item
+      const recordingFeedbackMap = feedback.reduce((result, item) => {
+        /* eslint-disable-next-line no-param-reassign */
+        result[item.recording_msid] = item.score;
+        return result;
+      }, {} as RecordingFeedbackMap);
+      this.setState({ recordingFeedbackMap });
+    } else {
+      this.loadFeedback();
+    }
   }
 
   componentWillUnmount() {

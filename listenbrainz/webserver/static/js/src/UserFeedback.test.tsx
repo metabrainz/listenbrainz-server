@@ -89,9 +89,19 @@ describe("UserFeedback", () => {
     fakeDateNow.mockRestore();
   });
 
-  it("loads user feedback from props to recordingFeedbackMap in state", async () => {
+  it("loads user feedback from props if logged-in user on their profile", async () => {
     const wrapper = mount<UserFeedback>(
-      <GlobalAppContext.Provider value={mountOptions.context}>
+      <GlobalAppContext.Provider
+        value={{
+          ...mountOptions.context,
+          // Same user as in page props
+          currentUser: {
+            name: "mr_monkey",
+            id: 1,
+            auth_token: "IHaveSeenTheFnords",
+          },
+        }}
+      >
         <UserFeedback {...props} />
       </GlobalAppContext.Provider>
     );
@@ -105,7 +115,22 @@ describe("UserFeedback", () => {
     );
   });
 
-  it("does not load user feedback if no user is logged in", async () => {
+  it("loads user feedback from API for logged-in user", async () => {
+    const wrapper = mount<UserFeedback>(
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <UserFeedback {...props} />
+      </GlobalAppContext.Provider>
+    );
+    const instance = wrapper.instance();
+    const loadFeedbackSpy = jest.spyOn(instance, "loadFeedback");
+
+    expect(loadFeedbackSpy).toHaveBeenCalledTimes(1);
+    expect(instance.state.recordingFeedbackMap).toEqual(
+      initialRecordingFeedbackMap
+    );
+  });
+
+  it("loadFeedback does not do anything if no user is logged in", async () => {
     const wrapper = mount<UserFeedback>(
       <GlobalAppContext.Provider value={mountOptionsWithoutUser.context}>
         <UserFeedback {...props} />
