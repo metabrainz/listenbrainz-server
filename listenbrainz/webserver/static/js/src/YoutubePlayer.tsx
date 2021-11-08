@@ -28,24 +28,30 @@ type ExtendedYoutubePlayer = {
 export default class YoutubePlayer
   extends React.Component<YoutubePlayerProps, YoutubePlayerState>
   implements DataSourceType {
-  static isListenFromThisService(listen: Listen | JSPFTrack): boolean {
+  static getVideoIDFromListen(listen: Listen | JSPFTrack): string | undefined {
     // Checks if there is a youtube ID in the listen
     const youtubeId = _get(listen, "track_metadata.additional_info.youtube_id");
     if (youtubeId) {
-      return true;
+      return youtubeId;
     }
 
     // or if the origin URL contains youtube.com
     const originURL = _get(listen, "track_metadata.additional_info.origin_url");
     if (_isString(originURL) && originURL.length) {
-      const parsedURL = new URL(originURL);
-      const { hostname, searchParams } = parsedURL;
-      if (/youtube\.com/.test(hostname)) {
-        return true;
-      }
+      /** Credit for this regular expression goes to Soufiane Sakhi:
+       * https://stackoverflow.com/a/61033353/4904467
+       */
+      const youtubeURLRegexp = /(?:https?:\/\/)?(?:www\.|m\.)?youtu(?:\.be\/|be.com\/\S*(?:watch|embed)(?:(?:(?=\/[^&\s?]+(?!\S))\/)|(?:\S*v=|v\/)))([^&\s?]+)/g;
+      const match = youtubeURLRegexp.exec(originURL);
+      return match?.[0];
     }
 
-    return false;
+    return undefined;
+  }
+
+  static isListenFromThisService(listen: Listen | JSPFTrack): boolean {
+    const videoId = YoutubePlayer.getVideoIDFromListen(listen);
+    return Boolean(videoId);
   }
 
   /**
