@@ -1,7 +1,6 @@
 import * as React from "react";
 import * as _ from "lodash";
 import * as timeago from "time-ago";
-import { set } from "lodash";
 import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
 import SpotifyAPIService from "./SpotifyAPIService";
@@ -119,13 +118,17 @@ const searchForYoutubeTrack = async (
   return null;
 };
 
-const getArtistMBIDs = (listen: Listen) =>
+const getArtistMBIDs = (listen: Listen): string[] | undefined =>
   _.get(listen, "track_metadata.additional_info.artist_mbids") ??
   _.get(listen, "track_metadata.mbid_mapping.artist_mbids");
 
-const getRecordingMBID = (listen: Listen) =>
+const getRecordingMBID = (listen: Listen): string | undefined =>
   _.get(listen, "track_metadata.additional_info.recording_mbid") ??
   _.get(listen, "track_metadata.mbid_mapping.recording_mbid");
+
+const getReleaseMBID = (listen: Listen): string | undefined =>
+  _.get(listen, "track_metadata.additional_info.release_mbid") ??
+  _.get(listen, "track_metadata.mbid_mapping.release_mbid");
 
 const getArtistLink = (listen: Listen) => {
   const artistName = _.get(listen, "track_metadata.artist_name");
@@ -388,7 +391,7 @@ const getListenablePin = (pinnedRecording: PinnedRecording): Listen => {
     listened_at: 0,
     ...pinnedRecording,
   };
-  set(
+  _.set(
     pinnedRecListen,
     "track_metadata.additional_info.recording_msid",
     pinnedRecording.recording_msid
@@ -431,6 +434,21 @@ const getAlbumArtFromListenMetadata = async (
     const images = YoutubePlayer.getThumbnailsFromVideoid(videoId);
     return images?.[0].src;
   }
+  /** Could not load image from music service, fetching from CoverArtArchive if MBID is available */
+  const releaseMBID = getReleaseMBID(listen);
+  if (releaseMBID) {
+    try {
+      const CAAResponse = await fetch(
+        `https://coverartarchive.org/release/${releaseMBID}`
+      );
+      if (CAAResponse.ok) {
+        const body: CoverArtArchiveResponse = await CAAResponse.json();
+        return body.images?.[0]?.thumbnails?.[250];
+      }
+    } catch (error) {
+      // Do nothing with the error, I guess.
+    }
+  }
   return undefined;
 };
 
@@ -448,6 +466,7 @@ export {
   countWords,
   handleNavigationClickEvent,
   getRecordingMBID,
+  getReleaseMBID,
   getArtistMBIDs,
   pinnedRecordingToListen,
   getAlbumArtFromListenMetadata,
