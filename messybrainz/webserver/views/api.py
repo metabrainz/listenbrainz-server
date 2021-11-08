@@ -46,12 +46,3 @@ def get(messybrainz_id):
         raise NotFound
 
     return Response(ujson.dumps(data), mimetype='application/json')
-
-
-@api_bp.route("/<uuid:messybrainz_id>/aka")
-@crossdomain()
-def get_aka(messybrainz_id):
-    """Returns all other MessyBrainz recordings that are known to be equivalent
-    (as specified in the clusters table).
-    """
-    raise NotImplementedError

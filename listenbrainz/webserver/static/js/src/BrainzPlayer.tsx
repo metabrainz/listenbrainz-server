@@ -9,6 +9,7 @@ import {
   assign,
   debounce,
   cloneDeep,
+  omit,
 } from "lodash";
 import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -70,6 +71,9 @@ type BrainzPlayerProps = {
     title: string,
     message: string | JSX.Element
   ) => void;
+  refreshSpotifyToken: () => Promise<string>;
+  refreshYoutubeToken: () => Promise<string>;
+  listenBrainzAPIBaseURI: string;
 };
 
 type BrainzPlayerState = {
@@ -585,23 +589,28 @@ export default class BrainzPlayer extends React.Component<
         cloneDeep((currentListen as BaseListenFormat)?.track_metadata) ?? {},
     };
 
-    let musicService = dataSource.current?.name;
-    try {
-      // Browser could potentially be missing the URL constructor
-      musicService = new URL(currentTrackURL ?? "").origin;
-    } catch (e) {
-      // Do nothing, we just fallback gracefully to dataSource name.
+    const musicServiceName = dataSource.current?.name;
+    let musicServiceDomain = dataSource.current?.domainName;
+    // Best effort try?
+    if (!musicServiceDomain && currentTrackURL) {
+      try {
+        // Browser could potentially be missing the URL constructor
+        musicServiceDomain = new URL(currentTrackURL).hostname;
+      } catch (e) {
+        // Do nothing, we just fallback gracefully to dataSource name.
+      }
     }
 
     // ensure the track_metadata.additional_info path exists and add brainzplayer_metadata field
     assign(newListen.track_metadata, {
+      brainzplayer_metadata,
       additional_info: {
-        brainzplayer_metadata,
         media_player: "BrainzPlayer",
         submission_client: "BrainzPlayer",
         // TODO:  passs the GIT_COMMIT_SHA env variable to the globalprops and add it here as submission_client_version
         // submission_client_version:"",
-        music_service: musicService,
+        music_service: musicServiceDomain,
+        music_service_name: musicServiceName,
         origin_url: currentTrackURL,
       },
     });
@@ -615,10 +624,12 @@ export default class BrainzPlayer extends React.Component<
 
   submitListenToListenBrainz = async (
     listenType: ListenType,
-    listen: BaseListenFormat
+    listen: BaseListenFormat,
+    retries: number = 3
   ): Promise<void> => {
-    const { APIService, currentUser } = this.context;
+    const { currentUser } = this.context;
     const { currentDataSourceIndex } = this.state;
+    const { listenBrainzAPIBaseURI } = this.props;
     const dataSource = this.dataSources[currentDataSourceIndex];
     if (!currentUser || !currentUser.auth_token) {
       return;
@@ -626,9 +637,43 @@ export default class BrainzPlayer extends React.Component<
     if (dataSource?.current && !dataSource.current.datasourceRecordsListens()) {
       try {
         const { auth_token } = currentUser;
-        await APIService.submitListens(auth_token, listenType, [listen]);
+        let processedPayload = listen;
+        // When submitting playing_now listens, listened_at must NOT be present
+        if (listenType === "playing_now") {
+          processedPayload = omit(listen, "listened_at") as Listen;
+        }
+
+        const struct = {
+          listen_type: listenType,
+          payload: [processedPayload],
+        } as SubmitListensPayload;
+        const url = `${listenBrainzAPIBaseURI}/submit-listens`;
+
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            Authorization: `Token ${auth_token}`,
+            "Content-Type": "application/json;charset=UTF-8",
+          },
+          body: JSON.stringify(struct),
+        });
+        if (!response.ok) {
+          throw response.statusText;
+        }
       } catch (error) {
-        this.handleWarning(error, "Could not save this listen");
+        if (retries > 0) {
+          // Something went wrong, try again in 3 seconds.
+          await new Promise((resolve) => {
+            setTimeout(resolve, 3000);
+          });
+          await this.submitListenToListenBrainz(
+            listenType,
+            listen,
+            retries - 1
+          );
+        } else {
+          this.handleWarning(error, "Could not save this listen");
+        }
       }
     }
   };
@@ -688,7 +733,8 @@ export default class BrainzPlayer extends React.Component<
       durationMs,
       isActivated,
     } = this.state;
-    const { APIService, youtubeAuth, spotifyAuth } = this.context;
+    const { refreshSpotifyToken, refreshYoutubeToken } = this.props;
+    const { youtubeAuth, spotifyAuth } = this.context;
     // Determine if the user is authenticated to search & play tracks with any of the datasources
     const hasDatasourceToSearch =
       this.dataSources.findIndex((ds) =>
@@ -727,7 +773,7 @@ export default class BrainzPlayer extends React.Component<
               this.dataSources[currentDataSourceIndex]?.current instanceof
                 SpotifyPlayer
             }
-            refreshSpotifyToken={APIService.refreshSpotifyToken}
+            refreshSpotifyToken={refreshSpotifyToken}
             onInvalidateDataSource={this.invalidateDataSource}
             ref={this.spotifyPlayer}
             spotifyUser={spotifyAuth}
@@ -751,7 +797,7 @@ export default class BrainzPlayer extends React.Component<
             onInvalidateDataSource={this.invalidateDataSource}
             ref={this.youtubePlayer}
             youtubeUser={youtubeAuth}
-            refreshYoutubeToken={APIService.refreshYoutubeToken}
+            refreshYoutubeToken={refreshYoutubeToken}
             playerPaused={playerPaused}
             onPlayerPausedChange={this.playerPauseChange}
             onProgressChange={this.progressChange}

@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as _ from "lodash";
 import * as timeago from "time-ago";
+import { set } from "lodash";
 
 const searchForSpotifyTrack = async (
   spotifyToken?: string,
@@ -115,16 +116,22 @@ const searchForYoutubeTrack = async (
   return null;
 };
 
+const getArtistMBIDs = (listen: Listen) =>
+  _.get(listen, "track_metadata.additional_info.artist_mbids") ??
+  _.get(listen, "track_metadata.mbid_mapping.artist_mbids");
+
+const getRecordingMBID = (listen: Listen) =>
+  _.get(listen, "track_metadata.additional_info.recording_mbid") ??
+  _.get(listen, "track_metadata.mbid_mapping.recording_mbid");
+
 const getArtistLink = (listen: Listen) => {
   const artistName = _.get(listen, "track_metadata.artist_name");
-  const artistMbids =
-    _.get(listen, "track_metadata.additional_info.artist_mbids") ??
-    _.get(listen, "track_metadata.mbid_mapping.artist_mbids");
+  const artistMbids = getArtistMBIDs(listen);
   const firstArtist = _.first(artistMbids);
   if (firstArtist) {
     return (
       <a
-        href={`http://musicbrainz.org/artist/${firstArtist}`}
+        href={`https://musicbrainz.org/artist/${firstArtist}`}
         target="_blank"
         rel="noopener noreferrer"
       >
@@ -137,9 +144,8 @@ const getArtistLink = (listen: Listen) => {
 
 const getTrackLink = (listen: Listen): JSX.Element | string => {
   const trackName = _.get(listen, "track_metadata.track_name");
-  const recordingMbid =
-    _.get(listen, "track_metadata.additional_info.recording_mbid") ??
-    _.get(listen, "track_metadata.mbid_mapping.recording_mbid");
+  const recordingMbid = getRecordingMBID(listen);
+
   if (recordingMbid) {
     return (
       <a
@@ -379,6 +385,11 @@ const getListenablePin = (pinnedRecording: PinnedRecording): Listen => {
     listened_at: 0,
     ...pinnedRecording,
   };
+  set(
+    pinnedRecListen,
+    "track_metadata.additional_info.recording_msid",
+    pinnedRecording.recording_msid
+  );
   return pinnedRecListen;
 };
 
@@ -397,6 +408,13 @@ const handleNavigationClickEvent = (event?: React.MouseEvent): void => {
   }
 };
 
+const pinnedRecordingToListen = (pinnedRecording: PinnedRecording): Listen => {
+  return {
+    listened_at: pinnedRecording.created,
+    track_metadata: pinnedRecording.track_metadata,
+  };
+};
+
 export {
   searchForSpotifyTrack,
   getArtistLink,
@@ -410,4 +428,7 @@ export {
   getListenablePin,
   countWords,
   handleNavigationClickEvent,
+  getRecordingMBID,
+  getArtistMBIDs,
+  pinnedRecordingToListen,
 };

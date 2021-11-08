@@ -16,7 +16,8 @@ type CreateOrEditPlaylistModalProps = {
     description: string,
     isPublic: boolean,
     collaborators: string[],
-    id?: string
+    id?: string,
+    onSuccessCallback?: () => void
   ) => void;
   htmlId?: string;
 };
@@ -62,6 +63,16 @@ export default class CreateOrEditPlaylistModal extends React.Component<
     }
   }
 
+  clear = () => {
+    this.setState({
+      name: "",
+      description: "",
+      isPublic: true,
+      collaborators: [],
+      newCollaborator: "",
+    });
+  };
+
   submit = (event: React.SyntheticEvent) => {
     event.preventDefault();
     const { onSubmit, playlist } = this.props;
@@ -73,7 +84,8 @@ export default class CreateOrEditPlaylistModal extends React.Component<
       description,
       isPublic,
       collaborators,
-      getPlaylistId(playlist)
+      getPlaylistId(playlist),
+      this.clear.bind(this)
     );
   };
 
@@ -247,6 +259,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
                 type="button"
                 className="btn btn-default"
                 data-dismiss="modal"
+                onClick={this.clear}
               >
                 Cancel
               </button>

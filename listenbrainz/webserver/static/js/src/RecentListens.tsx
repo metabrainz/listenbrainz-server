@@ -10,8 +10,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import { io, Socket } from "socket.io-client";
-import { fromPairs } from "lodash";
+import { fromPairs, get, isEqual } from "lodash";
 import { Integrations } from "@sentry/tracing";
+import { faThumbtack, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
@@ -29,7 +30,9 @@ import {
   formatWSMessageToListen,
   getPageProps,
   getListenablePin,
+  getRecordingMBID,
 } from "./utils";
+import ListenControl from "./listens/ListenControl";
 
 export type RecentListensProps = {
   latestListenTs: number;
@@ -54,6 +57,11 @@ export interface RecentListensState {
   recordingFeedbackMap: RecordingFeedbackMap;
   recordingToPin?: Listen;
   dateTimePickerValue: Date | Date[];
+  /* This is used to mark a listen as deleted
+  which give the UI some time to animate it out of the page
+  before being removed from the state */
+  deletedListen: Listen | null;
+  userPinnedRecording?: PinnedRecording;
 }
 
 export default class RecentListens extends React.Component<
@@ -86,6 +94,8 @@ export default class RecentListens extends React.Component<
       dateTimePickerValue: nextListenTs
         ? new Date(nextListenTs * 1000)
         : new Date(Date.now()),
+      deletedListen: null,
+      userPinnedRecording: props.userPinnedRecording,
     };
 
     this.listensTable = React.createRef();
@@ -93,6 +103,7 @@ export default class RecentListens extends React.Component<
 
   componentDidMount(): void {
     const { mode } = this.state;
+    const { newAlert } = this.props;
     // Get API instance from React context provided for in top-level component
     const { APIService, currentUser } = this.context;
     this.APIService = APIService;
@@ -106,9 +117,17 @@ export default class RecentListens extends React.Component<
       const { user } = this.props;
       // Get the user listen count
       if (user?.name) {
-        this.APIService.getUserListenCount(user.name).then((listenCount) => {
-          this.setState({ listenCount });
-        });
+        this.APIService.getUserListenCount(user.name)
+          .then((listenCount) => {
+            this.setState({ listenCount });
+          })
+          .catch((error) => {
+            newAlert(
+              "danger",
+              "Sorry, we couldn't load your listens count…",
+              error?.toString()
+            );
+          });
       }
       if (currentUser?.name && currentUser?.name === user?.name) {
         this.loadFeedback();
@@ -405,9 +424,15 @@ export default class RecentListens extends React.Component<
     this.setState({ recordingFeedbackMap });
   };
 
-  updateFeedback = (recordingMsid: string, score: ListenFeedBack) => {
+  updateFeedback = (
+    recordingMsid: string,
+    score: ListenFeedBack | RecommendationFeedBack
+  ) => {
     const { recordingFeedbackMap } = this.state;
-    const newFeedbackMap = { ...recordingFeedbackMap, [recordingMsid]: score };
+    const newFeedbackMap = {
+      ...recordingFeedbackMap,
+      [recordingMsid]: score as ListenFeedBack,
+    };
     this.setState({ recordingFeedbackMap: newFeedbackMap });
   };
 
@@ -422,12 +447,47 @@ export default class RecentListens extends React.Component<
     return recordingMsid ? _.get(recordingFeedbackMap, recordingMsid, 0) : 0;
   };
 
+  deleteListen = async (listen: Listen) => {
+    const { newAlert } = this.props;
+    const { APIService, currentUser } = this.context;
+    const isCurrentUser =
+      Boolean(listen.user_name) && listen.user_name === currentUser?.name;
+    if (isCurrentUser && currentUser?.auth_token) {
+      const listenedAt = get(listen, "listened_at");
+      const recordingMSID = get(
+        listen,
+        "track_metadata.additional_info.recording_msid"
+      );
+
+      try {
+        const status = await APIService.deleteListen(
+          currentUser.auth_token,
+          recordingMSID,
+          listenedAt
+        );
+        if (status === 200) {
+          this.setState({ deletedListen: listen });
+          // wait for the delete animation to finish
+          setTimeout(() => {
+            this.removeListenFromListenList(listen);
+          }, 1000);
+        }
+      } catch (error) {
+        newAlert(
+          "danger",
+          "Error while deleting listen",
+          typeof error === "object" ? error.message : error.toString()
+        );
+      }
+    }
+  };
+
   removeListenFromListenList = (listen: Listen) => {
     const { listens } = this.state;
     const index = listens.indexOf(listen);
-
-    listens.splice(index, 1);
-    this.setState({ listens });
+    const listensCopy = [...listens];
+    listensCopy.splice(index, 1);
+    this.setState({ listens: listensCopy });
   };
 
   updatePaginationVariables = () => {
@@ -512,6 +572,10 @@ export default class RecentListens extends React.Component<
     }
   }
 
+  handlePinnedRecording(pinnedRecording: PinnedRecording) {
+    this.setState({ userPinnedRecording: pinnedRecording });
+  }
+
   render() {
     const {
       direction,
@@ -523,15 +587,11 @@ export default class RecentListens extends React.Component<
       previousListenTs,
       dateTimePickerValue,
       recordingToPin,
-    } = this.state;
-    const {
-      latestListenTs,
-      oldestListenTs,
-      user,
-      newAlert,
+      deletedListen,
       userPinnedRecording,
-    } = this.props;
-    const { currentUser } = this.context;
+    } = this.state;
+    const { latestListenTs, oldestListenTs, user, newAlert } = this.props;
+    const { APIService, currentUser } = this.context;
 
     let allListenables = listens;
     if (userPinnedRecording) {
@@ -555,6 +615,10 @@ export default class RecentListens extends React.Component<
                   userName={user.name}
                   pinnedRecording={userPinnedRecording}
                   isCurrentUser={currentUser?.name === user?.name}
+                  currentFeedback={this.getFeedbackForRecordingMsid(
+                    userPinnedRecording?.recording_msid
+                  )}
+                  updateFeedbackCallback={this.updateFeedback}
                   removePinFromPinsList={() => {}}
                   newAlert={newAlert}
                 />
@@ -602,6 +666,42 @@ export default class RecentListens extends React.Component<
                       return 0;
                     })
                     .map((listen) => {
+                      const isCurrentUser =
+                        Boolean(listen.user_name) &&
+                        listen.user_name === currentUser?.name;
+                      const listenedAt = get(listen, "listened_at");
+                      const recordingMSID = get(
+                        listen,
+                        "track_metadata.additional_info.recording_msid"
+                      );
+                      const canDelete =
+                        isCurrentUser &&
+                        Boolean(listenedAt) &&
+                        Boolean(recordingMSID);
+                      /* eslint-disable react/jsx-no-bind */
+                      const additionalMenuItems = (
+                        <>
+                          <ListenControl
+                            title="Pin this recording"
+                            icon={faThumbtack}
+                            action={this.updateRecordingToPin.bind(
+                              this,
+                              listen
+                            )}
+                            dataToggle="modal"
+                            dataTarget="#PinRecordingModal"
+                          />
+                          {canDelete && (
+                            <ListenControl
+                              title="Delete Listen"
+                              icon={faTrashAlt}
+                              action={this.deleteListen.bind(this, listen)}
+                            />
+                          )}
+                        </>
+                      );
+                      const shouldBeDeleted = isEqual(deletedListen, listen);
+                      /* eslint-enable react/jsx-no-bind */
                       return (
                         <ListenCard
                           key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
@@ -612,13 +712,12 @@ export default class RecentListens extends React.Component<
                             listen.track_metadata?.additional_info
                               ?.recording_msid
                           )}
-                          removeListenCallback={this.removeListenFromListenList}
                           updateFeedbackCallback={this.updateFeedback}
-                          updateRecordingToPin={this.updateRecordingToPin}
                           newAlert={newAlert}
                           className={`${
-                            listen.playing_now ? "playing-now" : ""
-                          }`}
+                            listen.playing_now ? "playing-now " : ""
+                          }${shouldBeDeleted ? "deleted " : ""}`}
+                          additionalMenuItems={additionalMenuItems}
                         />
                       );
                     })}
@@ -735,6 +834,9 @@ export default class RecentListens extends React.Component<
                   <PinRecordingModal
                     recordingToPin={recordingToPin || listens[0]}
                     newAlert={newAlert}
+                    onSuccessfulPin={(pinnedListen) =>
+                      this.handlePinnedRecording(pinnedListen)
+                    }
                   />
                 )}
               </div>
@@ -750,6 +852,9 @@ export default class RecentListens extends React.Component<
               direction={direction}
               listens={allListenables}
               newAlert={newAlert}
+              listenBrainzAPIBaseURI={APIService.APIBaseURI}
+              refreshSpotifyToken={APIService.refreshSpotifyToken}
+              refreshYoutubeToken={APIService.refreshYoutubeToken}
             />
           </div>
         </div>

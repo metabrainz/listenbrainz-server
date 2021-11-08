@@ -32,11 +32,13 @@ def import_full_dump_to_hdfs(dump_id: int = None) -> str:
         the name of the imported dump
     """
     with tempfile.TemporaryDirectory() as temp_dir:
-        src, dump_name, dump_id = ListenbrainzDataDownloader().download_listens(
+        downloader = ListenbrainzDataDownloader()
+        src, dump_name, dump_id = downloader.download_listens(
             directory=temp_dir,
             dump_type=DumpType.FULL,
             listens_dump_id=dump_id
         )
+        downloader.connection.close()
         ListenbrainzDataUploader().upload_new_listens_full_dump(src)
     utils.insert_dump_data(dump_id, DumpType.FULL, datetime.utcnow())
     return dump_name

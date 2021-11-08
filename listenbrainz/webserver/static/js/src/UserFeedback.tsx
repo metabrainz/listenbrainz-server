@@ -6,7 +6,11 @@ import * as Sentry from "@sentry/react";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { faHeart, faHeartBroken } from "@fortawesome/free-solid-svg-icons";
+import {
+  faHeart,
+  faHeartBroken,
+  faThumbtack,
+} from "@fortawesome/free-solid-svg-icons";
 import { isNaN, get, clone } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
@@ -23,6 +27,7 @@ import ListenCard from "./listens/ListenCard";
 import Loader from "./components/Loader";
 import PinRecordingModal from "./PinRecordingModal";
 import { getPageProps, handleNavigationClickEvent } from "./utils";
+import ListenControl from "./listens/ListenControl";
 
 export type UserFeedbackProps = {
   feedback?: Array<FeedbackResponseWithTrackMetadata>;
@@ -309,11 +314,17 @@ export default class UserFeedback extends React.Component<
     this.setState({ recordingFeedbackMap });
   };
 
-  updateFeedback = (recordingMsid: string, score: ListenFeedBack) => {
+  updateFeedback = (
+    recordingMsid: string,
+    score: ListenFeedBack | RecommendationFeedBack
+  ) => {
     const { recordingFeedbackMap, feedback } = this.state;
     const { currentUser } = this.context;
     const { user } = this.props;
-    const newFeedbackMap = { ...recordingFeedbackMap, [recordingMsid]: score };
+    const newFeedbackMap = {
+      ...recordingFeedbackMap,
+      [recordingMsid]: score as ListenFeedBack,
+    };
     if (currentUser?.name && currentUser.name === user?.name) {
       const index = feedback.findIndex(
         (feedbackItem) => feedbackItem.recording_msid === recordingMsid
@@ -351,7 +362,7 @@ export default class UserFeedback extends React.Component<
       selectedFeedbackScore,
     } = this.state;
     const { user, newAlert } = this.props;
-    const { currentUser } = this.context;
+    const { APIService, currentUser } = this.context;
     const listensFromFeedback: BaseListenFormat[] = feedback.map(
       (feedbackItem) =>
         UserFeedback.RecordingMetadataToListenFormat(feedbackItem)
@@ -414,6 +425,18 @@ export default class UserFeedback extends React.Component<
                 >
                   {feedback.map((feedbackItem, index) => {
                     const listen = listensFromFeedback[index];
+                    const additionalMenuItems = (
+                      <>
+                        <ListenControl
+                          title="Pin this recording"
+                          icon={faThumbtack}
+                          // eslint-disable-next-line react/jsx-no-bind
+                          action={this.updateRecordingToPin.bind(this, listen)}
+                          dataToggle="modal"
+                          dataTarget="#PinRecordingModal"
+                        />
+                      </>
+                    );
                     return (
                       <ListenCard
                         showUsername={false}
@@ -424,7 +447,7 @@ export default class UserFeedback extends React.Component<
                           feedbackItem.recording_msid
                         )}
                         updateFeedbackCallback={this.updateFeedback}
-                        updateRecordingToPin={this.updateRecordingToPin}
+                        additionalMenuItems={additionalMenuItems}
                         newAlert={newAlert}
                       />
                     );
@@ -518,6 +541,9 @@ export default class UserFeedback extends React.Component<
               direction={direction}
               listens={listensFromFeedback}
               newAlert={newAlert}
+              listenBrainzAPIBaseURI={APIService.APIBaseURI}
+              refreshSpotifyToken={APIService.refreshSpotifyToken}
+              refreshYoutubeToken={APIService.refreshYoutubeToken}
             />
           </div>
         </div>

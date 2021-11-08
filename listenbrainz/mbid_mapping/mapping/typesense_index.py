@@ -106,7 +106,7 @@ def build(client, collection_name):
             documents = []
             for i, row in enumerate(curs):
                 document = dict(row)
-                document['artist_mbids'] = row["artist_mbids"][1:-1]
+                document['artist_mbids'] = "{" + row["artist_mbids"][1:-1] + "}"
                 document['score'] = max_score - document['score']
                 document['combined'] = prepare_string(document['recording_name'] + " " + document['artist_credit_name'])
                 documents.append(document)
