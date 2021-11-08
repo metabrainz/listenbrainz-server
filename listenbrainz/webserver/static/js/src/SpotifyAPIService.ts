@@ -5,6 +5,8 @@
 
 import { searchForSpotifyTrack } from "./utils";
 
+const defaultSpotifyAPIBaseURL = "https://api.spotify.com/v1";
+
 export default class SpotifyAPIService {
   static async checkStatus(response: Response) {
     if (response.status >= 200 && response.status < 300) {
@@ -20,7 +22,27 @@ export default class SpotifyAPIService {
     }
   }
 
-  APIBaseURI: string = "https://api.spotify.com/v1";
+  static async getAlbumArtFromSpotifyTrackID(
+    spotifyTrackID: string
+  ): Promise<string | undefined> {
+    if (!spotifyTrackID) {
+      return undefined;
+    }
+    try {
+      const response = await fetch(
+        `${defaultSpotifyAPIBaseURL}/tracks/${spotifyTrackID}`
+      );
+      if (response.ok) {
+        const track: SpotifyTrack = await response.json();
+        return track.album?.images?.[0]?.url;
+      }
+    } catch (error) {
+      return undefined;
+    }
+    return undefined;
+  }
+
+  APIBaseURI: string = defaultSpotifyAPIBaseURL;
   private spotifyUser?: SpotifyUser;
   private spotifyUserId?: string;
 

@@ -2,6 +2,9 @@ import * as React from "react";
 import * as _ from "lodash";
 import * as timeago from "time-ago";
 import { set } from "lodash";
+import SpotifyPlayer from "./SpotifyPlayer";
+import YoutubePlayer from "./YoutubePlayer";
+import SpotifyAPIService from "./SpotifyAPIService";
 
 const searchForSpotifyTrack = async (
   spotifyToken?: string,
@@ -415,6 +418,22 @@ const pinnedRecordingToListen = (pinnedRecording: PinnedRecording): Listen => {
   };
 };
 
+const getAlbumArtFromListenMetadata = async (
+  listen: BaseListenFormat
+): Promise<string | undefined> => {
+  // if spotifyListen
+  if (SpotifyPlayer.isListenFromThisService(listen)) {
+    const trackID = SpotifyPlayer.getSpotifyTrackIDFromListen(listen);
+    return SpotifyAPIService.getAlbumArtFromSpotifyTrackID(trackID);
+  }
+  if (YoutubePlayer.isListenFromThisService(listen)) {
+    const videoId = YoutubePlayer.getVideoIDFromListen(listen);
+    const images = YoutubePlayer.getThumbnailsFromVideoid(videoId);
+    return images?.[0].src;
+  }
+  return undefined;
+};
+
 export {
   searchForSpotifyTrack,
   getArtistLink,
@@ -431,4 +450,5 @@ export {
   getRecordingMBID,
   getArtistMBIDs,
   pinnedRecordingToListen,
+  getAlbumArtFromListenMetadata,
 };
