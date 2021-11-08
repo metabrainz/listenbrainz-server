@@ -1,13 +1,10 @@
 import * as React from "react";
-import {
-  faPlusCircle,
-  faTimes,
-  faTrashAlt,
-} from "@fortawesome/free-solid-svg-icons";
+import { faPlusCircle, faTimes } from "@fortawesome/free-solid-svg-icons";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { getPlaylistExtension, getPlaylistId } from "./utils";
+import GlobalAppContext from "../GlobalAppContext";
 
 type CreateOrEditPlaylistModalProps = {
   playlist?: JSPFPlaylist;
@@ -34,6 +31,9 @@ export default class CreateOrEditPlaylistModal extends React.Component<
   CreateOrEditPlaylistModalProps,
   CreateOrEditPlaylistModalState
 > {
+  static contextType = GlobalAppContext;
+  declare context: React.ContextType<typeof GlobalAppContext>;
+
   constructor(props: CreateOrEditPlaylistModalProps) {
     super(props);
     const customFields = getPlaylistExtension(props.playlist);
@@ -136,7 +136,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
       newCollaborator,
     } = this.state;
     const { htmlId, playlist } = this.props;
-
+    const { currentUser } = this.context;
     const isEdit = Boolean(getPlaylistId(playlist));
     return (
       <div
@@ -244,9 +244,17 @@ export default class CreateOrEditPlaylistModal extends React.Component<
                   />
                   <span className="input-group-btn">
                     <button
-                      className="btn"
+                      className="btn btn-default"
                       type="submit"
                       onClick={this.addCollaborator}
+                      disabled={
+                        !newCollaborator ||
+                        (isEdit
+                          ? playlist?.creator.toLowerCase() ===
+                            newCollaborator.toLowerCase()
+                          : currentUser.name.toLowerCase() ===
+                            newCollaborator.toLowerCase())
+                      }
                     >
                       <FontAwesomeIcon icon={faPlusCircle as IconProp} /> Add
                     </button>
