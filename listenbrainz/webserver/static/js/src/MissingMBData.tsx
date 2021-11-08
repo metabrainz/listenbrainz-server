@@ -4,7 +4,6 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as Sentry from "@sentry/react";
 
-import { get, isEqual } from "lodash";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
@@ -13,9 +12,9 @@ import {
 import APIServiceClass from "./APIService";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import ErrorBoundary from "./ErrorBoundary";
-import Loader from "./components/Loader";
 import { getPageProps } from "./utils";
 import ListenCard from "./listens/ListenCard";
+import Loader from "./components/Loader";
 
 export type MissingMBDataProps = {
   missingData?: Array<MissingMBData>;
@@ -26,6 +25,7 @@ export interface MissingMBDataState {
   missingData?: Array<MissingMBData>;
   currPage?: number;
   totalPages: number;
+  loading: boolean;
 }
 
 export default class MissingMBDataPage extends React.Component<
@@ -45,6 +45,7 @@ export default class MissingMBDataPage extends React.Component<
       totalPages: props.missingData
         ? Math.ceil(props.missingData.length / this.expectedDataPerPage)
         : 0,
+      loading: false,
     };
 
     this.MissingMBDataTable = React.createRef();
@@ -59,13 +60,17 @@ export default class MissingMBDataPage extends React.Component<
     const { missingData } = this.props;
     const { currPage } = this.state;
     if (currPage && currPage > 1) {
+      this.setState({ loading: true });
       const offset = (currPage - 1) * this.expectedDataPerPage;
       const updatedPage = currPage - 1;
-      this.setState({
-        missingData:
-          missingData?.slice(offset - this.expectedDataPerPage, offset) || [],
-        currPage: updatedPage,
-      });
+      this.setState(
+        {
+          missingData:
+            missingData?.slice(offset - this.expectedDataPerPage, offset) || [],
+          currPage: updatedPage,
+        },
+        this.afterDisplay
+      );
       window.history.pushState(null, "", `?page=${updatedPage}`);
     }
   };
@@ -74,19 +79,30 @@ export default class MissingMBDataPage extends React.Component<
     const { missingData } = this.props;
     const { currPage, totalPages } = this.state;
     if (currPage && currPage < totalPages) {
+      this.setState({ loading: true });
       const offset = currPage * this.expectedDataPerPage;
       const updatedPage = currPage + 1;
-      this.setState({
-        missingData:
-          missingData?.slice(offset, offset + this.expectedDataPerPage) || [],
-        currPage: updatedPage,
-      });
+      this.setState(
+        {
+          missingData:
+            missingData?.slice(offset, offset + this.expectedDataPerPage) || [],
+          currPage: updatedPage,
+        },
+        this.afterDisplay
+      );
       window.history.pushState(null, "", `?page=${updatedPage}`);
     }
   };
 
+  afterDisplay = () => {
+    if (this.MissingMBDataTable?.current) {
+      this.MissingMBDataTable.current.scrollIntoView({ behavior: "smooth" });
+    }
+    this.setState({ loading: false });
+  };
+
   render() {
-    const { missingData, currPage, totalPages } = this.state;
+    const { missingData, currPage, totalPages, loading } = this.state;
     const { user, newAlert } = this.props;
     return (
       <div role="main">
@@ -95,6 +111,16 @@ export default class MissingMBDataPage extends React.Component<
             <div>
               <div id="missingMBData" ref={this.MissingMBDataTable}>
                 <h2>Missing Data:</h2>
+                <div
+                  style={{
+                    height: 0,
+                    position: "sticky",
+                    top: "50%",
+                    zIndex: 1,
+                  }}
+                >
+                  <Loader isLoading={loading} />
+                </div>
                 <div>
                   {missingData?.map((data) => {
                     return (

@@ -101,11 +101,31 @@ export default class ListenCard extends React.Component<
     const form = document.createElement("form");
     form.method = "post";
     form.action = "https://musicbrainz.org/release/add";
-    const hiddenInput = document.createElement("input");
-    hiddenInput.type = "hidden";
-    hiddenInput.name = "name";
-    hiddenInput.value = listen.track_metadata.release_name || "test";
-    form.appendChild(hiddenInput);
+    const name = document.createElement("input");
+    name.type = "hidden";
+    name.name = "name";
+    name.value = listen.track_metadata.release_name || "";
+    form.appendChild(name);
+    const recording = document.createElement("input");
+    recording.type = "hidden";
+    recording.name = "mediums.0.track.0.name";
+    recording.value = listen.track_metadata.track_name;
+    form.appendChild(recording);
+    const artists = listen.track_metadata.artist_name.split(",");
+    artists.forEach((artist, index) => {
+      const artistCredit = document.createElement("input");
+      artistCredit.type = "hidden";
+      artistCredit.name = `artist_credit.names.${index}.artist.name`;
+      artistCredit.value = artist;
+      form.appendChild(artistCredit);
+      if (index !== artists.length - 1) {
+        const joiner = document.createElement("input");
+        joiner.type = "hidden";
+        joiner.name = `artist_credit.names.${index}.join_phrase`;
+        joiner.value = ", ";
+        form.appendChild(joiner);
+      }
+    });
     document.body.appendChild(form);
     form.submit();
   };
