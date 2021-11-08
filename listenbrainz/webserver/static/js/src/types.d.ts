@@ -586,3 +586,19 @@ type CoverArtArchiveResponse = {
   images: CoverArtArchiveEntry[];
   release: string; // Full MB URL i.e "http://musicbrainz.org/release/76df3287-6cda-33eb-8e9a-044b5e15ffdd"
 };
+
+type ColorReleaseItem = {
+  artist_name: string;
+  color: number[];
+  dist: number;
+  caa_id: number;
+  release_name: string;
+  release_mbid: string;
+  recordings?: BaseListenFormat[];
+};
+
+type ColorReleasesResponse = {
+  payload: {
+    releases: Array<ColorReleaseItem>;
+  };
+};

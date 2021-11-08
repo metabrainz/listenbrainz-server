@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import datetime, time
+from datetime import datetime, time, date
 from typing import Iterator, Optional, Tuple
 
 from dateutil.relativedelta import relativedelta, MO
@@ -25,6 +25,33 @@ time_range_schema = StructType([
 logger = logging.getLogger(__name__)
 
 
+def get_two_quarters_ago_offset(_date: date) -> relativedelta:
+    """ Given a month, returns the relativedelta offset to get
+    the beginning date of the previous to previous quarter.
+
+    .. note:: there is similar function to calculate 1 quarter back
+    in listenbrainz_spark.stats module which is used by other stats.
+    However, here in listening_activity stats we need two quarters
+    so that we can compare the quarter with the previous quarter of
+    the same duration and .
+    """
+    month = _date.month
+    if month <= 3:
+        # currently, in Jan-Mar so 2 quarters ago is last year's Jul-Sep
+        return relativedelta(years=-1, month=7, day=1)
+    elif month <= 6:
+        # currently, in Apr-Jun so 2 quarters ago is last year's Oct-Dec
+        return relativedelta(years=-1, month=10, day=1)
+    elif month <= 9:
+        # currently, in Jul-Sep so 2 quarters ago is Jan-Mar
+        return relativedelta(month=1, day=1)
+    else:
+        # currently, in Oct-Dec so 2 quarters ago is Apr-Jun
+        return relativedelta(month=4, day=1)
+
+
+# other stats uses a different function (get_dates_for_stats_range) to calculate
+# time ranges. if making modifications here, remember to check and update that as well
 def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta, str]:
     latest_listen_ts = get_latest_listen_ts()
     if stats_range == "all_time":
@@ -60,6 +87,12 @@ def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta,
         # compute listening activity for each day but no weekday
         step = relativedelta(days=+1)
         date_format = "%d %B %Y"
+    elif stats_range == "quarter":
+        from_offset = get_two_quarters_ago_offset(latest_listen_date)
+        to_offset = relativedelta(months=+6)
+        # compute listening activity for each week with date format as day
+        step = relativedelta(weeks=+1)
+        date_format = "%d %B %Y"
     else:  # year
         from_offset = relativedelta(years=-2, month=1, day=1)  # start of the previous to previous year
         to_offset = relativedelta(years=+2)
@@ -85,46 +118,47 @@ def calculate_listening_activity():
         3) year - each month of the past 2 years.
         4) all_time - each year starting from LAST_FM_FOUNDING_YEAR (2002)
     """
-    # Calculate the number of listens in each time range for each user except the time ranges which have zero listens.
-    result_without_zero_days = run_query("""
-            SELECT listens.user_name
-                 , time_range.time_range
-                 , count(listens.user_name) as listen_count
-              FROM listens
-              JOIN time_range
-                ON listens.listened_at >= time_range.start
-               AND listens.listened_at <= time_range.end
-          GROUP BY listens.user_name
-                 , time_range.time_range
-            """)
-    result_without_zero_days.createOrReplaceTempView("result_without_zero_days")
-
-    # Add the time ranges which have zero listens to the previous dataframe
-    result = run_query("""
-            SELECT dist_user_name.user_name
-                 , time_range.time_range
-                 , to_unix_timestamp(time_range.start) as from_ts
-                 , to_unix_timestamp(time_range.end) as to_ts
-                 , ifnull(result_without_zero_days.listen_count, 0) as listen_count
-              FROM (SELECT DISTINCT user_name FROM listens) dist_user_name
+    # calculates the number of listens in each time range for each user, count(listen.listened_at) so that
+    # group without listens are counted as 0, count(*) gives 1.
+    result = run_query(""" 
+    WITH dist_user_name AS (
+            SELECT DISTINCT user_name FROM listens
+        ),
+        intermediate_table AS (
+            SELECT dist_user_name.user_name AS user_name
+                 , to_unix_timestamp(first(time_range.start)) as from_ts
+                 , to_unix_timestamp(first(time_range.end)) as to_ts
+                 , time_range.time_range AS time_range
+                 , count(listens.listened_at) as listen_count
+              FROM dist_user_name
         CROSS JOIN time_range
-         LEFT JOIN result_without_zero_days
-                ON result_without_zero_days.user_name = dist_user_name.user_name
-               AND result_without_zero_days.time_range = time_range.time_range
-            """)
-
-    # Create a table with a list of time ranges and corresponding listen count for each user
-    iterator = result \
-        .withColumn("listening_activity", struct("from_ts", "to_ts", "listen_count", "time_range")) \
-        .groupBy("user_name") \
-        .agg(sort_array(collect_list("listening_activity")).alias("listening_activity")) \
-        .toLocalIterator()
-
-    return iterator
+         LEFT JOIN listens
+                ON listens.listened_at BETWEEN time_range.start AND time_range.end
+               AND listens.user_name = dist_user_name.user_name
+          GROUP BY dist_user_name.user_name
+                 , time_range.time_range
+        )
+            SELECT user_name
+                 , sort_array(
+                       collect_list(
+                           struct(from_ts, to_ts, time_range, listen_count)
+                        )
+                    ) AS listening_activity
+              FROM intermediate_table
+          GROUP BY user_name
+    """)
+    return result.toLocalIterator()
 
 
 def get_listening_activity(stats_range: str):
-    """ Calculate the number of listens of users for the given stats_range """
+    """ Compute the number of listens for a time range compared to the previous range
+
+    Given a time range, this computes a histogram of a users' listens for that range
+    and the previous range of the same duration, so that they can be compared. The
+    bin size of the histogram depends on the size of the range (e.g.
+    year -> 12 months, month -> ~30 days, week -> ~7 days, see get_time_range for
+    details). These values are used on the listening activity reports.
+    """
     logger.debug(f"Calculating listening_activity_{stats_range}")
 
     from_date, to_date, step, date_format = get_time_range(stats_range)

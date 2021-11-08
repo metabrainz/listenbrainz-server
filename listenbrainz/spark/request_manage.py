@@ -6,6 +6,8 @@ import pika
 import ujson
 
 from flask import current_app
+
+from data.model.common_stat import ALLOWED_STATISTICS_RANGE
 from listenbrainz.webserver import create_app
 
 
@@ -93,7 +95,7 @@ def send_request_to_spark_cluster(message):
 @cli.command(name="request_user_stats")
 @click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity', 'daily_activity']),
               help="Type of statistics to calculate", required=True)
-@click.option("--range", 'range_', type=click.Choice(['week', 'month', 'year', 'all_time']),
+@click.option("--range", 'range_', type=click.Choice(ALLOWED_STATISTICS_RANGE),
               help="Time range of statistics to calculate", required=True)
 @click.option("--entity", type=click.Choice(['artists', 'releases', 'recordings']),
               help="Entity for which statistics should be calculated")
@@ -113,7 +115,7 @@ def request_user_stats(type_, range_, entity):
 
 
 @cli.command(name="request_sitewide_stats")
-@click.option("--range", 'range_', type=click.Choice(['week', 'month', 'year', 'all_time']),
+@click.option("--range", 'range_', type=click.Choice(ALLOWED_STATISTICS_RANGE),
               help="Time range of statistics to calculate", required=True)
 @click.option("--entity", type=click.Choice(['artists']),
               help="Entity for which statistics should be calculated")
@@ -269,30 +271,15 @@ def request_similar_users(max_num_users):
 @cli.command(name='cron_request_all_stats')
 @click.pass_context
 def cron_request_all_stats(ctx):
-    ctx.invoke(request_user_stats, type_="entity", range_="week", entity="artists")
-    ctx.invoke(request_user_stats, type_="entity", range_="month", entity="artists")
-    ctx.invoke(request_user_stats, type_="entity", range_="year", entity="artists")
-    ctx.invoke(request_user_stats, type_="entity", range_="all_time", entity="artists")
+    for stats_range in ALLOWED_STATISTICS_RANGE:
+        for entity in ["artists", "releases", "recordings"]:
+            ctx.invoke(request_user_stats, type_="entity", range_=stats_range, entity=entity)
 
-    ctx.invoke(request_user_stats, type_="entity", range_="week", entity="releases")
-    ctx.invoke(request_user_stats, type_="entity", range_="month", entity="releases")
-    ctx.invoke(request_user_stats, type_="entity", range_="year", entity="releases")
-    ctx.invoke(request_user_stats, type_="entity", range_="all_time", entity="releases")
+        for stat in ["listening_activity", "daily_activity"]:
+            ctx.invoke(request_user_stats, type_=stat, range_=stats_range)
 
-    ctx.invoke(request_user_stats, type_="entity", range_="week", entity="recordings")
-    ctx.invoke(request_user_stats, type_="entity", range_="month", entity="recordings")
-    ctx.invoke(request_user_stats, type_="entity", range_="year", entity="recordings")
-    ctx.invoke(request_user_stats, type_="entity", range_="all_time", entity="recordings")
-
-    ctx.invoke(request_user_stats, type_="listening_activity", range_="week")
-    ctx.invoke(request_user_stats, type_="listening_activity", range_="month")
-    ctx.invoke(request_user_stats, type_="listening_activity", range_="year")
-    ctx.invoke(request_user_stats, type_="listening_activity", range_="all_time")
-
-    ctx.invoke(request_user_stats, type_="daily_activity", range_="week")
-    ctx.invoke(request_user_stats, type_="daily_activity", range_="month")
-    ctx.invoke(request_user_stats, type_="daily_activity", range_="year")
-    ctx.invoke(request_user_stats, type_="daily_activity", range_="all_time")
+        for entity in ["artists"]:
+            ctx.invoke(request_sitewide_stats, range_=stats_range, entity=entity)
 
 
 @cli.command(name='cron_request_similar_users')

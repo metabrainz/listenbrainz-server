@@ -21,7 +21,7 @@ import time
 import ujson
 
 from collections import defaultdict
-from typing import Optional, List, Tuple
+from typing import List, Tuple
 
 from flask import Blueprint, jsonify, request, current_app
 
@@ -37,11 +37,11 @@ from listenbrainz.db.model.pinned_recording import fetch_track_metadata_for_pins
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.listenstore import TimescaleListenStore
-from listenbrainz.webserver.views.api import _validate_get_endpoint_params
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, \
     APIForbidden
-from listenbrainz.webserver.views.api_tools import validate_auth_header, _filter_description_html
+from listenbrainz.webserver.views.api_tools import validate_auth_header, _filter_description_html, \
+    _validate_get_endpoint_params
 from brainzutils.ratelimit import ratelimit
 
 MAX_LISTEN_EVENTS_PER_USER = 2 # the maximum number of listens we want to return in the feed per user
@@ -116,7 +116,7 @@ def create_user_notification_event(user_name):
 
         {
             "metadata": {
-                "message": <the message to post, required>,
+                "message": "<the message to post, required>",
             }
         }
 
@@ -181,7 +181,7 @@ def user_feed(user_name: str):
         raise APIUnauthorized("You don't have permissions to view this user's timeline.")
 
     db_conn = webserver.create_timescale(current_app)
-    min_ts, max_ts, count = _validate_get_endpoint_params(db_conn, user_name)
+    min_ts, max_ts, count = _validate_get_endpoint_params()
     if min_ts is None and max_ts is None:
         max_ts = int(time.time())
 
@@ -246,16 +246,23 @@ def delete_feed_events(user_name):
     '''
     Delete those events from user's feed that belong to them.
     Supports deletion of recommendation and notification.
-    Along with the authorization token, post one of the following, according
-    to your need.
-    {
-        "event_type": "recording_recommendation",
-        "id": int
-    }
-    {
-        "event_type": "notification",
-        "id": int
-    }
+    Along with the authorization token, post the event type and event id.
+    For example:
+
+    .. code-block:: json
+
+        {
+            "event_type": "recording_recommendation",
+            "id": "<integer id of the event>"
+        }
+
+    .. code-block:: json
+
+        {
+            "event_type": "notification",
+            "id": "<integer id of the event>"
+        }
+
     :param user_name: The MusicBrainz ID of the user from whose timeline events are being deleted
     :type user_name: ``str``
     :statuscode 200: Successful deletion

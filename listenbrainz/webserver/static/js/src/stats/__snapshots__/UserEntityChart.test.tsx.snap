@@ -259,11 +259,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -283,6 +283,25 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": undefined,
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Coldplay",
+                                "release_name": "",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -383,11 +402,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -407,6 +426,25 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": undefined,
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Ellie Goulding",
+                                "release_name": "",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -507,11 +545,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -531,6 +569,25 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": undefined,
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Maroon 5",
+                                "release_name": "",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -631,11 +688,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -655,6 +712,25 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": undefined,
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "OneRepublic",
+                                "release_name": "",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -755,11 +831,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -779,6 +855,25 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": undefined,
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "The Fray",
+                                "release_name": "",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -879,11 +974,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -903,6 +998,25 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": undefined,
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Ritviz",
+                                "release_name": "",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -1003,11 +1117,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -1027,6 +1141,25 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": undefined,
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Imagine Dragons",
+                                "release_name": "",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -1127,11 +1260,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -1151,6 +1284,25 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": undefined,
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Lenka",
+                                "release_name": "",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -1251,11 +1403,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -1275,6 +1427,25 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": undefined,
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Vance Joy",
+                                "release_name": "",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -1375,11 +1546,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -1399,6 +1570,25 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": undefined,
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Taylor Swift",
+                                "release_name": "",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -1499,11 +1689,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -1523,6 +1713,25 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": undefined,
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Ed Sheeran",
+                                "release_name": "",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -1623,11 +1832,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -1647,6 +1856,25 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": undefined,
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "George Ezra",
+                                "release_name": "",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -1747,11 +1975,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -1771,6 +1999,25 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": undefined,
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Christina Perri",
+                                "release_name": "",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -1871,11 +2118,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -1895,6 +2142,25 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": undefined,
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "The Script",
+                                "release_name": "",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -1995,11 +2261,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -2019,6 +2285,25 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": undefined,
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "The Local train",
+                                "release_name": "",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -2119,11 +2404,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -2143,6 +2428,25 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": undefined,
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Tommee Profitt",
+                                "release_name": "",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -2243,11 +2547,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -2267,6 +2571,25 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": undefined,
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "The Chainsmokers",
+                                "release_name": "",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -2367,11 +2690,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -2391,6 +2714,25 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": undefined,
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Sia",
+                                "release_name": "",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -2491,11 +2833,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -2515,6 +2857,25 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": undefined,
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Of Monsters and Men",
+                                "release_name": "",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -2615,11 +2976,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -2639,6 +3000,25 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": undefined,
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "M.I.A.",
+                                "release_name": "",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -2739,11 +3119,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -2763,6 +3143,25 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": undefined,
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Linkin Park",
+                                "release_name": "",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -2863,11 +3262,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -2887,6 +3286,25 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": undefined,
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "The Weeknd",
+                                "release_name": "",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -2987,11 +3405,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -3011,6 +3429,25 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": undefined,
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Backstreet Boys",
+                                "release_name": "",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -3111,11 +3548,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -3135,6 +3572,25 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": undefined,
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Train",
+                                "release_name": "",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -3235,11 +3691,11 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -3259,6 +3715,25 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": undefined,
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "The Lumineers",
+                                "release_name": "",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -3813,6 +4288,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
       >
         <BrainzPlayer
           direction="down"
+          listenBrainzAPIBaseURI="http://localhost/1"
           listens={
             Array [
               Object {
@@ -4143,6 +4619,8 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
             ]
           }
           newAlert={[MockFunction]}
+          refreshSpotifyToken={[Function]}
+          refreshYoutubeToken={[Function]}
         >
           <div>
             <PlaybackControls
@@ -4990,11 +5468,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -5027,6 +5505,25 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": "0fe11cd3-0be4-467b-84fa-0bd524d45d74",
+                                  "release_mbid": "",
+                                },
+                                "artist_name": "Ellie Goulding",
+                                "release_name": "Delirium (Deluxe)",
+                                "track_name": "Love Me Like You Do - From \\"Fifty Shades of Grey\\"",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -5142,11 +5639,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -5179,6 +5676,25 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": "0008ab49-a6ad-40b5-aa90-9d2779265c22",
+                                  "release_mbid": "",
+                                },
+                                "artist_name": "The Fray",
+                                "release_name": "How to Save a Life",
+                                "track_name": "How to Save a Life",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -5289,11 +5805,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -5319,6 +5835,25 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": "",
+                                  "release_mbid": "",
+                                },
+                                "artist_name": "Ritviz",
+                                "release_name": "Udd Gaye (Bacardi House Party Sessions)",
+                                "track_name": "Udd Gaye - Bacardi House Party Sessions",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -5434,11 +5969,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -5471,6 +6006,25 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": "00d32e28-0df2-486c-9829-750301962fb2",
+                                  "release_mbid": "",
+                                },
+                                "artist_name": "OneRepublic",
+                                "release_name": "Native",
+                                "track_name": "Counting Stars",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -5586,11 +6140,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -5623,6 +6177,25 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": "017cd117-e343-408f-95fe-ee4c1018e312",
+                                  "release_mbid": "",
+                                },
+                                "artist_name": "Ellie Goulding",
+                                "release_name": "Halcyon Days",
+                                "track_name": "Burn",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -5738,11 +6311,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -5775,6 +6348,25 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": "01236d26-9f46-435f-adc5-6c92e6e76f53",
+                                  "release_mbid": "",
+                                },
+                                "artist_name": "Taylor Swift",
+                                "release_name": "1989",
+                                "track_name": "Blank Space",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -5890,11 +6482,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -5927,6 +6519,25 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": "03a0cdfb-f964-434f-bfb7-379203dc139d",
+                                  "release_mbid": "",
+                                },
+                                "artist_name": "Christina Perri",
+                                "release_name": "A Thousand Years",
+                                "track_name": "A Thousand Years",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -6042,11 +6653,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -6079,6 +6690,25 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": "003196a1-f6ab-4fe8-9683-b970d163cfa4",
+                                  "release_mbid": "",
+                                },
+                                "artist_name": "Vance Joy",
+                                "release_name": "Dream Your Life Away (Special Edition)",
+                                "track_name": "Riptide",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -6194,11 +6824,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -6231,6 +6861,25 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": "02ba28bc-6d79-44fb-b770-c49395661117",
+                                  "release_mbid": "",
+                                },
+                                "artist_name": "Ed Sheeran",
+                                "release_name": "÷ (Deluxe)",
+                                "track_name": "Castle on the Hill",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -6341,11 +6990,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -6371,6 +7020,25 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": "",
+                                  "release_mbid": "",
+                                },
+                                "artist_name": "OneRepublic",
+                                "release_name": "13 Reasons Why (Season 2)",
+                                "track_name": "Start Again (feat. Logic)",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -6486,11 +7154,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -6523,6 +7191,25 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": "0a4c5dfd-02c7-43dc-ba7f-1b4ce7a02994",
+                                  "release_mbid": "",
+                                },
+                                "artist_name": "George Ezra",
+                                "release_name": "Staying at Tamara's",
+                                "track_name": "Shotgun",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -6633,11 +7320,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -6663,6 +7350,25 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": "",
+                                  "release_mbid": "",
+                                },
+                                "artist_name": "Tommee Profitt",
+                                "release_name": "In The End",
+                                "track_name": "In The End - Mellen Gi Remix",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -6778,11 +7484,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -6815,6 +7521,25 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": "045cdbf9-796e-4949-91f6-e05d9ce3ed21",
+                                  "release_mbid": "",
+                                },
+                                "artist_name": "The Script",
+                                "release_name": "#3",
+                                "track_name": "Hall of Fame",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -6925,11 +7650,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -6955,6 +7680,25 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": "",
+                                  "release_mbid": "",
+                                },
+                                "artist_name": "Maroon 5",
+                                "release_name": "Singles",
+                                "track_name": "Moves Like Jagger - Studio Recording From The Voice Performance",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -7070,11 +7814,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -7107,6 +7851,25 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": "0031fba1-dde0-3755-bcb2-63b2544159f8",
+                                  "release_mbid": "",
+                                },
+                                "artist_name": "Of Monsters and Men",
+                                "release_name": "My Head Is an Animal",
+                                "track_name": "Little Talks",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -7217,11 +7980,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -7247,6 +8010,25 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": "",
+                                  "release_mbid": "",
+                                },
+                                "artist_name": "Sia",
+                                "release_name": "Cheap Thrills (feat. Sean Paul)",
+                                "track_name": "Cheap Thrills (feat. Sean Paul)",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -7362,11 +8144,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -7399,6 +8181,25 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": "0126d206-3894-4d97-b5c2-f6cf037a323a",
+                                  "release_mbid": "",
+                                },
+                                "artist_name": "Maroon 5",
+                                "release_name": "Overexposed",
+                                "track_name": "Payphone",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -7514,11 +8315,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -7551,6 +8352,25 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": "234ae263-ffad-472a-8077-dab64bcedf99",
+                                  "release_mbid": "",
+                                },
+                                "artist_name": "M.I.A.",
+                                "release_name": "Kala",
+                                "track_name": "Paper Planes",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -7666,11 +8486,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -7703,6 +8523,25 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": "14c913e9-db47-40fa-ae1a-81099a67e4bf",
+                                  "release_mbid": "",
+                                },
+                                "artist_name": "Linkin Park",
+                                "release_name": "One More Light",
+                                "track_name": "Battle Symphony",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -7818,11 +8657,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -7855,6 +8694,25 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": "0040980c-4f9a-43df-8be0-142dce4374f4",
+                                  "release_mbid": "",
+                                },
+                                "artist_name": "Backstreet Boys",
+                                "release_name": "The Hits--Chapter One",
+                                "track_name": "I Want It That Way",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -7970,11 +8828,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -8007,6 +8865,25 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": "036e67df-baae-4626-a2ab-951dd162e332",
+                                  "release_mbid": "",
+                                },
+                                "artist_name": "Lenka",
+                                "release_name": "Two (Expanded Edition)",
+                                "track_name": "Everything at Once",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -8117,11 +8994,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -8147,6 +9024,25 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": "",
+                                  "release_mbid": "",
+                                },
+                                "artist_name": "The Local train",
+                                "release_name": "Aalas Ka Pedh",
+                                "track_name": "Choo Lo",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -8262,11 +9158,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -8299,6 +9195,25 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": "02b47acf-3bc5-47dc-a516-e8c2c95bc07b",
+                                  "release_mbid": "",
+                                },
+                                "artist_name": "Coldplay",
+                                "release_name": "A Head Full Of Dreams",
+                                "track_name": "Up&Up",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -8414,11 +9329,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -8451,6 +9366,25 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": "0132a6b9-a04f-48ea-81e7-5f3a5d608f75",
+                                  "release_mbid": "",
+                                },
+                                "artist_name": "Imagine Dragons",
+                                "release_name": "Night Visions (Deluxe)",
+                                "track_name": "On Top of the World",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -8561,11 +9495,11 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -8591,6 +9525,25 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": "",
+                                  "release_mbid": "",
+                                },
+                                "artist_name": "Ellie Goulding",
+                                "release_name": "Close To Me (feat. Swae Lee)",
+                                "track_name": "Close to Me (with Diplo) (feat. Swae Lee)",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -9395,6 +10348,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
       >
         <BrainzPlayer
           direction="down"
+          listenBrainzAPIBaseURI="http://localhost/1"
           listens={
             Array [
               Object {
@@ -9725,6 +10679,8 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
             ]
           }
           newAlert={[MockFunction]}
+          refreshSpotifyToken={[Function]}
+          refreshYoutubeToken={[Function]}
         >
           <div>
             <PlaybackControls
@@ -10561,11 +11517,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -10587,6 +11543,25 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Coldplay",
+                                "release_name": "Live in Buenos Aires",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -10691,11 +11666,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -10717,6 +11692,25 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "The Fray",
+                                "release_name": "How to Save a Life",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -10821,11 +11815,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -10847,6 +11841,25 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Ellie Goulding",
+                                "release_name": "Delirium (Deluxe)",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -10951,11 +11964,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -10977,6 +11990,25 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Ritviz",
+                                "release_name": "Udd Gaye (Bacardi House Party Sessions)",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -11081,11 +12113,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -11107,6 +12139,25 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "OneRepublic",
+                                "release_name": "Native",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -11211,11 +12262,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -11237,6 +12288,25 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Vance Joy",
+                                "release_name": "Dream Your Life Away (Special Edition)",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -11341,11 +12411,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -11367,6 +12437,25 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Ed Sheeran",
+                                "release_name": "÷ (Deluxe)",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -11471,11 +12560,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -11497,6 +12586,25 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Imagine Dragons",
+                                "release_name": "Night Visions (Deluxe)",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -11601,11 +12709,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -11627,6 +12735,25 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Taylor Swift",
+                                "release_name": "1989",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -11731,11 +12858,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -11757,6 +12884,25 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Ellie Goulding",
+                                "release_name": "Halcyon Days",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -11861,11 +13007,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -11887,6 +13033,25 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Christina Perri",
+                                "release_name": "A Thousand Years",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -11991,11 +13156,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -12017,6 +13182,25 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Coldplay",
+                                "release_name": "A Head Full Of Dreams",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -12121,11 +13305,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -12147,6 +13331,25 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "George Ezra",
+                                "release_name": "Staying at Tamara's",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -12251,11 +13454,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -12277,6 +13480,25 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Lenka",
+                                "release_name": "Two (Expanded Edition)",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -12381,11 +13603,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -12407,6 +13629,25 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "OneRepublic",
+                                "release_name": "13 Reasons Why (Season 2)",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -12511,11 +13752,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -12537,6 +13778,25 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Tommee Profitt",
+                                "release_name": "In The End",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -12641,11 +13901,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -12667,6 +13927,25 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "The Script",
+                                "release_name": "#3",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -12771,11 +14050,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -12797,6 +14076,25 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Maroon 5",
+                                "release_name": "Singles",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -12901,11 +14199,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -12927,6 +14225,25 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Maroon 5",
+                                "release_name": "Overexposed",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -13031,11 +14348,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -13057,6 +14374,25 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Of Monsters and Men",
+                                "release_name": "My Head Is an Animal",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -13161,11 +14497,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -13187,6 +14523,25 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Sia",
+                                "release_name": "Cheap Thrills (feat. Sean Paul)",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -13291,11 +14646,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -13317,6 +14672,25 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Linkin Park",
+                                "release_name": "One More Light",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -13421,11 +14795,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -13447,6 +14821,25 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "M.I.A.",
+                                "release_name": "Kala",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -13551,11 +14944,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -13577,6 +14970,25 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "The Local train",
+                                "release_name": "Aalas Ka Pedh",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -13681,11 +15093,11 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   showUsername={false}
                 >
                   <ForwardRef
-                    className="listen-card row    compact "
+                    className="listen-card row  compact "
                     onDoubleClick={[Function]}
                   >
                     <div
-                      className="card listen-card row    compact "
+                      className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
                       <div
@@ -13707,6 +15119,25 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       <div
                         className="listen-controls"
                       >
+                        <ListenFeedbackComponent
+                          currentFeedback={0}
+                          listen={
+                            Object {
+                              "listened_at": -1,
+                              "track_metadata": Object {
+                                "additional_info": Object {
+                                  "artist_mbids": Array [],
+                                  "recording_mbid": undefined,
+                                  "release_mbid": undefined,
+                                },
+                                "artist_name": "Backstreet Boys",
+                                "release_name": "The Hits--Chapter One",
+                                "track_name": "",
+                              },
+                            }
+                          }
+                          newAlert={[MockFunction]}
+                        />
                         <button
                           className="btn-transparent play-button"
                           onClick={[Function]}
@@ -14411,6 +15842,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
       >
         <BrainzPlayer
           direction="down"
+          listenBrainzAPIBaseURI="http://localhost/1"
           listens={
             Array [
               Object {
@@ -14741,6 +16173,8 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
             ]
           }
           newAlert={[MockFunction]}
+          refreshSpotifyToken={[Function]}
+          refreshYoutubeToken={[Function]}
         >
           <div>
             <PlaybackControls
@@ -15590,8 +17024,11 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
       >
         <BrainzPlayer
           direction="down"
+          listenBrainzAPIBaseURI="http://localhost/1"
           listens={Array []}
           newAlert={[MockFunction]}
+          refreshSpotifyToken={[Function]}
+          refreshYoutubeToken={[Function]}
         >
           <div>
             <PlaybackControls
