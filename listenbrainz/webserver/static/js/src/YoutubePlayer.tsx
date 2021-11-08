@@ -30,20 +30,17 @@ export default class YoutubePlayer
   implements DataSourceType {
   static getVideoIDFromListen(listen: Listen | JSPFTrack): string | undefined {
     // Checks if there is a youtube ID in the listen
-    const youtubeId = _get(listen, "track_metadata.additional_info.youtube_id");
-    if (youtubeId) {
-      return youtubeId;
-    }
-
-    // or if the origin URL contains youtube.com
-    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
-    if (_isString(originURL) && originURL.length) {
+    // or if the origin_url field contains youtube.com
+    const videoURL =
+      _get(listen, "track_metadata.additional_info.youtube_id") ??
+      _get(listen, "track_metadata.additional_info.origin_url");
+    if (_isString(videoURL) && videoURL.length) {
       /** Credit for this regular expression goes to Soufiane Sakhi:
        * https://stackoverflow.com/a/61033353/4904467
        */
       const youtubeURLRegexp = /(?:https?:\/\/)?(?:www\.|m\.)?youtu(?:\.be\/|be.com\/\S*(?:watch|embed)(?:(?:(?=\/[^&\s?]+(?!\S))\/)|(?:\S*v=|v\/)))([^&\s?]+)/g;
-      const match = youtubeURLRegexp.exec(originURL);
-      return match?.[0];
+      const match = youtubeURLRegexp.exec(videoURL);
+      return match?.[1];
     }
 
     return undefined;
