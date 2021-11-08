@@ -83,10 +83,14 @@ export default class YoutubePlayer
     // or if the origin URL contains youtube.com
     const originURL = _get(listen, "track_metadata.additional_info.origin_url");
     if (_isString(originURL) && originURL.length) {
-      const parsedURL = new URL(originURL);
-      const { hostname, searchParams } = parsedURL;
-      if (/youtube\.com/.test(hostname)) {
-        return originURL;
+      try {
+        const parsedURL = new URL(originURL);
+        const { hostname, searchParams } = parsedURL;
+        if (/youtube\.com/.test(hostname)) {
+          return originURL;
+        }
+      } catch {
+        return undefined;
       }
     }
     return undefined;
@@ -270,10 +274,14 @@ export default class YoutubePlayer
     // or if the origin URL contains youtube.com
     const originURL = _get(listen, "track_metadata.additional_info.origin_url");
     if (_isString(originURL) && originURL.length) {
-      const parsedURL = new URL(originURL);
-      const { hostname, searchParams } = parsedURL;
-      if (/youtube\.com/.test(hostname)) {
-        return true;
+      try {
+        const parsedURL = new URL(originURL);
+        const { hostname, searchParams } = parsedURL;
+        if (/youtube\.com/.test(hostname)) {
+          return true;
+        }
+      } catch {
+        return false;
       }
     }
 
@@ -298,10 +306,14 @@ export default class YoutubePlayer
     let youtubeId = _get(listen, "track_metadata.additional_info.youtube_id");
     const originURL = _get(listen, "track_metadata.additional_info.origin_url");
     if (!youtubeId && _isString(originURL) && originURL.length) {
-      const parsedURL = new URL(originURL);
-      const { hostname, searchParams } = parsedURL;
-      if (/youtube\.com/.test(hostname)) {
-        youtubeId = searchParams.get("v");
+      try {
+        const parsedURL = new URL(originURL);
+        const { hostname, searchParams } = parsedURL;
+        if (/youtube\.com/.test(hostname)) {
+          youtubeId = searchParams.get("v");
+        }
+      } catch {
+        // URL is not valid, do nothing
       }
     }
     if (youtubeId) {
