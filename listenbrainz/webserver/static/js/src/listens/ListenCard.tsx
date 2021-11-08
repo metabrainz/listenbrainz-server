@@ -83,36 +83,11 @@ export default class ListenCard extends React.Component<
 
   componentDidMount() {
     window.addEventListener("message", this.receiveBrainzPlayerMessage);
-    this.getMusicBrainzMetadata();
   }
 
   componentWillUnmount() {
     window.removeEventListener("message", this.receiveBrainzPlayerMessage);
   }
-
-  getMusicBrainzMetadata = async () => {
-    const { listen } = this.props;
-    const releaseMBID =
-      _get(listen, "track_metadata.additional_info.release_mbid") ??
-      _get(listen, "track_metadata.mbid_mapping.release_mbid");
-    if (!releaseMBID) {
-      return;
-    }
-    try {
-      const CAAResponse = await fetch(
-        `https://coverartarchive.org/release/${releaseMBID}`
-      );
-      if (CAAResponse.ok) {
-        const body: CoverArtArchiveResponse = await CAAResponse.json();
-        const thumbnail = body.images?.[0]?.thumbnails?.[250];
-        if (thumbnail) {
-          this.setState({ thumbnailSrc: thumbnail });
-        }
-      }
-    } catch (error) {
-      // Do nothing with the error, I guess.
-    }
-  };
 
   playListen = () => {
     const { listen } = this.props;
