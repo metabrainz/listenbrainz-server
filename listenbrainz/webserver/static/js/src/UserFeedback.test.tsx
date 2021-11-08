@@ -123,11 +123,25 @@ describe("UserFeedback", () => {
     );
     const instance = wrapper.instance();
     const loadFeedbackSpy = jest.spyOn(instance, "loadFeedback");
-
+    const apiGetFeedbackSpy = jest
+      .spyOn(instance.context.APIService, "getFeedbackForUserForRecordings")
+      .mockResolvedValueOnce({
+        feedback: [
+          { recording_msid: "some-uuid", score: 1 },
+          { recording_msid: "some-other-uuid", score: -1 },
+        ],
+      });
+    instance.componentDidMount();
     expect(loadFeedbackSpy).toHaveBeenCalledTimes(1);
-    expect(instance.state.recordingFeedbackMap).toEqual(
-      initialRecordingFeedbackMap
+    expect(apiGetFeedbackSpy).toHaveBeenCalledWith(
+      "pikachu",
+      props.feedback.map((item) => item.recording_msid).join(",")
     );
+    await flushPromises();
+    expect(instance.state.recordingFeedbackMap).toEqual({
+      "some-uuid": 1,
+      "some-other-uuid": -1,
+    });
   });
 
   it("loadFeedback does not do anything if no user is logged in", async () => {
@@ -204,7 +218,6 @@ describe("UserFeedback", () => {
     ).toBeFalsy();
   });
   it("updates recordingFeedbackMap when clicking on a feedback button", async () => {
-    jest.useFakeTimers();
     const wrapper = mount<UserFeedback>(
       <GlobalAppContext.Provider value={mountOptions.context}>
         <UserFeedback {...props} />
@@ -224,7 +237,6 @@ describe("UserFeedback", () => {
       },
     });
     expect(instance.state.recordingFeedbackMap).toEqual({
-      ...initialRecordingFeedbackMap,
       "8aa379ad-852e-4794-9c01-64959f5d0b17": 0,
     });
     const firstListenCard = listens.first();
@@ -244,17 +256,14 @@ describe("UserFeedback", () => {
       "8aa379ad-852e-4794-9c01-64959f5d0b17",
       1
     );
-
-    expect(
-      instance.state.recordingFeedbackMap[
-        "8aa379ad-852e-4794-9c01-64959f5d0b17"
-      ]
-    ).toEqual(1);
-
     expect(updateFeedbackSpy).toHaveBeenCalledWith(
       "8aa379ad-852e-4794-9c01-64959f5d0b17",
       1
     );
+    await flushPromises();
+    expect(instance.state.recordingFeedbackMap).toEqual({
+      "8aa379ad-852e-4794-9c01-64959f5d0b17": 1,
+    });
   });
   describe("getFeedbackItemsFromAPI", () => {
     it("calls the API with the right parameters", async () => {
