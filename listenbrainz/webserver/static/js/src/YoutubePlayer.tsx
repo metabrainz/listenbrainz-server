@@ -313,7 +313,7 @@ export default class YoutubePlayer
           youtubeId = searchParams.get("v");
         }
       } catch {
-        return false;
+        // URL is not valid, do nothing
       }
     }
     if (youtubeId) {
