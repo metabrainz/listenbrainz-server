@@ -32,7 +32,6 @@ export type DataSourceType = {
   playListen: (listen: Listen | JSPFTrack) => void;
   togglePlay: () => void;
   seekToPositionMs: (msTimecode: number) => void;
-  isListenFromThisService: (listen: Listen | JSPFTrack) => boolean;
   canSearchAndPlayTracks: () => boolean;
   datasourceRecordsListens: () => boolean;
 };
@@ -344,7 +343,7 @@ export default class BrainzPlayer extends React.Component<
     if (datasourceIndex === 0) {
       /** If available, retrieve the service the listen was listened with */
       const listenedFromIndex = this.dataSources.findIndex((ds) =>
-        ds.current?.isListenFromThisService(listen)
+        ds.current?.constructor.isListenFromThisService(listen)
       );
       selectedDatasourceIndex =
         listenedFromIndex === -1 ? 0 : listenedFromIndex;
@@ -363,7 +362,7 @@ export default class BrainzPlayer extends React.Component<
     // otherwise skip to the next datasource without trying or setting currentDataSourceIndex
     // This prevents rendering datasource iframes when we can't use the datasource
     if (
-      !datasource.isListenFromThisService(listen) &&
+      !datasource.constructor.isListenFromThisService(listen) &&
       !datasource.canSearchAndPlayTracks()
     ) {
       this.playListen(listen, datasourceIndex + 1);

@@ -28,18 +28,24 @@ type ExtendedYoutubePlayer = {
 export default class YoutubePlayer
   extends React.Component<YoutubePlayerProps, YoutubePlayerState>
   implements DataSourceType {
-  public name = "youtube";
-  public domainName = "youtube.com";
-  youtubePlayer?: ExtendedYoutubePlayer;
-  checkVideoLoadedTimerId?: NodeJS.Timeout;
-
-  componentDidUpdate(prevProps: DataSourceProps) {
-    const { show } = this.props;
-    if (prevProps.show === true && show === false && this.youtubePlayer) {
-      this.youtubePlayer.stopVideo();
-      // Clear playlist
-      this.youtubePlayer.cueVideoById("");
+  static isListenFromThisService(listen: Listen | JSPFTrack): boolean {
+    // Checks if there is a youtube ID in the listen
+    const youtubeId = _get(listen, "track_metadata.additional_info.youtube_id");
+    if (youtubeId) {
+      return true;
     }
+
+    // or if the origin URL contains youtube.com
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    if (_isString(originURL) && originURL.length) {
+      const parsedURL = new URL(originURL);
+      const { hostname, searchParams } = parsedURL;
+      if (/youtube\.com/.test(hostname)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**
@@ -90,6 +96,24 @@ export default class YoutubePlayer
       }
     }
     return undefined;
+  }
+
+  /**
+   * @see https://github.com/Microsoft/TypeScript/issues/3841#issuecomment-337560146
+   */
+  ["constructor"]: typeof YoutubePlayer;
+  public name = "youtube";
+  public domainName = "youtube.com";
+  youtubePlayer?: ExtendedYoutubePlayer;
+  checkVideoLoadedTimerId?: NodeJS.Timeout;
+
+  componentDidUpdate(prevProps: DataSourceProps) {
+    const { show } = this.props;
+    if (prevProps.show === true && show === false && this.youtubePlayer) {
+      this.youtubePlayer.stopVideo();
+      // Clear playlist
+      this.youtubePlayer.cueVideoById("");
+    }
   }
 
   onReady = (event: YT.PlayerEvent): void => {
@@ -258,26 +282,6 @@ export default class YoutubePlayer
     } else {
       this.youtubePlayer.loadVideoById(videoId);
     }
-  };
-
-  isListenFromThisService = (listen: Listen | JSPFTrack): boolean => {
-    // Checks if there is a youtube ID in the listen
-    const youtubeId = _get(listen, "track_metadata.additional_info.youtube_id");
-    if (youtubeId) {
-      return true;
-    }
-
-    // or if the origin URL contains youtube.com
-    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
-    if (_isString(originURL) && originURL.length) {
-      const parsedURL = new URL(originURL);
-      const { hostname, searchParams } = parsedURL;
-      if (/youtube\.com/.test(hostname)) {
-        return true;
-      }
-    }
-
-    return false;
   };
 
   canSearchAndPlayTracks = (): boolean => {
