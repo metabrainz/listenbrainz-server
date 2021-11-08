@@ -485,7 +485,7 @@ export default class PlaylistPage extends React.Component<
     const { playlist } = this.state;
     // Owner can't be collaborator
     const collaboratorsWithoutOwner = collaborators.filter(
-      (username) => username !== playlist.creator
+      (username) => username.toLowerCase() !== playlist.creator.toLowerCase()
     );
     if (
       description === playlist.annotation &&
