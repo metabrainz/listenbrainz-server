@@ -89,16 +89,25 @@ class ListeningActivityTestCase(StatsTestCase):
             datetime(2021, 10, 1)
         ]
         step = relativedelta(weeks=+1)
-        date_fmt = "%d %B %Y"
-
+        fmt = "%d %B %Y"
         mock_listen_ts.return_value = datetime(2021, 1, 5, 2, 3, 0)
-        self.assertEqual((quarters[0], quarters[2], step, date_fmt), listening_activity_stats.get_time_range("quarter"))
-
+        self.assertEqual((quarters[0], quarters[2], step, fmt), listening_activity_stats.get_time_range("quarter"))
         mock_listen_ts.return_value = datetime(2021, 5, 7, 2, 3, 0)
-        self.assertEqual((quarters[1], quarters[3], step, date_fmt), listening_activity_stats.get_time_range("quarter"))
-
+        self.assertEqual((quarters[1], quarters[3], step, fmt), listening_activity_stats.get_time_range("quarter"))
         mock_listen_ts.return_value = datetime(2021, 8, 9, 2, 3, 0)
-        self.assertEqual((quarters[2], quarters[4], step, date_fmt), listening_activity_stats.get_time_range("quarter"))
-
+        self.assertEqual((quarters[2], quarters[4], step, fmt), listening_activity_stats.get_time_range("quarter"))
         mock_listen_ts.return_value = datetime(2021, 11, 8, 2, 3, 0)
-        self.assertEqual((quarters[3], quarters[5], step, date_fmt), listening_activity_stats.get_time_range("quarter"))
+        self.assertEqual((quarters[3], quarters[5], step, fmt), listening_activity_stats.get_time_range("quarter"))
+
+        periods = [
+            datetime(2020, 1, 1),
+            datetime(2020, 7, 1),
+            datetime(2021, 1, 1),
+            datetime(2021, 7, 1)
+        ]
+        step = relativedelta(months=+1)
+        fmt = "%B %Y"
+        mock_listen_ts.return_value = datetime(2021, 3, 5, 2, 3, 0)
+        self.assertEqual((periods[0], periods[2], step, fmt), listening_activity_stats.get_time_range("half_yearly"))
+        mock_listen_ts.return_value = datetime(2021, 9, 7, 2, 3, 0)
+        self.assertEqual((periods[1], periods[3], step, fmt), listening_activity_stats.get_time_range("half_yearly"))
