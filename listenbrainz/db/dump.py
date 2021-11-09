@@ -42,6 +42,7 @@ from brainzutils.mail import send_mail
 from flask import current_app, render_template
 from listenbrainz import DUMP_LICENSE_FILE_PATH
 import listenbrainz.db as db
+from listenbrainz.db import timescale
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.utils import create_path, log_ioerrors
 
@@ -109,6 +110,25 @@ PUBLIC_TABLES_DUMP = {
     ),
 }
 
+PUBLIC_TABLES_TIMESCALE_DUMP = {
+    'listen_mbid_mapping': (
+        'id',
+        'artist_credit_id',
+        'recording_mbid',
+        'release_mbid',
+        'release_name',
+        'artist_mbids',
+        'artist_credit_name',
+        'recording_name',
+        'match_type',
+        'last_updated',
+    ),
+    'listen_join_listen_mbid_mapping': (
+        'recording_msid',
+        'listen_mbid_mapping'
+    )
+}
+
 PUBLIC_TABLES_IMPORT = PUBLIC_TABLES_DUMP.copy()
 # When importing fields with COPY we need to use the names of the fields, rather
 # than the placeholders that we set for the export
@@ -152,6 +172,34 @@ PRIVATE_TABLES = {
     ),
 }
 
+PRIVATE_TABLES_TIMESCALE = {
+    'playlist.playlist': (
+        'id',
+        'mbid',
+        'creator_id',
+        'name',
+        'description',
+        'public',
+        'created',
+        'last_updated',
+        'copied_from_id',
+        'created_for_id',
+        'algorithm_metadata',
+    ),
+    'playlist.playlist_recording': (
+        'id',
+        'playlist_id',
+        'position',
+        'mbid',
+        'added_by_id',
+        'created'
+    ),
+    'playlist.playlist_collaborator': (
+        'playlist_id',
+        'collaborator_id'
+    )
+}
+
 
 def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
     """ Create postgres database dump in the specified location
@@ -186,6 +234,24 @@ def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
     current_app.logger.info(
         'Dump of private data created at %s!', private_dump)
 
+    current_app.logger.info('Creating dump of timescale private data...')
+    try:
+        private_timescale_dump = create_private_timescale_dump(location, dump_time, threads)
+    except IOError as e:
+        current_app.logger.critical(
+            'IOError while creating private timescale dump: %s', str(e), exc_info=True)
+        current_app.logger.info('Removing created files and giving up...')
+        shutil.rmtree(location)
+        return
+    except Exception as e:
+        current_app.logger.critical(
+            'Unable to create private timescale db dump due to error %s', str(e), exc_info=True)
+        current_app.logger.info('Removing created files and giving up...')
+        shutil.rmtree(location)
+        return
+    current_app.logger.info(
+        'Dump of private timescale data created at %s!', private_timescale_dump)
+
     current_app.logger.info('Creating dump of public data...')
     try:
         public_dump = create_public_dump(location, dump_time, threads)
@@ -202,11 +268,27 @@ def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
         shutil.rmtree(location)
         return
 
-    current_app.logger.info('Dump of public data created at %s!', public_dump)
+    current_app.logger.info('Creating dump of timescale public data...')
+    try:
+        public_timescale_dump = create_public_timescale_dump(location, dump_time, threads)
+    except IOError as e:
+        current_app.logger.critical(
+            'IOError while creating public timescale dump: %s', str(e), exc_info=True)
+        current_app.logger.info('Removing created files and giving up...')
+        shutil.rmtree(location)
+        return
+    except Exception as e:
+        current_app.logger.critical(
+            'Unable to create public timescale dump due to error %s', str(e), exc_info=True)
+        current_app.logger.info('Removing created files and giving up...')
+        shutil.rmtree(location)
+        return
+
+    current_app.logger.info('Dump of public timescale data created at %s!', public_timescale_dump)
 
     current_app.logger.info(
         'ListenBrainz PostgreSQL data dump created at %s!', location)
-    return private_dump, public_dump
+    return private_dump, private_timescale_dump, public_dump, public_timescale_dump
 
 
 def dump_feedback_for_spark(location, dump_time=datetime.today(), threads=None):
@@ -244,11 +326,13 @@ def dump_feedback_for_spark(location, dump_time=datetime.today(), threads=None):
     return feedback_dump
 
 
-def _create_dump(location, dump_type, tables, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
+def _create_dump(location: str, db_engine: sqlalchemy.engine.Engine, dump_type: str,
+                 tables, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Creates a dump of the provided tables at the location passed
 
         Arguments:
             location: the path where the dump should be created
+            db_engine: an sqlalchemy Engine instance for making a connection
             dump_type: the type of data dump being made - private or public
             tables: a dict containing the names of the tables to be dumped as keys and the columns
                     to be dumped as values
@@ -303,7 +387,7 @@ def _create_dump(location, dump_type, tables, dump_time, threads=DUMP_DEFAULT_TH
             archive_tables_dir = os.path.join(temp_dir, 'lbdump', 'lbdump')
             create_path(archive_tables_dir)
 
-            with db.engine.connect() as connection:
+            with db_engine.connect() as connection:
                 if dump_type == "feedback":
                     dump_user_feedback(connection, location=archive_tables_dir)
                 else:
@@ -338,7 +422,7 @@ def _create_dump(location, dump_type, tables, dump_time, threads=DUMP_DEFAULT_TH
     return archive_path
 
 
-def create_private_dump(location, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
+def create_private_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Create postgres database dump for private data in db.
         This includes dumps of the following tables:
             "user",
@@ -347,6 +431,7 @@ def create_private_dump(location, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
     """
     return _create_dump(
         location=location,
+        db_engine=db.engine,
         dump_type='private',
         tables=PRIVATE_TABLES,
         dump_time=dump_time,
@@ -354,7 +439,20 @@ def create_private_dump(location, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
     )
 
 
-def create_public_dump(location, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
+def create_private_timescale_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
+    """ Create timescale database dump for private data in db.
+    """
+    return _create_dump(
+        location=location,
+        db_engine=timescale.engine,
+        dump_type='private-timescale',
+        tables=PRIVATE_TABLES_TIMESCALE,
+        dump_time=dump_time,
+        threads=threads,
+    )
+
+
+def create_public_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Create postgres database dump for statistics and user info in db.
         This includes a sanitized dump of the "user" table and dumps of all tables
         in the statistics schema:
@@ -365,6 +463,7 @@ def create_public_dump(location, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
     """
     return _create_dump(
         location=location,
+        db_engine=db.engine,
         dump_type='public',
         tables=PUBLIC_TABLES_DUMP,
         dump_time=dump_time,
@@ -372,11 +471,26 @@ def create_public_dump(location, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
     )
 
 
-def create_feedback_dump(location, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
+def create_public_timescale_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
+    """ Create postgres database dump for public info in the timescale database.
+        This includes the MBID mapping table
+    """
+    return _create_dump(
+        location=location,
+        db_engine=timescale.engine,
+        dump_type='public-timescale',
+        tables=PUBLIC_TABLES_TIMESCALE_DUMP,
+        dump_time=dump_time,
+        threads=threads,
+    )
+
+
+def create_feedback_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Create a spark format dump of user listen and user recommendation feedback.
     """
     return _create_dump(
         location=location,
+        db_engine=db.engine,
         dump_type='feedback',
         tables=[],
         dump_time=dump_time,
@@ -533,7 +647,8 @@ def import_postgres_dump(private_dump_archive_path=None, public_dump_archive_pat
     """ Imports postgres dump created by dump_postgres_db present at location.
 
         Arguments:
-            location: the directory where the private and public archives are present
+            private_dump_archive_path: Location of the private dump file
+            public_dump_archive_path: Location of the public dump file
             threads: the number of threads to use while decompressing the archives, defaults to
                      db.DUMP_DEFAULT_THREAD_COUNT
     """
