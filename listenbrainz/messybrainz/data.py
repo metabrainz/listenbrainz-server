@@ -108,6 +108,7 @@ def add_release(connection, release):
     connection.execute(query, {"gid": gid, "title": release})
     return gid
 
+
 def get_id_from_recording(connection, data):
     """ Returns the Recording MessyBrainz ID for recording with specified data
 
@@ -273,28 +274,6 @@ def load_recordings_from_mbids(connection, musicbrainz_ids):
         results.append(result)
 
     return results
-
-def link_recording_to_recording_id(connection, msid, mbid):
-    """ Link a MessyBrainz recording to specified MusicBrainz Recording ID.
-
-    Args:
-        connection: sqlalchemy database connection to execute queries with
-        msid (uuid): the Recording MessyBrainz ID
-        mbid (uuid): the Recording MusicBrainz ID
-    """
-    query = text("""INSERT INTO recording_cluster (cluster_id, gid)
-                         VALUES (:cluster_id, :gid)""")
-    connection.execute(query, {
-        "cluster_id": msid,
-        "gid": msid,
-    })
-
-    query = text("""INSERT INTO recording_redirect (recording_cluster_id, recording_mbid)
-                         VALUES (:cluster_id, :mbid)""")
-    connection.execute(query, {
-        "cluster_id": msid,
-        "mbid": mbid,
-    })
 
 
 def convert_to_messybrainz_json(data):
