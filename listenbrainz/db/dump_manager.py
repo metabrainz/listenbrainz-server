@@ -243,10 +243,13 @@ def create_feedback(location, threads):
 
 @cli.command(name="import_dump")
 @click.option('--private-archive', '-pr', default=None, required=False)
+@click.option('--private-timescale-archive', default=None, required=False)
 @click.option('--public-archive', '-pu', default=None, required=False)
+@click.option('--public-timescale-archive', default=None, required=False)
 @click.option('--listen-archive', '-l', default=None, required=True)
 @click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
-def import_dump(private_archive, public_archive, listen_archive, threads):
+def import_dump(private_archive, private_timescale_archive,
+                public_archive, public_timescale_archive, listen_archive, threads):
     """ Import a ListenBrainz dump into the database.
 
         Note: This method tries to import the private db dump first, followed by the public db
@@ -257,13 +260,17 @@ def import_dump(private_archive, public_archive, listen_archive, threads):
 
         Args:
             private_archive (str): the path to the ListenBrainz private dump to be imported
+            private_timescale_archive (str): the path to the ListenBrainz private timescale dump to be imported
             public_archive (str): the path to the ListenBrainz public dump to be imported
+            public_timescale_archive (str): the path to the ListenBrainz public timescale dump to be imported
             listen_archive (str): the path to the ListenBrainz listen dump archive to be imported
             threads (int): the number of threads to use during decompression, defaults to 1
     """
     app = create_app()
     with app.app_context():
-        db_dump.import_postgres_dump(private_archive, public_archive, threads)
+        db_dump.import_postgres_dump(private_archive, private_timescale_archive,
+                                     public_archive, public_timescale_archive,
+                                     threads)
 
         from listenbrainz.webserver.timescale_connection import _ts as ls
         try:

@@ -643,12 +643,18 @@ def get_dump_entry(dump_id):
         return None
 
 
-def import_postgres_dump(private_dump_archive_path=None, public_dump_archive_path=None, threads=DUMP_DEFAULT_THREAD_COUNT):
+def import_postgres_dump(private_dump_archive_path=None,
+                         private_timescale_dump_archive_path=None,
+                         public_dump_archive_path=None,
+                         public_timescale_dump_archive_path=None,
+                         threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Imports postgres dump created by dump_postgres_db present at location.
 
         Arguments:
             private_dump_archive_path: Location of the private dump file
+            private_timescale_dump_archive_path: Location of the private timescale dump file
             public_dump_archive_path: Location of the public dump file
+            public_timescale_dump_archive_path: Location of the public timescale dump file
             threads: the number of threads to use while decompressing the archives, defaults to
                      db.DUMP_DEFAULT_THREAD_COUNT
     """
@@ -658,7 +664,7 @@ def import_postgres_dump(private_dump_archive_path=None, public_dump_archive_pat
             'Importing private dump %s...', private_dump_archive_path)
         try:
             _import_dump(private_dump_archive_path,
-                         'private', PRIVATE_TABLES, threads)
+                         db.engine, PRIVATE_TABLES, threads)
             current_app.logger.info(
                 'Import of private dump %s done!', private_dump_archive_path)
         except IOError as e:
@@ -676,6 +682,29 @@ def import_postgres_dump(private_dump_archive_path=None, public_dump_archive_pat
         current_app.logger.info(
             'Private dump %s imported!', private_dump_archive_path)
 
+    if private_timescale_dump_archive_path:
+        current_app.logger.info(
+            'Importing private timescale dump %s...', private_timescale_dump_archive_path)
+        try:
+            _import_dump(private_timescale_dump_archive_path,
+                         timescale.engine, PRIVATE_TABLES_TIMESCALE, threads)
+            current_app.logger.info(
+                'Import of private timescale dump %s done!', private_timescale_dump_archive_path)
+        except IOError as e:
+            current_app.logger.critical(
+                'IOError while importing private timescale dump: %s', str(e), exc_info=True)
+            raise
+        except SchemaMismatchException as e:
+            current_app.logger.critical(
+                'SchemaMismatchException: %s', str(e), exc_info=True)
+            raise
+        except Exception as e:
+            current_app.logger.critical(
+                'Error while importing private timescale dump: %s', str(e), exc_info=True)
+            raise
+        current_app.logger.info(
+            'Private timescale dump %s imported!', private_timescale_dump_archive_path)
+
     if public_dump_archive_path:
         current_app.logger.info(
             'Importing public dump %s...', public_dump_archive_path)
@@ -688,7 +717,7 @@ def import_postgres_dump(private_dump_archive_path=None, public_dump_archive_pat
             del tables_to_import['"user"']
 
         try:
-            _import_dump(public_dump_archive_path, 'public',
+            _import_dump(public_dump_archive_path, db.engine,
                          tables_to_import, threads)
             current_app.logger.info(
                 'Import of Public dump %s done!', public_dump_archive_path)
@@ -707,13 +736,37 @@ def import_postgres_dump(private_dump_archive_path=None, public_dump_archive_pat
         current_app.logger.info(
             'Public dump %s imported!', public_dump_archive_path)
 
+    if public_timescale_dump_archive_path:
+        current_app.logger.info(
+            'Importing public timescale dump %s...', public_timescale_dump_archive_path)
 
-def _import_dump(archive_path, dump_type, tables, threads=DUMP_DEFAULT_THREAD_COUNT):
+        try:
+            _import_dump(public_timescale_dump_archive_path, timescale.engine,
+                         PUBLIC_TABLES_TIMESCALE_DUMP, threads)
+            current_app.logger.info(
+                'Import of Public timescale dump %s done!', public_timescale_dump_archive_path)
+        except IOError as e:
+            current_app.logger.critical(
+                'IOError while importing public timescale dump: %s', str(e), exc_info=True)
+            raise
+        except SchemaMismatchException as e:
+            current_app.logger.critical(
+                'SchemaMismatchException: %s', str(e), exc_info=True)
+            raise
+        except Exception as e:
+            current_app.logger.critical(
+                'Error while importing public timescale dump: %s', str(e), exc_info=True)
+            raise
+        current_app.logger.info(
+            'Public timescale dump %s imported!', public_timescale_dump_archive_path)
+
+
+def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine, tables, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Import dump present in passed archive path into postgres db.
 
         Arguments:
             archive_path: path to the .tar.xz archive to be imported
-            dump_type (str): type of dump to be imported ('private' or 'public')
+            db_engine: an sqlalchemy Engine instance for making a connection
             tables: dict of tables present in the archive with table name as key and
                     columns to import as values
             threads (int): the number of threads to use while decompressing, defaults to
@@ -724,7 +777,7 @@ def _import_dump(archive_path, dump_type, tables, threads=DUMP_DEFAULT_THREAD_CO
                    archive_path, '-T{threads}'.format(threads=threads)]
     pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
 
-    connection = db.engine.raw_connection()
+    connection = db_engine.raw_connection()
     try:
         cursor = connection.cursor()
         with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
