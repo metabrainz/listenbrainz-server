@@ -127,7 +127,9 @@ export default class SpotifyPlayer
     if (!spotifyId) {
       return "";
     }
-    const spotifyTrack = spotifyId.split("https://open.spotify.com/")?.[1];
+    const spotifyTrack = spotifyId.split(
+      "https://open.spotify.com/track/"
+    )?.[1];
     return spotifyTrack;
   }
 
@@ -136,7 +138,7 @@ export default class SpotifyPlayer
     if (typeof spotifyTrack !== "string") {
       return "";
     }
-    return `spotify:${spotifyTrack.replace("/", ":")}`;
+    return `spotify:track:${spotifyTrack}`;
   }
 
   searchAndPlayTrack = async (listen: Listen | JSPFTrack): Promise<void> => {
