@@ -457,7 +457,7 @@ const getAlbumArtFromListenMetadata = async (
           thumbnails[250] ??
           thumbnails.small ??
           // If neither of the above exists, return the fisrt one we find
-          // @ts-expect-error
+          // @ts-ignore
           thumbnails[Object.keys(thumbnails)?.[0]]
         );
       }

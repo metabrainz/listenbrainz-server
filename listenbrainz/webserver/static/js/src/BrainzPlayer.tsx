@@ -343,7 +343,7 @@ export default class BrainzPlayer extends React.Component<
     if (datasourceIndex === 0) {
       /** If available, retrieve the service the listen was listened with */
       const listenedFromIndex = this.dataSources.findIndex((ds) =>
-        // @ts-expect-error
+        // @ts-ignore
         ds.current?.isListenFromThisService(listen)
       );
       selectedDatasourceIndex =
@@ -363,7 +363,7 @@ export default class BrainzPlayer extends React.Component<
     // otherwise skip to the next datasource without trying or setting currentDataSourceIndex
     // This prevents rendering datasource iframes when we can't use the datasource
     if (
-      // @ts-expect-error
+      // @ts-ignore
       !datasource.isListenFromThisService(listen) &&
       !datasource.canSearchAndPlayTracks()
     ) {
