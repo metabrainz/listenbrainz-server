@@ -519,8 +519,12 @@ export default class LastFmImporter extends React.Component<
 
   updateRateLimitParameters(response: Response) {
     /* Update the variables we use to honor LB's rate limits */
-    this.rlRemain = Number(response.headers.get("X-RateLimit-Remaining"));
-    this.rlReset = Number(response.headers.get("X-RateLimit-Reset-In"));
+    if (response?.headers?.get("X-RateLimit-Remaining")) {
+      this.rlRemain = Number(response.headers.get("X-RateLimit-Remaining"));
+    }
+    if (response?.headers?.get("X-RateLimit-Reset-In")) {
+      this.rlReset = Number(response.headers.get("X-RateLimit-Reset-In"));
+    }
     this.rlOrigin = new Date().getTime() / 1000;
   }
 
