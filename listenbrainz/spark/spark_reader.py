@@ -87,7 +87,7 @@ class SparkReader:
         try:
             response_handler(response)
         except Exception as e:
-            current_app.logger.error('Error in the response handler: %s, data: %s %'
+            current_app.logger.error('Error in the response handler: %s, data: %s' %
                                      (str(e), json.dumps(response, indent=4)), exc_info=True)
             return
 
