@@ -142,12 +142,10 @@ A minimal payload must include
 
 ``artist_name`` and ``track_name`` elements must be simple strings.
 
-The payload will also include the ``listened_at`` element which must be an integer
-representing the Unix time when the track was listened to. The minimum acceptable
-value for this field is :data:`~webserver.views.api.LISTEN_MINIMUM_TS` The only
-exception to this rule is when the listen is being played right now and has been
-retrieved from the endpoint to get listens being played right now. The
-``listened_at`` element will be absent for such listens.
+The payload should also include the ``listened_at`` element, which must be an integer
+representing the Unix time when the track was listened to. The minimum accepted
+value for this field is :data:`~webserver.views.api.LISTEN_MINIMUM_TS`.
+playing_now requests should not have a ``listened_at`` field
 
 Add additional metadata you may have for a track to the ``additional_info``
 element. Any additional information allows us to better correlate your listen
