@@ -327,7 +327,7 @@ def dump_feedback_for_spark(location, dump_time=datetime.today(), threads=None):
 
 
 def _create_dump(location: str, db_engine: sqlalchemy.engine.Engine, dump_type: str,
-                 tables, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
+                 tables, schema_version: int, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Creates a dump of the provided tables at the location passed
 
         Arguments:
@@ -336,6 +336,7 @@ def _create_dump(location: str, db_engine: sqlalchemy.engine.Engine, dump_type: 
             dump_type: the type of data dump being made - private or public
             tables: a dict containing the names of the tables to be dumped as keys and the columns
                     to be dumped as values
+            schema_version: the current schema version, to add to the archive file
             dump_time: the time at which the dump process was started
             threads: the maximum number of threads to use for compression
 
@@ -365,7 +366,7 @@ def _create_dump(location: str, db_engine: sqlalchemy.engine.Engine, dump_type: 
             try:
                 schema_seq_path = os.path.join(temp_dir, "SCHEMA_SEQUENCE")
                 with open(schema_seq_path, "w") as f:
-                    f.write(str(db.SCHEMA_VERSION))
+                    f.write(str(schema_version))
                 tar.add(schema_seq_path,
                         arcname=os.path.join(archive_name, "SCHEMA_SEQUENCE"))
                 timestamp_path = os.path.join(temp_dir, "TIMESTAMP")
@@ -434,6 +435,7 @@ def create_private_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT
         db_engine=db.engine,
         dump_type='private',
         tables=PRIVATE_TABLES,
+        schema_version=db.SCHEMA_VERSION_CORE,
         dump_time=dump_time,
         threads=threads,
     )
@@ -447,6 +449,7 @@ def create_private_timescale_dump(location: str, dump_time: datetime, threads=DU
         db_engine=timescale.engine,
         dump_type='private-timescale',
         tables=PRIVATE_TABLES_TIMESCALE,
+        schema_version=timescale.SCHEMA_VERSION_TIMESCALE,
         dump_time=dump_time,
         threads=threads,
     )
@@ -466,6 +469,7 @@ def create_public_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT_
         db_engine=db.engine,
         dump_type='public',
         tables=PUBLIC_TABLES_DUMP,
+        schema_version=db.SCHEMA_VERSION_CORE,
         dump_time=dump_time,
         threads=threads,
     )
@@ -480,6 +484,7 @@ def create_public_timescale_dump(location: str, dump_time: datetime, threads=DUM
         db_engine=timescale.engine,
         dump_type='public-timescale',
         tables=PUBLIC_TABLES_TIMESCALE_DUMP,
+        schema_version=timescale.SCHEMA_VERSION_TIMESCALE,
         dump_time=dump_time,
         threads=threads,
     )
@@ -493,6 +498,7 @@ def create_feedback_dump(location: str, dump_time: datetime, threads=DUMP_DEFAUL
         db_engine=db.engine,
         dump_type='feedback',
         tables=[],
+        schema_version=db.SCHEMA_VERSION_CORE,
         dump_time=dump_time,
         threads=threads,
     )
@@ -664,7 +670,7 @@ def import_postgres_dump(private_dump_archive_path=None,
             'Importing private dump %s...', private_dump_archive_path)
         try:
             _import_dump(private_dump_archive_path,
-                         db.engine, PRIVATE_TABLES, threads)
+                         db.engine, PRIVATE_TABLES, db.SCHEMA_VERSION_CORE, threads)
             current_app.logger.info(
                 'Import of private dump %s done!', private_dump_archive_path)
         except IOError as e:
@@ -687,7 +693,7 @@ def import_postgres_dump(private_dump_archive_path=None,
             'Importing private timescale dump %s...', private_timescale_dump_archive_path)
         try:
             _import_dump(private_timescale_dump_archive_path,
-                         timescale.engine, PRIVATE_TABLES_TIMESCALE, threads)
+                         timescale.engine, PRIVATE_TABLES_TIMESCALE, timescale.SCHEMA_VERSION_TIMESCALE, threads)
             current_app.logger.info(
                 'Import of private timescale dump %s done!', private_timescale_dump_archive_path)
         except IOError as e:
@@ -718,7 +724,7 @@ def import_postgres_dump(private_dump_archive_path=None,
 
         try:
             _import_dump(public_dump_archive_path, db.engine,
-                         tables_to_import, threads)
+                         tables_to_import, db.SCHEMA_VERSION_CORE, threads)
             current_app.logger.info(
                 'Import of Public dump %s done!', public_dump_archive_path)
         except IOError as e:
@@ -742,7 +748,7 @@ def import_postgres_dump(private_dump_archive_path=None,
 
         try:
             _import_dump(public_timescale_dump_archive_path, timescale.engine,
-                         PUBLIC_TABLES_TIMESCALE_DUMP, threads)
+                         PUBLIC_TABLES_TIMESCALE_DUMP, timescale.SCHEMA_VERSION_TIMESCALE, threads)
             current_app.logger.info(
                 'Import of Public timescale dump %s done!', public_timescale_dump_archive_path)
         except IOError as e:
@@ -761,7 +767,8 @@ def import_postgres_dump(private_dump_archive_path=None,
             'Public timescale dump %s imported!', public_timescale_dump_archive_path)
 
 
-def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine, tables, threads=DUMP_DEFAULT_THREAD_COUNT):
+def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
+                 tables, schema_version: int, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Import dump present in passed archive path into postgres db.
 
         Arguments:
@@ -769,6 +776,7 @@ def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine, tables, thre
             db_engine: an sqlalchemy Engine instance for making a connection
             tables: dict of tables present in the archive with table name as key and
                     columns to import as values
+            schema_version: the current schema version, to compare against the dumped file
             threads (int): the number of threads to use while decompressing, defaults to
                             db.DUMP_DEFAULT_THREAD_COUNT
     """
@@ -787,10 +795,10 @@ def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine, tables, thre
                 if file_name == 'SCHEMA_SEQUENCE':
                     # Verifying schema version
                     schema_seq = int(tar.extractfile(member).read().strip())
-                    if schema_seq != db.SCHEMA_VERSION:
+                    if schema_seq != schema_version:
                         raise SchemaMismatchException('Incorrect schema version! Expected: %d, got: %d.'
                                                       'Please, get the latest version of the dump.'
-                                                      % (db.SCHEMA_VERSION, schema_seq))
+                                                      % (schema_version, schema_seq))
                     else:
                         current_app.logger.info('Schema version verified.')
 

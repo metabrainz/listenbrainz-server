@@ -5,8 +5,12 @@ from sqlalchemy.pool import NullPool
 import time
 import psycopg2
 
-# This value must be incremented after schema changes on replicated tables!
-SCHEMA_VERSION = 5
+# The schema version of the core database. This includes data in the "user" database
+# (tables created from ./admin/sql/create-tables.sql) and includes user data,
+# statistics, feedback, and results of user interaction on the site.
+# This value must be incremented after schema changes on tables that are included in the
+# public dump
+SCHEMA_VERSION_CORE = 5
 
 engine = None
 
