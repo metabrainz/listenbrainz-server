@@ -449,7 +449,17 @@ const getAlbumArtFromListenMetadata = async (
       );
       if (CAAResponse.ok) {
         const body: CoverArtArchiveResponse = await CAAResponse.json();
-        return body.images?.[0]?.thumbnails?.[250];
+        if (!body.images?.[0]?.thumbnails) {
+          return undefined;
+        }
+        const { thumbnails } = body.images[0];
+        return (
+          thumbnails[250] ??
+          thumbnails.small ??
+          // If neither of the above exists, return the fisrt one we find
+          // @ts-expect-error
+          thumbnails[Object.keys(thumbnails)?.[0]]
+        );
       }
     } catch (error) {
       // Do nothing with the error, I guess.
