@@ -422,12 +422,18 @@ const pinnedRecordingToListen = (pinnedRecording: PinnedRecording): Listen => {
 };
 
 const getAlbumArtFromListenMetadata = async (
-  listen: BaseListenFormat
+  listen: BaseListenFormat,
+  spotifyUser?: SpotifyUser
 ): Promise<string | undefined> => {
   // if spotifyListen
-  if (SpotifyPlayer.isListenFromThisService(listen)) {
+  if (
+    SpotifyPlayer.isListenFromThisService(listen) &&
+    SpotifyPlayer.hasPermissions(spotifyUser)
+  ) {
     const trackID = SpotifyPlayer.getSpotifyTrackIDFromListen(listen);
-    return SpotifyAPIService.getAlbumArtFromSpotifyTrackID(trackID);
+    return new SpotifyAPIService(spotifyUser).getAlbumArtFromSpotifyTrackID(
+      trackID
+    );
   }
   if (YoutubePlayer.isListenFromThisService(listen)) {
     const videoId = YoutubePlayer.getVideoIDFromListen(listen);

@@ -5,8 +5,6 @@
 
 import { searchForSpotifyTrack } from "./utils";
 
-const defaultSpotifyAPIBaseURL = "https://api.spotify.com/v1";
-
 export default class SpotifyAPIService {
   static async checkStatus(response: Response) {
     if (response.status >= 200 && response.status < 300) {
@@ -22,27 +20,7 @@ export default class SpotifyAPIService {
     }
   }
 
-  static async getAlbumArtFromSpotifyTrackID(
-    spotifyTrackID: string
-  ): Promise<string | undefined> {
-    if (!spotifyTrackID) {
-      return undefined;
-    }
-    try {
-      const response = await fetch(
-        `${defaultSpotifyAPIBaseURL}/tracks/${spotifyTrackID}`
-      );
-      if (response.ok) {
-        const track: SpotifyTrack = await response.json();
-        return track.album?.images?.[0]?.url;
-      }
-    } catch (error) {
-      return undefined;
-    }
-    return undefined;
-  }
-
-  APIBaseURI: string = defaultSpotifyAPIBaseURL;
+  APIBaseURI: string = "https://api.spotify.com/v1";
   private spotifyUser?: SpotifyUser;
   private spotifyUserId?: string;
 
@@ -55,6 +33,32 @@ export default class SpotifyAPIService {
       );
     }
   }
+
+  getAlbumArtFromSpotifyTrackID = async (
+    spotifyTrackID: string
+  ): Promise<string | undefined> => {
+    if (!spotifyTrackID) {
+      return undefined;
+    }
+    try {
+      const response = await fetch(
+        `${this.APIBaseURI}/tracks/${spotifyTrackID}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${this.spotifyUser?.access_token}`,
+          },
+        }
+      );
+      if (response.ok) {
+        const track: SpotifyTrack = await response.json();
+        return track.album?.images?.[0]?.url;
+      }
+    } catch (error) {
+      return undefined;
+    }
+    return undefined;
+  };
 
   setUserToken = (userToken: string) => {
     if (!userToken) {

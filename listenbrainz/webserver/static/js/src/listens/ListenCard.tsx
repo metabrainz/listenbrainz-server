@@ -84,9 +84,12 @@ export default class ListenCard extends React.Component<
 
   async componentDidMount() {
     window.addEventListener("message", this.receiveBrainzPlayerMessage);
-
+    const { spotifyAuth } = this.context;
     const { listen } = this.props;
-    const albumArtSrc = await getAlbumArtFromListenMetadata(listen);
+    const albumArtSrc = await getAlbumArtFromListenMetadata(
+      listen,
+      spotifyAuth
+    );
     if (albumArtSrc) {
       this.setState({ thumbnailSrc: albumArtSrc });
     }
