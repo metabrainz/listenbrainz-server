@@ -113,7 +113,9 @@ def create_full(location, threads, dump_id):
             sys.exit(-1)
 
         try:
-            if not sanity_check_dumps(dump_path, 12):
+            # 6 types of dumps, archive, md5, sha256 for each
+            EXPECTED_NUM_DUMP_FILES = 6 * 3
+            if not sanity_check_dumps(dump_path, EXPECTED_NUM_DUMP_FILES):
                 return sys.exit(-1)
         except OSError as e:
             sys.exit(-1)
