@@ -115,10 +115,10 @@ def gen_app(debug=None):
     # Database connections
     from listenbrainz import db
     from listenbrainz.db import timescale as ts
+    from listenbrainz import messybrainz as msb
     db.init_db_connection(app.config['SQLALCHEMY_DATABASE_URI'])
     ts.init_db_connection(app.config['SQLALCHEMY_TIMESCALE_URI'])
-    from listenbrainz.webserver.external import messybrainz
-    messybrainz.init_db_connection(app.config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
+    msb.init_db_connection(app.config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
 
     if app.config['MB_DATABASE_URI']:
         from brainzutils import musicbrainz_db

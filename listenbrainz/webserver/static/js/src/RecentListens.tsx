@@ -129,9 +129,7 @@ export default class RecentListens extends React.Component<
             );
           });
       }
-      if (currentUser?.name && currentUser?.name === user?.name) {
-        this.loadFeedback();
-      }
+      this.loadFeedback();
     }
   }
 
@@ -380,10 +378,12 @@ export default class RecentListens extends React.Component<
   };
 
   getFeedback = async () => {
-    const { user, listens, newAlert } = this.props;
+    const { user, newAlert } = this.props;
+    const { APIService, currentUser } = this.context;
+    const { listens } = this.state;
     let recordings = "";
 
-    if (listens) {
+    if (listens && listens.length && currentUser?.name) {
       listens.forEach((listen) => {
         const recordingMsid = _.get(
           listen,
@@ -394,7 +394,7 @@ export default class RecentListens extends React.Component<
         }
       });
       try {
-        const data = await this.APIService.getFeedbackForUserForRecordings(
+        const data = await APIService.getFeedbackForUserForRecordings(
           user.name,
           recordings
         );
@@ -567,6 +567,7 @@ export default class RecentListens extends React.Component<
     this.setState({ loading: false });
     // Scroll to the top of the listens list
     this.updatePaginationVariables();
+    this.loadFeedback();
     if (typeof this.listensTable?.current?.scrollIntoView === "function") {
       this.listensTable.current.scrollIntoView({ behavior: "smooth" });
     }

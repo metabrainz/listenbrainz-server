@@ -14,6 +14,23 @@ import ListenFeedbackComponent from "./listens/ListenFeedbackComponent";
 
 const { totalCount, user, feedback, youtube, spotify } = userFeedbackProps;
 
+const initialRecordingFeedbackMap = {
+  "8aa379ad-852e-4794-9c01-64959f5d0b17": 1,
+  "edfa0bb9-a58c-406c-9f7c-f16741443f9c": 1,
+  "20059ffb-1615-4712-8235-a12840fb156e": 1,
+  "da31a1d9-267a-4bad-bcd7-c6d2b1ab6539": 1,
+  "75f7f913-8cb5-45b6-b154-7633ecec61ad": 1,
+  "3fc76ff9-1985-4b83-9b81-e3a840e9d8fb": 1,
+  "96e83a2d-9d75-4a93-8061-36ed2174a84b": 1,
+  "ac15219d-5f2d-47d4-ba9f-7f8259e67e23": 1,
+  "37c605a6-8fac-4c47-bdb6-ed12b4239a01": 1,
+  "830ee421-c28b-4ff0-abfb-e43caa189983": 1,
+  "ae9456a9-7477-419f-9aad-691b2f84e378": 1,
+  "71d8053a-845d-4d68-a8e4-0eec52cc77bd": 1,
+  "eacfa55b-3f70-44c1-a2f3-6e27ea9f0187": 1,
+  "4704b20d-2377-45de-aa87-089de93c2aaf": 1,
+  "15497abd-f41c-4a1e-8bf6-e00fffb11f79": 1,
+};
 // Typescript does not like the "score“ field
 const typedFeedback = feedback as FeedbackResponseWithTrackMetadata[];
 
@@ -72,7 +89,33 @@ describe("UserFeedback", () => {
     fakeDateNow.mockRestore();
   });
 
-  it("loads user feedback on componentDidMount", async () => {
+  it("loads user feedback from props if logged-in user on their profile", async () => {
+    const wrapper = mount<UserFeedback>(
+      <GlobalAppContext.Provider
+        value={{
+          ...mountOptions.context,
+          // Same user as in page props
+          currentUser: {
+            name: "mr_monkey",
+            id: 1,
+            auth_token: "IHaveSeenTheFnords",
+          },
+        }}
+      >
+        <UserFeedback {...props} />
+      </GlobalAppContext.Provider>
+    );
+    const instance = wrapper.instance();
+    const loadFeedbackSpy = jest.spyOn(instance, "loadFeedback");
+
+    // We don't call loadFeedback because we already have the feedback scores in props
+    expect(loadFeedbackSpy).not.toHaveBeenCalled();
+    expect(instance.state.recordingFeedbackMap).toEqual(
+      initialRecordingFeedbackMap
+    );
+  });
+
+  it("loads user feedback from API for logged-in user", async () => {
     const wrapper = mount<UserFeedback>(
       <GlobalAppContext.Provider value={mountOptions.context}>
         <UserFeedback {...props} />
@@ -80,47 +123,44 @@ describe("UserFeedback", () => {
     );
     const instance = wrapper.instance();
     const loadFeedbackSpy = jest.spyOn(instance, "loadFeedback");
-    const getFeedbackSpy = jest.spyOn(instance, "getFeedback");
-    const apiGetFeedbackSpy = jest.spyOn(
-      instance.context.APIService,
-      "getFeedbackForUserForRecordings"
-    );
-    await instance.componentDidMount();
-    await flushPromises();
-
+    const apiGetFeedbackSpy = jest
+      .spyOn(instance.context.APIService, "getFeedbackForUserForRecordings")
+      .mockResolvedValueOnce({
+        feedback: [
+          { recording_msid: "some-uuid", score: 1 },
+          { recording_msid: "some-other-uuid", score: -1 },
+        ],
+      });
+    instance.componentDidMount();
     expect(loadFeedbackSpy).toHaveBeenCalledTimes(1);
-    expect(getFeedbackSpy).toHaveBeenCalledTimes(1);
-    expect(apiGetFeedbackSpy).toHaveBeenCalledTimes(1);
     expect(apiGetFeedbackSpy).toHaveBeenCalledWith(
       "pikachu",
-      feedback
-        .map((item) => item.recording_msid)
-        .filter((item) => {
-          return item !== undefined;
-        })
-        .join(",")
+      props.feedback.map((item) => item.recording_msid).join(",")
     );
+    await flushPromises();
+    expect(instance.state.recordingFeedbackMap).toEqual({
+      "some-uuid": 1,
+      "some-other-uuid": -1,
+    });
   });
 
-  it("does not load user feedback if no user is logged in", async () => {
+  it("loadFeedback does not do anything if no user is logged in", async () => {
     const wrapper = mount<UserFeedback>(
       <GlobalAppContext.Provider value={mountOptionsWithoutUser.context}>
         <UserFeedback {...props} />
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
-    const loadFeedbackSpy = jest.spyOn(instance, "loadFeedback");
     const getFeedbackSpy = jest.spyOn(instance, "getFeedback");
     const apiGetFeedbackSpy = jest.spyOn(
       instance.context.APIService,
       "getFeedbackForUserForRecordings"
     );
-    instance.componentDidMount();
-    expect(loadFeedbackSpy).toHaveBeenCalledTimes(1);
+    expect(instance.context.currentUser).toEqual({});
+    instance.loadFeedback();
     expect(getFeedbackSpy).toHaveBeenCalledTimes(1);
 
     await flushPromises();
-    expect(instance.context.currentUser).toEqual({});
     expect(apiGetFeedbackSpy).not.toHaveBeenCalled();
   });
 
@@ -178,7 +218,6 @@ describe("UserFeedback", () => {
     ).toBeFalsy();
   });
   it("updates recordingFeedbackMap when clicking on a feedback button", async () => {
-    jest.useFakeTimers();
     const wrapper = mount<UserFeedback>(
       <GlobalAppContext.Provider value={mountOptions.context}>
         <UserFeedback {...props} />
@@ -190,9 +229,16 @@ describe("UserFeedback", () => {
       .spyOn(instance.context.APIService, "submitFeedback")
       .mockResolvedValue(200);
     const updateFeedbackSpy = jest.spyOn(instance, "updateFeedback");
-    await flushPromises();
 
-    expect(instance.state.recordingFeedbackMap).toEqual({});
+    instance.setState({
+      recordingFeedbackMap: {
+        ...instance.state.recordingFeedbackMap,
+        "8aa379ad-852e-4794-9c01-64959f5d0b17": 0,
+      },
+    });
+    expect(instance.state.recordingFeedbackMap).toEqual({
+      "8aa379ad-852e-4794-9c01-64959f5d0b17": 0,
+    });
     const firstListenCard = listens.first();
 
     const loveButton = firstListenCard
@@ -210,14 +256,14 @@ describe("UserFeedback", () => {
       "8aa379ad-852e-4794-9c01-64959f5d0b17",
       1
     );
-
-    expect(instance.state.recordingFeedbackMap).toEqual({
-      "8aa379ad-852e-4794-9c01-64959f5d0b17": 1,
-    });
     expect(updateFeedbackSpy).toHaveBeenCalledWith(
       "8aa379ad-852e-4794-9c01-64959f5d0b17",
       1
     );
+    await flushPromises();
+    expect(instance.state.recordingFeedbackMap).toEqual({
+      "8aa379ad-852e-4794-9c01-64959f5d0b17": 1,
+    });
   });
   describe("getFeedbackItemsFromAPI", () => {
     it("calls the API with the right parameters", async () => {
