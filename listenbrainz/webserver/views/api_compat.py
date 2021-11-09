@@ -8,7 +8,6 @@ from yattag import Doc
 import yattag
 from flask import Blueprint, request, render_template, current_app
 from flask_login import login_required, current_user
-from listenbrainz.webserver.external import messybrainz
 from brainzutils.ratelimit import ratelimit
 from brainzutils.musicbrainz_db import engine as mb_engine
 from listenbrainz.webserver.errors import InvalidAPIUsage, CompatError
