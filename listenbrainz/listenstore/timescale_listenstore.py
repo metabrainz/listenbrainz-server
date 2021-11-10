@@ -704,8 +704,8 @@ class TimescaleListenStore(ListenStore):
                             archive_dir,
                             temp_dir,
                             tar_file,
-                            start_time,
-                            end_time,
+                            start_time: datetime,
+                            end_time: datetime,
                             parquet_file_id=0):
         """
             Carry out fetching listens from the DB, joining them to the MBID mapping table and
@@ -715,16 +715,14 @@ class TimescaleListenStore(ListenStore):
             archive_dir: the directory where the listens dump archive should be created
             temp_dir: the directory where tmp files should be written
             tar_file: the tarfile object that the dumps are being written to
-            dump_id (int): the ID of the dump in the dump sequence
-            start_time and end_time (datetime): the time range for which listens should be dumped
+            start_time: the start of the time range for which listens should be dumped
+            end_time: the end of the time range for which listens should be dumped
             parquet_file_id: the file id number to use for indexing parquet files
 
         Returns:
             the next parquet_file_id to use.
 
         """
-
-        listen_count = 0
 
         query = """SELECT listened_at,
                           user_name,
@@ -828,9 +826,9 @@ class TimescaleListenStore(ListenStore):
         return parquet_file_id
 
     def dump_listens_for_spark(self, location,
-                               dump_id,
-                               start_time=datetime.utcfromtimestamp(DATA_START_YEAR_IN_SECONDS),
-                               end_time=None):
+                               dump_id: int,
+                               start_time: datetime = datetime.utcfromtimestamp(DATA_START_YEAR_IN_SECONDS),
+                               end_time: datetime = None):
         """ Dumps all listens in the ListenStore into spark parquet files in a .tar archive.
 
         Listens are dumped into files ideally no larger than 128MB, sorted from oldest to newest. Files
@@ -841,9 +839,10 @@ class TimescaleListenStore(ListenStore):
 
         Args:
             location: the directory where the listens dump archive should be created
-            dump_id (int): the ID of the dump in the dump sequence
-            start_time and end_time (datetime): the time range for which listens should be dumped
-                start_time defaults to utc 0 (meaning a full dump) and end_time defaults to the current time
+            dump_id: the ID of the dump in the dump sequence
+            start_time: the start of the time range for which listens should be dumped. defaults to
+                utc 0 (meaning a full dump)
+            end_time: the end of time range for which listens should be dumped. defaults to the current time
 
         Returns:
             the path to the dump archive
@@ -897,13 +896,13 @@ class TimescaleListenStore(ListenStore):
         self.log.info('Dump present at %s!', archive_path)
         return archive_path
 
-    def import_listens_dump(self, archive_path, threads=DUMP_DEFAULT_THREAD_COUNT):
+    def import_listens_dump(self, archive_path: str, threads: int = DUMP_DEFAULT_THREAD_COUNT):
         """ Imports listens into TimescaleDB from a ListenBrainz listens dump .tar.xz archive.
 
         Args:
-            archive (str): the path to the listens dump .tar.xz archive to be imported
-            threads (int): the number of threads to be used for decompression
-                           (defaults to DUMP_DEFAULT_THREAD_COUNT)
+            archive_path: the path to the listens dump .tar.xz archive to be imported
+            threads: the number of threads to be used for decompression
+                        (defaults to DUMP_DEFAULT_THREAD_COUNT)
 
         Returns:
             int: the number of users for whom listens have been imported
