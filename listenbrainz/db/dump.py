@@ -770,6 +770,14 @@ def import_postgres_dump(private_dump_archive_path=None,
         current_app.logger.info(
             'Public timescale dump %s imported!', public_timescale_dump_archive_path)
 
+    try:
+        current_app.logger.info("Creating sequences")
+        _update_sequences()
+    except Exception as e:
+        current_app.logger.critical(
+            'Exception while trying to update sequences: %s', str(e), exc_info=True)
+        raise
+
 
 def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
                  tables, schema_version: int, threads=DUMP_DEFAULT_THREAD_COUNT):
@@ -828,22 +836,15 @@ def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
         connection.close()
         pxz.stdout.close()
 
-    try:
-        _update_sequences()
-    except Exception as e:
-        current_app.logger.critical(
-            'Exception while trying to update sequences: %s', str(e), exc_info=True)
-        raise
 
-
-def _update_sequence(seq_name, table_name):
+def _update_sequence(db_engine: sqlalchemy.engine.Engine, seq_name, table_name):
     """ Update the specified sequence's value to the maximum value of ID in the table.
 
     Args:
         seq_name (str): the name of the sequence to be updated.
         table_name (str): the name of the table from which the maximum value is to be retrieved
     """
-    with db.engine.connect() as connection:
+    with db_engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
             SELECT setval('{seq_name}', max(id))
               FROM {table_name}
@@ -855,31 +856,41 @@ def _update_sequences():
     """
     # user_id_seq
     current_app.logger.info('Updating user_id_seq...')
-    _update_sequence('user_id_seq', '"user"')
+    _update_sequence(db.engine, 'user_id_seq', '"user"')
 
     # token_id_seq
     current_app.logger.info('Updating token_id_seq...')
-    _update_sequence('api_compat.token_id_seq', 'api_compat.token')
+    _update_sequence(db.engine, 'api_compat.token_id_seq', 'api_compat.token')
 
     # session_id_seq
     current_app.logger.info('Updating session_id_seq...')
-    _update_sequence('api_compat.session_id_seq', 'api_compat.session')
+    _update_sequence(db.engine, 'api_compat.session_id_seq', 'api_compat.session')
 
     # artist_id_seq
     current_app.logger.info('Updating artist_id_seq...')
-    _update_sequence('statistics.artist_id_seq', 'statistics.artist')
+    _update_sequence(db.engine, 'statistics.artist_id_seq', 'statistics.artist')
 
     # release_id_seq
     current_app.logger.info('Updating release_id_seq...')
-    _update_sequence('statistics.release_id_seq', 'statistics.release')
+    _update_sequence(db.engine, 'statistics.release_id_seq', 'statistics.release')
 
     # recording_id_seq
     current_app.logger.info('Updating recording_id_seq...')
-    _update_sequence('statistics.recording_id_seq', 'statistics.recording')
+    _update_sequence(db.engine, 'statistics.recording_id_seq', 'statistics.recording')
 
     # data_dump_id_seq
     current_app.logger.info('Updating data_dump_id_seq...')
-    _update_sequence('data_dump_id_seq', 'data_dump')
+    _update_sequence(db.engine, 'data_dump_id_seq', 'data_dump')
+
+    current_app.logger.info('Updating playlist.playlist_id_seq...')
+    _update_sequence(timescale.engine, 'playlist.playlist_id_seq', 'playlist.playlist')
+
+    current_app.logger.info('Updating playlist.playlist_recording_id_seq...')
+    _update_sequence(timescale.engine, 'playlist.playlist_recording_id_seq', 'playlist.playlist_recording')
+
+    current_app.logger.info('Updating listen_mbid_mapping_id_seq...')
+    _update_sequence(timescale.engine, 'listen_mbid_mapping_id_seq', 'listen_mbid_mapping')
+
 
 
 def _fetch_latest_file_info_from_ftp_dir(server, dir):
