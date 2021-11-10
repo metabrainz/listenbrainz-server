@@ -7,7 +7,7 @@
 @player-min-height: 320px;
 @card-shadow-color: #c0c0c0;
 @listen-small-break: @screen-sm;
-@cover-art-thumbnail-size: 65px;
+@cover-art-thumbnail-size: 66px;
 
 #music-player {
 	position: relative;
@@ -236,6 +236,12 @@
 		.listen-controls {
 			flex-grow: 0;
 		}
+		.listen-thumbnail {
+			padding:0;
+			margin-left: -10px;
+			width: 56px;
+			height: 56px;
+		}
 	}
 	&:not(.compact) .listen-controls{
 		max-width: 120px;
@@ -243,19 +249,25 @@
 	}
 	
 	.listen-thumbnail {
-		flex: 1 0 @cover-art-thumbnail-size;
-		align-self: center;
-		padding-right: 1em;
-		margin: -1em;
-		margin-right: initial;
-		border-radius: 8px;
+		flex: 0;
+		padding: 0;
+		margin: -10px -5px;
+		margin-right: 1em;
 		width: @cover-art-thumbnail-size;
 		height: @cover-art-thumbnail-size;
-    	justify-content: flex-start;
 		> img {
 			height: inherit;
 			width: inherit;
 			object-fit: cover;
+			border-radius: 8px 0 0 8px;
+		}
+		@media (min-width: @screen-phone) {
+			margin: -15px;
+			margin-right: 1em;
+		}
+		@media (min-width: @listen-small-break) {
+			margin: -15px;
+			margin-right: 0;
 		}
 	}
 	
