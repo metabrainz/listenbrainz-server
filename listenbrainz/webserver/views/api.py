@@ -17,6 +17,7 @@ import listenbrainz.db.user as db_user
 from listenbrainz.db import listens_importer
 from brainzutils.ratelimit import ratelimit
 import listenbrainz.webserver.redis_connection as redis_connection
+from listenbrainz.webserver.models import SubmitListenUserMetadata
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list, \
     is_valid_uuid, MAX_LISTEN_SIZE, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, _validate_get_endpoint_params, \
@@ -87,7 +88,8 @@ def submit_listen():
     validated_payload = [validate_listen(listen, listen_type) for listen in payload]
 
     try:
-        insert_payload(validated_payload, user, listen_type)
+        user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])
+        insert_payload(validated_payload, user_metadata, listen_type)
     except APIServiceUnavailable as e:
         raise
     except Exception as e:
