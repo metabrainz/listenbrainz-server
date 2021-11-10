@@ -412,8 +412,12 @@ def _create_dump(location: str, db_engine: sqlalchemy.engine.Engine, dump_type: 
                                 raise
                         transaction.rollback()
 
-            tar.add(archive_tables_dir, arcname=os.path.join(
-                archive_name, 'lbdump'.format(dump_type)))
+            # Add the files to the archive in the order that they are defined in the dump definition.
+            # This is so that when imported into a db with FK constraints added, we import dependent
+            # tables first
+            for table in tables:
+                tar.add(os.path.join(archive_tables_dir, table),
+                        arcname=os.path.join(archive_name, 'lbdump', table))
 
             shutil.rmtree(temp_dir)
 
