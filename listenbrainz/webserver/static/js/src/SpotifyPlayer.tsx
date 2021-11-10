@@ -74,11 +74,6 @@ export default class SpotifyPlayer
     );
   };
 
-  /**
-   * @see https://github.com/Microsoft/TypeScript/issues/3841#issuecomment-337560146
-   */
-  ["constructor"]: typeof SpotifyPlayer;
-
   public name = "spotify";
   public domainName = "spotify.com";
   spotifyPlayer?: SpotifyPlayerType;

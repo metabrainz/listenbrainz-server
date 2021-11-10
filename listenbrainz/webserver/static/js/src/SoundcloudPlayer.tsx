@@ -61,11 +61,6 @@ export default class SoundcloudPlayer
     return !!originURL && /soundcloud\.com/.test(originURL);
   }
 
-  /**
-   * @see https://github.com/Microsoft/TypeScript/issues/3841#issuecomment-337560146
-   */
-  ["constructor"]: typeof SoundcloudPlayer;
-
   public name = "soundcloud";
   public domainName = "soundcloud.com";
   iFrameRef?: React.RefObject<HTMLIFrameElement>;
