@@ -267,6 +267,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -409,6 +412,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -553,6 +559,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -695,6 +704,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -839,6 +851,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -981,6 +996,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -1125,6 +1143,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -1267,6 +1288,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -1411,6 +1435,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -1553,6 +1580,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -1697,6 +1727,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -1839,6 +1872,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -1983,6 +2019,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -2125,6 +2164,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -2269,6 +2311,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -2411,6 +2456,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -2555,6 +2603,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -2697,6 +2748,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -2841,6 +2895,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -2983,6 +3040,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -3127,6 +3187,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -3269,6 +3332,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -3413,6 +3479,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -3556,6 +3625,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -3698,6 +3770,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -5476,6 +5551,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -5647,6 +5725,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -5813,6 +5894,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -5976,6 +6060,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -6148,6 +6235,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -6318,6 +6408,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -6490,6 +6583,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -6660,6 +6756,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -6832,6 +6931,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -6998,6 +7100,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -7161,6 +7266,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -7328,6 +7436,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -7491,6 +7602,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -7658,6 +7772,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -7821,6 +7938,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -7988,6 +8108,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -8151,6 +8274,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -8323,6 +8449,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -8493,6 +8622,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -8665,6 +8797,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -8836,6 +8971,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -9002,6 +9140,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -9165,6 +9306,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -9337,6 +9481,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -9502,6 +9649,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -11525,6 +11675,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -11673,6 +11826,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -11823,6 +11979,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -11971,6 +12130,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -12121,6 +12283,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -12269,6 +12434,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -12419,6 +12587,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -12567,6 +12738,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -12717,6 +12891,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -12865,6 +13042,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -13015,6 +13195,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -13163,6 +13346,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -13313,6 +13499,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -13461,6 +13650,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -13611,6 +13803,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -13759,6 +13954,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -13909,6 +14107,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -14057,6 +14258,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -14207,6 +14411,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -14355,6 +14562,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -14505,6 +14715,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -14653,6 +14866,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
@@ -14803,6 +15019,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -14952,6 +15171,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail empty"
+                      />
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -15100,6 +15322,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail empty"
+                      />
                       <div
                         className="listen-details"
                       >
