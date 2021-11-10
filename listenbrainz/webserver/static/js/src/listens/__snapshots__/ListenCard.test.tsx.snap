@@ -37,6 +37,9 @@ exports[`ListenCard renders correctly 1`] = `
       onDoubleClick={[Function]}
     >
       <div
+        className="listen-thumbnail empty"
+      />
+      <div
         className="listen-details"
       >
         <div
@@ -594,6 +597,9 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
       onDoubleClick={[Function]}
     >
       <div
+        className="listen-thumbnail empty"
+      />
+      <div
         className="listen-details"
       >
         <div
@@ -1150,6 +1156,9 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
       className="card listen-card row   "
       onDoubleClick={[Function]}
     >
+      <div
+        className="listen-thumbnail empty"
+      />
       <div
         className="listen-details"
       >
