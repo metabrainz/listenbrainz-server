@@ -84,6 +84,21 @@ export default class ListenCard extends React.Component<
 
   async componentDidMount() {
     window.addEventListener("message", this.receiveBrainzPlayerMessage);
+    await this.getCoverArt();
+  }
+
+  async componentDidUpdate(oldProps: ListenCardProps) {
+    const { listen } = this.props;
+    if (Boolean(listen) && !isEqual(listen, oldProps.listen)) {
+      await this.getCoverArt();
+    }
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener("message", this.receiveBrainzPlayerMessage);
+  }
+
+  async getCoverArt() {
     const { spotifyAuth } = this.context;
     const { listen } = this.props;
     const albumArtSrc = await getAlbumArtFromListenMetadata(
@@ -93,10 +108,6 @@ export default class ListenCard extends React.Component<
     if (albumArtSrc) {
       this.setState({ thumbnailSrc: albumArtSrc });
     }
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener("message", this.receiveBrainzPlayerMessage);
   }
 
   playListen = () => {
