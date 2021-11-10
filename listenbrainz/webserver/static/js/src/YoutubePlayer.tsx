@@ -105,10 +105,6 @@ export default class YoutubePlayer
     return undefined;
   }
 
-  /**
-   * @see https://github.com/Microsoft/TypeScript/issues/3841#issuecomment-337560146
-   */
-  ["constructor"]: typeof YoutubePlayer;
   public name = "youtube";
   public domainName = "youtube.com";
   youtubePlayer?: ExtendedYoutubePlayer;
