@@ -13,6 +13,12 @@ export type ListenControlProps = {
   dataToggle?: string;
   dataTarget?: string;
   disabled?: boolean;
+  // When link is passed, an <a> tag will be rendered instead of an icon or button
+  // icon and title props will still be used.
+  // The props iconOnly action, dataToggle and dataTarget will be ignored.
+  link?: string;
+  // optional anchor tag attributes such as {target:"_blank", rel:"noopener noreferrer"}
+  anchorTagAttributes?: any;
 };
 
 const ListenControl = (props: ListenControlProps) => {
@@ -25,7 +31,20 @@ const ListenControl = (props: ListenControlProps) => {
     dataToggle,
     dataTarget,
     disabled,
+    link,
+    anchorTagAttributes,
   } = props;
+
+  if (link) {
+    // When using the link property,
+    // render an anchor tag with an href instead of onClick
+    return (
+      <a href={link} title={title} {...anchorTagAttributes}>
+        {icon && <FontAwesomeIcon icon={icon as IconProp} />}
+        &nbsp;{title}
+      </a>
+    );
+  }
 
   let iconElement;
   if (icon) {

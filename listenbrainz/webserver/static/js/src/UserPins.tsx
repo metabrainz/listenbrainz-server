@@ -3,7 +3,7 @@
 import * as ReactDOM from "react-dom";
 import * as React from "react";
 
-import { isEqual } from "lodash";
+import { get } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import * as Sentry from "@sentry/react";
 import ErrorBoundary from "./ErrorBoundary";
@@ -32,6 +32,7 @@ export type UserPinsState = {
   page: number;
   maxPage: number;
   loading: boolean;
+  recordingFeedbackMap: RecordingFeedbackMap;
 };
 
 export default class UserPins extends React.Component<
@@ -52,13 +53,16 @@ export default class UserPins extends React.Component<
       pins: props.pins || [],
       loading: false,
       direction: "down",
+      recordingFeedbackMap: {},
     };
   }
 
   async componentDidMount(): Promise<void> {
+    const { currentUser } = this.context;
     // Listen to browser previous/next events and load page accordingly
     window.addEventListener("popstate", this.handleURLChange);
     this.handleURLChange();
+    this.loadFeedback();
   }
 
   componentWillUnmount() {
@@ -126,12 +130,15 @@ export default class UserPins extends React.Component<
       }
 
       const totalCount = parseInt(newPins.total_count, 10);
-      this.setState({
-        loading: false,
-        page,
-        maxPage: Math.ceil(totalCount / this.DEFAULT_PINS_PER_PAGE),
-        pins: newPins.pinned_recordings,
-      });
+      this.setState(
+        {
+          loading: false,
+          page,
+          maxPage: Math.ceil(totalCount / this.DEFAULT_PINS_PER_PAGE),
+          pins: newPins.pinned_recordings,
+        },
+        this.loadFeedback
+      );
       if (pushHistory) {
         window.history.pushState(null, "", `?page=${[page]}`);
       }
@@ -160,6 +167,68 @@ export default class UserPins extends React.Component<
     }
   };
 
+  getFeedback = async () => {
+    const { pins, newAlert } = this.props;
+    const { APIService, currentUser } = this.context;
+    let recordings = "";
+
+    if (pins && currentUser?.name) {
+      pins.forEach((pin) => {
+        const recordingMsid = pin.recording_msid;
+        if (recordingMsid) {
+          recordings += `${recordingMsid},`;
+        }
+      });
+      try {
+        const data = await APIService.getFeedbackForUserForRecordings(
+          currentUser.name,
+          recordings
+        );
+        return data.feedback;
+      } catch (error) {
+        if (newAlert) {
+          newAlert(
+            "danger",
+            "Playback error",
+            typeof error === "object" ? error.message : error
+          );
+        }
+      }
+    }
+    return [];
+  };
+
+  loadFeedback = async () => {
+    const feedback = await this.getFeedback();
+    if (!feedback) {
+      return;
+    }
+    const recordingFeedbackMap: RecordingFeedbackMap = {};
+    feedback.forEach((fb: FeedbackResponse) => {
+      recordingFeedbackMap[fb.recording_msid] = fb.score;
+    });
+    this.setState({ recordingFeedbackMap });
+  };
+
+  updateFeedback = (
+    recordingMsid: string,
+    score: ListenFeedBack | RecommendationFeedBack
+  ) => {
+    const { recordingFeedbackMap } = this.state;
+    const newFeedbackMap = {
+      ...recordingFeedbackMap,
+      [recordingMsid]: score as ListenFeedBack,
+    };
+    this.setState({ recordingFeedbackMap: newFeedbackMap });
+  };
+
+  getFeedbackForRecordingMsid = (
+    recordingMsid?: string | null
+  ): ListenFeedBack => {
+    const { recordingFeedbackMap } = this.state;
+    return recordingMsid ? get(recordingFeedbackMap, recordingMsid, 0) : 0;
+  };
+
   // BrainzPlayer functions
   removePinFromPinsList = (pin: PinnedRecording) => {
     const { pins } = this.state;
@@ -172,7 +241,7 @@ export default class UserPins extends React.Component<
   render() {
     const { user, profileUrl, newAlert } = this.props;
     const { pins, page, direction, loading, maxPage } = this.state;
-    const { currentUser } = this.context;
+    const { currentUser, APIService } = this.context;
 
     const isNewerButtonDisabled = page === 1;
     const isOlderButtonDisabled = page >= maxPage;
@@ -225,6 +294,10 @@ export default class UserPins extends React.Component<
                         isCurrentUser={currentUser?.name === user?.name}
                         removePinFromPinsList={this.removePinFromPinsList}
                         newAlert={newAlert}
+                        currentFeedback={this.getFeedbackForRecordingMsid(
+                          pin.recording_msid
+                        )}
+                        updateFeedbackCallback={this.updateFeedback}
                       />
                     );
                   })}
@@ -292,6 +365,9 @@ export default class UserPins extends React.Component<
               direction={direction}
               listens={pinsAsListens}
               newAlert={newAlert}
+              listenBrainzAPIBaseURI={APIService.APIBaseURI}
+              refreshSpotifyToken={APIService.refreshSpotifyToken}
+              refreshYoutubeToken={APIService.refreshYoutubeToken}
             />
           </div>
         </div>

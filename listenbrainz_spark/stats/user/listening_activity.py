@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import datetime, time
+from datetime import datetime, time, date
 from typing import Iterator, Optional, Tuple
 
 from dateutil.relativedelta import relativedelta, MO
@@ -25,6 +25,45 @@ time_range_schema = StructType([
 logger = logging.getLogger(__name__)
 
 
+def _get_half_year_offset(_date: date) -> relativedelta:
+    """ Given a month, returns the relativedelta offset to get
+    the beginning date of the previous to previous half year."""
+    month = _date.month
+    if month <= 6:
+        # currently, in Jan-Jun previous half year is last year's Jan-Jun
+        return relativedelta(years=-1, month=1, day=1)
+    else:
+        # currently, in Jul-Dec previous half year is last year's Jul-Dec
+        return relativedelta(years=-1, month=7, day=1)
+
+
+def get_two_quarters_ago_offset(_date: date) -> relativedelta:
+    """ Given a month, returns the relativedelta offset to get
+    the beginning date of the previous to previous quarter.
+
+    .. note:: there is similar function to calculate 1 quarter back
+    in listenbrainz_spark.stats module which is used by other stats.
+    However, here in listening_activity stats we need two quarters
+    so that we can compare the quarter with the previous quarter of
+    the same duration and .
+    """
+    month = _date.month
+    if month <= 3:
+        # currently, in Jan-Mar so 2 quarters ago is last year's Jul-Sep
+        return relativedelta(years=-1, month=7, day=1)
+    elif month <= 6:
+        # currently, in Apr-Jun so 2 quarters ago is last year's Oct-Dec
+        return relativedelta(years=-1, month=10, day=1)
+    elif month <= 9:
+        # currently, in Jul-Sep so 2 quarters ago is Jan-Mar
+        return relativedelta(month=1, day=1)
+    else:
+        # currently, in Oct-Dec so 2 quarters ago is Apr-Jun
+        return relativedelta(month=4, day=1)
+
+
+# other stats uses a different function (get_dates_for_stats_range) to calculate
+# time ranges. if making modifications here, remember to check and update that as well
 def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta, str]:
     latest_listen_ts = get_latest_listen_ts()
     if stats_range == "all_time":
@@ -60,6 +99,17 @@ def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta,
         # compute listening activity for each day but no weekday
         step = relativedelta(days=+1)
         date_format = "%d %B %Y"
+    elif stats_range == "quarter":
+        from_offset = get_two_quarters_ago_offset(latest_listen_date)
+        to_offset = relativedelta(months=+6)
+        # compute listening activity for each week with date format as day
+        step = relativedelta(weeks=+1)
+        date_format = "%d %B %Y"
+    elif stats_range == "half_yearly":
+        from_offset = _get_half_year_offset(latest_listen_date)
+        to_offset = relativedelta(months=+12)
+        step = relativedelta(months=+1)
+        date_format = "%B %Y"
     else:  # year
         from_offset = relativedelta(years=-2, month=1, day=1)  # start of the previous to previous year
         to_offset = relativedelta(years=+2)
@@ -80,9 +130,11 @@ def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta,
 def calculate_listening_activity():
     """ Calculate number of listens for each user in time ranges given in the "time_range" table.
     The time ranges are as follows:
-        1) week - each day with weekday name of the past 2 weeks.
-        2) month - each day the past 2 months. 
-        3) year - each month of the past 2 years.
+        1) week - each day with weekday name of the past 2 weeks
+        2) month - each day the past 2 months
+        3) quarter - each week of past 2 quarters
+        4) half_yearly - each month of past 2 half-years
+        5) year - each month of the past 2 years
         4) all_time - each year starting from LAST_FM_FOUNDING_YEAR (2002)
     """
     # calculates the number of listens in each time range for each user, count(listen.listened_at) so that
@@ -118,7 +170,14 @@ def calculate_listening_activity():
 
 
 def get_listening_activity(stats_range: str):
-    """ Calculate the number of listens of users for the given stats_range """
+    """ Compute the number of listens for a time range compared to the previous range
+
+    Given a time range, this computes a histogram of a users' listens for that range
+    and the previous range of the same duration, so that they can be compared. The
+    bin size of the histogram depends on the size of the range (e.g.
+    year -> 12 months, month -> ~30 days, week -> ~7 days, see get_time_range for
+    details). These values are used on the listening activity reports.
+    """
     logger.debug(f"Calculating listening_activity_{stats_range}")
 
     from_date, to_date, step, date_format = get_time_range(stats_range)

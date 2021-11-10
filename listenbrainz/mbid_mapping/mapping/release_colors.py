@@ -79,8 +79,8 @@ def process_row(row):
     while True:
         headers = {
             'User-Agent': 'ListenBrainz HueSound Color Bot ( rob@metabrainz.org )'}
-        url = "https://coverartarchive.org/release/%s/%d-250.jpg" % (
-            row["release_mbid"], row["caa_id"])
+        release_mbid, caa_id = row["release_mbid"], row["caa_id"]
+        url = f"https://archive.org/download/mbid-{release_mbid}/mbid-{release_mbid}-{caa_id}_thumb250.jpg"
         r = requests.get(url, headers=headers)
         if r.status_code == 200:
             filename = "/tmp/release-colors-%s.img" % get_ident()

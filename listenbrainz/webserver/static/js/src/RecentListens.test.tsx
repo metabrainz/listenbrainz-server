@@ -96,8 +96,9 @@ describe("Recentlistens", () => {
 
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
     const wrapper = mount<RecentListens>(
-      <RecentListens {...props} />,
-      mountOptions
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
     );
     expect(wrapper.html()).toMatchSnapshot();
     fakeDateNow.mockRestore();
@@ -138,7 +139,7 @@ describe("componentDidMount", () => {
     expect(wrapper.state("listenCount")).toEqual(42);
   });
 
-  it('calls loadFeedback if user is the currentUser and mode "listens"', () => {
+  it('calls loadFeedback if user is logged in and mode "listens"', () => {
     const wrapper = mount<RecentListens>(
       <GlobalAppContext.Provider value={mountOptions.context}>
         <RecentListens {...propsOneListen} />
@@ -152,20 +153,25 @@ describe("componentDidMount", () => {
     expect(instance.loadFeedback).toHaveBeenCalledTimes(1);
   });
 
-  it('does not call loadFeedback if user is not the currentUser even if mode "listens"', () => {
+  it('does not fetch user feedback if user is not logged in"', () => {
     const wrapper = mount<RecentListens>(
       <GlobalAppContext.Provider
-        value={{ ...mountOptions.context, currentUser: { name: "foobar" } }}
+        value={{ ...mountOptions.context, currentUser: {} as ListenBrainzUser }}
       >
         <RecentListens {...propsOneListen} />
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
-    instance.loadFeedback = jest.fn();
+    const loadFeedbackSpy = jest.spyOn(instance, "loadFeedback");
+    const APIFeedbackSpy = jest.spyOn(
+      instance.context.APIService,
+      "getFeedbackForUserForRecordings"
+    );
 
     instance.componentDidMount();
 
-    expect(instance.loadFeedback).toHaveBeenCalledTimes(0);
+    expect(loadFeedbackSpy).toHaveBeenCalledTimes(1);
+    expect(APIFeedbackSpy).not.toHaveBeenCalled();
   });
 });
 
@@ -430,6 +436,17 @@ describe("deleteListen", () => {
 
     expect(spy).toHaveBeenCalledTimes(0);
     expect(instance.state.deletedListen).toEqual(null);
+  });
+
+  it("does not render delete listen control if isCurrentUser is false", async () => {
+    const wrapper = mount<RecentListens>(
+      <GlobalAppContext.Provider
+        value={{ ...mountOptions.context, currentUser: {} as ListenBrainzUser }}
+      >
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
+    );
+    expect(wrapper.find("button[title='Delete Listen']")).toHaveLength(0);
   });
 
   it("does nothing if CurrentUser.authtoken is not set", async () => {
@@ -940,6 +957,7 @@ describe("pinRecordingModal", () => {
     expect(pinRecordingModal.props()).toEqual({
       recordingToPin: props.listens[0],
       newAlert: props.newAlert,
+      onSuccessfulPin: expect.any(Function),
     });
 
     instance.updateRecordingToPin(recordingToPin);
@@ -949,6 +967,7 @@ describe("pinRecordingModal", () => {
     expect(pinRecordingModal.props()).toEqual({
       recordingToPin,
       newAlert: props.newAlert,
+      onSuccessfulPin: expect.any(Function),
     });
   });
 });

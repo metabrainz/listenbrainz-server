@@ -29,6 +29,7 @@ export default class YoutubePlayer
   extends React.Component<YoutubePlayerProps, YoutubePlayerState>
   implements DataSourceType {
   public name = "youtube";
+  public domainName = "youtube.com";
   youtubePlayer?: ExtendedYoutubePlayer;
   checkVideoLoadedTimerId?: NodeJS.Timeout;
 
@@ -68,6 +69,31 @@ export default class YoutubePlayer
       ];
     }
     return images;
+  }
+
+  static getYoutubeURLFromListen(
+    listen: Listen | JSPFTrack
+  ): string | undefined {
+    // Checks if there is a youtube ID in the listen
+    const youtubeId = _get(listen, "track_metadata.additional_info.youtube_id");
+    if (youtubeId) {
+      return `https://www.youtube.com/watch?v=${youtubeId}`;
+    }
+
+    // or if the origin URL contains youtube.com
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    if (_isString(originURL) && originURL.length) {
+      try {
+        const parsedURL = new URL(originURL);
+        const { hostname, searchParams } = parsedURL;
+        if (/youtube\.com/.test(hostname)) {
+          return originURL;
+        }
+      } catch {
+        return undefined;
+      }
+    }
+    return undefined;
   }
 
   onReady = (event: YT.PlayerEvent): void => {
@@ -248,10 +274,14 @@ export default class YoutubePlayer
     // or if the origin URL contains youtube.com
     const originURL = _get(listen, "track_metadata.additional_info.origin_url");
     if (_isString(originURL) && originURL.length) {
-      const parsedURL = new URL(originURL);
-      const { hostname, searchParams } = parsedURL;
-      if (/youtube\.com/.test(hostname)) {
-        return true;
+      try {
+        const parsedURL = new URL(originURL);
+        const { hostname, searchParams } = parsedURL;
+        if (/youtube\.com/.test(hostname)) {
+          return true;
+        }
+      } catch {
+        return false;
       }
     }
 
@@ -276,10 +306,14 @@ export default class YoutubePlayer
     let youtubeId = _get(listen, "track_metadata.additional_info.youtube_id");
     const originURL = _get(listen, "track_metadata.additional_info.origin_url");
     if (!youtubeId && _isString(originURL) && originURL.length) {
-      const parsedURL = new URL(originURL);
-      const { hostname, searchParams } = parsedURL;
-      if (/youtube\.com/.test(hostname)) {
-        youtubeId = searchParams.get("v");
+      try {
+        const parsedURL = new URL(originURL);
+        const { hostname, searchParams } = parsedURL;
+        if (/youtube\.com/.test(hostname)) {
+          youtubeId = searchParams.get("v");
+        }
+      } catch {
+        // URL is not valid, do nothing
       }
     }
     if (youtubeId) {

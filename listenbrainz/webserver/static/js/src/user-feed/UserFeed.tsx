@@ -246,7 +246,12 @@ export default class UserFeedPage extends React.Component<
         previousEventTs: newEvents[0].created,
         ...optionalProps,
       },
-      successCallback
+      async () => {
+        if (successCallback) {
+          successCallback();
+        }
+        await this.loadFeedback();
+      }
     );
 
     // Scroll window back to the top of the events container element
@@ -420,7 +425,7 @@ export default class UserFeedPage extends React.Component<
   }
 
   render() {
-    const { currentUser } = this.context;
+    const { currentUser, APIService } = this.context;
     const { newAlert } = this.props;
     const {
       events,
@@ -574,6 +579,9 @@ export default class UserFeedPage extends React.Component<
                   direction="down"
                   listens={listens}
                   newAlert={newAlert}
+                  listenBrainzAPIBaseURI={APIService.APIBaseURI}
+                  refreshSpotifyToken={APIService.refreshSpotifyToken}
+                  refreshYoutubeToken={APIService.refreshYoutubeToken}
                 />
               </div>
             </div>

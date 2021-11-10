@@ -206,6 +206,8 @@ export default class PlaylistPage extends React.Component<
           {
             playlist: { ...playlist, track: [...playlist.track, jspfTrack] },
             // recordingFeedbackMap,
+            searchInputValue: "",
+            cachedSearchResults: [],
           },
           this.emitPlaylistChanged
         );
@@ -483,12 +485,16 @@ export default class PlaylistPage extends React.Component<
       return;
     }
     const { playlist } = this.state;
+    // Owner can't be collaborator
+    const collaboratorsWithoutOwner = collaborators.filter(
+      (username) => username.toLowerCase() !== playlist.creator.toLowerCase()
+    );
     if (
       description === playlist.annotation &&
       name === playlist.title &&
       isPublic ===
         playlist.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]?.public &&
-      collaborators ===
+      collaboratorsWithoutOwner ===
         playlist.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]?.collaborators
     ) {
       // Nothing changed
@@ -502,7 +508,7 @@ export default class PlaylistPage extends React.Component<
         extension: {
           [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
             public: isPublic,
-            collaborators,
+            collaborators: collaboratorsWithoutOwner,
           },
         },
       };
@@ -640,6 +646,7 @@ export default class PlaylistPage extends React.Component<
       searchInputValue,
       cachedSearchResults,
     } = this.state;
+    const { APIService } = this.context;
     const { newAlert } = this.props;
     const { track: tracks } = playlist;
     const hasRightToEdit = this.hasRightToEdit();
@@ -739,24 +746,22 @@ export default class PlaylistPage extends React.Component<
               <div className="info">
                 <div>{playlist.track?.length} tracks</div>
                 <div>Created: {new Date(playlist.date).toLocaleString()}</div>
-                {customFields?.collaborators?.length && (
-                  <div>
-                    With the help of:&ensp;
-                    {customFields.collaborators.map((collaborator, index) => (
-                      <>
-                        <a
-                          key={collaborator}
-                          href={sanitizeUrl(`/user/${collaborator}`)}
-                        >
-                          {collaborator}
-                        </a>
-                        {index < customFields.collaborators.length - 1
-                          ? ", "
-                          : ""}
-                      </>
-                    ))}
-                  </div>
-                )}
+                {customFields?.collaborators &&
+                  Boolean(customFields.collaborators.length) && (
+                    <div>
+                      With the help of:&ensp;
+                      {customFields.collaborators.map((collaborator, index) => (
+                        <React.Fragment key={collaborator}>
+                          <a href={sanitizeUrl(`/user/${collaborator}`)}>
+                            {collaborator}
+                          </a>
+                          {index < customFields.collaborators.length - 1
+                            ? ", "
+                            : ""}
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  )}
                 {customFields?.last_modified_at && (
                   <div>
                     Last modified:{" "}
@@ -832,7 +837,7 @@ export default class PlaylistPage extends React.Component<
                 </div>
               )}
               {hasRightToEdit && (
-                <Card className="playlist-item-card row" id="add-track">
+                <Card className="listen-card row" id="add-track">
                   <span>
                     <FontAwesomeIcon icon={faPlusCircle as IconProp} />
                     &nbsp;&nbsp;Add a track
@@ -878,6 +883,9 @@ export default class PlaylistPage extends React.Component<
               direction="down"
               listens={tracks.map(JSPFTrackToListen)}
               newAlert={newAlert}
+              listenBrainzAPIBaseURI={APIService.APIBaseURI}
+              refreshSpotifyToken={APIService.refreshSpotifyToken}
+              refreshYoutubeToken={APIService.refreshYoutubeToken}
             />
           </div>
         </div>

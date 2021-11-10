@@ -120,6 +120,3 @@ data.
 
 When the tests complete, you will see if your changes are valid or not. These tests
 are a helpful way to validate new changes without a lot of work.
-
-Refer the :doc:`FAQs <faqs>` to resolve the common errors that may arise when setting up
-the development environment.

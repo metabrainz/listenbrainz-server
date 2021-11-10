@@ -52,6 +52,9 @@ export default class RecommendationFeedbackComponent extends React.Component<
 
     if (currentUser?.auth_token) {
       const recordingMBID = getRecordingMBID(listen);
+      if (!recordingMBID) {
+        return;
+      }
       try {
         let status;
         if (currentFeedback === rating) {

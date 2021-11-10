@@ -57,6 +57,7 @@ export default class SoundcloudPlayer
   extends React.Component<DataSourceProps, SoundcloudPlayerState>
   implements DataSourceType {
   public name = "soundcloud";
+  public domainName = "soundcloud.com";
   iFrameRef?: React.RefObject<HTMLIFrameElement>;
   soundcloudPlayer?: SoundCloudHTML5Widget;
   retries = 0;
@@ -123,6 +124,16 @@ export default class SoundcloudPlayer
       // eslint-disable-next-line no-empty
     } catch (error) {}
   }
+
+  static getSoundcloudURLFromListen = (
+    listen: Listen | JSPFTrack
+  ): string | undefined => {
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    if (originURL && /soundcloud\.com/.test(originURL)) {
+      return originURL;
+    }
+    return undefined;
+  };
 
   onReady = (): void => {
     if (!this.soundcloudPlayer) {
