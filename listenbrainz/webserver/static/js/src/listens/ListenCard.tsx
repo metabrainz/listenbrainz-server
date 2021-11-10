@@ -196,7 +196,7 @@ export default class ListenCard extends React.Component<
       className,
       showUsername,
       showTimestamp,
-      thumbnail: thumbnailOverwrite,
+      thumbnail,
       listenDetails,
       compact,
       feedbackComponent,
@@ -262,9 +262,9 @@ export default class ListenCard extends React.Component<
           isCurrentlyPlaying ? "current-listen" : ""
         }${compact ? " compact" : " "} ${className || ""}`}
       >
-        {(thumbnailOverwrite ?? thumbnailSrc) && (
-          <div className="listen-thumbnail">
-            {thumbnailOverwrite || (
+        {thumbnail || (
+          <div className={`listen-thumbnail ${!thumbnailSrc ? "empty" : ""}`}>
+            {Boolean(thumbnailSrc) && (
               <img
                 src={thumbnailSrc}
                 alt={listen.track_metadata?.release_name ?? "Cover art"}

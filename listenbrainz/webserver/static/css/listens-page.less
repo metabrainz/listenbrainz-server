@@ -254,7 +254,14 @@
 		margin: -10px -5px;
 		margin-right: 1em;
 		width: @cover-art-thumbnail-size;
+		transition: width ease-out 0.4s;
 		height: @cover-art-thumbnail-size;
+		&.empty{
+			width: 0;
+		}
+		.drag-handle{
+			padding:10px;
+		}
 		> img {
 			height: inherit;
 			width: inherit;
