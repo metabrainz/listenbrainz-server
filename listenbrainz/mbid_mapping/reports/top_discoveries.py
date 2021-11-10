@@ -18,8 +18,7 @@ def create_table(mb_conn):
         with mb_conn.cursor() as curs:
             curs.execute("DROP TABLE IF EXISTS mapping.top_discoveries")
             curs.execute("""CREATE TABLE mapping.top_discoveries
-                                       ( recording_msid     UUID NOT NULL
-                                       , recording_mbid     UUID
+                                       ( recording_mbid     UUID
                                        , recording_name     TEXT NOT NULL
                                        , artist_credit_name TEXT NOT NULL
                                        , listen_count       INTEGER NOT NULL
@@ -81,8 +80,7 @@ def fetch_top_discoveries_for_users(lb_conn, mb_conn, year, users):
             query = """SELECT user_name
                             , track_name
                             , data->'track_metadata'->>'artist_name' AS artist_name
-                            , data->'track_metadata'->'additional_info'->>'recording_msid'::TEXT AS rec_msid
-                            , array_agg(extract(year from to_timestamp(listened_at))::INT ORDER BY 
+                            , array_agg(extract(year from to_timestamp(listened_at))::INT ORDER BY
                                         extract(year from to_timestamp(listened_at))::INT) AS years
                             , recording_mbid
                          FROM listen
@@ -91,10 +89,11 @@ def fetch_top_discoveries_for_users(lb_conn, mb_conn, year, users):
               FULL OUTER JOIN listen_mbid_mapping m
                               ON lj.listen_mbid_mapping = m.id
                         WHERE user_name in %s
-                     GROUP BY user_name, rec_msid, recording_mbid, artist_name, track_name
+                     GROUP BY user_name, artist_name, track_name, recording_mbid
                        HAVING (array_agg(extract(year from to_timestamp(listened_at))::INT ORDER BY
                                          extract(year from to_timestamp(listened_at))::INT))[1] = %s
                      ORDER BY user_name, array_length(array_agg(extract(year from to_timestamp(listened_at))::INT), 1) DESC"""
+
 
             for users in chunks(user_list, USERS_PER_BATCH):
                 log(users)
@@ -107,8 +106,7 @@ def fetch_top_discoveries_for_users(lb_conn, mb_conn, year, users):
                         break
 
                     if len(row["years"]) > 2:
-                        top_recordings.append((row["rec_msid"],
-                                               row["recording_mbid"],
+                        top_recordings.append((row["recording_mbid"],
                                                row["track_name"],
                                                row["artist_name"],
                                                len(row["years"]),
