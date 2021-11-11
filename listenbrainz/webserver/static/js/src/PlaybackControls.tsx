@@ -128,7 +128,7 @@ export default class PlaybackControls extends React.Component<
     const { autoHideControls } = this.state;
     const progressPercentage = Number((progressMs * 100) / durationMs);
     return (
-      <div id="music-player" aria-label="Playback control">
+      <div id="brainz-player" aria-label="Playback control">
         <div className="content">
           {children}
           <div className="no-album-art" />
