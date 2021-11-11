@@ -119,7 +119,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               >
                 <h3>
                   Top
-
+                   
                   <span
                     style={
                       Object {
@@ -127,8 +127,8 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       }
                     }
                   />
-
-                  of
+                   
+                  of 
                   the
                   <span
                     className="dropdown"
@@ -206,7 +206,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     }
                   }
                 >
-                   count -
+                   count - 
                   <b>
                     0
                   </b>
@@ -4647,14 +4647,14 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                     className="connect-services-message"
                   >
                     You need to
-
+                     
                     <a
                       href="/profile/music-services/details/"
                       target="_blank"
                     >
                       connect to a music service
                     </a>
-
+                     
                     and refresh this page in order to search for and play songs on ListenBrainz.
                   </div>
                   <SpotifyPlayer
@@ -5313,7 +5313,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               >
                 <h3>
                   Top
-
+                   
                   <span
                     style={
                       Object {
@@ -5321,8 +5321,8 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       }
                     }
                   />
-
-                  of
+                   
+                  of 
                   the
                   <span
                     className="dropdown"
@@ -5400,7 +5400,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     }
                   }
                 >
-                   count -
+                   count - 
                   <b>
                     0
                   </b>
@@ -10707,14 +10707,14 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                     className="connect-services-message"
                   >
                     You need to
-
+                     
                     <a
                       href="/profile/music-services/details/"
                       target="_blank"
                     >
                       connect to a music service
                     </a>
-
+                     
                     and refresh this page in order to search for and play songs on ListenBrainz.
                   </div>
                   <SpotifyPlayer
@@ -11373,7 +11373,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               >
                 <h3>
                   Top
-
+                   
                   <span
                     style={
                       Object {
@@ -11381,8 +11381,8 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       }
                     }
                   />
-
-                  of
+                   
+                  of 
                   the
                   <span
                     className="dropdown"
@@ -11460,7 +11460,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     }
                   }
                 >
-                   count -
+                   count - 
                   <b>
                     0
                   </b>
@@ -16201,14 +16201,14 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                     className="connect-services-message"
                   >
                     You need to
-
+                     
                     <a
                       href="/profile/music-services/details/"
                       target="_blank"
                     >
                       connect to a music service
                     </a>
-
+                     
                     and refresh this page in order to search for and play songs on ListenBrainz.
                   </div>
                   <SpotifyPlayer
@@ -16868,7 +16868,7 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
               >
                 <h3>
                   Top
-
+                   
                   <span
                     style={
                       Object {
@@ -16878,8 +16878,8 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
                   >
                     artists
                   </span>
-
-                  of
+                   
+                  of 
                   <span
                     className="dropdown"
                     style={
@@ -17005,7 +17005,7 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
                       />
                     </svg>
                   </FontAwesomeIcon>
-
+                   
                   Statistics for the user have not been calculated
                 </span>
               </div>
@@ -17055,14 +17055,14 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
                     className="connect-services-message"
                   >
                     You need to
-
+                     
                     <a
                       href="/profile/music-services/details/"
                       target="_blank"
                     >
                       connect to a music service
                     </a>
-
+                     
                     and refresh this page in order to search for and play songs on ListenBrainz.
                   </div>
                   <SpotifyPlayer
