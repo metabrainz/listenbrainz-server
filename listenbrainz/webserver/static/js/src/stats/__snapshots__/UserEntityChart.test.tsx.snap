@@ -4638,7 +4638,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
             >
               <div
                 aria-label="Playback control"
-                id="music-player"
+                id="brainz-player"
               >
                 <div
                   className="content"
@@ -10698,7 +10698,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
             >
               <div
                 aria-label="Playback control"
-                id="music-player"
+                id="brainz-player"
               >
                 <div
                   className="content"
@@ -16192,7 +16192,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
             >
               <div
                 aria-label="Playback control"
-                id="music-player"
+                id="brainz-player"
               >
                 <div
                   className="content"
@@ -17046,7 +17046,7 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
             >
               <div
                 aria-label="Playback control"
-                id="music-player"
+                id="brainz-player"
               >
                 <div
                   className="content"

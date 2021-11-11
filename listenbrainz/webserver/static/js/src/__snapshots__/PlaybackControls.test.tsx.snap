@@ -16,7 +16,7 @@ exports[`PlaybackControls renders 1`] = `
 >
   <div
     aria-label="Playback control"
-    id="music-player"
+    id="brainz-player"
   >
     <div
       className="content"
