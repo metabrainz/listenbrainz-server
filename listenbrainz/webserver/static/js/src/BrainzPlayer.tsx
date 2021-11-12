@@ -64,7 +64,6 @@ export type DataSourceProps = {
 };
 
 type BrainzPlayerProps = {
-  direction: BrainzPlayDirection;
   listens: Array<Listen | JSPFTrack>;
   newAlert: (
     alertType: AlertType,
@@ -83,7 +82,6 @@ type BrainzPlayerState = {
   currentTrackArtist?: string;
   currentTrackAlbum?: string;
   currentTrackURL?: string;
-  direction: BrainzPlayDirection;
   playerPaused: boolean;
   isActivated: boolean;
   durationMs: number;
@@ -135,7 +133,6 @@ export default class BrainzPlayer extends React.Component<
       currentDataSourceIndex: 0,
       currentTrackName: "",
       currentTrackArtist: "",
-      direction: props.direction || "down",
       playerPaused: true,
       progressMs: 0,
       durationMs: 0,
@@ -227,7 +224,7 @@ export default class BrainzPlayer extends React.Component<
 
   playNextTrack = (invert: boolean = false): void => {
     const { listens } = this.props;
-    const { direction, isActivated } = this.state;
+    const { isActivated } = this.state;
 
     if (!isActivated) {
       // Player has not been activated by the user, do nothing.
@@ -247,13 +244,7 @@ export default class BrainzPlayer extends React.Component<
 
     let nextListenIndex;
     if (currentListenIndex === -1) {
-      nextListenIndex = direction === "up" ? listens.length - 1 : 0;
-    } else if (direction === "up") {
-      nextListenIndex =
-        invert === true ? currentListenIndex + 1 : currentListenIndex - 1 || 0;
-    } else if (direction === "down") {
-      nextListenIndex =
-        invert === true ? currentListenIndex - 1 || 0 : currentListenIndex + 1;
+      nextListenIndex = listens.length - 1;
     } else {
       this.handleWarning("Please select a song to play", "Unrecognised state");
       return;
@@ -425,13 +416,6 @@ export default class BrainzPlayer extends React.Component<
   seekBackward = (): void => {
     const { progressMs } = this.state;
     this.seekToPositionMs(progressMs - this.SEEK_TIME_MILLISECONDS);
-  };
-
-  toggleDirection = (): void => {
-    this.setState((prevState) => {
-      const direction = prevState.direction === "down" ? "up" : "down";
-      return { direction };
-    });
   };
 
   /* Listeners for datasource events */
@@ -728,7 +712,6 @@ export default class BrainzPlayer extends React.Component<
       currentTrackName,
       currentTrackArtist,
       playerPaused,
-      direction,
       progressMs,
       durationMs,
       isActivated,
@@ -749,8 +732,6 @@ export default class BrainzPlayer extends React.Component<
             isActivated ? this.togglePlay : this.activatePlayerAndPlay
           }
           playerPaused={playerPaused}
-          toggleDirection={this.toggleDirection}
-          direction={direction}
           trackName={currentTrackName}
           artistName={currentTrackArtist}
           progressMs={progressMs}

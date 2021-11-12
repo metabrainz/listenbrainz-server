@@ -8,8 +8,6 @@ const props = {
   playNextTrack: () => {},
   togglePlay: () => {},
   playerPaused: true,
-  toggleDirection: () => {},
-  direction: "up" as BrainzPlayDirection,
   trackName: "Dangerous",
   artistName: "The xx",
   progressMs: 0,

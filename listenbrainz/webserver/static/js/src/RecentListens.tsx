@@ -46,7 +46,6 @@ export type RecentListensProps = {
 } & WithAlertNotificationsInjectedProps;
 
 export interface RecentListensState {
-  direction: BrainzPlayDirection;
   lastFetchedDirection?: "older" | "newer";
   listens: Array<Listen>;
   listenCount?: number;
@@ -89,7 +88,6 @@ export default class RecentListens extends React.Component<
       nextListenTs,
       previousListenTs: props.listens?.[0]?.listened_at,
       recordingToPin: props.listens?.[0],
-      direction: "down",
       recordingFeedbackMap: {},
       dateTimePickerValue: nextListenTs
         ? new Date(nextListenTs * 1000)
@@ -579,7 +577,6 @@ export default class RecentListens extends React.Component<
 
   render() {
     const {
-      direction,
       listens,
       listenCount,
       loading,
@@ -850,7 +847,6 @@ export default class RecentListens extends React.Component<
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
             <BrainzPlayer
-              direction={direction}
               listens={allListenables}
               newAlert={newAlert}
               listenBrainzAPIBaseURI={APIService.APIBaseURI}

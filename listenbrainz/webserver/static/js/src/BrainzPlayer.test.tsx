@@ -9,7 +9,6 @@ import APIService from "./APIService";
 import GlobalAppContext from "./GlobalAppContext";
 
 const props = {
-  direction: "up" as BrainzPlayDirection,
   listens: [],
   newAlert: (
     alertType: AlertType,
@@ -512,37 +511,6 @@ describe("BrainzPlayer", () => {
       expect(fakeDatasource.current.seekToPositionMs).toHaveBeenCalledWith(
         1000
       );
-    });
-  });
-  describe("toggleDirection", () => {
-    it("sets direction to 'down' if not set to a recognised value", () => {
-      const mockProps = {
-        ...props,
-        direction: "" as BrainzPlayDirection,
-      };
-      const wrapper = mount<BrainzPlayer>(
-        <BrainzPlayer {...mockProps} />,
-        GlobalContextMock
-      );
-      const instance = wrapper.instance();
-      expect(instance.state.direction).toEqual("down");
-      instance.setState({ direction: "fnord" as BrainzPlayDirection });
-      expect(instance.state.direction).toEqual("fnord");
-      instance.toggleDirection();
-      expect(instance.state.direction).toEqual("down");
-    });
-
-    it("alternates direction between 'up' and 'down'", () => {
-      const wrapper = mount<BrainzPlayer>(
-        <BrainzPlayer {...props} />,
-        GlobalContextMock
-      );
-      const instance = wrapper.instance();
-      expect(instance.state.direction).toEqual("up");
-      instance.toggleDirection();
-      expect(instance.state.direction).toEqual("down");
-      instance.toggleDirection();
-      expect(instance.state.direction).toEqual("up");
     });
   });
 
