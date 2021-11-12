@@ -1,13 +1,12 @@
 import sqlalchemy
 
-from flask import current_app
 from listenbrainz import db
 from listenbrainz.db import timescale
 from listenbrainz.db.model.feedback import Feedback
-from messybrainz.db.data import load_recordings_from_msids
-from messybrainz import db as msb_db
+from listenbrainz import messybrainz as msb_db
+from listenbrainz.messybrainz.data import load_recordings_from_msids
 from typing import List
-from messybrainz.db.exceptions import NoDataFoundException
+from listenbrainz.messybrainz.exceptions import NoDataFoundException
 
 
 def insert(feedback: Feedback):
@@ -127,7 +126,7 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
                         "recording_mbid": row["recording_mbid"],
                         "release_mbid": row["release_mbid"],
                         "artist_mbids": row["artist_mbids"],
-                        "artist_msid": artist_msids[rec["ids"]["recording_msid"]]}
+                        "artist_msid": artist_msids[row["recording_msid"]]}
 
     return feedback
 

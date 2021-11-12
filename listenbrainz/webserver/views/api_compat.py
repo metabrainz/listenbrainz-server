@@ -8,12 +8,13 @@ from yattag import Doc
 import yattag
 from flask import Blueprint, request, render_template, current_app
 from flask_login import login_required, current_user
-from listenbrainz.webserver.external import messybrainz
 from brainzutils.ratelimit import ratelimit
 from brainzutils.musicbrainz_db import engine as mb_engine
 from listenbrainz.webserver.errors import InvalidAPIUsage, CompatError
 from listenbrainz.webserver.decorators import api_listenstore_needed
 import xmltodict
+
+from listenbrainz.webserver.models import SubmitListenUserMetadata
 from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen
 from listenbrainz.db.lastfm_user import User
 from listenbrainz.db.lastfm_session import Session
@@ -278,7 +279,8 @@ def record_listens(request, data):
     listen_type, native_payload = _to_native_api(lookup, data['method'], output_format)
     validated_payload = [validate_listen(listen, listen_type) for listen in native_payload]
 
-    augmented_listens = insert_payload(validated_payload, user, listen_type=listen_type)
+    user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])
+    augmented_listens = insert_payload(validated_payload, user_metadata, listen_type=listen_type)
 
     # With corrections than the original submitted listen.
     doc, tag, text = Doc().tagtext()

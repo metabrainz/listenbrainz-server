@@ -642,8 +642,8 @@ class APITestCase(ListenAPIIntegrationTestCase):
         response = self.send_data(payload)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
-        self.assertEqual('Value for key listened_at is too low. listened_at timestamp should'
-                         ' be greater than the timestamp of start of 2005.', response.json['error'])
+        self.assertEqual('Value for key listened_at is too low. listened_at timestamp should be'
+                         ' greater than 1033410600 (2002-10-01 00:00:00 UTC).', response.json['error'])
 
     def test_invalid_token_validation(self):
         """Sends an invalid token to api.validate_token"""

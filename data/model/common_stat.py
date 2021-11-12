@@ -9,6 +9,7 @@ class StatisticsRange(Enum):
     week = 'week'
     month = 'month'
     quarter = 'quarter'
+    half_yearly = 'half_yearly'
     year = 'year'
     all_time = 'all_time'
 
