@@ -17,8 +17,8 @@ class ListensDispatcher(ConsumerMixin):
         self.connection = None
         self.channel2 = None
 
-        self.unique_exchange = Exchange(app.config["UNIQUE_EXCHANGE"], "fanout")
-        self.playing_now_exchange = Exchange(app.config["PLAYING_NOW_EXCHANGE"], "fanout")
+        self.unique_exchange = Exchange(app.config["UNIQUE_EXCHANGE"], "fanout", durable=False)
+        self.playing_now_exchange = Exchange(app.config["PLAYING_NOW_EXCHANGE"], "fanout", durable=False)
         self.websockets_queue = Queue(app.config["WEBSOCKETS_QUEUE"], exchange=self.unique_exchange, durable=True)
         self.playing_now_queue = Queue(app.config["PLAYING_NOW_QUEUE"], exchange=self.playing_now_exchange, durable=True)
 
