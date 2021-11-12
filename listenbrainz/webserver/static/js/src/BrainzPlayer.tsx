@@ -246,8 +246,7 @@ export default class BrainzPlayer extends React.Component<
     if (currentListenIndex === -1) {
       nextListenIndex = 0;
     } else {
-      this.handleWarning("Please select a song to play", "Unrecognised state");
-      return;
+      nextListenIndex = invert === true ? currentListenIndex - 1 || 0 : currentListenIndex + 1;
     }
 
     const nextListen = listens[nextListenIndex];
