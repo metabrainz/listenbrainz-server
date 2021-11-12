@@ -29,12 +29,16 @@ def process_listens(app, listens, is_legacy_listen=False):
     msids = {str(listen['recording_msid']): listen for listen in listens}
     stats["total"] = len(msids)
     if len(msids):
+
+        # Remove msids for which we already have a match, unless
+        # its timestamp is 0, which means we should re-check the item
         with timescale.engine.connect() as connection:
             query = """SELECT recording_msid 
                          FROM listen_join_listen_mbid_mapping lj
                          JOIN listen_mbid_mapping mbid
                            ON mbid.id = lj.listen_mbid_mapping
-                        WHERE recording_msid IN :msids"""
+                        WHERE recording_msid IN :msids
+                          AND last_updated != '1970-01-01'"""
             curs = connection.execute(sqlalchemy.text(
                 query), msids=tuple(msids.keys()))
             while True:
@@ -111,7 +115,13 @@ def process_listens(app, listens, is_legacy_listen=False):
                                         , recording_name
                                         , match_type
                                    FROM   data
-                              ON CONFLICT DO NOTHING
+                              ON CONFLICT DO UPDATE
+                                      SET release_name = d.release_name
+                                        , artist_mbids = d.artist_mbids
+                                        , artist_credit_id = d.artist_credit.id
+                                        , artist_credit_name = d.artist_credit_name
+                                        , recording_name = d.recording_name
+                                        , match_type = d.match_type
                                    RETURNING id AS join_id, recording_mbid, release_mbid, artist_credit_id
                                    )
                                 INSERT INTO listen_join_listen_mbid_mapping (recording_msid, listen_mbid_mapping)
