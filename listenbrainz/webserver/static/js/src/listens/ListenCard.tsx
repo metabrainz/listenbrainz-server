@@ -51,7 +51,7 @@ export type ListenCardProps = {
     message: string | JSX.Element
   ) => void;
   // This show under the first line of listen details. It's meant for reviews, etc.
-  additionalDetails?: string | JSX.Element;
+  additionalContent?: string | JSX.Element;
   thumbnail?: JSX.Element;
   // The default details (recording name, artist name) can be replaced
   listenDetails?: JSX.Element;
@@ -202,7 +202,7 @@ export default class ListenCard extends React.Component<
 
   render() {
     const {
-      additionalDetails,
+      additionalContent,
       listen,
       className,
       showUsername,
@@ -271,7 +271,9 @@ export default class ListenCard extends React.Component<
         onDoubleClick={this.playListen}
         className={`listen-card row ${
           isCurrentlyPlaying ? "current-listen" : ""
-        }${compact ? " compact" : " "} ${className || ""}`}
+        }${compact ? " compact" : ""}${
+          additionalContent ? " has-additional-content" : " "
+        } ${className || ""}`}
       >
         <div className="main-content">
           {thumbnail || (
@@ -412,12 +414,12 @@ export default class ListenCard extends React.Component<
             </div>
           </div>
         </div>
-        {additionalDetails && (
+        {additionalContent && (
           <div
             className="additional-content"
             title={listen.track_metadata?.track_name}
           >
-            {additionalDetails}
+            {additionalContent}
           </div>
         )}
       </Card>
