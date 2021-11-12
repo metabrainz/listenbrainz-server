@@ -6,8 +6,6 @@ import {
   faFastForward,
   faPauseCircle,
   faPlayCircle,
-  faSortAmountDown,
-  faSortAmountUp,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
