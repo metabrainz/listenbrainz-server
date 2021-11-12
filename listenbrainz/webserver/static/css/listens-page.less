@@ -191,10 +191,7 @@
 }
 .listen-card {
 	
-	padding: 10px 5px;
-	@media (min-width: @screen-phone) {
-		padding: 15px;
-	}
+
 	margin-bottom: 7px;
 	a:focus, a:hover {
 		text-decoration: underline;
@@ -210,37 +207,46 @@
 			opacity: 1;
 		}
 	}
-	@media (min-width: @listen-small-break) {
-		&:not(.compact)> *{
-			padding: 0 1em;
+	
+	> *{
+		padding: 10px;
+		@media (min-width: @screen-phone) {
+			padding: 15px;
 		}
 	}
+	
 	/** Special styles for compact size cards (i.e. charts etc.) **/
 	&.compact {
-		padding: 10px;
 		margin: 0;
 		margin-bottom: 3px;
-		.listen-details {
-			flex-basis: 0%;
+		> *{
+			padding: 10px;
 		}
-		.listen-controls {
-			flex-grow: 0;
-		}
-		.listen-thumbnail {
-			padding:0;
-			margin: -10px;
-			margin-right: 10px;
-			width: 56px;
-			height: 56px;
+		.main-content{
+			.right-section{
+				flex:0;
+			}
+			.listen-controls {
+				flex-grow: 0;
+			}
+			.listen-thumbnail {
+				padding:0;
+				margin: -10px;
+				margin-right: 10px;
+				width: 56px;
+				height: 56px;
+			}
 		}
 	}
 	.additional-content{
-		padding-top: 0.7em;
-		margin-top: 0.7em;
 		border-top: 1px solid @gray-lighter;
 		font-style: italic;
 		width: 100%;
 	}
+	&.has-additional-content .main-content .listen-thumbnail > img {
+		border-bottom-left-radius: 0;
+	}
+
 	.main-content {
 		display: flex;
 		flex-wrap: wrap;
@@ -259,9 +265,11 @@
 			margin: -10px -5px;
 			margin-right: 1em;
 			width: @cover-art-thumbnail-size;
-			transition: width ease-out 0.4s;
+			transition: width height ease-out 0.4s;
 			&.empty{
 				width: 0;
+				height:0
+				margin: 0;
 			}
 			> img {
 				height: inherit;
