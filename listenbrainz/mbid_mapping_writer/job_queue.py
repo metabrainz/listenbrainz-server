@@ -86,10 +86,49 @@ class MappingJobQueue(threading.Thread):
             target=_add_legacy_listens_to_queue, args=(self,))
         self.legacy_load_thread.start()
 
+    def fetch_and_queue_listens(self, query, args):
+        """ Fetch and queue legacy and recheck listens """
+
+        count = 0
+        with timescale.engine.connect() as connection:
+            curs = connection.execute(sqlalchemy.text(query), args)
+            while True:
+                result = curs.fetchone()
+                if not result:
+                    break
+
+                self.queue.put(JobItem(LEGACY_LISTEN, [{"data": {"artist_name": result[2],
+                                                                 "track_name": result[1]},
+                                                        "recording_msid": result[0],
+                                                        "legacy": True}]))
+                count += 1
+
+        return count
+
     def add_legacy_listens_to_queue(self):
         """Fetch more legacy listens from the listens table by doing an left join
            on the matched listens, finding the next chunk of legacy listens to look up.
            Listens are added to the queue with a low priority."""
+
+        legacy_query = """SELECT data->'track_metadata'->'additional_info'->>'recording_msid'::TEXT AS recording_msid,
+                                 track_name,
+                                 data->'track_metadata'->'artist_name' AS artist_name
+                            FROM listen
+                       LEFT JOIN listen_join_listen_mbid_mapping lj
+                              ON data->'track_metadata'->'additional_info'->>'recording_msid' = lj.recording_msid::text
+                           WHERE lj.recording_msid IS NULL
+                             AND listened_at <= :max_ts
+                             AND listened_at > :min_ts"""
+
+        recheck_query = """SELECT data->'track_metadata'->'additional_info'->>'recording_msid'::TEXT AS recording_msid,
+                                  track_name,
+                                  data->'track_metadata'->'artist_name' AS artist_name
+                             FROM listen
+                        LEFT JOIN listen_join_listen_mbid_mapping lj
+                               ON data->'track_metadata'->'additional_info'->>'recording_msid' = lj.recording_msid::text
+                        LEFT JOIN listen_mbid_mapping mbid
+                               ON mbid.id = lj.listen_mbid_mapping
+                            WHERE last_updated = '1970-01-01'"""
 
         # Check to see where we need to pick up from, or start new
         if not self.legacy_listens_index_date:
@@ -113,36 +152,18 @@ class MappingJobQueue(threading.Thread):
             self.num_legacy_listens_loaded = 0
             dt = datetime.datetime.fromtimestamp(self.legacy_listens_index_date)
             cache.set(LEGACY_LISTENS_INDEX_DATE_CACHE_KEY, dt.strftime("%Y-%m-%d"), expirein=0, encode=False)
+
+            # Now queue up the recheck listens
+            self.fetch_and_queue_listens(recheck_query, {})
+
             return
 
-        # Load listens
+        # Load legacy listens and listens that have been marked for re-checking
         self.app.logger.info("Load more legacy listens for %s" % datetime.datetime.fromtimestamp(
             self.legacy_listens_index_date).strftime("%Y-%m-%d"))
-        query = """SELECT data->'track_metadata'->'additional_info'->>'recording_msid'::TEXT AS recording_msid,
-                          track_name,
-                          data->'track_metadata'->'artist_name' AS artist_name
-                     FROM listen
-                LEFT JOIN listen_join_listen_mbid_mapping lj
-                       ON data->'track_metadata'->'additional_info'->>'recording_msid' = lj.recording_msid::text
-                 WHERE lj.recording_msid IS NULL
-                      AND listened_at <= :max_ts
-                      AND listened_at > :min_ts"""
 
-        count = 0
-        with timescale.engine.connect() as connection:
-            curs = connection.execute(sqlalchemy.text(query),
-                                      max_ts=self.legacy_listens_index_date,
-                                      min_ts=self.legacy_listens_index_date - LEGACY_LISTENS_LOAD_WINDOW)
-            while True:
-                result = curs.fetchone()
-                if not result:
-                    break
-
-                self.queue.put(JobItem(LEGACY_LISTEN, [{"data": {"artist_name": result[2],
-                                                                 "track_name": result[1]},
-                                                        "recording_msid": result[0],
-                                                        "legacy": True}]))
-                count += 1
+        count = self.fetch_and_queue_listens(legacy_query, { "max_ts", self.legacy_listens_index_date,
+                                             "min_ts", self.legacy_listens_index_date - LEGACY_LISTENS_LOAD_WINDOW })
 
         # update cache entry and count
         self.legacy_listens_index_date -= LEGACY_LISTENS_LOAD_WINDOW
