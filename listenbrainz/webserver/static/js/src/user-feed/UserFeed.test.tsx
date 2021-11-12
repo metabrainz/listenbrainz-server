@@ -170,7 +170,7 @@ describe("<UserFeed />", () => {
     expect(time.text()).toEqual("Feb 16, 10:44 AM");
 
     // Ensure additional details are rendered if provided
-    const additionalDetails = content.find(".additional-details");
+    const additionalDetails = content.find(".additional-content");
     expect(additionalDetails.text()).toEqual('"Very good..."');
   });
 
