@@ -196,9 +196,6 @@
 		padding: 15px;
 	}
 	margin-bottom: 7px;
-	display: flex;
-	// flex-wrap: wrap;
-	
 	a:focus, a:hover {
 		text-decoration: underline;
 	}
@@ -213,18 +210,11 @@
 			opacity: 1;
 		}
 	}
-	
-	> div {
-		display: flex;
-		flex:1;
-		justify-content: center;
-	}
 	@media (min-width: @listen-small-break) {
 		&:not(.compact)> *{
 			padding: 0 1em;
 		}
 	}
-	
 	/** Special styles for compact size cards (i.e. charts etc.) **/
 	&.compact {
 		padding: 10px;
@@ -244,265 +234,272 @@
 			height: 56px;
 		}
 	}
-	&:not(.compact) .listen-controls{
-		max-width: 120px;
-		min-width: 120px;
-	}
-	
-	.listen-thumbnail {
-		flex: 0;
-		padding: 0;
-		margin: -10px -5px;
-		margin-right: 1em;
-		width: @cover-art-thumbnail-size;
-		transition: width ease-out 0.4s;
-		// height: @cover-art-thumbnail-size;
-		&.empty{
-			width: 0;
-		}
-		> img {
-			height: inherit;
-			width: inherit;
-			object-fit: cover;
-			border-radius: 7px 0 0 7px;
-		}
-		@media (min-width: @screen-phone) {
-			margin: -15px;
-			margin-right: 1em;
-		}
-		@media (min-width: @listen-small-break) {
-			margin: -15px;
-			margin-right: 0;
-		}
-	}
-	
-	.listen-time {
-		font-style: italic;
-		font-size: 80%;
-		&:extend(.text-muted);
-		white-space: nowrap;
-	}
-	.username-and-timestamp{
-		flex-direction: column;
-		justify-content: center;
-		padding-right: 1em;
-		align-items: flex-end;
-	}
-	
-	.listen-details{
-		flex-direction: column;
-		line-height: 1.3em;
-		overflow: hidden;
-		flex: 3;
-		flex-basis: 270px;
-		
-		.artist-and-timestamp {
-			display: flex;
-			flex-wrap: wrap;
-		}
-	}
-	
-	.ellipsis {
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space:nowrap;
-	}
-	.ellipsis-2-lines {
-		display: -webkit-box;
-		-webkit-line-clamp: 2;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-	
-	.additional-details{
+	.additional-content{
 		padding-top: 0.7em;
 		margin-top: 0.7em;
 		border-top: 1px solid @gray-lighter;
 		font-style: italic;
 		width: 100%;
 	}
-	.right-section{
-		flex-basis: 180px;
+	.main-content {
+		display: flex;
 		flex-wrap: wrap;
-		justify-content: flex-end;
-		align-items: center;
-		padding:0;
-		.listen-controls {
-			margin-left: initial;
-		}
-		> * {
+		
+		
+		> div {
 			display: flex;
-		}
-	}
-	
-	.listen-controls {
-		flex-wrap: nowrap;
-		justify-content: space-around;
-		position: relative; // This is need for dropdown menu positioning
-		margin-left: auto; // align flexbox item at flex-end
-		
-		> * {
-			align-self: center;
+			flex:1;
+			justify-content: center;
 		}
 		
-		a {
-			word-break: break-word;
-		}
 		
-		> svg:hover {
-			cursor: pointer;
-		}
-		
-		.fa-heart, .fa-heart-broken, .fa-ellipsis-v {
-			stroke-width: 40px;
-			font-size: 18px;
-			margin: 0% 7%;
-			width: 1em;
-		}
-		
-		.fa-heart, .fa-heart-broken {
-			color: transparent;
-			stroke: #8d8d8d;
-		}
-		
-		.fa-ellipsis-v {
-			color: #8d8d8d;
-			stroke: #ffffff;
-			
-			&:hover {
-				color: #46433a;
+		.listen-thumbnail {
+			flex: 0;
+			padding: 0;
+			margin: -10px -5px;
+			margin-right: 1em;
+			width: @cover-art-thumbnail-size;
+			transition: width ease-out 0.4s;
+			&.empty{
+				width: 0;
+			}
+			> img {
+				height: inherit;
+				width: inherit;
+				object-fit: cover;
+				border-radius: 7px 0 0 7px;
+			}
+			@media (min-width: @screen-phone) {
+				margin: -15px;
+				margin-right: 1em;
+			}
+			@media (min-width: @listen-small-break) {
+				margin: -15px;
+				margin-right: 0;
 			}
 		}
 		
-		.fa-heart {
+		.listen-time {
+			font-style: italic;
+			font-size: 80%;
+			&:extend(.text-muted);
+			white-space: nowrap;
+		}
+		.username-and-timestamp{
+			flex-direction: column;
+			justify-content: center;
+			padding-right: 1em;
+			align-items: flex-end;
+		}
+		
+		.listen-details{
+			flex-direction: column;
+			line-height: 1.3em;
+			overflow: hidden;
+			flex: 5;
 			
-			&:hover {
-				stroke: @love;
-			}
-			
-			&.loved {
-				stroke: transparent;
-				color: @love;
+			.username-and-timestamp {
+				padding-right:initial;
 			}
 		}
 		
-		.fa-heart-broken {
-			
-			&:hover {
-				stroke: @hate;
+		.ellipsis {
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space:nowrap;
+		}
+		.ellipsis-2-lines {
+			display: -webkit-box;
+			-webkit-line-clamp: 2;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+		
+
+		.right-section{
+			flex-wrap: wrap-reverse;
+			justify-content: flex-end;
+			align-items: center;
+			padding:0;
+			flex: 3.5;
+			.listen-controls {
+				margin-left: 1.5em;
 			}
-			
-			&.hated {
-				stroke: transparent;
-				color: @hate;
+			> *:not(.dropdown-menu) {
+				min-width: 1.5em;
+				display: flex;
 			}
 		}
 		
-		.dropdown-menu {
-			min-width: 140px;
-			border-radius: 4px;
-			padding: 10px 0px;
-			width: 260px;
+		.listen-controls {
+			flex-wrap: nowrap;
+			justify-content: space-around;
+			position: relative; // This is need for dropdown menu positioning
+			margin-left: auto; // align flexbox item at flex-end
 			
-			> a, > button {
-				display: block;// necessary for <a> tags
-				width: 100%;
-				background: none;
-				color: inherit;
-				border: none;
-				padding: 5px 20px;
-				font: inherit;
+			> * {
+				align-self: center;
+			}
+			
+			a {
+				word-break: break-word;
+			}
+			
+			> svg:hover {
 				cursor: pointer;
-				outline: inherit;
-				text-align: left;
+			}
+			
+			.fa-heart, .fa-heart-broken, .fa-ellipsis-v {
+				stroke-width: 40px;
+				font-size: 18px;
+				margin: 0% 7%;
+				width: 1em;
+			}
+			
+			.fa-heart, .fa-heart-broken {
+				color: transparent;
+				stroke: #8d8d8d;
+			}
+			
+			.fa-ellipsis-v {
+				color: #8d8d8d;
+				stroke: #ffffff;
 				
 				&:hover {
-					color: #ffffff;
-					background-color: #eb743b;
+					color: #46433a;
+				}
+			}
+			
+			.fa-heart {
+				
+				&:hover {
+					stroke: @love;
+				}
+				
+				&.loved {
+					stroke: transparent;
+					color: @love;
+				}
+			}
+			
+			.fa-heart-broken {
+				
+				&:hover {
+					stroke: @hate;
+				}
+				
+				&.hated {
+					stroke: transparent;
+					color: @hate;
+				}
+			}
+			
+			.dropdown-menu {
+				min-width: 140px;
+				border-radius: 4px;
+				padding: 10px 0px;
+				width: 260px;
+				
+				> a, > button {
+					display: block;// necessary for <a> tags
+					width: 100%;
+					background: none;
+					color: inherit;
+					border: none;
+					padding: 5px 20px;
+					font: inherit;
+					cursor: pointer;
+					outline: inherit;
+					text-align: left;
+					
+					&:hover {
+						color: #ffffff;
+						background-color: #eb743b;
+					}
 				}
 			}
 		}
-	}
-	.recommendation-controls {
-		
-		flex: 0 140px;
-		
-		&.open .dropdown-menu {
-			display: flex;
-			justify-content: space-around;
-		
-			> * {
-				flex: 1;
-				text-align: center;
-			}
-		}
-		
-		.btn {
-			font-size: 1em;
-			color: @blue;
-			background-color: white;
+		.recommendation-controls {
 			
-			&:hover {
-				background-color: @blue;
-				color: white;
+			flex: 0 140px;
+			
+			&.open .dropdown-menu {
+				display: flex;
+				justify-content: space-around;
+			
+				> * {
+					flex: 1;
+					text-align: center;
+				}
 			}
-		}
-		
-		.hate {
-			color: #C62828;
-		}
-		
-		.dislike {
-			color: #f5873d;
-		}
-		
-		.like {
-			color: #b0e111;
-		}
-		
-		.love {
-			color: #32cd32;
-		}
-		
-		.recommendation-icon {
-			> span {
-				stroke-width: 40px;
-				font-size: 18px;
-				flex: 1;
-				text-align: center;
-				margin: 0 0.4em;
+			
+			.btn {
+				font-size: 1em;
+				color: @blue;
+				background-color: white;
+				
+				&:hover {
+					background-color: @blue;
+					color: white;
+				}
 			}
+			
+			.hate {
+				color: #C62828;
+			}
+			
+			.dislike {
+				color: #f5873d;
+			}
+			
+			.like {
+				color: #b0e111;
+			}
+			
+			.love {
+				color: #32cd32;
+			}
+			
+			.recommendation-icon {
+				> span {
+					stroke-width: 40px;
+					font-size: 18px;
+					flex: 1;
+					text-align: center;
+					margin: 0 0.4em;
+				}
 
-			&:hover .off,
-			&.selected .off,
-			& .on {
-				display: none;
-			}
+				&:hover .off,
+				&.selected .off,
+				& .on {
+					display: none;
+				}
 
-			&:hover .on,
-			&.selected .on {
-				display: inline;
+				&:hover .on,
+				&.selected .on {
+					display: inline;
+				}
+			}
+		}
+		
+		.play-button {
+			color: #8d8d8d;
+			margin-left: .4em;
+		}
+		// If the user has an input method compatible with hovering (f.e. a mouse)
+		// hide the play button by default and show it on card hover
+		@media (hover: hover) {
+			.play-button {
+				transition: opacity .3s ease-in-out;
+				opacity: 0;
+			}
+			&:hover .play-button {
+				opacity: 1;
 			}
 		}
 	}
 	
-	.play-button {
-		padding: 0;
-		color: #8d8d8d;
-		margin-left: .4em;
-	}
-	// If the user has an input method compatible with hovering (f.e. a mouse)
-	// hide the play button by default and show it on card hover
-	@media (hover: hover) {
-		.play-button {
-			transition: opacity .3s ease-in-out;
-			opacity: 0;
-		}
-		&:hover .play-button {
-			opacity: 1;
-		}
-	}
 	
 	&.deleted {
 		animation: deleted-animation 0.3s linear forwards;

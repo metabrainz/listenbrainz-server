@@ -273,150 +273,152 @@ export default class ListenCard extends React.Component<
           isCurrentlyPlaying ? "current-listen" : ""
         }${compact ? " compact" : " "} ${className || ""}`}
       >
-        {thumbnail || (
-          <div className={`listen-thumbnail ${!thumbnailSrc ? "empty" : ""}`}>
-            {Boolean(thumbnailSrc) && (
-              <img
-                src={thumbnailSrc}
-                alt={listen.track_metadata?.release_name ?? "Cover art"}
-              />
-            )}
-          </div>
-        )}
-        {listenDetails ? (
-          <div className="listen-details">{listenDetails}</div>
-        ) : (
-          <div className="listen-details">
-            <div
-              title={listen.track_metadata?.track_name}
-              className="ellipsis-2-lines"
-            >
-              {getTrackLink(listen)}
-            </div>
-            <span
-              className="small text-muted ellipsis"
-              title={listen.track_metadata?.artist_name}
-            >
-              {getArtistLink(listen)}
-            </span>
-          </div>
-        )}
-        <div className="right-section">
-          {(showUsername || showTimestamp) && (
-            <div className="username-and-timestamp">
-              {showUsername && (
-                <a
-                  href={`/user/${listen.user_name}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={listen.user_name ?? undefined}
-                >
-                  {listen.user_name}
-                </a>
+        <div className="main-content">
+          {thumbnail || (
+            <div className={`listen-thumbnail ${!thumbnailSrc ? "empty" : ""}`}>
+              {Boolean(thumbnailSrc) && (
+                <img
+                  src={thumbnailSrc}
+                  alt={listen.track_metadata?.release_name ?? "Cover art"}
+                />
               )}
-              {showTimestamp && timeStampForDisplay}
             </div>
           )}
-          <div className="listen-controls">
-            {feedbackComponent ?? (
-              <ListenFeedbackComponent
-                newAlert={newAlert}
-                listen={listen}
-                currentFeedback={currentFeedback as ListenFeedBack}
-                updateFeedbackCallback={updateFeedbackCallback}
-              />
+          {listenDetails ? (
+            <div className="listen-details">{listenDetails}</div>
+          ) : (
+            <div className="listen-details">
+              <div
+                title={listen.track_metadata?.track_name}
+                className="ellipsis-2-lines"
+              >
+                {getTrackLink(listen)}
+              </div>
+              <span
+                className="small text-muted ellipsis"
+                title={listen.track_metadata?.artist_name}
+              >
+                {getArtistLink(listen)}
+              </span>
+            </div>
+          )}
+          <div className="right-section">
+            {(showUsername || showTimestamp) && (
+              <div className="username-and-timestamp">
+                {showUsername && (
+                  <a
+                    href={`/user/${listen.user_name}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={listen.user_name ?? undefined}
+                  >
+                    {listen.user_name}
+                  </a>
+                )}
+                {showTimestamp && timeStampForDisplay}
+              </div>
             )}
-            {hideActionsMenu ? null : (
-              <>
-                <FontAwesomeIcon
-                  icon={faEllipsisV as IconProp}
-                  title="More actions"
-                  className="dropdown-toggle"
-                  id="listenControlsDropdown"
-                  data-toggle="dropdown"
-                  aria-haspopup="true"
-                  aria-expanded="true"
+            <div className="listen-controls">
+              {feedbackComponent ?? (
+                <ListenFeedbackComponent
+                  newAlert={newAlert}
+                  listen={listen}
+                  currentFeedback={currentFeedback as ListenFeedBack}
+                  updateFeedbackCallback={updateFeedbackCallback}
                 />
-                <ul
-                  className="dropdown-menu dropdown-menu-right"
-                  aria-labelledby="listenControlsDropdown"
-                >
-                  {recordingMBID && (
-                    <ListenControl
-                      icon={faExternalLinkAlt}
-                      title="Open in MusicBrainz"
-                      link={`https://musicbrainz.org/recording/${recordingMBID}`}
-                      anchorTagAttributes={{
-                        target: "_blank",
-                        rel: "noopener noreferrer",
-                      }}
-                    />
-                  )}
-                  {spotifyURL && (
-                    <ListenControl
-                      icon={faSpotify}
-                      title="Open in Spotify"
-                      link={spotifyURL}
-                      anchorTagAttributes={{
-                        target: "_blank",
-                        rel: "noopener noreferrer",
-                      }}
-                    />
-                  )}
-                  {youtubeURL && (
-                    <ListenControl
-                      icon={faYoutube}
-                      title="Open in YouTube"
-                      link={youtubeURL}
-                      anchorTagAttributes={{
-                        target: "_blank",
-                        rel: "noopener noreferrer",
-                      }}
-                    />
-                  )}
-                  {soundcloudURL && (
-                    <ListenControl
-                      icon={faSoundcloud}
-                      title="Open in Soundcloud"
-                      link={soundcloudURL}
-                      anchorTagAttributes={{
-                        target: "_blank",
-                        rel: "noopener noreferrer",
-                      }}
-                    />
-                  )}
-                  {enableRecommendButton && (
-                    <ListenControl
-                      icon={faCommentDots}
-                      title="Recommend to my followers"
-                      action={this.recommendListenToFollowers}
-                    />
-                  )}
-                  {additionalMenuItems}
-                </ul>
-              </>
-            )}
-            <button
-              title="Play"
-              className="btn-transparent play-button"
-              onClick={this.playListen}
-              type="button"
-            >
-              {isCurrentlyPlaying ? (
-                <FontAwesomeIcon size="1x" icon={faPlay as IconProp} />
-              ) : (
-                <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />
               )}
-            </button>
+              {hideActionsMenu ? null : (
+                <>
+                  <FontAwesomeIcon
+                    icon={faEllipsisV as IconProp}
+                    title="More actions"
+                    className="dropdown-toggle"
+                    id="listenControlsDropdown"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="true"
+                  />
+                  <ul
+                    className="dropdown-menu dropdown-menu-right"
+                    aria-labelledby="listenControlsDropdown"
+                  >
+                    {recordingMBID && (
+                      <ListenControl
+                        icon={faExternalLinkAlt}
+                        title="Open in MusicBrainz"
+                        link={`https://musicbrainz.org/recording/${recordingMBID}`}
+                        anchorTagAttributes={{
+                          target: "_blank",
+                          rel: "noopener noreferrer",
+                        }}
+                      />
+                    )}
+                    {spotifyURL && (
+                      <ListenControl
+                        icon={faSpotify}
+                        title="Open in Spotify"
+                        link={spotifyURL}
+                        anchorTagAttributes={{
+                          target: "_blank",
+                          rel: "noopener noreferrer",
+                        }}
+                      />
+                    )}
+                    {youtubeURL && (
+                      <ListenControl
+                        icon={faYoutube}
+                        title="Open in YouTube"
+                        link={youtubeURL}
+                        anchorTagAttributes={{
+                          target: "_blank",
+                          rel: "noopener noreferrer",
+                        }}
+                      />
+                    )}
+                    {soundcloudURL && (
+                      <ListenControl
+                        icon={faSoundcloud}
+                        title="Open in Soundcloud"
+                        link={soundcloudURL}
+                        anchorTagAttributes={{
+                          target: "_blank",
+                          rel: "noopener noreferrer",
+                        }}
+                      />
+                    )}
+                    {enableRecommendButton && (
+                      <ListenControl
+                        icon={faCommentDots}
+                        title="Recommend to my followers"
+                        action={this.recommendListenToFollowers}
+                      />
+                    )}
+                    {additionalMenuItems}
+                  </ul>
+                </>
+              )}
+              <button
+                title="Play"
+                className="btn-transparent play-button"
+                onClick={this.playListen}
+                type="button"
+              >
+                {isCurrentlyPlaying ? (
+                  <FontAwesomeIcon size="1x" icon={faPlay as IconProp} />
+                ) : (
+                  <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />
+                )}
+              </button>
+            </div>
           </div>
         </div>
         {additionalDetails && (
-          <span
-            className="additional-details"
+          <div
+            className="additional-content"
             title={listen.track_metadata?.track_name}
           >
             {additionalDetails}
-          </span>
+          </div>
         )}
       </Card>
     );
