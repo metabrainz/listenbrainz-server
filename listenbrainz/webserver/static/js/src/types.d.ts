@@ -71,8 +71,6 @@ declare type ImportService = "lastfm" | "librefm";
 
 declare type ListenType = "single" | "playing_now" | "import";
 
-declare type BrainzPlayDirection = "up" | "down" | "hidden";
-
 declare type SubmitListensPayload = {
   listen_type: "single" | "playing_now" | "import";
   payload: Array<Listen>;

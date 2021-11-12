@@ -29,7 +29,6 @@ export type RecommendationsProps = {
 
 export interface RecommendationsState {
   currentRecommendation?: Recommendation;
-  direction: BrainzPlayDirection;
   recommendations: Array<Recommendation>;
   loading: boolean;
   currRecPage?: number;
@@ -57,7 +56,6 @@ export default class Recommendations extends React.Component<
         props.recommendations?.slice(0, this.expectedRecommendationsPerPage) ||
         [],
       loading: false,
-      direction: "down",
       currRecPage: 1,
       totalRecPages: props.recommendations
         ? Math.ceil(
@@ -206,7 +204,6 @@ export default class Recommendations extends React.Component<
       currentRecommendation,
       recommendations,
       loading,
-      direction,
       currRecPage,
       totalRecPages,
     } = this.state;
@@ -309,7 +306,6 @@ export default class Recommendations extends React.Component<
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
             <BrainzPlayer
-              direction={direction}
               listens={recommendations}
               newAlert={newAlert}
               listenBrainzAPIBaseURI={APIService.APIBaseURI}
