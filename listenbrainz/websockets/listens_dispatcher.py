@@ -34,9 +34,9 @@ class ListensDispatcher(ConsumerMixin):
     def get_consumers(self, _, channel):
         self.channel2 = self.connection.channel()
         return [
-            Consumer(channel, queues=[self.websockets_queue],
+            Consumer(self.channel2, queues=[self.websockets_queue],
                      callbacks=[lambda body, message: self.send_listens("listen", body, message)]),
-            Consumer(self.channel2, queues=[self.playing_now_queue],
+            Consumer(channel, queues=[self.playing_now_queue],
                      callbacks=[lambda body, message: self.send_listens("playing_now", body, message)])
         ]
 
