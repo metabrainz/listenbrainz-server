@@ -52,5 +52,5 @@ def joined(data):
 
 def run_websockets(host='0.0.0.0', port=8082, debug=True):
     dispatcher = ListensDispatcher(app, socketio)
-    dispatcher.start()
+    Thread(target=dispatcher.start).start()
     socketio.run(app, debug=debug, host=host, port=port)
