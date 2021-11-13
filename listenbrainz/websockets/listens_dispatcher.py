@@ -24,9 +24,9 @@ class ListensDispatcher(ConsumerMixin):
         self.websockets_queue = Queue(app.config["WEBSOCKETS_QUEUE"], exchange=self.unique_exchange, durable=True)
         self.playing_now_queue = Queue(app.config["PLAYING_NOW_QUEUE"], exchange=self.playing_now_exchange, durable=True)
 
-    def send_listens(self, event_name, body, message):
+    def send_listens(self, event_name, message):
         self.app.logger.info("Callback called")
-        listens = json.loads(body)
+        listens = json.loads(message.body.decode("utf-8"))
         for listen in listens:
             self.socketio.emit(event_name, json.dumps(listen), to=listen["user_name"])
         message.ack()
@@ -34,10 +34,8 @@ class ListensDispatcher(ConsumerMixin):
     def get_consumers(self, _, channel):
         self.channel2 = self.connection.channel()
         return [
-            Consumer(self.channel2, queues=[self.websockets_queue],
-                     callbacks=[lambda body, message: self.send_listens("listen", body, message)]),
-            Consumer(channel, queues=[self.playing_now_queue],
-                     callbacks=[lambda body, message: self.send_listens("playing_now", body, message)])
+            Consumer(self.channel2, queues=[self.websockets_queue], on_message=lambda x: self.send_listens("listen", x))
+          , Consumer(channel, queues=[self.playing_now_queue], on_message=lambda x: self.send_listens("playing_now", x))
         ]
 
     def on_consume_end(self, connection, default_channel):
@@ -70,6 +68,6 @@ class ListensDispatcher(ConsumerMixin):
                 except KeyboardInterrupt:
                     self.app.logger.error("Keyboard interrupt!")
                     break
-                except Exception as e:
-                    self.app.logger.error("Error in PlayerWriter: %s", str(e), exc_info=True)
+                except Exception:
+                    self.app.logger.error("Error in PlayerWriter:", exc_info=True)
                     time.sleep(3)
