@@ -6,6 +6,9 @@ from kombu.mixins import ConsumerMixin
 from listenbrainz.utils import get_fallback_connection_name
 
 from kombu import Connection, Exchange, Queue, Consumer
+from kombu.utils.debug import setup_logging
+
+setup_logging()
 
 
 class ListensDispatcher(ConsumerMixin):
