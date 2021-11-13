@@ -22,7 +22,8 @@ class ListensDispatcher(ConsumerMixin):
         self.unique_exchange = Exchange(app.config["UNIQUE_EXCHANGE"], "fanout", durable=False)
         self.playing_now_exchange = Exchange(app.config["PLAYING_NOW_EXCHANGE"], "fanout", durable=False)
         self.websockets_queue = Queue(app.config["WEBSOCKETS_QUEUE"], exchange=self.unique_exchange, durable=True)
-        self.playing_now_queue = Queue(app.config["PLAYING_NOW_QUEUE"], exchange=self.playing_now_exchange, durable=True)
+        self.playing_now_queue = Queue(app.config["PLAYING_NOW_QUEUE"], exchange=self.playing_now_exchange,
+                                       durable=True)
 
     def send_listens(self, event_name, message):
         self.app.logger.info("Callback called")
@@ -34,8 +35,10 @@ class ListensDispatcher(ConsumerMixin):
     def get_consumers(self, _, channel):
         self.channel2 = channel.connection.channel()
         return [
-            Consumer(self.channel2, queues=[self.websockets_queue], on_message=lambda x: self.send_listens("listen", x))
-          , Consumer(channel, queues=[self.playing_now_queue], on_message=lambda x: self.send_listens("playing_now", x))
+            Consumer(channel, queues=[self.websockets_queue],
+                     on_message=lambda x: self.send_listens("listen", x)),
+            Consumer(self.channel2, queues=[self.playing_now_queue],
+                     on_message=lambda x: self.send_listens("playing_now", x))
         ]
 
     def on_consume_end(self, connection, default_channel):
@@ -43,27 +46,21 @@ class ListensDispatcher(ConsumerMixin):
             self.channel2.close()
 
     def init_rabbitmq_connection(self):
-        while True:
-            try:
-                self.connection = Connection(
-                    hostname=self.app.config["RABBITMQ_HOST"],
-                    userid=self.app.config["RABBITMQ_USERNAME"],
-                    port=self.app.config["RABBITMQ_PORT"],
-                    password=self.app.config["RABBITMQ_PASSWORD"],
-                    virtual_host=self.app.config["RABBITMQ_VHOST"],
-                    client_properties={"connection_name": get_fallback_connection_name()}
-                )
-                break
-            except Exception as e:
-                self.app.logger.error("Error while connecting to RabbitMQ: %s", str(e), exc_info=True)
-                time.sleep(3)
+        self.connection = Connection(
+            hostname=self.app.config["RABBITMQ_HOST"],
+            userid=self.app.config["RABBITMQ_USERNAME"],
+            port=self.app.config["RABBITMQ_PORT"],
+            password=self.app.config["RABBITMQ_PASSWORD"],
+            virtual_host=self.app.config["RABBITMQ_VHOST"],
+            transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
+        )
 
     def start(self):
         with self.app.app_context():
             while True:
-                self.app.logger.info("Starting player writer...")
-                self.init_rabbitmq_connection()
                 try:
+                    self.app.logger.info("Starting player writer...")
+                    self.init_rabbitmq_connection()
                     self.run()
                 except KeyboardInterrupt:
                     self.app.logger.error("Keyboard interrupt!")
