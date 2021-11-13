@@ -6,7 +6,6 @@ from kombu.mixins import ConsumerMixin
 from listenbrainz.utils import get_fallback_connection_name
 
 from kombu import Connection, Exchange, Queue, Consumer
-from flask import current_app
 
 
 class ListensDispatcher(ConsumerMixin):
@@ -23,6 +22,7 @@ class ListensDispatcher(ConsumerMixin):
         self.playing_now_queue = Queue(app.config["PLAYING_NOW_QUEUE"], exchange=self.playing_now_exchange, durable=True)
 
     def send_listens(self, event_name, body, message):
+        self.app.logger.info("Callback called")
         listens = json.loads(body)
         for listen in listens:
             self.socketio.emit(event_name, json.dumps(listen), to=listen["user_name"])
@@ -45,28 +45,28 @@ class ListensDispatcher(ConsumerMixin):
         while True:
             try:
                 self.connection = Connection(
-                    hostname=current_app.config["RABBITMQ_HOST"],
-                    userid=current_app.config["RABBITMQ_USERNAME"],
-                    port=current_app.config["RABBITMQ_PORT"],
-                    password=current_app.config["RABBITMQ_PASSWORD"],
-                    virtual_host=current_app.config["RABBITMQ_VHOST"],
+                    hostname=self.app.config["RABBITMQ_HOST"],
+                    userid=self.app.config["RABBITMQ_USERNAME"],
+                    port=self.app.config["RABBITMQ_PORT"],
+                    password=self.app.config["RABBITMQ_PASSWORD"],
+                    virtual_host=self.app.config["RABBITMQ_VHOST"],
                     client_properties={"connection_name": get_fallback_connection_name()}
                 )
                 break
             except Exception as e:
-                current_app.logger.error("Error while connecting to RabbitMQ: %s", str(e), exc_info=True)
+                self.app.logger.error("Error while connecting to RabbitMQ: %s", str(e), exc_info=True)
                 time.sleep(3)
 
     def start(self):
         with self.app.app_context():
             while True:
-                current_app.logger.info("Starting player writer...")
+                self.app.logger.info("Starting player writer...")
                 self.init_rabbitmq_connection()
                 try:
                     self.run()
                 except KeyboardInterrupt:
-                    current_app.logger.error("Keyboard interrupt!")
+                    self.app.logger.error("Keyboard interrupt!")
                     break
                 except Exception as e:
-                    current_app.logger.error("Error in PlayerWriter: %s", str(e), exc_info=True)
+                    self.app.logger.error("Error in PlayerWriter: %s", str(e), exc_info=True)
                     time.sleep(3)
