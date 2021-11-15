@@ -151,7 +151,7 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
             temp_file = os.path.join(temp_dir, "LATEST")
             self.download_file_binary("LATEST", temp_file)
             with open(temp_file) as f:
-                dump_name = f.readline()
+                dump_name = f.readline().strip()
         self.connection.cwd(dump_name)
 
         logger.info(f"Downloading release.tar.gz of dump {dump_name} from FTP...")
