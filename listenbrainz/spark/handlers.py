@@ -342,3 +342,11 @@ def handle_similar_users(message):
             from_name='ListenBrainz',
             from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
         )
+
+
+def handle_new_releases_of_top_artists(message):
+    musicbrainz_id = message["musicbrainz_id"]
+    user = db_user.get_by_mb_id(musicbrainz_id)
+    if not user:
+        return
+    db_stats.insert_year_in_music(user["id"], "new_releases_of_top_artists", message["data"])
