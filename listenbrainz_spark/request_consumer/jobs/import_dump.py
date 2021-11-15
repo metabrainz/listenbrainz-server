@@ -174,6 +174,6 @@ def import_artist_relation_to_hdfs():
 def import_release_json_dump_to_hdfs():
     with tempfile.TemporaryDirectory() as temp_dir:
         downloader = ListenbrainzDataDownloader()
-        downloader.download_release_json_dump(temp_dir)
+        dest = downloader.download_release_json_dump(temp_dir)
         downloader.connection.close()
-        ListenbrainzDataUploader().upload_release_json_dump(temp_dir)
+        ListenbrainzDataUploader().upload_release_json_dump(dest)

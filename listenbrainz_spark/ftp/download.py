@@ -157,8 +157,10 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
         logger.info(f"Downloading release.tar.gz of dump {dump_name} from FTP...")
         t0 = time.monotonic()
         filename = "release.tar.xz"
-        self.download_file_binary(filename, os.path.join(directory, filename))
+        dest = os.path.join(directory, filename)
+        self.download_file_binary(filename, dest)
         logger.info(f"Done. Total time: {time.monotonic() - t0:.2f} sec")
+        return dest
 
     def get_latest_dump_id(self, dump_type: DumpType):
         if dump_type == DumpType.INCREMENTAL:
