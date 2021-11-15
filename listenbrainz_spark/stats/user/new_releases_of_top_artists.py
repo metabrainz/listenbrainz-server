@@ -1,3 +1,4 @@
+from datetime import datetime
 from data.model.new_releases_stat import NewReleasesStat
 
 import listenbrainz_spark
@@ -14,7 +15,7 @@ def get_new_releases_of_top_artists():
     new_releases = run_query(_get_new_releases_of_top_artists()).toLocalIterator()
     for entry in new_releases:
         data = entry.asDict(recursive=True)
-        yield NewReleaseStat(
+        yield NewReleasesStat(
             type="new_release_of_top_artists",
             user_name=data["user_name"],
             data=data["new_releases"]
