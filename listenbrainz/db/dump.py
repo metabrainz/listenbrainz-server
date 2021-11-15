@@ -42,6 +42,7 @@ from brainzutils.mail import send_mail
 from flask import current_app, render_template
 from listenbrainz import DUMP_LICENSE_FILE_PATH
 import listenbrainz.db as db
+from listenbrainz.db import timescale
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.utils import create_path, log_ioerrors
 
@@ -109,6 +110,25 @@ PUBLIC_TABLES_DUMP = {
     ),
 }
 
+PUBLIC_TABLES_TIMESCALE_DUMP = {
+    'listen_mbid_mapping': (
+        'id',
+        'artist_credit_id',
+        'recording_mbid',
+        'release_mbid',
+        'release_name',
+        'artist_mbids',
+        'artist_credit_name',
+        'recording_name',
+        'match_type',
+        'last_updated',
+    ),
+    'listen_join_listen_mbid_mapping': (
+        'recording_msid',
+        'listen_mbid_mapping'
+    )
+}
+
 PUBLIC_TABLES_IMPORT = PUBLIC_TABLES_DUMP.copy()
 # When importing fields with COPY we need to use the names of the fields, rather
 # than the placeholders that we set for the export
@@ -152,6 +172,34 @@ PRIVATE_TABLES = {
     ),
 }
 
+PRIVATE_TABLES_TIMESCALE = {
+    'playlist.playlist': (
+        'id',
+        'mbid',
+        'creator_id',
+        'name',
+        'description',
+        'public',
+        'created',
+        'last_updated',
+        'copied_from_id',
+        'created_for_id',
+        'algorithm_metadata',
+    ),
+    'playlist.playlist_recording': (
+        'id',
+        'playlist_id',
+        'position',
+        'mbid',
+        'added_by_id',
+        'created'
+    ),
+    'playlist.playlist_collaborator': (
+        'playlist_id',
+        'collaborator_id'
+    )
+}
+
 
 def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
     """ Create postgres database dump in the specified location
@@ -186,6 +234,24 @@ def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
     current_app.logger.info(
         'Dump of private data created at %s!', private_dump)
 
+    current_app.logger.info('Creating dump of timescale private data...')
+    try:
+        private_timescale_dump = create_private_timescale_dump(location, dump_time, threads)
+    except IOError as e:
+        current_app.logger.critical(
+            'IOError while creating private timescale dump: %s', str(e), exc_info=True)
+        current_app.logger.info('Removing created files and giving up...')
+        shutil.rmtree(location)
+        return
+    except Exception as e:
+        current_app.logger.critical(
+            'Unable to create private timescale db dump due to error %s', str(e), exc_info=True)
+        current_app.logger.info('Removing created files and giving up...')
+        shutil.rmtree(location)
+        return
+    current_app.logger.info(
+        'Dump of private timescale data created at %s!', private_timescale_dump)
+
     current_app.logger.info('Creating dump of public data...')
     try:
         public_dump = create_public_dump(location, dump_time, threads)
@@ -202,11 +268,27 @@ def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
         shutil.rmtree(location)
         return
 
-    current_app.logger.info('Dump of public data created at %s!', public_dump)
+    current_app.logger.info('Creating dump of timescale public data...')
+    try:
+        public_timescale_dump = create_public_timescale_dump(location, dump_time, threads)
+    except IOError as e:
+        current_app.logger.critical(
+            'IOError while creating public timescale dump: %s', str(e), exc_info=True)
+        current_app.logger.info('Removing created files and giving up...')
+        shutil.rmtree(location)
+        return
+    except Exception as e:
+        current_app.logger.critical(
+            'Unable to create public timescale dump due to error %s', str(e), exc_info=True)
+        current_app.logger.info('Removing created files and giving up...')
+        shutil.rmtree(location)
+        return
+
+    current_app.logger.info('Dump of public timescale data created at %s!', public_timescale_dump)
 
     current_app.logger.info(
         'ListenBrainz PostgreSQL data dump created at %s!', location)
-    return private_dump, public_dump
+    return private_dump, private_timescale_dump, public_dump, public_timescale_dump
 
 
 def dump_feedback_for_spark(location, dump_time=datetime.today(), threads=None):
@@ -244,14 +326,17 @@ def dump_feedback_for_spark(location, dump_time=datetime.today(), threads=None):
     return feedback_dump
 
 
-def _create_dump(location, dump_type, tables, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
+def _create_dump(location: str, db_engine: sqlalchemy.engine.Engine, dump_type: str,
+                 tables, schema_version: int, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Creates a dump of the provided tables at the location passed
 
         Arguments:
             location: the path where the dump should be created
+            db_engine: an sqlalchemy Engine instance for making a connection
             dump_type: the type of data dump being made - private or public
             tables: a dict containing the names of the tables to be dumped as keys and the columns
                     to be dumped as values
+            schema_version: the current schema version, to add to the archive file
             dump_time: the time at which the dump process was started
             threads: the maximum number of threads to use for compression
 
@@ -281,7 +366,7 @@ def _create_dump(location, dump_type, tables, dump_time, threads=DUMP_DEFAULT_TH
             try:
                 schema_seq_path = os.path.join(temp_dir, "SCHEMA_SEQUENCE")
                 with open(schema_seq_path, "w") as f:
-                    f.write(str(db.SCHEMA_VERSION))
+                    f.write(str(schema_version))
                 tar.add(schema_seq_path,
                         arcname=os.path.join(archive_name, "SCHEMA_SEQUENCE"))
                 timestamp_path = os.path.join(temp_dir, "TIMESTAMP")
@@ -303,7 +388,7 @@ def _create_dump(location, dump_type, tables, dump_time, threads=DUMP_DEFAULT_TH
             archive_tables_dir = os.path.join(temp_dir, 'lbdump', 'lbdump')
             create_path(archive_tables_dir)
 
-            with db.engine.connect() as connection:
+            with db_engine.connect() as connection:
                 if dump_type == "feedback":
                     dump_user_feedback(connection, location=archive_tables_dir)
                 else:
@@ -327,8 +412,12 @@ def _create_dump(location, dump_type, tables, dump_time, threads=DUMP_DEFAULT_TH
                                 raise
                         transaction.rollback()
 
-            tar.add(archive_tables_dir, arcname=os.path.join(
-                archive_name, 'lbdump'.format(dump_type)))
+            # Add the files to the archive in the order that they are defined in the dump definition.
+            # This is so that when imported into a db with FK constraints added, we import dependent
+            # tables first
+            for table in tables:
+                tar.add(os.path.join(archive_tables_dir, table),
+                        arcname=os.path.join(archive_name, 'lbdump', table))
 
             shutil.rmtree(temp_dir)
 
@@ -338,7 +427,7 @@ def _create_dump(location, dump_type, tables, dump_time, threads=DUMP_DEFAULT_TH
     return archive_path
 
 
-def create_private_dump(location, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
+def create_private_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Create postgres database dump for private data in db.
         This includes dumps of the following tables:
             "user",
@@ -347,14 +436,30 @@ def create_private_dump(location, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
     """
     return _create_dump(
         location=location,
+        db_engine=db.engine,
         dump_type='private',
         tables=PRIVATE_TABLES,
+        schema_version=db.SCHEMA_VERSION_CORE,
         dump_time=dump_time,
         threads=threads,
     )
 
 
-def create_public_dump(location, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
+def create_private_timescale_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
+    """ Create timescale database dump for private data in db.
+    """
+    return _create_dump(
+        location=location,
+        db_engine=timescale.engine,
+        dump_type='private-timescale',
+        tables=PRIVATE_TABLES_TIMESCALE,
+        schema_version=timescale.SCHEMA_VERSION_TIMESCALE,
+        dump_time=dump_time,
+        threads=threads,
+    )
+
+
+def create_public_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Create postgres database dump for statistics and user info in db.
         This includes a sanitized dump of the "user" table and dumps of all tables
         in the statistics schema:
@@ -365,20 +470,39 @@ def create_public_dump(location, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
     """
     return _create_dump(
         location=location,
+        db_engine=db.engine,
         dump_type='public',
         tables=PUBLIC_TABLES_DUMP,
+        schema_version=db.SCHEMA_VERSION_CORE,
         dump_time=dump_time,
         threads=threads,
     )
 
 
-def create_feedback_dump(location, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
+def create_public_timescale_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
+    """ Create postgres database dump for public info in the timescale database.
+        This includes the MBID mapping table
+    """
+    return _create_dump(
+        location=location,
+        db_engine=timescale.engine,
+        dump_type='public-timescale',
+        tables=PUBLIC_TABLES_TIMESCALE_DUMP,
+        schema_version=timescale.SCHEMA_VERSION_TIMESCALE,
+        dump_time=dump_time,
+        threads=threads,
+    )
+
+
+def create_feedback_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Create a spark format dump of user listen and user recommendation feedback.
     """
     return _create_dump(
         location=location,
+        db_engine=db.engine,
         dump_type='feedback',
         tables=[],
+        schema_version=db.SCHEMA_VERSION_CORE,
         dump_time=dump_time,
         threads=threads,
     )
@@ -529,11 +653,18 @@ def get_dump_entry(dump_id):
         return None
 
 
-def import_postgres_dump(private_dump_archive_path=None, public_dump_archive_path=None, threads=DUMP_DEFAULT_THREAD_COUNT):
+def import_postgres_dump(private_dump_archive_path=None,
+                         private_timescale_dump_archive_path=None,
+                         public_dump_archive_path=None,
+                         public_timescale_dump_archive_path=None,
+                         threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Imports postgres dump created by dump_postgres_db present at location.
 
         Arguments:
-            location: the directory where the private and public archives are present
+            private_dump_archive_path: Location of the private dump file
+            private_timescale_dump_archive_path: Location of the private timescale dump file
+            public_dump_archive_path: Location of the public dump file
+            public_timescale_dump_archive_path: Location of the public timescale dump file
             threads: the number of threads to use while decompressing the archives, defaults to
                      db.DUMP_DEFAULT_THREAD_COUNT
     """
@@ -543,7 +674,7 @@ def import_postgres_dump(private_dump_archive_path=None, public_dump_archive_pat
             'Importing private dump %s...', private_dump_archive_path)
         try:
             _import_dump(private_dump_archive_path,
-                         'private', PRIVATE_TABLES, threads)
+                         db.engine, PRIVATE_TABLES, db.SCHEMA_VERSION_CORE, threads)
             current_app.logger.info(
                 'Import of private dump %s done!', private_dump_archive_path)
         except IOError as e:
@@ -561,6 +692,29 @@ def import_postgres_dump(private_dump_archive_path=None, public_dump_archive_pat
         current_app.logger.info(
             'Private dump %s imported!', private_dump_archive_path)
 
+    if private_timescale_dump_archive_path:
+        current_app.logger.info(
+            'Importing private timescale dump %s...', private_timescale_dump_archive_path)
+        try:
+            _import_dump(private_timescale_dump_archive_path,
+                         timescale.engine, PRIVATE_TABLES_TIMESCALE, timescale.SCHEMA_VERSION_TIMESCALE, threads)
+            current_app.logger.info(
+                'Import of private timescale dump %s done!', private_timescale_dump_archive_path)
+        except IOError as e:
+            current_app.logger.critical(
+                'IOError while importing private timescale dump: %s', str(e), exc_info=True)
+            raise
+        except SchemaMismatchException as e:
+            current_app.logger.critical(
+                'SchemaMismatchException: %s', str(e), exc_info=True)
+            raise
+        except Exception as e:
+            current_app.logger.critical(
+                'Error while importing private timescale dump: %s', str(e), exc_info=True)
+            raise
+        current_app.logger.info(
+            'Private timescale dump %s imported!', private_timescale_dump_archive_path)
+
     if public_dump_archive_path:
         current_app.logger.info(
             'Importing public dump %s...', public_dump_archive_path)
@@ -573,8 +727,8 @@ def import_postgres_dump(private_dump_archive_path=None, public_dump_archive_pat
             del tables_to_import['"user"']
 
         try:
-            _import_dump(public_dump_archive_path, 'public',
-                         tables_to_import, threads)
+            _import_dump(public_dump_archive_path, db.engine,
+                         tables_to_import, db.SCHEMA_VERSION_CORE, threads)
             current_app.logger.info(
                 'Import of Public dump %s done!', public_dump_archive_path)
         except IOError as e:
@@ -592,15 +746,49 @@ def import_postgres_dump(private_dump_archive_path=None, public_dump_archive_pat
         current_app.logger.info(
             'Public dump %s imported!', public_dump_archive_path)
 
+    if public_timescale_dump_archive_path:
+        current_app.logger.info(
+            'Importing public timescale dump %s...', public_timescale_dump_archive_path)
 
-def _import_dump(archive_path, dump_type, tables, threads=DUMP_DEFAULT_THREAD_COUNT):
+        try:
+            _import_dump(public_timescale_dump_archive_path, timescale.engine,
+                         PUBLIC_TABLES_TIMESCALE_DUMP, timescale.SCHEMA_VERSION_TIMESCALE, threads)
+            current_app.logger.info(
+                'Import of Public timescale dump %s done!', public_timescale_dump_archive_path)
+        except IOError as e:
+            current_app.logger.critical(
+                'IOError while importing public timescale dump: %s', str(e), exc_info=True)
+            raise
+        except SchemaMismatchException as e:
+            current_app.logger.critical(
+                'SchemaMismatchException: %s', str(e), exc_info=True)
+            raise
+        except Exception as e:
+            current_app.logger.critical(
+                'Error while importing public timescale dump: %s', str(e), exc_info=True)
+            raise
+        current_app.logger.info(
+            'Public timescale dump %s imported!', public_timescale_dump_archive_path)
+
+    try:
+        current_app.logger.info("Creating sequences")
+        _update_sequences()
+    except Exception as e:
+        current_app.logger.critical(
+            'Exception while trying to update sequences: %s', str(e), exc_info=True)
+        raise
+
+
+def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
+                 tables, schema_version: int, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Import dump present in passed archive path into postgres db.
 
         Arguments:
             archive_path: path to the .tar.xz archive to be imported
-            dump_type (str): type of dump to be imported ('private' or 'public')
+            db_engine: an sqlalchemy Engine instance for making a connection
             tables: dict of tables present in the archive with table name as key and
                     columns to import as values
+            schema_version: the current schema version, to compare against the dumped file
             threads (int): the number of threads to use while decompressing, defaults to
                             db.DUMP_DEFAULT_THREAD_COUNT
     """
@@ -609,7 +797,7 @@ def _import_dump(archive_path, dump_type, tables, threads=DUMP_DEFAULT_THREAD_CO
                    archive_path, '-T{threads}'.format(threads=threads)]
     pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
 
-    connection = db.engine.raw_connection()
+    connection = db_engine.raw_connection()
     try:
         cursor = connection.cursor()
         with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
@@ -619,10 +807,10 @@ def _import_dump(archive_path, dump_type, tables, threads=DUMP_DEFAULT_THREAD_CO
                 if file_name == 'SCHEMA_SEQUENCE':
                     # Verifying schema version
                     schema_seq = int(tar.extractfile(member).read().strip())
-                    if schema_seq != db.SCHEMA_VERSION:
+                    if schema_seq != schema_version:
                         raise SchemaMismatchException('Incorrect schema version! Expected: %d, got: %d.'
                                                       'Please, get the latest version of the dump.'
-                                                      % (db.SCHEMA_VERSION, schema_seq))
+                                                      % (schema_version, schema_seq))
                     else:
                         current_app.logger.info('Schema version verified.')
 
@@ -648,22 +836,15 @@ def _import_dump(archive_path, dump_type, tables, threads=DUMP_DEFAULT_THREAD_CO
         connection.close()
         pxz.stdout.close()
 
-    try:
-        _update_sequences()
-    except Exception as e:
-        current_app.logger.critical(
-            'Exception while trying to update sequences: %s', str(e), exc_info=True)
-        raise
 
-
-def _update_sequence(seq_name, table_name):
+def _update_sequence(db_engine: sqlalchemy.engine.Engine, seq_name, table_name):
     """ Update the specified sequence's value to the maximum value of ID in the table.
 
     Args:
         seq_name (str): the name of the sequence to be updated.
         table_name (str): the name of the table from which the maximum value is to be retrieved
     """
-    with db.engine.connect() as connection:
+    with db_engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
             SELECT setval('{seq_name}', max(id))
               FROM {table_name}
@@ -675,31 +856,41 @@ def _update_sequences():
     """
     # user_id_seq
     current_app.logger.info('Updating user_id_seq...')
-    _update_sequence('user_id_seq', '"user"')
+    _update_sequence(db.engine, 'user_id_seq', '"user"')
 
     # token_id_seq
     current_app.logger.info('Updating token_id_seq...')
-    _update_sequence('api_compat.token_id_seq', 'api_compat.token')
+    _update_sequence(db.engine, 'api_compat.token_id_seq', 'api_compat.token')
 
     # session_id_seq
     current_app.logger.info('Updating session_id_seq...')
-    _update_sequence('api_compat.session_id_seq', 'api_compat.session')
+    _update_sequence(db.engine, 'api_compat.session_id_seq', 'api_compat.session')
 
     # artist_id_seq
     current_app.logger.info('Updating artist_id_seq...')
-    _update_sequence('statistics.artist_id_seq', 'statistics.artist')
+    _update_sequence(db.engine, 'statistics.artist_id_seq', 'statistics.artist')
 
     # release_id_seq
     current_app.logger.info('Updating release_id_seq...')
-    _update_sequence('statistics.release_id_seq', 'statistics.release')
+    _update_sequence(db.engine, 'statistics.release_id_seq', 'statistics.release')
 
     # recording_id_seq
     current_app.logger.info('Updating recording_id_seq...')
-    _update_sequence('statistics.recording_id_seq', 'statistics.recording')
+    _update_sequence(db.engine, 'statistics.recording_id_seq', 'statistics.recording')
 
     # data_dump_id_seq
     current_app.logger.info('Updating data_dump_id_seq...')
-    _update_sequence('data_dump_id_seq', 'data_dump')
+    _update_sequence(db.engine, 'data_dump_id_seq', 'data_dump')
+
+    current_app.logger.info('Updating playlist.playlist_id_seq...')
+    _update_sequence(timescale.engine, 'playlist.playlist_id_seq', 'playlist.playlist')
+
+    current_app.logger.info('Updating playlist.playlist_recording_id_seq...')
+    _update_sequence(timescale.engine, 'playlist.playlist_recording_id_seq', 'playlist.playlist_recording')
+
+    current_app.logger.info('Updating listen_mbid_mapping_id_seq...')
+    _update_sequence(timescale.engine, 'listen_mbid_mapping_id_seq', 'listen_mbid_mapping')
+
 
 
 def _fetch_latest_file_info_from_ftp_dir(server, dir):
