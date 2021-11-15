@@ -19,6 +19,11 @@
     "description": "Calculate top entites listened to on the website in the requested stats_range",
     "params": ["entity", "stats_range"]
   },
+  "stats.new_releases_of_top_artists": {
+    "name": "stats.new_releases_of_top_artists",
+    "description": "List of releases released in 2021 by top 50 artists of 2021 for the user",
+    "params": []
+  },
   "import.dump.full_newest": {
     "name": "import.dump.full_newest",
     "description": "Import the newest available full dump into the spark cluster",
