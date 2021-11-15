@@ -207,6 +207,13 @@ CREATE TABLE statistics.sitewide (
 
 ALTER TABLE statistics.sitewide ADD CONSTRAINT stats_range_uniq UNIQUE (stats_range);
 
+CREATE TABLE statistics.year_in_music (
+    id                              SERIAL,
+    user_id                         INTEGER NOT NULL, -- FK to "user".id
+    new_releases_of_top_artists     JSONB
+);
+
+
 CREATE TABLE recommendation_feedback (
     id                      SERIAL, -- PK
     user_id                 INTEGER NOT NULL, -- FK to "user".id

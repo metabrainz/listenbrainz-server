@@ -25,6 +25,7 @@ import json
 from typing import Optional
 
 import sqlalchemy
+import ujson
 
 from data.model.common_stat import StatRange, StatApi
 from data.model.user_artist_map import UserArtistMapRecord
@@ -246,3 +247,12 @@ def delete_user_stats(user_id):
 def delete_sitewide_stats():
     """ Delete sitewide stats """
     delete_user_stats(SITEWIDE_STATS_USER_ID)
+
+
+def insert_year_in_music(user_id, column, data):
+    with db.engine.connect() as connection:
+        connection.execute(sqlalchemy.text("""
+            INSERT INTO statistics.year_in_music(user_id, :column) VALUES(:user_id, :data)
+        """, user_id=user_id, column=column, data=ujson.dumps(data))
+        )
+    
