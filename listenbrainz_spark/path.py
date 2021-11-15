@@ -89,4 +89,4 @@ USER_SIMILARITY_MAPPED_LISTENS = os.path.join(
 
 # MusicBrainz Release JSON dump
 MUSICBRAINZ_RELEASE_DUMP = "/musicbrainz/release"
-
+MUSICBRAINZ_RELEASE_DUMP_JSON_FILE = "/musicbrainz/release/mbdump/release"
