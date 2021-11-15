@@ -130,7 +130,8 @@ export default class SpotifyPlayer
 
   static getSpotifyUriFromListen(listen: Listen | JSPFTrack): string {
     const spotifyTrack = SpotifyPlayer.getSpotifyTrackIDFromListen(listen);
-    if (typeof spotifyTrack !== "string") {
+    // spotifyTrack could be undefined
+    if (!spotifyTrack) {
       return "";
     }
     return `spotify:track:${spotifyTrack}`;
