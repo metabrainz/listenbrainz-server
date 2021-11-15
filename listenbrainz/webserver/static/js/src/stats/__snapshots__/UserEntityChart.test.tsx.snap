@@ -5765,7 +5765,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       "track_metadata": Object {
                         "additional_info": Object {
                           "artist_mbids": Array [],
-                          "recording_mbid": "",
+                          "recording_mbid": undefined,
                           "release_mbid": "",
                         },
                         "artist_name": "Ritviz",
@@ -5843,7 +5843,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                               "track_metadata": Object {
                                 "additional_info": Object {
                                   "artist_mbids": Array [],
-                                  "recording_mbid": "",
+                                  "recording_mbid": undefined,
                                   "release_mbid": "",
                                 },
                                 "artist_name": "Ritviz",
@@ -6950,7 +6950,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       "track_metadata": Object {
                         "additional_info": Object {
                           "artist_mbids": Array [],
-                          "recording_mbid": "",
+                          "recording_mbid": undefined,
                           "release_mbid": "",
                         },
                         "artist_name": "OneRepublic",
@@ -7028,7 +7028,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                               "track_metadata": Object {
                                 "additional_info": Object {
                                   "artist_mbids": Array [],
-                                  "recording_mbid": "",
+                                  "recording_mbid": undefined,
                                   "release_mbid": "",
                                 },
                                 "artist_name": "OneRepublic",
@@ -7280,7 +7280,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       "track_metadata": Object {
                         "additional_info": Object {
                           "artist_mbids": Array [],
-                          "recording_mbid": "",
+                          "recording_mbid": undefined,
                           "release_mbid": "",
                         },
                         "artist_name": "Tommee Profitt",
@@ -7358,7 +7358,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                               "track_metadata": Object {
                                 "additional_info": Object {
                                   "artist_mbids": Array [],
-                                  "recording_mbid": "",
+                                  "recording_mbid": undefined,
                                   "release_mbid": "",
                                 },
                                 "artist_name": "Tommee Profitt",
@@ -7610,7 +7610,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       "track_metadata": Object {
                         "additional_info": Object {
                           "artist_mbids": Array [],
-                          "recording_mbid": "",
+                          "recording_mbid": undefined,
                           "release_mbid": "",
                         },
                         "artist_name": "Maroon 5",
@@ -7688,7 +7688,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                               "track_metadata": Object {
                                 "additional_info": Object {
                                   "artist_mbids": Array [],
-                                  "recording_mbid": "",
+                                  "recording_mbid": undefined,
                                   "release_mbid": "",
                                 },
                                 "artist_name": "Maroon 5",
@@ -7940,7 +7940,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       "track_metadata": Object {
                         "additional_info": Object {
                           "artist_mbids": Array [],
-                          "recording_mbid": "",
+                          "recording_mbid": undefined,
                           "release_mbid": "",
                         },
                         "artist_name": "Sia",
@@ -8018,7 +8018,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                               "track_metadata": Object {
                                 "additional_info": Object {
                                   "artist_mbids": Array [],
-                                  "recording_mbid": "",
+                                  "recording_mbid": undefined,
                                   "release_mbid": "",
                                 },
                                 "artist_name": "Sia",
@@ -8954,7 +8954,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       "track_metadata": Object {
                         "additional_info": Object {
                           "artist_mbids": Array [],
-                          "recording_mbid": "",
+                          "recording_mbid": undefined,
                           "release_mbid": "",
                         },
                         "artist_name": "The Local train",
@@ -9032,7 +9032,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                               "track_metadata": Object {
                                 "additional_info": Object {
                                   "artist_mbids": Array [],
-                                  "recording_mbid": "",
+                                  "recording_mbid": undefined,
                                   "release_mbid": "",
                                 },
                                 "artist_name": "The Local train",
@@ -9455,7 +9455,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       "track_metadata": Object {
                         "additional_info": Object {
                           "artist_mbids": Array [],
-                          "recording_mbid": "",
+                          "recording_mbid": undefined,
                           "release_mbid": "",
                         },
                         "artist_name": "Ellie Goulding",
@@ -9533,7 +9533,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                               "track_metadata": Object {
                                 "additional_info": Object {
                                   "artist_mbids": Array [],
-                                  "recording_mbid": "",
+                                  "recording_mbid": undefined,
                                   "release_mbid": "",
                                 },
                                 "artist_name": "Ellie Goulding",
@@ -10382,7 +10382,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 "track_metadata": Object {
                   "additional_info": Object {
                     "artist_mbids": Array [],
-                    "recording_mbid": "",
+                    "recording_mbid": undefined,
                     "release_mbid": "",
                   },
                   "artist_name": "Ritviz",
@@ -10473,7 +10473,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 "track_metadata": Object {
                   "additional_info": Object {
                     "artist_mbids": Array [],
-                    "recording_mbid": "",
+                    "recording_mbid": undefined,
                     "release_mbid": "",
                   },
                   "artist_name": "OneRepublic",
@@ -10499,7 +10499,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 "track_metadata": Object {
                   "additional_info": Object {
                     "artist_mbids": Array [],
-                    "recording_mbid": "",
+                    "recording_mbid": undefined,
                     "release_mbid": "",
                   },
                   "artist_name": "Tommee Profitt",
@@ -10525,7 +10525,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 "track_metadata": Object {
                   "additional_info": Object {
                     "artist_mbids": Array [],
-                    "recording_mbid": "",
+                    "recording_mbid": undefined,
                     "release_mbid": "",
                   },
                   "artist_name": "Maroon 5",
@@ -10551,7 +10551,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 "track_metadata": Object {
                   "additional_info": Object {
                     "artist_mbids": Array [],
-                    "recording_mbid": "",
+                    "recording_mbid": undefined,
                     "release_mbid": "",
                   },
                   "artist_name": "Sia",
@@ -10629,7 +10629,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 "track_metadata": Object {
                   "additional_info": Object {
                     "artist_mbids": Array [],
-                    "recording_mbid": "",
+                    "recording_mbid": undefined,
                     "release_mbid": "",
                   },
                   "artist_name": "The Local train",
@@ -10668,7 +10668,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 "track_metadata": Object {
                   "additional_info": Object {
                     "artist_mbids": Array [],
-                    "recording_mbid": "",
+                    "recording_mbid": undefined,
                     "release_mbid": "",
                   },
                   "artist_name": "Ellie Goulding",
