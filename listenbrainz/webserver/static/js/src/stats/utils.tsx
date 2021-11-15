@@ -37,6 +37,18 @@ export function userChartEntityToListen(
   const trackName = entityType === "recording" ? entityName : "";
   const artistName = entityType === "artist" ? entityName : artist;
   const releaseName = entityType === "release" ? entityName : release;
+  let artist_mbids = artistMBIDs;
+  let release_mbid = releaseMBID;
+  let recording_mbid;
+  if (entityType === "artist" && entityMBID) {
+    artist_mbids = [entityMBID] as string[];
+  }
+  if (entityType === "release" && entityMBID) {
+    release_mbid = entityMBID;
+  }
+  if (entityType === "recording" && entityMBID) {
+    recording_mbid = entityMBID;
+  }
   return {
     listened_at: -1,
     track_metadata: {
@@ -44,10 +56,9 @@ export function userChartEntityToListen(
       artist_name: artistName ?? "",
       release_name: releaseName ?? "",
       additional_info: {
-        artist_mbids:
-          entityType === "artist" ? ([entityMBID] as string[]) : artistMBIDs,
-        recording_mbid: entityType === "recording" ? entityMBID : undefined,
-        release_mbid: entityType === "release" ? entityMBID : releaseMBID,
+        artist_mbids,
+        recording_mbid,
+        release_mbid,
       },
     },
   };
