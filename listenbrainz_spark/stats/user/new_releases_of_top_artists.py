@@ -68,18 +68,21 @@ def _get_2021_releases():
                  , id
                  , explode(`artist-credit`) AS ac
                  , date
+                 , `release-group`.`primary-type` as type
               FROM release
              WHERE substr(date, 1, 4) = '2021'
         )
         SELECT title
              , id AS release_id
              , date
+             , type
              , collect_list(ac.artist.name) AS artist_credit_names
              , collect_list(ac.artist.id) AS artist_credit_mbids 
           FROM intermediate_table
       GROUP BY title
              , id
              , date
+             , type
     """
 
 
@@ -91,6 +94,7 @@ def _get_new_releases_of_top_artists():
                        title
                      , release_id
                      , date
+                     , type
                      , releases_2021.artist_credit_mbids
                      , releases_2021.artist_credit_names
                     )
