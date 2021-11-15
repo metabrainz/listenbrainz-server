@@ -1,5 +1,6 @@
 import os
 import re
+import tempfile
 import time
 import logging
 from typing import List
@@ -143,6 +144,18 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
         logger.info('Done. Total time: {:.2f} sec'.format(time.monotonic() - t0))
 
         return dest_path, artist_relation_file_name
+
+    def download_release_json_dump(self, directory):
+        self.connection.cwd(config.FTP_MUSICBRAINZ_DIR)
+        with tempfile.TemporaryFile() as f:
+            self.connection.retrbinary("RETR LATEST", f.write)
+            dump_name = f.readline()
+        self.connection.cwd(dump_name)
+
+        logger.info(f"Downloading release.tar.gz of dump {dump_name} from FTP...")
+        t0 = time.monotonic()
+        self.download_dump("release.tar.xz", directory)
+        logger.info(f"Done. Total time: {time.monotonic() - t0:.2f} sec")
 
     def get_latest_dump_id(self, dump_type: DumpType):
         if dump_type == DumpType.INCREMENTAL:

@@ -169,3 +169,11 @@ def import_artist_relation_to_hdfs():
         'import_time': str(datetime.utcnow()),
         'time_taken_to_import': '{:.2f}'.format(time.monotonic() - ts)
     }]
+
+
+def import_release_json_dump_to_hdfs():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        downloader = ListenbrainzDataDownloader()
+        downloader.download_release_json_dump(temp_dir)
+        downloader.connection.close()
+        ListenbrainzDataUploader().upload_release_json_dump(temp_dir)

@@ -234,6 +234,13 @@ def request_import_artist_relation():
     send_request_to_spark_cluster('import.artist_relation')
 
 
+@cli.command(name='request_import_musicbrainz_release_dump')
+def request_import_musicbrainz_release_dump():
+    """ Send the spark cluster a request to import musicbrainz release dump.
+    """
+    send_request_to_spark_cluster(_prepare_query_message('import.musicbrainz_release_dump'))
+
+
 @cli.command(name='request_similar_users')
 @click.option("--max-num-users", type=int, default=25, help="The maxiumum number of similar users to return for any given user.")
 def request_similar_users(max_num_users):
