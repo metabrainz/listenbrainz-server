@@ -147,9 +147,11 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
 
     def download_release_json_dump(self, directory):
         self.connection.cwd(config.FTP_MUSICBRAINZ_DIR)
-        with tempfile.TemporaryFile() as f:
-            self.connection.retrbinary("RETR LATEST", f.write)
-            dump_name = f.readline()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_file = os.path.join(temp_dir, "LATEST")
+            self.download_file_binary("LATEST", temp_file)
+            with open(temp_file) as f:
+                dump_name = f.readline()
         self.connection.cwd(dump_name)
 
         logger.info(f"Downloading release.tar.gz of dump {dump_name} from FTP...")
