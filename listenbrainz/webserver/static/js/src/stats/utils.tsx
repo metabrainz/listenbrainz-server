@@ -44,9 +44,10 @@ export function userChartEntityToListen(
       artist_name: artistName ?? "",
       release_name: releaseName ?? "",
       additional_info: {
-        artist_mbids: artistMBIDs,
+        artist_mbids:
+          entityType === "artist" ? ([entityMBID] as string[]) : artistMBIDs,
         recording_mbid: entityType === "recording" ? entityMBID : undefined,
-        release_mbid: releaseMBID,
+        release_mbid: entityType === "release" ? entityMBID : releaseMBID,
       },
     },
   };
