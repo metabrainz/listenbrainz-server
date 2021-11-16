@@ -256,7 +256,7 @@ def insert_year_in_music(user_id, column, data):
             INSERT INTO statistics.year_in_music (user_id, data)
                  VALUES (:user_id, jsonb_build_object(:column, :data))
             ON CONFLICT (user_id)
-          DO UPDATE SET data = jsonb_set(statistics.year_in_music.data, :column, :data)
+          DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
         """), user_id=user_id, column=column, data=ujson.dumps(data))
 
 
@@ -274,20 +274,16 @@ def insert_most_prominent_color(data):
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
             WITH user_colors AS (
-                SELECT key AS user_name
+                SELECT "user".id AS user_id
                      , value AS color
                   FROM jsonb_each(:colors)
-            ), join_insert AS (
-                SELECT "user".id AS user_id
-                     , color
-                  FROM user_colors
                   JOIN "user"
-                    ON "user".musicbrainz_id = user_colors.user_name  
+                    ON "user".musicbrainz_id = key  
             )
-            INSERT INTO statistics.year_in_music
+            INSERT INTO statistics.year_in_music(user_id, data)
                  SELECT user_id
                       , jsonb_build_object('most_prominent_color', color)
-                   FROM join_insert
+                   FROM user_colors
             ON CONFLICT (user_id)
-          DO UPDATE SET data = jsonb_set(statistics.year_in_music.data, 'most_prominent_color', color)
+          DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
         """), colors=data)
