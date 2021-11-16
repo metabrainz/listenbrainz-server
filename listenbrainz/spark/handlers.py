@@ -349,7 +349,7 @@ def handle_new_releases_of_top_artists(message):
     user = db_user.get_by_mb_id(musicbrainz_id)
     if not user:
         return
-    db_stats.insert_year_in_music(user["id"], {"new_releases_of_top_artists": message["data"]})
+    db_stats.insert_year_in_music(user["id"], "new_releases_of_top_artists", message["data"])
 
 
 def handle_most_prominent_color(message):
