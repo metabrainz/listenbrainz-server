@@ -238,7 +238,10 @@ export default class ListenCard extends React.Component<
 
     // Hide the actions menu if in compact mode or no buttons to be shown
     const hideActionsMenu =
-      compact || (!additionalMenuItems && !enableRecommendButton);
+      compact ||
+      (!additionalMenuItems &&
+        !enableRecommendButton &&
+        !(recordingMBID || spotifyURL || youtubeURL || soundcloudURL));
 
     const timeStampForDisplay = (
       <>
