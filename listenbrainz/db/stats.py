@@ -272,7 +272,7 @@ def get_year_in_music(user_id):
 
 def insert_most_prominent_color(data):
     with db.engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
+        result = connection.execute(sqlalchemy.text("""
             WITH user_colors AS (
                 SELECT "user".id AS user_id
                      , value AS color
@@ -287,4 +287,4 @@ def insert_most_prominent_color(data):
             ON CONFLICT (user_id)
           DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
         """), colors=data)
-        current_app.logger.error("Most Prominent Color Affected Row Count: %s", connection.rowcount)
+        current_app.logger.error("Most Prominent Color Affected Row Count: %s", result.rowcount)
