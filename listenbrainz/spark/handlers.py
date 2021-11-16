@@ -345,7 +345,7 @@ def handle_similar_users(message):
 
 
 def handle_new_releases_of_top_artists(message):
-    musicbrainz_id = message["musicbrainz_id"]
+    musicbrainz_id = message["user_name"]
     user = db_user.get_by_mb_id(musicbrainz_id)
     if not user:
         return
