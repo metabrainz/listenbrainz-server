@@ -2,6 +2,7 @@
 @hate: @blue;
 @card-shadow-color: #c0c0c0;
 @listen-small-break: @screen-sm;
+@cover-art-thumbnail-size: 66px;
 
 .listens-table > tbody {
 
@@ -90,6 +91,13 @@
 		.listen-controls {
 			flex-grow: 0;
 		}
+		.listen-thumbnail {
+			padding:0;
+			margin: -10px;
+			margin-right: 10px;
+			width: 56px;
+			height: 56px;
+		}
 	}
 	&:not(.compact) .listen-controls{
 		max-width: 120px;
@@ -98,7 +106,33 @@
 
 	.listen-thumbnail {
 		flex: 0;
-		align-self: center;
+		padding: 0;
+		margin: -10px -5px;
+		margin-right: 1em;
+		width: @cover-art-thumbnail-size;
+		transition: width ease-out 0.4s;
+		height: @cover-art-thumbnail-size;
+		&.empty{
+			width: 0;
+		}
+		> * {
+			height: inherit;
+			width: inherit;
+		}
+		img {
+			height: inherit;
+			width: inherit;
+			object-fit: cover;
+			border-radius: 7px 0 0 7px;
+		}
+		@media (min-width: @screen-phone) {
+			margin: -15px;
+			margin-right: 1em;
+		}
+		@media (min-width: @listen-small-break) {
+			margin: -15px;
+			margin-right: 0;
+		}
 	}
 
 	.listen-time {

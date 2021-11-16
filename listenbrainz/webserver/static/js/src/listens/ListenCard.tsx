@@ -22,6 +22,7 @@ import {
   preciseTimestamp,
   fullLocalizedDateFromTimestampOrISODate,
   getRecordingMBID,
+  getAlbumArtFromListenMetadata,
 } from "../utils";
 import GlobalAppContext from "../GlobalAppContext";
 import Card from "../components/Card";
@@ -30,6 +31,7 @@ import ListenFeedbackComponent from "./ListenFeedbackComponent";
 import YoutubePlayer from "../YoutubePlayer";
 import SpotifyPlayer from "../SpotifyPlayer";
 import SoundcloudPlayer from "../SoundcloudPlayer";
+import BrainzPlayer from "../BrainzPlayer";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
@@ -63,12 +65,14 @@ export type ListenCardProps = {
 
 type ListenCardState = {
   isCurrentlyPlaying: boolean;
+  thumbnailSrc?: string; // Full URL to the CoverArtArchive thumbnail
 };
 
 export default class ListenCard extends React.Component<
   ListenCardProps,
   ListenCardState
 > {
+  static defaultThumbnailSrc: string = "/static/img/cover-art-placeholder.jpg";
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
@@ -80,12 +84,32 @@ export default class ListenCard extends React.Component<
     };
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     window.addEventListener("message", this.receiveBrainzPlayerMessage);
+    await this.getCoverArt();
+  }
+
+  async componentDidUpdate(oldProps: ListenCardProps) {
+    const { listen } = this.props;
+    if (Boolean(listen) && !isEqual(listen, oldProps.listen)) {
+      await this.getCoverArt();
+    }
   }
 
   componentWillUnmount() {
     window.removeEventListener("message", this.receiveBrainzPlayerMessage);
+  }
+
+  async getCoverArt() {
+    const { spotifyAuth } = this.context;
+    const { listen } = this.props;
+    const albumArtSrc = await getAlbumArtFromListenMetadata(
+      listen,
+      spotifyAuth
+    );
+    if (albumArtSrc) {
+      this.setState({ thumbnailSrc: albumArtSrc });
+    }
   }
 
   playListen = () => {
@@ -195,7 +219,7 @@ export default class ListenCard extends React.Component<
       updateFeedbackCallback,
       ...otherProps
     } = this.props;
-    const { isCurrentlyPlaying } = this.state;
+    const { isCurrentlyPlaying, thumbnailSrc } = this.state;
 
     const recordingMSID = _get(
       listen,
@@ -251,7 +275,28 @@ export default class ListenCard extends React.Component<
           isCurrentlyPlaying ? "current-listen" : ""
         }${compact ? " compact" : " "} ${className || ""}`}
       >
-        {thumbnail && <div className="listen-thumbnail">{thumbnail}</div>}
+        {thumbnail || (
+          <div className="listen-thumbnail">
+            {thumbnailSrc ? (
+              <img
+                src={thumbnailSrc}
+                alt={listen.track_metadata?.release_name ?? "Cover art"}
+              />
+            ) : (
+              <a
+                href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                title="How can I add missing cover art?"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img
+                  src={ListenCard.defaultThumbnailSrc}
+                  alt="How can I add missing cover art?"
+                />
+              </a>
+            )}
+          </div>
+        )}
         {listenDetails ? (
           <div className="listen-details">{listenDetails}</div>
         ) : (

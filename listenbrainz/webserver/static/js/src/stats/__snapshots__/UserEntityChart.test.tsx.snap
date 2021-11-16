@@ -267,6 +267,21 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -409,6 +424,21 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -553,6 +583,21 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -695,6 +740,21 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -839,6 +899,21 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -981,6 +1056,21 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -1125,6 +1215,21 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -1267,6 +1372,21 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -1411,6 +1531,21 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -1553,6 +1688,21 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -1697,6 +1847,21 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -1839,6 +2004,21 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -1983,6 +2163,21 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -2125,6 +2320,21 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -2269,6 +2479,21 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -2411,6 +2636,21 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -2555,6 +2795,21 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -2697,6 +2952,21 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -2841,6 +3111,21 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -2983,6 +3268,21 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -3127,6 +3427,21 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -3269,6 +3584,21 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -3413,6 +3743,21 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -3556,6 +3901,21 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -3698,6 +4058,21 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -5476,6 +5851,21 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -5647,6 +6037,21 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -5813,6 +6218,21 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -5976,6 +6396,21 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -6148,6 +6583,21 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -6318,6 +6768,21 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -6490,6 +6955,21 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -6660,6 +7140,21 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -6832,6 +7327,21 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -6998,6 +7508,21 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -7161,6 +7686,21 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -7328,6 +7868,21 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -7491,6 +8046,21 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -7658,6 +8228,21 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -7821,6 +8406,21 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -7988,6 +8588,21 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -8151,6 +8766,21 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -8323,6 +8953,21 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -8493,6 +9138,21 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -8665,6 +9325,21 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -8836,6 +9511,21 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -9002,6 +9692,21 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -9165,6 +9870,21 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -9337,6 +10057,21 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -9502,6 +10237,21 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -11525,6 +12275,21 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -11673,6 +12438,21 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -11823,6 +12603,21 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -11971,6 +12766,21 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -12121,6 +12931,21 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -12269,6 +13094,21 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -12419,6 +13259,21 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -12567,6 +13422,21 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -12717,6 +13587,21 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -12865,6 +13750,21 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -13015,6 +13915,21 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -13163,6 +14078,21 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -13313,6 +14243,21 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -13461,6 +14406,21 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -13611,6 +14571,21 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -13759,6 +14734,21 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -13909,6 +14899,21 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -14057,6 +15062,21 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -14207,6 +15227,21 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -14355,6 +15390,21 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -14505,6 +15555,21 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -14653,6 +15718,21 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >
@@ -14803,6 +15883,21 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -14952,6 +16047,21 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       onDoubleClick={[Function]}
                     >
                       <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
+                      <div
                         className="listen-details"
                       >
                         <div
@@ -15100,6 +16210,21 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                       className="card listen-card row  compact "
                       onDoubleClick={[Function]}
                     >
+                      <div
+                        className="listen-thumbnail"
+                      >
+                        <a
+                          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          title="How can I add missing cover art?"
+                        >
+                          <img
+                            alt="How can I add missing cover art?"
+                            src="/static/img/cover-art-placeholder.jpg"
+                          />
+                        </a>
+                      </div>
                       <div
                         className="listen-details"
                       >

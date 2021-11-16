@@ -63,6 +63,17 @@ export default class SpotifyPlayer
     return true;
   };
 
+  static isListenFromThisService = (listen: Listen | JSPFTrack): boolean => {
+    const listeningFrom = _get(
+      listen,
+      "track_metadata.additional_info.listening_from"
+    );
+    return (
+      (isString(listeningFrom) && listeningFrom.toLowerCase() === "spotify") ||
+      Boolean(SpotifyPlayer.getSpotifyURLFromListen(listen))
+    );
+  };
+
   public name = "spotify";
   public domainName = "spotify.com";
   spotifyPlayer?: SpotifyPlayerType;
@@ -106,16 +117,24 @@ export default class SpotifyPlayer
     return _get(listen, "track_metadata.additional_info.spotify_id");
   }
 
-  static getSpotifyUriFromListen(listen: Listen | JSPFTrack): string {
+  static getSpotifyTrackIDFromListen(listen: Listen | JSPFTrack): string {
     const spotifyId = SpotifyPlayer.getSpotifyURLFromListen(listen);
     if (!spotifyId) {
       return "";
     }
-    const spotifyTrack = spotifyId.split("https://open.spotify.com/")[1];
-    if (typeof spotifyTrack !== "string") {
+    const spotifyTrack = spotifyId.split(
+      "https://open.spotify.com/track/"
+    )?.[1];
+    return spotifyTrack;
+  }
+
+  static getSpotifyUriFromListen(listen: Listen | JSPFTrack): string {
+    const spotifyTrack = SpotifyPlayer.getSpotifyTrackIDFromListen(listen);
+    // spotifyTrack could be undefined
+    if (!spotifyTrack) {
       return "";
     }
-    return `spotify:${spotifyTrack.replace("/", ":")}`;
+    return `spotify:track:${spotifyTrack}`;
   }
 
   searchAndPlayTrack = async (listen: Listen | JSPFTrack): Promise<void> => {
