@@ -127,10 +127,17 @@ def request_sitewide_stats(range_, entity):
 
 
 @cli.command(name="request_new_release_stats")
-def request_sitewide_stats():
+def request_new_release_stats():
     """ Send request to calculate new release stats to the spark cluster
     """
     send_request_to_spark_cluster(_prepare_query_message("stats.new_releases_of_top_artists"))
+
+
+@cli.command(name="request_most_prominent_color")
+def request_most_prominent_color():
+    """ Send request to calculate new release stats to the spark cluster
+    """
+    send_request_to_spark_cluster(_prepare_query_message("stats.most_prominent_color"))
 
 
 @cli.command(name="request_import_full")
