@@ -24,6 +24,11 @@
     "description": "List of releases released in 2021 by top 50 artists of 2021 for the user",
     "params": []
   },
+  "stats.most_prominent_color": {
+    "name": "stats.most_prominent_color",
+    "description": "Most prominent color of users",
+    "params": []
+  },
   "import.dump.full_newest": {
     "name": "import.dump.full_newest",
     "description": "Import the newest available full dump into the spark cluster",

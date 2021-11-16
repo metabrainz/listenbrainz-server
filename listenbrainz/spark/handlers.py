@@ -350,3 +350,7 @@ def handle_new_releases_of_top_artists(message):
     if not user:
         return
     db_stats.insert_year_in_music(user["id"], {"new_releases_of_top_artists": message["data"]})
+
+
+def handle_most_prominent_color(message):
+    db_stats.insert_most_prominent_color(message["data"])

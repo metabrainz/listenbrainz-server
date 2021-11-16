@@ -9,6 +9,7 @@ import listenbrainz_spark.stats.user.daily_activity
 import listenbrainz_spark.stats.user.entity
 import listenbrainz_spark.stats.user.listening_activity
 import listenbrainz_spark.stats.user.new_releases_of_top_artists
+import listenbrainz_spark.stats.user.most_prominent_color
 
 functions = {
     'stats.user.entity': listenbrainz_spark.stats.user.entity.get_entity_stats,
@@ -16,6 +17,7 @@ functions = {
     'stats.user.daily_activity': listenbrainz_spark.stats.user.daily_activity.get_daily_activity,
     'stats.sitewide.entity': listenbrainz_spark.stats.sitewide.entity.get_entity_stats,
     'stats.new_releases_of_top_artists': listenbrainz_spark.stats.user.new_releases_of_top_artists.get_new_releases_of_top_artists,
+    'stats.most_prominent_color': listenbrainz_spark.stats.user.most_prominent_color.get_most_prominent_color,
     'import.dump.full_newest': listenbrainz_spark.request_consumer.jobs.import_dump.import_newest_full_dump_handler,
     'import.dump.full_id': listenbrainz_spark.request_consumer.jobs.import_dump.import_full_dump_by_id_handler,
     'import.dump.incremental_newest': listenbrainz_spark.request_consumer.jobs.import_dump.import_newest_incremental_dump_handler,
