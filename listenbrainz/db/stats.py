@@ -271,21 +271,22 @@ def get_year_in_music(user_id):
 
 
 def insert_most_prominent_color(data):
-    values = [(x["user_name"], x["color"]) for x in data]
-    query = """
-        WITH user_colors (user_name, color) AS (VALUES %s)
-        , join_insert AS (
-            SELECT "user".id AS user_id
-                 , jsonb_build_object('most_prominent_color', color) AS data
-              FROM user_colors
-              JOIN "user"
-                ON "user".musicbrainz_id = user_colors.user_name  
-        )
-        INSERT INTO statistics.year_in_music
-             SELECT user_id, data
-               FROM join_insert
-        ON CONFLICT (user_id)
-      DO UPDATE SET data = COALESCE(statistics.year_in_music.data || data, data)
-    """
-    with db.engine.connect() as connection, connection.cursor() as curs:
-        execute_values(curs, query, values)
+    with db.engine.connect() as connection:
+        connection.execute("""
+            WITH user_colors AS (
+                SELECT key AS user_name
+                     , value AS color
+                  FROM jsonb_each(:colors)
+            ), join_insert AS (
+                SELECT "user".id AS user_id
+                     , jsonb_build_object('most_prominent_color', color) AS data
+                  FROM user_colors
+                  JOIN "user"
+                    ON "user".musicbrainz_id = user_colors.user_name  
+            )
+            INSERT INTO statistics.year_in_music
+                 SELECT user_id, data
+                   FROM join_insert
+            ON CONFLICT (user_id)
+          DO UPDATE SET data = COALESCE(statistics.year_in_music.data || data, data)
+        """)
