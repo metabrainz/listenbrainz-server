@@ -11,7 +11,7 @@ ALTER TABLE statistics.artist ADD CONSTRAINT stats_artist_pkey PRIMARY KEY (id);
 ALTER TABLE statistics.release ADD CONSTRAINT stats_release_pkey PRIMARY KEY (id);
 ALTER TABLE statistics.recording ADD CONSTRAINT stats_recording_pkey PRIMARY KEY (id);
 ALTER TABLE statistics.user_new ADD CONSTRAINT stats_user_new_pkey PRIMARY KEY (id);
-ALTER TABLE statistics.year_in_music ADD CONSTRAINT stats_year_in_music_pkey PRIMARY KEY (id);
+ALTER TABLE statistics.year_in_music ADD CONSTRAINT stats_year_in_music_pkey PRIMARY KEY (user_id);
 
 ALTER TABLE recommendation.cf_recording ADD CONSTRAINT rec_cf_recording_pkey PRIMARY KEY (id);
 ALTER TABLE recommendation.recommender ADD CONSTRAINT rec_recommender_pkey PRIMARY KEY (id);
