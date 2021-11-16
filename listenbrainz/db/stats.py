@@ -279,14 +279,15 @@ def insert_most_prominent_color(data):
                   FROM jsonb_each(:colors)
             ), join_insert AS (
                 SELECT "user".id AS user_id
-                     , jsonb_build_object('most_prominent_color', color) AS data
+                     , jsonb_build_object('most_prominent_color', color) AS color
                   FROM user_colors
                   JOIN "user"
                     ON "user".musicbrainz_id = user_colors.user_name  
             )
             INSERT INTO statistics.year_in_music
-                 SELECT user_id, data
+                 SELECT user_id
+                      , color
                    FROM join_insert
             ON CONFLICT (user_id)
-          DO UPDATE SET data = COALESCE(statistics.year_in_music.data || data, data)
+          DO UPDATE SET data = COALESCE(statistics.year_in_music.data || color, color)
         """), colors=data)
