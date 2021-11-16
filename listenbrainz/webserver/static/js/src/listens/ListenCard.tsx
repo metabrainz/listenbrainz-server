@@ -31,6 +31,7 @@ import ListenFeedbackComponent from "./ListenFeedbackComponent";
 import YoutubePlayer from "../YoutubePlayer";
 import SpotifyPlayer from "../SpotifyPlayer";
 import SoundcloudPlayer from "../SoundcloudPlayer";
+import BrainzPlayer from "../BrainzPlayer";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
@@ -71,6 +72,7 @@ export default class ListenCard extends React.Component<
   ListenCardProps,
   ListenCardState
 > {
+  static defaultThumbnailSrc: string = "/static/img/cover-art-placeholder.jpg";
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
@@ -277,12 +279,24 @@ export default class ListenCard extends React.Component<
       >
         <div className="main-content">
           {thumbnail || (
-            <div className={`listen-thumbnail ${!thumbnailSrc ? "empty" : ""}`}>
-              {Boolean(thumbnailSrc) && (
+            <div className="listen-thumbnail">
+              {thumbnailSrc ? (
                 <img
                   src={thumbnailSrc}
                   alt={listen.track_metadata?.release_name ?? "Cover art"}
                 />
+              ) : (
+                <a
+                  href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                  title="How can I add missing cover art?"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img
+                    src={ListenCard.defaultThumbnailSrc}
+                    alt="How can I add missing cover art?"
+                  />
+                </a>
               )}
             </div>
           )}

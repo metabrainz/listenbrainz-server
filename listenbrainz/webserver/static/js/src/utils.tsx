@@ -456,13 +456,17 @@ const getAlbumArtFromListenMetadata = async (
         return (
           thumbnails[250] ??
           thumbnails.small ??
-          // If neither of the above exists, return the fisrt one we find
+          // If neither of the above exists, return the first one we find
           // @ts-ignore
           thumbnails[Object.keys(thumbnails)?.[0]]
         );
       }
     } catch (error) {
-      // Do nothing with the error, I guess.
+      // eslint-disable-next-line no-console
+      console.warn(
+        `Couldn't fetch Cover Art Archive entry for ${releaseMBID}`,
+        error
+      );
     }
   }
   return undefined;
