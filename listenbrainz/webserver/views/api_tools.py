@@ -19,6 +19,8 @@ from flask import current_app, request
 from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
 from listenbrainz.webserver.errors import APIInternalServerError, APIServiceUnavailable, APIBadRequest, APIUnauthorized
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
+from listenbrainz.webserver.models import SubmitListenUserMetadata
+
 MAX_LISTEN_SIZE = 10240
 
 #: The maximum number of tags per listen.
@@ -41,11 +43,12 @@ LISTEN_TYPE_SINGLE = 1
 LISTEN_TYPE_IMPORT = 2
 LISTEN_TYPE_PLAYING_NOW = 3
 
-# 2002 is Last.FM founding year but the data before 2005 is mostly rubbish
-LISTEN_MINIMUM_TS = datetime(2005, 1, 1).timestamp()
+# October 2002 is date before which most Last.FM data is rubbish
+#: The minimum acceptable value for listened_at field
+LISTEN_MINIMUM_TS = int(datetime(2002, 10, 1).timestamp())
 
 
-def insert_payload(payload, user, listen_type=LISTEN_TYPE_IMPORT):
+def insert_payload(payload, user: SubmitListenUserMetadata, listen_type=LISTEN_TYPE_IMPORT):
     """ Convert the payload into augmented listens then submit them.
         Returns: augmented_listens
     """
@@ -175,7 +178,7 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
         # check that listened_at value is greater than last.fm founding year.
         if listen['listened_at'] < LISTEN_MINIMUM_TS:
             raise APIBadRequest("Value for key listened_at is too low. listened_at timestamp"
-                                " should be greater than the timestamp of start of 2005.", listen)
+                                " should be greater than 1033410600 (2002-10-01 00:00:00 UTC).", listen)
 
     elif listen_type == LISTEN_TYPE_PLAYING_NOW:
         if 'listened_at' in listen:
@@ -247,11 +250,11 @@ def is_valid_uuid(u):
         return False
 
 
-def _get_augmented_listens(payload, user):
+def _get_augmented_listens(payload, user: SubmitListenUserMetadata):
     """ Converts the payload to augmented list after adding user_id and user_name attributes """
     for listen in payload:
-        listen['user_id'] = user['id']
-        listen['user_name'] = user['musicbrainz_id']
+        listen['user_id'] = user.user_id
+        listen['user_name'] = user.musicbrainz_id
     return payload
 
 

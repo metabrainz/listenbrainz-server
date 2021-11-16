@@ -190,6 +190,9 @@ add_rsync_include_rule \
     "listenbrainz-public-dump-$DUMP_TIMESTAMP.tar.xz"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
+    "listenbrainz-public-timescale-dump-$DUMP_TIMESTAMP.tar.xz"
+add_rsync_include_rule \
+    "$FTP_CURRENT_DUMP_DIR" \
     "listenbrainz-listens-dump-$DUMP_ID-$DUMP_TIMESTAMP-$DUMP_TYPE.tar.xz"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
