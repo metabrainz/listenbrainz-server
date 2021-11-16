@@ -286,5 +286,6 @@ def insert_most_prominent_color(data):
                    FROM user_colors
             ON CONFLICT (user_id)
           DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+          RETURNING *
         """), colors=data)
-        current_app.logger.error("Most Prominent Color Affected Row Count: %s", result.rowcount)
+        current_app.logger.error("Affected data: %s", result.fetchall())
