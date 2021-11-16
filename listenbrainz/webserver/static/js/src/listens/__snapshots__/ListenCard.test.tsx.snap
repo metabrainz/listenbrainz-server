@@ -37,6 +37,21 @@ exports[`ListenCard renders correctly 1`] = `
       onDoubleClick={[Function]}
     >
       <div
+        className="listen-thumbnail"
+      >
+        <a
+          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+          rel="noopener noreferrer"
+          target="_blank"
+          title="How can I add missing cover art?"
+        >
+          <img
+            alt="How can I add missing cover art?"
+            src="/static/img/cover-art-placeholder.jpg"
+          />
+        </a>
+      </div>
+      <div
         className="listen-details"
       >
         <div
@@ -594,6 +609,21 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
       onDoubleClick={[Function]}
     >
       <div
+        className="listen-thumbnail"
+      >
+        <a
+          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+          rel="noopener noreferrer"
+          target="_blank"
+          title="How can I add missing cover art?"
+        >
+          <img
+            alt="How can I add missing cover art?"
+            src="/static/img/cover-art-placeholder.jpg"
+          />
+        </a>
+      </div>
+      <div
         className="listen-details"
       >
         <div
@@ -1150,6 +1180,21 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
       className="card listen-card row   "
       onDoubleClick={[Function]}
     >
+      <div
+        className="listen-thumbnail"
+      >
+        <a
+          href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+          rel="noopener noreferrer"
+          target="_blank"
+          title="How can I add missing cover art?"
+        >
+          <img
+            alt="How can I add missing cover art?"
+            src="/static/img/cover-art-placeholder.jpg"
+          />
+        </a>
+      </div>
       <div
         className="listen-details"
       >
