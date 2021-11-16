@@ -257,3 +257,13 @@ def insert_year_in_music(user_id, data):
             ON CONFLICT (user_id)
           DO UPDATE SET data = COALESCE(statistics.year_in_music.data || :data, :data)
         """), user_id=user_id, data=ujson.dumps(data))
+
+
+def get_year_in_music(user_id):
+    """ Get year in music data for requested user """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT data FROM statistics.year_in_music WHERE user_id = :user_id
+        """), user_id=user_id)
+        row = result.fetchone()
+        return row["data"] if row else None

@@ -612,6 +612,21 @@ def get_sitewide_artist():
     })
 
 
+@stats_api_bp.route("/user/<user_name>/year-in-music/")
+def year_in_music(user_name: str):
+    """ Get data for year in music stuff """
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise APINotFound(f"Cannot find user: {user_name}")
+    return jsonify({
+        "payload": {
+            "user_name": user_name,
+            "data": db_stats.get_year_in_music(user["id"]) or {}
+        }
+    })
+
+
+
 def _process_user_entity(stats: StatApi[UserEntityRecord], offset, count) -> Tuple[list, int]:
     """ Process the statistics data according to query params
 
