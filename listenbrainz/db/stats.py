@@ -256,6 +256,4 @@ def insert_year_in_music(user_id, data):
                  VALUES (:user_id, :data)
             ON CONFLICT (user_id)
           DO UPDATE SET data = COALESCE(statistics.year_in_music.data || :data, :data)
-        """, user_id=user_id, data=ujson.dumps(data))
-        )
-    
+        """), user_id=user_id, data=ujson.dumps(data))
