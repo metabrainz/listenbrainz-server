@@ -13,6 +13,4 @@ ALTER TABLE statistics.year_in_music
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
-CREATE INDEX user_id_ndx_year_in_music_new ON statistics.year_in_music (user_id);
-
 COMMIT;
