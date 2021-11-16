@@ -112,7 +112,7 @@ export default class YoutubePlayer
 
   componentDidUpdate(prevProps: DataSourceProps) {
     const { show } = this.props;
-    if (prevProps.show === true && show === false && this.youtubePlayer) {
+    if (prevProps.show && !show && this.youtubePlayer) {
       this.youtubePlayer.stopVideo();
       // Clear playlist
       this.youtubePlayer.cueVideoById("");
