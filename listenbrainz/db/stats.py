@@ -249,10 +249,13 @@ def delete_sitewide_stats():
     delete_user_stats(SITEWIDE_STATS_USER_ID)
 
 
-def insert_year_in_music(user_id, column, data):
+def insert_year_in_music(user_id, data):
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
-            INSERT INTO statistics.year_in_music(user_id, :column) VALUES(:user_id, :data)
-        """, user_id=user_id, column=column, data=ujson.dumps(data))
+            INSERT INTO statistics.year_in_music (user_id, data)
+                 VALUES (:user_id, :data)
+            ON CONFLICT (user_id)
+          DO UPDATE SET data = COALESCE(statistics.year_in_music.data || :data, :data)
+        """, user_id=user_id, data=ujson.dumps(data))
         )
     

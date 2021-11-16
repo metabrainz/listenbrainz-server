@@ -1,12 +1,11 @@
 BEGIN;
 
 CREATE TABLE statistics.year_in_music (
-    id                              SERIAL,
-    user_id                         INTEGER NOT NULL, -- FK to "user".id
-    new_releases_of_top_artists     JSONB
+    user_id     INTEGER NOT NULL, -- PK and FK to "user".id
+    data        JSONB
 );
 
-ALTER TABLE statistics.year_in_music ADD CONSTRAINT stats_year_in_music_pkey PRIMARY KEY (id);
+ALTER TABLE statistics.year_in_music ADD CONSTRAINT stats_year_in_music_pkey PRIMARY KEY (user_id);
 
 ALTER TABLE statistics.year_in_music
     ADD CONSTRAINT user_stats_year_in_music_user_id_foreign_key
