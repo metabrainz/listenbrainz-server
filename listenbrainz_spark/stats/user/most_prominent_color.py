@@ -45,8 +45,10 @@ def _get_most_prominent_color():
               FROM user_colors
         )
         SELECT to_json(
-                    collect_list(
-                        struct(user_name, color)
+                    map_from_entries(
+                        collect_list(
+                            struct(user_name, color)
+                        )
                     )
                 ) AS all_users_colors
           FROM ranked_user_colors
