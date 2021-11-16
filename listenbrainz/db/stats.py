@@ -289,4 +289,4 @@ def insert_most_prominent_color(data):
                    FROM join_insert
             ON CONFLICT (user_id)
           DO UPDATE SET data = COALESCE(statistics.year_in_music.data || data, data)
-        """), color_data=data)
+        """), colors=data)
