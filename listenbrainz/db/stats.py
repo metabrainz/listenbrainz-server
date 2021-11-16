@@ -250,14 +250,14 @@ def delete_sitewide_stats():
     delete_user_stats(SITEWIDE_STATS_USER_ID)
 
 
-def insert_year_in_music(user_id, data):
+def insert_year_in_music(user_id, column, data):
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
             INSERT INTO statistics.year_in_music (user_id, data)
-                 VALUES (:user_id, :data)
+                 VALUES (:user_id, jsonb_build_object(:column, :data))
             ON CONFLICT (user_id)
-          DO UPDATE SET data = COALESCE(statistics.year_in_music.data || :data, :data)
-        """), user_id=user_id, data=ujson.dumps(data))
+          DO UPDATE SET data = jsonb_set(statistics.year_in_music.data, :column, :data)
+        """), user_id=user_id, column=column, data=ujson.dumps(data))
 
 
 def get_year_in_music(user_id):
@@ -279,15 +279,15 @@ def insert_most_prominent_color(data):
                   FROM jsonb_each(:colors)
             ), join_insert AS (
                 SELECT "user".id AS user_id
-                     , jsonb_build_object('most_prominent_color', color) AS color
+                     , color
                   FROM user_colors
                   JOIN "user"
                     ON "user".musicbrainz_id = user_colors.user_name  
             )
             INSERT INTO statistics.year_in_music
                  SELECT user_id
-                      , color
+                      , jsonb_build_object('most_prominent_color', color)
                    FROM join_insert
             ON CONFLICT (user_id)
-          DO UPDATE SET data = COALESCE(statistics.year_in_music.data || color, color)
+          DO UPDATE SET data = jsonb_set(statistics.year_in_music.data, 'most_prominent_color', color)
         """), colors=data)
