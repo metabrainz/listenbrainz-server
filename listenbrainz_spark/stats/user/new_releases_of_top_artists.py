@@ -16,7 +16,7 @@ def get_new_releases_of_top_artists():
     for entry in new_releases:
         data = entry.asDict(recursive=True)
         yield NewReleasesStat(
-            type="new_release_of_top_artists",
+            type="new_releases_of_top_artists",
             user_name=data["user_name"],
             data=data["new_releases"]
         ).dict(exclude_none=True)
