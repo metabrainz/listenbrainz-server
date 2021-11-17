@@ -293,8 +293,7 @@ def insert_most_prominent_color(data):
     try:
         with connection.cursor() as cursor:
             execute_values(cursor, query, user_colors.items(), fetch=True)
-            result = connection.execute(sqlalchemy.text(), colors=data)
-            current_app.logger.error("Affected data: %s", result.fetchall())
+            current_app.logger.error("Affected data: %s", cursor.fetchall())
         connection.commit()
     except psycopg2.errors.OperationalError:
         connection.rollback()
