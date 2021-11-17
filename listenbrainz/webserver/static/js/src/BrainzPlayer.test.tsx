@@ -558,7 +558,7 @@ describe("BrainzPlayer", () => {
     it("calls playNextTrack if we ran out of datasources", () => {
       const mockProps = {
         ...props,
-        listens: [listen2, listen],
+        listens: [listen, listen2],
       };
       const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...mockProps} />,
