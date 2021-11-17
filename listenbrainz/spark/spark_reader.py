@@ -90,12 +90,7 @@ class SparkReader:
                                      exc_info=True)
             return
 
-        try:
-            response_handler(response)
-        except Exception:
-            current_app.logger.error("Error in the spark reader response handler: data: %s",
-                                     json.dumps(response, indent=4), exc_info=True)
-            return
+        response_handler(response)
 
     def callback(self, ch, method, properties, body):
         """ Handle the data received from the queue and
