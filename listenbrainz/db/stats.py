@@ -271,6 +271,7 @@ def get_year_in_music(user_id):
 
 
 def insert_most_prominent_color(data):
+    current_app.logger.error("Most prominent colors: %s", json.dumps(data))
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             WITH user_colors AS (
