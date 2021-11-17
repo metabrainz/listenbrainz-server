@@ -26,7 +26,6 @@ export type ColorPlayProps = {
 } & WithAlertNotificationsInjectedProps;
 
 export type ColorPlayState = {
-  direction: BrainzPlayDirection;
   colorReleases: Array<ColorReleaseItem>;
   loading: boolean;
   selectedRelease?: ColorReleaseItem;
@@ -46,7 +45,6 @@ export default class ColorPlay extends React.Component<
     this.state = {
       colorReleases: [],
       loading: false,
-      direction: "down",
       gridBackground: "#FFFFFF",
     };
   }
@@ -97,7 +95,6 @@ export default class ColorPlay extends React.Component<
   render() {
     const { user, newAlert } = this.props;
     const {
-      direction,
       loading,
       colorReleases,
       selectedRelease,
@@ -228,7 +225,6 @@ export default class ColorPlay extends React.Component<
               </div>
               <div className="col-md-4 sticky-top">
                 <BrainzPlayer
-                  direction={direction}
                   newAlert={newAlert}
                   listens={selectedReleaseTracks}
                   listenBrainzAPIBaseURI={APIService.APIBaseURI}
