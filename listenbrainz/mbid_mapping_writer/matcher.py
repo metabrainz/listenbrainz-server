@@ -80,60 +80,43 @@ def process_listens(app, listens, is_legacy_listen=False):
                 mogrified = []
                 for match in matches:
                     if match[1] is None:
-                        m = str(curs.mogrify(
-                            "(%s::UUID, NULL::UUID, NULL::UUID, NULL, NULL::UUID[], NULL::INT, NULL, NULL, %s::mbid_mapping_match_type_enum)", (match[1], match[7])), "utf-8")
+                        m = str(curs.mogrify("(NULL::UUID, NULL::UUID, NULL, NULL::UUID[], NULL::INT, NULL, NULL, 'no_match'::mbid_mapping_match_type_enum)", (match[7])), "utf-8")
                     else:
-                        m = str(curs.mogrify(
-                            "(%s::UUID, %s::UUID, %s::UUID, %s, %s::UUID[], %s, %s, %s, %s::mbid_mapping_match_type_enum)", match), "utf-8")
+                        m = str(curs.mogrify("(%s::UUID, %s::UUID, %s, %s::UUID[], %s, %s, %s, %s::mbid_mapping_match_type_enum)", match[1:]), "utf-8")
                     mogrified.append(m)
 
-                query = """WITH data (recording_msid
-                                   ,  recording_mbid
-                                   ,  release_mbid
-                                   ,  release_name
-                                   ,  artist_mbids
-                                   ,  artist_credit_id
-                                   ,  artist_credit_name
-                                   ,  recording_name
-                                   ,  match_type) AS (
-                               VALUES %s)
-                           , join_insert AS (
-                                   INSERT INTO listen_mbid_mapping (recording_mbid
-                                                                 ,  release_mbid
-                                                                 ,  release_name
-                                                                 ,  artist_mbids
-                                                                 ,  artist_credit_id
-                                                                 ,  artist_credit_name
-                                                                 ,  recording_name
-                                                                 ,  match_type)
-                                   SELECT recording_mbid
-                                        , release_mbid
-                                        , release_name
-                                        , artist_mbids
-                                        , artist_credit_id
-                                        , artist_credit_name
-                                        , recording_name
-                                        , match_type
-                                   FROM   data
-                              ON CONFLICT DO UPDATE
-                                      SET release_name = d.release_name
-                                        , artist_mbids = d.artist_mbids
-                                        , artist_credit_id = d.artist_credit.id
-                                        , artist_credit_name = d.artist_credit_name
-                                        , recording_name = d.recording_name
-                                        , match_type = d.match_type
-                                   RETURNING id AS join_id, recording_mbid, release_mbid, artist_credit_id
-                                   )
-                                INSERT INTO listen_join_listen_mbid_mapping (recording_msid, listen_mbid_mapping)
-                                SELECT d.recording_msid
-                                     , ji.join_id
-                                  FROM data d
-                                  JOIN join_insert ji
-                                    ON ji.recording_mbid = d.recording_mbid
-                                   AND ji.release_mbid = d.release_mbid
-                                   AND ji.artist_credit_id = d.artist_credit_id
-                           ON CONFLICT DO NOTHING""" % ",".join(mogrified)
+                query = """INSERT INTO listen_mbid_mapping AS mbid
+                                     ( recording_mbid
+                                     , release_mbid
+                                     , release_name
+                                     , artist_mbids
+                                     , artist_credit_id
+                                     , artist_credit_name
+                                     , recording_name
+                                     , match_type)
+                                VALUES %s
+                           ON CONFLICT (recording_mbid) DO UPDATE
+                                   SET release_name = mbid.release_name
+                                     , artist_mbids = mbid.artist_mbids
+                                     , artist_credit_id = mbid.artist_credit_id
+                                     , artist_credit_name = mbid.artist_credit_name
+                                     , recording_name = mbid.recording_name
+                                     , match_type = mbid.match_type
+                                     , last_updated = now()
+                             RETURNING id AS join_id, recording_mbid""" % ",".join(mogrified)
                 curs.execute(query)
+
+                join_rows = []
+                for i, row in enumerate(curs.fetchall()):
+                    join_rows.append((matches[i][0], row[0]))
+
+                query = "INSERT INTO listen_join_listen_mbid_mapping VALUES %s"
+                execute_values(curs, query, join_rows, template=None)
+
+            except psycopg2.errors.CardinalityViolation as err:
+                app.logger.error("CardinalityViolation on insert to mbid_mapping\n%s" % str(query))
+                conn.rollback()
+                return
 
             except (psycopg2.OperationalError, psycopg2.errors.DatatypeMismatch) as err:
                 app.logger.info(

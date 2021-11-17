@@ -33,6 +33,9 @@ UNMATCHED_LISTENS_COMPLETED_TIMEOUT = 86400  # in s
 LEGACY_LISTENS_LOAD_WINDOW = 604800  # 7 days in seconds
 LEGACY_LISTENS_INDEX_DATE_CACHE_KEY = "mbid.legacy_index_date"
 
+# How many listens should be re-checked every mapping pass?
+NUM_ITEMS_TO_RECHECK_PER_PASS = 100000
+
 
 @dataclass(order=True)
 class JobItem:
@@ -65,7 +68,6 @@ class MappingJobQueue(threading.Thread):
         init_cache(host=app.config['REDIS_HOST'], port=app.config['REDIS_PORT'],
                    namespace=app.config['REDIS_NAMESPACE'])
         metrics.init("listenbrainz")
-        self.load_legacy_listens()
 
     def add_new_listens(self, listens):
         self.queue.put(JobItem(NEW_LISTEN, listens))
@@ -74,10 +76,29 @@ class MappingJobQueue(threading.Thread):
         self.done = True
         self.join()
 
+    def mark_oldest_no_match_entries_as_stale(self):
+        """ 
+        """
+        query = """UPDATE listen_mbid_mapping
+                      SET last_updated = '1970-01-01'
+                    WHERE match_type = 'no_match'
+                      AND last_updated >= (SELECT last_updated
+                                             FROM listen_mbid_mapping
+                                            WHERE match_type = 'no_match'
+                                         ORDER BY last_updated
+                                           OFFSET %s
+                                            LIMIT 1);"""
+        args = (NUM_ITEMS_TO_RECHECK_PER_PASS,)
+
+
+        pass
+
     def load_legacy_listens(self):
         """ This function should kick off a thread to load more legacy listens if called.
             It may be called multiple times, so it must guard against firing off multiple
             threads. """
+
+        return
 
         if self.legacy_load_thread or (self.legacy_next_run and self.legacy_next_run > monotonic()):
             return
@@ -158,12 +179,12 @@ class MappingJobQueue(threading.Thread):
 
             return
 
-        # Load legacy listens and listens that have been marked for re-checking
+        # Load legacy listens
         self.app.logger.info("Load more legacy listens for %s" % datetime.datetime.fromtimestamp(
             self.legacy_listens_index_date).strftime("%Y-%m-%d"))
 
-        count = self.fetch_and_queue_listens(legacy_query, { "max_ts", self.legacy_listens_index_date,
-                                             "min_ts", self.legacy_listens_index_date - LEGACY_LISTENS_LOAD_WINDOW })
+        count = self.fetch_and_queue_listens(legacy_query, { "max_ts": self.legacy_listens_index_date,
+                                             "min_ts": self.legacy_listens_index_date - LEGACY_LISTENS_LOAD_WINDOW })
 
         # update cache entry and count
         self.legacy_listens_index_date -= LEGACY_LISTENS_LOAD_WINDOW
@@ -266,7 +287,7 @@ class MappingJobQueue(threading.Thread):
                                 stats["errors"] += 1
                             else:
                                 job_stats = complete.result()
-                                for stat in job_stats:
+                                for stat in job_stats or []:
                                     stats[stat] += job_stats[stat]
                             del futures[complete]
 
