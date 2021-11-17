@@ -255,7 +255,7 @@ def insert_year_in_music(user_id, column, data):
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
             INSERT INTO statistics.year_in_music (user_id, data)
-                 VALUES (:user_id, jsonb_build_object(:column, :data))
+                 VALUES (:user_id, jsonb_build_object(:column, :data :: jsonb))
             ON CONFLICT (user_id)
           DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
         """), user_id=user_id, column=column, data=ujson.dumps(data))
