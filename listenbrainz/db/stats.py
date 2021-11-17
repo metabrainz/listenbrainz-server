@@ -287,12 +287,11 @@ def insert_most_prominent_color(data):
                FROM user_colors
         ON CONFLICT (user_id)
       DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
-          RETURNING *
         """
     user_colors = ujson.loads(data)
     try:
         with connection.cursor() as cursor:
-            execute_values(cursor, query, user_colors.items(), fetch=True)
+            execute_values(cursor, query, user_colors.items())
         connection.commit()
     except psycopg2.errors.OperationalError:
         connection.rollback()
