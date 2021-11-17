@@ -24,6 +24,7 @@
 import json
 from typing import Optional
 
+import psycopg2
 import sqlalchemy
 import ujson
 from psycopg2.extras import execute_values
@@ -271,22 +272,30 @@ def get_year_in_music(user_id):
 
 
 def insert_most_prominent_color(data):
-    current_app.logger.error("Most prominent colors: %s", json.dumps(data))
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            WITH user_colors AS (
-                SELECT "user".id AS user_id
-                     , value AS color
-                  FROM jsonb_each(:colors)
-                  JOIN "user"
-                    ON "user".musicbrainz_id = key
-            )
-            INSERT INTO statistics.year_in_music(user_id, data)
-                 SELECT user_id
-                      , jsonb_build_object('most_prominent_color', color)
-                   FROM user_colors
-            ON CONFLICT (user_id)
-          DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
-              RETURNING *
-        """), colors=data)
-        current_app.logger.error("Affected data: %s", result.fetchall())
+    connection = db.engine.raw_connection()
+    query = """
+        WITH user_colors AS (
+            SELECT "user".id AS user_id
+                 , color
+              FROM (VALUES %s) AS t(user_name, color)
+              JOIN "user"
+                ON "user".musicbrainz_id = user_name
+        )
+        INSERT INTO statistics.year_in_music(user_id, data)
+             SELECT user_id
+                  , jsonb_build_object('most_prominent_color', color)
+               FROM user_colors
+        ON CONFLICT (user_id)
+      DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+          RETURNING *
+        """
+    user_colors = ujson.loads(data)
+    try:
+        with connection.cursor() as cursor:
+            execute_values(cursor, query, user_colors.items(), fetch=True)
+            result = connection.execute(sqlalchemy.text(), colors=data)
+            current_app.logger.error("Affected data: %s", result.fetchall())
+        connection.commit()
+    except psycopg2.errors.OperationalError:
+        connection.rollback()
+        current_app.logger.error("Error while inserting most prominent colors:", exc_info=True)
