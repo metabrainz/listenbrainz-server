@@ -37,7 +37,6 @@ export type UserFeedbackProps = {
 } & WithAlertNotificationsInjectedProps;
 
 export interface UserFeedbackState {
-  direction: BrainzPlayDirection;
   feedback: Array<FeedbackResponseWithTrackMetadata>;
   loading: boolean;
   page: number;
@@ -83,7 +82,6 @@ export default class UserFeedback extends React.Component<
       page: 1,
       feedback: feedback?.slice(0, this.DEFAULT_ITEMS_PER_PAGE) || [],
       loading: false,
-      direction: "down",
       recordingFeedbackMap: {},
       selectedFeedbackScore: feedback?.[0]?.score ?? 1,
     };
@@ -369,7 +367,6 @@ export default class UserFeedback extends React.Component<
 
   render() {
     const {
-      direction,
       feedback,
       loading,
       maxPage,
@@ -554,7 +551,6 @@ export default class UserFeedback extends React.Component<
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
             <BrainzPlayer
-              direction={direction}
               listens={listensFromFeedback}
               newAlert={newAlert}
               listenBrainzAPIBaseURI={APIService.APIBaseURI}
