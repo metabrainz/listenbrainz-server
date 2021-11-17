@@ -6,7 +6,7 @@ import listenbrainz.db.user as db_user
 from listenbrainz.db import timescale as ts
 from listenbrainz import messybrainz as msb_db
 from listenbrainz.messybrainz.testing import MessyBrainzTestCase
-from listenbrainz.messybrainz.data import submit_recording, load_recordings_from_msids
+from listenbrainz.messybrainz.data import submit_recording, load_recordings_from_msids, get_id_from_meta_hash
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 
 
@@ -58,7 +58,11 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
         """ Insert test data with metadata into the database """
 
         with msb_db.engine.connect() as connection:
-            msid = submit_recording(connection, self.sample_recording)
+            msid = get_id_from_meta_hash(connection, self.sample_recording)
+            if msid is None:
+                msid = submit_recording(connection, self.sample_recording)
+            msid = str(msid)
+
             artists = load_recordings_from_msids(connection, [msid])
             self.saved_artist_msid = artists[0]["ids"]["artist_msid"]
 
@@ -83,7 +87,7 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
 
         with ts.engine.connect() as connection:
             connection.execute(sqlalchemy.text(query), 
-                               args={ "msid": msid, "mbid": '076255b4-1575-11ec-ac84-135bf6a670e3', match_type: 'exact_match' })
+                               { "msid": msid, "mbid": "076255b4-1575-11ec-ac84-135bf6a670e3", "match_type": "exact_match" })
 
         for fb in self.sample_feedback_with_metadata:
             db_feedback.insert(
