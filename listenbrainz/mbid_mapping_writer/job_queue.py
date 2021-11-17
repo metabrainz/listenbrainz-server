@@ -246,7 +246,7 @@ class MappingJobQueue(threading.Thread):
         # Fetch stats of how many items have already been matched.
         with timescale.engine.connect() as connection:
             query = """SELECT COUNT(*), match_type
-                         FROM listen_mbid_mapping
+                         FROM mbid_mapping
                      GROUP BY match_type"""
             curs = connection.execute(query)
             while True:
@@ -256,8 +256,9 @@ class MappingJobQueue(threading.Thread):
 
                 stats[result[1]] = result[0]
 
+            # TODO: improve this and make it it a instantaneous stat
             query = """SELECT COUNT(*)
-                         FROM listen_mbid_mapping"""
+                         FROM mbid_mapping_metadata"""
             curs = connection.execute(query)
             while True:
                 result = curs.fetchone()

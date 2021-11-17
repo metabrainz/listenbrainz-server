@@ -81,20 +81,19 @@ class TestTimescaleListenStore(DatabaseTestCase):
     def _insert_mapping_metadata(self, msid):
         """ Insert mapping test data into the mapping tables """
 
-        query = """INSERT INTO listen_mbid_mapping
-                               (id, recording_mbid, release_mbid, release_name, artist_credit_id, 
-                                artist_mbids, artist_credit_name, recording_name, match_type)
-                        VALUES (1,
-                                '076255b4-1575-11ec-ac84-135bf6a670e3',
+        query = """INSERT INTO mbid_mapping_metadata
+                               (recording_mbid, release_mbid, release_name, artist_credit_id, 
+                                artist_mbids, artist_credit_name, recording_name)
+                        VALUES ('076255b4-1575-11ec-ac84-135bf6a670e3',
                                 '1fd178b4-1575-11ec-b98a-d72392cd8c97',
                                 'release_name',
                                 65,
                                 '{6a221fda-2200-11ec-ac7d-dfa16a57158f}'::UUID[],
-                                'artist name', 'recording name', 'exact_match')"""
+                                'artist name', 'recording name')"""
 
-        join_query = """INSERT INTO listen_join_listen_mbid_mapping
-                               (recording_msid, listen_mbid_mapping)
-                        VALUES ('%s', 1)""" % msid
+        join_query = """INSERT INTO mbid_mapping
+                               (recording_msid, recording_mbid, match_type)
+                        VALUES ('%s', '%s', 'exact_match')""" % (msid, '076255b4-1575-11ec-ac84-135bf6a670e3')
 
         with ts.engine.connect() as connection:
             connection.execute(sqlalchemy.text(query))

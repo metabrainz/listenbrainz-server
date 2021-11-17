@@ -111,9 +111,9 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
 
         # Fetch the mapped MBIDs from the mapping
         query = """SELECT recording_msid::TEXT, recording_mbid::TEXT, release_mbid::TEXT, artist_mbids::TEXT[]
-                     FROM listen_join_listen_mbid_mapping lj
-                     JOIN listen_mbid_mapping mbid
-                       ON lj.listen_mbid_mapping = mbid.id
+                     FROM mbid_mapping m
+                     JOIN mbid_mapping_metadata mm
+                       ON m.recording_mbid = mm.recording_mbid
                     WHERE recording_msid in :msids
                  ORDER BY recording_msid"""
 
