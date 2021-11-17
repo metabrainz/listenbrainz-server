@@ -201,13 +201,16 @@ class MappingJobQueue(threading.Thread):
                 listens_per_sec = 0
             self.last_processed = stats["processed"]
 
+
             percent = (stats["exact_match"] + stats["high_quality"] + stats["med_quality"] +
                        stats["low_quality"]) / stats["total"] * 100.00
-            self.app.logger.info("loaded %d processed %d matched %d not %d legacy: %d queue: %d %d l/s" %
-                                 (stats["total"], stats["processed"], stats["exact_match"] + stats["high_quality"] +
-                                  stats["med_quality"] +
-                                  stats["low_quality"], stats["no_match"],
-                                     stats["legacy"], self.queue.qsize(), listens_per_sec))
+            self.app.logger.info("total %d matched %d/%d legacy: %d queue: %d %d l/s" %
+                                 (stats["total"], 
+                                  stats["exact_match"] + stats["high_quality"] + stats["med_quality"] + stats["low_quality"],
+                                  stats["no_match"],
+                                  stats["legacy"],
+                                  self.queue.qsize(),
+                                  listens_per_sec))
 
             metrics.set("listenbrainz-mbid-mapping-writer",
                         total_match_p=percent,
@@ -222,24 +225,35 @@ class MappingJobQueue(threading.Thread):
                         no_match_p=stats["no_match"] / stats["total"] * 100.00,
                         errors_p=stats["errors"] / stats["total"] * 100.00,
                         total_listens=stats["total"],
-                        total_processed=stats["processed"],
                         exact_match=stats["exact_match"],
                         high_quality=stats["high_quality"],
                         med_quality=stats["med_quality"],
                         low_quality=stats["low_quality"],
                         no_match=stats["no_match"],
                         errors=stats["errors"],
-                        legacy=stats["legacy"],
-                        legacy_match=stats["legacy_match"],
                         qsize=self.queue.qsize(),
+                        exact_match_rate=stats["last_exact_match"] - stats["exact_match"]
+                        high_quality_rate=stats["last_high_quality"] - stats["high_quality"]
+                        med_quality_rate=stats["last_med_quality"] - stats["med_quality"]
+                        low_quality_rate=stats["last_low_quality"] - stats["low_quality"]
+                        no_match_rate=stats["last_no_match"] - stats["no_match"]
                         listens_per_sec=listens_per_sec,
                         legacy_index_date=datetime.date.fromtimestamp(self.legacy_listens_index_date).strftime("%Y-%m-%d"))
+
+            stats["last_exact_match"] = stats["exact_match"]
+            stats["last_high_quality"] = stats["high_quality"]
+            stats["last_med_quality"] = stats["med_quality"]
+            stats["last_low_quality"] = stats["low_quality"]
+            stats["last_no_match"] = stats["no_match"]
 
     def run(self):
         """ main thread entry point"""
 
-        stats = {"processed": 0, "total": 0,
-                 "errors": 0, "legacy": 0, "legacy_match": 0}
+        stats = {"processed": 0,
+                 "total": 0,
+                 "errors": 0,
+                 "legacy": 0,
+                 "legacy_match": 0}
         for typ in MATCH_TYPES:
             stats[typ] = 0
 
@@ -256,7 +270,7 @@ class MappingJobQueue(threading.Thread):
 
                 stats[result[1]] = result[0]
 
-            # TODO: improve this and make it it a instantaneous stat
+            # TODO: improve this and make it an instantaneous stat
             query = """SELECT COUNT(*)
                          FROM mbid_mapping_metadata"""
             curs = connection.execute(query)
