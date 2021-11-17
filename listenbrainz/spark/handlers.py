@@ -6,6 +6,7 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
 import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
+from listenbrainz.db import year_in_music
 
 from flask import current_app, render_template
 from pydantic import ValidationError
@@ -344,13 +345,17 @@ def handle_similar_users(message):
         )
 
 
+def handle_similar_users_2021(message):
+    year_in_music.insert_similar_users(message["data"])
+
+
 def handle_new_releases_of_top_artists(message):
     musicbrainz_id = message["user_name"]
     user = db_user.get_by_mb_id(musicbrainz_id)
     if not user:
         return
-    db_stats.insert_year_in_music(user["id"], "new_releases_of_top_artists", message["data"])
+    year_in_music.insert_new_releases_of_top_artists(user["id"], message["data"])
 
 
 def handle_most_prominent_color(message):
-    db_stats.insert_most_prominent_color(message["data"])
+    year_in_music.insert_most_prominent_color(message["data"])

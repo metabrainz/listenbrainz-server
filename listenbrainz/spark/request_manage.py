@@ -263,6 +263,12 @@ def request_similar_users(max_num_users):
     send_request_to_spark_cluster('similarity.similar_users', max_num_users=max_num_users)
 
 
+@cli.command(name='request_similar_users_2021')
+def request_similar_users():
+    """ Send the cluster a request to generate similar users for Year in Music 2021. """
+    send_request_to_spark_cluster(_prepare_query_message('similarity.similar_users_2021'))
+
+
 # Some useful commands to keep our crontabs manageable. These commands do not add new functionality
 # rather combine multiple commands related to a task so that they are always invoked in the correct order.
 
