@@ -880,7 +880,6 @@ export default class PlaylistPage extends React.Component<
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
             <BrainzPlayer
-              direction="down"
               listens={tracks.map(JSPFTrackToListen)}
               newAlert={newAlert}
               listenBrainzAPIBaseURI={APIService.APIBaseURI}
