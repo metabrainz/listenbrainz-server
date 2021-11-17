@@ -60,10 +60,10 @@ def insert_similar_users(data):
         ON CONFLICT (user_id)
       DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
         """
-    similar_users = ujson.loads(data)
+    similar_users = [(k, ujson.dumps(v)) for k, v in data.items()]
     try:
         with connection.cursor() as cursor:
-            execute_values(cursor, query, similar_users.items())
+            execute_values(cursor, query, similar_users)
         connection.commit()
     except psycopg2.errors.OperationalError:
         connection.rollback()
