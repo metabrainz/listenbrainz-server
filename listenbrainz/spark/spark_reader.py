@@ -24,7 +24,7 @@ from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          handle_missing_musicbrainz_data,
                                          notify_cf_recording_recommendations_generation,
                                          handle_similar_users, handle_new_releases_of_top_artists,
-                                         handle_most_prominent_color)
+                                         handle_most_prominent_color, handle_similar_users_2021)
 
 from listenbrainz.webserver import create_app
 
