@@ -670,7 +670,6 @@ export default class UserEntityChart extends React.Component<
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
             <BrainzPlayer
-              direction="down"
               listens={listenableItems}
               newAlert={newAlert}
               listenBrainzAPIBaseURI={APIService.APIBaseURI}
