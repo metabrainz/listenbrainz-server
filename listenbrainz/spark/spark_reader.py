@@ -46,6 +46,7 @@ response_handler_map = {
     'missing_musicbrainz_data': handle_missing_musicbrainz_data,
     'cf_recommendations_recording_mail': notify_cf_recording_recommendations_generation,
     'similar_users': handle_similar_users,
+    'similar_users_2021': handle_similar_users_2021,
 }
 
 RABBITMQ_HEARTBEAT_TIME = 60 * 60  # 1 hour, in seconds

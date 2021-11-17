@@ -99,5 +99,10 @@
     "params": [
       "max_num_users"
     ]
+  },
+  "similarity.similar_users_2021": {
+    "name": "similarity.similar_users_2021",
+    "description": "Generate similar user correlation for Year in Music 2021",
+    "params": []
   }
 }
