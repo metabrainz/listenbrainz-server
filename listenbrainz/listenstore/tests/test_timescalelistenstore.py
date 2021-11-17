@@ -400,7 +400,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
     def test_schema_mismatch_exception_for_dump_incorrect_schema(self):
         """ Tests that SchemaMismatchException is raised when the schema of the dump is old """
 
-        # create a temp archive with incorrect SCHEMA_VERSION
+        # create a temp archive with incorrect SCHEMA_VERSION_CORE
         temp_dir = tempfile.mkdtemp()
         archive_name = 'temp_dump'
         archive_path = os.path.join(temp_dir, archive_name + '.tar.xz')

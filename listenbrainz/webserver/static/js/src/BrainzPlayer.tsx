@@ -32,7 +32,6 @@ export type DataSourceType = {
   playListen: (listen: Listen | JSPFTrack) => void;
   togglePlay: () => void;
   seekToPositionMs: (msTimecode: number) => void;
-  isListenFromThisService: (listen: Listen | JSPFTrack) => boolean;
   canSearchAndPlayTracks: () => boolean;
   datasourceRecordsListens: () => boolean;
 };
@@ -64,7 +63,6 @@ export type DataSourceProps = {
 };
 
 type BrainzPlayerProps = {
-  direction: BrainzPlayDirection;
   listens: Array<Listen | JSPFTrack>;
   newAlert: (
     alertType: AlertType,
@@ -83,7 +81,6 @@ type BrainzPlayerState = {
   currentTrackArtist?: string;
   currentTrackAlbum?: string;
   currentTrackURL?: string;
-  direction: BrainzPlayDirection;
   playerPaused: boolean;
   isActivated: boolean;
   durationMs: number;
@@ -92,6 +89,31 @@ type BrainzPlayerState = {
   listenSubmitted: boolean;
   continuousPlaybackTime: number;
 };
+
+/**
+ * Due to some issue with TypeScript when accessing static methods of an instance when you don't know
+ * which class it is, we have to manually determine the class of the instance and call MyClass.staticMethod().
+ * Neither instance.constructor.staticMethod() nor instance.prototype.constructor.staticMethod() work without issues.
+ * See https://github.com/Microsoft/TypeScript/issues/3841#issuecomment-337560146
+ */
+function isListenFromDatasource(
+  listen: BaseListenFormat | Listen | JSPFTrack,
+  datasource: DataSourceTypes | null
+) {
+  if (!listen || !datasource) {
+    return undefined;
+  }
+  if (datasource instanceof SpotifyPlayer) {
+    return SpotifyPlayer.isListenFromThisService(listen);
+  }
+  if (datasource instanceof YoutubePlayer) {
+    return YoutubePlayer.isListenFromThisService(listen);
+  }
+  if (datasource instanceof SoundcloudPlayer) {
+    return SoundcloudPlayer.isListenFromThisService(listen);
+  }
+  return undefined;
+}
 
 export default class BrainzPlayer extends React.Component<
   BrainzPlayerProps,
@@ -135,7 +157,6 @@ export default class BrainzPlayer extends React.Component<
       currentDataSourceIndex: 0,
       currentTrackName: "",
       currentTrackArtist: "",
-      direction: props.direction || "down",
       playerPaused: true,
       progressMs: 0,
       durationMs: 0,
@@ -227,7 +248,7 @@ export default class BrainzPlayer extends React.Component<
 
   playNextTrack = (invert: boolean = false): void => {
     const { listens } = this.props;
-    const { direction, isActivated } = this.state;
+    const { isActivated } = this.state;
 
     if (!isActivated) {
       // Player has not been activated by the user, do nothing.
@@ -247,16 +268,13 @@ export default class BrainzPlayer extends React.Component<
 
     let nextListenIndex;
     if (currentListenIndex === -1) {
-      nextListenIndex = direction === "up" ? listens.length - 1 : 0;
-    } else if (direction === "up") {
-      nextListenIndex =
-        invert === true ? currentListenIndex + 1 : currentListenIndex - 1 || 0;
-    } else if (direction === "down") {
-      nextListenIndex =
-        invert === true ? currentListenIndex - 1 || 0 : currentListenIndex + 1;
+      // No current listen index found, default to first item
+      nextListenIndex = 0;
+    } else if (invert) {
+      // `|| 0` constrains to positive numbers
+      nextListenIndex = currentListenIndex - 1 || 0;
     } else {
-      this.handleWarning("Please select a song to play", "Unrecognised state");
-      return;
+      nextListenIndex = currentListenIndex + 1;
     }
 
     const nextListen = listens[nextListenIndex];
@@ -343,9 +361,10 @@ export default class BrainzPlayer extends React.Component<
     let selectedDatasourceIndex: number;
     if (datasourceIndex === 0) {
       /** If available, retrieve the service the listen was listened with */
-      const listenedFromIndex = this.dataSources.findIndex((ds) =>
-        ds.current?.isListenFromThisService(listen)
-      );
+      const listenedFromIndex = this.dataSources.findIndex((datasourceRef) => {
+        const { current } = datasourceRef;
+        return isListenFromDatasource(listen, current);
+      });
       selectedDatasourceIndex =
         listenedFromIndex === -1 ? 0 : listenedFromIndex;
     } else {
@@ -363,7 +382,7 @@ export default class BrainzPlayer extends React.Component<
     // otherwise skip to the next datasource without trying or setting currentDataSourceIndex
     // This prevents rendering datasource iframes when we can't use the datasource
     if (
-      !datasource.isListenFromThisService(listen) &&
+      !isListenFromDatasource(listen, datasource) &&
       !datasource.canSearchAndPlayTracks()
     ) {
       this.playListen(listen, datasourceIndex + 1);
@@ -425,13 +444,6 @@ export default class BrainzPlayer extends React.Component<
   seekBackward = (): void => {
     const { progressMs } = this.state;
     this.seekToPositionMs(progressMs - this.SEEK_TIME_MILLISECONDS);
-  };
-
-  toggleDirection = (): void => {
-    this.setState((prevState) => {
-      const direction = prevState.direction === "down" ? "up" : "down";
-      return { direction };
-    });
   };
 
   /* Listeners for datasource events */
@@ -728,7 +740,6 @@ export default class BrainzPlayer extends React.Component<
       currentTrackName,
       currentTrackArtist,
       playerPaused,
-      direction,
       progressMs,
       durationMs,
       isActivated,
@@ -749,8 +760,6 @@ export default class BrainzPlayer extends React.Component<
             isActivated ? this.togglePlay : this.activatePlayerAndPlay
           }
           playerPaused={playerPaused}
-          toggleDirection={this.toggleDirection}
-          direction={direction}
           trackName={currentTrackName}
           artistName={currentTrackArtist}
           progressMs={progressMs}
