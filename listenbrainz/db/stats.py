@@ -278,7 +278,7 @@ def insert_most_prominent_color(data):
                      , value AS color
                   FROM jsonb_each(:colors)
                   JOIN "user"
-                    ON "user".musicbrainz_id = key  
+                    ON "user".musicbrainz_id = key
             )
             INSERT INTO statistics.year_in_music(user_id, data)
                  SELECT user_id
@@ -286,6 +286,6 @@ def insert_most_prominent_color(data):
                    FROM user_colors
             ON CONFLICT (user_id)
           DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
-          RETURNING *
+              RETURNING *
         """), colors=data)
         current_app.logger.error("Affected data: %s", result.fetchall())
