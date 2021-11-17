@@ -345,7 +345,7 @@ export default class UserFeedPage extends React.Component<
             showUsername={false}
             showTimestamp={false}
             listen={metadata as Listen}
-            additionalDetails={
+            additionalContent={
               (metadata as PinEventMetadata).blurb_content
                 ? `"${(metadata as PinEventMetadata).blurb_content}"`
                 : ""

@@ -32,7 +32,6 @@ export type DataSourceType = {
   playListen: (listen: Listen | JSPFTrack) => void;
   togglePlay: () => void;
   seekToPositionMs: (msTimecode: number) => void;
-  isListenFromThisService: (listen: Listen | JSPFTrack) => boolean;
   canSearchAndPlayTracks: () => boolean;
   datasourceRecordsListens: () => boolean;
 };
@@ -90,6 +89,31 @@ type BrainzPlayerState = {
   listenSubmitted: boolean;
   continuousPlaybackTime: number;
 };
+
+/**
+ * Due to some issue with TypeScript when accessing static methods of an instance when you don't know
+ * which class it is, we have to manually determine the class of the instance and call MyClass.staticMethod().
+ * Neither instance.constructor.staticMethod() nor instance.prototype.constructor.staticMethod() work without issues.
+ * See https://github.com/Microsoft/TypeScript/issues/3841#issuecomment-337560146
+ */
+function isListenFromDatasource(
+  listen: BaseListenFormat | Listen | JSPFTrack,
+  datasource: DataSourceTypes | null
+) {
+  if (!listen || !datasource) {
+    return undefined;
+  }
+  if (datasource instanceof SpotifyPlayer) {
+    return SpotifyPlayer.isListenFromThisService(listen);
+  }
+  if (datasource instanceof YoutubePlayer) {
+    return YoutubePlayer.isListenFromThisService(listen);
+  }
+  if (datasource instanceof SoundcloudPlayer) {
+    return SoundcloudPlayer.isListenFromThisService(listen);
+  }
+  return undefined;
+}
 
 export default class BrainzPlayer extends React.Component<
   BrainzPlayerProps,
@@ -337,9 +361,10 @@ export default class BrainzPlayer extends React.Component<
     let selectedDatasourceIndex: number;
     if (datasourceIndex === 0) {
       /** If available, retrieve the service the listen was listened with */
-      const listenedFromIndex = this.dataSources.findIndex((ds) =>
-        ds.current?.isListenFromThisService(listen)
-      );
+      const listenedFromIndex = this.dataSources.findIndex((datasourceRef) => {
+        const { current } = datasourceRef;
+        return isListenFromDatasource(listen, current);
+      });
       selectedDatasourceIndex =
         listenedFromIndex === -1 ? 0 : listenedFromIndex;
     } else {
@@ -357,7 +382,7 @@ export default class BrainzPlayer extends React.Component<
     // otherwise skip to the next datasource without trying or setting currentDataSourceIndex
     // This prevents rendering datasource iframes when we can't use the datasource
     if (
-      !datasource.isListenFromThisService(listen) &&
+      !isListenFromDatasource(listen, datasource) &&
       !datasource.canSearchAndPlayTracks()
     ) {
       this.playListen(listen, datasourceIndex + 1);
