@@ -67,7 +67,7 @@ def process_listens(app, listens, is_legacy_listen=False):
                     # keep attempting to look up more listens.
                     for listen in remaining_listens:
                         matches.append(
-                            (listen['recording_msid'], None, None, None, None, None, None, MATCH_TYPES[0]))
+                            (listen['recording_msid'], None,None, None, None, None, None, None, MATCH_TYPES[0]))
                         stats['no_match'] += 1
 
                 stats["processed"] += len(matches)
@@ -82,7 +82,7 @@ def process_listens(app, listens, is_legacy_listen=False):
                                               , artist_credit_id
                                               , artist_credit_name
                                               , recording_name
-                                              , last_upated
+                                              , last_updated
                                               )
                                          VALUES 
                                               ( %s::UUID
@@ -107,7 +107,7 @@ def process_listens(app, listens, is_legacy_listen=False):
                                              ( recording_msid
                                              , recording_mbid
                                              , match_type
-                                             , last_upated
+                                             , last_updated
                                              )
                                         VALUES 
                                              ( %s::UUID
@@ -118,17 +118,17 @@ def process_listens(app, listens, is_legacy_listen=False):
                                    ON CONFLICT (recording_msid) DO UPDATE
                                            SET recording_msid = m.recording_msid
                                              , recording_mbid = m.recording_mbid
-                                             , match_type = mbid.match_type
+                                             , match_type = m.match_type
                                              , last_updated = now()"""
 
                 # Finally insert matches to PG
                 for match in matches:
                     # Insert/update the metadata row
                     if match[1] is not None:
-                        curs.execute(metadata_query, tuple(match[1:7]))
+                        curs.execute(metadata_query, match[1:8])
 
                     # Insert the mapping row
-                    curs.execute(mapping_query, (match[0], match[1], match[8])
+                    curs.execute(mapping_query, (match[0], match[1], match[8]))
 
             except psycopg2.errors.CardinalityViolation as err:
                 app.logger.error("CardinalityViolation on insert to mbid mapping\n%s" % str(query))

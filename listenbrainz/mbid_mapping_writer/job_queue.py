@@ -68,6 +68,7 @@ class MappingJobQueue(threading.Thread):
         init_cache(host=app.config['REDIS_HOST'], port=app.config['REDIS_PORT'],
                    namespace=app.config['REDIS_NAMESPACE'])
         metrics.init("listenbrainz")
+        self.load_legacy_listens()
 
     def add_new_listens(self, listens):
         self.queue.put(JobItem(NEW_LISTEN, listens))
@@ -98,7 +99,7 @@ class MappingJobQueue(threading.Thread):
             It may be called multiple times, so it must guard against firing off multiple
             threads. """
 
-        return
+#        return
 
         if self.legacy_load_thread or (self.legacy_next_run and self.legacy_next_run > monotonic()):
             return
@@ -131,6 +132,7 @@ class MappingJobQueue(threading.Thread):
            on the matched listens, finding the next chunk of legacy listens to look up.
            Listens are added to the queue with a low priority."""
 
+        self.app.logger.info("add legacy listen thread started")
         legacy_query = """SELECT data->'track_metadata'->'additional_info'->>'recording_msid'::TEXT AS recording_msid,
                                  track_name,
                                  data->'track_metadata'->'artist_name' AS artist_name
@@ -232,11 +234,11 @@ class MappingJobQueue(threading.Thread):
                         no_match=stats["no_match"],
                         errors=stats["errors"],
                         qsize=self.queue.qsize(),
-                        exact_match_rate=stats["last_exact_match"] - stats["exact_match"]
-                        high_quality_rate=stats["last_high_quality"] - stats["high_quality"]
-                        med_quality_rate=stats["last_med_quality"] - stats["med_quality"]
-                        low_quality_rate=stats["last_low_quality"] - stats["low_quality"]
-                        no_match_rate=stats["last_no_match"] - stats["no_match"]
+                        exact_match_rate=stats["last_exact_match"] - stats["exact_match"],
+                        high_quality_rate=stats["last_high_quality"] - stats["high_quality"],
+                        med_quality_rate=stats["last_med_quality"] - stats["med_quality"],
+                        low_quality_rate=stats["last_low_quality"] - stats["low_quality"],
+                        no_match_rate=stats["last_no_match"] - stats["no_match"],
                         listens_per_sec=listens_per_sec,
                         legacy_index_date=datetime.date.fromtimestamp(self.legacy_listens_index_date).strftime("%Y-%m-%d"))
 
@@ -253,7 +255,12 @@ class MappingJobQueue(threading.Thread):
                  "total": 0,
                  "errors": 0,
                  "legacy": 0,
-                 "legacy_match": 0}
+                 "legacy_match": 0,
+                 "last_exact_match": 0,
+                 "last_high_quality": 0,
+                 "last_med_quality": 0,
+                 "last_low_quality": 0,
+                 "last_no_match": 0}
         for typ in MATCH_TYPES:
             stats[typ] = 0
 
@@ -270,7 +277,6 @@ class MappingJobQueue(threading.Thread):
 
                 stats[result[1]] = result[0]
 
-            # TODO: improve this and make it an instantaneous stat
             query = """SELECT COUNT(*)
                          FROM mbid_mapping_metadata"""
             curs = connection.execute(query)
@@ -309,6 +315,7 @@ class MappingJobQueue(threading.Thread):
                             try:
                                 job = self.queue.get(False)
                                 if self.queue.qsize() < QUEUE_RELOAD_THRESHOLD:
+                                    self.app.logger.info("Load legacy")
                                     self.load_legacy_listens()
                             except Empty:
                                 sleep(.1)
