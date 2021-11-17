@@ -27,12 +27,6 @@ def _get_all_releases():
     return listenbrainz_spark.sql_context.read.json(path.MUSICBRAINZ_RELEASE_DUMP_JSON_FILE)
 
 
-def _get_2021_listens():
-    start = datetime(2021, 1, 1, 0, 0, 0)
-    end = datetime.now()
-    return get_listens_from_new_dump(start, end)
-
-
 def _get_top_50_artists():
     return """
         WITH intermediate_table as (
@@ -68,21 +62,21 @@ def _get_2021_releases():
             SELECT title
                  , id
                  , explode(`artist-credit`) AS ac
-                 , date
-                 , `release-group`.`primary-type` as type
+                 , `release-group`.`first-release-date` AS first_release_date
+                 , `release-group`.`primary-type` AS type
               FROM release
-             WHERE substr(date, 1, 4) = '2021'
+             WHERE substr(`release-group`.`first-release-date`, 1, 4) = '2021'
         )
         SELECT title
              , id AS release_id
-             , date
+             , first_release_date
              , type
              , collect_list(ac.artist.name) AS artist_credit_names
              , collect_list(ac.artist.id) AS artist_credit_mbids 
           FROM intermediate_table
       GROUP BY title
              , id
-             , date
+             , first_release_date
              , type
     """
 
@@ -94,7 +88,7 @@ def _get_new_releases_of_top_artists():
                     struct(
                        title
                      , release_id
-                     , date
+                     , first_release_date
                      , type
                      , releases_2021.artist_credit_mbids
                      , releases_2021.artist_credit_names
