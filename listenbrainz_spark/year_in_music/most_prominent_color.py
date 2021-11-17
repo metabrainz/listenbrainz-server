@@ -1,14 +1,12 @@
-from datetime import datetime
-
 import listenbrainz_spark
 from listenbrainz_spark import path
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.utils import get_listens_from_new_dump
+from listenbrainz_spark.year_in_music.utils import setup_2021_listens
 
 
 def get_most_prominent_color():
+    setup_2021_listens()
     _get_release_colors().createOrReplaceTempView("release_color")
-    _get_2021_listens().createOrReplaceTempView("listens_2021")
     all_user_colors = run_query(_get_most_prominent_color()).collect()
     yield {
         "type": "most_prominent_color",
@@ -18,12 +16,6 @@ def get_most_prominent_color():
 
 def _get_release_colors():
     return listenbrainz_spark.sql_context.read.json(path.RELEASE_COLOR_DUMP)
-
-
-def _get_2021_listens():
-    start = datetime(2021, 1, 1, 0, 0, 0)
-    end = datetime.now()
-    return get_listens_from_new_dump(start, end)
 
 
 def _get_most_prominent_color():
