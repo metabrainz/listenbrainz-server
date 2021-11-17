@@ -34,9 +34,7 @@ def process_listens(app, listens, is_legacy_listen=False):
         # its timestamp is 0, which means we should re-check the item
         with timescale.engine.connect() as connection:
             query = """SELECT recording_msid 
-                         FROM listen_join_listen_mbid_mapping lj
-                         JOIN listen_mbid_mapping mbid
-                           ON mbid.id = lj.listen_mbid_mapping
+                         FROM mbid_mapping
                         WHERE recording_msid IN :msids
                           AND last_updated != '1970-01-01'"""
             curs = connection.execute(sqlalchemy.text(
@@ -76,45 +74,64 @@ def process_listens(app, listens, is_legacy_listen=False):
                 if is_legacy_listen:
                     stats["legacy_match"] += len(matches)
 
+                metadata_query = """INSERT INTO mbid_mapping_metadata AS mbid
+                                              ( recording_mbid
+                                              , release_mbid
+                                              , release_name
+                                              , artist_mbids
+                                              , artist_credit_id
+                                              , artist_credit_name
+                                              , recording_name
+                                              , last_upated
+                                              )
+                                         VALUES 
+                                              ( %s::UUID
+                                              , %s::UUID
+                                              , %s
+                                              , %s::UUID[]
+                                              , %s
+                                              , %s
+                                              , %s
+                                              , now()
+                                              )
+                                    ON CONFLICT (recording_mbid) DO UPDATE
+                                            SET release_mbid = mbid.release_mbid
+                                              , release_name = mbid.release_name
+                                              , artist_mbids = mbid.artist_mbids
+                                              , artist_credit_id = mbid.artist_credit_id
+                                              , artist_credit_name = mbid.artist_credit_name
+                                              , recording_name = mbid.recording_name
+                                              , last_updated = now()"""
+
+                mapping_query = """INSERT INTO mbid_mapping AS m
+                                             ( recording_msid
+                                             , recording_mbid
+                                             , match_type
+                                             , last_upated
+                                             )
+                                        VALUES 
+                                             ( %s::UUID
+                                             , %s::UUID
+                                             , %s
+                                             , now()
+                                             )
+                                   ON CONFLICT (recording_msid) DO UPDATE
+                                           SET recording_msid = m.recording_msid
+                                             , recording_mbid = m.recording_mbid
+                                             , match_type = mbid.match_type
+                                             , last_updated = now()"""
+
                 # Finally insert matches to PG
-                mogrified = []
                 for match in matches:
-                    if match[1] is None:
-                        m = str(curs.mogrify("(NULL::UUID, NULL::UUID, NULL, NULL::UUID[], NULL::INT, NULL, NULL, 'no_match'::mbid_mapping_match_type_enum)", (match[7])), "utf-8")
-                    else:
-                        m = str(curs.mogrify("(%s::UUID, %s::UUID, %s, %s::UUID[], %s, %s, %s, %s::mbid_mapping_match_type_enum)", match[1:]), "utf-8")
-                    mogrified.append(m)
+                    # Insert/update the metadata row
+                    if match[1] is not None:
+                        curs.execute(metadata_query, tuple(match[1:7]))
 
-                query = """INSERT INTO listen_mbid_mapping AS mbid
-                                     ( recording_mbid
-                                     , release_mbid
-                                     , release_name
-                                     , artist_mbids
-                                     , artist_credit_id
-                                     , artist_credit_name
-                                     , recording_name
-                                     , match_type)
-                                VALUES %s
-                           ON CONFLICT (recording_mbid) DO UPDATE
-                                   SET release_name = mbid.release_name
-                                     , artist_mbids = mbid.artist_mbids
-                                     , artist_credit_id = mbid.artist_credit_id
-                                     , artist_credit_name = mbid.artist_credit_name
-                                     , recording_name = mbid.recording_name
-                                     , match_type = mbid.match_type
-                                     , last_updated = now()
-                             RETURNING id AS join_id, recording_mbid""" % ",".join(mogrified)
-                curs.execute(query)
-
-                join_rows = []
-                for i, row in enumerate(curs.fetchall()):
-                    join_rows.append((matches[i][0], row[0]))
-
-                query = "INSERT INTO listen_join_listen_mbid_mapping VALUES %s"
-                execute_values(curs, query, join_rows, template=None)
+                    # Insert the mapping row
+                    curs.execute(mapping_query, (match[0], match[1], match[8])
 
             except psycopg2.errors.CardinalityViolation as err:
-                app.logger.error("CardinalityViolation on insert to mbid_mapping\n%s" % str(query))
+                app.logger.error("CardinalityViolation on insert to mbid mapping\n%s" % str(query))
                 conn.rollback()
                 return
 

@@ -79,11 +79,11 @@ class MappingJobQueue(threading.Thread):
     def mark_oldest_no_match_entries_as_stale(self):
         """ 
         """
-        query = """UPDATE listen_mbid_mapping
+        query = """UPDATE mbid_mapping
                       SET last_updated = '1970-01-01'
                     WHERE match_type = 'no_match'
                       AND last_updated >= (SELECT last_updated
-                                             FROM listen_mbid_mapping
+                                             FROM mbid_mapping
                                             WHERE match_type = 'no_match'
                                          ORDER BY last_updated
                                            OFFSET %s
@@ -135,9 +135,9 @@ class MappingJobQueue(threading.Thread):
                                  track_name,
                                  data->'track_metadata'->'artist_name' AS artist_name
                             FROM listen
-                       LEFT JOIN listen_join_listen_mbid_mapping lj
-                              ON data->'track_metadata'->'additional_info'->>'recording_msid' = lj.recording_msid::text
-                           WHERE lj.recording_msid IS NULL
+                       LEFT JOIN mbid_mapping m
+                              ON data->'track_metadata'->'additional_info'->>'recording_msid' = m.recording_msid::text
+                           WHERE m.recording_msid IS NULL
                              AND listened_at <= :max_ts
                              AND listened_at > :min_ts"""
 
@@ -145,10 +145,8 @@ class MappingJobQueue(threading.Thread):
                                   track_name,
                                   data->'track_metadata'->'artist_name' AS artist_name
                              FROM listen
-                        LEFT JOIN listen_join_listen_mbid_mapping lj
-                               ON data->'track_metadata'->'additional_info'->>'recording_msid' = lj.recording_msid::text
-                        LEFT JOIN listen_mbid_mapping mbid
-                               ON mbid.id = lj.listen_mbid_mapping
+                        LEFT JOIN mbid_mapping m
+                               ON data->'track_metadata'->'additional_info'->>'recording_msid' = m.recording_msid::text
                             WHERE last_updated = '1970-01-01'"""
 
         # Check to see where we need to pick up from, or start new
