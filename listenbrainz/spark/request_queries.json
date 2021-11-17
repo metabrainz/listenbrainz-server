@@ -29,6 +29,11 @@
     "description": "Most prominent color of users",
     "params": []
   },
+  "stats.day_of_week": {
+    "name": "stats.day_of_week",
+    "description": "User's day of week",
+    "params": []
+  },
   "import.dump.full_newest": {
     "name": "import.dump.full_newest",
     "description": "Import the newest available full dump into the spark cluster",

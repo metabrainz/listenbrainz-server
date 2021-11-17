@@ -5,11 +5,12 @@ import listenbrainz_spark
 from listenbrainz_spark import path
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import get_listens_from_new_dump
+from listenbrainz_spark.year_in_music.utils import setup_2021_listens
 
 
 def get_new_releases_of_top_artists():
+    setup_2021_listens()
     _get_all_releases().createOrReplaceTempView("release")
-    _get_2021_listens().createOrReplaceTempView("listens_2021")
     run_query(_get_top_50_artists()).createOrReplaceTempView("top_50_artists")
     run_query(_get_2021_releases()).createOrReplaceTempView("releases_2021")
     new_releases = run_query(_get_new_releases_of_top_artists()).toLocalIterator()

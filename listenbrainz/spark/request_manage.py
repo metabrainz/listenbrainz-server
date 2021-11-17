@@ -140,6 +140,13 @@ def request_most_prominent_color():
     send_request_to_spark_cluster(_prepare_query_message("stats.most_prominent_color"))
 
 
+@cli.command(name="request_day_of_week")
+def request_day_of_week():
+    """ Send request to calculate new release stats to the spark cluster
+    """
+    send_request_to_spark_cluster(_prepare_query_message("stats.day_of_week"))
+
+
 @cli.command(name="request_import_full")
 @click.option("--id", "id_", type=int, required=False,
               help="Optional. ID of the full dump to import, defaults to latest dump available on FTP server")

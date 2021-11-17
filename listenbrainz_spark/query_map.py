@@ -11,6 +11,7 @@ import listenbrainz_spark.stats.user.listening_activity
 import listenbrainz_spark.year_in_music.new_releases_of_top_artists
 import listenbrainz_spark.year_in_music.most_prominent_color
 import listenbrainz_spark.year_in_music.similar_users
+import listenbrainz_spark.year_in_music.day_of_week
 
 functions = {
     'stats.user.entity': listenbrainz_spark.stats.user.entity.get_entity_stats,
@@ -19,6 +20,7 @@ functions = {
     'stats.sitewide.entity': listenbrainz_spark.stats.sitewide.entity.get_entity_stats,
     'stats.new_releases_of_top_artists': listenbrainz_spark.year_in_music.new_releases_of_top_artists.get_new_releases_of_top_artists,
     'stats.most_prominent_color': listenbrainz_spark.year_in_music.most_prominent_color.get_most_prominent_color,
+    'stats.day_of_week': listenbrainz_spark.year_in_music.day_of_week.get_day_of_week,
     'import.dump.full_newest': listenbrainz_spark.request_consumer.jobs.import_dump.import_newest_full_dump_handler,
     'import.dump.full_id': listenbrainz_spark.request_consumer.jobs.import_dump.import_full_dump_by_id_handler,
     'import.dump.incremental_newest': listenbrainz_spark.request_consumer.jobs.import_dump.import_newest_incremental_dump_handler,

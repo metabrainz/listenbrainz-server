@@ -24,7 +24,7 @@ from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          handle_missing_musicbrainz_data,
                                          notify_cf_recording_recommendations_generation,
                                          handle_similar_users, handle_new_releases_of_top_artists,
-                                         handle_most_prominent_color, handle_similar_users_2021)
+                                         handle_most_prominent_color, handle_similar_users_2021, handle_day_of_week)
 
 from listenbrainz.webserver import create_app
 
@@ -35,6 +35,7 @@ response_handler_map = {
     'sitewide_entity': handle_sitewide_entity,
     'new_releases_of_top_artists': handle_new_releases_of_top_artists,
     'most_prominent_color': handle_most_prominent_color,
+    'day_of_week': handle_day_of_week,
     'import_full_dump': handle_dump_imported,
     'import_incremental_dump': handle_dump_imported,
     'cf_recommendations_recording_dataframes': handle_dataframes,

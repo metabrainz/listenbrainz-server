@@ -359,3 +359,7 @@ def handle_new_releases_of_top_artists(message):
 
 def handle_most_prominent_color(message):
     year_in_music.insert_most_prominent_color(message["data"])
+
+
+def handle_day_of_week(message):
+    year_in_music.insert_day_of_week(message["data"])

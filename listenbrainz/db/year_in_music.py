@@ -68,3 +68,25 @@ def insert_similar_users(data):
     except psycopg2.errors.OperationalError:
         connection.rollback()
         current_app.logger.error("Error while inserting similar users:", exc_info=True)
+
+
+def insert_day_of_week(data):
+    connection = db.engine.raw_connection()
+    query = """
+        INSERT INTO statistics.year_in_music(user_id, data)
+             SELECT "user".id
+                  , jsonb_build_object('day_of_week', weekday)
+               FROM (VALUES %s) AS t(user_name, weekday)
+               JOIN "user"
+                 ON "user".musicbrainz_id = user_name
+        ON CONFLICT (user_id)
+      DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+        """
+    user_weekdays = ujson.loads(data)
+    try:
+        with connection.cursor() as cursor:
+            execute_values(cursor, query, user_weekdays.items())
+        connection.commit()
+    except psycopg2.errors.OperationalError:
+        connection.rollback()
+        current_app.logger.error("Error while inserting day of week:", exc_info=True)
