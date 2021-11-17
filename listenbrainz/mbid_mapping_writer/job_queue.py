@@ -214,6 +214,12 @@ class MappingJobQueue(threading.Thread):
                                   self.queue.qsize(),
                                   listens_per_sec))
 
+            if stats["last_exact_match"] is None:
+                stats["last_exact_match"] = stats["exact_match"]
+                stats["last_high_quality"] = stats["high_quality"]
+                stats["last_med_quality"] = stats["med_quality"]
+                stats["last_low_quality"] = stats["low_quality"]
+                stats["last_no_match"] = stats["no_match"]
             metrics.set("listenbrainz-mbid-mapping-writer",
                         total_match_p=percent,
                         exact_match_p=stats["exact_match"] /
@@ -234,12 +240,14 @@ class MappingJobQueue(threading.Thread):
                         no_match=stats["no_match"],
                         errors=stats["errors"],
                         qsize=self.queue.qsize(),
-                        exact_match_rate=stats["last_exact_match"] - stats["exact_match"],
-                        high_quality_rate=stats["last_high_quality"] - stats["high_quality"],
-                        med_quality_rate=stats["last_med_quality"] - stats["med_quality"],
-                        low_quality_rate=stats["last_low_quality"] - stats["low_quality"],
-                        no_match_rate=stats["last_no_match"] - stats["no_match"],
+                        exact_match_rate=stats["exact_match"] - stats["last_exact_match"],
+                        high_quality_rate=stats["high_quality"] - stats["last_high_quality"],
+                        med_quality_rate=stats["med_quality"] - stats["last_med_quality"],
+                        low_quality_rate=stats["low_quality"] - stats["last_low_quality"],
+                        no_match_rate=stats["no_match"] - stats["last_no_match"],
                         listens_per_sec=listens_per_sec,
+                        listen_count=stats["listen_count"],
+                        listens_matched=stats["listens_matched"],
                         legacy_index_date=datetime.date.fromtimestamp(self.legacy_listens_index_date).strftime("%Y-%m-%d"))
 
             stats["last_exact_match"] = stats["exact_match"]
@@ -254,13 +262,15 @@ class MappingJobQueue(threading.Thread):
         stats = {"processed": 0,
                  "total": 0,
                  "errors": 0,
+                 "listen_count": 0,
+                 "listens_matched": 0,
                  "legacy": 0,
                  "legacy_match": 0,
-                 "last_exact_match": 0,
-                 "last_high_quality": 0,
-                 "last_med_quality": 0,
-                 "last_low_quality": 0,
-                 "last_no_match": 0}
+                 "last_exact_match": None,
+                 "last_high_quality": None,
+                 "last_med_quality": None,
+                 "last_low_quality": None,
+                 "last_no_match": None}
         for typ in MATCH_TYPES:
             stats[typ] = 0
 
@@ -315,7 +325,6 @@ class MappingJobQueue(threading.Thread):
                             try:
                                 job = self.queue.get(False)
                                 if self.queue.qsize() < QUEUE_RELOAD_THRESHOLD:
-                                    self.app.logger.info("Load legacy")
                                     self.load_legacy_listens()
                             except Empty:
                                 sleep(.1)

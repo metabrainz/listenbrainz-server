@@ -20,14 +20,18 @@ def process_listens(app, listens, is_legacy_listen=False):
        a result alrady exists in the DB -- the selection of legacy listens
        has already taken care of this."""
 
-    stats = {"processed": 0, "total": 0, "errors": 0, "legacy_match": 0}
+    stats = {"processed": 0, "total": 0, "errors": 0, "listen_count": 0, "listens_matched": 0}
     for typ in MATCH_TYPES:
         stats[typ] = 0
 
     skipped = 0
 
+
     msids = {str(listen['recording_msid']): listen for listen in listens}
     stats["total"] = len(msids)
+    if not is_legacy_listen:
+        stats["listen_count"] += len(msids)
+
     if len(msids):
 
         # Remove msids for which we already have a match, unless
@@ -63,16 +67,16 @@ def process_listens(app, listens, is_legacy_listen=False):
                         app, remaining_listens, stats, False)
                     matches.extend(new_matches)
 
-                    # For all listens that are not matched, enter a no match entry, so we don't
-                    # keep attempting to look up more listens.
-                    for listen in remaining_listens:
-                        matches.append(
-                            (listen['recording_msid'], None,None, None, None, None, None, None, MATCH_TYPES[0]))
-                        stats['no_match'] += 1
+                if not is_legacy_listen:
+                    stats["listens_matched"] += len(matches)
+
+                # For all listens that are not matched, enter a no match entry, so we don't
+                # keep attempting to look up more listens.
+                for listen in remaining_listens:
+                    matches.append((listen['recording_msid'], None,None, None, None, None, None, None, MATCH_TYPES[0]))
+                    stats['no_match'] += 1
 
                 stats["processed"] += len(matches)
-                if is_legacy_listen:
-                    stats["legacy_match"] += len(matches)
 
                 metadata_query = """INSERT INTO mbid_mapping_metadata AS mbid
                                               ( recording_mbid
