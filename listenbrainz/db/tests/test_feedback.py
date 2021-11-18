@@ -86,8 +86,8 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
                         VALUES (:msid, :mbid, :match_type, now())"""
 
         with ts.engine.connect() as connection:
-            connection.execute(sqlalchemy.text(query), 
-                               { "msid": msid, "mbid": "076255b4-1575-11ec-ac84-135bf6a670e3", "match_type": "exact_match" })
+            connection.execute(sqlalchemy.text(query),
+                               {"msid": msid, "mbid": "076255b4-1575-11ec-ac84-135bf6a670e3", "match_type": "exact_match"})
 
         for fb in self.sample_feedback_with_metadata:
             db_feedback.insert(
@@ -283,9 +283,9 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
         recording_list.append("b83fd3c3-449c-49be-a874-31d7cf26d946")
 
         result = db_feedback.get_feedback_for_multiple_recordings_for_user(
-                                                                           user_id=self.user["id"],
-                                                                           recording_list=recording_list
-                                                                          )
+            user_id=self.user["id"],
+            recording_list=recording_list
+        )
         self.assertEqual(len(result), len(recording_list))
 
         # test correct score is returned for recording_msids for which feedback records are inserted

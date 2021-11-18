@@ -87,7 +87,7 @@ def process_listens(app, listens, is_legacy_listen=False):
                                               , recording_name
                                               , last_updated
                                               )
-                                         VALUES 
+                                         VALUES
                                               ( %s::UUID
                                               , %s::UUID
                                               , %s
@@ -112,7 +112,7 @@ def process_listens(app, listens, is_legacy_listen=False):
                                              , match_type
                                              , last_updated
                                              )
-                                        VALUES 
+                                        VALUES
                                              ( %s::UUID
                                              , %s::UUID
                                              , %s

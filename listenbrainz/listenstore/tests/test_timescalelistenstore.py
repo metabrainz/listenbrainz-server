@@ -99,7 +99,6 @@ class TestTimescaleListenStore(DatabaseTestCase):
             connection.execute(sqlalchemy.text(query))
             connection.execute(sqlalchemy.text(join_query))
 
-
     def _insert_with_created(self, listens):
         """ Insert a batch of listens with 'created' field.
         """

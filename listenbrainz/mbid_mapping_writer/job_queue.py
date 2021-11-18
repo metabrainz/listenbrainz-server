@@ -82,7 +82,7 @@ class MappingJobQueue(threading.Thread):
         self.join()
 
     def mark_oldest_no_match_entries_as_stale(self):
-        """ 
+        """
             THIS FUNCTION IS CURRENTLY UNUSED, BUT WILL BE USED LATER.
         """
         query = """UPDATE mbid_mapping
