@@ -761,10 +761,10 @@ export default class BrainzPlayer extends React.Component<
     const { refreshSpotifyToken, refreshYoutubeToken } = this.props;
     const { youtubeAuth, spotifyAuth } = this.context;
     // Determine if the user is authenticated to search & play tracks with any of the datasources
-    const hasDatasourceToSearch =
-      this.dataSources.findIndex((ds) =>
-        ds.current?.canSearchAndPlayTracks()
-      ) !== -1;
+    // const hasDatasourceToSearch =
+    //   this.dataSources.findIndex((ds) =>
+    //     ds.current?.canSearchAndPlayTracks()
+    //   ) !== -1;
     return (
       <div>
         <PlaybackControls
@@ -782,16 +782,6 @@ export default class BrainzPlayer extends React.Component<
           durationMs={durationMs}
           seekToPositionMs={this.seekToPositionMs}
         >
-          {!hasDatasourceToSearch && (
-            <div className="connect-services-message">
-              You need to{" "}
-              <a href="/profile/music-services/details/" target="_blank">
-                connect to a music service
-              </a>{" "}
-              and refresh this page in order to search for and play songs on
-              ListenBrainz.
-            </div>
-          )}
           <SpotifyPlayer
             show={
               isActivated &&
