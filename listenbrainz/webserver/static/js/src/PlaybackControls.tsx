@@ -1,9 +1,13 @@
 import * as React from "react";
 import {
+  faCog,
+  faEllipsisV,
   faEye,
   faEyeSlash,
   faFastBackward,
   faFastForward,
+  faHeart,
+  faHeartBroken,
   faPauseCircle,
   faPlayCircle,
   faSortAmountDown,
@@ -185,6 +189,10 @@ export default class PlaybackControls extends React.Component<
           />
         </div>
         <div className="actions">
+          <FontAwesomeIcon icon={faHeart} />
+          <FontAwesomeIcon icon={faHeartBroken} />
+          <FontAwesomeIcon icon={faEllipsisV} />
+          <FontAwesomeIcon icon={faCog} />
         </div>
       </div>
     );
