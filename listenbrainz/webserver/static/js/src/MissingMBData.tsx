@@ -4,6 +4,8 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as Sentry from "@sentry/react";
 
+import { faPlus } from "@fortawesome/free-solid-svg-icons";
+
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
@@ -101,6 +103,51 @@ export default class MissingMBDataPage extends React.Component<
     this.setState({ loading: false });
   };
 
+  submitMissingData = (listen: Listen) => {
+    // This function submits data to the MusicBrainz server. We have not used
+    // fetch here because the endpoint where the submision is being done
+    // replies back with HTML and since we cannot redirect via fetch, we have
+    // to resort to such obscure method :D
+    const { user } = this.props;
+    const form = document.createElement("form");
+    form.method = "post";
+    form.action = "https://musicbrainz.org/release/add";
+    form.target = "_blank";
+    const name = document.createElement("input");
+    name.type = "hidden";
+    name.name = "name";
+    name.value = listen.track_metadata.release_name || "";
+    form.appendChild(name);
+    const recording = document.createElement("input");
+    recording.type = "hidden";
+    recording.name = "mediums.0.track.0.name";
+    recording.value = listen.track_metadata.track_name;
+    form.appendChild(recording);
+    const artists = listen.track_metadata.artist_name.split(",");
+    artists.forEach((artist, index) => {
+      const artistCredit = document.createElement("input");
+      artistCredit.type = "hidden";
+      artistCredit.name = `artist_credit.names.${index}.artist.name`;
+      artistCredit.value = artist;
+      form.appendChild(artistCredit);
+      if (index !== artists.length - 1) {
+        const joiner = document.createElement("input");
+        joiner.type = "hidden";
+        joiner.name = `artist_credit.names.${index}.join_phrase`;
+        joiner.value = ", ";
+        form.appendChild(joiner);
+      }
+    });
+    const editNote = document.createElement("textarea");
+    editNote.style.display = "none";
+    editNote.name = "edit_note";
+    editNote.value = `Imported from ${user.name}'s ListenBrainz Missing MusicBrainz Data Page`;
+    form.appendChild(editNote);
+    document.body.appendChild(form);
+    form.submit();
+    form.remove();
+  };
+
   render() {
     const { missingData, currPage, totalPages, loading } = this.state;
     const { user, newAlert } = this.props;
@@ -130,8 +177,10 @@ export default class MissingMBDataPage extends React.Component<
                           showTimestamp
                           showUsername={false}
                           newAlert={newAlert}
-                          isMissingData
-                          disablePlay
+                          customIconFunction={{
+                            icon: faPlus,
+                            func: this.submitMissingData,
+                          }}
                           listen={{
                             listened_at:
                               new Date(`${data.listened_at}Z`).getTime() / 1000,
