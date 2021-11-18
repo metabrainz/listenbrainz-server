@@ -22,6 +22,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
+import { isEmpty, isNil } from "lodash";
 import FollowButton from "./FollowButton";
 import APIService from "./APIService";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
@@ -39,11 +40,12 @@ const UserPageHeading = ({
   loggedInUserFollowsUser: boolean;
   alreadyReportedUser: boolean;
 }) => {
+  const hasLoggedInUser = !isNil(loggedInUser) && !isEmpty(loggedInUser);
   return (
     <>
       <h2 className="page-title">
         {user.name}
-        {loggedInUser && user.name !== loggedInUser.name && (
+        {hasLoggedInUser && user.name !== loggedInUser.name && (
           <FollowButton
             type="icon-only"
             user={user}
@@ -52,7 +54,7 @@ const UserPageHeading = ({
           />
         )}
       </h2>
-      {loggedInUser && user?.name !== loggedInUser.name && (
+      {hasLoggedInUser && user?.name !== loggedInUser.name && (
         <ReportUserButton user={user} alreadyReported={alreadyReportedUser} />
       )}
     </>
