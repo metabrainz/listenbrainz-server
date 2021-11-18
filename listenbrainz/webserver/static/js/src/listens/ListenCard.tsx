@@ -23,6 +23,7 @@ import {
   fullLocalizedDateFromTimestampOrISODate,
   getRecordingMBID,
   getAlbumArtFromListenMetadata,
+  getReleaseMBID,
 } from "../utils";
 import GlobalAppContext from "../GlobalAppContext";
 import Card from "../components/Card";
@@ -31,7 +32,6 @@ import ListenFeedbackComponent from "./ListenFeedbackComponent";
 import YoutubePlayer from "../YoutubePlayer";
 import SpotifyPlayer from "../SpotifyPlayer";
 import SoundcloudPlayer from "../SoundcloudPlayer";
-import BrainzPlayer from "../BrainzPlayer";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
@@ -226,6 +226,7 @@ export default class ListenCard extends React.Component<
       "track_metadata.additional_info.recording_msid"
     );
     const recordingMBID = getRecordingMBID(listen);
+    const releaseMBID = getReleaseMBID(listen);
     const spotifyURL = SpotifyPlayer.getSpotifyURLFromListen(listen);
     const youtubeURL = YoutubePlayer.getYoutubeURLFromListen(listen);
     const soundcloudURL = SoundcloudPlayer.getSoundcloudURLFromListen(listen);
@@ -287,10 +288,21 @@ export default class ListenCard extends React.Component<
           {thumbnail || (
             <div className="listen-thumbnail">
               {thumbnailSrc ? (
-                <img
-                  src={thumbnailSrc}
-                  alt={listen.track_metadata?.release_name ?? "Cover art"}
-                />
+                <a
+                  href={
+                    releaseMBID
+                      ? `https://musicbrainz.org/release/${releaseMBID}`
+                      : ""
+                  }
+                  title={listen.track_metadata?.release_name ?? "Cover art"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img
+                    src={thumbnailSrc}
+                    alt={listen.track_metadata?.release_name ?? "Cover art"}
+                  />
+                </a>
               ) : (
                 <a
                   href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
