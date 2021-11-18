@@ -5,7 +5,6 @@ import {
   faEllipsisV,
   faPlay,
   faCommentDots,
-  faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -51,10 +50,8 @@ export type ListenCardProps = {
   feedbackComponent?: JSX.Element;
   // These go in the dropdown menu
   additionalMenuItems?: JSX.Element;
-  // Mode for displaying missing MusicBrainz data
-  isMissingData?: boolean;
-  // Disables the play button that pops up when hovering, disables play on click too
-  disablePlay?: boolean;
+  // This object should be passed when you want custom icon with custom action
+  customIconFunction?: CustomIconFunction;
 };
 
 type ListenCardState = {
@@ -94,40 +91,6 @@ export default class ListenCard extends React.Component<
       { brainzplayer_event: "play-listen", payload: listen },
       window.location.origin
     );
-  };
-
-  submitMissingData = () => {
-    const { listen } = this.props;
-    const form = document.createElement("form");
-    form.method = "post";
-    form.action = "https://musicbrainz.org/release/add";
-    const name = document.createElement("input");
-    name.type = "hidden";
-    name.name = "name";
-    name.value = listen.track_metadata.release_name || "";
-    form.appendChild(name);
-    const recording = document.createElement("input");
-    recording.type = "hidden";
-    recording.name = "mediums.0.track.0.name";
-    recording.value = listen.track_metadata.track_name;
-    form.appendChild(recording);
-    const artists = listen.track_metadata.artist_name.split(",");
-    artists.forEach((artist, index) => {
-      const artistCredit = document.createElement("input");
-      artistCredit.type = "hidden";
-      artistCredit.name = `artist_credit.names.${index}.artist.name`;
-      artistCredit.value = artist;
-      form.appendChild(artistCredit);
-      if (index !== artists.length - 1) {
-        const joiner = document.createElement("input");
-        joiner.type = "hidden";
-        joiner.name = `artist_credit.names.${index}.join_phrase`;
-        joiner.value = ", ";
-        form.appendChild(joiner);
-      }
-    });
-    document.body.appendChild(form);
-    form.submit();
   };
 
   /** React to events sent by BrainzPlayer */
@@ -226,7 +189,7 @@ export default class ListenCard extends React.Component<
       ...otherProps
     } = this.props;
     const { isCurrentlyPlaying } = this.state;
-    const { isMissingData, disablePlay } = this.props;
+    const { customIconFunction } = this.props;
 
     const recordingMSID = _get(
       listen,
@@ -347,7 +310,7 @@ export default class ListenCard extends React.Component<
               </ul>
             </>
           )}
-          {disablePlay ? null : (
+          {customIconFunction ? null : (
             <button
               title="Play"
               className="btn-transparent play-button"
@@ -361,14 +324,19 @@ export default class ListenCard extends React.Component<
               )}
             </button>
           )}
-          {isMissingData ? (
+          {customIconFunction ? (
             <button
               title="Add to MusicBrainz"
               className="btn-transparent"
-              onClick={this.submitMissingData}
+              onClick={() => {
+                customIconFunction.func(listen);
+              }}
               type="button"
             >
-              <FontAwesomeIcon size="2x" icon={faPlus as IconProp} />
+              <FontAwesomeIcon
+                size="2x"
+                icon={customIconFunction.icon as IconProp}
+              />
             </button>
           ) : null}
         </div>
