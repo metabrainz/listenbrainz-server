@@ -25,6 +25,7 @@ import {
   hasMediaSessionSupport,
   overwriteMediaSession,
   updateMediaSession,
+  updateWindowTitle,
 } from "./Notifications";
 
 export type DataSourceType = {
@@ -538,6 +539,9 @@ export default class BrainzPlayer extends React.Component<
       // (Avoids getting notifications upon pausing a track)
       return;
     }
+
+    updateWindowTitle(title, "🎵", " — ListenBrainz");
+
     if (hasMediaSessionSupport()) {
       overwriteMediaSession(this.mediaSessionHandlers);
       updateMediaSession(title, artist, album, artwork);
