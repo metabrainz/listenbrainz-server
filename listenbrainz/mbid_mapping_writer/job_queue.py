@@ -20,7 +20,7 @@ from brainzutils import metrics, cache
 
 MAX_THREADS = 3
 MAX_QUEUED_JOBS = MAX_THREADS * 2
-QUEUE_RELOAD_THRESHOLD = 1000
+QUEUE_RELOAD_THRESHOLD = 0
 UPDATE_INTERVAL = 30
 
 LEGACY_LISTEN = 1
@@ -30,7 +30,7 @@ NEW_LISTEN = 0
 UNMATCHED_LISTENS_COMPLETED_TIMEOUT = 86400  # in s
 
 # This is the point where the legacy listens should be processed from
-LEGACY_LISTENS_LOAD_WINDOW = 604800  # 7 days in seconds
+LEGACY_LISTENS_LOAD_WINDOW = 86400 # TODO FIX THIS BEFORE PR 604800  # 7 days in seconds
 LEGACY_LISTENS_INDEX_DATE_CACHE_KEY = "mbid.legacy_index_date"
 
 # How many listens should be re-checked every mapping pass?
@@ -99,9 +99,8 @@ class MappingJobQueue(threading.Thread):
             It may be called multiple times, so it must guard against firing off multiple
             threads. """
 
-#        return
-
         if self.legacy_load_thread or (self.legacy_next_run and self.legacy_next_run > monotonic()):
+            self.app.logger.info("Not starting thread because of guard")
             return
 
         self.legacy_load_thread = threading.Thread(
@@ -174,22 +173,25 @@ class MappingJobQueue(threading.Thread):
             dt = datetime.datetime.fromtimestamp(self.legacy_listens_index_date)
             cache.set(LEGACY_LISTENS_INDEX_DATE_CACHE_KEY, dt.strftime("%Y-%m-%d"), expirein=0, encode=False)
 
-            # Now queue up the recheck listens
-            self.fetch_and_queue_listens(recheck_query, {})
-
             return
 
-        # Load legacy listens
-        self.app.logger.info("Load more legacy listens for %s" % datetime.datetime.fromtimestamp(
-            self.legacy_listens_index_date).strftime("%Y-%m-%d"))
-
-        count = self.fetch_and_queue_listens(legacy_query, { "max_ts": self.legacy_listens_index_date,
-                                             "min_ts": self.legacy_listens_index_date - LEGACY_LISTENS_LOAD_WINDOW })
+        # Check to see if any listens have been marked for re-check
+        count = self.fetch_and_queue_listens(recheck_query, {})
+        if count > 0:
+            self.app.logger.info("Loaded %d listens to be rechecked." % count)
+        else:
+            # If none, check for old legacy listens
+            count = self.fetch_and_queue_listens(legacy_query, { "max_ts": self.legacy_listens_index_date,
+                                                 "min_ts": self.legacy_listens_index_date - LEGACY_LISTENS_LOAD_WINDOW })
+            self.app.logger.info("Loaded %s more legacy listens for %s" % (count, datetime.datetime.fromtimestamp(
+                self.legacy_listens_index_date).strftime("%Y-%m-%d")))
 
         # update cache entry and count
-        self.legacy_listens_index_date -= LEGACY_LISTENS_LOAD_WINDOW
-        dt = datetime.datetime.fromtimestamp(self.legacy_listens_index_date)
-        cache.set(LEGACY_LISTENS_INDEX_DATE_CACHE_KEY, dt.strftime("%Y-%m-%d"), expirein=0, encode=False)
+        if count == 0:
+            self.app.logger.info("move legacy listen high water mark")
+            self.legacy_listens_index_date -= LEGACY_LISTENS_LOAD_WINDOW
+            dt = datetime.datetime.fromtimestamp(self.legacy_listens_index_date)
+            cache.set(LEGACY_LISTENS_INDEX_DATE_CACHE_KEY, dt.strftime("%Y-%m-%d"), expirein=0, encode=False)
         self.num_legacy_listens_loaded = count
 
     def update_metrics(self, stats):
@@ -324,8 +326,6 @@ class MappingJobQueue(threading.Thread):
                         for i in range(MAX_QUEUED_JOBS - len(uncompleted)):
                             try:
                                 job = self.queue.get(False)
-                                if self.queue.qsize() < QUEUE_RELOAD_THRESHOLD:
-                                    self.load_legacy_listens()
                             except Empty:
                                 sleep(.1)
                                 continue
@@ -337,8 +337,10 @@ class MappingJobQueue(threading.Thread):
 
                         if self.legacy_load_thread and not self.legacy_load_thread.is_alive():
                             self.legacy_load_thread = None
-                            self.app.logger.info(
-                                "%d legacy listens loaded" % self.num_legacy_listens_loaded)
+
+                        if self.queue.qsize() == 0:
+                            self.app.logger.info("Queue empty, reload") 
+                            self.load_legacy_listens()
 
                         if monotonic() > update_time:
                             update_time = monotonic() + UPDATE_INTERVAL

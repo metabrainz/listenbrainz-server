@@ -27,5 +27,6 @@ CREATE UNIQUE INDEX recording_mbid_ndx_mbid_mapping_metadata ON mbid_mapping_met
 CREATE UNIQUE INDEX recording_msid_ndx_mbid_mapping ON mbid_mapping (recording_msid);
 CREATE INDEX recording_mbid_ndx_mbid_mapping ON mbid_mapping (recording_mbid);
 CREATE INDEX match_type_ndx_mbid_mapping ON mbid_mapping (match_type);
+CREATE INDEX last_updated_ndx_mbid_mapping ON mbid_mapping (last_updated);
 
 COMMIT;
