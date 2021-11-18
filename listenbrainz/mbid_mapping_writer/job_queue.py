@@ -83,6 +83,7 @@ class MappingJobQueue(threading.Thread):
 
     def mark_oldest_no_match_entries_as_stale(self):
         """ 
+            THIS FUNCTION IS CURRENTLY UNUSED, BUT WILL BE USED LATER.
         """
         query = """UPDATE mbid_mapping
                       SET last_updated = '1970-01-01'
@@ -94,8 +95,6 @@ class MappingJobQueue(threading.Thread):
                                            OFFSET %s
                                             LIMIT 1);"""
         args = (NUM_ITEMS_TO_RECHECK_PER_PASS,)
-
-        pass
 
     def load_legacy_listens(self):
         """ This function should kick off a thread to load more legacy listens if called.
