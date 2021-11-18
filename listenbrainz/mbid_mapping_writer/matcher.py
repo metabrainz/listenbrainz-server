@@ -26,7 +26,6 @@ def process_listens(app, listens, is_legacy_listen=False):
 
     skipped = 0
 
-
     msids = {str(listen['recording_msid']): listen for listen in listens}
     stats["total"] = len(msids)
     if not is_legacy_listen:
@@ -73,7 +72,7 @@ def process_listens(app, listens, is_legacy_listen=False):
                 # For all listens that are not matched, enter a no match entry, so we don't
                 # keep attempting to look up more listens.
                 for listen in remaining_listens:
-                    matches.append((listen['recording_msid'], None,None, None, None, None, None, None, MATCH_TYPES[0]))
+                    matches.append((listen['recording_msid'], None, None, None, None, None, None, None, MATCH_TYPES[0]))
                     stats['no_match'] += 1
 
                 stats["processed"] += len(matches)

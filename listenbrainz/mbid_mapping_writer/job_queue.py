@@ -16,6 +16,7 @@ from listenbrainz.mbid_mapping_writer.matcher import process_listens
 from listenbrainz.labs_api.labs.api.mbid_mapping import MATCH_TYPES
 from listenbrainz.utils import init_cache
 from listenbrainz.listenstore.timescale_listenstore import DATA_START_YEAR_IN_SECONDS
+from listenbrainz import messybrainz as msb_db
 from brainzutils import metrics, cache
 
 MAX_THREADS = 3
@@ -30,11 +31,14 @@ NEW_LISTEN = 0
 UNMATCHED_LISTENS_COMPLETED_TIMEOUT = 86400  # in s
 
 # This is the point where the legacy listens should be processed from
-LEGACY_LISTENS_LOAD_WINDOW = 86400 # TODO FIX THIS BEFORE PR 604800  # 7 days in seconds
+LEGACY_LISTENS_LOAD_WINDOW = 86400 * 3   # load 3 days of data per go
 LEGACY_LISTENS_INDEX_DATE_CACHE_KEY = "mbid.legacy_index_date"
 
 # How many listens should be re-checked every mapping pass?
 NUM_ITEMS_TO_RECHECK_PER_PASS = 100000
+
+# When looking for mapped items marked for re-checking, use this batch size
+RECHECK_BATCH_SIZE = 5000
 
 
 @dataclass(order=True)
@@ -91,7 +95,6 @@ class MappingJobQueue(threading.Thread):
                                             LIMIT 1);"""
         args = (NUM_ITEMS_TO_RECHECK_PER_PASS,)
 
-
         pass
 
     def load_legacy_listens(self):
@@ -100,7 +103,6 @@ class MappingJobQueue(threading.Thread):
             threads. """
 
         if self.legacy_load_thread or (self.legacy_next_run and self.legacy_next_run > monotonic()):
-            self.app.logger.info("Not starting thread because of guard")
             return
 
         self.legacy_load_thread = threading.Thread(
@@ -110,9 +112,26 @@ class MappingJobQueue(threading.Thread):
     def fetch_and_queue_listens(self, query, args):
         """ Fetch and queue legacy and recheck listens """
 
+        msb_query = """SELECT gid AS recording_msid
+                            , rj.data->>'title' AS track_name
+                            , rj.data->>'artist' AS artist_name
+                         FROM recording r
+                         JOIN recording_json rj
+                           ON r.data = rj.id
+                       WHERE gid in :msids"""
+
         count = 0
+        msids = []
         with timescale.engine.connect() as connection:
             curs = connection.execute(sqlalchemy.text(query), args)
+            for row in curs.fetchall():
+                msids.append(row["recording_msid"])
+
+        if len(msids) == 0:
+            return 0
+
+        with msb_db.engine.connect() as connection:
+            curs = connection.execute(sqlalchemy.text(msb_query), msids=tuple(msids))
             while True:
                 result = curs.fetchone()
                 if not result:
@@ -131,10 +150,7 @@ class MappingJobQueue(threading.Thread):
            on the matched listens, finding the next chunk of legacy listens to look up.
            Listens are added to the queue with a low priority."""
 
-        self.app.logger.info("add legacy listen thread started")
-        legacy_query = """SELECT data->'track_metadata'->'additional_info'->>'recording_msid'::TEXT AS recording_msid,
-                                 track_name,
-                                 data->'track_metadata'->'artist_name' AS artist_name
+        legacy_query = """SELECT data->'track_metadata'->'additional_info'->>'recording_msid'::TEXT AS recording_msid
                             FROM listen
                        LEFT JOIN mbid_mapping m
                               ON data->'track_metadata'->'additional_info'->>'recording_msid' = m.recording_msid::text
@@ -142,13 +158,10 @@ class MappingJobQueue(threading.Thread):
                              AND listened_at <= :max_ts
                              AND listened_at > :min_ts"""
 
-        recheck_query = """SELECT data->'track_metadata'->'additional_info'->>'recording_msid'::TEXT AS recording_msid,
-                                  track_name,
-                                  data->'track_metadata'->'artist_name' AS artist_name
-                             FROM listen
-                        LEFT JOIN mbid_mapping m
-                               ON data->'track_metadata'->'additional_info'->>'recording_msid' = m.recording_msid::text
-                            WHERE last_updated = '1970-01-01'"""
+        recheck_query = """SELECT recording_msid
+                             FROM mbid_mapping
+                            WHERE last_updated = '1970-01-01'
+                            LIMIT %d""" % RECHECK_BATCH_SIZE
 
         # Check to see where we need to pick up from, or start new
         if not self.legacy_listens_index_date:
@@ -179,19 +192,18 @@ class MappingJobQueue(threading.Thread):
         count = self.fetch_and_queue_listens(recheck_query, {})
         if count > 0:
             self.app.logger.info("Loaded %d listens to be rechecked." % count)
+            return
         else:
             # If none, check for old legacy listens
-            count = self.fetch_and_queue_listens(legacy_query, { "max_ts": self.legacy_listens_index_date,
-                                                 "min_ts": self.legacy_listens_index_date - LEGACY_LISTENS_LOAD_WINDOW })
+            count = self.fetch_and_queue_listens(legacy_query, {"max_ts": self.legacy_listens_index_date,
+                                                                "min_ts": self.legacy_listens_index_date - LEGACY_LISTENS_LOAD_WINDOW})
             self.app.logger.info("Loaded %s more legacy listens for %s" % (count, datetime.datetime.fromtimestamp(
                 self.legacy_listens_index_date).strftime("%Y-%m-%d")))
 
         # update cache entry and count
-        if count == 0:
-            self.app.logger.info("move legacy listen high water mark")
-            self.legacy_listens_index_date -= LEGACY_LISTENS_LOAD_WINDOW
-            dt = datetime.datetime.fromtimestamp(self.legacy_listens_index_date)
-            cache.set(LEGACY_LISTENS_INDEX_DATE_CACHE_KEY, dt.strftime("%Y-%m-%d"), expirein=0, encode=False)
+        self.legacy_listens_index_date -= LEGACY_LISTENS_LOAD_WINDOW
+        dt = datetime.datetime.fromtimestamp(self.legacy_listens_index_date)
+        cache.set(LEGACY_LISTENS_INDEX_DATE_CACHE_KEY, dt.strftime("%Y-%m-%d"), expirein=0, encode=False)
         self.num_legacy_listens_loaded = count
 
     def update_metrics(self, stats):
@@ -205,11 +217,10 @@ class MappingJobQueue(threading.Thread):
                 listens_per_sec = 0
             self.last_processed = stats["processed"]
 
-
             percent = (stats["exact_match"] + stats["high_quality"] + stats["med_quality"] +
                        stats["low_quality"]) / stats["total"] * 100.00
             self.app.logger.info("total %d matched %d/%d legacy: %d queue: %d %d l/s" %
-                                 (stats["total"], 
+                                 (stats["total"],
                                   stats["exact_match"] + stats["high_quality"] + stats["med_quality"] + stats["low_quality"],
                                   stats["no_match"],
                                   stats["legacy"],
@@ -339,7 +350,6 @@ class MappingJobQueue(threading.Thread):
                             self.legacy_load_thread = None
 
                         if self.queue.qsize() == 0:
-                            self.app.logger.info("Queue empty, reload") 
                             self.load_legacy_listens()
 
                         if monotonic() > update_time:

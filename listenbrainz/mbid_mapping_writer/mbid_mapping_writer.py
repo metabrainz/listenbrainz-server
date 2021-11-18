@@ -67,10 +67,6 @@ class MBIDMappingWriter(threading.Thread):
             # start the queue stuffer thread
             self.queue.start()
             while True:
-                # TODO: Remove me before PR!
-                time.sleep(1000)
-                continue
-                
                 current_app.logger.info("Starting MBID mapping writer...")
                 self.init_rabbitmq_connection()
                 try:

@@ -414,7 +414,6 @@ class TimescaleListenStore(ListenStore):
 
                         break
 
-
                     listens.append(Listen.from_timescale(*result))
                     if len(listens) == limit:
                         done = True
