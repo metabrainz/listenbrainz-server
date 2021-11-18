@@ -13,6 +13,7 @@ import {
 
 import APIServiceClass from "./APIService";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
+import BrainzPlayer from "./BrainzPlayer";
 import ErrorBoundary from "./ErrorBoundary";
 import { getPageProps } from "./utils";
 import ListenCard from "./listens/ListenCard";
@@ -24,10 +25,11 @@ export type MissingMBDataProps = {
 } & WithAlertNotificationsInjectedProps;
 
 export interface MissingMBDataState {
-  missingData?: Array<MissingMBData>;
+  missingData: Array<MissingMBData>;
   currPage?: number;
   totalPages: number;
   loading: boolean;
+  direction: BrainzPlayDirection;
 }
 
 export default class MissingMBDataPage extends React.Component<
@@ -38,6 +40,7 @@ export default class MissingMBDataPage extends React.Component<
   declare context: React.ContextType<typeof GlobalAppContext>;
   private expectedDataPerPage = 25;
   private MissingMBDataTable = React.createRef<HTMLTableElement>();
+  private APIService!: APIServiceClass;
 
   constructor(props: MissingMBDataProps) {
     super(props);
@@ -48,6 +51,7 @@ export default class MissingMBDataPage extends React.Component<
         ? Math.ceil(props.missingData.length / this.expectedDataPerPage)
         : 0,
       loading: false,
+      direction: "down",
     };
 
     this.MissingMBDataTable = React.createRef();
@@ -55,6 +59,8 @@ export default class MissingMBDataPage extends React.Component<
 
   componentDidMount(): void {
     const { currPage } = this.state;
+    const { APIService } = this.context;
+    this.APIService = APIService;
     window.history.replaceState(null, "", `?page=${currPage}`);
   }
 
@@ -149,8 +155,15 @@ export default class MissingMBDataPage extends React.Component<
   };
 
   render() {
-    const { missingData, currPage, totalPages, loading } = this.state;
+    const {
+      missingData,
+      currPage,
+      totalPages,
+      loading,
+      direction,
+    } = this.state;
     const { user, newAlert } = this.props;
+    const { APIService } = this.context;
     return (
       <div role="main">
         <div className="row" style={{ display: "flex", flexWrap: "wrap" }}>
@@ -169,7 +182,7 @@ export default class MissingMBDataPage extends React.Component<
                   <Loader isLoading={loading} />
                 </div>
                 <div>
-                  {missingData?.map((data) => {
+                  {missingData.map((data) => {
                     return (
                       <div className="event-content" style={{ width: "100%" }}>
                         <ListenCard
@@ -232,6 +245,37 @@ export default class MissingMBDataPage extends React.Component<
                   </li>
                 </ul>
               </div>
+            </div>
+            <div
+              className="col-xs-12"
+              /* eslint-disable no-dupe-keys */
+              style={{
+                position: "-webkit-sticky",
+                // @ts-ignore
+                position: "sticky",
+                top: 20,
+              }}
+              /* eslint-enable no-dupe-keys */
+            >
+              <BrainzPlayer
+                direction={direction}
+                listens={missingData?.map((data) => {
+                  return {
+                    listened_at:
+                      new Date(`${data.listened_at}Z`).getTime() / 1000,
+                    user_name: user.name,
+                    track_metadata: {
+                      artist_name: data.artist_name,
+                      track_name: data.recording_name,
+                      release_name: data?.release_name,
+                    },
+                  };
+                })}
+                newAlert={newAlert}
+                listenBrainzAPIBaseURI={APIService.APIBaseURI}
+                refreshSpotifyToken={APIService.refreshSpotifyToken}
+                refreshYoutubeToken={APIService.refreshYoutubeToken}
+              />
             </div>
           </div>
         </div>
