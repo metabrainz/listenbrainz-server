@@ -13,6 +13,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconDefinition } from "@fortawesome/fontawesome-common-types"; // eslint-disable-line import/no-unresolved
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { isNaN as _isNaN } from "lodash";
 
 type PlaybackControlsProps = {
   playPreviousTrack: () => void;
@@ -52,9 +53,7 @@ const PlaybackControlButton = (props: PlaybackControlButtonProps) => {
   );
 };
 
-type PlaybackControlsState = {
-  autoHideControls: boolean;
-};
+type PlaybackControlsState = {};
 
 export default class PlaybackControls extends React.Component<
   PlaybackControlsProps,
@@ -63,12 +62,11 @@ export default class PlaybackControls extends React.Component<
   // How many milliseconds to navigate to with keyboard left/right arrows
   keyboardStepMS: number = 5000;
 
-  constructor(props: PlaybackControlsProps) {
-    super(props);
-    this.state = {
-      autoHideControls: true,
-    };
-  }
+  // constructor(props: PlaybackControlsProps) {
+  //   super(props);
+  //   this.state = {
+  //   };
+  // }
 
   progressClickHandler = (event: React.MouseEvent<HTMLInputElement>): void => {
     const { durationMs, seekToPositionMs } = this.props;
@@ -121,86 +119,72 @@ export default class PlaybackControls extends React.Component<
       playPreviousTrack,
       togglePlay,
       playNextTrack,
-      toggleDirection,
-      direction,
     } = this.props;
 
-    const { autoHideControls } = this.state;
-    const progressPercentage = Number((progressMs * 100) / durationMs);
+    const progressPercentage = Math.round(
+      Number((progressMs * 100) / durationMs)
+    );
+    const isPlayingATrack = Boolean(trackName || artistName);
+    const hideProgressBar =
+      _isNaN(progressPercentage) || progressPercentage <= 0;
     return (
       <div id="brainz-player" aria-label="Playback control">
+        <div
+          className={`progress${hideProgressBar ? " hidden" : ""}`}
+          onClick={this.progressClickHandler}
+          onKeyDown={this.onKeyPressHandler}
+          aria-label="Audio Progress Control"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={progressPercentage}
+          tabIndex={0}
+        >
+          <div
+            className="progress-bar"
+            style={{
+              width: `${progressPercentage}%`,
+            }}
+          />
+        </div>
         <div className="content">
           {children}
           <div className="no-album-art" />
         </div>
-        <div
-          className={`info ${
-            !autoHideControls || !children || playerPaused ? "showControls" : ""
-          }`}
-        >
-          <div className="currently-playing">
-            {trackName && <h2 className="song-name">{trackName}</h2>}
-            {artistName && <h3 className="artist-name">{artistName}</h3>}
-            <div
-              className="progress"
-              onClick={this.progressClickHandler}
-              onKeyDown={this.onKeyPressHandler}
-              aria-label="Audio Progress Control"
-              role="progressbar"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={progressPercentage}
-              tabIndex={0}
-            >
-              <div
-                className="progress-bar"
-                style={{
-                  width: `${progressPercentage}%`,
-                }}
-              />
+        <div className={isPlayingATrack ? "currently-playing" : ""}>
+          {trackName && (
+            <div title={trackName} className="ellipsis-2-lines">
+              {trackName}
             </div>
-          </div>
-          <div className="controls">
-            <PlaybackControlButton
-              className="left btn btn-xs"
-              title={`${
-                autoHideControls ? "Always show" : "Autohide"
-              } controls`}
-              action={() => {
-                this.setState((state) => ({
-                  autoHideControls: !state.autoHideControls,
-                }));
-              }}
-              icon={autoHideControls ? faEyeSlash : faEye}
-            />
-            <PlaybackControlButton
-              className="previous btn btn-xs"
-              title="Previous"
-              action={playPreviousTrack}
-              icon={faFastBackward}
-            />
-            <PlaybackControlButton
-              className="play btn"
-              action={togglePlay}
-              title={`${playerPaused ? "Play" : "Pause"}`}
-              icon={playerPaused ? faPlayCircle : faPauseCircle}
-              size="2x"
-            />
-            <PlaybackControlButton
-              className="next btn btn-xs"
-              action={playNextTrack}
-              title="Next"
-              icon={faFastForward}
-            />
-            {direction !== "hidden" && (
-              <PlaybackControlButton
-                className="right btn btn-xs"
-                action={toggleDirection}
-                title={`Play ${direction === "up" ? "down" : "up"}`}
-                icon={direction === "up" ? faSortAmountUp : faSortAmountDown}
-              />
-            )}
-          </div>
+          )}
+          {artistName && (
+            <span className="small text-muted ellipsis" title={artistName}>
+              {artistName}
+            </span>
+          )}
+        </div>
+        <div className="controls">
+          <PlaybackControlButton
+            className="previous"
+            title="Previous"
+            action={playPreviousTrack}
+            icon={faFastBackward}
+          />
+          <PlaybackControlButton
+            className="play"
+            action={togglePlay}
+            title={`${playerPaused ? "Play" : "Pause"}`}
+            icon={playerPaused ? faPlayCircle : faPauseCircle}
+            size="2x"
+          />
+          <PlaybackControlButton
+            className="next"
+            action={playNextTrack}
+            title="Next"
+            icon={faFastForward}
+          />
+        </div>
+        <div className="actions">
         </div>
       </div>
     );
