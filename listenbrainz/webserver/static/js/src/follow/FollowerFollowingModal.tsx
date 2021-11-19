@@ -6,7 +6,6 @@ import UserListModalEntry from "./UserListModalEntry";
 
 export type FollowerFollowingModalProps = {
   user: ListenBrainzUser;
-  loggedInUser: ListenBrainzUser | null;
   followerList: Array<string>;
   followingList: Array<string>;
   loggedInUserFollowsUser: (user: ListenBrainzUser | SimilarUser) => boolean;
@@ -37,7 +36,6 @@ export default class FollowerFollowingModal extends React.Component<
 
   render() {
     const {
-      loggedInUser,
       loggedInUserFollowsUser,
       updateFollowingList,
       followerList,
@@ -77,7 +75,6 @@ export default class FollowerFollowingModal extends React.Component<
                 mode="follow-following"
                 key={listEntry}
                 user={formattedAsUser}
-                loggedInUser={loggedInUser}
                 loggedInUserFollowsUser={loggedInUserFollowsUser(
                   formattedAsUser
                 )}
