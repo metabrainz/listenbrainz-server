@@ -22,8 +22,11 @@ CREATE INDEX collaborator_id_playlist_collaborator ON playlist.playlist_collabor
 
 -- MBID Mapping
 
-CREATE UNIQUE INDEX id_ndx_listen_join_listen_mbid_mapping ON listen_mbid_mapping (id);
-CREATE INDEX listen_mbid_mapping_ndx_listen_join_listen_mbid_mapping on listen_join_listen_mbid_mapping(listen_mbid_mapping);
-CREATE UNIQUE INDEX recording_msid_ndx_listen_join_listen_mbid_mapping ON listen_join_listen_mbid_mapping (recording_msid);
+CREATE UNIQUE INDEX recording_mbid_ndx_mbid_mapping_metadata ON mbid_mapping_metadata (recording_mbid);
+
+CREATE UNIQUE INDEX recording_msid_ndx_mbid_mapping ON mbid_mapping (recording_msid);
+CREATE INDEX recording_mbid_ndx_mbid_mapping ON mbid_mapping (recording_mbid);
+CREATE INDEX match_type_ndx_mbid_mapping ON mbid_mapping (match_type);
+CREATE INDEX last_updated_ndx_mbid_mapping ON mbid_mapping (last_updated);
 
 COMMIT;

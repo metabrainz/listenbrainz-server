@@ -111,8 +111,7 @@ PUBLIC_TABLES_DUMP = {
 }
 
 PUBLIC_TABLES_TIMESCALE_DUMP = {
-    'listen_mbid_mapping': (
-        'id',
+    'mbid_mapping_metadata': (
         'artist_credit_id',
         'recording_mbid',
         'release_mbid',
@@ -120,12 +119,13 @@ PUBLIC_TABLES_TIMESCALE_DUMP = {
         'artist_mbids',
         'artist_credit_name',
         'recording_name',
-        'match_type',
         'last_updated',
     ),
-    'listen_join_listen_mbid_mapping': (
+    'mbid_mapping': (
         'recording_msid',
-        'listen_mbid_mapping'
+        'recording_mbid',
+        'match_type',
+        'last_updated'
     )
 }
 
@@ -887,10 +887,6 @@ def _update_sequences():
 
     current_app.logger.info('Updating playlist.playlist_recording_id_seq...')
     _update_sequence(timescale.engine, 'playlist.playlist_recording_id_seq', 'playlist.playlist_recording')
-
-    current_app.logger.info('Updating listen_mbid_mapping_id_seq...')
-    _update_sequence(timescale.engine, 'listen_mbid_mapping_id_seq', 'listen_mbid_mapping')
-
 
 
 def _fetch_latest_file_info_from_ftp_dir(server, dir):
