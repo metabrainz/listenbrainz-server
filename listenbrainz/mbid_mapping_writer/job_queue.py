@@ -149,6 +149,7 @@ class MappingJobQueue(threading.Thread):
            on the matched listens, finding the next chunk of legacy listens to look up.
            Listens are added to the queue with a low priority."""
 
+        # Find listens that have no entry in the mapping yet.
         legacy_query = """SELECT data->'track_metadata'->'additional_info'->>'recording_msid'::TEXT AS recording_msid
                             FROM listen
                        LEFT JOIN mbid_mapping m
@@ -157,6 +158,7 @@ class MappingJobQueue(threading.Thread):
                              AND listened_at <= :max_ts
                              AND listened_at > :min_ts"""
 
+        # Find mapping rows that need to be rechecked
         recheck_query = """SELECT recording_msid
                              FROM mbid_mapping
                             WHERE last_updated = '1970-01-01'
