@@ -387,9 +387,9 @@ def process_all_spotify_users():
                                         u['musicbrainz_id'], exc_info=True)
             failure += 1
 
-    if time.monotonic() > _metric_submission_time:
-        _metric_submission_time += METRIC_UPDATE_INTERVAL
-        metrics.set("spotify_reader", imported_listens=_listens_imported_since_start)
+        if time.monotonic() > _metric_submission_time:
+            _metric_submission_time += METRIC_UPDATE_INTERVAL
+            metrics.set("spotify_reader", imported_listens=_listens_imported_since_start)
 
     current_app.logger.info('Processed %d users successfully!', success)
     current_app.logger.info('Encountered errors while processing %d users.', failure)
