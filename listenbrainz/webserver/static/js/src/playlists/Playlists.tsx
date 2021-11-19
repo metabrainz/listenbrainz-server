@@ -162,20 +162,20 @@ export default class UserPlaylists extends React.Component<
         currentUser.auth_token,
         playlistId
       );
+      // Fetch the newly created playlist and add it to the state if it's the current user's page
+      const JSPFObject: JSPFObject = await this.APIService.getPlaylist(
+        newPlaylistId,
+        currentUser.auth_token
+      );
       newAlert(
         "success",
         "Duplicated playlist",
         <>
           Duplicated to playlist&ensp;
-          <a href={`/playlist/${newPlaylistId}`}>Copy of {playlistTitle}</a>
+          <a href={`/playlist/${newPlaylistId}`}>{JSPFObject.playlist.title}</a>
         </>
       );
-      // Fetch the newly created playlist and add it to the state if it's the current user's page
       if (this.isCurrentUserPage()) {
-        const JSPFObject: JSPFObject = await this.APIService.getPlaylist(
-          newPlaylistId,
-          currentUser.auth_token
-        );
         this.setState((prevState) => ({
           playlists: [JSPFObject.playlist, ...prevState.playlists],
         }));
