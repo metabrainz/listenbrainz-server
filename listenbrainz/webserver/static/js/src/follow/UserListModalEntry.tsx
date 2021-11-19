@@ -1,11 +1,13 @@
+import { isEmpty, isNil } from "lodash";
 import * as React from "react";
+import { useContext } from "react";
 import FollowButton from "../FollowButton";
+import GlobalAppContext from "../GlobalAppContext";
 import SimilarityScore from "../SimilarityScore";
 
 export type UserListModalEntryProps = {
   mode: "follow-following" | "similar-users";
   user: ListenBrainzUser | SimilarUser;
-  loggedInUser: ListenBrainzUser | null;
   loggedInUserFollowsUser: boolean;
   updateFollowingList: (
     user: ListenBrainzUser,
@@ -14,13 +16,9 @@ export type UserListModalEntryProps = {
 };
 
 const UserListModalEntry = (props: UserListModalEntryProps) => {
-  const {
-    mode,
-    user,
-    loggedInUserFollowsUser,
-    loggedInUser,
-    updateFollowingList,
-  } = props;
+  const { mode, user, loggedInUserFollowsUser, updateFollowingList } = props;
+  const { currentUser } = useContext(GlobalAppContext);
+  const isUserLoggedIn = !isNil(currentUser) && !isEmpty(currentUser);
   return (
     <>
       <div key={user.name}>
@@ -32,7 +30,7 @@ const UserListModalEntry = (props: UserListModalEntryProps) => {
           >
             {user.name}
           </a>
-          {loggedInUser && mode === "similar-users" && (
+          {isUserLoggedIn && mode === "similar-users" && (
             <SimilarityScore
               similarityScore={(user as SimilarUser).similarityScore}
               user={user}
@@ -40,11 +38,10 @@ const UserListModalEntry = (props: UserListModalEntryProps) => {
             />
           )}
         </div>
-        {loggedInUser && (
+        {isUserLoggedIn && (
           <FollowButton
             type="block"
             user={user}
-            loggedInUser={loggedInUser}
             loggedInUserFollowsUser={loggedInUserFollowsUser}
             updateFollowingList={updateFollowingList}
           />
