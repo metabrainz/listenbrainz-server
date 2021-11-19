@@ -2,10 +2,10 @@ import * as React from "react";
 import { includes as _includes } from "lodash";
 
 import UserListModalEntry from "./UserListModalEntry";
+import GlobalAppContext from "../GlobalAppContext";
 
 export type SimilarUsersModalProps = {
   user: ListenBrainzUser;
-  loggedInUser: ListenBrainzUser | null;
   similarUsersList: Array<SimilarUser>;
   loggedInUserFollowsUser: (user: ListenBrainzUser | SimilarUser) => boolean;
   updateFollowingList: (
@@ -17,16 +17,16 @@ export type SimilarUsersModalProps = {
 const SimilarUsersModal = (props: SimilarUsersModalProps) => {
   const {
     user,
-    loggedInUser,
     loggedInUserFollowsUser,
     updateFollowingList,
     similarUsersList,
   } = props;
+  const { currentUser } = React.useContext(GlobalAppContext);
 
   return (
     <>
       <h3 className="text-center">
-        Users similar to {user.name === loggedInUser?.name ? "you" : user.name}
+        Users similar to {user.name === currentUser?.name ? "you" : user.name}
       </h3>
       <div className="similar-users-list">
         {similarUsersList.map((listEntry: SimilarUser) => {
@@ -35,7 +35,6 @@ const SimilarUsersModal = (props: SimilarUsersModalProps) => {
               mode="similar-users"
               key={listEntry.name}
               user={listEntry}
-              loggedInUser={loggedInUser}
               loggedInUserFollowsUser={loggedInUserFollowsUser(listEntry)}
               updateFollowingList={updateFollowingList}
             />

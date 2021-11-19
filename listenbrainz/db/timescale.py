@@ -13,7 +13,7 @@ from listenbrainz import config
 # Listens are tracked with `listenstore.LISTENS_DUMP_SCHEMA_VERSION`
 # This value must be incremented after schema changes on tables that are included in the
 # public dump
-SCHEMA_VERSION_TIMESCALE = 6
+SCHEMA_VERSION_TIMESCALE = 7
 
 engine = None
 
