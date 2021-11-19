@@ -569,11 +569,7 @@ export default class UserFeedPage extends React.Component<
               </ul>
             </div>
             <div className="col-md-offset-1 col-md-4">
-              <UserSocialNetwork
-                user={currentUser}
-                loggedInUser={currentUser}
-                newAlert={newAlert}
-              />
+              <UserSocialNetwork user={currentUser} newAlert={newAlert} />
               <div className="sticky-top mt-15">
                 <BrainzPlayer
                   listens={listens}
