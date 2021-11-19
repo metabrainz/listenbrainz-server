@@ -58,11 +58,12 @@ describe("<UserPageHeading />", () => {
     expect(wrapper.contains("followed_user")).toBeTruthy();
   });
 
-  it("does not render the FollowButton component if loggedInUser is null", () => {
+  it("does not render the FollowButton component if no loggedInUser", () => {
+    // server sends an empty object in case no user is logged in
     const wrapper = shallow(
       <UserPageHeading
         user={user}
-        loggedInUser={null}
+        loggedInUser={{} as ListenBrainzUser}
         loggedInUserFollowsUser={false}
         alreadyReportedUser={false}
       />
@@ -95,17 +96,17 @@ describe("<UserPageHeading />", () => {
     expect(followButton.props()).toEqual({
       type: "icon-only",
       user: { id: 1, name: "followed_user" },
-      loggedInUser: { id: 2, name: "iliekcomputers" },
       loggedInUserFollowsUser: false,
     });
   });
 
   describe("ReportUser", () => {
     it("does not render a ReportUserButton nor ReportUserModal components if user is not logged in", () => {
+      // server sends an empty object in case no user is logged in
       const wrapper = shallow(
         <UserPageHeading
           user={user}
-          loggedInUser={null}
+          loggedInUser={{} as ListenBrainzUser}
           loggedInUserFollowsUser={false}
           alreadyReportedUser={false}
         />

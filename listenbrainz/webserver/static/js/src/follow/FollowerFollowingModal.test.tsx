@@ -19,29 +19,43 @@
  */
 
 import * as React from "react";
-import { shallow } from "enzyme";
+import { mount } from "enzyme";
 import FollowerFollowingModal from "./FollowerFollowingModal";
+import APIService from "../APIService";
+import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 
 const props = {
   user: { name: "foobar" },
-  loggedInUser: null,
   followerList: ["foo"],
   followingList: ["bar"],
   loggedInUserFollowsUser: () => true,
   updateFollowingList: () => {},
 };
 
+const globalContext: GlobalAppContextT = {
+  APIService: new APIService("foo"),
+  youtubeAuth: {},
+  spotifyAuth: {},
+  currentUser: {} as ListenBrainzUser,
+};
+
 describe("<FollowerFollowingModal />", () => {
   it("renders", () => {
-    const wrapper = shallow(<FollowerFollowingModal {...props} />);
+    const wrapper = mount<FollowerFollowingModal>(
+      <GlobalAppContext.Provider value={globalContext}>
+        <FollowerFollowingModal {...props} />
+      </GlobalAppContext.Provider>
+    );
     expect(wrapper.html()).toMatchSnapshot();
   });
 });
 
 describe("updateMode()", () => {
   it("updates the mode correctly", () => {
-    const wrapper = shallow<FollowerFollowingModal>(
-      <FollowerFollowingModal {...props} />
+    const wrapper = mount<FollowerFollowingModal>(
+      <GlobalAppContext.Provider value={globalContext}>
+        <FollowerFollowingModal {...props} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
 

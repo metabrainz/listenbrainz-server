@@ -32,7 +32,6 @@ import GlobalAppContext from "./GlobalAppContext";
 type FollowButtonProps = {
   type: "icon-only" | "block";
   user: ListenBrainzUser;
-  loggedInUser?: ListenBrainzUser;
   loggedInUserFollowsUser: boolean;
   updateFollowingList?: (
     user: ListenBrainzUser,
@@ -86,11 +85,11 @@ class FollowButton extends React.Component<
   };
 
   followUser = () => {
-    const { user, loggedInUser, updateFollowingList } = this.props;
-    const { APIService } = this.context;
+    const { user, updateFollowingList } = this.props;
+    const { APIService, currentUser } = this.context;
     const { followUser } = APIService;
 
-    followUser(user.name, loggedInUser?.auth_token!).then(({ status }) => {
+    followUser(user.name, currentUser?.auth_token!).then(({ status }) => {
       if (status === 200) {
         this.setState({ loggedInUserFollowsUser: true, justFollowed: true });
         if (updateFollowingList) {
@@ -103,11 +102,11 @@ class FollowButton extends React.Component<
   };
 
   unfollowUser = () => {
-    const { user, loggedInUser, updateFollowingList } = this.props;
-    const { APIService } = this.context;
+    const { user, updateFollowingList } = this.props;
+    const { APIService, currentUser } = this.context;
     const { unfollowUser } = APIService;
 
-    unfollowUser(user.name, loggedInUser?.auth_token!).then(({ status }) => {
+    unfollowUser(user.name, currentUser?.auth_token!).then(({ status }) => {
       if (status === 200) {
         this.setState({
           loggedInUserFollowsUser: false,
