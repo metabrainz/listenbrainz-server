@@ -36,7 +36,7 @@ const UserPageHeading = ({
   alreadyReportedUser = false,
 }: {
   user: ListenBrainzUser;
-  loggedInUser: ListenBrainzUser | null;
+  loggedInUser?: ListenBrainzUser;
   loggedInUserFollowsUser: boolean;
   alreadyReportedUser: boolean;
 }) => {
@@ -45,16 +45,15 @@ const UserPageHeading = ({
     <>
       <h2 className="page-title">
         {user.name}
-        {hasLoggedInUser && user.name !== loggedInUser.name && (
+        {hasLoggedInUser && user.name !== loggedInUser?.name && (
           <FollowButton
             type="icon-only"
             user={user}
-            loggedInUser={loggedInUser}
             loggedInUserFollowsUser={loggedInUserFollowsUser}
           />
         )}
       </h2>
-      {hasLoggedInUser && user?.name !== loggedInUser.name && (
+      {hasLoggedInUser && user?.name !== loggedInUser?.name && (
         <ReportUserButton user={user} alreadyReported={alreadyReportedUser} />
       )}
     </>
