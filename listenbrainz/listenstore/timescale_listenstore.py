@@ -348,12 +348,12 @@ class TimescaleListenStore(ListenStore):
             return ([], min_user_ts, max_user_ts)
 
         window_size = DEFAULT_FETCH_WINDOW
-        query = """SELECT listened_at, track_name, user_name, created, data, recording_mbid, release_mbid, artist_mbids
+        query = """SELECT listened_at, track_name, user_name, created, data, mm.recording_mbid, release_mbid, artist_mbids
                      FROM listen
-          FULL OUTER JOIN listen_join_listen_mbid_mapping lj
-                       ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = lj.recording_msid
-          FULL OUTER JOIN listen_mbid_mapping m
-                       ON lj.listen_mbid_mapping = m.id
+          FULL OUTER JOIN mbid_mapping mm
+                       ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
+          FULL OUTER JOIN mbid_mapping_metadata m
+                       ON mm.recording_mbid = m.recording_mbid
                     WHERE user_name IN :user_names
                       AND listened_at > :from_ts
                       AND listened_at < :to_ts
@@ -414,7 +414,6 @@ class TimescaleListenStore(ListenStore):
 
                         break
 
-
                     listens.append(Listen.from_timescale(*result))
                     if len(listens) == limit:
                         done = True
@@ -445,16 +444,16 @@ class TimescaleListenStore(ListenStore):
         args = {'user_list': tuple(user_list), 'ts': int(
             time.time()) - max_age, 'limit': limit}
         query = """SELECT * FROM (
-                              SELECT listened_at, track_name, user_name, created, data, recording_mbid, release_mbid, artist_mbids,
+                              SELECT listened_at, track_name, user_name, created, data, mm.recording_mbid, release_mbid, artist_mbids,
                                      row_number() OVER (partition by user_name ORDER BY listened_at DESC) AS rownum
                                 FROM listen l
-                     FULL OUTER JOIN listen_join_listen_mbid_mapping lj
-                                  ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = lj.recording_msid
-                     FULL OUTER JOIN listen_mbid_mapping m
-                                  ON lj.listen_mbid_mapping = m.id
+                     FULL OUTER JOIN mbid_mapping m
+                                  ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = m.recording_msid
+                     FULL OUTER JOIN mbid_mapping_metadata mm
+                                  ON mm.recording_mbid = m.recording_mbid
                                WHERE user_name IN :user_list
                                  AND listened_at > :ts
-                            GROUP BY user_name, listened_at, track_name, created, data, recording_mbid, release_mbid, artist_mbids
+                            GROUP BY user_name, listened_at, track_name, created, data, mm.recording_mbid, release_mbid, artist_mbids
                             ORDER BY listened_at DESC) tmp
                                WHERE rownum <= :limit"""
 
@@ -735,12 +734,12 @@ class TimescaleListenStore(ListenStore):
                           release_mbid::TEXT,
                           recording_name AS m_recording_name,
                           track_name AS l_recording_name,
-                          recording_mbid::TEXT
+                          mm.recording_mbid::TEXT
                      FROM listen l
-          FULL OUTER JOIN listen_join_listen_mbid_mapping lj
-                       ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = lj.recording_msid
-          FULL OUTER JOIN listen_mbid_mapping m
-                       ON lj.listen_mbid_mapping = m.id
+          FULL OUTER JOIN mbid_mapping mm
+                       ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
+          FULL OUTER JOIN mbid_mapping_metadata m
+                       ON mm.recording_mbid = m.recording_mbid
                     WHERE created > %s
                       AND created <= %s
                  ORDER BY created ASC"""
