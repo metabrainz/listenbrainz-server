@@ -147,6 +147,13 @@ def request_day_of_week():
     send_request_to_spark_cluster(_prepare_query_message("stats.day_of_week"))
 
 
+@cli.command(name="request_most_listened_year")
+def request_most_listened_year():
+    """ Send request to calculate most listened year stats to the spark cluster
+    """
+    send_request_to_spark_cluster(_prepare_query_message("stats.request_most_listened_year"))
+
+
 @cli.command(name="request_import_full")
 @click.option("--id", "id_", type=int, required=False,
               help="Optional. ID of the full dump to import, defaults to latest dump available on FTP server")

@@ -363,3 +363,7 @@ def handle_most_prominent_color(message):
 
 def handle_day_of_week(message):
     year_in_music.insert_day_of_week(message["data"])
+
+
+def handle_most_listened_year(message):
+    year_in_music.insert_most_listened_year(message["data"])

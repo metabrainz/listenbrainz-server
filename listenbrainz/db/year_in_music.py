@@ -90,3 +90,25 @@ def insert_day_of_week(data):
     except psycopg2.errors.OperationalError:
         connection.rollback()
         current_app.logger.error("Error while inserting day of week:", exc_info=True)
+
+
+def insert_most_listened_year(data):
+    connection = db.engine.raw_connection()
+    query = """
+        INSERT INTO statistics.year_in_music(user_id, data)
+             SELECT "user".id
+                  , jsonb_build_object('most_listened_year', yearly_counts)
+               FROM (VALUES %s) AS t(user_name, yearly_counts)
+               JOIN "user"
+                 ON "user".musicbrainz_id = user_name
+        ON CONFLICT (user_id)
+      DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+        """
+    user_listened_years = ujson.loads(data)
+    try:
+        with connection.cursor() as cursor:
+            execute_values(cursor, query, user_listened_years.items())
+        connection.commit()
+    except psycopg2.errors.OperationalError:
+        connection.rollback()
+        current_app.logger.error("Error while inserting most_listened_year:", exc_info=True)
