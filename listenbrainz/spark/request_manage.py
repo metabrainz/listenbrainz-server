@@ -151,7 +151,7 @@ def request_day_of_week():
 def request_most_listened_year():
     """ Send request to calculate most listened year stats to the spark cluster
     """
-    send_request_to_spark_cluster(_prepare_query_message("stats.request_most_listened_year"))
+    send_request_to_spark_cluster(_prepare_query_message("stats.most_listened_year"))
 
 
 @cli.command(name="request_import_full")
