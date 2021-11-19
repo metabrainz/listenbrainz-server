@@ -268,6 +268,9 @@ class MappingJobQueue(threading.Thread):
             stats["last_med_quality"] = stats["med_quality"]
             stats["last_low_quality"] = stats["low_quality"]
             stats["last_no_match"] = stats["no_match"]
+            stats["listens_matched"] = 0
+            stats["listen_count"] = 0
+
 
     def run(self):
         """ main thread entry point"""
