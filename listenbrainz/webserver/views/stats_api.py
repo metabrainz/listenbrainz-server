@@ -13,6 +13,7 @@ from data.model.user_artist_map import UserArtistMapRecord
 from flask import Blueprint, current_app, jsonify, request
 
 from data.model.user_entity import UserEntityRecord
+from listenbrainz.db.year_in_music import get_year_in_music
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError,
@@ -621,7 +622,7 @@ def year_in_music(user_name: str):
     return jsonify({
         "payload": {
             "user_name": user_name,
-            "data": db_stats.get_year_in_music(user["id"]) or {}
+            "data": get_year_in_music(user["id"]) or {}
         }
     })
 
