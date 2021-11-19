@@ -190,7 +190,7 @@ export default class MissingMBDataPage extends React.Component<
                           showTimestamp
                           showUsername={false}
                           newAlert={newAlert}
-                          customIconFunction={{
+                          customicon={{
                             icon: faPlus,
                             func: this.submitMissingData,
                           }}
