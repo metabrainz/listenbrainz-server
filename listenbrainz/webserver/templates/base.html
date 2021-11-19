@@ -4,60 +4,139 @@
 <html>
 <head>
   {%- block head -%}
-    <meta charset="utf-8" />
-    <title>{% block title %}ListenBrainz{% endblock %}</title>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8" />
+  <title>{% block title %}ListenBrainz{% endblock %}</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <link rel="icon" sizes="16x16" href="{{ url_for('static', filename='img/favicon-16.png') }}" type="image/png" />
-    <link rel="icon" sizes="256x256" href="{{ url_for('static', filename='img/favicon-256.png') }}" type="image/png" />
-    <link rel="icon" sizes="32x32" href="{{ url_for('static', filename='img/favicon-32.png') }}" type="image/png" />
+  <link rel="icon" sizes="16x16" href="{{ url_for('static', filename='img/favicon-16.png') }}" type="image/png" />
+  <link rel="icon" sizes="256x256" href="{{ url_for('static', filename='img/favicon-256.png') }}" type="image/png" />
+  <link rel="icon" sizes="32x32" href="{{ url_for('static', filename='img/favicon-32.png') }}" type="image/png" />
 
-    {# The css file has a .less extension in the manifest file entry (due to its original name in Webpack entry) #}
-    <link href="{{ get_static_path('main.less') }}" rel="stylesheet" media="screen" />
+  {# The css file has a .less extension in the manifest file entry (due to its original name in Webpack entry) #}
+  <link href="{{ get_static_path('main.less') }}" rel="stylesheet" media="screen" />
   {%- endblock -%}
 </head>
 
 <body>
-  {%- include 'navbar.html' -%}
+{%- include 'navbar.html' -%}
 
-  <div class="container">
+<div class="container">
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% for category, message in messages %}
-        {{ print_message(message, category) }}
-      {% endfor %}
-    {% endwith %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% for category, message in messages %}
+  {{ print_message(message, category) }}
+  {% endfor %}
+  {% endwith %}
 
-    {%- block wrapper -%}
-    <div class ="wrapper">
+  {%- block wrapper -%}
+  <div class ="wrapper">
 
-      {%- block content -%}
-      <!-- Page content -->
-      {%- endblock -%}
-    </div>
-    {%- endblock -%}
-
-    {%- block footer -%}
-    <div class="footer">
-      <hr />
-        <ul class="list-inline pull-left">
-          <li><a href="http://blog.musicbrainz.org/category/listenbrainz/">Blog</a></li>
-          <li><a href="https://twitter.com/ListenBrainz">Twitter</a></li>
-          <li><a href="https://github.com/metabrainz/listenbrainz-server/">GitHub</a></li>
-          <li><a href="http://tickets.musicbrainz.org/browse/LB">Bug Tracker</a></li>
-          <li><a href="{{ url_for("index.current_status") }}">Status</a></li>
-        </ul>
-        <ul class="list-inline pull-right">
-          <li><a href="https://metabrainz.org" title="MetaBrainz"><img src="{{ url_for('static', filename='img/MetaBrainz_logo_no_text.svg') }}" /></a></li>
-        </ul>
-      </div>
+    {%- block content -%}
+    <!-- Page content -->
     {%- endblock -%}
   </div>
+  {%- endblock -%}
+
+  {%- block footer -%}
+  <section class="footer">
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <h3>
+            <img src="{{ url_for('static', filename='img/logo_big.svg') }}" width="52" alt="image"/>
+            <span class="color-purple">Listen</span><span class="color-orange">Brainz</span>
+          </h3>
+          <br/>
+          <p class="color-gray">
+            keeps tracks of what music you listen to and provides you with insights into your listening habits. We're completely open-source and publish our data as open data.
+
+            You can use ListenBrainz to track your music listening habits and share your taste with others using our visualizations. We also have an API if you want to do more with our data.
+          </p>
+          <ul class="list-unstyled">
+            <li class="color-a">
+              <span class="color-gray">IRC: </span> <a href="https://kiwiirc.com/nextclient/irc.libera.chat/?#metabrainz" target="_blank" rel="noopener noreferrer" > #metabrainz</a>
+            </li>
+            <li class="color-a" >
+              <span class="color-gray">Email: </span> <a href="mailto:support@metabrainz.org">support@metabrainz.org </a>
+            </li>
+          </ul>
+        </div>
+        <br/>
+        <div class="col-sm-12 col-md-3 section-md-t3">
+          <h3 class="w-title-a text-brand">Useful Links</h3>
+          <ul class="list-unstyled">
+            <li class="item-list-a">
+              <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="24" height="24" alt="image"/> <a href="https://metabrainz.org/donate" target="_blank" rel="noopener noreferrer" >Donate</a>
+            </li>
+            <li class="item-list-a">
+              <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="24" height="24" alt="image"/> <a href="https://wiki.musicbrainz.org/Main_Page" target="_blank" rel="noopener noreferrer" >Wiki</a>
+            </li>
+            <li class="item-list-a">
+              <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="24" height="24" alt="image"/><a href="https://community.metabrainz.org/" target="_blank" rel="noopener noreferrer" >Community</a>
+            </li>
+            <li class="item-list-a">
+              <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="24" height="24" alt="image"/><a href="https://blog.metabrainz.org/" target="_blank" rel="noopener noreferrer" >Blog</a>
+            </li>
+            <li class="item-list-a">
+              <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="24" height="24" alt="image"/> <a href="https://www.redbubble.com/people/metabrainz/shop" target="_blank" rel="noopener noreferrer" >Shop</a>
+            </li>
+            <li class="item-list-a">
+              <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="24" height="24" alt="image"/> <a href="https://metabrainz.org/" target="_blank" rel="noopener noreferrer" >MetaBrainz</a>
+            </li>
+
+          </ul>
+        </div>
+        <div class="col-sm-12 col-md-3 section-md-t3">
+          <h3 class="w-title-a text-brand">Fellow Projects</h3>
+          <ul class="list-unstyled">
+            <li class="item-list-a">
+              <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="24" height="24" alt="image"/>  <img src="{{ url_for('static', filename='img/meb-icons/MusicBrainz.svg') }}" width="24" height="24" alt="image"/> <a href="https://musicbrainz.org/" target="_blank" rel="noopener noreferrer" >MusicBrainz</a>
+            </li>
+            <li class="item-list-a">
+              <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="24" height="24" alt="image"/>  <img src="{{ url_for('static', filename='img/meb-icons/CritiqueBrainz.svg') }}" width="24" height="24" alt="image"/> <a href="https://critiquebrainz.org/" target="_blank" rel="noopener noreferrer" >CritiqueBrainz</a>
+            </li>
+            <li class="item-list-a">
+              <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="24" height="24" alt="image"/> <img src="{{ url_for('static', filename='img/meb-icons/Picard.svg') }}" width="24" height="24" alt="image"/> <a href="https://picard.musicbrainz.org/" target="_blank" rel="noopener noreferrer" >Picard</a>
+            </li>
+            <li class="item-list-a">
+              <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="24" height="24" alt="image"/> <img src="{{ url_for('static', filename='img/meb-icons/BookBrainz.svg') }}" width="24" height="24" alt="image"/> <a href="https://bookbrainz.org/" target="_blank" rel="noopener noreferrer" >BookBrainz</a>
+            </li>
+            <li class="item-list-a">
+              <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="24" height="24" alt="image"/><img src="{{ url_for('static', filename='img/meb-icons/AcousticBrainz.svg') }}" width="24" height="24" alt="image"/> <a href="https://acousticbrainz.org/" target="_blank" rel="noopener noreferrer" >AcousticBrainz</a>
+            </li>
+            <li class="item-list-a">
+              <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="24" height="24" alt="image"/> <img src="{{ url_for('static', filename='img/meb-icons/CoverArtArchive.svg') }}" width="24" height="24" alt="image"/> <a href="https://coverartarchive.org" target="_blank" rel="noopener noreferrer" >Cover Art Archive</a>
+            </li>
+
+          </ul>
+        </div>
+      </div>
+      <div class="row center-p">
+        <div class="col-md-3 d-none d-md-block">
+          <p class="color-gray section-line">
+            OSS Geek?  <a href="https://github.com/metabrainz/listenbrainz-server" target="_blank" rel="noopener noreferrer" > <span  class="color-a"> Contribute Here </span> </a>
+          </p>
+        </div>
+        <div class="col-md-6">
+          <p class="section-line">
+            Brought to you by <img src="{{ url_for('static', filename='img/meb-icons/MetaBrainz.svg') }}" width="30" height="30" alt="image"/> <span class="color-a"> MetaBrainz Foundation </span>
+          </p>
+        </div>
+        <div class="col-md-3 d-none d-md-block">
+          <p class="color-gray section-line">
+            Found an Issue?  <a href="https://tickets.metabrainz.org/" target="_blank" rel="noopener noreferrer" > <span class="color-a"> Report Here </span></a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </section>
+  {%- endblock -%}
 
   {%- block scripts -%}
-    <script src="{{ url_for('static', filename='js/lib/jquery-2.1.0.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/lib/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/lib/jquery-2.1.0.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/lib/bootstrap.min.js') }}"></script>
   {%- endblock -%}
 </body>
 </html>
