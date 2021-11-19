@@ -97,7 +97,7 @@ def insert_most_listened_year(data):
     query = """
         INSERT INTO statistics.year_in_music(user_id, data)
              SELECT "user".id
-                  , jsonb_build_object('most_listened_year', yearly_counts)
+                  , jsonb_build_object('most_listened_year', yearly_counts::jsonb)
                FROM (VALUES %s) AS t(user_name, yearly_counts)
                JOIN "user"
                  ON "user".musicbrainz_id = user_name
