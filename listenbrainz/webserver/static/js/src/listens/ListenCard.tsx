@@ -51,7 +51,7 @@ export type ListenCardProps = {
   // These go in the dropdown menu
   additionalMenuItems?: JSX.Element;
   // This object should be passed when you want custom icon with custom action
-  customIconFunction?: CustomIconFunction;
+  customicon?: CustomIconFunction;
 };
 
 type ListenCardState = {
@@ -189,7 +189,7 @@ export default class ListenCard extends React.Component<
       ...otherProps
     } = this.props;
     const { isCurrentlyPlaying } = this.state;
-    const { customIconFunction } = this.props;
+    const { customicon } = this.props;
 
     const recordingMSID = _get(
       listen,
@@ -310,33 +310,30 @@ export default class ListenCard extends React.Component<
               </ul>
             </>
           )}
-          {customIconFunction ? null : (
-            <button
-              title="Play"
-              className="btn-transparent play-button"
-              onClick={this.playListen}
-              type="button"
-            >
-              {isCurrentlyPlaying ? (
-                <FontAwesomeIcon size="1x" icon={faPlay as IconProp} />
-              ) : (
-                <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />
-              )}
-            </button>
-          )}
-          {customIconFunction ? (
+
+          <button
+            title="Play"
+            className="btn-transparent play-button"
+            onClick={this.playListen}
+            type="button"
+          >
+            {isCurrentlyPlaying ? (
+              <FontAwesomeIcon size="1x" icon={faPlay as IconProp} />
+            ) : (
+              <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />
+            )}
+          </button>
+
+          {customicon ? (
             <button
               title="Add to MusicBrainz"
               className="btn-transparent"
               onClick={() => {
-                customIconFunction.func(listen);
+                customicon.func(listen);
               }}
               type="button"
             >
-              <FontAwesomeIcon
-                size="2x"
-                icon={customIconFunction.icon as IconProp}
-              />
+              <FontAwesomeIcon size="2x" icon={customicon.icon as IconProp} />
             </button>
           ) : null}
         </div>
