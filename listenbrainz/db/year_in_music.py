@@ -104,10 +104,10 @@ def insert_most_listened_year(data):
         ON CONFLICT (user_id)
       DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
         """
-    user_listened_years = ujson.loads(data)
+    user_listened_years = [(k, ujson.dumps(v)) for k, v in ujson.loads(data)]
     try:
         with connection.cursor() as cursor:
-            execute_values(cursor, query, user_listened_years.items())
+            execute_values(cursor, query, user_listened_years)
         connection.commit()
     except psycopg2.errors.OperationalError:
         connection.rollback()
