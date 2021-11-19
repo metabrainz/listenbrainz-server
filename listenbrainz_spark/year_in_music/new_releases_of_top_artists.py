@@ -5,12 +5,12 @@ import listenbrainz_spark
 from listenbrainz_spark import path
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import get_listens_from_new_dump
-from listenbrainz_spark.year_in_music.utils import setup_2021_listens
+from listenbrainz_spark.year_in_music.utils import setup_2021_listens, setup_all_releases
 
 
 def get_new_releases_of_top_artists():
     setup_2021_listens()
-    _get_all_releases().createOrReplaceTempView("release")
+    setup_all_releases()
     run_query(_get_top_50_artists()).createOrReplaceTempView("top_50_artists")
     run_query(_get_2021_releases()).createOrReplaceTempView("releases_2021")
     new_releases = run_query(_get_new_releases_of_top_artists()).toLocalIterator()
@@ -21,10 +21,6 @@ def get_new_releases_of_top_artists():
             user_name=data["user_name"],
             data=data["new_releases"]
         ).dict(exclude_none=True)
-
-
-def _get_all_releases():
-    return listenbrainz_spark.sql_context.read.json(path.MUSICBRAINZ_RELEASE_DUMP_JSON_FILE)
 
 
 def _get_top_50_artists():
@@ -68,7 +64,7 @@ def _get_2021_releases():
              WHERE substr(`release-group`.`first-release-date`, 1, 4) = '2021'
         )
         SELECT title
-             , id AS release_id
+             , id AS release_mbid
              , first_release_date
              , type
              , collect_list(ac.artist.name) AS artist_credit_names
@@ -87,7 +83,7 @@ def _get_new_releases_of_top_artists():
              , collect_list(
                     struct(
                        title
-                     , release_id
+                     , release_mbid
                      , first_release_date
                      , type
                      , releases_2021.artist_credit_mbids

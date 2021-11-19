@@ -34,6 +34,11 @@
     "description": "User's day of week",
     "params": []
   },
+  "stats.most_listened_year": {
+    "name": "stats.most_listened_year",
+    "description": "User's most listened year",
+    "params": []
+  },
   "import.dump.full_newest": {
     "name": "import.dump.full_newest",
     "description": "Import the newest available full dump into the spark cluster",
