@@ -292,7 +292,7 @@ export default class ListenCard extends React.Component<
                   href={
                     releaseMBID
                       ? `https://musicbrainz.org/release/${releaseMBID}`
-                      : ""
+                      : (spotifyURL || youtubeURL || soundcloudURL) ?? ""
                   }
                   title={listen.track_metadata?.release_name ?? "Cover art"}
                   target="_blank"
