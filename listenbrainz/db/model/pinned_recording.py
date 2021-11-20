@@ -100,7 +100,7 @@ def fetch_track_metadata_for_pins(pins: List[PinnedRecording]) -> List[PinnedRec
     if mbid_pins:
         query = """SELECT artist_credit_name AS artist, recording_name AS title, release_name AS release,
                           recording_mbid::TEXT, release_mbid::TEXT, artist_mbids::TEXT[]
-                     FROM listen_mbid_mapping
+                     FROM mbid_mapping_metadata
                     WHERE recording_mbid IN :mbids
                  ORDER BY recording_mbid"""
         # retrieves list of mbid's to fetch with
@@ -119,6 +119,7 @@ def fetch_track_metadata_for_pins(pins: List[PinnedRecording]) -> List[PinnedRec
                         "recording_mbid": metadata["recording_mbid"],
                         "release_mbid": metadata["release_mbid"],
                         "artist_mbids": metadata["artist_mbids"],
+                        "recording_msid": pin.recording_msid
                     }
                 }
 
@@ -131,7 +132,10 @@ def fetch_track_metadata_for_pins(pins: List[PinnedRecording]) -> List[PinnedRec
             pin.track_metadata = {
                 "track_name": metadata["payload"]["title"],
                 "artist_name": metadata["payload"]["artist"],
-                "artist_msid": metadata["ids"]["artist_msid"]
+                "additional_info": {
+                    "artist_msid": metadata["ids"]["artist_msid"],
+                    "recording_msid": pin.recording_msid
+                }
             }
 
     return pins
