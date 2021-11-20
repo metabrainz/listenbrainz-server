@@ -8,14 +8,14 @@ def get_day_of_week(year):
         WITH listen_weekday AS (
               SELECT user_name
                    , date_format(listened_at, 'EEEE') AS weekday
-                   , count(*) AS listen_count 
+                   , count(*) AS listen_count
                 FROM listens_of_year
             GROUP BY user_name
                    , weekday
         ), top_listen_weekday AS (
               SELECT user_name
                    , weekday
-                   , listen_count 
+                   , listen_count
                    , row_number() OVER(PARTITION BY user_name ORDER BY listen_count DESC) AS row_number
                 FROM listen_weekday
         )

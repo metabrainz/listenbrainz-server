@@ -39,7 +39,7 @@ def _get_releases_with_date():
                      )
                ) AS yearly_count
           FROM listen_year
-      GROUP BY user_name  
+      GROUP BY user_name
         )
         SELECT to_json(
                     map_from_entries(

@@ -27,7 +27,7 @@ def _get_top_50_artists():
                  , artist_credit_mbids
                  , count(*) as listen_count
               FROM listens_of_year
-             WHERE artist_credit_mbids IS NOT NULL  
+             WHERE artist_credit_mbids IS NOT NULL
           GROUP BY user_name
                  , artist_name
                  , artist_credit_mbids
@@ -44,7 +44,7 @@ def _get_top_50_artists():
              , artist_credit_mbids
              , listen_count
           FROM intermediate_table_2
-         WHERE row_number <= 50         
+         WHERE row_number <= 50
     """
 
 
@@ -64,7 +64,7 @@ def _get_releases_for_year(year):
              , first_release_date
              , type
              , collect_list(ac.artist.name) AS artist_credit_names
-             , collect_list(ac.artist.id) AS artist_credit_mbids 
+             , collect_list(ac.artist.id) AS artist_credit_mbids
           FROM intermediate_table
       GROUP BY title
              , id
@@ -87,7 +87,7 @@ def _get_new_releases_of_top_artists():
                     )
                ) AS new_releases
           FROM releases_of_year
-          JOIN top_50_artists 
+          JOIN top_50_artists
             ON cardinality(array_intersect(releases_of_year.artist_credit_mbids, top_50_artists.artist_credit_mbids)) > 0
-      GROUP BY user_name     
+      GROUP BY user_name
     """
