@@ -30,7 +30,7 @@ def _get_possible_queries():
         return ujson.load(f)
 
 
-def _prepare_query_message(query, /, **params):
+def _prepare_query_message(query, **params):
     """ Prepare the JSON message that needs to be sent to the
     spark cluster based on the query and the parameters the
     query needs
@@ -62,7 +62,7 @@ def _prepare_query_message(query, /, **params):
     return ujson.dumps(message)
 
 
-def send_request_to_spark_cluster(query, /, **params):
+def send_request_to_spark_cluster(query, **params):
     message = _prepare_query_message(query, **params)
 
     with create_app().app_context():
