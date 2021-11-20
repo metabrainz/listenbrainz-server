@@ -1,7 +1,7 @@
 import * as React from "react";
 import { get as _get } from "lodash";
 import GlobalAppContext from "./GlobalAppContext";
-import {getRecordingMBID, preciseTimestamp} from "./utils";
+import { getRecordingMBID, preciseTimestamp } from "./utils";
 
 export type PinRecordingModalProps = {
   recordingToPin: Listen;
