@@ -24,10 +24,7 @@
 import json
 from typing import Optional
 
-import psycopg2
 import sqlalchemy
-import ujson
-from psycopg2.extras import execute_values
 
 from data.model.common_stat import StatRange, StatApi
 from data.model.user_artist_map import UserArtistMapRecord
