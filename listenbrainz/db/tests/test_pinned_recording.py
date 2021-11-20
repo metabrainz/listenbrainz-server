@@ -182,6 +182,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainz
                 "release_mbid": "1fd178b4-1575-11ec-b98a-d72392cd8c97",
                 "artist_mbids": ["6a221fda-2200-11ec-ac7d-dfa16a57158f"],
                 "recording_msid": msids[0][0],
+                "artist_msid": msids[0][1]
             }
         })
 

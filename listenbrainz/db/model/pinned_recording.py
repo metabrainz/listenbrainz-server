@@ -92,10 +92,22 @@ def fetch_track_metadata_for_pins(pins: List[PinnedRecording]) -> List[PinnedRec
         Returns:
             The given list of PinnedRecording objects with updated track_metadata.
     """
+    fetch_msids = [pin.recording_msid for pin in pins]  # retrieves list of msid's to fetch with
+    msid_metadatas = load_recordings_from_msids(fetch_msids)
+    # we can zip the pins and metadata because load_recordings_from_msids
+    # returns the metadata in same order of the msid list passed to it
+    for pin, metadata in zip(pins, msid_metadatas):
+        pin.track_metadata = {
+            "track_name": metadata["payload"]["title"],
+            "artist_name": metadata["payload"]["artist"],
+            "additional_info": {
+                "artist_msid": metadata["ids"]["artist_msid"],
+                "recording_msid": pin.recording_msid
+            }
+        }
 
-    # seperate pins containing mbid's from those without
-    mbid_pins = list(filter(lambda pin: pin.recording_mbid, pins))
-    msid_pins = list(filter(lambda pin: not pin.recording_mbid, pins))
+    # find pins that have a mbid and use mapped data to overwrite msid data
+    mbid_pins = [pin for pin in pins if pin.recording_mbid]
 
     if mbid_pins:
         query = """SELECT artist_credit_name AS artist, recording_name AS title, release_name AS release,
@@ -111,31 +123,16 @@ def fetch_track_metadata_for_pins(pins: List[PinnedRecording]) -> List[PinnedRec
             # we can zip the pins and metadata because the query returns
             # the metadata in same order of the mbid list passed to it
             for pin, metadata in zip(mbid_pins, mbid_metadatas):
-                pin.track_metadata = {
+                pin.track_metadata.update({
                     "track_name": metadata["title"],
                     "artist_name": metadata["artist"],
-                    "release_name": metadata["release"],
-                    "additional_info": {
-                        "recording_mbid": metadata["recording_mbid"],
-                        "release_mbid": metadata["release_mbid"],
-                        "artist_mbids": metadata["artist_mbids"],
-                        "recording_msid": pin.recording_msid
-                    }
-                }
+                    "release_name": metadata["release"]
+                })
 
-    if msid_pins:
-        fetch_msids = [pin.recording_msid for pin in msid_pins]  # retrieves list of msid's to fetch with
-        msid_metadatas = load_recordings_from_msids(fetch_msids)
-        # we can zip the pins and metadata because load_recordings_from_msids
-        # returns the metadata in same order of the msid list passed to it
-        for pin, metadata in zip(msid_pins, msid_metadatas):
-            pin.track_metadata = {
-                "track_name": metadata["payload"]["title"],
-                "artist_name": metadata["payload"]["artist"],
-                "additional_info": {
-                    "artist_msid": metadata["ids"]["artist_msid"],
-                    "recording_msid": pin.recording_msid
-                }
-            }
+                pin.track_metadata["additional_info"].update({
+                    "recording_mbid": metadata["recording_mbid"],
+                    "release_mbid": metadata["release_mbid"],
+                    "artist_mbids": metadata["artist_mbids"]
+                })
 
     return pins
