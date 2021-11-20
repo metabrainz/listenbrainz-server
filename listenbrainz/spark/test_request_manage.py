@@ -46,83 +46,83 @@ class RequestManageTestCase(unittest.TestCase):
 
         # extra parameter given
         with self.assertRaises(request_manage.InvalidSparkRequestError):
-            request_manage._prepare_query_message('stats.user.listening_activity.week', {'musicbrainz_id': 'wtf'})
+            request_manage._prepare_query_message('stats.user.listening_activity.week', musicbrainz_id='wtf')
 
         # invalid parameter given
         with self.assertRaises(request_manage.InvalidSparkRequestError):
-            request_manage._prepare_query_message('stats.user.entity', {'invalid_param': 'wtf'})
+            request_manage._prepare_query_message('stats.user.entity', invalid_param='wtf')
 
         # extra (unexpected) parameter passed
         with self.assertRaises(request_manage.InvalidSparkRequestError):
-            request_manage._prepare_query_message('stats.user.entity', {'entity': 'recordings', 'param2': 'bbq'})
+            request_manage._prepare_query_message('stats.user.entity', entity='recordings', param2='bbq')
 
         # expected parameter not passed
         with self.assertRaises(request_manage.InvalidSparkRequestError):
-            request_manage._prepare_query_message('stats.user.entity', {})
+            request_manage._prepare_query_message('stats.user.entity')
 
     def test_prepare_query_message_happy_path(self):
         expected_message = ujson.dumps({'query': 'stats.user.entity', 'params': {'entity': 'test', 'stats_range': 'week'}})
-        received_message = request_manage._prepare_query_message('stats.user.entity', params={'entity': 'test', 'stats_range': 'week'})
+        received_message = request_manage._prepare_query_message('stats.user.entity', entity='test', stats_range='week')
         self.assertEqual(expected_message, received_message)
 
         expected_message = ujson.dumps({'query': 'stats.user.entity', 'params': {'entity': 'test', 'stats_range': 'month'}})
-        received_message = request_manage._prepare_query_message('stats.user.entity', params={'entity': 'test', 'stats_range': 'month'})
+        received_message = request_manage._prepare_query_message('stats.user.entity', entity='test', stats_range='month')
         self.assertEqual(expected_message, received_message)
 
         expected_message = ujson.dumps({'query': 'stats.user.entity', 'params': {'entity': 'test', 'stats_range': 'year'}})
-        received_message = request_manage._prepare_query_message('stats.user.entity', params={'entity': 'test', 'stats_range': 'year'})
+        received_message = request_manage._prepare_query_message('stats.user.entity', entity='test', stats_range='year')
         self.assertEqual(expected_message, received_message)
 
         expected_message = ujson.dumps({'query': 'stats.user.entity', 'params': {'entity': 'test', 'stats_range': 'all_time'}})
-        received_message = request_manage._prepare_query_message('stats.user.entity', params={'entity': 'test', 'stats_range': 'all_time'})
+        received_message = request_manage._prepare_query_message('stats.user.entity', entity='test', stats_range='all_time')
         self.assertEqual(expected_message, received_message)
 
         expected_message = ujson.dumps({'query': 'stats.user.listening_activity', 'params': {'stats_range': 'week'}})
-        received_message = request_manage._prepare_query_message('stats.user.listening_activity', params={'stats_range': 'week'})
+        received_message = request_manage._prepare_query_message('stats.user.listening_activity', stats_range='week')
         self.assertEqual(expected_message, received_message)
 
         expected_message = ujson.dumps({'query': 'stats.user.listening_activity', 'params': {'stats_range': 'month'}})
-        received_message = request_manage._prepare_query_message('stats.user.listening_activity', params={'stats_range': 'month'})
+        received_message = request_manage._prepare_query_message('stats.user.listening_activity', stats_range='month')
         self.assertEqual(expected_message, received_message)
 
         expected_message = ujson.dumps({'query': 'stats.user.listening_activity', 'params': {'stats_range': 'year'}})
-        received_message = request_manage._prepare_query_message('stats.user.listening_activity', params={'stats_range': 'year'})
+        received_message = request_manage._prepare_query_message('stats.user.listening_activity', stats_range='year')
         self.assertEqual(expected_message, received_message)
 
         expected_message = ujson.dumps({'query': 'stats.user.listening_activity', 'params': {'stats_range': 'all_time'}})
-        received_message = request_manage._prepare_query_message('stats.user.listening_activity', params={'stats_range': 'all_time'})
+        received_message = request_manage._prepare_query_message('stats.user.listening_activity', stats_range='all_time')
         self.assertEqual(expected_message, received_message)
 
         expected_message = ujson.dumps({'query': 'stats.user.daily_activity', 'params': {'stats_range': 'week'}})
-        received_message = request_manage._prepare_query_message('stats.user.daily_activity', params={'stats_range': 'week'})
+        received_message = request_manage._prepare_query_message('stats.user.daily_activity', stats_range='week')
         self.assertEqual(expected_message, received_message)
 
         expected_message = ujson.dumps({'query': 'stats.user.daily_activity', 'params': {'stats_range': 'month'}})
-        received_message = request_manage._prepare_query_message('stats.user.daily_activity', params={'stats_range': 'month'})
+        received_message = request_manage._prepare_query_message('stats.user.daily_activity', stats_range='month')
         self.assertEqual(expected_message, received_message)
 
         expected_message = ujson.dumps({'query': 'stats.user.daily_activity', 'params': {'stats_range': 'year'}})
-        received_message = request_manage._prepare_query_message('stats.user.daily_activity', params={'stats_range': 'year'})
+        received_message = request_manage._prepare_query_message('stats.user.daily_activity', stats_range='year')
         self.assertEqual(expected_message, received_message)
 
         expected_message = ujson.dumps({'query': 'stats.user.daily_activity', 'params': {'stats_range': 'all_time'}})
-        received_message = request_manage._prepare_query_message('stats.user.daily_activity', params={'stats_range': 'all_time'})
+        received_message = request_manage._prepare_query_message('stats.user.daily_activity', stats_range='all_time')
         self.assertEqual(expected_message, received_message)
 
         expected_message = ujson.dumps({'query': 'stats.sitewide.entity', 'params': {'entity': 'test', 'stats_range': 'week'}})
-        received_message = request_manage._prepare_query_message('stats.sitewide.entity', params={'entity': 'test', 'stats_range': 'week'})
+        received_message = request_manage._prepare_query_message('stats.sitewide.entity', entity='test', stats_range='week')
         self.assertEqual(expected_message, received_message)
 
         expected_message = ujson.dumps({'query': 'stats.sitewide.entity', 'params': {'entity': 'test', 'stats_range': 'month'}})
-        received_message = request_manage._prepare_query_message('stats.sitewide.entity', params={'entity': 'test', 'stats_range': 'month'})
+        received_message = request_manage._prepare_query_message('stats.sitewide.entity', entity='test', stats_range='month')
         self.assertEqual(expected_message, received_message)
 
         expected_message = ujson.dumps({'query': 'stats.sitewide.entity', 'params': {'entity': 'test', 'stats_range': 'year'}})
-        received_message = request_manage._prepare_query_message('stats.sitewide.entity', params={'entity': 'test', 'stats_range': 'year'})
+        received_message = request_manage._prepare_query_message('stats.sitewide.entity', entity='test', stats_range='year')
         self.assertEqual(expected_message, received_message)
 
         expected_message = ujson.dumps({'query': 'stats.sitewide.entity', 'params': {'entity': 'test', 'stats_range': 'all_time'}})
-        received_message = request_manage._prepare_query_message('stats.sitewide.entity', params={'entity': 'test', 'stats_range': 'all_time'})
+        received_message = request_manage._prepare_query_message('stats.sitewide.entity', entity='test', stats_range='all_time')
         self.assertEqual(expected_message, received_message)
 
         message = {
@@ -135,7 +135,7 @@ class RequestManageTestCase(unittest.TestCase):
         }
         expected_message = ujson.dumps(message)
         received_message = request_manage._prepare_query_message('cf.recommendations.recording.create_dataframes',
-                                                                 message['params'])
+                                                                 **message['params'])
         self.assertEqual(expected_message, received_message)
 
         message = {
@@ -149,7 +149,7 @@ class RequestManageTestCase(unittest.TestCase):
         }
         expected_message = ujson.dumps(message)
         received_message = request_manage._prepare_query_message('cf.recommendations.recording.train_model',
-                                                                 message['params'])
+                                                                 **message['params'])
         self.assertEqual(expected_message, received_message)
 
         message = {
@@ -164,7 +164,7 @@ class RequestManageTestCase(unittest.TestCase):
         }
         expected_message = ujson.dumps(message)
         received_message = request_manage._prepare_query_message('cf.recommendations.recording.candidate_sets',
-                                                                 message['params'])
+                                                                 **message['params'])
         self.assertEqual(expected_message, received_message)
 
         message = {
@@ -177,7 +177,7 @@ class RequestManageTestCase(unittest.TestCase):
         }
         expected_message = ujson.dumps(message)
         received_message = request_manage._prepare_query_message('cf.recommendations.recording.recommendations',
-                                                                 message['params'])
+                                                                 **message['params'])
         self.assertEqual(expected_message, received_message)
 
         expected_message = ujson.dumps({'query': 'import.artist_relation'})
@@ -191,6 +191,5 @@ class RequestManageTestCase(unittest.TestCase):
             }
         }
         expected_message = ujson.dumps(message)
-        received_message = request_manage._prepare_query_message('similarity.similar_users',
-                                                                 message['params'])
+        received_message = request_manage._prepare_query_message('similarity.similar_users', max_num_users=25)
         self.assertEqual(expected_message, received_message)
