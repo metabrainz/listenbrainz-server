@@ -729,19 +729,21 @@ class TimescaleListenStore(ListenStore):
         # listens using the created column. all incremental listens are always loaded by spark
         # , so we can get upto date stats sooner.
         if dump_type == "full":
+            criteria = "listened_at"
+            # listened_at column is bigint so need to convert datetime to timestamp
             args = {
-                "criteria": "listened_at",
                 "start": int(start_time.timestamp()),
                 "end": int(end_time.timestamp())
             }
         else:  # incremental dump
+            criteria = "created"
             args = {
-                "criteria": "created",
                 "start": start_time,
                 "end": end_time
             }
 
-        query = """SELECT listened_at,
+        query = psycopg2.sql.SQL("""
+                    SELECT listened_at,
                           user_name,
                           artist_credit_id,
                           artist_mbids::TEXT[] AS artist_credit_mbids,
@@ -758,9 +760,9 @@ class TimescaleListenStore(ListenStore):
                        ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
           FULL OUTER JOIN mbid_mapping_metadata m
                        ON mm.recording_mbid = m.recording_mbid
-                    WHERE %(criteria)s > %(start)s
-                      AND %(criteria)s <= %(end)s
-                 ORDER BY %(criteria)s ASC"""
+                    WHERE {criteria} > %(start)s
+                      AND {criteria} <= %(end)s
+                 ORDER BY {criteria} ASC""").format(criteria=psycopg2.sql.Identifier(criteria))
 
         listen_count = 0
         current_listened_at = None
