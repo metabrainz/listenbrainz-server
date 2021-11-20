@@ -1,9 +1,9 @@
-from listenbrainz_spark.year_in_music.utils import setup_2021_listens, setup_all_releases
+from listenbrainz_spark.year_in_music.utils import setup_listens_for_year, setup_all_releases
 from listenbrainz_spark.stats import run_query
 
 
-def get_most_listened_year():
-    setup_2021_listens()
+def get_most_listened_year(year):
+    setup_listens_for_year(year)
     setup_all_releases()
     data = run_query(_get_releases_with_date()).collect()
     yield {
@@ -26,7 +26,7 @@ def _get_releases_with_date():
              , collect_list(release_date.release_mbid) AS release_mbids
              , release_date.year
              , count(*) AS listen_count
-          FROM listens_2021 l
+          FROM listens_of_year l
           JOIN release_date
             ON l.release_mbid = release_date.release_mbid
       GROUP BY user_name

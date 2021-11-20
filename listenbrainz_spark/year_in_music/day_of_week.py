@@ -1,15 +1,15 @@
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.year_in_music.utils import setup_2021_listens
+from listenbrainz_spark.year_in_music.utils import setup_listens_for_year
 
 
-def get_day_of_week():
-    setup_2021_listens()
+def get_day_of_week(year):
+    setup_listens_for_year(year)
     query = """
         WITH listen_weekday AS (
               SELECT user_name
                    , date_format(listened_at, 'EEEE') AS weekday
                    , count(*) AS listen_count 
-                FROM listens_2021
+                FROM listens_of_year
             GROUP BY user_name
                    , weekday
         ), top_listen_weekday AS (

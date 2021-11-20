@@ -21,22 +21,22 @@
   },
   "stats.new_releases_of_top_artists": {
     "name": "stats.new_releases_of_top_artists",
-    "description": "List of releases released in 2021 by top 50 artists of 2021 for the user",
+    "description": "Calculate list of releases released this year by top 50 artists of this year for each user",
     "params": []
   },
   "stats.most_prominent_color": {
     "name": "stats.most_prominent_color",
-    "description": "Most prominent color of users",
+    "description": "Calculate the most prominent color of the user",
     "params": []
   },
   "stats.day_of_week": {
     "name": "stats.day_of_week",
-    "description": "User's day of week",
+    "description": "Calculate the day of week with most listens for the user",
     "params": []
   },
   "stats.most_listened_year": {
     "name": "stats.most_listened_year",
-    "description": "User's most listened year",
+    "description": "Calculate the year for in which highest number of albums listened by the user were released",
     "params": []
   },
   "import.dump.full_newest": {
@@ -110,9 +110,9 @@
       "max_num_users"
     ]
   },
-  "similarity.similar_users_2021": {
-    "name": "similarity.similar_users_2021",
-    "description": "Generate similar user correlation for Year in Music 2021",
+  "similarity.similar_users_year_end": {
+    "name": "similarity.similar_users_year_end",
+    "description": "Generate similar user correlation for Year in Music",
     "params": []
   }
 }

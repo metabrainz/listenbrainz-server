@@ -1,11 +1,11 @@
 import listenbrainz_spark
 from listenbrainz_spark import path
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.year_in_music.utils import setup_2021_listens
+from listenbrainz_spark.year_in_music.utils import setup_listens_for_year
 
 
-def get_most_prominent_color():
-    setup_2021_listens()
+def get_most_prominent_color(year):
+    setup_listens_for_year(year)
     _get_release_colors().createOrReplaceTempView("release_color")
     all_user_colors = run_query(_get_most_prominent_color()).collect()
     yield {
@@ -24,7 +24,7 @@ def _get_most_prominent_color():
             SELECT user_name
                  , color
                  , count(*) as listen_count
-              FROM listens_2021 l
+              FROM listens_of_year l
               JOIN release_color
                 ON release_color.release_mbid = l.release_mbid
              WHERE l.release_mbid IS NOT NULL
