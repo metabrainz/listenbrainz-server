@@ -19,7 +19,8 @@ functions = {
     'stats.user.listening_activity': listenbrainz_spark.stats.user.listening_activity.get_listening_activity,
     'stats.user.daily_activity': listenbrainz_spark.stats.user.daily_activity.get_daily_activity,
     'stats.sitewide.entity': listenbrainz_spark.stats.sitewide.entity.get_entity_stats,
-    'stats.new_releases_of_top_artists': listenbrainz_spark.year_in_music.new_releases_of_top_artists.get_new_releases_of_top_artists,
+    'stats.new_releases_of_top_artists':
+        listenbrainz_spark.year_in_music.new_releases_of_top_artists.get_new_releases_of_top_artists,
     'stats.most_prominent_color': listenbrainz_spark.year_in_music.most_prominent_color.get_most_prominent_color,
     'stats.most_listened_year': listenbrainz_spark.year_in_music.most_listened_year.get_most_listened_year,
     'stats.day_of_week': listenbrainz_spark.year_in_music.day_of_week.get_day_of_week,
