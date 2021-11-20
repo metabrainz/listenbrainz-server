@@ -1,4 +1,6 @@
 import sys
+from datetime import date
+
 import click
 import listenbrainz.utils as utils
 import os
@@ -127,31 +129,39 @@ def request_sitewide_stats(range_, entity):
 
 
 @cli.command(name="request_new_release_stats")
-def request_new_release_stats():
+@click.option("--year", type=int, help="Year for which to calculate the stat",
+              default=date.today().year)
+def request_new_release_stats(year: int):
     """ Send request to calculate new release stats to the spark cluster
     """
-    send_request_to_spark_cluster(_prepare_query_message("stats.new_releases_of_top_artists"))
+    send_request_to_spark_cluster("stats.new_releases_of_top_artists", year=year)
 
 
 @cli.command(name="request_most_prominent_color")
-def request_most_prominent_color():
-    """ Send request to calculate new release stats to the spark cluster
+@click.option("--year", type=int, help="Year for which to calculate the stat",
+              default=date.today().year)
+def request_most_prominent_color(year: int):
+    """ Send request to calculate most prominent color stat to the spark cluster
     """
-    send_request_to_spark_cluster(_prepare_query_message("stats.most_prominent_color"))
+    send_request_to_spark_cluster("stats.most_prominent_color", year=year)
 
 
 @cli.command(name="request_day_of_week")
-def request_day_of_week():
-    """ Send request to calculate new release stats to the spark cluster
+@click.option("--year", type=int, help="Year for which to calculate the stat",
+              default=date.today().year)
+def request_day_of_week(year: int):
+    """ Send request to calculate most listened day of week to the spark cluster
     """
-    send_request_to_spark_cluster(_prepare_query_message("stats.day_of_week"))
+    send_request_to_spark_cluster("stats.day_of_week", year=year)
 
 
 @cli.command(name="request_most_listened_year")
-def request_most_listened_year():
-    """ Send request to calculate most listened year stats to the spark cluster
+@click.option("--year", type=int, help="Year for which to calculate the stat",
+              default=date.today().year)
+def request_most_listened_year(year: int):
+    """ Send request to calculate most listened year stat to the spark cluster
     """
-    send_request_to_spark_cluster(_prepare_query_message("stats.most_listened_year"))
+    send_request_to_spark_cluster("stats.most_listened_year", year=year)
 
 
 @cli.command(name="request_import_full")
@@ -277,10 +287,12 @@ def request_similar_users(max_num_users):
     send_request_to_spark_cluster('similarity.similar_users', max_num_users=max_num_users)
 
 
-@cli.command(name='request_similar_users_2021')
-def request_similar_users():
-    """ Send the cluster a request to generate similar users for Year in Music 2021. """
-    send_request_to_spark_cluster(_prepare_query_message('similarity.similar_users_2021'))
+@cli.command(name='request_similar_users_year_end')
+@click.option("--year", type=int, help="Year for which to calculate the stat",
+              default=date.today().year)
+def request_similar_users(year: int):
+    """ Send the cluster a request to generate similar users for Year in Music. """
+    send_request_to_spark_cluster('similarity.similar_users_year_end', year=year)
 
 
 # Some useful commands to keep our crontabs manageable. These commands do not add new functionality

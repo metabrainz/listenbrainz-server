@@ -1,18 +1,14 @@
-from datetime import datetime
 from data.model.new_releases_stat import NewReleasesStat
 
-import listenbrainz_spark
-from listenbrainz_spark import path
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.utils import get_listens_from_new_dump
-from listenbrainz_spark.year_in_music.utils import setup_2021_listens, setup_all_releases
+from listenbrainz_spark.year_in_music.utils import setup_listens_for_year, setup_all_releases
 
 
-def get_new_releases_of_top_artists():
-    setup_2021_listens()
+def get_new_releases_of_top_artists(year):
+    setup_listens_for_year(year)
     setup_all_releases()
     run_query(_get_top_50_artists()).createOrReplaceTempView("top_50_artists")
-    run_query(_get_2021_releases()).createOrReplaceTempView("releases_2021")
+    run_query(_get_releases_for_year(year)).createOrReplaceTempView("releases_of_year")
     new_releases = run_query(_get_new_releases_of_top_artists()).toLocalIterator()
     for entry in new_releases:
         data = entry.asDict(recursive=True)
@@ -30,7 +26,7 @@ def _get_top_50_artists():
                  , artist_name
                  , artist_credit_mbids
                  , count(*) as listen_count
-              FROM listens_2021
+              FROM listens_of_year
              WHERE artist_credit_mbids IS NOT NULL  
           GROUP BY user_name
                  , artist_name
@@ -52,8 +48,8 @@ def _get_top_50_artists():
     """
 
 
-def _get_2021_releases():
-    return """
+def _get_releases_for_year(year):
+    return f"""
         WITH intermediate_table AS (
             SELECT title
                  , id
@@ -61,7 +57,7 @@ def _get_2021_releases():
                  , `release-group`.`first-release-date` AS first_release_date
                  , `release-group`.`primary-type` AS type
               FROM release
-             WHERE substr(`release-group`.`first-release-date`, 1, 4) = '2021'
+             WHERE substr(`release-group`.`first-release-date`, 1, 4) = '{year}'
         )
         SELECT title
              , id AS release_mbid
@@ -86,12 +82,12 @@ def _get_new_releases_of_top_artists():
                      , release_mbid
                      , first_release_date
                      , type
-                     , releases_2021.artist_credit_mbids
-                     , releases_2021.artist_credit_names
+                     , releases_of_year.artist_credit_mbids
+                     , releases_of_year.artist_credit_names
                     )
                ) AS new_releases
-          FROM releases_2021
+          FROM releases_of_year
           JOIN top_50_artists 
-            ON cardinality(array_intersect(releases_2021.artist_credit_mbids, top_50_artists.artist_credit_mbids)) > 0
+            ON cardinality(array_intersect(releases_of_year.artist_credit_mbids, top_50_artists.artist_credit_mbids)) > 0
       GROUP BY user_name     
     """

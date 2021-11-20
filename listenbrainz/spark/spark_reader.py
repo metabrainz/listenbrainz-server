@@ -24,7 +24,7 @@ from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          handle_missing_musicbrainz_data,
                                          notify_cf_recording_recommendations_generation,
                                          handle_similar_users, handle_new_releases_of_top_artists,
-                                         handle_most_prominent_color, handle_similar_users_2021, handle_day_of_week,
+                                         handle_most_prominent_color, handle_similar_users_year_end, handle_day_of_week,
                                          handle_most_listened_year)
 
 from listenbrainz.webserver import create_app
@@ -49,7 +49,7 @@ response_handler_map = {
     'missing_musicbrainz_data': handle_missing_musicbrainz_data,
     'cf_recommendations_recording_mail': notify_cf_recording_recommendations_generation,
     'similar_users': handle_similar_users,
-    'similar_users_2021': handle_similar_users_2021,
+    'similar_users_year_end': handle_similar_users_year_end,
 }
 
 RABBITMQ_HEARTBEAT_TIME = 60 * 60  # 1 hour, in seconds

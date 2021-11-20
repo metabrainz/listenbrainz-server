@@ -345,7 +345,7 @@ def handle_similar_users(message):
         )
 
 
-def handle_similar_users_2021(message):
+def handle_similar_users_year_end(message):
     year_in_music.insert_similar_users(message["data"])
 
 
