@@ -703,6 +703,7 @@ class TimescaleListenStore(ListenStore):
                             archive_dir,
                             temp_dir,
                             tar_file,
+                            dump_type,
                             start_time: datetime,
                             end_time: datetime,
                             parquet_file_id=0):
@@ -714,6 +715,7 @@ class TimescaleListenStore(ListenStore):
             archive_dir: the directory where the listens dump archive should be created
             temp_dir: the directory where tmp files should be written
             tar_file: the tarfile object that the dumps are being written to
+            dump_type: type of dump, full or incremental
             start_time: the start of the time range for which listens should be dumped
             end_time: the end of the time range for which listens should be dumped
             parquet_file_id: the file id number to use for indexing parquet files
@@ -722,8 +724,16 @@ class TimescaleListenStore(ListenStore):
             the next parquet_file_id to use.
 
         """
+        # the spark listens dump is sorted using this column. full dumps are sorted on
+        # listened_at because so during loading listens in spark for stats calculation
+        # we can load a subset of files. however, sorting on listened_at creates the
+        # issue that the data imported today with listened_at in the past won't show up
+        # in the stats until the next full dump. to solve this, we sort and dump incremental
+        # listens using the created column. all incremental listens are always loaded by spark
+        # , so we can get upto date stats sooner.
+        criteria = "listened_at" if dump_type == "full" else "created"
 
-        query = """SELECT listened_at,
+        query = psycopg2.sql.SQL("""SELECT listened_at,
                           user_name,
                           artist_credit_id,
                           artist_mbids::TEXT[] AS artist_credit_mbids,
@@ -740,9 +750,9 @@ class TimescaleListenStore(ListenStore):
                        ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
           FULL OUTER JOIN mbid_mapping_metadata m
                        ON mm.recording_mbid = m.recording_mbid
-                    WHERE created > %s
-                      AND created <= %s
-                 ORDER BY created ASC"""
+                    WHERE {criteria} > %s
+                      AND {criteria} <= %s
+                 ORDER BY {criteria} ASC""").format(criteria=psycopg2.sql.Identifier(criteria))
 
         args = (start_time, end_time)
 
@@ -826,6 +836,7 @@ class TimescaleListenStore(ListenStore):
 
     def dump_listens_for_spark(self, location,
                                dump_id: int,
+                               dump_type: str,
                                start_time: datetime = datetime.utcfromtimestamp(DATA_START_YEAR_IN_SECONDS),
                                end_time: datetime = None):
         """ Dumps all listens in the ListenStore into spark parquet files in a .tar archive.
@@ -839,6 +850,7 @@ class TimescaleListenStore(ListenStore):
         Args:
             location: the directory where the listens dump archive should be created
             dump_id: the ID of the dump in the dump sequence
+            dump_type: type of dump, full or incremental
             start_time: the start of the time range for which listens should be dumped. defaults to
                 utc 0 (meaning a full dump)
             end_time: the end of time range for which listens should be dumped. defaults to the current time
@@ -884,7 +896,8 @@ class TimescaleListenStore(ListenStore):
                 # Without it sometimes test pass and sometimes they give totally unrelated errors.
                 # Keeping this block should help with future testing...
                 try:
-                    parquet_index = self.write_parquet_files(archive_name, temp_dir, tar, start, end, parquet_index)
+                    parquet_index = self.write_parquet_files(archive_name, temp_dir, tar, dump_type,
+                                                             start, end, parquet_index)
                 except Exception as err:
                     self.log.info("likely test failure: " + str(err))
                     raise
