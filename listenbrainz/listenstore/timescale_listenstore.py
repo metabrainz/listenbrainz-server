@@ -18,11 +18,9 @@ import sqlalchemy
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
-import numpy as np
 
 from brainzutils import cache
 
-import listenbrainz.db.user as db_user
 from listenbrainz.db import timescale
 from listenbrainz import DUMP_LICENSE_FILE_PATH
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
@@ -31,7 +29,6 @@ from listenbrainz.listen import Listen
 from listenbrainz.listenstore import ListenStore
 from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, LISTENS_DUMP_SCHEMA_VERSION
 from listenbrainz.utils import create_path, init_cache
-from listenbrainz import config
 
 # Append the user name for both of these keys
 REDIS_USER_LISTEN_COUNT = "lc."
@@ -731,9 +728,20 @@ class TimescaleListenStore(ListenStore):
         # in the stats until the next full dump. to solve this, we sort and dump incremental
         # listens using the created column. all incremental listens are always loaded by spark
         # , so we can get upto date stats sooner.
-        criteria = "listened_at" if dump_type == "full" else "created"
+        if dump_type == "full":
+            args = {
+                "criteria": "listened_at",
+                "start": int(start_time.timestamp()),
+                "end": int(end_time.timestamp())
+            }
+        else:  # incremental dump
+            args = {
+                "criteria": "created",
+                "start": start_time,
+                "end": end_time
+            }
 
-        query = psycopg2.sql.SQL("""SELECT listened_at,
+        query = """SELECT listened_at,
                           user_name,
                           artist_credit_id,
                           artist_mbids::TEXT[] AS artist_credit_mbids,
@@ -750,11 +758,9 @@ class TimescaleListenStore(ListenStore):
                        ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
           FULL OUTER JOIN mbid_mapping_metadata m
                        ON mm.recording_mbid = m.recording_mbid
-                    WHERE {criteria} > %s
-                      AND {criteria} <= %s
-                 ORDER BY {criteria} ASC""").format(criteria=psycopg2.sql.Identifier(criteria))
-
-        args = (start_time, end_time)
+                    WHERE %(criteria)s > %(start)s
+                      AND %(criteria)s <= %(end)s
+                 ORDER BY %(criteria)s ASC"""
 
         listen_count = 0
         current_listened_at = None
