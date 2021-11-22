@@ -148,7 +148,6 @@ class APITestCase(ListenAPIIntegrationTestCase):
         response = self.client.get(url)
         self.assert404(response)
 
-
     def test_get_listens_order(self):
         """ Test to make sure that the api sends listens in valid order.
         """
@@ -413,6 +412,30 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """ Test for invalid submission in which a listen contains a tag of length > 64
         """
         with open(self.path_to_data_file('too_long_tag.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+
+    def test_missing_track_metadata(self):
+        """ Test for invalid submission in which a listen does not contain track_metadata field """
+        with open(self.path_to_data_file('invalid_listen_missing_track_metadata.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+
+    def test_null_track_metadata(self):
+        """ Test for invalid submission in which a listen has null track_metadata field """
+        with open(self.path_to_data_file('invalid_listen_null_track_metadata.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+
+    def test_null_listened_at(self):
+        """ Test for invalid submission in which a listen has null listened_at field """
+        with open(self.path_to_data_file('invalid_listen_null_listened_at.json'), 'r') as f:
             payload = json.load(f)
         response = self.send_data(payload)
         self.assert400(response)

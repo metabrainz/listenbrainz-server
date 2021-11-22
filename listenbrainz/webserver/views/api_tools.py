@@ -153,23 +153,15 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
         raise ListenValidationError("Listen is empty and cannot be validated.")
 
     if listen_type in (LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT):
-        if 'listened_at' not in listen:
-            raise ListenValidationError("JSON document must contain the key listened_at at the top level.", listen)
+        validate_listened_at(listen)
 
-        try:
-            listen['listened_at'] = int(listen['listened_at'])
-        except ValueError:
-            raise ListenValidationError("JSON document must contain an int value for listened_at.", listen)
+        if "track_metadata" not in listen:
+            raise ListenValidationError("JSON document must contain the key track_metadata"
+                                        " at the top level.", listen)
 
-        if 'listened_at' in listen and 'track_metadata' in listen and len(listen) > 2:
+        if len(listen) > 2:
             raise ListenValidationError("JSON document may only contain listened_at and "
                                         "track_metadata top level keys", listen)
-
-        # if timestamp is too high, raise BadRequest
-        # in order to make up for possible clock skew, we allow
-        # timestamps to be one hour ahead of server time
-        if not is_valid_timestamp(listen['listened_at']):
-            raise ListenValidationError("Value for key listened_at is too high.", listen)
 
         # check that listened_at value is greater than last.fm founding year.
         if listen['listened_at'] < LISTEN_MINIMUM_TS:
@@ -177,13 +169,20 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
                                         "should be greater than 1033410600 (2002-10-01 00:00:00 UTC).", listen)
 
     elif listen_type == LISTEN_TYPE_PLAYING_NOW:
-        if 'listened_at' in listen:
+        if "listened_at" in listen:
             raise ListenValidationError("JSON document must not contain listened_at while submitting"
                                         " playing_now.", listen)
 
-        if 'track_metadata' in listen and len(listen) > 1:
+        if "track_metadata" not in listen:
+            raise ListenValidationError("JSON document must contain the key track_metadata"
+                                        " at the top level.", listen)
+
+        if len(listen) > 1:
             raise ListenValidationError("JSON document may only contain track_metadata as top level"
                                         " key when submitting playing_now.", listen)
+
+    if listen["track_metadata"] is None:
+        raise ListenValidationError("JSON document may not have track_metadata with null value.", listen)
 
     # Basic metadata
     if 'track_name' in listen['track_metadata']:
@@ -316,17 +315,31 @@ def validate_multiple_mbids_field(listen, key):
         listen['track_metadata']['additional_info'][key] = mbids  # set the filtered in the listen payload
 
 
-def is_valid_timestamp(ts):
-    """ Returns True if the timestamp passed is in the API's
-    allowed range of timestamps, False otherwise
+def validate_listened_at(listen):
+    """ Raises an error if the listened_at timestamp is invalid. The timestamp is invalid
+    if it is lower than the minimum acceptable timestamp or if its in future beyond
+    tolerable skew.
 
     Args:
-        ts (int): the timestamp to be checked for validity
-
-    Returns:
-        bool: True if timestamp is valid, False otherwise
+        listen: the listen to be validated
     """
-    return ts <= int(time.time()) + API_LISTENED_AT_ALLOWED_SKEW
+    if "listened_at" not in listen:
+        raise ListenValidationError("JSON document must contain the key listened_at at the top level.", listen)
+
+    try:
+        listen["listened_at"] = int(listen["listened_at"])
+    except (ValueError, TypeError):
+        raise ListenValidationError("JSON document must contain an int value for listened_at.", listen)
+
+    # raise error if timestamp is too high
+    # in order to make up for possible clock skew, we allow
+    # timestamps to be one hour ahead of server time
+    if listen["listened_at"] >= int(time.time()) + API_LISTENED_AT_ALLOWED_SKEW:
+        raise ListenValidationError("Value for key listened_at is too high.", listen)
+
+    if listen["listened_at"] < LISTEN_MINIMUM_TS:
+        raise ListenValidationError("Value for key listened_at is too low. listened_at timestamp "
+                                    "should be greater than 1033410600 (2002-10-01 00:00:00 UTC).", listen)
 
 
 def publish_data_to_queue(data, exchange, queue, error_msg):
