@@ -11,6 +11,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 import ujson
 import psycopg2
+import psycopg2.sql
 from psycopg2.extras import execute_values
 from psycopg2.errors import UntranslatableCharacter
 from typing import List
