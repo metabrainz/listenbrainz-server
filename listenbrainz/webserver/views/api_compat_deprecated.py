@@ -35,7 +35,7 @@ from listenbrainz.webserver.models import SubmitListenUserMetadata
 from listenbrainz.webserver.errors import ListenValidationError
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
 from listenbrainz.webserver.views.api_tools import insert_payload, LISTEN_TYPE_PLAYING_NOW, \
-    is_valid_uuid, check_for_unicode_null_recursively, validate_timestamp
+    is_valid_uuid, check_for_unicode_null_recursively, validate_listened_at
 
 api_compat_old_bp = Blueprint('api_compat_old', __name__)
 
@@ -164,8 +164,8 @@ def _to_native_api(data, append_key):
     if append_key != '':
         try:
             listen['listened_at'] = int(data['i{}'.format(append_key)])
-            validate_timestamp(listen)
-        except (KeyError, ValueError, ValidationError):
+            validate_listened_at(listen)
+        except (KeyError, ValueError, ListenValidationError):
             return None
 
     if 'o{}'.format(append_key) in data:
