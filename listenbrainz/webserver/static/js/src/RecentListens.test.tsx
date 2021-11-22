@@ -543,8 +543,8 @@ describe("updateRecordingToReview", () => {
 
     expect(wrapper.state("recordingToReview")).toEqual(props.listens[0]); // default recordingToreview
 
-    instance.updateRecordingToPin(recordingToReview);
-    expect(wrapper.state("recordingToPin")).toEqual(recordingToReview);
+    instance.updateRecordingToReview(recordingToReview);
+    expect(wrapper.state("recordingToReview")).toEqual(recordingToReview);
   });
 });
 
