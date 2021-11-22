@@ -163,7 +163,7 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
 
         if 'listened_at' in listen and 'track_metadata' in listen and len(listen) > 2:
             raise ListenValidationError("JSON document may only contain listened_at and "
-                                  "track_metadata top level keys", listen)
+                                        "track_metadata top level keys", listen)
 
         # if timestamp is too high, raise BadRequest
         # in order to make up for possible clock skew, we allow
@@ -174,16 +174,16 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
         # check that listened_at value is greater than last.fm founding year.
         if listen['listened_at'] < LISTEN_MINIMUM_TS:
             raise ListenValidationError("Value for key listened_at is too low. listened_at timestamp "
-                                  "should be greater than 1033410600 (2002-10-01 00:00:00 UTC).", listen)
+                                        "should be greater than 1033410600 (2002-10-01 00:00:00 UTC).", listen)
 
     elif listen_type == LISTEN_TYPE_PLAYING_NOW:
         if 'listened_at' in listen:
             raise ListenValidationError("JSON document must not contain listened_at while submitting"
-                                  " playing_now.", listen)
+                                        " playing_now.", listen)
 
         if 'track_metadata' in listen and len(listen) > 1:
             raise ListenValidationError("JSON document may only contain track_metadata as top level"
-                                  " key when submitting playing_now.", listen)
+                                        " key when submitting playing_now.", listen)
 
     # Basic metadata
     if 'track_name' in listen['track_metadata']:
@@ -214,11 +214,11 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
             tags = listen['track_metadata']['additional_info']['tags']
             if len(tags) > MAX_TAGS_PER_LISTEN:
                 raise ListenValidationError("JSON document may not contain more than %d items in "
-                                      "track_metadata.additional_info.tags." % MAX_TAGS_PER_LISTEN, listen)
+                                            "track_metadata.additional_info.tags." % MAX_TAGS_PER_LISTEN, listen)
             for tag in tags:
                 if len(tag) > MAX_TAG_SIZE:
                     raise ListenValidationError("JSON document may not contain track_metadata.additional_info.tags "
-                                          "longer than %d characters." % MAX_TAG_SIZE, listen)
+                                                "longer than %d characters." % MAX_TAG_SIZE, listen)
         # MBIDs, both of the mbid validation methods mutate the listen payload if needed.
         single_mbid_keys = ['release_mbid', 'recording_mbid', 'release_group_mbid', 'track_mbid']
         for key in single_mbid_keys:
