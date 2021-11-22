@@ -28,7 +28,7 @@ from werkzeug.exceptions import InternalServerError, ServiceUnavailable
 from brainzutils.mail import send_mail
 
 METRIC_UPDATE_INTERVAL = 60  # seconds
-_listens_imported_since_start = 0
+_listens_imported_since_last_update = 0  # number of listens imported since last metric update was submitted
 _metric_submission_time = time.monotonic() + METRIC_UPDATE_INTERVAL
 
 def notify_error(musicbrainz_id: str, error: str):
@@ -363,7 +363,7 @@ def process_all_spotify_users():
             failure: the number of users for whom we faced errors while importing.
     """
 
-    global _listens_imported_since_start, _metric_submission_time
+    global _listens_imported_since_last_update, _metric_submission_time
 
     service = SpotifyService()
     try:
@@ -380,7 +380,7 @@ def process_all_spotify_users():
     failure = 0
     for u in users:
         try:
-            _listens_imported_since_start += process_one_user(u, service)
+            _listens_imported_since_last_update += process_one_user(u, service)
             success += 1
         except Exception:
             current_app.logger.critical('spotify_reader could not import listens for user %s:',
@@ -389,7 +389,8 @@ def process_all_spotify_users():
 
         if time.monotonic() > _metric_submission_time:
             _metric_submission_time += METRIC_UPDATE_INTERVAL
-            metrics.set("spotify_reader", imported_listens=_listens_imported_since_start)
+            metrics.set("spotify_reader", imported_listens=_listens_imported_since_last_update)
+            _listens_imported_since_last_update = 0
 
     current_app.logger.info('Processed %d users successfully!', success)
     current_app.logger.info('Encountered errors while processing %d users.', failure)
