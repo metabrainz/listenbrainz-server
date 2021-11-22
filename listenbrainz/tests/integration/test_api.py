@@ -199,6 +199,19 @@ class APITestCase(ListenAPIIntegrationTestCase):
             response = self.send_data(payload)
             self.assert400(response)
 
+    def test_payload_is_not_list(self):
+        """ Test that API returns 400 for payloads with no listens
+        """
+        for listen_type in ('single', 'playing_now', 'import'):
+            data = {
+                'listen_type': listen_type,
+                'payload': {},
+            }
+            response = self.send_data(data)
+            self.assert400(response)
+            self.assertEqual('The payload in the JSON document should be'
+                             ' a list of listens.', response.json['error'])
+
     def test_unauthorized_submission(self):
         """ Test for checking that unauthorized submissions return 401
         """
