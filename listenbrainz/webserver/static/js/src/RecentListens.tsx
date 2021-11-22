@@ -10,10 +10,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import { io, Socket } from "socket.io-client";
-import { fromPairs, get, isEqual } from "lodash";
+import { get, isEqual } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import {
-  faPenAlt,
+  faPencilAlt,
   faThumbtack,
   faTrashAlt,
 } from "@fortawesome/free-solid-svg-icons";
@@ -36,6 +36,8 @@ import {
   getListenablePin,
   getRecordingMBID,
   getArtistMBIDs,
+  getReleaseMBID,
+  getReleaseGroupMBID,
 } from "./utils";
 import CBReviewModal from "./CBReviewModal";
 import ListenControl from "./listens/ListenControl";
@@ -689,12 +691,9 @@ export default class RecentListens extends React.Component<
                       const artistMBIDs = getArtistMBIDs(listen);
                       const trackMBID = get(
                         listen,
-                        "track_metadata.additional_info.track_msid"
+                        "track_metadata.additional_info.track_mbid"
                       );
-                      const releaseGroupMBID = get(
-                        listen,
-                        "track_metadata.additional_info.release_group_mbid"
-                      );
+                      const releaseGroupMBID = getReleaseGroupMBID(listen);
                       const canDelete =
                         isCurrentUser &&
                         Boolean(listenedAt) &&
@@ -721,7 +720,7 @@ export default class RecentListens extends React.Component<
                           <ListenControl
                             title="Write a review"
                             disabled={!isListenReviewable}
-                            icon={faPenAlt}
+                            icon={faPencilAlt}
                             action={this.updateRecordingToReview.bind(
                               this,
                               listen
