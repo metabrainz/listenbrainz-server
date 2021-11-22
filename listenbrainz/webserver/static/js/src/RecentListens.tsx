@@ -717,17 +717,18 @@ export default class RecentListens extends React.Component<
                             dataToggle="modal"
                             dataTarget="#PinRecordingModal"
                           />
-                          <ListenControl
-                            title="Write a review"
-                            disabled={!isListenReviewable}
-                            icon={faPencilAlt}
-                            action={this.updateRecordingToReview.bind(
-                              this,
-                              listen
-                            )}
-                            dataToggle="modal"
-                            dataTarget="#CBReviewModal"
-                          />
+                          {isListenReviewable && (
+                            <ListenControl
+                              title="Write a review"
+                              icon={faPencilAlt}
+                              action={this.updateRecordingToReview.bind(
+                                this,
+                                listen
+                              )}
+                              dataToggle="modal"
+                              dataTarget="#CBReviewModal"
+                            />
+                          )}
                           {canDelete && (
                             <ListenControl
                               title="Delete Listen"
