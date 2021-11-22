@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import flask_testing
 from datasethoster.main import create_app
-from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery, COLLECTION_NAME
+from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery
 
 
 json_request_0 = [
