@@ -587,21 +587,91 @@ def get_sitewide_artist():
     :statuscode 400: Bad request, check ``response['error']`` for more details
     :resheader Content-Type: *application/json*
     """
-    stats_range = request.args.get('range', default='all_time')
+    return _get_sitewide_stats("artists")
+
+
+@stats_api_bp.route("/sitewide/releases")
+@crossdomain()
+@ratelimit()
+def get_sitewide_release():
+    """
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "releases": [
+                    {
+                        "artist_mbids": [],
+                        "artist_name": "Coldplay",
+                        "listen_count": 26,
+                        "release_mbid": "",
+                        "release_name": "Live in Buenos Aires"
+                    },
+                    {
+                        "artist_mbids": [],
+                        "artist_name": "Ellie Goulding",
+                        "listen_count": 25,
+                        "release_mbid": "",
+                        "release_name": "Delirium (Deluxe)"
+                    },
+                    {
+                        "artist_mbids": [],
+                        "artist_name": "The Fray",
+                        "listen_count": 25,
+                        "release_mbid": "",
+                        "release_name": "How to Save a Life"
+                    },
+                ],
+                "offset": 0,
+                "count": 2,
+                "range": "year",
+                "last_updated": 1588494361,
+                "from_ts": 1009823400,
+                "to_ts": 1590029157
+            }
+        }
+
+    .. note::
+        - This endpoint is currently in beta
+        - ``artist_mbids``, ``artist_msid``, ``release_mbid`` and ``release_msid`` are optional fields and
+          may not be present in all the responses
+
+    :param count: Optional, number of artists to return for each time range,
+        Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
+        Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
+    :type count: ``int``
+    :param offset: Optional, number of artists to skip from the beginning, for pagination.
+        Ex. An offset of 5 means the top 5 artists will be skipped, defaults to 0
+    :type offset: ``int``
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :resheader Content-Type: *application/json*
+    """
+    return _get_sitewide_stats("releases")
+
+
+def _get_sitewide_stats(entity: str):
+    stats_range = request.args.get("range", default="all_time")
     if not _is_valid_range(stats_range):
-        raise APIBadRequest("Invalid range: {}".format(stats_range))
+        raise APIBadRequest(f"Invalid range: {stats_range}")
 
-    offset = get_non_negative_param('offset', default=0)
-    count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
+    offset = get_non_negative_param("offset", default=0)
+    count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
 
-    stats = db_stats.get_sitewide_stats(stats_range, 'artists')
+    stats = db_stats.get_sitewide_stats(stats_range, entity)
     if stats is None:
-        raise APINoContent('')
+        raise APINoContent("")
 
     entity_list, total_entity_count = _process_user_entity(stats, offset, count)
     return jsonify({
         "payload": {
-            "artists": entity_list,
+            entity: entity_list,
             "range": stats_range,
             "offset": offset,
             "count": total_entity_count,
