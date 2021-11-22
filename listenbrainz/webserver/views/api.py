@@ -7,7 +7,7 @@ from brainzutils.musicbrainz_db import engine as mb_engine
 
 from data.model.external_service import ExternalServiceType
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
-    APIUnauthorized
+    APIUnauthorized, ListenValidationError
 from listenbrainz.webserver.decorators import api_listenstore_needed
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import crossdomain
@@ -84,16 +84,14 @@ def submit_listen():
     except KeyError:
         log_raise_400("Invalid JSON document submitted.", raw_data)
 
-    # validate listens to make sure json is okay
-    validated_payload = [validate_listen(listen, listen_type) for listen in payload]
-
     try:
-        user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])
-        insert_payload(validated_payload, user_metadata, listen_type)
-    except APIServiceUnavailable as e:
-        raise
-    except Exception as e:
-        raise APIInternalServerError("Something went wrong. Please try again.")
+        # validate listens to make sure json is okay
+        validated_payload = [validate_listen(listen, listen_type) for listen in payload]
+    except ListenValidationError as err:
+        raise APIBadRequest(err.message, err.payload)
+
+    user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])
+    insert_payload(validated_payload, user_metadata, listen_type)
 
     return jsonify({'status': 'ok'})
 
@@ -396,7 +394,7 @@ def latest_import():
             current_app.logger.error("Error while updating latest import: ", exc_info=True)
             raise APIInternalServerError('Could not update latest_import, try again')
 
-        # During unrelated tests _ts may be None -- improving this would be a great headache. 
+        # During unrelated tests _ts may be None -- improving this would be a great headache.
         # However, during the test of this code and while serving requests _ts is set.
         if _ts:
             _ts.set_listen_count_expiry_for_user(user['musicbrainz_id'])
