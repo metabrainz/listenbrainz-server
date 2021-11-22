@@ -17,6 +17,7 @@ import BrainzPlayer from "./BrainzPlayer";
 import ErrorBoundary from "./ErrorBoundary";
 import { getPageProps } from "./utils";
 import ListenCard from "./listens/ListenCard";
+import ListenControl from "./listens/ListenControl";
 import Loader from "./components/Loader";
 
 export type MissingMBDataProps = {
@@ -183,6 +184,26 @@ export default class MissingMBDataPage extends React.Component<
                 </div>
                 <div>
                   {missingData.map((data) => {
+                    const listen = {
+                      listened_at:
+                        new Date(`${data.listened_at}Z`).getTime() / 1000,
+                      user_name: user.name,
+                      track_metadata: {
+                        artist_name: data.artist_name,
+                        track_name: data.recording_name,
+                        release_name: data?.release_name,
+                      },
+                    };
+                    const additionalActions = (
+                      <>
+                        <ListenControl
+                          icon={faPlus}
+                          title=""
+                          // eslint-disable-next-line react/jsx-no-bind
+                          action={this.submitMissingData.bind(this, listen)}
+                        />
+                      </>
+                    );
                     return (
                       <div className="event-content" style={{ width: "100%" }}>
                         <ListenCard
@@ -190,20 +211,8 @@ export default class MissingMBDataPage extends React.Component<
                           showTimestamp
                           showUsername={false}
                           newAlert={newAlert}
-                          customicon={{
-                            icon: faPlus,
-                            func: this.submitMissingData,
-                          }}
-                          listen={{
-                            listened_at:
-                              new Date(`${data.listened_at}Z`).getTime() / 1000,
-                            user_name: user.name,
-                            track_metadata: {
-                              artist_name: data.artist_name,
-                              track_name: data.recording_name,
-                              release_name: data?.release_name,
-                            },
-                          }}
+                          listen={listen}
+                          additionalActions={additionalActions}
                         />
                       </div>
                     );
