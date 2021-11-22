@@ -30,23 +30,20 @@ def _get_possible_queries():
         return ujson.load(f)
 
 
-def _prepare_query_message(query, params=None):
+def _prepare_query_message(query, **params):
     """ Prepare the JSON message that needs to be sent to the
     spark cluster based on the query and the parameters the
     query needs
 
     Args:
-        query (str): the name of the query, should be in request_queries.json
-        params (dict): the parameters the query needs, should contain all the params
-            in the correspoding request_queries.json to be valid
+        query: the name of the query, should be in request_queries.json
+        params: the parameters the query needs, should contain all the params
+            in the corresponding request_queries.json to be valid
 
     Raises:
         InvalidSparkRequestError if the query isn't in the list or if the parameters
         don't match up
     """
-    if params is None:
-        params = {}
-
     possible_queries = _get_possible_queries()
     if query not in possible_queries:
         raise InvalidSparkRequestError(query)
@@ -65,7 +62,9 @@ def _prepare_query_message(query, params=None):
     return ujson.dumps(message)
 
 
-def send_request_to_spark_cluster(message):
+def send_request_to_spark_cluster(query, **params):
+    message = _prepare_query_message(query, **params)
+
     with create_app().app_context():
         rabbitmq_connection = utils.connect_to_rabbitmq(
             username=current_app.config['RABBITMQ_USERNAME'],
@@ -108,8 +107,7 @@ def request_user_stats(type_, range_, entity):
     if type_ == "entity" and entity:
         params["entity"] = entity
     try:
-        send_request_to_spark_cluster(_prepare_query_message(
-            f"stats.user.{type_}", params=params))
+        send_request_to_spark_cluster(f"stats.user.{type_}", **params)
     except InvalidSparkRequestError:
         click.echo("Incorrect arguments provided")
 
@@ -122,13 +120,8 @@ def request_user_stats(type_, range_, entity):
 def request_sitewide_stats(range_, entity):
     """ Send request to calculate sitewide stats to the spark cluster
     """
-    params = {
-        'entity': entity,
-        'stats_range': range_
-    }
     try:
-        send_request_to_spark_cluster(_prepare_query_message(
-            "stats.sitewide.entity", params=params))
+        send_request_to_spark_cluster("stats.sitewide.entity", entity=entity, stats_range=range_)
     except InvalidSparkRequestError:
         click.echo("Incorrect arguments provided")
 
@@ -140,11 +133,9 @@ def request_import_new_full_dump(id_: int):
     """ Send the cluster a request to import a new full data dump
     """
     if id_:
-        send_request_to_spark_cluster(_prepare_query_message(
-            'import.dump.full_id', params={'dump_id': id_}))
+        send_request_to_spark_cluster('import.dump.full_id', dump_id=id_)
     else:
-        send_request_to_spark_cluster(
-            _prepare_query_message('import.dump.full_newest'))
+        send_request_to_spark_cluster('import.dump.full_newest')
 
 
 @cli.command(name="request_import_incremental")
@@ -154,11 +145,9 @@ def request_import_new_incremental_dump(id_: int):
     """ Send the cluster a request to import a new incremental data dump
     """
     if id_:
-        send_request_to_spark_cluster(_prepare_query_message(
-            'import.dump.incremental_id', params={'dump_id': id_}))
+        send_request_to_spark_cluster('import.dump.incremental_id', dump_id=id_)
     else:
-        send_request_to_spark_cluster(
-            _prepare_query_message('import.dump.incremental_newest'))
+        send_request_to_spark_cluster('import.dump.incremental_newest')
 
 
 @cli.command(name="request_dataframes")
@@ -173,13 +162,10 @@ def request_dataframes(days, job_type, listens_threshold):
         print("job_type must be one of ", DATAFRAME_JOB_TYPES)
         sys.exit(-1)
 
-    params = {
-        'train_model_window': days,
-        'job_type': job_type,
-        'minimum_listens_threshold': listens_threshold
-    }
-    send_request_to_spark_cluster(_prepare_query_message(
-        'cf.recommendations.recording.create_dataframes', params=params))
+    send_request_to_spark_cluster(
+        'cf.recommendations.recording.create_dataframes', train_model_window=days,
+        job_type=job_type, minimum_listens_threshold=listens_threshold
+    )
 
 
 def parse_list(ctx, args):
@@ -202,8 +188,7 @@ def request_model(rank, itr, lmbda, alpha):
         'alpha': alpha,
     }
 
-    send_request_to_spark_cluster(_prepare_query_message(
-        'cf.recommendations.recording.train_model', params=params))
+    send_request_to_spark_cluster('cf.recommendations.recording.train_model', **params)
 
 
 @cli.command(name='request_candidate_sets')
@@ -223,8 +208,7 @@ def request_candidate_sets(days, top, similar, users, html):
         "users": users,
         "html_flag": html
     }
-    send_request_to_spark_cluster(_prepare_query_message(
-        'cf.recommendations.recording.candidate_sets', params=params))
+    send_request_to_spark_cluster('cf.recommendations.recording.candidate_sets', params=params)
 
 
 @cli.command(name='request_recommendations')
@@ -240,17 +224,14 @@ def request_recommendations(top, similar, users):
         'recommendation_similar_artist_limit': similar,
         'users': users
     }
-    send_request_to_spark_cluster(_prepare_query_message(
-        'cf.recommendations.recording.recommendations', params=params))
+    send_request_to_spark_cluster('cf.recommendations.recording.recommendations', **params)
 
 
 @cli.command(name='request_import_artist_relation')
 def request_import_artist_relation():
     """ Send the spark cluster a request to import artist relation.
     """
-
-    send_request_to_spark_cluster(
-        _prepare_query_message('import.artist_relation'))
+    send_request_to_spark_cluster('import.artist_relation')
 
 
 @cli.command(name='request_similar_users')
@@ -258,11 +239,7 @@ def request_import_artist_relation():
 def request_similar_users(max_num_users):
     """ Send the cluster a request to generate similar users.
     """
-    params = {
-        'max_num_users': max_num_users
-    }
-    send_request_to_spark_cluster(_prepare_query_message(
-        'similarity.similar_users', params=params))
+    send_request_to_spark_cluster('similarity.similar_users', max_num_users=max_num_users)
 
 
 # Some useful commands to keep our crontabs manageable. These commands do not add new functionality
