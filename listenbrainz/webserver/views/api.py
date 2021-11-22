@@ -65,6 +65,10 @@ def submit_listen():
 
     try:
         payload = data['payload']
+
+        if not isinstance(payload, list):
+            raise APIBadRequest("The payload in the JSON document should be a list of listens.", payload)
+
         if len(payload) == 0:
             log_raise_400(
                 "JSON document does not contain any listens", payload)
