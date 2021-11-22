@@ -3,10 +3,8 @@ import logging
 from datetime import datetime
 from typing import List, Optional
 
-from data.model.sitewide_artist_stat import SitewideArtistRecord
 from data.model.sitewide_entity import SitewideEntityStatMessage
 from data.model.user_artist_stat import UserArtistRecord
-from data.model.user_entity import UserEntityRecord
 from data.model.user_recording_stat import UserRecordingRecord
 from data.model.user_release_stat import UserReleaseRecord
 from listenbrainz_spark.stats import get_dates_for_stats_range
