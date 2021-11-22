@@ -33,7 +33,7 @@ from flask import current_app, Blueprint, request, render_template, redirect
 from werkzeug.exceptions import BadRequest
 from listenbrainz.db.lastfm_session import Session
 from listenbrainz.webserver.models import SubmitListenUserMetadata
-from listenbrainz.webserver.errors import ValidationError
+from listenbrainz.webserver.errors import ListenValidationError
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
 from listenbrainz.webserver.views.api_tools import insert_payload, is_valid_timestamp, LISTEN_TYPE_PLAYING_NOW, \
     is_valid_uuid, check_for_unicode_null_recursively
@@ -197,7 +197,7 @@ def _to_native_api(data, append_key):
 
     try:
         check_for_unicode_null_recursively(listen)
-    except ValidationError:
+    except ListenValidationError:
         return None
 
     return listen

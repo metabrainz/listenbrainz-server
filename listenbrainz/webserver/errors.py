@@ -233,7 +233,7 @@ class InvalidAPIUsage(Exception):
         return '<?xml version="1.0" encoding="utf-8"?>\n' + yattag.indent(doc.getvalue())
 
 
-class ValidationError(Exception):
+class ListenValidationError(Exception):
     """ Error class for raising when the submitted payload does not pass validation.
     Only use for code paths common to LB API, API compat & API compat deprecated.
     Throw this error from an util method, capture it in each of the corresponding

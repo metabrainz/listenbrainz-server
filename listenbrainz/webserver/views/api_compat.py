@@ -8,7 +8,7 @@ from flask import Blueprint, request, render_template, current_app
 from flask_login import login_required, current_user
 from brainzutils.ratelimit import ratelimit
 from brainzutils.musicbrainz_db import engine as mb_engine
-from listenbrainz.webserver.errors import InvalidAPIUsage, CompatError, ValidationError
+from listenbrainz.webserver.errors import InvalidAPIUsage, CompatError, ListenValidationError
 import xmltodict
 
 from listenbrainz.webserver.models import SubmitListenUserMetadata
@@ -276,7 +276,7 @@ def record_listens(request, data):
     listen_type, native_payload = _to_native_api(lookup, data['method'], output_format)
     try:
         validated_payload = [validate_listen(listen, listen_type) for listen in native_payload]
-    except ValidationError as err:
+    except ListenValidationError as err:
         raise InvalidAPIUsage(err.message, 400, output_format)
 
     user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])

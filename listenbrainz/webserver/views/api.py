@@ -7,7 +7,7 @@ from brainzutils.musicbrainz_db import engine as mb_engine
 
 from data.model.external_service import ExternalServiceType
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
-    APIUnauthorized, ValidationError
+    APIUnauthorized, ListenValidationError
 from listenbrainz.webserver.decorators import api_listenstore_needed
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import crossdomain
@@ -87,7 +87,7 @@ def submit_listen():
     try:
         # validate listens to make sure json is okay
         validated_payload = [validate_listen(listen, listen_type) for listen in payload]
-    except ValidationError as err:
+    except ListenValidationError as err:
         raise APIBadRequest(err.message, err.payload)
 
     user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])

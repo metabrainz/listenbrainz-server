@@ -17,8 +17,8 @@ import sentry_sdk
 from flask import current_app, request
 
 from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
-from listenbrainz.webserver.errors import APIInternalServerError, APIServiceUnavailable, APIBadRequest, APIUnauthorized, \
-    ValidationError
+from listenbrainz.webserver.errors import APIServiceUnavailable, APIBadRequest, APIUnauthorized, \
+    ListenValidationError
 
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
 from listenbrainz.webserver.models import SubmitListenUserMetadata
@@ -150,62 +150,62 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
     in place if needed."""
 
     if listen is None:
-        raise ValidationError("Listen is empty and cannot be validated.")
+        raise ListenValidationError("Listen is empty and cannot be validated.")
 
     if listen_type in (LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT):
         if 'listened_at' not in listen:
-            raise ValidationError("JSON document must contain the key listened_at at the top level.", listen)
+            raise ListenValidationError("JSON document must contain the key listened_at at the top level.", listen)
 
         try:
             listen['listened_at'] = int(listen['listened_at'])
         except ValueError:
-            raise ValidationError("JSON document must contain an int value for listened_at.", listen)
+            raise ListenValidationError("JSON document must contain an int value for listened_at.", listen)
 
         if 'listened_at' in listen and 'track_metadata' in listen and len(listen) > 2:
-            raise ValidationError("JSON document may only contain listened_at and "
+            raise ListenValidationError("JSON document may only contain listened_at and "
                                   "track_metadata top level keys", listen)
 
         # if timestamp is too high, raise BadRequest
         # in order to make up for possible clock skew, we allow
         # timestamps to be one hour ahead of server time
         if not is_valid_timestamp(listen['listened_at']):
-            raise ValidationError("Value for key listened_at is too high.", listen)
+            raise ListenValidationError("Value for key listened_at is too high.", listen)
 
         # check that listened_at value is greater than last.fm founding year.
         if listen['listened_at'] < LISTEN_MINIMUM_TS:
-            raise ValidationError("Value for key listened_at is too low. listened_at timestamp "
+            raise ListenValidationError("Value for key listened_at is too low. listened_at timestamp "
                                   "should be greater than 1033410600 (2002-10-01 00:00:00 UTC).", listen)
 
     elif listen_type == LISTEN_TYPE_PLAYING_NOW:
         if 'listened_at' in listen:
-            raise ValidationError("JSON document must not contain listened_at while submitting"
+            raise ListenValidationError("JSON document must not contain listened_at while submitting"
                                   " playing_now.", listen)
 
         if 'track_metadata' in listen and len(listen) > 1:
-            raise ValidationError("JSON document may only contain track_metadata as top level"
+            raise ListenValidationError("JSON document may only contain track_metadata as top level"
                                   " key when submitting playing_now.", listen)
 
     # Basic metadata
     if 'track_name' in listen['track_metadata']:
         if not isinstance(listen['track_metadata']['track_name'], str):
-            raise ValidationError("track_metadata.track_name must be a single string.", listen)
+            raise ListenValidationError("track_metadata.track_name must be a single string.", listen)
 
         listen['track_metadata']['track_name'] = listen['track_metadata']['track_name'].strip()
         if len(listen['track_metadata']['track_name']) == 0:
-            raise ValidationError("required field track_metadata.track_name is empty.", listen)
+            raise ListenValidationError("required field track_metadata.track_name is empty.", listen)
     else:
-        raise ValidationError("JSON document does not contain required track_metadata.track_name.", listen)
+        raise ListenValidationError("JSON document does not contain required track_metadata.track_name.", listen)
 
 
     if 'artist_name' in listen['track_metadata']:
         if not isinstance(listen['track_metadata']['artist_name'], str):
-            raise ValidationError("track_metadata.artist_name must be a single string.", listen)
+            raise ListenValidationError("track_metadata.artist_name must be a single string.", listen)
 
         listen['track_metadata']['artist_name'] = listen['track_metadata']['artist_name'].strip()
         if len(listen['track_metadata']['artist_name']) == 0:
-            raise ValidationError("required field track_metadata.artist_name is empty.", listen)
+            raise ListenValidationError("required field track_metadata.artist_name is empty.", listen)
     else:
-        raise ValidationError("JSON document does not contain required track_metadata.artist_name.", listen)
+        raise ListenValidationError("JSON document does not contain required track_metadata.artist_name.", listen)
 
 
     if 'additional_info' in listen['track_metadata']:
@@ -213,11 +213,11 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
         if 'tags' in listen['track_metadata']['additional_info']:
             tags = listen['track_metadata']['additional_info']['tags']
             if len(tags) > MAX_TAGS_PER_LISTEN:
-                raise ValidationError("JSON document may not contain more than %d items in "
+                raise ListenValidationError("JSON document may not contain more than %d items in "
                                       "track_metadata.additional_info.tags." % MAX_TAGS_PER_LISTEN, listen)
             for tag in tags:
                 if len(tag) > MAX_TAG_SIZE:
-                    raise ValidationError("JSON document may not contain track_metadata.additional_info.tags "
+                    raise ListenValidationError("JSON document may not contain track_metadata.additional_info.tags "
                                           "longer than %d characters." % MAX_TAG_SIZE, listen)
         # MBIDs, both of the mbid validation methods mutate the listen payload if needed.
         single_mbid_keys = ['release_mbid', 'recording_mbid', 'release_group_mbid', 'track_mbid']
@@ -285,7 +285,7 @@ def validate_single_mbid_field(listen, key):
             return
 
         if not is_valid_uuid(mbid):  # if the mbid is invalid raise an error
-            raise ValidationError("%s MBID format invalid." % (key, ), listen)
+            raise ListenValidationError("%s MBID format invalid." % (key,), listen)
 
 
 def validate_multiple_mbids_field(listen, key):
@@ -311,7 +311,7 @@ def validate_multiple_mbids_field(listen, key):
 
         for mbid in mbids:
             if not is_valid_uuid(mbid):   # if the mbid is invalid raise an error
-                raise ValidationError("%s MBID format invalid." % (key,), listen)
+                raise ListenValidationError("%s MBID format invalid." % (key,), listen)
 
         listen['track_metadata']['additional_info'][key] = mbids  # set the filtered in the listen payload
 
