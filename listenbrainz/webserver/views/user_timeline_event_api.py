@@ -21,7 +21,7 @@ import time
 import ujson
 
 from collections import defaultdict
-from typing import Optional, List, Tuple
+from typing import List, Tuple
 
 from flask import Blueprint, jsonify, request, current_app
 
@@ -37,11 +37,11 @@ from listenbrainz.db.model.pinned_recording import fetch_track_metadata_for_pins
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.listenstore import TimescaleListenStore
-from listenbrainz.webserver.views.api import _validate_get_endpoint_params
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, \
     APIForbidden
-from listenbrainz.webserver.views.api_tools import validate_auth_header, _filter_description_html
+from listenbrainz.webserver.views.api_tools import validate_auth_header, _filter_description_html, \
+    _validate_get_endpoint_params
 from brainzutils.ratelimit import ratelimit
 
 MAX_LISTEN_EVENTS_PER_USER = 2 # the maximum number of listens we want to return in the feed per user
@@ -116,7 +116,7 @@ def create_user_notification_event(user_name):
 
         {
             "metadata": {
-                "message": <the message to post, required>,
+                "message": "<the message to post, required>",
             }
         }
 
@@ -181,7 +181,7 @@ def user_feed(user_name: str):
         raise APIUnauthorized("You don't have permissions to view this user's timeline.")
 
     db_conn = webserver.create_timescale(current_app)
-    min_ts, max_ts, count = _validate_get_endpoint_params(db_conn, user_name)
+    min_ts, max_ts, count = _validate_get_endpoint_params()
     if min_ts is None and max_ts is None:
         max_ts = int(time.time())
 
@@ -237,6 +237,63 @@ def user_feed(user_name: str):
         'user_id': user_name,
         'events': [event.dict() for event in all_events],
     }})
+
+
+@user_timeline_event_api_bp.route("/user/<user_name>/feed/events/delete", methods=['OPTIONS', 'POST'])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
+def delete_feed_events(user_name):
+    '''
+    Delete those events from user's feed that belong to them.
+    Supports deletion of recommendation and notification.
+    Along with the authorization token, post the event type and event id.
+    For example:
+
+    .. code-block:: json
+
+        {
+            "event_type": "recording_recommendation",
+            "id": "<integer id of the event>"
+        }
+
+    .. code-block:: json
+
+        {
+            "event_type": "notification",
+            "id": "<integer id of the event>"
+        }
+
+    :param user_name: The MusicBrainz ID of the user from whose timeline events are being deleted
+    :type user_name: ``str``
+    :statuscode 200: Successful deletion
+    :statuscode 400: Bad request, check ``response['error']`` for more details.
+    :statuscode 401: Unauthorized
+    :statuscode 404: User not found
+    :statuscode 500: API Internal Server Error
+    :resheader Content-Type: *application/json*
+    '''
+    user = validate_auth_header()
+    if user_name != user['musicbrainz_id']:
+        raise APIUnauthorized("You don't have permissions to delete from this user's timeline.")
+
+    try:
+        event = ujson.loads(request.get_data())
+
+        if event["event_type"] in [UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+                UserTimelineEventType.NOTIFICATION.value]:
+            try:
+                event_deleted = db_user_timeline_event.delete_user_timeline_event(event["id"], user["id"])
+            except Exception as e:
+                raise APIInternalServerError("Something went wrong. Please try again")
+            if not event_deleted:
+                raise APINotFound("Cannot find '%s' event with id '%s' for user '%s'" % (event["event_type"], event["id"],
+                    user["id"]))
+            return jsonify({"status": "ok"})
+
+        raise APIBadRequest("This event type is not supported for deletion via this method")
+
+    except (ValueError, KeyError) as e:
+        raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
 
 def get_listen_events(
@@ -324,6 +381,7 @@ def get_notification_events(user: dict, count: int) -> List[APITimelineEvent]:
     events = []
     for event in notification_events_db:
         events.append(APITimelineEvent(
+            id=event.id,
             event_type=UserTimelineEventType.NOTIFICATION,
             user_name=event.metadata.creator,
             created=event.created.timestamp(),
@@ -362,6 +420,7 @@ def get_recording_recommendation_events(users_for_events: List[dict], min_ts: in
             )
 
             events.append(APITimelineEvent(
+                id=event.id,
                 event_type=UserTimelineEventType.RECORDING_RECOMMENDATION,
                 user_name=listen.user_name,
                 created=event.created.timestamp(),

@@ -12,14 +12,13 @@ from pyspark.sql.utils import AnalysisException
 
 import listenbrainz_spark
 from hdfs.util import HdfsError
-from listenbrainz_spark import config, hdfs_connection, path, stats
+from listenbrainz_spark import config, hdfs_connection, path
 from listenbrainz_spark.schema import listens_new_schema
 from listenbrainz_spark.exceptions import (DataFrameNotAppendedException,
                                            DataFrameNotCreatedException,
                                            FileNotFetchedException,
                                            FileNotSavedException,
                                            HDFSDirectoryNotDeletedException,
-                                           HDFSException,
                                            PathNotFoundException,
                                            ViewNotRegisteredException)
 

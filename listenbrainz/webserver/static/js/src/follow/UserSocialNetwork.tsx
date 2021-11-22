@@ -1,3 +1,4 @@
+import { isEmpty, isNil } from "lodash";
 import * as React from "react";
 
 import GlobalAppContext from "../GlobalAppContext";
@@ -6,7 +7,11 @@ import SimilarUsersModal from "./SimilarUsersModal";
 
 export type UserSocialNetworkProps = {
   user: ListenBrainzUser;
-  loggedInUser: ListenBrainzUser | null;
+  newAlert: (
+    alertType: AlertType,
+    title: string,
+    message: string | JSX.Element
+  ) => void;
 };
 
 type UserSocialNetworkState = {
@@ -54,26 +59,25 @@ export default class UserSocialNetwork extends React.Component<
         similarUsersList,
       });
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error(err);
+      const { newAlert } = this.props;
+      newAlert("danger", "Error while fetching followers", err.toString());
     }
   };
 
   getFollowers = async () => {
-    const { loggedInUser } = this.props;
-    const { APIService } = this.context;
+    const { APIService, currentUser } = this.context;
     const { getFollowersOfUser } = APIService;
-    if (!loggedInUser) {
+    if (isNil(currentUser) || isEmpty(currentUser)) {
       return;
     }
     try {
-      const response = await getFollowersOfUser(loggedInUser.name);
+      const response = await getFollowersOfUser(currentUser.name);
       const { followers } = response;
 
       this.setState({ followerList: followers });
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error(err);
+      const { newAlert } = this.props;
+      newAlert("danger", "Error while fetching followers", err.toString());
     }
   };
 
@@ -87,16 +91,16 @@ export default class UserSocialNetwork extends React.Component<
 
       this.setState({ followingList: following });
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error(err);
+      const { newAlert } = this.props;
+      newAlert("danger", "Error while fetching followers", err.toString());
     }
   };
 
   loggedInUserFollowsUser = (user: ListenBrainzUser): boolean => {
-    const { loggedInUser } = this.props;
+    const { currentUser } = this.context;
     const { followingList } = this.state;
 
-    if (!loggedInUser) {
+    if (isNil(currentUser) || isEmpty(currentUser)) {
       return false;
     }
 
@@ -122,13 +126,12 @@ export default class UserSocialNetwork extends React.Component<
   };
 
   render() {
-    const { user, loggedInUser } = this.props;
+    const { user } = this.props;
     const { followerList, followingList, similarUsersList } = this.state;
     return (
       <>
         <FollowerFollowingModal
           user={user}
-          loggedInUser={loggedInUser}
           followerList={followerList}
           followingList={followingList}
           loggedInUserFollowsUser={this.loggedInUserFollowsUser}
@@ -136,7 +139,6 @@ export default class UserSocialNetwork extends React.Component<
         />
         <SimilarUsersModal
           user={user}
-          loggedInUser={loggedInUser}
           similarUsersList={similarUsersList}
           loggedInUserFollowsUser={this.loggedInUserFollowsUser}
           updateFollowingList={this.updateFollowingList}

@@ -3,11 +3,10 @@ import { mount } from "enzyme";
 import fetchMock from "jest-fetch-mock";
 
 import * as recentListensProps from "./__mocks__/recentListensProps.json";
-import * as recentListensPropsTooManyListens from "./__mocks__/recentListensPropsTooManyListens.json";
 import * as recentListensPropsOneListen from "./__mocks__/recentListensPropsOneListen.json";
-import * as recentListensPropsPlayingNow from "./__mocks__/recentListensPropsPlayingNow.json";
 import * as getFeedbackByMsidResponse from "./__mocks__/getFeedbackByMsidResponse.json";
-
+import GlobalAppContext from "./GlobalAppContext";
+import APIService from "./APIService";
 import RecentListens, { RecentListensProps } from "./RecentListens";
 
 // Font Awesome generates a random hash ID for each icon everytime.
@@ -15,34 +14,46 @@ import RecentListens, { RecentListensProps } from "./RecentListens";
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
 jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
+const GlobalContextMock = {
+  context: {
+    APIBaseURI: "base-uri",
+    APIService: new APIService("base-uri"),
+    spotifyAuth: {
+      access_token: "heyo",
+      permission: [
+        "user-read-currently-playing",
+        "user-read-recently-played",
+      ] as Array<SpotifyPermission>,
+    },
+    youtubeAuth: {
+      api_key: "fake-api-key",
+    },
+    currentUser: {
+      name: "Gulab Jamun",
+      auth_token: "IHaveSeenTheFnords",
+    },
+  },
+};
+
 const {
-  artistCount,
-  haveListenCount,
   latestListenTs,
   latestSpotifyUri,
-  listenCount,
   listens,
   mode,
   oldestListenTs,
   profileUrl,
-  spotify,
   user,
-  webSocketsServerUrl,
-} = recentListensProps;
+} = recentListensPropsOneListen;
 
-const props = {
-  artistCount,
-  haveListenCount,
+const props: RecentListensProps = {
   latestListenTs,
   latestSpotifyUri,
-  listenCount,
   listens,
   mode: mode as ListensListMode,
   oldestListenTs,
   profileUrl,
-  spotify: spotify as SpotifyUser,
   user,
-  webSocketsServerUrl,
+  newAlert: jest.fn(),
 };
 
 fetchMock.mockIf(
@@ -54,15 +65,10 @@ fetchMock.mockIf(
 
 describe("getFeedback", () => {
   it("calls the API correctly", async () => {
-    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
-     * so that it doesn't get passed as a reference.
-     */
     const wrapper = mount<RecentListens>(
-      <RecentListens
-        {...(JSON.parse(
-          JSON.stringify(recentListensPropsOneListen)
-        ) as RecentListensProps)}
-      />
+      <GlobalAppContext.Provider value={GlobalContextMock.context}>
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
     );
 
     const instance = wrapper.instance();
@@ -77,24 +83,18 @@ describe("getFeedback", () => {
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith(
       "iliekcomputers",
-      "973e5620-829d-46dd-89a8-760d87076287,"
+      "983e5620-829d-46dd-89a8-760d87076287,"
     );
     expect(result).toEqual(getFeedbackByMsidResponse.feedback);
   });
 
   it("doesn't call the API if there are no listens", async () => {
-    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
-     * so that it doesn't get passed as a reference.
-     */
+    const propsCopy = { ...props };
+    propsCopy.listens = [];
     const wrapper = mount<RecentListens>(
-      <RecentListens
-        {...{
-          ...(JSON.parse(
-            JSON.stringify(recentListensPropsOneListen)
-          ) as RecentListensProps),
-          listens: undefined,
-        }}
-      />
+      <GlobalAppContext.Provider value={GlobalContextMock.context}>
+        <RecentListens {...propsCopy} />
+      </GlobalAppContext.Provider>
     );
 
     const instance = wrapper.instance();
@@ -114,15 +114,10 @@ describe("getFeedback", () => {
 
 describe("loadFeedback", () => {
   it("updates the recordingFeedbackMap state", async () => {
-    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
-     * so that it doesn't get passed as a reference.
-     */
     const wrapper = mount<RecentListens>(
-      <RecentListens
-        {...(JSON.parse(
-          JSON.stringify(recentListensPropsOneListen)
-        ) as RecentListensProps)}
-      />
+      <GlobalAppContext.Provider value={GlobalContextMock.context}>
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
     );
 
     const instance = wrapper.instance();
@@ -142,15 +137,10 @@ describe("loadFeedback", () => {
 
 describe("getFeedbackForRecordingMsid", () => {
   it("returns the feedback after fetching from recordingFeedbackMap state", async () => {
-    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
-     * so that it doesn't get passed as a reference.
-     */
     const wrapper = mount<RecentListens>(
-      <RecentListens
-        {...(JSON.parse(
-          JSON.stringify(recentListensPropsOneListen)
-        ) as RecentListensProps)}
-      />
+      <GlobalAppContext.Provider value={GlobalContextMock.context}>
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
     );
 
     const instance = wrapper.instance();
@@ -168,15 +158,10 @@ describe("getFeedbackForRecordingMsid", () => {
   });
 
   it("returns 0 if the recording is not in recordingFeedbackMap state", async () => {
-    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
-     * so that it doesn't get passed as a reference.
-     */
     const wrapper = mount<RecentListens>(
-      <RecentListens
-        {...(JSON.parse(
-          JSON.stringify(recentListensPropsOneListen)
-        ) as RecentListensProps)}
-      />
+      <GlobalAppContext.Provider value={GlobalContextMock.context}>
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
     );
 
     const instance = wrapper.instance();
@@ -191,15 +176,10 @@ describe("getFeedbackForRecordingMsid", () => {
 
 describe("updateFeedback", () => {
   it("updates the recordingFeedbackMap state for particular recording", async () => {
-    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
-     * so that it doesn't get passed as a reference.
-     */
     const wrapper = mount<RecentListens>(
-      <RecentListens
-        {...(JSON.parse(
-          JSON.stringify(recentListensPropsOneListen)
-        ) as RecentListensProps)}
-      />
+      <GlobalAppContext.Provider value={GlobalContextMock.context}>
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
     );
 
     const instance = wrapper.instance();
@@ -207,7 +187,7 @@ describe("updateFeedback", () => {
     const recordingFeedbackMap: RecordingFeedbackMap = {
       "973e5620-829d-46dd-89a8-760d87076287": 0,
     };
-    wrapper.setState(JSON.parse(JSON.stringify(recordingFeedbackMap)));
+    wrapper.setState({ recordingFeedbackMap });
 
     await instance.updateFeedback("973e5620-829d-46dd-89a8-760d87076287", 1);
 
@@ -219,20 +199,16 @@ describe("updateFeedback", () => {
 
 describe("removeListenFromListenList", () => {
   it("updates the listens state for particular recording", async () => {
-    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
-     * so that it doesn't get passed as a reference.
-     */
-    const oneListenProps = JSON.parse(
-      JSON.stringify(recentListensPropsOneListen)
-    );
     const wrapper = mount<RecentListens>(
-      <RecentListens {...(oneListenProps as RecentListensProps)} />
+      <GlobalAppContext.Provider value={GlobalContextMock.context}>
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
     );
 
     const instance = wrapper.instance();
-    wrapper.setState({ listens: oneListenProps.listens });
+    wrapper.setState({ listens: props.listens as Listen[] });
 
-    instance.removeListenFromListenList(props.listens[0]);
+    instance.removeListenFromListenList(props.listens?.[0] as Listen);
     expect(wrapper.state("listens")).toMatchObject([]);
   });
 });

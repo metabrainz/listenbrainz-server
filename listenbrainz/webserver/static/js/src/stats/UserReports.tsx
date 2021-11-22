@@ -2,6 +2,7 @@ import * as ReactDOM from "react-dom";
 import * as React from "react";
 
 import * as Sentry from "@sentry/react";
+import { Integrations } from "@sentry/tracing";
 import ErrorBoundary from "../ErrorBoundary";
 import Pill from "../components/Pill";
 import UserListeningActivity from "./UserListeningActivity";
@@ -166,11 +167,15 @@ export default class UserReports extends React.Component<
 
 document.addEventListener("DOMContentLoaded", () => {
   const { domContainer, reactProps, globalReactProps } = getPageProps();
-  const { api_url, sentry_dsn } = globalReactProps;
+  const { api_url, sentry_dsn, sentry_traces_sample_rate } = globalReactProps;
   const { user } = reactProps;
 
   if (sentry_dsn) {
-    Sentry.init({ dsn: sentry_dsn });
+    Sentry.init({
+      dsn: sentry_dsn,
+      integrations: [new Integrations.BrowserTracing()],
+      tracesSampleRate: sentry_traces_sample_rate,
+    });
   }
 
   ReactDOM.render(

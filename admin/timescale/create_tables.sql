@@ -43,16 +43,43 @@ CREATE TABLE  playlist.playlist_collaborator (
 
 -- MBID Mapping
 
-CREATE TABLE listen_mbid_mapping (
-        id                 SERIAL,
-        recording_msid     UUID NOT NULL,
-        recording_mbid     UUID,
-        release_mbid       UUID,
-        artist_credit_id   INTEGER,
-        artist_credit_name TEXT,
-        recording_name     TEXT,
-        match_type         mbid_mapping_match_type_enum NOT NULL,
-        last_updated       TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+CREATE TABLE mbid_mapping (
+        recording_msid      uuid not null,
+        recording_mbid      uuid, -- FK mbid_mapping_metadata.recording_mbid
+        match_type          mbid_mapping_match_type_enum NOT NULL,
+        last_updated        TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
+
+CREATE TABLE mbid_mapping_metadata (
+        artist_credit_id    INT NOT NULL,
+        recording_mbid      UUID NOT NULL,
+        release_mbid        UUID NOT NULL,
+        release_name        TEXT NOT NULL,
+        artist_mbids        UUID[] NOT NULL,
+        artist_credit_name  TEXT NOT NULL,
+        recording_name      TEXT NOT NULL,
+        last_updated        TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+);
+
+-- postgres does not enforce dimensionality of arrays. add explicit check to avoid regressions (once burnt, twice shy!).
+ALTER TABLE mbid_mapping_metadata
+    ADD CONSTRAINT mbid_mapping_metadata_artist_mbids_check
+    CHECK ( array_ndims(artist_mbids) = 1 );
+
+-- the various mapping columns should only be null if the match_type is no_match, otherwise the columns should be
+-- non null. we have had bugs where we completely forgot to insert values for a column and it went unchecked because
+-- it is not possible to mark the column as NOT NULL. however, we can use this constraint to enforce the NOT NULL
+-- check conditionally. this should help in preventing regressions and future bugs.
+ALTER TABLE mbid_mapping
+    ADD CONSTRAINT mbid_mapping_fields_null_check
+    CHECK (
+        (
+              match_type = 'no_match'
+          AND recording_mbid IS NULL
+        ) OR (
+              match_type <> 'no_match'
+          AND recording_mbid IS NOT NULL
+        )
+    );
 
 COMMIT;

@@ -1,4 +1,4 @@
-import { isNil } from "lodash";
+import { isNil, isUndefined, omit } from "lodash";
 import APIError from "./APIError";
 
 export default class APIService {
@@ -233,67 +233,103 @@ export default class APIService {
   submitListens = async (
     userToken: string,
     listenType: ListenType,
-    payload: Array<Listen>
+    payload: Array<Listen>,
+    retries: number = 3
   ): Promise<Response> => {
-    if (JSON.stringify(payload).length <= this.MAX_LISTEN_SIZE) {
+    let processedPayload = payload;
+    // When submitting playing_now listens, listened_at must NOT be present
+    if (listenType === "playing_now") {
+      processedPayload = payload.map(
+        (listen) => omit(listen, "listened_at") as Listen
+      );
+    }
+    if (JSON.stringify(processedPayload).length <= this.MAX_LISTEN_SIZE) {
       // Payload is within submission limit, submit directly
       const struct = {
         listen_type: listenType,
-        payload,
+        payload: processedPayload,
       } as SubmitListensPayload;
 
       const url = `${this.APIBaseURI}/submit-listens`;
 
-      /* eslint-disable no-await-in-loop */
-      /* eslint-disable-next-line no-constant-condition */
-      while (true) {
-        try {
-          const response = await fetch(url, {
-            method: "POST",
-            headers: {
-              Authorization: `Token ${userToken}`,
-              "Content-Type": "application/json;charset=UTF-8",
-            },
-            body: JSON.stringify(struct),
-          });
-          // we skip listens if we get an error code that's not a rate limit
-          if (response.status !== 429) {
-            return response; // Return response so that caller can handle appropriately
+      try {
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            Authorization: `Token ${userToken}`,
+            "Content-Type": "application/json;charset=UTF-8",
+          },
+          body: JSON.stringify(struct),
+        });
+        // we skip listens if we get an error code that's not a rate limit
+        if (response.status !== 429) {
+          return response; // Return response so that caller can handle appropriately
+        }
+        if (!response.ok) {
+          if (retries > 0) {
+            // Rate limit error, this should never happen, but if it does, try again in 3 seconds.
+            await new Promise((resolve) => {
+              setTimeout(resolve, 3000);
+            });
+            return this.submitListens(
+              userToken,
+              listenType,
+              payload,
+              retries - 1
+            );
           }
-          // Rate limit error, this should never happen, but if it does, try again in 3 seconds.
-          await new Promise((resolve) => {
-            setTimeout(resolve, 3000);
-          });
-        } catch {
+          return response;
+        }
+      } catch (error) {
+        if (retries > 0) {
           // Retry if there is an network error
           await new Promise((resolve) => {
             setTimeout(resolve, 3000);
           });
+          return this.submitListens(
+            userToken,
+            listenType,
+            payload,
+            retries - 1
+          );
         }
+
+        throw error;
       }
-      /* eslint-enable no-await-in-loop */
     }
 
     // Payload is not within submission limit, split and submit
-    await this.submitListens(
-      userToken,
-      listenType,
-      payload.slice(0, payload.length / 2)
-    );
-    return this.submitListens(
-      userToken,
-      listenType,
-      payload.slice(payload.length / 2, payload.length)
-    );
+    const payload1 = payload.slice(0, payload.length / 2);
+    const payload2 = payload.slice(payload.length / 2, payload.length);
+    return this.submitListens(userToken, listenType, payload1, retries)
+      .then((response1) =>
+        // Succes of first request, now do the second one
+        this.submitListens(userToken, listenType, payload2, retries)
+      )
+      .then((response2) => response2)
+      .catch((error) => {
+        if (retries > 0) {
+          return this.submitListens(
+            userToken,
+            listenType,
+            payload,
+            retries - 1
+          );
+        }
+        return error;
+      });
   };
 
   /*
    *  Send a GET request to the ListenBrainz server to get the latest import time
    *  from previous imports for the user.
    */
-  getLatestImport = async (userName: string): Promise<number> => {
+  getLatestImport = async (
+    userName: string,
+    service: ImportService
+  ): Promise<number> => {
     const url = encodeURI(
-      `${this.APIBaseURI}/latest-import?user_name=${userName}`
+      `${this.APIBaseURI}/latest-import?user_name=${userName}&service=${service}`
     );
     const response = await fetch(url, {
       method: "GET",
@@ -310,6 +346,7 @@ export default class APIService {
    */
   setLatestImport = async (
     userToken: string,
+    service: ImportService,
     timestamp: number
   ): Promise<number> => {
     const url = `${this.APIBaseURI}/latest-import`;
@@ -319,7 +356,7 @@ export default class APIService {
         Authorization: `Token ${userToken}`,
         "Content-Type": "application/json;charset=UTF-8",
       },
-      body: JSON.stringify({ ts: timestamp }),
+      body: JSON.stringify({ ts: timestamp, service }),
     });
     await this.checkStatus(response);
     return response.status; // Return true if timestamp is updated
@@ -452,6 +489,34 @@ export default class APIService {
     });
     await this.checkStatus(response);
     return response.status;
+  };
+
+  getFeedbackForUser = async (
+    userName: string,
+    offset: number = 0,
+    count?: number,
+    score?: ListenFeedBack
+  ) => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    let queryURL = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback`;
+    const queryParams: Array<string> = ["metadata=true"];
+    if (!isUndefined(offset)) {
+      queryParams.push(`offset=${offset}`);
+    }
+    if (!isUndefined(score)) {
+      queryParams.push(`score=${score}`);
+    }
+    if (!isUndefined(count)) {
+      queryParams.push(`count=${count}`);
+    }
+    if (queryParams.length) {
+      queryURL += `?${queryParams.join("&")}`;
+    }
+    const response = await fetch(queryURL);
+    await this.checkStatus(response);
+    return response.json();
   };
 
   getFeedbackForUserForRecordings = async (
@@ -890,6 +955,17 @@ export default class APIService {
   lookupMBReleaseFromTrack = async (trackMBID: string): Promise<any> => {
     const url = `${this.MBBaseURI}/release?track=${trackMBID}&fmt=json`;
     const response = await fetch(encodeURI(url));
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  lookupReleaseFromColor = async (
+    color: string,
+    count?: number
+  ): Promise<any> => {
+    let query = `${this.APIBaseURI}/color/${color}`;
+    if (!isUndefined(count)) query += `?count=${count}`;
+    const response = await fetch(query);
     await this.checkStatus(response);
     return response.json();
   };

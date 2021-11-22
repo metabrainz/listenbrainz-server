@@ -56,6 +56,13 @@ type SoundcloudPlayerState = {
 export default class SoundcloudPlayer
   extends React.Component<DataSourceProps, SoundcloudPlayerState>
   implements DataSourceType {
+  static isListenFromThisService(listen: Listen | JSPFTrack): boolean {
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    return !!originURL && /soundcloud\.com/.test(originURL);
+  }
+
+  public name = "soundcloud";
+  public domainName = "soundcloud.com";
   iFrameRef?: React.RefObject<HTMLIFrameElement>;
   soundcloudPlayer?: SoundCloudHTML5Widget;
   retries = 0;
@@ -112,13 +119,26 @@ export default class SoundcloudPlayer
     if (!this.soundcloudPlayer) {
       return;
     }
-    this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.FINISH);
-    this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.PAUSE);
-    this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.PLAY);
-    this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.PLAY_PROGRESS);
-    this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.ERROR);
-    this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.READY);
+    try {
+      this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.FINISH);
+      this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.PAUSE);
+      this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.PLAY);
+      this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.PLAY_PROGRESS);
+      this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.ERROR);
+      this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.READY);
+      // eslint-disable-next-line no-empty
+    } catch (error) {}
   }
+
+  static getSoundcloudURLFromListen = (
+    listen: Listen | JSPFTrack
+  ): string | undefined => {
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    if (originURL && /soundcloud\.com/.test(originURL)) {
+      return originURL;
+    }
+    return undefined;
+  };
 
   onReady = (): void => {
     if (!this.soundcloudPlayer) {
@@ -157,12 +177,11 @@ export default class SoundcloudPlayer
     onPlayerPausedChange(false);
   };
 
-  isListenFromThisService = (listen: Listen | JSPFTrack): boolean => {
-    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
-    return !!originURL && /soundcloud\.com/.test(originURL);
+  canSearchAndPlayTracks = (): boolean => {
+    return false;
   };
 
-  canSearchAndPlayTracks = (): boolean => {
+  datasourceRecordsListens = (): boolean => {
     return false;
   };
 
@@ -171,7 +190,7 @@ export default class SoundcloudPlayer
     if (!show) {
       return;
     }
-    if (!this.isListenFromThisService(listen)) {
+    if (!SoundcloudPlayer.isListenFromThisService(listen)) {
       onTrackNotFound();
       return;
     }
@@ -206,6 +225,7 @@ export default class SoundcloudPlayer
         : [];
       onTrackInfoChange(
         currentTrack.title,
+        currentTrack.permalink_url,
         currentTrack.user?.username,
         undefined,
         artwork

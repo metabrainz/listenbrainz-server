@@ -5,6 +5,7 @@ import * as ReactDOM from "react-dom";
 import * as Sentry from "@sentry/react";
 
 import { get, isEqual } from "lodash";
+import { Integrations } from "@sentry/tracing";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
@@ -15,8 +16,9 @@ import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import BrainzPlayer from "../BrainzPlayer";
 import ErrorBoundary from "../ErrorBoundary";
 import Loader from "../components/Loader";
-import RecommendationCard from "./RecommendationCard";
-import { getPageProps } from "../utils";
+import { getPageProps, getRecordingMBID } from "../utils";
+import ListenCard from "../listens/ListenCard";
+import RecommendationFeedbackComponent from "../listens/RecommendationFeedbackComponent";
 
 export type RecommendationsProps = {
   recommendations?: Array<Recommendation>;
@@ -27,7 +29,6 @@ export type RecommendationsProps = {
 
 export interface RecommendationsState {
   currentRecommendation?: Recommendation;
-  direction: BrainzPlayDirection;
   recommendations: Array<Recommendation>;
   loading: boolean;
   currRecPage?: number;
@@ -42,7 +43,6 @@ export default class Recommendations extends React.Component<
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
-  private brainzPlayer = React.createRef<BrainzPlayer>();
   private recommendationsTable = React.createRef<HTMLTableElement>();
 
   private APIService!: APIServiceClass;
@@ -56,7 +56,6 @@ export default class Recommendations extends React.Component<
         props.recommendations?.slice(0, this.expectedRecommendationsPerPage) ||
         [],
       loading: false,
-      direction: "down",
       currRecPage: 1,
       totalRecPages: props.recommendations
         ? Math.ceil(
@@ -87,10 +86,7 @@ export default class Recommendations extends React.Component<
 
     if (recommendations) {
       recommendations.forEach((recommendation) => {
-        const recordingMbid = get(
-          recommendation,
-          "track_metadata.additional_info.recording_mbid"
-        );
+        const recordingMbid = getRecordingMBID(recommendation);
         if (recordingMbid) {
           recordings.push(recordingMbid);
         }
@@ -126,12 +122,12 @@ export default class Recommendations extends React.Component<
 
   updateFeedback = (
     recordingMbid: string,
-    rating: RecommendationFeedBack | null
+    rating: ListenFeedBack | RecommendationFeedBack | null
   ) => {
     this.setState((state) => ({
       recommendationFeedbackMap: {
         ...state.recommendationFeedbackMap,
-        [recordingMbid]: rating,
+        [recordingMbid]: rating as RecommendationFeedBack,
       },
     }));
   };
@@ -143,18 +139,6 @@ export default class Recommendations extends React.Component<
     return recordingMbid
       ? get(recommendationFeedbackMap, recordingMbid, null)
       : null;
-  };
-
-  playRecommendation = (recommendation: Recommendation): void => {
-    if (this.brainzPlayer.current) {
-      this.brainzPlayer.current.playListen(recommendation);
-    }
-  };
-
-  handleCurrentRecommendationChange = (
-    recommendation: Recommendation | JSPFTrack
-  ): void => {
-    this.setState({ currentRecommendation: recommendation as Recommendation });
   };
 
   handleClickPrevious = () => {
@@ -203,13 +187,6 @@ export default class Recommendations extends React.Component<
     }
   };
 
-  isCurrentRecommendation = (recommendation: Recommendation): boolean => {
-    const { currentRecommendation } = this.state;
-    return Boolean(
-      currentRecommendation && isEqual(recommendation, currentRecommendation)
-    );
-  };
-
   afterRecommendationsDisplay() {
     const { currentUser } = this.context;
     const { user } = this.props;
@@ -227,13 +204,13 @@ export default class Recommendations extends React.Component<
       currentRecommendation,
       recommendations,
       loading,
-      direction,
       currRecPage,
       totalRecPages,
     } = this.state;
     const { user, newAlert } = this.props;
-    const { currentUser } = this.context;
-
+    const { APIService, currentUser } = this.context;
+    const isCurrentUser =
+      Boolean(currentUser?.name) && currentUser?.name === user?.name;
     return (
       <div role="main">
         <div className="row">
@@ -255,22 +232,29 @@ export default class Recommendations extends React.Component<
                 style={{ opacity: loading ? "0.4" : "1" }}
               >
                 {recommendations.map((recommendation) => {
-                  return (
-                    <RecommendationCard
-                      key={`${recommendation.track_metadata?.track_name}-${recommendation.track_metadata?.additional_info?.recording_msid}-${recommendation.user_name}`}
-                      isCurrentUser={currentUser?.name === user?.name}
-                      recommendation={recommendation}
-                      playRecommendation={this.playRecommendation}
-                      className={`${
-                        this.isCurrentRecommendation(recommendation)
-                          ? " current-recommendation"
-                          : ""
-                      }`}
+                  const recordingMBID = getRecordingMBID(recommendation);
+                  const recommendationFeedbackComponent = (
+                    <RecommendationFeedbackComponent
+                      newAlert={newAlert}
+                      updateFeedbackCallback={this.updateFeedback}
+                      listen={recommendation}
                       currentFeedback={this.getFeedbackForRecordingMbid(
-                        recommendation.track_metadata?.additional_info
-                          ?.recording_mbid
+                        recordingMBID
                       )}
-                      updateFeedback={this.updateFeedback}
+                    />
+                  );
+                  return (
+                    <ListenCard
+                      key={`${recommendation.track_metadata?.track_name}-${
+                        recommendation.track_metadata?.additional_info
+                          ?.recording_msid ?? recordingMBID
+                      }-${recommendation.listened_at}-${
+                        recommendation.user_name
+                      }`}
+                      showTimestamp={false}
+                      showUsername={false}
+                      feedbackComponent={recommendationFeedbackComponent}
+                      listen={recommendation}
                       newAlert={newAlert}
                     />
                   );
@@ -322,12 +306,11 @@ export default class Recommendations extends React.Component<
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
             <BrainzPlayer
-              currentListen={currentRecommendation}
-              direction={direction}
               listens={recommendations}
               newAlert={newAlert}
-              onCurrentListenChange={this.handleCurrentRecommendationChange}
-              ref={this.brainzPlayer}
+              listenBrainzAPIBaseURI={APIService.APIBaseURI}
+              refreshSpotifyToken={APIService.refreshSpotifyToken}
+              refreshYoutubeToken={APIService.refreshYoutubeToken}
             />
           </div>
         </div>
@@ -349,11 +332,16 @@ document.addEventListener("DOMContentLoaded", () => {
     current_user,
     spotify,
     youtube,
+    sentry_traces_sample_rate,
   } = globalReactProps;
   const { recommendations, user, web_sockets_server_url } = reactProps;
 
   if (sentry_dsn) {
-    Sentry.init({ dsn: sentry_dsn });
+    Sentry.init({
+      dsn: sentry_dsn,
+      integrations: [new Integrations.BrowserTracing()],
+      tracesSampleRate: sentry_traces_sample_rate,
+    });
   }
 
   const apiService = new APIServiceClass(

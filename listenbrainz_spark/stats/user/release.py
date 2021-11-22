@@ -28,17 +28,17 @@ def get_releases(table):
     result = run_query(f"""
         WITH intermediate_table as (
             SELECT user_name
-                , release_name
+                , first(release_name) AS any_release_name
                 , release_mbid
-                , artist_name
+                , first(artist_name) AS any_artist_name
                 , artist_credit_mbids
                 , count(*) as listen_count
               FROM {table}
              WHERE release_name != ''
           GROUP BY user_name
-                , release_name
+                , lower(release_name)
                 , release_mbid
-                , artist_name
+                , lower(artist_name)
                 , artist_credit_mbids
         )
         SELECT user_name
@@ -46,9 +46,9 @@ def get_releases(table):
                     collect_list(
                         struct(
                             listen_count
-                          , release_name
+                          , any_release_name AS release_name
                           , release_mbid
-                          , artist_name
+                          , any_artist_name AS artist_name
                           , coalesce(artist_credit_mbids, array()) AS artist_mbids
                         )
                     )

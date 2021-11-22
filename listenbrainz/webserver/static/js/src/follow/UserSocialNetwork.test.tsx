@@ -25,9 +25,24 @@ import UserSocialNetwork from "./UserSocialNetwork";
 import FollowerFollowingModal from "./FollowerFollowingModal";
 import SimilarUsersModal from "./SimilarUsersModal";
 
-import * as props from "./__mocks__/userSocialNetworkProps.json";
+import * as userSocialNetworkProps from "./__mocks__/userSocialNetworkProps.json";
+import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
+import APIService from "../APIService";
 
 jest.useFakeTimers();
+
+const { loggedInUser, ...otherProps } = userSocialNetworkProps;
+const props = {
+  ...otherProps,
+  newAlert: jest.fn(),
+};
+
+const globalContext: GlobalAppContextT = {
+  APIService: new APIService("foo"),
+  youtubeAuth: {},
+  spotifyAuth: {},
+  currentUser: loggedInUser,
+};
 
 const similarUsers = [
   {
@@ -61,7 +76,11 @@ describe("<UserSocialNetwork />", () => {
   });
 
   it("renders correctly", () => {
-    const wrapper = mount(<UserSocialNetwork {...props} />);
+    const wrapper = mount(
+      <GlobalAppContext.Provider value={globalContext}>
+        <UserSocialNetwork {...props} />
+      </GlobalAppContext.Provider>
+    );
     expect(wrapper.html()).toMatchSnapshot();
   });
 
@@ -75,7 +94,11 @@ describe("<UserSocialNetwork />", () => {
   it("initializes by calling the API to get data", async () => {
     const consoleErrorSpy = jest.spyOn(console, "error");
 
-    const wrapper = mount<UserSocialNetwork>(<UserSocialNetwork {...props} />);
+    const wrapper = mount<UserSocialNetwork>(
+      <GlobalAppContext.Provider value={globalContext}>
+        <UserSocialNetwork {...props} />
+      </GlobalAppContext.Provider>
+    );
     const instance = wrapper.instance();
 
     await instance.componentDidMount();
@@ -163,8 +186,13 @@ describe("<UserSocialNetwork />", () => {
 
   describe("loggedInUserFollowsUser", () => {
     it("returns false if there is no logged in user", () => {
+      // server sends an empty object in case no user is logged in
       const wrapper = mount<UserSocialNetwork>(
-        <UserSocialNetwork {...props} loggedInUser={null} />
+        <GlobalAppContext.Provider
+          value={{ ...globalContext, currentUser: {} as ListenBrainzUser }}
+        >
+          <UserSocialNetwork {...props} />
+        </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
 
@@ -173,7 +201,9 @@ describe("<UserSocialNetwork />", () => {
 
     it("returns false if user is not in followingList", async () => {
       const wrapper = mount<UserSocialNetwork>(
-        <UserSocialNetwork {...props} />
+        <GlobalAppContext.Provider value={globalContext}>
+          <UserSocialNetwork {...props} />
+        </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
       await instance.componentDidMount();
@@ -185,7 +215,9 @@ describe("<UserSocialNetwork />", () => {
 
     it("returns true if user is in followingList", async () => {
       const wrapper = mount<UserSocialNetwork>(
-        <UserSocialNetwork {...props} />
+        <GlobalAppContext.Provider value={globalContext}>
+          <UserSocialNetwork {...props} />
+        </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
       await instance.componentDidMount();

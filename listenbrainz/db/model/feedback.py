@@ -1,6 +1,7 @@
+from copy import copy
 import uuid
 
-from datetime import datetime
+from datetime import datetime, timezone
 from pydantic import BaseModel, ValidationError, validator
 
 
@@ -19,6 +20,16 @@ class Feedback(BaseModel):
     recording_msid: str
     score: int
     created: datetime = None
+    track_metadata: dict = None
+
+    def to_api(self) -> dict:
+        fb = copy(self)
+        fb.user_id = fb.user_name
+        if fb.created is not None:
+            fb.created = int(fb.created.timestamp())
+        del fb.user_name
+
+        return fb.dict()
 
     @validator('score')
     def check_score_is_valid(cls, scr):

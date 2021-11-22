@@ -1,5 +1,5 @@
 {
-    "artists": [
+    "data": [
         {
             "artist_mbids": [
                 "d340853d-7408-4a0d-89c2-6ff13e568815"
@@ -203,5 +203,6 @@
     ],
     "count": 25,
     "from_ts": 1577923191,
-    "to_ts": 1590796791
+    "to_ts": 1590796791,
+    "stats_range": "year"
 }

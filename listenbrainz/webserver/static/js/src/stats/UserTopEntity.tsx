@@ -6,7 +6,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import APIService from "../APIService";
 import Card from "../components/Card";
 import Loader from "../components/Loader";
-import getEntityLink from "./utils";
+import { getEntityLink } from "./utils";
 
 export type UserTopEntityProps = {
   range: UserStatsAPIRange;

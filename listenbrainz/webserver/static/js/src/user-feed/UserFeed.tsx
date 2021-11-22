@@ -18,8 +18,9 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { isEqual } from "lodash";
+import { isEqual, get as _get } from "lodash";
 import { sanitize } from "dompurify";
+import { Integrations } from "@sentry/tracing";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
@@ -30,7 +31,7 @@ import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import BrainzPlayer from "../BrainzPlayer";
 import ErrorBoundary from "../ErrorBoundary";
 import Loader from "../components/Loader";
-import TimelineEventCard from "./TimelineEventCard";
+import ListenCard from "../listens/ListenCard";
 import { getPageProps, preciseTimestamp } from "../utils";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 
@@ -50,12 +51,12 @@ type UserFeedPageProps = {
 } & WithAlertNotificationsInjectedProps;
 
 type UserFeedPageState = {
-  currentListen?: Listen;
   nextEventTs?: number;
   previousEventTs?: number;
   earliestEventTs?: number;
   events: TimelineEvent[];
   loading: boolean;
+  recordingFeedbackMap: RecordingFeedbackMap;
 };
 
 export default class UserFeedPage extends React.Component<
@@ -114,11 +115,10 @@ export default class UserFeedPage extends React.Component<
     }
   }
 
-  private brainzPlayer = React.createRef<BrainzPlayer>();
-
   constructor(props: UserFeedPageProps) {
     super(props);
     this.state = {
+      recordingFeedbackMap: {},
       nextEventTs: props.events?.[props.events.length - 1]?.created,
       previousEventTs: props.events?.[0]?.created,
       events: props.events || [],
@@ -127,11 +127,13 @@ export default class UserFeedPage extends React.Component<
   }
 
   async componentDidMount(): Promise<void> {
+    const { currentUser } = this.context;
     // Listen to browser previous/next events and load page accordingly
     window.addEventListener("popstate", this.handleURLChange);
     // Fetch initial events from API
     // TODO: Pass the required data in the props and remove this initial API call
     await this.getFeedFromAPI();
+    await this.loadFeedback();
   }
 
   componentWillUnmount() {
@@ -244,7 +246,12 @@ export default class UserFeedPage extends React.Component<
         previousEventTs: newEvents[0].created,
         ...optionalProps,
       },
-      successCallback
+      async () => {
+        if (successCallback) {
+          successCallback();
+        }
+        await this.loadFeedback();
+      }
     );
 
     // Scroll window back to the top of the events container element
@@ -254,19 +261,70 @@ export default class UserFeedPage extends React.Component<
     }
   };
 
-  handleCurrentListenChange = (listen: Listen | JSPFTrack): void => {
-    this.setState({ currentListen: listen as Listen });
-  };
+  /** User feedback mechanism (love/hate button) */
+  getFeedback = async () => {
+    const { currentUser, APIService } = this.context;
+    const { events, newAlert } = this.props;
+    let recordings = "";
 
-  isCurrentListen = (listen: Listen): boolean => {
-    const { currentListen } = this.state;
-    return Boolean(currentListen && isEqual(listen, currentListen));
-  };
-
-  playListen = (listen: Listen): void => {
-    if (this.brainzPlayer.current) {
-      this.brainzPlayer.current.playListen(listen);
+    if (currentUser?.name && events) {
+      events.forEach((event) => {
+        const recordingMsid = _get(
+          event,
+          "metadata.track_metadata.additional_info.recording_msid"
+        );
+        if (recordingMsid) {
+          recordings += `${recordingMsid},`;
+        }
+      });
+      try {
+        const data = await APIService.getFeedbackForUserForRecordings(
+          currentUser.name,
+          recordings
+        );
+        return data.feedback;
+      } catch (error) {
+        if (newAlert) {
+          newAlert(
+            "danger",
+            "Playback error",
+            typeof error === "object" ? error.message : error
+          );
+        }
+      }
     }
+    return [];
+  };
+
+  loadFeedback = async () => {
+    const feedback = await this.getFeedback();
+    if (!feedback) {
+      return;
+    }
+    const recordingFeedbackMap: RecordingFeedbackMap = {};
+    feedback.forEach((fb: FeedbackResponse) => {
+      recordingFeedbackMap[fb.recording_msid] = fb.score;
+    });
+    this.setState({ recordingFeedbackMap });
+  };
+
+  getFeedbackForRecordingMsid = (
+    recordingMsid?: string | null
+  ): ListenFeedBack => {
+    const { recordingFeedbackMap } = this.state;
+    return recordingMsid ? _get(recordingFeedbackMap, recordingMsid, 0) : 0;
+  };
+
+  updateFeedback = (
+    recordingMsid: string,
+    score: ListenFeedBack | RecommendationFeedBack
+  ) => {
+    const { recordingFeedbackMap } = this.state;
+    const newFeedbackMap = {
+      ...recordingFeedbackMap,
+      [recordingMsid]: score as ListenFeedBack,
+    };
+    this.setState({ recordingFeedbackMap: newFeedbackMap });
   };
 
   renderEventContent(event: TimelineEvent) {
@@ -275,18 +333,24 @@ export default class UserFeedPage extends React.Component<
       const { newAlert } = this.props;
       return (
         <div className="event-content">
-          <TimelineEventCard
-            className={
-              this.isCurrentListen(metadata as Listen) ? " current-listen" : ""
-            }
+          <ListenCard
+            updateFeedbackCallback={this.updateFeedback}
+            currentFeedback={this.getFeedbackForRecordingMsid(
+              _get(
+                metadata,
+                "track_metadata.additional_info.recording_msid",
+                null
+              )
+            )}
+            showUsername={false}
+            showTimestamp={false}
             listen={metadata as Listen}
-            additionalDetails={
+            additionalContent={
               (metadata as PinEventMetadata).blurb_content
                 ? `"${(metadata as PinEventMetadata).blurb_content}"`
                 : ""
             }
             newAlert={newAlert}
-            playListen={this.playListen}
           />
         </div>
       );
@@ -361,10 +425,9 @@ export default class UserFeedPage extends React.Component<
   }
 
   render() {
-    const { currentUser } = this.context;
+    const { currentUser, APIService } = this.context;
     const { newAlert } = this.props;
     const {
-      currentListen,
       events,
       previousEventTs,
       nextEventTs,
@@ -411,7 +474,7 @@ export default class UserFeedPage extends React.Component<
         <div role="main">
           {/* display:flex to allow right-column to take all available height, for sticky player */}
           <div className="row" style={{ display: "flex", flexWrap: "wrap" }}>
-            <div className="col-md-7">
+            <div className="col-md-7 col-xs-12">
               <div
                 style={{
                   height: 0,
@@ -506,18 +569,14 @@ export default class UserFeedPage extends React.Component<
               </ul>
             </div>
             <div className="col-md-offset-1 col-md-4">
-              <UserSocialNetwork
-                user={currentUser}
-                loggedInUser={currentUser}
-              />
+              <UserSocialNetwork user={currentUser} newAlert={newAlert} />
               <div className="sticky-top mt-15">
                 <BrainzPlayer
-                  currentListen={currentListen}
-                  direction="down"
                   listens={listens}
                   newAlert={newAlert}
-                  onCurrentListenChange={this.handleCurrentListenChange}
-                  ref={this.brainzPlayer}
+                  listenBrainzAPIBaseURI={APIService.APIBaseURI}
+                  refreshSpotifyToken={APIService.refreshSpotifyToken}
+                  refreshYoutubeToken={APIService.refreshYoutubeToken}
                 />
               </div>
             </div>
@@ -541,11 +600,16 @@ document.addEventListener("DOMContentLoaded", () => {
     current_user,
     spotify,
     youtube,
+    sentry_traces_sample_rate,
   } = globalReactProps;
   const { events } = reactProps;
 
   if (sentry_dsn) {
-    Sentry.init({ dsn: sentry_dsn });
+    Sentry.init({
+      dsn: sentry_dsn,
+      integrations: [new Integrations.BrowserTracing()],
+      tracesSampleRate: sentry_traces_sample_rate,
+    });
   }
 
   const apiService = new APIServiceClass(

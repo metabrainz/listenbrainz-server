@@ -78,6 +78,27 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.logstore.insert(test_data)
         return len(test_data)
 
+    def _insert_mapping_metadata(self, msid):
+        """ Insert mapping test data into the mapping tables """
+
+        query = """INSERT INTO mbid_mapping_metadata
+                               (recording_mbid, release_mbid, release_name, artist_credit_id, 
+                                artist_mbids, artist_credit_name, recording_name)
+                        VALUES ('076255b4-1575-11ec-ac84-135bf6a670e3',
+                                '1fd178b4-1575-11ec-b98a-d72392cd8c97',
+                                'release_name',
+                                65,
+                                '{6a221fda-2200-11ec-ac7d-dfa16a57158f}'::UUID[],
+                                'artist name', 'recording name')"""
+
+        join_query = """INSERT INTO mbid_mapping
+                               (recording_msid, recording_mbid, match_type)
+                        VALUES ('%s', '%s', 'exact_match')""" % (msid, '076255b4-1575-11ec-ac84-135bf6a670e3')
+
+        with ts.engine.connect() as connection:
+            connection.execute(sqlalchemy.text(query))
+            connection.execute(sqlalchemy.text(join_query))
+
     def _insert_with_created(self, listens):
         """ Insert a batch of listens with 'created' field.
         """
@@ -192,6 +213,15 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[1].ts_since_epoch, 1420000000)
         self.assertEqual(listens[2].ts_since_epoch, 1400000050)
         self.assertEqual(listens[3].ts_since_epoch, 1400000000)
+
+    def test_fetch_listens_with_mapping(self):
+        self._create_test_data(self.testuser_name)
+        self._insert_mapping_metadata("c7a41965-9f1e-456c-8b1d-27c0f0dde280")
+        listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000000, limit=1)
+        self.assertEqual(len(listens), 1)
+        self.assertEqual(listens[0].data["mbid_mapping"]["artist_mbids"], ['6a221fda-2200-11ec-ac7d-dfa16a57158f'])
+        self.assertEqual(listens[0].data["mbid_mapping"]["release_mbid"], '1fd178b4-1575-11ec-b98a-d72392cd8c97')
+        self.assertEqual(listens[0].data["mbid_mapping"]["recording_mbid"], '076255b4-1575-11ec-ac84-135bf6a670e3')
 
     def test_get_listen_count_for_user(self):
         uid = random.randint(2000, 1 << 31)
@@ -369,7 +399,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
     def test_schema_mismatch_exception_for_dump_incorrect_schema(self):
         """ Tests that SchemaMismatchException is raised when the schema of the dump is old """
 
-        # create a temp archive with incorrect SCHEMA_VERSION
+        # create a temp archive with incorrect SCHEMA_VERSION_CORE
         temp_dir = tempfile.mkdtemp()
         archive_name = 'temp_dump'
         archive_path = os.path.join(temp_dir, archive_name + '.tar.xz')

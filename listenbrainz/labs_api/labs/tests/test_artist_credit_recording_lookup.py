@@ -23,6 +23,7 @@ json_request = [
 db_response = [
     {
         "artist_credit_id": 963,
+        "artist_mbids": ['067102ea-9519-4622-9077-57ca4164cfbb'],
         "artist_credit_name": "Morcheeba",
         "combined_lookup": "morcheebatriggerhippie",
         "recording_mbid": "97e69767-5d34-4c97-b36a-f3b2b1ef9dae",
@@ -33,6 +34,7 @@ db_response = [
     {
         "artist_credit_id": 65,
         "artist_credit_name": "Portishead",
+        "artist_mbids": ['8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11'],
         "combined_lookup": "portisheadstrangers",
         "recording_mbid": "e97f805a-ab48-4c52-855e-07049142113d",
         "recording_name": "Strangers",
@@ -46,6 +48,7 @@ json_response = [
     {
         "artist_credit_arg": "morcheeba",
         "artist_credit_id": 963,
+        "artist_mbids": ['067102ea-9519-4622-9077-57ca4164cfbb'],
         "artist_credit_name": "Morcheeba",
         "combined_lookup": "morcheebatriggerhippie",
         "index": 1,
@@ -58,6 +61,7 @@ json_response = [
     {
         "artist_credit_arg": "portishead",
         "artist_credit_id": 65,
+        "artist_mbids": ['8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11'],
         "artist_credit_name": "Portishead",
         "combined_lookup": "portisheadstrangers",
         "index": 0,
@@ -93,7 +97,7 @@ class MainTestCase(flask_testing.TestCase):
             q.inputs(), ['[artist_credit_name]', '[recording_name]'])
         self.assertEqual(q.outputs(), ['index', 'artist_credit_arg', 'recording_arg',
                                        'artist_credit_name', 'release_name', 'recording_name',
-                                       'artist_credit_id', 'release_mbid', 'recording_mbid'])
+                                       'artist_credit_id', 'artist_mbids', 'release_mbid', 'recording_mbid'])
 
     @patch('psycopg2.connect')
     def test_fetch(self, mock_connect):

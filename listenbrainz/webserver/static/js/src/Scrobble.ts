@@ -1,7 +1,7 @@
 export default class Scrobble {
   private rootScrobbleElement: any;
 
-  constructor(rootScrobbleElement: any) {
+  constructor(rootScrobbleElement: any, source: ImportService) {
     this.rootScrobbleElement = rootScrobbleElement;
   }
 

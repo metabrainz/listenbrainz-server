@@ -79,6 +79,24 @@ def create_user_notification_event(user_id: int, metadata: NotificationMetadata)
         metadata=metadata
     )
 
+def delete_user_timeline_event(
+        id: int,
+        user_id:int
+) -> bool:
+    ''' Deletes recommendation and notification event using id'''
+    try:
+        with db.engine.connect() as connection:
+            result = connection.execute(sqlalchemy.text('''
+                    DELETE FROM user_timeline_event
+                    WHERE user_id = :user_id
+                    AND id = :id
+                '''), {
+                    'user_id': user_id,
+                    'id': id
+                })
+            return result.rowcount == 1
+    except Exception as e:
+        raise DatabaseException(str(e))
 
 def get_user_timeline_events(user_id: int, event_type: UserTimelineEventType, count: int = 50) -> List[UserTimelineEvent]:
     """ Gets user timeline events of the specified type associated with the specified user.

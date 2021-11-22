@@ -696,3 +696,36 @@ class FeedbackAPITestCase(IntegrationTestCase):
                                    query_string={"recordings": recordings})  # recordings has invalid recording_msid
         self.assert400(response)
         self.assertEqual(response.json["code"], 400)
+
+    def test_feedback_view(self):
+        inserted_rows = self.insert_test_data(self.user["id"])
+
+        # Fetch loved page
+        r = self.client.get(url_for('user.feedback', user_name=self.user['musicbrainz_id']))
+        self.assert200(r)
+        props = json.loads(self.get_context_variable('props'))
+
+        self.assertEqual(props['feedback_count'], 1)
+        self.assertEqual(props['active_section'], 'feedback')
+        feedback = props["feedback"]
+
+        self.assertEqual(len(feedback), 1)
+        self.assertEqual(feedback[0]["user_id"], self.user["musicbrainz_id"])
+        self.assertEqual(feedback[0]["recording_msid"], inserted_rows[0]["recording_msid"])
+        self.assertEqual(feedback[0]["score"], inserted_rows[0]["score"])
+        self.assertNotEqual(feedback[0]["created"], "")
+
+        # Fetch hated page
+        r = self.client.get(url_for('user.feedback', user_name=self.user['musicbrainz_id'], score=-1))
+        self.assert200(r)
+        props = json.loads(self.get_context_variable('props'))
+
+        self.assertEqual(props['feedback_count'], 1)
+        self.assertEqual(props['active_section'], 'feedback')
+        feedback = props["feedback"]
+
+        self.assertEqual(len(feedback), 1)
+        self.assertEqual(feedback[0]["user_id"], self.user["musicbrainz_id"])
+        self.assertEqual(feedback[0]["recording_msid"], inserted_rows[1]["recording_msid"])
+        self.assertEqual(feedback[0]["score"], inserted_rows[1]["score"])
+        self.assertNotEqual(feedback[0]["created"], "")

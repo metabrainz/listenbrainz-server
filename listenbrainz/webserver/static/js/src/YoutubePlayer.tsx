@@ -5,6 +5,7 @@ import {
   get as _get,
   isNil as _isNil,
   isString as _isString,
+  isFunction as _isFunction,
 } from "lodash";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
 import { searchForYoutubeTrack } from "./utils";
@@ -27,16 +28,27 @@ type ExtendedYoutubePlayer = {
 export default class YoutubePlayer
   extends React.Component<YoutubePlayerProps, YoutubePlayerState>
   implements DataSourceType {
-  youtubePlayer?: ExtendedYoutubePlayer;
-  checkVideoLoadedTimerId?: NodeJS.Timeout;
-
-  componentDidUpdate(prevProps: DataSourceProps) {
-    const { show } = this.props;
-    if (prevProps.show === true && show === false && this.youtubePlayer) {
-      this.youtubePlayer.stopVideo();
-      // Clear playlist
-      this.youtubePlayer.cueVideoById("");
+  static getVideoIDFromListen(listen: Listen | JSPFTrack): string | undefined {
+    // Checks if there is a youtube ID in the listen
+    // or if the origin_url field contains youtube.com
+    const videoURL =
+      _get(listen, "track_metadata.additional_info.youtube_id") ??
+      _get(listen, "track_metadata.additional_info.origin_url");
+    if (_isString(videoURL) && videoURL.length) {
+      /** Credit for this regular expression goes to Soufiane Sakhi:
+       * https://stackoverflow.com/a/61033353/4904467
+       */
+      const youtubeURLRegexp = /(?:https?:\/\/)?(?:www\.|m\.)?youtu(?:\.be\/|be.com\/\S*(?:watch|embed)(?:(?:(?=\/[^&\s?]+(?!\S))\/)|(?:\S*v=|v\/)))([^&\s?]+)/g;
+      const match = youtubeURLRegexp.exec(videoURL);
+      return match?.[1];
     }
+
+    return undefined;
+  }
+
+  static isListenFromThisService(listen: Listen | JSPFTrack): boolean {
+    const videoId = YoutubePlayer.getVideoIDFromListen(listen);
+    return Boolean(videoId);
   }
 
   /**
@@ -68,6 +80,45 @@ export default class YoutubePlayer
     return images;
   }
 
+  static getYoutubeURLFromListen(
+    listen: Listen | JSPFTrack
+  ): string | undefined {
+    // Checks if there is a youtube ID in the listen
+    const youtubeId = _get(listen, "track_metadata.additional_info.youtube_id");
+    if (youtubeId) {
+      return `https://www.youtube.com/watch?v=${youtubeId}`;
+    }
+
+    // or if the origin URL contains youtube.com
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    if (_isString(originURL) && originURL.length) {
+      try {
+        const parsedURL = new URL(originURL);
+        const { hostname, searchParams } = parsedURL;
+        if (/youtube\.com/.test(hostname)) {
+          return originURL;
+        }
+      } catch {
+        return undefined;
+      }
+    }
+    return undefined;
+  }
+
+  public name = "youtube";
+  public domainName = "youtube.com";
+  youtubePlayer?: ExtendedYoutubePlayer;
+  checkVideoLoadedTimerId?: NodeJS.Timeout;
+
+  componentDidUpdate(prevProps: DataSourceProps) {
+    const { show } = this.props;
+    if (prevProps.show && !show && this.youtubePlayer) {
+      this.youtubePlayer.stopVideo();
+      // Clear playlist
+      this.youtubePlayer.cueVideoById("");
+    }
+  }
+
   onReady = (event: YT.PlayerEvent): void => {
     this.youtubePlayer = event.target;
   };
@@ -78,16 +129,23 @@ export default class YoutubePlayer
     const { onTrackInfoChange, onDurationChange } = this.props;
     const videoData =
       this.youtubePlayer?.getVideoData && this.youtubePlayer.getVideoData();
+    let videoId: string = "";
     if (videoData) {
       title = videoData.title;
-      const videoId = videoData.video_id;
+      videoId = videoData.video_id as string;
       images = YoutubePlayer.getThumbnailsFromVideoid(videoId);
     } else {
       // Fallback to track name from the listen we are playing
       const { currentListen } = this.state;
       title = currentListen?.track_metadata.track_name ?? "";
     }
-    onTrackInfoChange(title, undefined, undefined, images);
+    onTrackInfoChange(
+      title,
+      `https://www.youtube.com/watch?v=${videoId}`,
+      undefined,
+      undefined,
+      images
+    );
     const duration = this.youtubePlayer?.getDuration();
     if (duration) {
       onDurationChange(duration * 1000);
@@ -123,7 +181,7 @@ export default class YoutubePlayer
         const images: MediaImage[] = YoutubePlayer.getThumbnailsFromVideoid(
           videoId
         );
-        onTrackInfoChange(title, undefined, undefined, images);
+        onTrackInfoChange(title, videoId, undefined, undefined, images);
       }
       player.playVideo();
     }
@@ -132,7 +190,6 @@ export default class YoutubePlayer
       state === YouTube.PlayerState.BUFFERING
     ) {
       onPlayerPausedChange(false);
-      onDurationChange(player.getDuration() * 1000);
     }
     if (state === YouTube.PlayerState.PAUSED) {
       onPlayerPausedChange(true);
@@ -141,6 +198,10 @@ export default class YoutubePlayer
       onPlayerPausedChange(false);
     }
     onProgressChange(player.getCurrentTime() * 1000);
+    const duration = _isFunction(player.getDuration) && player.getDuration();
+    if (duration) {
+      onDurationChange(duration * 1000);
+    }
   };
 
   handleAccountError = (): void => {
@@ -166,7 +227,11 @@ export default class YoutubePlayer
       _get(listen, "track_metadata.track_name") || _get(listen, "title");
     const artistName =
       _get(listen, "track_metadata.artist_name") || _get(listen, "creator");
-    const releaseName = _get(listen, "track_metadata.release_name");
+    // Using the releaseName has paradoxically given worst search results,
+    // so we're only using it when track name isn't provided (for example for an album search)
+    const releaseName = trackName
+      ? ""
+      : _get(listen, "track_metadata.release_name");
 
     const {
       handleWarning,
@@ -184,7 +249,7 @@ export default class YoutubePlayer
       this.handleAccountError();
       return;
     }
-    if (!trackName) {
+    if (!trackName && !artistName && !releaseName) {
       handleWarning("Not enough info to search on Youtube");
       onTrackNotFound();
       return;
@@ -206,7 +271,7 @@ export default class YoutubePlayer
         onTrackNotFound();
       }
     } catch (error) {
-      handleWarning(error, "Youtube player error");
+      handleWarning(error?.message ?? error.toString(), "Youtube player error");
       onTrackNotFound();
     }
   };
@@ -222,30 +287,14 @@ export default class YoutubePlayer
     }
   };
 
-  isListenFromThisService = (listen: Listen | JSPFTrack): boolean => {
-    // Checks if there is a youtube ID in the listen
-    const youtubeId = _get(listen, "track_metadata.additional_info.youtube_id");
-    if (youtubeId) {
-      return true;
-    }
-
-    // or if the origin URL contains youtube.com
-    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
-    if (_isString(originURL) && originURL.length) {
-      const parsedURL = new URL(originURL);
-      const { hostname, searchParams } = parsedURL;
-      if (/youtube\.com/.test(hostname)) {
-        return true;
-      }
-    }
-
-    return false;
-  };
-
   canSearchAndPlayTracks = (): boolean => {
     const { youtubeUser } = this.props;
     // check if the user is authed to search with the Youtube API
     return Boolean(youtubeUser) && Boolean(youtubeUser?.api_key);
+  };
+
+  datasourceRecordsListens = (): boolean => {
+    return false;
   };
 
   playListen = (listen: Listen | JSPFTrack) => {
@@ -256,10 +305,14 @@ export default class YoutubePlayer
     let youtubeId = _get(listen, "track_metadata.additional_info.youtube_id");
     const originURL = _get(listen, "track_metadata.additional_info.origin_url");
     if (!youtubeId && _isString(originURL) && originURL.length) {
-      const parsedURL = new URL(originURL);
-      const { hostname, searchParams } = parsedURL;
-      if (/youtube\.com/.test(hostname)) {
-        youtubeId = searchParams.get("v");
+      try {
+        const parsedURL = new URL(originURL);
+        const { hostname, searchParams } = parsedURL;
+        if (/youtube\.com/.test(hostname)) {
+          youtubeId = searchParams.get("v");
+        }
+      } catch {
+        // URL is not valid, do nothing
       }
     }
     if (youtubeId) {
