@@ -587,8 +587,3 @@ type MissingMBData = {
   recording_name: string;
   release_name?: string;
 };
-
-type CustomIconFunction = {
-  icon: IconProp;
-  func: Function;
-};

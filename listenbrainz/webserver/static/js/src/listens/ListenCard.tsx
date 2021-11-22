@@ -50,8 +50,8 @@ export type ListenCardProps = {
   feedbackComponent?: JSX.Element;
   // These go in the dropdown menu
   additionalMenuItems?: JSX.Element;
-  // This object should be passed when you want custom icon with custom action
-  customicon?: CustomIconFunction;
+  // This optional JSX element is for a custom icon
+  additionalActions?: JSX.Element;
 };
 
 type ListenCardState = {
@@ -189,7 +189,7 @@ export default class ListenCard extends React.Component<
       ...otherProps
     } = this.props;
     const { isCurrentlyPlaying } = this.state;
-    const { customicon } = this.props;
+    const { additionalActions } = this.props;
 
     const recordingMSID = _get(
       listen,
@@ -323,19 +323,7 @@ export default class ListenCard extends React.Component<
               <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />
             )}
           </button>
-
-          {customicon ? (
-            <button
-              title="Add to MusicBrainz"
-              className="btn-transparent"
-              onClick={() => {
-                customicon.func(listen);
-              }}
-              type="button"
-            >
-              <FontAwesomeIcon size="2x" icon={customicon.icon as IconProp} />
-            </button>
-          ) : null}
+          {additionalActions}
         </div>
         {additionalDetails && (
           <span
