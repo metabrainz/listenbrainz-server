@@ -3,8 +3,7 @@
 """
 import pydantic
 
-from datetime import datetime
-from typing import Optional, List
+from typing import List
 
 
 class UserListeningActivityRecord(pydantic.BaseModel):
@@ -29,29 +28,4 @@ class UserListeningActivityStatMessage(pydantic.BaseModel):
     stats_range: str  # The range for which the stats are calculated, i.e week, month, year or all_time
     from_ts: int
     to_ts: int
-    listening_activity: List[UserListeningActivityRecord]
-
-
-class UserListeningActivityStatRange(pydantic.BaseModel):
-    """ Model for user's listening activity for a particular time range.
-        Currently supports week, month, year and all-time
-    """
-    to_ts: int
-    from_ts: int
-    listening_activity: List[UserListeningActivityRecord]
-
-
-class UserListeningActivityStatJson(pydantic.BaseModel):
-    """ Model for the JSON stored in the statistics.user table's listening_activity column
-    """
-    week: Optional[UserListeningActivityStatRange]
-    month: Optional[UserListeningActivityStatRange]
-    year: Optional[UserListeningActivityStatRange]
-    all_time: Optional[UserListeningActivityStatRange]
-
-
-class UserListeningActivityStat(UserListeningActivityStatJson):
-    """ Model for stats around user's listening activity
-    """
-    user_id: int
-    last_updated: datetime
+    data: List[UserListeningActivityRecord]

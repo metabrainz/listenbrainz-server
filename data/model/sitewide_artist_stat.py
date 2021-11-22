@@ -1,8 +1,6 @@
 import pydantic
 
-from datetime import datetime
-from enum import Enum
-from typing import Optional, List, Dict
+from typing import Optional, List
 
 
 class SitewideArtistRecord(pydantic.BaseModel):
@@ -15,30 +13,3 @@ class SitewideArtistRecord(pydantic.BaseModel):
     artist_name: str
     # to add an empty field to stats API response, for compatibility
     artist_msid: Optional[str]
-
-
-class SitewideArtistStatRange(pydantic.BaseModel):
-    """ Model for storing most listened-to artists on the website for a
-        particular time range.
-    """
-    to_ts: int
-    from_ts: int
-    time_range: str
-    artists: List[SitewideArtistRecord]
-
-
-class SitewideArtistStatJson(pydantic.BaseModel):
-    """ Model for the JSON stored in the statistics.sitewide table's
-        artist column.
-    """
-    to_ts: int
-    from_ts: int
-    time_ranges: List[SitewideArtistStatRange]
-
-
-class SitewideArtistStat(pydantic.BaseModel):
-    """ Model for stats around a most listened artists on the website
-    """
-    stats_range: str
-    data: Optional[SitewideArtistStatJson]
-    last_updated: datetime

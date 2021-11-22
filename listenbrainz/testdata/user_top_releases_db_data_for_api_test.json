@@ -1,5 +1,5 @@
 {
-    "releases": [
+    "data": [
         {
             "artist_mbids": [
                 "6599e41e-390c-4855-a2ac-68ee798538b4"
@@ -1103,5 +1103,6 @@
     ],
     "count": 100,
     "from_ts": 0,
-    "to_ts": 5
+    "to_ts": 5,
+    "stats_range": "all_time"
 }

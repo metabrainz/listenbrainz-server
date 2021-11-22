@@ -1,8 +1,6 @@
 import pydantic
 
-from datetime import datetime
-from enum import Enum
-from typing import Optional, List
+from typing import Optional
 
 
 class UserArtistMapRecord(pydantic.BaseModel):
@@ -13,29 +11,3 @@ class UserArtistMapRecord(pydantic.BaseModel):
     country: str
     artist_count: int
     listen_count: Optional[int]  # Make field optional to maintain backward compatibility
-
-
-class UserArtistMapStatRange(pydantic.BaseModel):
-    """ Model for user's artist map for a particular
-    time range. Currently supports week, month, year and all-time
-    """
-    to_ts: int
-    from_ts: int
-    artist_map: List[UserArtistMapRecord]
-    last_updated: int
-
-
-class UserArtistMapStatJson(pydantic.BaseModel):
-    """ Model for the JSON stored in the statistics.user table's artist_map column
-    """
-    week: Optional[UserArtistMapStatRange]
-    year: Optional[UserArtistMapStatRange]
-    month: Optional[UserArtistMapStatRange]
-    all_time: Optional[UserArtistMapStatRange]
-
-
-class UserArtistMapStat(UserArtistMapStatJson):
-    """ Model for stats around a user's most listened artists
-    """
-    user_id: int
-    last_updated: datetime

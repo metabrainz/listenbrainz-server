@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-import logging
 import sys
-import traceback
 from time import sleep, monotonic
 from datetime import datetime
 
@@ -17,26 +15,13 @@ from listenbrainz.listenstore import RedisListenStore
 from listenbrainz.listen_writer import ListenWriter
 from listenbrainz.listenstore import TimescaleListenStore
 from listenbrainz.webserver import create_app
-from listenbrainz.utils import init_cache
-from brainzutils import metrics, cache
+from brainzutils import metrics
 
-from listenbrainz.webserver.external import messybrainz
+from listenbrainz import messybrainz
 from listenbrainz.webserver.views.api_tools import MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
 
 METRIC_UPDATE_INTERVAL = 60  # seconds
 LISTEN_INSERT_ERROR_SENTINEL = -1  #
-
-
-def check_recursively_for_nulls(listen):
-    for key, value in listen.items():
-        if isinstance(value, dict):
-            check_recursively_for_nulls(value)
-        else:
-            if isinstance(value, list):
-                value = " ".join(value)
-
-            if isinstance(value, str)  and '\x00' in value:
-                raise ValueError("field {} contains a null".format(value))
 
 
 class TimescaleWriterSubscriber(ListenWriter):
@@ -49,6 +34,7 @@ class TimescaleWriterSubscriber(ListenWriter):
         self.unique_ch = None
         self.redis_listenstore = None
 
+        # these are counts since the last metric update was submitted
         self.incoming_listens = 0
         self.unique_listens = 0
         self.metric_submission_time = monotonic() + METRIC_UPDATE_INTERVAL
@@ -56,19 +42,9 @@ class TimescaleWriterSubscriber(ListenWriter):
     def callback(self, ch, method, properties, body):
 
         listens = ujson.loads(body)
-        non_null_listens = []
-
-        for listen in listens:
-            try:
-                check_recursively_for_nulls(listen)
-            except ValueError:
-                # temporary to make sure fix is working
-                current_app.logger.error("Found null byte in listen. Skipping!", exc_info=True)
-                continue
-            non_null_listens.append(listen)
 
         msb_listens = []
-        for chunk in chunked(non_null_listens, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP):
+        for chunk in chunked(listens, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP):
             msb_listens.extend(self.messybrainz_lookup(chunk))
 
         submit = []
@@ -119,7 +95,7 @@ class TimescaleWriterSubscriber(ListenWriter):
             msb_listens.append(messy_dict)
 
         try:
-            msb_responses = messybrainz.submit_listens(msb_listens)
+            msb_responses = messybrainz.submit_listens_and_sing_me_a_sweet_song(msb_listens)
         except (messybrainz.exceptions.BadDataException, messybrainz.exceptions.ErrorAddingException):
             current_app.logger.error("MessyBrainz lookup for listens failed: ", exc_info=True)
             return []
@@ -226,6 +202,8 @@ class TimescaleWriterSubscriber(ListenWriter):
         if monotonic() > self.metric_submission_time:
             self.metric_submission_time += METRIC_UPDATE_INTERVAL
             metrics.set("timescale_writer", incoming_listens=self.incoming_listens, unique_listens=self.unique_listens)
+            self.incoming_listens = 0
+            self.unique_listens = 0
 
         return len(data)
 

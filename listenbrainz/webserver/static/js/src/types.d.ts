@@ -42,15 +42,16 @@ interface AdditionalInfo {
   work_mbids?: Array<string> | null;
 }
 
+declare type MbidMapping = {
+  recording_mbid: string;
+  release_mbid: string;
+  artist_mbids: Array<string>;
+};
+
 declare type BaseListenFormat = {
   listened_at: number;
   user_name?: string | null;
-  track_metadata: {
-    artist_name: string;
-    release_name?: string | null;
-    track_name: string;
-    additional_info?: AdditionalInfo;
-  };
+  track_metadata: TrackMetadata;
 };
 
 declare type Listen = BaseListenFormat & {
@@ -66,9 +67,9 @@ declare type ListenBrainzUser = {
   auth_token?: string;
 };
 
-declare type ListenType = "single" | "playingNow" | "import";
+declare type ImportService = "lastfm" | "librefm";
 
-declare type BrainzPlayDirection = "up" | "down" | "hidden";
+declare type ListenType = "single" | "playing_now" | "import";
 
 declare type SubmitListensPayload = {
   listen_type: "single" | "playing_now" | "import";
@@ -375,9 +376,26 @@ declare type ListenFeedBack = 1 | 0 | -1;
 declare type RecommendationFeedBack = "love" | "like" | "hate" | "dislike";
 
 declare type FeedbackResponse = {
+  created: number;
   recording_msid: string;
   score: ListenFeedBack;
   user_id: string;
+};
+declare type TrackMetadata = {
+  artist_name: string;
+  track_name: string;
+  release_name?: string;
+  recording_mbid?: string;
+  recording_msid?: string;
+  artist_msid?: string;
+  release_mbid?: string;
+  release_msid?: string;
+  additional_info?: AdditionalInfo;
+  mbid_mapping?: MbidMapping;
+};
+
+declare type FeedbackResponseWithTrackMetadata = FeedbackResponse & {
+  track_metadata: TrackMetadata;
 };
 
 declare type RecommendationFeedbackResponse = {
@@ -469,12 +487,7 @@ declare type PinnedRecording = {
   row_id: number;
   recording_mbid: string | null;
   recording_msid?: string;
-  track_metadata: {
-    artist_name: string;
-    release_name?: string | null;
-    track_name: string;
-    additional_info?: AdditionalInfo;
-  };
+  track_metadata: TrackMetadata;
 };
 
 /** For recommending a track from the front-end */
@@ -548,4 +561,42 @@ type CritiqueBrainzReview = {
   text: string;
   languageCode: string;
   rating?: number;
+};
+
+type CoverArtArchiveEntry = {
+  types: string[]; // Array of types i.e ["Front", "Back"]
+  front: boolean;
+  back: boolean;
+  edit: number;
+  image: string; // "http://coverartarchive.org/release/76df3287-6cda-33eb-8e9a-044b5e15ffdd/829521842.jpg",
+  comment: "";
+  approved: true;
+  id: string;
+  thumbnails: {
+    250: string; // Full URL to 250px version "http://coverartarchive.org/release/76df3287-6cda-33eb-8e9a-044b5e15ffdd/829521842-250.jpg",
+    500: string;
+    1200: string;
+    small: string;
+    large: string;
+  };
+};
+type CoverArtArchiveResponse = {
+  images: CoverArtArchiveEntry[];
+  release: string; // Full MB URL i.e "http://musicbrainz.org/release/76df3287-6cda-33eb-8e9a-044b5e15ffdd"
+};
+
+type ColorReleaseItem = {
+  artist_name: string;
+  color: number[];
+  dist: number;
+  caa_id: number;
+  release_name: string;
+  release_mbid: string;
+  recordings?: BaseListenFormat[];
+};
+
+type ColorReleasesResponse = {
+  payload: {
+    releases: Array<ColorReleaseItem>;
+  };
 };

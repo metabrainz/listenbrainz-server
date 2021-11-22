@@ -204,13 +204,13 @@ class DumpManagerTestCase(DatabaseTestCase):
         dump_name = os.listdir(self.tempdir)[0]
         mock_notify.assert_called_with(dump_name, 'fullexport')
 
-        # make sure that the dump contains a full listens dump, a public dump
-        # a private dump and a spark dump.
+        # make sure that the dump contains a full listens dump, a public and private dump (postgres),
+        # a public and private dump (timescale) and a spark dump.
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
             if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
                 archive_count += 1
-        self.assertEqual(archive_count, 4)
+        self.assertEqual(archive_count, 6)
 
     def test_create_full_dump_with_id(self):
 
@@ -232,12 +232,12 @@ class DumpManagerTestCase(DatabaseTestCase):
         created_dump_id = int(dump_name.split('-')[2])
         self.assertEqual(dump_id, created_dump_id)
 
-        # dump should contain the 4 archives
+        # dump should contain the 6 archives
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
             if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
                 archive_count += 1
-        self.assertEqual(archive_count, 4)
+        self.assertEqual(archive_count, 6)
 
     @patch('listenbrainz.db.dump_manager.send_dump_creation_notification')
     def test_create_incremental(self, mock_notify):

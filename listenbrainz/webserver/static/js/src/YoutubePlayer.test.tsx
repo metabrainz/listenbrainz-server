@@ -17,6 +17,7 @@ const props = {
   onDurationChange: (durationMs: number) => {},
   onTrackInfoChange: (
     title: string,
+    trackId: string,
     artist?: string,
     album?: string,
     artwork?: ReadonlyArray<MediaImage>
@@ -105,6 +106,7 @@ describe("YoutubePlayer", () => {
       expect(instance.props.onTrackInfoChange).toHaveBeenCalledTimes(1);
       expect(instance.props.onTrackInfoChange).toHaveBeenCalledWith(
         "FNORD",
+        "IhaveSeenTheFnords",
         undefined,
         undefined,
         [

@@ -18,6 +18,7 @@ const props = {
   onDurationChange: (durationMs: number) => {},
   onTrackInfoChange: (
     title: string,
+    trackId: string,
     artist?: string,
     album?: string,
     artwork?: ReadonlyArray<MediaImage>
@@ -229,12 +230,12 @@ describe("SpotifyPlayer", () => {
             { uri: "", name: "Track artist 1" },
             { uri: "", name: "Track artist 2" },
           ],
-          id: "1",
+          id: "spotifyVideoId",
           is_playable: true,
           media_type: "audio",
           name: "Track name",
           type: "track",
-          uri: "",
+          uri: "my-spotify-uri",
         },
       },
     };
@@ -296,6 +297,7 @@ describe("SpotifyPlayer", () => {
         instance.props.onTrackInfoChange
       ).toHaveBeenCalledWith(
         "Track name",
+        "https://open.spotify.com/track/spotifyVideoId",
         "Track artist 1, Track artist 2",
         "Album name",
         [{ src: "url/to/album-art.jpg", sizes: "200x100" }]

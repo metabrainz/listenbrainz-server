@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.external_service_oauth as db_oauth
@@ -7,11 +8,12 @@ import sqlalchemy
 import time
 import ujson
 
+from data.model.common_stat import StatRange
 from data.model.external_service import ExternalServiceType
+from data.model.user_entity import UserEntityRecord
 from listenbrainz import db
 from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.db.testing import DatabaseTestCase
-from data.model.user_artist_stat import UserArtistStatJson
 
 
 class UserTestCase(DatabaseTestCase):
@@ -95,17 +97,18 @@ class UserTestCase(DatabaseTestCase):
 
         with open(self.path_to_data_file('user_top_artists_db.json')) as f:
             artists_data = ujson.load(f)
-        db_stats.insert_user_artists(
+        db_stats.insert_user_jsonb_data(
             user_id=user_id,
-            artists=UserArtistStatJson(**{'all_time': artists_data}),
+            stats_type='artists',
+            stats=StatRange[UserEntityRecord](**artists_data),
         )
-        user_stats = db_stats.get_user_artists(user_id, 'all_time')
+        user_stats = db_stats.get_user_stats(user_id, 'all_time', 'artists')
         self.assertIsNotNone(user_stats)
 
         db_user.delete(user_id)
         user = db_user.get(user_id)
         self.assertIsNone(user)
-        user_stats = db_stats.get_user_artists(user_id, 'all_time')
+        user_stats = db_stats.get_user_stats(user_id, 'all_time', 'artists')
         self.assertIsNone(user_stats)
 
     def test_delete_when_spotify_import_activated(self):
@@ -184,7 +187,7 @@ class UserTestCase(DatabaseTestCase):
 
         self.assertDictEqual({"twenty_two": 0.4, "twenty_three": 0.7},
                              db_user.get_similar_users(user_id_21).similar_users)
-        self.assertDictEqual({"twenty_one": 0.4 },
+        self.assertDictEqual({"twenty_one": 0.4},
                              db_user.get_similar_users(user_id_22).similar_users)
         self.assertDictEqual({"twenty_one": 0.7},
                              db_user.get_similar_users(user_id_23).similar_users)
@@ -213,3 +216,19 @@ class UserTestCase(DatabaseTestCase):
 
         self.assertNotIn("email", db_user.get_by_mb_id(musicbrainz_id))
         self.assertEqual(email, db_user.get_by_mb_id(musicbrainz_id, fetch_email=True)["email"])
+
+    def test_search(self):
+        searcher_id = db_user.create(0, "Cécile")
+        db_user.create(1, "Cecile")
+        db_user.create(2, "lucifer")
+        db_user.create(3, "rob")
+
+        with db.engine.connect() as connection:
+            connection.execute(sqlalchemy.text("""INSERT INTO recommendation.similar_user (user_id, similar_users)
+                                                       VALUES (:user_id, :similar_users)"""), {
+                "user_id": searcher_id,
+                "similar_users": json.dumps({"Cecile": [0.42, 0.20], "lucifer": [0.61, 0.25], "rob": [0.87, 0.43]})
+            })
+
+        results = db_user.search("cif", 10, searcher_id)
+        self.assertEqual(results, [("Cécile", 0.1, None), ("Cecile", 0.1, 0.42), ("lucifer", 0.0909091, 0.61)])

@@ -22,6 +22,7 @@ import { sanitize } from "dompurify";
 import { sanitizeUrl } from "@braintree/sanitize-url";
 import * as Sentry from "@sentry/react";
 import { io, Socket } from "socket.io-client";
+import { Integrations } from "@sentry/tracing";
 import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
@@ -44,18 +45,15 @@ import {
   getPlaylistId,
   getRecordingMBIDFromJSPFTrack,
   JSPFTrackToListen,
-  listenToJSPFTrack,
 } from "./utils";
 import { getPageProps } from "../utils";
 
 export type PlaylistPageProps = {
   labsApiUrl: string;
   playlist: JSPFObject;
-  webSocketsServerUrl: string;
 } & WithAlertNotificationsInjectedProps;
 
 export interface PlaylistPageState {
-  currentTrack?: JSPFTrack;
   playlist: JSPFPlaylist;
   recordingFeedbackMap: RecordingFeedbackMap;
   loading: boolean;
@@ -85,7 +83,6 @@ export default class PlaylistPage extends React.Component<
   private SpotifyAPIService?: SpotifyAPIService;
   private spotifyPlaylist?: SpotifyPlaylistObject;
   private searchForTrackDebounced: any;
-  private brainzPlayer = React.createRef<BrainzPlayer>();
 
   private socket!: Socket;
 
@@ -138,8 +135,7 @@ export default class PlaylistPage extends React.Component<
   };
 
   createWebsocketsConnection = (): void => {
-    const { webSocketsServerUrl } = this.props;
-    this.socket = io(webSocketsServerUrl);
+    this.socket = io(`${window.location.origin}`, { path: "/socket.io/" });
   };
 
   addWebsocketsHandlers = (): void => {
@@ -171,13 +167,6 @@ export default class PlaylistPage extends React.Component<
       jspfTrack.id = getRecordingMBIDFromJSPFTrack(jspfTrack);
     });
     this.setState({ playlist: newPlaylist });
-  };
-
-  playTrack = (track: JSPFTrack): void => {
-    const listen = JSPFTrackToListen(track);
-    if (this.brainzPlayer.current) {
-      this.brainzPlayer.current.playListen(listen);
-    }
   };
 
   addTrack = async (
@@ -217,6 +206,8 @@ export default class PlaylistPage extends React.Component<
           {
             playlist: { ...playlist, track: [...playlist.track, jspfTrack] },
             // recordingFeedbackMap,
+            searchInputValue: "",
+            cachedSearchResults: [],
           },
           this.emitPlaylistChanged
         );
@@ -321,27 +312,6 @@ export default class PlaylistPage extends React.Component<
     }
   };
 
-  handleCurrentTrackChange = (track: JSPFTrack | Listen): void => {
-    if (has(track, "identifier")) {
-      // JSPF Track
-      this.setState({ currentTrack: track as JSPFTrack });
-      return;
-    }
-    const JSPFTrack = listenToJSPFTrack(track as Listen);
-    this.setState({ currentTrack: JSPFTrack });
-  };
-
-  isCurrentTrack = (track: JSPFTrack): boolean => {
-    const { currentTrack } = this.state;
-    if (isNil(currentTrack)) {
-      return false;
-    }
-    if (track.id === currentTrack.id) {
-      return true;
-    }
-    return false;
-  };
-
   getFeedback = async (mbids?: string[]): Promise<FeedbackResponse[]> => {
     const { newAlert } = this.props;
     const { currentUser } = this.context;
@@ -378,26 +348,13 @@ export default class PlaylistPage extends React.Component<
     return newRecordingFeedbackMap;
   };
 
-  updateFeedback = async (recordingMbid: string, score: ListenFeedBack) => {
+  updateFeedback = (
+    recordingMsid: string,
+    score: ListenFeedBack | RecommendationFeedBack
+  ) => {
     const { recordingFeedbackMap } = this.state;
-    const { currentUser } = this.context;
-    const { newAlert } = this.props;
-    if (currentUser?.auth_token) {
-      try {
-        const status = await this.APIService.submitFeedback(
-          currentUser.auth_token,
-          recordingMbid,
-          score
-        );
-        if (status === 200) {
-          const newRecordingFeedbackMap = { ...recordingFeedbackMap };
-          newRecordingFeedbackMap[recordingMbid] = score;
-          this.setState({ recordingFeedbackMap: newRecordingFeedbackMap });
-        }
-      } catch (error) {
-        newAlert("danger", "Error while submitting feedback", error.message);
-      }
-    }
+    recordingFeedbackMap[recordingMsid] = score as ListenFeedBack;
+    this.setState({ recordingFeedbackMap });
   };
 
   getFeedbackForRecordingMbid = (
@@ -528,12 +485,16 @@ export default class PlaylistPage extends React.Component<
       return;
     }
     const { playlist } = this.state;
+    // Owner can't be collaborator
+    const collaboratorsWithoutOwner = collaborators.filter(
+      (username) => username.toLowerCase() !== playlist.creator.toLowerCase()
+    );
     if (
       description === playlist.annotation &&
       name === playlist.title &&
       isPublic ===
         playlist.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]?.public &&
-      collaborators ===
+      collaboratorsWithoutOwner ===
         playlist.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]?.collaborators
     ) {
       // Nothing changed
@@ -547,7 +508,7 @@ export default class PlaylistPage extends React.Component<
         extension: {
           [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
             public: isPublic,
-            collaborators,
+            collaborators: collaboratorsWithoutOwner,
           },
         },
       };
@@ -680,12 +641,12 @@ export default class PlaylistPage extends React.Component<
 
   render() {
     const {
-      currentTrack,
       playlist,
       loading,
       searchInputValue,
       cachedSearchResults,
     } = this.state;
+    const { APIService } = this.context;
     const { newAlert } = this.props;
     const { track: tracks } = playlist;
     const hasRightToEdit = this.hasRightToEdit();
@@ -785,24 +746,22 @@ export default class PlaylistPage extends React.Component<
               <div className="info">
                 <div>{playlist.track?.length} tracks</div>
                 <div>Created: {new Date(playlist.date).toLocaleString()}</div>
-                {customFields?.collaborators?.length && (
-                  <div>
-                    With the help of:&ensp;
-                    {customFields.collaborators.map((collaborator, index) => (
-                      <>
-                        <a
-                          key={collaborator}
-                          href={sanitizeUrl(`/user/${collaborator}`)}
-                        >
-                          {collaborator}
-                        </a>
-                        {index < customFields.collaborators.length - 1
-                          ? ", "
-                          : ""}
-                      </>
-                    ))}
-                  </div>
-                )}
+                {customFields?.collaborators &&
+                  Boolean(customFields.collaborators.length) && (
+                    <div>
+                      With the help of:&ensp;
+                      {customFields.collaborators.map((collaborator, index) => (
+                        <React.Fragment key={collaborator}>
+                          <a href={sanitizeUrl(`/user/${collaborator}`)}>
+                            {collaborator}
+                          </a>
+                          {index < customFields.collaborators.length - 1
+                            ? ", "
+                            : ""}
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  )}
                 {customFields?.last_modified_at && (
                   <div>
                     Last modified:{" "}
@@ -862,13 +821,11 @@ export default class PlaylistPage extends React.Component<
                         key={`${track.id}-${index.toString()}`}
                         canEdit={hasRightToEdit}
                         track={track}
-                        isBeingPlayed={this.isCurrentTrack(track)}
                         currentFeedback={this.getFeedbackForRecordingMbid(
                           track.id
                         )}
-                        playTrack={this.playTrack}
                         removeTrackFromPlaylist={this.deletePlaylistItem}
-                        updateFeedback={this.updateFeedback}
+                        updateFeedbackCallback={this.updateFeedback}
                         newAlert={newAlert}
                       />
                     );
@@ -880,7 +837,7 @@ export default class PlaylistPage extends React.Component<
                 </div>
               )}
               {hasRightToEdit && (
-                <Card className="playlist-item-card row" id="add-track">
+                <Card className="listen-card row" id="add-track">
                   <span>
                     <FontAwesomeIcon icon={faPlusCircle as IconProp} />
                     &nbsp;&nbsp;Add a track
@@ -923,12 +880,11 @@ export default class PlaylistPage extends React.Component<
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
             <BrainzPlayer
-              currentListen={currentTrack}
-              direction="down"
-              listens={tracks}
+              listens={tracks.map(JSPFTrackToListen)}
               newAlert={newAlert}
-              onCurrentListenChange={this.handleCurrentTrackChange}
-              ref={this.brainzPlayer}
+              listenBrainzAPIBaseURI={APIService.APIBaseURI}
+              refreshSpotifyToken={APIService.refreshSpotifyToken}
+              refreshYoutubeToken={APIService.refreshYoutubeToken}
             />
           </div>
         </div>
@@ -950,11 +906,16 @@ document.addEventListener("DOMContentLoaded", () => {
     current_user,
     spotify,
     youtube,
+    sentry_traces_sample_rate,
   } = globalReactProps;
-  const { labs_api_url, playlist, web_sockets_server_url } = reactProps;
+  const { labs_api_url, playlist } = reactProps;
 
   if (sentry_dsn) {
-    Sentry.init({ dsn: sentry_dsn });
+    Sentry.init({
+      dsn: sentry_dsn,
+      integrations: [new Integrations.BrowserTracing()],
+      tracesSampleRate: sentry_traces_sample_rate,
+    });
   }
 
   const PlaylistPageWithAlertNotifications = withAlertNotifications(
@@ -979,7 +940,6 @@ document.addEventListener("DOMContentLoaded", () => {
           initialAlerts={optionalAlerts}
           labsApiUrl={labs_api_url}
           playlist={playlist}
-          webSocketsServerUrl={web_sockets_server_url}
         />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,

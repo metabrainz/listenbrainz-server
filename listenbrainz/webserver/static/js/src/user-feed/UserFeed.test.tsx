@@ -33,7 +33,7 @@ import APIService from "../APIService";
 const props = {
   ...timelineProps,
   events: timelineProps.events as TimelineEvent[],
-  newAlert: () => {},
+  newAlert: jest.fn(),
 };
 
 const GlobalContextMock = {
@@ -46,6 +46,10 @@ const GlobalContextMock = {
 describe("<UserFeed />", () => {
   beforeAll(() => {
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
+    // Font Awesome generates a random hash ID for each icon everytime.
+    // Mocking Math.random() fixes this
+    // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
+    jest.spyOn(global.Math, "random").mockImplementation(() => 0);
   });
   it("renders correctly", () => {
     const wrapper = mount<UserFeedPage>(
@@ -74,8 +78,6 @@ describe("<UserFeed />", () => {
     );
     const instance = wrapper.instance();
     expect(wrapper.find(BrainzPlayer)).toHaveLength(1);
-    // eslint-disable-next-line dot-notation
-    expect(instance["brainzPlayer"].current).toBeInstanceOf(BrainzPlayer);
   });
 
   it("renders the correct number of timeline events", () => {
@@ -168,8 +170,8 @@ describe("<UserFeed />", () => {
     expect(time.text()).toEqual("Feb 16, 10:44 AM");
 
     // Ensure additional details are rendered if provided
-    const additionalDetails = content.find(".additional-details");
-    expect(additionalDetails.text()).toEqual('"Very good..."');
+    const additionalContent = content.find(".additional-content");
+    expect(additionalContent.text()).toEqual('"Very good..."');
   });
 
   describe("Pagination", () => {

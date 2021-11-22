@@ -19,14 +19,9 @@ exports[`UserListeningActivity renders corectly when range is invalid 1`] = `
     }
   >
     <div
+      className="card "
       style={
         Object {
-          "background": "#FFFFFF",
-          "border": "1px solid #EEEEEE",
-          "borderRadius": "8px",
-          "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
-          "boxSizing": "border-box",
-          "height": "100%",
           "marginTop": 20,
           "minHeight": 400,
         }
@@ -223,14 +218,9 @@ exports[`UserListeningActivity renders correctly for all_time 1`] = `
     }
   >
     <div
+      className="card "
       style={
         Object {
-          "background": "#FFFFFF",
-          "border": "1px solid #EEEEEE",
-          "borderRadius": "8px",
-          "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
-          "boxSizing": "border-box",
-          "height": "100%",
           "marginTop": 20,
           "minHeight": 400,
         }
@@ -662,14 +652,9 @@ exports[`UserListeningActivity renders correctly for month 1`] = `
     }
   >
     <div
+      className="card "
       style={
         Object {
-          "background": "#FFFFFF",
-          "border": "1px solid #EEEEEE",
-          "borderRadius": "8px",
-          "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
-          "boxSizing": "border-box",
-          "height": "100%",
           "marginTop": 20,
           "minHeight": 400,
         }
@@ -1326,14 +1311,9 @@ exports[`UserListeningActivity renders correctly for week 1`] = `
     }
   >
     <div
+      className="card "
       style={
         Object {
-          "background": "#FFFFFF",
-          "border": "1px solid #EEEEEE",
-          "borderRadius": "8px",
-          "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
-          "boxSizing": "border-box",
-          "height": "100%",
           "marginTop": 20,
           "minHeight": 400,
         }
@@ -1708,14 +1688,9 @@ exports[`UserListeningActivity renders correctly for year 1`] = `
     }
   >
     <div
+      className="card "
       style={
         Object {
-          "background": "#FFFFFF",
-          "border": "1px solid #EEEEEE",
-          "borderRadius": "8px",
-          "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
-          "boxSizing": "border-box",
-          "height": "100%",
           "marginTop": 20,
           "minHeight": 400,
         }

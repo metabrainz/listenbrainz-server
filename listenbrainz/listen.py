@@ -39,14 +39,6 @@ def convert_comma_seperated_string_to_list(string):
     return [val for val in string.split(',')]
 
 
-def check_listen_data_for_nulls(**kwargs):
-    """Given a set of kwargs, check if any values have a null string in them.
-    Raises ValueError if any of the args has a null value in it"""
-    for k, v in kwargs.items():
-        if v and '\x00' in v:
-            raise ValueError("field {} contains a null".format(k))
-
-
 class Listen(object):
     """ Represents a listen object """
 
@@ -85,9 +77,6 @@ class Listen(object):
         self.user_id = user_id
         self.user_name = user_name
 
-        check_listen_data_for_nulls(user_name=user_name, artist_msid=artist_msid, release_msid=release_msid,
-                                    recording_msid=recording_msid)
-
         # determine the type of timestamp and do the right thing
         if isinstance(timestamp, int) or isinstance(timestamp, float):
             self.ts_since_epoch = int(timestamp)
@@ -111,7 +100,6 @@ class Listen(object):
             try:
                 flattened_data = flatten_dict(data['additional_info'])
                 data['additional_info'] = flattened_data
-                check_listen_data_for_nulls(**flattened_data)
             except TypeError:
                 # TypeError may occur here because PostgresListenStore passes strings
                 # to data sometimes. If that occurs, we don't need to do anything.
@@ -144,11 +132,17 @@ class Listen(object):
         )
 
     @classmethod
-    def from_timescale(cls, listened_at, track_name, user_name, created, j):
+    def from_timescale(cls, listened_at, track_name, user_name, created, j,
+                       recording_mbid=None, release_mbid=None, artist_mbids=None):
         """Factory to make Listen() objects from a timescale dict"""
 
         j['listened_at'] = datetime.utcfromtimestamp(float(listened_at))
         j['track_metadata']['track_name'] = track_name
+        if recording_mbid is not None and release_mbid is not None and artist_mbids is not None:
+            j["track_metadata"]["mbid_mapping"] = {
+                "recording_mbid": str(recording_mbid),
+                "release_mbid": str(release_mbid),
+                "artist_mbids": [ str(m) for m in artist_mbids ] }
         return cls(
             user_id=j.get('user_id'),
             user_name=user_name,

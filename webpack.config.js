@@ -33,6 +33,7 @@ module.exports = function (env, argv) {
           syntactic: true,
         },
         mode: "write-references",
+        memoryLimit: 4096,
       },
       eslint: {
         // Starting the path with "**/" because of current dev/prod path discrepancy
@@ -56,10 +57,12 @@ module.exports = function (env, argv) {
       userEntityChart: path.resolve(jsDir, "src/stats/UserEntityChart.tsx"),
       userReports: path.resolve(jsDir, "src/stats/UserReports.tsx"),
       userPageHeading: path.resolve(jsDir, "src/UserPageHeading.tsx"),
+      userFeedback: path.resolve(jsDir, "src/UserFeedback.tsx"),
       userPins: path.resolve(jsDir, "src/UserPins.tsx"),
       userFeed: path.resolve(jsDir, "src/user-feed/UserFeed.tsx"),
       playlist: path.resolve(jsDir, "src/playlists/Playlist.tsx"),
       playlists: path.resolve(jsDir, "src/playlists/Playlists.tsx"),
+      huesound: path.resolve(jsDir, "src/huesound/ColorPlay.tsx"),
       recommendations: path.resolve(
         jsDir,
         "src/recommendations/Recommendations.tsx"

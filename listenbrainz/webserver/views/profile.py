@@ -25,7 +25,6 @@ from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.login import api_login_required
-from listenbrainz.webserver.views.feedback_api import _feedback_to_api
 from listenbrainz.webserver.views.user import delete_user, delete_listens_history
 from time import time
 
@@ -108,6 +107,8 @@ def import_data():
         "profile_url": url_for('user.profile', user_name=user_data["name"]),
         "lastfm_api_url": current_app.config["LASTFM_API_URL"],
         "lastfm_api_key": current_app.config["LASTFM_API_KEY"],
+        "librefm_api_url": current_app.config["LIBREFM_API_URL"],
+        "librefm_api_key": current_app.config["LIBREFM_API_KEY"],
     }
 
     return render_template(
@@ -190,7 +191,7 @@ def export_feedback():
     # feedback into memory at once, and we can start serving the response
     # immediately.
     feedback = fetch_feedback(current_user.id)
-    output = stream_json_array(_feedback_to_api(fb=fb) for fb in feedback)
+    output = stream_json_array(fb.to_api() for fb in feedback)
 
     response = Response(stream_with_context(output))
     response.headers["Content-Disposition"] = "attachment; filename=" + filename
@@ -218,8 +219,8 @@ def delete():
             delete_user(current_user.musicbrainz_id)
             flash.success("Successfully deleted account for %s." % current_user.musicbrainz_id)
             return redirect(url_for('index.index'))
-        except Exception as e:
-            current_app.logger.error('Error while deleting %s: %s', current_user.musicbrainz_id, str(e))
+        except Exception:
+            current_app.logger.error('Error while deleting user: %s', current_user.musicbrainz_id, exc_info=True)
             flash.error('Error while deleting user %s, please try again later.' % current_user.musicbrainz_id)
             return redirect(url_for('profile.info'))
 
@@ -253,8 +254,8 @@ def delete_listens():
             delete_listens_history(current_user.musicbrainz_id)
             flash.info('Successfully deleted listens for %s.' % current_user.musicbrainz_id)
             return redirect(url_for('user.profile', user_name=current_user.musicbrainz_id))
-        except Exception as e:
-            current_app.logger.error('Error while deleting listens for %s: %s', current_user.musicbrainz_id, str(e))
+        except Exception:
+            current_app.logger.error('Error while deleting listens for user: %s', current_user.musicbrainz_id, exc_info=True)
             flash.error('Error while deleting listens for %s, please try again later.' % current_user.musicbrainz_id)
             return redirect(url_for('profile.info'))
 

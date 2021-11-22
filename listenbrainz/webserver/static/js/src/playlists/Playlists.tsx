@@ -16,6 +16,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { sanitize } from "dompurify";
 import * as Sentry from "@sentry/react";
+import { Integrations } from "@sentry/tracing";
 import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
@@ -209,6 +210,7 @@ export default class UserPlaylists extends React.Component<
           playlists: playlists.filter(
             (pl) => getPlaylistId(pl) !== getPlaylistId(playlist)
           ),
+          playlistSelectedForOperation: undefined,
         },
         newAlert.bind(
           this,
@@ -232,7 +234,8 @@ export default class UserPlaylists extends React.Component<
     isPublic: boolean,
     // Not sure what to do with those yet
     collaborators: string[],
-    id?: string
+    id?: string,
+    onSuccessCallback?: () => void
   ): Promise<void> => {
     const { newAlert } = this.props;
     const { currentUser } = this.context;
@@ -297,9 +300,12 @@ export default class UserPlaylists extends React.Component<
         newPlaylistId,
         currentUser.auth_token
       );
-      this.setState((prevState) => ({
-        playlists: [JSPFObject.playlist, ...prevState.playlists],
-      }));
+      this.setState(
+        (prevState) => ({
+          playlists: [JSPFObject.playlist, ...prevState.playlists],
+        }),
+        onSuccessCallback
+      );
     } catch (error) {
       newAlert("danger", "Error", error.message);
     }
@@ -337,6 +343,11 @@ export default class UserPlaylists extends React.Component<
       return;
     }
     try {
+      // Owner can't be collaborator
+      const collaboratorsWithoutOwner = collaborators.filter(
+        (username) =>
+          username.toLowerCase() !== playlistToEdit.creator.toLowerCase()
+      );
       const editedPlaylist: JSPFPlaylist = {
         ...playlistToEdit,
         annotation: description,
@@ -344,7 +355,7 @@ export default class UserPlaylists extends React.Component<
         extension: {
           [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
             public: isPublic,
-            collaborators,
+            collaborators: collaboratorsWithoutOwner,
           },
         },
       };
@@ -356,7 +367,10 @@ export default class UserPlaylists extends React.Component<
 
       // Once API call succeeds, update playlist in state
       playlistsCopy[playlistIndex] = editedPlaylist;
-      this.setState({ playlists: playlistsCopy });
+      this.setState({
+        playlists: playlistsCopy,
+        playlistSelectedForOperation: undefined,
+      });
     } catch (error) {
       newAlert("danger", "Error", error.message);
     }
@@ -683,6 +697,7 @@ document.addEventListener("DOMContentLoaded", () => {
     current_user,
     spotify,
     youtube,
+    sentry_traces_sample_rate,
   } = globalReactProps;
   const {
     playlists,
@@ -694,7 +709,11 @@ document.addEventListener("DOMContentLoaded", () => {
   } = reactProps;
 
   if (sentry_dsn) {
-    Sentry.init({ dsn: sentry_dsn });
+    Sentry.init({
+      dsn: sentry_dsn,
+      integrations: [new Integrations.BrowserTracing()],
+      tracesSampleRate: sentry_traces_sample_rate,
+    });
   }
 
   const UserPlaylistsWithAlertNotifications = withAlertNotifications(

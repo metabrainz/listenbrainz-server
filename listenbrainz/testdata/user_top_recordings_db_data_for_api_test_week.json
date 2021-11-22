@@ -1,7 +1,7 @@
 {
     "count": 25,
     "from_ts": 1588632658,
-    "recordings": [
+    "data": [
         {
             "artist_name": "Ellie Goulding",
             "artist_mbids": [
@@ -353,5 +353,6 @@
             "release_msid": null
         }
     ],
-    "to_ts": 1589237458
+    "to_ts": 1589237458,
+    "stats_range": "week"
 }

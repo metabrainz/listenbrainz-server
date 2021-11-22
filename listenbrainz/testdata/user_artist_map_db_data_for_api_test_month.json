@@ -1,5 +1,5 @@
 {
-  "artist_map": [
+  "data": [
     {
       "artist_count": 6,
       "country": "GBR",
@@ -54,5 +54,6 @@
   "from_ts": 1588373458,
   "last_updated": 1599918137,
   "to_ts": 1589496658,
-  "user_id": "ishaanshah"
+  "user_id": "ishaanshah",
+  "stats_range": "month"
 }

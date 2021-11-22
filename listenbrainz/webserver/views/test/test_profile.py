@@ -326,18 +326,21 @@ class ProfileViewsTestCase(IntegrationTestCase):
             'score': 1,
             'user_id': None,
             'created': None,
+            'track_metadata': None,
         })
         self.assertDictEqual(results[1], {
             'recording_msid': '7ad53fd7-5b40-4e13-b680-52716fb86d5f',
             'score': 1,
             'user_id': None,
             'created': None,
+            'track_metadata': None,
         })
         self.assertDictEqual(results[2], {
             'recording_msid': '7816411a-2cc6-4e43-b7a1-60ad093c2c31',
             'score': -1,
             'user_id': None,
             'created': None,
+            'track_metadata': None,
         })
 
     def test_export_feedback_streaming_not_logged_in(self):
