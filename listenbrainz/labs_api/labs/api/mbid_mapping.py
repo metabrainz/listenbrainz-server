@@ -7,7 +7,7 @@ class MBIDMappingQuery(Query):
        Thin wrapper around the MBIDMapper -- see mbid_mapper.py for details.
     """
 
-    def __init__(self, timeout, remove_stop_words, debug=False):
+    def __init__(self, timeout=10, remove_stop_words=True, debug=False):
         self.mapper = MBIDMapper(timeout=timeout, remove_stop_words=remove_stop_words, debug=debug)
 
     def names(self):

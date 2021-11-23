@@ -35,7 +35,7 @@ def process_listens(app, listens, priority):
         stats["listen_count"] += len(msids)
 
     # To debug the mapping, set this to True or a specific priority
-    debug = False  # (priority == RECHECK_LISTEN)
+    debug = False   #(priority == RECHECK_LISTEN)
 
     if len(msids):
 
@@ -52,6 +52,10 @@ def process_listens(app, listens, priority):
                 result = curs.fetchone()
                 if not result:
                     break
+
+                if debug:
+                    app.logger.info(f"Remove {str(result[0])}, since a match exists")
+
                 del msids[str(result[0])]
                 stats["processed"] += 1
                 skipped += 1
@@ -163,6 +167,9 @@ def lookup_listens(app, listens, stats, exact, debug):
     if len(listens) == 0:
         return ([], [], stats)
 
+    if debug:
+        app.logger.info(f"""Lookup (exact {exact}) '{listens[0]["data"]["artist_name"]}', '{listens[0]["data"]["track_name"]}'""")
+
     if exact:
         q = ArtistCreditRecordingLookupQuery(debug=debug)
     else:
@@ -177,6 +184,7 @@ def lookup_listens(app, listens, stats, exact, debug):
     hits = q.fetch(params)
     for hit in sorted(hits, key=itemgetter("index"), reverse=True):
         listen = listens[hit["index"]]
+
         if exact:
             hit["match_type"] = MATCH_TYPE_EXACT_MATCH
         stats[MATCH_TYPES[hit["match_type"]]] += 1
@@ -196,5 +204,9 @@ def lookup_listens(app, listens, stats, exact, debug):
         listens.pop(hit["index"])
         if len(listens) == 0:
             break
+
+    else:
+        if debug:
+            app.logger.info("No matches returned.")
 
     return rows, listens, stats
