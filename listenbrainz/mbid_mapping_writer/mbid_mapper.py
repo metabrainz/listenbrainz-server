@@ -226,7 +226,7 @@ class MBIDMapper():
                                 <th>recording name</th>
                                 <th>release name</th>
                                 <th>artist credit name</th>
-                                <th>recording MBID<th>
+                                <th>recording MBID</th>
                                 <th>release MBID</th>
                                 <th>artist_credit_id</th>
                             </tr>
