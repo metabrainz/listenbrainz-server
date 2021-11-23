@@ -135,7 +135,7 @@ json_response_0 = [
         "artist_mbids": ["8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"],
         "artist_credit_name": "Portishead",
         "index": 2,
-        "match_type": 4,
+        "match_type": 1,
         "recording_arg": "glory box (feat. your mom)",
         "recording_mbid": "145f5c43-0ac2-4886-8b09-63d0e92ded5d",
         "recording_name": "Glory Box",
