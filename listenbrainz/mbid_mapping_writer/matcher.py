@@ -42,7 +42,7 @@ def process_listens(app, listens, priority):
         # Remove msids for which we already have a match, unless
         # its timestamp is 0, which means we should re-check the item
         with timescale.engine.connect() as connection:
-            query = """SELECT recording_msid 
+            query = """SELECT recording_msid, match_type
                          FROM mbid_mapping
                         WHERE recording_msid IN :msids
                           AND last_updated != '1970-01-01'"""
@@ -58,6 +58,8 @@ def process_listens(app, listens, priority):
 
                 del msids[str(result[0])]
                 stats["processed"] += 1
+                if result[1] != 'no_match':
+                    stats["listens_matched"] += 1
                 skipped += 1
 
         if len(msids) == 0:

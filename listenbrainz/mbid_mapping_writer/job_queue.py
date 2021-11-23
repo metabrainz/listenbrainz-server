@@ -262,8 +262,7 @@ class MappingJobQueue(threading.Thread):
                         low_quality_rate=stats["low_quality"] - stats["last_low_quality"],
                         no_match_rate=stats["no_match"] - stats["last_no_match"],
                         listens_per_sec=listens_per_sec,
-                        listen_count=stats["listen_count"],
-                        listens_matched=stats["listens_matched"],
+                        listens_matched_p=stats["listens_matched"] / (stats["listen_count"] or .000001) * 100.0,
                         legacy_index_date=datetime.date.fromtimestamp(self.legacy_listens_index_date).strftime("%Y-%m-%d"))
 
             stats["last_exact_match"] = stats["exact_match"]
@@ -271,6 +270,9 @@ class MappingJobQueue(threading.Thread):
             stats["last_med_quality"] = stats["med_quality"]
             stats["last_low_quality"] = stats["low_quality"]
             stats["last_no_match"] = stats["no_match"]
+            stats["listens_matched"] = 0
+            stats["listen_count"] = 0
+
 
     def run(self):
         """ main thread entry point"""
