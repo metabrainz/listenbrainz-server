@@ -29,6 +29,6 @@ class ExplainMBIDMappingQuery(Query):
         results = []
         self.mapper.search(params[0]["artist_credit_name"], params[0]["recording_name"])
         for line in self.mapper.read_log():
-            results.append({ "log_lines": line })
+            results.append({"log_lines": line})
 
         return results
