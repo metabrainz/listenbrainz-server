@@ -15,5 +15,4 @@ class UserArtistRecord(BaseModel):
     # to add an empty field to stats API response, for compatibility
     artist_msid: Optional[str]
 
-    _validate_artist_msid: classmethod = validator("artist_msid", allow_reuse=True)(check_valid_uuid)
     _validate_artist_mbids: classmethod = validator("artist_mbids", each_item=True, allow_reuse=True)(check_valid_uuid)

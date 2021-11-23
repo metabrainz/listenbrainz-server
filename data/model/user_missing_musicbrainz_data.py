@@ -13,13 +13,6 @@ class UserMissingMusicBrainzDataRecord(BaseModel):
     release_name: Optional[str]
     recording_name: constr(min_length=1)
 
-    _validate_uuids: classmethod = validator(
-        "artist_msid",
-        "recording_msid",
-        "release_msid",
-        allow_reuse=True
-    )(check_valid_uuid)
-
 
 class UserMissingMusicBrainzDataJson(BaseModel):
     """ Model for the JSON stored in the missing_musicbrainz_data table's data column
