@@ -1,8 +1,7 @@
-from typing import Dict, List, Union
+from typing import List
 
 from pydantic import BaseModel, NonNegativeInt, constr
 
-from data.model.sitewide_artist_stat import SitewideArtistRecord
 from data.model.user_entity import UserEntityRecord
 
 

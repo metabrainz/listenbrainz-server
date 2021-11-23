@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional, List
 from pydantic import BaseModel, validator, constr, NonNegativeInt
-from listenbrainz.db.model.validators import check_valid_uuid, check_datetime_has_tzinfo
+from data.model.validators import check_valid_uuid, check_datetime_has_tzinfo
 from listenbrainz.messybrainz import load_recordings_from_msids, load_recordings_from_mbids
 
 DAYS_UNTIL_UNPIN = 7  # default = unpin after one week

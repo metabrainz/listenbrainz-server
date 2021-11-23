@@ -3,8 +3,7 @@
 """
 from pydantic import BaseModel, NonNegativeInt, constr
 
-from datetime import datetime
-from typing import Optional, List
+from typing import List
 
 
 class UserDailyActivityRecord(BaseModel):

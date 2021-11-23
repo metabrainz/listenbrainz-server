@@ -1,8 +1,6 @@
-import uuid
-
 from datetime import datetime
 from pydantic import BaseModel, NonNegativeInt, validator, constr
-from listenbrainz.db.model.validators import check_valid_uuid
+from data.model.validators import check_valid_uuid
 
 
 def get_allowed_ratings():

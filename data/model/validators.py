@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
 
 def check_valid_uuid(param: str):

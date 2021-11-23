@@ -3,7 +3,7 @@ import datetime
 from typing import Dict, List, Optional
 
 from pydantic import BaseModel, validator, NonNegativeInt, constr
-from listenbrainz.db.model.validators import check_valid_uuid
+from data.model.validators import check_valid_uuid
 
 class PlaylistRecording(BaseModel):
     """A recording that is part of a playlist"""
