@@ -11,7 +11,7 @@ from Levenshtein import distance
 from listenbrainz import config
 from listenbrainz.mbid_mapping_writer.stop_words import ENGLISH_STOP_WORDS
 
-DEFAULT_TIMEOUT=2
+DEFAULT_TIMEOUT = 2
 COLLECTION_NAME = "mbid_mapping_latest"
 MATCH_TYPES = ('no_match', 'low_quality', 'med_quality', 'high_quality', 'exact_match')
 MATCH_TYPE_NO_MATCH = 0
@@ -23,7 +23,8 @@ MATCH_TYPE_EXACT_MATCH = 4
 MATCH_TYPE_HIGH_QUALITY_MAX_EDIT_DISTANCE = 2
 MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE = 5
 
-ENGLISH_STOP_WORD_INDEX = { k:1 for k in ENGLISH_STOP_WORDS }
+ENGLISH_STOP_WORD_INDEX = {k: 1 for k in ENGLISH_STOP_WORDS}
+
 
 def prepare_query(text):
     return unidecode(re.sub(" +", " ", re.sub(r'[^\w ]+', '', text)).strip().lower())
@@ -127,8 +128,8 @@ class MBIDMapper():
 
             # If we detuned one or more fields and it matches, the best it can get is a low quality match
             if (self.is_ac_detuned or self.is_r_detuned) and \
-                ac_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and \
-                r_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE:
+                    ac_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and \
+                    r_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE:
                 self._log(Markup(f"""<b>low quality</b>: ac_detuned {self.is_ac_detuned}, r_detuned {self.is_r_detuned},
                                      ac_dist {ac_dist:.3f} r_dist {r_dist:.3f}"""))
                 return (hit, MATCH_TYPE_LOW_QUALITY)
@@ -147,7 +148,7 @@ class MBIDMapper():
 
             # If both fields are above the medium quality threshold, call it medium quality
             if ac_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and \
-                r_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE:
+                    r_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE:
                 self._log(Markup(f"""<b>med quality</b>: ac_detuned {self.is_ac_detuned}, r_detuned {self.is_r_detuned},
                                      ac_dist {ac_dist:.3f} r_dist {r_dist:.3f}"""))
                 return (hit, MATCH_TYPE_MED_QUALITY)
@@ -279,4 +280,4 @@ class MBIDMapper():
                 'release_mbid': hit['document']['release_mbid'],
                 'recording_name': hit['document']['recording_name'],
                 'recording_mbid': hit['document']['recording_mbid'],
-                'match_type': match_type }
+                'match_type': match_type}

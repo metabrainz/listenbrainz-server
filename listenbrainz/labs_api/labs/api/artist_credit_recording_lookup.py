@@ -73,6 +73,10 @@ class ArtistCreditRecordingLookupQuery(Query):
                     results.append(data)
 
                     if self.debug:
-                        self.log_lines.append("exact match: '%s' '%s' %s" % (data['artist_credit_name'], data['recording_name'], data['recording_mbid']))
+                        self.log_lines.append(
+                            "exact match: '%s' '%s' %s" %
+                            (data['artist_credit_name'],
+                             data['recording_name'],
+                             data['recording_mbid']))
 
                 return results

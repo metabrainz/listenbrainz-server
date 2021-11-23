@@ -35,7 +35,8 @@ def process_listens(app, listens, priority):
         stats["listen_count"] += len(msids)
 
     # To debug the mapping, set this to True or a specific priority
-    debug = False   #(priority == RECHECK_LISTEN)
+    # e.g. (priority == RECHECK_LISTEN)
+    debug = False   
 
     if len(msids):
 

@@ -160,6 +160,7 @@ json_response_1 = [
     }
 ]
 
+
 class MainTestCase(flask_testing.TestCase):
 
     def create_app(self):
