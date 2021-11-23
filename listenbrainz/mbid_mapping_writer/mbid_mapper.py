@@ -4,6 +4,7 @@ from time import sleep
 import typesense
 import typesense.exceptions
 import requests.exceptions
+from markupsafe import Markup
 from unidecode import unidecode
 from Levenshtein import distance
 
@@ -219,14 +220,17 @@ class MBIDMapper():
                 (hit, match_type) = self.evaluate_hit(
                     hit, artist_credit_name_p, recording_name_p)
                 if hit:
-                    self._log("""<table>
+                    self._log(Markup(
+                        """<table>
                              <td>recording name</td><td>""" + str(hit['document']["recording_name"]) + """</td>
                              <td>release name</td><td>""" + str(hit['document']["release_name"]) + """</td>
                              <td>artist credit name</td><td>""" + str(hit['document']["artist_credit_name"]) + """</td>
                              <td>recording MBID<td>""" + str(hit['document']["recording_mbid"]) + """</td>
                              <td>release MBID</td><td>""" + str(hit['document']["release_mbid"]) + """</td>
                              <td>artist_credit_id</td><td>""" + str(hit['document']["artist_credit_id"]) + """</td>
-                           </table>""")
+                           </table>
+                        """
+                    ))
 
             if not hit:
                 hit = None
