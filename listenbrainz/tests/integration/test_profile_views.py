@@ -1,7 +1,7 @@
 import json
 import time
 
-from flask import url_for, current_app
+from flask import url_for, current_app, g
 from redis import Redis
 from brainzutils import cache
 
@@ -106,7 +106,10 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.assertEqual(json.loads(resp.data)['payload']['count'], 3)
 
         # now delete all the listens we just sent
-        resp = self.client.post(url_for('profile.delete_listens'), data={'token': self.user['auth_token']})
+        # we do a get request first to put the CSRF token in the flask global context
+        # so that we can access it for using in the post request in the next step
+        self.client.get(url_for('profile.delete_listens'))
+        resp = self.client.post(url_for('profile.delete_listens'), data={'csrf_token': g.csrf_token})
         self.assertRedirects(resp, url_for('user.profile', user_name=self.user['musicbrainz_id']))
 
         time.sleep(2)

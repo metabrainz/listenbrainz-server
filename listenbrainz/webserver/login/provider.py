@@ -13,6 +13,16 @@ _musicbrainz = None
 _session_key = None
 
 
+class MusicBrainzAuthSessionError(Exception):
+    """Raised when there is an error parsing the oauth response from MusicBrainz"""
+    pass
+
+
+class MusicBrainzAuthNoEmailError(Exception):
+    """Raised when a user has no email address on MusicBrainz"""
+    pass
+
+
 def init(client_id, client_secret, session_key='musicbrainz'):
     global _musicbrainz, _session_key
     _musicbrainz = OAuth2Service(
@@ -26,16 +36,28 @@ def init(client_id, client_secret, session_key='musicbrainz'):
     _session_key = session_key
 
 
+def musicbrainz_auth_session_decoder(message):
+    """Decode the json oauth response from MusicBrainz, returning {} if the response isn't valid json"""
+    try:
+        return ujson.loads(message.decode("utf-8"))
+    except ValueError:
+        return {}
+
+
 def get_user():
     """Function should fetch user data from database, or, if necessary, create it, and return it."""
-    s = _musicbrainz.get_auth_session(data={
-        'code': _fetch_data('code'),
-        'grant_type': 'authorization_code',
-        'redirect_uri': url_for('login.musicbrainz_post', _external=True)
-    }, decoder=lambda b: ujson.loads(b.decode("utf-8")))
-    data = s.get('oauth2/userinfo').json()
-    musicbrainz_id = data.get('sub')
-    musicbrainz_row_id = data.get('metabrainz_user_id')
+    try:
+        s = _musicbrainz.get_auth_session(data={
+            'code': _fetch_data('code'),
+            'grant_type': 'authorization_code',
+            'redirect_uri': url_for('login.musicbrainz_post', _external=True)
+        }, decoder=musicbrainz_auth_session_decoder)
+        data = s.get('oauth2/userinfo').json()
+        musicbrainz_id = data.get('sub')
+        musicbrainz_row_id = data.get('metabrainz_user_id')
+    except KeyError:
+        # get_auth_session raises a KeyError if it was unable to get the required data from `code`
+        raise MusicBrainzAuthSessionError()
 
     user = db_user.get_by_mb_row_id(musicbrainz_row_id, musicbrainz_id)
     user_email = None
@@ -45,7 +67,7 @@ def get_user():
     if user is None:  # a new user is trying to sign up
         if current_app.config["REJECT_NEW_USERS_WITHOUT_EMAIL"] and user_email is None:
             # if flag is set to True and the user does not have an email do not allow to sign up
-            return None
+            raise MusicBrainzAuthNoEmailError()
         db_user.create(musicbrainz_row_id, musicbrainz_id, email=user_email)
         user = db_user.get_by_mb_id(musicbrainz_id, fetch_email=True)
         ts.set_empty_cache_values_for_user(musicbrainz_id)

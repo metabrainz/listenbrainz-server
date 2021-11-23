@@ -2,10 +2,11 @@ import string
 import random
 
 import ujson
-from flask import current_app
+from flask import current_app, request
 from flask_login import current_user
 
-from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user
+from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user, \
+    get_current_critiquebrainz_user
 
 
 REJECT_LISTENS_WITHOUT_EMAIL_ERROR = \
@@ -57,13 +58,29 @@ def get_global_props():
             "name": current_user.musicbrainz_id,
             "auth_token": current_user.auth_token,
         }
-    spotify_user = get_current_spotify_user()
-    youtube_user = get_current_youtube_user()
+
+    sentry_config = current_app.config.get("LOG_SENTRY", {})
+
     props = {
         "api_url": current_app.config["API_URL"],
-        "sentry_dsn": current_app.config.get("LOG_SENTRY", {}).get("dsn"),
+        "sentry_dsn": sentry_config.get("dsn"),
         "current_user": current_user_data,
-        "spotify": spotify_user,
-        "youtube": youtube_user,
+        "spotify": get_current_spotify_user(),
+        "youtube": get_current_youtube_user(),
+        "critiquebrainz": get_current_critiquebrainz_user(),
+        "sentry_traces_sample_rate": sentry_config.get("traces_sample_rate", 0.0),
     }
     return ujson.dumps(props)
+
+
+def parse_boolean_arg(name, default=None):
+    from listenbrainz.webserver.errors import APIBadRequest
+    value = request.args.get(name)
+    if not value:
+        return default
+
+    value = value.lower()
+    if value not in ["true", "false"]:
+        raise APIBadRequest("Invalid %s argument: %s. Must be 'true' or 'false'" % (name, value))
+
+    return True if value == "true" else False

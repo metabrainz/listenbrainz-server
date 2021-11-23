@@ -25,12 +25,12 @@ def search(query):
         'num_typos': 5
     }
 
-    hits = client.collections['recording_artist_credit_mapping'].documents.search(search_parameters)
+    hits = client.collections['mbid_mapping_latest'].documents.search(search_parameters)
 
     output = []
     for hit in hits['hits']:
         output.append({'artist_credit_name': hit['document']['artist_credit_name'],
-                       'artist_credit_id': hit['document']['artist_credit_id'],
+                       'artist_mbids': hit['document']['artist_mbids'],
                        'release_name': hit['document']['release_name'],
                        'release_mbid': hit['document']['release_mbid'],
                        'recording_name': hit['document']['recording_name'],

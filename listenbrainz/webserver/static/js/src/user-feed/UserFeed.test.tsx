@@ -33,7 +33,7 @@ import APIService from "../APIService";
 const props = {
   ...timelineProps,
   events: timelineProps.events as TimelineEvent[],
-  newAlert: () => {},
+  newAlert: jest.fn(),
 };
 
 const GlobalContextMock = {
@@ -46,6 +46,10 @@ const GlobalContextMock = {
 describe("<UserFeed />", () => {
   beforeAll(() => {
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
+    // Font Awesome generates a random hash ID for each icon everytime.
+    // Mocking Math.random() fixes this
+    // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
+    jest.spyOn(global.Math, "random").mockImplementation(() => 0);
   });
   it("renders correctly", () => {
     const wrapper = mount<UserFeedPage>(
@@ -74,8 +78,6 @@ describe("<UserFeed />", () => {
     );
     const instance = wrapper.instance();
     expect(wrapper.find(BrainzPlayer)).toHaveLength(1);
-    // eslint-disable-next-line dot-notation
-    expect(instance["brainzPlayer"].current).toBeInstanceOf(BrainzPlayer);
   });
 
   it("renders the correct number of timeline events", () => {
@@ -150,6 +152,26 @@ describe("<UserFeed />", () => {
     expect(content.exists()).toBeFalsy();
     const time = notificationEvent.find(".event-time");
     expect(time.text()).toEqual("Feb 16, 11:17 AM");
+  });
+
+  it("renders recording pin events", () => {
+    const wrapper = mount<UserFeedPage>(
+      <GlobalAppContext.Provider value={GlobalContextMock}>
+        <UserFeedPage {...props} />
+      </GlobalAppContext.Provider>
+    );
+    const recEvent = wrapper.find("#timeline > ul >li").at(11);
+    const description = recEvent.find(".event-description-text");
+    expect(description.text()).toEqual("jdaok pinned a recording");
+    const content = recEvent.find(".event-content");
+    expect(content.exists()).toBeTruthy();
+    expect(content.children()).toHaveLength(1);
+    const time = recEvent.find(".event-time");
+    expect(time.text()).toEqual("Feb 16, 10:44 AM");
+
+    // Ensure additional details are rendered if provided
+    const additionalContent = content.find(".additional-content");
+    expect(additionalContent.text()).toEqual('"Very good..."');
   });
 
   describe("Pagination", () => {

@@ -3,12 +3,13 @@ import requests
 
 ROOT = '127.0.0.1'
 
-def set_latest_import(timestamp, token):
+def set_latest_import(timestamp, token, service="lastfm"):
     """Sets the time of the latest import.
 
     Args:
         timestamp: Unix epoch to set latest import to.
         token: the auth token of the user you're setting latest_import of
+        service: service to set latest import time of.
 
     Returns:
         The JSON response if there's an OK status.
@@ -20,7 +21,8 @@ def set_latest_import(timestamp, token):
     response = requests.post(
         url="http://{0}/1/latest-import".format(ROOT),
         json={
-            "ts": timestamp
+            "ts": timestamp,
+            "service": service
         },
         headers={
             "Authorization": "Token {0}".format(token),

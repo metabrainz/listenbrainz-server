@@ -10,7 +10,13 @@ const props = {
   onPlayerPausedChange: (paused: boolean) => {},
   onProgressChange: (progressMs: number) => {},
   onDurationChange: (durationMs: number) => {},
-  onTrackInfoChange: (title: string, artist?: string) => {},
+  onTrackInfoChange: (
+    title: string,
+    trackId: string,
+    artist?: string,
+    album?: string,
+    artwork?: ReadonlyArray<MediaImage>
+  ) => {},
   onTrackEnd: () => {},
   onTrackNotFound: () => {},
   handleError: (error: BrainzPlayerError, title?: string) => {},
@@ -126,6 +132,8 @@ describe("SoundcloudPlayer", () => {
         title: "Dope track",
         user: { username: "Emperor Norton the 1st" },
         full_duration: 420,
+        permalink_url: "some/url/to/track",
+        artwork_url: "some/url/to/artwork",
       })
     );
 
@@ -140,7 +148,10 @@ describe("SoundcloudPlayer", () => {
     expect(onPlayerPausedChange).toHaveBeenCalledWith(false);
     expect(onTrackInfoChange).toHaveBeenCalledWith(
       "Dope track",
-      "Emperor Norton the 1st"
+      "some/url/to/track",
+      "Emperor Norton the 1st",
+      undefined,
+      [{ src: "some/url/to/artwork" }]
     );
     expect(onProgressChange).toHaveBeenCalledWith(456);
     expect(onDurationChange).toHaveBeenCalledWith(420);

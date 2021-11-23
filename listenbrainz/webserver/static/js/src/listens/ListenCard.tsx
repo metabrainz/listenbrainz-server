@@ -1,140 +1,167 @@
 import * as React from "react";
-import { get as _get } from "lodash";
-import MediaQuery from "react-responsive";
+import { get as _get, has as _has, isEqual, isNil } from "lodash";
 import {
   faMusic,
-  faHeart,
-  faHeartBroken,
   faEllipsisV,
+  faPlay,
+  faCommentDots,
+  faExternalLinkAlt,
 } from "@fortawesome/free-solid-svg-icons";
+import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { getArtistLink, getTrackLink, preciseTimestamp } from "../utils";
+import {
+  faSoundcloud,
+  faSpotify,
+  faYoutube,
+} from "@fortawesome/free-brands-svg-icons";
+import {
+  getArtistLink,
+  getTrackLink,
+  preciseTimestamp,
+  fullLocalizedDateFromTimestampOrISODate,
+  getRecordingMBID,
+  getAlbumArtFromListenMetadata,
+  getReleaseMBID,
+} from "../utils";
 import GlobalAppContext from "../GlobalAppContext";
 import Card from "../components/Card";
 import ListenControl from "./ListenControl";
+import ListenFeedbackComponent from "./ListenFeedbackComponent";
+import YoutubePlayer from "../YoutubePlayer";
+import SpotifyPlayer from "../SpotifyPlayer";
+import SoundcloudPlayer from "../SoundcloudPlayer";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
 export type ListenCardProps = {
   listen: Listen;
-  mode: ListensListMode;
   className?: string;
-  currentFeedback: ListenFeedBack;
-  isCurrentUser: Boolean;
-  playListen: (listen: Listen) => void;
-  removeListenFromListenList: (listen: Listen) => void;
-  updateFeedback: (recordingMsid: string, score: ListenFeedBack) => void;
-  updateRecordingToPin: (recordingToPin: Listen) => void;
+  currentFeedback?: ListenFeedBack | RecommendationFeedBack | null;
+  showTimestamp: boolean;
+  showUsername: boolean;
+  // Only used when not passing a custom feedbackComponent
+  updateFeedbackCallback?: (
+    recordingMsid: string,
+    score: ListenFeedBack | RecommendationFeedBack
+  ) => void;
   newAlert: (
     alertType: AlertType,
     title: string,
     message: string | JSX.Element
   ) => void;
+  // This show under the first line of listen details. It's meant for reviews, etc.
+  additionalContent?: string | JSX.Element;
+  thumbnail?: JSX.Element;
+  // The default details (recording name, artist name) can be replaced
+  listenDetails?: JSX.Element;
+  compact?: boolean;
+  // The default Listen fedback (love/hate) can be replaced
+  feedbackComponent?: JSX.Element;
+  // These go in the dropdown menu
+  additionalMenuItems?: JSX.Element;
 };
 
 type ListenCardState = {
-  isDeleted: Boolean;
-  feedback: ListenFeedBack;
+  isCurrentlyPlaying: boolean;
+  thumbnailSrc?: string; // Full URL to the CoverArtArchive thumbnail
 };
 
 export default class ListenCard extends React.Component<
   ListenCardProps,
   ListenCardState
 > {
+  static defaultThumbnailSrc: string = "/static/img/cover-art-placeholder.jpg";
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
-
-  playListen: (listen: Listen) => void;
 
   constructor(props: ListenCardProps) {
     super(props);
 
     this.state = {
-      isDeleted: false,
-      feedback: props.currentFeedback || 0,
+      isCurrentlyPlaying: false,
     };
-    this.playListen = props.playListen.bind(this, props.listen);
   }
 
-  componentDidUpdate(prevProps: ListenCardProps) {
-    const { currentFeedback } = this.props;
-    if (currentFeedback !== prevProps.currentFeedback) {
-      this.setState({ feedback: currentFeedback });
+  async componentDidMount() {
+    window.addEventListener("message", this.receiveBrainzPlayerMessage);
+    await this.getCoverArt();
+  }
+
+  async componentDidUpdate(oldProps: ListenCardProps) {
+    const { listen } = this.props;
+    if (Boolean(listen) && !isEqual(listen, oldProps.listen)) {
+      await this.getCoverArt();
     }
   }
 
-  submitFeedback = async (score: ListenFeedBack) => {
-    const { listen, isCurrentUser, updateFeedback } = this.props;
-    const { APIService, currentUser } = this.context;
-    // const { submitFeedback } = APIService;
-    if (isCurrentUser && currentUser?.auth_token) {
-      const recordingMSID = _get(
-        listen,
-        "track_metadata.additional_info.recording_msid"
-      );
+  componentWillUnmount() {
+    window.removeEventListener("message", this.receiveBrainzPlayerMessage);
+  }
 
-      try {
-        const status = await APIService.submitFeedback(
-          currentUser.auth_token,
-          recordingMSID,
-          score
-        );
-        if (status === 200) {
-          this.setState({ feedback: score });
-          updateFeedback(recordingMSID, score);
-        }
-      } catch (error) {
-        this.handleError(error, "Error while submitting feedback");
-      }
+  async getCoverArt() {
+    const { spotifyAuth } = this.context;
+    const { listen } = this.props;
+    const albumArtSrc = await getAlbumArtFromListenMetadata(
+      listen,
+      spotifyAuth
+    );
+    if (albumArtSrc) {
+      this.setState({ thumbnailSrc: albumArtSrc });
+    }
+  }
+
+  playListen = () => {
+    const { listen } = this.props;
+    const { isCurrentlyPlaying } = this.state;
+    if (isCurrentlyPlaying) {
+      return;
+    }
+    window.postMessage(
+      { brainzplayer_event: "play-listen", payload: listen },
+      window.location.origin
+    );
+  };
+
+  /** React to events sent by BrainzPlayer */
+  receiveBrainzPlayerMessage = (event: MessageEvent) => {
+    if (event.origin !== window.location.origin) {
+      // Received postMessage from different origin, ignoring it
+      return;
+    }
+    const { brainzplayer_event, payload } = event.data;
+    switch (brainzplayer_event) {
+      case "current-listen-change":
+        this.onCurrentListenChange(payload);
+        break;
+      default:
+      // do nothing
     }
   };
 
-  deleteListen = async () => {
-    const { listen, isCurrentUser, removeListenFromListenList } = this.props;
-    const { APIService, currentUser } = this.context;
+  onCurrentListenChange = (newListen: BaseListenFormat) => {
+    this.setState({ isCurrentlyPlaying: this.isCurrentlyPlaying(newListen) });
+  };
 
-    if (isCurrentUser && currentUser?.auth_token) {
-      const listenedAt = _get(listen, "listened_at");
-      const recordingMSID = _get(
-        listen,
-        "track_metadata.additional_info.recording_msid"
-      );
-
-      try {
-        const status = await APIService.deleteListen(
-          currentUser.auth_token,
-          recordingMSID,
-          listenedAt
-        );
-        if (status === 200) {
-          this.setState({ isDeleted: true });
-
-          // wait for the animation to finish
-          setTimeout(function removeListen() {
-            removeListenFromListenList(listen);
-          }, 1000);
-        }
-      } catch (error) {
-        this.handleError(error, "Error while deleting listen");
-      }
+  isCurrentlyPlaying = (element: BaseListenFormat): boolean => {
+    const { listen } = this.props;
+    if (isNil(listen)) {
+      return false;
     }
+    return isEqual(element, listen);
   };
 
   recommendListenToFollowers = async () => {
-    const { listen, isCurrentUser, newAlert } = this.props;
+    const { listen, newAlert } = this.props;
     const { APIService, currentUser } = this.context;
 
-    if (isCurrentUser && currentUser?.auth_token) {
+    if (currentUser?.auth_token) {
       const metadata: UserTrackRecommendationMetadata = {
         artist_name: _get(listen, "track_metadata.artist_name"),
         track_name: _get(listen, "track_metadata.track_name"),
         release_name: _get(listen, "track_metadata.release_name"),
-        recording_mbid: _get(
-          listen,
-          "track_metadata.additional_info.recording_mbid"
-        ),
+        recording_mbid: getRecordingMBID(listen),
         recording_msid: _get(
           listen,
           "track_metadata.additional_info.recording_msid"
@@ -177,133 +204,168 @@ export default class ListenCard extends React.Component<
 
   render() {
     const {
+      additionalContent,
       listen,
-      mode,
       className,
-      isCurrentUser,
-      updateRecordingToPin,
+      showUsername,
+      showTimestamp,
+      thumbnail,
+      listenDetails,
+      compact,
+      feedbackComponent,
+      additionalMenuItems,
+      currentFeedback,
+      newAlert,
+      updateFeedbackCallback,
+      ...otherProps
     } = this.props;
-    const { feedback, isDeleted } = this.state;
+    const { isCurrentlyPlaying, thumbnailSrc } = this.state;
+
+    const recordingMSID = _get(
+      listen,
+      "track_metadata.additional_info.recording_msid"
+    );
+    const recordingMBID = getRecordingMBID(listen);
+    const releaseMBID = getReleaseMBID(listen);
+    const spotifyURL = SpotifyPlayer.getSpotifyURLFromListen(listen);
+    const youtubeURL = YoutubePlayer.getYoutubeURLFromListen(listen);
+    const soundcloudURL = SoundcloudPlayer.getSoundcloudURLFromListen(listen);
+
+    const hasRecordingMSID = Boolean(recordingMSID);
+    const enableRecommendButton =
+      _has(listen, "track_metadata.artist_name") &&
+      _has(listen, "track_metadata.track_name") &&
+      hasRecordingMSID;
+
+    // Hide the actions menu if in compact mode or no buttons to be shown
+    const hasActionOptions =
+      additionalMenuItems ||
+      enableRecommendButton ||
+      recordingMBID ||
+      spotifyURL ||
+      youtubeURL ||
+      soundcloudURL;
+    const hideActionsMenu = compact || !hasActionOptions;
+
+    const timeStampForDisplay = (
+      <>
+        {listen.playing_now ? (
+          <span className="listen-time">
+            <FontAwesomeIcon icon={faMusic as IconProp} /> Playing now &#8212;
+          </span>
+        ) : (
+          <span
+            className="listen-time"
+            title={
+              listen.listened_at
+                ? fullLocalizedDateFromTimestampOrISODate(
+                    listen.listened_at * 1000
+                  )
+                : fullLocalizedDateFromTimestampOrISODate(
+                    listen.listened_at_iso
+                  )
+            }
+          >
+            {preciseTimestamp(
+              listen.listened_at_iso || listen.listened_at * 1000
+            )}
+          </span>
+        )}
+      </>
+    );
 
     return (
       <Card
+        {...otherProps}
         onDoubleClick={this.playListen}
-        className={`listen-card row ${className} ${
-          isDeleted ? " deleted" : ""
-        }`}
+        className={`listen-card row ${
+          isCurrentlyPlaying ? "current-listen" : ""
+        }${compact ? " compact" : ""}${
+          additionalContent ? " has-additional-content" : " "
+        } ${className || ""}`}
       >
-        <div
-          className={`${
-            isCurrentUser || mode === "recent" ? " col-xs-9" : " col-xs-12"
-          }`}
-        >
-          <MediaQuery minWidth={768}>
-            <div className="col-xs-8">
-              <div className="track-details">
-                <p title={listen.track_metadata?.track_name}>
-                  {getTrackLink(listen)}
-                </p>
-                <p>
-                  <small
-                    className="text-muted"
-                    title={listen.track_metadata?.artist_name}
-                  >
-                    {getArtistLink(listen)}
-                  </small>
-                </p>
-              </div>
-            </div>
-            <div className="col-xs-4">
-              {listen.playing_now ? (
-                <span className="listen-time text-center text-muted">
-                  <FontAwesomeIcon icon={faMusic as IconProp} /> Playing now
-                </span>
-              ) : (
-                <span
-                  className="listen-time text-center text-muted"
-                  title={
-                    listen.listened_at_iso?.toString() ||
-                    new Date(listen.listened_at * 1000).toISOString()
+        <div className="main-content">
+          {thumbnail || (
+            <div className="listen-thumbnail">
+              {thumbnailSrc ? (
+                <a
+                  href={
+                    releaseMBID
+                      ? `https://musicbrainz.org/release/${releaseMBID}`
+                      : (spotifyURL || youtubeURL || soundcloudURL) ?? ""
                   }
+                  title={listen.track_metadata?.release_name ?? "Cover art"}
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  {preciseTimestamp(
-                    listen.listened_at_iso || listen.listened_at * 1000
-                  )}
-                </span>
+                  <img
+                    src={thumbnailSrc}
+                    alt={listen.track_metadata?.release_name ?? "Cover art"}
+                  />
+                </a>
+              ) : (
+                <a
+                  href="https://musicbrainz.org/doc/How_to_Add_Cover_Art"
+                  title="How can I add missing cover art?"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img
+                    src={ListenCard.defaultThumbnailSrc}
+                    alt="How can I add missing cover art?"
+                  />
+                </a>
               )}
             </div>
-          </MediaQuery>
-          <MediaQuery maxWidth={767}>
-            <div className="col-xs-12">
-              <div className="track-details">
-                <p title={listen.track_metadata?.track_name}>
-                  {getTrackLink(listen)}
-                </p>
-                <p>
-                  <small
-                    className="text-muted"
-                    title={listen.track_metadata?.artist_name}
-                  >
-                    {listen.playing_now ? (
-                      <span className="listen-time text-muted">
-                        <FontAwesomeIcon icon={faMusic as IconProp} /> Playing
-                        now &#8212;
-                      </span>
-                    ) : (
-                      <span
-                        className="listen-time text-muted"
-                        title={
-                          listen.listened_at_iso?.toString() ||
-                          new Date(listen.listened_at * 1000).toISOString()
-                        }
-                      >
-                        {preciseTimestamp(
-                          listen.listened_at_iso || listen.listened_at * 1000
-                        )}
-                        &nbsp; &#8212; &nbsp;
-                      </span>
-                    )}
-                    {getArtistLink(listen)}
-                  </small>
-                </p>
-              </div>
-            </div>
-          </MediaQuery>
-        </div>
-        <div
-          className={`${
-            isCurrentUser || mode === "recent"
-              ? " col-xs-3 text-center"
-              : "hidden"
-          }`}
-        >
-          {mode === "recent" ? (
-            <a
-              href={`/user/${listen.user_name}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {listen.user_name}
-            </a>
+          )}
+          {listenDetails ? (
+            <div className="listen-details">{listenDetails}</div>
           ) : (
+            <div className="listen-details">
+              <div
+                title={listen.track_metadata?.track_name}
+                className="ellipsis-2-lines"
+              >
+                {getTrackLink(listen)}
+              </div>
+              <span
+                className="small text-muted ellipsis"
+                title={listen.track_metadata?.artist_name}
+              >
+                {getArtistLink(listen)}
+              </span>
+            </div>
+          )}
+          <div className="right-section">
+            {(showUsername || showTimestamp) && (
+              <div className="username-and-timestamp">
+                {showUsername && (
+                  <a
+                    href={`/user/${listen.user_name}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={listen.user_name ?? undefined}
+                  >
+                    {listen.user_name}
+                  </a>
+                )}
+                {showTimestamp && timeStampForDisplay}
+              </div>
+            )}
             <div className="listen-controls">
-              {!listen?.playing_now && (
+              {feedbackComponent ?? (
+                <ListenFeedbackComponent
+                  newAlert={newAlert}
+                  listen={listen}
+                  currentFeedback={currentFeedback as ListenFeedBack}
+                  updateFeedbackCallback={updateFeedbackCallback}
+                />
+              )}
+              {hideActionsMenu ? null : (
                 <>
-                  <ListenControl
-                    icon={faHeart}
-                    title="Love"
-                    action={() => this.submitFeedback(feedback === 1 ? 0 : 1)}
-                    className={`${feedback === 1 ? " loved" : ""}`}
-                  />
-                  <ListenControl
-                    icon={faHeartBroken}
-                    title="Hate"
-                    action={() => this.submitFeedback(feedback === -1 ? 0 : -1)}
-                    className={`${feedback === -1 ? " hated" : ""}`}
-                  />
                   <FontAwesomeIcon
                     icon={faEllipsisV as IconProp}
-                    title="Delete"
+                    title="More actions"
                     className="dropdown-toggle"
                     id="listenControlsDropdown"
                     data-toggle="dropdown"
@@ -314,26 +376,84 @@ export default class ListenCard extends React.Component<
                     className="dropdown-menu dropdown-menu-right"
                     aria-labelledby="listenControlsDropdown"
                   >
-                    <ListenControl
-                      title="Recommend to my followers"
-                      action={this.recommendListenToFollowers}
-                    />
-                    <ListenControl
-                      title="Delete Listen"
-                      action={this.deleteListen}
-                    />
-                    <ListenControl
-                      title="Pin this Recording"
-                      action={() => updateRecordingToPin(listen)}
-                      dataToggle="modal"
-                      dataTarget="#PinRecordingModal"
-                    />
+                    {recordingMBID && (
+                      <ListenControl
+                        icon={faExternalLinkAlt}
+                        title="Open in MusicBrainz"
+                        link={`https://musicbrainz.org/recording/${recordingMBID}`}
+                        anchorTagAttributes={{
+                          target: "_blank",
+                          rel: "noopener noreferrer",
+                        }}
+                      />
+                    )}
+                    {spotifyURL && (
+                      <ListenControl
+                        icon={faSpotify}
+                        title="Open in Spotify"
+                        link={spotifyURL}
+                        anchorTagAttributes={{
+                          target: "_blank",
+                          rel: "noopener noreferrer",
+                        }}
+                      />
+                    )}
+                    {youtubeURL && (
+                      <ListenControl
+                        icon={faYoutube}
+                        title="Open in YouTube"
+                        link={youtubeURL}
+                        anchorTagAttributes={{
+                          target: "_blank",
+                          rel: "noopener noreferrer",
+                        }}
+                      />
+                    )}
+                    {soundcloudURL && (
+                      <ListenControl
+                        icon={faSoundcloud}
+                        title="Open in Soundcloud"
+                        link={soundcloudURL}
+                        anchorTagAttributes={{
+                          target: "_blank",
+                          rel: "noopener noreferrer",
+                        }}
+                      />
+                    )}
+                    {enableRecommendButton && (
+                      <ListenControl
+                        icon={faCommentDots}
+                        title="Recommend to my followers"
+                        action={this.recommendListenToFollowers}
+                      />
+                    )}
+                    {additionalMenuItems}
                   </ul>
                 </>
               )}
+              <button
+                title="Play"
+                className="btn-transparent play-button"
+                onClick={this.playListen}
+                type="button"
+              >
+                {isCurrentlyPlaying ? (
+                  <FontAwesomeIcon size="1x" icon={faPlay as IconProp} />
+                ) : (
+                  <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />
+                )}
+              </button>
             </div>
-          )}
+          </div>
         </div>
+        {additionalContent && (
+          <div
+            className="additional-content"
+            title={listen.track_metadata?.track_name}
+          >
+            {additionalContent}
+          </div>
+        )}
       </Card>
     );
   }

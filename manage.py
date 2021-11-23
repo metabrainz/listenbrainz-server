@@ -3,7 +3,8 @@ from datetime import datetime
 import listenbrainz.db.dump_manager as dump_manager
 import listenbrainz.spark.request_manage as spark_request_manage
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data, \
-                                                     refresh_listen_count_aggregate as ts_refresh_listen_count_aggregate
+    refresh_listen_count_aggregate as ts_refresh_listen_count_aggregate
+
 from listenbrainz import db
 from listenbrainz.db import timescale as ts
 from listenbrainz import webserver
@@ -20,6 +21,7 @@ safely_import_config()
 @click.group()
 def cli():
     pass
+
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(
     os.path.realpath(__file__)), 'admin', 'sql')
@@ -264,7 +266,9 @@ def update_user_emails():
 @click.argument("window_size", type=click.IntRange(1, None))
 def set_rate_limits(per_token_limit, per_ip_limit, window_size):
     from brainzutils.ratelimit import set_rate_limits
-    set_rate_limits(per_token_limit, per_ip_limit, window_size)
+    application = webserver.create_app()
+    with application.app_context():
+        set_rate_limits(per_token_limit, per_ip_limit, window_size)
 
 
 @cli.command(name="recalculate_all_user_data")

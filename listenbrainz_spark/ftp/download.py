@@ -86,47 +86,6 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
 
         return mapping
 
-    def get_latest_mapping(self, mapping):
-        """ Get latest mapping name.
-
-            Args:
-                mapping: list of mapping dump names.
-
-            Returns:
-               latest mapping dump name.
-        """
-        # sort the mappings on timestamp
-        def callback(mapping_name):
-            res = re.findall("\\d+", mapping_name)
-            _date = res[0]
-            _time = res[1]
-            return int(_date + _time)
-
-        return sorted(mapping, key=callback)[-1]
-
-    def download_msid_mbid_mapping(self, directory):
-        """ Download latest msid_mbid_mapping to dir passed as an argument.
-
-            Args:
-                directory (str): Dir to save mappings locally.
-
-            Returns:
-                dest_path (str): Local path where mapping has been downloaded.
-                mapping_file_name (str): file name of downloaded mapping.
-        """
-        self.connection.cwd(config.FTP_MSID_MBID_DIR)
-        dump = self.list_dir()
-
-        mapping = self.get_available_dumps(dump, config.MAPPING_NAME_PREFIX)
-
-        mapping_file_name = self.get_latest_mapping(mapping)
-
-        t0 = time.monotonic()
-        logger.info('Downloading {} from FTP...'.format(mapping_file_name))
-        dest_path = self.download_dump(mapping_file_name, directory)
-        logger.info('Done. Total time: {:.2f} sec'.format(time.monotonic() - t0))
-        return dest_path, mapping_file_name
-
     def download_listens(self, directory, listens_dump_id=None, dump_type: DumpType = DumpType.FULL):
         """ Download listens to dir passed as an argument.
 

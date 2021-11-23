@@ -1,6 +1,6 @@
 import { mount } from "enzyme";
 
-import getEntityLink from "./utils";
+import { getEntityLink } from "./utils";
 
 describe("getEntityLink", () => {
   it("renders a link if MBID is provided", () => {

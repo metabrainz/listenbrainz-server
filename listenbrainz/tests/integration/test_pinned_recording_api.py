@@ -1,4 +1,6 @@
 from flask import url_for
+from typing import List
+from unittest.mock import patch
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.pinned_recording as db_pinned_rec
@@ -8,13 +10,17 @@ from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.db.model.pinned_recording import (
     PinnedRecording,
     WritablePinnedRecording,
+    fetch_track_metadata_for_pins,
     DAYS_UNTIL_UNPIN,
     MAX_BLURB_CONTENT_LENGTH,
 )
 import json
 
 
+def fetch_track_metadata_for_pins(pins: List[PinnedRecording]) -> List[PinnedRecording]:
+    return pins
 class PinnedRecAPITestCase(IntegrationTestCase):
+
     def setUp(self):
         super(PinnedRecAPITestCase, self).setUp()
         self.user = db_user.get_or_create(1, "test_user_1")
@@ -238,7 +244,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         pin_to_delete = db_pinned_rec.get_current_pin_for_user(self.user["id"])
 
         response = self.client.post(
-            url_for("pinned_rec_api_bp_v1.delete_pin_for_user", pinned_id=pin_to_delete.row_id),
+            url_for("pinned_rec_api_bp_v1.delete_pin_for_user", row_id=pin_to_delete.row_id),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
         )
 
@@ -259,14 +265,14 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         pin_to_delete = db_pinned_rec.get_current_pin_for_user(self.user["id"])
 
         response = self.client.post(
-            url_for("pinned_rec_api_bp_v1.delete_pin_for_user", pinned_id=pin_to_delete.row_id),
+            url_for("pinned_rec_api_bp_v1.delete_pin_for_user", row_id=pin_to_delete.row_id),
             headers={"Authorization": "Token {}".format("-- This is an invalid auth token --")},
         )
         self.assert401(response)
         self.assertEqual(response.json["code"], 401)
 
-    def test_delete_no_pinned_id_found(self):
-        """Tests that delete endpoint returns 404 when no pin with pinned_id is found to delete"""
+    def test_delete_no_row_id_found(self):
+        """Tests that delete endpoint returns 404 when no pin with row_id is found to delete"""
         self.client.post(
             url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
             data=json.dumps(self.pinned_rec_samples[0]),
@@ -275,15 +281,17 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         )
 
         response = self.client.post(
-            url_for("pinned_rec_api_bp_v1.delete_pin_for_user", pinned_id=98764),
+            url_for("pinned_rec_api_bp_v1.delete_pin_for_user", row_id=98764),
             headers={"Authorization": "Token {}".format(self.followed_user_1["auth_token"])},
         )
 
         self.assert404(response)
         self.assertEqual(response.json["code"], 404)
 
+    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_pins', fetch_track_metadata_for_pins)
     def test_get_pins_for_user(self):
         """Test that valid response is received with 200 code"""
+
         count = self.insert_test_data(self.user["id"], 2)  # pin 2 recordings
         response = self.client.get(url_for("pinned_rec_api_bp_v1.get_pins_for_user", user_name=self.user["musicbrainz_id"]))
         self.assert200(response)
@@ -297,7 +305,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
 
         # check that data is sorted in descending order of created date
         self.assertGreaterEqual(pins[0]["created"], pins[1]["created"])
-        self.assertGreater(pins[0]["pinned_id"], pins[1]["pinned_id"])
+        self.assertGreater(pins[0]["row_id"], pins[1]["row_id"])
 
         self.assertEqual(pins[0]["recording_msid"], self.pinned_rec_samples[1]["recording_msid"])
         self.assertEqual(pins[0]["recording_mbid"], self.pinned_rec_samples[1]["recording_mbid"])
@@ -315,6 +323,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         self.assert404(response)
         self.assertEqual(response.json["code"], 404)
 
+    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_pins', fetch_track_metadata_for_pins)
     def test_get_pins_for_user_count_param(self):
         """Tests that valid response is received honoring count parameter"""
         limit = 2
@@ -359,6 +368,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         self.assert400(response)
         self.assertEqual(response.json["code"], 400)
 
+    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_pins', fetch_track_metadata_for_pins)
     def test_get_pins_for_user_offset_param(self):
         """Tests that valid response is received honoring offset parameter"""
         offset = 2
@@ -405,6 +415,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         self.assert400(response)
         self.assertEqual(response.json["code"], 400)
 
+    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_pins', fetch_track_metadata_for_pins)
     def test_get_pins_for_user_following(self):
         """Test that valid response is received with 200 code"""
         # user follows followed_user_1 and followed_user_2
@@ -445,6 +456,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         self.assert404(response)
         self.assertEqual(response.json["code"], 404)
 
+    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_pins', fetch_track_metadata_for_pins)
     def test_get_pins_for_user_count_param(self):
         """Tests that valid response is received honoring count parameter"""
         # user follows followed_user_1 and followed_user_2
@@ -491,6 +503,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         self.assert400(response)
         self.assertEqual(response.json["code"], 400)
 
+    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_pins', fetch_track_metadata_for_pins)
     def test_get_pins_for_user_following_offset_param(self):
         """Tests that valid response is received honoring offset parameter"""
         # user follows followed_user_1 and followed_user_2

@@ -146,10 +146,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
         url = url_for('api_v1.get_listen_count', user_name="sir_dumpsterfire")
         response = self.client.get(url)
-        self.assert200(response)
-        data = json.loads(response.data)['payload']
-        self.assertEqual(data['count'], 0)
-
+        self.assert404(response)
 
     def test_get_listens_order(self):
         """ Test to make sure that the api sends listens in valid order.
@@ -420,6 +417,30 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
 
+    def test_missing_track_metadata(self):
+        """ Test for invalid submission in which a listen does not contain track_metadata field """
+        with open(self.path_to_data_file('invalid_listen_missing_track_metadata.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+
+    def test_null_track_metadata(self):
+        """ Test for invalid submission in which a listen has null track_metadata field """
+        with open(self.path_to_data_file('invalid_listen_null_track_metadata.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+
+    def test_null_listened_at(self):
+        """ Test for invalid submission in which a listen has null listened_at field """
+        with open(self.path_to_data_file('invalid_listen_null_listened_at.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+
     def test_invalid_release_mbid(self):
         """ Test for invalid submission in which a listen contains an invalid release_mbid
             in additional_info
@@ -449,6 +470,14 @@ class APITestCase(ListenAPIIntegrationTestCase):
         response = self.send_data(payload)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
+
+    def test_unicode_null_error(self):
+        with open(self.path_to_data_file('listen_having_unicode_null.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+        self.assertEqual(response.json['error'], '\x00Fade contains a unicode null')
 
     def test_additional_info(self):
         """ Test to make sure that user generated data present in additional_info field
@@ -628,6 +657,16 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(response.json['code'], 400)
         self.assertEqual(
             'Value for key listened_at is too high.', response.json['error'])
+
+    def test_too_low_timestamps(self):
+        """ Tests for timestamps earlier than last.fm founding year """
+        with open(self.path_to_data_file('timestamp_before_lfm_founding.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+        self.assertEqual('Value for key listened_at is too low. listened_at timestamp should be'
+                         ' greater than 1033410600 (2002-10-01 00:00:00 UTC).', response.json['error'])
 
     def test_invalid_token_validation(self):
         """Sends an invalid token to api.validate_token"""

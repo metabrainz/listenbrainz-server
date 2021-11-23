@@ -1,4 +1,5 @@
-from typing import Dict
+from datetime import datetime
+from typing import Dict, Tuple
 from urllib.parse import urlparse
 
 import bleach
@@ -8,19 +9,20 @@ import listenbrainz.webserver.redis_connection as redis_connection
 import listenbrainz.db.user as db_user
 import pika
 import pika.exceptions
-import sys
 import time
 import ujson
 import uuid
+import sentry_sdk
 
 from flask import current_app, request
-from sqlalchemy.exc import DataError
 
-from listenbrainz.listen import Listen
 from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
-from listenbrainz.webserver.external import messybrainz
-from listenbrainz.webserver.errors import APIInternalServerError, APIServiceUnavailable, APIBadRequest, APIUnauthorized
+from listenbrainz.webserver.errors import APIServiceUnavailable, APIBadRequest, APIUnauthorized, \
+    ListenValidationError
+
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
+from listenbrainz.webserver.models import SubmitListenUserMetadata
+
 MAX_LISTEN_SIZE = 10240
 
 #: The maximum number of tags per listen.
@@ -43,21 +45,17 @@ LISTEN_TYPE_SINGLE = 1
 LISTEN_TYPE_IMPORT = 2
 LISTEN_TYPE_PLAYING_NOW = 3
 
+# October 2002 is date before which most Last.FM data is rubbish
+#: The minimum acceptable value for listened_at field
+LISTEN_MINIMUM_TS = int(datetime(2002, 10, 1).timestamp())
 
-def insert_payload(payload, user, listen_type=LISTEN_TYPE_IMPORT):
+
+def insert_payload(payload, user: SubmitListenUserMetadata, listen_type=LISTEN_TYPE_IMPORT):
     """ Convert the payload into augmented listens then submit them.
         Returns: augmented_listens
     """
-    try:
-        augmented_listens = _get_augmented_listens(payload, user, listen_type)
-        _send_listens_to_queue(listen_type, augmented_listens)
-    except (APIInternalServerError, APIServiceUnavailable) as e:
-        raise
-    except DataError:
-        raise APIBadRequest("Listen submission contains invalid characters.")
-    except Exception as e:
-        current_app.logger.error("Error while inserting payload: %s", str(e), exc_info=True)
-        raise APIInternalServerError("Something went wrong. Please try again.")
+    augmented_listens = _get_augmented_listens(payload, user)
+    _send_listens_to_queue(listen_type, augmented_listens)
     return augmented_listens
 
 
@@ -69,13 +67,21 @@ def handle_playing_now(listen):
         listen if new playing now listen, None otherwise
     """
     old_playing_now = redis_connection._redis.get_playing_now(listen['user_id'])
-    if old_playing_now and listen['recording_msid'] == old_playing_now.recording_msid:
+
+    track_metadata = listen['track_metadata']
+    if old_playing_now and \
+            listen['track_metadata']['track_name'] == old_playing_now.data['track_name'] and \
+            listen['track_metadata']['artist_name'] == old_playing_now.data['artist_name']:
         return None
-    if 'duration' in listen['track_metadata']['additional_info']:
-        listen_timeout = listen['track_metadata']['additional_info']['duration']
-    elif 'duration_ms' in listen['track_metadata']['additional_info']:
-        listen_timeout = listen['track_metadata']['additional_info']['duration_ms'] // 1000
-    else:
+
+    listen_timeout = None
+    if 'additional_info' in track_metadata:
+        additional_info = track_metadata['additional_info']
+        if 'duration' in additional_info:
+            listen_timeout = additional_info['duration']
+        elif 'duration_ms' in additional_info:
+            listen_timeout = additional_info['duration_ms'] // 1000
+    if listen_timeout is None:
         listen_timeout = current_app.config['PLAYING_NOW_MAX_DURATION']
     redis_connection._redis.put_playing_now(listen['user_id'], listen, listen_timeout)
     return listen
@@ -89,8 +95,8 @@ def _send_listens_to_queue(listen_type, listens):
                 listen = handle_playing_now(listen)
                 if listen:
                     submit.append(listen)
-            except Exception as e:
-                current_app.logger.error("Redis rpush playing_now write error: " + str(e))
+            except Exception:
+                current_app.logger.error("Redis rpush playing_now write error: ", exc_info=True)
                 raise APIServiceUnavailable("Cannot record playing_now at this time.")
         else:
             submit.append(listen)
@@ -119,62 +125,86 @@ def _send_listens_to_queue(listen_type, listens):
         )
 
 
+def _raise_error_if_has_unicode_null(value, listen):
+    if isinstance(value, str) and '\x00' in value:
+        raise APIBadRequest("{} contains a unicode null".format(value), listen)
+
+
+def check_for_unicode_null_recursively(listen: Dict):
+    """ Checks for unicode null in all items in the dict, including inside
+    nested dicts and lists."""
+    for key, value in listen.items():
+        if isinstance(value, dict):
+            check_for_unicode_null_recursively(value)
+        elif isinstance(value, list):
+            for item in value:
+                _raise_error_if_has_unicode_null(item, listen)
+        else:
+            _raise_error_if_has_unicode_null(value, listen)
+
+
 def validate_listen(listen: Dict, listen_type) -> Dict:
     """Make sure that required keys are present, filled out and not too large.
-    The function may also mutate listens in place if needed."""
+    Also, check all keys for absence of unicode null which cannot be
+    inserted into Postgres. The function may also mutate listens
+    in place if needed."""
 
     if listen is None:
-        raise APIBadRequest("Listen is empty and cannot be validated.")
+        raise ListenValidationError("Listen is empty and cannot be validated.")
 
     if listen_type in (LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT):
-        if 'listened_at' not in listen:
-            raise APIBadRequest("JSON document must contain the key listened_at at the top level.", listen)
+        validate_listened_at(listen)
 
-        try:
-            listen['listened_at'] = int(listen['listened_at'])
-        except ValueError:
-            raise APIBadRequest("JSON document must contain an int value for listened_at.", listen)
+        if "track_metadata" not in listen:
+            raise ListenValidationError("JSON document must contain the key track_metadata"
+                                        " at the top level.", listen)
 
-        if 'listened_at' in listen and 'track_metadata' in listen and len(listen) > 2:
-            raise APIBadRequest("JSON document may only contain listened_at and "
-                                "track_metadata top level keys", listen)
+        if len(listen) > 2:
+            raise ListenValidationError("JSON document may only contain listened_at and "
+                                        "track_metadata top level keys", listen)
 
-        # if timestamp is too high, raise BadRequest
-        # in order to make up for possible clock skew, we allow
-        # timestamps to be one hour ahead of server time
-        if not is_valid_timestamp(listen['listened_at']):
-            raise APIBadRequest("Value for key listened_at is too high.", listen)
+        # check that listened_at value is greater than last.fm founding year.
+        if listen['listened_at'] < LISTEN_MINIMUM_TS:
+            raise ListenValidationError("Value for key listened_at is too low. listened_at timestamp "
+                                        "should be greater than 1033410600 (2002-10-01 00:00:00 UTC).", listen)
 
     elif listen_type == LISTEN_TYPE_PLAYING_NOW:
-        if 'listened_at' in listen:
-            raise APIBadRequest("JSON document must not contain listened_at while submitting "
-                                "playing_now.", listen)
+        if "listened_at" in listen:
+            raise ListenValidationError("JSON document must not contain listened_at while submitting"
+                                        " playing_now.", listen)
 
-        if 'track_metadata' in listen and len(listen) > 1:
-            raise APIBadRequest("JSON document may only contain track_metadata as top level "
-                                "key when submitting playing_now.", listen)
+        if "track_metadata" not in listen:
+            raise ListenValidationError("JSON document must contain the key track_metadata"
+                                        " at the top level.", listen)
+
+        if len(listen) > 1:
+            raise ListenValidationError("JSON document may only contain track_metadata as top level"
+                                        " key when submitting playing_now.", listen)
+
+    if listen["track_metadata"] is None:
+        raise ListenValidationError("JSON document may not have track_metadata with null value.", listen)
 
     # Basic metadata
     if 'track_name' in listen['track_metadata']:
         if not isinstance(listen['track_metadata']['track_name'], str):
-            raise APIBadRequest("track_metadata.track_name must be a single string.", listen)
+            raise ListenValidationError("track_metadata.track_name must be a single string.", listen)
 
         listen['track_metadata']['track_name'] = listen['track_metadata']['track_name'].strip()
         if len(listen['track_metadata']['track_name']) == 0:
-            raise APIBadRequest("required field track_metadata.track_name is empty.", listen)
+            raise ListenValidationError("required field track_metadata.track_name is empty.", listen)
     else:
-        raise APIBadRequest("JSON document does not contain required track_metadata.track_name.", listen)
+        raise ListenValidationError("JSON document does not contain required track_metadata.track_name.", listen)
 
 
     if 'artist_name' in listen['track_metadata']:
         if not isinstance(listen['track_metadata']['artist_name'], str):
-            raise APIBadRequest("track_metadata.artist_name must be a single string.", listen)
+            raise ListenValidationError("track_metadata.artist_name must be a single string.", listen)
 
         listen['track_metadata']['artist_name'] = listen['track_metadata']['artist_name'].strip()
         if len(listen['track_metadata']['artist_name']) == 0:
-            raise APIBadRequest("required field track_metadata.artist_name is empty.", listen)
+            raise ListenValidationError("required field track_metadata.artist_name is empty.", listen)
     else:
-        raise APIBadRequest("JSON document does not contain required track_metadata.artist_name.", listen)
+        raise ListenValidationError("JSON document does not contain required track_metadata.artist_name.", listen)
 
 
     if 'additional_info' in listen['track_metadata']:
@@ -182,12 +212,12 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
         if 'tags' in listen['track_metadata']['additional_info']:
             tags = listen['track_metadata']['additional_info']['tags']
             if len(tags) > MAX_TAGS_PER_LISTEN:
-                raise APIBadRequest("JSON document may not contain more than %d items in "
-                                    "track_metadata.additional_info.tags." % MAX_TAGS_PER_LISTEN, listen)
+                raise ListenValidationError("JSON document may not contain more than %d items in "
+                                            "track_metadata.additional_info.tags." % MAX_TAGS_PER_LISTEN, listen)
             for tag in tags:
                 if len(tag) > MAX_TAG_SIZE:
-                    raise APIBadRequest("JSON document may not contain track_metadata.additional_info.tags "
-                                        "longer than %d characters." % MAX_TAG_SIZE, listen)
+                    raise ListenValidationError("JSON document may not contain track_metadata.additional_info.tags "
+                                                "longer than %d characters." % MAX_TAG_SIZE, listen)
         # MBIDs, both of the mbid validation methods mutate the listen payload if needed.
         single_mbid_keys = ['release_mbid', 'recording_mbid', 'release_group_mbid', 'track_mbid']
         for key in single_mbid_keys:
@@ -195,11 +225,19 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
         multiple_mbid_keys = ['artist_mbids', 'work_mbids']
         for key in multiple_mbid_keys:
             validate_multiple_mbids_field(listen, key)
+
+    # monitor performance of unicode null check because it might be a potential bottleneck
+    with sentry_sdk.start_span(op="null check", description="check for unicode null in submitted listen json"):
+        # If unicode null is present in the listen, postgres will raise an
+        # error while trying to insert it. hence, reject such listens.
+        check_for_unicode_null_recursively(listen)
+
     return listen
 
 
-# lifted from AcousticBrainz
 def is_valid_uuid(u):
+    if u is None:
+        return False
     try:
         u = uuid.UUID(u)
         return True
@@ -207,96 +245,12 @@ def is_valid_uuid(u):
         return False
 
 
-def _get_augmented_listens(payload, user, listen_type):
-    """ Converts the payload to augmented list after lookup
-        in the MessyBrainz database
-    """
-
-    augmented_listens = []
-    msb_listens = []
-    for l in payload:
-        listen = l.copy()   # Create a local object to prevent the mutation of the passed object
-        listen['user_id'] = user['id']
-        listen['user_name'] = user['musicbrainz_id']
-
-        msb_listens.append(listen)
-        if len(msb_listens) >= MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP:
-            augmented_listens.extend(_messybrainz_lookup(msb_listens))
-            msb_listens = []
-
-    if msb_listens:
-        augmented_listens.extend(_messybrainz_lookup(msb_listens))
-    return augmented_listens
-
-
-def _messybrainz_lookup(listens):
-
-    msb_listens = []
-    for listen in listens:
-        messy_dict = {
-            'artist': listen['track_metadata']['artist_name'],
-            'title': listen['track_metadata']['track_name'],
-        }
-        if 'release_name' in listen['track_metadata']:
-            messy_dict['release'] = listen['track_metadata']['release_name']
-
-        if 'additional_info' in listen['track_metadata']:
-            ai = listen['track_metadata']['additional_info']
-            if 'artist_mbids' in ai and isinstance(ai['artist_mbids'], list):
-                messy_dict['artist_mbids'] = ai['artist_mbids']
-            if 'release_mbid' in ai:
-                messy_dict['release_mbid'] = ai['release_mbid']
-            if 'recording_mbid' in ai:
-                messy_dict['recording_mbid'] = ai['recording_mbid']
-            if 'track_number' in ai:
-                messy_dict['track_number'] = ai['track_number']
-            if 'spotify_id' in ai:
-                messy_dict['spotify_id'] = ai['spotify_id']
-        msb_listens.append(messy_dict)
-
-    try:
-        msb_responses = messybrainz.submit_listens(msb_listens)
-    except messybrainz.exceptions.BadDataException as e:
-        log_raise_400(str(e))
-    except messybrainz.exceptions.NoDataFoundException:
-        return []
-    except messybrainz.exceptions.ErrorAddingException as e:
-        raise APIServiceUnavailable(str(e))
-
-    augmented_listens = []
-    for listen, messybrainz_resp in zip(listens, msb_responses['payload']):
-        messybrainz_resp = messybrainz_resp['ids']
-
-        if 'additional_info' not in listen['track_metadata']:
-            listen['track_metadata']['additional_info'] = {}
-
-        try:
-            listen['recording_msid'] = messybrainz_resp['recording_msid']
-            listen['track_metadata']['additional_info']['artist_msid'] = messybrainz_resp['artist_msid']
-        except KeyError:
-            current_app.logger.error("MessyBrainz did not return a proper set of ids")
-            raise APIInternalServerError
-
-        try:
-            listen['track_metadata']['additional_info']['release_msid'] = messybrainz_resp['release_msid']
-        except KeyError:
-            pass
-
-        artist_mbids = messybrainz_resp.get('artist_mbids', [])
-        release_mbid = messybrainz_resp.get('release_mbid', None)
-        recording_mbid = messybrainz_resp.get('recording_mbid', None)
-
-        if 'artist_mbids'   not in listen['track_metadata']['additional_info'] and \
-           'release_mbid'   not in listen['track_metadata']['additional_info'] and \
-           'recording_mbid' not in listen['track_metadata']['additional_info']:
-
-            if len(artist_mbids) > 0 and release_mbid and recording_mbid:
-                listen['track_metadata']['additional_info']['artist_mbids'] = artist_mbids
-                listen['track_metadata']['additional_info']['release_mbid'] = release_mbid
-                listen['track_metadata']['additional_info']['recording_mbid'] = recording_mbid
-
-        augmented_listens.append(listen)
-    return augmented_listens
+def _get_augmented_listens(payload, user: SubmitListenUserMetadata):
+    """ Converts the payload to augmented list after adding user_id and user_name attributes """
+    for listen in payload:
+        listen['user_id'] = user.user_id
+        listen['user_name'] = user.musicbrainz_id
+    return payload
 
 
 def log_raise_400(msg, data=""):
@@ -314,7 +268,7 @@ def log_raise_400(msg, data=""):
 
 def validate_single_mbid_field(listen, key):
     """ Verify that mbid if present in the listen with given key is valid.
-    An APIBadRequest error is raised for invalid values of mbids.
+    A ValidationError is raised for invalid values of mbids.
 
     NOTE: If the mbid at the key is None or "", the key is dropped without
      raising an error.
@@ -330,12 +284,12 @@ def validate_single_mbid_field(listen, key):
             return
 
         if not is_valid_uuid(mbid):  # if the mbid is invalid raise an error
-            log_raise_400("%s MBID format invalid." % (key, ), listen)
+            raise ListenValidationError("%s MBID format invalid." % (key,), listen)
 
 
 def validate_multiple_mbids_field(listen, key):
     """ Verify that all the mbids in the list if present in the listen with
-    given key are valid. An APIBadRequest error is raised for if any mbid is
+    given key are valid. An ValidationError error is raised for if any mbid is
     invalid.
 
     NOTE: If an mbid in the list is None or "", it is dropped from the list
@@ -356,21 +310,36 @@ def validate_multiple_mbids_field(listen, key):
 
         for mbid in mbids:
             if not is_valid_uuid(mbid):   # if the mbid is invalid raise an error
-                log_raise_400("%s MBID format invalid." % (key,), listen)
+                raise ListenValidationError("%s MBID format invalid." % (key,), listen)
 
         listen['track_metadata']['additional_info'][key] = mbids  # set the filtered in the listen payload
 
-def is_valid_timestamp(ts):
-    """ Returns True if the timestamp passed is in the API's
-    allowed range of timestamps, False otherwise
+
+def validate_listened_at(listen):
+    """ Raises an error if the listened_at timestamp is invalid. The timestamp is invalid
+    if it is lower than the minimum acceptable timestamp or if its in future beyond
+    tolerable skew.
 
     Args:
-        ts (int): the timestamp to be checked for validity
-
-    Returns:
-        bool: True if timestamp is valid, False otherwise
+        listen: the listen to be validated
     """
-    return ts <= int(time.time()) + API_LISTENED_AT_ALLOWED_SKEW
+    if "listened_at" not in listen:
+        raise ListenValidationError("JSON document must contain the key listened_at at the top level.", listen)
+
+    try:
+        listen["listened_at"] = int(listen["listened_at"])
+    except (ValueError, TypeError):
+        raise ListenValidationError("JSON document must contain an int value for listened_at.", listen)
+
+    # raise error if timestamp is too high
+    # in order to make up for possible clock skew, we allow
+    # timestamps to be one hour ahead of server time
+    if listen["listened_at"] >= int(time.time()) + API_LISTENED_AT_ALLOWED_SKEW:
+        raise ListenValidationError("Value for key listened_at is too high.", listen)
+
+    if listen["listened_at"] < LISTEN_MINIMUM_TS:
+        raise ListenValidationError("Value for key listened_at is too low. listened_at timestamp "
+                                    "should be greater than 1033410600 (2002-10-01 00:00:00 UTC).", listen)
 
 
 def publish_data_to_queue(data, exchange, queue, error_msg):
@@ -430,6 +399,38 @@ def parse_param_list(params: str) -> list:
         param_list.append(param)
 
     return param_list
+
+
+def _parse_int_arg(name, default=None):
+    value = request.args.get(name)
+    if value:
+        try:
+            return int(value)
+        except ValueError:
+            raise APIBadRequest("Invalid %s argument: %s" % (name, value))
+    else:
+        return default
+
+
+def _validate_get_endpoint_params() -> Tuple[int, int, int]:
+    """ Validates parameters for listen GET endpoints like /username/listens and /username/feed/events
+
+    Returns a tuple of integers: (min_ts, max_ts, count)
+    """
+    max_ts = _parse_int_arg("max_ts")
+    min_ts = _parse_int_arg("min_ts")
+
+    if max_ts and min_ts:
+        if max_ts < min_ts:
+            log_raise_400("max_ts should be greater than min_ts")
+
+    # Validate requetsed listen count is positive
+    count = min(_parse_int_arg(
+        "count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET)
+    if count < 0:
+        log_raise_400("Number of items requested should be positive")
+
+    return min_ts, max_ts, count
 
 
 def validate_auth_header(*, optional: bool = False, fetch_email: bool = False):

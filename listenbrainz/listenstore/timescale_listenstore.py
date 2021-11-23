@@ -11,14 +11,17 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 import ujson
 import psycopg2
+import psycopg2.sql
 from psycopg2.extras import execute_values
 from psycopg2.errors import UntranslatableCharacter
 from typing import List
 import sqlalchemy
+import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
 
 from brainzutils import cache
 
-import listenbrainz.db.user as db_user
 from listenbrainz.db import timescale
 from listenbrainz import DUMP_LICENSE_FILE_PATH
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
@@ -47,6 +50,13 @@ DEFAULT_FETCH_WINDOW = 30 * 86400  # 30 days
 WINDOW_SIZE_MULTIPLIER = 3
 
 LISTEN_COUNT_BUCKET_WIDTH = 2592000
+
+# These values are defined to create spark parquet files that are at most 128MB in size.
+# This compression ration allows us to roughly estimate how full we can make files before starting a new one
+PARQUET_APPROX_COMPRESSION_RATIO = .57
+
+# This is the approximate amount of data to write to a parquet file in order to meet the max size
+PARQUET_TARGET_SIZE = 134217728 / PARQUET_APPROX_COMPRESSION_RATIO  # 128MB / compression ratio
 
 
 class TimescaleListenStore(ListenStore):
@@ -81,7 +91,22 @@ class TimescaleListenStore(ListenStore):
         """
 
         count = cache.get(REDIS_USER_LISTEN_COUNT + user_name, decode=False)
-        if count is None:
+        # count < 0, yeah that's possible. when a user imports from last.fm,
+        # we call set_listen_count_expiry_for_user to set a TTL on the count.
+        # the intent is that when the key expires and the listen counts will
+        # be recalculated and put into redis again. the issue is that listen
+        # counts are only calculated when the listen-count api endpoint is
+        # called. So imagine this, I do a last.fm import at 13:00 on 2021-10-23.
+        # The key expires at 13:00 on 2021-10-24. From this moment, redis has no
+        # key for my listens. Then, I delete a listen using the API at say 13:05.
+        # The listen is deleted and the listenstore tries to decrement the listen
+        # count but hey redis has no key. So what does it do, it creates one with
+        # a value of 0 and decrements that. Voila, we have the key with a negative
+        # value.
+        # Note that the check is still incomplete. If instead of deleting, one had
+        # inserted a listen. redis would create a key with value 0 and increment it
+        # by 1. only now we don't have a way to detect this.
+        if count is None or int(count) < 0:
             return self.reset_listen_count(user_name)
         else:
             return int(count)
@@ -259,13 +284,13 @@ class TimescaleListenStore(ListenStore):
         user_timestamps = {}
         user_counts = defaultdict(int)
         for ts, _, user_name in inserted_rows:
-            if listen.user_name in user_timestamps:
-                if ts < user_timestamps[listen.user_name][0]:
-                    user_timestamps[listen.user_name][0] = ts
-                if ts > user_timestamps[listen.user_name][1]:
-                    user_timestamps[listen.user_name][1] = ts
+            if user_name in user_timestamps:
+                if ts < user_timestamps[user_name][0]:
+                    user_timestamps[user_name][0] = ts
+                if ts > user_timestamps[user_name][1]:
+                    user_timestamps[user_name][1] = ts
             else:
-                user_timestamps[listen.user_name] = [ts, ts]
+                user_timestamps[user_name] = [ts, ts]
 
             user_counts[user_name] += 1
 
@@ -321,8 +346,12 @@ class TimescaleListenStore(ListenStore):
             return ([], min_user_ts, max_user_ts)
 
         window_size = DEFAULT_FETCH_WINDOW
-        query = """SELECT listened_at, track_name, user_name, created, data
+        query = """SELECT listened_at, track_name, user_name, created, data, mm.recording_mbid, release_mbid, artist_mbids
                      FROM listen
+          FULL OUTER JOIN mbid_mapping mm
+                       ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
+          FULL OUTER JOIN mbid_mapping_metadata m
+                       ON mm.recording_mbid = m.recording_mbid
                     WHERE user_name IN :user_names
                       AND listened_at > :from_ts
                       AND listened_at < :to_ts
@@ -413,14 +442,18 @@ class TimescaleListenStore(ListenStore):
         args = {'user_list': tuple(user_list), 'ts': int(
             time.time()) - max_age, 'limit': limit}
         query = """SELECT * FROM (
-                              SELECT listened_at, track_name, user_name, created, data,
+                              SELECT listened_at, track_name, user_name, created, data, mm.recording_mbid, release_mbid, artist_mbids,
                                      row_number() OVER (partition by user_name ORDER BY listened_at DESC) AS rownum
-                                FROM listen
+                                FROM listen l
+                     FULL OUTER JOIN mbid_mapping m
+                                  ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = m.recording_msid
+                     FULL OUTER JOIN mbid_mapping_metadata mm
+                                  ON mm.recording_mbid = m.recording_mbid
                                WHERE user_name IN :user_list
                                  AND listened_at > :ts
-                            GROUP BY user_name, listened_at, track_name, created, data
+                            GROUP BY user_name, listened_at, track_name, created, data, mm.recording_mbid, release_mbid, artist_mbids
                             ORDER BY listened_at DESC) tmp
-                           WHERE rownum <= :limit"""
+                               WHERE rownum <= :limit"""
 
         listens = []
         with timescale.engine.connect() as connection:
@@ -430,8 +463,7 @@ class TimescaleListenStore(ListenStore):
                 if not result:
                     break
 
-                listens.append(Listen.from_timescale(
-                    result[0], result[1], result[2], result[3], result[4]))
+                listens.append(Listen.from_timescale(*result[0:8]))
 
         return listens
 
@@ -618,7 +650,6 @@ class TimescaleListenStore(ListenStore):
             start_time and end_time (datetime): the time range for which listens should be dumped
                 start_time defaults to utc 0 (meaning a full dump) and end_time defaults to the current time
             threads (int): the number of threads to use for compression
-            spark_format (bool): dump files in Apache Spark friendly format if True, else full dumps
 
         Returns:
             the path to the dump archive
@@ -666,13 +697,233 @@ class TimescaleListenStore(ListenStore):
         self.log.info('Dump present at %s!', archive_path)
         return archive_path
 
-    def import_listens_dump(self, archive_path, threads=DUMP_DEFAULT_THREAD_COUNT):
+    def write_parquet_files(self,
+                            archive_dir,
+                            temp_dir,
+                            tar_file,
+                            dump_type,
+                            start_time: datetime,
+                            end_time: datetime,
+                            parquet_file_id=0):
+        """
+            Carry out fetching listens from the DB, joining them to the MBID mapping table and
+            then writing them to parquet files.
+
+        Args:
+            archive_dir: the directory where the listens dump archive should be created
+            temp_dir: the directory where tmp files should be written
+            tar_file: the tarfile object that the dumps are being written to
+            dump_type: type of dump, full or incremental
+            start_time: the start of the time range for which listens should be dumped
+            end_time: the end of the time range for which listens should be dumped
+            parquet_file_id: the file id number to use for indexing parquet files
+
+        Returns:
+            the next parquet_file_id to use.
+
+        """
+        # the spark listens dump is sorted using this column. full dumps are sorted on
+        # listened_at because so during loading listens in spark for stats calculation
+        # we can load a subset of files. however, sorting on listened_at creates the
+        # issue that the data imported today with listened_at in the past won't show up
+        # in the stats until the next full dump. to solve this, we sort and dump incremental
+        # listens using the created column. all incremental listens are always loaded by spark
+        # , so we can get upto date stats sooner.
+        if dump_type == "full":
+            criteria = "listened_at"
+            # listened_at column is bigint so need to convert datetime to timestamp
+            args = {
+                "start": int(start_time.timestamp()),
+                "end": int(end_time.timestamp())
+            }
+        else:  # incremental dump
+            criteria = "created"
+            args = {
+                "start": start_time,
+                "end": end_time
+            }
+
+        query = psycopg2.sql.SQL("""
+                    SELECT listened_at,
+                          user_name,
+                          artist_credit_id,
+                          artist_mbids::TEXT[] AS artist_credit_mbids,
+                          artist_credit_name AS m_artist_name,
+                          data->'track_metadata'->>'artist_name' AS l_artist_name,
+                          release_name AS m_release_name,
+                          data->'track_metadata'->>'release_name' AS l_release_name,
+                          release_mbid::TEXT,
+                          recording_name AS m_recording_name,
+                          track_name AS l_recording_name,
+                          mm.recording_mbid::TEXT
+                     FROM listen l
+          FULL OUTER JOIN mbid_mapping mm
+                       ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
+          FULL OUTER JOIN mbid_mapping_metadata m
+                       ON mm.recording_mbid = m.recording_mbid
+                    WHERE {criteria} > %(start)s
+                      AND {criteria} <= %(end)s
+                 ORDER BY {criteria} ASC""").format(criteria=psycopg2.sql.Identifier(criteria))
+
+        listen_count = 0
+        current_listened_at = None
+        conn = timescale.engine.raw_connection()
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as curs:
+            curs.execute(query, args)
+            while True:
+                t0 = time.monotonic()
+                written = 0
+                approx_size = 0
+                data = {
+                    'listened_at': [],
+                    'user_name': [],
+                    'artist_name': [],
+                    'artist_credit_id': [],
+                    'release_name': [],
+                    'release_mbid': [],
+                    'recording_name': [],
+                    'recording_mbid': [],
+                    'artist_credit_mbids': []
+                }
+                while True:
+                    result = curs.fetchone()
+                    if not result:
+                        break
+
+                    # Either take the original listen metadata or the mapping metadata
+                    if result["artist_credit_id"] is None:
+                        data["artist_name"].append(result["l_artist_name"])
+                        data["release_name"].append(result["l_release_name"])
+                        data["recording_name"].append(result["l_recording_name"])
+                        data["artist_credit_id"].append(None)
+                        approx_size += len(result["l_artist_name"]) + len(result["l_release_name"] or "0") + \
+                            len(result["l_recording_name"])
+                    else:
+                        data["artist_name"].append(result["m_artist_name"])
+                        data["release_name"].append(result["m_release_name"])
+                        data["recording_name"].append(result["m_recording_name"])
+                        data["artist_credit_id"].append(result["artist_credit_id"])
+                        approx_size += len(result["m_artist_name"]) + len(result["m_release_name"]) + \
+                            len(result["m_recording_name"]) + len(str(result["artist_credit_id"]))
+
+                    for col in data:
+                        if col == 'listened_at':
+                            current_listened_at = datetime.utcfromtimestamp(result['listened_at'])
+                            data[col].append(current_listened_at)
+                            approx_size += len(str(result[col]))
+                        elif col in ['artist_name', 'release_name', 'recording_name', 'artist_credit_id']:
+                            pass
+                        else:
+                            data[col].append(result[col])
+                            approx_size += len(str(result[col]))
+
+                    written += 1
+                    listen_count += 1
+                    if approx_size > PARQUET_TARGET_SIZE:
+                        break
+
+                if written == 0:
+                    break
+
+                filename = os.path.join(temp_dir, "%d.parquet" % parquet_file_id)
+
+                # Create a pandas dataframe, then write that to a parquet files
+                df = pd.DataFrame(data, dtype=object)
+                table = pa.Table.from_pandas(df, preserve_index=False)
+                pq.write_table(table, filename)
+                file_size = os.path.getsize(filename)
+                tar_file.add(filename, arcname=os.path.join(archive_dir, "%d.parquet" % parquet_file_id))
+                os.unlink(filename)
+                parquet_file_id += 1
+
+                self.log.info("%d listens dumped for %s at %.2f listens/s (%sMB)",
+                              listen_count, current_listened_at.strftime("%Y-%m-%d"),
+                              written / (time.monotonic() - t0),
+                              str(round(file_size / (1024 * 1024), 3)))
+
+        return parquet_file_id
+
+    def dump_listens_for_spark(self, location,
+                               dump_id: int,
+                               dump_type: str,
+                               start_time: datetime = datetime.utcfromtimestamp(DATA_START_YEAR_IN_SECONDS),
+                               end_time: datetime = None):
+        """ Dumps all listens in the ListenStore into spark parquet files in a .tar archive.
+
+        Listens are dumped into files ideally no larger than 128MB, sorted from oldest to newest. Files
+        are named #####.parguet with monotonically increasing integers starting with 0.
+
+        This creates an incremental dump if start_time is specified (with range start_time to end_time),
+        otherwise it creates a full dump with all listens.
+
+        Args:
+            location: the directory where the listens dump archive should be created
+            dump_id: the ID of the dump in the dump sequence
+            dump_type: type of dump, full or incremental
+            start_time: the start of the time range for which listens should be dumped. defaults to
+                utc 0 (meaning a full dump)
+            end_time: the end of time range for which listens should be dumped. defaults to the current time
+
+        Returns:
+            the path to the dump archive
+        """
+
+        if end_time is None:
+            end_time = datetime.now()
+
+        self.log.info('Beginning spark dump of listens from TimescaleDB...')
+        full_dump = bool(start_time == datetime.utcfromtimestamp(DATA_START_YEAR_IN_SECONDS))
+        archive_name = 'listenbrainz-spark-dump-{dump_id}-{time}'.format(dump_id=dump_id,
+                                                                         time=end_time.strftime('%Y%m%d-%H%M%S'))
+        if full_dump:
+            archive_name = '{}-full'.format(archive_name)
+        else:
+            archive_name = '{}-incremental'.format(archive_name)
+        archive_path = os.path.join(
+            location, '{filename}.tar'.format(filename=archive_name))
+
+        parquet_index = 0
+        with tarfile.open(archive_path, "w") as tar:
+
+            temp_dir = os.path.join(self.dump_temp_dir_root, str(uuid.uuid4()))
+            create_path(temp_dir)
+            self.write_dump_metadata(archive_name, start_time, end_time, temp_dir, tar, full_dump)
+
+            for year in range(start_time.year, end_time.year + 1):
+                if year == start_time.year:
+                    start = start_time
+                else:
+                    start = datetime(year=year, day=1, month=1)
+                if year == end_time.year:
+                    end = end_time
+                else:
+                    end = datetime(year=year + 1, day=1, month=1)
+
+                self.log.info("dump %s to %s" % (start.strftime("%Y-%m-%d %H:%M:%S"), end.strftime("%Y-%m-%d %H:%M:%S")))
+
+                # This try block is here in an effort to expose bugs that occur during testing
+                # Without it sometimes test pass and sometimes they give totally unrelated errors.
+                # Keeping this block should help with future testing...
+                try:
+                    parquet_index = self.write_parquet_files(archive_name, temp_dir, tar, dump_type,
+                                                             start, end, parquet_index)
+                except Exception as err:
+                    self.log.info("likely test failure: " + str(err))
+                    raise
+
+            shutil.rmtree(temp_dir)
+
+        self.log.info('ListenBrainz spark listen dump done!')
+        self.log.info('Dump present at %s!', archive_path)
+        return archive_path
+
+    def import_listens_dump(self, archive_path: str, threads: int = DUMP_DEFAULT_THREAD_COUNT):
         """ Imports listens into TimescaleDB from a ListenBrainz listens dump .tar.xz archive.
 
         Args:
-            archive (str): the path to the listens dump .tar.xz archive to be imported
-            threads (int): the number of threads to be used for decompression
-                           (defaults to DUMP_DEFAULT_THREAD_COUNT)
+            archive_path: the path to the listens dump .tar.xz archive to be imported
+            threads: the number of threads to be used for decompression
+                        (defaults to DUMP_DEFAULT_THREAD_COUNT)
 
         Returns:
             int: the number of users for whom listens have been imported

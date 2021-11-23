@@ -60,6 +60,9 @@
 					&.notification {
 						color:@turquoise;
 					}
+					&.recording_pin {
+						color:@yellow;
+					}
 				}
 				
 				.event-description-text {
@@ -71,17 +74,6 @@
 			.event-content {
 				padding-top: 1em;
 				padding-left: 3.5em;
-				.listen-card {
-					&:extend(#listens .listen-card all);
-					> *:last-child{
-						display: flex;
-    					align-items: center;
-						> * {
-							flex: 1;
-    						text-align: right;
-						}
-					}
-				}
 			}
 		}
 	}

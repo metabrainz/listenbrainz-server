@@ -1,10 +1,12 @@
+/* eslint-disable jest/no-disabled-tests */
+
 import * as React from "react";
 import { mount } from "enzyme";
 import * as timeago from "time-ago";
 import fetchMock from "jest-fetch-mock";
 import { io } from "socket.io-client";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
-import APIService from "./APIService";
+import APIServiceClass from "./APIService";
 
 import * as recentListensProps from "./__mocks__/recentListensProps.json";
 import * as recentListensPropsTooManyListens from "./__mocks__/recentListensPropsTooManyListens.json";
@@ -41,7 +43,7 @@ const {
   spotify,
   youtube,
   user,
-  webSocketsServerUrl,
+  userPinnedRecording,
 } = recentListensProps;
 
 const props = {
@@ -55,17 +57,17 @@ const props = {
   oldestListenTs,
   profileUrl,
   user,
-  webSocketsServerUrl,
+  userPinnedRecording,
   newAlert: () => {},
 };
 
 // Create a new instance of GlobalAppContext
 const mountOptions: { context: GlobalAppContextT } = {
   context: {
-    APIService: new APIService("foo"),
+    APIService: new APIServiceClass("foo"),
     youtubeAuth: youtube as YoutubeUser,
     spotifyAuth: spotify as SpotifyUser,
-    currentUser: user,
+    currentUser: { id: 1, name: "iliekcomputers", auth_token: "fnord" },
   },
 };
 
@@ -94,8 +96,9 @@ describe("Recentlistens", () => {
 
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
     const wrapper = mount<RecentListens>(
-      <RecentListens {...props} />,
-      mountOptions
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
     );
     expect(wrapper.html()).toMatchSnapshot();
     fakeDateNow.mockRestore();
@@ -136,7 +139,7 @@ describe("componentDidMount", () => {
     expect(wrapper.state("listenCount")).toEqual(42);
   });
 
-  it('calls loadFeedback if user is the currentUser and mode "listens"', () => {
+  it('calls loadFeedback if user is logged in and mode "listens"', () => {
     const wrapper = mount<RecentListens>(
       <GlobalAppContext.Provider value={mountOptions.context}>
         <RecentListens {...propsOneListen} />
@@ -150,20 +153,25 @@ describe("componentDidMount", () => {
     expect(instance.loadFeedback).toHaveBeenCalledTimes(1);
   });
 
-  it('does not call loadFeedback if user is not the currentUser even if mode "listens"', () => {
+  it('does not fetch user feedback if user is not logged in"', () => {
     const wrapper = mount<RecentListens>(
       <GlobalAppContext.Provider
-        value={{ ...mountOptions.context, currentUser: { name: "foobar" } }}
+        value={{ ...mountOptions.context, currentUser: {} as ListenBrainzUser }}
       >
         <RecentListens {...propsOneListen} />
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
-    instance.loadFeedback = jest.fn();
+    const loadFeedbackSpy = jest.spyOn(instance, "loadFeedback");
+    const APIFeedbackSpy = jest.spyOn(
+      instance.context.APIService,
+      "getFeedbackForUserForRecordings"
+    );
 
     instance.componentDidMount();
 
-    expect(instance.loadFeedback).toHaveBeenCalledTimes(0);
+    expect(loadFeedbackSpy).toHaveBeenCalledTimes(1);
+    expect(APIFeedbackSpy).not.toHaveBeenCalled();
   });
 });
 
@@ -173,13 +181,13 @@ describe("createWebsocketsConnection", () => {
   });
   it("calls io with correct parameters", () => {
     const wrapper = mount<RecentListens>(
-      <RecentListens {...props} webSocketsServerUrl="http://localhost:8082" />,
+      <RecentListens {...props} />,
       mountOptions
     );
     const instance = wrapper.instance();
     instance.createWebsocketsConnection();
 
-    expect(io).toHaveBeenCalledWith("http://localhost:8082");
+    expect(io).toHaveBeenCalled();
 
     expect(mockSocket.on).toHaveBeenNthCalledWith(
       1,
@@ -202,7 +210,7 @@ describe("createWebsocketsConnection", () => {
 describe("addWebsocketsHandlers", () => {
   it('calls correct handler for "listen" event', () => {
     const wrapper = mount<RecentListens>(
-      <RecentListens {...props} webSocketsServerUrl="http://localhost:8082" />,
+      <RecentListens {...props} />,
       mountOptions
     );
     const instance = wrapper.instance();
@@ -222,11 +230,12 @@ describe("addWebsocketsHandlers", () => {
     expect(instance.receiveNewListen).toHaveBeenCalledWith(
       JSON.stringify(recentListensPropsOneListen.listens[0])
     );
+    spy.mockReset();
   });
 
   it('calls correct event for "playing_now" event', () => {
     const wrapper = mount<RecentListens>(
-      <RecentListens {...props} webSocketsServerUrl="http://localhost:8082" />,
+      <RecentListens {...props} />,
       mountOptions
     );
     const instance = wrapper.instance();
@@ -244,6 +253,7 @@ describe("addWebsocketsHandlers", () => {
     expect(instance.receiveNewPlayingNow).toHaveBeenCalledWith(
       JSON.stringify(recentListensPropsPlayingNow.listens[0])
     );
+    spy.mockReset();
   });
 });
 
@@ -350,59 +360,7 @@ describe("receiveNewPlayingNow", () => {
   });
 });
 
-describe("handleCurrentListenChange", () => {
-  it("sets the state correctly", () => {
-    const wrapper = mount<RecentListens>(
-      <RecentListens {...props} />,
-      mountOptions
-    );
-    const instance = wrapper.instance();
-
-    const listen: Listen = {
-      listened_at: 0,
-      track_metadata: {
-        artist_name: "George Erza",
-        track_name: "Shotgun",
-      },
-    };
-    instance.handleCurrentListenChange(listen);
-
-    expect(wrapper.state().currentListen).toEqual(listen);
-  });
-});
-
-describe("isCurrentListen", () => {
-  it("returns true if currentListen and passed listen is same", () => {
-    const wrapper = mount<RecentListens>(
-      <RecentListens {...props} />,
-      mountOptions
-    );
-    const instance = wrapper.instance();
-
-    const listen: Listen = {
-      listened_at: 0,
-      track_metadata: {
-        artist_name: "Coldplay",
-        track_name: "Up & Up",
-      },
-    };
-    wrapper.setState({ currentListen: listen });
-
-    expect(instance.isCurrentListen(listen)).toBe(true);
-  });
-
-  it("returns false if currentListen is not set", () => {
-    const wrapper = mount<RecentListens>(
-      <RecentListens {...props} />,
-      mountOptions
-    );
-    const instance = wrapper.instance();
-
-    wrapper.setState({ currentListen: undefined });
-
-    expect(instance.isCurrentListen({} as Listen)).toBeFalsy();
-  });
-});
+// Will re-add this test when feature flag is removed
 
 describe("updateRecordingToPin", () => {
   it("sets the recordingToPin in the state", async () => {
@@ -410,6 +368,7 @@ describe("updateRecordingToPin", () => {
       <RecentListens {...props} />,
       mountOptions
     );
+
     const instance = wrapper.instance();
     const recordingToPin = props.listens[1];
 
@@ -417,6 +376,158 @@ describe("updateRecordingToPin", () => {
 
     instance.updateRecordingToPin(recordingToPin);
     expect(wrapper.state("recordingToPin")).toEqual(recordingToPin);
+  });
+});
+
+describe("deleteListen", () => {
+  it("calls API and removeListenFromListenList correctly, and updates the state", async () => {
+    jest.useFakeTimers();
+
+    const wrapper = mount<RecentListens>(
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
+    );
+    const instance = wrapper.instance();
+    expect(instance.context.currentUser.name).toEqual("iliekcomputers");
+    const spy = jest
+      .spyOn(instance.context.APIService, "deleteListen")
+      .mockImplementation(() => Promise.resolve(200));
+    const removeListenCallbackSpy = jest.spyOn(
+      instance,
+      "removeListenFromListenList"
+    );
+
+    const listenToDelete = props.listens[0];
+    await instance.deleteListen(listenToDelete);
+
+    jest.advanceTimersByTime(1000);
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(
+      "fnord",
+      "973e5620-829d-46dd-89a8-760d87076287",
+      1586523524
+    );
+
+    expect(removeListenCallbackSpy).toHaveBeenCalledTimes(1);
+    expect(removeListenCallbackSpy).toHaveBeenCalledWith(listenToDelete);
+    expect(instance.state.deletedListen).toEqual(listenToDelete);
+    expect(instance.state.listens).not.toContainEqual(listenToDelete);
+  });
+
+  it("does nothing if isCurrentUser is false", async () => {
+    const wrapper = mount<RecentListens>(
+      <GlobalAppContext.Provider
+        value={{ ...mountOptions.context, currentUser: {} as ListenBrainzUser }}
+      >
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
+    );
+    const instance = wrapper.instance();
+
+    const { APIService } = instance.context;
+    const spy = jest.spyOn(APIService, "deleteListen");
+    spy.mockImplementation(() => Promise.resolve(200));
+
+    expect(instance.state.deletedListen).toEqual(null);
+    const listenToDelete = props.listens[0];
+    await instance.deleteListen(listenToDelete);
+
+    expect(spy).toHaveBeenCalledTimes(0);
+    expect(instance.state.deletedListen).toEqual(null);
+  });
+
+  it("does not render delete listen control if isCurrentUser is false", async () => {
+    const wrapper = mount<RecentListens>(
+      <GlobalAppContext.Provider
+        value={{ ...mountOptions.context, currentUser: {} as ListenBrainzUser }}
+      >
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
+    );
+    expect(wrapper.find("button[title='Delete Listen']")).toHaveLength(0);
+  });
+
+  it("does nothing if CurrentUser.authtoken is not set", async () => {
+    const wrapper = mount<RecentListens>(
+      <GlobalAppContext.Provider
+        value={{
+          ...mountOptions.context,
+          currentUser: { auth_token: undefined, name: "test" },
+        }}
+      >
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
+    );
+    const instance = wrapper.instance();
+
+    const { APIService } = instance.context;
+    const spy = jest.spyOn(APIService, "deleteListen");
+    spy.mockImplementation(() => Promise.resolve(200));
+
+    expect(instance.state.deletedListen).toEqual(null);
+    const listenToDelete = props.listens[0];
+    await instance.deleteListen(listenToDelete);
+
+    expect(spy).toHaveBeenCalledTimes(0);
+    expect(instance.state.deletedListen).toEqual(null);
+  });
+
+  it("doesn't call removeListenFromListenList or update state if status code is not 200", async () => {
+    const wrapper = mount<RecentListens>(
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
+    );
+    const instance = wrapper.instance();
+    const removeListenCallbackSpy = jest.spyOn(
+      instance,
+      "removeListenFromListenList"
+    );
+
+    const { APIService } = instance.context;
+    const spy = jest.spyOn(APIService, "deleteListen");
+    spy.mockImplementation(() => Promise.resolve(500));
+
+    const listenToDelete = props.listens[0];
+    await instance.deleteListen(listenToDelete);
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(
+      "fnord",
+      "973e5620-829d-46dd-89a8-760d87076287",
+      1586523524
+    );
+
+    expect(removeListenCallbackSpy).toHaveBeenCalledTimes(0);
+    expect(instance.state.listens).toContainEqual(listenToDelete);
+  });
+
+  it("calls newAlert if error is returned", async () => {
+    const newAlertMock = jest.fn();
+    const wrapper = mount<RecentListens>(
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <RecentListens {...props} newAlert={newAlertMock} />
+      </GlobalAppContext.Provider>
+    );
+    const instance = wrapper.instance();
+
+    const error = new Error("my error message");
+    const { APIService } = instance.context;
+    const spy = jest.spyOn(APIService, "deleteListen");
+    spy.mockImplementation(() => {
+      throw error;
+    });
+
+    const listenToDelete = props.listens[0];
+    await instance.deleteListen(listenToDelete);
+
+    expect(newAlertMock).toHaveBeenCalledWith(
+      "danger",
+      "Error while deleting listen",
+      "my error message"
+    );
   });
 });
 
@@ -501,6 +612,7 @@ describe("Pagination", () => {
       const instance = wrapper.instance();
 
       // Random nextListenTs to ensure that is the value set in browser history
+      wrapper.setProps({ latestListenTs: 1586623524 });
       wrapper.setState({ listens: [], nextListenTs: 1586440600 });
 
       const spy = jest.fn().mockImplementation((username, minTs, maxTs) => {
@@ -510,8 +622,6 @@ describe("Pagination", () => {
       const scrollSpy = jest.spyOn(instance, "afterListensFetch");
 
       await instance.handleClickOlder();
-
-      await new Promise((done) => setTimeout(done, 500));
 
       expect(wrapper.state("listens")).toEqual(listens);
       expect(wrapper.state("loading")).toBeFalsy();
@@ -547,7 +657,6 @@ describe("Pagination", () => {
       instance.getFeedback = jest.fn();
 
       await instance.handleClickOlder();
-      await new Promise((done) => setTimeout(done, 500));
 
       expect(wrapper.state("loading")).toBeFalsy();
       expect(wrapper.state("nextListenTs")).toBeUndefined();
@@ -630,6 +739,7 @@ describe("Pagination", () => {
       );
       const instance = wrapper.instance();
 
+      wrapper.setProps({ latestListenTs: 1586623524 });
       wrapper.setState({ previousListenTs: 123456 });
 
       const spy = jest.fn().mockImplementation((username, minTs, maxTs) => {
@@ -639,8 +749,6 @@ describe("Pagination", () => {
       const scrollSpy = jest.spyOn(instance, "afterListensFetch");
 
       await instance.handleClickNewer();
-
-      await new Promise((done) => setTimeout(done, 500));
 
       expect(wrapper.state("listens")).toEqual(listens);
       expect(wrapper.state("loading")).toBeFalsy();
@@ -832,6 +940,8 @@ describe("Pagination", () => {
   });
 });
 
+// Will re-add this test when feature flag is removed
+
 describe("pinRecordingModal", () => {
   it("renders the PinRecordingModal component with the correct props", async () => {
     const wrapper = mount<RecentListens>(
@@ -845,9 +955,9 @@ describe("pinRecordingModal", () => {
 
     // recentListens renders pinRecordingModal with listens[0] as recordingToPin by default
     expect(pinRecordingModal.props()).toEqual({
-      isCurrentUser: true,
       recordingToPin: props.listens[0],
       newAlert: props.newAlert,
+      onSuccessfulPin: expect.any(Function),
     });
 
     instance.updateRecordingToPin(recordingToPin);
@@ -855,9 +965,11 @@ describe("pinRecordingModal", () => {
 
     pinRecordingModal = wrapper.find(PinRecordingModal).first();
     expect(pinRecordingModal.props()).toEqual({
-      isCurrentUser: true,
       recordingToPin,
       newAlert: props.newAlert,
+      onSuccessfulPin: expect.any(Function),
     });
   });
 });
+
+/* eslint-enable jest/no-disabled-tests */

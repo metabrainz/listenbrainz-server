@@ -5,26 +5,11 @@ import {
   get as _get,
   has as _has,
   debounce as _debounce,
+  isString,
+  difference,
 } from "lodash";
 import { searchForSpotifyTrack, loadScriptAsync } from "./utils";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
-
-const getSpotifyUriFromListen = (listen: Listen): string => {
-  if (
-    !listen ||
-    !listen.track_metadata ||
-    !listen.track_metadata.additional_info ||
-    typeof listen.track_metadata.additional_info.spotify_id !== "string"
-  ) {
-    return "";
-  }
-  const spotifyId = listen.track_metadata.additional_info.spotify_id;
-  const spotifyTrack = spotifyId.split("https://open.spotify.com/")[1];
-  if (typeof spotifyTrack !== "string") {
-    return "";
-  }
-  return `spotify:${spotifyTrack.replace("/", ":")}`;
-};
 
 // Fix for LB-447 (Player does not play any sound)
 // https://github.com/spotify/web-playback-sdk/issues/75#issuecomment-487325589
@@ -78,6 +63,19 @@ export default class SpotifyPlayer
     return true;
   };
 
+  static isListenFromThisService = (listen: Listen | JSPFTrack): boolean => {
+    const listeningFrom = _get(
+      listen,
+      "track_metadata.additional_info.listening_from"
+    );
+    return (
+      (isString(listeningFrom) && listeningFrom.toLowerCase() === "spotify") ||
+      Boolean(SpotifyPlayer.getSpotifyURLFromListen(listen))
+    );
+  };
+
+  public name = "spotify";
+  public domainName = "spotify.com";
   spotifyPlayer?: SpotifyPlayerType;
   debouncedOnTrackEnd: () => void;
 
@@ -113,20 +111,49 @@ export default class SpotifyPlayer
     this.disconnectSpotifyPlayer();
   }
 
+  static getSpotifyURLFromListen(
+    listen: Listen | JSPFTrack
+  ): string | undefined {
+    return _get(listen, "track_metadata.additional_info.spotify_id");
+  }
+
+  static getSpotifyTrackIDFromListen(listen: Listen | JSPFTrack): string {
+    const spotifyId = SpotifyPlayer.getSpotifyURLFromListen(listen);
+    if (!spotifyId) {
+      return "";
+    }
+    const spotifyTrack = spotifyId.split(
+      "https://open.spotify.com/track/"
+    )?.[1];
+    return spotifyTrack;
+  }
+
+  static getSpotifyUriFromListen(listen: Listen | JSPFTrack): string {
+    const spotifyTrack = SpotifyPlayer.getSpotifyTrackIDFromListen(listen);
+    // spotifyTrack could be undefined
+    if (!spotifyTrack) {
+      return "";
+    }
+    return `spotify:track:${spotifyTrack}`;
+  }
+
   searchAndPlayTrack = async (listen: Listen | JSPFTrack): Promise<void> => {
     const trackName =
       _get(listen, "track_metadata.track_name") || _get(listen, "title");
     const artistName =
       _get(listen, "track_metadata.artist_name") || _get(listen, "creator");
-    // Using the releaseName has paradoxically given worst search results, so we're going to ignore it for now
-    const releaseName = ""; // _get(listen, "track_metadata.release_name");
+    // Using the releaseName has paradoxically given worst search results,
+    // so we're only using it when track name isn't provided (for example for an album search)
+    const releaseName = trackName
+      ? ""
+      : _get(listen, "track_metadata.release_name");
     const {
       handleError,
       handleWarning,
       handleSuccess,
       onTrackNotFound,
     } = this.props;
-    if (!trackName) {
+    if (!trackName && !artistName && !releaseName) {
       handleWarning("Not enough info to search on Spotify");
       onTrackNotFound();
     }
@@ -189,6 +216,9 @@ export default class SpotifyPlayer
         }
       );
       let errorMessage;
+      if (response.ok) {
+        return;
+      }
       try {
         errorMessage = await response.json();
       } catch (err) {
@@ -224,9 +254,45 @@ export default class SpotifyPlayer
     }
   };
 
+  isListenFromThisService = (listen: Listen | JSPFTrack): boolean => {
+    const listeningFrom = _get(
+      listen,
+      "track_metadata.additional_info.listening_from"
+    );
+    return (
+      (isString(listeningFrom) && listeningFrom.toLowerCase() === "spotify") ||
+      Boolean(SpotifyPlayer.getSpotifyURLFromListen(listen))
+    );
+  };
+
+  canSearchAndPlayTracks = (): boolean => {
+    const { spotifyUser } = this.props;
+    return SpotifyPlayer.hasPermissions(spotifyUser);
+  };
+
+  datasourceRecordsListens = (): boolean => {
+    const { spotifyUser } = this.props;
+    const permissionsRequiredForScrobbling = [
+      "user-read-currently-playing",
+      "user-read-recently-played",
+    ];
+    return (
+      difference(
+        permissionsRequiredForScrobbling,
+        spotifyUser?.permission ?? []
+      ).length === 0
+    );
+  };
+
   playListen = (listen: Listen | JSPFTrack): void => {
-    if (_get(listen, "track_metadata.additional_info.spotify_id")) {
-      this.playSpotifyURI(getSpotifyUriFromListen(listen as Listen));
+    const { show } = this.props;
+    if (!show) {
+      return;
+    }
+    if (SpotifyPlayer.getSpotifyURLFromListen(listen)) {
+      this.playSpotifyURI(
+        SpotifyPlayer.getSpotifyUriFromListen(listen as Listen)
+      );
     } else {
       this.searchAndPlayTrack(listen);
     }
@@ -419,7 +485,23 @@ export default class SpotifyPlayer
       const artists = current_track.artists
         .map((artist: SpotifyArtist) => artist.name)
         .join(", ");
-      onTrackInfoChange(current_track.name, artists);
+      onTrackInfoChange(
+        current_track.name,
+        `https://open.spotify.com/track/${current_track.id}`,
+        artists,
+        current_track.album?.name,
+        current_track.album.images
+          .filter((image) => image.url)
+          .map((image) => {
+            const mediaImage: MediaImage = {
+              src: image.url,
+            };
+            if (image.width && image.height) {
+              mediaImage.sizes = `${image.width}x${image.height}`;
+            }
+            return mediaImage;
+          })
+      );
 
       this.setState({
         durationMs: duration,

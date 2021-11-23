@@ -1,0 +1,239 @@
+{
+   "release-offset": 0,
+   "release-count": 1,
+   "releases": [
+      {
+         "release-events": [
+            {
+               "date": "2011-03-29",
+               "area": {
+                  "disambiguation": "",
+                  "type": null,
+                  "id": "89a675c2-3e37-3518-b83c-418bad59a85a",
+                  "name": "Europe",
+                  "type-id": null,
+                  "iso-3166-1-codes": [
+                     "XE"
+                  ],
+                  "sort-name": "Europe"
+               }
+            }
+         ],
+         "status": "Official",
+         "title": "Femme Fatale",
+         "disambiguation": "eastern europe",
+         "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+         "media": [
+            {
+               "title": "",
+               "tracks": [
+                  {
+                     "recording": {
+                        "disambiguation": "",
+                        "id": "c0a6ef98-6284-48d4-9e44-fd38bcbae5ad",
+                        "title": "Till the World Ends",
+                        "video": false,
+                        "length": 238000,
+                        "first-release-date": "2011-03-04"
+                     },
+                     "id": "a0331c57-67b9-4e24-bc39-ebeaf03a96bd",
+                     "title": "Till the World Ends",
+                     "number": "1",
+                     "position": 1,
+                     "length": 237000
+                  },
+                  {
+                     "recording": {
+                        "video": false,
+                        "title": "Hold It Against Me",
+                        "first-release-date": "2011-01-11",
+                        "length": 229000,
+                        "id": "4b6ad952-257a-4f39-99bb-ed30e6036fd8",
+                        "disambiguation": ""
+                     },
+                     "id": "78188716-9079-42be-be4b-1af5551807b5",
+                     "title": "Hold It Against Me",
+                     "position": 2,
+                     "number": "2",
+                     "length": 228000
+                  },
+                  {
+                     "id": "93b3e85a-1dbe-4e8c-a910-81fd844c8d32",
+                     "title": "Inside Out",
+                     "number": "3",
+                     "position": 3,
+                     "length": 218000,
+                     "recording": {
+                        "disambiguation": "",
+                        "id": "b0309cfc-6bb8-425a-8211-b5a158226e5f",
+                        "first-release-date": "2011-03-25",
+                        "length": 218026,
+                        "video": false,
+                        "title": "Inside Out"
+                     }
+                  },
+                  {
+                     "id": "7a923ad7-b7a8-47dd-8e8b-2239f30819d7",
+                     "title": "I Wanna Go",
+                     "length": 210000,
+                     "position": 4,
+                     "number": "4",
+                     "recording": {
+                        "disambiguation": "",
+                        "video": false,
+                        "title": "I Wanna Go",
+                        "length": 210000,
+                        "first-release-date": "2011-03-25",
+                        "id": "113b6fbc-8a9a-40f1-ae9f-538ba2a93ae7"
+                     }
+                  },
+                  {
+                     "title": "How I Roll",
+                     "length": 216000,
+                     "position": 5,
+                     "number": "5",
+                     "id": "0a85d227-5054-4042-90ab-fbbace6bae76",
+                     "recording": {
+                        "disambiguation": "",
+                        "id": "26d328de-ff0d-4468-b3b9-a3df9975884e",
+                        "first-release-date": "2011-03-25",
+                        "length": 216546,
+                        "video": false,
+                        "title": "How I Roll"
+                     }
+                  },
+                  {
+                     "position": 6,
+                     "length": 216000,
+                     "number": "6",
+                     "title": "(Drop Dead) Beautiful",
+                     "id": "46c7fb0a-227a-4866-85d1-4234b4916863",
+                     "recording": {
+                        "disambiguation": "",
+                        "title": "(Drop Dead) Beautiful",
+                        "video": false,
+                        "first-release-date": "2011-03-25",
+                        "length": 216400,
+                        "id": "bd558866-6c1e-4e45-9fbc-51e92acc9315"
+                     }
+                  },
+                  {
+                     "recording": {
+                        "id": "8aa9b186-a8b4-4034-8540-8cf288cd23b8",
+                        "first-release-date": "2011-03-25",
+                        "length": 206320,
+                        "video": false,
+                        "title": "Seal It With a Kiss",
+                        "disambiguation": ""
+                     },
+                     "length": 206000,
+                     "position": 7,
+                     "number": "7",
+                     "title": "Seal It With a Kiss",
+                     "id": "8a602d98-adea-4c6c-b216-3f3ec1330550"
+                  },
+                  {
+                     "id": "2e22538e-678b-450a-9ecc-1760b5e74d68",
+                     "position": 8,
+                     "length": 284000,
+                     "number": "8",
+                     "title": "Big Fat Bass",
+                     "recording": {
+                        "length": 284840,
+                        "first-release-date": "2011-03-25",
+                        "video": false,
+                        "title": "Big Fat Bass",
+                        "id": "da3196f5-fc27-40c0-9b4c-c603603a958d",
+                        "disambiguation": ""
+                     }
+                  },
+                  {
+                     "recording": {
+                        "disambiguation": "",
+                        "first-release-date": "2011-03-25",
+                        "length": 201000,
+                        "title": "Trouble for Me",
+                        "video": false,
+                        "id": "7c894616-9bf5-4aa2-a047-7bc7e4227e0b"
+                     },
+                     "title": "Trouble for Me",
+                     "number": "9",
+                     "position": 9,
+                     "length": 201000,
+                     "id": "6d7d6260-807f-411e-990f-05cbe801d5f0"
+                  },
+                  {
+                     "id": "a225ea8b-9d08-4fde-b034-4901c37c6c68",
+                     "title": "Trip to Your Heart",
+                     "position": 10,
+                     "length": 213000,
+                     "number": "10",
+                     "recording": {
+                        "disambiguation": "",
+                        "first-release-date": "2011-03-25",
+                        "length": 213773,
+                        "title": "Trip to Your Heart",
+                        "video": false,
+                        "id": "67db7f69-9990-47dd-a9f7-b1be5327f4b4"
+                     }
+                  },
+                  {
+                     "title": "Gasoline",
+                     "position": 11,
+                     "length": 188000,
+                     "number": "11",
+                     "id": "92b5600d-f1d1-4775-978f-5487ae59371b",
+                     "recording": {
+                        "id": "0b862101-5927-44cd-8b69-e54f163a92aa",
+                        "first-release-date": "2011-03-25",
+                        "length": 188426,
+                        "video": false,
+                        "title": "Gasoline",
+                        "disambiguation": ""
+                     }
+                  },
+                  {
+                     "recording": {
+                        "id": "508315f7-93d2-4b25-9561-0034d7e07717",
+                        "first-release-date": "2011-03-25",
+                        "length": 225000,
+                        "title": "Criminal",
+                        "video": false,
+                        "disambiguation": ""
+                     },
+                     "id": "0255f1ea-3199-49b4-8b5c-bdcc3716ebc9",
+                     "title": "Criminal",
+                     "number": "12",
+                     "position": 12,
+                     "length": 225000
+                  }
+               ],
+               "format": "CD",
+               "format-id": "9712d52a-4509-3d4b-a1a2-67c88c643e31",
+               "position": 1,
+               "track-offset": 0,
+               "track-count": 12
+            }
+         ],
+         "packaging-id": "21179778-2f98-3d11-816e-42b469a0c924",
+         "quality": "normal",
+         "id": "76658887-8e15-43db-9b5b-46df81cdf52e",
+         "asin": "B004UMAPKY",
+         "text-representation": {
+            "script": "Latn",
+            "language": "eng"
+         },
+         "packaging": "Discbox Slider",
+         "date": "2011-03-29",
+         "cover-art-archive": {
+            "artwork": true,
+            "front": true,
+            "count": 1,
+            "back": false,
+            "darkened": false
+         },
+         "country": "XE",
+         "barcode": "886978602527"
+      }
+   ]
+}

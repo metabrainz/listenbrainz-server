@@ -31,6 +31,7 @@ class UserTimelineEventType(Enum):
     FOLLOW = 'follow'
     LISTEN = 'listen'
     NOTIFICATION = 'notification'
+    RECORDING_PIN = 'recording_pin'
 
 
 class RecordingRecommendationMetadata(BaseModel):
@@ -76,10 +77,15 @@ class APIFollowEvent(BaseModel):
     created: NonNegativeInt
 
 
-APIEventMetadata = Union[APIListen, APIFollowEvent, APINotificationEvent]
+class APIPinEvent(APIListen):
+    blurb_content: Optional[str]
+
+
+APIEventMetadata = Union[APIListen, APIFollowEvent, APINotificationEvent, APIPinEvent]
 
 
 class APITimelineEvent(BaseModel):
+    id: Optional[int]
     event_type: UserTimelineEventType
     user_name: constr(min_length=1)
     created: NonNegativeInt

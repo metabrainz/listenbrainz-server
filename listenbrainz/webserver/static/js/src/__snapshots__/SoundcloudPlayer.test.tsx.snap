@@ -24,7 +24,7 @@ exports[`SoundcloudPlayer renders 1`] = `
       height="420px"
       id="soundcloud-iframe"
       scrolling="no"
-      src="https://w.soundcloud.com/player/?url="
+      src="https://w.soundcloud.com/player/?auto_play=false"
       title="Soundcloud player"
       width="100%"
     />

@@ -46,7 +46,7 @@ option to `register`_ your application. Fill out the form with the following dat
 
 - **Type**: ``Web Application``
 
-- **Callback URL**: ``http://localhost/login/musicbrainz/post``
+- **Callback URL**: ``http://localhost/login/musicbrainz/post/``
 
 After entering this information, you'll have an OAuth client ID and OAuth client
 secret. You'll use these for configuring ListenBrainz.
@@ -157,14 +157,14 @@ environment by running ``develop.sh up``.
     
 .. note::
 
-    By default, the web service listens on port 80. If you already have a service listening
+    By default, the web service listens on port 7000. If you already have a service listening
     on this port, then you can change it by updating the ports section of ``docker/docker-compose.yml``.
     
     
     .. code-block:: bash
     
         ports:
-        - "80:80"
+        - "7000:80"
     
     To change the listening port, change only the value before the ":" to the port of your choice
     and point your browser to ``http://localhost:<Port>``
@@ -279,10 +279,5 @@ There can be quite a lot of logs in the terminal, so if you want to look only at
 .. code-block:: bash
 
    ./develop.sh logs -f static_builder
-
-FAQ
---------------
-We have a :doc:`FAQ page <faqs>` for questions that come up often. Please take a look
-if you have any issues.
 
 .. include:: develop-sh.rst

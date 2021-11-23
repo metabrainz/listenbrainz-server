@@ -17,13 +17,8 @@ class ReportedUsers(db.Model):
 class ReportedUserAdminView(AdminModelView):
     column_list = [
         'id',
-        'reporter',
-        'reported',
+        'reporter.musicbrainz_id',
+        'reported.musicbrainz_id',
         'reason',
         'reported_at'
     ]
-
-    column_formatters = dict(
-        reporter=lambda view, context, model, name: model.reporter.musicbrainz_id,
-        reported=lambda view, context, model, name: model.reported.musicbrainz_id
-    )

@@ -8,13 +8,10 @@ from typing import List, Optional
 class UserMissingMusicBrainzDataRecord(BaseModel):
     """ Each individual record for a user's missing musicbrainz data.
     """
-    artist_msid: constr(min_length=1)
     artist_name: constr(min_length=1)
     listened_at: constr(min_length=1)
-    recording_msid: constr(min_length=1)
-    release_msid: Optional[str]
     release_name: Optional[str]
-    track_name: constr(min_length=1)
+    recording_name: constr(min_length=1)
 
     _validate_uuids: classmethod = validator(
         "artist_msid",

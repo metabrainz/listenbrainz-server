@@ -1,5 +1,5 @@
 import * as React from "react";
-import { shallow, mount } from "enzyme";
+import { mount } from "enzyme";
 
 import * as recommendationProps from "../__mocks__/recommendations.json";
 
@@ -65,7 +65,13 @@ const feedback = {
 
 describe("Recommendations", () => {
   it("renders correctly on the recommendations page", () => {
-    const wrapper = shallow<Recommendations>(<Recommendations {...props} />);
+    const wrapper = mount<Recommendations>(
+      <GlobalAppContext.Provider
+        value={{ ...mountOptions.context, currentUser: props.user }}
+      >
+        <Recommendations {...props} />
+      </GlobalAppContext.Provider>
+    );
     expect(wrapper.html()).toMatchSnapshot();
   });
 });
@@ -131,8 +137,10 @@ describe("getFeedback", () => {
 
 describe("loadFeedback", () => {
   it("updates the recommendationFeedbackMap state", async () => {
-    const wrapper = shallow<Recommendations>(
-      <Recommendations {...(propsOne as RecommendationsProps)} />
+    const wrapper = mount<Recommendations>(
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <Recommendations {...props} />
+      </GlobalAppContext.Provider>
     );
 
     const instance = wrapper.instance();
@@ -151,8 +159,10 @@ describe("loadFeedback", () => {
 
 describe("getFeedbackForRecordingMbid", () => {
   it("returns the feedback after fetching from recommendationFeedbackMap state", async () => {
-    const wrapper = shallow<Recommendations>(
-      <Recommendations {...(propsOne as RecommendationsProps)} />
+    const wrapper = mount<Recommendations>(
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <Recommendations {...props} />
+      </GlobalAppContext.Provider>
     );
 
     const instance = wrapper.instance();
@@ -170,8 +180,10 @@ describe("getFeedbackForRecordingMbid", () => {
   });
 
   it("returns null if the recording is not in recommendationFeedbackMap state", async () => {
-    const wrapper = shallow<Recommendations>(
-      <Recommendations {...(propsOne as RecommendationsProps)} />
+    const wrapper = mount<Recommendations>(
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <Recommendations {...props} />
+      </GlobalAppContext.Provider>
     );
 
     const instance = wrapper.instance();
@@ -186,8 +198,10 @@ describe("getFeedbackForRecordingMbid", () => {
 
 describe("updateFeedback", () => {
   it("updates the recommendationFeedbackMap state for particular recording", async () => {
-    const wrapper = shallow<Recommendations>(
-      <Recommendations {...(propsOne as RecommendationsProps)} />
+    const wrapper = mount<Recommendations>(
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <Recommendations {...props} />
+      </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
 
@@ -207,54 +221,17 @@ describe("updateFeedback", () => {
   });
 });
 
-describe("isCurrentRecommendation", () => {
-  it("returns true if currentRecommendation and passed recommendation is same", () => {
-    const wrapper = shallow<Recommendations>(<Recommendations {...props} />);
-    const instance = wrapper.instance();
-
-    const recommendation: Recommendation = {
-      listened_at: 0,
-      track_metadata: {
-        artist_name: "Coldplay",
-        track_name: "Up & Up",
-      },
-    };
-    wrapper.setState({ currentRecommendation: recommendation });
-
-    expect(instance.isCurrentRecommendation(recommendation)).toBe(true);
-  });
-
-  it("returns false if currentRecommendation is not set", () => {
-    const wrapper = shallow<Recommendations>(<Recommendations {...props} />);
-    const instance = wrapper.instance();
-
-    wrapper.setState({ currentRecommendation: undefined });
-
-    expect(instance.isCurrentRecommendation({} as Recommendation)).toBeFalsy();
-  });
-});
-
-describe("handleCurrentRecommendationChange", () => {
-  it("sets the state correctly", () => {
-    const wrapper = shallow<Recommendations>(<Recommendations {...props} />);
-    const instance = wrapper.instance();
-
-    const recommendation: Recommendation = {
-      listened_at: 0,
-      track_metadata: {
-        artist_name: "George Erza",
-        track_name: "Shotgun",
-      },
-    };
-    instance.handleCurrentRecommendationChange(recommendation);
-
-    expect(wrapper.state().currentRecommendation).toEqual(recommendation);
-  });
-});
-
 describe("handleClickPrevious", () => {
+  beforeAll(() => {
+    window.HTMLElement.prototype.scrollIntoView = jest.fn();
+  });
+
   it("don't do anything if already on first page", async () => {
-    const wrapper = shallow<Recommendations>(<Recommendations {...props} />);
+    const wrapper = mount<Recommendations>(
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <Recommendations {...props} />
+      </GlobalAppContext.Provider>
+    );
     const instance = wrapper.instance();
     instance.afterRecommendationsDisplay = jest.fn();
 
@@ -270,7 +247,11 @@ describe("handleClickPrevious", () => {
   });
 
   it("go to the previous page if not on first page", async () => {
-    const wrapper = shallow<Recommendations>(<Recommendations {...props} />);
+    const wrapper = mount<Recommendations>(
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <Recommendations {...props} />
+      </GlobalAppContext.Provider>
+    );
     const instance = wrapper.instance();
     const afterRecommendationsDisplaySpy = jest.spyOn(
       instance,
@@ -296,7 +277,11 @@ describe("handleClickPrevious", () => {
 
 describe("handleClickNext", () => {
   it("don't do anything if already on last page", async () => {
-    const wrapper = shallow<Recommendations>(<Recommendations {...props} />);
+    const wrapper = mount<Recommendations>(
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <Recommendations {...props} />
+      </GlobalAppContext.Provider>
+    );
     const instance = wrapper.instance();
     const afterRecommendationsDisplaySpy = jest.spyOn(
       instance,
@@ -320,7 +305,11 @@ describe("handleClickNext", () => {
   });
 
   it("go to the next page if not on last page", async () => {
-    const wrapper = shallow<Recommendations>(<Recommendations {...props} />);
+    const wrapper = mount<Recommendations>(
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <Recommendations {...props} />
+      </GlobalAppContext.Provider>
+    );
     const instance = wrapper.instance();
     const afterRecommendationsDisplaySpy = jest.spyOn(
       instance,

@@ -19,8 +19,10 @@
  */
 
 import * as React from "react";
-import { shallow, mount, ReactWrapper } from "enzyme";
+import { mount, ReactWrapper } from "enzyme";
 import FollowButton from "./FollowButton";
+import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
+import APIService from "./APIService";
 
 const user = {
   id: 1,
@@ -32,51 +34,54 @@ const loggedInUser = {
   name: "iliekcomputers",
 };
 
+const globalContext: GlobalAppContextT = {
+  APIService: new APIService("foo"),
+  youtubeAuth: {},
+  spotifyAuth: {},
+  currentUser: loggedInUser,
+};
+
 describe("<FollowButton />", () => {
   it("renders correct styling based on type prop", () => {
     // button is icon-only and renders text on hover
     let wrapper = mount(
-      <FollowButton
-        type="icon-only"
-        user={user}
-        loggedInUser={loggedInUser}
-        loggedInUserFollowsUser
-      />
+      <GlobalAppContext.Provider value={globalContext}>
+        <FollowButton type="icon-only" user={user} loggedInUserFollowsUser />
+      </GlobalAppContext.Provider>
     );
     expect(wrapper.html()).toMatchSnapshot();
 
     // button is solid and has no icon
     wrapper = mount(
-      <FollowButton
-        type="block"
-        user={user}
-        loggedInUser={loggedInUser}
-        loggedInUserFollowsUser={false}
-      />
+      <GlobalAppContext.Provider value={globalContext}>
+        <FollowButton
+          type="block"
+          user={user}
+          loggedInUserFollowsUser={false}
+        />
+      </GlobalAppContext.Provider>
     );
     expect(wrapper.html()).toMatchSnapshot();
   });
 
   it("renders with the correct text based on the props", () => {
     // already follows the user, should show "Following"
-    let wrapper = shallow(
-      <FollowButton
-        type="icon-only"
-        user={user}
-        loggedInUser={loggedInUser}
-        loggedInUserFollowsUser
-      />
+    let wrapper = mount(
+      <GlobalAppContext.Provider value={globalContext}>
+        <FollowButton type="icon-only" user={user} loggedInUserFollowsUser />
+      </GlobalAppContext.Provider>
     );
     expect(wrapper.contains("Following")).toBeTruthy();
 
     // doesn't already follow the user, should show "Follow"
-    wrapper = shallow(
-      <FollowButton
-        type="icon-only"
-        user={user}
-        loggedInUser={loggedInUser}
-        loggedInUserFollowsUser={false}
-      />
+    wrapper = mount(
+      <GlobalAppContext.Provider value={globalContext}>
+        <FollowButton
+          type="icon-only"
+          user={user}
+          loggedInUserFollowsUser={false}
+        />
+      </GlobalAppContext.Provider>
     );
     expect(wrapper.contains("Follow")).toBeTruthy();
     expect(wrapper.contains("Following")).toBeFalsy();
@@ -106,12 +111,13 @@ describe("<FollowButton />", () => {
 
     it("follows the user if logged in user isn't following the user", () => {
       const wrapper = mount(
-        <FollowButton
-          type="icon-only"
-          user={user}
-          loggedInUser={loggedInUser}
-          loggedInUserFollowsUser={false}
-        />
+        <GlobalAppContext.Provider value={globalContext}>
+          <FollowButton
+            type="icon-only"
+            user={user}
+            loggedInUserFollowsUser={false}
+          />
+        </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
 
@@ -122,12 +128,9 @@ describe("<FollowButton />", () => {
 
     it("unfollows the user if logged in user is already following the user", () => {
       const wrapper = mount(
-        <FollowButton
-          type="icon-only"
-          user={user}
-          loggedInUser={loggedInUser}
-          loggedInUserFollowsUser
-        />
+        <GlobalAppContext.Provider value={globalContext}>
+          <FollowButton type="icon-only" user={user} loggedInUserFollowsUser />
+        </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
 

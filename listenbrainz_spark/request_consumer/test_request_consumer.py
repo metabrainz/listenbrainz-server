@@ -1,10 +1,10 @@
 from unittest.mock import patch, MagicMock
 
 from listenbrainz_spark.request_consumer.request_consumer import RequestConsumer
-from listenbrainz_spark.tests import SparkTestCase
+from listenbrainz_spark.tests import SparkNewTestCase
 
 
-class RequestConsumerTestCase(SparkTestCase):
+class RequestConsumerTestCase(SparkNewTestCase):
 
     def setUp(self):
         self.consumer = RequestConsumer()

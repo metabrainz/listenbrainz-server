@@ -23,29 +23,4 @@ class UserDailyActivityStatMessage(BaseModel):
     stats_range: constr(min_length=1)  # The range for which the stats are calculated, i.e week, month, year or all_time
     from_ts: NonNegativeInt
     to_ts: NonNegativeInt
-    daily_activity: List[UserDailyActivityRecord]
-
-
-class UserDailyActivityStatRange(BaseModel):
-    """ Model for user's daily activity for a particular time range.
-        Currently supports week, month, year and all-time
-    """
-    to_ts: NonNegativeInt
-    from_ts: NonNegativeInt
-    daily_activity: List[UserDailyActivityRecord]
-
-
-class UserDailyActivityStatJson(BaseModel):
-    """ Model for the JSON stored in the statistics.user table's daily_activity column
-    """
-    week: Optional[UserDailyActivityStatRange]
-    month: Optional[UserDailyActivityStatRange]
-    year: Optional[UserDailyActivityStatRange]
-    all_time: Optional[UserDailyActivityStatRange]
-
-
-class UserDailyActivityStat(UserDailyActivityStatJson):
-    """ Model for stats around user's daily activity
-    """
-    user_id: NonNegativeInt
-    last_updated: datetime
+    data: List[UserDailyActivityRecord]

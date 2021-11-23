@@ -5,10 +5,10 @@ from unittest.mock import patch, mock_open, call, MagicMock
 import listenbrainz_spark
 from listenbrainz_spark import config
 from listenbrainz_spark.exceptions import DumpInvalidException
-from listenbrainz_spark.tests import SparkTestCase
+from listenbrainz_spark.tests import SparkNewTestCase
 
 
-class FTPTestCase(SparkTestCase):
+class FTPTestCase(SparkNewTestCase):
 
     @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.connect')
     def test_init(self, mock_connect):

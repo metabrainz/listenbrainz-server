@@ -13,7 +13,7 @@ recommendations_cf_recording_bp = Blueprint('recommendations_cf_recording', __na
 SERVER_URL = "https://labs.api.listenbrainz.org/recording-mbid-lookup/json"
 
 
-@recommendations_cf_recording_bp.route("/<user_name>")
+@recommendations_cf_recording_bp.route("/<user_name>/")
 def info(user_name):
     """ Show info about the recommended tracks
     """
@@ -27,7 +27,7 @@ def info(user_name):
     )
 
 
-@recommendations_cf_recording_bp.route("/<user_name>/top_artist")
+@recommendations_cf_recording_bp.route("/<user_name>/top_artist/")
 def top_artist(user_name: str):
     """ Show top artist user recommendations """
     user = _get_user(user_name)
@@ -37,7 +37,7 @@ def top_artist(user_name: str):
     return template
 
 
-@recommendations_cf_recording_bp.route("/<user_name>/similar_artist")
+@recommendations_cf_recording_bp.route("/<user_name>/similar_artist/")
 def similar_artist(user_name: str):
     """ Show similar artist user recommendations """
     user = _get_user(user_name)

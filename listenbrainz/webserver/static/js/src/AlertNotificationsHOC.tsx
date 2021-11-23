@@ -106,6 +106,7 @@ export function withAlertNotifications<P extends object>(
             timeout={15000}
             dismissTitle="Dismiss"
             onDismiss={this.onAlertDismissed}
+            showIcon={false}
           />
           <WrappedComponent
             {...(passthroughProps as P)}

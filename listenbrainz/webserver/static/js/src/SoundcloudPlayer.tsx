@@ -56,9 +56,15 @@ type SoundcloudPlayerState = {
 export default class SoundcloudPlayer
   extends React.Component<DataSourceProps, SoundcloudPlayerState>
   implements DataSourceType {
+  static isListenFromThisService(listen: Listen | JSPFTrack): boolean {
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    return !!originURL && /soundcloud\.com/.test(originURL);
+  }
+
+  public name = "soundcloud";
+  public domainName = "soundcloud.com";
   iFrameRef?: React.RefObject<HTMLIFrameElement>;
   soundcloudPlayer?: SoundCloudHTML5Widget;
-  supportsSearch = false;
   retries = 0;
   // HTML widget options: https://developers.soundcloud.com/docs/api/html5-widget#parameters
   options = {
@@ -113,13 +119,26 @@ export default class SoundcloudPlayer
     if (!this.soundcloudPlayer) {
       return;
     }
-    this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.FINISH);
-    this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.PAUSE);
-    this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.PLAY);
-    this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.PLAY_PROGRESS);
-    this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.ERROR);
-    this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.READY);
+    try {
+      this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.FINISH);
+      this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.PAUSE);
+      this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.PLAY);
+      this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.PLAY_PROGRESS);
+      this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.ERROR);
+      this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.READY);
+      // eslint-disable-next-line no-empty
+    } catch (error) {}
   }
+
+  static getSoundcloudURLFromListen = (
+    listen: Listen | JSPFTrack
+  ): string | undefined => {
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    if (originURL && /soundcloud\.com/.test(originURL)) {
+      return originURL;
+    }
+    return undefined;
+  };
 
   onReady = (): void => {
     if (!this.soundcloudPlayer) {
@@ -158,28 +177,33 @@ export default class SoundcloudPlayer
     onPlayerPausedChange(false);
   };
 
+  canSearchAndPlayTracks = (): boolean => {
+    return false;
+  };
+
+  datasourceRecordsListens = (): boolean => {
+    return false;
+  };
+
   playListen = (listen: Listen | JSPFTrack) => {
     const { show, onTrackNotFound } = this.props;
     if (!show) {
       return;
     }
-    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
-    if (/soundcloud\.com/.test(originURL)) {
-      if (this.soundcloudPlayer) {
-        this.soundcloudPlayer.load(originURL, this.options);
-      } else if (this.retries <= 3) {
-        this.retries += 1;
-        setTimeout(this.playListen.bind(this, listen), 500);
-      } else {
-        // Abort!
-        const { onInvalidateDataSource } = this.props;
-        onInvalidateDataSource(
-          this,
-          "Soundcloud player did not load properly."
-        );
-      }
-    } else {
+    if (!SoundcloudPlayer.isListenFromThisService(listen)) {
       onTrackNotFound();
+      return;
+    }
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    if (this.soundcloudPlayer) {
+      this.soundcloudPlayer.load(originURL, this.options);
+    } else if (this.retries <= 3) {
+      this.retries += 1;
+      setTimeout(this.playListen.bind(this, listen), 500);
+    } else {
+      // Abort!
+      const { onInvalidateDataSource } = this.props;
+      onInvalidateDataSource(this, "Soundcloud player did not load properly.");
     }
   };
 
@@ -196,7 +220,16 @@ export default class SoundcloudPlayer
       if (!currentTrack) {
         return;
       }
-      onTrackInfoChange(currentTrack.title, currentTrack.user?.username);
+      const artwork: MediaImage[] = currentTrack.artwork_url
+        ? [{ src: currentTrack.artwork_url }]
+        : [];
+      onTrackInfoChange(
+        currentTrack.title,
+        currentTrack.permalink_url,
+        currentTrack.user?.username,
+        undefined,
+        artwork
+      );
       onDurationChange(currentTrack.full_duration);
       if (event) {
         onProgressChange(event.currentPosition);
@@ -237,7 +270,7 @@ export default class SoundcloudPlayer
           scrolling="no"
           frameBorder="no"
           allow="autoplay"
-          src="https://w.soundcloud.com/player/?url="
+          src="https://w.soundcloud.com/player/?auto_play=false"
         />
       </div>
     );

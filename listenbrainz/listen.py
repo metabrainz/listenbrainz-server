@@ -39,14 +39,6 @@ def convert_comma_seperated_string_to_list(string):
     return [val for val in string.split(',')]
 
 
-def check_listen_data_for_nulls(**kwargs):
-    """Given a set of kwargs, check if any values have a null string in them.
-    Raises ValueError if any of the args has a null value in it"""
-    for k, v in kwargs.items():
-        if v and '\x00' in v:
-            raise ValueError("field {} contains a null".format(k))
-
-
 class Listen(object):
     """ Represents a listen object """
 
@@ -85,9 +77,6 @@ class Listen(object):
         self.user_id = user_id
         self.user_name = user_name
 
-        check_listen_data_for_nulls(user_name=user_name, artist_msid=artist_msid, release_msid=release_msid,
-                                    recording_msid=recording_msid)
-
         # determine the type of timestamp and do the right thing
         if isinstance(timestamp, int) or isinstance(timestamp, float):
             self.ts_since_epoch = int(timestamp)
@@ -111,7 +100,6 @@ class Listen(object):
             try:
                 flattened_data = flatten_dict(data['additional_info'])
                 data['additional_info'] = flattened_data
-                check_listen_data_for_nulls(**flattened_data)
             except TypeError:
                 # TypeError may occur here because PostgresListenStore passes strings
                 # to data sometimes. If that occurs, we don't need to do anything.
@@ -123,17 +111,14 @@ class Listen(object):
     def from_json(cls, j):
         """Factory to make Listen() objects from a dict"""
 
-        if 'playing_now' in j:
-            j.update({'listened_at': None})
-        else:
-            # Let's go play whack-a-mole with our lovely whicket of timestamp fields. Hopefully one will work!
+        # Let's go play whack-a-mole with our lovely whicket of timestamp fields. Hopefully one will work!
+        try:
+            j['listened_at'] = datetime.utcfromtimestamp(float(j['listened_at']))
+        except KeyError:
             try:
-                j['listened_at'] = datetime.utcfromtimestamp(float(j['listened_at']))
+                j['listened_at'] = datetime.utcfromtimestamp(float(j['timestamp']))
             except KeyError:
-                try:
-                    j['listened_at'] = datetime.utcfromtimestamp(float(j['timestamp']))
-                except KeyError:
-                    j['listened_at'] = datetime.utcfromtimestamp(float(j['ts_since_epoch']))
+                j['listened_at'] = datetime.utcfromtimestamp(float(j['ts_since_epoch']))
 
         return cls(
             user_id=j.get('user_id'),
@@ -147,11 +132,17 @@ class Listen(object):
         )
 
     @classmethod
-    def from_timescale(cls, listened_at, track_name, user_name, created, j):
+    def from_timescale(cls, listened_at, track_name, user_name, created, j,
+                       recording_mbid=None, release_mbid=None, artist_mbids=None):
         """Factory to make Listen() objects from a timescale dict"""
 
         j['listened_at'] = datetime.utcfromtimestamp(float(listened_at))
         j['track_metadata']['track_name'] = track_name
+        if recording_mbid is not None and release_mbid is not None and artist_mbids is not None:
+            j["track_metadata"]["mbid_mapping"] = {
+                "recording_mbid": str(recording_mbid),
+                "release_mbid": str(release_mbid),
+                "artist_mbids": [ str(m) for m in artist_mbids ] }
         return cls(
             user_id=j.get('user_id'),
             user_name=user_name,
@@ -207,7 +198,6 @@ class Listen(object):
             'track_metadata': track_metadata
         }))
 
-
     def validate(self):
         return (self.user_id is not None and self.timestamp is not None and self.artist_msid is not None
                 and self.recording_msid is not None and self.data is not None)
@@ -223,6 +213,32 @@ class Listen(object):
     def __unicode__(self):
         return "<Listen: user_name: %s, time: %s, artist_msid: %s, release_msid: %s, recording_msid: %s, artist_name: %s, track_name: %s>" % \
                (self.user_name, self.ts_since_epoch, self.artist_msid, self.release_msid, self.recording_msid, self.data['artist_name'], self.data['track_name'])
+
+
+class NowPlayingListen:
+    """Represents a now playing listen"""
+
+    def __init__(self, user_id=None, user_name=None, data=None):
+        self.user_id = user_id
+        self.user_name = user_name
+
+        if data is None:
+            self.data = {'additional_info': {}}
+        else:
+            # submitted listens always has an additional_info key in track_metadata
+            # because of the msb lookup. now playing listens do not have a msb lookup
+            # so the additional_info key may not always be present.
+            additional_info = data.get('additional_info', {})
+            data['additional_info'] = flatten_dict(additional_info)
+            self.data = data
+
+    def __repr__(self):
+        from pprint import pformat
+        return pformat(vars(self))
+
+    def __str__(self):
+        return "<Now Playing Listen: user_name: %s, artist_name: %s, track_name: %s>" % \
+               (self.user_name, self.data['artist_name'], self.data['track_name'])
 
 
 def convert_dump_row_to_spark_row(row):

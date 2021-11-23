@@ -1,5 +1,5 @@
 {
-  "daily_activity": [
+  "data": [
     {
       "day": "Friday",
       "hour": 1,
@@ -142,5 +142,6 @@
     }
   ],
   "from_ts": 1590969600,
-  "to_ts": 1592956800
+  "to_ts": 1592956800,
+  "stats_range": "month"
 }

@@ -62,13 +62,18 @@ TIMESCALE_ADMIN_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
 TIMESCALE_ADMIN_LB_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
 {{end}}
 
-{{if service "pgbouncer-williams"}}
-{{with index (service "pgbouncer-williams") 0}}
+{{if service "pgbouncer-aretha"}}
+{{with index (service "pgbouncer-aretha") 0}}
 MBID_MAPPING_DATABASE_URI = "dbname=musicbrainz_json_dump user=musicbrainz host={{.Address}} port={{.Port}} password=musicbrainz"
 {{end}}
 {{else}}
 MBID_MAPPING_DATABASE_URI = ""
 {{end}}
+
+# for use in playlists admin view
+SQLALCHEMY_BINDS = {
+   'timescale': SQLALCHEMY_TIMESCALE_URI
+}
 
 {{if service "typesense-listenbrainz"}}
 {{with index (service "typesense-listenbrainz") 0}}
@@ -76,8 +81,8 @@ TYPESENSE_HOST = "{{.Address}}"
 TYPESENSE_PORT = {{.Port}}
 {{end}}
 {{else}}
-TYPESENSE_HOST = "SERVICEDOESNOTEXIST_typesense-listenbrainz"
-TYPESENSE_PORT = "SERVICEDOESNOTEXIST_typesense-listenbrainz"
+TYPESENSE_HOST = "localhost"
+TYPESENSE_PORT = 80
 {{end}}
 TYPESENSE_API_KEY = '''{{template "KEY" "typesense_api_key"}}'''
 
@@ -131,6 +136,9 @@ MUSICBRAINZ_CLIENT_SECRET = '''{{template "KEY" "musicbrainz/client_secret"}}'''
 LASTFM_API_URL = '''{{template "KEY" "lastfm_api_url"}}'''
 LASTFM_API_KEY = '''{{template "KEY" "lastfm_api_key"}}'''
 
+LIBREFM_API_URL = '''{{template "KEY" "librefm_api_url"}}'''
+LIBREFM_API_KEY = '''{{template "KEY" "librefm_api_key"}}'''
+
 # Default is fine for now
 PLAYING_NOW_MAX_DURATION = 10 * 60
 
@@ -154,6 +162,7 @@ LOG_SENTRY = {
     'dsn': '''{{template "KEY" "sentry/dsn"}}''',
     'environment': '''{{template "KEY" "sentry/environment"}}''',
     'release': os.getenv('GIT_SHA', None),
+    'traces_sample_rate': {{template "KEY" "sentry/traces_sample_rate"}},
 }
 DATASETS_SENTRY_DSN = '''{{template "KEY" "sentry/datasets_dsn"}}'''
 
@@ -177,6 +186,12 @@ APPROVED_PLAYLIST_BOTS = [
 SPOTIFY_CLIENT_ID = '''{{template "KEY" "spotify/client_id"}}'''
 SPOTIFY_CLIENT_SECRET = '''{{template "KEY" "spotify/client_secret"}}'''
 SPOTIFY_CALLBACK_URL = '''{{template "KEY" "spotify/redirect_uri"}}'''
+
+# CRITIQUEBRAINZ
+CRITIQUEBRAINZ_CLIENT_ID = '''{{template "KEY" "critiquebrainz/client_id"}}'''
+CRITIQUEBRAINZ_CLIENT_SECRET = '''{{template "KEY" "critiquebrainz/client_secret"}}'''
+CRITIQUEBRAINZ_REDIRECT_URI = '''{{template "KEY" "critiquebrainz/redirect_uri"}}'''
+
 
 # YOUTUBE
 YOUTUBE_API_KEY = '''{{template "KEY" "youtube/api_key"}}'''
@@ -210,6 +225,3 @@ REJECT_LISTENS_WITHOUT_USER_EMAIL = {{template "KEY_JSON" "reject_listens_withou
 
 # If set to True, do not allow new users without email to register and warn existing without email
 REJECT_NEW_USERS_WITHOUT_EMAIL = {{template "KEY_JSON" "reject_new_users_without_email"}}
-
-# If set to True, enabled pinned recording feature
-FEATURE_PINNED_REC = {{template "KEY_JSON" "feature_pinned_rec"}}

@@ -22,27 +22,19 @@ create and import postgres data dumps.
 
 import click
 from datetime import datetime, timedelta
-from ftplib import FTP
 import listenbrainz.db.dump as db_dump
-import logging
 import os
 import re
 import shutil
 import subprocess
 import sys
-import tarfile
-import tempfile
 
 import psycopg2
-import ujson
 from flask import current_app, render_template
 from brainzutils.mail import send_mail
-from listenbrainz import db
-from listenbrainz.listen import convert_dump_row_to_spark_row
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app
-from listenbrainz.webserver.timescale_connection import init_timescale_connection
 from listenbrainz.db.dump import check_ftp_dump_ages
 
 
@@ -72,7 +64,10 @@ def send_dump_creation_notification(dump_name, dump_type):
 @click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'))
 @click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
 @click.option('--dump-id', type=int, default=None)
-def create_full(location, threads, dump_id):
+@click.option('--listen/--no-listen', 'do_listen_dump', default=True)
+@click.option('--spark/--no-spark', 'do_spark_dump', type=bool, default=True)
+@click.option('--db/--no-db', 'do_db_dump', type=bool, default=True)
+def create_full(location, threads, dump_id, do_listen_dump: bool, do_spark_dump: bool, do_db_dump: bool):
     """ Create a ListenBrainz data dump which includes a private dump, a statistics dump
         and a dump of the actual listens from the listenstore
 
@@ -80,6 +75,9 @@ def create_full(location, threads, dump_id):
             location (str): path to the directory where the dump should be made
             threads (int): the number of threads to be used while compression
             dump_id (int): the ID of the ListenBrainz data dump
+            do_listen_dump: If True, make a listens dump
+            do_spark_dump: If True, make a spark listens dump
+            do_db_dump: If True, make a public/private postgres/timescale dump
     """
     app = create_app()
     with app.app_context():
@@ -99,15 +97,17 @@ def create_full(location, threads, dump_id):
             dump_id=dump_id, time=ts)
         dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
-        db_dump.dump_postgres_db(dump_path, end_time, threads)
 
-        listens_dump_file = ls.dump_listens(
-            dump_path, dump_id=dump_id, end_time=end_time, threads=threads)
-        spark_dump_file = 'listenbrainz-listens-dump-{dump_id}-{time}-spark-full.tar.xz'.format(dump_id=dump_id,
-                                                                                                time=ts)
-        spark_dump_path = os.path.join(location, dump_path, spark_dump_file)
-        transmogrify_dump_file_to_spark_import_format(
-            listens_dump_file, spark_dump_path, threads)
+        expected_num_dumps = 0
+        if do_db_dump:
+            db_dump.dump_postgres_db(dump_path, end_time, threads)
+            expected_num_dumps += 4
+        if do_listen_dump:
+            ls.dump_listens(dump_path, dump_id=dump_id, end_time=end_time, threads=threads)
+            expected_num_dumps += 1
+        if do_spark_dump:
+            ls.dump_listens_for_spark(dump_path, dump_id=dump_id, dump_type="full", end_time=end_time)
+            expected_num_dumps += 1
 
         try:
             write_hashes(dump_path)
@@ -117,9 +117,11 @@ def create_full(location, threads, dump_id):
             sys.exit(-1)
 
         try:
-            if not sanity_check_dumps(dump_path, 12):
+            # 6 types of dumps, archive, md5, sha256 for each
+            expected_num_dump_files = expected_num_dumps * 3
+            if not sanity_check_dumps(dump_path, expected_num_dump_files):
                 return sys.exit(-1)
-        except OSError as e:
+        except OSError:
             sys.exit(-1)
 
         current_app.logger.info(
@@ -167,13 +169,11 @@ def create_incremental(location, threads, dump_id):
             dump_id=dump_id, time=end_time.strftime('%Y%m%d-%H%M%S'))
         dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
-        listens_dump_file = ls.dump_listens(
-            dump_path, dump_id=dump_id, start_time=start_time, end_time=end_time, threads=threads)
-        spark_dump_file = 'listenbrainz-listens-dump-{dump_id}-{time}-spark-incremental.tar.xz'.format(dump_id=dump_id,
-                                                                                                       time=end_time.strftime('%Y%m%d-%H%M%S'))
-        spark_dump_path = os.path.join(location, dump_path, spark_dump_file)
-        transmogrify_dump_file_to_spark_import_format(
-            listens_dump_file, spark_dump_path, threads)
+
+        ls.dump_listens(dump_path, dump_id=dump_id, start_time=start_time, end_time=end_time, threads=threads)
+        ls.dump_listens_for_spark(dump_path, dump_id=dump_id, dump_type="incremental",
+                                  start_time=start_time, end_time=end_time)
+
         try:
             write_hashes(dump_path)
         except IOError as e:
@@ -248,10 +248,13 @@ def create_feedback(location, threads):
 
 @cli.command(name="import_dump")
 @click.option('--private-archive', '-pr', default=None, required=False)
-@click.option('--public-archive', '-pu', default=None, required=True)
+@click.option('--private-timescale-archive', default=None, required=False)
+@click.option('--public-archive', '-pu', default=None, required=False)
+@click.option('--public-timescale-archive', default=None, required=False)
 @click.option('--listen-archive', '-l', default=None, required=True)
 @click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
-def import_dump(private_archive, public_archive, listen_archive, threads):
+def import_dump(private_archive, private_timescale_archive,
+                public_archive, public_timescale_archive, listen_archive, threads):
     """ Import a ListenBrainz dump into the database.
 
         Note: This method tries to import the private db dump first, followed by the public db
@@ -262,13 +265,17 @@ def import_dump(private_archive, public_archive, listen_archive, threads):
 
         Args:
             private_archive (str): the path to the ListenBrainz private dump to be imported
+            private_timescale_archive (str): the path to the ListenBrainz private timescale dump to be imported
             public_archive (str): the path to the ListenBrainz public dump to be imported
+            public_timescale_archive (str): the path to the ListenBrainz public timescale dump to be imported
             listen_archive (str): the path to the ListenBrainz listen dump archive to be imported
             threads (int): the number of threads to use during decompression, defaults to 1
     """
     app = create_app()
     with app.app_context():
-        db_dump.import_postgres_dump(private_archive, public_archive, threads)
+        db_dump.import_postgres_dump(private_archive, private_timescale_archive,
+                                     public_archive, public_timescale_archive,
+                                     threads)
 
         from listenbrainz.webserver.timescale_connection import _ts as ls
         try:
@@ -302,6 +309,16 @@ def check_dump_ages():
     check_ftp_dump_ages()
     sys.exit(0)
 
+@cli.command(name="create_parquet")
+def create_test_parquet_files():
+    app = create_app()
+    with app.app_context():
+        from listenbrainz.webserver.timescale_connection import _ts as ls
+
+        start = datetime.now() - timedelta(days=30)
+        ls.dump_listens_for_spark("/tmp", 1000, "full", start)
+
+        sys.exit(-2)
 
 def get_dump_id(dump_name):
     return int(dump_name.split('-')[2])
@@ -426,49 +443,3 @@ def sanity_check_dumps(location, expected_count):
     print("Expected %d dump files, found %d. Aborting." %
           (expected_count, count))
     return False
-
-
-def transmogrify_dump_file_to_spark_import_format(in_file, out_file, threads):
-    """ Decompress and convert an LB dump,  ready for spark.
-
-    Args:
-        in_file: The tar.xz dump file to import
-        out_file: The spark dump file the dump should be mogrified to.
-        threads: The number of threads to use to compress the spark dump
-    """
-    try:
-        with tarfile.open(in_file, "r:xz") as tarf:  # yep, going with that one again!
-            with open(out_file, 'w') as archive:
-                pxz_command = ['pxz', '--compress',
-                               '-T{threads}'.format(threads=threads)]
-                pxz = subprocess.Popen(
-                    pxz_command, stdin=subprocess.PIPE, stdout=archive)
-
-                with tarfile.open(fileobj=pxz.stdin, mode='w|') as out_tar:
-                    for member in tarf:
-                        if member.name.endswith(".listens"):
-                            filename = member.name.replace(".listens", ".json")
-                            filename = filename.replace("-full", "-spark-full")
-                            print("mogrify: ", filename)
-                            tmp_file = tempfile.mkstemp()
-                            with os.fdopen(tmp_file[0], "w") as out_f:
-                                with tarf.extractfile(member) as f:
-                                    while True:
-                                        line = f.readline()
-                                        if not line:
-                                            break
-
-                                        listen = ujson.loads(line)
-                                        out_f.write(ujson.dumps(
-                                            convert_dump_row_to_spark_row(listen)) + "\n")
-                            out_tar.add(tmp_file[1], arcname=filename)
-                            os.unlink(tmp_file[1])
-
-                pxz.stdin.close()
-
-            pxz.wait()
-
-    except IOError as e:
-        current_app.logger.error('IOError while trying to mogrify spark dump file for file %s -> %s: %s',
-                                 in_file, out_file, str(e), exc_info=True)
-        raise

@@ -16,6 +16,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { sanitize } from "dompurify";
 import * as Sentry from "@sentry/react";
+import { Integrations } from "@sentry/tracing";
 import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
@@ -35,7 +36,6 @@ import {
 import { getPageProps } from "../utils";
 
 export type UserPlaylistsProps = {
-  currentUser?: ListenBrainzUser;
   playlists?: JSPFObject[];
   user: ListenBrainzUser;
   paginationOffset: string;
@@ -110,8 +110,8 @@ export default class UserPlaylists extends React.Component<
     }
 
     this.setState({ loading: true });
-    const { user, activeSection, currentUser, newAlert } = this.props;
-
+    const { user, activeSection, newAlert } = this.props;
+    const { currentUser } = this.context;
     try {
       const newPlaylists = await this.APIService.getUserPlaylists(
         user.name,
@@ -130,7 +130,7 @@ export default class UserPlaylists extends React.Component<
   };
 
   isOwner = (playlist: JSPFPlaylist): boolean => {
-    const { currentUser } = this.props;
+    const { currentUser } = this.context;
     return Boolean(currentUser) && currentUser?.name === playlist.creator;
   };
 
@@ -144,7 +144,8 @@ export default class UserPlaylists extends React.Component<
   };
 
   copyPlaylist = async (playlistId: string): Promise<void> => {
-    const { currentUser, newAlert } = this.props;
+    const { newAlert } = this.props;
+    const { currentUser } = this.context;
     if (!currentUser?.auth_token) {
       this.alertMustBeLoggedIn();
       return;
@@ -182,7 +183,8 @@ export default class UserPlaylists extends React.Component<
   };
 
   deletePlaylist = async (): Promise<void> => {
-    const { currentUser, newAlert } = this.props;
+    const { newAlert } = this.props;
+    const { currentUser } = this.context;
     const { playlistSelectedForOperation: playlist, playlists } = this.state;
     if (!currentUser?.auth_token) {
       this.alertMustBeLoggedIn();
@@ -208,6 +210,7 @@ export default class UserPlaylists extends React.Component<
           playlists: playlists.filter(
             (pl) => getPlaylistId(pl) !== getPlaylistId(playlist)
           ),
+          playlistSelectedForOperation: undefined,
         },
         newAlert.bind(
           this,
@@ -231,9 +234,11 @@ export default class UserPlaylists extends React.Component<
     isPublic: boolean,
     // Not sure what to do with those yet
     collaborators: string[],
-    id?: string
+    id?: string,
+    onSuccessCallback?: () => void
   ): Promise<void> => {
-    const { currentUser, newAlert } = this.props;
+    const { newAlert } = this.props;
+    const { currentUser } = this.context;
     if (id) {
       newAlert(
         "danger",
@@ -295,9 +300,12 @@ export default class UserPlaylists extends React.Component<
         newPlaylistId,
         currentUser.auth_token
       );
-      this.setState((prevState) => ({
-        playlists: [JSPFObject.playlist, ...prevState.playlists],
-      }));
+      this.setState(
+        (prevState) => ({
+          playlists: [JSPFObject.playlist, ...prevState.playlists],
+        }),
+        onSuccessCallback
+      );
     } catch (error) {
       newAlert("danger", "Error", error.message);
     }
@@ -310,7 +318,8 @@ export default class UserPlaylists extends React.Component<
     collaborators: string[],
     id?: string
   ): Promise<void> => {
-    const { currentUser, newAlert } = this.props;
+    const { newAlert } = this.props;
+    const { currentUser } = this.context;
     if (!id) {
       newAlert(
         "danger",
@@ -334,6 +343,11 @@ export default class UserPlaylists extends React.Component<
       return;
     }
     try {
+      // Owner can't be collaborator
+      const collaboratorsWithoutOwner = collaborators.filter(
+        (username) =>
+          username.toLowerCase() !== playlistToEdit.creator.toLowerCase()
+      );
       const editedPlaylist: JSPFPlaylist = {
         ...playlistToEdit,
         annotation: description,
@@ -341,7 +355,7 @@ export default class UserPlaylists extends React.Component<
         extension: {
           [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
             public: isPublic,
-            collaborators,
+            collaborators: collaboratorsWithoutOwner,
           },
         },
       };
@@ -353,7 +367,10 @@ export default class UserPlaylists extends React.Component<
 
       // Once API call succeeds, update playlist in state
       playlistsCopy[playlistIndex] = editedPlaylist;
-      this.setState({ playlists: playlistsCopy });
+      this.setState({
+        playlists: playlistsCopy,
+        playlistSelectedForOperation: undefined,
+      });
     } catch (error) {
       newAlert("danger", "Error", error.message);
     }
@@ -365,7 +382,8 @@ export default class UserPlaylists extends React.Component<
   };
 
   isCurrentUserPage = () => {
-    const { currentUser, user, activeSection } = this.props;
+    const { user, activeSection } = this.props;
+    const { currentUser } = this.context;
     if (activeSection === "recommendations") {
       return false;
     }
@@ -373,7 +391,8 @@ export default class UserPlaylists extends React.Component<
   };
 
   handleClickNext = async () => {
-    const { user, activeSection, currentUser, newAlert } = this.props;
+    const { user, activeSection, newAlert } = this.props;
+    const { currentUser } = this.context;
     const { paginationOffset, playlistsPerPage, playlistCount } = this.state;
     const newOffset = paginationOffset + playlistsPerPage;
     // No more playlists to fetch
@@ -399,7 +418,8 @@ export default class UserPlaylists extends React.Component<
   };
 
   handleClickPrevious = async () => {
-    const { user, activeSection, currentUser, newAlert } = this.props;
+    const { user, activeSection, newAlert } = this.props;
+    const { currentUser } = this.context;
     const { paginationOffset, playlistsPerPage } = this.state;
     // No more playlists to fetch
     if (paginationOffset === 0) {
@@ -565,7 +585,7 @@ export default class UserPlaylists extends React.Component<
                     </div>
                   </>
                 )}
-                <a className="info" href={`/playlist/${playlistId}`}>
+                <a className="info" href={`/playlist/${sanitize(playlistId)}`}>
                   <h4>{playlist.title}</h4>
                   {playlist.annotation && (
                     <div
@@ -677,6 +697,7 @@ document.addEventListener("DOMContentLoaded", () => {
     current_user,
     spotify,
     youtube,
+    sentry_traces_sample_rate,
   } = globalReactProps;
   const {
     playlists,
@@ -688,7 +709,11 @@ document.addEventListener("DOMContentLoaded", () => {
   } = reactProps;
 
   if (sentry_dsn) {
-    Sentry.init({ dsn: sentry_dsn });
+    Sentry.init({
+      dsn: sentry_dsn,
+      integrations: [new Integrations.BrowserTracing()],
+      tracesSampleRate: sentry_traces_sample_rate,
+    });
   }
 
   const UserPlaylistsWithAlertNotifications = withAlertNotifications(

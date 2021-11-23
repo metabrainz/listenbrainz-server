@@ -1,0 +1,55 @@
+{
+  "asin": "B00DW5IKJI",
+  "packaging-id": "ec27701a-4a22-37f4-bfac-6616e0f9750a",
+  "disambiguation": "",
+  "status": "Official",
+  "barcode": "888837546928",
+  "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+  "title": "The Essential Britney Spears",
+  "date": "2013-08-20",
+  "release-events": [
+     {
+        "date": "2013-08-20",
+        "area": {
+           "name": "United States",
+           "sort-name": "United States",
+           "type-id": null,
+           "iso-3166-1-codes": [
+              "US"
+           ],
+           "id": "489ce91b-6658-3307-9877-795b68554c98",
+           "type": null,
+           "disambiguation": ""
+        }
+     }
+  ],
+  "id": "2bf47421-2344-4255-a525-e7d7f54de742",
+  "text-representation": {
+     "language": "eng",
+     "script": "Latn"
+  },
+  "release-group": {
+     "secondary-types": [
+        "Compilation"
+     ],
+     "title": "The Essential Britney Spears",
+     "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+     "id": "9ecc1aea-289d-4d03-b476-6bbcd1e749d7",
+     "primary-type": "Album",
+     "disambiguation": "",
+     "first-release-date": "2013-08-20",
+     "secondary-type-ids": [
+        "dd2a21e1-0c00-3729-a7a0-de60b84eb5d1"
+     ]
+  },
+  "country": "US",
+  "quality": "normal",
+  "cover-art-archive": {
+     "back": true,
+     "artwork": true,
+     "front": true,
+     "darkened": false,
+     "count": 29
+  },
+  "packaging": "Jewel Case"
+}

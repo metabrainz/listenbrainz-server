@@ -7,8 +7,13 @@ import psycopg2
 
 from listenbrainz import config
 
-# This value must be incremented after schema changes on replicated tables!
-SCHEMA_VERSION = 6
+# The schema version of the timescale database (tables created
+# from ./admin/timescale/create-tables.sql). This includes user playlists
+# and mbid mappings.
+# Listens are tracked with `listenstore.LISTENS_DUMP_SCHEMA_VERSION`
+# This value must be incremented after schema changes on tables that are included in the
+# public dump
+SCHEMA_VERSION_TIMESCALE = 7
 
 engine = None
 

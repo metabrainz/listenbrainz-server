@@ -115,10 +115,10 @@ def gen_app(debug=None):
     # Database connections
     from listenbrainz import db
     from listenbrainz.db import timescale as ts
+    from listenbrainz import messybrainz as msb
     db.init_db_connection(app.config['SQLALCHEMY_DATABASE_URI'])
     ts.init_db_connection(app.config['SQLALCHEMY_TIMESCALE_URI'])
-    from listenbrainz.webserver.external import messybrainz
-    messybrainz.init_db_connection(app.config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
+    msb.init_db_connection(app.config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
 
     if app.config['MB_DATABASE_URI']:
         from brainzutils import musicbrainz_db
@@ -173,14 +173,20 @@ def create_app(debug=None):
     from listenbrainz.model import User as UserModel
     from listenbrainz.model import ListensImporter as ListensImporterModel
     from listenbrainz.model import ReportedUsers as ReportedUsersModel
+    from listenbrainz.model import Playlist as PlaylistModel
+    from listenbrainz.model import PlaylistRecording as PlaylistRecordingModel
     from listenbrainz.model.external_service_oauth import ExternalServiceAdminView
     from listenbrainz.model.user import UserAdminView
     from listenbrainz.model.listens_import import ListensImporterAdminView
     from listenbrainz.model.reported_users import ReportedUserAdminView
+    from listenbrainz.model.playlist import PlaylistAdminView
+    from listenbrainz.model.playlist_recording import PlaylistRecordingAdminView
     admin.add_view(UserAdminView(UserModel, model.db.session, endpoint='user_model'))
     admin.add_view(ExternalServiceAdminView(ExternalServiceModel, model.db.session, endpoint='external_service_model'))
     admin.add_view(ListensImporterAdminView(ListensImporterModel, model.db.session, endpoint='listens_importer_model'))
     admin.add_view(ReportedUserAdminView(ReportedUsersModel, model.db.session, endpoint='reported_users_model'))
+    admin.add_view(PlaylistAdminView(PlaylistModel, model.db.session, endpoint='playlist_model'))
+    admin.add_view(PlaylistRecordingAdminView(PlaylistRecordingModel, model.db.session, endpoint='playlist_recording_model'))
 
     @app.before_request
     def before_request_gdpr_check():
@@ -310,6 +316,8 @@ def _register_blueprints(app):
     from listenbrainz.webserver.views.user_timeline_event_api import user_timeline_event_api_bp
     app.register_blueprint(user_timeline_event_api_bp, url_prefix=API_PREFIX)
 
-    if app.config.get("FEATURE_PINNED_REC", False):
-        from listenbrainz.webserver.views.pinned_recording_api import pinned_recording_api_bp
-        app.register_blueprint(pinned_recording_api_bp, url_prefix=API_PREFIX)
+    from listenbrainz.webserver.views.pinned_recording_api import pinned_recording_api_bp
+    app.register_blueprint(pinned_recording_api_bp, url_prefix=API_PREFIX)
+
+    from listenbrainz.webserver.views.color_api import color_api_bp
+    app.register_blueprint(color_api_bp, url_prefix=API_PREFIX+'/color')

@@ -6,6 +6,8 @@ import pika
 import ujson
 
 from flask import current_app
+
+from data.model.common_stat import ALLOWED_STATISTICS_RANGE
 from listenbrainz.webserver import create_app
 
 
@@ -28,23 +30,20 @@ def _get_possible_queries():
         return ujson.load(f)
 
 
-def _prepare_query_message(query, params=None):
+def _prepare_query_message(query, **params):
     """ Prepare the JSON message that needs to be sent to the
     spark cluster based on the query and the parameters the
     query needs
 
     Args:
-        query (str): the name of the query, should be in request_queries.json
-        params (dict): the parameters the query needs, should contain all the params
-            in the correspoding request_queries.json to be valid
+        query: the name of the query, should be in request_queries.json
+        params: the parameters the query needs, should contain all the params
+            in the corresponding request_queries.json to be valid
 
     Raises:
         InvalidSparkRequestError if the query isn't in the list or if the parameters
         don't match up
     """
-    if params is None:
-        params = {}
-
     possible_queries = _get_possible_queries()
     if query not in possible_queries:
         raise InvalidSparkRequestError(query)
@@ -63,7 +62,9 @@ def _prepare_query_message(query, params=None):
     return ujson.dumps(message)
 
 
-def send_request_to_spark_cluster(message):
+def send_request_to_spark_cluster(query, **params):
+    message = _prepare_query_message(query, **params)
+
     with create_app().app_context():
         rabbitmq_connection = utils.connect_to_rabbitmq(
             username=current_app.config['RABBITMQ_USERNAME'],
@@ -93,39 +94,34 @@ def send_request_to_spark_cluster(message):
 @cli.command(name="request_user_stats")
 @click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity', 'daily_activity']),
               help="Type of statistics to calculate", required=True)
-@click.option("--range", 'range_', type=click.Choice(['week', 'month', 'year', 'all_time']),
+@click.option("--range", 'range_', type=click.Choice(ALLOWED_STATISTICS_RANGE),
               help="Time range of statistics to calculate", required=True)
 @click.option("--entity", type=click.Choice(['artists', 'releases', 'recordings']),
               help="Entity for which statistics should be calculated")
 def request_user_stats(type_, range_, entity):
     """ Send a user stats request to the spark cluster
     """
-    params = {}
-    if type_ == 'entity' and entity:
-        params['entity'] = entity
+    params = {
+        "stats_range": range_
+    }
+    if type_ == "entity" and entity:
+        params["entity"] = entity
     try:
-        send_request_to_spark_cluster(_prepare_query_message(
-            'stats.user.{type}.{range}'.format(range=range_, type=type_), params=params))
+        send_request_to_spark_cluster(f"stats.user.{type_}", **params)
     except InvalidSparkRequestError:
         click.echo("Incorrect arguments provided")
 
 
 @cli.command(name="request_sitewide_stats")
-@click.option("--range", 'range_', type=click.Choice(['week', 'month', 'year', 'all_time']),
+@click.option("--range", 'range_', type=click.Choice(ALLOWED_STATISTICS_RANGE),
               help="Time range of statistics to calculate", required=True)
-@click.option("--entity", type=click.Choice(['artists']),
+@click.option("--entity", type=click.Choice(['artists', 'releases']),
               help="Entity for which statistics should be calculated")
-@click.option("--use-mapping", type=bool, help="Set to true if MSID-MBID mapping should be used while calculating statistics")
-def request_sitewide_stats(range_, entity, use_mapping):
+def request_sitewide_stats(range_, entity):
     """ Send request to calculate sitewide stats to the spark cluster
     """
-    params = {
-        'use_mapping': use_mapping,
-        'entity': entity
-    }
     try:
-        send_request_to_spark_cluster(_prepare_query_message(
-            "stats.sitewide.entity.{range}".format(range=range_), params=params))
+        send_request_to_spark_cluster("stats.sitewide.entity", entity=entity, stats_range=range_)
     except InvalidSparkRequestError:
         click.echo("Incorrect arguments provided")
 
@@ -137,11 +133,9 @@ def request_import_new_full_dump(id_: int):
     """ Send the cluster a request to import a new full data dump
     """
     if id_:
-        send_request_to_spark_cluster(_prepare_query_message(
-            'import.dump.full_id', params={'id': id_}))
+        send_request_to_spark_cluster('import.dump.full_id', dump_id=id_)
     else:
-        send_request_to_spark_cluster(
-            _prepare_query_message('import.dump.full_newest'))
+        send_request_to_spark_cluster('import.dump.full_newest')
 
 
 @cli.command(name="request_import_incremental")
@@ -151,11 +145,9 @@ def request_import_new_incremental_dump(id_: int):
     """ Send the cluster a request to import a new incremental data dump
     """
     if id_:
-        send_request_to_spark_cluster(_prepare_query_message(
-            'import.dump.incremental_id', params={'id': id_}))
+        send_request_to_spark_cluster('import.dump.incremental_id', dump_id=id_)
     else:
-        send_request_to_spark_cluster(
-            _prepare_query_message('import.dump.incremental_newest'))
+        send_request_to_spark_cluster('import.dump.incremental_newest')
 
 
 @cli.command(name="request_dataframes")
@@ -170,13 +162,10 @@ def request_dataframes(days, job_type, listens_threshold):
         print("job_type must be one of ", DATAFRAME_JOB_TYPES)
         sys.exit(-1)
 
-    params = {
-        'train_model_window': days,
-        'job_type': job_type,
-        'minimum_listens_threshold': listens_threshold
-    }
-    send_request_to_spark_cluster(_prepare_query_message(
-        'cf.recommendations.recording.create_dataframes', params=params))
+    send_request_to_spark_cluster(
+        'cf.recommendations.recording.create_dataframes', train_model_window=days,
+        job_type=job_type, minimum_listens_threshold=listens_threshold
+    )
 
 
 def parse_list(ctx, args):
@@ -199,8 +188,7 @@ def request_model(rank, itr, lmbda, alpha):
         'alpha': alpha,
     }
 
-    send_request_to_spark_cluster(_prepare_query_message(
-        'cf.recommendations.recording.train_model', params=params))
+    send_request_to_spark_cluster('cf.recommendations.recording.train_model', **params)
 
 
 @cli.command(name='request_candidate_sets')
@@ -220,8 +208,7 @@ def request_candidate_sets(days, top, similar, users, html):
         "users": users,
         "html_flag": html
     }
-    send_request_to_spark_cluster(_prepare_query_message(
-        'cf.recommendations.recording.candidate_sets', params=params))
+    send_request_to_spark_cluster('cf.recommendations.recording.candidate_sets', params=params)
 
 
 @cli.command(name='request_recommendations')
@@ -237,25 +224,14 @@ def request_recommendations(top, similar, users):
         'recommendation_similar_artist_limit': similar,
         'users': users
     }
-    send_request_to_spark_cluster(_prepare_query_message(
-        'cf.recommendations.recording.recommendations', params=params))
-
-
-@cli.command(name='request_import_mapping')
-def request_import_mapping():
-    """ Send the spark cluster a request to import msid mbid mapping.
-    """
-
-    send_request_to_spark_cluster(_prepare_query_message('import.mapping'))
+    send_request_to_spark_cluster('cf.recommendations.recording.recommendations', **params)
 
 
 @cli.command(name='request_import_artist_relation')
 def request_import_artist_relation():
     """ Send the spark cluster a request to import artist relation.
     """
-
-    send_request_to_spark_cluster(
-        _prepare_query_message('import.artist_relation'))
+    send_request_to_spark_cluster('import.artist_relation')
 
 
 @cli.command(name='request_similar_users')
@@ -263,11 +239,7 @@ def request_import_artist_relation():
 def request_similar_users(max_num_users):
     """ Send the cluster a request to generate similar users.
     """
-    params = {
-        'max_num_users': max_num_users
-    }
-    send_request_to_spark_cluster(_prepare_query_message(
-        'similarity.similar_users', params=params))
+    send_request_to_spark_cluster('similarity.similar_users', max_num_users=max_num_users)
 
 
 # Some useful commands to keep our crontabs manageable. These commands do not add new functionality
@@ -276,30 +248,15 @@ def request_similar_users(max_num_users):
 @cli.command(name='cron_request_all_stats')
 @click.pass_context
 def cron_request_all_stats(ctx):
-    ctx.invoke(request_user_stats, type_="entity", range_="week", entity="artists")
-    ctx.invoke(request_user_stats, type_="entity", range_="month", entity="artists")
-    ctx.invoke(request_user_stats, type_="entity", range_="year", entity="artists")
-    ctx.invoke(request_user_stats, type_="entity", range_="all_time", entity="artists")
+    for stats_range in ALLOWED_STATISTICS_RANGE:
+        for entity in ["artists", "releases", "recordings"]:
+            ctx.invoke(request_user_stats, type_="entity", range_=stats_range, entity=entity)
 
-    ctx.invoke(request_user_stats, type_="entity", range_="week", entity="releases")
-    ctx.invoke(request_user_stats, type_="entity", range_="month", entity="releases")
-    ctx.invoke(request_user_stats, type_="entity", range_="year", entity="releases")
-    ctx.invoke(request_user_stats, type_="entity", range_="all_time", entity="releases")
+        for stat in ["listening_activity", "daily_activity"]:
+            ctx.invoke(request_user_stats, type_=stat, range_=stats_range)
 
-    ctx.invoke(request_user_stats, type_="entity", range_="week", entity="recordings")
-    ctx.invoke(request_user_stats, type_="entity", range_="month", entity="recordings")
-    ctx.invoke(request_user_stats, type_="entity", range_="year", entity="recordings")
-    ctx.invoke(request_user_stats, type_="entity", range_="all_time", entity="recordings")
-
-    ctx.invoke(request_user_stats, type_="listening_activity", range_="week")
-    ctx.invoke(request_user_stats, type_="listening_activity", range_="month")
-    ctx.invoke(request_user_stats, type_="listening_activity", range_="year")
-    ctx.invoke(request_user_stats, type_="listening_activity", range_="all_time")
-
-    ctx.invoke(request_user_stats, type_="daily_activity", range_="week")
-    ctx.invoke(request_user_stats, type_="daily_activity", range_="month")
-    ctx.invoke(request_user_stats, type_="daily_activity", range_="year")
-    ctx.invoke(request_user_stats, type_="daily_activity", range_="all_time")
+        for entity in ["artists"]:
+            ctx.invoke(request_sitewide_stats, range_=stats_range, entity=entity)
 
 
 @cli.command(name='cron_request_similar_users')

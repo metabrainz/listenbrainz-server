@@ -34,6 +34,32 @@ export default class SpotifyAPIService {
     }
   }
 
+  getAlbumArtFromSpotifyTrackID = async (
+    spotifyTrackID: string
+  ): Promise<string | undefined> => {
+    if (!spotifyTrackID) {
+      return undefined;
+    }
+    try {
+      const response = await fetch(
+        `${this.APIBaseURI}/tracks/${spotifyTrackID}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${this.spotifyUser?.access_token}`,
+          },
+        }
+      );
+      if (response.ok) {
+        const track: SpotifyTrack = await response.json();
+        return track.album?.images?.[0]?.url;
+      }
+    } catch (error) {
+      return undefined;
+    }
+    return undefined;
+  };
+
   setUserToken = (userToken: string) => {
     if (!userToken) {
       throw new Error("No Spotify user token to set");
@@ -178,8 +204,6 @@ export default class SpotifyAPIService {
         }
         tracksCopy.shift();
       } catch (error) {
-        // eslint-disable-next-line no-console
-        console.debug(error);
         if (error.status === 429) {
           // Too many requests, take a nap before continuing
           await new Promise((resolve) => setTimeout(resolve, 600));

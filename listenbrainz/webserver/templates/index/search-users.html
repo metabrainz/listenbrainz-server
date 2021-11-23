@@ -1,0 +1,51 @@
+{%- extends "base.html" -%}
+{%- block title -%}Username Search Results{%- endblock -%}
+{%- block content -%}
+    <form>
+        <div class="form-group row">
+            <h2 class="col-sm-4">Username Search Results</h2>
+            <div class="col-xs-6">
+                <input type="text" class="form-control" name="search_term" placeholder="Not found yet?" value="{{ search_term }}" style="margin-top: 25px" required>
+            </div>
+            <div class="col-xs-2">
+               <span class="input-group-btn">
+                   <button class="btn btn-default" type="submit" style="margin-top: 27px">Search Again!</button>
+               </span>
+            </div>
+        </div>
+    </form>
+    <table class="table table-striped">
+    <tr>
+        <th></th>
+        <th>User</th>
+        {% if current_user.is_authenticated %}
+            <th>Similarity to you
+                <span class="glyphicon glyphicon-question-sign"
+                      title="Similarity between users is calculated based on their listen history.">
+                </span>
+            </th>
+        {% endif %}
+    </tr>
+    {% for row in users %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td><a href="{{ url_for("user.profile", user_name=row[0]) }}">{{ row[0] }}</a></td>
+            {% if current_user.is_authenticated %}
+                <td>
+                    {% if current_user.musicbrainz_id == row[0] %}
+                        100%, we hope!
+                    {% elif row[2] %}
+                        {{ "{:.1f}".format(row[2] * 10) }}
+                    {% else %}
+                        Similarity score not available
+                    {% endif %}
+                </td>
+            {% endif %}
+        </tr>
+    {% else %}
+       <tr>
+           <td>No search results found.</td>
+       </tr>
+    {% endfor %}
+    </table>
+{%- endblock -%}

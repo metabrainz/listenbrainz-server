@@ -1,0 +1,393 @@
+{
+  "user": {
+    "name": "jdaok",
+    "id": 1
+  },
+  "pins": [
+    {
+      "user_id": 1,
+      "user_name": null,
+      "row_id": 100,
+      "recording_msid": "3c48f5de-33a8-489b-b4d9-024ad12e9357",
+      "recording_mbid": null,
+      "blurb_content": null,
+      "created": 1629108902,
+      "pinned_until": 1629713702,
+      "track_metadata": {
+        "track_name": "All the Way Down",
+        "artist_name": "Kelela",
+        "artist_msid": "a0443fc9-0cf5-4689-88e6-cc53c9cf2c05"
+      }
+    },
+    {
+      "user_id": 1,
+      "user_name": null,
+      "row_id": 98,
+      "recording_msid": "a539519f-e99e-4a6a-acc8-b80f6cd38476",
+      "recording_mbid": null,
+      "blurb_content": null,
+      "created": 1629103728,
+      "pinned_until": 1629103730,
+      "track_metadata": {
+        "track_name": "400 Lux",
+        "artist_name": "Lorde",
+        "artist_msid": "edbb5ff8-ebd3-42e1-96c2-e22d4e4c080a"
+      }
+    },
+    {
+      "user_id": 1,
+      "user_name": null,
+      "row_id": 96,
+      "recording_msid": "c7963711-297c-467d-b699-a2e016248655",
+      "recording_mbid": null,
+      "blurb_content": null,
+      "created": 1629103130,
+      "pinned_until": 1629103132,
+      "track_metadata": {
+        "track_name": "Moshi Moshi",
+        "artist_name": "Poppy",
+        "artist_msid": "7c97c59a-e0d9-461f-a7a9-88e7659343e5"
+      }
+    },
+    {
+      "user_id": 1,
+      "user_name": null,
+      "row_id": 95,
+      "recording_msid": "a539519f-e99e-4a6a-acc8-b80f6cd38476",
+      "recording_mbid": null,
+      "blurb_content": null,
+      "created": 1629103128,
+      "pinned_until": 1629103130,
+      "track_metadata": {
+        "track_name": "400 Lux",
+        "artist_name": "Lorde",
+        "artist_msid": "edbb5ff8-ebd3-42e1-96c2-e22d4e4c080a"
+      }
+    },
+    {
+      "user_id": 1,
+      "user_name": null,
+      "row_id": 94,
+      "recording_msid": "1b7b3eab-65a1-4674-8f27-c71751639be3",
+      "recording_mbid": null,
+      "blurb_content": null,
+      "created": 1629101076,
+      "pinned_until": 1629103128,
+      "track_metadata": {
+        "track_name": "Sky Gate",
+        "artist_name": "舞花 | NAGI☆",
+        "artist_msid": "dbc0f9a9-3ffa-4d0e-94ca-0992e85772ca"
+      }
+    },
+    {
+      "user_id": 1,
+      "user_name": null,
+      "row_id": 93,
+      "recording_msid": "c7963711-297c-467d-b699-a2e016248655",
+      "recording_mbid": null,
+      "blurb_content": null,
+      "created": 1629101074,
+      "pinned_until": 1629101076,
+      "track_metadata": {
+        "track_name": "Moshi Moshi",
+        "artist_name": "Poppy",
+        "artist_msid": "7c97c59a-e0d9-461f-a7a9-88e7659343e5"
+      }
+    },
+    {
+      "user_id": 1,
+      "user_name": null,
+      "row_id": 92,
+      "recording_msid": "a539519f-e99e-4a6a-acc8-b80f6cd38476",
+      "recording_mbid": null,
+      "blurb_content": null,
+      "created": 1629101072,
+      "pinned_until": 1629101074,
+      "track_metadata": {
+        "track_name": "400 Lux",
+        "artist_name": "Lorde",
+        "artist_msid": "edbb5ff8-ebd3-42e1-96c2-e22d4e4c080a"
+      }
+    },
+    {
+      "user_id": 1,
+      "user_name": null,
+      "row_id": 91,
+      "recording_msid": "a539519f-e99e-4a6a-acc8-b80f6cd38476",
+      "recording_mbid": null,
+      "blurb_content": null,
+      "created": 1629100064,
+      "pinned_until": 1629101072,
+      "track_metadata": {
+        "track_name": "400 Lux",
+        "artist_name": "Lorde",
+        "artist_msid": "edbb5ff8-ebd3-42e1-96c2-e22d4e4c080a"
+      }
+    },
+    {
+      "user_id": 1,
+      "user_name": null,
+      "row_id": 90,
+      "recording_msid": "a539519f-e99e-4a6a-acc8-b80f6cd38476",
+      "recording_mbid": null,
+      "blurb_content": null,
+      "created": 1629100044,
+      "pinned_until": 1629100064,
+      "track_metadata": {
+        "track_name": "400 Lux",
+        "artist_name": "Lorde",
+        "artist_msid": "edbb5ff8-ebd3-42e1-96c2-e22d4e4c080a"
+      }
+    },
+    {
+      "user_id": 1,
+      "user_name": null,
+      "row_id": 89,
+      "recording_msid": "a539519f-e99e-4a6a-acc8-b80f6cd38476",
+      "recording_mbid": null,
+      "blurb_content": null,
+      "created": 1629099907,
+      "pinned_until": 1629100044,
+      "track_metadata": {
+        "track_name": "400 Lux",
+        "artist_name": "Lorde",
+        "artist_msid": "edbb5ff8-ebd3-42e1-96c2-e22d4e4c080a"
+      }
+    },
+    {
+      "user_id": 1,
+      "user_name": null,
+      "row_id": 88,
+      "recording_msid": "a539519f-e99e-4a6a-acc8-b80f6cd38476",
+      "recording_mbid": null,
+      "blurb_content": null,
+      "created": 1629099892,
+      "pinned_until": 1629099907,
+      "track_metadata": {
+        "track_name": "400 Lux",
+        "artist_name": "Lorde",
+        "artist_msid": "edbb5ff8-ebd3-42e1-96c2-e22d4e4c080a"
+      }
+    },
+    {
+      "user_id": 1,
+      "user_name": null,
+      "row_id": 87,
+      "recording_msid": "ae59763d-889a-41ff-9861-bd4345566651",
+      "recording_mbid": null,
+      "blurb_content": null,
+      "created": 1629097000,
+      "pinned_until": 1629099892,
+      "track_metadata": {
+        "track_name": "Harleys in Hawaii",
+        "artist_name": "Katy Perry",
+        "artist_msid": "8aa272e4-eef4-4b8c-b27c-fa3c26dbd6ba"
+      }
+    },
+    {
+      "user_id": 1,
+      "user_name": null,
+      "row_id": 86,
+      "recording_msid": "a539519f-e99e-4a6a-acc8-b80f6cd38476",
+      "recording_mbid": null,
+      "blurb_content": null,
+      "created": 1629096991,
+      "pinned_until": 1629097000,
+      "track_metadata": {
+        "track_name": "400 Lux",
+        "artist_name": "Lorde",
+        "artist_msid": "edbb5ff8-ebd3-42e1-96c2-e22d4e4c080a"
+      }
+    },
+    {
+      "user_id": 1,
+      "user_name": null,
+      "row_id": 85,
+      "recording_msid": "c7963711-297c-467d-b699-a2e016248655",
+      "recording_mbid": null,
+      "blurb_content": null,
+      "created": 1629095563,
+      "pinned_until": 1629096991,
+      "track_metadata": {
+        "track_name": "Moshi Moshi",
+        "artist_name": "Poppy",
+        "artist_msid": "7c97c59a-e0d9-461f-a7a9-88e7659343e5"
+      }
+    },
+    {
+      "user_id": 1,
+      "user_name": null,
+      "row_id": 84,
+      "recording_msid": "c7963711-297c-467d-b699-a2e016248655",
+      "recording_mbid": null,
+      "blurb_content": null,
+      "created": 1629095557,
+      "pinned_until": 1629095563,
+      "track_metadata": {
+        "track_name": "Moshi Moshi",
+        "artist_name": "Poppy",
+        "artist_msid": "7c97c59a-e0d9-461f-a7a9-88e7659343e5"
+      }
+    },
+    {
+      "user_id": 1,
+      "user_name": null,
+      "row_id": 83,
+      "recording_msid": "a539519f-e99e-4a6a-acc8-b80f6cd38476",
+      "recording_mbid": null,
+      "blurb_content": null,
+      "created": 1629095555,
+      "pinned_until": 1629095557,
+      "track_metadata": {
+        "track_name": "400 Lux",
+        "artist_name": "Lorde",
+        "artist_msid": "edbb5ff8-ebd3-42e1-96c2-e22d4e4c080a"
+      }
+    },
+    {
+      "user_id": 1,
+      "user_name": null,
+      "row_id": 82,
+      "recording_msid": "a539519f-e99e-4a6a-acc8-b80f6cd38476",
+      "recording_mbid": null,
+      "blurb_content": null,
+      "created": 1629095545,
+      "pinned_until": 1629095555,
+      "track_metadata": {
+        "track_name": "400 Lux",
+        "artist_name": "Lorde",
+        "artist_msid": "edbb5ff8-ebd3-42e1-96c2-e22d4e4c080a"
+      }
+    },
+    {
+      "user_id": 1,
+      "user_name": null,
+      "row_id": 81,
+      "recording_msid": "a539519f-e99e-4a6a-acc8-b80f6cd38476",
+      "recording_mbid": null,
+      "blurb_content": null,
+      "created": 1629095542,
+      "pinned_until": 1629095545,
+      "track_metadata": {
+        "track_name": "400 Lux",
+        "artist_name": "Lorde",
+        "artist_msid": "edbb5ff8-ebd3-42e1-96c2-e22d4e4c080a"
+      }
+    },
+    {
+      "user_id": 1,
+      "user_name": null,
+      "row_id": 80,
+      "recording_msid": "a539519f-e99e-4a6a-acc8-b80f6cd38476",
+      "recording_mbid": null,
+      "blurb_content": null,
+      "created": 1629095540,
+      "pinned_until": 1629095542,
+      "track_metadata": {
+        "track_name": "400 Lux",
+        "artist_name": "Lorde",
+        "artist_msid": "edbb5ff8-ebd3-42e1-96c2-e22d4e4c080a"
+      }
+    },
+    {
+      "user_id": 1,
+      "user_name": null,
+      "row_id": 79,
+      "recording_msid": "a539519f-e99e-4a6a-acc8-b80f6cd38476",
+      "recording_mbid": null,
+      "blurb_content": null,
+      "created": 1629095537,
+      "pinned_until": 1629095540,
+      "track_metadata": {
+        "track_name": "400 Lux",
+        "artist_name": "Lorde",
+        "artist_msid": "edbb5ff8-ebd3-42e1-96c2-e22d4e4c080a"
+      }
+    },
+    {
+      "user_id": 1,
+      "user_name": null,
+      "row_id": 78,
+      "recording_msid": "a539519f-e99e-4a6a-acc8-b80f6cd38476",
+      "recording_mbid": null,
+      "blurb_content": null,
+      "created": 1629095534,
+      "pinned_until": 1629095537,
+      "track_metadata": {
+        "track_name": "400 Lux",
+        "artist_name": "Lorde",
+        "artist_msid": "edbb5ff8-ebd3-42e1-96c2-e22d4e4c080a"
+      }
+    },
+    {
+      "user_id": 1,
+      "user_name": null,
+      "row_id": 77,
+      "recording_msid": "a539519f-e99e-4a6a-acc8-b80f6cd38476",
+      "recording_mbid": null,
+      "blurb_content": null,
+      "created": 1629095531,
+      "pinned_until": 1629095534,
+      "track_metadata": {
+        "track_name": "400 Lux",
+        "artist_name": "Lorde",
+        "artist_msid": "edbb5ff8-ebd3-42e1-96c2-e22d4e4c080a"
+      }
+    },
+    {
+      "user_id": 1,
+      "user_name": null,
+      "row_id": 76,
+      "recording_msid": "a539519f-e99e-4a6a-acc8-b80f6cd38476",
+      "recording_mbid": null,
+      "blurb_content": null,
+      "created": 1629095528,
+      "pinned_until": 1629095531,
+      "track_metadata": {
+        "track_name": "400 Lux",
+        "artist_name": "Lorde",
+        "artist_msid": "edbb5ff8-ebd3-42e1-96c2-e22d4e4c080a"
+      }
+    },
+    {
+      "user_id": 1,
+      "user_name": null,
+      "row_id": 75,
+      "recording_msid": "a539519f-e99e-4a6a-acc8-b80f6cd38476",
+      "recording_mbid": null,
+      "blurb_content": null,
+      "created": 1629095525,
+      "pinned_until": 1629095528,
+      "track_metadata": {
+        "track_name": "400 Lux",
+        "artist_name": "Lorde",
+        "artist_msid": "edbb5ff8-ebd3-42e1-96c2-e22d4e4c080a"
+      }
+    },
+    {
+      "user_id": 1,
+      "user_name": null,
+      "row_id": 74,
+      "recording_msid": "a539519f-e99e-4a6a-acc8-b80f6cd38476",
+      "recording_mbid": null,
+      "blurb_content": null,
+      "created": 1629095522,
+      "pinned_until": 1629095525,
+      "track_metadata": {
+        "track_name": "400 Lux",
+        "artist_name": "Lorde",
+        "artist_msid": "edbb5ff8-ebd3-42e1-96c2-e22d4e4c080a"
+      }
+    }
+  ],
+  "totalCount": 50,
+  "profileUrl": "/user/jdaok/",
+  "newAlert": "ƒ () {}",
+  "spotify": {
+    "access_token": "access token",
+    "permission": ["streaming", "user-read-email", "user-read-private"]
+  },
+  "youtube": {
+    "api_key": "fake-api-key"
+  }
+}
