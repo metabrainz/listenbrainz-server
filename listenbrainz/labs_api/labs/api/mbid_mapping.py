@@ -7,8 +7,8 @@ class MBIDMappingQuery(Query):
        Thin wrapper around the MBIDMapper -- see mbid_mapper.py for details.
     """
 
-    def __init__(self, remove_stop_words=False):
-        self.mapper = MBIDMapper(remove_stop_words=remove_stop_words)
+    def __init__(self, timeout, remove_stop_words, debug=False):
+        self.mapper = MBIDMapper(timeout=timeout, remove_stop_words=remove_stop_words, debug=debug)
 
     def names(self):
         return ("mbid-mapping", "MusicBrainz ID Mapping lookup")
@@ -24,6 +24,9 @@ class MBIDMappingQuery(Query):
         return ['index', 'artist_credit_arg', 'recording_arg',
                 'artist_credit_name', 'artist_mbids', 'release_name', 'recording_name',
                 'release_mbid', 'recording_mbid', 'artist_credit_id']
+
+    def get_debug_log_lines(self):
+        return self.mapper.read_log()
 
     def fetch(self, params, offset=-1, count=-1):
         """ Call the MBIDMapper and carry out this mapping search """

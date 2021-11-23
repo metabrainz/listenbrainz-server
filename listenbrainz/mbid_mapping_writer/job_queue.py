@@ -13,7 +13,7 @@ import sqlalchemy
 from listenbrainz.listen import Listen
 from listenbrainz.db import timescale
 from listenbrainz.mbid_mapping_writer.matcher import process_listens
-from listenbrainz.labs_api.labs.api.mbid_mapping import MATCH_TYPES
+from listenbrainz.mbid_mapping_writer.mbid_mapper import MATCH_TYPES
 from listenbrainz.utils import init_cache
 from listenbrainz.listenstore.timescale_listenstore import DATA_START_YEAR_IN_SECONDS
 from listenbrainz import messybrainz as msb_db
@@ -24,7 +24,8 @@ MAX_QUEUED_JOBS = MAX_THREADS * 2
 QUEUE_RELOAD_THRESHOLD = 0
 UPDATE_INTERVAL = 30
 
-LEGACY_LISTEN = 1
+LEGACY_LISTEN = 2
+RECHECK_LISTEN = 1
 NEW_LISTEN = 0
 
 # How long to wait if all unmatched listens have been processed before starting the process anew
@@ -108,7 +109,7 @@ class MappingJobQueue(threading.Thread):
             target=_add_legacy_listens_to_queue, args=(self,))
         self.legacy_load_thread.start()
 
-    def fetch_and_queue_listens(self, query, args):
+    def fetch_and_queue_listens(self, query, args, priority):
         """ Fetch and queue legacy and recheck listens """
 
         msb_query = """SELECT gid AS recording_msid
@@ -136,10 +137,10 @@ class MappingJobQueue(threading.Thread):
                 if not result:
                     break
 
-                self.queue.put(JobItem(LEGACY_LISTEN, [{"data": {"artist_name": result[2],
-                                                                 "track_name": result[1]},
-                                                        "recording_msid": result[0],
-                                                        "legacy": True}]))
+                self.queue.put(JobItem(priority, [{"data": {"artist_name": result[2],
+                                                            "track_name": result[1]},
+                                                   "recording_msid": result[0],
+                                                   "priority": priority}]))
                 count += 1
 
         return count
@@ -190,14 +191,15 @@ class MappingJobQueue(threading.Thread):
             return
 
         # Check to see if any listens have been marked for re-check
-        count = self.fetch_and_queue_listens(recheck_query, {})
+        count = self.fetch_and_queue_listens(recheck_query, {}, RECHECK_LISTEN)
         if count > 0:
             self.app.logger.info("Loaded %d listens to be rechecked." % count)
             return
         else:
             # If none, check for old legacy listens
             count = self.fetch_and_queue_listens(legacy_query, {"max_ts": self.legacy_listens_index_date,
-                                                                "min_ts": self.legacy_listens_index_date - LEGACY_LISTENS_LOAD_WINDOW})
+                                                                "min_ts": self.legacy_listens_index_date - LEGACY_LISTENS_LOAD_WINDOW},
+                                                 LEGACY_LISTEN)
             self.app.logger.info("Loaded %s more legacy listens for %s" % (count, datetime.datetime.fromtimestamp(
                 self.legacy_listens_index_date).strftime("%Y-%m-%d")))
 
@@ -343,7 +345,7 @@ class MappingJobQueue(threading.Thread):
                                 continue
 
                             futures[executor.submit(
-                                process_listens, self.app, job.item, job.priority == LEGACY_LISTEN)] = job.priority
+                                process_listens, self.app, job.item, job.priority)] = job.priority
                             if job.priority == LEGACY_LISTEN:
                                 stats["legacy"] += 1
 
