@@ -219,12 +219,14 @@ class MBIDMapper():
                 (hit, match_type) = self.evaluate_hit(
                     hit, artist_credit_name_p, recording_name_p)
                 if hit:
-                    self._log("recording name: " + str(hit['document']["recording_name"]))
-                    self._log("release name: " + str(hit['document']["release_name"]))
-                    self._log("artist credit name: " + str(hit['document']["artist_credit_name"]))
-                    self._log("recording MBID: " + str(hit['document']["recording_mbid"]))
-                    self._log("release MBID: " + str(hit['document']["release_mbid"]))
-                    self._log("artist_credit_id: " + str(hit['document']["artist_credit_id"]))
+                    self._log("""<table>
+                             <td>recording name</td><td>""" + str(hit['document']["recording_name"]) + """</td>
+                             <td>release name</td><td>""" + str(hit['document']["release_name"]) + """</td>
+                             <td>artist credit name</td><td>""" + str(hit['document']["artist_credit_name"]) + """</td>
+                             <td>recording MBID<td>""" + str(hit['document']["recording_mbid"]) + """</td>
+                             <td>release MBID</td><td>""" + str(hit['document']["release_mbid"]) + """</td>
+                             <td>artist_credit_id</td><td>""" + str(hit['document']["artist_credit_id"]) + """</td>
+                           </table>""")
 
             if not hit:
                 hit = None
