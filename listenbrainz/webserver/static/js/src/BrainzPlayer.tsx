@@ -25,6 +25,7 @@ import {
   hasMediaSessionSupport,
   overwriteMediaSession,
   updateMediaSession,
+  updateWindowTitle,
 } from "./Notifications";
 
 export type DataSourceType = {
@@ -129,6 +130,7 @@ export default class BrainzPlayer extends React.Component<
 
   playerStateTimerID?: NodeJS.Timeout;
 
+  private readonly initialWindowTitle: string = window.document.title;
   private readonly mediaSessionHandlers: Array<{
     action: string;
     handler: () => void;
@@ -224,6 +226,15 @@ export default class BrainzPlayer extends React.Component<
     }
   };
 
+  updateWindowTitle = () => {
+    const { currentTrackName } = this.state;
+    updateWindowTitle(currentTrackName, "🎵", ` — ${this.initialWindowTitle}`);
+  };
+
+  reinitializeWindowTitle = () => {
+    updateWindowTitle(this.initialWindowTitle);
+  };
+
   stopOtherBrainzPlayers = (): void => {
     // Tell all other BrainzPlayer instances to please STFU
     // Using timestamp to ensure a new value each time
@@ -283,6 +294,7 @@ export default class BrainzPlayer extends React.Component<
         "You can try loading more listens or refreshing the page",
         "No more listens to play"
       );
+      this.reinitializeWindowTitle();
       return;
     }
     this.playListen(nextListen);
@@ -469,8 +481,10 @@ export default class BrainzPlayer extends React.Component<
     this.setState({ playerPaused: paused }, () => {
       if (paused) {
         this.stopPlayerStateTimer();
+        this.reinitializeWindowTitle();
       } else {
         this.startPlayerStateTimer();
+        this.updateWindowTitle();
       }
     });
     if (hasMediaSessionSupport()) {
@@ -526,18 +540,22 @@ export default class BrainzPlayer extends React.Component<
     album?: string,
     artwork?: Array<MediaImage>
   ): void => {
-    this.setState({
-      currentTrackName: title,
-      currentTrackArtist: artist,
-      currentTrackURL: trackURL,
-      currentTrackAlbum: album,
-    });
+    this.setState(
+      {
+        currentTrackName: title,
+        currentTrackArtist: artist,
+        currentTrackURL: trackURL,
+        currentTrackAlbum: album,
+      },
+      this.updateWindowTitle
+    );
     const { playerPaused } = this.state;
     if (playerPaused) {
       // Don't send notifications or any of that if the player is not playing
       // (Avoids getting notifications upon pausing a track)
       return;
     }
+
     if (hasMediaSessionSupport()) {
       overwriteMediaSession(this.mediaSessionHandlers);
       updateMediaSession(title, artist, album, artwork);
