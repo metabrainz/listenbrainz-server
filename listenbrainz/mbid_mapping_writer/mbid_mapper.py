@@ -220,17 +220,26 @@ class MBIDMapper():
                 (hit, match_type) = self.evaluate_hit(
                     hit, artist_credit_name_p, recording_name_p)
                 if hit:
-                    self._log(Markup(
-                        """<table>
-                             <td>recording name</td><td>""" + str(hit['document']["recording_name"]) + """</td>
-                             <td>release name</td><td>""" + str(hit['document']["release_name"]) + """</td>
-                             <td>artist credit name</td><td>""" + str(hit['document']["artist_credit_name"]) + """</td>
-                             <td>recording MBID<td>""" + str(hit['document']["recording_mbid"]) + """</td>
-                             <td>release MBID</td><td>""" + str(hit['document']["release_mbid"]) + """</td>
-                             <td>artist_credit_id</td><td>""" + str(hit['document']["artist_credit_id"]) + """</td>
-                           </table>
-                        """
-                    ))
+                    self._log(Markup(f"""
+                        <table>
+                            <tr>
+                                <th>recording name</th>
+                                <th>release name</th>
+                                <th>artist credit name</th>
+                                <th>recording MBID<th>
+                                <th>release MBID</th>
+                                <th>artist_credit_id</th>
+                            </tr>
+                            <tr>
+                                <td>{hit['document']["recording_name"]}</td>
+                                <td>{hit['document']["release_name"]}</td>
+                                <td>{hit['document']["artist_credit_name"]}</td>
+                                <td>{hit['document']["recording_mbid"]}</td>
+                                <td>{hit['document']["release_mbid"]}</td>
+                                <td>{hit['document']["artist_credit_id"]}</td>
+                            </tr>
+                        </table>
+                    """))
 
             if not hit:
                 hit = None
