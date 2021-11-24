@@ -1,10 +1,26 @@
-# listenbrainz-server
+<h1 align="center">
+  <br>
+  <a href="https://github.com/metabrainz/listenbrainz-server/archive/master.zip"><img src="https://github.com/metabrainz/metabrainz-logos/blob/master/logos/ListenBrainz/SVG/ListenBrainz_logo.svg" alt="ListenBrainz"></a>
+</h1>
+<h4 align="center">Server for the ListenBrainz project</h4>
+<p align="center">
+    <a href="https://github.com/metabrainz/listenbrainz-server/commits/master">
+    <img src="https://img.shields.io/github/last-commit/metabrainz/listenbrainz-server.svg?style=flat-square&logo=github&logoColor=white"
+         alt="GitHub last commit"></a>
+    <a href="https://github.com/metabrainz/listenbrainz-server/issues">
+    <img src="https://img.shields.io/github/issues-raw/metabrainz/listenbrainz-server.svg?style=flat-square&logo=github&logoColor=white"
+         alt="GitHub issues"></a>
+    <a href="https://github.com/metabrainz/metabrainz.org/pulls">
+    <img src="https://img.shields.io/github/issues-pr-raw/metabrainz/listenbrainz-server?style=flat-square&logo=github&logoColor=white"
+         alt="GitHub pull requests"></a>
+</p>
+<p align="center">
+  <a href="https://listenbrainz.org">Website</a> •
+  <a href="https://listenbrainz.readthedocs.io">Documentation</a> •
+  <a href="https://tickets.metabrainz.org/projects/LB/issues">Bug tracker</a>
+</p>
 
-Server for the ListenBrainz project
-
-[Website](https://listenbrainz.org) |
-[Documentation](https://listenbrainz.readthedocs.io) |
-[Bug tracker](https://tickets.metabrainz.org/projects/LB/issues)
+---
 
 ## About
 
