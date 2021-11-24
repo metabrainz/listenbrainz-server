@@ -69,9 +69,12 @@ PUBLIC_TABLES_DUMP = {
     ),
     'statistics.user': (
         'user_id',
-        'artist',
-        'release',
-        'recording',
+        'stats_type',
+        'stats_range',
+        'data',
+        'count',
+        'from_ts',
+        'to_ts',
         'last_updated',
     ),
     'statistics.artist': (
@@ -865,6 +868,10 @@ def _update_sequences():
     # session_id_seq
     current_app.logger.info('Updating session_id_seq...')
     _update_sequence(db.engine, 'api_compat.session_id_seq', 'api_compat.session')
+
+    # statistics.user_id_seq
+    current_app.logger.info('Updating statistics.user_id_seq...')
+    _update_sequence(db.engine, 'statistics.user_id_seq', 'statistics.user')
 
     # artist_id_seq
     current_app.logger.info('Updating artist_id_seq...')
