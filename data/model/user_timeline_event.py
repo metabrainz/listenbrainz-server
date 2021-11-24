@@ -17,7 +17,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 from pydantic import BaseModel, validator, NonNegativeInt, constr
-from listenbrainz.db.model.validators import check_valid_uuid
+from data.model.validators import check_valid_uuid
 
 from datetime import datetime
 from enum import Enum

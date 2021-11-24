@@ -18,7 +18,7 @@
 
 from typing import Optional, List
 from pydantic import BaseModel, validator, NonNegativeInt, constr
-from listenbrainz.db.model.validators import check_valid_uuid
+from data.model.validators import check_valid_uuid
 
 
 class AdditionalInfo(BaseModel):

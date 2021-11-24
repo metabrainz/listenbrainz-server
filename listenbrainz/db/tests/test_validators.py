@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from pydantic import ValidationError
 import unittest
 
-import listenbrainz.db.model.validators as validators
+import data.model.validators as validators
 
 
 class ModelUtilsTestCase(unittest.TestCase):

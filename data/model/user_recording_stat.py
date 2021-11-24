@@ -1,5 +1,5 @@
-from pydantic import BaseModel, validator, NonNegativeInt, constr
-from listenbrainz.db.model.validators import check_valid_uuid
+from pydantic import BaseModel, constr, validator
+from data.model.validators import check_valid_uuid
 
 from typing import Optional, List
 
@@ -18,3 +18,12 @@ class UserRecordingRecord(BaseModel):
     artist_msid: Optional[str]
     recording_msid: Optional[str]
     release_msid: Optional[str]
+
+    _validate_uuids: classmethod = validator(
+        "recording_mbid",
+        "release_mbid",
+        allow_reuse=True
+    )(check_valid_uuid)
+
+    _validate_artist_mbids: classmethod = validator("artist_mbids", each_item=True, allow_reuse=True)(check_valid_uuid)
+
