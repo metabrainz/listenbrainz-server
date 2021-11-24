@@ -52,22 +52,22 @@ class CFRecordingRecommendationDatabaseTestCase(DatabaseTestCase):
     def insert_test_data(self):
         top_artist_recording_mbids = [
             {
-                'recording_mbid': 'x36d6fc9-49d0-4789-a7dd-a2b72369ca45',
+                'recording_mbid': '17009e7b-11cb-46fa-9a42-e72937d05ee5',
                 'score': 1.0
             },
             {
-                'recording_mbid': 'h36d6fc9-49d0-4789-a7dd-a2b72369ca45',
+                'recording_mbid': 'c8f2edaa-6da8-471a-8c45-069852176104',
                 'score': 8.7
             }
         ]
 
         similar_artist_recording_mbids = [
             {
-                'recording_mbid': 'v36d6fc9-49d0-4789-a7dd-a2b72369ca45',
+                'recording_mbid': '81925173-6863-44c3-afd8-e1023b69969d',
                 'score': 2.6
             },
             {
-                'recording_mbid': 'i36d6fc9-49d0-4789-a7dd-a2b72369ca45',
+                'recording_mbid': '62413d46-6bac-4bad-96b9-1b062da236a2',
                 'score': 3.7
             }
         ]
