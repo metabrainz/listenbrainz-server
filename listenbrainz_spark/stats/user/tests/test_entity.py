@@ -1,4 +1,5 @@
 import json
+import uuid
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
@@ -64,11 +65,11 @@ class UserEntityTestCase(StatsTestCase):
         for i in range(0, 2000):
             recordings.append({
                 'artist_name': 'artist_{}'.format(i),
-                'artist_mbids': [str(i)],
+                'artist_mbids': [uuid.uuid4()],
                 'release_name': 'release_{}'.format(i),
-                'release_mbid': str(i),
+                'release_mbid': uuid.uuid4(),
                 'track_name': 'recording_{}'.format(i),
-                'recording_mbid': str(i),
+                'recording_mbid': uuid.uuid4(),
                 'listen_count': i
             })
 
