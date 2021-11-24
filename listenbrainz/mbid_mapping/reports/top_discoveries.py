@@ -65,8 +65,8 @@ def chunks(lst, n):
         yield lst[i:i + n]
 
 
-def fetch_top_discoveries_for_users(lb_conn, mb_conn, year, users):
-    """ Actually fetch the top discoveries for the given year and set of users """
+def fetch_top_discoveries_for_users(lb_conn, mb_conn, year):
+    """ Actually fetch the top discoveries for the given year"""
 
     with lb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
         with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
@@ -74,7 +74,7 @@ def fetch_top_discoveries_for_users(lb_conn, mb_conn, year, users):
             create_table(mb_conn)
 
             log("fetch active users")
-            user_list = fetch_user_list(lb_conn, year)
+            user_list = ["rob", "mr_monkey", "alastairp", "amCap1712", "tandy1000"] #fetch_user_list(lb_conn, year)
             log("Process %d users." % len(user_list))
 
             query = """SELECT user_name
@@ -82,14 +82,14 @@ def fetch_top_discoveries_for_users(lb_conn, mb_conn, year, users):
                             , data->'track_metadata'->>'artist_name' AS artist_name
                             , array_agg(extract(year from to_timestamp(listened_at))::INT ORDER BY
                                         extract(year from to_timestamp(listened_at))::INT) AS years
-                            , recording_mbid
+                            , m.recording_mbid
                          FROM listen
-              FULL OUTER JOIN listen_join_listen_mbid_mapping lj
-                           ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = lj.recording_msid
-              FULL OUTER JOIN listen_mbid_mapping m
-                              ON lj.listen_mbid_mapping = m.id
+              FULL OUTER JOIN mbid_mapping m
+                           ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = m.recording_msid
+              FULL OUTER JOIN mbid_mapping_metadata mm
+                              ON mm.recording_mbid = m.recording_mbid
                         WHERE user_name in %s
-                     GROUP BY user_name, artist_name, track_name, recording_mbid
+                     GROUP BY user_name, artist_name, track_name, m.recording_mbid
                        HAVING (array_agg(extract(year from to_timestamp(listened_at))::INT ORDER BY
                                          extract(year from to_timestamp(listened_at))::INT))[1] = %s
                      ORDER BY user_name, array_length(array_agg(extract(year from to_timestamp(listened_at))::INT), 1) DESC"""
@@ -126,7 +126,7 @@ def get_top_discoveries(year):
     with psycopg2.connect(config.TIMESCALE_DATABASE_URI) as lb_conn:
         with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
             create_table(mb_conn)
-            fetch_top_discoveries_for_users(lb_conn, mb_conn, year, ["rob", "mr_monkey"])
+            fetch_top_discoveries_for_users(lb_conn, mb_conn, year)
             create_indexes(mb_conn)
 
 

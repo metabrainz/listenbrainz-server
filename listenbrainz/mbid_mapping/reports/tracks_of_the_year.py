@@ -65,7 +65,7 @@ def fetch_tracks_listened_to(lb_conn, mb_conn, ts):
 
     with lb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
         with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
-            log("create top_listens table")
+            log("create tracks listened table")
             create_table(mb_conn)
 
             log("fetch tracks listened to")
@@ -78,14 +78,15 @@ def fetch_tracks_listened_to(lb_conn, mb_conn, ts):
                      GROUP BY m.recording_mbid, user_name""" % ts
 
             to_insert = []
+            lb_curs.execute(query)
             while True:
                 row = lb_curs.fetchone()
                 if not row:
                     break
 
                 to_insert.append(row)
-                if to_insert) > BATCH_SIZE:
-                    print("insert %d rows" % len(top_recordings))
+                if len(to_insert) >= BATCH_SIZE:
+                    print("insert %d rows" % len(to_insert))
                     insert_rows(mb_curs, "mapping.tracks_of_the_year", to_insert)
                     to_insert = []
                     mb_conn.commit()
