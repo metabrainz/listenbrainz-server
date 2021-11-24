@@ -871,7 +871,7 @@ def _update_sequences():
 
     # statistics.user_id_seq
     current_app.logger.info('Updating statistics.user_id_seq...')
-    _update_sequence('statistics.user_id_seq', 'statistics.user')
+    _update_sequence(db.engine, 'statistics.user_id_seq', 'statistics.user')
 
     # artist_id_seq
     current_app.logger.info('Updating artist_id_seq...')
