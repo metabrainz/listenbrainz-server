@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-  <a href="https://github.com/metabrainz/listenbrainz-server/archive/master.zip"><img src="https://github.com/metabrainz/metabrainz-logos/blob/master/logos/ListenBrainz/SVG/ListenBrainz_logo.svg" alt="ListenBrainz"></a>
+  <a href="https://listenbrainz.org"><img src="https://github.com/metabrainz/metabrainz-logos/blob/master/logos/ListenBrainz/SVG/ListenBrainz_logo.svg" alt="ListenBrainz"></a>
 </h1>
 <h4 align="center">Server for the ListenBrainz project</h4>
 <p align="center">
