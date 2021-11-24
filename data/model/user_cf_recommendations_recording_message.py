@@ -1,51 +1,55 @@
-import pydantic
+from pydantic import BaseModel, validator, NonNegativeInt, constr
+from data.model.validators import check_valid_uuid
 
 from datetime import datetime
 from typing import List, Optional
 
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataRecord
 
-class UserMissingMusicBrainzDataMessage(pydantic.BaseModel):
+
+class UserMissingMusicBrainzDataMessage(BaseModel):
     """ Format of missing musicbrainz data messages sent to the ListenBrainz Server """
-    type: str
-    musicbrainz_id: str
+    type: constr(min_length=1)
+    musicbrainz_id: constr(min_length=1)
     missing_musicbrainz_data: List[UserMissingMusicBrainzDataRecord]
-    source: str
+    source: constr(min_length=1)
 
 
-class UserCreateDataframesMessage(pydantic.BaseModel):
+class UserCreateDataframesMessage(BaseModel):
     """ Format of dataframe creation messages sent to the ListenBrainz Server """
-    type: str
-    dataframe_upload_time: str
-    total_time: str
-    from_date: str
-    to_date: str
+    type: constr(min_length=1)
+    dataframe_upload_time: constr(min_length=1)
+    total_time: constr(min_length=1)
+    from_date: constr(min_length=1)
+    to_date: constr(min_length=1)
 
 
-class UserRecommendationsRecord(pydantic.BaseModel):
+class UserRecommendationsRecord(BaseModel):
     """ Each individual record for a user's recommendations.
     """
-    recording_mbid: str
+    recording_mbid: constr(min_length=1)
     score: float
 
+    _validate_recording_mbid: classmethod = validator("recording_mbid", allow_reuse=True)(check_valid_uuid)
 
-class UserRecommendationsJson(pydantic.BaseModel):
+
+class UserRecommendationsJson(BaseModel):
     """ Model for the JSON stored in recommendation.cf_recording tables's recording_mbid column
     """
     top_artist: Optional[List[UserRecommendationsRecord]]
     similar_artist: Optional[List[UserRecommendationsRecord]]
 
 
-class UserRecommendationsData(pydantic.BaseModel):
+class UserRecommendationsData(BaseModel):
     """ Model for table recommendation.cf_recording
     """
-    user_id: int
+    user_id: NonNegativeInt
     created: datetime
     recording_mbid: UserRecommendationsJson
 
 
-class UserRecommendationsMessage(pydantic.BaseModel):
+class UserRecommendationsMessage(BaseModel):
     """ Format of recommendations messages sent to the ListenBrainz Server """
-    type: str
-    musicbrainz_id: str
+    type: constr(min_length=1)
+    musicbrainz_id: constr(min_length=1)
     recommendations: UserRecommendationsJson
