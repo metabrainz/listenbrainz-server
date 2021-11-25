@@ -45,6 +45,14 @@ export default class YearInMusic extends React.Component<
     const selectedReleaseTracks = selectedRelease?.recordings ?? [];
     return (
       <div role="main">
+      <div role="main" id="year-in-music">
+          <div className="col-sm-8">
+            <img
+              className="header-image"
+              src="/static/img/year-in-music-2021.svg"
+              alt="Your year in music 2021"
+            />
+          </div>
       </div>
     );
   }
