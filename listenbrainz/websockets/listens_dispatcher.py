@@ -17,6 +17,9 @@ class ListensDispatcher(ConsumerMixin):
         self.app = app
         self.socketio = socketio
         self.connection = None
+        # there are two consumers: one for playing now queue and another for normal listens
+        # queue when using ConsumerMixin, it sets up a default channel itself. we create the
+        # other channel here. we also need to handle its cleanup later
         self.channel2 = None
 
         self.unique_exchange = Exchange(app.config["UNIQUE_EXCHANGE"], "fanout", durable=False)
@@ -26,7 +29,6 @@ class ListensDispatcher(ConsumerMixin):
                                        durable=True)
 
     def send_listens(self, event_name, message):
-        self.app.logger.info("Callback called")
         listens = json.loads(message.body.decode("utf-8"))
         for listen in listens:
             self.socketio.emit(event_name, json.dumps(listen), to=listen["user_name"])
