@@ -24,7 +24,7 @@ def get_recordings(table: str, limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
                  , artist_credit_mbids
                  , nullif(first(release_name), '') as any_release_name
                  , release_mbid
-                 , count(*) as listen_count
+                 , LEAST(count(*), 500) as listen_count
               FROM {table}
           GROUP BY lower(recording_name)
                  , recording_mbid
