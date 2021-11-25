@@ -117,25 +117,25 @@ class ListeningActivityTestCase(StatsTestCase):
 
         mock_listen_ts.return_value = datetime(2021, 11, 24, 2, 3, 0)
         self.assertEqual(
-            (datetime(2021, 11, 22), datetime(2021, 11, 24), step, fmt),
+            (datetime(2021, 11, 15), datetime(2021, 11, 24), step, fmt),
             listening_activity_stats.get_time_range("this_week")
         )
 
         mock_listen_ts.return_value = datetime(2021, 11, 22, 3, 0, 0)
         self.assertEqual(
-            (datetime(2021, 11, 15), datetime(2021, 11, 22), step, fmt),
+            (datetime(2021, 11, 8), datetime(2021, 11, 22), step, fmt),
             listening_activity_stats.get_time_range("this_week")
         )
 
         mock_listen_ts.return_value = datetime(2021, 11, 24, 2, 3, 0)
         self.assertEqual(
-            (datetime(2021, 11, 15), datetime(2021, 11, 22), step, fmt),
+            (datetime(2021, 11, 8), datetime(2021, 11, 22), step, fmt),
             listening_activity_stats.get_time_range("week")
         )
 
         mock_listen_ts.return_value = datetime(2021, 11, 22, 3, 0, 0)
         self.assertEqual(
-            (datetime(2021, 11, 15), datetime(2021, 11, 22), step, fmt),
+            (datetime(2021, 11, 8), datetime(2021, 11, 22), step, fmt),
             listening_activity_stats.get_time_range("week")
         )
 
@@ -144,25 +144,25 @@ class ListeningActivityTestCase(StatsTestCase):
 
         mock_listen_ts.return_value = datetime(2021, 11, 21, 2, 3, 0)
         self.assertEqual(
-            (datetime(2021, 11, 1), datetime(2021, 11, 21), step, fmt),
+            (datetime(2021, 10, 1), datetime(2021, 11, 21), step, fmt),
             listening_activity_stats.get_time_range("this_month")
         )
 
         mock_listen_ts.return_value = datetime(2021, 11, 1, 3, 0, 0)
         self.assertEqual(
-            (datetime(2021, 10, 1), datetime(2021, 11, 1), step, fmt),
+            (datetime(2021, 9, 1), datetime(2021, 10, 1), step, fmt),
             listening_activity_stats.get_time_range("this_month")
         )
 
         mock_listen_ts.return_value = datetime(2021, 11, 21, 2, 3, 0)
         self.assertEqual(
-            (datetime(2021, 10, 1), datetime(2021, 11, 1), step, fmt),
+            (datetime(2021, 9, 1), datetime(2021, 11, 1), step, fmt),
             listening_activity_stats.get_time_range("month")
         )
 
         mock_listen_ts.return_value = datetime(2021, 11, 1, 3, 0, 0)
         self.assertEqual(
-            (datetime(2021, 10, 1), datetime(2021, 11, 1), step, fmt),
+            (datetime(2021, 9, 1), datetime(2021, 11, 1), step, fmt),
             listening_activity_stats.get_time_range("month")
         )
 
@@ -171,24 +171,24 @@ class ListeningActivityTestCase(StatsTestCase):
 
         mock_listen_ts.return_value = datetime(2021, 11, 21, 2, 3, 0)
         self.assertEqual(
-            (datetime(2020, 1, 1), datetime(2021, 1, 1), step, fmt),
+            (datetime(2019, 1, 1), datetime(2021, 1, 1), step, fmt),
             listening_activity_stats.get_time_range("year")
         )
 
         mock_listen_ts.return_value = datetime(2021, 1, 1, 2, 3, 0)
         self.assertEqual(
-            (datetime(2020, 1, 1), datetime(2021, 1, 1), step, fmt),
+            (datetime(2019, 1, 1), datetime(2021, 1, 1), step, fmt),
             listening_activity_stats.get_time_range("year")
         )
 
         mock_listen_ts.return_value = datetime(2021, 1, 1, 2, 1, 0)
         self.assertEqual(
-            (datetime(2020, 1, 1), datetime(2021, 11, 1), step, fmt),
+            (datetime(2019, 1, 1), datetime(2021, 1, 1), step, fmt),
             listening_activity_stats.get_time_range("this_year")
         )
 
         mock_listen_ts.return_value = datetime(2021, 11, 1, 3, 0, 0)
         self.assertEqual(
-            (datetime(2021, 1, 1), datetime(2021, 11, 1), step, fmt),
+            (datetime(2020, 1, 1), datetime(2021, 11, 1), step, fmt),
             listening_activity_stats.get_time_range("this_year")
         )
