@@ -46,6 +46,13 @@ export default class UserListeningActivity extends React.Component<
       },
       perRange: "day",
     },
+    this_week: {
+      dateFormat: {
+        weekday: "short",
+        timeZone: "UTC",
+      },
+      perRange: "day",
+    },
     month: {
       dateFormat: {
         day: "2-digit",
@@ -53,7 +60,21 @@ export default class UserListeningActivity extends React.Component<
       },
       perRange: "day",
     },
+    this_month: {
+      dateFormat: {
+        day: "2-digit",
+        timeZone: "UTC",
+      },
+      perRange: "day",
+    },
     year: {
+      dateFormat: {
+        month: "short",
+        timeZone: "UTC",
+      },
+      perRange: "month",
+    },
+    this_year: {
       dateFormat: {
         month: "short",
         timeZone: "UTC",

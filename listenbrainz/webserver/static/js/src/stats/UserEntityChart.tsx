@@ -279,7 +279,17 @@ export default class UserEntityChart extends React.Component<
       let initData = {};
       if (range !== currRange || entity !== currEntity) {
         // Check if given range is valid
-        if (["week", "month", "year", "all_time"].indexOf(range) < 0) {
+        if (
+          [
+            "week",
+            "month",
+            "year",
+            "all_time",
+            "this_year",
+            "this_month",
+            "this_week",
+          ].indexOf(range) < 0
+        ) {
           this.setState({
             hasError: true,
             loading: false,
@@ -429,6 +439,18 @@ export default class UserEntityChart extends React.Component<
     const { newAlert } = this.props;
     const prevPage = currPage - 1;
     const nextPage = currPage + 1;
+
+    type UserStatsPair = [UserStatsAPIRange, string];
+    const ranges: Array<UserStatsPair> = [
+      ["this_week", "This Week"],
+      ["this_month", "This Month"],
+      ["this_year", "This Year"],
+      ["week", "Week"],
+      ["month", "Month"],
+      ["year", "Year"],
+      ["all_time", "All Time"],
+    ];
+
     // We receive the items in inverse order so we need to reorder them
     const listenableItems: BaseListenFormat[] =
       data?.map(userChartEntityToListen).reverse() ?? [];
@@ -481,58 +503,27 @@ export default class UserEntityChart extends React.Component<
                           <span className="caret" />
                         </button>
                         <ul className="dropdown-menu" role="menu">
-                          <li>
-                            <a
-                              href={this.buildURLParams(1, "week", entity)}
-                              role="button"
-                              onClick={(e) => {
-                                this.handleClickEvent(e, () => {
-                                  this.changeRange("week");
-                                });
-                              }}
-                            >
-                              Week
-                            </a>
-                          </li>
-                          <li>
-                            <a
-                              href={this.buildURLParams(1, "month", entity)}
-                              role="button"
-                              onClick={(e) => {
-                                this.handleClickEvent(e, () => {
-                                  this.changeRange("month");
-                                });
-                              }}
-                            >
-                              Month
-                            </a>
-                          </li>
-                          <li>
-                            <a
-                              href={this.buildURLParams(1, "year", entity)}
-                              role="button"
-                              onClick={(e) => {
-                                this.handleClickEvent(e, () => {
-                                  this.changeRange("year");
-                                });
-                              }}
-                            >
-                              Year
-                            </a>
-                          </li>
-                          <li>
-                            <a
-                              href={this.buildURLParams(1, "all_time", entity)}
-                              role="button"
-                              onClick={(e) => {
-                                this.handleClickEvent(e, () => {
-                                  this.changeRange("all_time");
-                                });
-                              }}
-                            >
-                              All Time
-                            </a>
-                          </li>
+                          {ranges.map((stats_range) => {
+                            return (
+                              <li>
+                                <a
+                                  href={this.buildURLParams(
+                                    1,
+                                    stats_range[0],
+                                    entity
+                                  )}
+                                  role="button"
+                                  onClick={(e) => {
+                                    this.handleClickEvent(e, () => {
+                                      this.changeRange("week");
+                                    });
+                                  }}
+                                >
+                                  {stats_range[1]}
+                                </a>
+                              </li>
+                            );
+                          })}
                         </ul>
                       </span>
                       {range !== "all_time" &&
