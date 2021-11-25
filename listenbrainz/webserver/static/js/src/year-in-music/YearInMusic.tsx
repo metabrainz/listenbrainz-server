@@ -4,6 +4,7 @@ import * as ReactDOM from "react-dom";
 import * as React from "react";
 import ErrorBoundary from "../ErrorBoundary";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
+import BrainzPlayer from "../BrainzPlayer";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
@@ -37,15 +38,18 @@ export default class YearInMusic extends React.Component<
 
   render() {
     const { user, newAlert } = this.props;
-    const {
-      loading,
-      selectedRelease,
-    } = this.state;
+    const { loading, selectedRelease } = this.state;
     const { APIService, currentUser } = this.context;
     const selectedReleaseTracks = selectedRelease?.recordings ?? [];
     return (
-      <div role="main">
       <div role="main" id="year-in-music">
+        <div className="row">
+          <div className="col-sm-4">
+            <div className="card">
+              Username here
+              {user?.name}
+            </div>
+          </div>
           <div className="col-sm-8">
             <img
               className="header-image"
@@ -53,6 +57,59 @@ export default class YearInMusic extends React.Component<
               alt="Your year in music 2021"
             />
           </div>
+          <div className="col-sm-4">
+            <div className="card flex-center">
+              <h3 className="text-center">Your most active listening day</h3>
+              <div>Friday</div>
+            </div>
+          </div>
+          <div className="col-sm-4">
+            <div className="card flex-center">
+              <h3 className="text-center">Color highlights</h3>
+            </div>
+          </div>
+          <div className="col-sm-4">
+            <div className="card flex-center">
+              <h3 className="text-center">12345 listens this year</h3>
+            </div>
+          </div>
+          <div className="col-sm-4">
+            <div className="card flex-center">
+              <h3 className="text-center">Top artists of the year</h3>
+            </div>
+          </div>
+          <div className="col-sm-4">
+            <div className="card flex-center">
+              <h3 className="text-center">Top albums of the year</h3>
+            </div>
+          </div>
+          <div className="col-sm-4">
+            <div className="card flex-center">
+              <h3 className="text-center">
+                Your top discoveries published this year
+              </h3>
+            </div>
+          </div>
+          <div className="col-sm-4">
+            <div className="card flex-center">
+              <h3 className="text-center">
+                New releases from 2021 from my top 50 Artists
+              </h3>
+            </div>
+          </div>
+          <div className="col-sm-4">
+            <div className="card flex-center">
+              <h3 className="text-center">Most similar users this year</h3>
+            </div>
+          </div>
+          <BrainzPlayer
+            listens={[]}
+            newAlert={newAlert}
+            listenBrainzAPIBaseURI={APIService.APIBaseURI}
+            refreshSpotifyToken={APIService.refreshSpotifyToken}
+            refreshYoutubeToken={APIService.refreshYoutubeToken}
+          />
+        </div>
       </div>
     );
   }
