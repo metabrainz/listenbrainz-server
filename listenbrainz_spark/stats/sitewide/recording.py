@@ -17,33 +17,50 @@ def get_recordings(table: str, limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
     # order of collected results is not guaranteed so sort again
     # with sort_array.
     result = run_query(f"""
-        WITH intermediate_table as (
-            SELECT first(recording_name) AS any_recording_name
+        WITH user_counts as (
+            SELECT user_name
+                 , first(recording_name) AS recording_name
                  , recording_mbid
-                 , first(artist_name) AS any_artist_name
+                 , first(artist_name) AS artist_name
                  , artist_credit_mbids
-                 , nullif(first(release_name), '') as any_release_name
+                 , nullif(first(release_name), '') as release_name
                  , release_mbid
                  , LEAST(count(*), 500) as listen_count
               FROM {table}
+          GROUP BY user_name
+                 , lower(recording_name)
+                 , recording_mbid
+                 , lower(artist_name)
+                 , artist_credit_mbids
+                 , lower(release_name)
+                 , release_mbid
+        ), intermediate_table AS (
+            SELECT first(recording_name) AS recording_name
+                 , recording_mbid
+                 , first(artist_name) AS artist_name
+                 , artist_credit_mbids
+                 , nullif(first(release_name), '') as release_name
+                 , release_mbid
+                 , SUM(listen_count) as total_listen_count
+              FROM user_counts
           GROUP BY lower(recording_name)
                  , recording_mbid
                  , lower(artist_name)
                  , artist_credit_mbids
                  , lower(release_name)
                  , release_mbid
-          ORDER BY listen_count DESC
+          ORDER BY total_listen_count DESC
              LIMIT {limit}
         )
         SELECT sort_array(
                     collect_list(
                         struct(
-                            listen_count
-                          , any_recording_name AS track_name
+                            total_listen_count AS listen_count
+                          , recording_name AS track_name
                           , recording_mbid
-                          , any_artist_name AS artist_name
+                          , artist_name
                           , coalesce(artist_credit_mbids, array()) AS artist_mbids
-                          , any_release_name AS release_name
+                          , release_name
                           , release_mbid
                         )
                     )
