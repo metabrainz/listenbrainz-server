@@ -17,9 +17,9 @@ class ListensDispatcher(ConsumerMixin):
         self.app = app
         self.socketio = socketio
         self.connection = None
-        # there are two consumers: one for playing now queue and another for normal listens
-        # queue when using ConsumerMixin, it sets up a default channel itself. we create the
-        # other channel here. we also need to handle its cleanup later
+        # there are two consumers, so we need two channels: one for playing now queue and another
+        # for normal listens queue. when using ConsumerMixin, it sets up a default channel itself.
+        # we create the other channel here. we also need to handle its cleanup later
         self.channel2 = None
 
         self.unique_exchange = Exchange(app.config["UNIQUE_EXCHANGE"], "fanout", durable=False)
