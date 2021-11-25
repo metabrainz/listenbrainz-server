@@ -515,7 +515,7 @@ export default class UserEntityChart extends React.Component<
                                   role="button"
                                   onClick={(e) => {
                                     this.handleClickEvent(e, () => {
-                                      this.changeRange("week");
+                                      this.changeRange(stats_range[0]);
                                     });
                                   }}
                                 >
