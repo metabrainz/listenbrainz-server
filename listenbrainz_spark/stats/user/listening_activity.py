@@ -93,16 +93,16 @@ def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta,
             date_format = "%A %d %B %Y"
         elif stats_range == "this_month":
             # if today is 1st then 1st of 2 months ago otherwise the 1st of last month
-            from_offset = relativedelta(months=-1) if latest_listen_date.day == 1 else relativedelta(day=1)
+            from_offset = relativedelta(months=-2) if latest_listen_date.day == 1 else relativedelta(months=-1, day=1)
             # compute listening activity for each day but no weekday
             step = relativedelta(days=+1)
             date_format = "%d %B %Y"
         else:
             # if today is the 1st of the year, then still show last year stats
             if latest_listen_date.day == 1 and latest_listen_date.month == 1:
-                from_offset = relativedelta(years=-1)
+                from_offset = relativedelta(years=-2)
             else:
-                from_offset = relativedelta(month=1, day=1)
+                from_offset = relativedelta(years=-1, month=1, day=1)
             step = relativedelta(months=+1)
             # compute listening activity for each month
             date_format = "%B %Y"
