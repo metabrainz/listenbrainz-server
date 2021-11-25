@@ -20,7 +20,7 @@ class ListensDispatcher(ConsumerMixin):
         # there are two consumers, so we need two channels: one for playing now queue and another
         # for normal listens queue. when using ConsumerMixin, it sets up a default channel itself.
         # we create the other channel here. we also need to handle its cleanup later
-        self.channel2 = None
+        self.playing_now_channel = None
 
         self.unique_exchange = Exchange(app.config["UNIQUE_EXCHANGE"], "fanout", durable=False)
         self.playing_now_exchange = Exchange(app.config["PLAYING_NOW_EXCHANGE"], "fanout", durable=False)
@@ -35,17 +35,17 @@ class ListensDispatcher(ConsumerMixin):
         message.ack()
 
     def get_consumers(self, _, channel):
-        self.channel2 = channel.connection.channel()
+        self.playing_now_channel = channel.connection.channel()
         return [
             Consumer(channel, queues=[self.websockets_queue],
                      on_message=lambda x: self.send_listens("listen", x)),
-            Consumer(self.channel2, queues=[self.playing_now_queue],
+            Consumer(self.playing_now_channel, queues=[self.playing_now_queue],
                      on_message=lambda x: self.send_listens("playing_now", x))
         ]
 
     def on_consume_end(self, connection, default_channel):
-        if self.channel2:
-            self.channel2.close()
+        if self.playing_now_channel:
+            self.playing_now_channel.close()
 
     def init_rabbitmq_connection(self):
         self.connection = Connection(
