@@ -281,7 +281,8 @@ export default class BrainzPlayer extends React.Component<
     if (currentListenIndex === -1) {
       // No current listen index found, default to first item
       nextListenIndex = 0;
-    } else if (invert) {
+    } else if (invert === true) {
+      // Invert means "play previous track" instead of next track
       // `|| 0` constrains to positive numbers
       nextListenIndex = currentListenIndex - 1 || 0;
     } else {
