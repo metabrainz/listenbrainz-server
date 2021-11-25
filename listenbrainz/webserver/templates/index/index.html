@@ -2,9 +2,10 @@
 {%- block content -%}
   <div id="homepage" class="row">
 
-    <div class="col-md-7 col-lg-8">
-      <img src="{{ url_for('static', filename='img/logo_big.svg') }}" id="big-logo" />
-      <h2 class="page-title">Welcome to ListenBrainz!</h2>
+    <div class="col-lg-12">
+      <h2 class="page-title">
+        Share and Visualize your Musical Habits!
+      </h2>
       <p>
         ListenBrainz keeps tracks of what music you listen to and
         provides you with insights into your listening habits. We're
@@ -28,6 +29,9 @@
       <p>
         Need help? Ask our <a href="https://community.metabrainz.org/c/listenbrainz">community</a>!
       </p>
+    </div>
+
+    <div class="col-md-7 col-lg-8">
       <h2>About us</h2>
       <p>
         ListenBrainz is operated by the <a href="https://metabrainz.org">MetaBrainz Foundation</a>
@@ -44,41 +48,42 @@
         For more information about this project and its goals, please take a look at our
         <a href="{{ url_for('index.goals') }}">goals page</a>.
       </p>
-    </div>
-
-    <div class="col-md-5 col-lg-4">
-
-      <div id="stats" class="panel panel-default">
+      <div id="stats" >
         <div class="panel-heading"><strong>Data Statistics</strong></div>
         <div class="panel-body">
-
           <table class="table table-collapsed">
             <thead>
-              <tr>
-                <th>Description</th>
-                <th>Number</th>
-              </tr>
+            <tr>
+              <th>Description</th>
+              <th>Number</th>
+            </tr>
             </thead>
             <tbody>
             {% if listen_count %}
-              <tr>
-                <td>Number of Listens</td>
-                <td>{{ "{:,}".format(listen_count) }}</td>
-              </tr>
+            <tr>
+              <td>Number of listens</td>
+              <td>{{ listen_count }}</td>
+            </tr>
+            {% endif %}
+            {% if user_count %}
+            <tr>
+              <td>Number of users</td>
+              <td>{{ user_count }}</td>
+            </tr>
             {% endif %}
             </tbody>
           </table>
           <p style="text-align: center">
-            <small>updated every 5 minutes</small><br />
+            <small>Updated every 5 minutes!</small><br />
             <small><a href="{{ url_for('index.current_status') }}">more on the current status page</a></small>
           </p>
         </div>
       </div>
 
-      <div id="twitter-block">
-        <a class="twitter-timeline" data-dnt="true" data-lang="en" href="https://twitter.com/ListenBrainz" data-widget-id="640261552604643328" data-height="450px">Tweets by @ListenBrainz</a>
-        <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
-      </div>
+    </div>
+    <div class="col-md-5 col-lg-4" id="twitter-block">
+      <a class="twitter-timeline" data-dnt="true" data-lang="en" href="https://twitter.com/ListenBrainz" data-widget-id="640261552604643328" data-height="450px">Tweets by @ListenBrainz</a>
+      <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
     </div>
   </div>
 {%- endblock -%}
