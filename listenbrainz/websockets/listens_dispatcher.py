@@ -1,81 +1,72 @@
 import json
-import pika
 import time
-import threading
+
+from kombu.mixins import ConsumerMixin
 
 from listenbrainz.utils import get_fallback_connection_name
 
-from flask import current_app
-from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_PLAYING_NOW, LISTEN_TYPE_IMPORT
+from kombu import Connection, Exchange, Queue, Consumer
+from kombu.utils.debug import setup_logging
+
+setup_logging()
 
 
-class ListensDispatcher(threading.Thread):
+class ListensDispatcher(ConsumerMixin):
 
     def __init__(self, app, socketio):
-        threading.Thread.__init__(self)
         self.app = app
         self.socketio = socketio
+        self.connection = None
+        # there are two consumers, so we need two channels: one for playing now queue and another
+        # for normal listens queue. when using ConsumerMixin, it sets up a default channel itself.
+        # we create the other channel here. we also need to handle its cleanup later
+        self.playing_now_channel = None
 
-    def send_listens(self, listens, listen_type):
-        if listen_type == LISTEN_TYPE_PLAYING_NOW:
-            event_name = 'playing_now'
-        else:
-            event_name = 'listen'
+        self.unique_exchange = Exchange(app.config["UNIQUE_EXCHANGE"], "fanout", durable=False)
+        self.playing_now_exchange = Exchange(app.config["PLAYING_NOW_EXCHANGE"], "fanout", durable=False)
+        self.websockets_queue = Queue(app.config["WEBSOCKETS_QUEUE"], exchange=self.unique_exchange, durable=True)
+        self.playing_now_queue = Queue(app.config["PLAYING_NOW_QUEUE"], exchange=self.playing_now_exchange,
+                                       durable=True)
+
+    def send_listens(self, event_name, message):
+        listens = json.loads(message.body.decode("utf-8"))
         for listen in listens:
-            self.socketio.emit(event_name, json.dumps(listen), to=listen['user_name'])
+            self.socketio.emit(event_name, json.dumps(listen), to=listen["user_name"])
+        message.ack()
 
-    def callback_listen(self, channel, method, properties, body):
-        listens = json.loads(body)
-        self.send_listens(listens, LISTEN_TYPE_IMPORT)
-        channel.basic_ack(delivery_tag=method.delivery_tag)
+    def get_consumers(self, _, channel):
+        self.playing_now_channel = channel.connection.channel()
+        return [
+            Consumer(channel, queues=[self.websockets_queue],
+                     on_message=lambda x: self.send_listens("listen", x)),
+            Consumer(self.playing_now_channel, queues=[self.playing_now_queue],
+                     on_message=lambda x: self.send_listens("playing_now", x))
+        ]
 
-    def callback_playing_now(self, channel, method, properties, body):
-        listens = json.loads(body)
-        self.send_listens(listens, LISTEN_TYPE_PLAYING_NOW)
-        channel.basic_ack(delivery_tag=method.delivery_tag)
-
-    def create_and_bind_exchange_and_queue(self, channel, exchange, queue):
-        channel.exchange_declare(exchange=exchange, exchange_type='fanout')
-        channel.queue_declare(callback=lambda x: None, queue=queue, durable=True)
-        channel.queue_bind(callback=lambda x: None, exchange=exchange, queue=queue)
-
-    def on_open_callback(self, channel):
-        self.create_and_bind_exchange_and_queue(channel, current_app.config['UNIQUE_EXCHANGE'], current_app.config['WEBSOCKETS_QUEUE'])
-        channel.basic_consume(queue=current_app.config['WEBSOCKETS_QUEUE'], on_message_callback=self.callback_listen)
-
-        self.create_and_bind_exchange_and_queue(channel, current_app.config['PLAYING_NOW_EXCHANGE'], current_app.config['PLAYING_NOW_QUEUE'])
-        channel.basic_consume(queue=current_app.config['PLAYING_NOW_QUEUE'], on_message_callback=self.callback_playing_now)
-
-    def on_open(self, connection):
-        connection.channel(on_open_callback=self.on_open_callback)
+    def on_consume_end(self, connection, default_channel):
+        if self.playing_now_channel:
+            self.playing_now_channel.close()
 
     def init_rabbitmq_connection(self):
-        while True:
-            try:
-                credentials = pika.PlainCredentials(current_app.config['RABBITMQ_USERNAME'], current_app.config['RABBITMQ_PASSWORD'])
-                connection_parameters = pika.ConnectionParameters(
-                    host=current_app.config['RABBITMQ_HOST'],
-                    port=current_app.config['RABBITMQ_PORT'],
-                    virtual_host=current_app.config['RABBITMQ_VHOST'],
-                    credentials=credentials,
-                    client_properties={"connection_name": get_fallback_connection_name()}
-                )
-                self.connection = pika.SelectConnection(parameters=connection_parameters, on_open_callback=self.on_open)
-                break
-            except Exception as e:
-                current_app.logger.error("Error while connecting to RabbitMQ: %s", str(e), exc_info=True)
-                time.sleep(3)
+        self.connection = Connection(
+            hostname=self.app.config["RABBITMQ_HOST"],
+            userid=self.app.config["RABBITMQ_USERNAME"],
+            port=self.app.config["RABBITMQ_PORT"],
+            password=self.app.config["RABBITMQ_PASSWORD"],
+            virtual_host=self.app.config["RABBITMQ_VHOST"],
+            transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
+        )
 
-    def run(self):
+    def start(self):
         with self.app.app_context():
             while True:
-                current_app.logger.info("Starting player writer...")
-                self.init_rabbitmq_connection()
                 try:
-                    self.connection.ioloop.start()
+                    self.app.logger.info("Starting player writer...")
+                    self.init_rabbitmq_connection()
+                    self.run()
                 except KeyboardInterrupt:
-                    current_app.logger.error("Keyboard interrupt!")
+                    self.app.logger.error("Keyboard interrupt!")
                     break
-                except Exception as e:
-                    current_app.logger.error("Error in PlayerWriter: %s", str(e), exc_info=True)
+                except Exception:
+                    self.app.logger.error("Error in PlayerWriter:", exc_info=True)
                     time.sleep(3)
