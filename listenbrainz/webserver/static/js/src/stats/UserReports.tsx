@@ -77,38 +77,31 @@ export default class UserReports extends React.Component<
     const { range } = this.state;
     const { apiUrl, user } = this.props;
 
+    type UserStatsPair = [UserStatsAPIRange, string];
+    const ranges: Array<UserStatsPair> = [
+      ["this_week", "This Week"],
+      ["this_month", "This Month"],
+      ["this_year", "This Year"],
+      ["week", "Week"],
+      ["month", "Month"],
+      ["year", "Year"],
+      ["all_time", "All Time"],
+    ];
     return (
       <div>
         <div className="row mt-15">
           <div className="col-xs-12">
-            <Pill
-              active={range === "week"}
-              type="secondary"
-              onClick={() => this.changeRange("week")}
-            >
-              Week
-            </Pill>
-            <Pill
-              active={range === "month"}
-              type="secondary"
-              onClick={() => this.changeRange("month")}
-            >
-              Month
-            </Pill>
-            <Pill
-              active={range === "year"}
-              type="secondary"
-              onClick={() => this.changeRange("year")}
-            >
-              Year
-            </Pill>
-            <Pill
-              active={range === "all_time"}
-              type="secondary"
-              onClick={() => this.changeRange("all_time")}
-            >
-              All Time
-            </Pill>
+            {ranges.map((stats_range) => {
+              return (
+                <Pill
+                  active={range === stats_range[0]}
+                  type="secondary"
+                  onClick={() => this.changeRange(stats_range[0])}
+                >
+                  {stats_range[1]}
+                </Pill>
+              );
+            })}
           </div>
         </div>
         <section id="listening-activity">
