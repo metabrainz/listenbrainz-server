@@ -111,3 +111,84 @@ class ListeningActivityTestCase(StatsTestCase):
         self.assertEqual((periods[0], periods[2], step, fmt), listening_activity_stats.get_time_range("half_yearly"))
         mock_listen_ts.return_value = datetime(2021, 9, 7, 2, 3, 0)
         self.assertEqual((periods[1], periods[3], step, fmt), listening_activity_stats.get_time_range("half_yearly"))
+
+        step = relativedelta(days=+1)
+        fmt = "%A %d %B %Y"
+
+        mock_listen_ts.return_value = datetime(2021, 11, 24, 2, 3, 0)
+        self.assertEqual(
+            (datetime(2021, 11, 22), datetime(2021, 11, 24), step, fmt),
+            listening_activity_stats.get_time_range("this_week")
+        )
+
+        mock_listen_ts.return_value = datetime(2021, 11, 22, 3, 0, 0)
+        self.assertEqual(
+            (datetime(2021, 11, 15), datetime(2021, 11, 22), step, fmt),
+            listening_activity_stats.get_time_range("this_week")
+        )
+
+        mock_listen_ts.return_value = datetime(2021, 11, 24, 2, 3, 0)
+        self.assertEqual(
+            (datetime(2021, 11, 15), datetime(2021, 11, 22), step, fmt),
+            listening_activity_stats.get_time_range("week")
+        )
+
+        mock_listen_ts.return_value = datetime(2021, 11, 22, 3, 0, 0)
+        self.assertEqual(
+            (datetime(2021, 11, 15), datetime(2021, 11, 22), step, fmt),
+            listening_activity_stats.get_time_range("week")
+        )
+
+        step = relativedelta(days=+1)
+        fmt = "%d %B %Y"
+
+        mock_listen_ts.return_value = datetime(2021, 11, 21, 2, 3, 0)
+        self.assertEqual(
+            (datetime(2021, 11, 1), datetime(2021, 11, 21), step, fmt),
+            listening_activity_stats.get_time_range("this_month")
+        )
+
+        mock_listen_ts.return_value = datetime(2021, 11, 1, 3, 0, 0)
+        self.assertEqual(
+            (datetime(2021, 10, 1), datetime(2021, 11, 1), step, fmt),
+            listening_activity_stats.get_time_range("this_month")
+        )
+
+        mock_listen_ts.return_value = datetime(2021, 11, 21, 2, 3, 0)
+        self.assertEqual(
+            (datetime(2021, 10, 1), datetime(2021, 11, 1), step, fmt),
+            listening_activity_stats.get_time_range("month")
+        )
+
+        mock_listen_ts.return_value = datetime(2021, 11, 1, 3, 0, 0)
+        self.assertEqual(
+            (datetime(2021, 10, 1), datetime(2021, 11, 1), step, fmt),
+            listening_activity_stats.get_time_range("month")
+        )
+
+        step = relativedelta(months=+1)
+        fmt = "%B %Y"
+
+        mock_listen_ts.return_value = datetime(2021, 11, 21, 2, 3, 0)
+        self.assertEqual(
+            (datetime(2020, 1, 1), datetime(2021, 1, 1), step, fmt),
+            listening_activity_stats.get_time_range("year")
+        )
+
+        mock_listen_ts.return_value = datetime(2021, 1, 1, 2, 3, 0)
+        self.assertEqual(
+            (datetime(2020, 1, 1), datetime(2021, 1, 1), step, fmt),
+            listening_activity_stats.get_time_range("year")
+        )
+
+        mock_listen_ts.return_value = datetime(2021, 1, 1, 2, 1, 0)
+        self.assertEqual(
+            (datetime(2020, 1, 1), datetime(2021, 11, 1), step, fmt),
+            listening_activity_stats.get_time_range("this_year")
+        )
+
+        mock_listen_ts.return_value = datetime(2021, 11, 1, 3, 0, 0)
+        self.assertEqual(
+            (datetime(2021, 1, 1), datetime(2021, 11, 1), step, fmt),
+            listening_activity_stats.get_time_range("this_year")
+        )

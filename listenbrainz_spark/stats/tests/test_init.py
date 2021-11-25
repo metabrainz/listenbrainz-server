@@ -109,6 +109,11 @@ class InitTestCase(SparkNewTestCase):
         mock_get_latest_listen_ts.return_value = datetime(2021, 11, 21, 2, 3, 0)
         self.assertEqual((datetime(2020, 1, 1), datetime(2021, 1, 1)), stats.get_dates_for_stats_range("year"))
 
+        mock_get_latest_listen_ts.return_value = datetime(2021, 1, 1, 2, 3, 0)
+        self.assertEqual((datetime(2020, 1, 1), datetime(2021, 1, 1)), stats.get_dates_for_stats_range("year"))
+
+        mock_get_latest_listen_ts.return_value = datetime(2021, 1, 1, 2, 1, 0)
+        self.assertEqual((datetime(2020, 1, 1), datetime(2021, 11, 1)), stats.get_dates_for_stats_range("this_year"))
+
         mock_get_latest_listen_ts.return_value = datetime(2021, 11, 1, 3, 0, 0)
         self.assertEqual((datetime(2021, 1, 1), datetime(2021, 11, 1)), stats.get_dates_for_stats_range("this_year"))
-

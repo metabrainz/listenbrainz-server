@@ -178,7 +178,11 @@ def get_dates_for_stats_range(stats_range: str) -> Tuple[datetime, datetime]:
             # if today is 1st then 1st of last month otherwise the 1st of this month
             from_offset = relativedelta(months=-1) if latest_listen_date.day == 1 else relativedelta(day=1)
         else:
-            from_offset = relativedelta(month=1, day=1)
+            # if today is the 1st of the year, then still show last year stats
+            if latest_listen_date.day == 1 and latest_listen_date.month == 1:
+                from_offset = relativedelta(years=-1)
+            else:
+                from_offset = relativedelta(month=1, day=1)
 
         from_date = latest_listen_date + from_offset
 

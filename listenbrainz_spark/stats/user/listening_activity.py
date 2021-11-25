@@ -76,14 +76,46 @@ def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta,
         date_format = "%Y"
         return from_date, to_date, step, date_format
 
-    # following are "last" week/month/year stats, here we want the stats of the
-    # previous week/month/year and *not* from 7 days ago to today so on.
-
     # If we had used datetime.now or date.today here and the data in spark
     # became outdated due to some reason, empty stats would be sent to LB.
     # Hence, we use get_latest_listen_ts to get the time of the latest listen
     # in spark and so that instead of no stats, outdated stats are calculated.
     latest_listen_date = latest_listen_ts.date()
+
+    # "this" time ranges, these count stats for the ongoing time period till date
+    if stats_range.startswith("this"):
+        if stats_range == "this_week":
+            # if today is a monday then from_offset is monday of 2 weeks ago
+            # otherwise from_offset is monday of last week
+            from_offset = relativedelta(weeks=-1, days=-1, weekday=MO(-1))
+            # compute listening activity for each day, include weekday in date format
+            step = relativedelta(days=+1)
+            date_format = "%A %d %B %Y"
+        elif stats_range == "this_month":
+            # if today is 1st then 1st of 2 months ago otherwise the 1st of last month
+            from_offset = relativedelta(months=-1) if latest_listen_date.day == 1 else relativedelta(day=1)
+            # compute listening activity for each day but no weekday
+            step = relativedelta(days=+1)
+            date_format = "%d %B %Y"
+        else:
+            # if today is the 1st of the year, then still show last year stats
+            if latest_listen_date.day == 1 and latest_listen_date.month == 1:
+                from_offset = relativedelta(years=-1)
+            else:
+                from_offset = relativedelta(month=1, day=1)
+            step = relativedelta(months=+1)
+            # compute listening activity for each month
+            date_format = "%B %Y"
+
+        from_date = latest_listen_date + from_offset
+
+        # set time to 00:00
+        from_date = datetime.combine(from_date, time.min)
+        to_date = datetime.combine(latest_listen_date, time.min)
+        return from_date, to_date, step, date_format
+
+    # following are "last" week/month/year stats, here we want the stats of the
+    # previous week/month/year and *not* from 7 days ago to today so on.
 
     # from_offset: this is applied to the latest_listen_date to get from_date
     # to_offset: this is applied to from_date to get to_date
