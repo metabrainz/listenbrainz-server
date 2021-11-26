@@ -31,10 +31,12 @@ import listenbrainz.db.user_relationship as db_user_relationship
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
 from data.model.listen import APIListen, TrackMetadata, AdditionalInfo
 from data.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, \
-    CBReviewMetadata, APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent, APICBReviewEvent
+    CBReviewMetadata, APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent, APICBReviewEvent, \
+    CBReviewTimelineMetadata
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.pinned_recording import get_pins_for_feed
 from listenbrainz.db.exceptions import DatabaseException
+from listenbrainz.domain.critiquebrainz import CritiqueBrainzService
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, \
@@ -162,7 +164,7 @@ def create_user_cb_review_event(user_name):
     """ Creates a CritiqueBrainz review event for the user.
     """
     user = validate_auth_header()
-    if user_name != user['musicbrainz_id']:
+    if user_name != user["musicbrainz_id"]:
         raise APIUnauthorized("You don't have permissions to post to this user's timeline.")
 
     try:
@@ -171,30 +173,27 @@ def create_user_cb_review_event(user_name):
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
     try:
-        data = data["metadata"]
-        metadata = CBReviewMetadata(
+        review = CBReviewMetadata(
+            entity_id=data["entity_id"],
             entity_type=data["entity_type"],
-            rating=data.get("rating", 0),
             text=data["text"],
-            review_mbid=data["review_mbid"],
-            artist_name=data["track_metadata"]["artist_name"],
-            track_name=data["track_metadata"]["track_name"],
-            release_name=data["track_metadata"]["release_name"],
-            recording_mbid=data["track_metadata"].get("recording_mbid", ""),
-            recording_msid=data["track_metadata"]["additional_info"]["recording_msid"],
-            artist_msid=data["track_metadata"]["additional_info"]["artist_msid"],
+            language=data["language"],
+            rating=data.get("rating", 0)
         )
-    except (pydantic.ValidationError, KeyError) as e:
+    except (pydantic.ValidationError, KeyError):
         raise APIBadRequest(f"Invalid metadata: {str(data)}")
 
+    review_id = CritiqueBrainzService().submit_review(user["id"], review)
+
     try:
-        event = db_user_timeline_event.create_user_cb_review_event(user['id'], metadata)
+        metadata = CBReviewTimelineMetadata(review_id=review_id, entity_id=review.entity_id)
+        event = db_user_timeline_event.create_user_cb_review_event(user["id"], metadata)
     except DatabaseException:
         raise APIInternalServerError("Something went wrong, please try again.")
 
     event_data = event.dict()
-    event_data['created'] = event_data['created'].timestamp()
-    event_data['event_type'] = event_data['event_type'].value
+    event_data["created"] = event_data["created"].timestamp()
+    event_data["event_type"] = event_data["event_type"].value
     return jsonify(event_data)
 
 
@@ -251,12 +250,12 @@ def user_feed(user_name: str):
         count=count,
     )
 
-    cb_review_events = get_cb_review_events(
-        users_for_events=users_for_feed_events,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
+    # cb_review_events = get_cb_review_events(
+    #     users_for_events=users_for_feed_events,
+    #     min_ts=min_ts or 0,
+    #     max_ts=max_ts or int(time.time()),
+    #     count=count,
+    # )
 
     notification_events = get_notification_events(user, count)
 
@@ -270,7 +269,7 @@ def user_feed(user_name: str):
     # TODO: add playlist event and like event
     all_events = sorted(
         listen_events + follow_events + recording_recommendation_events + recording_pin_events +
-        cb_review_events + notification_events,
+        notification_events,
         key=lambda event: -event.created,
     )
 

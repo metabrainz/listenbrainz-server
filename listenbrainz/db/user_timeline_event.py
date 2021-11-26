@@ -27,7 +27,7 @@ from data.model.user_timeline_event import (
     UserTimelineEventType,
     UserTimelineEventMetadata,
     RecordingRecommendationMetadata, NotificationMetadata,
-    CBReviewMetadata,
+    CBReviewMetadata, CBReviewTimelineMetadata,
 )
 from enum import Enum
 from listenbrainz import db
@@ -100,7 +100,7 @@ def delete_user_timeline_event(
         raise DatabaseException(str(e))
 
 
-def create_user_cb_review_event(user_id: int, metadata: CBReviewMetadata) -> UserTimelineEvent:
+def create_user_cb_review_event(user_id: int, metadata: CBReviewTimelineMetadata) -> UserTimelineEvent:
     """ Creates a CritiqueBrainz review event in the database and returns it.
     """
     return create_user_timeline_event(

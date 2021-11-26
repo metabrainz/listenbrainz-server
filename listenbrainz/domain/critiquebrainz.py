@@ -1,20 +1,25 @@
 import time
-from datetime import timezone
 
+import requests
 from requests_oauthlib import OAuth2Session
 from oauthlib.oauth2.rfc6749.errors import InvalidGrantError
 
 from data.model.external_service import ExternalServiceType
+from data.model.user_timeline_event import CBReviewMetadata
 from listenbrainz.db import external_service_oauth
 
 from flask import current_app
 
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
+from listenbrainz.webserver.errors import APIUnauthorized, APIServiceUnavailable, APIBadRequest
 
 CRITIQUEBRAINZ_SCOPES = ["review"]
 
 OAUTH_AUTHORIZE_URL = "https://critiquebrainz.org/oauth/authorize"
 OAUTH_TOKEN_URL = "https://critiquebrainz.org/ws/1/oauth/token"
+
+CRITIQUEBRAINZ_REVIEW_SUBMIT_URL = "https://critiquebrainz.org/ws/1/review/"
+CRITIQUEBRAINZ_REVIEW_LICENSE = "CC BY-SA 3.0"
 
 
 class CritiqueBrainzService(ExternalService):
@@ -85,3 +90,31 @@ class CritiqueBrainzService(ExternalService):
 
     def get_user_connection_details(self, user_id: int):
         pass
+
+    def submit_review(self, user_id: int, review: CBReviewMetadata) -> str:
+        """ Submit a review for the user to CritiqueBrainz.
+
+        Args:
+            user_id: user id of the user for whom to submit the review
+            review: content of the review to be submitted
+
+        Returns:
+            the review uuid returned by the CritiqueBrainz API
+        """
+        token = self.get_user(user_id)
+        if token is None:
+            raise APIUnauthorized("You need to CritiqueBrainz service in order to write a review.")
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json;charset=UTF-8"
+        }
+        payload = review.dict()
+        payload["is_draft"] = False
+        payload["license_choice"] = CRITIQUEBRAINZ_REVIEW_LICENSE
+        response = requests.post(CRITIQUEBRAINZ_REVIEW_SUBMIT_URL, data=payload, headers=headers).json()
+        if 400 <= response.status_code < 500:
+            raise APIBadRequest(response["description"])
+        elif response.status_code >= 500:
+            raise APIServiceUnavailable("Something went wrong. Please try again later.")
+        else:
+            return response["revision"]["review_id"]
