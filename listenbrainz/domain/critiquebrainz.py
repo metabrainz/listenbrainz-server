@@ -11,7 +11,6 @@ from listenbrainz.db import external_service_oauth
 from flask import current_app
 
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
-from listenbrainz.webserver.errors import APIUnauthorized, APIServiceUnavailable, APIBadRequest
 
 CRITIQUEBRAINZ_SCOPES = ["review"]
 
