@@ -3,6 +3,9 @@ import time
 
 from kombu.mixins import ConsumerMixin
 
+import ujson
+
+from listenbrainz.listen import Listen, NowPlayingListen
 from listenbrainz.utils import get_fallback_connection_name
 
 from kombu import Connection, Exchange, Queue, Consumer
@@ -30,8 +33,12 @@ class ListensDispatcher(ConsumerMixin):
 
     def send_listens(self, event_name, message):
         listens = json.loads(message.body.decode("utf-8"))
-        for listen in listens:
-            self.socketio.emit(event_name, json.dumps(listen), to=listen["user_name"])
+        for data in listens:
+            if event_name == "playing_now":
+                listen = NowPlayingListen(user_id=data["user_id"], user_name=data["user_name"], data=data["data"])
+            else:
+                listen = Listen.from_json(data)
+            self.socketio.emit(event_name, json.dumps(listen.to_api()), to=listen.user_name)
         message.ack()
 
     def get_consumers(self, _, channel):

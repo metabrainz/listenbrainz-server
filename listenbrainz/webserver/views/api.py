@@ -204,10 +204,8 @@ def get_playing_now(user_name):
     listen_data = []
     count = 0
     if playing_now_listen:
-        count += 1
-        listen_data = [{
-            'track_metadata': playing_now_listen.data,
-        }]
+        count = 1
+        listen_data = [playing_now_listen.to_api()]
 
     return jsonify({
         'payload': {
