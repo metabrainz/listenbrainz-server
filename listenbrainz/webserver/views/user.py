@@ -138,7 +138,6 @@ def profile(user_name):
         "listens": listens,
         "latest_listen_ts": max_ts_per_user,
         "oldest_listen_ts": min_ts_per_user,
-        "latest_spotify_uri": _get_spotify_uri_for_listens(listens),
         "artist_count": format(user_stats.count, ",d") if user_stats else None,
         "profile_url": url_for('user.profile', user_name=user_name),
         "mode": "listens",
@@ -422,25 +421,6 @@ def _get_user(user_name):
         return User.from_dbrow(user)
 
 
-def _get_spotify_uri_for_listens(listens):
-
-    def get_track_id_from_listen(listen):
-        additional_info = listen["track_metadata"]["additional_info"]
-        if "spotify_id" in additional_info and additional_info["spotify_id"] is not None:
-            return additional_info["spotify_id"].rsplit('/', 1)[-1]
-        else:
-            return None
-
-    track_id = None
-    if len(listens):
-        track_id = get_track_id_from_listen(listens[0])
-
-    if track_id:
-        return "spotify:track:" + track_id
-    else:
-        return None
-
-
 def delete_user(musicbrainz_id):
     """ Delete a user from ListenBrainz completely.
     First, drops the user's listens and then deletes the user from the
@@ -477,7 +457,7 @@ def delete_listens_history(musicbrainz_id):
 def feedback(user_name: str):
     """ Show user feedback, with filter on score (love/hate).
 
-    Args: 
+    Args:
         musicbrainz_id (str): the MusicBrainz ID of the user
     Raises:
         NotFound if user isn't present in the database
