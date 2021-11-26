@@ -54,7 +54,7 @@ class NotificationMetadata(BaseModel):
     message: constr(min_length=1)
 
 
-class CBReviewMetadata(pydantic.BaseModel):
+class CBReviewMetadata(BaseModel):
     entity_type: str
     rating: int
     text: str
