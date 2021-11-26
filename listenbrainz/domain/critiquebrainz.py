@@ -115,10 +115,10 @@ class CritiqueBrainzService(ExternalService):
         payload = review.dict()
         payload["is_draft"] = False
         payload["license_choice"] = CRITIQUEBRAINZ_REVIEW_LICENSE
-        response = requests.post(CRITIQUEBRAINZ_REVIEW_SUBMIT_URL, data=payload, headers=headers).json()
+        response = requests.post(CRITIQUEBRAINZ_REVIEW_SUBMIT_URL, data=payload, headers=headers)
         if 400 <= response.status_code < 500:
-            raise APIBadRequest(response["description"])
+            raise APIBadRequest(response.json()["description"])
         elif response.status_code >= 500:
             raise APIServiceUnavailable("Something went wrong. Please try again later.")
         else:
-            return response["revision"]["review_id"]
+            return response.json()["revision"]["review_id"]
