@@ -22,9 +22,6 @@ create and import postgres data dumps.
 
 import click
 from datetime import datetime, timedelta
-
-from ftplib import FTP
-
 import listenbrainz.db.dump as db_dump
 import os
 import re
@@ -40,15 +37,12 @@ from listenbrainz.db.year_in_music import insert_playlists
 from listenbrainz.listenstore.dump_listenstore import DumpListenStore
 from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app
+from listenbrainz.db.dump import check_ftp_dump_ages
 
 
 NUMBER_OF_FULL_DUMPS_TO_KEEP = 2
 NUMBER_OF_INCREMENTAL_DUMPS_TO_KEEP = 30
 NUMBER_OF_FEEDBACK_DUMPS_TO_KEEP = 2
-
-MAIN_FTP_SERVER_URL = "ftp.eu.metabrainz.org"
-FULLEXPORT_MAX_AGE = 17  # days
-INCREMENTAL_MAX_AGE = 26  # hours
 
 cli = click.Group()
 
@@ -312,50 +306,9 @@ def delete_old_dumps(location):
 
 @cli.command(name="check_dump_ages")
 def check_dump_ages():
-    """ Check to make sure that data dumps are sufficiently fresh. Send mail if they are not.
-        Fetch the FTP dir listing of the full and incremental dumps and check their ages. Send mail
-       to the observability list in case the dumps are too old.
-   """
-
-    msg = ""
-    try:
-        id, dt = _fetch_latest_file_info_from_ftp_dir(
-            MAIN_FTP_SERVER_URL, '/pub/musicbrainz/listenbrainz/fullexport')
-        age = datetime.now() - dt
-        if age > timedelta(days=FULLEXPORT_MAX_AGE):
-            msg = "Full dump %d is more than %d days old: %s\n" % (
-                id, FULLEXPORT_MAX_AGE, str(age))
-            print(msg, end="")
-        else:
-            print("Full dump %s is %s old, good!" % (id, str(age)))
-    except Exception as err:
-        msg = "Cannot fetch full dump age: %s" % str(err)
-
-    try:
-        id, dt = _fetch_latest_file_info_from_ftp_dir(
-            MAIN_FTP_SERVER_URL, '/pub/musicbrainz/listenbrainz/incremental')
-        age = datetime.now() - dt
-        if age > timedelta(hours=INCREMENTAL_MAX_AGE):
-            msg = "Incremental dump %s is more than %s hours old: %s\n" % (
-                id, INCREMENTAL_MAX_AGE, str(age))
-            print(msg, end="")
-        else:
-            print("Incremental dump %s is %s old, good!" % (id, str(age)))
-    except Exception as err:
-        msg = "Cannot fetch full dump age: %s" % str(err)
-
-    app = create_app()
-    with app.app_context():
-        if not current_app.config['TESTING'] and msg:
-            send_mail(
-                subject="ListenBrainz outdated dumps!",
-                text=render_template('emails/data_dump_outdated.txt', msg=msg),
-                recipients=['listenbrainz-exceptions@metabrainz.org'],
-                from_name='ListenBrainz',
-                from_addr='noreply@' + current_app.config['MAIL_FROM_DOMAIN']
-            )
+    """Check to make sure that data dumps are sufficiently fresh. Send mail if they are not."""
+    check_ftp_dump_ages()
     sys.exit(0)
-
 
 @cli.command(name="create_parquet")
 def create_test_parquet_files():
@@ -508,26 +461,3 @@ def sanity_check_dumps(location, expected_count):
     print("Expected %d dump files, found %d. Aborting." %
           (expected_count, count))
     return False
-
-
-def _fetch_latest_file_info_from_ftp_dir(server, dir):
-    """
-        Given a FTP server and dir, fetch the latst dump file info, parse it and
-        return a tuple containing (dump_id, datetime_of_dump_file).
-    """
-
-    line = ""
-
-    def add_line(l):
-        nonlocal line
-        l = l.strip()
-        if l:
-            line = l
-
-    ftp = FTP(server)
-    ftp.login()
-    ftp.cwd(dir)
-    ftp.retrlines('LIST', add_line)
-    _, _, id, d, t, _ = line[56:].strip().split("-")
-
-    return int(id), datetime.strptime(d + t, "%Y%m%d%H%M%S")
