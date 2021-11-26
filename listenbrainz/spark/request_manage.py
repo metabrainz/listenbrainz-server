@@ -113,7 +113,7 @@ def request_user_stats(type_, range_, entity):
 
 
 @cli.command(name="request_sitewide_stats")
-@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity', 'daily_activity']),
+@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity']),
               help="Type of statistics to calculate", required=True)
 @click.option("--range", 'range_', type=click.Choice(ALLOWED_STATISTICS_RANGE),
               help="Time range of statistics to calculate", required=True)
@@ -264,6 +264,9 @@ def cron_request_all_stats(ctx):
 
         for entity in ["artists", "releases", "recordings"]:
             ctx.invoke(request_sitewide_stats, range_=stats_range, entity=entity)
+
+        for stat in ["listening_activity"]:
+            ctx.invoke(request_sitewide_stats, type_=stat, range_=stats_range)
 
 
 @cli.command(name='cron_request_similar_users')

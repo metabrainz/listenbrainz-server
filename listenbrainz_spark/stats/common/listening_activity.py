@@ -55,9 +55,15 @@ def get_two_quarters_ago_offset(_date: date) -> relativedelta:
         return relativedelta(month=4, day=1)
 
 
-# other stats uses a different function (get_dates_for_stats_range) to calculate
-# time ranges. if making modifications here, remember to check and update that as well
 def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta, str]:
+    """ Returns the start time, end time, segment step size and date format to use for
+    calculating the listening activity stats
+
+    .. note::
+
+        other stats uses a different function (get_dates_for_stats_range) to calculate
+        time ranges. if making modifications here, remember to check and update that as well
+    """
     latest_listen_ts = get_latest_listen_ts()
     if stats_range == "all_time":
         # all_time stats range is easy, just return time from LASTFM founding
@@ -153,17 +159,29 @@ def get_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta,
 
 
 def setup_time_range(stats_range: str) -> Tuple[datetime, datetime]:
+    """
+    Sets up time range buckets needed to calculate listening activity stats and
+    returns the start and end time of the time range.
+
+    The listening activity stats compare the number of listens in sub-segments
+    of two time ranges of similar length. For example: consider the this_year
+    stat range. It will count the listens for each month since the start of
+    last year so that we can present a chart comparing the listen counts of
+    the corresponding months of last year against this year. Also, this function
+    will return 1st of last year as the start time and the current date as the
+    end time in this example.
+    """
     from_date, to_date, step, date_format = get_time_range(stats_range)
     time_range = []
 
-    period_start = from_date
-    while period_start < to_date:
-        period_formatted = period_start.strftime(date_format)
+    segment_start = from_date
+    while segment_start < to_date:
+        segment_formatted = segment_start.strftime(date_format)
         # calculate the time at which this period ends i.e. 1 microsecond before the next period's start
-        # here, period_start + step is next period's start
-        period_end = period_start + step + relativedelta(microseconds=-1)
-        time_range.append([period_formatted, period_start, period_end])
-        period_start = period_start + step
+        # here, segment_start + step is next segment's start
+        segment_end = segment_start + step + relativedelta(microseconds=-1)
+        time_range.append([segment_formatted, segment_start, segment_end])
+        segment_start = segment_start + step
 
     time_range_df = listenbrainz_spark.session.createDataFrame(time_range, time_range_schema)
     time_range_df.createOrReplaceTempView("time_range")
