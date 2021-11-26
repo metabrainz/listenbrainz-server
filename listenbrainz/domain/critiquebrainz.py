@@ -91,6 +91,16 @@ class CritiqueBrainzService(ExternalService):
     def get_user_connection_details(self, user_id: int):
         pass
 
+    def _submit_review_to_CB(self, token: dict, review: CBReviewMetadata):
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json;charset=UTF-8"
+        }
+        payload = review.dict()
+        payload["is_draft"] = False
+        payload["license_choice"] = CRITIQUEBRAINZ_REVIEW_LICENSE
+        return requests.post(CRITIQUEBRAINZ_REVIEW_SUBMIT_URL, data=payload, headers=headers)
+
     def submit_review(self, user_id: int, review: CBReviewMetadata) -> str:
         """ Submit a review for the user to CritiqueBrainz.
 
@@ -103,21 +113,19 @@ class CritiqueBrainzService(ExternalService):
         """
         # don't move this import outside otherwise will lead to a circular import error. you definitely
         # don't want to spend an evening debugging that :sob:
-        from listenbrainz.webserver.errors import APIUnauthorized, APIBadRequest, APIServiceUnavailable
+        from listenbrainz.webserver.errors import APIUnauthorized, APIError, APIServiceUnavailable
 
         token = self.get_user(user_id)
         if token is None:
             raise APIUnauthorized("You need to CritiqueBrainz service in order to write a review.")
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json;charset=UTF-8"
-        }
-        payload = review.dict()
-        payload["is_draft"] = False
-        payload["license_choice"] = CRITIQUEBRAINZ_REVIEW_LICENSE
-        response = requests.post(CRITIQUEBRAINZ_REVIEW_SUBMIT_URL, data=payload, headers=headers)
+
+        response = self._submit_review_to_CB(token, review)
+        if response.status_code == 401:
+            token = self.refresh_access_token(user_id, token["refresh_token"])
+            response = self._submit_review_to_CB(token, review)
+
         if 400 <= response.status_code < 500:
-            raise APIBadRequest(response.json()["description"])
+            raise APIError(response.json()["description"], response.status_code)
         elif response.status_code >= 500:
             raise APIServiceUnavailable("Something went wrong. Please try again later.")
         else:
