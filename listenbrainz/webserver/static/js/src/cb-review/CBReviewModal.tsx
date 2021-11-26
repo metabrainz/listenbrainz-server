@@ -366,8 +366,9 @@ export default class CBReviewModal extends React.Component<
     if (!listen) {
       return null;
     }
-    const { APIService, critiquebrainzAuth } = this.context;
+    const { APIService, critiquebrainzAuth, currentUser } = this.context;
     const accessToken = access_token ?? critiquebrainzAuth?.access_token;
+    const { name, auth_token } = currentUser;
     const {
       entityToReview,
       textContent,
@@ -388,7 +389,13 @@ export default class CBReviewModal extends React.Component<
       return null;
     }
 
-    if (isCurrentUser && accessToken && entityToReview && acceptLicense) {
+    if (
+      isCurrentUser &&
+      accessToken &&
+      entityToReview &&
+      acceptLicense &&
+      auth_token
+    ) {
       this.setState({ loading: true });
 
       /* do not include rating if it wasn't set */
@@ -407,7 +414,8 @@ export default class CBReviewModal extends React.Component<
 
       try {
         const response = await APIService.submitReviewToCB(
-          accessToken,
+          auth_token,
+          name,
           reviewToSubmit
         );
         if (response) {
