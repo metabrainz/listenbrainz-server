@@ -116,8 +116,6 @@ def profile(user_name):
             }
             listens.insert(0, listen)
 
-    user_stats = db_stats.get_user_stats(user.id, 'all_time', 'artists')
-
     logged_in_user_follows_user = None
     already_reported_user = False
     if current_user.is_authenticated:
@@ -138,7 +136,6 @@ def profile(user_name):
         "listens": listens,
         "latest_listen_ts": max_ts_per_user,
         "oldest_listen_ts": min_ts_per_user,
-        "artist_count": format(user_stats.count, ",d") if user_stats else None,
         "profile_url": url_for('user.profile', user_name=user_name),
         "mode": "listens",
         "userPinnedRecording": pin,
