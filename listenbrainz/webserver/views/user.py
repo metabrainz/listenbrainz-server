@@ -110,11 +110,7 @@ def profile(user_name):
     if not listens or listens[0]['listened_at'] >= max_ts_per_user:
         playing_now = playing_now_conn.get_playing_now(user.id)
         if playing_now:
-            listen = {
-                "track_metadata": playing_now.data,
-                "playing_now": "true",
-            }
-            listens.insert(0, listen)
+            listens.insert(0, playing_now.to_api())
 
     user_stats = db_stats.get_user_stats(user.id, 'all_time', 'artists')
 
@@ -477,7 +473,7 @@ def delete_listens_history(musicbrainz_id):
 def feedback(user_name: str):
     """ Show user feedback, with filter on score (love/hate).
 
-    Args: 
+    Args:
         musicbrainz_id (str): the MusicBrainz ID of the user
     Raises:
         NotFound if user isn't present in the database
