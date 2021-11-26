@@ -31,7 +31,7 @@ class UserListeningActivityStatMessage(BaseModel):
     data: List[UserListeningActivityRecord]
 
 
-class SitewideListeningActivityStatMessage(pydantic.BaseModel):
+class SitewideListeningActivityStatMessage(BaseModel):
     """ Format of messages sent to the ListenBrainz Server """
     type: str
     stats_range: str  # The range for which the stats are calculated, i.e week, month, year or all_time
