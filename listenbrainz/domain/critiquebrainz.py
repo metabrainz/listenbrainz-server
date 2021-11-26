@@ -11,9 +11,9 @@ from listenbrainz.db import external_service_oauth
 from flask import current_app
 
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
-# don't import the actual error classes here directly otherwise will lead to a circular import error. believe me you
+# don't change this import to from import otherwise will lead to a circular import error. believe me you
 # don't want to spend an evening debugging that :sob:
-from listenbrainz.webserver import errors
+import listenbrainz.webserver.errors
 
 CRITIQUEBRAINZ_SCOPES = ["review"]
 
@@ -105,7 +105,7 @@ class CritiqueBrainzService(ExternalService):
         """
         token = self.get_user(user_id)
         if token is None:
-            raise errors.APIUnauthorized("You need to CritiqueBrainz service in order to write a review.")
+            raise listenbrainz.webserver.errors.APIUnauthorized("You need to CritiqueBrainz service in order to write a review.")
         headers = {
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json;charset=UTF-8"
@@ -115,8 +115,8 @@ class CritiqueBrainzService(ExternalService):
         payload["license_choice"] = CRITIQUEBRAINZ_REVIEW_LICENSE
         response = requests.post(CRITIQUEBRAINZ_REVIEW_SUBMIT_URL, data=payload, headers=headers).json()
         if 400 <= response.status_code < 500:
-            raise errors.APIBadRequest(response["description"])
+            raise listenbrainz.webserver.errors.APIBadRequest(response["description"])
         elif response.status_code >= 500:
-            raise errors.APIServiceUnavailable("Something went wrong. Please try again later.")
+            raise listenbrainz.webserver.errors.APIServiceUnavailable("Something went wrong. Please try again later.")
         else:
             return response["revision"]["review_id"]
