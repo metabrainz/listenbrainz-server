@@ -55,19 +55,27 @@ class NotificationMetadata(BaseModel):
 
 
 class CBReviewMetadata(BaseModel):
+    """ Model to represent the review payload sent to the CB api
+    Some fields is_draft and license_choice are added by the backend
+    and always the same. Hence, omitted from this model.
+    """
     entity_type: str
     rating: int
     text: str
-    review_mbid: str
-    artist_name: str
-    track_name: str
-    release_name: str
-    recording_mbid: Optional[str]
-    recording_msid: str
-    artist_msid: str
+    entity_id: str
+    language: str
 
 
-UserTimelineEventMetadata = Union[CBReviewMetadata, RecordingRecommendationMetadata, NotificationMetadata]
+class CBReviewTimelineMetadata(BaseModel):
+    """Model to represent the data stored in user timeline event table
+    for a CB review. We only store review uuid and the entity's mbid.
+    Other data is retrieved from the CB api as needed.
+    """
+    review_id: str
+    entity_id: str
+
+
+UserTimelineEventMetadata = Union[CBReviewTimelineMetadata, RecordingRecommendationMetadata, NotificationMetadata]
 
 
 class UserTimelineEvent(BaseModel):
