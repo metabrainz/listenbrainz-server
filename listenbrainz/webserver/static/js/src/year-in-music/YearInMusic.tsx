@@ -12,6 +12,7 @@ import {
 
 import APIServiceClass from "../APIService";
 import { getPageProps } from "../utils";
+import ComponentToImage from "./ComponentToImage";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -109,6 +110,7 @@ export default class YearInMusic extends React.Component<
             refreshSpotifyToken={APIService.refreshSpotifyToken}
             refreshYoutubeToken={APIService.refreshYoutubeToken}
           />
+          <ComponentToImage />
         </div>
       </div>
     );
