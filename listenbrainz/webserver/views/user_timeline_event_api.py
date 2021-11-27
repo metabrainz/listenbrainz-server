@@ -31,10 +31,10 @@ import listenbrainz.db.user_relationship as db_user_relationship
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
 from data.model.listen import APIListen, TrackMetadata, AdditionalInfo
 from listenbrainz.db.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, \
-    CBReviewMetadata, APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent, APICBReviewEvent, \
+    APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent, APICBReviewEvent, \
     CBReviewTimelineMetadata
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
-from listenbrainz.db.model.review import fetch_mapped_recording_data
+from listenbrainz.db.model.review import fetch_mapped_recording_data, CBReviewMetadata
 from listenbrainz.db.pinned_recording import get_pins_for_feed
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService
