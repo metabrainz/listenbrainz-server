@@ -3,9 +3,7 @@ import sqlalchemy
 import ujson
 from flask import current_app
 from psycopg2.extras import execute_values
-
 from listenbrainz import db
-
 
 def get_year_in_music(user_id):
     """ Get year in music data for requested user """
