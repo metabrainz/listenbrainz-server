@@ -119,9 +119,10 @@ class CritiqueBrainzService(ExternalService):
 
         token = self.get_user(user_id)
         if token is None:
-            raise APIUnauthorized("You need to CritiqueBrainz service in order to write a review.")
+            raise APIUnauthorized("You need to connect to the CritiqueBrainz service to write a review.")
 
         response = self._submit_review_to_CB(token, review)
+        current_app.logger.error("CritiqueBrainz Response:", response)
         if response.status_code == 401:
             token = self.refresh_access_token(user_id, token["refresh_token"])
             response = self._submit_review_to_CB(token, review)
@@ -131,4 +132,4 @@ class CritiqueBrainzService(ExternalService):
         elif response.status_code >= 500:
             raise APIServiceUnavailable("Something went wrong. Please try again later.")
         else:
-            return response.json()["revision"]["review_id"]
+            return response.json()["id"]
