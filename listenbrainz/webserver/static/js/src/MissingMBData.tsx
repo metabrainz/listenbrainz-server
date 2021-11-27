@@ -165,124 +165,116 @@ export default class MissingMBDataPage extends React.Component<
     } = this.state;
     const { user, newAlert } = this.props;
     const { APIService } = this.context;
+    const missingMBDataAsListen = missingData.map((data) => {
+      return {
+        listened_at: new Date(`${data.listened_at}Z`).getTime() / 1000,
+        user_name: user.name,
+        track_metadata: {
+          artist_name: data.artist_name,
+          track_name: data.recording_name,
+          release_name: data?.release_name,
+        },
+      };
+    });
     return (
-      <div role="main">
-        <div className="row" style={{ display: "flex", flexWrap: "wrap" }}>
-          <div className="col-xs-12">
-            <div>
-              <div id="missingMBData" ref={this.MissingMBDataTable}>
-                <h2>Missing Data:</h2>
-                <div
-                  style={{
-                    height: 0,
-                    position: "sticky",
-                    top: "50%",
-                    zIndex: 1,
-                  }}
-                >
-                  <Loader isLoading={loading} />
-                </div>
-                {missingData.map((data) => {
-                  const listen = {
-                    listened_at:
-                      new Date(`${data.listened_at}Z`).getTime() / 1000,
-                    user_name: user.name,
-                    track_metadata: {
-                      artist_name: data.artist_name,
-                      track_name: data.recording_name,
-                      release_name: data?.release_name,
-                    },
-                  };
-                  const additionalActions = (
-                    <>
-                      <ListenControl
-                        icon={faPlus}
-                        title=""
-                        // eslint-disable-next-line react/jsx-no-bind
-                        action={this.submitMissingData.bind(this, listen)}
-                      />
-                    </>
-                  );
-                  return (
-                    <ListenCard
-                      key={`${data.recording_name}-${data.artist_name}-${data.listened_at}`}
-                      showTimestamp
-                      showUsername={false}
-                      newAlert={newAlert}
-                      listen={listen}
-                      additionalActions={additionalActions}
-                    />
-                  );
-                })}
+      <div className="row" style={{ display: "flex", flexWrap: "wrap" }}>
+        <div className="col-xs-12">
+          <div>
+            <div id="missingMBData" ref={this.MissingMBDataTable}>
+              <h2>Missing Data:</h2>
+              <div
+                style={{
+                  height: 0,
+                  position: "sticky",
+                  top: "50%",
+                  zIndex: 1,
+                }}
+              >
+                <Loader isLoading={loading} />
               </div>
-              <ul className="pager" style={{ display: "flex" }}>
-                <li
-                  className={`previous ${
-                    currPage && currPage <= 1 ? "hidden" : ""
-                  }`}
-                >
-                  <a
-                    role="button"
-                    onClick={this.handleClickPrevious}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") this.handleClickPrevious();
-                    }}
-                    tabIndex={0}
-                  >
-                    &larr; Previous
-                  </a>
-                </li>
-                <li
-                  className={`next ${
-                    currPage && currPage >= totalPages ? "hidden" : ""
-                  }`}
-                  style={{ marginLeft: "auto" }}
-                >
-                  <a
-                    role="button"
-                    onClick={this.handleClickNext}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") this.handleClickNext();
-                    }}
-                    tabIndex={0}
-                  >
-                    Next &rarr;
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div
-            className="col-xs-12"
-            /* eslint-disable no-dupe-keys */
-            style={{
-              position: "-webkit-sticky",
-              // @ts-ignore
-              position: "sticky",
-              top: 20,
-            }}
-            /* eslint-enable no-dupe-keys */
-          >
-            <BrainzPlayer
-              direction={direction}
-              listens={missingData?.map((data) => {
-                return {
-                  listened_at:
-                    new Date(`${data.listened_at}Z`).getTime() / 1000,
-                  user_name: user.name,
-                  track_metadata: {
-                    artist_name: data.artist_name,
-                    track_name: data.recording_name,
-                    release_name: data?.release_name,
-                  },
-                };
+              {missingData.map((data, index) => {
+                const additionalActions = (
+                  <>
+                    <ListenControl
+                      className="btn-primary btn-success"
+                      icon={faPlus}
+                      title=""
+                      // eslint-disable-next-line react/jsx-no-bind
+                      action={this.submitMissingData.bind(
+                        this,
+                        missingMBDataAsListen[index]
+                      )}
+                    />
+                  </>
+                );
+                return (
+                  <ListenCard
+                    key={`${data.recording_name}-${data.artist_name}-${data.listened_at}`}
+                    showTimestamp
+                    showUsername={false}
+                    newAlert={newAlert}
+                    listen={missingMBDataAsListen[index]}
+                    additionalActions={additionalActions}
+                  />
+                );
               })}
-              newAlert={newAlert}
-              listenBrainzAPIBaseURI={APIService.APIBaseURI}
-              refreshSpotifyToken={APIService.refreshSpotifyToken}
-              refreshYoutubeToken={APIService.refreshYoutubeToken}
-            />
+            </div>
+            <ul className="pager" style={{ display: "flex" }}>
+              <li
+                className={`previous ${
+                  currPage && currPage <= 1 ? "hidden" : ""
+                }`}
+              >
+                <a
+                  role="button"
+                  onClick={this.handleClickPrevious}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") this.handleClickPrevious();
+                  }}
+                  tabIndex={0}
+                >
+                  &larr; Previous
+                </a>
+              </li>
+              <li
+                className={`next ${
+                  currPage && currPage >= totalPages ? "hidden" : ""
+                }`}
+                style={{ marginLeft: "auto" }}
+              >
+                <a
+                  role="button"
+                  onClick={this.handleClickNext}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") this.handleClickNext();
+                  }}
+                  tabIndex={0}
+                >
+                  Next &rarr;
+                </a>
+              </li>
+            </ul>
           </div>
+        </div>
+        <div
+          className="col-xs-12"
+          /* eslint-disable no-dupe-keys */
+          style={{
+            position: "-webkit-sticky",
+            // @ts-ignore
+            position: "sticky",
+            top: 20,
+          }}
+          /* eslint-enable no-dupe-keys */
+        >
+          <BrainzPlayer
+            direction={direction}
+            listens={missingMBDataAsListen}
+            newAlert={newAlert}
+            listenBrainzAPIBaseURI={APIService.APIBaseURI}
+            refreshSpotifyToken={APIService.refreshSpotifyToken}
+            refreshYoutubeToken={APIService.refreshYoutubeToken}
+          />
         </div>
       </div>
     );
