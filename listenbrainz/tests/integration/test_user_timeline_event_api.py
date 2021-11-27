@@ -19,7 +19,7 @@
 from flask import url_for, current_app
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
-from data.model.user_timeline_event import UserTimelineEventType
+from listenbrainz.db.model.user_timeline_event import UserTimelineEventType
 from unittest import mock
 
 import listenbrainz.db.user as db_user

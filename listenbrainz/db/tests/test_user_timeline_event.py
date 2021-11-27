@@ -23,11 +23,12 @@ from unittest import mock
 import time
 import uuid
 
+from listenbrainz.db.model.review import CBReviewMetadata
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db.exceptions import DatabaseException
 
-from data.model.user_timeline_event import UserTimelineEventType, RecordingRecommendationMetadata, \
-    NotificationMetadata, CBReviewMetadata
+from listenbrainz.db.model.user_timeline_event import UserTimelineEventType, RecordingRecommendationMetadata, \
+    NotificationMetadata
 
 
 class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
