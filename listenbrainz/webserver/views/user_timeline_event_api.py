@@ -184,12 +184,8 @@ def create_user_cb_review_event(user_name):
         raise APIBadRequest(f"Invalid metadata: {str(data)}")
 
     review_id = CritiqueBrainzService().submit_review(user["id"], review)
-
-    try:
-        metadata = CBReviewTimelineMetadata(review_id=review_id, entity_id=review.entity_id)
-        event = db_user_timeline_event.create_user_cb_review_event(user["id"], metadata)
-    except DatabaseException:
-        raise APIInternalServerError("Something went wrong, please try again.")
+    metadata = CBReviewTimelineMetadata(review_id=review_id, entity_id=review.entity_id)
+    event = db_user_timeline_event.create_user_cb_review_event(user["id"], metadata)
 
     event_data = event.dict()
     event_data["created"] = event_data["created"].timestamp()
