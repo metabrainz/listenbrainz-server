@@ -35,6 +35,6 @@ def fetch_mapped_recording_data(mbids: List[str]):
     """
     # retrieves list of mbid's to fetch with
     with timescale.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text(query), mbids=mbids)
+        result = connection.execute(sqlalchemy.text(query), mbids=tuple(mbids))
         rows = result.fetchall()
         return { row["recording_mbid"]: row for row in rows } if rows else None
