@@ -16,6 +16,7 @@ import {
   faUserSlash,
   faThumbtack,
   faTrash,
+  faComments,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -46,6 +47,7 @@ export enum EventType {
   STOP_FOLLOW = "stop_follow",
   BLOCK_FOLLOW = "block_follow",
   NOTIFICATION = "notification",
+  REVIEW = "review",
 }
 
 type UserFeedPageProps = {
@@ -73,7 +75,8 @@ export default class UserFeedPage extends React.Component<
       event_type === EventType.RECORDING_RECOMMENDATION ||
       event_type === EventType.RECORDING_PIN ||
       event_type === EventType.LIKE ||
-      event_type === EventType.LISTEN
+      event_type === EventType.LISTEN ||
+      event_type === EventType.REVIEW
     );
   }
 
@@ -97,6 +100,8 @@ export default class UserFeedPage extends React.Component<
         return faBell;
       case EventType.RECORDING_PIN:
         return faThumbtack;
+      case EventType.REVIEW:
+        return faComments;
       default:
         return faQuestion;
     }
@@ -112,6 +117,8 @@ export default class UserFeedPage extends React.Component<
         return "added a track to their favorites";
       case EventType.RECORDING_PIN:
         return "pinned a recording";
+      case EventType.REVIEW:
+        return "reviewed a track";
       default:
         return "";
     }

@@ -34,6 +34,7 @@ from data.model.user_timeline_event import RecordingRecommendationMetadata, APIT
     CBReviewMetadata, APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent, APICBReviewEvent, \
     CBReviewTimelineMetadata
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
+from listenbrainz.db.model.review import fetch_mapped_recording_data
 from listenbrainz.db.pinned_recording import get_pins_for_feed
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService
@@ -246,12 +247,12 @@ def user_feed(user_name: str):
         count=count,
     )
 
-    # cb_review_events = get_cb_review_events(
-    #     users_for_events=users_for_feed_events,
-    #     min_ts=min_ts or 0,
-    #     max_ts=max_ts or int(time.time()),
-    #     count=count,
-    # )
+    cb_review_events = get_cb_review_events(
+        users_for_events=users_for_feed_events,
+        min_ts=min_ts or 0,
+        max_ts=max_ts or int(time.time()),
+        count=count,
+    )
 
     notification_events = get_notification_events(user, count)
 
@@ -264,8 +265,8 @@ def user_feed(user_name: str):
 
     # TODO: add playlist event and like event
     all_events = sorted(
-        listen_events + follow_events + recording_recommendation_events + recording_pin_events +
-        notification_events,
+        listen_events + follow_events + recording_recommendation_events + recording_pin_events
+        + cb_review_events + notification_events,
         key=lambda event: -event.created,
     )
 
@@ -475,36 +476,50 @@ def get_recording_recommendation_events(users_for_events: List[dict], min_ts: in
 def get_cb_review_events(users_for_events: List[dict], min_ts: int, max_ts: int, count: int) -> List[APITimelineEvent]:
     """ Gets all CritiqueBrainz review events in the feed.
     """
-
     id_username_map = {user['id']: user['musicbrainz_id'] for user in users_for_events}
     cb_review_events_db = db_user_timeline_event.get_cb_review_events(
-        user_ids=(user['id'] for user in users_for_events),
+        user_ids=[user['id'] for user in users_for_events],
         min_ts=min_ts,
         max_ts=max_ts,
         count=count,
     )
 
-    events = []
+    review_ids, entity_ids, review_id_event_map = [], [], {}
     for event in cb_review_events_db:
+        review_id = event.metadata.review_id
+        review_ids.append(review_id)
+        review_id_event_map[review_id] = event
+        entity_ids.append(event.metadata.entity_id)
+
+    reviews = CritiqueBrainzService().fetch_reviews(review_ids)
+    if reviews is None:
+        return []
+
+    mbid_metadatas = fetch_mapped_recording_data(entity_ids)
+
+    api_events = []
+    for review_id, event in review_id_event_map.items():
+        if review_id not in reviews:
+            continue
+        metadata = mbid_metadatas[event.metadata.entity_id]
         try:
             reviewEvent = APICBReviewEvent(
                 user_name=id_username_map[event.user_id],
-                entity_type=event.metadata.entity_type,
-                rating=event.metadata.rating,
-                text=event.metadata.text,
-                review_mbid=event.metadata.review_mbid,
+                entity_type=reviews[review_id].entity_type,
+                rating=reviews[review_id].rating,
+                blurb_content=reviews[review_id].text,
+                review_mbid=review_id,
                 track_metadata=TrackMetadata(
-                    artist_name=event.metadata.artist_name,
-                    track_name=event.metadata.track_name,
-                    release_name=event.metadata.release_name,
+                    artist_name=metadata["artist"],
+                    track_name=metadata["title"],
                     additional_info=AdditionalInfo(
-                        recording_msid=event.metadata.recording_msid,
-                        recording_mbid=event.metadata.recording_mbid,
-                        artist_msid=event.metadata.artist_msid,
+                        recording_mbid=metadata["recording_mbid"],
+                        artist_mbids=metadata["artist_mbids"],
+                        release_mbid=metadata["release_mbid"]
                     )
                 )
             )
-            events.append(APITimelineEvent(
+            api_events.append(APITimelineEvent(
                 event_type=UserTimelineEventType.CRITIQUEBRAINZ_REVIEW,
                 user_name=reviewEvent.user_name,
                 created=event.created.timestamp(),
@@ -513,7 +528,7 @@ def get_cb_review_events(users_for_events: List[dict], min_ts: int, max_ts: int,
         except pydantic.ValidationError as e:
             current_app.logger.error('Validation error: ' + str(e), exc_info=True)
             continue
-    return events
+    return api_events
 
 
 def get_recording_pin_events(users_for_events: List[dict], min_ts: int, max_ts: int, count: int) -> List[APITimelineEvent]:

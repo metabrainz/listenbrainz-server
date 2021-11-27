@@ -4,6 +4,7 @@ import json
 import requests
 from requests_oauthlib import OAuth2Session
 from oauthlib.oauth2.rfc6749.errors import InvalidGrantError
+from typing import Iterable
 
 from data.model.external_service import ExternalServiceType
 from data.model.user_timeline_event import CBReviewMetadata
@@ -20,6 +21,7 @@ OAUTH_AUTHORIZE_URL = "https://critiquebrainz.org/oauth/authorize"
 OAUTH_TOKEN_URL = "https://critiquebrainz.org/ws/1/oauth/token"
 
 CRITIQUEBRAINZ_REVIEW_SUBMIT_URL = "https://critiquebrainz.org/ws/1/review/"
+CRITIQUEBRAINZ_REVIEW_FETCH_URL = "https://critiquebrainz.org/ws/1/reviews/"
 CRITIQUEBRAINZ_REVIEW_LICENSE = "CC BY-SA 3.0"
 
 
@@ -135,3 +137,9 @@ class CritiqueBrainzService(ExternalService):
             raise APIServiceUnavailable("Something went wrong. Please try again later.")
         else:
             return data["id"]
+
+    def fetch_reviews(self, review_ids: Iterable[str]):
+        response = requests.get(CRITIQUEBRAINZ_REVIEW_FETCH_URL, params={"review_ids": ",".join(review_ids)})
+        if response.status_code != 200:
+            return None
+        return response.json()["reviews"]
