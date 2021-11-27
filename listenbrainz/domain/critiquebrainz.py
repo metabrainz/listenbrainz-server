@@ -95,7 +95,7 @@ class CritiqueBrainzService(ExternalService):
 
     def _submit_review_to_CB(self, token: dict, review: CBReviewMetadata):
         headers = {
-            "Authorization": f"Bearer {token}",
+            "Authorization": f"Token {token}",
             "Content-Type": "application/json;charset=UTF-8"
         }
         payload = review.dict()
@@ -123,13 +123,13 @@ class CritiqueBrainzService(ExternalService):
 
         response = self._submit_review_to_CB(token, review)
         data = response.json()
-        current_app.logger.error("CritiqueBrainz Response:", data)
+        current_app.logger.error("CritiqueBrainz Response: %s", data)
         if response.status_code == 401:
             token = self.refresh_access_token(user_id, token["refresh_token"])
             response = self._submit_review_to_CB(token, review)
 
         data = response.json()
-        current_app.logger.error("CritiqueBrainz Response second time:", data)
+        current_app.logger.error("CritiqueBrainz Response second time: %s", data)
         if 400 <= response.status_code < 500:
             raise APIError(data["description"], response.status_code)
         elif response.status_code >= 500:
