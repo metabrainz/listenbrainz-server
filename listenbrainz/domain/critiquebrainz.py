@@ -67,13 +67,15 @@ class CritiqueBrainzService(ExternalService):
     def refresh_access_token(self, user_id: int, refresh_token: str):
         oauth = OAuth2Session(
             client_id=self.client_id,
-            redirect_uri=self.redirect_uri
+            redirect_uri=self.redirect_uri,
+            scope=CRITIQUEBRAINZ_SCOPES
         )
         try:
             token = oauth.refresh_token(
                 OAUTH_TOKEN_URL,
                 client_secret=self.client_secret,
-                refresh_token=refresh_token
+                client_id=self.client_id,
+                refresh_token=refresh_token,
             )
         except InvalidGrantError as e:
             raise ExternalServiceInvalidGrantError("User revoked access") from e
