@@ -457,7 +457,7 @@ def get_recording_pin_events(users_for_events: List[dict], min_ts: int, max_ts: 
                     additional_info=AdditionalInfo(
                         recording_msid=pin.recording_msid,
                         recording_mbid=pin.recording_mbid,
-                        artist_msid=pin.track_metadata["artist_msid"],
+                        artist_msid=pin.track_metadata["additional_info"]["artist_msid"],
                     )
                 )
             )
