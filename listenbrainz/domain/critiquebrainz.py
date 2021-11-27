@@ -13,6 +13,21 @@ from flask import current_app
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
 
 
+import logging
+from http.client import HTTPConnection  # py3
+
+log = logging.getLogger('urllib3')
+log.setLevel(logging.DEBUG)
+
+# logging from urllib3 to console
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+log.addHandler(ch)
+
+# print statements from `http.client.HTTPConnection` to console/stdout
+HTTPConnection.debuglevel = 1
+
+
 CRITIQUEBRAINZ_SCOPES = ["review"]
 
 OAUTH_AUTHORIZE_URL = "https://critiquebrainz.org/oauth/authorize"
@@ -95,7 +110,7 @@ class CritiqueBrainzService(ExternalService):
 
     def _submit_review_to_CB(self, token: dict, review: CBReviewMetadata):
         headers = {
-            "Authorization": f"Token {token}",
+            "Authorization": f"Bearer {token}",
             "Content-Type": "application/json;charset=UTF-8"
         }
         payload = review.dict()
