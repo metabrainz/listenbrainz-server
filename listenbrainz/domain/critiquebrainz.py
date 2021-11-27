@@ -1,5 +1,6 @@
 import time
 
+import json
 import requests
 from requests_oauthlib import OAuth2Session
 from oauthlib.oauth2.rfc6749.errors import InvalidGrantError
@@ -115,7 +116,7 @@ class CritiqueBrainzService(ExternalService):
         payload = review.dict()
         payload["is_draft"] = False
         payload["license_choice"] = CRITIQUEBRAINZ_REVIEW_LICENSE
-        return requests.post(CRITIQUEBRAINZ_REVIEW_SUBMIT_URL, data=payload, headers=headers)
+        return requests.post(CRITIQUEBRAINZ_REVIEW_SUBMIT_URL, data=json.dumps(payload), headers=headers)
 
     def submit_review(self, user_id: int, review: CBReviewMetadata) -> str:
         """ Submit a review for the user to CritiqueBrainz.
