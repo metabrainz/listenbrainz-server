@@ -141,9 +141,11 @@ class CritiqueBrainzService(ExternalService):
             token = self.refresh_access_token(user_id, token["refresh_token"])
             response = self._submit_review_to_CB(token["access_token"], review)
 
+        data = response.json()
         if 400 <= response.status_code < 500:
-            raise APIError(response.json()["description"], response.status_code)
+            raise APIError(data["description"], response.status_code)
         elif response.status_code >= 500:
+            current_app.logger.error("CritiqueBrainz Server Error: %s", str(data))
             raise APIServiceUnavailable("Something went wrong. Please try again later.")
         else:
-            return response.json()["id"]
+            return data["id"]
