@@ -12,6 +12,20 @@ from flask import current_app
 
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
 
+import logging
+from http.client import HTTPConnection  # py3
+
+log = logging.getLogger('urllib3')
+log.setLevel(logging.DEBUG)
+
+# logging from urllib3 to console
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+log.addHandler(ch)
+
+# print statements from `http.client.HTTPConnection` to console/stdout
+HTTPConnection.debuglevel = 1
+
 
 CRITIQUEBRAINZ_SCOPES = ["review"]
 
