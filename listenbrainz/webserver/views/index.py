@@ -304,5 +304,6 @@ def year_in_music():
 
     return render_template(
         "index/year-in-music.html",
-        props=ujson.dumps({})
+        props=ujson.dumps({}),
+        user=current_user
     )

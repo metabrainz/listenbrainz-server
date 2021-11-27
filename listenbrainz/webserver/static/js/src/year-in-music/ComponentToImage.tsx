@@ -51,7 +51,7 @@ const ComponentToImage = () => {
 
   return (
     <div className="row text-center justify-content-center align-content-center align-items-center">
-      <div id="card" className="col-8 card" style={{ width: "24rem" }}>
+      <div id="card" className="col-sm-8 card" style={{ width: "24rem" }}>
         <img
           className="card-img-top"
           src="/static/img/listenbrainz-logo.svg"
@@ -93,7 +93,7 @@ const ComponentToImage = () => {
         </div>
       </div>
       <button
-        className="col-4"
+        className="col-sm-4"
         style={{ margin: "5rem" }}
         onClick={exportAsPicture}
       >

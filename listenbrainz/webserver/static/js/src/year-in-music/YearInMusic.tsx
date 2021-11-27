@@ -2,6 +2,7 @@
 
 import * as ReactDOM from "react-dom";
 import * as React from "react";
+import { paddingTop } from "html2canvas/dist/types/css/property-descriptors/padding";
 import ErrorBoundary from "../ErrorBoundary";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import BrainzPlayer from "../BrainzPlayer";
@@ -44,14 +45,19 @@ export default class YearInMusic extends React.Component<
     const selectedReleaseTracks = selectedRelease?.recordings ?? [];
     return (
       <div role="main" id="year-in-music">
-        <div className="row">
-          <div className="col-sm-4">
+        <div className="row center-block">
+          <div className="col-sm-6">
             <div className="card">
-              Username here
               {user?.name}
+              <h4>Share your year with your friends</h4>
+              <a
+                href={`https://listenbrainz.org/user/${user?.name}/year-in-music`}
+              >
+                https://listenbrainz.org/user/{user?.name}/year-in-music
+              </a>
             </div>
           </div>
-          <div className="col-sm-8">
+          <div className="col-sm-6">
             <img
               className="header-image"
               src="/static/img/year-in-music-2021.svg"
@@ -103,6 +109,7 @@ export default class YearInMusic extends React.Component<
               <h3 className="text-center">Most similar users this year</h3>
             </div>
           </div>
+          <ComponentToImage />
           <BrainzPlayer
             listens={[]}
             newAlert={newAlert}
@@ -110,7 +117,6 @@ export default class YearInMusic extends React.Component<
             refreshSpotifyToken={APIService.refreshSpotifyToken}
             refreshYoutubeToken={APIService.refreshYoutubeToken}
           />
-          <ComponentToImage />
         </div>
       </div>
     );
