@@ -17,7 +17,6 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 import sqlalchemy
-import pydantic
 import ujson
 
 from datetime import datetime
@@ -26,13 +25,14 @@ from data.model.user_timeline_event import (
     UserTimelineEvent,
     UserTimelineEventType,
     UserTimelineEventMetadata,
-    RecordingRecommendationMetadata, NotificationMetadata,
-    CBReviewMetadata, CBReviewTimelineMetadata,
+    RecordingRecommendationMetadata,
+    NotificationMetadata
 )
-from enum import Enum
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
 from typing import List
+
+from listenbrainz.db.model.review import CBReviewTimelineMetadata
 
 
 def create_user_timeline_event(

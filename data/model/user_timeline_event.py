@@ -24,6 +24,7 @@ from enum import Enum
 from typing import Union, Optional
 
 from data.model.listen import APIListen
+from listenbrainz.db.model.review import CBReviewTimelineMetadata
 
 
 class UserTimelineEventType(Enum):
@@ -52,27 +53,6 @@ class RecordingRecommendationMetadata(BaseModel):
 class NotificationMetadata(BaseModel):
     creator: constr(min_length=1)
     message: constr(min_length=1)
-
-
-class CBReviewMetadata(BaseModel):
-    """ Model to represent the review payload sent to the CB api
-    Some fields is_draft and license_choice are added by the backend
-    and always the same. Hence, omitted from this model.
-    """
-    entity_type: str
-    rating: int
-    text: str
-    entity_id: str
-    language: str
-
-
-class CBReviewTimelineMetadata(BaseModel):
-    """Model to represent the data stored in user timeline event table
-    for a CB review. We only store review uuid and the entity's mbid.
-    Other data is retrieved from the CB api as needed.
-    """
-    review_id: str
-    entity_id: str
 
 
 UserTimelineEventMetadata = Union[CBReviewTimelineMetadata, RecordingRecommendationMetadata, NotificationMetadata]
@@ -104,7 +84,7 @@ class APIPinEvent(APIListen):
 class APICBReviewEvent(APIListen):
     entity_type: str
     rating: int
-    text: str
+    blurb_content: str
     review_mbid: str
 
 

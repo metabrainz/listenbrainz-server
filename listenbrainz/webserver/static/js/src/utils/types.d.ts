@@ -529,7 +529,8 @@ type EventTypeT =
   | "follow"
   | "stop_follow"
   | "block_follow"
-  | "notification";
+  | "notification"
+  | "review";
 
 type UserRelationshipEventMetadata = {
   user_name_0: string;
