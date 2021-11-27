@@ -21,7 +21,7 @@ import ujson
 
 from datetime import datetime
 
-from data.model.user_timeline_event import (
+from listenbrainz.db.model.user_timeline_event import (
     UserTimelineEvent,
     UserTimelineEventType,
     UserTimelineEventMetadata,

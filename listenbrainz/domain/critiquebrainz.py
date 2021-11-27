@@ -7,7 +7,7 @@ from oauthlib.oauth2.rfc6749.errors import InvalidGrantError
 from typing import Iterable
 
 from data.model.external_service import ExternalServiceType
-from data.model.user_timeline_event import CBReviewMetadata
+from listenbrainz.db.model.review import CBReviewMetadata
 from listenbrainz.db import external_service_oauth
 
 from flask import current_app
