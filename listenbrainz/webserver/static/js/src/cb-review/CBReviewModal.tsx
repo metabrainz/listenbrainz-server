@@ -429,7 +429,7 @@ export default class CBReviewModal extends React.Component<
           );
           // show url using review mbid on success
           this.setState({
-            reviewMBID: response.id,
+            reviewMBID: response.metadata.review_id,
           });
           this.resetCBReviewForm();
         }
