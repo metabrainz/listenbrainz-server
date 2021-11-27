@@ -505,9 +505,9 @@ def get_cb_review_events(users_for_events: List[dict], min_ts: int, max_ts: int,
         try:
             reviewEvent = APICBReviewEvent(
                 user_name=id_username_map[event.user_id],
-                entity_type=reviews[review_id].entity_type,
-                rating=reviews[review_id].rating,
-                blurb_content=reviews[review_id].text,
+                entity_type=reviews[review_id]["entity_type"],
+                rating=reviews[review_id]["rating"],
+                blurb_content=reviews[review_id]["text"],
                 review_mbid=review_id,
                 track_metadata=TrackMetadata(
                     artist_name=metadata["artist"],
