@@ -47,7 +47,7 @@ export enum EventType {
   STOP_FOLLOW = "stop_follow",
   BLOCK_FOLLOW = "block_follow",
   NOTIFICATION = "notification",
-  REVIEW = "review",
+  REVIEW = "critiquebrainz_review",
 }
 
 type UserFeedPageProps = {
