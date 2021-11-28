@@ -530,7 +530,7 @@ type EventTypeT =
   | "stop_follow"
   | "block_follow"
   | "notification"
-  | "review";
+  | "critiquebrainz_review";
 
 type UserRelationshipEventMetadata = {
   user_name_0: string;
