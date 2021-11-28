@@ -499,7 +499,10 @@ def get_cb_review_events(users_for_events: List[dict], min_ts: int, max_ts: int,
 
     api_events = []
     for review_id, event in review_id_event_map.items():
-        if review_id not in reviews:
+        # TODO: remove the entity check and make the name/mbid data
+        #  optional otherwise only recording reviews are shown.
+        if review_id not in reviews or \
+                event.metadata.entity_id in mbid_metadatas:
             continue
         metadata = mbid_metadatas[event.metadata.entity_id]
         try:
