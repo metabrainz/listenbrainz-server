@@ -89,6 +89,7 @@ def insert_user_jsonb_data(user_id: int, stats_type: str, stats: StatRange):
 
 
 def insert_multiple_user_jsonb_data(data):
+    current_app.logger.info("Trying to insert begin")
     values = [(entry['musicbrainz_id'], entry['count'], json.dumps(entry['data'])) for entry in data['data']]
     query = """
         INSERT INTO statistics.user (user_id, stats_type, stats_range, data, count, from_ts, to_ts, last_updated)
@@ -124,6 +125,7 @@ def insert_multiple_user_jsonb_data(data):
     except psycopg2.errors.OperationalError:
         connection.rollback()
         current_app.logger.error("Error while inserting user stats:", exc_info=True)
+    current_app.logger.info("Trying to insert end")
 
 
 def insert_sitewide_jsonb_data(stats_type: str, stats: StatRange):
