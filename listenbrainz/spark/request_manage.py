@@ -376,7 +376,7 @@ def cron_request_recommendations(ctx):
 
 @cli.command(name='speed_test_request_stats')
 @click.pass_context
-def cron_request_all_stats(ctx):
+def test_request_all_stats(ctx):
     for stats_range in ["this_week", "week"]:
         for entity in ["artists", "releases", "recordings"]:
             ctx.invoke(request_user_stats, type_="entity", range_=stats_range, entity=entity)
