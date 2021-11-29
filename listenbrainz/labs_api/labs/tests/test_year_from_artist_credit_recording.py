@@ -24,12 +24,14 @@ json_response = [
     {
         "artist_credit_name": "Portishead",
         "recording_name": "Strangers",
-        "year": 1994
+        "year": 1994,
+        "recording_mbid": "f5a8aa28-4952-11ec-bd61-cf8e16d89c96"
     },
     {
         "artist_credit_name": "Rick Astley",
         "recording_name": "Never let you down",
-        "year": 1987
+        "year": 1987,
+        "recording_mbid": "06b5ae24-4953-11ec-996c-03baa656b5c1"
     }
 ]
 
@@ -49,7 +51,7 @@ class MainTestCase(flask_testing.TestCase):
         self.assertEqual(
             q.inputs(), ['[artist_credit_name]', '[recording_name]'])
         self.assertEqual(
-            q.outputs(), ['artist_credit_name', 'recording_name', 'year'])
+            q.outputs(), ['artist_credit_name', 'recording_name', 'recording_mbid', 'year'])
 
     @patch('psycopg2.connect')
     def test_fetch(self, mock_connect):
