@@ -113,15 +113,22 @@ def request_user_stats(type_, range_, entity):
 
 
 @cli.command(name="request_sitewide_stats")
+@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity']),
+              help="Type of statistics to calculate", required=True)
 @click.option("--range", 'range_', type=click.Choice(ALLOWED_STATISTICS_RANGE),
               help="Time range of statistics to calculate", required=True)
 @click.option("--entity", type=click.Choice(['artists', 'releases', 'recordings']),
               help="Entity for which statistics should be calculated")
-def request_sitewide_stats(range_, entity):
+def request_sitewide_stats(type_, range_, entity):
     """ Send request to calculate sitewide stats to the spark cluster
     """
+    params = {
+        "stats_range": range_
+    }
+    if type_ == "entity" and entity:
+        params["entity"] = entity
     try:
-        send_request_to_spark_cluster("stats.sitewide.entity", entity=entity, stats_range=range_)
+        send_request_to_spark_cluster(f"stats.sitewide.{type_}", **params)
     except InvalidSparkRequestError:
         click.echo("Incorrect arguments provided")
 
@@ -257,6 +264,9 @@ def cron_request_all_stats(ctx):
 
         for entity in ["artists", "releases", "recordings"]:
             ctx.invoke(request_sitewide_stats, range_=stats_range, entity=entity)
+
+        for stat in ["listening_activity"]:
+            ctx.invoke(request_sitewide_stats, type_=stat, range_=stats_range)
 
 
 @cli.command(name='cron_request_similar_users')
