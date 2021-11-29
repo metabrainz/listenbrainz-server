@@ -167,7 +167,7 @@ export default class MissingMBDataPage extends React.Component<
     const { APIService } = this.context;
     const missingMBDataAsListen = missingData.map((data) => {
       return {
-        listened_at: new Date(`${data.listened_at}Z`).getTime() / 1000,
+        listened_at: new Date(data.listened_at).getTime() / 1000,
         user_name: user.name,
         track_metadata: {
           artist_name: data.artist_name,
