@@ -172,6 +172,8 @@ def handle_missing_musicbrainz_data(data):
     current_app.logger.debug("Inserting missing musicbrainz data for {}".format(musicbrainz_id))
 
     missing_musicbrainz_data = data['missing_musicbrainz_data']
+    for index in range(len(missing_musicbrainz_data)):
+        missing_musicbrainz_data[index]["listened_at"]+="Z"
     source = data['source']
 
     try:
