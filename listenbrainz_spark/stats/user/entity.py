@@ -105,7 +105,7 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
     from_ts = int(from_date.timestamp())
     to_ts = int(to_date.timestamp())
 
-    for entries in chunked(data, 100):
+    for entries in chunked(data, 5):
         multiple_user_stats = []
         for entry in entries:
             processed_stat = parse_one_user_stats(entry, entity, stats_range, message_type)
