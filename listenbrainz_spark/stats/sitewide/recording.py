@@ -1,14 +1,15 @@
 from listenbrainz_spark.stats import run_query, SITEWIDE_STATS_ENTITY_LIMIT
 
 
-def get_recordings(table: str, limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
+def get_recordings(table: str, user_listen_count_limit, top_recordings_limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
     """
     Get recordings information (artist_name, artist_msid etc) for every
     time range specified ordered by listen count.
 
     Args:
         table: Name of the temporary table.
-        limit: number of top artists to retain
+        user_listen_count_limit: per user per entity listen count above which it should be capped
+        top_recordings_limit: number of top artists to retain
     Returns:
         iterator (iter): An iterator over result
     """
@@ -25,7 +26,7 @@ def get_recordings(table: str, limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
                  , artist_credit_mbids
                  , nullif(first(release_name), '') as release_name
                  , release_mbid
-                 , LEAST(count(*), 500) as listen_count
+                 , LEAST(count(*), {user_listen_count_limit}) as listen_count
               FROM {table}
           GROUP BY user_name
                  , lower(recording_name)
@@ -50,7 +51,7 @@ def get_recordings(table: str, limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
                  , lower(release_name)
                  , release_mbid
           ORDER BY total_listen_count DESC
-             LIMIT {limit}
+             LIMIT {top_recordings_limit}
         )
         SELECT sort_array(
                     collect_list(

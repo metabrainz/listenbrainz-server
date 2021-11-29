@@ -1,7 +1,7 @@
 from listenbrainz_spark.stats import run_query, SITEWIDE_STATS_ENTITY_LIMIT
 
 
-def get_releases(table: str, limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
+def get_releases(table: str, user_listen_count_limit, top_releases_limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
     """
     Get release information (release_name, release_mbid etc) ordered by
     listen count (number of times listened to tracks which belong to a
@@ -9,7 +9,8 @@ def get_releases(table: str, limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
 
     Args:
         table: name of the temporary table
-        limit: number of top releases to retain
+        user_listen_count_limit: per user per entity listen count above which it should be capped
+        top_releases_limit: number of top releases to retain
     Returns:
         iterator: an iterator over result, contains only 1 row
                 {
@@ -41,7 +42,7 @@ def get_releases(table: str, limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
                  , lower(artist_name)
                  , artist_credit_mbids
           ORDER BY listen_count DESC
-             LIMIT {limit}
+             LIMIT {top_releases_limit}
         )
         SELECT sort_array(
                     collect_list(
