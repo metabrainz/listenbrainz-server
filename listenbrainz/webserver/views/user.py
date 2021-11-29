@@ -112,8 +112,6 @@ def profile(user_name):
         if playing_now:
             listens.insert(0, playing_now.to_api())
 
-    user_stats = db_stats.get_user_stats(user.id, 'all_time', 'artists')
-
     logged_in_user_follows_user = None
     already_reported_user = False
     if current_user.is_authenticated:
@@ -134,8 +132,6 @@ def profile(user_name):
         "listens": listens,
         "latest_listen_ts": max_ts_per_user,
         "oldest_listen_ts": min_ts_per_user,
-        "latest_spotify_uri": _get_spotify_uri_for_listens(listens),
-        "artist_count": format(user_stats.count, ",d") if user_stats else None,
         "profile_url": url_for('user.profile', user_name=user_name),
         "mode": "listens",
         "userPinnedRecording": pin,
@@ -416,25 +412,6 @@ def _get_user(user_name):
         if user is None:
             raise NotFound("Cannot find user: %s" % user_name)
         return User.from_dbrow(user)
-
-
-def _get_spotify_uri_for_listens(listens):
-
-    def get_track_id_from_listen(listen):
-        additional_info = listen["track_metadata"]["additional_info"]
-        if "spotify_id" in additional_info and additional_info["spotify_id"] is not None:
-            return additional_info["spotify_id"].rsplit('/', 1)[-1]
-        else:
-            return None
-
-    track_id = None
-    if len(listens):
-        track_id = get_track_id_from_listen(listens[0])
-
-    if track_id:
-        return "spotify:track:" + track_id
-    else:
-        return None
 
 
 def delete_user(musicbrainz_id):
