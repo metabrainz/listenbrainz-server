@@ -30,7 +30,7 @@ entity_model_map = {
     "recordings": UserRecordingRecord
 }
 
-USERS_PER_MESSAGE = 100
+USERS_PER_MESSAGE = 10
 
 
 def get_entity_stats(entity: str, stats_range: str, message_type="user_entity")\
