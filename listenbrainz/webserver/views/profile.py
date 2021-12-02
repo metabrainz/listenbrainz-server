@@ -414,6 +414,9 @@ def missing_mb_data(user_name: str):
     else:
         missing_data_list = getattr(missing_data, 'data').dict()['missing_musicbrainz_data']
 
+    for index in range(len(missing_data_list)):
+        missing_data_list[index]["listened_at"] += "Z"
+
     props = {
         "missingData": missing_data_list,
         "user": user_data,

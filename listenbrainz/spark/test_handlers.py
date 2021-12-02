@@ -447,7 +447,7 @@ class HandlersTestCase(unittest.TestCase):
         mock_db_insert.assert_called_with(1, UserMissingMusicBrainzDataJson(
             missing_musicbrainz_data=[UserMissingMusicBrainzDataRecord(
                 artist_name="Katty Peri",
-                listened_at="2020-04-29 23:56:23Z",
+                listened_at="2020-04-29 23:56:23",
                 release_name="No Place Is Home",
                 recording_name="How High"
             )]),
