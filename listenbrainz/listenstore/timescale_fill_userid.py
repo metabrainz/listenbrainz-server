@@ -116,6 +116,7 @@ def fill_userid():
         else:
             chunk_count += 1
         print_status_update(chunk_count, number_chunks, start_time)
+        chunk_start += CHUNK_SECONDS
 
     print("Finished.")
     print(f"Usernames who have listens but no known user row: {global_missing_users}")
