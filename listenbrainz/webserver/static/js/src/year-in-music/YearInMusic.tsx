@@ -103,7 +103,7 @@ export default class YearInMusic extends React.Component<
                     style={{
                       width: "100%",
                       height: "65px",
-                      color: `rgb${fakeData.most_prominent_color}`,
+                      background: `rgb${fakeData.most_prominent_color}`,
                     }}
                   />
                 </h3>
