@@ -608,256 +608,249 @@ export default class RecentListens extends React.Component<
       listens?.[listens?.length - 1]?.listened_at <= oldestListenTs;
     return (
       <div role="main">
-        <div className="row">
-          <div className="col-md-8">
-            {userPinnedRecording && (
-              <div id="pinned-recordings">
-                <PinnedRecordingCard
-                  userName={user.name}
-                  pinnedRecording={userPinnedRecording}
-                  isCurrentUser={currentUser?.name === user?.name}
-                  currentFeedback={this.getFeedbackForRecordingMsid(
-                    userPinnedRecording?.recording_msid
-                  )}
-                  updateFeedbackCallback={this.updateFeedback}
-                  removePinFromPinsList={() => {}}
-                  newAlert={newAlert}
-                />
-              </div>
-            )}
-
-            <h3>
-              {mode === "listens" || mode === "recent"
-                ? `Recent listens${
-                    _.isNil(listenCount) ? "" : ` (${listenCount} total)`
-                  }`
-                : "Playlist"}
-            </h3>
-
-            {!listens.length && (
-              <div className="lead text-center">
-                <p>No listens yet</p>
-              </div>
-            )}
-            {listens.length > 0 && (
-              <div>
-                <div
-                  style={{
-                    height: 0,
-                    position: "sticky",
-                    top: "50%",
-                    zIndex: 1,
-                  }}
-                >
-                  <Loader isLoading={loading} />
-                </div>
-                <div
-                  id="listens"
-                  ref={this.listensTable}
-                  style={{ opacity: loading ? "0.4" : "1" }}
-                >
-                  {listens
-                    .sort((a, b) => {
-                      if (a.playing_now) {
-                        return -1;
-                      }
-                      if (b.playing_now) {
-                        return 1;
-                      }
-                      return 0;
-                    })
-                    .map((listen) => {
-                      const isCurrentUser =
-                        Boolean(listen.user_name) &&
-                        listen.user_name === currentUser?.name;
-                      const listenedAt = get(listen, "listened_at");
-                      const recordingMSID = get(
-                        listen,
-                        "track_metadata.additional_info.recording_msid"
-                      );
-                      const canDelete =
-                        isCurrentUser &&
-                        Boolean(listenedAt) &&
-                        Boolean(recordingMSID);
-                      /* eslint-disable react/jsx-no-bind */
-                      const additionalMenuItems = (
-                        <>
-                          <ListenControl
-                            title="Pin this recording"
-                            icon={faThumbtack}
-                            action={this.updateRecordingToPin.bind(
-                              this,
-                              listen
-                            )}
-                            dataToggle="modal"
-                            dataTarget="#PinRecordingModal"
-                          />
-                          {canDelete && (
-                            <ListenControl
-                              title="Delete Listen"
-                              icon={faTrashAlt}
-                              action={this.deleteListen.bind(this, listen)}
-                            />
-                          )}
-                        </>
-                      );
-                      const shouldBeDeleted = isEqual(deletedListen, listen);
-                      /* eslint-enable react/jsx-no-bind */
-                      return (
-                        <ListenCard
-                          key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
-                          showTimestamp
-                          showUsername={mode === "recent"}
-                          listen={listen}
-                          currentFeedback={this.getFeedbackForRecordingMsid(
-                            listen.track_metadata?.additional_info
-                              ?.recording_msid
-                          )}
-                          updateFeedbackCallback={this.updateFeedback}
-                          newAlert={newAlert}
-                          className={`${
-                            listen.playing_now ? "playing-now " : ""
-                          }${shouldBeDeleted ? "deleted " : ""}`}
-                          additionalMenuItems={additionalMenuItems}
-                        />
-                      );
-                    })}
-                </div>
-                {listens.length < this.expectedListensPerPage && (
-                  <h5 className="text-center">No more listens to show</h5>
+        <div>
+          {userPinnedRecording && (
+            <div id="pinned-recordings">
+              <PinnedRecordingCard
+                userName={user.name}
+                pinnedRecording={userPinnedRecording}
+                isCurrentUser={currentUser?.name === user?.name}
+                currentFeedback={this.getFeedbackForRecordingMsid(
+                  userPinnedRecording?.recording_msid
                 )}
-                {mode === "listens" && (
-                  <ul className="pager" id="navigation">
-                    <li
-                      className={`previous ${
-                        isNewestButtonDisabled ? "disabled" : ""
-                      }`}
-                    >
-                      <a
-                        role="button"
-                        onClick={this.handleClickNewest}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") this.handleClickNewest();
-                        }}
-                        tabIndex={0}
-                        href={
-                          isNewestButtonDisabled
-                            ? undefined
-                            : window.location.pathname
-                        }
-                      >
-                        &#x21E4;
-                      </a>
-                    </li>
-                    <li
-                      className={`previous ${
-                        isNewerButtonDisabled ? "disabled" : ""
-                      }`}
-                    >
-                      <a
-                        role="button"
-                        onClick={this.handleClickNewer}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") this.handleClickNewer();
-                        }}
-                        tabIndex={0}
-                        href={
-                          isNewerButtonDisabled
-                            ? undefined
-                            : `?min_ts=${previousListenTs}`
-                        }
-                      >
-                        &larr; Newer
-                      </a>
-                    </li>
-                    <li className="date-time-picker">
-                      <DatePicker
-                        onChange={this.onChangeDateTimePicker}
-                        value={dateTimePickerValue}
-                        clearIcon={null}
-                        maxDate={new Date(Date.now())}
-                        minDate={
-                          oldestListenTs
-                            ? new Date(oldestListenTs * 1000)
-                            : undefined
-                        }
-                        calendarIcon={
-                          <FontAwesomeIcon icon={faCalendar as IconProp} />
-                        }
-                      />
-                    </li>
-                    <li
-                      className={`next ${
-                        isOlderButtonDisabled ? "disabled" : ""
-                      }`}
-                      style={{ marginLeft: "auto" }}
-                    >
-                      <a
-                        role="button"
-                        onClick={this.handleClickOlder}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") this.handleClickOlder();
-                        }}
-                        tabIndex={0}
-                        href={
-                          isOlderButtonDisabled
-                            ? undefined
-                            : `?max_ts=${nextListenTs}`
-                        }
-                      >
-                        Older &rarr;
-                      </a>
-                    </li>
-                    <li
-                      className={`next ${
-                        isOldestButtonDisabled ? "disabled" : ""
-                      }`}
-                    >
-                      <a
-                        role="button"
-                        onClick={this.handleClickOldest}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") this.handleClickOldest();
-                        }}
-                        tabIndex={0}
-                        href={
-                          isOldestButtonDisabled
-                            ? undefined
-                            : `?min_ts=${oldestListenTs - 1}`
-                        }
-                      >
-                        &#x21E5;
-                      </a>
-                    </li>
-                  </ul>
-                )}
-                {currentUser && (
-                  <PinRecordingModal
-                    recordingToPin={recordingToPin || listens[0]}
-                    newAlert={newAlert}
-                    onSuccessfulPin={(pinnedListen) =>
-                      this.handlePinnedRecording(pinnedListen)
+                updateFeedbackCallback={this.updateFeedback}
+                removePinFromPinsList={() => {}}
+                newAlert={newAlert}
+              />
+            </div>
+          )}
+
+          <h3>
+            {mode === "listens" || mode === "recent"
+              ? `Recent listens${
+                  _.isNil(listenCount) ? "" : ` (${listenCount} total)`
+                }`
+              : "Playlist"}
+          </h3>
+
+          {!listens.length && (
+            <div className="lead text-center">
+              <p>No listens yet</p>
+            </div>
+          )}
+          {listens.length > 0 && (
+            <div>
+              <div
+                style={{
+                  height: 0,
+                  position: "sticky",
+                  top: "50%",
+                  zIndex: 1,
+                }}
+              >
+                <Loader isLoading={loading} />
+              </div>
+              <div
+                id="listens"
+                ref={this.listensTable}
+                style={{ opacity: loading ? "0.4" : "1" }}
+              >
+                {listens
+                  .sort((a, b) => {
+                    if (a.playing_now) {
+                      return -1;
                     }
-                  />
-                )}
+                    if (b.playing_now) {
+                      return 1;
+                    }
+                    return 0;
+                  })
+                  .map((listen) => {
+                    const isCurrentUser =
+                      Boolean(listen.user_name) &&
+                      listen.user_name === currentUser?.name;
+                    const listenedAt = get(listen, "listened_at");
+                    const recordingMSID = get(
+                      listen,
+                      "track_metadata.additional_info.recording_msid"
+                    );
+                    const canDelete =
+                      isCurrentUser &&
+                      Boolean(listenedAt) &&
+                      Boolean(recordingMSID);
+                    /* eslint-disable react/jsx-no-bind */
+                    const additionalMenuItems = (
+                      <>
+                        <ListenControl
+                          title="Pin this recording"
+                          icon={faThumbtack}
+                          action={this.updateRecordingToPin.bind(this, listen)}
+                          dataToggle="modal"
+                          dataTarget="#PinRecordingModal"
+                        />
+                        {canDelete && (
+                          <ListenControl
+                            title="Delete Listen"
+                            icon={faTrashAlt}
+                            action={this.deleteListen.bind(this, listen)}
+                          />
+                        )}
+                      </>
+                    );
+                    const shouldBeDeleted = isEqual(deletedListen, listen);
+                    /* eslint-enable react/jsx-no-bind */
+                    return (
+                      <ListenCard
+                        key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
+                        showTimestamp
+                        showUsername={mode === "recent"}
+                        listen={listen}
+                        currentFeedback={this.getFeedbackForRecordingMsid(
+                          listen.track_metadata?.additional_info?.recording_msid
+                        )}
+                        updateFeedbackCallback={this.updateFeedback}
+                        newAlert={newAlert}
+                        className={`${
+                          listen.playing_now ? "playing-now " : ""
+                        }${shouldBeDeleted ? "deleted " : ""}`}
+                        additionalMenuItems={additionalMenuItems}
+                      />
+                    );
+                  })}
               </div>
-            )}
-          </div>
-          <div
-            className="col-md-4"
-            // @ts-ignore
-            // eslint-disable-next-line no-dupe-keys
-            style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
-          >
-            <BrainzPlayer
-              direction={direction}
-              listens={allListenables}
-              newAlert={newAlert}
-              listenBrainzAPIBaseURI={APIService.APIBaseURI}
-              refreshSpotifyToken={APIService.refreshSpotifyToken}
-              refreshYoutubeToken={APIService.refreshYoutubeToken}
-            />
-          </div>
+              {listens.length < this.expectedListensPerPage && (
+                <h5 className="text-center">No more listens to show</h5>
+              )}
+              {mode === "listens" && (
+                <ul className="pager" id="navigation">
+                  <li
+                    className={`previous ${
+                      isNewestButtonDisabled ? "disabled" : ""
+                    }`}
+                  >
+                    <a
+                      role="button"
+                      onClick={this.handleClickNewest}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") this.handleClickNewest();
+                      }}
+                      tabIndex={0}
+                      href={
+                        isNewestButtonDisabled
+                          ? undefined
+                          : window.location.pathname
+                      }
+                    >
+                      &#x21E4;
+                    </a>
+                  </li>
+                  <li
+                    className={`previous ${
+                      isNewerButtonDisabled ? "disabled" : ""
+                    }`}
+                  >
+                    <a
+                      role="button"
+                      onClick={this.handleClickNewer}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") this.handleClickNewer();
+                      }}
+                      tabIndex={0}
+                      href={
+                        isNewerButtonDisabled
+                          ? undefined
+                          : `?min_ts=${previousListenTs}`
+                      }
+                    >
+                      &larr; Newer
+                    </a>
+                  </li>
+                  <li className="date-time-picker">
+                    <DatePicker
+                      onChange={this.onChangeDateTimePicker}
+                      value={dateTimePickerValue}
+                      clearIcon={null}
+                      maxDate={new Date(Date.now())}
+                      minDate={
+                        oldestListenTs
+                          ? new Date(oldestListenTs * 1000)
+                          : undefined
+                      }
+                      calendarIcon={
+                        <FontAwesomeIcon icon={faCalendar as IconProp} />
+                      }
+                    />
+                  </li>
+                  <li
+                    className={`next ${
+                      isOlderButtonDisabled ? "disabled" : ""
+                    }`}
+                    style={{ marginLeft: "auto" }}
+                  >
+                    <a
+                      role="button"
+                      onClick={this.handleClickOlder}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") this.handleClickOlder();
+                      }}
+                      tabIndex={0}
+                      href={
+                        isOlderButtonDisabled
+                          ? undefined
+                          : `?max_ts=${nextListenTs}`
+                      }
+                    >
+                      Older &rarr;
+                    </a>
+                  </li>
+                  <li
+                    className={`next ${
+                      isOldestButtonDisabled ? "disabled" : ""
+                    }`}
+                  >
+                    <a
+                      role="button"
+                      onClick={this.handleClickOldest}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") this.handleClickOldest();
+                      }}
+                      tabIndex={0}
+                      href={
+                        isOldestButtonDisabled
+                          ? undefined
+                          : `?min_ts=${oldestListenTs - 1}`
+                      }
+                    >
+                      &#x21E5;
+                    </a>
+                  </li>
+                </ul>
+              )}
+              {currentUser && (
+                <PinRecordingModal
+                  recordingToPin={recordingToPin || listens[0]}
+                  newAlert={newAlert}
+                  onSuccessfulPin={(pinnedListen) =>
+                    this.handlePinnedRecording(pinnedListen)
+                  }
+                />
+              )}
+            </div>
+          )}
+        </div>
+        <div
+          // @ts-ignore
+          // eslint-disable-next-line no-dupe-keys
+          style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
+        >
+          <BrainzPlayer
+            direction={direction}
+            listens={allListenables}
+            newAlert={newAlert}
+            listenBrainzAPIBaseURI={APIService.APIBaseURI}
+            refreshSpotifyToken={APIService.refreshSpotifyToken}
+            refreshYoutubeToken={APIService.refreshYoutubeToken}
+          />
         </div>
       </div>
     );

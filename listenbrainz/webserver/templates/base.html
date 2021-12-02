@@ -21,8 +21,6 @@
 <body>
   {%- include 'navbar.html' -%}
 
-  <div class="container">
-
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% for category, message in messages %}
         {{ print_message(message, category) }}
@@ -53,7 +51,6 @@
         </ul>
       </div>
     {%- endblock -%}
-  </div>
 
   {%- block scripts -%}
     <script src="{{ url_for('static', filename='js/lib/jquery-2.1.0.min.js') }}"></script>
