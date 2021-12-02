@@ -2,10 +2,24 @@
 	.header-image{
 		width: 500px;
 	}
-	.card{
+	.card:not(.listen-card){
 		padding:0.6em;
 		&.flex-center{
 			flex-direction: column;
+		}
+	}
+	
+	#similar-users , #new-releases{
+		max-height: 500px;
+		overflow-y: scroll;
+	}
+	#most-listened-year{
+		height: 500px;
+	}
+	
+	#similar-users {
+		.follow-button ~ div{
+			display: inline-block;
 		}
 	}
 }
