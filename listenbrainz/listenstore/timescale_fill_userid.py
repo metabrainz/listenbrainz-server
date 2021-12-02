@@ -129,5 +129,4 @@ def print_status_update(chunk_count, number_chunks, start_time):
     durdelta = timedelta(seconds=duration)
     remaining = round((duration / (chunk_percentage or 0.01)) - duration)
     remdelta = timedelta(seconds=remaining)
-    chunk_start += CHUNK_SECONDS
     print(f" - Done {chunk_count}/{number_chunks} in {str(durdelta)}; {str(remdelta)} remaining")
