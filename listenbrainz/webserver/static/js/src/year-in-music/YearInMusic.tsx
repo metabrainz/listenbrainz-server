@@ -193,7 +193,7 @@ export default class YearInMusic extends React.Component<
                   year. Maybe go check them out?
                 </div>
               </h3>
-              <div className="scrollable-area">
+              <div className="scrollable-area similar-users-list">
                 {fakeData.similar_users &&
                   Object.keys(fakeData.similar_users).map(
                     (userName: string, index) => {
@@ -224,7 +224,7 @@ export default class YearInMusic extends React.Component<
                   this year, but we&apos;re not judging
                 </div>
               </h3>
-              <div className="scrollable-area">
+              <div className="graph">
                 <ResponsiveBar
                   margin={{ left: 30, bottom: 130 }}
                   data={Object.keys(fakeData.most_listened_year).map(
