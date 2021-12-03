@@ -297,13 +297,3 @@ def huesound():
         "index/huesound.html",
         props=ujson.dumps({})
     )
-
-@index_bp.route("/year-in-music/")
-def year_in_music():
-    """ Your Year in Music """
-
-    return render_template(
-        "index/year-in-music.html",
-        props=ujson.dumps({}),
-        user=current_user
-    )
