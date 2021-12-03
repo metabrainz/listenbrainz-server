@@ -232,6 +232,12 @@ class NowPlayingListen:
             data['additional_info'] = flatten_dict(additional_info)
             self.data = data
 
+    def to_api(self):
+        return {
+            "track_metadata": self.data,
+            "playing_now": True
+        }
+
     def __repr__(self):
         from pprint import pformat
         return pformat(vars(self))

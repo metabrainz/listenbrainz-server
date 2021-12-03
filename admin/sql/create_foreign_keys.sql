@@ -18,12 +18,6 @@ ALTER TABLE statistics.user
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
-ALTER TABLE statistics.user_new
-    ADD CONSTRAINT user_stats_new_user_id_foreign_key
-    FOREIGN KEY (user_id)
-    REFERENCES "user" (id)
-    ON DELETE CASCADE;
-
 ALTER TABLE statistics.year_in_music
     ADD CONSTRAINT user_stats_year_in_music_user_id_foreign_key
     FOREIGN KEY (user_id)
