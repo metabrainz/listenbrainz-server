@@ -73,7 +73,10 @@ def submit_release_impl(token, release, url):
                 "listened_at": time_index,
                 "track_metadata": {
                     "artist_name": artist,
-                    "track_name": rec['title']
+                    "track_name": rec['title'],
+                    "additional_info": {
+                        "recording_mbid": rec['id']
+                    }
                 }
             }
         ]
