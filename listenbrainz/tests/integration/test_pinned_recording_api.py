@@ -10,8 +10,6 @@ from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.db.model.pinned_recording import (
     PinnedRecording,
     WritablePinnedRecording,
-    fetch_track_metadata_for_pins,
-    DAYS_UNTIL_UNPIN,
     MAX_BLURB_CONTENT_LENGTH,
 )
 import json
@@ -19,6 +17,8 @@ import json
 
 def fetch_track_metadata_for_pins(pins: List[PinnedRecording]) -> List[PinnedRecording]:
     return pins
+
+
 class PinnedRecAPITestCase(IntegrationTestCase):
 
     def setUp(self):
@@ -103,6 +103,8 @@ class PinnedRecAPITestCase(IntegrationTestCase):
 
         self.assert200(response)
         self.assertEqual(response.json["status"], "ok")
+        self.assertEqual(response.json["data"]["blurb_content"], "Amazing first recording")
+        self.assertIsNotNone(response.json["data"]["row_id"])
 
     def test_pin_unauthorized(self):
         """Tests that pin endpoint returns 401 when auth token is invalid"""
