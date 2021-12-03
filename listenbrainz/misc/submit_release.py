@@ -2,15 +2,13 @@
 
 import sys
 from time import time, sleep
-from uuid import uuid4
-from random import randint
 
 import click
 import requests
 
-ROOT = 'https://api.listenbrainz.org'
-ROOT = 'http://localhost'
-
+@click.group()
+def cli():
+    pass
 
 def submit_listen(url, listen_type, payload, token):
     """Submits listens for the track(s) in payload.
@@ -41,11 +39,15 @@ def submit_listen(url, listen_type, payload, token):
     response.raise_for_status()
 
 
-@click.command()
-@click.option('--url', '-u', help="Host to submit to. default: http://localhost", default="http://localhost")
+@cli.command()
+@click.option('--url', '-u', help="Host to submit to. default: http://localhost:7000", default="http://localhost:7000")
 @click.argument('token', nargs=1)
 @click.argument('release', nargs=1)
 def submit_release(token, release, url):
+    submit_release_impl(token, release, url)
+
+
+def submit_release_impl(token, release, url):
     """ Fetch a release from MusicBrainz and submit it as listens to LB
 
         Arguments:
@@ -89,11 +91,5 @@ def submit_release(token, release, url):
 
     sys.exit(0)
 
-
-def usage(command):
-    with click.Context(command) as ctx:
-        click.echo(command.get_help(ctx))
-
-
 if __name__ == '__main__':
-    submit_release()
+    cli()
