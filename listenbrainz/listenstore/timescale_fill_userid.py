@@ -20,6 +20,7 @@ from sqlalchemy import text
 
 from listenbrainz import db
 from listenbrainz.db import timescale
+from listenbrainz.listenstore import LISTEN_MINIMUM_TS
 
 CHUNK_SECONDS = 432000
 global_missing_users = set()
@@ -36,9 +37,9 @@ def process_chunk(chunk_start):
             text("""SELECT distinct(user_name) 
                       FROM listen 
                      WHERE user_id = 0 
-                       AND listened_at >= :from 
-                       AND listened_at < :to"""),
-            {"from": chunk_start, "to": chunk_start + CHUNK_SECONDS}
+                       AND listened_at >= :start 
+                       AND listened_at < :end"""),
+            start=chunk_start, end=chunk_start + CHUNK_SECONDS
         )
         if result.rowcount == 0:
             print(" - No more items in this chunk")
@@ -54,7 +55,7 @@ def process_chunk(chunk_start):
                          , musicbrainz_id 
                       FROM "user"
                       WHERE musicbrainz_id in :ids"""),
-            {"ids": tuple(usernames)}
+            ids=tuple(usernames)
         )
         user_mapping = {row["musicbrainz_id"]: row["id"] for row in username_mapping_result}
 
@@ -82,8 +83,7 @@ def process_chunk(chunk_start):
                       AND t.listened_at < %s"""
         # Push in chunk boundaries
         query = cursor.mogrify(query, (chunk_start, chunk_start + CHUNK_SECONDS))
-        new_values = [(k, v) for k, v in user_mapping.items()]
-        psycopg2.extras.execute_values(cursor, query, new_values, template=None, page_size=100)
+        psycopg2.extras.execute_values(cursor, query, user_mapping.items(), template=None, page_size=100)
         dbapi_conn.commit()
     finally:
         dbapi_conn.close()
@@ -92,16 +92,24 @@ def process_chunk(chunk_start):
 
     return True
 
+
 def fill_userid():
     with timescale.engine.connect() as connection:
         result = connection.execute(
-            """SELECT min(listened_at) as min_listened_at
+            text("""
+               SELECT min(listened_at) as min_listened_at
                     , max(listened_at) as max_listened_at
-                 FROM listen"""
-        )
+                 FROM listen
+                WHERE listened_at >= :least_accepted_ts
+                  AND user_id = 0"""),
+            least_accepted_ts=LISTEN_MINIMUM_TS)
         row = result.fetchone()
         min_listened_at = row['min_listened_at']
         max_listened_at = row['max_listened_at']
+
+    if min_listened_at is None:
+        print("No chunks found for processing.")
+        return
 
     number_chunks = math.ceil((max_listened_at - min_listened_at) / CHUNK_SECONDS)
     chunk_count = 0
@@ -130,4 +138,7 @@ def print_status_update(chunk_count, number_chunks, start_time):
     durdelta = timedelta(seconds=duration)
     remaining = round((duration / (chunk_percentage or 0.01)) - duration)
     remdelta = timedelta(seconds=remaining)
-    print(f" - Done {chunk_count}/{number_chunks} in {str(durdelta)}; {str(remdelta)} remaining")
+    if number_chunks > 0:
+        print(f" - Done {chunk_count}/{number_chunks} in {str(durdelta)}; {str(remdelta)} remaining")
+    else:
+        print(f" No chunks processed in {str(durdelta)}; {str(remdelta)} remaining")
