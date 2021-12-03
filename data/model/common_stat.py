@@ -12,6 +12,9 @@ class StatisticsRange(Enum):
     half_yearly = 'half_yearly'
     year = 'year'
     all_time = 'all_time'
+    this_week = 'this_week'
+    this_month = 'this_month'
+    this_year = 'this_year'
 
 
 #: list of allowed value for range param accepted by various statistics endpoints

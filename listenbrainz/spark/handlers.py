@@ -114,10 +114,15 @@ def handle_sitewide_entity(data):
     entity = data['entity']
 
     try:
-        db_stats.insert_sitewide_jsonb_data(entity, StatRange[SitewideArtistRecord](**data))
+        db_stats.insert_sitewide_jsonb_data(entity, StatRange[UserEntityRecord](**data))
     except ValidationError:
         current_app.logger.error(f"""ValidationError while inserting {stats_range} sitewide top {entity}.
         Data: {json.dumps(data, indent=3)}""", exc_info=True)
+
+
+def handle_sitewide_listening_activity(data):
+    data["musicbrainz_id"] = "listenbrainz-prod"
+    _handle_user_activity_stats('listening_activity', StatRange[UserListeningActivityRecord], data)
 
 
 def handle_dump_imported(data):

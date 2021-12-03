@@ -18,6 +18,7 @@ import RecentListens, {
   RecentListensState,
 } from "./RecentListens";
 import PinRecordingModal from "./PinRecordingModal";
+import CBReviewModal from "./CBReviewModal";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -31,10 +32,8 @@ jest.mock("socket.io-client", () => {
 });
 
 const {
-  artistCount,
   haveListenCount,
   latestListenTs,
-  latestSpotifyUri,
   listenCount,
   listens,
   mode,
@@ -47,10 +46,8 @@ const {
 } = recentListensProps;
 
 const props = {
-  artistCount,
   haveListenCount,
   latestListenTs,
-  latestSpotifyUri,
   listenCount,
   listens,
   mode: mode as ListensListMode,
@@ -531,6 +528,22 @@ describe("deleteListen", () => {
   });
 });
 
+describe("updateRecordingToReview", () => {
+  it("sets the recordingToReview in the state", async () => {
+    const wrapper = mount<RecentListens>(
+      <RecentListens {...props} />,
+      mountOptions
+    );
+    const instance = wrapper.instance();
+    const recordingToReview = props.listens[1];
+
+    expect(wrapper.state("recordingToReview")).toEqual(props.listens[0]); // default recordingToreview
+
+    instance.updateRecordingToReview(recordingToReview);
+    expect(wrapper.state("recordingToReview")).toEqual(recordingToReview);
+  });
+});
+
 describe("Pagination", () => {
   const pushStateSpy = jest.spyOn(window.history, "pushState");
 
@@ -968,6 +981,36 @@ describe("pinRecordingModal", () => {
       recordingToPin,
       newAlert: props.newAlert,
       onSuccessfulPin: expect.any(Function),
+    });
+  });
+});
+
+describe("CBReviewModal", () => {
+  it("renders the CBReviewModal component with the correct props", async () => {
+    const wrapper = mount<RecentListens>(
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
+    );
+    const instance = wrapper.instance();
+    const listen = props.listens[0];
+    let cbReviewModal = wrapper.find(CBReviewModal).first();
+
+    // recentListens renders CBReviewModal with listens[0] as listen by default
+    expect(cbReviewModal.props()).toEqual({
+      isCurrentUser: true,
+      listen: props.listens[0],
+      newAlert: props.newAlert,
+    });
+
+    instance.updateRecordingToPin(listen);
+    wrapper.update();
+
+    cbReviewModal = wrapper.find(CBReviewModal).first();
+    expect(cbReviewModal.props()).toEqual({
+      isCurrentUser: true,
+      listen,
+      newAlert: props.newAlert,
     });
   });
 });

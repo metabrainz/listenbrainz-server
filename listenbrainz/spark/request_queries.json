@@ -19,6 +19,11 @@
     "description": "Calculate top entites listened to on the website in the requested stats_range",
     "params": ["entity", "stats_range"]
   },
+  "stats.sitewide.listening_activity": {
+    "name": "stats.sitewide.listening_activity",
+    "description": "Calculates number of listens in periods depending on the stats_range value. see the documentation in spark code for details.",
+    "params": ["stats_range"]
+  },
   "stats.new_releases_of_top_artists": {
     "name": "stats.new_releases_of_top_artists",
     "description": "Calculate list of releases released this year by top 50 artists of this year for each user",

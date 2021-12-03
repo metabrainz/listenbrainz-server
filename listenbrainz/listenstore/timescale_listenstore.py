@@ -11,6 +11,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 import ujson
 import psycopg2
+import psycopg2.sql
 from psycopg2.extras import execute_values
 from psycopg2.errors import UntranslatableCharacter
 from typing import List
@@ -18,11 +19,9 @@ import sqlalchemy
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
-import numpy as np
 
 from brainzutils import cache
 
-import listenbrainz.db.user as db_user
 from listenbrainz.db import timescale
 from listenbrainz import DUMP_LICENSE_FILE_PATH
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
@@ -31,7 +30,6 @@ from listenbrainz.listen import Listen
 from listenbrainz.listenstore import ListenStore
 from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, LISTENS_DUMP_SCHEMA_VERSION
 from listenbrainz.utils import create_path, init_cache
-from listenbrainz import config
 
 # Append the user name for both of these keys
 REDIS_USER_LISTEN_COUNT = "lc."
@@ -703,6 +701,7 @@ class TimescaleListenStore(ListenStore):
                             archive_dir,
                             temp_dir,
                             tar_file,
+                            dump_type,
                             start_time: datetime,
                             end_time: datetime,
                             parquet_file_id=0):
@@ -714,6 +713,7 @@ class TimescaleListenStore(ListenStore):
             archive_dir: the directory where the listens dump archive should be created
             temp_dir: the directory where tmp files should be written
             tar_file: the tarfile object that the dumps are being written to
+            dump_type: type of dump, full or incremental
             start_time: the start of the time range for which listens should be dumped
             end_time: the end of the time range for which listens should be dumped
             parquet_file_id: the file id number to use for indexing parquet files
@@ -722,8 +722,29 @@ class TimescaleListenStore(ListenStore):
             the next parquet_file_id to use.
 
         """
+        # the spark listens dump is sorted using this column. full dumps are sorted on
+        # listened_at because so during loading listens in spark for stats calculation
+        # we can load a subset of files. however, sorting on listened_at creates the
+        # issue that the data imported today with listened_at in the past won't show up
+        # in the stats until the next full dump. to solve this, we sort and dump incremental
+        # listens using the created column. all incremental listens are always loaded by spark
+        # , so we can get upto date stats sooner.
+        if dump_type == "full":
+            criteria = "listened_at"
+            # listened_at column is bigint so need to convert datetime to timestamp
+            args = {
+                "start": int(start_time.timestamp()),
+                "end": int(end_time.timestamp())
+            }
+        else:  # incremental dump
+            criteria = "created"
+            args = {
+                "start": start_time,
+                "end": end_time
+            }
 
-        query = """SELECT listened_at,
+        query = psycopg2.sql.SQL("""
+                    SELECT listened_at,
                           user_name,
                           artist_credit_id,
                           artist_mbids::TEXT[] AS artist_credit_mbids,
@@ -740,11 +761,9 @@ class TimescaleListenStore(ListenStore):
                        ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
           FULL OUTER JOIN mbid_mapping_metadata m
                        ON mm.recording_mbid = m.recording_mbid
-                    WHERE created > %s
-                      AND created <= %s
-                 ORDER BY created ASC"""
-
-        args = (start_time, end_time)
+                    WHERE {criteria} > %(start)s
+                      AND {criteria} <= %(end)s
+                 ORDER BY {criteria} ASC""").format(criteria=psycopg2.sql.Identifier(criteria))
 
         listen_count = 0
         current_listened_at = None
@@ -826,6 +845,7 @@ class TimescaleListenStore(ListenStore):
 
     def dump_listens_for_spark(self, location,
                                dump_id: int,
+                               dump_type: str,
                                start_time: datetime = datetime.utcfromtimestamp(DATA_START_YEAR_IN_SECONDS),
                                end_time: datetime = None):
         """ Dumps all listens in the ListenStore into spark parquet files in a .tar archive.
@@ -839,6 +859,7 @@ class TimescaleListenStore(ListenStore):
         Args:
             location: the directory where the listens dump archive should be created
             dump_id: the ID of the dump in the dump sequence
+            dump_type: type of dump, full or incremental
             start_time: the start of the time range for which listens should be dumped. defaults to
                 utc 0 (meaning a full dump)
             end_time: the end of time range for which listens should be dumped. defaults to the current time
@@ -884,7 +905,8 @@ class TimescaleListenStore(ListenStore):
                 # Without it sometimes test pass and sometimes they give totally unrelated errors.
                 # Keeping this block should help with future testing...
                 try:
-                    parquet_index = self.write_parquet_files(archive_name, temp_dir, tar, start, end, parquet_index)
+                    parquet_index = self.write_parquet_files(archive_name, temp_dir, tar, dump_type,
+                                                             start, end, parquet_index)
                 except Exception as err:
                     self.log.info("likely test failure: " + str(err))
                     raise

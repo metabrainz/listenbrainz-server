@@ -23,10 +23,13 @@ from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          notify_mapping_import,
                                          handle_missing_musicbrainz_data,
                                          notify_cf_recording_recommendations_generation,
-                                         handle_similar_users, handle_new_releases_of_top_artists,
-                                         handle_most_prominent_color, handle_similar_users_year_end, handle_day_of_week,
+                                         handle_sitewide_listening_activity,
+                                         handle_similar_users,
+                                         handle_new_releases_of_top_artists,
+                                         handle_most_prominent_color,
+                                         handle_similar_users_year_end,
+                                         handle_day_of_week,
                                          handle_most_listened_year)
-
 from listenbrainz.webserver import create_app
 
 response_handler_map = {
@@ -34,6 +37,7 @@ response_handler_map = {
     'user_listening_activity': handle_user_listening_activity,
     'user_daily_activity': handle_user_daily_activity,
     'sitewide_entity': handle_sitewide_entity,
+    'sitewide_listening_activity': handle_sitewide_listening_activity,
     'new_releases_of_top_artists': handle_new_releases_of_top_artists,
     'most_prominent_color': handle_most_prominent_color,
     'day_of_week': handle_day_of_week,
