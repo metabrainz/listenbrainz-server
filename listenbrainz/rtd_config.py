@@ -71,7 +71,7 @@ MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
 UPLOAD_FOLDER = "/tmp/lastfm-backup-upload"
 
 API_URL = 'https://api.listenbrainz.org'
-LASTFM_PROXY_URL = 'http://0.0.0.0:8080/'
+LASTFM_PROXY_URL = 'http://0.0.0.0:7080/'
 MUSICBRAINZ_OAUTH_URL = 'https://musicbrainz.org/oauth2/userinfo'
 SPOTIFY_CLIENT_ID = ''
 SPOTIFY_CLIENT_SECRET = ''
