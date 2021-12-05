@@ -1,7 +1,9 @@
 {%- extends 'base.html' -%}
 {%- block content -%}
   <div id="homepage" class="row">
-
+    <div class="alert alert-success center-p" role="alert">
+      ListenBrainz Year in Music for 2021 just dropped! Find yours <a href="{{ url_for('user.year_in_music', user_name=current_user.musicbrainz_id) }}" class="alert-link">here</a>. Share it across social media and compare your stats with your friends!
+    </div>
     <div class="col-md-7 col-lg-8">
       <img src="{{ url_for('static', filename='img/logo_big.svg') }}" id="big-logo" />
       <h2 class="page-title">Welcome to ListenBrainz!</h2>
