@@ -949,7 +949,9 @@ export default class APIService {
         "Content-Type": "application/json;charset=UTF-8",
       },
       body: JSON.stringify({
+        name: review.entity_name,
         entity_id: review.entity_id,
+        recording_id: review.recording_id,
         entity_type: review.entity_type,
         text: review.text,
         language: review.languageCode,

@@ -118,6 +118,9 @@ const searchForYoutubeTrack = async (
   return null;
 };
 
+const getAdditionalContent = (listen: Listen): string =>
+  _.get(listen, "blurb_content") ?? _.get(listen, "text") ?? "";
+
 const getArtistMBIDs = (listen: Listen): string[] | undefined =>
   _.get(listen, "track_metadata.additional_info.artist_mbids") ??
   _.get(listen, "track_metadata.mbid_mapping.artist_mbids");
@@ -504,4 +507,5 @@ export {
   getTrackName,
   pinnedRecordingToListen,
   getAlbumArtFromListenMetadata,
+  getAdditionalContent
 };

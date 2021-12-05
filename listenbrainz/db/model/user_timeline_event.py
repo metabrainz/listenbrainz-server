@@ -82,9 +82,11 @@ class APIPinEvent(APIListen):
 
 
 class APICBReviewEvent(APIListen):
+    entity_name: str
+    entity_id: str
     entity_type: str
     rating: int
-    blurb_content: str
+    text: str
     review_mbid: str
 
 
