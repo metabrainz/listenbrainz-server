@@ -2,7 +2,6 @@
 
 import * as ReactDOM from "react-dom";
 import * as React from "react";
-import { paddingTop } from "html2canvas/dist/types/css/property-descriptors/padding";
 import { ResponsiveBar } from "@nivo/bar";
 import ErrorBoundary from "../ErrorBoundary";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
@@ -61,17 +60,33 @@ export default class YearInMusic extends React.Component<
       <div role="main" id="year-in-music">
         <div className="row center-block">
           <div className="col-sm-6">
-            <div className="card">
-              {user?.name}
-              <h4>Share your year with your friends</h4>
-              <a
-                href={`https://listenbrainz.org/user/${user?.name}/year-in-music`}
-              >
-                https://listenbrainz.org/user/{user?.name}/year-in-music
-              </a>
+            <br />
+            <br />
+            <h1>{user?.name}</h1>
+            <div style={{ marginTop: "20px", marginBottom: "20px" }}>
+              <img
+                src="{{ url_for('static', filename='img/musicbrainz-16.svg') }}"
+                alt="MusicBrainz Logo"
+              />
+              <b>
+                <a href={`https://musicbrainz.org/user/${user.name}`}>
+                  See profile on MusicBrainz
+                </a>
+              </b>
             </div>
-            <strong>listened to {totalListens} tracks</strong>
-            <strong>mostly on {fakeData.day_of_week}</strong>
+
+            <div className="card">
+              <h4>
+                Share your year with your friends
+                <br />
+                <br />
+                <a
+                  href={`https://listenbrainz.org/user/${user?.name}/year-in-music`}
+                >
+                  https://listenbrainz.org/user/{user?.name}/year-in-music
+                </a>
+              </h4>
+            </div>
           </div>
           <div className="col-sm-6">
             <img
@@ -112,9 +127,9 @@ export default class YearInMusic extends React.Component<
           </div>
           <hr className="wide" />
           <div className="row">
-            <div className="card flex-center">
-              <h3 className="text-center">
-                Your top{" "}
+            <div className="card">
+              <h3>
+                Your top {selectedTopEntity}s of the year
                 <Pill
                   active={selectedTopEntity === "recording"}
                   // eslint-disable-next-line react/jsx-no-bind
@@ -136,9 +151,8 @@ export default class YearInMusic extends React.Component<
                 >
                   Artists
                 </Pill>{" "}
-                of the year
               </h3>
-              <div className="scrollable-area">{selectedTopEntity}</div>
+              <ComponentToImage />
             </div>
           </div>
           <div className="row">
@@ -250,7 +264,6 @@ export default class YearInMusic extends React.Component<
             </h3>
           </div>
           <hr className="wide" />
-          <ComponentToImage />
           <BrainzPlayer
             listens={[]}
             newAlert={newAlert}
