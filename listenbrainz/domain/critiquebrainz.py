@@ -125,12 +125,11 @@ class CritiqueBrainzService(ExternalService):
             raise APIUnauthorized("You need to connect to the CritiqueBrainz service to write a review.")
 
         response = self._submit_review_to_CB(token["access_token"], review)
-        if response.status_code == 401:
-            token = self.refresh_access_token(user_id, token["refresh_token"])
-            response = self._submit_review_to_CB(token["access_token"], review)
-
         data = response.json()
         if 400 <= response.status_code < 500:
+            if data["code"] == "invalid_token": # oauth token expired, refresh and retry
+                token = self.refresh_access_token(user_id, token["refresh_token"])
+                response = self._submit_review_to_CB(token["access_token"], review)
             raise APIError(data["description"], response.status_code)
         elif response.status_code >= 500:
             current_app.logger.error("CritiqueBrainz Server Error: %s", str(data))
