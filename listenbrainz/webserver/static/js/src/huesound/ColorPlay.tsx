@@ -169,61 +169,59 @@ export default class ColorPlay extends React.Component<
 
           {colorReleases.length > 0 && <Loader isLoading={loading} />}
           {selectedRelease && (
-            <div className="row align-items-center">
-              <div className="col-md-8" style={{ marginTop: "3em" }}>
-                <Card style={{ display: "flex" }}>
-                  <img
-                    className="img-rounded"
-                    style={{ flex: 1 }}
-                    src={`https://archive.org/download/mbid-${selectedRelease.release_mbid}/mbid-${selectedRelease.release_mbid}-${selectedRelease.caa_id}_thumb250.jpg`}
-                    alt={`Cover art for Release ${selectedRelease.release_name}`}
-                    width={200}
-                    height={200}
-                  />
-                  <div style={{ flex: 3, padding: "0.5em 2em" }}>
-                    <div className="h3">
-                      <a
-                        href={`https://musicbrainz.org/release/${selectedRelease.release_mbid}`}
-                      >
-                        {selectedRelease.release_name}
-                      </a>
-                    </div>
-                    <div className="h4">
-                      {has(
-                        selectedRelease,
-                        "recordings[0].track_metadata.additional_info.artist_mbids[0]"
-                      ) ? (
-                        <a
-                          href={`https://musicbrainz.org/artist/${get(
-                            selectedRelease,
-                            "recordings[0].track_metadata.additional_info.artist_mbids[0]"
-                          )}`}
-                        >
-                          {selectedRelease.artist_name}
-                        </a>
-                      ) : (
-                        selectedRelease.artist_name
-                      )}
-                    </div>
+            <div style={{ marginTop: "3em" }}>
+              <Card style={{ display: "flex" }}>
+                <img
+                  className="img-rounded"
+                  style={{ flex: 1 }}
+                  src={`https://archive.org/download/mbid-${selectedRelease.release_mbid}/mbid-${selectedRelease.release_mbid}-${selectedRelease.caa_id}_thumb250.jpg`}
+                  alt={`Cover art for Release ${selectedRelease.release_name}`}
+                  width={200}
+                  height={200}
+                />
+                <div style={{ flex: 3, padding: "0.5em 2em" }}>
+                  <div className="h3">
+                    <a
+                      href={`https://musicbrainz.org/release/${selectedRelease.release_mbid}`}
+                    >
+                      {selectedRelease.release_name}
+                    </a>
                   </div>
-                </Card>
-                <div style={{ padding: "2em" }}>
-                  {selectedRelease.recordings?.map(
-                    (recording: BaseListenFormat) => {
-                      return (
-                        <ListenCard
-                          listen={recording}
-                          currentFeedback={0}
-                          showTimestamp={false}
-                          showUsername={false}
-                          newAlert={newAlert}
-                        />
-                      );
-                    }
-                  )}
+                  <div className="h4">
+                    {has(
+                      selectedRelease,
+                      "recordings[0].track_metadata.additional_info.artist_mbids[0]"
+                    ) ? (
+                      <a
+                        href={`https://musicbrainz.org/artist/${get(
+                          selectedRelease,
+                          "recordings[0].track_metadata.additional_info.artist_mbids[0]"
+                        )}`}
+                      >
+                        {selectedRelease.artist_name}
+                      </a>
+                    ) : (
+                      selectedRelease.artist_name
+                    )}
+                  </div>
                 </div>
+              </Card>
+              <div style={{ padding: "2em" }}>
+                {selectedRelease.recordings?.map(
+                  (recording: BaseListenFormat) => {
+                    return (
+                      <ListenCard
+                        listen={recording}
+                        currentFeedback={0}
+                        showTimestamp={false}
+                        showUsername={false}
+                        newAlert={newAlert}
+                      />
+                    );
+                  }
+                )}
               </div>
-              <div className="col-md-4 sticky-top">
+              <div className="sticky-top">
                 <BrainzPlayer
                   newAlert={newAlert}
                   listens={selectedReleaseTracks}
