@@ -176,7 +176,7 @@ def create_user_cb_review_event(user_name):
 
     try:
         review = CBReviewMetadata(
-            entity_name=data["entity_name"],
+            name=data["entity_name"],
             entity_id=data["entity_id"],
             entity_type=data["entity_type"],
             recording_id=data["recording_id"],
@@ -192,7 +192,7 @@ def create_user_cb_review_event(user_name):
         review_id=review_id,
         entity_id=review.entity_id,
         recording_id=review.recording_id,
-        entity_name=review.entity_name
+        entity_name=review.name
     )
     event = db_user_timeline_event.create_user_cb_review_event(user["id"], metadata)
 

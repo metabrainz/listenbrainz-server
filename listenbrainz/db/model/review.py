@@ -10,7 +10,7 @@ class CBReviewMetadata(BaseModel):
     Some fields is_draft and license_choice are added by the backend
     and always the same. Hence, omitted from this model.
     """
-    entity_name: str
+    name: str
     entity_type: str
     rating: int
     text: str
