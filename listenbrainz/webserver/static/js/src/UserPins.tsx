@@ -252,124 +252,119 @@ export default class UserPins extends React.Component<
 
     return (
       <div role="main">
-        <div className="row">
-          <div className="col-md-8">
-            <h3>Pinned Recordings</h3>
+        <div>
+          <h3>Pinned Recordings</h3>
 
-            {pins.length === 0 && (
-              <>
-                <div className="lead text-center">No pins yet</div>
+          {pins.length === 0 && (
+            <>
+              <div className="lead text-center">No pins yet</div>
 
-                {user.name === currentUser.name && (
-                  <>
-                    Pin one of your
-                    <a href={`${profileUrl}`}> recent Listens!</a>
-                  </>
-                )}
-              </>
-            )}
+              {user.name === currentUser.name && (
+                <>
+                  Pin one of your
+                  <a href={`${profileUrl}`}> recent Listens!</a>
+                </>
+              )}
+            </>
+          )}
 
-            {pins.length > 0 && (
-              <div>
-                <div
-                  style={{
-                    height: 0,
-                    position: "sticky",
-                    top: "50%",
-                    zIndex: 1,
-                  }}
-                >
-                  <Loader isLoading={loading} />
-                </div>
-                <div
-                  id="pinned-recordings"
-                  style={{ opacity: loading ? "0.4" : "1" }}
-                >
-                  {pins?.map((pin) => {
-                    return (
-                      <PinnedRecordingCard
-                        key={`${pin.created}-${pin.track_metadata.track_name}-${pin.recording_msid}-${user}`}
-                        userName={user.name}
-                        pinnedRecording={pin}
-                        isCurrentUser={currentUser?.name === user?.name}
-                        removePinFromPinsList={this.removePinFromPinsList}
-                        newAlert={newAlert}
-                        currentFeedback={this.getFeedbackForRecordingMsid(
-                          pin.recording_msid
-                        )}
-                        updateFeedbackCallback={this.updateFeedback}
-                      />
-                    );
-                  })}
-
-                  {pins.length < this.DEFAULT_PINS_PER_PAGE && (
-                    <h5 className="text-center">No more pins to show.</h5>
-                  )}
-                </div>
-
-                <ul
-                  className="pager"
-                  id="navigation"
-                  style={{ marginRight: "-1em", marginLeft: "1.5em" }}
-                >
-                  <li
-                    className={`previous ${
-                      isNewerButtonDisabled ? "disabled" : ""
-                    }`}
-                  >
-                    <a
-                      role="button"
-                      onClick={this.handleClickNewer}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") this.handleClickNewer();
-                      }}
-                      tabIndex={0}
-                      href={
-                        isNewerButtonDisabled ? undefined : `?page=${page - 1}`
-                      }
-                    >
-                      &larr; Newer
-                    </a>
-                  </li>
-                  <li
-                    className={`next ${
-                      isOlderButtonDisabled ? "disabled" : ""
-                    }`}
-                    style={{ marginLeft: "auto" }}
-                  >
-                    <a
-                      role="button"
-                      onClick={this.handleClickOlder}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") this.handleClickOlder();
-                      }}
-                      tabIndex={0}
-                      href={
-                        isOlderButtonDisabled ? undefined : `?page=${page + 1}`
-                      }
-                    >
-                      Older &rarr;
-                    </a>
-                  </li>
-                </ul>
+          {pins.length > 0 && (
+            <div>
+              <div
+                style={{
+                  height: 0,
+                  position: "sticky",
+                  top: "50%",
+                  zIndex: 1,
+                }}
+              >
+                <Loader isLoading={loading} />
               </div>
-            )}
-          </div>
-          <div
-            className="col-md-4"
-            // @ts-ignore
-            // eslint-disable-next-line no-dupe-keys
-            style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
-          >
-            <BrainzPlayer
-              direction={direction}
-              listens={pinsAsListens}
-              newAlert={newAlert}
-              listenBrainzAPIBaseURI={APIService.APIBaseURI}
-              refreshSpotifyToken={APIService.refreshSpotifyToken}
-              refreshYoutubeToken={APIService.refreshYoutubeToken}
-            />
-          </div>
+              <div
+                id="pinned-recordings"
+                style={{ opacity: loading ? "0.4" : "1" }}
+              >
+                {pins?.map((pin) => {
+                  return (
+                    <PinnedRecordingCard
+                      key={`${pin.created}-${pin.track_metadata.track_name}-${pin.recording_msid}-${user}`}
+                      userName={user.name}
+                      pinnedRecording={pin}
+                      isCurrentUser={currentUser?.name === user?.name}
+                      removePinFromPinsList={this.removePinFromPinsList}
+                      newAlert={newAlert}
+                      currentFeedback={this.getFeedbackForRecordingMsid(
+                        pin.recording_msid
+                      )}
+                      updateFeedbackCallback={this.updateFeedback}
+                    />
+                  );
+                })}
+
+                {pins.length < this.DEFAULT_PINS_PER_PAGE && (
+                  <h5 className="text-center">No more pins to show.</h5>
+                )}
+              </div>
+
+              <ul
+                className="pager"
+                id="navigation"
+                style={{ marginRight: "-1em", marginLeft: "1.5em" }}
+              >
+                <li
+                  className={`previous ${
+                    isNewerButtonDisabled ? "disabled" : ""
+                  }`}
+                >
+                  <a
+                    role="button"
+                    onClick={this.handleClickNewer}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") this.handleClickNewer();
+                    }}
+                    tabIndex={0}
+                    href={
+                      isNewerButtonDisabled ? undefined : `?page=${page - 1}`
+                    }
+                  >
+                    &larr; Newer
+                  </a>
+                </li>
+                <li
+                  className={`next ${isOlderButtonDisabled ? "disabled" : ""}`}
+                  style={{ marginLeft: "auto" }}
+                >
+                  <a
+                    role="button"
+                    onClick={this.handleClickOlder}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") this.handleClickOlder();
+                    }}
+                    tabIndex={0}
+                    href={
+                      isOlderButtonDisabled ? undefined : `?page=${page + 1}`
+                    }
+                  >
+                    Older &rarr;
+                  </a>
+                </li>
+              </ul>
+            </div>
+          )}
+        </div>
+        <div
+          // @ts-ignore
+          // eslint-disable-next-line no-dupe-keys
+          style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
+        >
+          <BrainzPlayer
+            direction={direction}
+            listens={pinsAsListens}
+            newAlert={newAlert}
+            listenBrainzAPIBaseURI={APIService.APIBaseURI}
+            refreshSpotifyToken={APIService.refreshSpotifyToken}
+            refreshYoutubeToken={APIService.refreshYoutubeToken}
+          />
         </div>
       </div>
     );
