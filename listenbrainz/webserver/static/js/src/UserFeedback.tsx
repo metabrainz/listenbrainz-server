@@ -388,180 +388,173 @@ export default class UserFeedback extends React.Component<
     const canNavigateOlder = page < maxPage;
     return (
       <div role="main">
-        <div className="row">
-          <div className="col-md-8">
-            <h3
-              style={{
-                display: "inline-block",
-                marginRight: "0.5em",
-                verticalAlign: "sub",
-              }}
-            >
-              Tracks {user.name === currentUser.name ? "you" : user.name}
-            </h3>
-            <Pill
-              active={selectedFeedbackScore === 1}
-              type="secondary"
-              onClick={() => this.changeSelectedFeedback(1)}
-            >
-              <FontAwesomeIcon icon={faHeart as IconProp} /> Loved
-            </Pill>
-            <Pill
-              active={selectedFeedbackScore === -1}
-              type="secondary"
-              onClick={() => this.changeSelectedFeedback(-1)}
-            >
-              <FontAwesomeIcon icon={faHeartBroken as IconProp} /> Hated
-            </Pill>
-
-            {!feedback.length && (
-              <div className="lead text-center">
-                <p>
-                  No {selectedFeedbackScore === 1 ? "loved" : "hated"} tracks to
-                  show yet
-                </p>
-              </div>
-            )}
-            {feedback.length > 0 && (
-              <div>
-                <div
-                  style={{
-                    height: 0,
-                    position: "sticky",
-                    top: "50%",
-                    zIndex: 1,
-                  }}
-                >
-                  <Loader isLoading={loading} />
-                </div>
-                <div
-                  id="listens"
-                  ref={this.listensTable}
-                  style={{ opacity: loading ? "0.4" : "1" }}
-                >
-                  {feedback.map((feedbackItem, index) => {
-                    const listen = listensFromFeedback[index];
-                    const additionalMenuItems = (
-                      <>
-                        <ListenControl
-                          title="Pin this recording"
-                          icon={faThumbtack}
-                          // eslint-disable-next-line react/jsx-no-bind
-                          action={this.updateRecordingToPin.bind(this, listen)}
-                          dataToggle="modal"
-                          dataTarget="#PinRecordingModal"
-                        />
-                      </>
-                    );
-                    return (
-                      <ListenCard
-                        showUsername={false}
-                        showTimestamp
-                        key={`${feedbackItem.created}`}
-                        listen={listen}
-                        currentFeedback={this.getFeedbackForRecordingMsid(
-                          feedbackItem.recording_msid
-                        )}
-                        updateFeedbackCallback={this.updateFeedback}
-                        additionalMenuItems={additionalMenuItems}
-                        newAlert={newAlert}
-                      />
-                    );
-                  })}
-                </div>
-                {feedback.length < this.DEFAULT_ITEMS_PER_PAGE && (
-                  <h5 className="text-center">No more feedback to show</h5>
-                )}
-                <ul className="pager" id="navigation">
-                  <li
-                    className={`previous ${
-                      !canNavigateNewer ? "disabled" : ""
-                    }`}
-                  >
-                    <a
-                      role="button"
-                      onClick={this.handleClickNewest}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") this.handleClickNewest();
-                      }}
-                      tabIndex={0}
-                      href={!canNavigateNewer ? undefined : "?page=1"}
-                    >
-                      &#x21E4;
-                    </a>
-                  </li>
-                  <li
-                    className={`previous ${
-                      !canNavigateNewer ? "disabled" : ""
-                    }`}
-                  >
-                    <a
-                      role="button"
-                      onClick={this.handleClickNewer}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") this.handleClickNewer();
-                      }}
-                      tabIndex={0}
-                      href={!canNavigateNewer ? undefined : `?page=${page - 1}`}
-                    >
-                      &larr; Newer
-                    </a>
-                  </li>
-
-                  <li
-                    className={`next ${!canNavigateOlder ? "disabled" : ""}`}
-                    style={{ marginLeft: "auto" }}
-                  >
-                    <a
-                      role="button"
-                      onClick={this.handleClickOlder}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") this.handleClickOlder();
-                      }}
-                      tabIndex={0}
-                      href={!canNavigateOlder ? undefined : `?page=${page + 1}`}
-                    >
-                      Older &rarr;
-                    </a>
-                  </li>
-                  <li className={`next ${!canNavigateOlder ? "disabled" : ""}`}>
-                    <a
-                      role="button"
-                      onClick={this.handleClickOldest}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") this.handleClickOldest();
-                      }}
-                      tabIndex={0}
-                      href={!canNavigateOlder ? undefined : `?page=${maxPage}`}
-                    >
-                      &#x21E5;
-                    </a>
-                  </li>
-                </ul>
-                {currentUser && (
-                  <PinRecordingModal
-                    recordingToPin={recordingToPin || listensFromFeedback[0]}
-                    newAlert={newAlert}
-                  />
-                )}
-              </div>
-            )}
-          </div>
-          <div
-            className="col-md-4"
-            // @ts-ignore
-            // eslint-disable-next-line no-dupe-keys
-            style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
+        <div>
+          <h3
+            style={{
+              display: "inline-block",
+              marginRight: "0.5em",
+              verticalAlign: "sub",
+            }}
           >
-            <BrainzPlayer
-              direction={direction}
-              listens={listensFromFeedback}
-              newAlert={newAlert}
-              listenBrainzAPIBaseURI={APIService.APIBaseURI}
-              refreshSpotifyToken={APIService.refreshSpotifyToken}
-              refreshYoutubeToken={APIService.refreshYoutubeToken}
-            />
-          </div>
+            Tracks {user.name === currentUser.name ? "you" : user.name}
+          </h3>
+          <Pill
+            active={selectedFeedbackScore === 1}
+            type="secondary"
+            onClick={() => this.changeSelectedFeedback(1)}
+          >
+            <FontAwesomeIcon icon={faHeart as IconProp} /> Loved
+          </Pill>
+          <Pill
+            active={selectedFeedbackScore === -1}
+            type="secondary"
+            onClick={() => this.changeSelectedFeedback(-1)}
+          >
+            <FontAwesomeIcon icon={faHeartBroken as IconProp} /> Hated
+          </Pill>
+
+          {!feedback.length && (
+            <div className="lead text-center">
+              <p>
+                No {selectedFeedbackScore === 1 ? "loved" : "hated"} tracks to
+                show yet
+              </p>
+            </div>
+          )}
+          {feedback.length > 0 && (
+            <div>
+              <div
+                style={{
+                  height: 0,
+                  position: "sticky",
+                  top: "50%",
+                  zIndex: 1,
+                }}
+              >
+                <Loader isLoading={loading} />
+              </div>
+              <div
+                id="listens"
+                ref={this.listensTable}
+                style={{ opacity: loading ? "0.4" : "1" }}
+              >
+                {feedback.map((feedbackItem, index) => {
+                  const listen = listensFromFeedback[index];
+                  const additionalMenuItems = (
+                    <>
+                      <ListenControl
+                        title="Pin this recording"
+                        icon={faThumbtack}
+                        // eslint-disable-next-line react/jsx-no-bind
+                        action={this.updateRecordingToPin.bind(this, listen)}
+                        dataToggle="modal"
+                        dataTarget="#PinRecordingModal"
+                      />
+                    </>
+                  );
+                  return (
+                    <ListenCard
+                      showUsername={false}
+                      showTimestamp
+                      key={`${feedbackItem.created}`}
+                      listen={listen}
+                      currentFeedback={this.getFeedbackForRecordingMsid(
+                        feedbackItem.recording_msid
+                      )}
+                      updateFeedbackCallback={this.updateFeedback}
+                      additionalMenuItems={additionalMenuItems}
+                      newAlert={newAlert}
+                    />
+                  );
+                })}
+              </div>
+              {feedback.length < this.DEFAULT_ITEMS_PER_PAGE && (
+                <h5 className="text-center">No more feedback to show</h5>
+              )}
+              <ul className="pager" id="navigation">
+                <li
+                  className={`previous ${!canNavigateNewer ? "disabled" : ""}`}
+                >
+                  <a
+                    role="button"
+                    onClick={this.handleClickNewest}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") this.handleClickNewest();
+                    }}
+                    tabIndex={0}
+                    href={!canNavigateNewer ? undefined : "?page=1"}
+                  >
+                    &#x21E4;
+                  </a>
+                </li>
+                <li
+                  className={`previous ${!canNavigateNewer ? "disabled" : ""}`}
+                >
+                  <a
+                    role="button"
+                    onClick={this.handleClickNewer}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") this.handleClickNewer();
+                    }}
+                    tabIndex={0}
+                    href={!canNavigateNewer ? undefined : `?page=${page - 1}`}
+                  >
+                    &larr; Newer
+                  </a>
+                </li>
+
+                <li
+                  className={`next ${!canNavigateOlder ? "disabled" : ""}`}
+                  style={{ marginLeft: "auto" }}
+                >
+                  <a
+                    role="button"
+                    onClick={this.handleClickOlder}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") this.handleClickOlder();
+                    }}
+                    tabIndex={0}
+                    href={!canNavigateOlder ? undefined : `?page=${page + 1}`}
+                  >
+                    Older &rarr;
+                  </a>
+                </li>
+                <li className={`next ${!canNavigateOlder ? "disabled" : ""}`}>
+                  <a
+                    role="button"
+                    onClick={this.handleClickOldest}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") this.handleClickOldest();
+                    }}
+                    tabIndex={0}
+                    href={!canNavigateOlder ? undefined : `?page=${maxPage}`}
+                  >
+                    &#x21E5;
+                  </a>
+                </li>
+              </ul>
+              {currentUser && (
+                <PinRecordingModal
+                  recordingToPin={recordingToPin || listensFromFeedback[0]}
+                  newAlert={newAlert}
+                />
+              )}
+            </div>
+          )}
+        </div>
+        <div
+          // @ts-ignore
+          // eslint-disable-next-line no-dupe-keys
+          style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
+        >
+          <BrainzPlayer
+            direction={direction}
+            listens={listensFromFeedback}
+            newAlert={newAlert}
+            listenBrainzAPIBaseURI={APIService.APIBaseURI}
+            refreshSpotifyToken={APIService.refreshSpotifyToken}
+            refreshYoutubeToken={APIService.refreshYoutubeToken}
+          />
         </div>
       </div>
     );
