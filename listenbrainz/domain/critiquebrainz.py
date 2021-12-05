@@ -127,7 +127,7 @@ class CritiqueBrainzService(ExternalService):
         response = self._submit_review_to_CB(token["access_token"], review)
         data = response.json()
         if 400 <= response.status_code < 500:
-            if data["code"] == "invalid_token": # oauth token expired, refresh and retry
+            if data["error"] == "invalid_token": # oauth token expired, refresh and retry
                 token = self.refresh_access_token(user_id, token["refresh_token"])
                 response = self._submit_review_to_CB(token["access_token"], review)
             raise APIError(data["description"], response.status_code)
