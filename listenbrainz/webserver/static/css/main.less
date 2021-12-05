@@ -79,7 +79,7 @@ body {
   min-height: 70vh;
 }
 
-// Footer
+/* Footer */
 .footer {
   margin-right: 20px;
   margin-left: 20px;
@@ -87,12 +87,22 @@ body {
   img { height: 45px; }
 }
 
-h2.page-title {
-  @media (max-width: @grid-float-breakpoint) {
-    margin-top: 0;
+@media (max-width: 767px) {
+  .text-brand {
+    font-size: 1.8rem;
   }
 }
+.color-purple {
+  color: #353070;
+}
 
+.color-orange {
+  color: #e9733d;
+}
+.color-gray {
+  text-decoration: none;
+  color: #000000;
+}
 #homepage {
   #big-logo {
     .pull-left;

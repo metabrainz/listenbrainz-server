@@ -3,10 +3,14 @@ import logging
 from datetime import datetime
 from typing import List, Optional
 
-from data.model.sitewide_artist_stat import SitewideArtistRecord
 from data.model.sitewide_entity import SitewideEntityStatMessage
+from data.model.user_artist_stat import UserArtistRecord
+from data.model.user_recording_stat import UserRecordingRecord
+from data.model.user_release_stat import UserReleaseRecord
 from listenbrainz_spark.stats import get_dates_for_stats_range
 from listenbrainz_spark.stats.sitewide.artist import get_artists
+from listenbrainz_spark.stats.sitewide.recording import get_recordings
+from listenbrainz_spark.stats.sitewide.release import get_releases
 from listenbrainz_spark.utils import get_listens_from_new_dump
 from pydantic import ValidationError
 
@@ -16,10 +20,14 @@ logger = logging.getLogger(__name__)
 
 entity_handler_map = {
     "artists": get_artists,
+    "releases": get_releases,
+    "recordings": get_recordings
 }
 
 entity_model_map = {
-    "artists": SitewideArtistRecord
+    "artists": UserArtistRecord,
+    "releases": UserReleaseRecord,
+    "recordings": UserRecordingRecord
 }
 
 

@@ -106,7 +106,7 @@ def create_full(location, threads, dump_id, do_listen_dump: bool, do_spark_dump:
             ls.dump_listens(dump_path, dump_id=dump_id, end_time=end_time, threads=threads)
             expected_num_dumps += 1
         if do_spark_dump:
-            ls.dump_listens_for_spark(dump_path, dump_id=dump_id, end_time=end_time)
+            ls.dump_listens_for_spark(dump_path, dump_id=dump_id, dump_type="full", end_time=end_time)
             expected_num_dumps += 1
 
         try:
@@ -171,7 +171,8 @@ def create_incremental(location, threads, dump_id):
         create_path(dump_path)
 
         ls.dump_listens(dump_path, dump_id=dump_id, start_time=start_time, end_time=end_time, threads=threads)
-        ls.dump_listens_for_spark(dump_path, dump_id=dump_id, start_time=start_time, end_time=end_time)
+        ls.dump_listens_for_spark(dump_path, dump_id=dump_id, dump_type="incremental",
+                                  start_time=start_time, end_time=end_time)
 
         try:
             write_hashes(dump_path)
@@ -315,7 +316,7 @@ def create_test_parquet_files():
         from listenbrainz.webserver.timescale_connection import _ts as ls
 
         start = datetime.now() - timedelta(days=30)
-        ls.dump_listens_for_spark("/tmp", 1000, start)
+        ls.dump_listens_for_spark("/tmp", 1000, "full", start)
 
         sys.exit(-2)
 

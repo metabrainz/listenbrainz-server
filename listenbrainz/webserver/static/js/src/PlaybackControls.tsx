@@ -10,8 +10,6 @@ import {
   faHeartBroken,
   faPauseCircle,
   faPlayCircle,
-  faSortAmountDown,
-  faSortAmountUp,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -24,8 +22,6 @@ type PlaybackControlsProps = {
   playNextTrack: (invert?: boolean) => void;
   togglePlay: (invert?: boolean) => void;
   playerPaused: boolean;
-  toggleDirection: () => void;
-  direction: BrainzPlayDirection;
   trackName?: string;
   artistName?: string;
   progressMs: number;

@@ -27,7 +27,6 @@ export type UserPinsProps = {
 } & WithAlertNotificationsInjectedProps;
 
 export type UserPinsState = {
-  direction: BrainzPlayDirection;
   pins: PinnedRecording[];
   page: number;
   maxPage: number;
@@ -52,7 +51,6 @@ export default class UserPins extends React.Component<
       page: 1,
       pins: props.pins || [],
       loading: false,
-      direction: "down",
       recordingFeedbackMap: {},
     };
   }
@@ -240,7 +238,7 @@ export default class UserPins extends React.Component<
 
   render() {
     const { user, profileUrl, newAlert } = this.props;
-    const { pins, page, direction, loading, maxPage } = this.state;
+    const { pins, page, loading, maxPage } = this.state;
     const { currentUser, APIService } = this.context;
 
     const isNewerButtonDisabled = page === 1;

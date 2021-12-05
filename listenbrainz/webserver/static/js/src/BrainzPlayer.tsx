@@ -25,6 +25,7 @@ import {
   hasMediaSessionSupport,
   overwriteMediaSession,
   updateMediaSession,
+  updateWindowTitle,
 } from "./Notifications";
 
 export type DataSourceType = {
@@ -63,7 +64,6 @@ export type DataSourceProps = {
 };
 
 type BrainzPlayerProps = {
-  direction: BrainzPlayDirection;
   listens: Array<Listen | JSPFTrack>;
   newAlert: (
     alertType: AlertType,
@@ -82,7 +82,6 @@ type BrainzPlayerState = {
   currentTrackArtist?: string;
   currentTrackAlbum?: string;
   currentTrackURL?: string;
-  direction: BrainzPlayDirection;
   playerPaused: boolean;
   isActivated: boolean;
   durationMs: number;
@@ -131,6 +130,7 @@ export default class BrainzPlayer extends React.Component<
 
   playerStateTimerID?: NodeJS.Timeout;
 
+  private readonly initialWindowTitle: string = window.document.title;
   private readonly mediaSessionHandlers: Array<{
     action: string;
     handler: () => void;
@@ -159,7 +159,6 @@ export default class BrainzPlayer extends React.Component<
       currentDataSourceIndex: 0,
       currentTrackName: "",
       currentTrackArtist: "",
-      direction: props.direction || "down",
       playerPaused: true,
       progressMs: 0,
       durationMs: 0,
@@ -227,6 +226,15 @@ export default class BrainzPlayer extends React.Component<
     }
   };
 
+  updateWindowTitle = () => {
+    const { currentTrackName } = this.state;
+    updateWindowTitle(currentTrackName, "🎵", ` — ${this.initialWindowTitle}`);
+  };
+
+  reinitializeWindowTitle = () => {
+    updateWindowTitle(this.initialWindowTitle);
+  };
+
   stopOtherBrainzPlayers = (): void => {
     // Tell all other BrainzPlayer instances to please STFU
     // Using timestamp to ensure a new value each time
@@ -251,7 +259,7 @@ export default class BrainzPlayer extends React.Component<
 
   playNextTrack = (invert: boolean = false): void => {
     const { listens } = this.props;
-    const { direction, isActivated } = this.state;
+    const { isActivated } = this.state;
 
     if (!isActivated) {
       // Player has not been activated by the user, do nothing.
@@ -271,16 +279,14 @@ export default class BrainzPlayer extends React.Component<
 
     let nextListenIndex;
     if (currentListenIndex === -1) {
-      nextListenIndex = direction === "up" ? listens.length - 1 : 0;
-    } else if (direction === "up") {
-      nextListenIndex =
-        invert === true ? currentListenIndex + 1 : currentListenIndex - 1 || 0;
-    } else if (direction === "down") {
-      nextListenIndex =
-        invert === true ? currentListenIndex - 1 || 0 : currentListenIndex + 1;
+      // No current listen index found, default to first item
+      nextListenIndex = 0;
+    } else if (invert === true) {
+      // Invert means "play previous track" instead of next track
+      // `|| 0` constrains to positive numbers
+      nextListenIndex = currentListenIndex - 1 || 0;
     } else {
-      this.handleWarning("Please select a song to play", "Unrecognised state");
-      return;
+      nextListenIndex = currentListenIndex + 1;
     }
 
     const nextListen = listens[nextListenIndex];
@@ -289,6 +295,7 @@ export default class BrainzPlayer extends React.Component<
         "You can try loading more listens or refreshing the page",
         "No more listens to play"
       );
+      this.reinitializeWindowTitle();
       return;
     }
     this.playListen(nextListen);
@@ -452,13 +459,6 @@ export default class BrainzPlayer extends React.Component<
     this.seekToPositionMs(progressMs - this.SEEK_TIME_MILLISECONDS);
   };
 
-  toggleDirection = (): void => {
-    this.setState((prevState) => {
-      const direction = prevState.direction === "down" ? "up" : "down";
-      return { direction };
-    });
-  };
-
   /* Listeners for datasource events */
 
   failedToPlayTrack = (): void => {
@@ -482,8 +482,10 @@ export default class BrainzPlayer extends React.Component<
     this.setState({ playerPaused: paused }, () => {
       if (paused) {
         this.stopPlayerStateTimer();
+        this.reinitializeWindowTitle();
       } else {
         this.startPlayerStateTimer();
+        this.updateWindowTitle();
       }
     });
     if (hasMediaSessionSupport()) {
@@ -539,18 +541,22 @@ export default class BrainzPlayer extends React.Component<
     album?: string,
     artwork?: Array<MediaImage>
   ): void => {
-    this.setState({
-      currentTrackName: title,
-      currentTrackArtist: artist,
-      currentTrackURL: trackURL,
-      currentTrackAlbum: album,
-    });
+    this.setState(
+      {
+        currentTrackName: title,
+        currentTrackArtist: artist,
+        currentTrackURL: trackURL,
+        currentTrackAlbum: album,
+      },
+      this.updateWindowTitle
+    );
     const { playerPaused } = this.state;
     if (playerPaused) {
       // Don't send notifications or any of that if the player is not playing
       // (Avoids getting notifications upon pausing a track)
       return;
     }
+
     if (hasMediaSessionSupport()) {
       overwriteMediaSession(this.mediaSessionHandlers);
       updateMediaSession(title, artist, album, artwork);
@@ -753,7 +759,6 @@ export default class BrainzPlayer extends React.Component<
       currentTrackName,
       currentTrackArtist,
       playerPaused,
-      direction,
       progressMs,
       durationMs,
       isActivated,
@@ -774,8 +779,6 @@ export default class BrainzPlayer extends React.Component<
             isActivated ? this.togglePlay : this.activatePlayerAndPlay
           }
           playerPaused={playerPaused}
-          toggleDirection={this.toggleDirection}
-          direction={direction}
           trackName={currentTrackName}
           artistName={currentTrackArtist}
           progressMs={progressMs}

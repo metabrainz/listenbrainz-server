@@ -9,7 +9,7 @@ import GlobalAppContext from "../GlobalAppContext";
 type CreateOrEditPlaylistModalProps = {
   playlist?: JSPFPlaylist;
   onSubmit: (
-    name: string,
+    title: string,
     description: string,
     isPublic: boolean,
     collaborators: string[],
