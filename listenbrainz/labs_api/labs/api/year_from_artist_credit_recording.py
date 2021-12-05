@@ -31,7 +31,7 @@ class YearFromArtistCreditRecordingQuery(Query):
                   the year, so the metadata must match the data in MusicBrainz exactly."""
 
     def outputs(self):
-        return ['artist_credit_name', 'recording_name', 'year']
+        return ['artist_credit_name', 'recording_name', 'recording_mbid', 'year']
 
     def fetch(self, params, offset=-1, count=-1):
         artists = tuple([p['[artist_credit_name]'].lower() for p in params])
@@ -40,7 +40,8 @@ class YearFromArtistCreditRecordingQuery(Query):
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
                 curs.execute("""SELECT DISTINCT artist_credit_name,
                                        recording_name,
-                                       year
+                                       year,
+                                       recording_mbid
                                   FROM mapping.year_mapping
                                  WHERE artist_credit_name IN %s
                                    AND recording_name IN %s""", (artists, recordings))
@@ -51,15 +52,17 @@ class YearFromArtistCreditRecordingQuery(Query):
                     if not row:
                         break
 
-                    index[row['artist_credit_name'] + row['recording_name']] = row['year']
+                    index[row['artist_credit_name'] + row['recording_name']] = (row['year'], row["recording_mbid"])
 
                 results = []
                 for param in params:
                     try:
+                        data = index[param['[artist_credit_name]']+param['[recording_name]']]
                         results.append({
                                          'artist_credit_name': param['[artist_credit_name]'],
                                          'recording_name': param['[recording_name]'],
-                                         'year': index[param['[artist_credit_name]']+param['[recording_name]']]
+                                         'year': data[0],
+                                         'recording_mbid': data[1]
                                        })
                     except KeyError:
                         pass

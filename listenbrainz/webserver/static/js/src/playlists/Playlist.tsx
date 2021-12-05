@@ -266,12 +266,17 @@ export default class PlaylistPage extends React.Component<
         currentUser.auth_token,
         getPlaylistId(playlist)
       );
+      // Fetch the newly created playlist and add it to the state if it's the current user's page
+      const JSPFObject: JSPFObject = await this.APIService.getPlaylist(
+        newPlaylistId,
+        currentUser.auth_token
+      );
       newAlert(
         "success",
         "Duplicated playlist",
         <>
           Duplicated to playlist&ensp;
-          <a href={`/playlist/${newPlaylistId}`}>{newPlaylistId}</a>
+          <a href={`/playlist/${newPlaylistId}`}>{JSPFObject.playlist.title}</a>
         </>
       );
     } catch (error) {
@@ -880,7 +885,6 @@ export default class PlaylistPage extends React.Component<
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
             <BrainzPlayer
-              direction="down"
               listens={tracks.map(JSPFTrackToListen)}
               newAlert={newAlert}
               listenBrainzAPIBaseURI={APIService.APIBaseURI}

@@ -20,7 +20,7 @@ def process_listens(app, listens, is_legacy_listen=False):
        a result alrady exists in the DB -- the selection of legacy listens
        has already taken care of this."""
 
-    stats = {"processed": 0, "total": 0, "errors": 0, "legacy_match": 0}
+    stats = {"processed": 0, "total": 0, "errors": 0, "listen_count": 0, "listens_matched": 0}
     for typ in MATCH_TYPES:
         stats[typ] = 0
 
@@ -28,13 +28,18 @@ def process_listens(app, listens, is_legacy_listen=False):
 
     msids = {str(listen['recording_msid']): listen for listen in listens}
     stats["total"] = len(msids)
+    if not is_legacy_listen:
+        stats["listen_count"] += len(msids)
+
     if len(msids):
+
+        # Remove msids for which we already have a match, unless
+        # its timestamp is 0, which means we should re-check the item
         with timescale.engine.connect() as connection:
             query = """SELECT recording_msid 
-                         FROM listen_join_listen_mbid_mapping lj
-                         JOIN listen_mbid_mapping mbid
-                           ON mbid.id = lj.listen_mbid_mapping
-                        WHERE recording_msid IN :msids"""
+                         FROM mbid_mapping
+                        WHERE recording_msid IN :msids
+                          AND last_updated != '1970-01-01'"""
             curs = connection.execute(sqlalchemy.text(
                 query), msids=tuple(msids.keys()))
             while True:
@@ -61,69 +66,77 @@ def process_listens(app, listens, is_legacy_listen=False):
                         app, remaining_listens, stats, False)
                     matches.extend(new_matches)
 
-                    # For all listens that are not matched, enter a no match entry, so we don't
-                    # keep attempting to look up more listens.
-                    for listen in remaining_listens:
-                        matches.append(
-                            (listen['recording_msid'], None, None, None, None, None, None, MATCH_TYPES[0]))
-                        stats['no_match'] += 1
+                if not is_legacy_listen:
+                    stats["listens_matched"] += len(matches)
+
+                # For all listens that are not matched, enter a no match entry, so we don't
+                # keep attempting to look up more listens.
+                for listen in remaining_listens:
+                    matches.append((listen['recording_msid'], None, None, None, None, None, None, None, MATCH_TYPES[0]))
+                    stats['no_match'] += 1
 
                 stats["processed"] += len(matches)
-                if is_legacy_listen:
-                    stats["legacy_match"] += len(matches)
+
+                metadata_query = """INSERT INTO mbid_mapping_metadata AS mbid
+                                              ( recording_mbid
+                                              , release_mbid
+                                              , release_name
+                                              , artist_mbids
+                                              , artist_credit_id
+                                              , artist_credit_name
+                                              , recording_name
+                                              , last_updated
+                                              )
+                                         VALUES
+                                              ( %s::UUID
+                                              , %s::UUID
+                                              , %s
+                                              , %s::UUID[]
+                                              , %s
+                                              , %s
+                                              , %s
+                                              , now()
+                                              )
+                                    ON CONFLICT (recording_mbid) DO UPDATE
+                                            SET release_mbid = mbid.release_mbid
+                                              , release_name = mbid.release_name
+                                              , artist_mbids = mbid.artist_mbids
+                                              , artist_credit_id = mbid.artist_credit_id
+                                              , artist_credit_name = mbid.artist_credit_name
+                                              , recording_name = mbid.recording_name
+                                              , last_updated = now()"""
+
+                mapping_query = """INSERT INTO mbid_mapping AS m
+                                             ( recording_msid
+                                             , recording_mbid
+                                             , match_type
+                                             , last_updated
+                                             )
+                                        VALUES
+                                             ( %s::UUID
+                                             , %s::UUID
+                                             , %s
+                                             , now()
+                                             )
+                                   ON CONFLICT (recording_msid) DO UPDATE
+                                           SET recording_msid = m.recording_msid
+                                             , recording_mbid = m.recording_mbid
+                                             , match_type = m.match_type
+                                             , last_updated = now()"""
 
                 # Finally insert matches to PG
-                mogrified = []
                 for match in matches:
-                    if match[1] is None:
-                        m = str(curs.mogrify(
-                            "(%s::UUID, NULL::UUID, NULL::UUID, NULL, NULL::UUID[], NULL::INT, NULL, NULL, %s::mbid_mapping_match_type_enum)", (match[1], match[7])), "utf-8")
-                    else:
-                        m = str(curs.mogrify(
-                            "(%s::UUID, %s::UUID, %s::UUID, %s, %s::UUID[], %s, %s, %s, %s::mbid_mapping_match_type_enum)", match), "utf-8")
-                    mogrified.append(m)
+                    # Insert/update the metadata row
+                    if match[1] is not None:
+                        curs.execute(metadata_query, match[1:8])
 
-                query = """WITH data (recording_msid
-                                   ,  recording_mbid
-                                   ,  release_mbid
-                                   ,  release_name
-                                   ,  artist_mbids
-                                   ,  artist_credit_id
-                                   ,  artist_credit_name
-                                   ,  recording_name
-                                   ,  match_type) AS (
-                               VALUES %s)
-                           , join_insert AS (
-                                   INSERT INTO listen_mbid_mapping (recording_mbid
-                                                                 ,  release_mbid
-                                                                 ,  release_name
-                                                                 ,  artist_mbids
-                                                                 ,  artist_credit_id
-                                                                 ,  artist_credit_name
-                                                                 ,  recording_name
-                                                                 ,  match_type)
-                                   SELECT recording_mbid
-                                        , release_mbid
-                                        , release_name
-                                        , artist_mbids
-                                        , artist_credit_id
-                                        , artist_credit_name
-                                        , recording_name
-                                        , match_type
-                                   FROM   data
-                              ON CONFLICT DO NOTHING
-                                   RETURNING id AS join_id, recording_mbid, release_mbid, artist_credit_id
-                                   )
-                                INSERT INTO listen_join_listen_mbid_mapping (recording_msid, listen_mbid_mapping)
-                                SELECT d.recording_msid
-                                     , ji.join_id
-                                  FROM data d
-                                  JOIN join_insert ji
-                                    ON ji.recording_mbid = d.recording_mbid
-                                   AND ji.release_mbid = d.release_mbid
-                                   AND ji.artist_credit_id = d.artist_credit_id
-                           ON CONFLICT DO NOTHING""" % ",".join(mogrified)
-                curs.execute(query)
+                    # Insert the mapping row
+                    curs.execute(mapping_query, (match[0], match[1], match[8]))
+
+            except psycopg2.errors.CardinalityViolation as err:
+                app.logger.error("CardinalityViolation on insert to mbid mapping\n%s" % str(query))
+                conn.rollback()
+                return
 
             except (psycopg2.OperationalError, psycopg2.errors.DatatypeMismatch) as err:
                 app.logger.info(

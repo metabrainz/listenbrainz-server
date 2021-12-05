@@ -130,6 +130,10 @@ const getReleaseMBID = (listen: Listen): string | undefined =>
   _.get(listen, "track_metadata.additional_info.release_mbid") ??
   _.get(listen, "track_metadata.mbid_mapping.release_mbid");
 
+const getReleaseGroupMBID = (listen: Listen): string | undefined =>
+  _.get(listen, "track_metadata.additional_info.release_group_mbid") ??
+  _.get(listen, "track_metadata.mbid_mapping.release_group_mbid");
+
 const getArtistLink = (listen: Listen) => {
   const artistName = _.get(listen, "track_metadata.artist_name");
   const artistMbids = getArtistMBIDs(listen);
@@ -487,6 +491,7 @@ export {
   handleNavigationClickEvent,
   getRecordingMBID,
   getReleaseMBID,
+  getReleaseGroupMBID,
   getArtistMBIDs,
   pinnedRecordingToListen,
   getAlbumArtFromListenMetadata,

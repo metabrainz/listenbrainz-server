@@ -1,4 +1,5 @@
 import eventlet
+from threading import Thread
 
 from flask_login import current_user
 from flask_socketio import SocketIO, join_room, emit, disconnect
@@ -51,5 +52,5 @@ def joined(data):
 
 def run_websockets(host='0.0.0.0', port=8082, debug=True):
     dispatcher = ListensDispatcher(app, socketio)
-    dispatcher.start()
+    Thread(target=dispatcher.start).start()
     socketio.run(app, debug=debug, host=host, port=port)

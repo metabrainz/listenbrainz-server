@@ -1,6 +1,4 @@
-from listenbrainz_spark.stats import run_query
-
-SITEWIDE_STATS_ENTITY_LIMIT = 1000  # number of top artists to retain in sitewide stats
+from listenbrainz_spark.stats import run_query, SITEWIDE_STATS_ENTITY_LIMIT
 
 
 def get_artists(table: str, limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
@@ -13,24 +11,30 @@ def get_artists(table: str, limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
         Returns:
             iterator (iter): An iterator over result
     """
-
+    # we sort twice, the ORDER BY in CTE sorts to eliminate all
+    # but top LIMIT results. collect_list's docs mention that the
+    # order of collected results is not guaranteed so sort again
+    # with sort_array.
     result = run_query(f"""
         WITH intermediate_table as (
-            SELECT artist_name
+            SELECT first(artist_name) AS any_artist_name
                  , artist_credit_mbids
                  , count(*) as listen_count
               FROM {table}
-          GROUP BY artist_name
+          GROUP BY lower(artist_name)
                  , artist_credit_mbids
           ORDER BY listen_count DESC
              LIMIT {limit}
         )
-        SELECT collect_list(
-                    struct(
-                        artist_name
-                      , coalesce(artist_credit_mbids, array()) AS artist_mbids
-                      , listen_count
+        SELECT sort_array(
+                    collect_list(
+                        struct(
+                            listen_count
+                          , any_artist_name AS artist_name
+                          , coalesce(artist_credit_mbids, array()) AS artist_mbids
+                        )
                     )
+                    , false
                ) AS stats
           FROM intermediate_table
     """)
