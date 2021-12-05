@@ -1,12 +1,11 @@
 import * as React from "react";
-import { get as _get } from "lodash";
+import * as _ from "lodash";
 
 import { Rating } from "react-simple-star-rating";
 import ReactTooltip from "react-tooltip";
 
 import * as iso from "@cospired/i18n-iso-languages";
 import * as eng from "@cospired/i18n-iso-languages/langs/en.json";
-import * as _ from "lodash";
 import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -79,7 +78,6 @@ export default class CBReviewModal extends React.Component<
         on your CritiqueBrainz profile. To view or delete your reviews, visit your
         <a href='${this.CBBaseUrl}'>CritiqueBrainz</a>  profile.`}
         data-event="click focus"
-        data-html
       >
         <FontAwesomeIcon
           icon={faInfoCircle as IconProp}
@@ -374,6 +372,7 @@ export default class CBReviewModal extends React.Component<
     const { name, auth_token } = currentUser;
     const {
       entityToReview,
+      recordingEntity,
       textContent,
       rating,
       language,
@@ -396,6 +395,7 @@ export default class CBReviewModal extends React.Component<
       isCurrentUser &&
       accessToken &&
       entityToReview &&
+      recordingEntity &&
       acceptLicense &&
       auth_token
     ) {
@@ -408,7 +408,11 @@ export default class CBReviewModal extends React.Component<
       }
 
       const reviewToSubmit: CritiqueBrainzReview = {
+        entity_name: entityToReview.name ?? "",
         entity_id: entityToReview.mbid,
+        // recording_mbid of listen chosen to write a review is always sent.
+        // for reviews of recordings, recording_id and entity_id are the same.
+        recording_id: recordingEntity.mbid,
         entity_type: entityToReview.type,
         text: textContent,
         languageCode: language,

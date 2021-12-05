@@ -34,7 +34,7 @@ import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import Loader from "../components/Loader";
 import ListenCard from "../listens/ListenCard";
-import { getPageProps, preciseTimestamp } from "../utils/utils";
+import { getPageProps, preciseTimestamp, getAdditionalContent } from "../utils/utils";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenControl from "../listens/ListenControl";
 
@@ -416,6 +416,7 @@ export default class UserFeedPage extends React.Component<
     if (UserFeedPage.isEventListenable(event)) {
       const { metadata } = event;
       const { currentUser } = this.context;
+      const listen = metadata as Listen;
       const { newAlert } = this.props;
       return (
         <div className="event-content">
@@ -430,12 +431,8 @@ export default class UserFeedPage extends React.Component<
             )}
             showUsername={false}
             showTimestamp={false}
-            listen={metadata as Listen}
-            additionalContent={
-              (metadata as PinEventMetadata).blurb_content
-                ? `"${(metadata as PinEventMetadata).blurb_content}"`
-                : ""
-            }
+            listen={listen}
+            additionalContent={getAdditionalContent(listen)}
             newAlert={newAlert}
             additionalMenuItems={
               (event.event_type === EventType.RECORDING_RECOMMENDATION ||

@@ -10,20 +10,26 @@ class CBReviewMetadata(BaseModel):
     Some fields is_draft and license_choice are added by the backend
     and always the same. Hence, omitted from this model.
     """
+    entity_name: str
     entity_type: str
     rating: int
     text: str
     entity_id: str
+    recording_id: str
     language: str
 
 
 class CBReviewTimelineMetadata(BaseModel):
     """Model to represent the data stored in user timeline event table
-    for a CB review. We only store review uuid and the entity's mbid.
-    Other data is retrieved from the CB api as needed.
+    for a CB review. We only store review uuid, the entity's mbid and
+    the recording mbid (of the listen using which the review was written).
+    For the review of a recording, the entity_id and the recording_id is
+    the same. Other data is retrieved from the CB api as needed.
     """
+    entity_name: str
     review_id: str
     entity_id: str
+    recording_id: str
 
 
 def fetch_mapped_recording_data(mbids: List[str]):

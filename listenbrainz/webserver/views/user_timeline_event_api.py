@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+import logging
 
 import time
 from collections import defaultdict
@@ -175,8 +176,10 @@ def create_user_cb_review_event(user_name):
 
     try:
         review = CBReviewMetadata(
+            entity_name=data["name"],
             entity_id=data["entity_id"],
             entity_type=data["entity_type"],
+            recording_id=data["recording_id"],
             text=data["text"],
             language=data["language"],
             rating=data.get("rating", 0)
@@ -185,7 +188,12 @@ def create_user_cb_review_event(user_name):
         raise APIBadRequest(f"Invalid metadata: {str(data)}")
 
     review_id = CritiqueBrainzService().submit_review(user["id"], review)
-    metadata = CBReviewTimelineMetadata(review_id=review_id, entity_id=review.entity_id)
+    metadata = CBReviewTimelineMetadata(
+        review_id=review_id,
+        entity_id=review.entity_id,
+        recording_id=review.recording_id,
+        name=review.entity_name
+    )
     event = db_user_timeline_event.create_user_cb_review_event(user["id"], metadata)
 
     event_data = event.dict()
@@ -476,45 +484,50 @@ def get_recording_recommendation_events(users_for_events: List[dict], min_ts: in
 def get_cb_review_events(users_for_events: List[dict], min_ts: int, max_ts: int, count: int) -> List[APITimelineEvent]:
     """ Gets all CritiqueBrainz review events in the feed.
     """
-    id_username_map = {user['id']: user['musicbrainz_id'] for user in users_for_events}
+    id_username_map = {user["id"]: user["musicbrainz_id"] for user in users_for_events}
     cb_review_events_db = db_user_timeline_event.get_cb_review_events(
-        user_ids=[user['id'] for user in users_for_events],
+        user_ids=[user["id"] for user in users_for_events],
         min_ts=min_ts,
         max_ts=max_ts,
         count=count,
     )
 
-    review_ids, entity_ids, review_id_event_map = [], [], {}
+    review_ids, recording_ids, review_id_event_map = [], [], {}
     for event in cb_review_events_db:
         review_id = event.metadata.review_id
         review_ids.append(review_id)
         review_id_event_map[review_id] = event
-        entity_ids.append(event.metadata.entity_id)
+        recording_ids.append(event.metadata.entity_id)
 
     reviews = CritiqueBrainzService().fetch_reviews(review_ids)
     if reviews is None:
         return []
 
-    mbid_metadatas = fetch_mapped_recording_data(entity_ids)
+    mbid_metadatas = fetch_mapped_recording_data(recording_ids)
 
     api_events = []
     for review_id, event in review_id_event_map.items():
-        # TODO: remove the entity check and make the name/mbid data
-        #  optional otherwise only recording reviews are shown.
         if review_id not in reviews or \
-                event.metadata.entity_id in mbid_metadatas:
+                event.metadata.recording_id not in mbid_metadatas:
+            logging.warning(f"""Skipping review timeline event because either
+             review for id {review_id} or mapped recording data for recording
+             mbid {event.metadata.recording_id} not found.""")
             continue
+
         metadata = mbid_metadatas[event.metadata.entity_id]
         try:
-            reviewEvent = APICBReviewEvent(
+            review_event = APICBReviewEvent(
                 user_name=id_username_map[event.user_id],
+                entity_id=event.metadata.entity_id,
+                entity_name=event.metadata.entity_name,
                 entity_type=reviews[review_id]["entity_type"],
                 rating=reviews[review_id]["rating"],
-                blurb_content=reviews[review_id]["text"],
+                text=reviews[review_id]["text"],
                 review_mbid=review_id,
                 track_metadata=TrackMetadata(
                     artist_name=metadata["artist"],
                     track_name=metadata["title"],
+                    release_name=metadata["release"],
                     additional_info=AdditionalInfo(
                         recording_mbid=metadata["recording_mbid"],
                         artist_mbids=metadata["artist_mbids"],
@@ -524,9 +537,9 @@ def get_cb_review_events(users_for_events: List[dict], min_ts: int, max_ts: int,
             )
             api_events.append(APITimelineEvent(
                 event_type=UserTimelineEventType.CRITIQUEBRAINZ_REVIEW,
-                user_name=reviewEvent.user_name,
+                user_name=review_event.user_name,
                 created=event.created.timestamp(),
-                metadata=reviewEvent,
+                metadata=review_event,
             ))
         except pydantic.ValidationError as e:
             current_app.logger.error('Validation error: ' + str(e), exc_info=True)

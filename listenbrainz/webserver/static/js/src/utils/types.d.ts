@@ -572,6 +572,8 @@ type ReviewableEntity = {
 
 type CritiqueBrainzReview = {
   entity_id: string;
+  entity_name: string;
+  recording_id: string;
   entity_type: ReviewableEntityType;
   text: string;
   languageCode: string;
