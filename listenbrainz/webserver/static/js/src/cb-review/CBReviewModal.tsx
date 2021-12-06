@@ -372,7 +372,6 @@ export default class CBReviewModal extends React.Component<
     const { name, auth_token } = currentUser;
     const {
       entityToReview,
-      recordingEntity,
       textContent,
       rating,
       language,
@@ -395,7 +394,6 @@ export default class CBReviewModal extends React.Component<
       isCurrentUser &&
       accessToken &&
       entityToReview &&
-      recordingEntity &&
       acceptLicense &&
       auth_token
     ) {
@@ -410,9 +408,6 @@ export default class CBReviewModal extends React.Component<
       const reviewToSubmit: CritiqueBrainzReview = {
         entity_name: entityToReview.name ?? "",
         entity_id: entityToReview.mbid,
-        // recording_mbid of listen chosen to write a review is always sent.
-        // for reviews of recordings, recording_id and entity_id are the same.
-        recording_id: recordingEntity.mbid,
         entity_type: entityToReview.type,
         text: textContent,
         languageCode: language,

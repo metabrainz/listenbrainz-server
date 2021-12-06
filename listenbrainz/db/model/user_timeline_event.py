@@ -81,7 +81,8 @@ class APIPinEvent(APIListen):
     blurb_content: Optional[str]
 
 
-class APICBReviewEvent(APIListen):
+class APICBReviewEvent(BaseModel):
+    user_name: str
     entity_name: str
     entity_id: str
     entity_type: str

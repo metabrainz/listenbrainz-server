@@ -416,6 +416,7 @@ export default class UserFeedPage extends React.Component<
     if (UserFeedPage.isEventListenable(event)) {
       const { metadata } = event;
       const { currentUser } = this.context;
+      // TODO: make review listenable
       const listen = metadata as Listen;
       const { newAlert } = this.props;
       return (
