@@ -35,7 +35,7 @@ def get_vectors_df(playcounts_df: DataFrame, listen_id_col: str, user_id_col: st
     coordinate_matrix = CoordinateMatrix(tuple_mapped_rdd)
     indexed_row_matrix = coordinate_matrix.toIndexedRowMatrix()
     vectors_mapped_rdd = indexed_row_matrix.rows.map(lambda r: (r.index, r.vector.asML()))
-    return listenbrainz_spark.session.createDataFrame(vectors_mapped_rdd, ['index', 'vector'])
+    return listenbrainz_spark.session.createDataFrame(vectors_mapped_rdd, ["index", "vector"])
 
 
 def threshold_similar_users(matrix: ndarray, max_num_users: int) -> List[Tuple[int, int, float, float]]:
@@ -109,19 +109,19 @@ def threshold_similar_users(matrix: ndarray, max_num_users: int) -> List[Tuple[i
     return similar_users
 
 
-def create_messages(similar_users_df: DataFrame) -> dict:
+def create_messages(similar_users_df: DataFrame, entity: str) -> dict:
     """
     Iterate over the similar_users_df to create a message of the following format for sending using the request consumer
 
         {
-            'type': 'similar_users',
-            'data': [
-                'user_1': {
-                    'user_2': (0.5, 0.2),
-                    'user_3': (0.7, 0.3),
+            "type": "similar_users_artist", # or similar_users_recording
+            "data": [
+                "user_1": {
+                    "user_2": (0.5, 0.2),
+                    "user_3": (0.7, 0.3),
                 },
-                'user_2': {
-                    'user_1': (0.5, 0.2)
+                "user_2": {
+                    "user_1": (0.5, 0.2)
                 }
                 ...
             ]
@@ -134,6 +134,6 @@ def create_messages(similar_users_df: DataFrame) -> dict:
             user.other_user_name: (user.similarity, user.global_similarity) for user in row.similar_users
         }
     yield {
-        'type': 'similar_users',
-        'data': message
+        "type": f"similar_users_{entity}",
+        "data": message
     }

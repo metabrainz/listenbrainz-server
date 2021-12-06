@@ -51,4 +51,4 @@ def main(max_num_users: int):
 
     logger.info('Finishing generating similar user matrix')
 
-    return create_messages(similar_users_df)
+    return create_messages(similar_users_df, "recording")
