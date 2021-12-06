@@ -951,7 +951,6 @@ export default class APIService {
       body: JSON.stringify({
         entity_name: review.entity_name,
         entity_id: review.entity_id,
-        recording_id: review.recording_id,
         entity_type: review.entity_type,
         text: review.text,
         language: review.languageCode,

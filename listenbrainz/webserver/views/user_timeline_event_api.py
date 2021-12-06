@@ -35,7 +35,7 @@ from listenbrainz.db.model.user_timeline_event import RecordingRecommendationMet
     APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent, APICBReviewEvent, \
     CBReviewTimelineMetadata
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
-from listenbrainz.db.model.review import fetch_mapped_recording_data, CBReviewMetadata
+from listenbrainz.db.model.review import CBReviewMetadata
 from listenbrainz.db.pinned_recording import get_pins_for_feed
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService
@@ -179,7 +179,6 @@ def create_user_cb_review_event(user_name):
             name=data["entity_name"],
             entity_id=data["entity_id"],
             entity_type=data["entity_type"],
-            recording_id=data["recording_id"],
             text=data["text"],
             language=data["language"],
             rating=data.get("rating", 0)
@@ -191,7 +190,6 @@ def create_user_cb_review_event(user_name):
     metadata = CBReviewTimelineMetadata(
         review_id=review_id,
         entity_id=review.entity_id,
-        recording_id=review.recording_id,
         entity_name=review.name
     )
     event = db_user_timeline_event.create_user_cb_review_event(user["id"], metadata)
@@ -492,29 +490,23 @@ def get_cb_review_events(users_for_events: List[dict], min_ts: int, max_ts: int,
         count=count,
     )
 
-    review_ids, recording_ids, review_id_event_map = [], [], {}
+    review_ids, review_id_event_map = [], {}
     for event in cb_review_events_db:
         review_id = event.metadata.review_id
         review_ids.append(review_id)
         review_id_event_map[review_id] = event
-        recording_ids.append(event.metadata.entity_id)
 
     reviews = CritiqueBrainzService().fetch_reviews(review_ids)
     if reviews is None:
         return []
 
-    mbid_metadatas = fetch_mapped_recording_data(recording_ids)
-
     api_events = []
     for review_id, event in review_id_event_map.items():
-        if review_id not in reviews or \
-                event.metadata.recording_id not in mbid_metadatas:
-            logging.warning(f"""Skipping review timeline event because either
-             review for id {review_id} or mapped recording data for recording
-             mbid {event.metadata.recording_id} not found.""")
+        if review_id not in reviews:
+            logging.warning(f"""Skipping review timeline event because
+             either review for id {review_id} not found.""")
             continue
 
-        metadata = mbid_metadatas[event.metadata.entity_id]
         try:
             review_event = APICBReviewEvent(
                 user_name=id_username_map[event.user_id],
@@ -523,17 +515,7 @@ def get_cb_review_events(users_for_events: List[dict], min_ts: int, max_ts: int,
                 entity_type=reviews[review_id]["entity_type"],
                 rating=reviews[review_id]["rating"],
                 text=reviews[review_id]["text"],
-                review_mbid=review_id,
-                track_metadata=TrackMetadata(
-                    artist_name=metadata["artist"],
-                    track_name=metadata["title"],
-                    release_name=metadata["release"],
-                    additional_info=AdditionalInfo(
-                        recording_mbid=metadata["recording_mbid"],
-                        artist_mbids=metadata["artist_mbids"],
-                        release_mbid=metadata["release_mbid"]
-                    )
-                )
+                review_mbid=review_id
             )
             api_events.append(APITimelineEvent(
                 event_type=UserTimelineEventType.CRITIQUEBRAINZ_REVIEW,
