@@ -151,10 +151,9 @@ def get_pins_for_user(user_name):
                     "recording_mbid": null,
                     "recording_msid": "fd7d9162-a284-4a10-906c-faae4f1e166b"
                     "track_metadata": {
-                        "artist_msid": "8c7b4641-e363-4598-ae70-7709840fb934",
                         "artist_name": "Rick Astley",
                         "track_name": "Never Gonna Give You Up"
-                        }
+                    }
                 },
                 "-- more pinned recording items here ---"
             ],
@@ -229,9 +228,8 @@ def get_pins_for_user_following(user_name):
                 "recording_mbid": null,
                 "recording_msid": "40ef0ae1-5626-43eb-838f-1b34187519bf",
                 "track_metadata": {
-                        "artist_msid": "8c7b4641-e363-4598-ae70-7709840fb934",
-                        "artist_name": "Rick Astley",
-                        "track_name": "Never Gonna Give You Up"
+                    "artist_name": "Rick Astley",
+                    "track_name": "Never Gonna Give You Up"
                 },
                 "user_name": "-- the MusicBrainz ID of the user who pinned this recording --"
                 },

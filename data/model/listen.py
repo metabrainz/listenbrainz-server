@@ -23,7 +23,7 @@ from data.model.validators import check_valid_uuid
 
 class AdditionalInfo(BaseModel):
     artist_mbids: Optional[List[str]]
-    artist_msid: constr(min_length=1)
+    artist_msid: Optional[constr(min_length=1)]
     discnumber: Optional[NonNegativeInt]
     duration_ms: Optional[NonNegativeInt]
     isrc: Optional[str]
