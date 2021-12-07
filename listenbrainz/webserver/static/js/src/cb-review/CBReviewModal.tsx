@@ -603,7 +603,7 @@ export default class CBReviewModal extends React.Component<
             ratingValue={rating}
             transition
             size={20}
-            stars={5}
+            iconsCount={5}
           />
         </div>
 
