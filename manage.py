@@ -287,6 +287,30 @@ def refresh_continuous_aggregates():
     """
     ts_refresh_listen_count_aggregate()
 
+@cli.command()
+@click.option("-u", "--user", type=str)
+@click.option("-t", "--token", type=str)
+@click.argument("releasembid", type=str)
+def submit_release(user, token, releasembid):
+    """Submit a release from MusicBrainz to the local ListenBrainz instance
+
+    Specify -u to use the token of this user when submitting, or
+    -t to specify a specific token.
+    """
+    if user is None and token is None:
+        raise click.ClickException(f"Need --user or --token")
+    if user is not None:
+        import listenbrainz.db.user
+        application = webserver.create_app()
+        with application.app_context():
+            user_ob = listenbrainz.db.user.get_by_mb_id(user)
+            if user_ob is None:
+                raise click.ClickException(f"No such user: {user}")
+            token = user_ob["auth_token"]
+            print("token is", token)
+    import listenbrainz.misc.submit_release
+    listenbrainz.misc.submit_release.submit_release_impl(token, releaseid, "http://web:7000")
+
 
 # Add other commands here
 cli.add_command(spark_request_manage.cli, name="spark")
