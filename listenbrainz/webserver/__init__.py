@@ -1,3 +1,4 @@
+import logging
 import os
 import pprint
 import sys
@@ -77,6 +78,7 @@ def gen_app(debug=None):
 
     In the Flask app returned, blueprints are not registered.
     """
+
     app = CustomFlask(
         import_name=__name__,
         use_flask_uuid=True,
@@ -85,6 +87,11 @@ def gen_app(debug=None):
     load_config(app)
     if debug is not None:
         app.debug = debug
+    # As early as possible, if debug is True, set the log level of our 'listenbrainz' logger to DEBUG
+    # to prevent flask from creating a new log handler
+    if app.debug:
+        logger = logging.getLogger('listenbrainz')
+        logger.setLevel(logging.DEBUG)
 
     # initialize Flask-DebugToolbar if the debug option is True
     if app.debug and app.config['SECRET_KEY']:
