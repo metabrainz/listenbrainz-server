@@ -20,7 +20,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { isEqual, get as _get, reject as _reject } from "lodash";
+import { get as _get, reject as _reject } from "lodash";
 import { sanitize } from "dompurify";
 import { Integrations } from "@sentry/tracing";
 import {
@@ -34,7 +34,13 @@ import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import Loader from "../components/Loader";
 import ListenCard from "../listens/ListenCard";
-import { getPageProps, preciseTimestamp, getAdditionalContent } from "../utils/utils";
+import {
+  getPageProps,
+  preciseTimestamp,
+  getAdditionalContent,
+  feedReviewEventToListen,
+  getReviewEventContent,
+} from "../utils/utils";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenControl from "../listens/ListenControl";
 
@@ -418,6 +424,20 @@ export default class UserFeedPage extends React.Component<
       const { currentUser } = this.context;
       // TODO: make review listenable
       const listen = metadata as Listen;
+      const { metadata, event_type } = event;
+      let listen: Listen;
+      let additionalContent: string | JSX.Element = getAdditionalContent(
+        metadata
+      );
+      if (event_type === EventType.REVIEW) {
+        const typedMetadata = metadata as CritiqueBrainzReview;
+        // Users can review various entity types, and we need to format the review as a Listen accordingly
+        listen = feedReviewEventToListen(typedMetadata);
+        // We also want to show rating and link to CB review, so we reformat the additionalContent
+        additionalContent = getReviewEventContent(typedMetadata);
+      } else {
+        listen = metadata as Listen;
+      }
       const { newAlert } = this.props;
       return (
         <div className="event-content">
@@ -425,7 +445,7 @@ export default class UserFeedPage extends React.Component<
             updateFeedbackCallback={this.updateFeedback}
             currentFeedback={this.getFeedbackForRecordingMsid(
               _get(
-                metadata,
+                listen,
                 "track_metadata.additional_info.recording_msid",
                 null
               )
@@ -433,7 +453,7 @@ export default class UserFeedPage extends React.Component<
             showUsername={false}
             showTimestamp={false}
             listen={listen}
-            additionalContent={getAdditionalContent(listen)}
+            additionalContent={additionalContent}
             newAlert={newAlert}
             additionalMenuItems={
               (event.event_type === EventType.RECORDING_RECOMMENDATION ||
