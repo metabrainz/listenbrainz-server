@@ -66,7 +66,9 @@ function docker_compose_run {
 }
 
 function docker_compose_run_spark {
-    invoke_docker_compose_spark run --rm --user `id -u`:`id -g` "$@"
+    # We run spark tests as root and not the local user due to the requirement for
+    # the uid to exist as a real user
+    invoke_docker_compose_spark run --rm "$@"
 }
 
 function docker_compose_run_int {
