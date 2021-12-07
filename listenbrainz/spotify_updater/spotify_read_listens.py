@@ -8,6 +8,8 @@ from typing import Dict, List
 import listenbrainz.webserver
 
 from listenbrainz.utils import safely_import_config
+from listenbrainz.webserver.models import SubmitListenUserMetadata
+
 safely_import_config()
 
 from listenbrainz.domain.external_service import ExternalServiceError, ExternalServiceAPIError, \
@@ -26,7 +28,7 @@ from werkzeug.exceptions import InternalServerError, ServiceUnavailable
 from brainzutils.mail import send_mail
 
 METRIC_UPDATE_INTERVAL = 60  # seconds
-_listens_imported_since_start = 0
+_listens_imported_since_last_update = 0  # number of listens imported since last metric update was submitted
 _metric_submission_time = time.monotonic() + METRIC_UPDATE_INTERVAL
 
 def notify_error(musicbrainz_id: str, error: str):
@@ -232,11 +234,12 @@ def submit_listens_to_listenbrainz(user: Dict, listens: List, listen_type=LISTEN
         listen_type: the type of listen (single, import, playing_now)
     """
     username = user['musicbrainz_id']
+    user_metadata = SubmitListenUserMetadata(user_id=user['user_id'], musicbrainz_id=username)
     retries = 10
     while retries >= 0:
         try:
             current_app.logger.debug('Submitting %d listens for user %s', len(listens), username)
-            insert_payload(listens, user, listen_type=listen_type)
+            insert_payload(listens, user_metadata, listen_type=listen_type)
             current_app.logger.debug('Submitted!')
             break
         except (InternalServerError, ServiceUnavailable) as e:
@@ -360,7 +363,7 @@ def process_all_spotify_users():
             failure: the number of users for whom we faced errors while importing.
     """
 
-    global _listens_imported_since_start, _metric_submission_time
+    global _listens_imported_since_last_update, _metric_submission_time
 
     service = SpotifyService()
     try:
@@ -377,16 +380,17 @@ def process_all_spotify_users():
     failure = 0
     for u in users:
         try:
-            _listens_imported_since_start += process_one_user(u, service)
+            _listens_imported_since_last_update += process_one_user(u, service)
             success += 1
         except Exception:
             current_app.logger.critical('spotify_reader could not import listens for user %s:',
                                         u['musicbrainz_id'], exc_info=True)
             failure += 1
 
-    if time.monotonic() > _metric_submission_time:
-        _metric_submission_time += METRIC_UPDATE_INTERVAL
-        metrics.set("spotify_reader", imported_listens=_listens_imported_since_start)
+        if time.monotonic() > _metric_submission_time:
+            _metric_submission_time += METRIC_UPDATE_INTERVAL
+            metrics.set("spotify_reader", imported_listens=_listens_imported_since_last_update)
+            _listens_imported_since_last_update = 0
 
     current_app.logger.info('Processed %d users successfully!', success)
     current_app.logger.info('Encountered errors while processing %d users.', failure)

@@ -246,7 +246,12 @@ export default class UserFeedPage extends React.Component<
         previousEventTs: newEvents[0].created,
         ...optionalProps,
       },
-      successCallback
+      async () => {
+        if (successCallback) {
+          successCallback();
+        }
+        await this.loadFeedback();
+      }
     );
 
     // Scroll window back to the top of the events container element
@@ -340,7 +345,7 @@ export default class UserFeedPage extends React.Component<
             showUsername={false}
             showTimestamp={false}
             listen={metadata as Listen}
-            additionalDetails={
+            additionalContent={
               (metadata as PinEventMetadata).blurb_content
                 ? `"${(metadata as PinEventMetadata).blurb_content}"`
                 : ""
@@ -564,14 +569,9 @@ export default class UserFeedPage extends React.Component<
               </ul>
             </div>
             <div className="col-md-offset-1 col-md-4">
-              <UserSocialNetwork
-                user={currentUser}
-                loggedInUser={currentUser}
-                newAlert={newAlert}
-              />
+              <UserSocialNetwork user={currentUser} newAlert={newAlert} />
               <div className="sticky-top mt-15">
                 <BrainzPlayer
-                  direction="down"
                   listens={listens}
                   newAlert={newAlert}
                   listenBrainzAPIBaseURI={APIService.APIBaseURI}

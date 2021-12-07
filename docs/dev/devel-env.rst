@@ -114,6 +114,28 @@ section of the file.
 .. _Spotify Developer Dashboard: https://developer.spotify.com/dashboard/applications
 
 
+To use the CritiqueBrainz reviewer, you'll need to visit the `CritiqueBrainz applications page`_
+and create/register an application. Use ``http://localhost/`` as the homepage URL and ``http://localhost/profile/music-services/critiquebrainz/callback/``
+as the callback URL.
+
+After registering, update the CritiqueBrainz section of the file with the client ID and client secret
+you obtained.
+
+.. code-block:: yaml
+
+    # CRITIQUEBRAINZ
+    CRITIQUEBRAINZ_CLIENT_ID = ''
+    CRITIQUEBRAINZ_CLIENT_SECRET = ''
+    CRITIQUEBRAINZ_REDIRECT_URI = 'http://localhost/profile/music-services/critiquebrainz/callback/'
+
+.. note::
+
+    Again, if you use something other than ``localhost`` as the host you use to access your development server, 
+    you should update the ``homepage`` and ``Authorization callback URL`` fields accordingly when registering on CritiqueBrainz.
+
+.. _CritiqueBrainz applications page: https://critiquebrainz.org/profile/applications/
+
+
 Initialize ListenBrainz containers
 ----------------------------------
 
@@ -279,10 +301,5 @@ There can be quite a lot of logs in the terminal, so if you want to look only at
 .. code-block:: bash
 
    ./develop.sh logs -f static_builder
-
-FAQ
---------------
-We have a :doc:`FAQ page <faqs>` for questions that come up often. Please take a look
-if you have any issues.
 
 .. include:: develop-sh.rst

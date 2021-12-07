@@ -27,15 +27,15 @@ import listenbrainz.db.user as db_user
 from brainzutils.musicbrainz_db import engine as mb_engine
 
 from hashlib import md5
-from time import time
 
-from flask import current_app, Blueprint, request, render_template, redirect
+from flask import current_app, Blueprint, request, redirect
 from werkzeug.exceptions import BadRequest
 from listenbrainz.db.lastfm_session import Session
-from listenbrainz.webserver.errors import APIBadRequest
+from listenbrainz.webserver.models import SubmitListenUserMetadata
+from listenbrainz.webserver.errors import ListenValidationError
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
-from listenbrainz.webserver.views.api_tools import insert_payload, is_valid_timestamp, LISTEN_TYPE_PLAYING_NOW, \
-    is_valid_uuid, check_for_unicode_null_recursively
+from listenbrainz.webserver.views.api_tools import insert_payload, LISTEN_TYPE_PLAYING_NOW, \
+    is_valid_uuid, check_for_unicode_null_recursively, validate_listened_at
 
 api_compat_old_bp = Blueprint('api_compat_old', __name__)
 
@@ -97,7 +97,8 @@ def submit_now_playing():
 
     listens = [listen]
     user = db_user.get(session.user_id)
-    insert_payload(listens, user, LISTEN_TYPE_PLAYING_NOW)
+    user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])
+    insert_payload(listens, user_metadata, LISTEN_TYPE_PLAYING_NOW)
 
     return 'OK\n'
 
@@ -125,7 +126,8 @@ def submit_listens():
         return 'FAILED Invalid data submitted!\n', 400
 
     user = db_user.get(session.user_id)
-    insert_payload(listens, user)
+    user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])
+    insert_payload(listens, user_metadata)
 
     return 'OK\n'
 
@@ -162,13 +164,8 @@ def _to_native_api(data, append_key):
     if append_key != '':
         try:
             listen['listened_at'] = int(data['i{}'.format(append_key)])
-        except (KeyError, ValueError):
-            return None
-
-        # if timestamp is too high, this is an invalid listen
-        # in order to make up for possible clock skew, we allow
-        # timestamps to be one hour ahead of server time
-        if not is_valid_timestamp(listen['listened_at']):
+            validate_listened_at(listen)
+        except (KeyError, ValueError, ListenValidationError):
             return None
 
     if 'o{}'.format(append_key) in data:
@@ -194,7 +191,7 @@ def _to_native_api(data, append_key):
 
     try:
         check_for_unicode_null_recursively(listen)
-    except APIBadRequest:
+    except ListenValidationError:
         return None
 
     return listen

@@ -1,13 +1,12 @@
 import sqlalchemy
 
-from flask import current_app
 from listenbrainz import db
 from listenbrainz.db import timescale
 from listenbrainz.db.model.feedback import Feedback
-from messybrainz.db.data import load_recordings_from_msids
-from messybrainz import db as msb_db
+from listenbrainz import messybrainz as msb_db
+from listenbrainz.messybrainz.data import load_recordings_from_msids
 from typing import List
-from messybrainz.db.exceptions import NoDataFoundException
+from listenbrainz.messybrainz.exceptions import NoDataFoundException
 
 
 def insert(feedback: Feedback):
@@ -111,10 +110,10 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
                              ] = rec["ids"]["artist_msid"]
 
         # Fetch the mapped MBIDs from the mapping
-        query = """SELECT recording_msid::TEXT, recording_mbid::TEXT, release_mbid::TEXT, artist_mbids::TEXT[]
-                     FROM listen_join_listen_mbid_mapping lj
-                     JOIN listen_mbid_mapping mbid
-                       ON lj.listen_mbid_mapping = mbid.id
+        query = """SELECT recording_msid::TEXT, m.recording_mbid::TEXT, release_mbid::TEXT, artist_mbids::TEXT[]
+                     FROM mbid_mapping m
+                     JOIN mbid_mapping_metadata mm
+                       ON m.recording_mbid = mm.recording_mbid
                     WHERE recording_msid in :msids
                  ORDER BY recording_msid"""
 
@@ -127,7 +126,7 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
                         "recording_mbid": row["recording_mbid"],
                         "release_mbid": row["release_mbid"],
                         "artist_mbids": row["artist_mbids"],
-                        "artist_msid": artist_msids[rec["ids"]["recording_msid"]]}
+                        "artist_msid": artist_msids[row["recording_msid"]]}
 
     return feedback
 

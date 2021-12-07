@@ -53,11 +53,10 @@ export default class PlaylistItemCard extends React.Component<
     //   : null;
 
     const thumbnail = canEdit ? (
-      <div style={{ padding: "10px", paddingLeft: "0" }}>
+      <div className="drag-handle text-muted">
         <FontAwesomeIcon
           icon={faGripLines as IconProp}
           title="Drag to reorder"
-          className="drag-handle text-muted"
         />
       </div>
     ) : undefined;

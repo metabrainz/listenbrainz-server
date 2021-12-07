@@ -143,7 +143,10 @@ export default class UserPlaylists extends React.Component<
     );
   };
 
-  copyPlaylist = async (playlistId: string): Promise<void> => {
+  copyPlaylist = async (
+    playlistId: string,
+    playlistTitle: string
+  ): Promise<void> => {
     const { newAlert } = this.props;
     const { currentUser } = this.context;
     if (!currentUser?.auth_token) {
@@ -159,20 +162,20 @@ export default class UserPlaylists extends React.Component<
         currentUser.auth_token,
         playlistId
       );
+      // Fetch the newly created playlist and add it to the state if it's the current user's page
+      const JSPFObject: JSPFObject = await this.APIService.getPlaylist(
+        newPlaylistId,
+        currentUser.auth_token
+      );
       newAlert(
         "success",
         "Duplicated playlist",
         <>
           Duplicated to playlist&ensp;
-          <a href={`/playlist/${newPlaylistId}`}>{newPlaylistId}</a>
+          <a href={`/playlist/${newPlaylistId}`}>{JSPFObject.playlist.title}</a>
         </>
       );
-      // Fetch the newly created playlist and add it to the state if it's the current user's page
       if (this.isCurrentUserPage()) {
-        const JSPFObject: JSPFObject = await this.APIService.getPlaylist(
-          newPlaylistId,
-          currentUser.auth_token
-        );
         this.setState((prevState) => ({
           playlists: [JSPFObject.playlist, ...prevState.playlists],
         }));
@@ -210,6 +213,7 @@ export default class UserPlaylists extends React.Component<
           playlists: playlists.filter(
             (pl) => getPlaylistId(pl) !== getPlaylistId(playlist)
           ),
+          playlistSelectedForOperation: undefined,
         },
         newAlert.bind(
           this,
@@ -228,12 +232,13 @@ export default class UserPlaylists extends React.Component<
   };
 
   createPlaylist = async (
-    name: string,
+    title: string,
     description: string,
     isPublic: boolean,
     // Not sure what to do with those yet
     collaborators: string[],
-    id?: string
+    id?: string,
+    onSuccessCallback?: () => void
   ): Promise<void> => {
     const { newAlert } = this.props;
     const { currentUser } = this.context;
@@ -271,7 +276,7 @@ export default class UserPlaylists extends React.Component<
           date: "",
           track: [],
 
-          title: name,
+          title,
           annotation: description,
           extension: {
             [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
@@ -289,8 +294,8 @@ export default class UserPlaylists extends React.Component<
         "success",
         "Created playlist",
         <>
-          Created new playlist{" "}
-          <a href={`/playlist/${newPlaylistId}`}>{newPlaylistId}</a>
+          Created new {isPublic ? "public" : "private"} playlist{" "}
+          <a href={`/playlist/${newPlaylistId}`}>{title}</a>
         </>
       );
       // Fetch the newly created playlist and add it to the state
@@ -298,9 +303,12 @@ export default class UserPlaylists extends React.Component<
         newPlaylistId,
         currentUser.auth_token
       );
-      this.setState((prevState) => ({
-        playlists: [JSPFObject.playlist, ...prevState.playlists],
-      }));
+      this.setState(
+        (prevState) => ({
+          playlists: [JSPFObject.playlist, ...prevState.playlists],
+        }),
+        onSuccessCallback
+      );
     } catch (error) {
       newAlert("danger", "Error", error.message);
     }
@@ -338,6 +346,11 @@ export default class UserPlaylists extends React.Component<
       return;
     }
     try {
+      // Owner can't be collaborator
+      const collaboratorsWithoutOwner = collaborators.filter(
+        (username) =>
+          username.toLowerCase() !== playlistToEdit.creator.toLowerCase()
+      );
       const editedPlaylist: JSPFPlaylist = {
         ...playlistToEdit,
         annotation: description,
@@ -345,7 +358,7 @@ export default class UserPlaylists extends React.Component<
         extension: {
           [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
             public: isPublic,
-            collaborators,
+            collaborators: collaboratorsWithoutOwner,
           },
         },
       };
@@ -357,7 +370,10 @@ export default class UserPlaylists extends React.Component<
 
       // Once API call succeeds, update playlist in state
       playlistsCopy[playlistIndex] = editedPlaylist;
-      this.setState({ playlists: playlistsCopy });
+      this.setState({
+        playlists: playlistsCopy,
+        playlistSelectedForOperation: undefined,
+      });
     } catch (error) {
       newAlert("danger", "Error", error.message);
     }
@@ -499,7 +515,11 @@ export default class UserPlaylists extends React.Component<
                 {isRecommendations ? (
                   <button
                     className="playlist-card-action-button"
-                    onClick={this.copyPlaylist.bind(this, playlistId)}
+                    onClick={this.copyPlaylist.bind(
+                      this,
+                      playlistId,
+                      playlist.title
+                    )}
                     type="button"
                   >
                     <FontAwesomeIcon
@@ -535,7 +555,11 @@ export default class UserPlaylists extends React.Component<
                       >
                         <li>
                           <button
-                            onClick={this.copyPlaylist.bind(this, playlistId)}
+                            onClick={this.copyPlaylist.bind(
+                              this,
+                              playlistId,
+                              playlist.title
+                            )}
                             type="button"
                           >
                             Duplicate

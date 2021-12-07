@@ -9,7 +9,6 @@ import APIService from "./APIService";
 import GlobalAppContext from "./GlobalAppContext";
 
 const props = {
-  direction: "up" as BrainzPlayDirection,
   listens: [],
   newAlert: (
     alertType: AlertType,
@@ -514,37 +513,6 @@ describe("BrainzPlayer", () => {
       );
     });
   });
-  describe("toggleDirection", () => {
-    it("sets direction to 'down' if not set to a recognised value", () => {
-      const mockProps = {
-        ...props,
-        direction: "" as BrainzPlayDirection,
-      };
-      const wrapper = mount<BrainzPlayer>(
-        <BrainzPlayer {...mockProps} />,
-        GlobalContextMock
-      );
-      const instance = wrapper.instance();
-      expect(instance.state.direction).toEqual("down");
-      instance.setState({ direction: "fnord" as BrainzPlayDirection });
-      expect(instance.state.direction).toEqual("fnord");
-      instance.toggleDirection();
-      expect(instance.state.direction).toEqual("down");
-    });
-
-    it("alternates direction between 'up' and 'down'", () => {
-      const wrapper = mount<BrainzPlayer>(
-        <BrainzPlayer {...props} />,
-        GlobalContextMock
-      );
-      const instance = wrapper.instance();
-      expect(instance.state.direction).toEqual("up");
-      instance.toggleDirection();
-      expect(instance.state.direction).toEqual("down");
-      instance.toggleDirection();
-      expect(instance.state.direction).toEqual("up");
-    });
-  });
 
   describe("failedToPlayTrack", () => {
     it("does nothing if isActivated is false", () => {
@@ -590,7 +558,7 @@ describe("BrainzPlayer", () => {
     it("calls playNextTrack if we ran out of datasources", () => {
       const mockProps = {
         ...props,
-        listens: [listen2, listen],
+        listens: [listen, listen2],
       };
       const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...mockProps} />,
@@ -721,12 +689,13 @@ describe("BrainzPlayer", () => {
           additional_info: {
             media_player: "BrainzPlayer",
             submission_client: "BrainzPlayer",
-            music_service: "https://open.spotify.com",
+            music_service: "spotify.com",
+            music_service_name: "spotify",
             origin_url: "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT",
-            brainzplayer_metadata: {
-              artist_name: "Rick Astley",
-              track_name: "Never Gonna Give You Up",
-            },
+          },
+          brainzplayer_metadata: {
+            artist_name: "Rick Astley",
+            track_name: "Never Gonna Give You Up",
           },
         },
       };
@@ -791,12 +760,13 @@ describe("BrainzPlayer", () => {
           additional_info: {
             media_player: "BrainzPlayer",
             submission_client: "BrainzPlayer",
-            music_service: "https://open.spotify.com",
+            music_service: "spotify.com",
+            music_service_name: "spotify",
             origin_url: "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT",
-            brainzplayer_metadata: {
-              artist_name: "Rick Astley",
-              track_name: "Never Gonna Give You Up",
-            },
+          },
+          brainzplayer_metadata: {
+            artist_name: "Rick Astley",
+            track_name: "Never Gonna Give You Up",
           },
         },
       };

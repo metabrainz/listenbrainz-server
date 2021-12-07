@@ -1,17 +1,13 @@
-# -*- coding: utf-8 -*-
-import json
-import os
-
 import sqlalchemy
 
-from listenbrainz import config
 from listenbrainz.db.model.feedback import Feedback
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
 from listenbrainz.db import timescale as ts
-from messybrainz import db as msb_db
-from messybrainz.db.data import submit_recording, load_recordings_from_msids
-from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase
+from listenbrainz import messybrainz as msb_db
+from listenbrainz.messybrainz.testing import MessyBrainzTestCase
+from listenbrainz.messybrainz.data import submit_recording, load_recordings_from_msids, get_id_from_meta_hash
+from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 
 
 class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzTestCase):
@@ -62,32 +58,36 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
         """ Insert test data with metadata into the database """
 
         with msb_db.engine.connect() as connection:
-            msid = submit_recording(connection, self.sample_recording)
+            msid = get_id_from_meta_hash(connection, self.sample_recording)
+            if msid is None:
+                msid = submit_recording(connection, self.sample_recording)
+            msid = str(msid)
+
             artists = load_recordings_from_msids(connection, [msid])
             self.saved_artist_msid = artists[0]["ids"]["artist_msid"]
 
         self.sample_feedback_with_metadata[0]["recording_msid"] = msid
 
-        query = """INSERT INTO listen_mbid_mapping
-                               (id, recording_mbid, release_mbid, release_name, artist_credit_id,
-                                artist_mbids, artist_credit_name, recording_name, match_type)
-                        VALUES (1,
-                                '076255b4-1575-11ec-ac84-135bf6a670e3',
+        query = """INSERT INTO mbid_mapping_metadata
+                               (recording_mbid, release_mbid, release_name, artist_credit_id,
+                                artist_mbids, artist_credit_name, recording_name)
+                        VALUES ('076255b4-1575-11ec-ac84-135bf6a670e3',
                                 '1fd178b4-1575-11ec-b98a-d72392cd8c97',
                                 'release_name',
                                 65,
                                 '{6a221fda-2200-11ec-ac7d-dfa16a57158f}'::UUID[],
-                                'artist name', 'recording name', 'exact_match')"""
+                                'artist name', 'recording name')"""
 
         with ts.engine.connect() as connection:
             connection.execute(sqlalchemy.text(query))
 
-        query = """INSERT INTO listen_join_listen_mbid_mapping
-                               (recording_msid, listen_mbid_mapping)
-                        VALUES ('%s', 1)""" % msid
+        query = """INSERT INTO mbid_mapping
+                               (recording_msid, recording_mbid, match_type, last_updated)
+                        VALUES (:msid, :mbid, :match_type, now())"""
 
         with ts.engine.connect() as connection:
-            connection.execute(sqlalchemy.text(query))
+            connection.execute(sqlalchemy.text(query),
+                               {"msid": msid, "mbid": "076255b4-1575-11ec-ac84-135bf6a670e3", "match_type": "exact_match"})
 
         for fb in self.sample_feedback_with_metadata:
             db_feedback.insert(
@@ -99,7 +99,6 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
             )
 
         return len(self.sample_feedback_with_metadata)
-
 
     def test_insert(self):
         count = self.insert_test_data(self.user["id"])
@@ -202,7 +201,6 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
         self.assertEqual(result[0].track_metadata["additional_info"]["release_mbid"], "1fd178b4-1575-11ec-b98a-d72392cd8c97")
         self.assertEqual(result[0].track_metadata["additional_info"]["artist_msid"], self.saved_artist_msid)
 
-
     def test_get_feedback_count_for_user(self):
         count = self.insert_test_data(self.user["id"])
         result = db_feedback.get_feedback_count_for_user(user_id=self.user["id"])
@@ -285,9 +283,9 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase, MessyBrainzT
         recording_list.append("b83fd3c3-449c-49be-a874-31d7cf26d946")
 
         result = db_feedback.get_feedback_for_multiple_recordings_for_user(
-                                                                           user_id=self.user["id"],
-                                                                           recording_list=recording_list
-                                                                          )
+            user_id=self.user["id"],
+            recording_list=recording_list
+        )
         self.assertEqual(len(result), len(recording_list))
 
         # test correct score is returned for recording_msids for which feedback records are inserted

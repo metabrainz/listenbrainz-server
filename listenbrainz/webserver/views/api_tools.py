@@ -17,8 +17,12 @@ import sentry_sdk
 from flask import current_app, request
 
 from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
-from listenbrainz.webserver.errors import APIInternalServerError, APIServiceUnavailable, APIBadRequest, APIUnauthorized
+from listenbrainz.webserver.errors import APIServiceUnavailable, APIBadRequest, APIUnauthorized, \
+    ListenValidationError
+
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
+from listenbrainz.webserver.models import SubmitListenUserMetadata
+
 MAX_LISTEN_SIZE = 10240
 
 #: The maximum number of tags per listen.
@@ -41,22 +45,17 @@ LISTEN_TYPE_SINGLE = 1
 LISTEN_TYPE_IMPORT = 2
 LISTEN_TYPE_PLAYING_NOW = 3
 
-# 2002 is Last.FM founding year but the data before 2005 is mostly rubbish
-LISTEN_MINIMUM_TS = datetime(2005, 1, 1).timestamp()
+# October 2002 is date before which most Last.FM data is rubbish
+#: The minimum acceptable value for listened_at field
+LISTEN_MINIMUM_TS = int(datetime(2002, 10, 1).timestamp())
 
 
-def insert_payload(payload, user, listen_type=LISTEN_TYPE_IMPORT):
+def insert_payload(payload, user: SubmitListenUserMetadata, listen_type=LISTEN_TYPE_IMPORT):
     """ Convert the payload into augmented listens then submit them.
         Returns: augmented_listens
     """
-    try:
-        augmented_listens = _get_augmented_listens(payload, user)
-        _send_listens_to_queue(listen_type, augmented_listens)
-    except (APIInternalServerError, APIServiceUnavailable):
-        raise
-    except Exception as e:
-        current_app.logger.error("Error while inserting payload: %s", str(e), exc_info=True)
-        raise APIInternalServerError("Something went wrong. Please try again.")
+    augmented_listens = _get_augmented_listens(payload, user)
+    _send_listens_to_queue(listen_type, augmented_listens)
     return augmented_listens
 
 
@@ -151,62 +150,61 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
     in place if needed."""
 
     if listen is None:
-        raise APIBadRequest("Listen is empty and cannot be validated.")
+        raise ListenValidationError("Listen is empty and cannot be validated.")
 
     if listen_type in (LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT):
-        if 'listened_at' not in listen:
-            raise APIBadRequest("JSON document must contain the key listened_at at the top level.", listen)
+        validate_listened_at(listen)
 
-        try:
-            listen['listened_at'] = int(listen['listened_at'])
-        except ValueError:
-            raise APIBadRequest("JSON document must contain an int value for listened_at.", listen)
+        if "track_metadata" not in listen:
+            raise ListenValidationError("JSON document must contain the key track_metadata"
+                                        " at the top level.", listen)
 
-        if 'listened_at' in listen and 'track_metadata' in listen and len(listen) > 2:
-            raise APIBadRequest("JSON document may only contain listened_at and "
-                                "track_metadata top level keys", listen)
-
-        # if timestamp is too high, raise BadRequest
-        # in order to make up for possible clock skew, we allow
-        # timestamps to be one hour ahead of server time
-        if not is_valid_timestamp(listen['listened_at']):
-            raise APIBadRequest("Value for key listened_at is too high.", listen)
+        if len(listen) > 2:
+            raise ListenValidationError("JSON document may only contain listened_at and "
+                                        "track_metadata top level keys", listen)
 
         # check that listened_at value is greater than last.fm founding year.
         if listen['listened_at'] < LISTEN_MINIMUM_TS:
-            raise APIBadRequest("Value for key listened_at is too low. listened_at timestamp"
-                                " should be greater than the timestamp of start of 2005.", listen)
+            raise ListenValidationError("Value for key listened_at is too low. listened_at timestamp "
+                                        "should be greater than 1033410600 (2002-10-01 00:00:00 UTC).", listen)
 
     elif listen_type == LISTEN_TYPE_PLAYING_NOW:
-        if 'listened_at' in listen:
-            raise APIBadRequest("JSON document must not contain listened_at while submitting "
-                                "playing_now.", listen)
+        if "listened_at" in listen:
+            raise ListenValidationError("JSON document must not contain listened_at while submitting"
+                                        " playing_now.", listen)
 
-        if 'track_metadata' in listen and len(listen) > 1:
-            raise APIBadRequest("JSON document may only contain track_metadata as top level "
-                                "key when submitting playing_now.", listen)
+        if "track_metadata" not in listen:
+            raise ListenValidationError("JSON document must contain the key track_metadata"
+                                        " at the top level.", listen)
+
+        if len(listen) > 1:
+            raise ListenValidationError("JSON document may only contain track_metadata as top level"
+                                        " key when submitting playing_now.", listen)
+
+    if listen["track_metadata"] is None:
+        raise ListenValidationError("JSON document may not have track_metadata with null value.", listen)
 
     # Basic metadata
     if 'track_name' in listen['track_metadata']:
         if not isinstance(listen['track_metadata']['track_name'], str):
-            raise APIBadRequest("track_metadata.track_name must be a single string.", listen)
+            raise ListenValidationError("track_metadata.track_name must be a single string.", listen)
 
         listen['track_metadata']['track_name'] = listen['track_metadata']['track_name'].strip()
         if len(listen['track_metadata']['track_name']) == 0:
-            raise APIBadRequest("required field track_metadata.track_name is empty.", listen)
+            raise ListenValidationError("required field track_metadata.track_name is empty.", listen)
     else:
-        raise APIBadRequest("JSON document does not contain required track_metadata.track_name.", listen)
+        raise ListenValidationError("JSON document does not contain required track_metadata.track_name.", listen)
 
 
     if 'artist_name' in listen['track_metadata']:
         if not isinstance(listen['track_metadata']['artist_name'], str):
-            raise APIBadRequest("track_metadata.artist_name must be a single string.", listen)
+            raise ListenValidationError("track_metadata.artist_name must be a single string.", listen)
 
         listen['track_metadata']['artist_name'] = listen['track_metadata']['artist_name'].strip()
         if len(listen['track_metadata']['artist_name']) == 0:
-            raise APIBadRequest("required field track_metadata.artist_name is empty.", listen)
+            raise ListenValidationError("required field track_metadata.artist_name is empty.", listen)
     else:
-        raise APIBadRequest("JSON document does not contain required track_metadata.artist_name.", listen)
+        raise ListenValidationError("JSON document does not contain required track_metadata.artist_name.", listen)
 
 
     if 'additional_info' in listen['track_metadata']:
@@ -214,12 +212,12 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
         if 'tags' in listen['track_metadata']['additional_info']:
             tags = listen['track_metadata']['additional_info']['tags']
             if len(tags) > MAX_TAGS_PER_LISTEN:
-                raise APIBadRequest("JSON document may not contain more than %d items in "
-                                    "track_metadata.additional_info.tags." % MAX_TAGS_PER_LISTEN, listen)
+                raise ListenValidationError("JSON document may not contain more than %d items in "
+                                            "track_metadata.additional_info.tags." % MAX_TAGS_PER_LISTEN, listen)
             for tag in tags:
                 if len(tag) > MAX_TAG_SIZE:
-                    raise APIBadRequest("JSON document may not contain track_metadata.additional_info.tags "
-                                        "longer than %d characters." % MAX_TAG_SIZE, listen)
+                    raise ListenValidationError("JSON document may not contain track_metadata.additional_info.tags "
+                                                "longer than %d characters." % MAX_TAG_SIZE, listen)
         # MBIDs, both of the mbid validation methods mutate the listen payload if needed.
         single_mbid_keys = ['release_mbid', 'recording_mbid', 'release_group_mbid', 'track_mbid']
         for key in single_mbid_keys:
@@ -247,11 +245,11 @@ def is_valid_uuid(u):
         return False
 
 
-def _get_augmented_listens(payload, user):
+def _get_augmented_listens(payload, user: SubmitListenUserMetadata):
     """ Converts the payload to augmented list after adding user_id and user_name attributes """
     for listen in payload:
-        listen['user_id'] = user['id']
-        listen['user_name'] = user['musicbrainz_id']
+        listen['user_id'] = user.user_id
+        listen['user_name'] = user.musicbrainz_id
     return payload
 
 
@@ -270,7 +268,7 @@ def log_raise_400(msg, data=""):
 
 def validate_single_mbid_field(listen, key):
     """ Verify that mbid if present in the listen with given key is valid.
-    An APIBadRequest error is raised for invalid values of mbids.
+    A ValidationError is raised for invalid values of mbids.
 
     NOTE: If the mbid at the key is None or "", the key is dropped without
      raising an error.
@@ -286,12 +284,12 @@ def validate_single_mbid_field(listen, key):
             return
 
         if not is_valid_uuid(mbid):  # if the mbid is invalid raise an error
-            log_raise_400("%s MBID format invalid." % (key, ), listen)
+            raise ListenValidationError("%s MBID format invalid." % (key,), listen)
 
 
 def validate_multiple_mbids_field(listen, key):
     """ Verify that all the mbids in the list if present in the listen with
-    given key are valid. An APIBadRequest error is raised for if any mbid is
+    given key are valid. An ValidationError error is raised for if any mbid is
     invalid.
 
     NOTE: If an mbid in the list is None or "", it is dropped from the list
@@ -312,22 +310,36 @@ def validate_multiple_mbids_field(listen, key):
 
         for mbid in mbids:
             if not is_valid_uuid(mbid):   # if the mbid is invalid raise an error
-                log_raise_400("%s MBID format invalid." % (key,), listen)
+                raise ListenValidationError("%s MBID format invalid." % (key,), listen)
 
         listen['track_metadata']['additional_info'][key] = mbids  # set the filtered in the listen payload
 
 
-def is_valid_timestamp(ts):
-    """ Returns True if the timestamp passed is in the API's
-    allowed range of timestamps, False otherwise
+def validate_listened_at(listen):
+    """ Raises an error if the listened_at timestamp is invalid. The timestamp is invalid
+    if it is lower than the minimum acceptable timestamp or if its in future beyond
+    tolerable skew.
 
     Args:
-        ts (int): the timestamp to be checked for validity
-
-    Returns:
-        bool: True if timestamp is valid, False otherwise
+        listen: the listen to be validated
     """
-    return ts <= int(time.time()) + API_LISTENED_AT_ALLOWED_SKEW
+    if "listened_at" not in listen:
+        raise ListenValidationError("JSON document must contain the key listened_at at the top level.", listen)
+
+    try:
+        listen["listened_at"] = int(listen["listened_at"])
+    except (ValueError, TypeError):
+        raise ListenValidationError("JSON document must contain an int value for listened_at.", listen)
+
+    # raise error if timestamp is too high
+    # in order to make up for possible clock skew, we allow
+    # timestamps to be one hour ahead of server time
+    if listen["listened_at"] >= int(time.time()) + API_LISTENED_AT_ALLOWED_SKEW:
+        raise ListenValidationError("Value for key listened_at is too high.", listen)
+
+    if listen["listened_at"] < LISTEN_MINIMUM_TS:
+        raise ListenValidationError("Value for key listened_at is too low. listened_at timestamp "
+                                    "should be greater than 1033410600 (2002-10-01 00:00:00 UTC).", listen)
 
 
 def publish_data_to_queue(data, exchange, queue, error_msg):
