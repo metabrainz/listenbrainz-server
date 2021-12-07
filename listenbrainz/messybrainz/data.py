@@ -196,6 +196,8 @@ def load_recordings_from_msids(connection, messybrainz_ids):
     if not messybrainz_ids:
         return {}
 
+    messybrainz_ids = [str(msid) for msid in messybrainz_ids]
+
     query = text("""SELECT DISTINCT rj.data
                          , r.artist
                          , r.release
@@ -204,23 +206,25 @@ def load_recordings_from_msids(connection, messybrainz_ids):
                  LEFT JOIN recording AS r
                         ON rj.id = r.data
                      WHERE r.gid IN :msids""")
-    result = connection.execute(query, {"msids": tuple(map(str, messybrainz_ids))})
+    result = connection.execute(query, msids=tuple(messybrainz_ids))
 
     rows = result.fetchall()
     if not rows:
         raise exceptions.NoDataFoundException
 
+    msid_recording_map = {str(x["gid"]): x for x in rows}
+
     # match results to every given mbid so list is returned in the same order
     results = []
     for msid in messybrainz_ids:
-        row = list(filter(lambda x: str(x["gid"]) == str(msid), rows))[0]
-        if not row:
+        if msid not in msid_recording_map:
             raise exceptions.NoDataFoundException
+        row = msid_recording_map[msid]
 
         result = {}
         result["payload"] = row["data"]
         result["ids"] = {"artist_mbids": [], "release_mbid": ""}
-        result["ids"]["recording_mbid"] = str(row["data"]["recording_mbid"]) if "recording_mbid" in row["data"] else ''
+        result["ids"]["recording_mbid"] = str(row["data"]["recording_mbid"]) if "recording_mbid" in row["data"] else ""
         result["ids"]["artist_msid"] = str(row["artist"])
         result["ids"]["release_msid"] = str(row["release"]) if row["release"] else None
         result["ids"]["recording_msid"] = str(row["gid"])
