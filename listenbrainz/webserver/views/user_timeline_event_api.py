@@ -63,7 +63,6 @@ def create_user_recording_recommendation_event(user_name):
             "metadata": {
                 "artist_name": "<The name of the artist, required>",
                 "track_name": "<The name of the track, required>",
-                "artist_msid": "<The MessyBrainz ID of the artist, required>",
                 "recording_msid": "<The MessyBrainz ID of the recording, required>",
                 "release_name": "<The name of the release, optional>",
                 "recording_mbid": "<The MusicBrainz ID of the recording, optional>"
@@ -116,7 +115,7 @@ def create_user_notification_event(user_name):
 
         {
             "metadata": {
-                "message": <the message to post, required>,
+                "message": "<the message to post, required>",
             }
         }
 
@@ -246,16 +245,23 @@ def delete_feed_events(user_name):
     '''
     Delete those events from user's feed that belong to them.
     Supports deletion of recommendation and notification.
-    Along with the authorization token, post one of the following, according
-    to your need.
-    {
-        "event_type": "recording_recommendation",
-        "id": int
-    }
-    {
-        "event_type": "notification",
-        "id": int
-    }
+    Along with the authorization token, post the event type and event id.
+    For example:
+
+    .. code-block:: json
+
+        {
+            "event_type": "recording_recommendation",
+            "id": "<integer id of the event>"
+        }
+
+    .. code-block:: json
+
+        {
+            "event_type": "notification",
+            "id": "<integer id of the event>"
+        }
+
     :param user_name: The MusicBrainz ID of the user from whose timeline events are being deleted
     :type user_name: ``str``
     :statuscode 200: Successful deletion
@@ -407,7 +413,6 @@ def get_recording_recommendation_events(users_for_events: List[dict], min_ts: in
                     additional_info=AdditionalInfo(
                         recording_msid=event.metadata.recording_msid,
                         recording_mbid=event.metadata.recording_mbid,
-                        artist_msid=event.metadata.artist_msid,
                     )
                 ),
             )
@@ -450,7 +455,6 @@ def get_recording_pin_events(users_for_events: List[dict], min_ts: int, max_ts: 
                     additional_info=AdditionalInfo(
                         recording_msid=pin.recording_msid,
                         recording_mbid=pin.recording_mbid,
-                        artist_msid=pin.track_metadata["artist_msid"],
                     )
                 )
             )

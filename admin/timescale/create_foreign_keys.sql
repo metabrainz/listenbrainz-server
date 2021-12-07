@@ -12,10 +12,10 @@ ALTER TABLE playlist.playlist_collaborator
     REFERENCES "playlist".playlist (id)
     ON DELETE CASCADE;
 
-ALTER TABLE listen_join_listen_mbid_mapping
-    ADD CONSTRAINT listen_mbid_mapping_foreign_key
-    FOREIGN KEY (listen_mbid_mapping)
-    REFERENCES listen_mbid_mapping (id)
+ALTER TABLE mbid_mapping
+    ADD CONSTRAINT mbid_mapping_recording_mbid_foreign_key
+    FOREIGN KEY (recording_mbid)
+    REFERENCES mbid_mapping_metadata (recording_mbid)
     ON DELETE CASCADE;
 
 COMMIT;

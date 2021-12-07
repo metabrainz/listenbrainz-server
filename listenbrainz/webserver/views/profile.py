@@ -220,8 +220,8 @@ def delete():
             delete_user(current_user.musicbrainz_id)
             flash.success("Successfully deleted account for %s." % current_user.musicbrainz_id)
             return redirect(url_for('index.index'))
-        except Exception as e:
-            current_app.logger.error('Error while deleting %s: %s', current_user.musicbrainz_id, str(e))
+        except Exception:
+            current_app.logger.error('Error while deleting user: %s', current_user.musicbrainz_id, exc_info=True)
             flash.error('Error while deleting user %s, please try again later.' % current_user.musicbrainz_id)
             return redirect(url_for('profile.info'))
 
@@ -255,8 +255,8 @@ def delete_listens():
             delete_listens_history(current_user.musicbrainz_id)
             flash.info('Successfully deleted listens for %s.' % current_user.musicbrainz_id)
             return redirect(url_for('user.profile', user_name=current_user.musicbrainz_id))
-        except Exception as e:
-            current_app.logger.error('Error while deleting listens for %s: %s', current_user.musicbrainz_id, str(e))
+        except Exception:
+            current_app.logger.error('Error while deleting listens for user: %s', current_user.musicbrainz_id, exc_info=True)
             flash.error('Error while deleting listens for %s, please try again later.' % current_user.musicbrainz_id)
             return redirect(url_for('profile.info'))
 

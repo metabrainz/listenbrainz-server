@@ -206,6 +206,8 @@ export default class PlaylistPage extends React.Component<
           {
             playlist: { ...playlist, track: [...playlist.track, jspfTrack] },
             // recordingFeedbackMap,
+            searchInputValue: "",
+            cachedSearchResults: [],
           },
           this.emitPlaylistChanged
         );
@@ -264,12 +266,17 @@ export default class PlaylistPage extends React.Component<
         currentUser.auth_token,
         getPlaylistId(playlist)
       );
+      // Fetch the newly created playlist and add it to the state if it's the current user's page
+      const JSPFObject: JSPFObject = await this.APIService.getPlaylist(
+        newPlaylistId,
+        currentUser.auth_token
+      );
       newAlert(
         "success",
         "Duplicated playlist",
         <>
           Duplicated to playlist&ensp;
-          <a href={`/playlist/${newPlaylistId}`}>{newPlaylistId}</a>
+          <a href={`/playlist/${newPlaylistId}`}>{JSPFObject.playlist.title}</a>
         </>
       );
     } catch (error) {
@@ -483,12 +490,16 @@ export default class PlaylistPage extends React.Component<
       return;
     }
     const { playlist } = this.state;
+    // Owner can't be collaborator
+    const collaboratorsWithoutOwner = collaborators.filter(
+      (username) => username.toLowerCase() !== playlist.creator.toLowerCase()
+    );
     if (
       description === playlist.annotation &&
       name === playlist.title &&
       isPublic ===
         playlist.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]?.public &&
-      collaborators ===
+      collaboratorsWithoutOwner ===
         playlist.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]?.collaborators
     ) {
       // Nothing changed
@@ -502,7 +513,7 @@ export default class PlaylistPage extends React.Component<
         extension: {
           [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
             public: isPublic,
-            collaborators,
+            collaborators: collaboratorsWithoutOwner,
           },
         },
       };
@@ -740,24 +751,22 @@ export default class PlaylistPage extends React.Component<
               <div className="info">
                 <div>{playlist.track?.length} tracks</div>
                 <div>Created: {new Date(playlist.date).toLocaleString()}</div>
-                {customFields?.collaborators?.length && (
-                  <div>
-                    With the help of:&ensp;
-                    {customFields.collaborators.map((collaborator, index) => (
-                      <>
-                        <a
-                          key={collaborator}
-                          href={sanitizeUrl(`/user/${collaborator}`)}
-                        >
-                          {collaborator}
-                        </a>
-                        {index < customFields.collaborators.length - 1
-                          ? ", "
-                          : ""}
-                      </>
-                    ))}
-                  </div>
-                )}
+                {customFields?.collaborators &&
+                  Boolean(customFields.collaborators.length) && (
+                    <div>
+                      With the help of:&ensp;
+                      {customFields.collaborators.map((collaborator, index) => (
+                        <React.Fragment key={collaborator}>
+                          <a href={sanitizeUrl(`/user/${collaborator}`)}>
+                            {collaborator}
+                          </a>
+                          {index < customFields.collaborators.length - 1
+                            ? ", "
+                            : ""}
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  )}
                 {customFields?.last_modified_at && (
                   <div>
                     Last modified:{" "}
@@ -876,7 +885,6 @@ export default class PlaylistPage extends React.Component<
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
             <BrainzPlayer
-              direction="down"
               listens={tracks.map(JSPFTrackToListen)}
               newAlert={newAlert}
               listenBrainzAPIBaseURI={APIService.APIBaseURI}

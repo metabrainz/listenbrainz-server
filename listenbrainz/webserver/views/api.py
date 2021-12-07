@@ -7,7 +7,7 @@ from brainzutils.musicbrainz_db import engine as mb_engine
 
 from data.model.external_service import ExternalServiceType
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
-    APIUnauthorized
+    APIUnauthorized, ListenValidationError
 from listenbrainz.webserver.decorators import api_listenstore_needed
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import crossdomain
@@ -17,6 +17,7 @@ import listenbrainz.db.user as db_user
 from listenbrainz.db import listens_importer
 from brainzutils.ratelimit import ratelimit
 import listenbrainz.webserver.redis_connection as redis_connection
+from listenbrainz.webserver.models import SubmitListenUserMetadata
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list, \
     is_valid_uuid, MAX_LISTEN_SIZE, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, _validate_get_endpoint_params, \
@@ -64,6 +65,10 @@ def submit_listen():
 
     try:
         payload = data['payload']
+
+        if not isinstance(payload, list):
+            raise APIBadRequest("The payload in the JSON document should be a list of listens.", payload)
+
         if len(payload) == 0:
             log_raise_400(
                 "JSON document does not contain any listens", payload)
@@ -83,15 +88,14 @@ def submit_listen():
     except KeyError:
         log_raise_400("Invalid JSON document submitted.", raw_data)
 
-    # validate listens to make sure json is okay
-    validated_payload = [validate_listen(listen, listen_type) for listen in payload]
-
     try:
-        insert_payload(validated_payload, user, listen_type)
-    except APIServiceUnavailable as e:
-        raise
-    except Exception as e:
-        raise APIInternalServerError("Something went wrong. Please try again.")
+        # validate listens to make sure json is okay
+        validated_payload = [validate_listen(listen, listen_type) for listen in payload]
+    except ListenValidationError as err:
+        raise APIBadRequest(err.message, err.payload)
+
+    user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])
+    insert_payload(validated_payload, user_metadata, listen_type)
 
     return jsonify({'status': 'ok'})
 
@@ -200,10 +204,8 @@ def get_playing_now(user_name):
     listen_data = []
     count = 0
     if playing_now_listen:
-        count += 1
-        listen_data = [{
-            'track_metadata': playing_now_listen.data,
-        }]
+        count = 1
+        listen_data = [playing_now_listen.to_api()]
 
     return jsonify({
         'payload': {
@@ -394,7 +396,7 @@ def latest_import():
             current_app.logger.error("Error while updating latest import: ", exc_info=True)
             raise APIInternalServerError('Could not update latest_import, try again')
 
-        # During unrelated tests _ts may be None -- improving this would be a great headache. 
+        # During unrelated tests _ts may be None -- improving this would be a great headache.
         # However, during the test of this code and while serving requests _ts is set.
         if _ts:
             _ts.set_listen_count_expiry_for_user(user['musicbrainz_id'])
@@ -413,9 +415,10 @@ def validate_token():
     header set to the value ``Token [the token value]``.
 
     .. note::
-        - This endpoint also checks for `token` argument in query
-        params (example: /validate-token?token=token-to-check) if the
-        Authorization header is missing for backward compatibility.
+
+        This endpoint also checks for `token` argument in query params
+        (example: /validate-token?token=token-to-check) if the Authorization
+        header is missing for backward compatibility.
 
     A JSON response, with the following format, will be returned.
 

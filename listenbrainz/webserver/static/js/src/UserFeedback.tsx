@@ -11,7 +11,7 @@ import {
   faHeartBroken,
   faThumbtack,
 } from "@fortawesome/free-solid-svg-icons";
-import { isNaN, get, clone } from "lodash";
+import { isNaN, get, clone, has } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import {
@@ -37,7 +37,6 @@ export type UserFeedbackProps = {
 } & WithAlertNotificationsInjectedProps;
 
 export interface UserFeedbackState {
-  direction: BrainzPlayDirection;
   feedback: Array<FeedbackResponseWithTrackMetadata>;
   loading: boolean;
   page: number;
@@ -69,7 +68,6 @@ export default class UserFeedback extends React.Component<
     return listenFormat;
   };
 
-  private APIService!: APIServiceClass;
   private listensTable = React.createRef<HTMLTableElement>();
 
   declare context: React.ContextType<typeof GlobalAppContext>;
@@ -77,30 +75,40 @@ export default class UserFeedback extends React.Component<
 
   constructor(props: UserFeedbackProps) {
     super(props);
-    const { totalCount } = this.props;
+    const { totalCount, feedback } = props;
+
     this.state = {
       maxPage: Math.ceil(totalCount / this.DEFAULT_ITEMS_PER_PAGE),
       page: 1,
-      feedback: props.feedback || [],
+      feedback: feedback?.slice(0, this.DEFAULT_ITEMS_PER_PAGE) || [],
       loading: false,
-      direction: "down",
       recordingFeedbackMap: {},
-      selectedFeedbackScore: props.feedback?.[0]?.score ?? 1,
+      selectedFeedbackScore: feedback?.[0]?.score ?? 1,
     };
 
     this.listensTable = React.createRef();
   }
 
   componentDidMount(): void {
-    // Get API instance from React context provided for in top-level component
-    const { APIService, currentUser } = this.context;
-    this.APIService = APIService;
+    const { currentUser } = this.context;
+    const { user, feedback } = this.props;
 
     // Listen to browser previous/next events and load page accordingly
     window.addEventListener("popstate", this.handleURLChange);
     document.addEventListener("keydown", this.handleKeyDown);
 
-    this.loadFeedback();
+    if (currentUser?.name === user.name && feedback?.length) {
+      // Logged in user is looking at their own feedback, we can build
+      // the RecordingFeedbackMap from feedback which already contains the feedback score for each item
+      const recordingFeedbackMap = feedback.reduce((result, item) => {
+        /* eslint-disable-next-line no-param-reassign */
+        result[item.recording_msid] = item.score;
+        return result;
+      }, {} as RecordingFeedbackMap);
+      this.setState({ recordingFeedbackMap });
+    } else {
+      this.loadFeedback();
+    }
   }
 
   componentWillUnmount() {
@@ -247,7 +255,7 @@ export default class UserFeedback extends React.Component<
     } catch (error) {
       newAlert(
         "warning",
-        "Could not load loved/hated tracks",
+        "We could not load love/hate feedback",
         <>
           Something went wrong when we tried to load your loved/hated
           recordings, please try again or contact us if the problem persists.
@@ -262,21 +270,24 @@ export default class UserFeedback extends React.Component<
   };
 
   getFeedback = async () => {
-    const { currentUser } = this.context;
+    const { currentUser, APIService } = this.context;
     const { newAlert } = this.props;
-    const { feedback } = this.state;
+    const { feedback, recordingFeedbackMap } = this.state;
 
     let recordings = "";
     if (feedback?.length && currentUser?.name) {
       recordings = feedback
         .map((item) => item.recording_msid)
-        .filter((item) => {
-          return item !== undefined;
-        })
+        // Only request non-undefined and non-empty string
+        .filter(Boolean)
+        // Only request feedback we don't already have
+        .filter((msid) => !has(recordingFeedbackMap, msid))
         .join(",");
-
+      if (!recordings) {
+        return [];
+      }
       try {
-        const data = await this.APIService.getFeedbackForUserForRecordings(
+        const data = await APIService.getFeedbackForUserForRecordings(
           currentUser.name,
           recordings
         );
@@ -284,8 +295,8 @@ export default class UserFeedback extends React.Component<
       } catch (error) {
         if (newAlert) {
           newAlert(
-            "danger",
-            "Playback error",
+            "warning",
+            "We could not load love/hate feedback",
             typeof error === "object" ? error.message : error
           );
         }
@@ -303,15 +314,18 @@ export default class UserFeedback extends React.Component<
   };
 
   loadFeedback = async () => {
+    const { recordingFeedbackMap } = this.state;
     const feedback = await this.getFeedback();
-    if (!feedback) {
+    if (!feedback?.length) {
       return;
     }
-    const recordingFeedbackMap: RecordingFeedbackMap = {};
+    const newRecordingFeedbackMap: RecordingFeedbackMap = {
+      ...recordingFeedbackMap,
+    };
     feedback.forEach((fb: FeedbackResponse) => {
-      recordingFeedbackMap[fb.recording_msid] = fb.score;
+      newRecordingFeedbackMap[fb.recording_msid] = fb.score;
     });
-    this.setState({ recordingFeedbackMap });
+    this.setState({ recordingFeedbackMap: newRecordingFeedbackMap });
   };
 
   updateFeedback = (
@@ -353,7 +367,6 @@ export default class UserFeedback extends React.Component<
 
   render() {
     const {
-      direction,
       feedback,
       loading,
       maxPage,
@@ -538,7 +551,6 @@ export default class UserFeedback extends React.Component<
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
             <BrainzPlayer
-              direction={direction}
               listens={listensFromFeedback}
               newAlert={newAlert}
               listenBrainzAPIBaseURI={APIService.APIBaseURI}

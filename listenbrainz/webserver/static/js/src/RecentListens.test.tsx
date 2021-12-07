@@ -18,6 +18,7 @@ import RecentListens, {
   RecentListensState,
 } from "./RecentListens";
 import PinRecordingModal from "./PinRecordingModal";
+import CBReviewModal from "./CBReviewModal";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -31,10 +32,8 @@ jest.mock("socket.io-client", () => {
 });
 
 const {
-  artistCount,
   haveListenCount,
   latestListenTs,
-  latestSpotifyUri,
   listenCount,
   listens,
   mode,
@@ -47,10 +46,8 @@ const {
 } = recentListensProps;
 
 const props = {
-  artistCount,
   haveListenCount,
   latestListenTs,
-  latestSpotifyUri,
   listenCount,
   listens,
   mode: mode as ListensListMode,
@@ -96,8 +93,9 @@ describe("Recentlistens", () => {
 
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
     const wrapper = mount<RecentListens>(
-      <RecentListens {...props} />,
-      mountOptions
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
     );
     expect(wrapper.html()).toMatchSnapshot();
     fakeDateNow.mockRestore();
@@ -138,7 +136,7 @@ describe("componentDidMount", () => {
     expect(wrapper.state("listenCount")).toEqual(42);
   });
 
-  it('calls loadFeedback if user is the currentUser and mode "listens"', () => {
+  it('calls loadFeedback if user is logged in and mode "listens"', () => {
     const wrapper = mount<RecentListens>(
       <GlobalAppContext.Provider value={mountOptions.context}>
         <RecentListens {...propsOneListen} />
@@ -152,20 +150,25 @@ describe("componentDidMount", () => {
     expect(instance.loadFeedback).toHaveBeenCalledTimes(1);
   });
 
-  it('does not call loadFeedback if user is not the currentUser even if mode "listens"', () => {
+  it('does not fetch user feedback if user is not logged in"', () => {
     const wrapper = mount<RecentListens>(
       <GlobalAppContext.Provider
-        value={{ ...mountOptions.context, currentUser: { name: "foobar" } }}
+        value={{ ...mountOptions.context, currentUser: {} as ListenBrainzUser }}
       >
         <RecentListens {...propsOneListen} />
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
-    instance.loadFeedback = jest.fn();
+    const loadFeedbackSpy = jest.spyOn(instance, "loadFeedback");
+    const APIFeedbackSpy = jest.spyOn(
+      instance.context.APIService,
+      "getFeedbackForUserForRecordings"
+    );
 
     instance.componentDidMount();
 
-    expect(instance.loadFeedback).toHaveBeenCalledTimes(0);
+    expect(loadFeedbackSpy).toHaveBeenCalledTimes(1);
+    expect(APIFeedbackSpy).not.toHaveBeenCalled();
   });
 });
 
@@ -432,6 +435,17 @@ describe("deleteListen", () => {
     expect(instance.state.deletedListen).toEqual(null);
   });
 
+  it("does not render delete listen control if isCurrentUser is false", async () => {
+    const wrapper = mount<RecentListens>(
+      <GlobalAppContext.Provider
+        value={{ ...mountOptions.context, currentUser: {} as ListenBrainzUser }}
+      >
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
+    );
+    expect(wrapper.find("button[title='Delete Listen']")).toHaveLength(0);
+  });
+
   it("does nothing if CurrentUser.authtoken is not set", async () => {
     const wrapper = mount<RecentListens>(
       <GlobalAppContext.Provider
@@ -511,6 +525,22 @@ describe("deleteListen", () => {
       "Error while deleting listen",
       "my error message"
     );
+  });
+});
+
+describe("updateRecordingToReview", () => {
+  it("sets the recordingToReview in the state", async () => {
+    const wrapper = mount<RecentListens>(
+      <RecentListens {...props} />,
+      mountOptions
+    );
+    const instance = wrapper.instance();
+    const recordingToReview = props.listens[1];
+
+    expect(wrapper.state("recordingToReview")).toEqual(props.listens[0]); // default recordingToreview
+
+    instance.updateRecordingToReview(recordingToReview);
+    expect(wrapper.state("recordingToReview")).toEqual(recordingToReview);
   });
 });
 
@@ -940,6 +970,7 @@ describe("pinRecordingModal", () => {
     expect(pinRecordingModal.props()).toEqual({
       recordingToPin: props.listens[0],
       newAlert: props.newAlert,
+      onSuccessfulPin: expect.any(Function),
     });
 
     instance.updateRecordingToPin(recordingToPin);
@@ -948,6 +979,37 @@ describe("pinRecordingModal", () => {
     pinRecordingModal = wrapper.find(PinRecordingModal).first();
     expect(pinRecordingModal.props()).toEqual({
       recordingToPin,
+      newAlert: props.newAlert,
+      onSuccessfulPin: expect.any(Function),
+    });
+  });
+});
+
+describe("CBReviewModal", () => {
+  it("renders the CBReviewModal component with the correct props", async () => {
+    const wrapper = mount<RecentListens>(
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <RecentListens {...props} />
+      </GlobalAppContext.Provider>
+    );
+    const instance = wrapper.instance();
+    const listen = props.listens[0];
+    let cbReviewModal = wrapper.find(CBReviewModal).first();
+
+    // recentListens renders CBReviewModal with listens[0] as listen by default
+    expect(cbReviewModal.props()).toEqual({
+      isCurrentUser: true,
+      listen: props.listens[0],
+      newAlert: props.newAlert,
+    });
+
+    instance.updateRecordingToPin(listen);
+    wrapper.update();
+
+    cbReviewModal = wrapper.find(CBReviewModal).first();
+    expect(cbReviewModal.props()).toEqual({
+      isCurrentUser: true,
+      listen,
       newAlert: props.newAlert,
     });
   });

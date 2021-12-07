@@ -10,6 +10,7 @@
 @import "music-services.less";
 @import "cbreviewmodal.less";
 @import "huesound.less";
+@import "brainzplayer.less";
 
 
 @icon-font-path:"/static/fonts/";
@@ -74,18 +75,52 @@ body {
   min-height: 70vh;
 }
 
-// Footer
+/* Footer */
 .footer {
-  height: 70px;
-  img { height: 45px; }
-}
-
-h2.page-title {
-  @media (max-width: @grid-float-breakpoint) {
-    margin-top: 0;
+  background: #fff;
+  color: #000000;
+  padding-bottom: 10px;
+  margin-top: 2rem;
+  border-top-width: 2px;
+  border-top-style: solid;
+  border-top-color: #ddd;
+  ul {
+    line-height: 2;
+  }
+  li{
+    vertical-align: middle;
   }
 }
+.center-p{
+  color: var(--color);
+  text-align: center;
+  padding-top: 20px;
+}
+.section-line {
+  padding-top: 30px;
+  border-top: 1px solid #ddd;
+}
+.text-brand {
+  font-size: 2rem;
+  font-weight: 600;
+}
 
+@media (max-width: 767px) {
+  .text-brand {
+    font-size: 1.8rem;
+  }
+}
+.color-purple {
+  color: #353070;
+}
+
+.color-orange {
+  color: #e9733d;
+}
+.color-gray {
+  text-decoration: none;
+  color: #000000;
+}
 #homepage {
   #big-logo {
     .pull-left;

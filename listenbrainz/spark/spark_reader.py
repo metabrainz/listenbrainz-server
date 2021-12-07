@@ -23,7 +23,7 @@ from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          notify_mapping_import,
                                          handle_missing_musicbrainz_data,
                                          notify_cf_recording_recommendations_generation,
-                                         handle_similar_users)
+                                         handle_similar_users, handle_sitewide_listening_activity)
 
 from listenbrainz.webserver import create_app
 
@@ -32,6 +32,7 @@ response_handler_map = {
     'user_listening_activity': handle_user_listening_activity,
     'user_daily_activity': handle_user_daily_activity,
     'sitewide_entity': handle_sitewide_entity,
+    'sitewide_listening_activity': handle_sitewide_listening_activity,
     'import_full_dump': handle_dump_imported,
     'import_incremental_dump': handle_dump_imported,
     'cf_recommendations_recording_dataframes': handle_dataframes,
@@ -75,20 +76,22 @@ class SparkReader:
         try:
             response_type = response['type']
         except KeyError:
-            current_app.logger.error('Bad response sent to spark_reader: %s' % json.dumps(response, indent=4), exc_info=True)
+            current_app.logger.error("Bad response sent to spark_reader: %s", json.dumps(response, indent=4),
+                                     exc_info=True)
             return
 
         try:
             response_handler = self.get_response_handler(response_type)
         except Exception:
-            current_app.logger.error('Unknown response type: %s, doing nothing.' % response_type, exc_info=True)
+            current_app.logger.error("Unknown response type: %s, doing nothing.", response_type,
+                                     exc_info=True)
             return
 
         try:
             response_handler(response)
-        except Exception as e:
-            current_app.logger.error('Error in the response handler: %s, data: %s %'
-                                     (str(e), json.dumps(response, indent=4)), exc_info=True)
+        except Exception:
+            current_app.logger.error("Error in the spark reader response handler: data: %s",
+                                     json.dumps(response, indent=4), exc_info=True)
             return
 
     def callback(self, ch, method, properties, body):

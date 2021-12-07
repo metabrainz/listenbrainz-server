@@ -10,9 +10,13 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import { io, Socket } from "socket.io-client";
-import { fromPairs, get, isEqual } from "lodash";
+import { get, isEqual } from "lodash";
 import { Integrations } from "@sentry/tracing";
-import { faThumbtack, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
+import {
+  faPencilAlt,
+  faThumbtack,
+  faTrashAlt,
+} from "@fortawesome/free-solid-svg-icons";
 import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
@@ -30,12 +34,16 @@ import {
   formatWSMessageToListen,
   getPageProps,
   getListenablePin,
+  getRecordingMBID,
+  getArtistMBIDs,
+  getReleaseMBID,
+  getReleaseGroupMBID,
 } from "./utils";
+import CBReviewModal from "./CBReviewModal";
 import ListenControl from "./listens/ListenControl";
 
 export type RecentListensProps = {
   latestListenTs: number;
-  latestSpotifyUri?: string;
   listens?: Array<Listen>;
   mode: ListensListMode;
   oldestListenTs: number;
@@ -45,7 +53,6 @@ export type RecentListensProps = {
 } & WithAlertNotificationsInjectedProps;
 
 export interface RecentListensState {
-  direction: BrainzPlayDirection;
   lastFetchedDirection?: "older" | "newer";
   listens: Array<Listen>;
   listenCount?: number;
@@ -55,11 +62,13 @@ export interface RecentListensState {
   previousListenTs?: number;
   recordingFeedbackMap: RecordingFeedbackMap;
   recordingToPin?: Listen;
+  recordingToReview?: Listen;
   dateTimePickerValue: Date | Date[];
   /* This is used to mark a listen as deleted
   which give the UI some time to animate it out of the page
   before being removed from the state */
   deletedListen: Listen | null;
+  userPinnedRecording?: PinnedRecording;
 }
 
 export default class RecentListens extends React.Component<
@@ -87,12 +96,13 @@ export default class RecentListens extends React.Component<
       nextListenTs,
       previousListenTs: props.listens?.[0]?.listened_at,
       recordingToPin: props.listens?.[0],
-      direction: "down",
+      recordingToReview: props.listens?.[0],
       recordingFeedbackMap: {},
       dateTimePickerValue: nextListenTs
         ? new Date(nextListenTs * 1000)
         : new Date(Date.now()),
       deletedListen: null,
+      userPinnedRecording: props.userPinnedRecording,
     };
 
     this.listensTable = React.createRef();
@@ -126,9 +136,7 @@ export default class RecentListens extends React.Component<
             );
           });
       }
-      if (currentUser?.name && currentUser?.name === user?.name) {
-        this.loadFeedback();
-      }
+      this.loadFeedback();
     }
   }
 
@@ -377,10 +385,12 @@ export default class RecentListens extends React.Component<
   };
 
   getFeedback = async () => {
-    const { user, listens, newAlert } = this.props;
+    const { user, newAlert } = this.props;
+    const { APIService, currentUser } = this.context;
+    const { listens } = this.state;
     let recordings = "";
 
-    if (listens) {
+    if (listens && listens.length && currentUser?.name) {
       listens.forEach((listen) => {
         const recordingMsid = _.get(
           listen,
@@ -391,7 +401,7 @@ export default class RecentListens extends React.Component<
         }
       });
       try {
-        const data = await this.APIService.getFeedbackForUserForRecordings(
+        const data = await APIService.getFeedbackForUserForRecordings(
           user.name,
           recordings
         );
@@ -435,6 +445,10 @@ export default class RecentListens extends React.Component<
 
   updateRecordingToPin = (recordingToPin: Listen) => {
     this.setState({ recordingToPin });
+  };
+
+  updateRecordingToReview = (recordingToReview: Listen) => {
+    this.setState({ recordingToReview });
   };
 
   getFeedbackForRecordingMsid = (
@@ -564,14 +578,18 @@ export default class RecentListens extends React.Component<
     this.setState({ loading: false });
     // Scroll to the top of the listens list
     this.updatePaginationVariables();
+    this.loadFeedback();
     if (typeof this.listensTable?.current?.scrollIntoView === "function") {
       this.listensTable.current.scrollIntoView({ behavior: "smooth" });
     }
   }
 
+  handlePinnedRecording(pinnedRecording: PinnedRecording) {
+    this.setState({ userPinnedRecording: pinnedRecording });
+  }
+
   render() {
     const {
-      direction,
       listens,
       listenCount,
       loading,
@@ -580,15 +598,11 @@ export default class RecentListens extends React.Component<
       previousListenTs,
       dateTimePickerValue,
       recordingToPin,
+      recordingToReview,
       deletedListen,
-    } = this.state;
-    const {
-      latestListenTs,
-      oldestListenTs,
-      user,
-      newAlert,
       userPinnedRecording,
-    } = this.props;
+    } = this.state;
+    const { latestListenTs, oldestListenTs, user, newAlert } = this.props;
     const { APIService, currentUser } = this.context;
 
     let allListenables = listens;
@@ -613,6 +627,10 @@ export default class RecentListens extends React.Component<
                   userName={user.name}
                   pinnedRecording={userPinnedRecording}
                   isCurrentUser={currentUser?.name === user?.name}
+                  currentFeedback={this.getFeedbackForRecordingMsid(
+                    userPinnedRecording?.recording_msid
+                  )}
+                  updateFeedbackCallback={this.updateFeedback}
                   removePinFromPinsList={() => {}}
                   newAlert={newAlert}
                 />
@@ -660,6 +678,31 @@ export default class RecentListens extends React.Component<
                       return 0;
                     })
                     .map((listen) => {
+                      const isCurrentUser =
+                        Boolean(listen.user_name) &&
+                        listen.user_name === currentUser?.name;
+                      const listenedAt = get(listen, "listened_at");
+                      const recordingMSID = get(
+                        listen,
+                        "track_metadata.additional_info.recording_msid"
+                      );
+                      const recordingMBID = getRecordingMBID(listen);
+                      const artistMBIDs = getArtistMBIDs(listen);
+                      const trackMBID = get(
+                        listen,
+                        "track_metadata.additional_info.track_mbid"
+                      );
+                      const releaseGroupMBID = getReleaseGroupMBID(listen);
+                      const canDelete =
+                        isCurrentUser &&
+                        Boolean(listenedAt) &&
+                        Boolean(recordingMSID);
+
+                      const isListenReviewable =
+                        Boolean(recordingMBID) ||
+                        artistMBIDs?.length ||
+                        Boolean(trackMBID) ||
+                        Boolean(releaseGroupMBID);
                       /* eslint-disable react/jsx-no-bind */
                       const additionalMenuItems = (
                         <>
@@ -673,11 +716,25 @@ export default class RecentListens extends React.Component<
                             dataToggle="modal"
                             dataTarget="#PinRecordingModal"
                           />
-                          <ListenControl
-                            title="Delete Listen"
-                            icon={faTrashAlt}
-                            action={this.deleteListen.bind(this, listen)}
-                          />
+                          {isListenReviewable && (
+                            <ListenControl
+                              title="Write a review"
+                              icon={faPencilAlt}
+                              action={this.updateRecordingToReview.bind(
+                                this,
+                                listen
+                              )}
+                              dataToggle="modal"
+                              dataTarget="#CBReviewModal"
+                            />
+                          )}
+                          {canDelete && (
+                            <ListenControl
+                              title="Delete Listen"
+                              icon={faTrashAlt}
+                              action={this.deleteListen.bind(this, listen)}
+                            />
+                          )}
                         </>
                       );
                       const shouldBeDeleted = isEqual(deletedListen, listen);
@@ -814,8 +871,16 @@ export default class RecentListens extends React.Component<
                   <PinRecordingModal
                     recordingToPin={recordingToPin || listens[0]}
                     newAlert={newAlert}
+                    onSuccessfulPin={(pinnedListen) =>
+                      this.handlePinnedRecording(pinnedListen)
+                    }
                   />
                 )}
+                <CBReviewModal
+                  listen={recordingToReview || listens[0]}
+                  isCurrentUser={currentUser?.name === user?.name}
+                  newAlert={newAlert}
+                />
               </div>
             )}
           </div>
@@ -826,7 +891,6 @@ export default class RecentListens extends React.Component<
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
             <BrainzPlayer
-              direction={direction}
               listens={allListenables}
               newAlert={newAlert}
               listenBrainzAPIBaseURI={APIService.APIBaseURI}
@@ -853,11 +917,11 @@ document.addEventListener("DOMContentLoaded", () => {
     current_user,
     spotify,
     youtube,
+    critiquebrainz,
     sentry_traces_sample_rate,
   } = globalReactProps;
   const {
     latest_listen_ts,
-    latest_spotify_uri,
     listens,
     oldest_listen_ts,
     mode,
@@ -887,6 +951,7 @@ document.addEventListener("DOMContentLoaded", () => {
     currentUser: current_user,
     spotifyAuth: spotify,
     youtubeAuth: youtube,
+    critiquebrainzAuth: critiquebrainz,
   };
 
   ReactDOM.render(
@@ -895,7 +960,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <RecentListensWithAlertNotifications
           initialAlerts={optionalAlerts}
           latestListenTs={latest_listen_ts}
-          latestSpotifyUri={latest_spotify_uri}
           listens={listens}
           mode={mode}
           userPinnedRecording={userPinnedRecording}

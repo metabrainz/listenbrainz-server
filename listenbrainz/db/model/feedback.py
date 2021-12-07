@@ -1,9 +1,8 @@
 from copy import copy
-import uuid
 
-from datetime import datetime, timezone
-from pydantic import BaseModel, ValidationError, validator
-
+from datetime import datetime
+from pydantic import BaseModel, NonNegativeInt, validator, constr
+from data.model.validators import check_valid_uuid
 
 class Feedback(BaseModel):
     """ Represents a feedback object
@@ -15,9 +14,9 @@ class Feedback(BaseModel):
             created: (Optional)the timestamp when the feedback record was inserted into DB
     """
 
-    user_id: int
+    user_id: NonNegativeInt
     user_name: str = None
-    recording_msid: str
+    recording_msid: constr(min_length=1)
     score: int
     created: datetime = None
     track_metadata: dict = None
@@ -37,10 +36,4 @@ class Feedback(BaseModel):
             raise ValueError('Score can have a value of 1, 0 or -1.')
         return scr
 
-    @validator('recording_msid')
-    def check_recording_msid_is_valid_uuid(cls, rec_msid):
-        try:
-            rec_msid = uuid.UUID(rec_msid)
-            return str(rec_msid)
-        except (AttributeError, ValueError):
-            raise ValueError('Recording MSID must be a valid UUID.')
+    _is_recording_msid_valid: classmethod = validator("recording_msid", allow_reuse=True)(check_valid_uuid)

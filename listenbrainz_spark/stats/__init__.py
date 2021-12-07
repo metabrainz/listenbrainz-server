@@ -1,5 +1,5 @@
 from calendar import monthrange
-from datetime import datetime, time
+from datetime import datetime, time, date
 from typing import Tuple
 
 from dateutil.relativedelta import relativedelta, MO
@@ -11,6 +11,8 @@ from listenbrainz_spark.exceptions import SQLException
 from pyspark.sql.utils import *
 
 from listenbrainz_spark.utils import get_latest_listen_ts
+
+SITEWIDE_STATS_ENTITY_LIMIT = 1000  # number of top artists to retain in sitewide stats
 
 
 def run_query(query):
@@ -113,6 +115,38 @@ def get_last_monday(date: datetime) -> datetime:
     return offset_days(date, date.weekday())
 
 
+def get_last_half_year_offset(_date: date) -> relativedelta:
+    """ Given a month, returns the relativedelta offset to get
+    the beginning date of the previous half year."""
+    month = _date.month
+    if month <= 6:
+        # currently, in Jan-Jun previous half year is last year's Jul-Dec
+        return relativedelta(years=-1, month=7, day=1)
+    else:
+        # currently, in Jul-Dec previous half year is Jan-Jun
+        return relativedelta(month=1, day=1)
+
+
+def get_last_quarter_offset(_date: date) -> relativedelta:
+    """ Given a month, returns the relativedelta offset to get
+    the beginning date of the previous quarter."""
+    month = _date.month
+    if month <= 3:
+        # currently, in Jan-Mar, so previous quarter is last year's Oct-Dec
+        return relativedelta(years=-1, month=10, day=1)
+    elif month <= 6:
+        # currently, in Apr-Jun previous is Jan-Mar
+        return relativedelta(month=1, day=1)
+    elif month <= 9:
+        # currently, in Jul-Sep, previous is Apr-Jun
+        return relativedelta(month=4, day=1)
+    else:
+        # currently, in Oct-Dec previous is Jul-Sep
+        return relativedelta(month=7, day=1)
+
+
+# listening activity stats uses a different function to calculate time ranges
+# if making modifications here, remember to check and update that as well
 def get_dates_for_stats_range(stats_range: str) -> Tuple[datetime, datetime]:
     """ Return the range of datetimes for which stats should be calculated.
 
@@ -128,14 +162,37 @@ def get_dates_for_stats_range(stats_range: str) -> Tuple[datetime, datetime]:
         to_date = latest_listen_ts
         return from_date, to_date
 
-    # following are "last" week/month/year stats, here we want the stats of the
-    # previous week/month/year and *not* from 7 days ago to today so on.
-
     # If we had used datetime.now or date.today here and the data in spark
     # became outdated due to some reason, empty stats would be sent to LB.
     # Hence, we use get_latest_listen_ts to get the time of the latest listen
     # in spark and so that instead of no stats, outdated stats are calculated.
     latest_listen_date = latest_listen_ts.date()
+
+    # "this" time ranges, these count stats for the ongoing time period till date
+    if stats_range.startswith("this"):
+        if stats_range == "this_week":
+            # if today is a monday then from_offset is monday of last week
+            # otherwise from_offset is monday of this week
+            from_offset = relativedelta(days=-1, weekday=MO(-1))
+        elif stats_range == "this_month":
+            # if today is 1st then 1st of last month otherwise the 1st of this month
+            from_offset = relativedelta(months=-1) if latest_listen_date.day == 1 else relativedelta(day=1)
+        else:
+            # if today is the 1st of the year, then still show last year stats
+            if latest_listen_date.day == 1 and latest_listen_date.month == 1:
+                from_offset = relativedelta(years=-1)
+            else:
+                from_offset = relativedelta(month=1, day=1)
+
+        from_date = latest_listen_date + from_offset
+
+        # set time to 00:00
+        from_date = datetime.combine(from_date, time.min)
+        to_date = datetime.combine(latest_listen_date, time.min)
+        return from_date, to_date
+
+    # following are "last" week/month/year stats, here we want the stats of the
+    # previous week/month/year and *not* from 7 days ago to today so on.
 
     # from_offset: this is applied to the latest_listen_date to get from_date
     # to_offset: this is applied to from_date to get to_date
@@ -145,6 +202,12 @@ def get_dates_for_stats_range(stats_range: str) -> Tuple[datetime, datetime]:
     elif stats_range == "month":
         from_offset = relativedelta(months=-1, day=1)  # first day of previous month
         to_offset = relativedelta(months=+1)
+    elif stats_range == "quarter":
+        from_offset = get_last_quarter_offset(latest_listen_date)
+        to_offset = relativedelta(months=+3)
+    elif stats_range == "half_yearly":
+        from_offset = get_last_half_year_offset(latest_listen_date)
+        to_offset = relativedelta(months=+6)
     else:  # year
         from_offset = relativedelta(years=-1, month=1, day=1)  # first day of previous year
         to_offset = relativedelta(years=+1)

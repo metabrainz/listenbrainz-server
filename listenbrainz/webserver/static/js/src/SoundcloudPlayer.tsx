@@ -56,7 +56,13 @@ type SoundcloudPlayerState = {
 export default class SoundcloudPlayer
   extends React.Component<DataSourceProps, SoundcloudPlayerState>
   implements DataSourceType {
+  static isListenFromThisService(listen: Listen | JSPFTrack): boolean {
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    return !!originURL && /soundcloud\.com/.test(originURL);
+  }
+
   public name = "soundcloud";
+  public domainName = "soundcloud.com";
   iFrameRef?: React.RefObject<HTMLIFrameElement>;
   soundcloudPlayer?: SoundCloudHTML5Widget;
   retries = 0;
@@ -124,6 +130,16 @@ export default class SoundcloudPlayer
     } catch (error) {}
   }
 
+  static getSoundcloudURLFromListen = (
+    listen: Listen | JSPFTrack
+  ): string | undefined => {
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    if (originURL && /soundcloud\.com/.test(originURL)) {
+      return originURL;
+    }
+    return undefined;
+  };
+
   onReady = (): void => {
     if (!this.soundcloudPlayer) {
       return;
@@ -161,11 +177,6 @@ export default class SoundcloudPlayer
     onPlayerPausedChange(false);
   };
 
-  isListenFromThisService = (listen: Listen | JSPFTrack): boolean => {
-    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
-    return !!originURL && /soundcloud\.com/.test(originURL);
-  };
-
   canSearchAndPlayTracks = (): boolean => {
     return false;
   };
@@ -179,7 +190,7 @@ export default class SoundcloudPlayer
     if (!show) {
       return;
     }
-    if (!this.isListenFromThisService(listen)) {
+    if (!SoundcloudPlayer.isListenFromThisService(listen)) {
       onTrackNotFound();
       return;
     }

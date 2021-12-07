@@ -1,7 +1,8 @@
 {
     "currentUser": {
         "id": 1,
-        "name": "iliekcomputers"
+        "name": "iliekcomputers",
+        "auth_token": "merde-a-celui-qui-lit"
     },
     "playlist": {
         "playlist": {
@@ -13,7 +14,8 @@
             "extension": {
                 "https://musicbrainz.org/doc/jspf#playlist": {
                     "public": true,
-                    "last_modified_at": "2021-01-18T16:44:22.837342+00:00"
+                    "last_modified_at": "2021-01-18T16:44:22.837342+00:00",
+                    "collaborators":[]
                 }
             },
             "track": [
@@ -34,6 +36,6 @@
             ]
         }
     },
-    "webSocketsServerUrl": "http://localhost:8082",
+    "webSocketsServerUrl": "http://localhost:7082",
     "labsApiUrl": "http://0.0.0.0"
 }

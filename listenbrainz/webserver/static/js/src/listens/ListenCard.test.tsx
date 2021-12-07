@@ -87,7 +87,7 @@ describe("ListenCard", () => {
     );
     expect(
       wrapper.find('[href="https://musicbrainz.org/recording/bar"]')
-    ).toHaveLength(1);
+    ).toHaveLength(2);
     expect(
       wrapper.find('[href="https://musicbrainz.org/artist/foobar"]')
     ).toHaveLength(1);
@@ -165,8 +165,6 @@ describe("ListenCard", () => {
       expect(spy).toHaveBeenCalledWith("test", "baz", {
         artist_name: instance.props.listen.track_metadata.artist_name,
         track_name: instance.props.listen.track_metadata.track_name,
-        artist_msid:
-          instance.props.listen.track_metadata.additional_info?.artist_msid,
         recording_msid:
           instance.props.listen.track_metadata.additional_info?.recording_msid,
         recording_mbid:

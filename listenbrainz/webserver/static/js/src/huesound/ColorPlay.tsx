@@ -26,7 +26,6 @@ export type ColorPlayProps = {
 } & WithAlertNotificationsInjectedProps;
 
 export type ColorPlayState = {
-  direction: BrainzPlayDirection;
   colorReleases: Array<ColorReleaseItem>;
   loading: boolean;
   selectedRelease?: ColorReleaseItem;
@@ -46,7 +45,6 @@ export default class ColorPlay extends React.Component<
     this.state = {
       colorReleases: [],
       loading: false,
-      direction: "down",
       gridBackground: "#FFFFFF",
     };
   }
@@ -97,7 +95,6 @@ export default class ColorPlay extends React.Component<
   render() {
     const { user, newAlert } = this.props;
     const {
-      direction,
       loading,
       colorReleases,
       selectedRelease,
@@ -160,7 +157,7 @@ export default class ColorPlay extends React.Component<
                     className="cover-art-container"
                   >
                     <img
-                      src={`https://coverartarchive.org/release/${release.release_mbid}/${release.caa_id}-250.jpg`}
+                      src={`https://archive.org/download/mbid-${release.release_mbid}/mbid-${release.release_mbid}-${release.caa_id}_thumb250.jpg`}
                       alt={`Cover art for Release ${release.release_name}`}
                       height={150}
                     />
@@ -178,7 +175,7 @@ export default class ColorPlay extends React.Component<
                   <img
                     className="img-rounded"
                     style={{ flex: 1 }}
-                    src={`https://coverartarchive.org/release/${selectedRelease.release_mbid}/${selectedRelease.caa_id}-250.jpg`}
+                    src={`https://archive.org/download/mbid-${selectedRelease.release_mbid}/mbid-${selectedRelease.release_mbid}-${selectedRelease.caa_id}_thumb250.jpg`}
                     alt={`Cover art for Release ${selectedRelease.release_name}`}
                     width={200}
                     height={200}
@@ -228,7 +225,6 @@ export default class ColorPlay extends React.Component<
               </div>
               <div className="col-md-4 sticky-top">
                 <BrainzPlayer
-                  direction={direction}
                   newAlert={newAlert}
                   listens={selectedReleaseTracks}
                   listenBrainzAPIBaseURI={APIService.APIBaseURI}

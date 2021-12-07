@@ -28,17 +28,27 @@ type ExtendedYoutubePlayer = {
 export default class YoutubePlayer
   extends React.Component<YoutubePlayerProps, YoutubePlayerState>
   implements DataSourceType {
-  public name = "youtube";
-  youtubePlayer?: ExtendedYoutubePlayer;
-  checkVideoLoadedTimerId?: NodeJS.Timeout;
-
-  componentDidUpdate(prevProps: DataSourceProps) {
-    const { show } = this.props;
-    if (prevProps.show === true && show === false && this.youtubePlayer) {
-      this.youtubePlayer.stopVideo();
-      // Clear playlist
-      this.youtubePlayer.cueVideoById("");
+  static getVideoIDFromListen(listen: Listen | JSPFTrack): string | undefined {
+    // Checks if there is a youtube ID in the listen
+    // or if the origin_url field contains youtube.com
+    const videoURL =
+      _get(listen, "track_metadata.additional_info.youtube_id") ??
+      _get(listen, "track_metadata.additional_info.origin_url");
+    if (_isString(videoURL) && videoURL.length) {
+      /** Credit for this regular expression goes to Soufiane Sakhi:
+       * https://stackoverflow.com/a/61033353/4904467
+       */
+      const youtubeURLRegexp = /(?:https?:\/\/)?(?:www\.|m\.)?youtu(?:\.be\/|be.com\/\S*(?:watch|embed)(?:(?:(?=\/[^&\s?]+(?!\S))\/)|(?:\S*v=|v\/)))([^&\s?]+)/g;
+      const match = youtubeURLRegexp.exec(videoURL);
+      return match?.[1];
     }
+
+    return undefined;
+  }
+
+  static isListenFromThisService(listen: Listen | JSPFTrack): boolean {
+    const videoId = YoutubePlayer.getVideoIDFromListen(listen);
+    return Boolean(videoId);
   }
 
   /**
@@ -68,6 +78,45 @@ export default class YoutubePlayer
       ];
     }
     return images;
+  }
+
+  static getYoutubeURLFromListen(
+    listen: Listen | JSPFTrack
+  ): string | undefined {
+    // Checks if there is a youtube ID in the listen
+    const youtubeId = _get(listen, "track_metadata.additional_info.youtube_id");
+    if (youtubeId) {
+      return `https://www.youtube.com/watch?v=${youtubeId}`;
+    }
+
+    // or if the origin URL contains youtube.com
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    if (_isString(originURL) && originURL.length) {
+      try {
+        const parsedURL = new URL(originURL);
+        const { hostname, searchParams } = parsedURL;
+        if (/youtube\.com/.test(hostname)) {
+          return originURL;
+        }
+      } catch {
+        return undefined;
+      }
+    }
+    return undefined;
+  }
+
+  public name = "youtube";
+  public domainName = "youtube.com";
+  youtubePlayer?: ExtendedYoutubePlayer;
+  checkVideoLoadedTimerId?: NodeJS.Timeout;
+
+  componentDidUpdate(prevProps: DataSourceProps) {
+    const { show } = this.props;
+    if (prevProps.show && !show && this.youtubePlayer) {
+      this.youtubePlayer.stopVideo();
+      // Clear playlist
+      this.youtubePlayer.cueVideoById("");
+    }
   }
 
   onReady = (event: YT.PlayerEvent): void => {
@@ -238,26 +287,6 @@ export default class YoutubePlayer
     }
   };
 
-  isListenFromThisService = (listen: Listen | JSPFTrack): boolean => {
-    // Checks if there is a youtube ID in the listen
-    const youtubeId = _get(listen, "track_metadata.additional_info.youtube_id");
-    if (youtubeId) {
-      return true;
-    }
-
-    // or if the origin URL contains youtube.com
-    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
-    if (_isString(originURL) && originURL.length) {
-      const parsedURL = new URL(originURL);
-      const { hostname, searchParams } = parsedURL;
-      if (/youtube\.com/.test(hostname)) {
-        return true;
-      }
-    }
-
-    return false;
-  };
-
   canSearchAndPlayTracks = (): boolean => {
     const { youtubeUser } = this.props;
     // check if the user is authed to search with the Youtube API
@@ -276,10 +305,14 @@ export default class YoutubePlayer
     let youtubeId = _get(listen, "track_metadata.additional_info.youtube_id");
     const originURL = _get(listen, "track_metadata.additional_info.origin_url");
     if (!youtubeId && _isString(originURL) && originURL.length) {
-      const parsedURL = new URL(originURL);
-      const { hostname, searchParams } = parsedURL;
-      if (/youtube\.com/.test(hostname)) {
-        youtubeId = searchParams.get("v");
+      try {
+        const parsedURL = new URL(originURL);
+        const { hostname, searchParams } = parsedURL;
+        if (/youtube\.com/.test(hostname)) {
+          youtubeId = searchParams.get("v");
+        }
+      } catch {
+        // URL is not valid, do nothing
       }
     }
     if (youtubeId) {

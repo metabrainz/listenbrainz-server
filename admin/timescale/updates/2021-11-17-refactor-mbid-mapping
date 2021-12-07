@@ -1,0 +1,79 @@
+-- create tables
+
+create table mbid_mapping (
+        recording_msid      uuid not null,
+        recording_mbid      uuid, -- FK mbid_mapping_metadata.recording_mbid
+        match_type          mbid_mapping_match_type_enum NOT NULL,
+        last_updated        TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+);
+
+create table mbid_mapping_metadata (
+        artist_credit_id    INT NOT NULL,
+        recording_mbid      UUID NOT NULL,
+        release_mbid        UUID NOT NULL,
+        release_name        TEXT NOT NULL,
+        artist_mbids        UUID[] NOT NULL,
+        artist_credit_name  TEXT NOT NULL,
+        recording_name      TEXT NOT NULL,
+        last_updated        TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+);
+
+-- copy data from current mapping
+
+INSERT INTO mbid_mapping_metadata
+     SELECT artist_credit_id  
+          , recording_mbid    
+          , release_mbid      
+          , release_name      
+          , artist_mbids      
+          , artist_credit_name
+          , recording_name    
+          , last_updated      
+       FROM listen_mbid_mapping
+      WHERE recording_mbid IS NOT NULL;
+     
+INSERT INTO mbid_mapping
+     SELECT recording_msid, recording_mbid, match_type, last_updated
+       FROM listen_join_listen_mbid_mapping lj
+       JOIN listen_mbid_mapping mbid
+         ON lj.listen_mbid_mapping = mbid.id
+      WHERE match_type != 'no_match';
+
+INSERT INTO mbid_mapping
+     SELECT recording_msid, NULL, match_type, last_updated
+       FROM listen_join_listen_mbid_mapping lj
+       JOIN listen_mbid_mapping mbid
+         ON lj.listen_mbid_mapping = mbid.id
+      WHERE match_type = 'no_match';
+
+-- Add indexes, PKs, FKS, etc
+
+ALTER TABLE mbid_mapping_metadata
+    ADD CONSTRAINT mbid_mapping_metadata_artist_mbids_check
+    CHECK ( array_ndims(artist_mbids) = 1 );
+
+ALTER TABLE mbid_mapping
+    ADD CONSTRAINT mbid_mapping_fields_null_check
+    CHECK (
+        (
+              match_type = 'no_match'
+          AND recording_mbid IS NULL
+        ) OR (
+              match_type <> 'no_match'
+          AND recording_mbid IS NOT NULL
+        )
+    );
+
+CREATE UNIQUE INDEX recording_mbid_ndx_mbid_mapping_metadata ON mbid_mapping_metadata (recording_mbid);
+
+CREATE UNIQUE INDEX recording_msid_ndx_mbid_mapping ON mbid_mapping (recording_msid);
+CREATE INDEX recording_mbid_ndx_mbid_mapping ON mbid_mapping (recording_mbid);
+CREATE INDEX match_type_ndx_mbid_mapping ON mbid_mapping (match_type);
+
+ALTER TABLE mbid_mapping_metadata ADD CONSTRAINT mbid_mapping_metadata_pkey PRIMARY KEY (recording_mbid);
+
+ALTER TABLE mbid_mapping
+    ADD CONSTRAINT mbid_mapping_recording_mbid_foreign_key
+    FOREIGN KEY (recording_mbid)
+    REFERENCES mbid_mapping_metadata (recording_mbid)
+    ON DELETE CASCADE;
