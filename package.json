@@ -69,7 +69,7 @@
     "react-loader-spinner": "^3.1.14",
     "react-responsive": "^8.1.0",
     "react-select": "^3.1.0",
-    "react-simple-star-rating": "^3.0.0",
+    "react-simple-star-rating": "^4.0.0",
     "react-sortablejs": "^6.0.0",
     "react-tooltip": "^4.2.21",
     "react-youtube": "^7.12.0",
