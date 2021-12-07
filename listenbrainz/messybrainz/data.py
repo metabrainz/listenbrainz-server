@@ -212,7 +212,7 @@ def load_recordings_from_msids(connection, messybrainz_ids):
     if not rows:
         raise exceptions.NoDataFoundException
 
-    msid_recording_map = { x["gid"]: x for x in rows }
+    msid_recording_map = {str(x["gid"]): x for x in rows}
 
     # match results to every given mbid so list is returned in the same order
     results = []
