@@ -21,7 +21,8 @@ def get_test_data():
           "annotation": "your lame <i>80s</i> music",
           "extension": {
               PLAYLIST_EXTENSION_URI: {
-                  "public": True
+                  "public": True,
+                  "algorithm_metadata": { "give_you_up": "never" }
               }
           },
           "track": [
@@ -104,6 +105,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["annotation"], "your lame <i>80s</i> music")
         self.assertEqual(response.json["playlist"]["track"][0]["identifier"],
                          playlist["playlist"]["track"][0]["identifier"])
+        self.assertNotIn("algorithm_metadata", response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI])
         try:
             dateutil.parser.isoparse(response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["last_modified_at"])
         except ValueError:
@@ -131,6 +133,9 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json["playlist"]["extension"]
                          [PLAYLIST_EXTENSION_URI]["created_for"], self.user["musicbrainz_id"])
+        self.assertEqual(response.json["playlist"]["extension"]
+                         [PLAYLIST_EXTENSION_URI]["algorithm_metadata"],
+                         playlist["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["algorithm_metadata"])
 
         # Try to submit a playlist on a different users's behalf without the right perms
         # (a user must be part of config. APPROVED_PLAYLIST_BOTS to be able to create playlists
