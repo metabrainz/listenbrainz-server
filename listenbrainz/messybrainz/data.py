@@ -233,53 +233,6 @@ def load_recordings_from_msids(connection, messybrainz_ids):
     return results
 
 
-def load_recordings_from_mbids(connection, musicbrainz_ids):
-    """ Returns data for a recordings corresponding to a given list of MusicBrainz IDs.
-
-    Args:
-        connection: sqlalchemy connection to execute db queries with
-        messybrainz_id (list [uuid]): the MusicBrainz IDs of the recordings to fetch data for
-
-    Returns:
-        list [dict]: a list of the recording data for the recordings in the order of the given MBIDs.
-    """
-
-    if not musicbrainz_ids:
-        return {}
-
-    query = text("""SELECT DISTINCT rj.data
-                         , r.artist
-                         , r.release
-                         , r.gid
-                      FROM recording_json AS rj
-                 LEFT JOIN recording AS r
-                        ON rj.id = r.data
-                     WHERE rj.data ->> 'recording_mbid' IN :mbids""")
-    result = connection.execute(query, {"mbids": tuple(map(str, musicbrainz_ids))})
-
-    rows = result.fetchall()
-    if not rows:
-        raise exceptions.NoDataFoundException
-
-    # match results to every given mbid so list is returned in the same order
-    results = []
-    for mbid in musicbrainz_ids:
-        row = list(filter(lambda x: str(x["data"]["recording_mbid"]) == str(mbid), rows))[0]
-        if not row:
-            raise exceptions.NoDataFoundException
-
-        result = {}
-        result["payload"] = row["data"]
-        result["ids"] = {"artist_mbids": [], "release_mbid": ""}
-        result["ids"]["recording_mbid"] = str(row["data"]["recording_mbid"])
-        result["ids"]["artist_msid"] = str(row["artist"])
-        result["ids"]["release_msid"] = str(row["release"]) if row["release"] else None
-        result["ids"]["recording_msid"] = str(row["gid"])
-        results.append(result)
-
-    return results
-
-
 def convert_to_messybrainz_json(data):
     """ Converts the specified data dict into JSON strings, while
     applying MessyBrainz' transformations which include (if needed)
