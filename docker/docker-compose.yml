@@ -22,6 +22,8 @@ services:
     image: timescale/timescaledb:2.2.0-pg11
     volumes:
       - timescaledb:/var/lib/postgresql/data:z
+    ports:
+      - "127.0.0.1:7432:5432"
     environment:
       POSTGRES_PASSWORD: 'postgres'
 
@@ -55,9 +57,9 @@ services:
 
   api_compat:
     image: web
-    command: python3 /code/listenbrainz/manage.py run_api_compat_server -h 0.0.0.0 -p 8080 -d
+    command: python3 /code/listenbrainz/manage.py run_api_compat_server -h 0.0.0.0 -p 7080 -d
     ports:
-      - "8080:8080"
+      - "7080:7080"
     volumes:
       - ..:/code/listenbrainz:z
     depends_on:
@@ -87,9 +89,9 @@ services:
     image: web
     volumes:
       - ..:/code/listenbrainz:z
-    command: python manage.py run_websockets -h 0.0.0.0 -p 8082
+    command: python manage.py run_websockets -h 0.0.0.0 -p 7082
     ports:
-      - "8082:8082"
+      - "7082:7082"
     depends_on:
       - redis
       - rabbitmq
