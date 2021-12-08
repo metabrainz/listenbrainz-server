@@ -59,9 +59,26 @@ export default class YearInMusic extends React.Component<
     return (
       <div role="main" id="year-in-music">
         <div className="row center-block">
+          <div className="col-sm-6 center-p">
+            <img
+              className="img-responsive header-image"
+              src="/static/img/year-in-music-2021.svg"
+              alt="Your year in music 2021"
+            />
+            <div>
+              <h4>
+                <div>Share your year with your friends</div>
+                <p>
+                  <a
+                    href={`https://listenbrainz.org/user/${user?.name}/year-in-music`}
+                  >
+                    https://listenbrainz.org/user/{user?.name}/year-in-music
+                  </a>
+                </p>
+              </h4>
+            </div>
+          </div>
           <div className="col-sm-6">
-            <br />
-            <br />
             <h1>{user?.name}</h1>
             <div style={{ marginTop: "20px", marginBottom: "20px" }}>
               <img
@@ -74,43 +91,23 @@ export default class YearInMusic extends React.Component<
                 </a>
               </b>
             </div>
-
-            <div className="card">
-              <h4>
-                Share your year with your friends
-                <br />
-                <br />
-                <a
-                  href={`https://listenbrainz.org/user/${user?.name}/year-in-music`}
-                >
-                  https://listenbrainz.org/user/{user?.name}/year-in-music
-                </a>
-              </h4>
-            </div>
-          </div>
-          <div className="col-sm-6">
-            <img
-              className="img-responsive header-image"
-              src="/static/img/year-in-music-2021.svg"
-              alt="Your year in music 2021"
-            />
-          </div>
-          <hr className="wide" />
-          <div className="row">
-            <div className="col-sm-4">
-              <div className="card flex-center">
-                <h3 className="text-center">
-                  You listened to 12345 songs this year
-                </h3>
+            <div className="row">
+              <div className="col-sm-6">
+                <div className="card flex-center">
+                  <h3 className="text-center">
+                    You listened to 12345 songs this year
+                  </h3>
+                </div>
               </div>
-            </div>
-            <div className="col-sm-4">
-              <div className="card flex-center">
-                <h3 className="text-center">Your most active listening day</h3>
-                <div>Friday</div>
+              <div className="col-sm-6">
+                <div className="card flex-center">
+                  <h3 className="text-center">
+                    Your most active listening day
+                  </h3>
+                  <div>Friday</div>
+                </div>
               </div>
-            </div>
-            <div className="col-sm-4">
+              {/* <div className="col-sm-4">
               <div className="card flex-center">
                 <h3 className="text-center">
                   Average color of your top albums:
@@ -123,9 +120,12 @@ export default class YearInMusic extends React.Component<
                   />
                 </h3>
               </div>
+            </div> */}
             </div>
           </div>
-          <hr className="wide" />
+        </div>
+        <hr className="wide" />
+        <div className="row">
           <div className="card">
             <h3>
               Your top {selectedTopEntity}s of the year
