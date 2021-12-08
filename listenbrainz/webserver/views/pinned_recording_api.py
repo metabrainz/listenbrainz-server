@@ -54,7 +54,7 @@ def pin_recording_for_user():
     try:
         recording_to_pin = WritablePinnedRecording(
             user_id=user["id"],
-            recording_msid=data["recording_msid"],
+            recording_msid=data["recording_msid"] if "recording_msid" in data else None,
             recording_mbid=data["recording_mbid"] if "recording_mbid" in data else None,
             blurb_content=data["blurb_content"] if "blurb_content" in data else None,
             pinned_until=data["pinned_until"] if "pinned_until" in data else None,
