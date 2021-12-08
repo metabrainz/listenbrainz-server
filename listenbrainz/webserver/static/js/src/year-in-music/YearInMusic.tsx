@@ -126,143 +126,135 @@ export default class YearInMusic extends React.Component<
             </div>
           </div>
           <hr className="wide" />
-          <div className="row">
-            <div className="card">
-              <h3>
-                Your top {selectedTopEntity}s of the year
-                <Pill
-                  active={selectedTopEntity === "recording"}
-                  // eslint-disable-next-line react/jsx-no-bind
-                  onClick={this.selectTopEntity.bind(this, "recording")}
-                >
-                  Tracks
-                </Pill>{" "}
-                <Pill
-                  active={selectedTopEntity === "release"}
-                  // eslint-disable-next-line react/jsx-no-bind
-                  onClick={this.selectTopEntity.bind(this, "release")}
-                >
-                  Albums
-                </Pill>{" "}
-                <Pill
-                  active={selectedTopEntity === "artist"}
-                  // eslint-disable-next-line react/jsx-no-bind
-                  onClick={this.selectTopEntity.bind(this, "artist")}
-                >
-                  Artists
-                </Pill>{" "}
-              </h3>
-              <ComponentToImage />
-            </div>
-          </div>
-          <div className="row">
-            <div className="col-sm-6 card">
-              <h3 className="text-center">
-                Your top discoveries published in 2021
-              </h3>
-              <div className="scrollable-area">
-                Extract info from a JSPF playlist, show first 5 items, link to
-                full playlist
-              </div>
-            </div>
-            <div className="col-sm-6 card" id="new-releases">
-              <h3 className="text-center">
-                New albums of your top artists
-                <div className="small">
-                  New albums released in 2021 from your favorite artists.
-                </div>
-              </h3>
-              <div className="scrollable-area">
-                {fakeData.new_releases_of_top_artists.map((release) => (
-                  <ListenCard
-                    key={release.release_id}
-                    compact
-                    listen={{
-                      listened_at: 0,
-                      listened_at_iso: release.first_release_date,
-                      track_metadata: {
-                        artist_name: release.artist_credit_names.join(", "),
-                        track_name: release.title,
-                        release_name: release.title,
-                        additional_info: {
-                          release_mbid: release.release_id,
-                          artist_mbids: release.artist_credit_mbids,
-                        },
-                      },
-                    }}
-                    showTimestamp
-                    showUsername={false}
-                    newAlert={newAlert}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="row">
-            <div className="col-sm-6 card" id="similar-users">
-              <h3 className="text-center">
-                Music buddies
-                <div className="small">
-                  Here are the users with the most similar taste to you this
-                  year. Maybe go check them out?
-                </div>
-              </h3>
-              <div className="scrollable-area similar-users-list">
-                {fakeData.similar_users &&
-                  Object.keys(fakeData.similar_users).map(
-                    (userName: string, index) => {
-                      return (
-                        <UserListModalEntry
-                          mode="similar-users"
-                          key={userName}
-                          user={{
-                            name: userName,
-                            similarityScore:
-                              fakeData.similar_users[
-                                userName as keyof typeof fakeData.similar_users
-                              ],
-                          }}
-                          loggedInUserFollowsUser={false}
-                          updateFollowingList={() => {}}
-                        />
-                      );
-                    }
-                  )}
-              </div>
-            </div>
-            <div className="col-sm-6 card" id="most-listened-year">
-              <h3 className="text-center">
-                What year are your favorite albums from?
-                <div className="small">
-                  It&apos;s one way of seeing how adventurous you&apos;ve been
-                  this year, but we&apos;re not judging
-                </div>
-              </h3>
-              <div className="graph">
-                <ResponsiveBar
-                  margin={{ left: 30, bottom: 130 }}
-                  data={Object.keys(fakeData.most_listened_year).map(
-                    (year: string, index) => ({
-                      year: Number(year),
-                      albums:
-                        fakeData.most_listened_year[
-                          year as keyof typeof fakeData.most_listened_year
-                        ],
-                    })
-                  )}
-                  padding={0.2}
-                  layout="horizontal"
-                  keys={["albums"]}
-                  indexBy="year"
-                />
-              </div>
-            </div>
-          </div>
-          <div className="row">
-            <h3 className="text-center">
-              We made some personnalized playlists for you !
+          <div className="card">
+            <h3>
+              Your top {selectedTopEntity}s of the year
+              <Pill
+                active={selectedTopEntity === "recording"}
+                // eslint-disable-next-line react/jsx-no-bind
+                onClick={this.selectTopEntity.bind(this, "recording")}
+              >
+                Tracks
+              </Pill>{" "}
+              <Pill
+                active={selectedTopEntity === "release"}
+                // eslint-disable-next-line react/jsx-no-bind
+                onClick={this.selectTopEntity.bind(this, "release")}
+              >
+                Albums
+              </Pill>{" "}
+              <Pill
+                active={selectedTopEntity === "artist"}
+                // eslint-disable-next-line react/jsx-no-bind
+                onClick={this.selectTopEntity.bind(this, "artist")}
+              >
+                Artists
+              </Pill>{" "}
             </h3>
+            <ComponentToImage />
           </div>
+          <div className="card">
+            <h3 className="text-center">
+              Your top discoveries published in 2021
+            </h3>
+            <div className="scrollable-area">
+              Extract info from a JSPF playlist, show first 5 items, link to
+              full playlist
+            </div>
+          </div>
+          <div className="card" id="new-releases">
+            <h3 className="text-center">
+              New albums of your top artists
+              <div className="small">
+                New albums released in 2021 from your favorite artists.
+              </div>
+            </h3>
+            <div className="scrollable-area">
+              {fakeData.new_releases_of_top_artists.map((release) => (
+                <ListenCard
+                  key={release.release_id}
+                  compact
+                  listen={{
+                    listened_at: 0,
+                    listened_at_iso: release.first_release_date,
+                    track_metadata: {
+                      artist_name: release.artist_credit_names.join(", "),
+                      track_name: release.title,
+                      release_name: release.title,
+                      additional_info: {
+                        release_mbid: release.release_id,
+                        artist_mbids: release.artist_credit_mbids,
+                      },
+                    },
+                  }}
+                  showTimestamp
+                  showUsername={false}
+                  newAlert={newAlert}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="card" id="similar-users">
+            <h3 className="text-center">
+              Music buddies
+              <div className="small">
+                Here are the users with the most similar taste to you this year.
+                Maybe go check them out?
+              </div>
+            </h3>
+            <div className="scrollable-area similar-users-list">
+              {fakeData.similar_users &&
+                Object.keys(fakeData.similar_users).map(
+                  (userName: string, index) => {
+                    return (
+                      <UserListModalEntry
+                        mode="similar-users"
+                        key={userName}
+                        user={{
+                          name: userName,
+                          similarityScore:
+                            fakeData.similar_users[
+                              userName as keyof typeof fakeData.similar_users
+                            ],
+                        }}
+                        loggedInUserFollowsUser={false}
+                        updateFollowingList={() => {}}
+                      />
+                    );
+                  }
+                )}
+            </div>
+          </div>
+          <div className="card" id="most-listened-year">
+            <h3 className="text-center">
+              What year are your favorite albums from?
+              <div className="small">
+                It&apos;s one way of seeing how adventurous you&apos;ve been
+                this year, but we&apos;re not judging
+              </div>
+            </h3>
+            <div className="graph">
+              <ResponsiveBar
+                margin={{ left: 30, bottom: 130 }}
+                data={Object.keys(fakeData.most_listened_year).map(
+                  (year: string, index) => ({
+                    year: Number(year),
+                    albums:
+                      fakeData.most_listened_year[
+                        year as keyof typeof fakeData.most_listened_year
+                      ],
+                  })
+                )}
+                padding={0.2}
+                layout="horizontal"
+                keys={["albums"]}
+                indexBy="year"
+              />
+            </div>
+          </div>
+          <h3 className="text-center">
+            We made some personnalized playlists for you !
+          </h3>
           <hr className="wide" />
           <BrainzPlayer
             listens={[]}
