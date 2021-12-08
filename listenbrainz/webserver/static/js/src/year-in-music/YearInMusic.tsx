@@ -65,7 +65,7 @@ export default class YearInMusic extends React.Component<
             <h1>{user?.name}</h1>
             <div style={{ marginTop: "20px", marginBottom: "20px" }}>
               <img
-                src="{{ url_for('static', filename='img/musicbrainz-16.svg') }}"
+                src="../../../../static/img/musicbrainz-16.svg"
                 alt="MusicBrainz Logo"
               />
               <b>
