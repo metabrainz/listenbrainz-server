@@ -74,7 +74,7 @@ def fetch_top_discoveries_for_users(lb_conn, mb_conn, year):
             create_table(mb_conn)
 
             log("fetch active users")
-            user_list = ["rob", "mr_monkey", "alastairp", "amCap1712", "tandy1000"] #fetch_user_list(lb_conn, year)
+            user_list = ["rob", "mr_monkey", "alastairp", "amCap1712", "tandy1000", "Damselfish", "akshaaatt", "riksucks"] #fetch_user_list(lb_conn, year)
             log("Process %d users." % len(user_list))
 
             query = """SELECT user_name
