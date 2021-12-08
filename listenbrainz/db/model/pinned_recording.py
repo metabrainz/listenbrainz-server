@@ -1,19 +1,17 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional, List
 
-import sqlalchemy
-from pydantic import BaseModel, validator, constr, NonNegativeInt
+from pydantic import validator, constr, NonNegativeInt
 
-from listenbrainz.db import timescale
-from data.model.validators import check_valid_uuid, check_datetime_has_tzinfo
-from listenbrainz.db.mapping import load_recordings_from_mapping
+from data.model.validators import check_datetime_has_tzinfo
+from listenbrainz.db.mapping import MsidMbidModel, load_recordings_from_mapping
 from listenbrainz.messybrainz import load_recordings_from_msids
 
 DAYS_UNTIL_UNPIN = 7  # default = unpin after one week
 MAX_BLURB_CONTENT_LENGTH = 280  # maximum length of blurb content
 
 
-class PinnedRecording(BaseModel):
+class PinnedRecording(MsidMbidModel):
     """Represents a pinned recording object.
     Args:
         user_id: the row id of the user in the DB
@@ -29,14 +27,10 @@ class PinnedRecording(BaseModel):
     user_id: NonNegativeInt
     user_name: Optional[str]
     row_id: NonNegativeInt
-    recording_msid: constr(min_length=1)
-    recording_mbid: Optional[str]
     blurb_content: constr(max_length=MAX_BLURB_CONTENT_LENGTH) = None
     created: datetime
     pinned_until: datetime
     track_metadata: dict = None
-
-    _validate_recording_msid: classmethod = validator("recording_msid", "recording_mbid", allow_reuse=True)(check_valid_uuid)
 
     _validate_created_tzinfo: classmethod = validator("created", always=True, allow_reuse=True)(check_datetime_has_tzinfo)
 
