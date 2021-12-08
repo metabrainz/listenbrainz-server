@@ -48,8 +48,8 @@ def pin_recording_for_user():
 
     data = request.json
 
-    if "recording_msid" not in data:
-        log_raise_400("JSON document must contain recording_msid: ", data)
+    if "recording_msid" not in data and "recording_mbid" not in data:
+        log_raise_400("JSON document must contain either recording_msid or recording_mbid", data)
 
     try:
         recording_to_pin = WritablePinnedRecording(
