@@ -225,7 +225,7 @@ export default class YearInMusic extends React.Component<
             </div>
           </div>
         </div>
-        <div className="row">
+        <div className="row flex">
           <div className="col-md-7">
             <div className="card" id="top-discoveries">
               <h3 className="text-center">
@@ -269,7 +269,7 @@ export default class YearInMusic extends React.Component<
             </div>
           </div>
         </div>
-        <div className="row">
+        <div className="row flex">
           <div className="col-md-5">
             <div className="card" id="similar-users">
               <h3 className="text-center">
@@ -348,10 +348,10 @@ export default class YearInMusic extends React.Component<
               <h3 className="text-center">
                 We made some personnalized playlists for you !
               </h3>
-              <div className="row">
-                <div className="col-md-4">Playlist #1</div>
-                <div className="col-md-4">Playlist #2</div>
-                <div className="col-md-4">Playlist #3</div>
+              <div className="flex">
+                <div>Playlist #1</div>
+                <div>Playlist #2</div>
+                <div>Playlist #3</div>
               </div>
             </div>
           </div>
