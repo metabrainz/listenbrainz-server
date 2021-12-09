@@ -20,6 +20,7 @@ def create_table(mb_conn):
             curs.execute("""CREATE TABLE mapping.tracks_of_the_year
                                        ( user_name          TEXT NOT NULL
                                        , recording_mbid     UUID NOT NULL
+                                       , recording_name     UUID NOT NULL
                                        , listen_count       INTEGER NOT NULL
                                        )""")
             mb_conn.commit()
@@ -69,7 +70,7 @@ def fetch_tracks_listened_to(lb_conn, mb_conn, ts):
             create_table(mb_conn)
 
             log("fetch tracks listened to")
-            query = """SELECT user_name, m.recording_mbid, count(*) AS cnt
+            query = """SELECT user_name, m.recording_mbid, m.recording_name, count(*) AS cnt
                          FROM listen l
                          JOIN mbid_mapping m
                            ON data->'track_metadata'->'additional_info'->>'recording_msid' = m.recording_msid::TEXT
