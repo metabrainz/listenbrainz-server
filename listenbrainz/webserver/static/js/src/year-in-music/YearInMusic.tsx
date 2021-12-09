@@ -3,6 +3,7 @@
 import * as ReactDOM from "react-dom";
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
+import { range, uniq } from "lodash";
 import ErrorBoundary from "../ErrorBoundary";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import BrainzPlayer from "../BrainzPlayer";
@@ -56,6 +57,23 @@ export default class YearInMusic extends React.Component<
     const selectedReleaseTracks = selectedRelease?.recordings ?? [];
     const totalListens = 12345;
     const mostActiveDay = "Friday";
+
+    /* Most listened years */
+    const mostListenedYears = Object.keys(fakeData.most_listened_year);
+    // Ensure there are no holes between years
+    const filledYears = range(
+      Number(mostListenedYears[0]),
+      Number(mostListenedYears[mostListenedYears.length - 1])
+    );
+    const mostListenedYearDataForGraph = filledYears.map((year: number) => ({
+      year,
+      // Add a 0 for years without data
+      albums:
+        fakeData.most_listened_year[
+          String(year) as keyof typeof fakeData.most_listened_year
+        ] ?? 0,
+    }));
+
     return (
       <div role="main" id="year-in-music">
         <div className="row center-block">
@@ -173,26 +191,28 @@ export default class YearInMusic extends React.Component<
               <h3 className="text-center">
                 What year are your favorite albums from?
                 <div className="small">
-                  It&apos;s one way of seeing how adventurous you&apos;ve been
-                  this year, but we&apos;re not judging
+                  How much were you on the lookout for new music this year? Not
+                  that we&apos;re judging.
                 </div>
               </h3>
               <div className="graph">
                 <ResponsiveBar
-                  margin={{ left: 30, bottom: 130 }}
-                  data={Object.keys(fakeData.most_listened_year).map(
-                    (year: string, index) => ({
-                      year: Number(year),
-                      albums:
-                        fakeData.most_listened_year[
-                          year as keyof typeof fakeData.most_listened_year
-                        ],
-                    })
-                  )}
-                  padding={0.2}
-                  layout="horizontal"
+                  margin={{ left: 30, bottom: 30 }}
+                  data={mostListenedYearDataForGraph}
+                  padding={0.1}
+                  layout="vertical"
                   keys={["albums"]}
                   indexBy="year"
+                  colors="#eb743b"
+                  enableLabel={false}
+                  axisBottom={{
+                    // Round to nearest 5 year mark
+                    tickValues: uniq(
+                      mostListenedYearDataForGraph.map(
+                        (datum) => Math.round((datum.year + 1) / 5) * 5
+                      )
+                    ),
+                  }}
                 />
               </div>
             </div>
