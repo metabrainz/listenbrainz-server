@@ -3,7 +3,7 @@
 import * as ReactDOM from "react-dom";
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
-import { range, uniq } from "lodash";
+import { isEmpty, isNil, range, uniq } from "lodash";
 import ErrorBoundary from "../ErrorBoundary";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import BrainzPlayer from "../BrainzPlayer";
@@ -27,7 +27,7 @@ export type YearInMusicProps = {
 
 export type YearInMusicState = {
   loading: boolean;
-  selectedRelease?: ColorReleaseItem;
+  followingList: Array<string>;
   selectedTopEntity: Entity;
 };
 
@@ -42,19 +42,70 @@ export default class YearInMusic extends React.Component<
     super(props);
     this.state = {
       loading: false,
+      followingList: [],
       selectedTopEntity: "recording",
     };
+  }
+
+  async componentDidMount() {
+    await this.getFollowing();
   }
 
   selectTopEntity = (entity: Entity) => {
     this.setState({ selectedTopEntity: entity });
   };
 
+  getFollowing = async () => {
+    const { user } = this.props;
+    const { APIService, currentUser } = this.context;
+    const { getFollowingForUser } = APIService;
+    if (!currentUser?.name) {
+      return;
+    }
+    try {
+      const response = await getFollowingForUser(currentUser.name);
+      const { following } = response;
+
+      this.setState({ followingList: following });
+    } catch (err) {
+      const { newAlert } = this.props;
+      newAlert("danger", "Error while fetching followers", err.toString());
+    }
+  };
+
+  updateFollowingList = (
+    user: ListenBrainzUser,
+    action: "follow" | "unfollow"
+  ) => {
+    const { followingList } = this.state;
+    const newFollowingList = [...followingList];
+    const index = newFollowingList.findIndex(
+      (following) => following === user.name
+    );
+    if (action === "follow" && index === -1) {
+      newFollowingList.push(user.name);
+    }
+    if (action === "unfollow" && index !== -1) {
+      newFollowingList.splice(index, 1);
+    }
+    this.setState({ followingList: newFollowingList });
+  };
+
+  loggedInUserFollowsUser = (user: ListenBrainzUser): boolean => {
+    const { currentUser } = this.context;
+    const { followingList } = this.state;
+
+    if (isNil(currentUser) || isEmpty(currentUser)) {
+      return false;
+    }
+
+    return followingList.includes(user.name);
+  };
+
   render() {
     const { user, newAlert } = this.props;
-    const { loading, selectedRelease, selectedTopEntity } = this.state;
+    const { loading, followingList, selectedTopEntity } = this.state;
     const { APIService, currentUser } = this.context;
-    const selectedReleaseTracks = selectedRelease?.recordings ?? [];
     const totalListens = 12345;
     const mostActiveDay = "Friday";
 
@@ -232,19 +283,23 @@ export default class YearInMusic extends React.Component<
                 {fakeData.similar_users &&
                   Object.keys(fakeData.similar_users).map(
                     (userName: string, index) => {
+                      const similarUser: SimilarUser = {
+                        name: userName,
+                        similarityScore:
+                          fakeData.similar_users[
+                            userName as keyof typeof fakeData.similar_users
+                          ],
+                      };
+                      const loggedInUserFollowsUser = this.loggedInUserFollowsUser(
+                        similarUser
+                      );
                       return (
                         <UserListModalEntry
                           mode="similar-users"
                           key={userName}
-                          user={{
-                            name: userName,
-                            similarityScore:
-                              fakeData.similar_users[
-                                userName as keyof typeof fakeData.similar_users
-                              ],
-                          }}
-                          loggedInUserFollowsUser={false}
-                          updateFollowingList={() => {}}
+                          user={similarUser}
+                          loggedInUserFollowsUser={loggedInUserFollowsUser}
+                          updateFollowingList={this.updateFollowingList}
                         />
                       );
                     }
