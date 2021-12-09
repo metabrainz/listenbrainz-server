@@ -76,7 +76,7 @@ export default class YearInMusic extends React.Component<
 
     return (
       <div role="main" id="year-in-music">
-        <div className="row center-block">
+        <div className="row flex-center flex-wrap">
           <div className="col-sm-6 center-p">
             <img
               className="img-responsive header-image"
@@ -98,7 +98,7 @@ export default class YearInMusic extends React.Component<
           </div>
           <div className="col-sm-6">
             <h1>{user?.name}</h1>
-            <div style={{ marginTop: "20px", marginBottom: "20px" }}>
+            <p>
               <img
                 src="../../../../static/img/musicbrainz-16.svg"
                 alt="MusicBrainz Logo"
@@ -108,22 +108,19 @@ export default class YearInMusic extends React.Component<
                   See profile on MusicBrainz
                 </a>
               </b>
-            </div>
-            <div className="row">
-              <div className="col-sm-6">
-                <div className="card flex-center">
-                  <h3 className="text-center">
-                    You listened to 12345 songs this year
-                  </h3>
-                </div>
+            </p>
+            <div className="flex-wrap">
+              <div className="card">
+                <h3 className="text-center">
+                  You listened to <span className="accent">12345</span> songs
+                  this year
+                </h3>
               </div>
-              <div className="col-sm-6">
-                <div className="card flex-center">
-                  <h3 className="text-center">
-                    Your most active listening day
-                  </h3>
-                  <div>Friday</div>
-                </div>
+              <div className="card">
+                <h3 className="text-center">
+                  <span className="accent">Friday</span> was your most active
+                  listening day
+                </h3>
               </div>
               {/* <div className="col-sm-4">
               <div className="card flex-center">
