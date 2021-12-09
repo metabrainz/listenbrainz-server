@@ -64,6 +64,9 @@ def submit_listen():
         log_raise_400("Cannot parse JSON document: %s" % e, raw_data)
 
     try:
+        if not isinstance(data, dict):
+            raise APIBadRequest("Invalid JSON document submitted.", raw_data)
+
         payload = data['payload']
 
         if not isinstance(payload, list):
