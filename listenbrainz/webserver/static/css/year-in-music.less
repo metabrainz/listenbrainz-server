@@ -3,14 +3,11 @@
 		color:@orange;
 	}
 	> .row > *{
-		margin-top: 1em;
-		margin-bottom: 1em;
+		margin-top: 2.5em;
+		margin-bottom: 2.5em;
 	}
-	.card:not(.listen-card){
+	.card:not(.listen-card) > *{
 		padding:0.6em;
-		&.flex-center{
-			flex-direction: column;
-		}
 	}
 	.scrollable-area{
 		box-shadow: inset 0px 11px 8px -10px #ccc;
@@ -18,7 +15,7 @@
 		overflow-y: scroll;
 	}
 	#most-listened-year .graph{
-		height: 500px;
+		height: 300px;
 	}
 	
 	#similar-users {
