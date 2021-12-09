@@ -141,6 +141,8 @@ class CritiqueBrainzService(ExternalService):
             return data["id"]
 
     def fetch_reviews(self, review_ids: Iterable[str]):
+        if not review_ids:
+            return None
         response = requests.get(CRITIQUEBRAINZ_REVIEW_FETCH_URL, params={"review_ids": ",".join(review_ids)})
         if response.status_code != 200:
             return None
