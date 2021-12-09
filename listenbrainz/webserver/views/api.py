@@ -61,11 +61,12 @@ def submit_listen():
     try:
         data = ujson.loads(raw_data.decode("utf-8"))
     except ValueError as e:
-        log_raise_400("Cannot parse JSON document: %s" % e, raw_data)
+        log_raise_400("Cannot parse JSON document: %s" % e)
 
     try:
         if not isinstance(data, dict):
-            raise APIBadRequest("Invalid JSON document submitted.", raw_data)
+            raise APIBadRequest("Invalid JSON document submitted. Top level of "
+                                "JSON document should be a json object.")
 
         payload = data['payload']
 

@@ -216,7 +216,8 @@ class APITestCase(ListenAPIIntegrationTestCase):
         for data in (1, False, None, [2, 3], "foobar"):
             response = self.send_data(data)
             self.assert400(response)
-            self.assertEqual("Invalid JSON document submitted.", response.json["error"])
+            self.assertEqual("Invalid JSON document submitted. Top level of JSON "
+                             "document should be a json object", response.json["error"])
 
     def test_unauthorized_submission(self):
         """ Test for checking that unauthorized submissions return 401
