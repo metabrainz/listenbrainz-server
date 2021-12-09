@@ -77,7 +77,7 @@ export default class YearInMusic extends React.Component<
     return (
       <div role="main" id="year-in-music">
         <div className="row flex-center flex-wrap">
-          <div className="col-sm-6 center-p">
+          <div className="col-sm-6 flex-center flex-wrap">
             <img
               className="img-responsive header-image"
               src="/static/img/year-in-music-2021.svg"
@@ -85,7 +85,9 @@ export default class YearInMusic extends React.Component<
             />
             <div>
               <h4>
-                <div>Share your year with your friends</div>
+                <div className="center-p">
+                  Share your year with your friends
+                </div>
                 <p>
                   <a
                     href={`https://listenbrainz.org/user/${user?.name}/year-in-music`}
@@ -143,8 +145,8 @@ export default class YearInMusic extends React.Component<
         <div className="row">
           <div className="col-sm-12">
             <div className="card">
-              <h3>
-                Your top {selectedTopEntity}s of the year
+              <h3 className="center-p">
+                Your top
                 <Pill
                   active={selectedTopEntity === "recording"}
                   // eslint-disable-next-line react/jsx-no-bind
@@ -166,6 +168,7 @@ export default class YearInMusic extends React.Component<
                 >
                   Artists
                 </Pill>{" "}
+                of the year
               </h3>
               <ComponentToImage />
             </div>
