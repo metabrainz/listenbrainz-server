@@ -24,22 +24,7 @@ const ComponentToImage = () => {
   };
 
   const exportAsPicture = () => {
-    const html = document.getElementsByTagName("HTML")[0] as HTMLElement;
-    const body = document.getElementsByTagName("BODY")[0] as HTMLElement;
-    let htmlWidth = html.clientWidth;
-    let bodyWidth = body.clientWidth;
-
     const data = document.getElementById("card");
-    const newWidth = data!.scrollWidth - data!.clientWidth;
-
-    if (newWidth > data!.clientWidth) {
-      htmlWidth += newWidth;
-      bodyWidth += newWidth;
-    }
-
-    html.style.width = `${htmlWidth}px`;
-    body.style.width = `${bodyWidth}px`;
-
     html2canvas(data as HTMLElement)
       .then((canvas) => {
         return canvas.toDataURL("image/png", 1.0);
