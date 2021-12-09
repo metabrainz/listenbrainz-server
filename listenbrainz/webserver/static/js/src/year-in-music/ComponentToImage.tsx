@@ -24,23 +24,12 @@ const ComponentToImage = () => {
   };
 
   const exportAsPicture = () => {
-    const html = document.getElementsByTagName("HTML")[0] as HTMLElement;
-    const body = document.getElementsByTagName("BODY")[0] as HTMLElement;
-    let htmlWidth = html.clientWidth;
-    let bodyWidth = body.clientWidth;
-
     const data = document.getElementById("card");
-    const newWidth = data!.scrollWidth - data!.clientWidth;
-
-    if (newWidth > data!.clientWidth) {
-      htmlWidth += newWidth;
-      bodyWidth += newWidth;
-    }
-
-    html.style.width = `${htmlWidth}px`;
-    body.style.width = `${bodyWidth}px`;
-
-    html2canvas(data as HTMLElement)
+    html2canvas(data as HTMLElement, {
+      onclone(clonedDoc) {
+        clonedDoc!.getElementById("card")!.style.display = "block";
+      },
+    })
       .then((canvas) => {
         return canvas.toDataURL("image/png", 1.0);
       })
@@ -54,7 +43,11 @@ const ComponentToImage = () => {
       <button style={{ margin: "5rem" }} onClick={exportAsPicture}>
         Save as Image
       </button>
-      <div id="card" className="card" style={{ width: "24rem" }}>
+      <div
+        id="card"
+        className="card"
+        style={{ width: "24rem", display: "none" }}
+      >
         <img
           className="card-img-top"
           src="/static/img/listenbrainz-logo.svg"
