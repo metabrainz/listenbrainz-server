@@ -132,6 +132,9 @@ ADMINS = []
 # Users who are allowed to submit playlists made for someone else.
 APPROVED_PLAYLIST_BOTS = ['troi-bot']
 
+# Auth tokens that are not subject to rate limits:
+WHITELISTED_AUTH_TOKENS = []
+
 # SPOTIFY
 SPOTIFY_CLIENT_ID = 'needs a non empty default value for tests, change this'
 SPOTIFY_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
