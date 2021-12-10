@@ -3,6 +3,7 @@
 import * as ReactDOM from "react-dom";
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
+import { ResponsiveCalendar } from "@nivo/calendar";
 import { isEmpty, isNil, range, uniq } from "lodash";
 import ErrorBoundary from "../ErrorBoundary";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
@@ -249,6 +250,14 @@ export default class YearInMusic extends React.Component<
                     newAlert={newAlert}
                   />
                 ))}
+            </div>
+          </div>
+        </div>
+        <div className="row">
+          <div className="card content-card" id="calendar">
+            <h3 className="text-center">Your listening activity in 2021</h3>
+            <div className="graph">
+              <ResponsiveCalendar from="2021-01-01" to="2021-12-31" data={[]} />
             </div>
           </div>
         </div>
