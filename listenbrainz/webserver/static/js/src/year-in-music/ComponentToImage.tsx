@@ -1,7 +1,11 @@
 import html2canvas from "html2canvas";
 import React from "react";
 
-const ComponentToImage = () => {
+export type ComponentToImageProps = {
+  data: any[];
+};
+
+const ComponentToImage = (props: ComponentToImageProps) => {
   const saveAs = (blob: string, fileName: string) => {
     const elem = window.document.createElement("a");
     elem.href = blob;
@@ -39,13 +43,16 @@ const ComponentToImage = () => {
   };
 
   return (
-    <div className="text-center justify-content-center align-content-center align-items-center">
-      <button style={{ margin: "5rem" }} onClick={exportAsPicture}>
+    <>
+      <button
+        style={{ marginLeft: "2rem", marginBottom: "1rem" }}
+        onClick={exportAsPicture}
+      >
         Save as Image
       </button>
       <div
         id="card"
-        className="card"
+        className="card text-center justify-content-center align-content-center align-items-center"
         style={{ width: "24rem", display: "none" }}
       >
         <img
@@ -68,16 +75,9 @@ const ComponentToImage = () => {
           alt="Tickets to my Downfall"
         />
         <ul className="list-group list-group-flush">
-          <li className="list-group-item">Linkin Park</li>
-          <li className="list-group-item">Machine Gun Kelly</li>
-          <li className="list-group-item">Troye Sivan</li>
-          <li className="list-group-item">Bring Me The Horizon</li>
-          <li className="list-group-item">Maroon 5</li>
-          <li className="list-group-item">Mike Shinoda</li>
-          <li className="list-group-item">Lauv</li>
-          <li className="list-group-item">Arctic Monkeys</li>
-          <li className="list-group-item">Halsey</li>
-          <li className="list-group-item">Ed Sheeran</li>
+          {props.data.map((release) => (
+            <li className="list-group-item">{release.name}</li>
+          ))}
         </ul>
         <div className="card-body">
           <p className="card-text">
@@ -88,7 +88,7 @@ const ComponentToImage = () => {
           </p>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
