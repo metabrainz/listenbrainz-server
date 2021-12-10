@@ -181,6 +181,9 @@ ADMINS = [
 APPROVED_PLAYLIST_BOTS = [
     {{template "KEY_ARRAY" "approved_playlist_bots"}}
 ]
+WHITELISTED_AUTH_TOKENS = [
+    {{template "KEY_ARRAY" "whitelisted_auth_tokens"}}
+]
 
 # SPOTIFY
 SPOTIFY_CLIENT_ID = '''{{template "KEY" "spotify/client_id"}}'''
