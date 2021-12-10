@@ -20,7 +20,8 @@ def create_table(mb_conn):
             curs.execute("""CREATE TABLE mapping.tracks_of_the_year
                                        ( user_name          TEXT NOT NULL
                                        , recording_mbid     UUID NOT NULL
-                                       , recording_name     UUID NOT NULL
+                                       , recording_name     TEXT NOT NULL
+                                       , artist_credit_name TEXT NOT NULL
                                        , listen_count       INTEGER NOT NULL
                                        )""")
             mb_conn.commit()
@@ -70,13 +71,21 @@ def fetch_tracks_listened_to(lb_conn, mb_conn, ts):
             create_table(mb_conn)
 
             log("fetch tracks listened to")
-            query = """SELECT user_name, m.recording_mbid, m.recording_name, count(*) AS cnt
+            query = """SELECT user_name
+                            , m.recording_mbid
+                            , md.recording_name
+                            , md.artist_credit_name
+                            , count(*) AS listen_count
                          FROM listen l
                          JOIN mbid_mapping m
                            ON data->'track_metadata'->'additional_info'->>'recording_msid' = m.recording_msid::TEXT
-                        WHERE listened_at >= %d
+                         JOIN mbid_mapping_metadata md
+                           ON m.recording_mbid = md.recording_mbid
+                        WHERE listened_at >= %s
                           AND m.recording_mbid is not null
-                     GROUP BY m.recording_mbid, user_name""" % ts
+                     GROUP BY m.recording_mbid, md.recording_name, md.artist_credit_name, user_name""" % ts
+ 
+                         
 
             to_insert = []
             lb_curs.execute(query)
@@ -87,7 +96,6 @@ def fetch_tracks_listened_to(lb_conn, mb_conn, ts):
 
                 to_insert.append(row)
                 if len(to_insert) >= BATCH_SIZE:
-                    print("insert %d rows" % len(to_insert))
                     insert_rows(mb_curs, "mapping.tracks_of_the_year", to_insert)
                     to_insert = []
                     mb_conn.commit()
