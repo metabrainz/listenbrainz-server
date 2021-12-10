@@ -221,7 +221,35 @@ export default class YearInMusic extends React.Component<
                 </Pill>{" "}
                 of the year
               </h3>
-              <ComponentToImage />
+              <div className="row">
+                <ComponentToImage
+                  data={fakeData.new_releases_of_top_artists.slice(0, 10)}
+                />
+              </div>
+              {fakeData.new_releases_of_top_artists
+                .slice(0, 10)
+                .map((release) => (
+                  <ListenCard
+                    key={release.release_id}
+                    compact
+                    listen={{
+                      listened_at: 0,
+                      listened_at_iso: release.first_release_date,
+                      track_metadata: {
+                        artist_name: release.artist_credit_names.join(", "),
+                        track_name: release.title,
+                        release_name: release.title,
+                        additional_info: {
+                          release_mbid: release.release_id,
+                          artist_mbids: release.artist_credit_mbids,
+                        },
+                      },
+                    }}
+                    showTimestamp
+                    showUsername={false}
+                    newAlert={newAlert}
+                  />
+                ))}
             </div>
           </div>
         </div>
@@ -346,7 +374,7 @@ export default class YearInMusic extends React.Component<
           <div className="col-sm-12">
             <div className="card">
               <h3 className="text-center">
-                We made some personnalized playlists for you !
+                We made some personalized playlists for you !
               </h3>
               <div className="flex">
                 <div>Playlist #1</div>
