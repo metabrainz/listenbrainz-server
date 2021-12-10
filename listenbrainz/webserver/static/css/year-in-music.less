@@ -6,14 +6,29 @@
 		margin-top: 2.5em;
 		margin-bottom: 2.5em;
 	}
-	.card:not(.listen-card) > *{
-		padding:0.6em;
+	.flex > .content-card {
+		min-width: 350px;
+	}
+	.content-card {
+		margin-right: 15px;
+		margin-left: 15px;
+		> *{
+			padding:0.6em;
+		}
 	}
 	.scrollable-area{
 		box-shadow: inset 0px 11px 8px -10px #ccc;
 		max-height: 500px;
 		overflow-y: scroll;
 	}
+	
+	#header {
+		align-items: center;
+		#share-link{
+			font-size: 0.7em;
+		}
+	}
+
 	#most-listened-year .graph{
 		height: 300px;
 	}
@@ -23,5 +38,10 @@
 			margin: 0;
 			padding: 0;
 		}
+	}
+
+	#top-entities .listen-card.row {
+		margin-right:0;
+		margin-left:0;
 	}
 }
