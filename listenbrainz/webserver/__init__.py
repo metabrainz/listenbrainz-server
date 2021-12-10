@@ -72,6 +72,15 @@ def load_config(app):
         print('Unable to retrieve git commit. Error: %s', str(e))
 
 
+def check_ratelimit_token_whitelist(auth_token):
+    """
+        Check to see if the given auth_token is a whitelisted auth token.
+    """
+
+    from flask import current_app
+    return if auth_token in current_app.config["WHITELISTED_AUTH_TOKENS"]
+
+
 def gen_app(debug=None):
     """ Generate a Flask app for LB with all configurations done and connections established.
 
@@ -134,7 +143,8 @@ def gen_app(debug=None):
     from listenbrainz.webserver.errors import init_error_handlers
     init_error_handlers(app)
 
-    from brainzutils.ratelimit import inject_x_rate_headers
+    from brainzutils.ratelimit import inject_x_rate_headers, set_user_validation_function
+    set_user_validation_function(check_ratelimit_token_whitelist)
     @app.after_request
     def after_request_callbacks(response):
         return inject_x_rate_headers(response)
