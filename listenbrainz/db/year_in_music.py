@@ -111,3 +111,16 @@ def insert_most_listened_year(data):
     except psycopg2.errors.OperationalError:
         connection.rollback()
         current_app.logger.error("Error while inserting most_listened_year:", exc_info=True)
+
+
+def handle_top_stats(data):
+    with db.engine.connect() as connection:
+        connection.execute(sqlalchemy.text("""
+            INSERT INTO statistics.year_in_music (user_id, data)
+                 VALUES (:user_id, :data)
+            ON CONFLICT (user_id)
+          DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+            """), {
+            "user_id": data["user_id"],
+            data["stats_range"]: data["data"],
+        })

@@ -171,6 +171,13 @@ def request_most_listened_year(year: int):
     send_request_to_spark_cluster("stats.most_listened_year", year=year)
 
 
+@cli.command(name="request_yim_top_stats")
+def request_yim_top_stats():
+    """ Send request to calculate most listened year stat to the spark cluster
+    """
+    send_request_to_spark_cluster("year_in_music.top_stats")
+
+
 @cli.command(name="request_import_full")
 @click.option("--id", "id_", type=int, required=False,
               help="Optional. ID of the full dump to import, defaults to latest dump available on FTP server")
@@ -297,7 +304,7 @@ def request_similar_users(max_num_users):
 @cli.command(name='request_similar_users_year_end')
 @click.option("--year", type=int, help="Year for which to calculate the stat",
               default=date.today().year)
-def request_similar_users(year: int):
+def request_similar_users_year_end(year: int):
     """ Send the cluster a request to generate similar users for Year in Music. """
     send_request_to_spark_cluster('similarity.similar_users_year_end', year=year)
 

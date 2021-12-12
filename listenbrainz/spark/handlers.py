@@ -372,3 +372,7 @@ def handle_day_of_week(message):
 
 def handle_most_listened_year(message):
     year_in_music.insert_most_listened_year(message["data"])
+
+
+def handle_top_stats(message):
+    year_in_music.handle_top_stats(message["data"])

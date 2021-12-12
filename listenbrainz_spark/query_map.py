@@ -14,6 +14,7 @@ import listenbrainz_spark.year_in_music.most_prominent_color
 import listenbrainz_spark.year_in_music.similar_users
 import listenbrainz_spark.year_in_music.day_of_week
 import listenbrainz_spark.year_in_music.most_listened_year
+import listenbrainz_spark.year_in_music.top_stats
 
 functions = {
     'stats.user.entity': listenbrainz_spark.stats.user.entity.get_entity_stats,
@@ -38,6 +39,7 @@ functions = {
     'import.musicbrainz_release_dump': listenbrainz_spark.request_consumer.jobs.import_dump.import_release_json_dump_to_hdfs,
     'similarity.similar_users': listenbrainz_spark.user_similarity.user_similarity.main,
     'similarity.similar_users_2021': listenbrainz_spark.year_in_music.similar_users.get_similar_users,
+    'year_in_music.top_stats': listenbrainz_spark.year_in_music.top_stats.calculate_top_entity_stats,
 }
 
 
