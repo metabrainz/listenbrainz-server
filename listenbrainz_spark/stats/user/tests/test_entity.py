@@ -24,7 +24,7 @@ class UserEntityTestCase(StatsTestCase):
         to_date = datetime(2021, 8, 9)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='sample_test_data', entity='test', stats_range='week',
-                                                from_date=from_date, to_date=to_date)
+                                                from_date=from_date, to_date=to_date, message_type="user_entity")
 
     @patch('listenbrainz_spark.stats.user.entity.get_listens_from_new_dump')
     @patch('listenbrainz_spark.stats.user.entity.create_messages')
@@ -35,7 +35,7 @@ class UserEntityTestCase(StatsTestCase):
         to_date = datetime(2021, 8, 1)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='sample_test_data', entity='test', stats_range='month',
-                                                from_date=from_date, to_date=to_date)
+                                                from_date=from_date, to_date=to_date, message_type="user_entity")
 
     @patch('listenbrainz_spark.stats.user.entity.get_listens_from_new_dump')
     @patch('listenbrainz_spark.stats.user.entity.create_messages')
@@ -46,7 +46,7 @@ class UserEntityTestCase(StatsTestCase):
         to_date = datetime(2021, 1, 1)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='sample_test_data', entity='test', stats_range='year',
-                                                from_date=from_date, to_date=to_date)
+                                                from_date=from_date, to_date=to_date, message_type="user_entity")
 
     @patch('listenbrainz_spark.stats.user.entity.get_listens_from_new_dump')
     @patch('listenbrainz_spark.stats.user.entity.create_messages')
@@ -57,7 +57,7 @@ class UserEntityTestCase(StatsTestCase):
         to_date = datetime(2021, 8, 9, 12, 22, 43)
         mock_get_listens.assert_called_with(from_date, to_date)
         mock_create_messages.assert_called_with(data='sample_test_data', entity='test', stats_range='all_time',
-                                                from_date=from_date, to_date=to_date)
+                                                from_date=from_date, to_date=to_date, message_type="user_entity")
 
     def test_create_messages_recordings(self):
         """ Test to check if the number of recordings are clipped to top 1000 """
@@ -79,7 +79,8 @@ class UserEntityTestCase(StatsTestCase):
             'recordings': recordings
         }
 
-        messages = entity.create_messages([mock_result], 'recordings', 'all_time', datetime.now(), datetime.now())
+        messages = entity.create_messages([mock_result], 'recordings', 'all_time',
+                                          datetime.now(), datetime.now(), "user_entity")
 
         message = next(messages)
         received_list = message['data']
@@ -101,7 +102,8 @@ class UserEntityTestCase(StatsTestCase):
             'artists': data
         }
 
-        messages = entity.create_messages([mock_result], 'artists', 'all_time', datetime.now(), datetime.now())
+        messages = entity.create_messages([mock_result], 'artists', 'all_time',
+                                          datetime.now(), datetime.now(), "user_entity")
         received_list = next(messages)['data']
 
         # Only the first entry in file is valid, all others must be skipped
@@ -118,7 +120,8 @@ class UserEntityTestCase(StatsTestCase):
             'releases': data
         }
 
-        messages = entity.create_messages([mock_result], 'releases', 'all_time', datetime.now(), datetime.now())
+        messages = entity.create_messages([mock_result], 'releases', 'all_time',
+                                          datetime.now(), datetime.now(), "user_entity")
         received_list = next(messages)['data']
 
         # Only the first entry in file is valid, all others must be skipped
@@ -135,7 +138,8 @@ class UserEntityTestCase(StatsTestCase):
             'recordings': data
         }
 
-        messages = entity.create_messages([mock_result], 'recordings', 'all_time', datetime.now(), datetime.now())
+        messages = entity.create_messages([mock_result], 'recordings', 'all_time',
+                                          datetime.now(), datetime.now(), "user_entity")
         received_list = next(messages)['data']
 
         # Only the first entry in file is valid, all others must be skipped
