@@ -53,7 +53,7 @@ For development
 #. In Audacious, go to File > Settings > Plugins > Scrobbler2.0 and enable it. Now open its settings and then authenticate.
 
 #. When you get a URL from your application which look like this ``http://last.fm/api/auth/?api_key=as3..234&..``, replace it with ``http://<HOSTURL>/api/auth/?api_key=as3..234&..``.
-    - If you are running a local server, then ``HOSTURL`` should be similar to "localhost:8080".
+    - If you are running a local server, then ``HOSTURL`` should be similar to "localhost:7080".
     - If you are not running the server, then ``HOSTURL`` should be "api.listenbrainz.org".
 
 

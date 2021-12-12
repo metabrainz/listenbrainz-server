@@ -20,9 +20,9 @@ from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
 from listenbrainz.webserver.errors import APIServiceUnavailable, APIBadRequest, APIUnauthorized, \
     ListenValidationError
 
-#: Maximum overall listen size in bytes, to prevent egregious spamming.
 from listenbrainz.webserver.models import SubmitListenUserMetadata
 
+#: Maximum overall listen size in bytes, to prevent egregious spamming.
 MAX_LISTEN_SIZE = 10240
 
 #: The maximum number of tags per listen.

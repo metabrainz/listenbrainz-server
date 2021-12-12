@@ -497,7 +497,6 @@ declare type UserTrackRecommendationMetadata = {
   release_name?: string;
   recording_mbid?: string;
   recording_msid: string;
-  artist_msid: string;
 };
 
 declare type PinEventMetadata = Listen & {

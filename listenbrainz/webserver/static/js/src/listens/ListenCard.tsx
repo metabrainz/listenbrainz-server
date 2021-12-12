@@ -166,7 +166,6 @@ export default class ListenCard extends React.Component<
           listen,
           "track_metadata.additional_info.recording_msid"
         ),
-        artist_msid: _get(listen, "track_metadata.additional_info.artist_msid"),
       };
       try {
         const status = await APIService.recommendTrackToFollowers(
