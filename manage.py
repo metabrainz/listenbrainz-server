@@ -33,7 +33,7 @@ TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(
 
 @cli.command(name="run_api_compat_server")
 @click.option("--host", "-h", default="0.0.0.0", show_default=True)
-@click.option("--port", "-p", default=8080, show_default=True)
+@click.option("--port", "-p", default=7080, show_default=True)
 @click.option("--debug", "-d", is_flag=True,
               help="Turns debugging mode on or off. If specified, overrides "
                    "'DEBUG' value in the config file.")
@@ -51,7 +51,7 @@ def run_api_compat_server(host, port, debug=False):
 
 @cli.command(name="run_websockets")
 @click.option("--host", "-h", default="0.0.0.0", show_default=True)
-@click.option("--port", "-p", default=8082, show_default=True)
+@click.option("--port", "-p", default=7082, show_default=True)
 @click.option("--debug", "-d", is_flag=True,
               help="Turns debugging mode on or off. If specified, overrides "
                    "'DEBUG' value in the config file.")
@@ -286,6 +286,30 @@ def refresh_continuous_aggregates():
         Update the continuous aggregates in timescale.
     """
     ts_refresh_listen_count_aggregate()
+
+@cli.command()
+@click.option("-u", "--user", type=str)
+@click.option("-t", "--token", type=str)
+@click.argument("releasembid", type=str)
+def submit_release(user, token, releasembid):
+    """Submit a release from MusicBrainz to the local ListenBrainz instance
+
+    Specify -u to use the token of this user when submitting, or
+    -t to specify a specific token.
+    """
+    if user is None and token is None:
+        raise click.ClickException(f"Need --user or --token")
+    if user is not None:
+        import listenbrainz.db.user
+        application = webserver.create_app()
+        with application.app_context():
+            user_ob = listenbrainz.db.user.get_by_mb_id(user)
+            if user_ob is None:
+                raise click.ClickException(f"No such user: {user}")
+            token = user_ob["auth_token"]
+            print("token is", token)
+    import listenbrainz.misc.submit_release
+    listenbrainz.misc.submit_release.submit_release_impl(token, releaseid, "http://web:7000")
 
 
 # Add other commands here

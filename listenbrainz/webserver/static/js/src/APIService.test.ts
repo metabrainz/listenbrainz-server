@@ -783,7 +783,6 @@ describe("recommendTrackToFollowers", () => {
     const metadata: UserTrackRecommendationMetadata = {
       artist_name: "Hans Zimmer",
       track_name: "Flight",
-      artist_msid: "artist_msid",
       recording_msid: "recording_msid",
     };
     await apiService.recommendTrackToFollowers(
@@ -808,7 +807,6 @@ describe("recommendTrackToFollowers", () => {
     const metadata: UserTrackRecommendationMetadata = {
       artist_name: "Hans Zimmer",
       track_name: "Flight",
-      artist_msid: "artist_msid",
       recording_msid: "recording_msid",
     };
     await apiService.recommendTrackToFollowers(
@@ -823,7 +821,6 @@ describe("recommendTrackToFollowers", () => {
     const metadata: UserTrackRecommendationMetadata = {
       artist_name: "Hans Zimmer",
       track_name: "Flight",
-      artist_msid: "artist_msid",
       recording_msid: "recording_msid",
     };
     await expect(
