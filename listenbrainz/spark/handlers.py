@@ -380,3 +380,7 @@ def handle_top_stats(message):
 
 def handle_listens_per_day(message):
     year_in_music.handle_listens_per_day(message["data"])
+
+
+def handle_yearly_listen_counts(message):
+    year_in_music.handle_yearly_listen_counts(message["data"])
