@@ -177,8 +177,9 @@ export default class YearInMusic extends React.Component<
             <div className="flex-wrap">
               <div className="card">
                 <h3 className="text-center">
-                  You listened to <span className="accent">12345</span> songs
-                  this year
+                  You listened to{" "}
+                  <span className="accent">{fakeData.total_listen_count}</span>{" "}
+                  songs this year
                 </h3>
               </div>
               <div className="card">
