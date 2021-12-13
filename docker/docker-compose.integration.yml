@@ -24,6 +24,8 @@ services:
     image: listenbrainz
     volumes:
       - ..:/code/listenbrainz:z
+    environment:
+      PYTHONDONTWRITEBYTECODE: 1
     depends_on:
       - redis
       - lb_db
