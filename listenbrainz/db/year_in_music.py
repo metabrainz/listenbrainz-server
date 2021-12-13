@@ -139,3 +139,25 @@ def handle_listens_per_day(data):
             "user_id": data["user_id"],
             "listens_per_day": json.dumps(data["data"]),
         })
+
+
+def handle_yearly_listen_counts(data):
+    connection = db.engine.raw_connection()
+    query = """
+        INSERT INTO statistics.year_in_music(user_id, data)
+             SELECT "user".id
+                  , jsonb_build_object('total_listen_count', listen_count)
+               FROM (VALUES %s) AS t(user_name, listen_count)
+               JOIN "user"
+                 ON "user".musicbrainz_id = user_name
+        ON CONFLICT (user_id)
+      DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+        """
+    user_listen_counts = ujson.loads(data)
+    try:
+        with connection.cursor() as cursor:
+            execute_values(cursor, query, user_listen_counts.items())
+        connection.commit()
+    except psycopg2.errors.OperationalError:
+        connection.rollback()
+        current_app.logger.error("Error while inserting most prominent colors:", exc_info=True)
