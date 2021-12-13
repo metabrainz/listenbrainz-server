@@ -173,9 +173,16 @@ def request_most_listened_year(year: int):
 
 @cli.command(name="request_yim_top_stats")
 def request_yim_top_stats():
-    """ Send request to calculate most listened year stat to the spark cluster
+    """ Send request to calculate top stats to the spark cluster
     """
     send_request_to_spark_cluster("year_in_music.top_stats")
+
+
+@cli.command(name="request_listens_per_day")
+def request_yim_top_stats():
+    """ Send request to calculate most listened year stat to the spark cluster
+    """
+    send_request_to_spark_cluster("year_in_music.listens_per_day")
 
 
 @cli.command(name="request_import_full")
