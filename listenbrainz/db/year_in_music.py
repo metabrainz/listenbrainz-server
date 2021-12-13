@@ -168,7 +168,7 @@ def insert_playlists(troi_patch_slug, import_file):
     query = """
         INSERT INTO statistics.year_in_music(user_id, data)
              SELECT "user".id
-                  , jsonb_build_object('playlists', playlists::jsonb)
+                  , playlists::jsonb
                FROM (VALUES %s) AS t(user_name, playlists)
                JOIN "user"
                  ON "user".musicbrainz_id = user_name
@@ -189,14 +189,11 @@ def insert_playlists(troi_patch_slug, import_file):
             jspf = f.readline().strip()
 
             data.append((user_name, ujson.dumps({
-                troi_patch_slug: {
+                f"playlist-{troi_patch_slug}": {
                     "mbid": playlist_mbid,
                     "jspf": ujson.loads(jspf)
                 }
             })))
-
-    for user_name, js in data:
-        print("%s %s" % (user_name, js[:20]))
 
     try:
         with connection.cursor() as cursor:
@@ -205,5 +202,5 @@ def insert_playlists(troi_patch_slug, import_file):
         print("playlists imported.")
     except psycopg2.errors.OperationalError:
         connection.rollback()
-        current_app.logger.error("Error while inserting playlist/%s:" % playlist_slug, exc_info=True)
+        current_app.logger.error("Error while inserting playlist/%s:" % troi_patch_slug, exc_info=True)
         print("playlists import failed.")
