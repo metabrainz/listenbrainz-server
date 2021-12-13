@@ -1,1 +1,2567 @@
-{"day_of_week":"Friday","most_listened_year":{"1958":1,"1962":3,"1964":1,"1965":1,"1966":4,"1967":12,"1968":6,"1969":2,"1970":7,"1971":8,"1972":6,"1973":8,"1974":12,"1975":7,"1976":4,"1977":1,"1978":8,"1979":4,"1981":2,"1982":1,"1983":4,"1984":3,"1986":2,"1987":6,"1988":8,"1989":7,"1990":4,"1991":4,"1992":9,"1993":30,"1994":23,"1995":9,"1996":22,"1997":12,"1998":22,"1999":17,"2000":10,"2001":10,"2002":25,"2003":19,"2004":16,"2005":22,"2006":42,"2007":26,"2008":40,"2009":51,"2010":36,"2011":37,"2012":20,"2013":52,"2014":97,"2015":72,"2016":140,"2017":82,"2018":181,"2019":120,"2020":339,"2021":196},"most_prominent_color":"(165, 166, 156)","new_releases_of_top_artists":[{"artist_credit_mbids":["9f930ddf-be2f-4de5-a39f-7ae47305752e"],"artist_credit_names":["The Psychedelic Furs"],"first_release_date":"2021-09-01","release_id":"1c6a4d54-dfac-4f0e-8502-0ca21b3c40f9","title":"Evergreen","type":"Single"},{"artist_credit_mbids":["d85defaf-b82e-48be-beb5-2672099e392e"],"artist_credit_names":["Mdou Moctar"],"first_release_date":"2021-05-21","release_id":"48afcf02-f396-4c13-bdef-222965474094","title":"Afrique victime","type":"Album"},{"artist_credit_mbids":["d85defaf-b82e-48be-beb5-2672099e392e"],"artist_credit_names":["Mdou Moctar"],"first_release_date":"2021-05-21","release_id":"01c0affe-3c70-4433-892f-80f6a1e74982","title":"Afrique victime","type":"Album"},{"artist_credit_mbids":["f58384a4-2ad2-4f24-89c5-c7b74ae1cce7"],"artist_credit_names":["King Gizzard & The Lizard Wizard"],"first_release_date":"2021-02-26","release_id":"f04e0d01-77bf-4d8c-b6b6-e0efb27da1ae","title":"L.W.","type":"Album"},{"artist_credit_mbids":["6738d800-5160-4959-b78a-ae12c5dba3d0"],"artist_credit_names":["Goat"],"first_release_date":"2021-08-27","release_id":"8297858b-eed6-43bd-b429-79b2f8a8625c","title":"Headsoup","type":"Album"},{"artist_credit_mbids":["36274201-f583-4859-83b8-5b8778dcb9f7"],"artist_credit_names":["Green Lung"],"first_release_date":"2021-08-27","release_id":"5998e6f1-6970-4d3e-ab1f-f6a7857cccce","title":"Graveyard Sun","type":"Single"},{"artist_credit_mbids":["f58384a4-2ad2-4f24-89c5-c7b74ae1cce7"],"artist_credit_names":["King Gizzard & The Lizard Wizard"],"first_release_date":"2021-02-18","release_id":"eea6587b-6ef9-4124-9e23-8a52d8459ed6","title":"Pleura","type":"Single"},{"artist_credit_mbids":["c266a7ab-7b9f-478f-a26d-91c5f8f04c7c","42dd1862-7255-47ed-8584-651abce3bf53","62b29e5c-d717-4586-87bc-ade74a6a9fe8"],"artist_credit_names":["DJ Yoda","Nubya Garcia","Edo.G"],"first_release_date":"2021-03-05","release_id":"fa634c8f-3710-4d73-903c-5b8200c6e80c","title":"Roxbury","type":"Single"},{"artist_credit_mbids":["f58384a4-2ad2-4f24-89c5-c7b74ae1cce7"],"artist_credit_names":["King Gizzard & The Lizard Wizard"],"first_release_date":"2021-05-29","release_id":"2a6d3e8d-f5ce-4633-afea-87e046a0758e","title":"Live in Sydney \u201821","type":"Album"},{"artist_credit_mbids":["6738d800-5160-4959-b78a-ae12c5dba3d0"],"artist_credit_names":["Goat"],"first_release_date":"2021-07-05","release_id":"3de4b3c3-1747-4a75-a394-846aa754ed7b","title":"Queen of the Underground (edit)","type":"Single"},{"artist_credit_mbids":["bded3a41-acd7-42ff-9402-cb59e35be8f4"],"artist_credit_names":["Endless Boogie"],"first_release_date":"2021-11-12","release_id":"534fb7ec-c530-4a49-aa9b-02f6560d6fed","title":"Admonitions","type":"Album"},{"artist_credit_mbids":["795d12c3-099e-4195-8f40-6764472db494","3a605eba-b6a1-4298-855d-b3033df0bf8b"],"artist_credit_names":["Ryley Walker","\u5e7e\u4f55\u5b66\u6a21\u69d8"],"first_release_date":"2021-02-05","release_id":"760acd46-eab1-4c25-bffc-c5dc7da69364","title":"Deep Fried Grandeur","type":"Album"},{"artist_credit_mbids":["3d303095-020a-4b65-9419-b91a574c8c9b"],"artist_credit_names":["Slift"],"first_release_date":"2021-06-18","release_id":"b2c565b3-f103-4bf5-aee4-31422cfd5838","title":"Levitation Sessions","type":"Album"},{"artist_credit_mbids":["ffc2d700-d87e-41c7-ab17-6d37ae4e5c8e"],"artist_credit_names":["Les Agamemnonz"],"first_release_date":"2021-06-11","release_id":"5149a1c7-49bc-4272-afed-00e2c1dd3a8e","title":"Amateurs","type":"Album"},{"artist_credit_mbids":["c266a7ab-7b9f-478f-a26d-91c5f8f04c7c","42dd1862-7255-47ed-8584-651abce3bf53","62b29e5c-d717-4586-87bc-ade74a6a9fe8"],"artist_credit_names":["DJ Yoda","Nubya Garcia","Edo.G"],"first_release_date":"2021-03-05","release_id":"715631dd-f796-4def-981b-d60d00d4e37d","title":"Roxbury","type":"Single"},{"artist_credit_mbids":["f58384a4-2ad2-4f24-89c5-c7b74ae1cce7"],"artist_credit_names":["King Gizzard & The Lizard Wizard"],"first_release_date":"2021-01-28","release_id":"36c762d3-d0b8-4349-89e2-37da14e83531","title":"O.N.E.","type":"Single"},{"artist_credit_mbids":["ffc2d700-d87e-41c7-ab17-6d37ae4e5c8e"],"artist_credit_names":["Les Agamemnonz"],"first_release_date":"2021-06-11","release_id":"cadabf15-9ea6-405f-92f4-d734c0235250","title":"Amateurs","type":"Album"},{"artist_credit_mbids":["42dd1862-7255-47ed-8584-651abce3bf53"],"artist_credit_names":["Nubya Garcia"],"first_release_date":"2021-10-22","release_id":"849aa6f7-d155-4d12-878a-df5b571bab0a","title":"SOURCE \u29fa WE MOVE","type":"Album"},{"artist_credit_mbids":["f58384a4-2ad2-4f24-89c5-c7b74ae1cce7"],"artist_credit_names":["King Gizzard & The Lizard Wizard"],"first_release_date":"2021-02-26","release_id":"61c386be-c0b0-41f8-8290-aede50a046b0","title":"L.W.","type":"Album"},{"artist_credit_mbids":["d85defaf-b82e-48be-beb5-2672099e392e"],"artist_credit_names":["Mdou Moctar"],"first_release_date":"2021-05-21","release_id":"60377f9b-98b5-4304-aeb4-e1835889482f","title":"Afrique victime","type":"Album"},{"artist_credit_mbids":["eb3b3201-d6d5-4143-bd30-c50e719c138e"],"artist_credit_names":["Dust Mice"],"first_release_date":"2021-04-16","release_id":"e5f194c0-3ee9-46f2-a7e4-78b6f642d6d9","title":"Earth III","type":null},{"artist_credit_mbids":["6514cffa-fbe0-4965-ad88-e998ead8a82a"],"artist_credit_names":["Fela Kuti"],"first_release_date":"2021-06-27","release_id":"e1dbf3fb-994f-46be-8b28-17b975e90522","title":"1984-06-24: Glastonbury Festival of Contemporary Performing Arts, UK","type":"Broadcast"},{"artist_credit_mbids":["36274201-f583-4859-83b8-5b8778dcb9f7"],"artist_credit_names":["Green Lung"],"first_release_date":"2021-10-22","release_id":"a0796b13-b7b2-45d4-8375-7a65d384d279","title":"Black Harvest","type":"Album"},{"artist_credit_mbids":["795d12c3-099e-4195-8f40-6764472db494","3a605eba-b6a1-4298-855d-b3033df0bf8b"],"artist_credit_names":["Ryley Walker","\u5e7e\u4f55\u5b66\u6a21\u69d8"],"first_release_date":"2021-02-05","release_id":"30b5db7d-cb62-4c09-938c-01e75da359e9","title":"Deep Fried Grandeur","type":"Album"},{"artist_credit_mbids":["3a605eba-b6a1-4298-855d-b3033df0bf8b"],"artist_credit_names":["\u5e7e\u4f55\u5b66\u6a21\u69d8"],"first_release_date":"2021-01-15","release_id":"6b0fbd5a-5027-450a-9fc0-5fdd567ffdff","title":"Live at Levitation","type":"Album"},{"artist_credit_mbids":["d85defaf-b82e-48be-beb5-2672099e392e"],"artist_credit_names":["Mdou Moctar"],"first_release_date":"2021-04-01","release_id":"d3989eb1-f6b7-4cc0-a645-3d2e50dca060","title":"Afrique Victime","type":"Single"},{"artist_credit_mbids":["42dd1862-7255-47ed-8584-651abce3bf53"],"artist_credit_names":["Nubya Garcia"],"first_release_date":"2021-09-02","release_id":"eb628f72-d946-4310-be8f-a25f9e65e946","title":"Pace (Moses Boyd remix)","type":"Single"},{"artist_credit_mbids":["f58384a4-2ad2-4f24-89c5-c7b74ae1cce7"],"artist_credit_names":["King Gizzard & The Lizard Wizard"],"first_release_date":"2021-06-11","release_id":"99517c21-0583-45c5-96e6-b90575090e45","title":"Butterfly 3000","type":"Album"},{"artist_credit_mbids":["d85defaf-b82e-48be-beb5-2672099e392e"],"artist_credit_names":["Mdou Moctar"],"first_release_date":"2021-05-21","release_id":"9439ce5e-0b57-431a-b2a8-58be26c3abc2","title":"Afrique victime","type":"Album"},{"artist_credit_mbids":["795d12c3-099e-4195-8f40-6764472db494","3a605eba-b6a1-4298-855d-b3033df0bf8b"],"artist_credit_names":["Ryley Walker","\u5e7e\u4f55\u5b66\u6a21\u69d8"],"first_release_date":"2021-02-05","release_id":"489fa3c2-5894-4cb6-a006-0506b851f3a3","title":"Deep Fried Grandeur","type":"Album"},{"artist_credit_mbids":["77e5c5bb-f35b-4573-964d-6c5f7e73e06b"],"artist_credit_names":["Black Sky Giant"],"first_release_date":"2021-01-16","release_id":"de3f6b4a-a5f7-4f7b-9d1b-92c0aa210746","title":"Planet Terror","type":"Album"},{"artist_credit_mbids":["f58384a4-2ad2-4f24-89c5-c7b74ae1cce7"],"artist_credit_names":["King Gizzard & The Lizard Wizard"],"first_release_date":"2021-10-01","release_id":"381e305a-ebef-4372-821b-68fef45d7778","title":"Live in Milwaukee \u201819","type":"Album"},{"artist_credit_mbids":["22e6f8d3-2d7e-4abb-8a77-1a6d581cd560"],"artist_credit_names":["Wolves Like Me"],"first_release_date":"2021-01-28","release_id":"bf04a661-b7f2-40c9-b8e6-276ff3602997","title":"Who's Afraid?","type":"Album"},{"artist_credit_mbids":["49814f71-8fef-41ec-9af8-b6995c0bd601"],"artist_credit_names":["The Black Angels"],"first_release_date":"2021-03-26","release_id":"a52aea68-c4ce-4e73-939a-6f2bd821814f","title":"Live at Levitation","type":"Album"},{"artist_credit_mbids":["f58384a4-2ad2-4f24-89c5-c7b74ae1cce7"],"artist_credit_names":["King Gizzard & The Lizard Wizard"],"first_release_date":"2021-02-26","release_id":"c3a1f0f6-4039-4ae1-a516-2a438ac6c88c","title":"L.W.","type":"Album"},{"artist_credit_mbids":["f58384a4-2ad2-4f24-89c5-c7b74ae1cce7"],"artist_credit_names":["King Gizzard & The Lizard Wizard"],"first_release_date":"2021-06-11","release_id":"793e1cc3-f568-4b5c-b160-b39ecd5ac007","title":"Butterfly 3000","type":"Album"},{"artist_credit_mbids":["49814f71-8fef-41ec-9af8-b6995c0bd601"],"artist_credit_names":["The Black Angels"],"first_release_date":"2021-03-26","release_id":"3c346667-efcc-4150-8955-a2bf20c26b77","title":"Live at Levitation","type":"Album"},{"artist_credit_mbids":["f58384a4-2ad2-4f24-89c5-c7b74ae1cce7"],"artist_credit_names":["King Gizzard & The Lizard Wizard"],"first_release_date":"2021-03-19","release_id":"0ef0d03c-418e-48fb-8444-bb2bdaaa862c","title":"Live in Melbourne \u201821","type":"Album"},{"artist_credit_mbids":["6738d800-5160-4959-b78a-ae12c5dba3d0"],"artist_credit_names":["Goat"],"first_release_date":"2021-08-03","release_id":"8ceb3338-7c74-4329-b04a-a2749683cd37","title":"Fill My Mouth","type":"Single"},{"artist_credit_mbids":["f58384a4-2ad2-4f24-89c5-c7b74ae1cce7"],"artist_credit_names":["King Gizzard & The Lizard Wizard"],"first_release_date":"2021-06-11","release_id":"e8a18bc7-1de7-4515-b2f3-2974286d8657","title":"Butterfly 3000","type":"Album"},{"artist_credit_mbids":["6738d800-5160-4959-b78a-ae12c5dba3d0"],"artist_credit_names":["Goat"],"first_release_date":"2021-08-27","release_id":"d6971aa7-545e-4ce8-8b5d-300868b57cf4","title":"Headsoup","type":"Album"},{"artist_credit_mbids":["6a125082-74c4-4a1b-bf4b-d91d9cafde4c"],"artist_credit_names":["The Longest Johns"],"first_release_date":"2021","release_id":"57f7b40d-f13b-498f-981d-6b6323727a8e","title":"Land Shanties","type":"Album"},{"artist_credit_mbids":["36274201-f583-4859-83b8-5b8778dcb9f7"],"artist_credit_names":["Green Lung"],"first_release_date":"2021-10-22","release_id":"edf26b54-36c9-43c7-918b-884711ba9dd1","title":"Black Harvest","type":"Album"},{"artist_credit_mbids":["981669c1-696b-450a-9594-4f59be20cd86"],"artist_credit_names":["Les Filles de Illighadad"],"first_release_date":"2021-07-09","release_id":"0ad08d1a-24f7-4cda-9d01-6cddc889ed2e","title":"At Pioneer Works","type":"Album"},{"artist_credit_mbids":["3d303095-020a-4b65-9419-b91a574c8c9b"],"artist_credit_names":["Slift"],"first_release_date":"2021-01-08","release_id":"ebe43918-bd5d-4f80-bbca-926752d01d59","title":"Space Is the Key / La Plan\u00e8te inexplor\u00e9e","type":"Album"},{"artist_credit_mbids":["77e5c5bb-f35b-4573-964d-6c5f7e73e06b"],"artist_credit_names":["Black Sky Giant"],"first_release_date":"2021-06-10","release_id":"9da22f1c-ceeb-401f-8dd2-acca823ec1eb","title":"Falling Mothership","type":"Album"},{"artist_credit_mbids":["36274201-f583-4859-83b8-5b8778dcb9f7"],"artist_credit_names":["Green Lung"],"first_release_date":"2021-10-22","release_id":"7a00a638-d77a-4da7-8c6e-d9f01a59bebb","title":"Black Harvest","type":"Album"},{"artist_credit_mbids":["c3aeb863-7b26-4388-94e8-5a240f2be21b"],"artist_credit_names":["Tom Waits"],"first_release_date":"2021-01-12","release_id":"545fdd9c-a696-4ea3-87f8-46e9082b266c","title":"Sharp as a Razor and Soft as a Prayer (Live 1977)","type":"Album"}],"similar_users":{"ALERTua":0.4478581138,"CatSup21":0.4049368468,"OverFjell":1.0,"Paoleddu":0.4044456301,"Peter-K":0.4677028542,"Shrike":0.3748777773,"TyriGen":0.4834224659,"Zas":0.6980259454,"a_beautiful_war":0.3927822425,"an.archi":0.3933177462,"djnebdal":0.3776345461,"doctorworm":0.4494480982,"hachepunto":0.3771839415,"itsthenewmeta":0.5275683667,"malguinis":0.3824861035,"mystictim":0.4394066269,"nihilix":0.374231944,"nkundiushuti":0.4286981934,"red_erik":0.3732145294,"rpaxon":0.4042519435,"rweb":0.4453530461,"shanksk":0.6750742337,"weirditude":0.4388046354,"y7kko":0.6120989314,"zehmurilo":0.878597616}}
+{
+	"day_of_week": "Friday",
+	"most_listened_year": {
+		"1958": 1,
+		"1962": 3,
+		"1964": 1,
+		"1965": 1,
+		"1966": 4,
+		"1967": 12,
+		"1968": 6,
+		"1969": 2,
+		"1970": 7,
+		"1971": 8,
+		"1972": 6,
+		"1973": 8,
+		"1974": 12,
+		"1975": 7,
+		"1976": 4,
+		"1977": 1,
+		"1978": 8,
+		"1979": 4,
+		"1981": 2,
+		"1982": 1,
+		"1983": 4,
+		"1984": 3,
+		"1986": 2,
+		"1987": 6,
+		"1988": 8,
+		"1989": 7,
+		"1990": 4,
+		"1991": 4,
+		"1992": 9,
+		"1993": 30,
+		"1994": 23,
+		"1995": 9,
+		"1996": 22,
+		"1997": 12,
+		"1998": 22,
+		"1999": 17,
+		"2000": 10,
+		"2001": 10,
+		"2002": 25,
+		"2003": 19,
+		"2004": 16,
+		"2005": 22,
+		"2006": 42,
+		"2007": 26,
+		"2008": 40,
+		"2009": 51,
+		"2010": 36,
+		"2011": 37,
+		"2012": 20,
+		"2013": 52,
+		"2014": 97,
+		"2015": 72,
+		"2016": 140,
+		"2017": 82,
+		"2018": 181,
+		"2019": 120,
+		"2020": 339,
+		"2021": 196
+	},
+	"most_prominent_color": "(165, 166, 156)",
+	"new_releases_of_top_artists": [
+		{
+			"artist_credit_mbids": ["9f930ddf-be2f-4de5-a39f-7ae47305752e"],
+			"artist_credit_names": ["The Psychedelic Furs"],
+			"first_release_date": "2021-09-01",
+			"release_id": "1c6a4d54-dfac-4f0e-8502-0ca21b3c40f9",
+			"title": "Evergreen",
+			"type": "Single"
+		},
+		{
+			"artist_credit_mbids": ["d85defaf-b82e-48be-beb5-2672099e392e"],
+			"artist_credit_names": ["Mdou Moctar"],
+			"first_release_date": "2021-05-21",
+			"release_id": "48afcf02-f396-4c13-bdef-222965474094",
+			"title": "Afrique victime",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["d85defaf-b82e-48be-beb5-2672099e392e"],
+			"artist_credit_names": ["Mdou Moctar"],
+			"first_release_date": "2021-05-21",
+			"release_id": "01c0affe-3c70-4433-892f-80f6a1e74982",
+			"title": "Afrique victime",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["f58384a4-2ad2-4f24-89c5-c7b74ae1cce7"],
+			"artist_credit_names": ["King Gizzard & The Lizard Wizard"],
+			"first_release_date": "2021-02-26",
+			"release_id": "f04e0d01-77bf-4d8c-b6b6-e0efb27da1ae",
+			"title": "L.W.",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["6738d800-5160-4959-b78a-ae12c5dba3d0"],
+			"artist_credit_names": ["Goat"],
+			"first_release_date": "2021-08-27",
+			"release_id": "8297858b-eed6-43bd-b429-79b2f8a8625c",
+			"title": "Headsoup",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["36274201-f583-4859-83b8-5b8778dcb9f7"],
+			"artist_credit_names": ["Green Lung"],
+			"first_release_date": "2021-08-27",
+			"release_id": "5998e6f1-6970-4d3e-ab1f-f6a7857cccce",
+			"title": "Graveyard Sun",
+			"type": "Single"
+		},
+		{
+			"artist_credit_mbids": ["f58384a4-2ad2-4f24-89c5-c7b74ae1cce7"],
+			"artist_credit_names": ["King Gizzard & The Lizard Wizard"],
+			"first_release_date": "2021-02-18",
+			"release_id": "eea6587b-6ef9-4124-9e23-8a52d8459ed6",
+			"title": "Pleura",
+			"type": "Single"
+		},
+		{
+			"artist_credit_mbids": [
+				"c266a7ab-7b9f-478f-a26d-91c5f8f04c7c", "42dd1862-7255-47ed-8584-651abce3bf53",
+				"62b29e5c-d717-4586-87bc-ade74a6a9fe8"
+			],
+			"artist_credit_names": ["DJ Yoda", "Nubya Garcia", "Edo.G"],
+			"first_release_date": "2021-03-05",
+			"release_id": "fa634c8f-3710-4d73-903c-5b8200c6e80c",
+			"title": "Roxbury",
+			"type": "Single"
+		},
+		{
+			"artist_credit_mbids": ["f58384a4-2ad2-4f24-89c5-c7b74ae1cce7"],
+			"artist_credit_names": ["King Gizzard & The Lizard Wizard"],
+			"first_release_date": "2021-05-29",
+			"release_id": "2a6d3e8d-f5ce-4633-afea-87e046a0758e",
+			"title": "Live in Sydney ‘21",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["6738d800-5160-4959-b78a-ae12c5dba3d0"],
+			"artist_credit_names": ["Goat"],
+			"first_release_date": "2021-07-05",
+			"release_id": "3de4b3c3-1747-4a75-a394-846aa754ed7b",
+			"title": "Queen of the Underground (edit)",
+			"type": "Single"
+		},
+		{
+			"artist_credit_mbids": ["bded3a41-acd7-42ff-9402-cb59e35be8f4"],
+			"artist_credit_names": ["Endless Boogie"],
+			"first_release_date": "2021-11-12",
+			"release_id": "534fb7ec-c530-4a49-aa9b-02f6560d6fed",
+			"title": "Admonitions",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["795d12c3-099e-4195-8f40-6764472db494", "3a605eba-b6a1-4298-855d-b3033df0bf8b"],
+			"artist_credit_names": ["Ryley Walker", "幾何学模様"],
+			"first_release_date": "2021-02-05",
+			"release_id": "760acd46-eab1-4c25-bffc-c5dc7da69364",
+			"title": "Deep Fried Grandeur",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["3d303095-020a-4b65-9419-b91a574c8c9b"],
+			"artist_credit_names": ["Slift"],
+			"first_release_date": "2021-06-18",
+			"release_id": "b2c565b3-f103-4bf5-aee4-31422cfd5838",
+			"title": "Levitation Sessions",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["ffc2d700-d87e-41c7-ab17-6d37ae4e5c8e"],
+			"artist_credit_names": ["Les Agamemnonz"],
+			"first_release_date": "2021-06-11",
+			"release_id": "5149a1c7-49bc-4272-afed-00e2c1dd3a8e",
+			"title": "Amateurs",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": [
+				"c266a7ab-7b9f-478f-a26d-91c5f8f04c7c", "42dd1862-7255-47ed-8584-651abce3bf53",
+				"62b29e5c-d717-4586-87bc-ade74a6a9fe8"
+			],
+			"artist_credit_names": ["DJ Yoda", "Nubya Garcia", "Edo.G"],
+			"first_release_date": "2021-03-05",
+			"release_id": "715631dd-f796-4def-981b-d60d00d4e37d",
+			"title": "Roxbury",
+			"type": "Single"
+		},
+		{
+			"artist_credit_mbids": ["f58384a4-2ad2-4f24-89c5-c7b74ae1cce7"],
+			"artist_credit_names": ["King Gizzard & The Lizard Wizard"],
+			"first_release_date": "2021-01-28",
+			"release_id": "36c762d3-d0b8-4349-89e2-37da14e83531",
+			"title": "O.N.E.",
+			"type": "Single"
+		},
+		{
+			"artist_credit_mbids": ["ffc2d700-d87e-41c7-ab17-6d37ae4e5c8e"],
+			"artist_credit_names": ["Les Agamemnonz"],
+			"first_release_date": "2021-06-11",
+			"release_id": "cadabf15-9ea6-405f-92f4-d734c0235250",
+			"title": "Amateurs",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["42dd1862-7255-47ed-8584-651abce3bf53"],
+			"artist_credit_names": ["Nubya Garcia"],
+			"first_release_date": "2021-10-22",
+			"release_id": "849aa6f7-d155-4d12-878a-df5b571bab0a",
+			"title": "SOURCE ⧺ WE MOVE",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["f58384a4-2ad2-4f24-89c5-c7b74ae1cce7"],
+			"artist_credit_names": ["King Gizzard & The Lizard Wizard"],
+			"first_release_date": "2021-02-26",
+			"release_id": "61c386be-c0b0-41f8-8290-aede50a046b0",
+			"title": "L.W.",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["d85defaf-b82e-48be-beb5-2672099e392e"],
+			"artist_credit_names": ["Mdou Moctar"],
+			"first_release_date": "2021-05-21",
+			"release_id": "60377f9b-98b5-4304-aeb4-e1835889482f",
+			"title": "Afrique victime",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["eb3b3201-d6d5-4143-bd30-c50e719c138e"],
+			"artist_credit_names": ["Dust Mice"],
+			"first_release_date": "2021-04-16",
+			"release_id": "e5f194c0-3ee9-46f2-a7e4-78b6f642d6d9",
+			"title": "Earth III",
+			"type": null
+		},
+		{
+			"artist_credit_mbids": ["6514cffa-fbe0-4965-ad88-e998ead8a82a"],
+			"artist_credit_names": ["Fela Kuti"],
+			"first_release_date": "2021-06-27",
+			"release_id": "e1dbf3fb-994f-46be-8b28-17b975e90522",
+			"title": "1984-06-24: Glastonbury Festival of Contemporary Performing Arts, UK",
+			"type": "Broadcast"
+		},
+		{
+			"artist_credit_mbids": ["36274201-f583-4859-83b8-5b8778dcb9f7"],
+			"artist_credit_names": ["Green Lung"],
+			"first_release_date": "2021-10-22",
+			"release_id": "a0796b13-b7b2-45d4-8375-7a65d384d279",
+			"title": "Black Harvest",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["795d12c3-099e-4195-8f40-6764472db494", "3a605eba-b6a1-4298-855d-b3033df0bf8b"],
+			"artist_credit_names": ["Ryley Walker", "幾何学模様"],
+			"first_release_date": "2021-02-05",
+			"release_id": "30b5db7d-cb62-4c09-938c-01e75da359e9",
+			"title": "Deep Fried Grandeur",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["3a605eba-b6a1-4298-855d-b3033df0bf8b"],
+			"artist_credit_names": ["幾何学模様"],
+			"first_release_date": "2021-01-15",
+			"release_id": "6b0fbd5a-5027-450a-9fc0-5fdd567ffdff",
+			"title": "Live at Levitation",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["d85defaf-b82e-48be-beb5-2672099e392e"],
+			"artist_credit_names": ["Mdou Moctar"],
+			"first_release_date": "2021-04-01",
+			"release_id": "d3989eb1-f6b7-4cc0-a645-3d2e50dca060",
+			"title": "Afrique Victime",
+			"type": "Single"
+		},
+		{
+			"artist_credit_mbids": ["42dd1862-7255-47ed-8584-651abce3bf53"],
+			"artist_credit_names": ["Nubya Garcia"],
+			"first_release_date": "2021-09-02",
+			"release_id": "eb628f72-d946-4310-be8f-a25f9e65e946",
+			"title": "Pace (Moses Boyd remix)",
+			"type": "Single"
+		},
+		{
+			"artist_credit_mbids": ["f58384a4-2ad2-4f24-89c5-c7b74ae1cce7"],
+			"artist_credit_names": ["King Gizzard & The Lizard Wizard"],
+			"first_release_date": "2021-06-11",
+			"release_id": "99517c21-0583-45c5-96e6-b90575090e45",
+			"title": "Butterfly 3000",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["d85defaf-b82e-48be-beb5-2672099e392e"],
+			"artist_credit_names": ["Mdou Moctar"],
+			"first_release_date": "2021-05-21",
+			"release_id": "9439ce5e-0b57-431a-b2a8-58be26c3abc2",
+			"title": "Afrique victime",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["795d12c3-099e-4195-8f40-6764472db494", "3a605eba-b6a1-4298-855d-b3033df0bf8b"],
+			"artist_credit_names": ["Ryley Walker", "幾何学模様"],
+			"first_release_date": "2021-02-05",
+			"release_id": "489fa3c2-5894-4cb6-a006-0506b851f3a3",
+			"title": "Deep Fried Grandeur",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["77e5c5bb-f35b-4573-964d-6c5f7e73e06b"],
+			"artist_credit_names": ["Black Sky Giant"],
+			"first_release_date": "2021-01-16",
+			"release_id": "de3f6b4a-a5f7-4f7b-9d1b-92c0aa210746",
+			"title": "Planet Terror",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["f58384a4-2ad2-4f24-89c5-c7b74ae1cce7"],
+			"artist_credit_names": ["King Gizzard & The Lizard Wizard"],
+			"first_release_date": "2021-10-01",
+			"release_id": "381e305a-ebef-4372-821b-68fef45d7778",
+			"title": "Live in Milwaukee ‘19",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["22e6f8d3-2d7e-4abb-8a77-1a6d581cd560"],
+			"artist_credit_names": ["Wolves Like Me"],
+			"first_release_date": "2021-01-28",
+			"release_id": "bf04a661-b7f2-40c9-b8e6-276ff3602997",
+			"title": "Who's Afraid?",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["49814f71-8fef-41ec-9af8-b6995c0bd601"],
+			"artist_credit_names": ["The Black Angels"],
+			"first_release_date": "2021-03-26",
+			"release_id": "a52aea68-c4ce-4e73-939a-6f2bd821814f",
+			"title": "Live at Levitation",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["f58384a4-2ad2-4f24-89c5-c7b74ae1cce7"],
+			"artist_credit_names": ["King Gizzard & The Lizard Wizard"],
+			"first_release_date": "2021-02-26",
+			"release_id": "c3a1f0f6-4039-4ae1-a516-2a438ac6c88c",
+			"title": "L.W.",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["f58384a4-2ad2-4f24-89c5-c7b74ae1cce7"],
+			"artist_credit_names": ["King Gizzard & The Lizard Wizard"],
+			"first_release_date": "2021-06-11",
+			"release_id": "793e1cc3-f568-4b5c-b160-b39ecd5ac007",
+			"title": "Butterfly 3000",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["49814f71-8fef-41ec-9af8-b6995c0bd601"],
+			"artist_credit_names": ["The Black Angels"],
+			"first_release_date": "2021-03-26",
+			"release_id": "3c346667-efcc-4150-8955-a2bf20c26b77",
+			"title": "Live at Levitation",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["f58384a4-2ad2-4f24-89c5-c7b74ae1cce7"],
+			"artist_credit_names": ["King Gizzard & The Lizard Wizard"],
+			"first_release_date": "2021-03-19",
+			"release_id": "0ef0d03c-418e-48fb-8444-bb2bdaaa862c",
+			"title": "Live in Melbourne ‘21",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["6738d800-5160-4959-b78a-ae12c5dba3d0"],
+			"artist_credit_names": ["Goat"],
+			"first_release_date": "2021-08-03",
+			"release_id": "8ceb3338-7c74-4329-b04a-a2749683cd37",
+			"title": "Fill My Mouth",
+			"type": "Single"
+		},
+		{
+			"artist_credit_mbids": ["f58384a4-2ad2-4f24-89c5-c7b74ae1cce7"],
+			"artist_credit_names": ["King Gizzard & The Lizard Wizard"],
+			"first_release_date": "2021-06-11",
+			"release_id": "e8a18bc7-1de7-4515-b2f3-2974286d8657",
+			"title": "Butterfly 3000",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["6738d800-5160-4959-b78a-ae12c5dba3d0"],
+			"artist_credit_names": ["Goat"],
+			"first_release_date": "2021-08-27",
+			"release_id": "d6971aa7-545e-4ce8-8b5d-300868b57cf4",
+			"title": "Headsoup",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["6a125082-74c4-4a1b-bf4b-d91d9cafde4c"],
+			"artist_credit_names": ["The Longest Johns"],
+			"first_release_date": "2021",
+			"release_id": "57f7b40d-f13b-498f-981d-6b6323727a8e",
+			"title": "Land Shanties",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["36274201-f583-4859-83b8-5b8778dcb9f7"],
+			"artist_credit_names": ["Green Lung"],
+			"first_release_date": "2021-10-22",
+			"release_id": "edf26b54-36c9-43c7-918b-884711ba9dd1",
+			"title": "Black Harvest",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["981669c1-696b-450a-9594-4f59be20cd86"],
+			"artist_credit_names": ["Les Filles de Illighadad"],
+			"first_release_date": "2021-07-09",
+			"release_id": "0ad08d1a-24f7-4cda-9d01-6cddc889ed2e",
+			"title": "At Pioneer Works",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["3d303095-020a-4b65-9419-b91a574c8c9b"],
+			"artist_credit_names": ["Slift"],
+			"first_release_date": "2021-01-08",
+			"release_id": "ebe43918-bd5d-4f80-bbca-926752d01d59",
+			"title": "Space Is the Key / La Planète inexplorée",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["77e5c5bb-f35b-4573-964d-6c5f7e73e06b"],
+			"artist_credit_names": ["Black Sky Giant"],
+			"first_release_date": "2021-06-10",
+			"release_id": "9da22f1c-ceeb-401f-8dd2-acca823ec1eb",
+			"title": "Falling Mothership",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["36274201-f583-4859-83b8-5b8778dcb9f7"],
+			"artist_credit_names": ["Green Lung"],
+			"first_release_date": "2021-10-22",
+			"release_id": "7a00a638-d77a-4da7-8c6e-d9f01a59bebb",
+			"title": "Black Harvest",
+			"type": "Album"
+		},
+		{
+			"artist_credit_mbids": ["c3aeb863-7b26-4388-94e8-5a240f2be21b"],
+			"artist_credit_names": ["Tom Waits"],
+			"first_release_date": "2021-01-12",
+			"release_id": "545fdd9c-a696-4ea3-87f8-46e9082b266c",
+			"title": "Sharp as a Razor and Soft as a Prayer (Live 1977)",
+			"type": "Album"
+		}
+	],
+	"similar_users": {
+		"ALERTua": 0.4478581138,
+		"CatSup21": 0.4049368468,
+		"OverFjell": 1,
+		"Paoleddu": 0.4044456301,
+		"Peter-K": 0.4677028542,
+		"Shrike": 0.3748777773,
+		"TyriGen": 0.4834224659,
+		"Zas": 0.6980259454,
+		"a_beautiful_war": 0.3927822425,
+		"an.archi": 0.3933177462,
+		"djnebdal": 0.3776345461,
+		"doctorworm": 0.4494480982,
+		"hachepunto": 0.3771839415,
+		"itsthenewmeta": 0.5275683667,
+		"malguinis": 0.3824861035,
+		"mystictim": 0.4394066269,
+		"nihilix": 0.374231944,
+		"nkundiushuti": 0.4286981934,
+		"red_erik": 0.3732145294,
+		"rpaxon": 0.4042519435,
+		"rweb": 0.4453530461,
+		"shanksk": 0.6750742337,
+		"weirditude": 0.4388046354,
+		"y7kko": 0.6120989314,
+		"zehmurilo": 0.878597616
+	},
+	"listens_per_day":[
+		{
+		"from_ts": 1609459200,
+		"listen_count": 46,
+		"time_range": "01 January 2021",
+		"to_ts": 1609545599
+		},
+		{
+		"from_ts": 1609545600,
+		"listen_count": 12,
+		"time_range": "02 January 2021",
+		"to_ts": 1609631999
+		},
+		{
+		"from_ts": 1609632000,
+		"listen_count": 0,
+		"time_range": "03 January 2021",
+		"to_ts": 1609718399
+		},
+		{
+		"from_ts": 1609718400,
+		"listen_count": 0,
+		"time_range": "04 January 2021",
+		"to_ts": 1609804799
+		},
+		{
+		"from_ts": 1609804800,
+		"listen_count": 0,
+		"time_range": "05 January 2021",
+		"to_ts": 1609891199
+		},
+		{
+		"from_ts": 1609891200,
+		"listen_count": 0,
+		"time_range": "06 January 2021",
+		"to_ts": 1609977599
+		},
+		{
+		"from_ts": 1609977600,
+		"listen_count": 39,
+		"time_range": "07 January 2021",
+		"to_ts": 1610063999
+		},
+		{
+		"from_ts": 1610064000,
+		"listen_count": 31,
+		"time_range": "08 January 2021",
+		"to_ts": 1610150399
+		},
+		{
+		"from_ts": 1610150400,
+		"listen_count": 3,
+		"time_range": "09 January 2021",
+		"to_ts": 1610236799
+		},
+		{
+		"from_ts": 1610236800,
+		"listen_count": 0,
+		"time_range": "10 January 2021",
+		"to_ts": 1610323199
+		},
+		{
+		"from_ts": 1610323200,
+		"listen_count": 2,
+		"time_range": "11 January 2021",
+		"to_ts": 1610409599
+		},
+		{
+		"from_ts": 1610409600,
+		"listen_count": 0,
+		"time_range": "12 January 2021",
+		"to_ts": 1610495999
+		},
+		{
+		"from_ts": 1610496000,
+		"listen_count": 0,
+		"time_range": "13 January 2021",
+		"to_ts": 1610582399
+		},
+		{
+		"from_ts": 1610582400,
+		"listen_count": 1,
+		"time_range": "14 January 2021",
+		"to_ts": 1610668799
+		},
+		{
+		"from_ts": 1610668800,
+		"listen_count": 0,
+		"time_range": "15 January 2021",
+		"to_ts": 1610755199
+		},
+		{
+		"from_ts": 1610755200,
+		"listen_count": 0,
+		"time_range": "16 January 2021",
+		"to_ts": 1610841599
+		},
+		{
+		"from_ts": 1610841600,
+		"listen_count": 26,
+		"time_range": "17 January 2021",
+		"to_ts": 1610927999
+		},
+		{
+		"from_ts": 1610928000,
+		"listen_count": 0,
+		"time_range": "18 January 2021",
+		"to_ts": 1611014399
+		},
+		{
+		"from_ts": 1611014400,
+		"listen_count": 0,
+		"time_range": "19 January 2021",
+		"to_ts": 1611100799
+		},
+		{
+		"from_ts": 1611100800,
+		"listen_count": 9,
+		"time_range": "20 January 2021",
+		"to_ts": 1611187199
+		},
+		{
+		"from_ts": 1611187200,
+		"listen_count": 0,
+		"time_range": "21 January 2021",
+		"to_ts": 1611273599
+		},
+		{
+		"from_ts": 1611273600,
+		"listen_count": 0,
+		"time_range": "22 January 2021",
+		"to_ts": 1611359999
+		},
+		{
+		"from_ts": 1611360000,
+		"listen_count": 0,
+		"time_range": "23 January 2021",
+		"to_ts": 1611446399
+		},
+		{
+		"from_ts": 1611446400,
+		"listen_count": 52,
+		"time_range": "24 January 2021",
+		"to_ts": 1611532799
+		},
+		{
+		"from_ts": 1611532800,
+		"listen_count": 12,
+		"time_range": "25 January 2021",
+		"to_ts": 1611619199
+		},
+		{
+		"from_ts": 1611619200,
+		"listen_count": 70,
+		"time_range": "26 January 2021",
+		"to_ts": 1611705599
+		},
+		{
+		"from_ts": 1611705600,
+		"listen_count": 31,
+		"time_range": "27 January 2021",
+		"to_ts": 1611791999
+		},
+		{
+		"from_ts": 1611792000,
+		"listen_count": 36,
+		"time_range": "28 January 2021",
+		"to_ts": 1611878399
+		},
+		{
+		"from_ts": 1611878400,
+		"listen_count": 29,
+		"time_range": "29 January 2021",
+		"to_ts": 1611964799
+		},
+		{
+		"from_ts": 1611964800,
+		"listen_count": 0,
+		"time_range": "30 January 2021",
+		"to_ts": 1612051199
+		},
+		{
+		"from_ts": 1612051200,
+		"listen_count": 2,
+		"time_range": "31 January 2021",
+		"to_ts": 1612137599
+		},
+		{
+		"from_ts": 1612137600,
+		"listen_count": 0,
+		"time_range": "01 February 2021",
+		"to_ts": 1612223999
+		},
+		{
+		"from_ts": 1612224000,
+		"listen_count": 18,
+		"time_range": "02 February 2021",
+		"to_ts": 1612310399
+		},
+		{
+		"from_ts": 1612310400,
+		"listen_count": 0,
+		"time_range": "03 February 2021",
+		"to_ts": 1612396799
+		},
+		{
+		"from_ts": 1612396800,
+		"listen_count": 36,
+		"time_range": "04 February 2021",
+		"to_ts": 1612483199
+		},
+		{
+		"from_ts": 1612483200,
+		"listen_count": 15,
+		"time_range": "05 February 2021",
+		"to_ts": 1612569599
+		},
+		{
+		"from_ts": 1612569600,
+		"listen_count": 6,
+		"time_range": "06 February 2021",
+		"to_ts": 1612655999
+		},
+		{
+		"from_ts": 1612656000,
+		"listen_count": 77,
+		"time_range": "07 February 2021",
+		"to_ts": 1612742399
+		},
+		{
+		"from_ts": 1612742400,
+		"listen_count": 7,
+		"time_range": "08 February 2021",
+		"to_ts": 1612828799
+		},
+		{
+		"from_ts": 1612828800,
+		"listen_count": 0,
+		"time_range": "09 February 2021",
+		"to_ts": 1612915199
+		},
+		{
+		"from_ts": 1612915200,
+		"listen_count": 65,
+		"time_range": "10 February 2021",
+		"to_ts": 1613001599
+		},
+		{
+		"from_ts": 1613001600,
+		"listen_count": 42,
+		"time_range": "11 February 2021",
+		"to_ts": 1613087999
+		},
+		{
+		"from_ts": 1613088000,
+		"listen_count": 0,
+		"time_range": "12 February 2021",
+		"to_ts": 1613174399
+		},
+		{
+		"from_ts": 1613174400,
+		"listen_count": 42,
+		"time_range": "13 February 2021",
+		"to_ts": 1613260799
+		},
+		{
+		"from_ts": 1613260800,
+		"listen_count": 32,
+		"time_range": "14 February 2021",
+		"to_ts": 1613347199
+		},
+		{
+		"from_ts": 1613347200,
+		"listen_count": 12,
+		"time_range": "15 February 2021",
+		"to_ts": 1613433599
+		},
+		{
+		"from_ts": 1613433600,
+		"listen_count": 3,
+		"time_range": "16 February 2021",
+		"to_ts": 1613519999
+		},
+		{
+		"from_ts": 1613520000,
+		"listen_count": 0,
+		"time_range": "17 February 2021",
+		"to_ts": 1613606399
+		},
+		{
+		"from_ts": 1613606400,
+		"listen_count": 0,
+		"time_range": "18 February 2021",
+		"to_ts": 1613692799
+		},
+		{
+		"from_ts": 1613692800,
+		"listen_count": 12,
+		"time_range": "19 February 2021",
+		"to_ts": 1613779199
+		},
+		{
+		"from_ts": 1613779200,
+		"listen_count": 25,
+		"time_range": "20 February 2021",
+		"to_ts": 1613865599
+		},
+		{
+		"from_ts": 1613865600,
+		"listen_count": 0,
+		"time_range": "21 February 2021",
+		"to_ts": 1613951999
+		},
+		{
+		"from_ts": 1613952000,
+		"listen_count": 40,
+		"time_range": "22 February 2021",
+		"to_ts": 1614038399
+		},
+		{
+		"from_ts": 1614038400,
+		"listen_count": 2,
+		"time_range": "23 February 2021",
+		"to_ts": 1614124799
+		},
+		{
+		"from_ts": 1614124800,
+		"listen_count": 58,
+		"time_range": "24 February 2021",
+		"to_ts": 1614211199
+		},
+		{
+		"from_ts": 1614211200,
+		"listen_count": 126,
+		"time_range": "25 February 2021",
+		"to_ts": 1614297599
+		},
+		{
+		"from_ts": 1614297600,
+		"listen_count": 53,
+		"time_range": "26 February 2021",
+		"to_ts": 1614383999
+		},
+		{
+		"from_ts": 1614384000,
+		"listen_count": 0,
+		"time_range": "27 February 2021",
+		"to_ts": 1614470399
+		},
+		{
+		"from_ts": 1614470400,
+		"listen_count": 4,
+		"time_range": "28 February 2021",
+		"to_ts": 1614556799
+		},
+		{
+		"from_ts": 1614556800,
+		"listen_count": 99,
+		"time_range": "01 March 2021",
+		"to_ts": 1614643199
+		},
+		{
+		"from_ts": 1614643200,
+		"listen_count": 44,
+		"time_range": "02 March 2021",
+		"to_ts": 1614729599
+		},
+		{
+		"from_ts": 1614729600,
+		"listen_count": 79,
+		"time_range": "03 March 2021",
+		"to_ts": 1614815999
+		},
+		{
+		"from_ts": 1614816000,
+		"listen_count": 92,
+		"time_range": "04 March 2021",
+		"to_ts": 1614902399
+		},
+		{
+		"from_ts": 1614902400,
+		"listen_count": 54,
+		"time_range": "05 March 2021",
+		"to_ts": 1614988799
+		},
+		{
+		"from_ts": 1614988800,
+		"listen_count": 16,
+		"time_range": "06 March 2021",
+		"to_ts": 1615075199
+		},
+		{
+		"from_ts": 1615075200,
+		"listen_count": 0,
+		"time_range": "07 March 2021",
+		"to_ts": 1615161599
+		},
+		{
+		"from_ts": 1615161600,
+		"listen_count": 44,
+		"time_range": "08 March 2021",
+		"to_ts": 1615247999
+		},
+		{
+		"from_ts": 1615248000,
+		"listen_count": 14,
+		"time_range": "09 March 2021",
+		"to_ts": 1615334399
+		},
+		{
+		"from_ts": 1615334400,
+		"listen_count": 14,
+		"time_range": "10 March 2021",
+		"to_ts": 1615420799
+		},
+		{
+		"from_ts": 1615420800,
+		"listen_count": 16,
+		"time_range": "11 March 2021",
+		"to_ts": 1615507199
+		},
+		{
+		"from_ts": 1615507200,
+		"listen_count": 0,
+		"time_range": "12 March 2021",
+		"to_ts": 1615593599
+		},
+		{
+		"from_ts": 1615593600,
+		"listen_count": 2,
+		"time_range": "13 March 2021",
+		"to_ts": 1615679999
+		},
+		{
+		"from_ts": 1615680000,
+		"listen_count": 30,
+		"time_range": "14 March 2021",
+		"to_ts": 1615766399
+		},
+		{
+		"from_ts": 1615766400,
+		"listen_count": 46,
+		"time_range": "15 March 2021",
+		"to_ts": 1615852799
+		},
+		{
+		"from_ts": 1615852800,
+		"listen_count": 36,
+		"time_range": "16 March 2021",
+		"to_ts": 1615939199
+		},
+		{
+		"from_ts": 1615939200,
+		"listen_count": 28,
+		"time_range": "17 March 2021",
+		"to_ts": 1616025599
+		},
+		{
+		"from_ts": 1616025600,
+		"listen_count": 71,
+		"time_range": "18 March 2021",
+		"to_ts": 1616111999
+		},
+		{
+		"from_ts": 1616112000,
+		"listen_count": 67,
+		"time_range": "19 March 2021",
+		"to_ts": 1616198399
+		},
+		{
+		"from_ts": 1616198400,
+		"listen_count": 0,
+		"time_range": "20 March 2021",
+		"to_ts": 1616284799
+		},
+		{
+		"from_ts": 1616284800,
+		"listen_count": 0,
+		"time_range": "21 March 2021",
+		"to_ts": 1616371199
+		},
+		{
+		"from_ts": 1616371200,
+		"listen_count": 9,
+		"time_range": "22 March 2021",
+		"to_ts": 1616457599
+		},
+		{
+		"from_ts": 1616457600,
+		"listen_count": 0,
+		"time_range": "23 March 2021",
+		"to_ts": 1616543999
+		},
+		{
+		"from_ts": 1616544000,
+		"listen_count": 104,
+		"time_range": "24 March 2021",
+		"to_ts": 1616630399
+		},
+		{
+		"from_ts": 1616630400,
+		"listen_count": 48,
+		"time_range": "25 March 2021",
+		"to_ts": 1616716799
+		},
+		{
+		"from_ts": 1616716800,
+		"listen_count": 25,
+		"time_range": "26 March 2021",
+		"to_ts": 1616803199
+		},
+		{
+		"from_ts": 1616803200,
+		"listen_count": 25,
+		"time_range": "27 March 2021",
+		"to_ts": 1616889599
+		},
+		{
+		"from_ts": 1616889600,
+		"listen_count": 54,
+		"time_range": "28 March 2021",
+		"to_ts": 1616975999
+		},
+		{
+		"from_ts": 1616976000,
+		"listen_count": 63,
+		"time_range": "29 March 2021",
+		"to_ts": 1617062399
+		},
+		{
+		"from_ts": 1617062400,
+		"listen_count": 61,
+		"time_range": "30 March 2021",
+		"to_ts": 1617148799
+		},
+		{
+		"from_ts": 1617148800,
+		"listen_count": 77,
+		"time_range": "31 March 2021",
+		"to_ts": 1617235199
+		},
+		{
+		"from_ts": 1617235200,
+		"listen_count": 85,
+		"time_range": "01 April 2021",
+		"to_ts": 1617321599
+		},
+		{
+		"from_ts": 1617321600,
+		"listen_count": 81,
+		"time_range": "02 April 2021",
+		"to_ts": 1617407999
+		},
+		{
+		"from_ts": 1617408000,
+		"listen_count": 10,
+		"time_range": "03 April 2021",
+		"to_ts": 1617494399
+		},
+		{
+		"from_ts": 1617494400,
+		"listen_count": 14,
+		"time_range": "04 April 2021",
+		"to_ts": 1617580799
+		},
+		{
+		"from_ts": 1617580800,
+		"listen_count": 10,
+		"time_range": "05 April 2021",
+		"to_ts": 1617667199
+		},
+		{
+		"from_ts": 1617667200,
+		"listen_count": 15,
+		"time_range": "06 April 2021",
+		"to_ts": 1617753599
+		},
+		{
+		"from_ts": 1617753600,
+		"listen_count": 63,
+		"time_range": "07 April 2021",
+		"to_ts": 1617839999
+		},
+		{
+		"from_ts": 1617840000,
+		"listen_count": 74,
+		"time_range": "08 April 2021",
+		"to_ts": 1617926399
+		},
+		{
+		"from_ts": 1617926400,
+		"listen_count": 78,
+		"time_range": "09 April 2021",
+		"to_ts": 1618012799
+		},
+		{
+		"from_ts": 1618012800,
+		"listen_count": 0,
+		"time_range": "10 April 2021",
+		"to_ts": 1618099199
+		},
+		{
+		"from_ts": 1618099200,
+		"listen_count": 41,
+		"time_range": "11 April 2021",
+		"to_ts": 1618185599
+		},
+		{
+		"from_ts": 1618185600,
+		"listen_count": 137,
+		"time_range": "12 April 2021",
+		"to_ts": 1618271999
+		},
+		{
+		"from_ts": 1618272000,
+		"listen_count": 151,
+		"time_range": "13 April 2021",
+		"to_ts": 1618358399
+		},
+		{
+		"from_ts": 1618358400,
+		"listen_count": 81,
+		"time_range": "14 April 2021",
+		"to_ts": 1618444799
+		},
+		{
+		"from_ts": 1618444800,
+		"listen_count": 104,
+		"time_range": "15 April 2021",
+		"to_ts": 1618531199
+		},
+		{
+		"from_ts": 1618531200,
+		"listen_count": 53,
+		"time_range": "16 April 2021",
+		"to_ts": 1618617599
+		},
+		{
+		"from_ts": 1618617600,
+		"listen_count": 0,
+		"time_range": "17 April 2021",
+		"to_ts": 1618703999
+		},
+		{
+		"from_ts": 1618704000,
+		"listen_count": 7,
+		"time_range": "18 April 2021",
+		"to_ts": 1618790399
+		},
+		{
+		"from_ts": 1618790400,
+		"listen_count": 60,
+		"time_range": "19 April 2021",
+		"to_ts": 1618876799
+		},
+		{
+		"from_ts": 1618876800,
+		"listen_count": 40,
+		"time_range": "20 April 2021",
+		"to_ts": 1618963199
+		},
+		{
+		"from_ts": 1618963200,
+		"listen_count": 163,
+		"time_range": "21 April 2021",
+		"to_ts": 1619049599
+		},
+		{
+		"from_ts": 1619049600,
+		"listen_count": 51,
+		"time_range": "22 April 2021",
+		"to_ts": 1619135999
+		},
+		{
+		"from_ts": 1619136000,
+		"listen_count": 50,
+		"time_range": "23 April 2021",
+		"to_ts": 1619222399
+		},
+		{
+		"from_ts": 1619222400,
+		"listen_count": 37,
+		"time_range": "24 April 2021",
+		"to_ts": 1619308799
+		},
+		{
+		"from_ts": 1619308800,
+		"listen_count": 2,
+		"time_range": "25 April 2021",
+		"to_ts": 1619395199
+		},
+		{
+		"from_ts": 1619395200,
+		"listen_count": 42,
+		"time_range": "26 April 2021",
+		"to_ts": 1619481599
+		},
+		{
+		"from_ts": 1619481600,
+		"listen_count": 110,
+		"time_range": "27 April 2021",
+		"to_ts": 1619567999
+		},
+		{
+		"from_ts": 1619568000,
+		"listen_count": 89,
+		"time_range": "28 April 2021",
+		"to_ts": 1619654399
+		},
+		{
+		"from_ts": 1619654400,
+		"listen_count": 121,
+		"time_range": "29 April 2021",
+		"to_ts": 1619740799
+		},
+		{
+		"from_ts": 1619740800,
+		"listen_count": 99,
+		"time_range": "30 April 2021",
+		"to_ts": 1619827199
+		},
+		{
+		"from_ts": 1619827200,
+		"listen_count": 16,
+		"time_range": "01 May 2021",
+		"to_ts": 1619913599
+		},
+		{
+		"from_ts": 1619913600,
+		"listen_count": 6,
+		"time_range": "02 May 2021",
+		"to_ts": 1619999999
+		},
+		{
+		"from_ts": 1620000000,
+		"listen_count": 69,
+		"time_range": "03 May 2021",
+		"to_ts": 1620086399
+		},
+		{
+		"from_ts": 1620086400,
+		"listen_count": 54,
+		"time_range": "04 May 2021",
+		"to_ts": 1620172799
+		},
+		{
+		"from_ts": 1620172800,
+		"listen_count": 65,
+		"time_range": "05 May 2021",
+		"to_ts": 1620259199
+		},
+		{
+		"from_ts": 1620259200,
+		"listen_count": 23,
+		"time_range": "06 May 2021",
+		"to_ts": 1620345599
+		},
+		{
+		"from_ts": 1620345600,
+		"listen_count": 75,
+		"time_range": "07 May 2021",
+		"to_ts": 1620431999
+		},
+		{
+		"from_ts": 1620432000,
+		"listen_count": 98,
+		"time_range": "08 May 2021",
+		"to_ts": 1620518399
+		},
+		{
+		"from_ts": 1620518400,
+		"listen_count": 78,
+		"time_range": "09 May 2021",
+		"to_ts": 1620604799
+		},
+		{
+		"from_ts": 1620604800,
+		"listen_count": 89,
+		"time_range": "10 May 2021",
+		"to_ts": 1620691199
+		},
+		{
+		"from_ts": 1620691200,
+		"listen_count": 42,
+		"time_range": "11 May 2021",
+		"to_ts": 1620777599
+		},
+		{
+		"from_ts": 1620777600,
+		"listen_count": 6,
+		"time_range": "12 May 2021",
+		"to_ts": 1620863999
+		},
+		{
+		"from_ts": 1620864000,
+		"listen_count": 42,
+		"time_range": "13 May 2021",
+		"to_ts": 1620950399
+		},
+		{
+		"from_ts": 1620950400,
+		"listen_count": 77,
+		"time_range": "14 May 2021",
+		"to_ts": 1621036799
+		},
+		{
+		"from_ts": 1621036800,
+		"listen_count": 8,
+		"time_range": "15 May 2021",
+		"to_ts": 1621123199
+		},
+		{
+		"from_ts": 1621123200,
+		"listen_count": 28,
+		"time_range": "16 May 2021",
+		"to_ts": 1621209599
+		},
+		{
+		"from_ts": 1621209600,
+		"listen_count": 100,
+		"time_range": "17 May 2021",
+		"to_ts": 1621295999
+		},
+		{
+		"from_ts": 1621296000,
+		"listen_count": 17,
+		"time_range": "18 May 2021",
+		"to_ts": 1621382399
+		},
+		{
+		"from_ts": 1621382400,
+		"listen_count": 13,
+		"time_range": "19 May 2021",
+		"to_ts": 1621468799
+		},
+		{
+		"from_ts": 1621468800,
+		"listen_count": 28,
+		"time_range": "20 May 2021",
+		"to_ts": 1621555199
+		},
+		{
+		"from_ts": 1621555200,
+		"listen_count": 19,
+		"time_range": "21 May 2021",
+		"to_ts": 1621641599
+		},
+		{
+		"from_ts": 1621641600,
+		"listen_count": 0,
+		"time_range": "22 May 2021",
+		"to_ts": 1621727999
+		},
+		{
+		"from_ts": 1621728000,
+		"listen_count": 0,
+		"time_range": "23 May 2021",
+		"to_ts": 1621814399
+		},
+		{
+		"from_ts": 1621814400,
+		"listen_count": 18,
+		"time_range": "24 May 2021",
+		"to_ts": 1621900799
+		},
+		{
+		"from_ts": 1621900800,
+		"listen_count": 0,
+		"time_range": "25 May 2021",
+		"to_ts": 1621987199
+		},
+		{
+		"from_ts": 1621987200,
+		"listen_count": 0,
+		"time_range": "26 May 2021",
+		"to_ts": 1622073599
+		},
+		{
+		"from_ts": 1622073600,
+		"listen_count": 34,
+		"time_range": "27 May 2021",
+		"to_ts": 1622159999
+		},
+		{
+		"from_ts": 1622160000,
+		"listen_count": 34,
+		"time_range": "28 May 2021",
+		"to_ts": 1622246399
+		},
+		{
+		"from_ts": 1622246400,
+		"listen_count": 6,
+		"time_range": "29 May 2021",
+		"to_ts": 1622332799
+		},
+		{
+		"from_ts": 1622332800,
+		"listen_count": 4,
+		"time_range": "30 May 2021",
+		"to_ts": 1622419199
+		},
+		{
+		"from_ts": 1622419200,
+		"listen_count": 42,
+		"time_range": "31 May 2021",
+		"to_ts": 1622505599
+		},
+		{
+		"from_ts": 1622505600,
+		"listen_count": 64,
+		"time_range": "01 June 2021",
+		"to_ts": 1622591999
+		},
+		{
+		"from_ts": 1622592000,
+		"listen_count": 96,
+		"time_range": "02 June 2021",
+		"to_ts": 1622678399
+		},
+		{
+		"from_ts": 1622678400,
+		"listen_count": 123,
+		"time_range": "03 June 2021",
+		"to_ts": 1622764799
+		},
+		{
+		"from_ts": 1622764800,
+		"listen_count": 177,
+		"time_range": "04 June 2021",
+		"to_ts": 1622851199
+		},
+		{
+		"from_ts": 1622851200,
+		"listen_count": 117,
+		"time_range": "05 June 2021",
+		"to_ts": 1622937599
+		},
+		{
+		"from_ts": 1622937600,
+		"listen_count": 55,
+		"time_range": "06 June 2021",
+		"to_ts": 1623023999
+		},
+		{
+		"from_ts": 1623024000,
+		"listen_count": 157,
+		"time_range": "07 June 2021",
+		"to_ts": 1623110399
+		},
+		{
+		"from_ts": 1623110400,
+		"listen_count": 72,
+		"time_range": "08 June 2021",
+		"to_ts": 1623196799
+		},
+		{
+		"from_ts": 1623196800,
+		"listen_count": 137,
+		"time_range": "09 June 2021",
+		"to_ts": 1623283199
+		},
+		{
+		"from_ts": 1623283200,
+		"listen_count": 38,
+		"time_range": "10 June 2021",
+		"to_ts": 1623369599
+		},
+		{
+		"from_ts": 1623369600,
+		"listen_count": 0,
+		"time_range": "11 June 2021",
+		"to_ts": 1623455999
+		},
+		{
+		"from_ts": 1623456000,
+		"listen_count": 0,
+		"time_range": "12 June 2021",
+		"to_ts": 1623542399
+		},
+		{
+		"from_ts": 1623542400,
+		"listen_count": 0,
+		"time_range": "13 June 2021",
+		"to_ts": 1623628799
+		},
+		{
+		"from_ts": 1623628800,
+		"listen_count": 1,
+		"time_range": "14 June 2021",
+		"to_ts": 1623715199
+		},
+		{
+		"from_ts": 1623715200,
+		"listen_count": 59,
+		"time_range": "15 June 2021",
+		"to_ts": 1623801599
+		},
+		{
+		"from_ts": 1623801600,
+		"listen_count": 94,
+		"time_range": "16 June 2021",
+		"to_ts": 1623887999
+		},
+		{
+		"from_ts": 1623888000,
+		"listen_count": 48,
+		"time_range": "17 June 2021",
+		"to_ts": 1623974399
+		},
+		{
+		"from_ts": 1623974400,
+		"listen_count": 53,
+		"time_range": "18 June 2021",
+		"to_ts": 1624060799
+		},
+		{
+		"from_ts": 1624060800,
+		"listen_count": 32,
+		"time_range": "19 June 2021",
+		"to_ts": 1624147199
+		},
+		{
+		"from_ts": 1624147200,
+		"listen_count": 11,
+		"time_range": "20 June 2021",
+		"to_ts": 1624233599
+		},
+		{
+		"from_ts": 1624233600,
+		"listen_count": 94,
+		"time_range": "21 June 2021",
+		"to_ts": 1624319999
+		},
+		{
+		"from_ts": 1624320000,
+		"listen_count": 43,
+		"time_range": "22 June 2021",
+		"to_ts": 1624406399
+		},
+		{
+		"from_ts": 1624406400,
+		"listen_count": 9,
+		"time_range": "23 June 2021",
+		"to_ts": 1624492799
+		},
+		{
+		"from_ts": 1624492800,
+		"listen_count": 16,
+		"time_range": "24 June 2021",
+		"to_ts": 1624579199
+		},
+		{
+		"from_ts": 1624579200,
+		"listen_count": 17,
+		"time_range": "25 June 2021",
+		"to_ts": 1624665599
+		},
+		{
+		"from_ts": 1624665600,
+		"listen_count": 0,
+		"time_range": "26 June 2021",
+		"to_ts": 1624751999
+		},
+		{
+		"from_ts": 1624752000,
+		"listen_count": 26,
+		"time_range": "27 June 2021",
+		"to_ts": 1624838399
+		},
+		{
+		"from_ts": 1624838400,
+		"listen_count": 14,
+		"time_range": "28 June 2021",
+		"to_ts": 1624924799
+		},
+		{
+		"from_ts": 1624924800,
+		"listen_count": 4,
+		"time_range": "29 June 2021",
+		"to_ts": 1625011199
+		},
+		{
+		"from_ts": 1625011200,
+		"listen_count": 0,
+		"time_range": "30 June 2021",
+		"to_ts": 1625097599
+		},
+		{
+		"from_ts": 1625097600,
+		"listen_count": 5,
+		"time_range": "01 July 2021",
+		"to_ts": 1625183999
+		},
+		{
+		"from_ts": 1625184000,
+		"listen_count": 40,
+		"time_range": "02 July 2021",
+		"to_ts": 1625270399
+		},
+		{
+		"from_ts": 1625270400,
+		"listen_count": 32,
+		"time_range": "03 July 2021",
+		"to_ts": 1625356799
+		},
+		{
+		"from_ts": 1625356800,
+		"listen_count": 27,
+		"time_range": "04 July 2021",
+		"to_ts": 1625443199
+		},
+		{
+		"from_ts": 1625443200,
+		"listen_count": 27,
+		"time_range": "05 July 2021",
+		"to_ts": 1625529599
+		},
+		{
+		"from_ts": 1625529600,
+		"listen_count": 17,
+		"time_range": "06 July 2021",
+		"to_ts": 1625615999
+		},
+		{
+		"from_ts": 1625616000,
+		"listen_count": 59,
+		"time_range": "07 July 2021",
+		"to_ts": 1625702399
+		},
+		{
+		"from_ts": 1625702400,
+		"listen_count": 8,
+		"time_range": "08 July 2021",
+		"to_ts": 1625788799
+		},
+		{
+		"from_ts": 1625788800,
+		"listen_count": 29,
+		"time_range": "09 July 2021",
+		"to_ts": 1625875199
+		},
+		{
+		"from_ts": 1625875200,
+		"listen_count": 0,
+		"time_range": "10 July 2021",
+		"to_ts": 1625961599
+		},
+		{
+		"from_ts": 1625961600,
+		"listen_count": 0,
+		"time_range": "11 July 2021",
+		"to_ts": 1626047999
+		},
+		{
+		"from_ts": 1626048000,
+		"listen_count": 39,
+		"time_range": "12 July 2021",
+		"to_ts": 1626134399
+		},
+		{
+		"from_ts": 1626134400,
+		"listen_count": 15,
+		"time_range": "13 July 2021",
+		"to_ts": 1626220799
+		},
+		{
+		"from_ts": 1626220800,
+		"listen_count": 3,
+		"time_range": "14 July 2021",
+		"to_ts": 1626307199
+		},
+		{
+		"from_ts": 1626307200,
+		"listen_count": 50,
+		"time_range": "15 July 2021",
+		"to_ts": 1626393599
+		},
+		{
+		"from_ts": 1626393600,
+		"listen_count": 35,
+		"time_range": "16 July 2021",
+		"to_ts": 1626479999
+		},
+		{
+		"from_ts": 1626480000,
+		"listen_count": 71,
+		"time_range": "17 July 2021",
+		"to_ts": 1626566399
+		},
+		{
+		"from_ts": 1626566400,
+		"listen_count": 0,
+		"time_range": "18 July 2021",
+		"to_ts": 1626652799
+		},
+		{
+		"from_ts": 1626652800,
+		"listen_count": 0,
+		"time_range": "19 July 2021",
+		"to_ts": 1626739199
+		},
+		{
+		"from_ts": 1626739200,
+		"listen_count": 0,
+		"time_range": "20 July 2021",
+		"to_ts": 1626825599
+		},
+		{
+		"from_ts": 1626825600,
+		"listen_count": 27,
+		"time_range": "21 July 2021",
+		"to_ts": 1626911999
+		},
+		{
+		"from_ts": 1626912000,
+		"listen_count": 25,
+		"time_range": "22 July 2021",
+		"to_ts": 1626998399
+		},
+		{
+		"from_ts": 1626998400,
+		"listen_count": 0,
+		"time_range": "23 July 2021",
+		"to_ts": 1627084799
+		},
+		{
+		"from_ts": 1627084800,
+		"listen_count": 20,
+		"time_range": "24 July 2021",
+		"to_ts": 1627171199
+		},
+		{
+		"from_ts": 1627171200,
+		"listen_count": 24,
+		"time_range": "25 July 2021",
+		"to_ts": 1627257599
+		},
+		{
+		"from_ts": 1627257600,
+		"listen_count": 73,
+		"time_range": "26 July 2021",
+		"to_ts": 1627343999
+		},
+		{
+		"from_ts": 1627344000,
+		"listen_count": 26,
+		"time_range": "27 July 2021",
+		"to_ts": 1627430399
+		},
+		{
+		"from_ts": 1627430400,
+		"listen_count": 0,
+		"time_range": "28 July 2021",
+		"to_ts": 1627516799
+		},
+		{
+		"from_ts": 1627516800,
+		"listen_count": 0,
+		"time_range": "29 July 2021",
+		"to_ts": 1627603199
+		},
+		{
+		"from_ts": 1627603200,
+		"listen_count": 44,
+		"time_range": "30 July 2021",
+		"to_ts": 1627689599
+		},
+		{
+		"from_ts": 1627689600,
+		"listen_count": 21,
+		"time_range": "31 July 2021",
+		"to_ts": 1627775999
+		},
+		{
+		"from_ts": 1627776000,
+		"listen_count": 18,
+		"time_range": "01 August 2021",
+		"to_ts": 1627862399
+		},
+		{
+		"from_ts": 1627862400,
+		"listen_count": 21,
+		"time_range": "02 August 2021",
+		"to_ts": 1627948799
+		},
+		{
+		"from_ts": 1627948800,
+		"listen_count": 32,
+		"time_range": "03 August 2021",
+		"to_ts": 1628035199
+		},
+		{
+		"from_ts": 1628035200,
+		"listen_count": 2,
+		"time_range": "04 August 2021",
+		"to_ts": 1628121599
+		},
+		{
+		"from_ts": 1628121600,
+		"listen_count": 1,
+		"time_range": "05 August 2021",
+		"to_ts": 1628207999
+		},
+		{
+		"from_ts": 1628208000,
+		"listen_count": 0,
+		"time_range": "06 August 2021",
+		"to_ts": 1628294399
+		},
+		{
+		"from_ts": 1628294400,
+		"listen_count": 0,
+		"time_range": "07 August 2021",
+		"to_ts": 1628380799
+		},
+		{
+		"from_ts": 1628380800,
+		"listen_count": 0,
+		"time_range": "08 August 2021",
+		"to_ts": 1628467199
+		},
+		{
+		"from_ts": 1628467200,
+		"listen_count": 43,
+		"time_range": "09 August 2021",
+		"to_ts": 1628553599
+		},
+		{
+		"from_ts": 1628553600,
+		"listen_count": 69,
+		"time_range": "10 August 2021",
+		"to_ts": 1628639999
+		},
+		{
+		"from_ts": 1628640000,
+		"listen_count": 24,
+		"time_range": "11 August 2021",
+		"to_ts": 1628726399
+		},
+		{
+		"from_ts": 1628726400,
+		"listen_count": 0,
+		"time_range": "12 August 2021",
+		"to_ts": 1628812799
+		},
+		{
+		"from_ts": 1628812800,
+		"listen_count": 0,
+		"time_range": "13 August 2021",
+		"to_ts": 1628899199
+		},
+		{
+		"from_ts": 1628899200,
+		"listen_count": 0,
+		"time_range": "14 August 2021",
+		"to_ts": 1628985599
+		},
+		{
+		"from_ts": 1628985600,
+		"listen_count": 11,
+		"time_range": "15 August 2021",
+		"to_ts": 1629071999
+		},
+		{
+		"from_ts": 1629072000,
+		"listen_count": 1,
+		"time_range": "16 August 2021",
+		"to_ts": 1629158399
+		},
+		{
+		"from_ts": 1629158400,
+		"listen_count": 21,
+		"time_range": "17 August 2021",
+		"to_ts": 1629244799
+		},
+		{
+		"from_ts": 1629244800,
+		"listen_count": 21,
+		"time_range": "18 August 2021",
+		"to_ts": 1629331199
+		},
+		{
+		"from_ts": 1629331200,
+		"listen_count": 39,
+		"time_range": "19 August 2021",
+		"to_ts": 1629417599
+		},
+		{
+		"from_ts": 1629417600,
+		"listen_count": 0,
+		"time_range": "20 August 2021",
+		"to_ts": 1629503999
+		},
+		{
+		"from_ts": 1629504000,
+		"listen_count": 4,
+		"time_range": "21 August 2021",
+		"to_ts": 1629590399
+		},
+		{
+		"from_ts": 1629590400,
+		"listen_count": 23,
+		"time_range": "22 August 2021",
+		"to_ts": 1629676799
+		},
+		{
+		"from_ts": 1629676800,
+		"listen_count": 0,
+		"time_range": "23 August 2021",
+		"to_ts": 1629763199
+		},
+		{
+		"from_ts": 1629763200,
+		"listen_count": 1,
+		"time_range": "24 August 2021",
+		"to_ts": 1629849599
+		},
+		{
+		"from_ts": 1629849600,
+		"listen_count": 13,
+		"time_range": "25 August 2021",
+		"to_ts": 1629935999
+		},
+		{
+		"from_ts": 1629936000,
+		"listen_count": 0,
+		"time_range": "26 August 2021",
+		"to_ts": 1630022399
+		},
+		{
+		"from_ts": 1630022400,
+		"listen_count": 17,
+		"time_range": "27 August 2021",
+		"to_ts": 1630108799
+		},
+		{
+		"from_ts": 1630108800,
+		"listen_count": 23,
+		"time_range": "28 August 2021",
+		"to_ts": 1630195199
+		},
+		{
+		"from_ts": 1630195200,
+		"listen_count": 30,
+		"time_range": "29 August 2021",
+		"to_ts": 1630281599
+		},
+		{
+		"from_ts": 1630281600,
+		"listen_count": 27,
+		"time_range": "30 August 2021",
+		"to_ts": 1630367999
+		},
+		{
+		"from_ts": 1630368000,
+		"listen_count": 18,
+		"time_range": "31 August 2021",
+		"to_ts": 1630454399
+		},
+		{
+		"from_ts": 1630454400,
+		"listen_count": 6,
+		"time_range": "01 September 2021",
+		"to_ts": 1630540799
+		},
+		{
+		"from_ts": 1630540800,
+		"listen_count": 3,
+		"time_range": "02 September 2021",
+		"to_ts": 1630627199
+		},
+		{
+		"from_ts": 1630627200,
+		"listen_count": 0,
+		"time_range": "03 September 2021",
+		"to_ts": 1630713599
+		},
+		{
+		"from_ts": 1630713600,
+		"listen_count": 15,
+		"time_range": "04 September 2021",
+		"to_ts": 1630799999
+		},
+		{
+		"from_ts": 1630800000,
+		"listen_count": 7,
+		"time_range": "05 September 2021",
+		"to_ts": 1630886399
+		},
+		{
+		"from_ts": 1630886400,
+		"listen_count": 20,
+		"time_range": "06 September 2021",
+		"to_ts": 1630972799
+		},
+		{
+		"from_ts": 1630972800,
+		"listen_count": 65,
+		"time_range": "07 September 2021",
+		"to_ts": 1631059199
+		},
+		{
+		"from_ts": 1631059200,
+		"listen_count": 33,
+		"time_range": "08 September 2021",
+		"to_ts": 1631145599
+		},
+		{
+		"from_ts": 1631145600,
+		"listen_count": 3,
+		"time_range": "09 September 2021",
+		"to_ts": 1631231999
+		},
+		{
+		"from_ts": 1631232000,
+		"listen_count": 50,
+		"time_range": "10 September 2021",
+		"to_ts": 1631318399
+		},
+		{
+		"from_ts": 1631318400,
+		"listen_count": 0,
+		"time_range": "11 September 2021",
+		"to_ts": 1631404799
+		},
+		{
+		"from_ts": 1631404800,
+		"listen_count": 30,
+		"time_range": "12 September 2021",
+		"to_ts": 1631491199
+		},
+		{
+		"from_ts": 1631491200,
+		"listen_count": 0,
+		"time_range": "13 September 2021",
+		"to_ts": 1631577599
+		},
+		{
+		"from_ts": 1631577600,
+		"listen_count": 7,
+		"time_range": "14 September 2021",
+		"to_ts": 1631663999
+		},
+		{
+		"from_ts": 1631664000,
+		"listen_count": 43,
+		"time_range": "15 September 2021",
+		"to_ts": 1631750399
+		},
+		{
+		"from_ts": 1631750400,
+		"listen_count": 34,
+		"time_range": "16 September 2021",
+		"to_ts": 1631836799
+		},
+		{
+		"from_ts": 1631836800,
+		"listen_count": 0,
+		"time_range": "17 September 2021",
+		"to_ts": 1631923199
+		},
+		{
+		"from_ts": 1631923200,
+		"listen_count": 24,
+		"time_range": "18 September 2021",
+		"to_ts": 1632009599
+		},
+		{
+		"from_ts": 1632009600,
+		"listen_count": 0,
+		"time_range": "19 September 2021",
+		"to_ts": 1632095999
+		},
+		{
+		"from_ts": 1632096000,
+		"listen_count": 0,
+		"time_range": "20 September 2021",
+		"to_ts": 1632182399
+		},
+		{
+		"from_ts": 1632182400,
+		"listen_count": 0,
+		"time_range": "21 September 2021",
+		"to_ts": 1632268799
+		},
+		{
+		"from_ts": 1632268800,
+		"listen_count": 0,
+		"time_range": "22 September 2021",
+		"to_ts": 1632355199
+		},
+		{
+		"from_ts": 1632355200,
+		"listen_count": 31,
+		"time_range": "23 September 2021",
+		"to_ts": 1632441599
+		},
+		{
+		"from_ts": 1632441600,
+		"listen_count": 138,
+		"time_range": "24 September 2021",
+		"to_ts": 1632527999
+		},
+		{
+		"from_ts": 1632528000,
+		"listen_count": 111,
+		"time_range": "25 September 2021",
+		"to_ts": 1632614399
+		},
+		{
+		"from_ts": 1632614400,
+		"listen_count": 52,
+		"time_range": "26 September 2021",
+		"to_ts": 1632700799
+		},
+		{
+		"from_ts": 1632700800,
+		"listen_count": 0,
+		"time_range": "27 September 2021",
+		"to_ts": 1632787199
+		},
+		{
+		"from_ts": 1632787200,
+		"listen_count": 16,
+		"time_range": "28 September 2021",
+		"to_ts": 1632873599
+		},
+		{
+		"from_ts": 1632873600,
+		"listen_count": 0,
+		"time_range": "29 September 2021",
+		"to_ts": 1632959999
+		},
+		{
+		"from_ts": 1632960000,
+		"listen_count": 2,
+		"time_range": "30 September 2021",
+		"to_ts": 1633046399
+		},
+		{
+		"from_ts": 1633046400,
+		"listen_count": 0,
+		"time_range": "01 October 2021",
+		"to_ts": 1633132799
+		},
+		{
+		"from_ts": 1633132800,
+		"listen_count": 0,
+		"time_range": "02 October 2021",
+		"to_ts": 1633219199
+		},
+		{
+		"from_ts": 1633219200,
+		"listen_count": 0,
+		"time_range": "03 October 2021",
+		"to_ts": 1633305599
+		},
+		{
+		"from_ts": 1633305600,
+		"listen_count": 0,
+		"time_range": "04 October 2021",
+		"to_ts": 1633391999
+		},
+		{
+		"from_ts": 1633392000,
+		"listen_count": 69,
+		"time_range": "05 October 2021",
+		"to_ts": 1633478399
+		},
+		{
+		"from_ts": 1633478400,
+		"listen_count": 38,
+		"time_range": "06 October 2021",
+		"to_ts": 1633564799
+		},
+		{
+		"from_ts": 1633564800,
+		"listen_count": 28,
+		"time_range": "07 October 2021",
+		"to_ts": 1633651199
+		},
+		{
+		"from_ts": 1633651200,
+		"listen_count": 43,
+		"time_range": "08 October 2021",
+		"to_ts": 1633737599
+		},
+		{
+		"from_ts": 1633737600,
+		"listen_count": 7,
+		"time_range": "09 October 2021",
+		"to_ts": 1633823999
+		},
+		{
+		"from_ts": 1633824000,
+		"listen_count": 25,
+		"time_range": "10 October 2021",
+		"to_ts": 1633910399
+		},
+		{
+		"from_ts": 1633910400,
+		"listen_count": 0,
+		"time_range": "11 October 2021",
+		"to_ts": 1633996799
+		},
+		{
+		"from_ts": 1633996800,
+		"listen_count": 75,
+		"time_range": "12 October 2021",
+		"to_ts": 1634083199
+		},
+		{
+		"from_ts": 1634083200,
+		"listen_count": 36,
+		"time_range": "13 October 2021",
+		"to_ts": 1634169599
+		},
+		{
+		"from_ts": 1634169600,
+		"listen_count": 39,
+		"time_range": "14 October 2021",
+		"to_ts": 1634255999
+		},
+		{
+		"from_ts": 1634256000,
+		"listen_count": 0,
+		"time_range": "15 October 2021",
+		"to_ts": 1634342399
+		},
+		{
+		"from_ts": 1634342400,
+		"listen_count": 20,
+		"time_range": "16 October 2021",
+		"to_ts": 1634428799
+		},
+		{
+		"from_ts": 1634428800,
+		"listen_count": 0,
+		"time_range": "17 October 2021",
+		"to_ts": 1634515199
+		},
+		{
+		"from_ts": 1634515200,
+		"listen_count": 0,
+		"time_range": "18 October 2021",
+		"to_ts": 1634601599
+		},
+		{
+		"from_ts": 1634601600,
+		"listen_count": 3,
+		"time_range": "19 October 2021",
+		"to_ts": 1634687999
+		},
+		{
+		"from_ts": 1634688000,
+		"listen_count": 1,
+		"time_range": "20 October 2021",
+		"to_ts": 1634774399
+		},
+		{
+		"from_ts": 1634774400,
+		"listen_count": 0,
+		"time_range": "21 October 2021",
+		"to_ts": 1634860799
+		},
+		{
+		"from_ts": 1634860800,
+		"listen_count": 0,
+		"time_range": "22 October 2021",
+		"to_ts": 1634947199
+		},
+		{
+		"from_ts": 1634947200,
+		"listen_count": 0,
+		"time_range": "23 October 2021",
+		"to_ts": 1635033599
+		},
+		{
+		"from_ts": 1635033600,
+		"listen_count": 62,
+		"time_range": "24 October 2021",
+		"to_ts": 1635119999
+		},
+		{
+		"from_ts": 1635120000,
+		"listen_count": 37,
+		"time_range": "25 October 2021",
+		"to_ts": 1635206399
+		},
+		{
+		"from_ts": 1635206400,
+		"listen_count": 105,
+		"time_range": "26 October 2021",
+		"to_ts": 1635292799
+		},
+		{
+		"from_ts": 1635292800,
+		"listen_count": 112,
+		"time_range": "27 October 2021",
+		"to_ts": 1635379199
+		},
+		{
+		"from_ts": 1635379200,
+		"listen_count": 82,
+		"time_range": "28 October 2021",
+		"to_ts": 1635465599
+		},
+		{
+		"from_ts": 1635465600,
+		"listen_count": 73,
+		"time_range": "29 October 2021",
+		"to_ts": 1635551999
+		},
+		{
+		"from_ts": 1635552000,
+		"listen_count": 109,
+		"time_range": "30 October 2021",
+		"to_ts": 1635638399
+		},
+		{
+		"from_ts": 1635638400,
+		"listen_count": 71,
+		"time_range": "31 October 2021",
+		"to_ts": 1635724799
+		},
+		{
+		"from_ts": 1635724800,
+		"listen_count": 65,
+		"time_range": "01 November 2021",
+		"to_ts": 1635811199
+		},
+		{
+		"from_ts": 1635811200,
+		"listen_count": 0,
+		"time_range": "02 November 2021",
+		"to_ts": 1635897599
+		},
+		{
+		"from_ts": 1635897600,
+		"listen_count": 78,
+		"time_range": "03 November 2021",
+		"to_ts": 1635983999
+		},
+		{
+		"from_ts": 1635984000,
+		"listen_count": 84,
+		"time_range": "04 November 2021",
+		"to_ts": 1636070399
+		},
+		{
+		"from_ts": 1636070400,
+		"listen_count": 24,
+		"time_range": "05 November 2021",
+		"to_ts": 1636156799
+		},
+		{
+		"from_ts": 1636156800,
+		"listen_count": 56,
+		"time_range": "06 November 2021",
+		"to_ts": 1636243199
+		},
+		{
+		"from_ts": 1636243200,
+		"listen_count": 0,
+		"time_range": "07 November 2021",
+		"to_ts": 1636329599
+		},
+		{
+		"from_ts": 1636329600,
+		"listen_count": 0,
+		"time_range": "08 November 2021",
+		"to_ts": 1636415999
+		},
+		{
+		"from_ts": 1636416000,
+		"listen_count": 0,
+		"time_range": "09 November 2021",
+		"to_ts": 1636502399
+		},
+		{
+		"from_ts": 1636502400,
+		"listen_count": 0,
+		"time_range": "10 November 2021",
+		"to_ts": 1636588799
+		},
+		{
+		"from_ts": 1636588800,
+		"listen_count": 0,
+		"time_range": "11 November 2021",
+		"to_ts": 1636675199
+		},
+		{
+		"from_ts": 1636675200,
+		"listen_count": 0,
+		"time_range": "12 November 2021",
+		"to_ts": 1636761599
+		},
+		{
+		"from_ts": 1636761600,
+		"listen_count": 0,
+		"time_range": "13 November 2021",
+		"to_ts": 1636847999
+		},
+		{
+		"from_ts": 1636848000,
+		"listen_count": 0,
+		"time_range": "14 November 2021",
+		"to_ts": 1636934399
+		},
+		{
+		"from_ts": 1636934400,
+		"listen_count": 154,
+		"time_range": "15 November 2021",
+		"to_ts": 1637020799
+		},
+		{
+		"from_ts": 1637020800,
+		"listen_count": 62,
+		"time_range": "16 November 2021",
+		"to_ts": 1637107199
+		},
+		{
+		"from_ts": 1637107200,
+		"listen_count": 1,
+		"time_range": "17 November 2021",
+		"to_ts": 1637193599
+		},
+		{
+		"from_ts": 1637193600,
+		"listen_count": 52,
+		"time_range": "18 November 2021",
+		"to_ts": 1637279999
+		},
+		{
+		"from_ts": 1637280000,
+		"listen_count": 57,
+		"time_range": "19 November 2021",
+		"to_ts": 1637366399
+		},
+		{
+		"from_ts": 1637366400,
+		"listen_count": 3,
+		"time_range": "20 November 2021",
+		"to_ts": 1637452799
+		},
+		{
+		"from_ts": 1637452800,
+		"listen_count": 0,
+		"time_range": "21 November 2021",
+		"to_ts": 1637539199
+		},
+		{
+		"from_ts": 1637539200,
+		"listen_count": 0,
+		"time_range": "22 November 2021",
+		"to_ts": 1637625599
+		},
+		{
+		"from_ts": 1637625600,
+		"listen_count": 36,
+		"time_range": "23 November 2021",
+		"to_ts": 1637711999
+		},
+		{
+		"from_ts": 1637712000,
+		"listen_count": 14,
+		"time_range": "24 November 2021",
+		"to_ts": 1637798399
+		},
+		{
+		"from_ts": 1637798400,
+		"listen_count": 1,
+		"time_range": "25 November 2021",
+		"to_ts": 1637884799
+		},
+		{
+		"from_ts": 1637884800,
+		"listen_count": 101,
+		"time_range": "26 November 2021",
+		"to_ts": 1637971199
+		},
+		{
+		"from_ts": 1637971200,
+		"listen_count": 42,
+		"time_range": "27 November 2021",
+		"to_ts": 1638057599
+		},
+		{
+		"from_ts": 1638057600,
+		"listen_count": 80,
+		"time_range": "28 November 2021",
+		"to_ts": 1638143999
+		},
+		{
+		"from_ts": 1638144000,
+		"listen_count": 92,
+		"time_range": "29 November 2021",
+		"to_ts": 1638230399
+		},
+		{
+		"from_ts": 1638230400,
+		"listen_count": 0,
+		"time_range": "30 November 2021",
+		"to_ts": 1638316799
+		},
+		{
+		"from_ts": 1638316800,
+		"listen_count": 0,
+		"time_range": "01 December 2021",
+		"to_ts": 1638403199
+		},
+		{
+		"from_ts": 1638403200,
+		"listen_count": 31,
+		"time_range": "02 December 2021",
+		"to_ts": 1638489599
+		},
+		{
+		"from_ts": 1638489600,
+		"listen_count": 0,
+		"time_range": "03 December 2021",
+		"to_ts": 1638575999
+		},
+		{
+		"from_ts": 1638576000,
+		"listen_count": 0,
+		"time_range": "04 December 2021",
+		"to_ts": 1638662399
+		},
+		{
+		"from_ts": 1638662400,
+		"listen_count": 0,
+		"time_range": "05 December 2021",
+		"to_ts": 1638748799
+		},
+		{
+		"from_ts": 1638748800,
+		"listen_count": 0,
+		"time_range": "06 December 2021",
+		"to_ts": 1638835199
+		},
+		{
+		"from_ts": 1638835200,
+		"listen_count": 0,
+		"time_range": "07 December 2021",
+		"to_ts": 1638921599
+		},
+		{
+		"from_ts": 1638921600,
+		"listen_count": 0,
+		"time_range": "08 December 2021",
+		"to_ts": 1639007999
+		},
+		{
+		"from_ts": 1639008000,
+		"listen_count": 0,
+		"time_range": "09 December 2021",
+		"to_ts": 1639094399
+		},
+		{
+		"from_ts": 1639094400,
+		"listen_count": 0,
+		"time_range": "10 December 2021",
+		"to_ts": 1639180799
+		},
+		{
+		"from_ts": 1639180800,
+		"listen_count": 0,
+		"time_range": "11 December 2021",
+		"to_ts": 1639267199
+		},
+		{
+		"from_ts": 1639267200,
+		"listen_count": 0,
+		"time_range": "12 December 2021",
+		"to_ts": 1639353599
+		},
+		{
+		"from_ts": 1639353600,
+		"listen_count": 0,
+		"time_range": "13 December 2021",
+		"to_ts": 1639439999
+		}
+	]
+}

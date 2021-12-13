@@ -126,6 +126,17 @@ export default class YearInMusic extends React.Component<
         ] ?? 0,
     }));
 
+    const listensPerDayForGraph = fakeData.listens_per_day
+      .map((datum) =>
+        datum.listen_count > 0
+          ? {
+              day: new Date(datum.time_range).toLocaleDateString("en-CA"),
+              value: datum.listen_count,
+            }
+          : null
+      )
+      .filter(Boolean);
+
     return (
       <div role="main" id="year-in-music">
         <div className="flex flex-wrap" id="header">
@@ -257,7 +268,18 @@ export default class YearInMusic extends React.Component<
           <div className="card content-card" id="calendar">
             <h3 className="text-center">Your listening activity in 2021</h3>
             <div className="graph">
-              <ResponsiveCalendar from="2021-01-01" to="2021-12-31" data={[]} />
+              <ResponsiveCalendar
+                from="2021-01-01"
+                to="2021-12-31"
+                data={listensPerDayForGraph}
+                emptyColor="#eeeeee"
+                colors={["#bbb7e1", "#6e66cc", "#eea582", "#eb743b"]}
+                // margin={{ top: 40, right: 40, bottom: 40, left: 40 }}
+                monthBorderColor="#eeeeee"
+                // monthBorderColor="#c9c2bb"
+                dayBorderWidth={2}
+                dayBorderColor="#ffffff"
+              />
             </div>
           </div>
         </div>
