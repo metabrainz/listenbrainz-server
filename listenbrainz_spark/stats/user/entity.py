@@ -43,7 +43,7 @@ def get_entity_stats(entity: str, stats_range: str, message_type="user_entity")\
     handler = entity_handler_map[entity]
     data = handler(table_name)
     messages = create_messages(data=data, entity=entity, stats_range=stats_range,
-                               from_date=from_date, to_date=to_date)
+                               from_date=from_date, to_date=to_date, message_type=message_type)
 
     logger.debug("Done!")
 
