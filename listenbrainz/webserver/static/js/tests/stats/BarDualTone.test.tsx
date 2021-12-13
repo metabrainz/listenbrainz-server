@@ -2,10 +2,10 @@ import * as React from "react";
 import { mount } from "enzyme";
 
 import BarDualTone from "../../src/stats/BarDualTone";
-import * as ListeningActivityDataWeek from "../../src/__mocks__/userListeningActivityProcessDataWeek.json";
-import * as ListeningActivityDataMonth from "../../src/__mocks__/userListeningActivityProcessDataMonth.json";
-import * as ListeningActivityDataYear from "../../src/__mocks__/userListeningActivityProcessDataYear.json";
-import * as ListeningActivityDataAllTime from "../../src/__mocks__/userListeningActivityProcessDataAllTime.json";
+import * as ListeningActivityDataWeek from "../__mocks__/userListeningActivityProcessDataWeek.json";
+import * as ListeningActivityDataMonth from "../__mocks__/userListeningActivityProcessDataMonth.json";
+import * as ListeningActivityDataYear from "../__mocks__/userListeningActivityProcessDataYear.json";
+import * as ListeningActivityDataAllTime from "../__mocks__/userListeningActivityProcessDataAllTime.json";
 
 describe("BarDualTone", () => {
   it("renders correctly for week", () => {

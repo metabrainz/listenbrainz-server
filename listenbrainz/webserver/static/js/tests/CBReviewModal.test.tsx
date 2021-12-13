@@ -3,8 +3,8 @@ import { mount, shallow } from "enzyme";
 import APIServiceClass from "../src/utils/APIService";
 import GlobalAppContext from "../src/utils/GlobalAppContext";
 
-import * as lookupMBRelease from "../src/__mocks__/lookupMBRelease.json";
-import * as lookupMBReleaseFromTrack from "../src/__mocks__/lookupMBReleaseFromTrack.json";
+import * as lookupMBRelease from "./__mocks__/lookupMBRelease.json";
+import * as lookupMBReleaseFromTrack from "./__mocks__/lookupMBReleaseFromTrack.json";
 
 import CBReviewModal from "../src/cb-review/CBReviewModal";
 

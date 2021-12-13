@@ -8,10 +8,10 @@ import { io } from "socket.io-client";
 import GlobalAppContext, { GlobalAppContextT } from "../src/utils/GlobalAppContext";
 import APIServiceClass from "../src/utils/APIService";
 
-import * as recentListensProps from "../src/__mocks__/recentListensProps.json";
-import * as recentListensPropsTooManyListens from "../src/__mocks__/recentListensPropsTooManyListens.json";
-import * as recentListensPropsOneListen from "../src/__mocks__/recentListensPropsOneListen.json";
-import * as recentListensPropsPlayingNow from "../src/__mocks__/recentListensPropsPlayingNow.json";
+import * as recentListensProps from "./__mocks__/recentListensProps.json";
+import * as recentListensPropsTooManyListens from "./__mocks__/recentListensPropsTooManyListens.json";
+import * as recentListensPropsOneListen from "./__mocks__/recentListensPropsOneListen.json";
+import * as recentListensPropsPlayingNow from "./__mocks__/recentListensPropsPlayingNow.json";
 
 import RecentListens, {
   RecentListensProps,

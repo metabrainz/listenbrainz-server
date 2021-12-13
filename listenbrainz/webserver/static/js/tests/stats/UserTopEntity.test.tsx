@@ -3,9 +3,9 @@ import { mount, shallow } from "enzyme";
 
 import APIError from "../../src/utils/APIError";
 import UserTopEntity, { UserTopEntityProps } from "../../src/stats/UserTopEntity";
-import * as userArtists from "../../src/__mocks__/userArtists.json";
-import * as userReleases from "../../src/__mocks__/userReleases.json";
-import * as userRecordings from "../../src/__mocks__/userRecordings.json";
+import * as userArtists from "../__mocks__/userArtists.json";
+import * as userReleases from "../__mocks__/userReleases.json";
+import * as userRecordings from "../__mocks__/userRecordings.json";
 
 const props: UserTopEntityProps = {
   range: "week",

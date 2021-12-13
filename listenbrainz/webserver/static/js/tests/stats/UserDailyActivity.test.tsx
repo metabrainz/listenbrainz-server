@@ -3,8 +3,8 @@ import { mount, shallow } from "enzyme";
 
 import UserDailyActivity, { UserDailyActivityProps } from "../../src/stats/UserDailyActivity";
 import APIError from "../../src/utils/APIError";
-import * as userDailyActivityResponse from "../../src/__mocks__/userDailyActivity.json";
-import * as userDailyActivityProcessedData from "../../src/__mocks__/userDailyActivityProcessData.json";
+import * as userDailyActivityResponse from "../__mocks__/userDailyActivity.json";
+import * as userDailyActivityProcessedData from "../__mocks__/userDailyActivityProcessData.json";
 
 const props: UserDailyActivityProps = {
   user: {

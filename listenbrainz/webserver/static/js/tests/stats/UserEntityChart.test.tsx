@@ -4,12 +4,12 @@ import { mount } from "enzyme";
 import UserEntityChart from "../../src/stats/UserEntityChart";
 import APIError from "../../src/utils/APIError";
 import APIService from "../../src/utils/APIService";
-import * as userArtistsResponse from "../../src/__mocks__/userArtists.json";
-import * as userArtistsProcessDataOutput from "../../src/__mocks__/userArtistsProcessData.json";
-import * as userReleasesResponse from "../../src/__mocks__/userReleases.json";
-import * as userReleasesProcessDataOutput from "../../src/__mocks__/userReleasesProcessData.json";
-import * as userRecordingsResponse from "../../src/__mocks__/userRecordings.json";
-import * as userRecordingsProcessDataOutput from "../../src/__mocks__/userRecordingsProcessData.json";
+import * as userArtistsResponse from "../__mocks__/userArtists.json";
+import * as userArtistsProcessDataOutput from "../__mocks__/userArtistsProcessData.json";
+import * as userReleasesResponse from "../__mocks__/userReleases.json";
+import * as userReleasesProcessDataOutput from "../__mocks__/userReleasesProcessData.json";
+import * as userRecordingsResponse from "../__mocks__/userRecordings.json";
+import * as userRecordingsProcessDataOutput from "../__mocks__/userRecordingsProcessData.json";
 
 const props = {
   user: {

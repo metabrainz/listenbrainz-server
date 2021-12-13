@@ -1,7 +1,7 @@
 import APIService from "../src/utils/APIService";
 
-const feedProps = require("../src/__mocks__/feedProps.json");
-const pinProps = require("../src/__mocks__/pinProps.json");
+const feedProps = require("./__mocks__/feedProps.json");
+const pinProps = require("./__mocks__/pinProps.json");
 
 const apiService = new APIService("foobar");
 

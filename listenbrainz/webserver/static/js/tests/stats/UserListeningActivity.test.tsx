@@ -5,14 +5,14 @@ import UserListeningActivity, {
   UserListeningActivityProps,
 } from "../../src/stats/UserListeningActivity";
 import APIError from "../../src/utils/APIError";
-import * as userListeningActivityResponseWeek from "../../src/__mocks__/userListeningActivityWeek.json";
-import * as userListeningActivityResponseMonth from "../../src/__mocks__/userListeningActivityMonth.json";
-import * as userListeningActivityResponseYear from "../../src/__mocks__/userListeningActivityYear.json";
-import * as userListeningActivityResponseAllTime from "../../src/__mocks__/userListeningActivityAllTime.json";
-import * as userListeningActivityProcessedDataWeek from "../../src/__mocks__/userListeningActivityProcessDataWeek.json";
-import * as userListeningActivityProcessedDataMonth from "../../src/__mocks__/userListeningActivityProcessDataMonth.json";
-import * as userListeningActivityProcessedDataYear from "../../src/__mocks__/userListeningActivityProcessDataYear.json";
-import * as userListeningActivityProcessedDataAllTime from "../../src/__mocks__/userListeningActivityProcessDataAllTime.json";
+import * as userListeningActivityResponseWeek from "../__mocks__/userListeningActivityWeek.json";
+import * as userListeningActivityResponseMonth from "../__mocks__/userListeningActivityMonth.json";
+import * as userListeningActivityResponseYear from "../__mocks__/userListeningActivityYear.json";
+import * as userListeningActivityResponseAllTime from "../__mocks__/userListeningActivityAllTime.json";
+import * as userListeningActivityProcessedDataWeek from "../__mocks__/userListeningActivityProcessDataWeek.json";
+import * as userListeningActivityProcessedDataMonth from "../__mocks__/userListeningActivityProcessDataMonth.json";
+import * as userListeningActivityProcessedDataYear from "../__mocks__/userListeningActivityProcessDataYear.json";
+import * as userListeningActivityProcessedDataAllTime from "../__mocks__/userListeningActivityProcessDataAllTime.json";
 
 const props: UserListeningActivityProps = {
   user: {
