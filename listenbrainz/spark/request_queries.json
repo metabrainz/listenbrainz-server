@@ -119,5 +119,15 @@
     "name": "similarity.similar_users_year_end",
     "description": "Generate similar user correlation for Year in Music",
     "params": []
+  },
+  "year_in_music.listens_per_day": {
+    "name": "year_in_music.listens_per_day",
+    "description": "Calculate the listens per day for the current year for each user",
+    "params": []
+  },
+  "year_in_music.top_stats": {
+    "name": "year_in_music.top_stats",
+    "description": "Calculate the top artists/recordings/releases stats for the current year for each user",
+    "params": []
   }
 }
