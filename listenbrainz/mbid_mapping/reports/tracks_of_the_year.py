@@ -22,6 +22,7 @@ def create_table(mb_conn):
                                        , recording_mbid     UUID NOT NULL
                                        , recording_name     TEXT NOT NULL
                                        , artist_credit_name TEXT NOT NULL
+                                       , artist_mbids       UUID[] NOT NULL
                                        , listen_count       INTEGER NOT NULL
                                        )""")
             mb_conn.commit()
@@ -75,6 +76,7 @@ def fetch_tracks_listened_to(lb_conn, mb_conn, ts):
                             , m.recording_mbid
                             , md.recording_name
                             , md.artist_credit_name
+                            , md.artist_mbids
                             , count(*) AS listen_count
                          FROM listen l
                          JOIN mbid_mapping m
@@ -83,10 +85,8 @@ def fetch_tracks_listened_to(lb_conn, mb_conn, ts):
                            ON m.recording_mbid = md.recording_mbid
                         WHERE listened_at >= %s
                           AND m.recording_mbid is not null
-                     GROUP BY m.recording_mbid, md.recording_name, md.artist_credit_name, user_name""" % ts
+                     GROUP BY m.recording_mbid, md.recording_name, md.artist_credit_name, md.artist_mbids, user_name""" % ts
  
-                         
-
             to_insert = []
             lb_curs.execute(query)
             while True:
