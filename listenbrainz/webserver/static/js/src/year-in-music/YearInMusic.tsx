@@ -280,6 +280,18 @@ export default class YearInMusic extends React.Component<
                 // monthBorderColor="#c9c2bb"
                 dayBorderWidth={2}
                 dayBorderColor="#ffffff"
+                legends={[
+                  {
+                    anchor: "bottom-right",
+                    direction: "row",
+                    translateY: 36,
+                    itemCount: 4,
+                    itemWidth: 42,
+                    itemHeight: 36,
+                    itemsSpacing: 14,
+                    itemDirection: "right-to-left",
+                  },
+                ]}
               />
             </div>
           </div>
