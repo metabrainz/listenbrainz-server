@@ -46,7 +46,7 @@ option to `register`_ your application. Fill out the form with the following dat
 
 - **Type**: ``Web Application``
 
-- **Callback URL**: ``http://localhost/login/musicbrainz/post/``
+- **Callback URL**: ``http://localhost:8100/login/musicbrainz/post/``
 
 After entering this information, you'll have an OAuth client ID and OAuth client
 secret. You'll use these for configuring ListenBrainz.
@@ -89,10 +89,10 @@ register for one at the `Last.fm API page`_. Look for the following section in `
 
 Update the ``LASTFM_API_KEY`` field with your Last.fm API key.
 
-You also need to update the ``API_URL`` field value to ``http://localhost``.
+You also need to update the ``API_URL`` field value to ``http://localhost:8100``.
 
 To use the Spotify importer you need to register an application on the
-`Spotify Developer Dashboard`_. Use ``http://localhost/profile/music-services/spotify/callback/``
+`Spotify Developer Dashboard`_. Use ``http://localhost:8100/profile/music-services/spotify/callback/``
 as the callback URL.
 
 After that, fill out the Spotify client ID and client secret in the following
@@ -115,7 +115,7 @@ section of the file.
 
 
 To use the CritiqueBrainz reviewer, you'll need to visit the `CritiqueBrainz applications page`_
-and create/register an application. Use ``http://localhost/`` as the homepage URL and ``http://localhost/profile/music-services/critiquebrainz/callback/``
+and create/register an application. Use ``http://localhost:8100/`` as the homepage URL and ``http://localhost:8100/profile/music-services/critiquebrainz/callback/``
 as the callback URL.
 
 After registering, update the CritiqueBrainz section of the file with the client ID and client secret
@@ -126,7 +126,7 @@ you obtained.
     # CRITIQUEBRAINZ
     CRITIQUEBRAINZ_CLIENT_ID = ''
     CRITIQUEBRAINZ_CLIENT_SECRET = ''
-    CRITIQUEBRAINZ_REDIRECT_URI = 'http://localhost/profile/music-services/critiquebrainz/callback/'
+    CRITIQUEBRAINZ_REDIRECT_URI = 'http://localhost:8100/profile/music-services/critiquebrainz/callback/'
 
 .. note::
 
@@ -179,14 +179,14 @@ environment by running ``develop.sh up``.
     
 .. note::
 
-    By default, the web service listens on port 7000. If you already have a service listening
+    By default, the web service listens on port 8100. If you already have a service listening
     on this port, then you can change it by updating the ports section of ``docker/docker-compose.yml``.
     
     
     .. code-block:: bash
     
         ports:
-        - "7000:80"
+        - "8100:80"
     
     To change the listening port, change only the value before the ":" to the port of your choice
     and point your browser to ``http://localhost:<Port>``
@@ -196,7 +196,7 @@ by pressing CTRL^C. Once everything is running, visit your new site in a browser
 
 .. code-block:: none
 
-   http://localhost
+   http://localhost:8100
 
 Now, you are all set to begin making changes and seeing them in real-time inside
 of your development environment. If you make changes to python code, the server will be
