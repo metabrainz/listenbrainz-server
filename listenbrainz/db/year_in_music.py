@@ -1,3 +1,5 @@
+import json
+
 import psycopg2
 import sqlalchemy
 import ujson
@@ -122,5 +124,18 @@ def handle_top_stats(data):
           DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
             """), {
             "user_id": data["user_id"],
-            data["stats_range"]: data["data"],
+            data["stats_range"]: json.dumps(data["data"]),
+        })
+
+
+def handle_listens_per_day(data):
+    with db.engine.connect() as connection:
+        connection.execute(sqlalchemy.text("""
+            INSERT INTO statistics.year_in_music (user_id, data)
+                 VALUES (:user_id, :data)
+            ON CONFLICT (user_id)
+          DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+            """), {
+            "user_id": data["user_id"],
+            "listens_per_day": json.dumps(data["data"]),
         })

@@ -376,3 +376,7 @@ def handle_most_listened_year(message):
 
 def handle_top_stats(message):
     year_in_music.handle_top_stats(message["data"])
+
+
+def handle_listens_per_day(message):
+    year_in_music.handle_listens_per_day(message["data"])

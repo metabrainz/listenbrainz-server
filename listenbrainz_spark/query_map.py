@@ -15,6 +15,7 @@ import listenbrainz_spark.year_in_music.similar_users
 import listenbrainz_spark.year_in_music.day_of_week
 import listenbrainz_spark.year_in_music.most_listened_year
 import listenbrainz_spark.year_in_music.top_stats
+import listenbrainz_spark.year_in_music.listens_per_day
 
 functions = {
     'stats.user.entity': listenbrainz_spark.stats.user.entity.get_entity_stats,
@@ -40,6 +41,7 @@ functions = {
     'similarity.similar_users': listenbrainz_spark.user_similarity.user_similarity.main,
     'similarity.similar_users_2021': listenbrainz_spark.year_in_music.similar_users.get_similar_users,
     'year_in_music.top_stats': listenbrainz_spark.year_in_music.top_stats.calculate_top_entity_stats,
+    'year_in_music.listens_per_day': listenbrainz_spark.year_in_music.listens_per_day.calculate_listens_per_day,
 }
 
 
