@@ -124,3 +124,46 @@ def handle_top_stats(data):
             "user_id": data["user_id"],
             data["stats_range"]: data["data"],
         })
+
+
+def insert_playlists(troi_patch_slug, import_file):
+    connection = db.engine.raw_connection()
+    query = """
+        INSERT INTO statistics.year_in_music(user_id, data)
+             SELECT "user".id
+                  , jsonb_build_object('playlists', playlists::jsonb)
+               FROM (VALUES %s) AS t(user_name, playlists)
+               JOIN "user"
+                 ON "user".musicbrainz_id = user_name
+        ON CONFLICT (user_id)
+      DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+        """
+
+    print("start playlist import")
+    data = []
+    with open(import_file, "r") as f:
+        while True:
+            user_name = f.readline()
+            if user_name == "":
+                break
+
+            user_name = user_name.strip()
+            playlist_mbid = f.readline().strip()
+            jspf = f.readline().strip()
+
+            data.append((user_name, ujson.dumps({ troi_patch_slug: { "mbid": playlist_mbid, "jspf": jspf }})))
+
+    for user_name, js in data:
+        print("%s %s" % (user_name, js[:20]))
+
+    try:
+        with connection.cursor() as cursor:
+            execute_values(cursor, query, data)
+        connection.commit()
+        print("playlists imported.")
+    except psycopg2.errors.OperationalError:
+        connection.rollback()
+        current_app.logger.error("Error while inserting playlist/%s:" % playlist_slug, exc_info=True)
+        print("playlists import failed.")
+
+
