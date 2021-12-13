@@ -15,13 +15,18 @@ def get_listen_count(year):
 
 def _get_yearly_listen_counts():
     return """
+        WITH user_listen_counts AS (
+            SELECT user_name
+                 , count(listened_at) AS listen_count
+              FROM listens_of_year
+          GROUP BY user_name  
+        )
         SELECT to_json(
                     map_from_entries(
                         collect_list(
-                            struct(user_name, count(listened_at))
+                            struct(user_name, listen_count)
                         )
                     )
                 ) AS yearly_listen_counts
-          FROM listens_of_year
-      GROUP BY user_name  
+          FROM user_listen_counts
     """
