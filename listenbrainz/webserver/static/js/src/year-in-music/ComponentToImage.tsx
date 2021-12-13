@@ -5,7 +5,7 @@ export type ComponentToImageProps = {
   data: any[];
 };
 
-const ComponentToImage = (props: ComponentToImageProps) => {
+const ComponentToImage = ({ data }: ComponentToImageProps) => {
   const saveAs = (blob: string, fileName: string) => {
     const elem = window.document.createElement("a");
     elem.href = blob;
@@ -47,6 +47,7 @@ const ComponentToImage = (props: ComponentToImageProps) => {
       <button
         style={{ marginLeft: "2rem", marginBottom: "1rem" }}
         onClick={exportAsPicture}
+        type="button"
       >
         Save as Image
       </button>
@@ -75,7 +76,7 @@ const ComponentToImage = (props: ComponentToImageProps) => {
           alt="Tickets to my Downfall"
         />
         <ul className="list-group list-group-flush">
-          {props.data.map((release) => (
+          {data.map((release) => (
             <li className="list-group-item">{release.name}</li>
           ))}
         </ul>
