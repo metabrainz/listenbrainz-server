@@ -9,14 +9,14 @@ import { Integrations } from "@sentry/tracing";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "../AlertNotificationsHOC";
+} from "../notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "../APIService";
-import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
-import BrainzPlayer from "../BrainzPlayer";
-import ErrorBoundary from "../ErrorBoundary";
-import Loader from "../components/Loader";
-import { getPageProps, getRecordingMBID } from "../utils";
+import APIServiceClass from "../utils/APIService";
+import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import BrainzPlayer from "../brainzplayer/BrainzPlayer";
+import ErrorBoundary from "../utils/ErrorBoundary";
+import Loader from "../utils/Loader";
+import { getPageProps, getRecordingMBID } from "../utils/utils";
 import ListenCard from "../listens/ListenCard";
 import RecommendationFeedbackComponent from "../listens/RecommendationFeedbackComponent";
 

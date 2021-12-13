@@ -6,8 +6,8 @@ import * as recommendationProps from "../__mocks__/recommendations.json";
 import Recommendations, { RecommendationsProps } from "./Recommendations";
 import * as recommendationPropsOne from "../__mocks__/recommendationPropsOne.json";
 
-import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
-import APIService from "../APIService";
+import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import APIService from "../utils/APIService";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this

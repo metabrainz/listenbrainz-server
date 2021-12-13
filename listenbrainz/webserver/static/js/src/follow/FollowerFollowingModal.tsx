@@ -1,7 +1,7 @@
 import * as React from "react";
 import { includes as _includes } from "lodash";
 
-import Pill from "../components/Pill";
+import Pill from "../utils/Pill";
 import UserListModalEntry from "./UserListModalEntry";
 
 export type FollowerFollowingModalProps = {

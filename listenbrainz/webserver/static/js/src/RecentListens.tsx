@@ -17,19 +17,19 @@ import {
   faThumbtack,
   faTrashAlt,
 } from "@fortawesome/free-solid-svg-icons";
-import GlobalAppContext, { GlobalAppContextT } from "./GlobalAppContext";
+import GlobalAppContext, { GlobalAppContextT } from "./utils/GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "./AlertNotificationsHOC";
+} from "./notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "./APIService";
-import BrainzPlayer from "./BrainzPlayer";
-import ErrorBoundary from "./ErrorBoundary";
+import APIServiceClass from "./utils/APIService";
+import BrainzPlayer from "./brainzplayer/BrainzPlayer";
+import ErrorBoundary from "./utils/ErrorBoundary";
 import ListenCard from "./listens/ListenCard";
-import Loader from "./components/Loader";
-import PinRecordingModal from "./PinRecordingModal";
-import PinnedRecordingCard from "./PinnedRecordingCard";
+import Loader from "./utils/Loader";
+import PinRecordingModal from "./pins/PinRecordingModal";
+import PinnedRecordingCard from "./pins/PinnedRecordingCard";
 import {
   formatWSMessageToListen,
   getPageProps,
@@ -38,8 +38,8 @@ import {
   getArtistMBIDs,
   getReleaseMBID,
   getReleaseGroupMBID,
-} from "./utils";
-import CBReviewModal from "./CBReviewModal";
+} from "./utils/utils";
+import CBReviewModal from "./cb-review/CBReviewModal";
 import ListenControl from "./listens/ListenControl";
 
 export type RecentListensProps = {

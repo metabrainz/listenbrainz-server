@@ -3,10 +3,10 @@ import { faExclamationCircle, faLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
-import APIService from "../APIService";
-import Card from "../components/Card";
+import APIService from "../utils/APIService";
+import Card from "../utils/Card";
 import HeatMap from "./HeatMap";
-import Loader from "../components/Loader";
+import Loader from "../utils/Loader";
 
 export type UserDailyActivityProps = {
   range: UserStatsAPIRange;

@@ -3,13 +3,13 @@ import * as React from "react";
 
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
-import ErrorBoundary from "../ErrorBoundary";
-import Pill from "../components/Pill";
+import ErrorBoundary from "../utils/ErrorBoundary";
+import Pill from "../utils/Pill";
 import UserListeningActivity from "./UserListeningActivity";
 import UserTopEntity from "./UserTopEntity";
 import UserDailyActivity from "./UserDailyActivity";
 import UserArtistMap from "./UserArtistMap";
-import { getPageProps } from "../utils";
+import { getPageProps } from "../utils/utils";
 
 export type UserReportsProps = {
   user: ListenBrainzUser;

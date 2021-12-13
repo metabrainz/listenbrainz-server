@@ -1,5 +1,5 @@
 import * as React from "react";
-import Card from "../components/Card";
+import Card from "../utils/Card";
 
 export type ListenCountCardProps = {
   listenCount?: number;
