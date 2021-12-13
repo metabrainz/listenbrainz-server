@@ -115,7 +115,7 @@ def insert_most_listened_year(data):
         current_app.logger.error("Error while inserting most_listened_year:", exc_info=True)
 
 
-def handle_top_stats(user_id, data):
+def handle_top_stats(user_id, entity, data):
     with db.engine.connect() as connection:
         connection.execute(
             sqlalchemy.text("""
@@ -125,8 +125,8 @@ def handle_top_stats(user_id, data):
           DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
             """),
             user_id=user_id,
-            stat_type=f"top_{data['stats_range']}",
-            data=ujson.dumps(data["data"])
+            stat_type=f"top_{entity}",
+            data=ujson.dumps(data)
         )
 
 

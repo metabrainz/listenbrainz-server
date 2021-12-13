@@ -379,7 +379,7 @@ def handle_top_stats(message):
     user = db_user.get_by_mb_id(musicbrainz_id)
     if not user:
         return
-    year_in_music.handle_top_stats(user["id"], message["data"])
+    year_in_music.handle_top_stats(user["id"], message["entity"], message["data"])
 
 
 def handle_listens_per_day(message):
