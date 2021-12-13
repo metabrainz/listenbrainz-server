@@ -18,11 +18,12 @@ def create_table(mb_conn):
         with mb_conn.cursor() as curs:
             curs.execute("DROP TABLE IF EXISTS mapping.top_discoveries")
             curs.execute("""CREATE TABLE mapping.top_discoveries
-                                       ( recording_mbid     UUID
-                                       , recording_name     TEXT NOT NULL
-                                       , artist_credit_name TEXT NOT NULL
-                                       , listen_count       INTEGER NOT NULL
-                                       , user_name          TEXT NOT NULL
+                                       ( recording_mbid      UUID
+                                       , recording_name      TEXT NOT NULL
+                                       , artist_credit_name  TEXT NOT NULL
+                                       , artist_mbids        UUID[] NOT NULL
+                                       , listen_count        INTEGER NOT NULL
+                                       , user_name           TEXT NOT NULL
                                        );""")
             mb_conn.commit()
     except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable) as err:
@@ -74,7 +75,7 @@ def fetch_top_discoveries_for_users(lb_conn, mb_conn, year):
             create_table(mb_conn)
 
             log("fetch active users")
-            user_list = fetch_user_list(lb_conn, year)
+            user_list = ["rob", "alastairp", "mr_monkey", "amCap1712", "akshaaatt"]   # fetch_user_list(lb_conn, year)
             log("Process %d users." % len(user_list))
 
             query = """SELECT user_name
@@ -83,13 +84,15 @@ def fetch_top_discoveries_for_users(lb_conn, mb_conn, year):
                             , array_agg(extract(year from to_timestamp(listened_at))::INT ORDER BY
                                         extract(year from to_timestamp(listened_at))::INT) AS years
                             , m.recording_mbid
+                            , mm.artist_mbids
                          FROM listen
               FULL OUTER JOIN mbid_mapping m
                            ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = m.recording_msid
               FULL OUTER JOIN mbid_mapping_metadata mm
                               ON mm.recording_mbid = m.recording_mbid
                         WHERE user_name in %s
-                     GROUP BY user_name, artist_name, track_name, m.recording_mbid
+                          AND mm.recording_mbid IS NOT NULL
+                     GROUP BY user_name, artist_name, mm.artist_mbids, track_name, m.recording_mbid
                        HAVING (array_agg(extract(year from to_timestamp(listened_at))::INT ORDER BY
                                          extract(year from to_timestamp(listened_at))::INT))[1] = %s
                      ORDER BY user_name, array_length(array_agg(extract(year from to_timestamp(listened_at))::INT), 1) DESC"""
@@ -109,6 +112,7 @@ def fetch_top_discoveries_for_users(lb_conn, mb_conn, year):
                         top_recordings.append((row["recording_mbid"],
                                                row["track_name"],
                                                row["artist_name"],
+                                               row["artist_mbids"],
                                                len(row["years"]),
                                                row["user_name"]))
 
