@@ -9,7 +9,7 @@ def get_listen_count(year):
     data = run_query(_get_yearly_listen_counts()).collect()
     yield {
         "type": "year_in_music_listen_count",
-        "data": data[0]["_get_yearly_listen_counts"]
+        "data": data[0]["yearly_listen_counts"]
     }
 
 
