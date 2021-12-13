@@ -33,6 +33,7 @@ import psycopg2
 from flask import current_app, render_template
 from brainzutils.mail import send_mail
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
+from listenbrainz.db.year_in_music import insert_playlists
 from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app
 from listenbrainz.db.dump import check_ftp_dump_ages
@@ -309,6 +310,7 @@ def check_dump_ages():
     check_ftp_dump_ages()
     sys.exit(0)
 
+
 @cli.command(name="create_parquet")
 def create_test_parquet_files():
     app = create_app()
@@ -319,6 +321,23 @@ def create_test_parquet_files():
         ls.dump_listens_for_spark("/tmp", 1000, "full", start)
 
         sys.exit(-2)
+
+
+@cli.command(name="import_yim_playlists")
+@click.argument('patch-slug', type=str)
+@click.argument('dump-file', type=str)
+def create_full(patch_slug, dump_file):
+    """ Import playlist excerpts into the YIM data table from a dump file.
+
+        Args:
+            patch_slug (str): The slug of the troi patch that generated these playlists.
+            dump_file (str): The dump file to import. For each user, it should contain
+                             three lines: user_name, playlist_mbid, JSPF data.
+    """
+    app = create_app()
+    with app.app_context():
+        insert_playlists(patch_slug, dump_file)
+
 
 def get_dump_id(dump_name):
     return int(dump_name.split('-')[2])
