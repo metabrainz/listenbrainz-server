@@ -28,9 +28,10 @@ const ComponentToImage = ({ data }: ComponentToImageProps) => {
   };
 
   const exportAsPicture = () => {
-    const data = document.getElementById("card");
-    html2canvas(data as HTMLElement, {
+    const element = document.getElementById("card");
+    html2canvas(element as HTMLElement, {
       onclone(clonedDoc) {
+        // eslint-disable-next-line no-param-reassign
         clonedDoc!.getElementById("card")!.style.display = "block";
       },
     })
