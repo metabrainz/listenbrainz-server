@@ -115,30 +115,29 @@ def insert_most_listened_year(data):
         current_app.logger.error("Error while inserting most_listened_year:", exc_info=True)
 
 
-def handle_top_stats(data):
+def handle_top_stats(user_id, data):
+    with db.engine.connect() as connection:
+        connection.execute(
+            sqlalchemy.text("""
+            INSERT INTO statistics.year_in_music (user_id, data)
+                 VALUES (:user_id, jsonb_build_object(:stat_type,:data :: jsonb))
+            ON CONFLICT (user_id)
+          DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+            """),
+            user_id=user_id,
+            stat_type=f"top_{data['stats_range']}",
+            data=ujson.dumps(data["data"])
+        )
+
+
+def handle_listens_per_day(user_id, data):
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
             INSERT INTO statistics.year_in_music (user_id, data)
-                 VALUES (:user_id, :data)
+                 VALUES (:user_id, jsonb_build_object('listens_per_day', :data :: jsonb))
             ON CONFLICT (user_id)
           DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
-            """), {
-            "user_id": data["user_id"],
-            data["stats_range"]: json.dumps(data["data"]),
-        })
-
-
-def handle_listens_per_day(data):
-    with db.engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
-            INSERT INTO statistics.year_in_music (user_id, data)
-                 VALUES (:user_id, :data)
-            ON CONFLICT (user_id)
-          DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
-            """), {
-            "user_id": data["user_id"],
-            "listens_per_day": json.dumps(data["data"]),
-        })
+        """), user_id=user_id, data=ujson.dumps(data))
 
 
 def handle_yearly_listen_counts(data):

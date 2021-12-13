@@ -375,11 +375,15 @@ def handle_most_listened_year(message):
 
 
 def handle_top_stats(message):
-    year_in_music.handle_top_stats(message["data"])
+    musicbrainz_id = message["user_name"]
+    user = db_user.get_by_mb_id(musicbrainz_id)
+    year_in_music.handle_top_stats(user["id"], message["data"])
 
 
 def handle_listens_per_day(message):
-    year_in_music.handle_listens_per_day(message["data"])
+    musicbrainz_id = message["user_name"]
+    user = db_user.get_by_mb_id(musicbrainz_id)
+    year_in_music.handle_listens_per_day(user["id"], message["data"])
 
 
 def handle_yearly_listen_counts(message):
