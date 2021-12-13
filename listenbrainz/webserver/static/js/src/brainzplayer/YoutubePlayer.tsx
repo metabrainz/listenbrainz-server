@@ -92,7 +92,7 @@ export default class YoutubePlayer
     if (_isString(originURL) && originURL.length) {
       try {
         const parsedURL = new URL(originURL);
-        const { hostname, searchParams } = parsedURL;
+        const { hostname } = parsedURL;
         if (/youtube\.com/.test(hostname)) {
           return originURL;
         }

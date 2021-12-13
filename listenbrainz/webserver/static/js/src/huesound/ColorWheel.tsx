@@ -136,7 +136,7 @@ export default class ColorWheel extends React.Component<
   }
 
   componentWillUnmount() {
-    const { onRef, preset, presetColor } = this.props;
+    const { onRef } = this.props;
     if (onRef) {
       onRef(undefined);
     }

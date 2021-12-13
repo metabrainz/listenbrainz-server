@@ -18,7 +18,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { isEqual, get as _get } from "lodash";
+import { get as _get } from "lodash";
 import { sanitize } from "dompurify";
 import { Integrations } from "@sentry/tracing";
 import {

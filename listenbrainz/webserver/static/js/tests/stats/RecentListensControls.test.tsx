@@ -2,11 +2,11 @@ import * as React from "react";
 import { mount } from "enzyme";
 import fetchMock from "jest-fetch-mock";
 
-import * as recentListensPropsOneListen from "./__mocks__/recentListensPropsOneListen.json";
-import * as getFeedbackByMsidResponse from "./__mocks__/getFeedbackByMsidResponse.json";
-import GlobalAppContext from "../src/utils/GlobalAppContext";
-import APIService from "../src/utils/APIService";
-import RecentListens, { RecentListensProps } from "../src/RecentListens";
+import * as recentListensPropsOneListen from "../__mocks__/recentListensPropsOneListen.json";
+import * as getFeedbackByMsidResponse from "../__mocks__/getFeedbackByMsidResponse.json";
+import GlobalAppContext from "../../src/utils/GlobalAppContext";
+import APIService from "../../src/utils/APIService";
+import RecentListens, { RecentListensProps } from "../../src/stats/RecentListens";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this

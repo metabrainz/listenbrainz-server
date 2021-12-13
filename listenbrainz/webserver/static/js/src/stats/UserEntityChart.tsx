@@ -5,14 +5,13 @@ import * as Sentry from "@sentry/react";
 import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { isEqual, isNil } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import APIServiceClass from "../utils/APIService";
 import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import {
-  WithAlertNotificationsInjectedProps,
   withAlertNotifications,
+  WithAlertNotificationsInjectedProps,
 } from "../notifications/AlertNotificationsHOC";
 
 import Bar from "./Bar";
@@ -181,14 +180,13 @@ export default class UserEntityChart extends React.Component<
     const { APIService } = this.context;
     const offset = (page - 1) * this.ROWS_PER_PAGE;
 
-    const data = await APIService.getUserEntity(
+    return await APIService.getUserEntity(
       user.name,
       entity,
       range,
       offset,
       this.ROWS_PER_PAGE
     );
-    return data;
   };
 
   processData = (

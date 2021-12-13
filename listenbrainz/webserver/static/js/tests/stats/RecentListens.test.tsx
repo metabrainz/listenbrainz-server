@@ -5,20 +5,20 @@ import { mount } from "enzyme";
 import * as timeago from "time-ago";
 import fetchMock from "jest-fetch-mock";
 import { io } from "socket.io-client";
-import GlobalAppContext, { GlobalAppContextT } from "../src/utils/GlobalAppContext";
-import APIServiceClass from "../src/utils/APIService";
+import GlobalAppContext, { GlobalAppContextT } from "../../src/utils/GlobalAppContext";
+import APIServiceClass from "../../src/utils/APIService";
 
-import * as recentListensProps from "./__mocks__/recentListensProps.json";
-import * as recentListensPropsTooManyListens from "./__mocks__/recentListensPropsTooManyListens.json";
-import * as recentListensPropsOneListen from "./__mocks__/recentListensPropsOneListen.json";
-import * as recentListensPropsPlayingNow from "./__mocks__/recentListensPropsPlayingNow.json";
+import * as recentListensProps from "../__mocks__/recentListensProps.json";
+import * as recentListensPropsTooManyListens from "../__mocks__/recentListensPropsTooManyListens.json";
+import * as recentListensPropsOneListen from "../__mocks__/recentListensPropsOneListen.json";
+import * as recentListensPropsPlayingNow from "../__mocks__/recentListensPropsPlayingNow.json";
 
 import RecentListens, {
   RecentListensProps,
   RecentListensState,
-} from "../src/RecentListens";
-import PinRecordingModal from "../src/pins/PinRecordingModal";
-import CBReviewModal from "../src/cb-review/CBReviewModal";
+} from "../../src/stats/RecentListens";
+import PinRecordingModal from "../../src/pins/PinRecordingModal";
+import CBReviewModal from "../../src/cb-review/CBReviewModal";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this

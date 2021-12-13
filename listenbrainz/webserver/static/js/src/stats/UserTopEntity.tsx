@@ -71,14 +71,13 @@ export default class UserTopEntity extends React.Component<
   getData = async (): Promise<UserEntityResponse> => {
     const { entity, range, user } = this.props;
     try {
-      const data = await this.APIService.getUserEntity(
+      return await this.APIService.getUserEntity(
         user.name,
         entity,
         range,
         0,
         10
       );
-      return data;
     } catch (error) {
       if (error.response && error.response.status === 204) {
         this.setState({

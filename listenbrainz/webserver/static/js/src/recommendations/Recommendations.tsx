@@ -4,7 +4,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as Sentry from "@sentry/react";
 
-import { get, isEqual } from "lodash";
+import { get } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import {
   WithAlertNotificationsInjectedProps,
@@ -200,17 +200,9 @@ export default class Recommendations extends React.Component<
   }
 
   render() {
-    const {
-      currentRecommendation,
-      recommendations,
-      loading,
-      currRecPage,
-      totalRecPages,
-    } = this.state;
-    const { user, newAlert } = this.props;
-    const { APIService, currentUser } = this.context;
-    const isCurrentUser =
-      Boolean(currentUser?.name) && currentUser?.name === user?.name;
+    const { recommendations, loading, currRecPage, totalRecPages } = this.state;
+    const { newAlert } = this.props;
+    const { APIService } = this.context;
     return (
       <div role="main">
         <div className="row">

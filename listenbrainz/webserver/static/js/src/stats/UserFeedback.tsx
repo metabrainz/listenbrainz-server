@@ -1,5 +1,4 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
-
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as Sentry from "@sentry/react";
@@ -13,21 +12,21 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { isNaN, get, clone, has } from "lodash";
 import { Integrations } from "@sentry/tracing";
-import GlobalAppContext, { GlobalAppContextT } from "./utils/GlobalAppContext";
+import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "./notifications/AlertNotificationsHOC";
+} from "../notifications/AlertNotificationsHOC";
 
-import Pill from "./utils/Pill";
-import APIServiceClass from "./utils/APIService";
-import BrainzPlayer from "./brainzplayer/BrainzPlayer";
-import ErrorBoundary from "./utils/ErrorBoundary";
-import ListenCard from "./listens/ListenCard";
-import Loader from "./utils/Loader";
-import PinRecordingModal from "./pins/PinRecordingModal";
-import { getPageProps, handleNavigationClickEvent } from "./utils/utils";
-import ListenControl from "./listens/ListenControl";
+import Pill from "../utils/Pill";
+import APIServiceClass from "../utils/APIService";
+import BrainzPlayer from "../brainzplayer/BrainzPlayer";
+import ErrorBoundary from "../utils/ErrorBoundary";
+import ListenCard from "../listens/ListenCard";
+import Loader from "../utils/Loader";
+import PinRecordingModal from "../pins/PinRecordingModal";
+import { getPageProps, handleNavigationClickEvent } from "../utils/utils";
+import ListenControl from "../listens/ListenControl";
 
 export type UserFeedbackProps = {
   feedback?: Array<FeedbackResponseWithTrackMetadata>;

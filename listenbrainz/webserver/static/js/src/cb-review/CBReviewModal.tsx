@@ -1,5 +1,4 @@
 import * as React from "react";
-import { get as _get } from "lodash";
 
 import { Rating } from "react-simple-star-rating";
 import ReactTooltip from "react-tooltip";
@@ -655,8 +654,6 @@ export default class CBReviewModal extends React.Component<
     /* Submit review button */
     if (entityToReview && !success) {
       const { reviewValidateAlert } = this.state;
-      const { critiquebrainzAuth } = this.context;
-
       return (
         <button
           type="submit"

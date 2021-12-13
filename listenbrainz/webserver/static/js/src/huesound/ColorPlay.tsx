@@ -93,7 +93,7 @@ export default class ColorPlay extends React.Component<
   };
 
   render() {
-    const { user, newAlert } = this.props;
+    const { newAlert } = this.props;
     const {
       loading,
       colorReleases,
@@ -101,7 +101,7 @@ export default class ColorPlay extends React.Component<
       selectedColorString,
       gridBackground,
     } = this.state;
-    const { APIService, currentUser } = this.context;
+    const { APIService } = this.context;
     const selectedReleaseTracks = selectedRelease?.recordings ?? [];
     return (
       <div role="main">

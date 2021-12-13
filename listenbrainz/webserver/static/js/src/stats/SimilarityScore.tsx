@@ -6,8 +6,8 @@ export type SimilarityScoreProps = {
   user?: ListenBrainzUser;
 };
 
-const getclassName = (similarityScore: number): string => {
-  let className = "";
+const getClassName = (similarityScore: number): string => {
+  let className: string;
   if (similarityScore <= 0.3) {
     className = "red";
   } else if (similarityScore <= 0.7) {
@@ -23,7 +23,7 @@ const SimilarityScore = (props: SimilarityScoreProps) => {
 
   // We transform the similarity score from a scale 0-1 to 0-10
   const adjustedSimilarityScore = Number((similarityScore * 10).toFixed(1));
-  const className = getclassName(similarityScore);
+  const className = getClassName(similarityScore);
   const percentage = adjustedSimilarityScore * 10;
 
   return (

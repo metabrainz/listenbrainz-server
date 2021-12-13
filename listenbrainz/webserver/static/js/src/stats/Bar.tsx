@@ -5,22 +5,6 @@ export type BarProps = {
   data: UserEntityData;
   maxValue: number;
 };
-
-type Tick = {
-  format: undefined | LabelFormatter;
-  lineX: number;
-  lineY: number;
-  rotate: number;
-  textAnchor: React.CSSProperties["textAnchor"];
-  textBaseline: React.CSSProperties["dominantBaseline"];
-  textX: number;
-  textY: number;
-  tickIndex: number;
-  x: number;
-  y: number;
-  value: string;
-};
-
 export default function Bar(props: BarProps) {
   const { data, maxValue } = props;
 

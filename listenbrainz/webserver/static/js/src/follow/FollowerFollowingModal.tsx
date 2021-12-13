@@ -1,5 +1,4 @@
 import * as React from "react";
-import { includes as _includes } from "lodash";
 
 import Pill from "../utils/Pill";
 import UserListModalEntry from "./UserListModalEntry";

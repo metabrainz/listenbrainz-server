@@ -4,13 +4,13 @@ import fetchMock from "jest-fetch-mock";
 import UserFeedback, {
   UserFeedbackProps,
   UserFeedbackState,
-} from "../src/UserFeedback";
-import GlobalAppContext, { GlobalAppContextT } from "../src/utils/GlobalAppContext";
-import APIService from "../src/utils/APIService";
-import * as userFeedbackProps from "./__mocks__/userFeedbackProps.json";
-import * as userFeedbackAPIResponse from "./__mocks__/userFeedbackAPIResponse.json";
-import ListenCard from "../src/listens/ListenCard";
-import ListenFeedbackComponent from "../src/listens/ListenFeedbackComponent";
+} from "../../src/stats/UserFeedback";
+import GlobalAppContext, { GlobalAppContextT } from "../../src/utils/GlobalAppContext";
+import APIService from "../../src/utils/APIService";
+import * as userFeedbackProps from "../__mocks__/userFeedbackProps.json";
+import * as userFeedbackAPIResponse from "../__mocks__/userFeedbackAPIResponse.json";
+import ListenCard from "../../src/listens/ListenCard";
+import ListenFeedbackComponent from "../../src/listens/ListenFeedbackComponent";
 
 const { totalCount, user, feedback, youtube, spotify } = userFeedbackProps;
 

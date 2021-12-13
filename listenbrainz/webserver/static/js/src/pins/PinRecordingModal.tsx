@@ -10,7 +10,7 @@ export type PinRecordingModalProps = {
     title: string,
     message: string | JSX.Element
   ) => void;
-  onSuccessfulPin?: (pinnedrecording: PinnedRecording) => void;
+  onSuccessfulPin?: (pinnedRecording: PinnedRecording) => void;
 };
 
 export interface PinRecordingModalState {

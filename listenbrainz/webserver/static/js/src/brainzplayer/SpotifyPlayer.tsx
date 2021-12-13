@@ -254,17 +254,6 @@ export default class SpotifyPlayer
     }
   };
 
-  isListenFromThisService = (listen: Listen | JSPFTrack): boolean => {
-    const listeningFrom = _get(
-      listen,
-      "track_metadata.additional_info.listening_from"
-    );
-    return (
-      (isString(listeningFrom) && listeningFrom.toLowerCase() === "spotify") ||
-      Boolean(SpotifyPlayer.getSpotifyURLFromListen(listen))
-    );
-  };
-
   canSearchAndPlayTracks = (): boolean => {
     const { spotifyUser } = this.props;
     return SpotifyPlayer.hasPermissions(spotifyUser);

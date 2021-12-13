@@ -1,5 +1,4 @@
 import * as React from "react";
-import { get as _get } from "lodash";
 import { faGripLines, faMinusCircle } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

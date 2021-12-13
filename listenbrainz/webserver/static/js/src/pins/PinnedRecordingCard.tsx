@@ -1,7 +1,5 @@
 import * as React from "react";
-import { isEqual, isNil } from "lodash";
-import MediaQuery from "react-responsive";
-import { faEllipsisV, faThumbtack } from "@fortawesome/free-solid-svg-icons";
+import { faThumbtack } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -11,7 +9,6 @@ import {
   pinnedRecordingToListen,
 } from "../utils/utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import Card from "../utils/Card";
 import ListenControl from "../listens/ListenControl";
 import ListenCard from "../listens/ListenCard";
 

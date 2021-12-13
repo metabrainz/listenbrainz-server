@@ -17,19 +17,19 @@ import {
   faThumbtack,
   faTrashAlt,
 } from "@fortawesome/free-solid-svg-icons";
-import GlobalAppContext, { GlobalAppContextT } from "./utils/GlobalAppContext";
+import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
-} from "./notifications/AlertNotificationsHOC";
+} from "../notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "./utils/APIService";
-import BrainzPlayer from "./brainzplayer/BrainzPlayer";
-import ErrorBoundary from "./utils/ErrorBoundary";
-import ListenCard from "./listens/ListenCard";
-import Loader from "./utils/Loader";
-import PinRecordingModal from "./pins/PinRecordingModal";
-import PinnedRecordingCard from "./pins/PinnedRecordingCard";
+import APIServiceClass from "../utils/APIService";
+import BrainzPlayer from "../brainzplayer/BrainzPlayer";
+import ErrorBoundary from "../utils/ErrorBoundary";
+import ListenCard from "../listens/ListenCard";
+import Loader from "../utils/Loader";
+import PinRecordingModal from "../pins/PinRecordingModal";
+import PinnedRecordingCard from "../pins/PinnedRecordingCard";
 import {
   formatWSMessageToListen,
   getPageProps,
@@ -38,9 +38,9 @@ import {
   getArtistMBIDs,
   getReleaseMBID,
   getReleaseGroupMBID,
-} from "./utils/utils";
-import CBReviewModal from "./cb-review/CBReviewModal";
-import ListenControl from "./listens/ListenControl";
+} from "../utils/utils";
+import CBReviewModal from "../cb-review/CBReviewModal";
+import ListenControl from "../listens/ListenControl";
 
 export type RecentListensProps = {
   latestListenTs: number;

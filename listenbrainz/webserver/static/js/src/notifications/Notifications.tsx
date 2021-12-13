@@ -36,10 +36,7 @@ function isNewNotificationConstructorSupported() {
 }
 
 export function hasNotificationSupport(): boolean {
-  if (!("Notification" in window)) {
-    return false;
-  }
-  return true;
+  return "Notification" in window;
 }
 /**
  * Check if 1. Notification API can be used on this browser
@@ -103,10 +100,7 @@ export function createNotification(
  */
 
 export function hasMediaSessionSupport(): boolean {
-  if ("mediaSession" in window.navigator) {
-    return true;
-  }
-  return false;
+  return "mediaSession" in window.navigator;
 }
 
 /* Our embedded players (youtube, spotify, etc.) are  loaded in an iFrame,

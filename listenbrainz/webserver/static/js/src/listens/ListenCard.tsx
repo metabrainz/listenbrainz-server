@@ -24,16 +24,14 @@ import {
   getRecordingMBID,
   getAlbumArtFromListenMetadata,
   getReleaseMBID,
-} from "../utils";
-import GlobalAppContext from "../GlobalAppContext";
-import Card from "../components/Card";
+} from "../utils/utils";
+import GlobalAppContext from "../utils/GlobalAppContext";
+import Card from "../utils/Card";
 import ListenControl from "./ListenControl";
 import ListenFeedbackComponent from "./ListenFeedbackComponent";
-import YoutubePlayer from "../YoutubePlayer";
-import SpotifyPlayer from "../SpotifyPlayer";
-import SoundcloudPlayer from "../SoundcloudPlayer";
-
-export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
+import YoutubePlayer from "../brainzplayer/YoutubePlayer";
+import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
+import SoundcloudPlayer from "../brainzplayer/SoundcloudPlayer";
 
 export type ListenCardProps = {
   listen: Listen;

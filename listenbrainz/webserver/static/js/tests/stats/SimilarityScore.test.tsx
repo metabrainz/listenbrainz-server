@@ -1,7 +1,9 @@
 import * as React from "react";
 import { mount } from "enzyme";
 
-import SimilarityScore, { SimilarityScoreProps } from "../src/stats/SimilarityScore";
+import SimilarityScore, {
+  SimilarityScoreProps,
+} from "../../src/stats/SimilarityScore";
 
 const props: SimilarityScoreProps = {
   similarityScore: 0.239745792,
