@@ -188,7 +188,12 @@ def insert_playlists(troi_patch_slug, import_file):
             playlist_mbid = f.readline().strip()
             jspf = f.readline().strip()
 
-            data.append((user_name, ujson.dumps({troi_patch_slug: {"mbid": playlist_mbid, "jspf": jspf}})))
+            data.append((user_name, ujson.dumps({
+                troi_patch_slug: {
+                    "mbid": playlist_mbid,
+                    "jspf": ujson.loads(jspf)
+                }
+            })))
 
     for user_name, js in data:
         print("%s %s" % (user_name, js[:20]))
