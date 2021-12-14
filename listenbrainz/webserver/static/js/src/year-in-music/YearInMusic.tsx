@@ -1,7 +1,7 @@
 import * as ReactDOM from "react-dom";
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
-import Carousel from "react-multi-carousel";
+import Coverflow from "react-coverflow";
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
 import { get, isEmpty, isNil, isString, range, uniq } from "lodash";
 import { sanitize } from "dompurify";
@@ -301,38 +301,34 @@ export default class YearInMusic extends React.Component<
           </div>
         </div>
         <hr className="wide" />
-        <div className="row">
-          <Carousel
-            ssr={false}
-            ref={(el) => (this.Carousel = el)}
-            partialVisbile={false}
-            infinite
-            autoPlay
-            autoPlaySpeed={6000}
-            itemClass="slider-image-item"
-            className="col-lg-12"
-            responsive={responsive}
-            containerClass="carousel-container-with-scrollbar"
-            additionalTransform={-this.state.additionalTransform}
-            beforeChange={(nextSlide) => {
-              if (nextSlide !== 0 && this.state.additionalTransform !== 150) {
-                this.setState({ additionalTransform: 150 });
-              }
-              if (nextSlide === 0 && this.state.additionalTransform === 150) {
-                this.setState({ additionalTransform: 0 });
-              }
-            }}
-          >
-            <div className="card text-left mt-5" key="1">
-              <img
-                width="256"
-                height="256"
-                src="/static/img/year-in-music-2021.svg"
-                alt="Cover Art"
-              />
-            </div>
-          </Carousel>
-        </div>
+        <Coverflow
+          displayQuantityOfSide={2}
+          navigation
+          infiniteScroll
+          enableHeading
+          media={{
+            "@media (max-width: 900px)": {
+              width: "600px",
+              height: "300px",
+            },
+            "@media (min-width: 900px)": {
+              width: "960px",
+              height: "600px",
+            },
+          }}
+        >
+          {yearInMusicData.top_recordings.slice(0, 50).map((recording) => (
+            <img
+              src="/static/img/cover-art-placeholder.jpg"
+              alt={recording.track_name}
+              data-action="http://tw.yahoo.com"
+              style={{
+                display: "block",
+                width: "100%",
+              }}
+            />
+          ))}
+        </Coverflow>
         <div className="row flex flex-wrap">
           <div className="card content-card" id="top-recordings">
             <h3 className="center-p">Your 50 most played songs of 2021</h3>
