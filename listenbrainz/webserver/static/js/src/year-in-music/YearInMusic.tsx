@@ -1,6 +1,7 @@
 import * as ReactDOM from "react-dom";
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
+import Carousel from "react-multi-carousel";
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
 import { get, isEmpty, isNil, isString, range, uniq } from "lodash";
 import ErrorBoundary from "../ErrorBoundary";
@@ -68,6 +69,21 @@ export type YearInMusicProps = {
   };
 } & WithAlertNotificationsInjectedProps;
 
+const responsive = {
+  desktop: {
+    breakpoint: { max: 3000, min: 1024 },
+    items: 3,
+  },
+  tablet: {
+    breakpoint: { max: 1024, min: 464 },
+    items: 2,
+  },
+  mobile: {
+    breakpoint: { max: 464, min: 0 },
+    items: 1,
+  },
+};
+
 export type YearInMusicState = {
   followingList: Array<string>;
 };
@@ -83,6 +99,8 @@ export default class YearInMusic extends React.Component<
     super(props);
     this.state = {
       followingList: [],
+      additionalTransform: 0,
+      posts: [],
     };
   }
 
@@ -282,6 +300,38 @@ export default class YearInMusic extends React.Component<
           </div>
         </div>
         <hr className="wide" />
+        <div className="row">
+          <Carousel
+            ssr={false}
+            ref={(el) => (this.Carousel = el)}
+            partialVisbile={false}
+            infinite
+            autoPlay
+            autoPlaySpeed={6000}
+            itemClass="slider-image-item"
+            className="col-lg-12"
+            responsive={responsive}
+            containerClass="carousel-container-with-scrollbar"
+            additionalTransform={-this.state.additionalTransform}
+            beforeChange={(nextSlide) => {
+              if (nextSlide !== 0 && this.state.additionalTransform !== 150) {
+                this.setState({ additionalTransform: 150 });
+              }
+              if (nextSlide === 0 && this.state.additionalTransform === 150) {
+                this.setState({ additionalTransform: 0 });
+              }
+            }}
+          >
+            <div className="card text-left mt-5" key="1">
+              <img
+                width="256"
+                height="256"
+                src="/static/img/year-in-music-2021.svg"
+                alt="Cover Art"
+              />
+            </div>
+          </Carousel>
+        </div>
         <div className="row flex flex-wrap">
           <div className="card content-card" id="top-recordings">
             <h3 className="center-p">Your most played songs of 2021</h3>
