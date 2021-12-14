@@ -159,21 +159,42 @@ export default class YearInMusic extends React.Component<
   render() {
     const { user, newAlert, yearInMusicData } = this.props;
     const { selectedTopEntity } = this.state;
-    const { APIService, currentUser } = this.context;
+    const { APIService } = this.context;
+
+    if (!yearInMusicData || isEmpty(yearInMusicData)) {
+      return (
+        <h4>
+          We don&apos;t have enough listening data for {user.name} to produce
+          any statistics or playlists.
+          <small>
+            Check out how you can submit listens by{" "}
+            <a href="/profile/music-services/details/">
+              connecting a music service
+            </a>{" "}
+            or <a href="/profile/import/">importing your listening history</a>,
+            and come back next year !
+          </small>
+        </h4>
+      );
+    }
 
     /* Most listened years */
-    const mostListenedYears = Object.keys(yearInMusicData.most_listened_year);
-    // Ensure there are no holes between years
-    const filledYears = range(
-      Number(mostListenedYears[0]),
-      Number(mostListenedYears[mostListenedYears.length - 1])
-    );
-    const mostListenedYearDataForGraph = filledYears.map((year: number) => ({
-      year,
-      // Set to 0 for years without data
-      albums: String(yearInMusicData.most_listened_year[String(year)] ?? 0),
-    }));
+    let mostListenedYearDataForGraph;
+    if (yearInMusicData.most_listened_year.length) {
+      const mostListenedYears = Object.keys(yearInMusicData.most_listened_year);
+      // Ensure there are no holes between years
+      const filledYears = range(
+        Number(mostListenedYears[0]),
+        Number(mostListenedYears[mostListenedYears.length - 1])
+      );
+      mostListenedYearDataForGraph = filledYears.map((year: number) => ({
+        year,
+        // Set to 0 for years without data
+        albums: String(yearInMusicData.most_listened_year[String(year)] ?? 0),
+      }));
+    }
 
+    /* Listening history calendar graph */
     const listensPerDayForGraph = yearInMusicData.listens_per_day
       .map((datum) =>
         datum.listen_count > 0
@@ -187,6 +208,7 @@ export default class YearInMusic extends React.Component<
       // Filter out null entries in the array
       .filter(Boolean);
 
+    /* Playlists */
     const topDiscoveriesPlaylist = this.getPlaylistByName(
       "playlist-top-discoveries-for-year-playlists"
     );
@@ -352,35 +374,37 @@ export default class YearInMusic extends React.Component<
           </div>
         </div>
         <div className="row flex flex-wrap">
-          <div className="card content-card" id="most-listened-year">
-            <h3 className="text-center">
-              What year are your favorite albums from?
-              <div className="small">
-                How much were you on the lookout for new music this year? Not
-                that we&apos;re judging.
+          {mostListenedYearDataForGraph && (
+            <div className="card content-card" id="most-listened-year">
+              <h3 className="text-center">
+                What year are your favorite albums from?
+                <div className="small">
+                  How much were you on the lookout for new music this year? Not
+                  that we&apos;re judging.
+                </div>
+              </h3>
+              <div className="graph">
+                <ResponsiveBar
+                  margin={{ left: 30, bottom: 30 }}
+                  data={mostListenedYearDataForGraph}
+                  padding={0.1}
+                  layout="vertical"
+                  keys={["albums"]}
+                  indexBy="year"
+                  colors="#eb743b"
+                  enableLabel={false}
+                  axisBottom={{
+                    // Round to nearest 5 year mark
+                    tickValues: uniq(
+                      mostListenedYearDataForGraph.map(
+                        (datum) => Math.round((datum.year + 1) / 5) * 5
+                      )
+                    ),
+                  }}
+                />
               </div>
-            </h3>
-            <div className="graph">
-              <ResponsiveBar
-                margin={{ left: 30, bottom: 30 }}
-                data={mostListenedYearDataForGraph}
-                padding={0.1}
-                layout="vertical"
-                keys={["albums"]}
-                indexBy="year"
-                colors="#eb743b"
-                enableLabel={false}
-                axisBottom={{
-                  // Round to nearest 5 year mark
-                  tickValues: uniq(
-                    mostListenedYearDataForGraph.map(
-                      (datum) => Math.round((datum.year + 1) / 5) * 5
-                    )
-                  ),
-                }}
-              />
             </div>
-          </div>
+          )}
         </div>
         <div className="row flex flex-wrap">
           <div className="card content-card" id="similar-users">
