@@ -284,72 +284,68 @@ export default class YearInMusic extends React.Component<
         <hr className="wide" />
         <div className="row flex flex-wrap">
           <div className="card content-card" id="top-recordings">
-            <h3 className="center-p">Your most played songs of 2021</h3>
+            <h3 className="center-p">Your 50 most played songs of 2021</h3>
             <div className="scrollable-area">
-              {yearInMusicData.top_recordings
-                .filter((recording) => recording.listen_count > 2)
-                .map((recording) => (
+              {yearInMusicData.top_recordings.slice(0, 50).map((recording) => (
+                <ListenCard
+                  compact
+                  key={`top-recordings-${recording.recording_mbid}`}
+                  listen={{
+                    listened_at: 0,
+                    track_metadata: {
+                      artist_name: recording.artist_name,
+                      track_name: recording.track_name,
+                      release_name: recording.release_name,
+                      additional_info: {
+                        recording_mbid: recording.recording_mbid,
+                        release_mbid: recording.release_mbid,
+                        artist_mbids: recording.artist_mbids,
+                      },
+                    },
+                  }}
+                  showTimestamp={false}
+                  showUsername={false}
+                  newAlert={newAlert}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="card content-card" id="top-artists">
+            <h3 className="center-p">Your top 50 artists of 2021</h3>
+            <div className="scrollable-area">
+              {yearInMusicData.top_artists.slice(0, 50).map((artist) => {
+                const details = getEntityLink(
+                  "artist",
+                  artist.artist_name,
+                  artist.artist_mbids[0]
+                );
+                const thumbnail = (
+                  <span className="badge badge-info">
+                    {artist.listen_count} listens
+                  </span>
+                );
+                return (
                   <ListenCard
                     compact
-                    key={`top-recordings-${recording.recording_mbid}`}
+                    key={`top-artists-${artist.artist_name}-${artist.artist_mbids}`}
                     listen={{
                       listened_at: 0,
                       track_metadata: {
-                        artist_name: recording.artist_name,
-                        track_name: recording.track_name,
-                        release_name: recording.release_name,
+                        track_name: "",
+                        artist_name: artist.artist_name,
                         additional_info: {
-                          recording_mbid: recording.recording_mbid,
-                          release_mbid: recording.release_mbid,
-                          artist_mbids: recording.artist_mbids,
+                          artist_mbids: artist.artist_mbids,
                         },
                       },
                     }}
+                    thumbnail={thumbnail}
+                    listenDetails={details}
                     showTimestamp={false}
                     showUsername={false}
                     newAlert={newAlert}
                   />
-                ))}
-            </div>
-          </div>
-          <div className="card content-card" id="top-artists">
-            <h3 className="center-p">Your top artists of 2021</h3>
-            <div className="scrollable-area">
-              {yearInMusicData.top_artists
-                .filter((artist) => artist.listen_count > 3)
-                .map((artist) => {
-                  const details = getEntityLink(
-                    "artist",
-                    artist.artist_name,
-                    artist.artist_mbids[0]
-                  );
-                  const thumbnail = (
-                    <span className="badge badge-info">
-                      {artist.listen_count} listens
-                    </span>
-                  );
-                  return (
-                    <ListenCard
-                      compact
-                      key={`top-artists-${artist.artist_name}-${artist.artist_mbids}`}
-                      listen={{
-                        listened_at: 0,
-                        track_metadata: {
-                          track_name: "",
-                          artist_name: artist.artist_name,
-                          additional_info: {
-                            artist_mbids: artist.artist_mbids,
-                          },
-                        },
-                      }}
-                      thumbnail={thumbnail}
-                      listenDetails={details}
-                      showTimestamp={false}
-                      showUsername={false}
-                      newAlert={newAlert}
-                    />
-                  );
-                })}
+                );
+              })}
             </div>
           </div>
         </div>
