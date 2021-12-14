@@ -284,7 +284,6 @@ export default class YearInMusic extends React.Component<
                   {
                     anchor: "bottom-right",
                     direction: "row",
-                    translateY: 36,
                     itemCount: 4,
                     itemWidth: 42,
                     itemHeight: 36,
