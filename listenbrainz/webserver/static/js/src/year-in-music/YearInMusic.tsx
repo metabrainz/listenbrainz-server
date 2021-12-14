@@ -3,10 +3,11 @@ import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
 import { get, isEmpty, isNil, isString, range, uniq } from "lodash";
+import { sanitize } from "dompurify";
 import ErrorBoundary from "../ErrorBoundary";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import BrainzPlayer from "../BrainzPlayer";
-import Pill from "../components/Pill";
+
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
@@ -489,6 +490,11 @@ export default class YearInMusic extends React.Component<
           <div className="card content-card">
             <h3 className="text-center">
               We made some personalized playlists for you !
+              <div className="small">
+                You&apos;ll find below 3 playlists that encapsulate your year,
+                and 1 playlist of music exploration based on users similar to
+                you
+              </div>
             </h3>
             <div className="row flex flex-wrap">
               {allPlaylists.map((topLevelPlaylist) => {
@@ -505,7 +511,14 @@ export default class YearInMusic extends React.Component<
                       >
                         {topLevelPlaylist.jspf?.playlist?.title}
                       </a>
-                      {/* Your top discoveries published in 2021 */}
+                      <div
+                        className="small ellipsis-2-lines"
+                        dangerouslySetInnerHTML={{
+                          __html: sanitize(
+                            topLevelPlaylist.jspf?.playlist?.annotation
+                          ),
+                        }}
+                      />
                     </h3>
                     <div>
                       {topLevelPlaylist.jspf?.playlist?.track.map(
