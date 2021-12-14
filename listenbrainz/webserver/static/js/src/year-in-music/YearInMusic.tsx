@@ -286,66 +286,70 @@ export default class YearInMusic extends React.Component<
           <div className="card content-card" id="top-recordings">
             <h3 className="center-p">Your most played songs of 2021</h3>
             <div className="scrollable-area">
-              {yearInMusicData.top_recordings.map((recording) => (
-                <ListenCard
-                  compact
-                  key={`top-recordings-${recording.recording_mbid}`}
-                  listen={{
-                    listened_at: 0,
-                    track_metadata: {
-                      artist_name: recording.artist_name,
-                      track_name: recording.track_name,
-                      release_name: recording.release_name,
-                      additional_info: {
-                        recording_mbid: recording.recording_mbid,
-                        release_mbid: recording.release_mbid,
-                        artist_mbids: recording.artist_mbids,
+              {yearInMusicData.top_recordings
+                .filter((recording) => recording.listen_count > 1)
+                .map((recording) => (
+                  <ListenCard
+                    compact
+                    key={`top-recordings-${recording.recording_mbid}`}
+                    listen={{
+                      listened_at: 0,
+                      track_metadata: {
+                        artist_name: recording.artist_name,
+                        track_name: recording.track_name,
+                        release_name: recording.release_name,
+                        additional_info: {
+                          recording_mbid: recording.recording_mbid,
+                          release_mbid: recording.release_mbid,
+                          artist_mbids: recording.artist_mbids,
+                        },
                       },
-                    },
-                  }}
-                  showTimestamp={false}
-                  showUsername={false}
-                  newAlert={newAlert}
-                />
-              ))}
+                    }}
+                    showTimestamp={false}
+                    showUsername={false}
+                    newAlert={newAlert}
+                  />
+                ))}
             </div>
           </div>
           <div className="card content-card" id="top-artists">
             <h3 className="center-p">Your top artists of 2021</h3>
             <div className="scrollable-area">
-              {yearInMusicData.top_artists.map((artist) => {
-                const details = getEntityLink(
-                  "artist",
-                  artist.artist_name,
-                  artist.artist_mbids[0]
-                );
-                const thumbnail = (
-                  <span className="badge badge-info">
-                    {artist.listen_count} listens
-                  </span>
-                );
-                return (
-                  <ListenCard
-                    compact
-                    key={`top-artists-${artist.artist_name}-${artist.artist_mbids}`}
-                    listen={{
-                      listened_at: 0,
-                      track_metadata: {
-                        track_name: "",
-                        artist_name: artist.artist_name,
-                        additional_info: {
-                          artist_mbids: artist.artist_mbids,
+              {yearInMusicData.top_artists
+                .filter((artist) => artist.listen_count > 1)
+                .map((artist) => {
+                  const details = getEntityLink(
+                    "artist",
+                    artist.artist_name,
+                    artist.artist_mbids[0]
+                  );
+                  const thumbnail = (
+                    <span className="badge badge-info">
+                      {artist.listen_count} listens
+                    </span>
+                  );
+                  return (
+                    <ListenCard
+                      compact
+                      key={`top-artists-${artist.artist_name}-${artist.artist_mbids}`}
+                      listen={{
+                        listened_at: 0,
+                        track_metadata: {
+                          track_name: "",
+                          artist_name: artist.artist_name,
+                          additional_info: {
+                            artist_mbids: artist.artist_mbids,
+                          },
                         },
-                      },
-                    }}
-                    thumbnail={thumbnail}
-                    listenDetails={details}
-                    showTimestamp={false}
-                    showUsername={false}
-                    newAlert={newAlert}
-                  />
-                );
-              })}
+                      }}
+                      thumbnail={thumbnail}
+                      listenDetails={details}
+                      showTimestamp={false}
+                      showUsername={false}
+                      newAlert={newAlert}
+                    />
+                  );
+                })}
             </div>
           </div>
         </div>
