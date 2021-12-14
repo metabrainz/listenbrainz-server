@@ -542,7 +542,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <GlobalAppContext.Provider value={globalProps}>
         <YearInMusicWithAlertNotifications
           user={user}
-          yearInMusicData={fakeData}
+          yearInMusicData={yearInMusicData}
         />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,
