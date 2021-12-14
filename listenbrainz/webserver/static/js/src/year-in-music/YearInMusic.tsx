@@ -287,7 +287,7 @@ export default class YearInMusic extends React.Component<
             <h3 className="center-p">Your most played songs of 2021</h3>
             <div className="scrollable-area">
               {yearInMusicData.top_recordings
-                .filter((recording) => recording.listen_count > 1)
+                .filter((recording) => recording.listen_count > 2)
                 .map((recording) => (
                   <ListenCard
                     compact
@@ -316,7 +316,7 @@ export default class YearInMusic extends React.Component<
             <h3 className="center-p">Your top artists of 2021</h3>
             <div className="scrollable-area">
               {yearInMusicData.top_artists
-                .filter((artist) => artist.listen_count > 1)
+                .filter((artist) => artist.listen_count > 3)
                 .map((artist) => {
                   const details = getEntityLink(
                     "artist",
