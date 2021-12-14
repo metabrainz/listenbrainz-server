@@ -3,7 +3,7 @@
 import * as ReactDOM from "react-dom";
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
-import { ResponsiveCalendar } from "@nivo/calendar";
+import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
 import { isEmpty, isNil, range, uniq } from "lodash";
 import ErrorBoundary from "../ErrorBoundary";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
@@ -24,10 +24,51 @@ import UserListModalEntry from "../follow/UserListModalEntry";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
+  yearInMusicData: {
+    day_of_week: string;
+    top_artists: Array<{
+      artist_name: string;
+      artist_mbids: string[];
+      listen_count: number;
+    }>;
+    top_releases: Array<{
+      artist_name: string;
+      artist_mbids: string[];
+      listen_count: number;
+      release_name: string;
+      release_mbid: string[];
+    }>;
+    top_recordings: Array<{
+      artist_name: string;
+      artist_mbids: string[];
+      listen_count: number;
+      release_name: string;
+      release_mbid: string[];
+      track_name: string;
+      recording_mbid: string;
+    }>;
+    similar_users: { [key: string]: number };
+    listens_per_day: Array<{
+      to_ts: number;
+      from_ts: number;
+      time_range: string;
+      listen_count: number;
+    }>;
+    most_listened_year: { [key: string]: number };
+    total_listen_count: number;
+    most_prominent_color: string;
+    new_releases_of_top_artists: Array<{
+      type: string;
+      title: string;
+      release_id: string;
+      first_release_date: string;
+      artist_credit_mbids: string[];
+      artist_credit_names: string[];
+    }>;
+  };
 } & WithAlertNotificationsInjectedProps;
 
 export type YearInMusicState = {
-  loading: boolean;
   followingList: Array<string>;
   selectedTopEntity: Entity;
 };
@@ -42,7 +83,6 @@ export default class YearInMusic extends React.Component<
   constructor(props: YearInMusicProps) {
     super(props);
     this.state = {
-      loading: false,
       followingList: [],
       selectedTopEntity: "recording",
     };
@@ -57,7 +97,6 @@ export default class YearInMusic extends React.Component<
   };
 
   getFollowing = async () => {
-    const { user } = this.props;
     const { APIService, currentUser } = this.context;
     const { getFollowingForUser } = APIService;
     if (!currentUser?.name) {
@@ -104,14 +143,12 @@ export default class YearInMusic extends React.Component<
   };
 
   render() {
-    const { user, newAlert } = this.props;
-    const { loading, followingList, selectedTopEntity } = this.state;
+    const { user, newAlert, yearInMusicData } = this.props;
+    const { selectedTopEntity } = this.state;
     const { APIService, currentUser } = this.context;
-    const totalListens = 12345;
-    const mostActiveDay = "Friday";
 
     /* Most listened years */
-    const mostListenedYears = Object.keys(fakeData.most_listened_year);
+    const mostListenedYears = Object.keys(yearInMusicData.most_listened_year);
     // Ensure there are no holes between years
     const filledYears = range(
       Number(mostListenedYears[0]),
@@ -119,22 +156,21 @@ export default class YearInMusic extends React.Component<
     );
     const mostListenedYearDataForGraph = filledYears.map((year: number) => ({
       year,
-      // Add a 0 for years without data
-      albums:
-        fakeData.most_listened_year[
-          String(year) as keyof typeof fakeData.most_listened_year
-        ] ?? 0,
+      // Set to 0 for years without data
+      albums: yearInMusicData.most_listened_year[String(year)] ?? 0,
     }));
 
-    const listensPerDayForGraph = fakeData.listens_per_day
+    const listensPerDayForGraph = yearInMusicData.listens_per_day
       .map((datum) =>
         datum.listen_count > 0
           ? {
               day: new Date(datum.time_range).toLocaleDateString("en-CA"),
               value: datum.listen_count,
             }
-          : null
+          : // Return null if the value is 0
+            null
       )
+      // Filter out null entries in the array
       .filter(Boolean);
 
     return (
@@ -178,7 +214,9 @@ export default class YearInMusic extends React.Component<
               <div className="card">
                 <h3 className="text-center">
                   You listened to{" "}
-                  <span className="accent">{fakeData.total_listen_count}</span>{" "}
+                  <span className="accent">
+                    {yearInMusicData.total_listen_count}
+                  </span>{" "}
                   songs this year
                 </h3>
               </div>
@@ -196,7 +234,7 @@ export default class YearInMusic extends React.Component<
                     style={{
                       width: "100%",
                       height: "65px",
-                      background: `rgb${fakeData.most_prominent_color}`,
+                      background: `rgb${yearInMusicData.most_prominent_color}`,
                     }}
                   />
                 </h3>
@@ -235,11 +273,11 @@ export default class YearInMusic extends React.Component<
             </h3>
             <div className="row">
               <ComponentToImage
-                data={fakeData.new_releases_of_top_artists.slice(0, 10)}
+                data={yearInMusicData.new_releases_of_top_artists.slice(0, 10)}
               />
             </div>
             <div>
-              {fakeData.new_releases_of_top_artists
+              {yearInMusicData.new_releases_of_top_artists
                 .slice(0, 10)
                 .map((release) => (
                   <ListenCard
@@ -272,7 +310,7 @@ export default class YearInMusic extends React.Component<
               <ResponsiveCalendar
                 from="2021-01-01"
                 to="2021-12-31"
-                data={listensPerDayForGraph}
+                data={listensPerDayForGraph as CalendarDatum[]}
                 emptyColor="#eeeeee"
                 colors={["#bbb7e1", "#6e66cc", "#eea582", "#eb743b"]}
                 // margin={{ top: 40, right: 40, bottom: 40, left: 40 }}
@@ -346,14 +384,14 @@ export default class YearInMusic extends React.Component<
               </div>
             </h3>
             <div className="scrollable-area similar-users-list">
-              {fakeData.similar_users &&
-                Object.keys(fakeData.similar_users).map(
+              {yearInMusicData.similar_users &&
+                Object.keys(yearInMusicData.similar_users).map(
                   (userName: string, index) => {
                     const similarUser: SimilarUser = {
                       name: userName,
                       similarityScore:
-                        fakeData.similar_users[
-                          userName as keyof typeof fakeData.similar_users
+                        yearInMusicData.similar_users[
+                          userName as keyof typeof yearInMusicData.similar_users
                         ],
                     };
                     const loggedInUserFollowsUser = this.loggedInUserFollowsUser(
@@ -381,7 +419,7 @@ export default class YearInMusic extends React.Component<
               </div>
             </h3>
             <div className="scrollable-area">
-              {fakeData.new_releases_of_top_artists.map((release) => (
+              {yearInMusicData.new_releases_of_top_artists.map((release) => (
                 <ListenCard
                   key={release.release_id}
                   compact
@@ -434,7 +472,7 @@ export default class YearInMusic extends React.Component<
 document.addEventListener("DOMContentLoaded", () => {
   const { domContainer, reactProps, globalReactProps } = getPageProps();
   const { api_url, current_user, spotify, youtube } = globalReactProps;
-  const { user } = reactProps;
+  const { user, data: yearInMusicData } = reactProps;
 
   const apiService = new APIServiceClass(
     api_url || `${window.location.origin}/1`
@@ -452,7 +490,10 @@ document.addEventListener("DOMContentLoaded", () => {
   ReactDOM.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalProps}>
-        <YearInMusicWithAlertNotifications user={user} />
+        <YearInMusicWithAlertNotifications
+          user={user}
+          yearInMusicData={yearInMusicData}
+        />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,
     domContainer
