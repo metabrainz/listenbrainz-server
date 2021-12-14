@@ -290,36 +290,10 @@ export default class YearInMusic extends React.Component<
         <hr className="wide" />
         <div className="row">
           <div className="card content-card" id="top-entities">
-            <h3 className="center-p">
-              Your top
-              <Pill
-                active={selectedTopEntity === "recording"}
-                // eslint-disable-next-line react/jsx-no-bind
-                onClick={this.selectTopEntity.bind(this, "recording")}
-              >
-                Tracks
-              </Pill>{" "}
-              <Pill
-                active={selectedTopEntity === "release"}
-                // eslint-disable-next-line react/jsx-no-bind
-                onClick={this.selectTopEntity.bind(this, "release")}
-              >
-                Albums
-              </Pill>{" "}
-              <Pill
-                active={selectedTopEntity === "artist"}
-                // eslint-disable-next-line react/jsx-no-bind
-                onClick={this.selectTopEntity.bind(this, "artist")}
-              >
-                Artists
-              </Pill>{" "}
-              of the year
-            </h3>
-            <div className="row">
-              <ComponentToImage
-                data={yearInMusicData.new_releases_of_top_artists.slice(0, 10)}
-              />
-            </div>
+            <h3 className="center-p">Top Tracks of the year</h3>
+            <ComponentToImage
+              data={yearInMusicData.new_releases_of_top_artists.slice(0, 10)}
+            />
             <div>
               {yearInMusicData.new_releases_of_top_artists
                 .slice(0, 10)
@@ -568,7 +542,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <GlobalAppContext.Provider value={globalProps}>
         <YearInMusicWithAlertNotifications
           user={user}
-          yearInMusicData={yearInMusicData}
+          yearInMusicData={fakeData}
         />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,
