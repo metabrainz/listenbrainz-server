@@ -176,7 +176,6 @@ def insert_playlists(troi_patch_slug, import_file):
       DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
         """
 
-    print("start playlist import")
     data = []
     with open(import_file, "r") as f:
         while True:
@@ -199,8 +198,6 @@ def insert_playlists(troi_patch_slug, import_file):
         with connection.cursor() as cursor:
             execute_values(cursor, query, data)
         connection.commit()
-        print("playlists imported.")
     except psycopg2.errors.OperationalError:
         connection.rollback()
         current_app.logger.error("Error while inserting playlist/%s:" % troi_patch_slug, exc_info=True)
-        print("playlists import failed.")
