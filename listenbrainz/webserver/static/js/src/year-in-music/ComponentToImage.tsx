@@ -1,5 +1,8 @@
 import html2canvas from "html2canvas";
 import React from "react";
+import { faCamera, faPlay } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 export type ComponentToImageProps = {
   data: any[];
@@ -46,11 +49,18 @@ const ComponentToImage = ({ data }: ComponentToImageProps) => {
   return (
     <>
       <button
+        className="col-6 btn-primary center"
         style={{ marginLeft: "2rem", marginBottom: "1rem" }}
         onClick={exportAsPicture}
         type="button"
       >
-        Save as Image
+        <FontAwesomeIcon
+          className="col-6"
+          size="1x"
+          style={{ margin: "4px" }}
+          icon={faCamera as IconProp}
+        />
+        Share with your friends!
       </button>
       <div
         id="card"
