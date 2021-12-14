@@ -163,18 +163,20 @@ export default class YearInMusic extends React.Component<
 
     if (!yearInMusicData || isEmpty(yearInMusicData)) {
       return (
-        <h4>
-          We don&apos;t have enough listening data for {user.name} to produce
-          any statistics or playlists.
-          <small>
+        <div className="flex-center flex-wrap">
+          <h3>
+            We don&apos;t have enough listening data for {user.name} to produce
+            any statistics or playlists.
+          </h3>
+          <p>
             Check out how you can submit listens by{" "}
             <a href="/profile/music-services/details/">
               connecting a music service
             </a>{" "}
             or <a href="/profile/import/">importing your listening history</a>,
             and come back next year !
-          </small>
-        </h4>
+          </p>
+        </div>
       );
     }
 
