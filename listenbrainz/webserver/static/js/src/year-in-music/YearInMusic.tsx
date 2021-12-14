@@ -1,10 +1,8 @@
-/* eslint-disable jsx-a11y/anchor-is-valid */
-
 import * as ReactDOM from "react-dom";
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
-import { isEmpty, isNil, range, uniq } from "lodash";
+import { get, isEmpty, isNil, isString, range, uniq } from "lodash";
 import ErrorBoundary from "../ErrorBoundary";
 import GlobalAppContext, { GlobalAppContextT } from "../GlobalAppContext";
 import BrainzPlayer from "../BrainzPlayer";
@@ -21,6 +19,7 @@ import ComponentToImage from "./ComponentToImage";
 import fakeData from "./year-in-music-data.json";
 import ListenCard from "../listens/ListenCard";
 import UserListModalEntry from "../follow/UserListModalEntry";
+import { JSPFTrackToListen } from "../playlists/utils";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -92,6 +91,21 @@ export default class YearInMusic extends React.Component<
     await this.getFollowing();
   }
 
+  private getPlaylistByName(
+    playlistName: string
+  ): { jspf: JSPFObject; mbid: string } | undefined {
+    const { yearInMusicData } = this.props;
+    let playlist;
+    try {
+      const rawPlaylist = get(yearInMusicData, playlistName);
+      playlist = isString(rawPlaylist) ? JSON.parse(rawPlaylist) : rawPlaylist;
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error(`"Error parsing ${playlistName}:`, error);
+    }
+    return playlist;
+  }
+
   selectTopEntity = (entity: Entity) => {
     this.setState({ selectedTopEntity: entity });
   };
@@ -157,7 +171,7 @@ export default class YearInMusic extends React.Component<
     const mostListenedYearDataForGraph = filledYears.map((year: number) => ({
       year,
       // Set to 0 for years without data
-      albums: yearInMusicData.most_listened_year[String(year)] ?? 0,
+      albums: String(yearInMusicData.most_listened_year[String(year)] ?? 0),
     }));
 
     const listensPerDayForGraph = yearInMusicData.listens_per_day
@@ -172,6 +186,26 @@ export default class YearInMusic extends React.Component<
       )
       // Filter out null entries in the array
       .filter(Boolean);
+
+    const topDiscoveriesPlaylist = this.getPlaylistByName(
+      "playlist-top-discoveries-for-year-playlists"
+    );
+    const topMissedRecordingsPlaylist = this.getPlaylistByName(
+      "playlist-top-missed-recordings-for-year-playlists"
+    );
+    const topNewRecordingsPlaylist = this.getPlaylistByName(
+      "playlist-top-new-recordings-for-year-playlists"
+    );
+    const topRecordingsPlaylist = this.getPlaylistByName(
+      "playlist-top-recordings-for-year-playlists"
+    );
+
+    const allPlaylists = [
+      topDiscoveriesPlaylist,
+      topMissedRecordingsPlaylist,
+      topNewRecordingsPlaylist,
+      topRecordingsPlaylist,
+    ];
 
     return (
       <div role="main" id="year-in-music">
@@ -226,20 +260,6 @@ export default class YearInMusic extends React.Component<
                   listening day
                 </h3>
               </div>
-              {/* <div className="col-sm-4">
-              <div className="card flex-center">
-                <h3 className="text-center">
-                  Average color of your top albums:
-                  <div
-                    style={{
-                      width: "100%",
-                      height: "65px",
-                      background: `rgb${yearInMusicData.most_prominent_color}`,
-                    }}
-                  />
-                </h3>
-              </div>
-            </div> */}
             </div>
           </div>
         </div>
@@ -313,9 +333,7 @@ export default class YearInMusic extends React.Component<
                 data={listensPerDayForGraph as CalendarDatum[]}
                 emptyColor="#eeeeee"
                 colors={["#bbb7e1", "#6e66cc", "#eea582", "#eb743b"]}
-                // margin={{ top: 40, right: 40, bottom: 40, left: 40 }}
                 monthBorderColor="#eeeeee"
-                // monthBorderColor="#c9c2bb"
                 dayBorderWidth={2}
                 dayBorderColor="#ffffff"
                 legends={[
@@ -334,16 +352,6 @@ export default class YearInMusic extends React.Component<
           </div>
         </div>
         <div className="row flex flex-wrap">
-          <div className="card content-card" id="top-discoveries">
-            <h3 className="text-center">
-              Your top discoveries published in 2021
-            </h3>
-            <div className="scrollable-area">
-              Extract info from a JSPF playlist, show first 5 items, link to
-              full playlist
-            </div>
-          </div>
-
           <div className="card content-card" id="most-listened-year">
             <h3 className="text-center">
               What year are your favorite albums from?
@@ -449,10 +457,52 @@ export default class YearInMusic extends React.Component<
             <h3 className="text-center">
               We made some personalized playlists for you !
             </h3>
-            <div className="flex">
-              <div>Playlist #1</div>
-              <div>Playlist #2</div>
-              <div>Playlist #3</div>
+            <div className="row flex flex-wrap">
+              {allPlaylists.map((topLevelPlaylist) => {
+                if (!topLevelPlaylist) {
+                  return undefined;
+                }
+                return (
+                  <div className="card content-card" id="top-discoveries">
+                    <h3 className="text-center">
+                      <a
+                        href={`/playlist/${topLevelPlaylist.mbid}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {topLevelPlaylist.jspf?.playlist?.title}
+                      </a>
+                      {/* Your top discoveries published in 2021 */}
+                    </h3>
+                    <div>
+                      {topLevelPlaylist.jspf?.playlist?.track.map(
+                        (playlistTrack) => {
+                          const listen = JSPFTrackToListen(playlistTrack);
+                          return (
+                            <ListenCard
+                              className="playlist-item-card"
+                              listen={listen}
+                              compact
+                              showTimestamp={false}
+                              showUsername={false}
+                              newAlert={newAlert}
+                            />
+                          );
+                        }
+                      )}
+                      <hr />
+                      <a
+                        href={`/playlist/${topLevelPlaylist.mbid}`}
+                        className="btn btn-info btn-block"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        See the full playlist…
+                      </a>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
