@@ -14,6 +14,7 @@ import {
 
 import APIServiceClass from "../APIService";
 import { getPageProps } from "../utils";
+import { getEntityLink } from "../stats/utils";
 import ComponentToImage from "./ComponentToImage";
 
 import fakeData from "./year-in-music-data.json";
@@ -35,14 +36,14 @@ export type YearInMusicProps = {
       artist_mbids: string[];
       listen_count: number;
       release_name: string;
-      release_mbid: string[];
+      release_mbid: string;
     }>;
     top_recordings: Array<{
       artist_name: string;
       artist_mbids: string[];
       listen_count: number;
       release_name: string;
-      release_mbid: string[];
+      release_mbid: string;
       track_name: string;
       recording_mbid: string;
     }>;
@@ -69,7 +70,6 @@ export type YearInMusicProps = {
 
 export type YearInMusicState = {
   followingList: Array<string>;
-  selectedTopEntity: Entity;
 };
 
 export default class YearInMusic extends React.Component<
@@ -83,7 +83,6 @@ export default class YearInMusic extends React.Component<
     super(props);
     this.state = {
       followingList: [],
-      selectedTopEntity: "recording",
     };
   }
 
@@ -105,10 +104,6 @@ export default class YearInMusic extends React.Component<
     }
     return playlist;
   }
-
-  selectTopEntity = (entity: Entity) => {
-    this.setState({ selectedTopEntity: entity });
-  };
 
   getFollowing = async () => {
     const { APIService, currentUser } = this.context;
@@ -158,7 +153,6 @@ export default class YearInMusic extends React.Component<
 
   render() {
     const { user, newAlert, yearInMusicData } = this.props;
-    const { selectedTopEntity } = this.state;
     const { APIService } = this.context;
 
     if (!yearInMusicData || isEmpty(yearInMusicData)) {
@@ -288,42 +282,81 @@ export default class YearInMusic extends React.Component<
           </div>
         </div>
         <hr className="wide" />
-        <div className="row">
-          <div className="card content-card" id="top-entities">
-            <h3 className="center-p">Top Tracks of the year</h3>
-            <ComponentToImage
-              data={yearInMusicData.new_releases_of_top_artists.slice(0, 10)}
-            />
-            <div>
-              {yearInMusicData.new_releases_of_top_artists
-                .slice(0, 10)
-                .map((release) => (
+        <div className="row flex flex-wrap">
+          <div className="card content-card" id="top-recordings">
+            <h3 className="center-p">Your most played songs of 2021</h3>
+            <div className="scrollable-area">
+              {yearInMusicData.top_recordings.map((recording) => (
+                <ListenCard
+                  compact
+                  key={`top-recordings-${recording.recording_mbid}`}
+                  listen={{
+                    listened_at: 0,
+                    track_metadata: {
+                      artist_name: recording.artist_name,
+                      track_name: recording.track_name,
+                      release_name: recording.release_name,
+                      additional_info: {
+                        recording_mbid: recording.recording_mbid,
+                        release_mbid: recording.release_mbid,
+                        artist_mbids: recording.artist_mbids,
+                      },
+                    },
+                  }}
+                  showTimestamp={false}
+                  showUsername={false}
+                  newAlert={newAlert}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="card content-card" id="top-artists">
+            <h3 className="center-p">Your top artists of 2021</h3>
+            <div className="scrollable-area">
+              {yearInMusicData.top_artists.map((artist) => {
+                const details = getEntityLink(
+                  "artist",
+                  artist.artist_name,
+                  artist.artist_mbids[0]
+                );
+                const thumbnail = (
+                  <span className="badge badge-info">
+                    {artist.listen_count} listens
+                  </span>
+                );
+                return (
                   <ListenCard
-                    key={release.release_id}
+                    compact
+                    key={`top-artists-${artist.artist_name}-${artist.artist_mbids}`}
                     listen={{
                       listened_at: 0,
-                      listened_at_iso: release.first_release_date,
                       track_metadata: {
-                        artist_name: release.artist_credit_names.join(", "),
-                        track_name: release.title,
-                        release_name: release.title,
+                        track_name: "",
+                        artist_name: artist.artist_name,
                         additional_info: {
-                          release_mbid: release.release_id,
-                          artist_mbids: release.artist_credit_mbids,
+                          artist_mbids: artist.artist_mbids,
                         },
                       },
                     }}
+                    thumbnail={thumbnail}
+                    listenDetails={details}
                     showTimestamp={false}
                     showUsername={false}
                     newAlert={newAlert}
                   />
-                ))}
+                );
+              })}
             </div>
           </div>
         </div>
         <div className="row">
           <div className="card content-card" id="calendar">
-            <h3 className="text-center">Your listening activity in 2021</h3>
+            <h3 className="text-center">
+              Your listening activity in 2021
+              <div className="small">
+                Number of listens submitted for each day fo the year
+              </div>
+            </h3>
             <div className="graph">
               <ResponsiveCalendar
                 from="2021-01-01"
