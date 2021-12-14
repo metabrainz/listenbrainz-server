@@ -12,8 +12,6 @@ import {
 import ListenCard from "../listens/ListenCard";
 import ListenControl from "../listens/ListenControl";
 
-export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
-
 export type PlaylistItemCardProps = {
   track: JSPFTrack;
   currentFeedback: ListenFeedBack;

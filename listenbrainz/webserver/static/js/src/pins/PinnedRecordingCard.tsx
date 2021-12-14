@@ -12,8 +12,6 @@ import GlobalAppContext from "../utils/GlobalAppContext";
 import ListenControl from "../listens/ListenControl";
 import ListenCard from "../listens/ListenCard";
 
-export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
-
 export type PinnedRecordingCardProps = {
   userName: string;
   pinnedRecording: PinnedRecording;
@@ -63,11 +61,7 @@ export default class PinnedRecordingCard extends React.Component<
     }
     const currentTime: Date = new Date();
 
-    if (currentTime < pinnedUntilTime) {
-      return true;
-    }
-
-    return false;
+    return currentTime < pinnedUntilTime;
   };
 
   handleError = (error: string | Error, title?: string): void => {

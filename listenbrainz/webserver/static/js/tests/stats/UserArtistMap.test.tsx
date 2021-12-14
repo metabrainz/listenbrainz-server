@@ -1,7 +1,9 @@
 import * as React from "react";
 import { mount, shallow } from "enzyme";
 
-import UserArtistMap, { UserArtistMapProps } from "../../src/stats/UserArtistMap";
+import UserArtistMap, {
+  UserArtistMapProps,
+} from "../../src/stats/UserArtistMap";
 import APIError from "../../src/utils/APIError";
 import * as userArtistMapResponse from "../__mocks__/userArtistMap.json";
 import * as userArtistMapProcessedDataArtist from "../__mocks__/userArtistMapProcessDataArtist.json";
