@@ -65,6 +65,7 @@
     "react-date-picker": "^8.1.1",
     "react-dom": "^16.13.1",
     "react-loader-spinner": "^3.1.14",
+    "react-multi-carousel": "^2.6.5",
     "react-responsive": "^8.1.0",
     "react-select": "^3.1.0",
     "react-simple-star-rating": "^3.0.0",
