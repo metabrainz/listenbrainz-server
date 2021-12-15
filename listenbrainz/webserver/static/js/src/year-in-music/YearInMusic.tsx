@@ -640,15 +640,17 @@ export default class YearInMusic extends React.Component<
                       >
                         {topLevelPlaylist.jspf?.playlist?.title}
                       </a>
-                      <div
-                        className="small ellipsis-2-lines"
-                        // eslint-disable-next-line react/no-danger
-                        dangerouslySetInnerHTML={{
-                          __html: sanitize(
-                            topLevelPlaylist.jspf?.playlist?.annotation
-                          ),
-                        }}
-                      />
+                      {topLevelPlaylist.jspf?.playlist?.annotation && (
+                        <div
+                          className="small ellipsis-2-lines"
+                          // eslint-disable-next-line react/no-danger
+                          dangerouslySetInnerHTML={{
+                            __html: sanitize(
+                              topLevelPlaylist.jspf.playlist.annotation
+                            ),
+                          }}
+                        />
+                      )}
                     </h3>
                     <div>
                       {topLevelPlaylist.jspf?.playlist?.track.map(
