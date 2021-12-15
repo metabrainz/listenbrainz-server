@@ -11,6 +11,25 @@ from data.model.user_timeline_event import NotificationMetadata
 from listenbrainz import db
 from listenbrainz.db.user_timeline_event import create_user_notification_event
 
+# Year in Music data element defintions
+#
+# The following keys are being used to populate the data JSONB element of the year_in_music table:
+#
+# day_of_week
+# listens_per_day
+# most_listened_year
+# most_prominent_color
+# new_releases_of_top_artists
+# playlist-top-discoveries-for-year-playlists
+# playlist-top-missed-recordings-for-year-playlists
+# playlist-top-new-recordings-for-year-playlists
+# playlist-top-recordings-for-year-playlists
+# similar_users
+# top_artists
+# top_recordings
+# top_releases
+# top_releases_coverart
+# total_listen_count
 
 
 def get_year_in_music(user_id):
@@ -231,18 +250,21 @@ def notify_yim_users():
     #              , musicbrainz_id
     #              , email
     #           FROM statistics.year_in_music yim
-    #           JOIN "users"
-    #             ON "users".id = yim.user_id
+    #           JOIN "user"
+    #             ON "user".id = yim.user_id
     #     """)
     #     rows = result.fetchall()
 
-    rows = [
-        {
-            "user_id": 5746,
-            "musicbrainz_id": "amCap1712",
-            "email": "kartikohri13@gmail.com"
-        }
-    ]
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT id AS user_id
+                 , musicbrainz_id
+                 , email
+              FROM "user"
+             WHERE musicbrainz_id IN ('amCap1712', 'rob', 'alastairp', 'mr_monkey', 'akshaaatt')    
+        """))
+        rows = result.fetchall()
+
     for row in rows:
         user_name = row["musicbrainz_id"]
 
@@ -262,8 +284,8 @@ def notify_yim_users():
         }
 
         send_mail(
-            subject="Year In Music",
-            text=render_template("emails/year_in_music.html", **params),
+            subject="Year In Music 2021",
+            text=render_template("emails/year_in_music.txt", **params),
             to_email=row["email"],
             to_name=user_name,
             html=render_template("emails/year_in_music.html", **params)

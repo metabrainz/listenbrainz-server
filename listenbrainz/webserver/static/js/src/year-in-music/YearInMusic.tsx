@@ -1,6 +1,7 @@
 import * as ReactDOM from "react-dom";
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
+import Coverflow from "react-coverflow";
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
 import { get, isEmpty, isNil, isString, range, uniq } from "lodash";
 import { sanitize } from "dompurify";
@@ -86,6 +87,7 @@ const responsive = {
 
 export type YearInMusicState = {
   followingList: Array<string>;
+  ca: { [key: string]: string };
 };
 
 export default class YearInMusic extends React.Component<
@@ -99,11 +101,13 @@ export default class YearInMusic extends React.Component<
     super(props);
     this.state = {
       followingList: [],
+      ca: {},
     };
   }
 
   async componentDidMount() {
     await this.getFollowing();
+    await this.getCoverArt();
   }
 
   private getPlaylistByName(
@@ -136,6 +140,37 @@ export default class YearInMusic extends React.Component<
       const { newAlert } = this.props;
       newAlert("danger", "Error while fetching followers", err.toString());
     }
+  };
+
+  getCoverArt = async () => {
+    const { ca } = this.state;
+
+    try {
+      const CAAResponse = await fetch(
+        `https://coverartarchive.org/release/${ca}`
+      );
+      if (CAAResponse.ok) {
+        const body: CoverArtArchiveResponse = await CAAResponse.json();
+        if (!body.images?.[0]?.thumbnails) {
+          return undefined;
+        }
+        const { thumbnails } = body.images[0];
+        this.setState({
+          ca: {
+            release_mbidHere:
+              thumbnails[250] ??
+              thumbnails.small ??
+              // If neither of the above exists, return the first one we find
+              // @ts-ignore
+              thumbnails[Object.keys(thumbnails)?.[0]],
+          },
+        });
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.warn(`Couldn't fetch Cover Art Archive entry for ${ca}`, error);
+    }
+    return false;
   };
 
   updateFollowingList = (
@@ -300,7 +335,7 @@ export default class YearInMusic extends React.Component<
         <hr className="wide" />
         <div className="row">
           <div className="col-md-12 d-flex center-p">
-            <h3 className="visible-lg-inline-block">Top Tracks of the Year</h3>
+            <h3 className="visible-lg-inline-block">Your top albums of 2021</h3>
             <br />
             <ComponentToImage
               data={yearInMusicData.top_releases.slice(0, 10)}
@@ -309,6 +344,54 @@ export default class YearInMusic extends React.Component<
             />
           </div>
         </div>
+        <Coverflow
+          displayQuantityOfSide={2}
+          navigation
+          enableScroll
+          infiniteScroll
+          enableHeading
+          active={0}
+          media={{
+            "@media (max-width: 900px)": {
+              width: "100%",
+              height: "300px",
+            },
+            "@media (min-width: 900px)": {
+              width: "100%",
+              height: "600px",
+            },
+          }}
+        >
+          {yearInMusicData.top_releases.slice(0, 50).map((release) => (
+            <img
+              src="/static/img/cover-art-placeholder.jpg"
+              alt={release.release_name}
+              data-action={() => {
+                window.postMessage(
+                  {
+                    brainzplayer_event: "play-listen",
+                    payload: {
+                      listened_at: 0,
+                      track_metadata: {
+                        artist_name: release.artist_name,
+                        release_name: release.release_name,
+                        additional_info: {
+                          release_mbid: release.release_mbid,
+                          artist_mbids: release.artist_mbids,
+                        },
+                      },
+                    },
+                  },
+                  window.location.origin
+                );
+              }}
+              style={{
+                display: "block",
+                width: "100%",
+              }}
+            />
+          ))}
+        </Coverflow>
         <div className="row flex flex-wrap">
           <div className="card content-card" id="top-recordings">
             <div className="col-md-12 d-flex center-p">
@@ -562,7 +645,7 @@ export default class YearInMusic extends React.Component<
                         // eslint-disable-next-line react/no-danger
                         dangerouslySetInnerHTML={{
                           __html: sanitize(
-                            topLevelPlaylist.jspf?.playlist?.annotation ?? ""
+                            topLevelPlaylist.jspf?.playlist?.annotation
                           ),
                         }}
                       />
