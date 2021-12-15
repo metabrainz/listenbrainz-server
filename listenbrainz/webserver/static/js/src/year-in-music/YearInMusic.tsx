@@ -72,7 +72,7 @@ export type YearInMusicProps = {
 
 export type YearInMusicState = {
   followingList: Array<string>;
-  ca: { [key: string]: string };
+  listens: Array<Listen>;
 };
 
 export default class YearInMusic extends React.Component<
@@ -86,7 +86,7 @@ export default class YearInMusic extends React.Component<
     super(props);
     this.state = {
       followingList: [],
-      ca: {},
+      listens: [],
     };
   }
 
@@ -127,42 +127,6 @@ export default class YearInMusic extends React.Component<
     }
   };
 
-  getCoverArt = async () => {
-    const { ca } = this.state;
-    for (const caKey in ca) {
-      console.log(caKey);
-      try {
-        const CAAResponse = await fetch(
-          `https://coverartarchive.org/release/${caKey}`
-        );
-        if (CAAResponse.ok) {
-          const body: CoverArtArchiveResponse = await CAAResponse.json();
-          if (!body.images?.[0]?.thumbnails) {
-            return undefined;
-          }
-          const { thumbnails } = body.images[0];
-          this.setState({
-            ca: {
-              key:
-                thumbnails[250] ??
-                thumbnails.small ??
-                // If neither of the above exists, return the first one we find
-                // @ts-ignore
-                thumbnails[Object.keys(thumbnails)?.[0]],
-            },
-          });
-        }
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.warn(
-          `Couldn't fetch Cover Art Archive entry for ${caKey}`,
-          error
-        );
-      }
-    }
-    return false;
-  };
-
   updateFollowingList = (
     user: ListenBrainzUser,
     action: "follow" | "unfollow"
@@ -195,6 +159,7 @@ export default class YearInMusic extends React.Component<
   render() {
     const { user, newAlert, yearInMusicData } = this.props;
     const { APIService } = this.context;
+    const { listens } = this.state;
 
     if (!yearInMusicData || isEmpty(yearInMusicData)) {
       return (
@@ -398,28 +363,32 @@ export default class YearInMusic extends React.Component<
               />
             </div>
             <div className="scrollable-area">
-              {yearInMusicData.top_recordings.slice(0, 50).map((recording) => (
-                <ListenCard
-                  compact
-                  key={`top-recordings-${recording.recording_mbid}`}
-                  listen={{
-                    listened_at: 0,
-                    track_metadata: {
-                      artist_name: recording.artist_name,
-                      track_name: recording.track_name,
-                      release_name: recording.release_name,
-                      additional_info: {
-                        recording_mbid: recording.recording_mbid,
-                        release_mbid: recording.release_mbid,
-                        artist_mbids: recording.artist_mbids,
-                      },
+              {yearInMusicData.top_recordings.slice(0, 50).map((recording) => {
+                const listenHere = {
+                  listened_at: 0,
+                  track_metadata: {
+                    artist_name: recording.artist_name,
+                    track_name: recording.track_name,
+                    release_name: recording.release_name,
+                    additional_info: {
+                      recording_mbid: recording.recording_mbid,
+                      release_mbid: recording.release_mbid,
+                      artist_mbids: recording.artist_mbids,
                     },
-                  }}
-                  showTimestamp={false}
-                  showUsername={false}
-                  newAlert={newAlert}
-                />
-              ))}
+                  },
+                };
+                listens.push(listenHere);
+                return (
+                  <ListenCard
+                    compact
+                    key={`top-recordings-${recording.recording_mbid}`}
+                    listen={listenHere}
+                    showTimestamp={false}
+                    showUsername={false}
+                    newAlert={newAlert}
+                  />
+                );
+              })}
             </div>
           </div>
           <div className="card content-card" id="top-artists">
@@ -553,28 +522,32 @@ export default class YearInMusic extends React.Component<
               </div>
             </h3>
             <div className="scrollable-area">
-              {yearInMusicData.new_releases_of_top_artists.map((release) => (
-                <ListenCard
-                  key={release.release_id}
-                  compact
-                  listen={{
-                    listened_at: 0,
-                    listened_at_iso: release.first_release_date,
-                    track_metadata: {
-                      artist_name: release.artist_credit_names.join(", "),
-                      track_name: release.title,
-                      release_name: release.title,
-                      additional_info: {
-                        release_mbid: release.release_id,
-                        artist_mbids: release.artist_credit_mbids,
-                      },
+              {yearInMusicData.new_releases_of_top_artists.map((release) => {
+                const listenHere = {
+                  listened_at: 0,
+                  listened_at_iso: release.first_release_date,
+                  track_metadata: {
+                    artist_name: release.artist_credit_names.join(", "),
+                    track_name: release.title,
+                    release_name: release.title,
+                    additional_info: {
+                      release_mbid: release.release_id,
+                      artist_mbids: release.artist_credit_mbids,
                     },
-                  }}
-                  showTimestamp={false}
-                  showUsername={false}
-                  newAlert={newAlert}
-                />
-              ))}
+                  },
+                };
+                listens.push(listenHere);
+                return (
+                  <ListenCard
+                    key={release.release_id}
+                    compact
+                    listen={listenHere}
+                    showTimestamp={false}
+                    showUsername={false}
+                    newAlert={newAlert}
+                  />
+                );
+              })}
             </div>
           </div>
         </div>
@@ -619,6 +592,7 @@ export default class YearInMusic extends React.Component<
                       {topLevelPlaylist.jspf?.playlist?.track.map(
                         (playlistTrack) => {
                           const listen = JSPFTrackToListen(playlistTrack);
+                          listens.push(listen);
                           return (
                             <ListenCard
                               className="playlist-item-card"
@@ -649,7 +623,7 @@ export default class YearInMusic extends React.Component<
         </div>
         <hr className="wide" />
         <BrainzPlayer
-          listens={[]}
+          listens={listens}
           newAlert={newAlert}
           listenBrainzAPIBaseURI={APIService.APIBaseURI}
           refreshSpotifyToken={APIService.refreshSpotifyToken}
