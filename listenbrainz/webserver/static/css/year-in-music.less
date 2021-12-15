@@ -71,10 +71,18 @@
 		-webkit-box-reflect: below 1px -webkit-linear-gradient(bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0) 20%, rgba(0, 0, 0, 0));
 	}
 	div[class*="coverflow__left__"]{
-		left:320px !important;
+		left:calc(50% - 300px) !important;
+		transform: translateZ(30px);
+		@media(min-width:@screen-desktop) {
+			left:calc(50% - 500px) !important;
+		}
 	}
 	div[class*="coverflow__right__"]{
-		right:320px !important;
+		right:calc(50% - 300px) !important;
+		transform: translateZ(30px);
+		@media(min-width:@screen-desktop) {
+			right:calc(50% - 500px) !important;
+		}
 	}
 	div[class*="coverflow__arrow__"]{
 		&:before, &:after{
