@@ -335,7 +335,9 @@ export default class YearInMusic extends React.Component<
         <hr className="wide" />
         <div className="row">
           <div className="col-md-12 d-flex center-p">
-            <h3 className="visible-lg-inline-block">Top Tracks of the Year</h3>
+            <h3 className="visible-lg-inline-block">
+              Your top releases of the Year
+            </h3>
             <ComponentToImage
               data={yearInMusicData.top_releases.slice(0, 10)}
               entity="Releases"
