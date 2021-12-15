@@ -42,6 +42,7 @@ const ComponentToImage = ({
     }
     URL.revokeObjectURL(elem.href);
     elem.remove();
+    setIsLoading(false);
   };
 
   const exportAsPicture = () => {
@@ -65,7 +66,6 @@ const ComponentToImage = ({
         return canvas.toDataURL("image/png", 1.0);
       })
       .then((image) => {
-        setIsLoading(false);
         saveAs(image, `${user.name}-top-${entityType}s-2021.png`);
       });
   };
@@ -138,11 +138,56 @@ const ComponentToImage = ({
                 );
               });
             }
-            // if (entityType === "release") {
-            //   return data.map((release) => (
-            //     <li className="list-group-item">{release.release_name}</li>
-            //   ));
-            // }
+            if (entityType === "release") {
+              return data.map((release) => {
+                const details = (
+                  <>
+                    <div
+                      title={release.release_name}
+                      className="ellipsis-2-lines"
+                    >
+                      {getEntityLink(
+                        "artist",
+                        release.release_name,
+                        release.release_mbid
+                      )}
+                    </div>
+                    <span
+                      className="small text-muted ellipsis"
+                      title={release.artist_name}
+                    >
+                      {getEntityLink(
+                        "artist",
+                        release.artist_name,
+                        release.artist_mbids[0]
+                      )}
+                    </span>
+                  </>
+                );
+                return (
+                  <ListenCard
+                    compact
+                    key={`top-release-${release.release_name}-${release.release_mbid}`}
+                    listen={{
+                      listened_at: 0,
+                      track_metadata: {
+                        track_name: "",
+                        artist_name: release.artist_name,
+                        release_name: release.release_name,
+                        additional_info: {
+                          artist_mbids: release.artist_mbids,
+                          release_mbid: release.release_mbid,
+                        },
+                      },
+                    }}
+                    listenDetails={details}
+                    showTimestamp={false}
+                    showUsername={false}
+                    newAlert={() => {}}
+                  />
+                );
+              });
+            }
             return data.map((recording) => (
               // <li className="list-group-item">{recording.track_name}</li>
               <ListenCard
