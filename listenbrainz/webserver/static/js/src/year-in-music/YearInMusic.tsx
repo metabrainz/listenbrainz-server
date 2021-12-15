@@ -70,21 +70,6 @@ export type YearInMusicProps = {
   };
 } & WithAlertNotificationsInjectedProps;
 
-const responsive = {
-  desktop: {
-    breakpoint: { max: 3000, min: 1024 },
-    items: 3,
-  },
-  tablet: {
-    breakpoint: { max: 1024, min: 464 },
-    items: 2,
-  },
-  mobile: {
-    breakpoint: { max: 464, min: 0 },
-    items: 1,
-  },
-};
-
 export type YearInMusicState = {
   followingList: Array<string>;
   ca: { [key: string]: string };
@@ -144,31 +129,36 @@ export default class YearInMusic extends React.Component<
 
   getCoverArt = async () => {
     const { ca } = this.state;
-
-    try {
-      const CAAResponse = await fetch(
-        `https://coverartarchive.org/release/${ca}`
-      );
-      if (CAAResponse.ok) {
-        const body: CoverArtArchiveResponse = await CAAResponse.json();
-        if (!body.images?.[0]?.thumbnails) {
-          return undefined;
+    for (const caKey in ca) {
+      console.log(caKey);
+      try {
+        const CAAResponse = await fetch(
+          `https://coverartarchive.org/release/${caKey}`
+        );
+        if (CAAResponse.ok) {
+          const body: CoverArtArchiveResponse = await CAAResponse.json();
+          if (!body.images?.[0]?.thumbnails) {
+            return undefined;
+          }
+          const { thumbnails } = body.images[0];
+          this.setState({
+            ca: {
+              key:
+                thumbnails[250] ??
+                thumbnails.small ??
+                // If neither of the above exists, return the first one we find
+                // @ts-ignore
+                thumbnails[Object.keys(thumbnails)?.[0]],
+            },
+          });
         }
-        const { thumbnails } = body.images[0];
-        this.setState({
-          ca: {
-            release_mbidHere:
-              thumbnails[250] ??
-              thumbnails.small ??
-              // If neither of the above exists, return the first one we find
-              // @ts-ignore
-              thumbnails[Object.keys(thumbnails)?.[0]],
-          },
-        });
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          `Couldn't fetch Cover Art Archive entry for ${caKey}`,
+          error
+        );
       }
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.warn(`Couldn't fetch Cover Art Archive entry for ${ca}`, error);
     }
     return false;
   };
@@ -365,7 +355,7 @@ export default class YearInMusic extends React.Component<
             <img
               src="/static/img/cover-art-placeholder.jpg"
               alt={release.release_name}
-              data-action={() => {
+              onClick={() => {
                 window.postMessage(
                   {
                     brainzplayer_event: "play-listen",
