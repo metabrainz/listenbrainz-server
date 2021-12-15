@@ -57,8 +57,15 @@
 		margin-left:0;
 	}
 	
-	div[class^="coverflow__arrowWrapper"]{
+	div[class^="coverflow__container__"]{
+		background: rgba(0, 0, 0, 0.04)
+	}
+	div[class^="coverflow__arrowWrapper__"]{
 		transform-style: preserve-3d;
+	}
+	div[class^="coverflow__figure__"]{
+		box-shadow: 0 20px 40px rgb(0 0 0 / 30%);
+		-webkit-box-reflect: below 1px -webkit-linear-gradient(bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0) 20%, rgba(0, 0, 0, 0));
 	}
 	/* "Save as image" component */
 	.savable-card {

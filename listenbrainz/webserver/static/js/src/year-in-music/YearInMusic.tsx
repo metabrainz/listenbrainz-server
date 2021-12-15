@@ -107,7 +107,7 @@ export default class YearInMusic extends React.Component<
 
   async componentDidMount() {
     await this.getFollowing();
-    await this.getCoverArt();
+    // await this.getCoverArt();
   }
 
   private getPlaylistByName(
@@ -334,63 +334,69 @@ export default class YearInMusic extends React.Component<
         </div>
         <hr className="wide" />
         <div className="row">
-          <div className="col-md-12 d-flex center-p">
-            <h3>Your top albums of 2021</h3>
-            <ComponentToImage
-              data={yearInMusicData.top_releases.slice(0, 10)}
-              entityType="release"
-              user={user}
-            />
+          <div className="card content-card" id="top-releases">
+            <div className="col-md-12 d-flex center-p">
+              <h3>Your top albums of 2021</h3>
+              <ComponentToImage
+                data={yearInMusicData.top_releases.slice(0, 10)}
+                entityType="release"
+                user={user}
+              />
+            </div>
+            <div>
+              <Coverflow
+                displayQuantityOfSide={3}
+                currentFigureScale={2}
+                otherFigureScale={1}
+                // navigation
+                // enableScroll
+                // infiniteScroll
+                enableHeading
+                active={0}
+                media={{
+                  "@media (max-width: 900px)": {
+                    width: "100%",
+                    height: "300px",
+                  },
+                  "@media (min-width: 900px)": {
+                    width: "100%",
+                    height: "600px",
+                  },
+                }}
+              >
+                {yearInMusicData.top_releases.slice(0, 50).map((release) => (
+                  <img
+                    src="/static/img/cover-art-placeholder.jpg"
+                    alt={release.release_name}
+                    data-action={() => {
+                      window.postMessage(
+                        {
+                          brainzplayer_event: "play-listen",
+                          payload: {
+                            listened_at: 0,
+                            track_metadata: {
+                              artist_name: release.artist_name,
+                              release_name: release.release_name,
+                              additional_info: {
+                                release_mbid: release.release_mbid,
+                                artist_mbids: release.artist_mbids,
+                              },
+                            },
+                          },
+                        },
+                        window.location.origin
+                      );
+                    }}
+                    style={{
+                      display: "block",
+                      width: "100%",
+                    }}
+                  />
+                ))}
+              </Coverflow>
+            </div>
           </div>
         </div>
-        <Coverflow
-          displayQuantityOfSide={2}
-          navigation
-          enableScroll
-          infiniteScroll
-          enableHeading
-          active={0}
-          media={{
-            "@media (max-width: 900px)": {
-              width: "100%",
-              height: "300px",
-            },
-            "@media (min-width: 900px)": {
-              width: "100%",
-              height: "600px",
-            },
-          }}
-        >
-          {yearInMusicData.top_releases.slice(0, 50).map((release) => (
-            <img
-              src="/static/img/cover-art-placeholder.jpg"
-              alt={release.release_name}
-              data-action={() => {
-                window.postMessage(
-                  {
-                    brainzplayer_event: "play-listen",
-                    payload: {
-                      listened_at: 0,
-                      track_metadata: {
-                        artist_name: release.artist_name,
-                        release_name: release.release_name,
-                        additional_info: {
-                          release_mbid: release.release_mbid,
-                          artist_mbids: release.artist_mbids,
-                        },
-                      },
-                    },
-                  },
-                  window.location.origin
-                );
-              }}
-              style={{
-                display: "block",
-                width: "100%",
-              }}
-            />
-          ))}
-        </Coverflow>
         <div className="row flex flex-wrap">
           <div className="card content-card" id="top-recordings">
             <div className="col-md-12 d-flex center-p">
