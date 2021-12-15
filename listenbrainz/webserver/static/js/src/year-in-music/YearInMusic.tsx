@@ -144,35 +144,32 @@ export default class YearInMusic extends React.Component<
 
   getCoverArt = async () => {
     const { ca } = this.state;
-    ca.map(async (release_mbidHere: string, imageSource: string) => {
-      try {
-        const CAAResponse = await fetch(
-          `https://coverartarchive.org/release/${release_mbidHere}`
-        );
-        if (CAAResponse.ok) {
-          const body: CoverArtArchiveResponse = await CAAResponse.json();
-          if (!body.images?.[0]?.thumbnails) {
-            return undefined;
-          }
-          const { thumbnails } = body.images[0];
-          this.setState({
-            // ca{
-            //   release_mbidHere:  thumbnails[250] ??
-            //     thumbnails.small ??
-            //     // If neither of the above exists, return the first one we find
-            //     // @ts-ignore
-            //     thumbnails[Object.keys(thumbnails)?.[0]]
-            // }
-          });
+
+    try {
+      const CAAResponse = await fetch(
+        `https://coverartarchive.org/release/${ca}`
+      );
+      if (CAAResponse.ok) {
+        const body: CoverArtArchiveResponse = await CAAResponse.json();
+        if (!body.images?.[0]?.thumbnails) {
+          return undefined;
         }
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.warn(
-          `Couldn't fetch Cover Art Archive entry for ${release_mbidHere}`,
-          error
-        );
+        const { thumbnails } = body.images[0];
+        this.setState({
+          ca: {
+            release_mbidHere:
+              thumbnails[250] ??
+              thumbnails.small ??
+              // If neither of the above exists, return the first one we find
+              // @ts-ignore
+              thumbnails[Object.keys(thumbnails)?.[0]],
+          },
+        });
       }
-    });
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.warn(`Couldn't fetch Cover Art Archive entry for ${ca}`, error);
+    }
     return false;
   };
 
