@@ -312,7 +312,7 @@ def submit_release(user, token, releasembid):
     listenbrainz.misc.submit_release.submit_release_impl(token, releaseid, "http://web:7000")
 
 
-@cli.command()
+@cli.command(name="notify_yim_users")
 def notify_yim_users():
     application = webserver.create_app()
     with application.app_context():

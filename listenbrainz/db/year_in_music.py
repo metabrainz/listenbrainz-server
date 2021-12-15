@@ -262,8 +262,8 @@ def notify_yim_users():
         }
 
         send_mail(
-            subject="Year In Music",
-            text=render_template("emails/year_in_music.html", **params),
+            subject="Year In Music 2021",
+            text=render_template("emails/year_in_music.txt", **params),
             to_email=row["email"],
             to_name=user_name,
             html=render_template("emails/year_in_music.html", **params)
