@@ -39,6 +39,7 @@ export type YearInMusicProps = {
       release_name: string;
       release_mbid: string;
     }>;
+    top_releases_coverart: { [key: string]: string };
     top_recordings: Array<{
       artist_name: string;
       artist_mbids: string[];
@@ -328,7 +329,11 @@ export default class YearInMusic extends React.Component<
               >
                 {yearInMusicData.top_releases.slice(0, 50).map((release) => (
                   <img
-                    src="/static/img/cover-art-placeholder.jpg"
+                    src={
+                      yearInMusicData.top_releases_coverart[
+                        release.release_mbid
+                      ]
+                    }
                     alt={release.release_name}
                   />
                 ))}
