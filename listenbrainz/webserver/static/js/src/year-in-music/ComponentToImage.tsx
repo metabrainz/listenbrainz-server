@@ -57,10 +57,10 @@ const ComponentToImage = ({ data }: ComponentToImageProps) => {
         <FontAwesomeIcon
           className="col-6"
           size="1x"
-          style={{ margin: "4px" }}
+          style={{ marginRight: "4px" }}
           icon={faCamera as IconProp}
         />
-        Share with your friends!
+        Share as Image
       </button>
       <div
         id="card"
