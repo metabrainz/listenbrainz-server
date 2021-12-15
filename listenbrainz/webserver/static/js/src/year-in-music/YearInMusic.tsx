@@ -1,7 +1,6 @@
 import * as ReactDOM from "react-dom";
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
-import Coverflow from "react-coverflow";
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
 import { get, isEmpty, isNil, isString, range, uniq } from "lodash";
 import { sanitize } from "dompurify";
@@ -308,36 +307,6 @@ export default class YearInMusic extends React.Component<
             />
           </div>
         </div>
-        <Coverflow
-          displayQuantityOfSide={2}
-          navigation
-          enableScroll
-          infiniteScroll
-          enableHeading
-          active={0}
-          media={{
-            "@media (max-width: 900px)": {
-              width: "100%",
-              height: "300px",
-            },
-            "@media (min-width: 900px)": {
-              width: "100%",
-              height: "600px",
-            },
-          }}
-        >
-          {yearInMusicData.top_recordings.slice(0, 50).map((recording) => (
-            <img
-              src="/static/img/cover-art-placeholder.jpg"
-              alt={recording.track_name}
-              data-action="http://tw.yahoo.com"
-              style={{
-                display: "block",
-                width: "100%",
-              }}
-            />
-          ))}
-        </Coverflow>
         <div className="row flex flex-wrap">
           <div className="card content-card" id="top-recordings">
             <div className="col-md-12 d-flex center-p">
