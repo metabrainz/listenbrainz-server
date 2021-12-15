@@ -1,5 +1,5 @@
 import html2canvas from "html2canvas";
-import React from "react";
+import React, { useState } from "react";
 import {
   faCamera,
   faPlay,
@@ -9,6 +9,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import ListenCard from "../listens/ListenCard";
 import { getEntityLink } from "../stats/utils";
+import Loader from "../components/Loader";
 
 export type ComponentToImageProps = {
   data: any[];
@@ -21,6 +22,7 @@ const ComponentToImage = ({
   entityType,
   user,
 }: ComponentToImageProps) => {
+  const [isLoading, setIsLoading] = useState(false);
   const saveAs = (blob: string, fileName: string) => {
     const elem = window.document.createElement("a");
     elem.href = blob;
@@ -43,6 +45,7 @@ const ComponentToImage = ({
   };
 
   const exportAsPicture = () => {
+    setIsLoading(true);
     const targetId = `savable-${entityType}-component`;
     const element = document.getElementById(targetId);
     html2canvas(element as HTMLElement, {
@@ -62,6 +65,7 @@ const ComponentToImage = ({
         return canvas.toDataURL("image/png", 1.0);
       })
       .then((image) => {
+        setIsLoading(false);
         saveAs(image, `${user.name}-top-${entityType}s-2021.png`);
       });
   };
@@ -73,13 +77,15 @@ const ComponentToImage = ({
         onClick={exportAsPicture}
         type="button"
       >
-        <FontAwesomeIcon
-          className="col-6"
-          size="1x"
-          style={{ marginRight: "4px" }}
-          icon={faCamera as IconProp}
-        />
-        Save as Image
+        <Loader isLoading={isLoading} loaderText="Generating image…">
+          <FontAwesomeIcon
+            className="col-6"
+            size="1x"
+            style={{ marginRight: "4px" }}
+            icon={faCamera as IconProp}
+          />
+          Save as image
+        </Loader>
       </button>
       <div id={`savable-${entityType}-component`} className="savable-card card">
         <img
