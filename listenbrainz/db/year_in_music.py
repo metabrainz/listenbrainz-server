@@ -1,7 +1,9 @@
+import smtplib
+from email.message import EmailMessage
+
 import psycopg2
 import sqlalchemy
 import ujson
-from brainzutils.mail import send_mail
 from flask import current_app, render_template
 from psycopg2.extras import execute_values
 
@@ -206,6 +208,22 @@ def insert_playlists(troi_patch_slug, import_file):
         current_app.logger.error("Error while inserting playlist/%s:" % troi_patch_slug, exc_info=True)
 
 
+def send_mail(subject, to_name, to_email, text, html):
+    message = EmailMessage()
+    message["From"] = f"ListenBrainz <noreply@{current_app.config['MAIL_FROM_DOMAIN']}>"
+    message["To"] = f"{to_name} <{to_email}>"
+    message["Subject"] = subject
+
+    message.set_content(text)
+    message.add_alternative(html, subtype="html")
+
+    if current_app.config["TESTING"]:  # Not sending any emails during the testing process
+        return
+
+    with smtplib.SMTP(current_app.config["SMTP_SERVER"], current_app.config["SMTP_PORT"]) as server:
+        server.send_message(message)
+
+
 def notify_yim_users():
     # with db.engine.connect() as connection:
     #     result = connection.execute("""
@@ -246,9 +264,9 @@ def notify_yim_users():
         send_mail(
             subject="Year In Music",
             text=render_template("emails/year_in_music.html", **params),
-            recipients=[row["email"]],
-            from_name="ListenBrainz",
-            from_addr="noreply@" + current_app.config["MAIL_FROM_DOMAIN"],
+            to_email=row["email"],
+            to_name=user_name,
+            html=render_template("emails/year_in_music.html", **params)
         )
         # create timeline event too
         timeline_message = 'ListenBrainz\' very own retrospective on 2021 has just dropped: Check out ' \
