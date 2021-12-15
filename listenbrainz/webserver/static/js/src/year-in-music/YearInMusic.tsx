@@ -100,8 +100,6 @@ export default class YearInMusic extends React.Component<
     super(props);
     this.state = {
       followingList: [],
-      additionalTransform: 0,
-      posts: [],
     };
   }
 
@@ -301,18 +299,28 @@ export default class YearInMusic extends React.Component<
           </div>
         </div>
         <hr className="wide" />
+        <div className="row">
+          <div className="col-md-12 d-flex center-p">
+            <h3 className="visible-lg-inline-block">Top Tracks of the Year</h3>
+            <ComponentToImage
+              data={yearInMusicData.top_recordings.slice(0, 10)}
+            />
+          </div>
+        </div>
         <Coverflow
           displayQuantityOfSide={2}
           navigation
+          enableScroll
           infiniteScroll
           enableHeading
+          active={0}
           media={{
             "@media (max-width: 900px)": {
-              width: "600px",
+              width: "100%",
               height: "300px",
             },
             "@media (min-width: 900px)": {
-              width: "960px",
+              width: "100%",
               height: "600px",
             },
           }}
@@ -634,7 +642,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <GlobalAppContext.Provider value={globalProps}>
         <YearInMusicWithAlertNotifications
           user={user}
-          yearInMusicData={yearInMusicData}
+          yearInMusicData={fakeData}
         />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,
