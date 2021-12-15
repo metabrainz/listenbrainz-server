@@ -14,7 +14,7 @@ We hope that you enjoy your Year in Music review, but we also wanted to point ou
 
 User feed page ({{ feed }}), which shows activity from your friends, including similar users, pinned tracks, recommended tracks and more.
 Statistics page ({{ statistics }}), which shows your listening statistics.
-Love/Hate page ({{ feedback }}) and pins page ({{ pins }}), which shows your loved/hated tracks.
+Feedback page ({{ feedback }}) and pins page ({{ pins }}) which show tracks you loved (or hated!).
 Playlists, both your own ({{ playlists }}) and ones generated for you ({{ collaborations }}).
 
 In the new year we hope to start generating more playlist recommendations based on your listening history – stay tuned for that!
